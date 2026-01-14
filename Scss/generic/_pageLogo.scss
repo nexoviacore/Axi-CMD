@@ -1,0 +1,18 @@
+//* application logo ==================================== *//
+.login{
+    .login-main{
+        .login-inner{
+            h2{
+                img{
+                    @include mainLogo;
+                }
+            }
+        }
+    }
+}
+#login-box{
+    img{
+        @include mainLogo;
+    }
+}
+//* application logo ==================================== *//

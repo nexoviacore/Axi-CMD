@@ -1,0 +1,47 @@
+//*Iview table header menu (on right click menu displaying)*//
+  .menu{
+      width: $pageTableHeaderMenuMainWidth;
+      position: $pageTableHeaderMenuMainPosition;
+      z-index: $pageTableHeaderMenuMainZIndex;
+      background: $applicationBackgroundColor;
+      ul{
+          @include listStyle;
+          border: $applicationBorderColor;
+          //@include shadow;
+          @include border-radius(4px);
+          border: 1px solid $applicationBorderColor;
+          li{
+            cursor: pointer;
+            text-decoration: none;
+            padding: $pageTableHeaderMenuListPadding;
+            &.highlightOption{
+                background:$pageTableHeaderBackgroundColor;
+                //color:$pageTableHeaderMenuListColor;
+                color: $applicationTextColor;
+            }
+            &:hover{
+                background:$pageTableHeaderBackgroundColor;
+                //color:$pageTableHeaderMenuListColor;
+                color: $applicationTextColor;
+            }
+          }
+      }
+  }
+  .gridData {
+    &.ivirMainGrid {
+        thead {
+            th:not(.sorting_disabled){
+                &:hover{
+                    button{
+                        background: 0;
+                        border:0;
+                        &.rightClickMenuIcn{
+                           display: $pageTableHeaderMenRightClickMenuIcnDisplay;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+//*Iview table header menu (on right click menu displaying)*//

@@ -1,0 +1,38 @@
+#breadcrumb-panel {
+    .modernButtonOptions &{
+        #breadcrumb{
+            @include floatLeft;
+        }
+    }
+    .modernButtonOptions.btextDir-rtl &{
+        #breadcrumb{
+            @include floatRight;
+        }
+    }
+    .isMobile.requestJSON &,.isMobile.modernButtonOptions & {
+        #breadcrumb{
+            //float: $applicationResponsiveTitleBreadcrumbMobileFloat;
+            @include floatLeft;
+            border-bottom: 1px solid $applicationBorderColor;
+        }
+    }
+    .btextDir-rtl.isMobile.requestJSON &,.btextDir-rtl.isMobile.modernButtonOptions & {
+        #breadcrumb{
+            @include floatRight;
+        }
+    }
+    .bcrumb{
+        span:not(.ivirCButton):not(.icon-arrows-down) 
+        {           
+            &.tstivCaption{                
+               width: $applicationResponsiveTitleTstivCaptionWidth;
+               .isMobile &{
+                    @include calc(width, $applicationResponsiveTitleTstivCaptionWidthCalcMobile);
+               }
+            }    
+            &.tstivtitle{
+                padding: $applicationResponsiveTitleNoBcrumbPadding;
+            }       
+        }
+    }
+}

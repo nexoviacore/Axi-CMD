@@ -1,0 +1,194 @@
+//* Login ==================================== *//
+.login-wrapper{
+    margin: $loginMainwrapperMargin;
+}
+  .login{
+      margin: 0;  
+    .login-main{
+        @include loginMain;
+        .center-view{
+            @include verticalCenter;
+        }
+        .login-inner{
+            max-width: $loginFormMaxWidth;
+            margin: auto;
+            padding: $loginInnerPadding;
+            min-height: $loginFormMinHeight;
+            #axpertMob{
+                display: none;
+            } 
+            .hybridAppSettingBtn {
+                @include hybridAppButton;
+            }
+            #selectProj,.control-group,.form-actions{
+                padding: $loginFormPadding;
+            }
+            .create-account{
+                padding: $loginFormPadding;
+                font-size: $loginFormLabelFontSize;
+                a{
+                    text-decoration: none;
+                    color: $loginLabelInfoColor;
+                    @include textCenter;
+                    display: block;
+                    &:hover{
+                        text-decoration: underline;
+                    }
+                }
+                
+            }
+            .copyrightlabs{
+                padding: $loginFormPadding;
+                .col-sm-6,.col-md-6,.col-xs-6,.col-lg-12
+                {
+                    padding-left: 0px;
+                    padding-right: 0px;
+                }
+                #dvCopyRight{
+                    color: $applicationTextColor;
+                    font-size: $loginFormLabelFontSize;
+                    @include textCenter;
+                    padding-bottom: $loginLabelPaddingBottom;
+                }
+                #axpertVer{
+                    @include floatRight;
+                    font-size: $loginFormLabelFontSize;
+                    color: $applicationTextColor;
+                }
+            }
+        }
+      }
+      .content{
+        margin-top: 0%;
+      }
+  }
+ul.ui-autocomplete {
+    max-height: $loginLabelMaxHeight;
+    overflow-y: auto;
+    overflow-x: hidden;
+    li{
+        &.ui-menu-item{
+            a{
+                &.ui-corner-all{
+                    @include loginDropdownListAnchorStyle;
+                }
+            }
+        }
+    }
+}
+#main_body{
+    margin: 0;
+    #login-container{
+        @include loginMain;
+        #container-arrow{
+            @include verticalCenter;
+        }
+    }
+#login-box{
+    max-width: $loginFormMaxWidth;
+    margin: auto;
+    padding: $loginInnerPadding;
+    min-height: $loginFormMinHeight;
+        #lblfrgotpwd{
+            @include mainHeadingSignIn;
+        }
+        .control-group,.divbutton{
+            padding: $loginFormPadding;
+        }
+        .Backlink{
+            a{
+                text-decoration: none;  
+            }
+            #lbllogin{
+                @include loginLabel;
+                &:hover{
+                    text-decoration: underline;
+                }
+            }
+        }
+}
+#btnReset{
+    display: none;
+}
+}
+#info-box{
+    max-width: $loginFormMaxWidth;
+    margin: auto;
+    padding: $loginInfoBoxPadding;
+    min-height: $loginFormMinHeight;
+    ul{
+        padding: 0px;
+        span{
+            @include textCenter;
+            display: block;
+            // &#lblsessrsn{
+                
+            // }
+        }
+        li{
+            @include listStyleNone;
+            @include textCenter;
+            font-size: $loginListFontSize;
+            margin-top: $loginListMarginTop;
+            color: $loginListColor;
+            a{
+                text-decoration: none;
+                display: $loginInfoBoxDisplay;
+                margin-top: $loginInfoBoxMarginTop;
+                padding: $loginBtnPadding;
+                &:hover{
+                    background-color: $hotBtnHoverColor;
+                }
+            }
+        }
+    }
+}
+#login-logo,#login-prouct-name{
+    display: none;
+}
+.chpwd-position{
+    #dvCp{
+        .control-group{
+            &#Epwddiv,&#Npwddiv,&#Region{
+               margin-bottom: $changePassControlGroupMarginBottom;
+            }
+        }
+        .form-actions{
+            @include textRight;
+            margin-right: $changePassFormActionMarginRight;
+            margin-top: $changePassFormActionMarginTop;
+        }
+    }
+}
+#dvMgs{
+    @include textCenter;
+    margin-bottom: $changePassDvMsgMarginBottom;
+    span{
+        color: $loginListColor;
+    }
+}
+//* Login ==================================== *//
+
+//* Login with another user confirm box =============== *//
+.userNameList {
+    padding: 12px;
+    border-bottom: 1px solid darken($applicationBackgroundColor, 13.33);
+    cursor: pointer;
+
+    &:hover {
+        background: #e8f0fe;
+    }
+
+    .userNameIcon {
+        color: lighten($applicationTextColor, 46.67);
+    }
+
+    .userNameText {
+        top: -6px;
+        position: $applicationPositionRelative;
+        margin-left: 10px;
+        font-size: 16px;
+        font-weight: 500;
+    }
+}
+//* Login with another user confirm box =============== *//

@@ -1,0 +1,52 @@
+//* import Data ========== *//
+#wizardWrappper{
+        #wizardHeader{
+            @include wizardDcClassicPadding;
+        .wizard-progress{
+            @include tabProgess;
+            .step{
+                 @include tabStep;
+                a{
+                    color: $applicationTextColor;
+                    @include textOverflow;
+                    width: $wizardProressTextOverflowWidth;
+                    &:hover{
+                        outline: none;
+                        text-decoration: none;
+                    }
+                }
+                .node{
+                    @include wizardDcClassicCircle;
+                }
+                &.in-progress:not(:last-child):not(.flat){
+                  &:before{
+                    @include wizardDcClassicBackground;
+                  }
+                }
+                &:not(:last-child):not(.flat){
+                    &:before{
+                        @include wizardDcClassicProgressBar;
+                    }
+                }
+                &.in-progress{
+                    .node{
+                        border-color:$applicationColor;
+                    }
+                }
+                &.complete:not(.flat){
+                  .node:not(.flat){
+                      border-color: $applicationColor;
+                      background: $applicationColor;
+                      &:before{
+                        @include wizardDcClassicCompleteState;
+                      }
+                  }
+                  &:before{
+                    background: $applicationColor;
+                  }
+                }
+            }
+        }
+        }
+    }
+//* import Data ========== *//

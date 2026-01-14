@@ -1,0 +1,51 @@
+//* Page Search -----------------*//
+#ivInSearch {
+    .requestJSON:not(.requestJsonOldUi).isMobile &{
+        position: $pageSearchPositionRequestJSONMobile;
+    }
+    .requestJSON:not(.requestJsonOldUi).isMobile.btextDir-rtl &{
+        left:$pageSearchPositionRequestJSONMobileLeftRTL;
+    }
+    @media only screen and(max-width:$breakTabDevice){
+        //right: 0;
+        //top:30px;
+        .btextDir-rtl &{
+            left: $applicationSearchLeftRtlMobileGap;
+            right: $applicationSearchRightRtlMobileGap;
+        }
+    }
+    .searchBoxChildContainer {
+        @include searchBoxChildContainer;
+        input{
+            &#ivInSearchInput{
+                background: $applicationBackgroundColor;
+                border: 1px solid $applicationBorderColor;
+                @include searchInput;
+                @include searchTransition;
+                @media only screen and(max-width:$breakTabDevice){
+                   @include mobileSearchOption;
+                   .btextDir-rtl &{
+                       padding: $applicationSearchPaddingMobile;
+                   }
+                }
+                &:focus,&:active{
+                    @include searchInputHoverWidth;
+                }
+                .btextDir-rtl &{
+                    @include rtlLeftAlign;
+                }
+            }
+    }
+    .icon{
+        @include searchIcon;
+        color: $applicationIconColor;
+        @media only screen and(max-width:$breakTabDevice){
+            @include searchIconMobile;
+        }
+        .btextDir-rtl &{
+            @include rtlLeftAlign;
+        }
+    }
+}
+}
+//* Page Search -----------------*//

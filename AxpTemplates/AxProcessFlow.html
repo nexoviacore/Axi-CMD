@@ -1,0 +1,428 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+
+    <title>Process Flow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../UI/axpertUI/style.bundle.css">
+    <link rel="stylesheet" href="../../UI/axpertUI/plugins.bundle.css">
+    <link rel="stylesheet" href="../../ThirdParty/jquery-confirm-master/jquery-confirm.min.css">
+    <link rel="stylesheet" href="css/AxProcessFlow.css?v=1" type="text/css">
+    <link href="../../Css/ActiveList_MainPage.css?v=1" rel="stylesheet">
+
+    <style>
+        #Homepage_ActiveList .card-title {
+            font-weight: bold !important;
+            font-size: 18px;
+            margin-right: 25px;
+        }
+
+        .HomeP-ActiveList-Title {
+            font-size: 14px;
+            color: #333 !important;
+            font-weight: bold;
+        }
+
+        #Homepage_ActiveList .card-header {
+            border-bottom: 1px solid #f0f0f0;
+            justify-content: flex-start;
+        }
+
+        .HomeP-ActiveList-Desc {
+            display: block;
+            font-size: 13px;
+            color: #737373;
+        }
+
+        .HP-ActiveList-Items {
+            border-bottom: 1px dashed #ccc;
+            padding: 15px 0;
+        }
+
+        #Homepage_ActiveList .card-body {
+            padding-top: 0;
+            /* border-top: 1px solid #ececec; */
+            overflow: auto;
+        }
+
+        #Homepage_ActiveList .card-title {
+            font-weight: bold !important;
+            font-size: 18px;
+        }
+
+        #Homepage_ActiveList .nav-item {
+            border-left: 1px solid #ececec;
+        }
+
+            #Homepage_ActiveList .nav-item .nav-link {
+                padding: 12px 18px;
+                margin: 0 !important;
+            }
+
+        .HomeP-ActiveList-btn {
+            text-decoration: underline;
+            color: #333 !important;
+            font-size: 12px;
+        }
+
+        #Homepage_ActiveList .nav-item .nav-link img {
+            width: 25px !important;
+        }
+
+        .HP-ActiveList-Items .badge-dark {
+            color: #ffe720 !important;
+            font-weight: normal;
+            font-size: 10px;
+        }
+
+        #Homepage_ActiveList .card {
+            border: 1px solid #eeeff0;
+            border-radius: 8px;
+        }
+
+        #Homepage_ActiveList {
+            height: 86vh;
+            min-height: 86vh;
+            position: relative;
+        }
+
+        #Homepage_CardsList {
+            height: 86vh;
+            min-height: 86vh;
+            overflow: scroll;
+        }
+
+        #New-Landing-layout {
+            height: 86vh;
+        }
+
+        #Homepage_ActiveList .btn.btn-white .material-icons.material-icons-style.material-icons-2 {
+            margin-right: 0;
+        }
+
+        #Homepage_ActiveList .btn.btn-white {
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+
+        #Homepage_ActiveList .nav-line-tabs {
+            border-bottom: 0;
+        }
+
+        #Homepage_ActiveList .activelist-tabs {
+            display: flex;
+            overflow-x: scroll;
+            overflow-y: hidden;
+            width: 73%;
+            list-style: none;
+            border-right: 1px solid #ececec;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+
+        #Homepage_ActiveList .card-toolbar {
+            position: absolute;
+            right: 0;
+            background: #fff !important;
+        }
+
+        #Homepage_ActiveList .nav-item .nav-link.active {
+            border-bottom: 2px solid;
+        }
+
+        #Homepage_ActiveList .task-actions-sets.d-flex:hover {
+            box-shadow: none;
+        }
+
+        #Homepage_ActiveList .btn-group-sm > .btn,
+        .btn-sm {
+            padding: 3px 7px !important;
+        }
+    </style>
+</head>
+
+<body id="Process_Flow" class="header-fixed header-tablet-and-mobile-fixed aside-fixed">
+    <div class="content d-flex flex-column flex-column-fluid ">
+        <div class="" id="pf_content_container">
+            <div class="row g-xl-8" id="PROFLOW-overalldiv">
+                <div class="toolbar py-2 bg-light border">
+                    <div class="container-fluid px-5 d-flex flex-stack flex-wrap flex-sm-nowrap">
+                        <div class="d-flex flex-column align-items-start justify-content-center flex-wrap me-2">
+                            <h1 class="PROFLOW-page-Titlez text-dark fw-bolder fs-4" id="process-name">
+                                <span>Process Flow</span>
+                                <button id="proFlw_Tree_button" onclick="axProcessObj.showProcessTree();" class="btn btn-icon btn-sm btn-white btn-color-gray-600 btn-active-light-primary shadow-sm btn-custom-border-radius flex-column d-none">
+                                    <span class="material-icons material-icons-style">account_tree</span>
+                                </button>
+                            </h1>
+                        </div>
+                        <toolbardrawer></toolbardrawer>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-3 d-flex flex-column flex-column-fluid vh-100 min-vh-100 d-none" id="PROFLOW_Left">
+
+                    <!--<div class="card card-xl-stretch shadow-sm flex-root h-1px  ">
+                        <div class="card-body h-300px ">
+
+                            <div id="PROFLOW-profile-container">
+                                <div class="PROFLOW-Info-Steps ax-data accordion arrows" id="procflow-steps">
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>-->
+                    <div class="card card-xl-stretch shadow-sm flex-root h-1px w-100">
+                        <div class="card-header pe-5">
+                            <div class="card-title d-none">
+                                <div class="d-flex justify-content-center flex-column me-3">
+                                    <a href="#" class="fs-4 fw-bolder text-gray-900 text-hover-primary me-1 lh-1">
+                                        Example Drawer
+                                        Title
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="card-toolbar d-flex align-items-stretch justify-content-between w-100 my-auto">
+                                <div class="d-flex gap-8 flex-wrap align-items-stretch">
+                                    <div>
+                                        <div id="pd_all_tasks" class="btn btn-sm btn-icon btn-primary btn-active-primary btn-custom-border-radius" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-start" data-kt-menu-flip="top-start" data-kt-menu-attach="parent">
+                                            <span class="material-icons material-icons-style">add_task</span>
+                                        </div>
+                                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light fw-bolder w-250px py-3" data-kt-menu="true" data-id="pd_all_tasks">
+                                            <pd-alltasks></pd-alltasks>
+                                        </div>
+                                    </div>
+                                    <div class="btn btn-sm btn-icon btn-active-primary border shadow-sm btn-custom-border-radius d-none" id="showList" title="Show List" onclick="axProcessObj.showList();">
+                                        <span class="material-icons material-icons-style">list_alt</span>
+                                    </div>
+                                    <div class="btn btn-sm btn-icon btn-active-primary border shadow-sm btn-custom-border-radius d-none" id="showProgress" title="Show Process Progress" onclick="axProcessObj.showProgress();">
+                                        <span class="material-icons material-icons-style">schema</span>
+                                    </div>
+                                    <pd-eachtasks></pd-eachtasks>
+                                    <div>
+                                        <div id="pd_ann_drawer" class="btn btn-sm btn-icon btn-active-primary border shadow-sm btn-custom-border-radius d-none" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end" data-kt-menu-attach="parent">
+                                            <span class="material-icons material-icons-style">more_horiz</span>
+                                        </div>
+                                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light fw-bolder w-250px py-3" data-kt-menu="true" data-id="pd_ann_drawer">
+                                            <pd-anncontent></pd-anncontent>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-stretch flex-shrink-0 gap-8">
+                                    <div class="btn btn-sm btn-icon btn-active-primary border shadow-sm btn-custom-border-radius" data-kt-menu-trigger="click" data-kt-menu-placement="bottom" data-kt-menu-flip="top" data-kt-menu-attach="parent">
+                                        <span class="material-icons material-icons-style">filter_alt</span>
+                                    </div>
+                                    <!--<button class="btn btn-sm btn-icon btn-active-danger btn-custom-border-radius col-2 ms-auto me-2 shadow-sm" data-kt-drawer-dismiss="true" id="kt_drawer_proFlw_close"><span class="material-icons material-icons-style">close</span></button>-->
+                                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light fw-bolder w-75 py-3 mt-3" data-kt-menu="true">
+                                        <div class="d-flex row mx-6 mb-4">
+                                            <div class="col-3">
+                                                <label for="pdFilUser" class="form-label col-form-label">From User</label>
+                                                <input type="text" class="form-control rounded-0 border-gray-300" id="pdFilUser" placeholder="Enter User Name">
+                                            </div>
+                                            <div class="col-3">
+                                                <label for="pdFilFrom" class="form-label col-form-label">From Date</label>
+                                                <input class="form-control rounded-0 border-gray-300 flatpickr-input" id="pdFilFrom" type="text" readonly="readonly" placeholder="Select from date">
+                                            </div>
+                                            <div class="col-3">
+                                                <label for="pdFilTo" class="form-label col-form-label">To Date</label>
+                                                <input class="form-control rounded-0 border-gray-300 flatpickr-input" id="pdFilTo" type="text" readonly="readonly" placeholder="Select to date">
+                                            </div>
+                                            <div class="col-3 mt-10 text-center">
+                                                <button class="btn btn-light-primary btn-sm mt-2 btn-custom-border-radius me-2" onclick="axProcessObj.taskFilter('reset');">Reset</button>
+                                                <button class="btn btn-primary btn-sm mt-2 btn-custom-border-radius" onclick="axProcessObj.taskFilter('filter');">Filter</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body hover-scroll-overlay-yz h-300px ">
+                            <div id="PROFLOW-profile-container" class="d-none">
+                                <div class="PROFLOW-Info-Steps ax-data accordion arrows" id="procflow-steps">
+                                </div>
+                            </div>
+                            <div class="accordion" id="plistAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingPending">
+                                        <button class="accordion-button" type="button" data-mdb-toggle="collapse" data-mdb-target="#collapsePending" data-toggle="collapse" data-target="#collapsePending" aria-expanded="true" aria-controls="collapsePending">
+                                            Pending
+                                        </button>
+                                    </h2>
+                                    <div id="collapsePending" class="accordion-collapse collapse show" aria-labelledby="headingPending" data-mdb-parent="#plistAccordion">
+                                        <div class="accordion-body">
+                                            <div id="plistContentPending" class="content"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingCompleted">
+                                        <button class="accordion-button" type="button" data-mdb-toggle="collapse" data-mdb-target="#collapseCompleted" data-toggle="collapse" data-target="#collapseCompleted" aria-expanded="true" aria-controls="collapseCompleted">
+                                            Completed
+                                        </button>
+                                    </h2>
+                                    <div id="collapseCompleted" class="accordion-collapse collapse show" aria-labelledby="headingCompleted" data-mdb-parent="#plistAccordion">
+                                        <div class="accordion-body">
+                                            <div id="plistContentCompleted" class="content"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer row py-5 d-none">
+                            <div class="d-flex col-10 gap-10 proFlw-status">
+                                <span class="d-flex gap-2">
+                                    <span class="symbol symbol-10px symbol-circle my-auto">
+                                        <span class="symbol-label bg-primary"></span>
+                                    </span>
+                                    <span class="fw-normal my-auto">Make</span>
+                                </span>
+                                <span class="d-flex gap-2">
+                                    <span class="symbol symbol-10px symbol-circle my-auto">
+                                        <span class="symbol-label bg-success"></span>
+                                    </span>
+                                    <span class="fw-normal my-auto">Approved</span>
+                                </span>
+                                <span class="d-flex gap-2">
+                                    <span class="symbol symbol-10px symbol-circle my-auto">
+                                        <span class="symbol-label bg-custom-checked"></span>
+                                    </span>
+                                    <span class="fw-normal my-auto">Checked</span>
+                                </span>
+                                <span class="d-flex gap-2">
+                                    <span class="symbol symbol-10px symbol-circle my-auto">
+                                        <span class="symbol-label bg-warning"></span>
+                                    </span>
+                                    <span class="fw-normal my-auto">Returned</span>
+                                </span>
+                                <span class="d-flex gap-2">
+                                    <span class="symbol symbol-10px symbol-circle my-auto">
+                                        <span class="symbol-label bg-danger"></span>
+                                    </span>
+                                    <span class="fw-normal my-auto">Rejected</span>
+                                </span>
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <div class="card-footer py-5 footer-legend ">
+                        <div class="footer-legend">
+                            <span class="legend-list">
+                                <span class="symbol symbol-10px symbol-circle my-auto">
+                                    <span class="symbol-label bg-make"></span>
+                                </span>
+                                <span class="fw-normal">Make</span>
+                            </span>
+                            <span class="legend-list">
+                                <span class="symbol symbol-10px symbol-circle my-auto">
+                                    <span class="symbol-label bg-approved"></span>
+                                </span>
+                                <span class="fw-normal">Approve</span>
+                            </span>
+                            <span class="legend-list">
+                                <span class="symbol symbol-10px symbol-circle my-auto">
+                                    <span class="symbol-label bg-checked"></span>
+                                </span>
+                                <span class="fw-normal">Check</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-7  col-md-7 d-flex flex-column flex-column-fluid vh-100 min-vh-100" id="PROFLOW_Right">
+                    <div class="card card-xl-stretch shadow-sm flex-root h-1px">
+						
+						<div id="Show-Hide-TL" class="btn btn-sm btn-icon btn-active-primary border shadow-sm btn-custom-border-radius" title="View Timeline">
+                                        <span class="material-icons material-icons-style">push_pin</span>
+                                    </div>
+
+                        <ul class="stepper stepper-horizontal d-none" id="horizontal-processbar">
+                        </ul>
+
+
+
+                        <iframe data-ignore-history="true" class="d-none" style="height: calc(100% - 0px);width: calc(100% - 0px);" id="rightIframe" src="about:blank"></iframe>
+                        <div id="process_centerpanel" class="header-fixed header-tablet-and-mobile-fixed aside-fixed Center-Display">
+                            <div class="content d-flex flex-column flex-column-fluid ">
+
+                                <div class="row g-xl-8">
+
+
+                                    <div class="d-flex flex-column  flex-column-fluid vh-45 min-vh-45  Left-Center-Display">
+                                        <img class="bg-img" src="img/bg.svg">
+                                        <lord-icon class="top-bg" src="js/arrows.json" trigger="loop" stroke="40" scale="40" border-radius="0;" style="width:110px;height:110px;" colors="primary:#0760c7,secondary:#f6f6f7">
+                                        </lord-icon>
+                                        <h1>Click any task <span class="highlight">  on the left panel  </span> to work on pending tasks or to check the completed tasks.</h1>
+                                    </div>
+
+                                    <div class="d-flex flex-column flex-column-fluid vh-45 min-vh-45  Right-Center-Display">
+                                        <img class="bg-img1" src="img/bg2.svg">
+                                        <lord-icon class="bottom-bg" src="js/plus.json" trigger="loop" scale="40" border-radius="0" style="width:110px;height:110px;border-radius:0;" stroke="40" colors="primary:#0760c7,secondary:#f6f6f7">
+                                        </lord-icon>
+                                        <h1>Make a new task from the <span class="highlight">  'Make tasks' </span>dropdown at the top.</h1>
+                                    </div>
+
+
+                                </div>
+                                <div id="waitDiv" class="page-loader rounded-2 bg-radial-gradient">
+                                    <div class="loader-box-wrapper d-flex bg-white p-20 shadow rounded">
+                                        <span class="loader"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-2  col-md-2 d-flex flex-column flex-column-fluid vh-100 min-vh-100 d-none" id="PROFLOW_Right_Last">
+                    <div class="card card-xl-stretch shadow-sm flex-root h-1px">
+                        <!--<div id="plistContentProgress" class="content"></div>-->
+                        <div class="card card-xl-stretch shadow-sm flex-root h-1px">
+                            
+                            <div id="Timeline-Cards" class="page d-flex flex-row flex-column-fluid position-relative">
+                                <div class="wrapper d-flex flex-column flex-row-fluid w-100 h-100">
+                                    <div class="content fs-6 d-flex flex-column flex-column-fluid px-3 pt-3 pb-2 pb-2">
+                                        <div class="cardsPageWrapper d-none">
+                                            <ul class="cardsDesigner card list-group d-none mt-6"></ul>
+                                            <div class="cardsPlot mb-8">
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+
+        </div>
+    </div>
+    <div id="waitDiv" class="page-loader rounded-2 bg-radial-gradient">
+        <div class="loader-box-wrapper d-flex bg-white p-20 shadow rounded">
+            <span class="loader"></span>
+        </div>
+    </div>
+    <script type="text/javascript" src="../../UI/axpertUI/plugins.bundle.js"></script>
+    <script type="text/javascript" src="../../UI/axpertUI/scripts.bundle.js"></script>
+    <script type="text/javascript" src="../../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../../Js/alerts.min.js"></script>
+    <script type="text/javascript" src="../../js/handlebars.js"></script>
+
+    <script type="text/javascript" src="../../js/common.js"></script>
+
+    <script type="text/javascript" src="../../Js/xmlToJson.js"></script>
+    <script type="text/javascript" src="js/custom_common.js"></script>
+    <script src="js/animicon.js"></script>
+    <script type="text/javascript" src="js/AxProcessFlow.js?v=1"></script>
+    <script type="text/javascript" src="../../js/ActiveList_mainpage.js?v=1"></script>
+    <script type="text/javascript">
+        var _processName = 'AxProcessFlow';
+    </script>
+
+
+</body>
+</html>

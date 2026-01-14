@@ -1,0 +1,14 @@
+//* iview pageOptionColumns ==================================== *//
+@import 'iviewUI/_pageToolbarOptionTitle';
+//* page Option Coloumn ==================================== *//
+.columList {
+    border: 1px solid $applicationBorderColor;
+    padding: $toolbarOptionPadding;
+    box-shadow: 0 0 5px $applicationBorderColor;
+}
+#ivirshowHideColumnWrapper{
+    input{
+        margin-left: $toolbarOptionColumnsCheckBoxMargingLeft;
+    }
+}
+//* page Option Coloumn ==================================== *//

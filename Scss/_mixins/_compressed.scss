@@ -1,0 +1,38 @@
+//*compressed Tstruct*//
+@mixin compressedLabel{
+	//font-size: $appliactionCompressedLevelFontSize;
+	font-weight: $moduleLabelsOrHeadingsFontWeight; //normal;
+	margin-bottom: $appliactionCompressedLevelMarginBottom;
+}
+@mixin gridIocnBtn{
+	min-width: 0px;
+    min-height: 0px;
+	height: $appliactionCompressedBtnHeight;
+	padding: 0px $appliactionCompressedBtnPadding;
+}
+@mixin gridStackItem{
+	margin-bottom: $compressedFieldsGapMarginBottom;
+	padding-left: 0px;
+	padding-right: $compressedFieldsGapPaddingRight;
+}
+@mixin gridStackContant{
+	left: 0px;
+	right: $gridStackContantCompressedRightGap;
+}
+@mixin teethBtnCompressed{
+	top: $teethBtnCompressedTopGap;
+	right: $teethBtnCompressedRightGap;
+	font-size: $teethBtnCompressedFontSize;
+}
+@mixin editLayoutFooter{
+	margin-top: $editLayoutFooterCompressedMargintop;
+	//padding-left: 0px;
+}
+
+@mixin compressedFieldsGap{
+	margin-bottom: $compressedFieldsGapMarginBottom;
+	padding-left: 0;
+	padding-right: $compressedFieldsGapPaddingRight;
+}
+
+//*compressed Tstruct*//

@@ -1,0 +1,23 @@
+ //* applicationCenterAlign  ==================================== *//
+ @mixin centerAlign{
+    position: $applicationCenterAlignPosition;
+    left: $applicationCenterAlignLeft;
+    top: $applicationCenterAlignTop;
+    transform: translate(-#{$applicationCenterAlignLeft}, -#{$applicationCenterAlignTop});
+    height: auto;
+    width: auto;
+ }
+  //* applicationCenterAlign  ==================================== *//
+
+ //* verticalCenter  ==================================== *//
+  @mixin verticalCenter{
+   display: table-cell;
+   vertical-align: middle;
+  }
+//* verticalCenter  ==================================== *//
+
+//* verticalallginMiddle  ==================================== *//
+@mixin verticalallginMiddle{
+   vertical-align: middle;
+  }
+//* verticalallginMiddle  ==================================== *//

@@ -1,0 +1,174 @@
+//* page Title========*//
+#breadcrumb-panel {
+    background-color:$applicationBackgroundColor;
+    border-bottom: 1px solid $applicationBorderColor;
+    padding: $breadcrumbPanelPading;
+    .btextDir-rtl &{
+        padding: $breadcrumbPanelPadingRtl;
+            .isMobile &{
+                padding: $breadcrumbPanelPadingRtlMobile
+            }
+    }
+    #nextprevicons{
+        display: none;
+    }
+    .bcrumb{
+        height:$breadcrumbPanelHeight;
+            .isMobile &{
+                padding: $applicationTitlePaddingMobile;            
+            }
+            //@include textOverflow;
+        span:not(.ivirCButton):not(.icon-arrows-down) {
+            &.menuBreadCrumb{    
+                color:#797878;          
+                font-size: $menuBreadcrumbTitleFont;
+                padding-left: $menuBreadcrumbLeftPadding;
+                @include textOverflow;
+                width: calc(100vw - 125px);
+                    .isMobile &{
+                        padding: $breadCrumbPanelPaddingMobile;
+                        width: calc(100vw - 23px);
+                    }
+            }
+        }        
+        span:not(.ivirCButton):not(.icon-arrows-down) 
+        {           
+            &.tstivCaption{                
+                @include applicationTitle;
+                display: block;
+                //background:$applicationBackgroundColor;
+                margin: $breadCrumbCaptionMargin;
+                padding: $applicationTitleBcrumbPadding;
+                @include textOverflow;
+                //width: calc(100vw - 125px);
+                .isMobile &{
+                    @include calc(width, $applicationTitleBcrumbMobileWidthCalc);
+                    font-size: $applicationTitleFontSizeMobile;
+                    line-height: $applicationTitleLineHeightMobile;
+                    padding: $breadCrumbPanelPaddingMobile;
+                }
+            } 
+            &.tstivtitle{
+                padding: $applicationTitleNoBcrumbPadding;
+                    .isMobile &{
+                        font-size: $applicationTitleFont;
+                        padding: $applicationTitleNoBcrumbPaddingMobile;
+                    }
+                    .isMobile.compressedModeUI &{
+                        padding: $applicationTitleNoBcrumbCompressedModePaddingMobile;
+                    }
+                .btextDir-rtl &{
+                    padding: $applicationTitleNoBcrumbPaddingRtl;
+                }
+            }          
+        }
+        .btextDir-rtl &{
+            @include textRight;
+        }
+    }
+}
+
+.compressedModeUI {
+    #breadcrumb-panel {
+        .bcrumb {
+            span:not(.ivirCButton):not(.icon-arrows-down) {
+                &.menuBreadCrumb {
+                    .isMobile &{
+                        padding: $breadCrumbPanelCompressedModePaddingMobile;
+                    }
+                }
+            }
+
+            span:not(.ivirCButton):not(.icon-arrows-down) {
+                &.tstivCaption {
+                    .isMobile &{
+                        padding: $breadCrumbPanelCompressedModePaddingMobile;
+                    }
+                }
+
+                &.tstivtitle {
+                    .isMobile &{
+                        padding: $breadCrumbPanelTitleCompressedModePaddingMobile;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.btextDir-rtl{
+    #backforwrdbuttons{
+        @include pageFooterbackforwrdbuttons;
+        right: $pageFooterbackforwrdbuttonsRightGapRtl;
+    }
+    .navLeft{
+        border: 0px;
+    }
+
+    &.compressedModeUI {
+        #breadcrumb-panel {
+            .bcrumb {
+                span:not(.ivirCButton):not(.icon-arrows-down) {
+                    &.menuBreadCrumb {
+                        .isMobile &{
+                            padding: $breadCrumbPanelCompressedModePaddingMobileRtl;
+                        }
+                    }
+                }
+    
+                span:not(.ivirCButton):not(.icon-arrows-down) {
+                    &.tstivCaption {
+                        .isMobile &{
+                            padding: $breadCrumbPanelCompressedModePaddingMobileRtl;
+                        }
+                    }
+    
+                    &.tstivtitle {
+                        .isMobile &{
+                            padding: $breadCrumbPanelTitleCompressedModePaddingMobileRtl;
+                        }
+                    }
+                }
+    
+            }
+        }
+    }
+    
+}
+.btextDir-ltr{
+    #backforwrdbuttons{
+        @include pageFooterbackforwrdbuttons;
+    }
+}
+#backtohm{
+    display:none;
+    @include floatLeft;
+}
+//* login Title (main heading) ========*//
+.login{
+    .login-main{
+        .login-inner{
+            h2{
+                @include mainHeadingLogin;
+                #lblSignin,#spnCpwdHeading{
+                  @include mainHeadingSignIn;
+                }
+            }
+        }
+    }
+}
+#login-box{
+    h2{
+        @include mainHeadingLogin;
+    }
+}
+#info-box{
+    h2{
+        color: $applicationTextColor;
+        @include textCenter;
+        font-weight: $applicationTitleFontWeight;
+    }
+}
+//* login Title (main heading) ========*//
+
+//* page Title========*//

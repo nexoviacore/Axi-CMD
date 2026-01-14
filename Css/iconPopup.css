@@ -1,0 +1,99 @@
+#divModalIcons .arrow {
+  display: none;
+}
+
+#divModalIcons .modal-content .modal-body #iconWrapperData {
+  overflow-y: scroll;
+  height: 290px;
+}
+
+#divModalIcons .modal-content .modal-body #iconWrapperData span {
+  color: #999999;
+  padding: 5px;
+}
+
+#divModalIcons .modal-content .modal-body #iconWrapperData span.material-icons {
+  font-size: 28px;
+  cursor: pointer;
+}
+
+#divModalIcons .modal-content .modal-body #iconWrapperData span:hover {
+  color: #615f5f;
+}
+
+#divModalIcons .modal-content .modal-body #iconWrapperData .userIcons {
+  border-bottom: 1px solid #adadad;
+  padding-bottom: 2px;
+  margin-bottom: 8px;
+}
+
+#divModalIcons .modal-content .modal-body #iconWrapperData .userIcons span {
+  display: inline-block;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+#divModalIcons .modal-content .modal-body #iconWrapperData .userIcons span img {
+  width: 28px;
+  height: 28px;
+  padding: 3px;
+  vertical-align: top;
+  border-style: none;
+}
+
+#divModalIcons .modal-content .modal-body #iconWrapperData .userIcons span a {
+  position: relative;
+  top: -5px;
+  margin-left: -9px;
+  background: #bfbebe1a;
+  text-decoration: none;
+  padding: 3px 2px 0px 2px;
+  border-radius: 12px;
+}
+
+#divModalIcons .modal-content .modal-body #iconWrapperData .userIcons span:hover {
+  border: 1px solid #ccc;
+}
+
+#divModalIcons .modal-content .modal-body .divBrwsIcon #brwsIcon {
+  background: #b3b3b3;
+  padding: 0 10px;
+  display: inline-block;
+  height: 30px;
+  line-height: 30px;
+  color: white;
+  margin-top: 8px;
+}
+
+#divModalIcons .modal-content .modal-body .divBrwsIcon #brwsIcon:hover {
+  text-decoration: none;
+}
+
+#divModalIcons .modal-content .modal-body .divBrwsIcon span label {
+  margin-left: 10px;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  width: 135px;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+  top: 7px;
+}
+
+#divModalIcons .modal-content .modal-body #srchIcon {
+  font-size: 12px;
+  width: 100%;
+  height: 35px;
+  margin-bottom: 10px;
+  padding-left: 10px;
+  border-bottom: 1px solid #ccc;
+  border-top: 0px;
+  border-right: 0px;
+  border-left: 0px;
+}
+
+#divModalIcons .modal-content .modal-body #srchIcon:focus {
+  border-bottom: 1px solid #000;
+  box-shadow: none;
+  outline: none;
+}

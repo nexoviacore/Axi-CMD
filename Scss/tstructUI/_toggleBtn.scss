@@ -1,0 +1,42 @@
+//*toggle btn--------*//
+.switch{
+    display: $toggleBtnSwitchDisplay;
+    width: $switchWidth;
+    //height: $switchHeight;
+    height: auto;
+    @include floatRight;
+    .tgl-btn{
+        right: $toggleBtnRight;
+    }
+    a{
+        input{
+            display: none;
+        }
+    }
+}
+.tgl-btn{
+    @include tglBtn;
+    // &.gridStretch{
+    //     @include gridStretch;
+    // }
+    &:after{
+        border-radius: $applicationCircleBorderRadius;
+        @include shadow;
+        @include toggleBtn;
+        @include toggleBtnBackground;
+        @include toggleBtnEffect;
+    }
+    
+}
+.tgl+.tgl-btn:after {
+    left: 0;
+}
+.tgl-ios:checked+.tgl-btn {
+    background: $applicationColor;
+    
+}
+.tgl:checked+.tgl-btn:after {
+    left: $toggleBtnLeft;
+}
+
+//*toggle Btn ---------*//

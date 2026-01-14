@@ -1,0 +1,17 @@
+//*===================Iview Hightlight ========*//
+#ivirbgColorValue,#ivirtxtColorValue{
+  width: $optionHighlightColorInputWidth;
+}
+.sp-replacer {
+  height: $optionHighlightColorInputHeight;
+  padding: $optionHighlightColorInputPadding;
+}
+#ivirHighlightWrapper{
+  legend{
+    font-size: $applicationFontSize;
+  }
+}
+.sp-container {
+  z-index: $pageOptionHighlightSpcontainerZindex;
+}
+//*===================Iview Hightlight ========*//

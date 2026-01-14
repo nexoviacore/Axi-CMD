@@ -1,0 +1,240 @@
+.navbar {
+    @include navbarStyleMainPage;
+    margin-bottom: $applicationMainPageNavbarMarginBottom;
+}
+
+.ls-closed {
+    @include applicationHomePageToggleIsClosed;
+    &.compressedModeUI {
+        .bars{
+            &:after,
+            &:before {
+                top:$applicationCompressedToggleBarTopGap;
+            }
+        }
+    }
+}
+
+.overlay-open {
+    .bars {
+        &:before {
+            @include transform(scale(0));
+        }
+
+        &:after {
+            @include transform(scale(1));
+        }
+    }
+}
+.navbar-left-panel{
+    @include floatLeft;
+    .navbar-header {
+        padding: $applicationMainPage-navbar-header-padding;
+        body:not(.enableExpandCollapse) &{
+            width: $applicationMainPageNavbarLeftPanelEnableExpandCollapseWidth;
+        }
+        .compressedModeUI &{
+            padding: $applicationCompressedNavbarPadding;
+        }
+        .bars {
+            @include floatLeft;
+            text-decoration: none;
+            color: $moduleIconColor;
+        }
+        .navbar-brand{
+            body:not(.enableExpandCollapse) & {
+                width: $applicationMainPageNavbarBrandLeftPanelEnableExpandCollapseWidth;
+                position: $applicationMainPageNavbarBrandLeftPanelEnableExpandCollapsePosition;
+                top: $applicationMainPageNavbarBrandLeftPanelEnableExpandCollapseTopGap;
+                @include three-dots-overflow();
+                display: $applicationMainPageNavbarBrandLeftPanelEnableExpandCollapseDisplay;
+            }
+            body.overlay-open &{
+                color: #fff;
+            }
+            body:not(.overlay-open)  &{
+                color: $moduleTextOrValueColor;
+            }
+           
+        }
+    }
+    body:not(.enableExpandCollapse) &{
+       @include floatNone;
+       @include three-dots-overflow();
+       padding: $applicationMainPageNavbarLeftPanelPadding;
+    }
+}
+
+.navbar-right-panel{
+    .enableExpandCollapse &{
+        @include calc(width, $applicationNavbarRightPanelEnableExpandCollapseWidthCalc);
+        position: $applicationNavbarRightPanelEnableExpandCollapsePosition;
+        right: $applicationNavbarRightPanelEnableExpandCollapseRight;
+        padding: $applicationNavbarRightPanelEnableExpandCollapsePadding;
+    }
+    .enableExpandCollapse.compressedModeUI &{
+        padding: $applicationNavbarRightPanelEnableExpandCollapseCompressedUIPadding;
+    }
+    #navbar-collapse{
+        .navbar-nav > {
+            li > {
+                a {
+                    padding: $applicationNavbarRightPanelNavbarCollapseListAchorPadding;
+                    height: $applicationNavbarRightPanelNavbarCollapseListAchorHeight;
+                    width: $applicationNavbarRightPanelNavbarCollapseListAchorWidth;
+                    color: $moduleIconColor;
+                    @include border-radius(50%);
+                    &:focus{
+                        background: none;
+                    }
+                    .compressedModeUI &{
+                        padding: $applicationCompressedMainPageNavbarCollapseNavbarNavPadding;
+                    }
+                }
+            }
+        }
+    }
+    body:not(.enableExpandCollapse) &{
+        @include floatRight;
+        //margin-top: $applicationMainPageNavbarNotEnableExpandCollapseMarginTop;
+    }
+    body:not(.enableExpandCollapse).compressedModeUI &{
+      //  margin-top: $applicationMainPageNavbarNotEnableExpandCollapseComprssedMarginTop;
+    }
+}
+
+
+.navbar-nav {
+    position: $applicationNavbarNavPosition;
+    height: $applicationNavbarNavHeight;
+   // top: $applicationNavbarNavTop;
+   body:not(.enableExpandCollapse) &{
+       margin: $applicationNavbarNavMobileMargin;
+   }
+    .compressedModeUI &{
+        //top: $applicationNavbarNavCopressedTop;
+    }
+    > li {
+        &#userProfile{
+            position: $applicationNavbarNavUserProfilePosition;
+            ul{
+                width: $applicationNavbarNavUserProfileUlWidth;
+                @include shadow;
+                li{
+                    border-bottom: 1px solid $applicationNavbarNavUserProfileListBorderColor;
+                  a{
+                      @include textCenter;
+                      span{
+                          &#userNameIcon{
+                            background: $applicationNavbarNavUserNameIconBackground;
+                            padding-top: $applicationNavbarNavUserNameIconPadding;
+                            @include border-radius($applicationNavbarNavUserNameIconBorderRadius);
+                            display: $applicationNavbarNavUserNameIconDisplay;
+                            height: $applicationNavbarNavUserNameIconWidth;
+                            width: $applicationNavbarNavUserNameIconHeight;
+                            font-size: $applicationNavbarNavUserNameIconFontSize;
+                          }
+                          &#userNameInfo{
+                            margin-top: $applicationNavbarNavUserNameInfoMarginTop;
+                            display: $applicationNavbarNavUserNameInfoDisplay;
+                            margin-bottom: $applicationNavbarNavUserNameInfoMarginBottom;
+                            span{
+                                color:$moduleTextOrValueColor;
+                            }
+                            #AxUserEmail{
+                                word-break: $applicationNavbarNavUserNameInfoAxUserEmailWordBreak;
+                                white-space: $applicationNavbarNavUserNameInfoAxUserEmailWhiteSpace;
+                                span{
+                                    color: $moduleTextOrValueColor;
+                                }
+                            }
+                          }
+                      }
+                  }
+                  #AxGlo{
+                    padding: $applicationNavbarNavUserProfileAxGloPadding;
+                      span{
+                        display: $applicationNavbarNavUserProfileAxGloSpanDisplay;
+                        padding: $applicationNavbarNavUserProfileAxGloSpanPadding;
+                        table{
+                            tbody{
+                                tr{
+                                    td{
+                                        color: $moduleTextOrValueColor;
+                                       b{
+                                        font-weight: $applicationNavbarNavUserProfileAxGloSpanTableTdFontWeight;
+                                       }
+                                    }
+                                }
+                            }
+                        }
+                      }
+                      a{
+                          color: $moduleIconColor;
+                        //display: $applicationNavbarNavUserProfileListAnchorDisplay;
+                          vertical-align: $applicationNavbarNavUserProfileListAnchorVerticalAlign;
+                      }
+                  }
+                  &#Logout{
+                      border:none;
+                      @include textCenter;
+                      a{
+                        display: $applicationNavbarNavUserProfileLogoutAnchorDisplay;
+                        border: 1px solid $applicationNavbarNavUserProfileLogoutAnchorBorderColor;
+                        margin-top: $applicationNavbarNavUserProfileLogoutAnchorMarginTop;
+                        @include border-radius($applicationNavbarNavUserProfileLogoutAnchorBorderRadius);
+                        span{
+                            color:$moduleTextOrValueColor;
+                        }
+                        &:hover{
+                            background: $applicationNavbarNavUserProfileLogoutAnchorBackgroundHoverColor;
+                        }
+                      }
+                  }
+                }
+            }
+        }
+        > a {
+            padding: $applicationMainPage-navbar-nav-li-a-padding;
+           // margin-top: $applicationMainPage-navbar-nav-li-a-margin-top;
+            @include textCenter;
+            .enableExpandCollapse.compressedModeUI &{
+                margin-top: $applicationCompressedMainPageNavbarNavMarginTop;
+                padding: $applicationCompressedMainPageNavbarNavPadding;
+            }
+            .enableExpandCollapse &{
+                margin-top: $applicationMainPageNavbarNavMarginTop;
+            }
+            body:not(.enableExpandCollapse) &{
+                margin-top: $applicationMainPageNavbarNavMarginTopMobile;
+            }
+            body:not(.enableExpandCollapse).compressedModeUI &{
+                margin-top: $applicationMainPageCompressedNavbarNavMarginTopMobile;
+            }
+            &.js-search{
+                .enableExpandCollapse &{
+                    display: none;
+                }
+            }
+        }
+    }
+
+    .dropdown-menu {
+        margin-top: $applicationNavbarNavDropdownMarginTop !important;
+    }
+}
+
+.label-count {
+    @include applicationLabelCount;
+    background-color: $applicationTextColor;
+    @include border-radius(3px);
+}
+
+@each $key, $val in $colors {
+    .col-#{$key} {
+        .navbar {
+            @include navbar-link-color($applicationMainPageToggleColor, $applicationTextColor, .95);
+            // @include navbar-link-color(rgba(0,0,0,0.85), #000, .95);
+        }
+    }
+}

@@ -1,0 +1,13 @@
+@mixin dropdownPin {
+    color: $applicationIconColor;
+    position: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_position;
+    background: $applicationBackgroundColor;
+    top: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_top;
+    right: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_right;
+    @include border-radius($toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_border-radius);
+    box-shadow: 1px 1px 7px 1px $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_box-shadow-color;
+    height: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_height;
+    width: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_width;
+    font-size: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_font_size;
+    z-index: 1;
+}

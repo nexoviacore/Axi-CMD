@@ -1,0 +1,897 @@
+.cardsPageWrapper{
+    .designer{
+        button{
+            &.editSaveCardDesign{
+                background: $applicationBackgroundColor;
+                position: $applicationPositionRelative;                
+                @include calc(left, "100% - 40px");
+                z-index: 1;
+            }
+        }
+        ul{
+            &.cardsDesigner{
+                list-style-type:none;
+                padding: 15px;
+                margin: 0px 15px 15px 15px;
+                li{
+                    cursor: pointer;
+                    background: $applicationBackgroundColor;
+                    color: lighten($applicationTextColor, 20);
+                    padding: 5px;
+                    .dragIcon{
+                        // font-size: 14px;
+                        margin: 5px;
+                    }
+                    .dragName{
+                        position: $applicationPositionRelative;
+                        top: -7px;
+                        // font-size: 12px;
+                        font-weight: 400;
+                    }
+                    .showHideChkBox{
+                        &+label{
+                            height: 17px;
+                            padding-left: 25px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    .card {
+        box-shadow: rgba(50, 50, 93, 0.03%) 0px 2px 5px -1px, rgba(0, 0, 0, 0.05%) 0px 1px 3px -1px;
+        @include border-radius(6px);
+        // position: $applicationPositionRelative;
+        // margin-bottom: 30px;
+        transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+        // background-color: $applicationBackgroundColor;
+        &:hover{
+            // transform: scale(1.05);            
+            @include box-shadow(0px 5px 15px rgba(10, 20, 30, 0.2));
+            transform: translateY(-8px);
+            z-index: 1;
+        }
+        .header{
+            padding: 16px 16px 0px;
+            border-bottom: none;
+            color: lighten($applicationTextColor, 12.94);
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            span{
+                &.mainHeading{
+                    font-weight: 500;
+                    font-size: 16px;
+                    // color: $applicationTextColor;
+                    width: 100%;
+                    display: inline-block;
+                    @include three-dots-overflow();
+                }
+            }
+            .mainIcon{
+                color: #4782da;
+                // font-size: 20px;
+                +span{
+                    &.mainHeading{
+                        // display: inline-block;
+                        position: $applicationPositionRelative;
+                        top: 0px;
+                        padding-top: 5px;
+                        padding-left: 5px;
+                    }
+                }
+                &.iconAdded{
+                    +span{
+                        &.mainHeading{
+                            @include calc(width, "100% - 30px");
+                        }
+                    }
+                }
+            }
+        }
+        .body{
+            padding: 16px;
+            color: lighten($applicationTextColor, 12.94);
+            // border-bottom-left-radius: 6px;
+            // border-bottom-right-radius: 6px;
+            .fc-button{
+                &.fc-button-primary{
+                    @include materialIcons;
+                    font-size: 20px;
+                }
+                &:focus{
+                    @include box-shadow(none);
+                }
+            }
+        }
+    }
+    .widgetWrapper{
+        &.kpiWrapper{
+            .top-div{
+                .text {
+                    &.header{
+                        padding: 16px 16px 0px;
+                        border-bottom: none;
+                        width: auto;
+                        border-top-left-radius: 6px;
+                        border-top-right-radius: 6px;
+                        // @include three-dots-overflow();
+                        white-space: nowrap;
+                        // -ms-text-overflow: ellipsis;
+                        // -o-text-overflow: ellipsis;
+                        // text-overflow: ellipsis;
+                        overflow: hidden;
+                        // span{
+                        //     // &.mainHeading{
+                                
+                        //     // }
+                        // }
+                        // .mainIcon{
+                        //     +span{
+                        //         &.mainHeading{
+                        //             display: inline-block;
+                        //         }
+                        //     }
+                        // }
+                    }
+                }
+                .status{
+                    max-width: 30%;
+                    @include floatRight;
+                    // margin-top: 19px;
+                    // margin-right: 10px;
+                    padding-top: 22px;
+                    padding-right: 10px;
+                    div{
+                        @include three-dots-overflow();
+                        width: 100%;
+                        font-size: 12px;
+                        background-color: #4782da;
+                        color: $applicationBackgroundColor;
+                        display: inline-block;
+                        padding: 2px 10px;
+                        @include border-radius(6px);
+                    }
+                }
+            }
+            .content{
+                min-height: 145px;
+                @include border-radius(6px);
+                .body{
+                    border-bottom-left-radius: 6px;
+                    border-bottom-right-radius: 6px;
+                    .body-content{
+                        div{
+                            margin-bottom: 12px;
+                            font-size: 24px;
+                            @include three-dots-overflow();
+                        }
+                    }
+                    .footer{
+                        div{
+                            font-size: 13px;
+                            font-weight: 500;
+                            color: darken($applicationBackgroundColor, 46.5);
+                            padding: 2px;
+                        }
+                    }
+                    // .info-1-content{
+                    //     div{
+                    //         font-size: 12px;
+                    //         background-color: #4782da;
+                    //         color: $applicationBackgroundColor;
+                    //         display: inline-block;
+                    //         padding: 2px 10px;
+                    //         @include border-radius(6px);
+                    //     }
+                    // }
+
+                    // .info-2-content{
+                    //     div{
+                    //         font-size: 13px;
+                    //         font-weight: 500;
+                    //         color: darken($applicationBackgroundColor, 46.5);
+                    //         padding: 2px;
+                    //     }
+                    // }
+                }
+            }
+        }
+        &.chartWrapper{
+            .highcharts-button.highcharts-contextbutton, .highcharts-button.highcharts-contextbutton *
+            {
+                display: none;
+            }
+            // .highcharts-container, .highcharts-container svg {
+            //     width: 100%;
+            // }
+        }
+        &.listWrapper{
+            .header {
+                border-top-left-radius: 6px;
+                border-top-right-radius: 6px;
+            }
+            .body {
+                border-bottom-left-radius: 6px;
+                border-bottom-right-radius: 6px;
+            }
+            table{
+                &.table{
+                    scrollbar-width: thin;
+                    scrollbar-color: darken($applicationBackgroundColor, 13.5%) $applicationBackgroundColor;
+                    @include scrollBar;
+                     tbody{
+                        tr{
+                            td{
+                                .list-img-icon {
+                                    width: 18px;
+                                    height: 18px;
+                                    border-style: none;
+                                }
+                            }
+                        }
+                    }
+                    &::-webkit-scrollbar-track {
+                        @include border-radius(4px);                      
+                    }
+                }
+            }
+        }
+        &.menuWrapper{
+            .content{
+                min-height: 145px;
+                @include border-radius(6px);
+                .body{
+                    border-bottom-left-radius: 6px;
+                    border-bottom-right-radius: 6px;
+                    .body-content{
+                        div.description{
+                            margin-bottom: 12px;
+                            font-size: 13px;
+                            @include three-dots-overflow();
+                        }
+                        div{
+                            ul{
+                                li{
+                                    a{
+                                        .menuIcon{
+                                            width: 24px;
+                                            height: 24px;
+                                            margin-right: 3px;
+                                            margin-top: 3px;
+                                            vertical-align: top;
+                                            border-style: none;
+                                        }
+                                        .menuIconFont{
+                                            vertical-align: top;
+                                            margin-right: 3px;
+                                            color: #4782da;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        &.modernMenuWrapper{
+            .card{
+                @include border-radius(6px);
+                cursor: pointer;
+                .header{
+                    border-top-left-radius: 6px;
+                    border-top-right-radius: 6px;
+                    .menuIconFont{
+                        @include textCenter;
+                        display: block;
+                        padding: 15px;
+                        font-size: 36px;
+                        color: #1170bf;
+                    }
+                    .modernMenuName{
+                        @include textCenter;
+                        display: block;
+                        padding-bottom: 30px;
+                        font-size: 20px;
+                        font-weight: 500;
+                        .modernMenuNameText{
+                            @include three-dots-overflow();                            
+                        }
+                    }
+                    img{
+                        width: 36px;
+                        height: 36px;
+                        display: block;
+                        @include textCenter;
+                        margin: 15px auto;
+                    }
+                }
+            }
+        }
+        &.imageWrapper{
+            .info-box-4{
+                .content{
+                    height: 305px;
+                    @include border-radius(6px);
+                }     
+            }
+            .content{
+                @include border-radius(6px);
+                height: 100%;
+                padding: 25px;
+                overflow: hidden;
+                position: $applicationPositionRelative;
+                @include textLeft;
+                &:before {
+                    background: rgba(0,0,0,0.4);
+                    bottom: 0;
+                    content: "";
+                    left: 0;
+                    position: $applicationPositionAbsolute;
+                    right: 0;
+                    top: 0;
+                    z-index: 1;
+                }
+                .top-div{
+                    .image_bg {
+                        bottom: 0;
+                        left: 0;
+                        position: $applicationPositionAbsolute;
+                        right: 0;
+                        top: 0;
+                        img{
+                            height: 100%;
+                            object-fit: cover;
+                            width: 100%;
+                        }
+                    }
+                    .header{
+                        border-top-left-radius: 6px;
+                        border-top-right-radius: 6px;
+                        .mainIcon{
+                            color: $applicationBackgroundColor;
+                            font-size: 50px;
+                            position: $applicationPositionRelative;
+                            z-index: 3;
+                            top: -3px;
+                            &.iconAdded{
+                                +span{
+                                    &.mainHeading{
+                                        @include calc(width, "100% - 54px");
+                                    }
+                                }
+                            }
+                        }
+                        .mainHeading {
+                            color: $applicationBackgroundColor;
+                            font-size: 45px;
+                            font-weight: 700;
+                            line-height: 54px;
+                            position: $applicationPositionRelative;
+                            z-index: 3;
+                            padding: 5px;
+                        }
+                    }
+            }
+            .body{
+                border-bottom-left-radius: 6px;
+                border-bottom-right-radius: 6px;
+                .body-content {
+                    color: $applicationBackgroundColor;
+                    margin-top: 20px;
+                    position: $applicationPositionRelative;
+                    z-index: 3;
+                    font-size: 18px;
+                    min-height: 85px;
+                    a{
+                        color: $applicationBackgroundColor;
+                    }
+                    > div{
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        display: -webkit-box;
+                        -webkit-line-clamp: 3;
+                        -webkit-box-orient: vertical;
+                    }
+                }
+                .footer {
+                    margin-top: 25px;
+                    position: $applicationPositionRelative;
+                    z-index: 3;
+                    font-size: 18px;
+                    color: #fdb515;
+                    a {
+                        color: #fdb515;
+                    }
+                }
+            }
+            }
+        }
+        &.htmlDomWrapper{           
+            .body {
+                height: 305px;
+                @include border-radius(6px);
+                .body-content{
+                    height: 273px;
+                    overflow: auto;
+                    @include scrollBar;
+                }                
+            }            
+        }
+    }
+    .widgetWrapper {
+        .cardbg_red{
+            .content, &.fc-event{
+                background: #D50000;
+                color: $applicationBackgroundColor;
+                .fc-daygrid-event-dot{
+                    border-color: $applicationBackgroundColor;
+                }
+                .mainHeading,.mainIcon, .fc-event-main {
+                    color: $applicationBackgroundColor;
+                }
+                .body-content{
+                    color: $applicationBackgroundColor;
+                    a{
+                        color: $applicationBackgroundColor;
+                    }
+                    .dropdown-menu li a{
+                        color: $applicationTextColor;
+                    }
+                    .btn-group{
+                        .btn-primary{
+                            background-color: $applicationBackgroundColor !important;
+                            color: $applicationTextColor;
+                        }
+                    }
+                }
+                .status{
+                    div{
+                        background: $applicationBackgroundColor;
+                        color: $applicationTextColor;
+                    }
+                }
+            }
+            .header{
+                background: #D50000;
+                // border-top-left-radius: 6px;
+                // border-top-right-radius: 6px;
+                .mainHeading,.mainIcon {
+                    color: $applicationBackgroundColor;
+                }
+            }
+            .body{
+                background: #D50000;
+                // border-bottom-left-radius: 6px;
+                // border-bottom-right-radius: 6px;
+                bodycontent{
+                    color: $applicationBackgroundColor;
+                }
+                .table{
+                    thead{
+                        tr{
+                            th{
+                                background: #D50000;
+                                color: $applicationBackgroundColor;
+                                border-bottom: 1px solid darken(#D50000, 10%);
+                            }
+                        }
+                    }
+                    tbody{
+                        tr{
+                            td{
+                                background: #D50000;
+                                color: $applicationBackgroundColor;
+                                border-top: 1px solid darken(#D50000, 10%);
+                                a{
+                                    color: $applicationBackgroundColor;
+                                }
+                            }
+                        }
+                    }
+                    &.dataTable{
+                        &.no-footer{
+                            border-bottom:1px solid darken(#D50000, 10%);
+                        }
+                    }
+                    &::-webkit-scrollbar-track {
+                        background: darken(#D50000, 10%);
+                        // @include border-radius(4px);                      
+                    }
+                    &::-webkit-scrollbar-thumb {
+                        background-color: $applicationBackgroundColor;
+                        border: 1px solid #D50000;
+                    }
+                }
+                .footer{
+                    div{
+                        color:$applicationBackgroundColor;
+                    }
+                }
+            }
+        }
+        .cardbg_pink{
+            .content, &.fc-event{
+                background: #C51162;
+                color: $applicationBackgroundColor;
+                // @include border-radius(6px);
+                .fc-daygrid-event-dot{
+                    border-color: $applicationBackgroundColor;
+                }
+                .mainHeading,.mainIcon, .fc-event-main {
+                    color: $applicationBackgroundColor;
+                }
+                .body-content{
+                    color: $applicationBackgroundColor;
+                    a{
+                        color: $applicationBackgroundColor;
+                    }
+                    .dropdown-menu li a{
+                        color: $applicationTextColor;
+                    }
+                    .btn-group{
+                        .btn-primary{
+                            background-color: $applicationBackgroundColor !important;
+                            color: $applicationTextColor;
+                        }
+                    }
+                }
+                .status{
+                    div{
+                        background: $applicationBackgroundColor;
+                        color: $applicationTextColor;
+                    }
+                }
+            }
+            .header{
+                background: #C51162;
+                // border-top-left-radius: 6px;
+                // border-top-right-radius: 6px;
+                .mainHeading,.mainIcon {
+                    color: $applicationBackgroundColor;
+                }
+            }
+            .body{
+                background: #C51162;
+                // border-bottom-left-radius: 6px;
+                // border-bottom-right-radius: 6px;            
+                bodycontent{
+                    color: $applicationBackgroundColor;
+                }
+                .table{
+                    thead{
+                        tr{
+                            th{
+                                background: #C51162;
+                                color: $applicationBackgroundColor;
+                                border-bottom: 1px solid darken(#C51162, 10%);
+                            }
+                        }
+                    }
+                    tbody{
+                        tr{
+                            td{
+                                background: #C51162;
+                                color: $applicationBackgroundColor;
+                                border-top: 1px solid darken(#C51162, 10%);
+                                a{
+                                    color: $applicationBackgroundColor;
+                                }
+                            }
+                        }
+                    }
+                    &.dataTable{
+                        &.no-footer{
+                            border-bottom:1px solid darken(#C51162, 10%);
+                        }
+                    }
+                    &::-webkit-scrollbar-track {
+                        background: darken(#C51162, 10%);
+                        // @include border-radius(4px);                      
+                    }
+                    &::-webkit-scrollbar-thumb {
+                        background-color: $applicationBackgroundColor;
+                        border: 1px solid #C51162;
+                    }
+                }
+                .footer {
+                    div {
+                        color:$applicationBackgroundColor;
+                    }
+                }
+            }
+        }
+        .cardbg_purple{
+            .content, &.fc-event{
+                background: #AA00FF;
+                color: $applicationBackgroundColor;
+                // @include border-radius(6px);
+                .fc-daygrid-event-dot{
+                    border-color: $applicationBackgroundColor;
+                }
+                .mainHeading,.mainIcon, .fc-event-main {
+                    color: $applicationBackgroundColor;
+                }
+                .body-content{
+                    color: $applicationBackgroundColor;
+                    a{
+                        color: $applicationBackgroundColor;
+                    }
+                    .dropdown-menu li a{
+                        color: $applicationTextColor;
+                    }
+                    .btn-group{
+                        .btn-primary{
+                            background-color: $applicationBackgroundColor !important;
+                            color: $applicationTextColor;
+                        }
+                    }
+                }
+                .status{
+                    div{
+                        background: $applicationBackgroundColor;
+                        color: $applicationTextColor;
+                    }
+                }
+            }
+            .header{
+                background: #AA00FF;
+                // border-top-left-radius: 6px;
+                // border-top-right-radius: 6px;
+                .mainHeading,.mainIcon {
+                    color: $applicationBackgroundColor;
+                }
+            }
+            .body{
+                background: #AA00FF;
+                // border-bottom-left-radius: 6px;
+                // border-bottom-right-radius: 6px;
+                bodycontent{
+                    color: $applicationBackgroundColor;
+                }
+                .table{
+                    thead{
+                        tr{
+                            th{
+                                background: #AA00FF;
+                                color: $applicationBackgroundColor;
+                                border-bottom: 1px solid darken(#AA00FF, 10%);
+                            }
+                        }
+                    }
+                    tbody{
+                        tr{
+                            td{
+                                background: #AA00FF;
+                                color: $applicationBackgroundColor;
+                                border-top: 1px solid darken(#AA00FF, 10%);
+                                a{
+                                    color: $applicationBackgroundColor;
+                                }
+                            }
+                        }
+                    }
+                    &.dataTable{
+                        &.no-footer{
+                            border-bottom:1px solid darken(#AA00FF, 10%);
+                        }
+                    }
+                    &::-webkit-scrollbar-track {
+                        background: darken(#AA00FF, 10%);
+                        // @include border-radius(4px);                      
+                    }
+                    &::-webkit-scrollbar-thumb {
+                        background-color: $applicationBackgroundColor;
+                        border: 1px solid #AA00FF;
+                    }
+                }
+                .footer {
+                    div {
+                        color:$applicationBackgroundColor;
+                    }
+                }
+            }
+        }
+        .cardbg_blue{
+            .content, &.fc-event{
+                background: #2962FF;
+                color: $applicationBackgroundColor;
+                // @include border-radius(6px);
+                .fc-daygrid-event-dot{
+                    border-color: $applicationBackgroundColor;
+                }
+                .mainHeading,.mainIcon, .fc-event-main {
+                    color: $applicationBackgroundColor;
+                }
+                .body-content{
+                    color: $applicationBackgroundColor;
+                    a{
+                        color: $applicationBackgroundColor;
+                    }
+                    .dropdown-menu li a{
+                        color: $applicationTextColor;
+                    }
+                    .dropdown-menu li a{
+                        color: $applicationTextColor;
+                    }
+                    .btn-group{
+                        .btn-primary{
+                            background-color: $applicationBackgroundColor !important;
+                            color: $applicationTextColor;
+                        }
+                    }
+                }
+                .status{
+                    div{
+                        background: $applicationBackgroundColor;
+                        color: $applicationTextColor;
+                    }
+                }
+            }
+            .header{
+                background: #2962FF;
+                // border-top-left-radius: 6px;
+                // border-top-right-radius: 6px;
+                .mainHeading,.mainIcon {
+                    color: $applicationBackgroundColor;
+                }
+            }
+            .body{
+                background: #2962FF;
+                // border-bottom-left-radius: 6px;
+                // border-bottom-right-radius: 6px;
+                bodycontent{
+                    color: $applicationBackgroundColor;
+                }
+                .table{
+                    thead{
+                        tr{
+                            th{
+                                background: #2962FF;
+                                color: $applicationBackgroundColor;
+                                border-bottom: 1px solid darken(#2962FF, 10%);
+                            }
+                        }
+                    }
+                    tbody{
+                        tr{
+                            td{
+                                background: #2962FF;
+                                color: $applicationBackgroundColor;
+                                border-top: 1px solid darken(#2962FF, 10%);
+                                a{
+                                    color: $applicationBackgroundColor;
+                                }
+                            }
+                        }
+                    }
+                    &.dataTable{
+                        &.no-footer{
+                            border-bottom:1px solid darken(#2962FF, 10%);                           
+                        }
+                    }
+                    &::-webkit-scrollbar-track {
+                        background: darken(#2962FF, 10%);
+                        // @include border-radius(4px);                      
+                    }
+                    &::-webkit-scrollbar-thumb {
+                        background-color: $applicationBackgroundColor;
+                        border: 1px solid #2962FF;
+                    }
+                }
+                .footer {
+                    div {
+                        color:$applicationBackgroundColor;
+                    }
+                }
+            }
+        }
+        .cardbg_cyan{
+            .content, &.fc-event{
+                background: #00B8D4;
+                color: $applicationTextColor;
+                // @include border-radius(6px);                
+                .fc-daygrid-event-dot{
+                    border-color: $applicationBackgroundColor;
+                }
+                .mainHeading,.mainIcon, .fc-event-main {
+                    color: $applicationTextColor;
+                }
+                .body-content{
+                    color: $applicationTextColor;
+                    a{
+                        color: $applicationTextColor;
+                    }
+                    .dropdown-menu li a{
+                        color: $applicationTextColor;
+                    }
+                    .btn-group{
+                        .btn-primary{
+                            background-color: $applicationBackgroundColor !important;
+                            color: $applicationTextColor;
+                        }
+                    }
+                }
+                .status{
+                    div{
+                        background: $applicationBackgroundColor;
+                        color: $applicationTextColor;
+                    }
+                }
+            }
+            .header{
+                background: #00B8D4;
+                // border-top-left-radius: 6px;
+                // border-top-right-radius: 6px;
+                .mainHeading,.mainIcon {
+                    color: $applicationTextColor;
+                }
+            }
+            .body{
+                background: #00B8D4;
+                // border-bottom-left-radius: 6px;
+                // border-bottom-right-radius: 6px;
+                bodycontent{
+                    color: $applicationTextColor;
+                }
+                .table{
+                    thead{
+                        tr{
+                            th{
+                                background: #00B8D4;
+                                color: $applicationTextColor;
+                                border-bottom: 1px solid darken(#00B8D4, 10%);
+                            }
+                        }
+                    }
+                    tbody{
+                        tr{
+                            td{
+                                background: #00B8D4;
+                                color: $applicationTextColor;
+                                border-top: 1px solid darken(#00B8D4, 10%);
+                                a{
+                                    color: $applicationTextColor;
+                                }
+                            }
+                        }
+                    }
+                    &.dataTable{
+                        &.no-footer{
+                            border-bottom:1px solid darken(#00B8D4, 10%);
+                        }
+                    }
+                    &::-webkit-scrollbar-track {
+                        background: darken(#00B8D4, 10%);
+                        // @include border-radius(4px);                      
+                    }
+                    &::-webkit-scrollbar-thumb {
+                        background-color: $applicationTextColor;
+                        border: 1px solid #00B8D4;
+                    }
+                }
+                .footer {
+                    div {
+                        color:$applicationTextColor;
+                    }
+                }
+            }
+        }
+    }
+    @include scrollBar;
+}
+
+.popover{
+    &.in{
+        .popover-content{
+            .material-icons{
+                &.calendarPopoverSpan{
+                    position: $applicationPositionRelative;
+                    top: 4px;
+                    right: 3px;
+                    font-size: 20px;
+                }
+            }
+        }
+    }
+}

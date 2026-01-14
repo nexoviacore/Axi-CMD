@@ -1,0 +1,21 @@
+/*-------attachment data---------*/
+#attachment-overlay{
+    .attachmentData{
+        border: 1px dotted $applicationImageFieldBorder;
+        padding: $appliactionAttachmentDataPadding;
+        .attachments{
+            border: 1px solid $applicationBorderColor;
+            display: inline-block;
+            width: 100%;
+            a{
+                color: $applicationTextColor;
+                &:hover{
+                    outline: none;
+                    text-decoration: none;
+                }
+            }
+        }
+    }
+}
+
+/*-------attachment data---------*/

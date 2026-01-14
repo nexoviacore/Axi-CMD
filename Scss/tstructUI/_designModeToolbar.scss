@@ -1,0 +1,58 @@
+/* Design Mode Toolbar==================================== */
+/* Design Mode Toolbar Design Property==================================== */
+@import 'tstructUI/_designModeToolbarTstructDesignProperty';
+#designModeToolbar{
+    #dvToolbar{
+        @include textLeft;
+        ul{
+            padding: 0px;
+            margin: $designModeToolbarListMargin;
+            li:not(#designStatus){
+                @include listStyleNone;
+                display: inline-block;
+                a{
+                    @include designModeListStyle;
+                    @include shadow;
+                    i{
+                        font-size: $designModeToolbarFontSize;
+                        color: $applicationTextColor;
+                        &:focus{
+                            text-decoration: none;
+                            outline: none;
+                        }
+                    }
+                    &:focus,&:hover{
+                        text-decoration: none;
+                        outline: none;
+                    }
+                    &:hover{
+                        border:1px solid $designModeToolbarHovercolor;
+                    }
+                }
+            }
+            li{
+                &#designStatus{
+                    @include floatRight;
+                    @include listStyleNone;
+                    margin:5px;
+                    a{
+                        @include designStatus;
+                        &.widgetStatus-published{
+                            // @each $at, $atbgc, $atbc in $alertTypeColors{
+                            //     background: $atbgc;
+                            // }
+                            background: $designModePublishedBackgroundColor;
+                        }
+                    }
+                    i{
+                        @include designStatusIcon;
+                        &:focus{
+                            outline: none;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    }
+/* Design Mode Toolbar==================================== */

@@ -1,0 +1,123 @@
+#divTreeView {
+    padding: 0;
+    position: absolute;
+    background: #eee;
+    margin-left: 0px;
+    width: 300px;
+   
+    #srchTree {
+        @include floatLeft;
+        margin-top: 10px;
+        border: 1px solid #ccc;
+        width: 90%;
+        margin-left: 14px;
+        margin-right: 5px;
+        padding-left: 8px;
+        &:focus{
+            outline: none;
+            text-decoration: none;
+        }
+    }
+    .closeMenu {
+        float: right;
+        position: relative;
+        top: 6px;
+        left: -8px;
+        background: #807e7e;
+        color: #fff;
+        padding: 5px 6px 0px;
+        span{
+            font-size:19px ;
+        }
+    }
+
+    #treeView {
+        /* width: 20%; */
+        height: calc(100vh - 40px);
+        padding: 5px 5px 5px 25px;
+        overflow-y: auto;
+        display: block;
+        color: #807e7e;
+        ul {
+            font-size: 14px;
+            background-color: #eee;
+            border: none;
+
+            &:focus {
+                outline: none;
+            }
+
+            .material-icons {
+                font-size: 20px;
+            }
+
+            span {
+                &.fancytree-custom-icon {
+                    margin-left: 5px;
+                    margin-right: 5px;
+                }
+            }
+
+            li {
+               // padding: 5px 0px;
+               
+                span {
+                    &.fancytree-node{
+                        padding: 5px 0px;
+                    }
+                    &.fancytree-title {
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        display: inline-block;
+                        overflow: hidden;
+                        width: 180px;
+                        padding: 0;
+                        margin: 0;
+                        &:hover{
+                            color: #337ab7;
+                        }
+                    }
+                    &.fancytree-active{
+                        color: #337ab7;
+                        span{
+                            &.fancytree-title{
+                                color: #337ab7;
+                            }
+                        }
+                    }
+                }
+                ul{
+                    li{
+                        &:hover{
+                            color: #337ab7;
+                        }
+                        span{
+                            &.fancytree-node{
+                                padding: 5px 0px;
+                            }
+                            &.fancytree-active{
+                                color: #337ab7;
+                                span{
+                                    &.fancytree-title{
+                                        color: #337ab7;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        .treeItem {
+            background-color: #eee;
+            border: 0px solid #eee;
+            padding: 5px 10px;
+        }
+        @include scrollBar;
+    }
+}
+
+.treeRoot {
+    background-color: #eee;
+}

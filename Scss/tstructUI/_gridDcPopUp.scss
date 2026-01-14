@@ -1,0 +1,89 @@
+//* pagePaginationGroup ==================================== *//
+@import 'iviewUI/_pagePaginationGroup';
+//* pagePaginationGroup ==================================== *//
+@import 'tstructUI/_fileUpload';
+
+//* gridDcPop ==================================== *//
+.modal-content{
+    #dvFillGrid{
+        #tblFillGrid2_wrapper{
+            table{
+                min-width: $tblFillGrid2WrapperMinWidth;
+            }
+        }
+    }
+    .modal-footer{
+        background: $applicationBackgroundColor;
+        border-bottom-right-radius: $gridDcPopBorderRadius;
+        border-bottom-left-radius: $gridDcPopBorderRadius;
+    }
+}
+.modal-open{
+    #bootstrapModalData{
+        [id^=wrapperForEditFields]{
+            @include gridPopUp;
+            // .grid-stack{
+            //     .grid-stack-item{
+            //         position: $gridStackItemPosition;
+            //         display: $gridStackItemDisplay;
+            //         vertical-align: top;
+            //         top: 0;
+            //     }
+                
+            // }
+            .previousNextEditButton{
+                button{
+                    @include hotbtn;
+                    @include coldBtnColors;
+                    margin-right: $previousNextEditButtonRightMargin;
+                    &:focus {
+                    @include coldHotBtnFocus;
+                            opacity: 1;
+                            outline: none;
+                    }
+                    &:hover{
+                    @include coldHotBtnHover;
+                    }
+                }
+            }
+            &.row{
+                margin: 0px;
+            }
+        }
+        .editWrapTr {
+            height: calc(#{$fillGridPopMaximumHeight} - #{$fillGridPopCalcHeight});
+            overflow: auto;
+            .form-group{
+                margin-top: $fillgridFormGroupMarginTop;
+            }
+        }
+    }
+    #bootstrapModal{
+        .modal-header {
+            cursor: move;
+        }
+    }
+}
+.dcContent{
+    .lablattactxt{
+        margin-bottom: $applicationLabelBottomMargin;
+    }
+    #fileuploadsts{
+        @include fileUploadInstruction;
+    }
+}
+.editLayoutFooter{
+    .footerRowCount{
+        @include floatRight;
+    }
+}
+.grid-stack {
+    &:not(.tstructDesignMode){
+        .grid-stack-item{
+            .badge-grid-stack{
+                display: none;
+            }
+        }
+    }
+}
+//* gridDcPop ==================================== *//

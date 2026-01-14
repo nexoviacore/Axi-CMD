@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="http://tempuri.org/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:xs="http://www.w3.org/2001/XMLSchema" name="ASBIViewservice" targetNamespace="http://tempuri.org/" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types />
+  <message name="GetIView0Request">
+    <part name="S" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="GetIView0Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetIViewNew1Request">
+    <part name="S" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="GetIViewNew1Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetLView2Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetLView2Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetParams3Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="GetParams3Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetParamsNew4Request">
+    <part name="s" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="GetParamsNew4Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetDependParamsValues5Request">
+    <part name="s" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="GetDependParamsValues5Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetParamChoices6Request">
+    <part name="s" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="GetParamChoices6Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SaveAsExcel7Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="SaveAsExcel7Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SaveCustomizeView8Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="SaveCustomizeView8Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="DeleteCustomizeView9Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="DeleteCustomizeView9Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetCustomizeViews10Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetCustomizeViews10Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SaveAsHTML11Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="SaveAsHTML11Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SaveSmartViews12Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="SaveSmartViews12Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <portType name="ASBIView">
+    <operation name="GetIView">
+      <input message="tns:GetIView0Request" />
+      <output message="tns:GetIView0Response" />
+    </operation>
+    <operation name="GetIViewNew">
+      <input message="tns:GetIViewNew1Request" />
+      <output message="tns:GetIViewNew1Response" />
+    </operation>
+    <operation name="GetLView">
+      <input message="tns:GetLView2Request" />
+      <output message="tns:GetLView2Response" />
+    </operation>
+    <operation name="GetParams">
+      <input message="tns:GetParams3Request" />
+      <output message="tns:GetParams3Response" />
+    </operation>
+    <operation name="GetParamsNew">
+      <input message="tns:GetParamsNew4Request" />
+      <output message="tns:GetParamsNew4Response" />
+    </operation>
+    <operation name="GetDependParamsValues">
+      <input message="tns:GetDependParamsValues5Request" />
+      <output message="tns:GetDependParamsValues5Response" />
+    </operation>
+    <operation name="GetParamChoices">
+      <input message="tns:GetParamChoices6Request" />
+      <output message="tns:GetParamChoices6Response" />
+    </operation>
+    <operation name="SaveAsExcel">
+      <input message="tns:SaveAsExcel7Request" />
+      <output message="tns:SaveAsExcel7Response" />
+    </operation>
+    <operation name="SaveCustomizeView">
+      <input message="tns:SaveCustomizeView8Request" />
+      <output message="tns:SaveCustomizeView8Response" />
+    </operation>
+    <operation name="DeleteCustomizeView">
+      <input message="tns:DeleteCustomizeView9Request" />
+      <output message="tns:DeleteCustomizeView9Response" />
+    </operation>
+    <operation name="GetCustomizeViews">
+      <input message="tns:GetCustomizeViews10Request" />
+      <output message="tns:GetCustomizeViews10Response" />
+    </operation>
+    <operation name="SaveAsHTML">
+      <input message="tns:SaveAsHTML11Request" />
+      <output message="tns:SaveAsHTML11Response" />
+    </operation>
+    <operation name="SaveSmartViews">
+      <input message="tns:SaveSmartViews12Request" />
+      <output message="tns:SaveSmartViews12Response" />
+    </operation>
+  </portType>
+  <binding name="ASBIViewbinding" type="tns:ASBIView">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="rpc" />
+    <operation name="GetIView">
+      <soap:operation soapAction="urn:uASBIView-ASBIView#GetIView" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetIViewNew">
+      <soap:operation soapAction="urn:uASBIView-ASBIView#GetIViewNew" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetLView">
+      <soap:operation soapAction="urn:uASBIView-ASBIView#GetLView" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetParams">
+      <soap:operation soapAction="urn:uASBIView-ASBIView#GetParams" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetParamsNew">
+      <soap:operation soapAction="urn:uASBIView-ASBIView#GetParamsNew" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetDependParamsValues">
+      <soap:operation soapAction="urn:uASBIView-ASBIView#GetDependParamsValues" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetParamChoices">
+      <soap:operation soapAction="urn:uASBIView-ASBIView#GetParamChoices" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SaveAsExcel">
+      <soap:operation soapAction="urn:uASBIView-ASBIView#SaveAsExcel" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SaveCustomizeView">
+      <soap:operation soapAction="urn:uASBIView-ASBIView#SaveCustomizeView" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="DeleteCustomizeView">
+      <soap:operation soapAction="urn:uASBIView-ASBIView#DeleteCustomizeView" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetCustomizeViews">
+      <soap:operation soapAction="urn:uASBIView-ASBIView#GetCustomizeViews" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SaveAsHTML">
+      <soap:operation soapAction="urn:uASBIView-ASBIView#SaveAsHTML" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SaveSmartViews">
+      <soap:operation soapAction="urn:uASBIView-ASBIView#SaveSmartViews" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBIView-ASBIView" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+  </binding>
+  <service name="ASBIViewservice">
+    <port name="ASBIViewPort" binding="tns:ASBIViewbinding">
+      <soap:address location="http://localhost/axpertwebscripts-11.1/ASBIView.dll/soap/ASBIView" />
+    </port>
+  </service>
+</definitions>

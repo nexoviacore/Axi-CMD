@@ -1,0 +1,486 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="lblactsess.Text" xml:space="preserve">
+    <value>Display Active sessions in Login page</value>
+  </data>
+  <data name="lblapplication.Text" xml:space="preserve">
+    <value>Application</value>
+  </data>
+  <data name="lblapptitle.Text" xml:space="preserve">
+    <value> Application Title &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Enter Application Title to overwrite the existing title." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblattachpath.Text" xml:space="preserve">
+    <value>Form Attachment storage path &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Attachment storage path" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblautognr.Text" xml:space="preserve">
+    <value>Show Auto generated Field Value &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Auto generated field values will be displayed for new records else text Auto will be displayed." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblcopyright.Text" xml:space="preserve">
+    <value>Copyright Text &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Enter Copyright text. This will be visible in the Signin page." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblcpwd.Text" xml:space="preserve">
+    <value>Allow Change Password on first time login &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="New users in the application will be redirected to ChangePassword page on first time login." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbldate.Text" xml:space="preserve">
+    <value>Date Format Culture &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Date format choosen will be applied across the application only if the DB server also has the same date format." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbldbpag.Text" xml:space="preserve">
+    <value>Enable DB pagination &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Paginate your DB" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblenablebreadcrumb.Text" xml:space="preserve">
+    <value>Enable Breadcrumb</value>
+  </data>
+  <data name="lblenableCards.Text" xml:space="preserve">
+    <value>Enable Homepage as Cards &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Cards Page functionality will be enabled if this option is enabled, Cards gives new, improved and modern look to application, Cards contains variety of card options and configurations to choose from" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblEnableDraft.Text" xml:space="preserve">
+    <value>Save As Draft &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Enable Save as Draft Feature for the Tstruct." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblAutoPurge.Text" xml:space="preserve">
+    <value>Auto Purge Drafts &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="To retain the drafts after first load set this off." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblexepath.Text" xml:space="preserve">
+    <value>Print Server Path(wktohtmlpdf) &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Path where the wktohtmlpdf.exe is installed." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblForm.Text" xml:space="preserve">
+    <value>Form</value>
+  </data>
+  <data name="lblgeneral.Text" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="lblgeneralc5.Text" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="lblgeneralc6.Text" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="lblgeneralsel1.Text" xml:space="preserve">
+    <value>Page builder access (Please select the responsibilities) &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Selected responsibilities will be allowed to build their own home page." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblgeneralsel2.Text" xml:space="preserve">
+    <value>Maximum number of widgets in page builder &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content=" Maximum number of widgets in home builder." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblglobal.Text" xml:space="preserve">
+    <value>Supported Languages</value>
+  </data>
+  <data name="lblgridattachpath.Text" xml:space="preserve">
+    <value>Grid Attachment storage path &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-html="true" data-content="Grid Attachment storage path&lt;br/&gt;Example:&lt;br/&gt;D:\Grid_Attachments&lt;br/&gt;D:\\Grid_Attachments&lt;br/&gt;\\192.168.1.1\Grid_Attachments&lt;br/&gt;ftp:\\192.168.1.1\Grid_Attachments" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblMaxDraftsCount.Text" xml:space="preserve">
+    <value>Max Drafts Count &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-html="true" data-content="Min Drafts count should be 1 and Maximum can be 99" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblgrpdup.Text" xml:space="preserve">
+    <value>Group duplicate value &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Enter a group value" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblhelpview.Text" xml:space="preserve">
+    <value>Help Page &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="At your service" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblhtmlpath.Text" xml:space="preserve">
+    <value>Template path(HTML) &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="HTML storage path" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblimgfld.Text" xml:space="preserve">
+    <value>Image field storage path &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Image field storage path, all images with fieldname prefixed with 'nodb_' will be stored in this path." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblimptmp.Text" xml:space="preserve">
+    <value>Import Template Path &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-html="true" data-content="Import Template folder path.&lt;br/&gt;Example - D:\Axpert\Import Templates" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbllanguage.Text" xml:space="preserve">
+    <value>Application Languages &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Choose your Application Languages." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbllanguage1.Text" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="lbllanguage2.Text" xml:space="preserve">
+    <value>Hindi</value>
+  </data>
+  <data name="lbllanguage3.Text" xml:space="preserve">
+    <value>Arabic</value>
+  </data>
+  <data name="lblmargins.Text" xml:space="preserve">
+    <value>Print Margins - Top, Right, Bottom, Left &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Margin values for the print format." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblmaxprint.Text" xml:space="preserve">
+    <value>Maximum number of rows to print &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content=" Maximum number of rows that are allowed in save as options like Print, Excel and PDF." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblmenu.Text" xml:space="preserve">
+    <value>Menu Style</value>
+  </data>
+  <data name="lbloptactsess.Text" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="lbloptactsess1.Text" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="lbloptautognr.Text" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="lbloptautognr1.Text" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="lbloptbcrum.Text" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="lbloptbcrum1.Text" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="lbloptcpwd.Text" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="lbloptcpwd1.Text" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="lbloptculture.Text" xml:space="preserve">
+    <value>US</value>
+  </data>
+  <data name="lbloptculture1.Text" xml:space="preserve">
+    <value>German</value>
+  </data>
+  <data name="lbloptdbpag.Text" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="lbloptdbpag1.Text" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="lbloptdcgrid.Text" xml:space="preserve">
+    <value>Grid DC Pop Up Visible On Save &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="On click of Save In DC Grid Popup will be availabe to modify previous and next rows." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbloptdcgrid1.Text" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="lbloptdcgrid2.Text" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="lbloptCards.Text" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="lbloptCards1.Text" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="lbloptmenu.Text" xml:space="preserve">
+    <value>Classic</value>
+  </data>
+  <data name="lbloptmenu1.Text" xml:space="preserve">
+    <value>Modern</value>
+  </data>
+  <data name="lbloptprint32.Text" xml:space="preserve">
+    <value>32-bit</value>
+  </data>
+  <data name="lbloptprint64.Text" xml:space="preserve">
+    <value>64-bit</value>
+  </data>
+  <data name="lbloptsess.Text" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="lbloptsess1.Text" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="lbloptslct.Text" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="lbloptslct1.Text" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="lblopttally.Text" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="lblopttally1.Text" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="lblopttitleprint.Text" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="lblopttitleprint1.Text" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="lblopttrace.Text" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="lblopttrace1.Text" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="lbloptwrapc5.Text" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="lblopwrapc5.Text" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="lblprint.Text" xml:space="preserve">
+    <value>Print</value>
+  </data>
+  <data name="lblprint32.Text" xml:space="preserve">
+    <value>Print for 32bit/64bit &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Choose your system used for printing." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblrowpage.Text" xml:space="preserve">
+    <value>Rows per page &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Number of rows that have to be displayed in Reports and Lists." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblsess.Text" xml:space="preserve">
+    <value>Session Auto Extend &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Session extension will display a message to the user about his session being expired. The user can then choose to extend or sign out." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblslct.Text" xml:space="preserve">
+    <value>Enable AutoComplete for Select and Picklist fields &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Autocomplete component will replace the dropdown and picklist with sql. This enables faster page load." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltally.Text" xml:space="preserve">
+    <value>Enable Export to Tally &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Export to tally enables an extra toolbar button if there is a transaction(covcx) available." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltextwrapc5.Text" xml:space="preserve">
+    <value>Column word wrap &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Cell text will be wrapped if enabled, else will display in single line. Applicable for Classic IViews only." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltitle.Text" xml:space="preserve">
+    <value>Print Title &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Print document Title" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltitlealign.Text" xml:space="preserve">
+    <value>Title Alignment &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Title alignment" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltitledwn.Text" xml:space="preserve">
+    <value>Show App Title in downloads &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Will display Application Title in the header for save as options like Print, Excel and PDF." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltrace.Text" xml:space="preserve">
+    <value>Enable Trace</value>
+  </data>
+  <data name="lblusr.Text" xml:space="preserve">
+    <value>Enable Submit and Cancel buttons in Tstruct Footer &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="The toolbar buttons will be enabled only if choosen." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbldeveloper.Text" xml:space="preserve">
+    <value>Page Builder</value>
+  </data>
+  <data name="lblforms.Text" xml:space="preserve">
+    <value>Forms</value>
+  </data>
+  <data name="lblreport.Text" xml:space="preserve">
+    <value>Reports</value>
+  </data>
+  <data name="lbltabapp.Text" xml:space="preserve">
+    <value>Application</value>
+  </data>
+  <data name="lbluserset.Text" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="lblsettitle.Text" xml:space="preserve">
+    <value>Show alert before row navigation in form Grid</value>
+  </data>
+  <data name="pagetitle.Text" xml:space="preserve">
+    <value>Configuration</value>
+  </data>
+  <data name="lblGlobalization.Text" xml:space="preserve">
+    <value>Globalization</value>
+  </data>
+  <data name="lblGlobe.Text" xml:space="preserve">
+    <value>Globalization</value>
+  </data>
+  <data name="lblLangSelect.Text" xml:space="preserve">
+    <value>Application Language &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Language specific configuration will be set based on the selected language" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblDesignMode.Text" xml:space="preserve">
+    <value>Enable Design Mode (Please select the responsibilities) &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="'Design Mode' in forms will be enabled for users having any of the selected responsibilities." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblaxMenuColCount.Text" xml:space="preserve">
+    <value>Columns &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Select the number of columns only if the menu style is Custom" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblaxMenuStyleSel.Text" xml:space="preserve">
+    <value>Menu Style &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Choose Menu Style" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblaxMenusubCntPerView.Text" xml:space="preserve">
+    <value>Submenu per view &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Select the number of items that has to appear in submenu" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblaxMenuWrdWrap.Text" xml:space="preserve">
+    <value>Word Wrap &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Toggle this bar to enable/disable word wrap" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblin.Text" xml:space="preserve">
+    <value>Translation String</value>
+  </data>
+  <data name="lbllang.Text" xml:space="preserve">
+    <value>Target Language &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Select the language in which form details are to be displayed" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblmenuSet.Text" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="lblsource.Text" xml:space="preserve">
+    <value>Form &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Select a form for translation" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblall.Text" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="lblDirSubMenuCount.Text" xml:space="preserve">
+    <value>Direct subMenu count &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Type or select the series of menus that has to appear under a sub menu" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblLimited.Text" xml:space="preserve">
+    <value>Limited</value>
+  </data>
+  <data name="lblSubMenuCount.Text" xml:space="preserve">
+    <value>SubMenu count &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Type or select the number of sub menus that has to appear under a menu header" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblAttachmentSize.Text" xml:space="preserve">
+    <value>Max Attachments Size in MB &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_AttachSize" data-toggle="popover" data-content="Maximum file size for attachments. File size has direct impact to upload performance, it is recommended to use File size less than 10 MB" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblUploadAppImg.Text" xml:space="preserve">
+    <value>Background Image/Video &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_AttachSize" data-toggle="popover" data-content="For video Maximum size allowed is 10MB and format should be mp4 and for Image Maximum file size allowed is 5 MB and format should gif, png, jpg, jpeg" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblUploadAppLogoImg.Text" xml:space="preserve">
+    <value>Logo &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_AttachSize" data-toggle="popover" data-content="Maximum Logo Size is 1MB and format should be gif, png, jpg, jpeg" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblUploadMobAppImage.Text" xml:space="preserve">
+    <value>Mobile Background Image &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_AttachSize" data-toggle="popover" data-content="Maximum Mobile Background Image Size is 1MB and format should be gif, png, jpg, jpeg" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblDevInstance.Text" xml:space="preserve">
+    <value>Development Instance &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="Dev_instance" data-toggle="popover" data-content="Enable this to fetch the data directly from the database" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblGetIviewRowCountTitle.Text" xml:space="preserve">
+    <value>Get IView with row count &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_GetIviewRowCount" data-toggle="popover" data-content="Enabe Get Iview Row Count(Recommended: Disabled)" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblIviewDataWSRowsTitle.Text" xml:space="preserve">
+    <value>Iview Data Rows Cache Size &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_IviewDataWSRows" data-toggle="popover" data-content="Iview Data Rows Cache Size when Get IView with row count is disabled" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblInlineGridEdit.Text" xml:space="preserve">
+    <value>Grid Data Edit &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_InlineGridEdit" data-toggle="popover" data-content="Tstruct DC Grid edit option" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblAlertTimeout.Text" xml:space="preserve">
+    <value>Alerts Timeout in milliseconds &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Alerts will be automatically closed after the configured seconds" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblWizardType.Text" xml:space="preserve">
+    <value>Wizard Type &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Type of wizard to be displayed across the application." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblWizardTstruct.Text" xml:space="preserve">
+    <value>Enable Wizard based DCs in forms &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Enable Wizard based DCs in forms." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblSaveAndPublish.Text" xml:space="preserve">
+    <value>Save and Auto Publish &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Enable Save and Auto Publish.Which help you to save and publish in single click." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblGlobalSrchTxt.Text" xml:space="preserve">
+    <value>Global Search Fetch Limit</value>
+  </data>
+  <data name="lblErrorTimeout.Text" xml:space="preserve">
+    <value>Alert message error/failure timeout in seconds &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Error messages will be automatically closed after the configured seconds" data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblDisableSplit.Text" xml:space="preserve">
+    <value>Disable Split </value>
+  </data>
+  <data name="lblenableErrormsg.Text" xml:space="preserve">
+    <value>Hide Error Messages</value>
+  </data>
+  <data name="lblSessionExpiryDays.Text" xml:space="preserve">
+    <value>Application Session Expiry in Days &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Application Session Expiry in Days when 'Keep me sign in' on during login.." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltimezone.Text" xml:space="preserve">
+    <value>Allow Timezone Variation &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Allow Timezone Variation." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbluiconfig.text" xml:space="preserve">
+    <value>UI Configuration</value>
+  </data>
+</root>

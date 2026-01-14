@@ -1,0 +1,15 @@
+//* popOver ==================================== *//
+.modal-backdrop {
+    background-color: $applicationBackgroundColor;
+}
+#bootstrapModal {
+    .modal-dialog{
+        .modal-content{
+            &.ui-resizable{
+                min-width: $bootstrapModalDialogResizableMinWidth;
+                min-height: $bootstrapModalDialogResizableMinHeight;
+            }
+        }
+  }
+}
+//* popOver ==================================== *//

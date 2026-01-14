@@ -1,0 +1,15 @@
+//* msgLightbox Laoding=====*//
+@mixin msgBoxRadius{
+    -webkit-border-radius: $applicationBoxRadius;
+      -moz-border-radius: $applicationBoxRadius;
+      -ms-border-radius: $applicationBoxRadius;
+      border-radius: $applicationBoxRadius;
+}
+@mixin msgBoxTitle {
+    background-color:$applicationBackgroundColor;
+    border-bottom: 1px solid $applicationBorderColor;
+    padding: $breadcrumbPanelPading;
+    font-size: $msgBoxTitleFontSize;
+    margin-bottom: $msgBoxTitleMarginBottom;
+}
+//* msgLightbox Laoding=====*//

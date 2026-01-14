@@ -1,0 +1,18 @@
+/**
+ * Theme framework entry point "themes.scss" which imports theme framework and theme modules for automating themes generation
+ * @author Prashik
+ * @Date   2021-03-10
+ */
+ @import 'themes/_themeFramework';
+ @import 'themes/_templateModule';
+ @import 'themes/_reportModule';
+ @import 'themes/_formModule';
+ @import 'themes/_adminConsoleModule';
+ @each $theme, $colors in $themes {
+     .#{$theme}-theme{
+         @include _templateModule($theme, $colors);
+         @include _reportModule($theme, $colors);
+         @include _formModule($theme, $colors);
+         @include _adminConsoleModule($theme, $colors);
+     }
+ }

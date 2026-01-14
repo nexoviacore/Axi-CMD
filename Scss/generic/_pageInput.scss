@@ -1,0 +1,46 @@
+//* application input ==================================== *//
+.login{
+    .login-main{
+        .login-inner{
+            .controls{
+                #axSelectProj{
+                   @include materialInputStyle;
+                   padding-right: $loginSelectBoxRightPadding;
+                } 
+                @include inputAutoComplete;
+            }
+            @include materialInputsStyle;
+        }
+    }
+}
+
+#login-box{
+    .field-wrapper{
+        #axSelectProj{
+            @include materialInputStyle;
+            padding-right: $loginSelectBoxRightPadding;
+        }
+         .input-icon {
+            .icon-cross {
+                @include inputIconCross;
+              }
+              .icon-chevron-down {
+                @include inputIconChevronDown;
+              }
+         }
+    }
+    @include materialInputsStyle;
+}
+
+// .field-wrapper input:not([disabled]):focus~.field-placeholder
+// {
+//     -webkit-transform: scale(0.7) translateY(-30px) translateX(-82px);
+//     transform: scale(0.7) translateY(-30px) translateX(-82px);
+
+// }
+// .field-wrapper.hasValue input:not([disabled])~.field-placeholder, 
+// .field-wrapper input:-webkit-autofill:not([disabled])~.field-placeholder
+// {
+//     @include loginInputTransformEffectDisplayAutoFill;
+// }
+//* application input ==================================== *//

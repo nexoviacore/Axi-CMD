@@ -1,0 +1,208 @@
+// Note: Please compile this file only if custom variables are added and updated as per customization requirement from "_axpertUiVariables.scss" to "_customAxpertUiVariables.scss" file or from "_genericVariables.scss" to "_customGenericVariables.scss" file as per the customization requirement, then only compile "customAxpertUI.scss" using "EasySass" Extension for "Visual Studio Code" Editor.
+
+@import 'materialUI/_mixins';
+@import 'materialUI/_variables';
+//* Global Variable ==================================== *//
+@import '_variables/_genericVariables';
+@import '_variables/_customGenericVariables';
+
+@import '_variables/_globalVariable';
+
+@import '_variables/_axpertUiVariables';
+@import '_variables/_customAxpertUiVariables';
+//* iview mixin ==================================== *//
+@import '_mixins/_globalMixin';
+//* Materialize Css | Taken from www.materializecss.com *//
+//@import url(../ThirdParty/materialize/css/materialize.min.css);
+@import url(materialize.css);
+//* Navbar ====================================== *//
+@import 'materialUI/_navbar';
+//* Material Icons font size only============================== *//
+@import 'materialUI/_materialicons';
+//* Media ======================================= *//
+@import 'materialUI/_media.scss';
+//* General ===================================== *//
+@import 'materialUI/_general.scss';
+//* Buttons ===================================== *//
+@import 'materialUI/_buttons.scss';
+//* Card ======================================== *//
+@import 'materialUI/_card.scss';
+//* Nav Tabs for home page (used in right hand side for history,utilities,settings tabs)==================================== *//
+@import 'materialUI/_navtabs.scss';
+@import 'materialUI/_navtabStyle.scss';
+//* Dropdown Menu =============================== *//
+@import 'materialUI/_dropdownmenu.scss';
+//* Tables ====================================== *//
+@import 'materialUI/_tables.scss';
+//* Left Sidebar & Overlay ====================== *//
+@import 'materialUI/_leftsidebaroverlay.scss';
+//* Searchbar for main page (top search)=================================== *//
+@import 'materialUI/_searchbar.scss';
+
+//* For enableExpandCollapse*//
+@import 'materialUI/_enableExpandCollapse.scss';
+
+//* Axpert Vertical/Horizonatal Splitter *//
+@import 'materialUI/_axPageSplitter';
+
+//*  axpert search autocomplete ui *//
+@import 'materialUI/_axSearchAutoComplete';
+
+//* Page Loader ================================= *//
+@import 'materialUI/_pageloader.scss';
+
+//* Preloaders ================================== *//
+@import 'materialUI/_preloaders.scss';
+//* compressed mode ui *//
+@import 'materialUI/_compressedModeUI';
+
+//* pulser animation *//
+@import 'materialUI/_pulserAnimation.scss';
+
+//* cards page in main page *//
+@import 'cardsPage/_cardsPageWrapper.scss';
+
+//* pulser animation *//
+@import 'materialUI/_rtlStyles.scss';
+
+//* For Internet Explorer 10 ===================== *//
+@import 'browser-support/_ie10.scss';
+
+//* For Internet Explorer 11 ===================== *//
+@import 'browser-support/_ie11.scss';
+
+//* For iOS Safari (isHybrid) ===================== *//
+@import 'browser-support/_iOS_Safari.scss';
+
+//* Helpers ===================================== *//
+// @import 'materialUI/_helpers.scss';
+
+//* Custom Animate ============================== *//
+// @import 'materialUI/_customanimate.scss';
+
+//* Demo ======================================== *//
+// @import 'materialUI/_demo.scss';
+
+//* Dashboard =================================== *//
+// @import 'materialUI/_dashboard.scss';
+
+
+//* Bootstrap Tags Input ======================== *//
+// @import 'materialUI/_tagsinput.scss';
+
+//* noUISlider ================================== *//
+// @import 'materialUI/_noUISlider.scss';
+
+//* Multi Select ================================ *//
+// @import 'materialUI/_multiselect.scss';
+
+//* Infobox ===================================== *//
+// @import 'materialUI/_infobox.scss';
+
+//* Alerts ====================================== *//
+// @import 'materialUI/_alerts.scss';
+
+//* Dialogs (SweetAlert) ======================== *//
+// @import 'materialUI/_dialogs.scss';
+
+//* Checkbox & Radio ============================ *//
+@import 'materialUI/_checkboxradio.scss';
+
+//* Switch ====================================== *//
+// @import 'materialUI/_switch.scss';
+
+//* DateTime Picker ============================= *//
+// @import 'materialUI/_datetimepicker.scss';
+
+//* Bootstrap Select ============================ *//
+// @import 'materialUI/_bootstrapselect.scss';
+
+/* Tooltip & Popovers ========================== */
+// @import 'materialUI/_tooltippopovers.scss';
+
+//* Thumbnails ================================== *//
+// @import 'materialUI/_thumbnails.scss';
+
+//* Modals ====================================== *//
+// @import 'materialUI/_modals.scss';
+
+//* Labels ====================================== *//
+// @import 'materialUI/_labels.scss';
+
+//* Collapse ==================================== *//
+// @import 'materialUI/_collapse.scss';
+
+//* Panel ======================================= *//
+// @import 'materialUI/_panels.scss';
+
+//* Progress Bars =============================== *//
+// @import 'materialUI/_progressbars.scss';
+
+//* Ion Range Slider ============================ *//
+// @import 'materialUI/_ionrangeslider.scss';
+
+//* Input Group ================================= *//
+// @import 'materialUI/_inputformgroup.scss';
+
+//* Color Picker ================================ *//
+// @import 'materialUI/_colorpicker.scss';
+
+//* Dropzone ==================================== *//
+// @import 'materialUI/_dropzone.scss';
+
+/* Breadcrumbs ================================= */
+// @import 'materialUI/_breadcrumbs.scss';
+
+//* Badge | List Group Item ===================== *//
+// @import 'materialUI/_badgelistgroupitem.scss';
+
+//* Pagination & Pager ========================== *//
+// @import 'materialUI/_pagination.scss';
+
+//* Media Object ================================ *//
+// @import 'materialUI/_mediaobject.scss';
+
+//* Form Wizard ================================= *//
+// @import 'materialUI/_formwizard.scss';
+
+//* Waves ======================================= *//
+// @import 'materialUI/_waveseffect.scss';
+
+//* Navbars ===================================== *//
+// @import 'materialUI/_navbar.scss';
+
+//* Bootstrap Notify ============================ *//
+// @import 'materialUI/_bootstrapnotify.scss';
+
+//* Jquery Nestable ============================= *//
+// @import 'materialUI/_jquerynestable.scss';
+
+//* Login Page ================================== *//
+// @import 'pages/_loginpage.scss';
+
+//* Sign Up Page ================================ *//
+// @import 'pages/_signuppage.scss';
+
+//* Forgot Password Page ======================== *//
+// @import 'pages/_forgotpasswordpage.scss';
+
+//* 404 Not Found Page ========================== *//
+// @import 'pages/_404.scss';
+
+//* 500 Server Error Page ======================= *//
+// @import 'pages/_500.scss';
+
+//* Profile Page ================================ *//
+// @import 'pages/_profile.scss';
+
+//* Maps ======================================== *//
+// @import 'materialUI/_maps.scss';
+
+//* Charts ====================================== *//
+// @import 'materialUI/_charts.scss';
+
+//* Jquery DataTable ============================ *//
+// @import 'materialUI/_jquerydatatable.scss';
+
+//* Light Gallery ================================ *//
+// @import 'materialUI/_lightgallery.scss';

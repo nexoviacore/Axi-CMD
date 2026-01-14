@@ -1,0 +1,257 @@
+/* .cm-s-elegant {
+    border-style: inset;
+} */
+
+.CodeMirror-scroll {
+  background-color: #f5f5f5;
+}
+
+.CodeMirror-gutter {
+  background-color: #ececec;
+}
+
+#spnRowCnt {
+  float: right;
+  display: none;
+}
+
+/* #btnSchema{
+  display: none;
+} */
+.DbNavTabs {
+  display: none;
+}
+
+
+
+
+#txtOutput {
+  padding: 5px 10px;
+
+}
+
+.rsltHeader {
+  background-color: #ececec;
+  color: #9999a4;
+  height: 25px;
+  padding: 1px 7px;
+  border: 1px solid #ccc;
+  font-weight: bold;
+}
+
+.CodeMirror {
+  height: 285px;
+  border: 1px solid #ccc;
+
+  .CodeMirror-hscrollbar {
+    bottom: 11px;
+  }
+}
+
+// table {
+//   border-collapse: collapse;
+//   max-width: 100%;
+//   width: auto;
+//   overflow: auto;
+//   display: inline-block;
+// }
+
+thead th {
+  background-color: #EFEFEF;
+}
+
+// thead,
+// tbody {
+//   display: block;
+// }
+
+// tbody {
+//   overflow-y: auto;
+//   overflow-x: hidden;
+//   height: auto;
+
+// }
+
+// td,
+// th {
+//   min-width: 150px;
+//   height: 25px;
+//   //overflow: hidden;
+//   //text-overflow: ellipsis;
+//   overflow-wrap: break-word;
+//   max-width: 150px;
+//   padding-left: 5px;
+// }
+
+#schemaBrwsr {
+  &.hideMenu {
+
+    #divTreeView {
+      margin-left: -314px;
+    }
+
+    #dataView {
+      left: 0px;
+      width: 100%;
+    }
+  }
+
+  #dataView {
+    /* width: 80%; */
+    height: calc(100vh - 10px);
+    border-left: 1px solid #ccc;
+    position: absolute;
+    left: 300px;
+    width: calc(100vw - 300px);
+    padding-left: 10px;
+
+    .AxDBToolBar,
+    .dvOpenMenu {
+      ul {
+        padding: 0px;
+
+        li {
+          list-style: none;
+          display: inline-block;
+          padding: 6px 5px 0px;
+          background: #807e7e;
+          margin-top: 5px;
+          box-shadow: 1px 2px 3px 0px #9a9a9a;
+
+          a {
+            span {
+              color: #fff;
+              font-size: 19px;
+            }
+          }
+        }
+      }
+    }
+
+    .dvOpenMenu {
+      //display: none;
+      position: absolute;
+      top: 35px;
+      z-index: 4;
+      left: -1px;
+      padding: 7px 0px 0px;
+
+      ul {
+        li {
+          padding: 5px 1px 0px;
+
+          a {
+            span {
+              font-size: 17px;
+            }
+          }
+        }
+      }
+    }
+
+    .tab-content {
+      height: calc(100vh - 50px);
+
+      #noRecord {
+        text-align: center;
+        padding: 5px;
+        background-color: #eeeeee;
+        margin: 5px;
+
+      }
+
+      #QryEditor {
+        height: 100%;
+
+        #ScriptToolBar {
+          list-style: none;
+          display: none;
+
+          ul {
+            text-align: right;
+            margin-top: -35px;
+            margin-right: 6px;
+
+            li {
+              display: inline;
+              margin-right: 0px;
+
+              a {
+                color: #fff;
+
+                span {
+                  background: #807e7e;
+                  padding: 5px;
+                  font-size: 20px;
+                  box-shadow: 1px 2px 3px 0px #9a9a9a;
+                }
+              }
+            }
+          }
+        }
+
+        #splitWrapper {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+
+          .CodeMirror {
+            height: 50%;
+            flex: 0 0 auto;
+            white-space: nowrap;
+
+            .ui-resizable-s {
+              height: 15px;
+              background: #cccdce;
+              background-image: url(../images/sql_resizeHandle.png);
+              background-repeat: no-repeat;
+              background-position: center;
+              cursor: row-resize;
+              z-index: 9 !important;
+            }
+          }
+
+          .dvOutput {
+            border: 1px solid #ccc;
+            /* border-style: inset; */
+            width: 100%;
+            height: 48%;
+            font-family: "Roboto", sans-serif;
+            font-size: 14px;
+            font-weight: normal;
+            flex: 1 1 auto;
+          }
+        }
+      }
+
+      // table {
+      // tbody {
+      //   max-height: calc(100vh - 90px);
+      // }
+
+      // &#tblOutput {
+      //   tbody {
+      //     max-height: calc(100vh - 400px);
+      //   }
+      // }
+      //}
+    }
+
+    #dvObjList {
+      display: none;
+    }
+  }
+}
+#waitDiv {
+  z-index: 100000;
+  display: none;
+
+  #backgroundDiv {
+    @include loaderFixedPoisionMiddel;
+  }
+
+  #backgroundDiv {
+    @include pageLoaderImg;
+  }
+}

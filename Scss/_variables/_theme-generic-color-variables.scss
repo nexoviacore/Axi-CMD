@@ -1,0 +1,84 @@
+$themesColors: (
+    mixed: (
+        'primary':(
+            'background': #000,
+            'color':#000    
+        ),
+        'secondary':(
+            'background': #000,
+            'color':#000    
+        ),'background':(
+            'background': #000,
+            'color':#000    
+        ),'surface':(
+            'background': #000,
+            'color':#000    
+        ),'alert':(
+            (success, #5bb240, #2bb500), 
+            (info, #31708f, #006596), 
+            (error, #e44b4b, #de2e2e), 
+            (warning, #8a6d3b, #8e5a00)
+        )
+    )
+);
+$themes: (
+  'mixed': (
+    'primary': (
+        'default': (
+            'background': #000,
+            'color':#000    
+        ),
+        'light': (
+            'background': #000,
+            'color':#000    
+        ),
+        'dark': (
+            'background': #000,
+            'color':#000    
+        ),
+    ),
+    'secondary': (
+        'default': (
+            'background': #000,
+            'color':#000    
+        ),
+        'light': (
+            'background': #000,
+            'color':#000    
+        ),
+        'dark': (
+            'background': #000,
+            'color':#000    
+        ),
+    ),
+    'background':(
+        'default': (
+            'background': #000,
+            'color':#000    
+        )
+    ),
+    'surface':(
+        'default': (
+            'background': #000,
+            'color':#000    
+        )
+    ),
+    'alert': (
+        
+    )
+  )
+) 
+
+$theme-material-mixed-primary:#233044;
+$theme-material-mixed-primary-light:lighten($theme-material-mixed-primary, 30%);
+$theme-material-mixed-primary-dark:darken($theme-material-mixed-primary, 2%);
+$theme-material-mixed-on-primary:#fff;
+$theme-material-mixed-secondary:#1976d2;
+$theme-material-mixed-secondary-light:lighten($theme-material-mixed-secondary, 30%);
+$theme-material-mixed-secondary-dark:darken($theme-material-mixed-secondary, 2%);
+$theme-material-mixed-on-secondary:#fff;
+$theme-material-mixed-background:#F7F9FC;
+$theme-material-mixed-on-background:#000;
+$theme-material-mixed-surface:#fff;
+$theme-material-mixed-on-surface:#000;
+$theme-material-mixed-alert-colors: ((success, #5bb240, #2bb500), (info, #31708f, #006596), (error, #e44b4b, #de2e2e), (warning, #8a6d3b, #8e5a00));

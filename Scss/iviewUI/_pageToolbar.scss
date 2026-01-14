@@ -1,0 +1,293 @@
+//* Page Option ==================================== *//
+@import 'iviewUI/_pageOption';
+//* iview pageParamsForm ==================================== *//
+@import 'iviewUI/_pageParamsForm';
+//* iview pageParamsForm ==================================== *//
+@import 'iviewUI/_paramToolbarMultiSelect';
+//* iview pageTasksList ==================================== *//
+@import 'iviewUI/_paramToolbarPickList';
+//* iview pageTasksList ==================================== *//
+@import 'iviewUI/_pageTasksList';
+//* iview actionFilter ==================================== *//
+@import 'iviewUI/_actionFilter';
+//* iview  pagetoolbarOptionSort==================================== *//
+@import 'iviewUI/_pageToolbarOptionSort';
+//* iview  pagetoolbarOptionSort==================================== *//
+@import 'iviewUI/_pageToolbarParamFilter';
+//* iview  pagetoolbarOptionRowGrouping==================================== *//
+@import 'iviewUI/_pageToolbarOptionRowGrouping';
+//* iview  pagetoolbarOptionHighlight==================================== *//
+@import 'iviewUI/_pageToolbarOptionHighlight';
+//* iview  pageToolbarParamToolTipText==================================== *//
+@import 'iviewUI/_pageToolbarParamToolTipText';
+
+//* page toolbar -----------------*//
+div#searchBar{
+    margin:$toolbarMargin;
+    @include floatLeft;
+    @media (max-width: $breakTabDevice){
+        display: inline-block;
+        // white-space: nowrap;
+        // overflow-x: auto;
+        // width: calc(100vw - 0px);
+        // //margin: 5px;
+        // /*Temporary Solution for dropdown hidden issue in toolbar in mobile resolution -- refer GIS000105*/
+        // margin-bottom: 35px;
+    }
+    .btextDir-rtl &{
+        @include floatRight;
+    }
+    #icons{
+       ul{
+           &.dropDownButton__list{
+            .btextDir-rtl &{
+                left: $pageTollbarDropDownButtonListRtlLeftGap;
+            }
+           }
+        @media (max-width: $breakTabDevice){
+          /*Temporary Solution for dropdown hidden issue in toolbar in mobile resolution -- refer GIS000105*/
+        //   position: $pageToolbarIconsUlPositionFixed;
+        //   z-index: $pageToolbarIconsUlZIndex;
+        }
+        @include listStyleNone;
+        @include listStylePadding;
+        @include textLeft;
+           li{
+               &:not(.dropDownButton__item){
+                display: inline-block;
+               }
+            
+            &:not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper){
+               @include listStyleNone;
+               @include shadow;
+               color: $coldbtntext;
+               background-color: $coldbtnBackground;
+               @include toolbarListGap;
+               &:focus{
+                outline: none;
+                text-decoration: none;
+                @include coldHotBtnFocus;
+                }
+                &:hover{
+                    @include coldHotBtnHover
+                } 
+            
+            }
+            &#dvRefreshFromLoad{
+                box-shadow: none;
+                margin: 0;
+                span{
+                    button{
+                        color: $applicationIconColor;
+                        &:hover{
+                            box-shadow: none;
+                        }
+                    }
+                }
+            }
+            #uldropelements .actionWrapper{
+                box-shadow: none;
+                margin: 0;
+            }
+            &#dvRefreshFromLoad{
+                span{
+                    button{
+                        &:focus{
+                           box-shadow: none;
+                        }
+                    }
+                }
+            }
+            button{
+                color: $coldbtntext;
+                background-color: $applicationBackgroundColor;
+                @include toolbarBtnNormal;
+                @include btnRadius;
+                &:focus{
+                    outline: none;
+                    text-decoration: none;
+                    @include coldHotBtnFocus;
+                    }
+                    &:hover{
+                       // @include coldHotBtnHover
+                    } 
+               }
+               a{
+                color: $coldbtntext;
+                display: block;
+                text-decoration: none;
+                @include listPadding;
+                cursor: pointer;
+                &:focus{
+                    outline: none;
+                    text-decoration: none;
+                    // @include coldHotBtnFocus;
+                    }
+                    // &:hover{
+                    //     @include coldHotBtnHover
+                    // } 
+                span:not(#lblfilters){
+                    top: $pageToolbarListlblfiltersTopGap;
+                    position: $pageToolbarListlblfiltersPosition;
+                }
+               }
+               
+               &.gropuedBtn{
+                   button{
+                       &:after{
+                           display: none;
+                       }
+                       span{
+                           &:before{
+                               position: $pageToolbargropuedBtnBeforePosition;
+                               top:$pageToolbargropuedBtnBeforeTopGap;
+                           }
+                       }
+                   }
+               }
+               &:focus{
+                text-decoration: none;
+                box-shadow: 0px 0px 2px $applicationPageToolbarHoverShadow;
+            }
+            &#myFiltersLi{
+                a{
+                    span{
+                        &:before{
+                            display: none;
+                        }
+                    }
+                }
+            }
+            &:not(#ivirCButtonsWrapper):hover{
+                background-color:$coldBtnBackgroundHover;
+            }
+            #dvSelectedFilters,#ivirCButtonsWrapper{
+                display: none;
+            }
+            &.lnkNext,&.lnkPrev{
+                position: $pageToolbarLnkNextLnkPrevPosition;
+                top:$pageToolbargropuedBtnBeforeTopGap;
+            }
+            &#ivirCButtonsWrapper{
+                button{
+                    @include shadow;
+                }
+            }
+            &.open{
+                .dropdown-menu {
+                    max-height: $pageToolbarDropdownMaxHight;
+                    height: auto;
+                    overflow-y: auto;
+                    border: 1px solid $applicationBorderColor;
+                    @include shadow;
+                }
+            }
+           }
+           .lnkPrev,.lnkNext{
+               padding: 0px 0px $pageToolbarListViewNextPrevBtnPaddingBottom;
+            }
+       }
+       li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.actionWrapper){
+           @include listStyleNone;
+           @include shadow;
+            color: $coldbtntext;
+            background-color: $coldbtnBackground;
+            display: $applicationDisplayInline;
+            &:focus{
+            outline: none;
+            text-decoration: none;
+            @include coldHotBtnFocus;
+            }
+            &:hover{
+                @include coldHotBtnHover
+            }
+            a{
+                color: $coldbtntext;
+                display: block;
+                text-decoration: none;
+                @include listPadding;
+                cursor: pointer;
+            }
+       }
+    }
+}
+
+#ivContainer{
+    .container{
+        width:100%;
+        .bs-example{
+            button{
+                &:focus{
+                    outline: none;
+                }
+                i{
+                    &:focus{
+                        outline: none;
+                    }
+                }
+            }
+            #dvStagLoad,#dvPages,#dvRowsPerPage{
+                    display: none;
+            }
+            #dvSqlPages{
+                #rowsTxtCount{
+                    #lnkShowAll{
+                        display: none;
+                    }
+                }
+            }
+            #dvRefreshParam{
+                span{
+                    button{
+                        border: 0;
+                        background: no-repeat;
+                        top: $pageRefreshParamTopGap;
+                        position: $pageRefreshParamPosition;
+                        @include floatRight;
+                        i{
+                            color:$moduleIconColor;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+.iviewTableWrapper{
+    .dvContent{
+        .sort,#leftPanel{
+            display: none;
+        }
+        #contentPanelGridIview{
+            #noRecccord{
+                display: none;
+            }
+        }
+    }
+}
+#lblTaskExcel,#lblTaskPDF{
+    display: none;
+}
+#dvRefreshParam{
+    .btextDir-rtl &{
+        @include floatLeft;
+    }
+}
+#tstIcons{
+    display: inline;
+}
+#cb_sactbu{
+    span{
+        padding-right: 0px;
+    }
+}
+div#searchBar #icons ul li.gropuedBtn .dropdown .actionsBtn #uldropelements{
+    @include pageToolbarDropelements;
+}
+div#searchBar #icons ul li.gropuedBtn #uldropelements li{
+    &.actionWrapper{
+        box-shadow: none;
+        margin: 0px;
+    }
+}
+//* page toolbar -----------------*//

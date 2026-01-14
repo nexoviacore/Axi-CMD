@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #12864a;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4, .cls-5 {
+        fill-rule: evenodd;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4, .cls-5, .cls-6, .cls-7, .cls-8 {
+        stroke-width: 0px;
+      }
+
+      .cls-2 {
+        fill: #125e30;
+      }
+
+      .cls-3 {
+        fill: #20a263;
+      }
+
+      .cls-4 {
+        fill: #49bb82;
+      }
+
+      .cls-5 {
+        fill: #fff;
+      }
+
+      .cls-6 {
+        fill: #125e31;
+      }
+
+      .cls-7 {
+        fill: #21a664;
+      }
+
+      .cls-8 {
+        fill: #127a41;
+      }
+    </style>
+  </defs>
+  <path class="cls-4" d="M25.04,2.16h12.94c1.11,0,2.02.91,2.02,2.02v6.9h-14.96V2.16Z"/>
+  <rect class="cls-7" x="25.04" y="11.08" width="14.96" height="8.92"/>
+  <rect class="cls-8" x="25.04" y="20" width="14.96" height="8.92"/>
+  <path class="cls-3" d="M11.4,2.16h13.64v8.92h-15.66v-6.9c0-1.11.91-2.02,2.02-2.02h0Z"/>
+  <rect class="cls-8" x="9.38" y="11.08" width="15.66" height="8.92"/>
+  <rect class="cls-6" x="9.38" y="20" width="15.66" height="8.92"/>
+  <path class="cls-2" d="M25.04,37.84h-13.64c-1.11,0-2.02-.91-2.02-2v-6.92h30.62v6.92c0,1.1-.91,2-2.02,2h-12.94Z"/>
+  <path class="cls-1" d="M2.02,9.65h16.28c1.11,0,2.02.91,2.02,2.02v16.5c0,1.11-.91,2.02-2.02,2.02H2.02c-1.11,0-2.02-.91-2.02-2.02V11.67c0-1.11.91-2.02,2.02-2.02h0Z"/>
+  <polygon class="cls-5" points="5.47 14.48 7.84 14.48 10.14 18.11 12.45 14.48 14.8 14.48 11.32 19.95 14.8 25.42 12.45 25.42 10.14 21.8 7.84 25.42 5.47 25.42 8.97 19.95 5.47 14.48"/>
+</svg>

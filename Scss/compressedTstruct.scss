@@ -1,0 +1,420 @@
+/*div#bootstrapModal .form-group:not(.checkbox) label, div#wBdr .form-group:not(.checkbox) label{
+    margin-bottom: -6px !important;
+}*/
+//* Global Variable ==================================== *//
+@import '_variables/_genericVariables';
+@import '_variables/_globalVariable';
+@import '_variables/_formsVariables';
+//* iview mixin ==================================== *//
+@import '_mixins/_globalMixin';
+@import 'materialUI/_mixins';
+//*compressed Tstruct*//
+div#wBdr {
+	input.form-control {
+		height: $appliactionCompressedInputSelectHeight;
+	}
+	select.form-control {
+		height: $appliactionCompressedInputSelectHeight;
+	}
+	.grid-stack-item{
+		.divImgBorder,.divReadOnly,.gridstackCalc,input[type=button].hotbtn.btn{
+			height: calc(#{$applicationMaximumHeight} - #{$appliactionCompressedTextareaSelectHeight}) !important;
+		}
+	}
+}
+.dvdcframe {
+	.mainIframe{
+		&.grid-stack:not(.tstructDesignMode){
+			.grid-stack-item {
+				.gridstackCalc{
+					height: calc(#{$applicationMaximumHeight} - #{$appliactionCompressedTextareaSelectHeight}) !important;
+				}
+			}
+		}
+	}
+}
+div#bootstrapModal {
+	input.form-control {
+		height: $appliactionCompressedInputSelectHeight;
+	}
+	select.form-control {
+		height: $appliactionCompressedInputSelectHeight;
+	}
+	label {
+		@include compressedLabel;
+		margin-bottom: $applicationCompressedAllowemptyFontSize;
+	}
+}
+div#wBdr {
+	label{
+		@include compressedLabel;
+		//margin-bottom: $applicationCompressedAllowemptyFontSize;
+	}
+}
+.form-control {
+	padding: $appliactionCompressedInputPadding;
+	margin-bottom: $appliactionCompressedInputMarginBottom;
+}
+div.picklisttxtclear {
+	top: $appliactionCompressedInputPadding;
+}
+#ico_cl {
+	font-size: $applicationCompressedHintFontSize;
+	&:focus{
+		outline: none;
+		text-decoration: none;
+	}
+}
+font.allowempty {
+	font-size: $applicationCompressedAllowemptyFontSize;
+}
+.editLayoutFooter {
+	@include editLayoutFooter;
+}
+.loadingTheDataPW {
+	margin-top: 10px;
+	font-size: $appliactionCompressedLevelFontSize;
+}
+.dvheightframe  {
+	.input-group-addon{
+		padding: $applicationInputGroupAddonPaddingRtl;
+	}
+  }
+.dcTitle {
+	.frameCap {
+		font-size: $appliactionCompressedTitleMainFontSize;
+	}
+	padding: $dcTitleCompressedPadding;
+}
+[id^='wrapperForEditFields'] {
+	margin: 0px;
+}
+.wrapper {
+	padding: $wrapperCompressedPadding;
+}
+#wBdr {
+	.wrapper {
+		.container-fluid {
+			padding: 0px;
+		}
+	}
+}
+.customSetupTableMN {
+	margin: 0px;
+}
+#dvlayout {
+	.checkbox.form-group.col-lg-12.col-sm-12.col-md-12 {
+		margin-top: $compressedCheckboxFormGroupMarginTop;
+	}
+}
+.grdButtons {
+	ul {
+		margin-bottom: 0px;
+	}
+}
+.grid-icons {
+	.btn {
+		@include gridIocnBtn;
+	}
+}
+#myTab {
+	li {
+		a {
+			//padding: $appliactionCompressedBtnPadding;
+			span{
+				&.text{
+					&:not(.gridoptions):not(#tabCollapseButton){
+						//font-size: $appliactionCompressedNotGridoptionsFontSize;
+					}
+				}
+				&.gridoptions {
+					font-size: $appliactionCompressedGridoptionsFontSize;
+					left: $appliactionCompressedGridoptionsLeft;
+				}
+			}
+		}
+	}
+}
+#heightframe {
+	#wBdr {
+		.wrapper {
+			.bs-example {
+					ul {
+						li {
+							&.active {
+								a {
+									span{
+										&:not(.gridoptions){
+											//font-size: $appliactionCompressedGridoptionsActiveFontSize;
+										}
+									}
+								}
+							}
+						}
+						span{
+							&.text{
+								&:not(.gridoptions):not(#tabCollapseButton){
+									//font-size: $appliactionCompressedGridoptionsActiveSapnTextFontSize;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+.newgridbtn {
+	ul {
+		li{
+			a,button{
+				span{
+					font-size: $appliactionCompressedNewgridBtnListSpanFontSize;
+				}
+			}
+		}
+	}
+}
+[id^='colScroll'] {
+	[id^='gridHd'] {
+		td {
+			padding: $gridTableDataCompressedPadding;
+		}
+		th {
+			padding: $gridTableHeadingCompressedPadding;
+		}
+		tbody {
+			tr {
+				td {
+					&:nth-child(3) {
+						padding-top: $compressedTableDataThirdChildPadding;
+						@include textCenter;
+					}
+				}
+			}
+		}
+	}
+	&.gridFixedHeader{
+		@include calc(max-height,$gridDCcolScrollGridFixedHeaderCompressedModeHeightCalc);
+	}
+}
+textarea.labelInp {
+	height: $appliactionCompressedInputSelectHeight;
+}
+span.checkBoxSpn {
+	position: $applicationPositionRelative;
+	top: $appliactionCompressedCheckBoxMarginTop;
+}
+.pickListFooter {
+	@include listPaddingCompressed;
+}
+input#Button1 {
+	height: $appliactionCompressedInputSelectHeight;
+}
+input#searstr {
+	height: $appliactionCompressedInputSelectHeight;
+}
+button#advancebtn {
+	font-size: $appliactionCompressedFontSize;
+}
+select#ddlSearch {
+	height: $appliactionCompressedInputSelectHeight;
+}
+#searchoverrelay {
+	.panel-heading {
+		padding: $searcHoverRelayPenalHeadingPadding;
+	}
+	.panel-body {
+		padding: $searcHoverRelayPenalBodyPadding;
+	}
+	#UpdatePanel1{
+		input{
+			&#Button1{
+				padding-top: $searchPagetoolBarSearchButtonPadding;
+			}
+		}
+	}
+}
+div#UpdatePanel1 {
+	font-size: $appliactionCompressedFontSize;
+	margin-bottom: $applicationCompressedUpdatePanelBottomMargin;
+}
+.pickListFRP {
+	i {
+		&:first-child {
+			margin-right: -2px;
+		}
+	}
+}
+div.ui-datepicker {
+	font-size: $appliactionCompressedFontSize;
+}
+div#Panel1 {
+	background-color: transparent;
+}
+.ui-autocomplete {
+	font-size: $appliactionCompressedFontSize;
+}
+span.fa.fa-paperclip {
+	font-size: $appliactionCompressedIconSize;
+}
+.custInpChk {
+	margin-top: $applicationCompressedCustInpChk;
+	position: $applicationPositionRelative;
+}
+.autoinput-parent.opened {
+	&::after {
+		top: $autoinputCompressedTopMargin;
+	}
+}
+.autoinput-parent{
+	.autoclear {
+		padding-top: $autoclearCompressedTopMargin;
+		top:0px;
+	}
+}
+.autoinput-parent{
+	.edit {
+		padding-top: $editCompressedTopMargin;
+		top: 0px;
+	}
+}
+#wizardBodyFooterWrapper {
+	margin-top: $wizardBodyFooterWrapperCommprssedTopMargin;
+}
+.wizardBodyContent {
+	height: calc(#{$applicationWizardMaximumHieght} - #{$wizardBodyContentCompressed});
+}
+#wizardWrappper.progress_flat {
+	.wizardBodyContent {
+		height: calc(#{$applicationWizardMaximumHieght} - #{$wizardBodyContentCompressedProgress_Flat}) !important;
+	}
+}
+.htmlPagesCls {
+		#wizardWrappper {
+			.wizardBodyContent {
+				height: calc(100vh - 45px) !important;
+			}
+	}
+}
+.dvdcframe {
+	.tstructDesignMode{
+		&.grid-stack{
+			.grid-stack-item{
+				>.ui-resizable-se,.ui-resizable-sw {
+					right: $gridStackMargin;
+				}
+			}
+		}
+	} 
+}
+.grid-stack {
+	>.grid-stack-item {
+		>.grid-stack-item-content {
+			@include gridStackContant;
+			.pwdtoggle{
+				top: $applicationCompressedNonGridPasswordtoggleTopGap;
+			}
+		}
+		>.ui-resizable-sw {
+			left: $gridStackMargin;
+		}
+	}
+	&:not(.staticRunMode) {
+		>.grid-stack-item {
+			@include gridStackItem;
+		}
+	}
+}
+.grid-stack-item {
+	.gridstackCalc {
+		height: calc(#{$applicationMaximumHeight} - #{$gridstackCalcCompressedModeHeight});
+	}
+	.customGridchkbox {
+		top:$applicationCompressedCustomGridchkBoxMarginTop;
+	}
+}
+img{
+	height: $applicationMaximumHeight;
+}
+#ui-datepicker-div{
+	min-height: $compressedDatePickerMinHeight;
+}
+.tgl-btn.gridStretch {
+    top: $gridStretchtoggleBtnCompressedModeTopGap;
+    left: $gridStretchtoggleBtnCompressedModeLeftGap;
+}
+.form-group {
+    margin: 0;
+    padding: 0 3px;
+    margin-top: 1px;
+    margin-bottom: 0;
+}
+//* compressed mode field gap form bottom *//
+.dvdcframe{
+	.mainIframe{
+		&.grid-stack{
+			&.dynamicRunMode:not(.staticRunMode){
+				&>.grid-stack-item{
+					@include compressedFieldsGap;
+				}
+			}
+		}
+	}
+	.divBarQrScan {
+		.barQrIcon {
+			top: 1px;
+		}
+	}
+	#containerDc {
+        .edit-mode-content {            
+            .divBarQrScan {  
+                .barQrIcon {                    
+                    top: 0px;
+                }                          
+            }
+        }               
+    }
+}
+
+
+.gridstackCalcChecklist{
+	.tokenfield{
+        &.form-control{
+			height:30px !important;
+			min-height: 50px;
+        }
+    }
+}
+.modal-open {
+	#bootstrapModalData {
+		.editWrapTr {
+			.grid-stack-item-content {
+                .fld-wrap1{
+					margin: 0;
+				}
+			}
+		}
+	}
+}
+#pagebdy{
+	#heightframe {
+		.tstructcontent {
+			.dcTitle {
+				span{
+					&.gridoptions {
+						font-size: 16px;
+					}
+				}
+			}
+		}
+	}
+}
+.tstformbutton{
+    padding:$tstructFormButtonCompressedModePadding;
+    margin-top: $tstructFormButtonCompressedModeMarginTop;
+}
+
+.colDivInputPadding {    
+    padding: $formLayoutRowInputPadding; 
+}
+//*compressed Tstruct*//

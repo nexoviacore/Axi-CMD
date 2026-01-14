@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" name="ASBActionservice" targetNamespace="http://tempuri.org/" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types />
+  <message name="RemoteDoAction0Request">
+    <part name="S" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="RemoteDoAction0Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="CreatePDF1Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="CreatePDF1Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="CreatePrintForm2Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="CreatePrintForm2Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetDocList3Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetDocList3Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="AxpSendMail4Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="AxpSendMail4Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetPrintDocList5Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetPrintDocList5Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="CreateFastreport6Request">
+    <part name="S" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="CreateFastreport6Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="WriteDefinition7Request">
+    <part name="S" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="WriteDefinition7Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="DeleteDefinition8Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="DeleteDefinition8Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetMETAdata9Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetMETAdata9Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="UpdateMETAdata10Request">
+    <part name="S" type="xs:string" />
+    <part name="sXML" type="xs:string" />
+  </message>
+  <message name="UpdateMETAdata10Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ValidateMailSettings11Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="ValidateMailSettings11Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <portType name="ASBAction">
+    <operation name="RemoteDoAction">
+      <input message="tns:RemoteDoAction0Request" />
+      <output message="tns:RemoteDoAction0Response" />
+    </operation>
+    <operation name="CreatePDF">
+      <input message="tns:CreatePDF1Request" />
+      <output message="tns:CreatePDF1Response" />
+    </operation>
+    <operation name="CreatePrintForm">
+      <input message="tns:CreatePrintForm2Request" />
+      <output message="tns:CreatePrintForm2Response" />
+    </operation>
+    <operation name="GetDocList">
+      <input message="tns:GetDocList3Request" />
+      <output message="tns:GetDocList3Response" />
+    </operation>
+    <operation name="AxpSendMail">
+      <input message="tns:AxpSendMail4Request" />
+      <output message="tns:AxpSendMail4Response" />
+    </operation>
+    <operation name="GetPrintDocList">
+      <input message="tns:GetPrintDocList5Request" />
+      <output message="tns:GetPrintDocList5Response" />
+    </operation>
+    <operation name="CreateFastreport">
+      <input message="tns:CreateFastreport6Request" />
+      <output message="tns:CreateFastreport6Response" />
+    </operation>
+    <operation name="WriteDefinition">
+      <input message="tns:WriteDefinition7Request" />
+      <output message="tns:WriteDefinition7Response" />
+    </operation>
+    <operation name="DeleteDefinition">
+      <input message="tns:DeleteDefinition8Request" />
+      <output message="tns:DeleteDefinition8Response" />
+    </operation>
+    <operation name="GetMETAdata">
+      <input message="tns:GetMETAdata9Request" />
+      <output message="tns:GetMETAdata9Response" />
+    </operation>
+    <operation name="UpdateMETAdata">
+      <input message="tns:UpdateMETAdata10Request" />
+      <output message="tns:UpdateMETAdata10Response" />
+    </operation>
+    <operation name="ValidateMailSettings">
+      <input message="tns:ValidateMailSettings11Request" />
+      <output message="tns:ValidateMailSettings11Response" />
+    </operation>
+  </portType>
+  <binding name="ASBActionbinding" type="tns:ASBAction">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="rpc" />
+    <operation name="RemoteDoAction">
+      <soap:operation soapAction="urn:uASBAction-ASBAction#RemoteDoAction" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="CreatePDF">
+      <soap:operation soapAction="urn:uASBAction-ASBAction#CreatePDF" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="CreatePrintForm">
+      <soap:operation soapAction="urn:uASBAction-ASBAction#CreatePrintForm" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetDocList">
+      <soap:operation soapAction="urn:uASBAction-ASBAction#GetDocList" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="AxpSendMail">
+      <soap:operation soapAction="urn:uASBAction-ASBAction#AxpSendMail" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetPrintDocList">
+      <soap:operation soapAction="urn:uASBAction-ASBAction#GetPrintDocList" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="CreateFastreport">
+      <soap:operation soapAction="urn:uASBAction-ASBAction#CreateFastreport" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="WriteDefinition">
+      <soap:operation soapAction="urn:uASBAction-ASBAction#WriteDefinition" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="DeleteDefinition">
+      <soap:operation soapAction="urn:uASBAction-ASBAction#DeleteDefinition" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetMETAdata">
+      <soap:operation soapAction="urn:uASBAction-ASBAction#GetMETAdata" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="UpdateMETAdata">
+      <soap:operation soapAction="urn:uASBAction-ASBAction#UpdateMETAdata" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ValidateMailSettings">
+      <soap:operation soapAction="urn:uASBAction-ASBAction#ValidateMailSettings" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+  </binding>
+  <service name="ASBActionservice">
+    <port name="ASBActionPort" binding="tns:ASBActionbinding">
+      <soap:address location="http://localhost/AxpertWebScripts/ASBAction.dll/soap/ASBAction" />
+    </port>
+  </service>
+</definitions>

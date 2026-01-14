@@ -1,0 +1,7 @@
+﻿.gridHeader, .gridContent {
+    table-layout: fixed;
+}
+
+    .gridContent td {
+        padding-right: 4px;
+    }

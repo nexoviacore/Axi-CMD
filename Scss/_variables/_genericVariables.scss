@@ -1,0 +1,64 @@
+//* application generic varibales starts ==================================== *//
+
+//* application color  ==================================== *//
+//$applicationColor: #607D8B;
+$applicationColor: #233044;
+//* applicationText color  ==================================== *//
+$applicationTextColor: #000;
+//* applicationBackgroundColor color  ==================================== *//
+$applicationBackgroundColor: #fff;
+//* applicationPageTitleColor color  ==================================== *//
+$applicationPageTitleColor:lighten($applicationTextColor, 13%);  
+//* applicationFontWeight  ==================================== *//
+$applicationFontWeight:600;
+//* applicationBorderColor color  ==================================== *//
+$applicationBorderColor:darken($applicationBackgroundColor, 10%);
+//* applicationBorderColor color  ==================================== *//
+$applicationTabBorderColor:darken($applicationBackgroundColor, 5%);
+//* login input border color ==================================== *//
+$materialInputBorderColor:darken($applicationBackgroundColor, 30%);
+//* pills color  ==================================== *//
+$pillsCheckedBoxBorderColor:darken($applicationBackgroundColor, 60%);
+//* applicationShadowColor color  ==================================== *//
+$applicationShadowColor:darken($applicationBackgroundColor, 30%);
+//* applicationListshadow color  ==================================== *//
+$applicationListShadow:darken($applicationBackgroundColor, 15%);
+//* pagetoolbarfocusshadow color  ==================================== *//
+$applicationPageToolbarHoverShadow:darken($applicationBackgroundColor, 80%);
+//* applicationFileUploadActiveColor after upload ==================================== *//
+$applicationFileUploadActiveColor:darken($applicationBackgroundColor, 0%);
+
+//* application scroll bar color  ==================================== *//
+$applicationScrollBarThumbBackgroundColor:lighten($applicationTextColor,60%);
+$applicationScrollBarThumbMinHeight:15%;
+$applicationScrollBarThumbMinWidth:15%;
+
+
+//* applicationShadowFirstColor color  ==================================== *//
+$applicationShadowFirstColor: rgba(0, 0, 0, 0.16);
+//* applicationShadowSecondColor color  ==================================== *//
+$applicationShadowSecondColor: rgba(0, 0, 0, 0.12);
+//* applicationFileUploadBorder color  ==================================== *//
+$applicationFileUploadBorder: lighten($applicationTextColor,70%);
+//*applicationFileUpload for file and camra radio button margin=============*//
+$applicationFileUploadRadioBtnRtlMarginRight:-20px;
+//* applicationIconColor  ==================================== *//
+$applicationIconColor:lighten($applicationTextColor,60%);
+//* applicationIconBackgroundColor  ==================================== *//
+$applicationIconBackgroundColor:lighten($applicationTextColor,60%);
+
+
+
+//* List of Custom Variables - Generic ==================================== *//
+//* Generic Icon Color  ==================================== */
+$moduleIconColor: lighten($applicationTextColor,60%);
+//* Generic Labels or Headings color  ==================================== */
+$moduleLabelsOrHeadingsColor: lighten($applicationTextColor,6.5%); //#111111
+//* Generic Input's Text Or Value Color  ==================================== */
+$moduleTextOrValueColor: lighten($applicationTextColor,0.5%); //#010101
+//* Generic Labels or Headings Font Size  ==================================== */
+$moduleLabelsOrHeadingsFontSize: 15px;
+//* Generic Labels or Headings Font Weight  ==================================== */
+$moduleLabelsOrHeadingsFontWeight: 600;
+
+//* application generic varibales Ends ==================================== *//

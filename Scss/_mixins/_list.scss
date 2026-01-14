@@ -1,0 +1,50 @@
+//* liststyle with padding margin-----------*//
+@mixin listStyle {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+@mixin listStylePadding {
+  padding: 0;
+}
+//* toolbar list gap-----------*//
+@mixin toolbarListGap{
+  margin-right: $toolbarListMargin;
+  margin-bottom: $toolbarListMargin;
+}
+@mixin toolbarPinListGap{
+  margin-right: $toolbarListMargin;
+  margin-bottom: $toolbarPinListMargin;
+}
+//* toolbar list gap without inside in ul separate li gap in toolbar from right -----------*//
+@mixin toolbarListGapSeparateList{
+  margin-bottom: $toolbarListMargin;
+}
+//* listpadding-----------*//
+@mixin listPadding{
+    padding: $listPadding;
+}
+//* liststyle none-----------*//
+@mixin listStyleNone{
+  list-style: none;
+}
+//* listpadding-----------*//
+@mixin listPaddingCompressed{
+  padding: 0px 0px;
+}
+@mixin workFlowselectboxList {
+  @include listStyleNone;
+  display: $workFlowWfselectboxUlLiDisplay;
+  padding: $workFlowWfselectboxUlLiPadding;
+  border-bottom: 1px solid $applicationBorderColor;
+  height: $workFlowWfselectboxUlLiHeight;
+  width: auto;
+  @include textCenter;
+}
+@mixin gridList {
+      list-style: none;
+      display: inline-block;
+      padding: 6px 6px 1px;
+      margin-left: 5px;
+      border-radius: 50%;
+}

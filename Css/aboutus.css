@@ -1,0 +1,27 @@
+﻿/*css for abous us page*/
+.versionInfo .castLbl {
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.versionInfo .fontclass {
+    font-size: 13px;
+}
+
+
+.btextDir-rtl .modal-header button#btnModalClose {
+    float: left !important;
+}
+#btnClose {
+    position: absolute;
+    top: 10px;
+    right: 0;
+    background: #fff;
+    cursor: default;
+    width: 0;
+    height: 0;
+    padding: 0;
+    background-color: #FFF!important;
+    float: right;
+
+}

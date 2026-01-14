@@ -1,0 +1,11 @@
+//*datePickerIcon  ==================================== *//
+@mixin datePickerIcon{
+    right: $datePickerRightGap;
+    width: $datePickerWidth;
+    top: $datePickerTopGap;
+}
+@mixin datePickerIconRtl{
+    left: $datePickerLeftGapRtl;
+    right: auto;
+}
+//*datePickerIcon  ==================================== *//

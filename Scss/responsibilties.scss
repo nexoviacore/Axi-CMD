@@ -1,0 +1,28 @@
+//* materialui mixin ==================================== *//
+@import 'materialUI/_mixins';
+/* Global Variable ==================================== */
+@import '_variables/_genericVariables';
+@import '_variables/_globalVariable';
+/* iview mixin ==================================== */
+@import '_mixins/_globalMixin';
+/* page Title ==================================== */
+@import 'iviewUI/_pageTitle';
+/* page Loader ==================================== */
+@import 'iviewUI/_loader';
+//* Responsibilities ==================================== *//
+//* page iframe loder (tstruct and iview) ==================================== *//
+@import 'iviewUI/_pageLoader';
+#searchclear{
+    display: none;
+    .btextDir-ltr &{
+        @include searchIconReponsibilities;
+    }
+}
+#spnResponsibilityActions{
+    position: $applicationPositionAbsolute;
+    margin-top: $searchIconReponsibilitiesMarginTop;
+}
+#dvPopErrMsg{
+    display: none;
+}
+//* Responsibilities ==================================== *//

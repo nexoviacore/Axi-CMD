@@ -1,0 +1,75 @@
+#axpertPopupWrapper {
+    max-width: calc(100% - 8px);
+    height: calc(100% - 8px);
+    margin:4px;
+}
+
+.remodal-wrapper {
+    overflow: hidden !important;
+    padding:0;
+}
+
+.dvheightframe {
+    /*height: calc(100vh - 114px) !important;
+    height: -webkit-calc(100vh - 114px) !important;
+    height: -moz-calc(100vh - 88px) !important;
+    height: -o-calc(100vh - 88px) !important;
+    position: relative;
+    top: 6px;
+    border-top: 1px solid #e2e2e2;
+    overflow: auto;
+    overflow-x: hidden;*/
+}
+
+body[dir="rtl"] .remodal-close.icon-basic-remove{left:7px !important;right:auto!important}
+
+/*unclickable & blur css for main-header, body, footer */ 
+.remodal-overlay-custom {
+    pointer-events: none;
+    background: rgba(43,46,56,.29);
+    opacity: 0.6;
+}
+#heightframe{
+    /*height: calc(100vh - 132px) !important;*/
+    /*height: -webkit-calc(100vh - 88px) !important;
+    height: -moz-calc(100vh - 88px) !important;
+    height: -o-calc(100vh - 88px) !important;*/
+    /*position: relative;
+    top: 6px;
+    border-top: 1px solid #e2e2e2;
+    overflow: auto;
+    overflow-x: hidden;*/
+}
+
+/*div#heightframe[data-submitcancel=true] {
+    height: calc(100vh - 132px)!important;
+    height: -webkit-calc(100vh - 132px) !important;
+    height: -moz-calc(100vh - 132px) !important;
+    height: -o-calc(100vh - 132px) !important;
+}*/
+
+ /*div#heightframe[data-submitcancel=false] {
+    height: calc(100vh - 113px)!important;
+    height: -webkit-calc(100vh - 113px) !important;
+    height: -moz-calc(100vh - 113px) !important;
+    height: -o-calc(100vh - 113px) !important;
+}*/
+
+#axpertPopupWrapper button{
+    right: 1px !important;
+    background: rgba(0,0,0,0.6);
+    border-radius: 33px;
+    width: 33px;
+    color:#fff !important;
+}
+.btextDir-rtl #axpertPopupWrapper button{
+    left: 0px !important;
+    background: rgba(0,0,0,0.6);
+    color: #fff !important;
+    width: 33px !important;
+    border-radius: 33px;
+    top: 0px;
+    height: 30px;
+    right: auto !important;
+    position: absolute;
+}

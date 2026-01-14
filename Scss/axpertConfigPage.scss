@@ -1,0 +1,15 @@
+@import 'materialUI/_mixins';
+@import 'materialUI/_variables';
+//* Global Variable ==================================== *//
+@import '_variables/_genericVariables';
+@import '_variables/_globalVariable';
+//* iview mixin ==================================== *//
+@import '_mixins/_globalMixin';
+//* Materialize Css | Taken from www.materializecss.com *//
+//@import url(../ThirdParty/materialize/css/materialize.min.css);
+@import url(materialize.css);
+//* Card ======================================== *//
+// @import 'materialUI/_card.scss';
+@import 'tstructUI/_fileUpload';
+//* axpertconfig file pageOptionColumns ==================================== *//
+@import 'generic/_axpertConfig';

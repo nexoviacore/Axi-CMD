@@ -1,0 +1,5 @@
+@mixin pickListOption{
+    height: $picklistOptionHeight;
+    overflow-y: auto;
+    margin: $picklistOptionMargin 0px;
+}

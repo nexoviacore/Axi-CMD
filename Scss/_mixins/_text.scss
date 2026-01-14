@@ -1,0 +1,16 @@
+//* Modal box ==================================== *//
+@mixin textOverflow {
+    text-overflow: $textOverflowEllipsis;
+    white-space: $textoverflowWhiteSpaceNowrap;
+    display: $textOverflowDisplay;
+    overflow: $textOverflowHidden;
+}
+@mixin textOverflowFillgridPopUp {
+    text-overflow: $textOverflowEllipsis;
+    white-space: $textoverflowWhiteSpaceNowrap;
+    overflow: $textOverflowHidden;
+}
+@mixin textOverflowModernUi {
+   white-space: $toolbar_textOverflow_ModernUi_Wordspace;
+}
+//* Modal box ==================================== *//

@@ -1,0 +1,26 @@
+//* application button ==================================== *//
+.login {
+    .login-main{
+        .form-actions{
+            button,input{
+                @include loginBtn;
+                &:hover{
+                    background-color: $hotBtnHoverColor;
+                }
+            }
+        }
+    }
+}
+#main_body{
+    #login-box{
+        .divbutton{
+            #btnSubmit{
+                @include loginBtn;
+                &:hover{
+                    background-color: $hotBtnHoverColor;
+                }
+            }
+        }
+    }
+}
+//* application button ==================================== *//

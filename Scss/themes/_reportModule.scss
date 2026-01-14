@@ -1,0 +1,29 @@
+@mixin _reportModule($theme, $colors) {
+    .table{
+        thead {
+            tr {
+                th {
+                    background: getMapByPath($colors, 'surface.default.background');
+                }
+            }
+        }
+        tbody{
+            tr{
+                td{
+                    &.isHyperlinkUI{
+                        a{
+                            //background: darken(getMapByPath($colors, 'surface.default.background'), 3.5%);
+                            color: getMapByPath($colors, 'hot.default.background');
+                            &:hover{
+                                //background: darken(getMapByPath($colors, 'surface.default.background'), 6%);
+                            }
+                        }
+                    }
+                }
+                // td,th{
+                //     color: getMapByPath($colors, 'surface.default.color');
+                // }
+            }
+        }
+    }
+}

@@ -1,0 +1,10 @@
+.gridstackCalcChecklist{
+    overflow: hidden;
+    width:100%;
+    height: calc(#{$applicationMaximumHeight} - 23px);
+    label{
+        vertical-align: top;
+        display:none;
+        padding-top: 8px;
+    }
+}

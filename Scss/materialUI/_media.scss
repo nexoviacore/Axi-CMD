@@ -1,0 +1,135 @@
+﻿@import '_variables/_theme-color-variables';
+@media (max-width: 767px) {
+    .navbar {
+        > .container,
+        > .container-fluid {
+            .navbar-brand {
+                margin-left: 35px;
+                width: 50%;
+            }
+        }
+
+        .navbar-header {
+            display: inline-block;
+            margin-bottom: -6px;
+            width: calc(100% + 30px);
+        }
+
+        .nav {
+            > li {
+                display: inline-block;
+            }
+        }
+
+        .navbar-nav {
+           //margin-top: -10px;
+            //margin-bottom: 1px;
+            //margin-left: -7px;
+
+            .open {
+                .dropdown-menu {
+                    background-color: #fff;
+                    position: absolute;
+                }
+            }
+        }
+
+        .dropdown-menu {
+            margin-left: -50px;
+        }
+
+        // .js-right-sidebar {
+        //     margin-top: 17px;
+        // }
+    }
+
+    .dt-buttons {
+        float: none !important;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    .panel-switch-btn {
+        top: 12px;
+        right: 0 !important;
+    }
+}
+@media (max-width: 768px) {
+    .navbar{
+        .navbar-collapse{
+            display: $applicationNavBarCollapseDisplayMobile;
+            ul{
+                //@include floatRight;
+                // margin-top: $applicationNavBarCollapseUlMarginTopMobile;
+                // .compressedModeUI &{
+                //     margin-top: $applicationCompressedNavBarCollapseUlMarginTopMobile;
+                // }
+            }
+        }
+        // .navbar-nav {
+        //     li{
+        //         a{
+        //             &.js-search{
+        //                 display: block;
+        //             }
+        //         }
+        //     }
+        // }
+    }
+    .fullTempleteWrapper{
+        .search-bar{
+            top: $applicationSearchBarTopGapMobile;
+            &.open{
+               top: 0px;
+               width: $applicationSearchBarWidthMobile;
+               input[type="text"]{
+                   @include border-radius($applicationSearchBarInutBorderRadiusMobile);
+                   padding: $applicationSearchBarInutPaddingMobile;
+                   margin-top: $applicationSearchBarInutMarginTopMobile;
+                   .compressedModeUI &{
+                       padding: $applicationCompressedSearchBarInutPaddingMobile;
+                   }
+               }
+            }
+        }
+    }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+    .navbar {
+        > .container,
+        > .container-fluid {
+            .navbar-brand {
+                margin-left: 20px;
+                width: 138px;
+            }
+        }
+    }
+    .fullTempleteWrapper{
+        .search-bar {
+            width: 460px;
+        }
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1169px) {
+    .navbar {
+        > .container,
+        > .container-fluid {
+            .navbar-brand {
+                margin-left: 20px;
+                width: 169px;
+            }
+        }
+    }
+    .fullTempleteWrapper{
+        .search-bar {
+            width: 600px;
+        }
+    }
+}
+
+@media (min-width: 1170px) and (max-width: 1999px) {
+}
+
+@media (min-width: 1200px) {
+}

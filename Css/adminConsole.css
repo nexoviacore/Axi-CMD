@@ -1,0 +1,1707 @@
+@import url(materialize.css);
+.overlay {
+  position: fixed;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+  z-index: 10;
+}
+
+.overlay-open .sidebar {
+  margin-left: 0;
+  z-index: 99999999;
+}
+
+.sidebar {
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
+  -webkit-transition: all 0.5s;
+  transition: all 0.5s;
+  background: #fdfdfd;
+  width: 300px;
+  overflow: hidden;
+  display: inline-block;
+  height: calc(100vh - 70px);
+  position: fixed;
+  top: 70px;
+  left: 0;
+  -webkit-box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  -ms-box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 11 !important;
+}
+
+.compressedModeUI .sidebar {
+  top: 50px;
+  height: -moz-calc(100vh - 50px);
+  height: -webkit-calc(100vh - 50px);
+  height: calc(100vh - 50px);
+}
+
+.sidebar .legal {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 15px;
+  overflow: hidden;
+}
+
+.sidebar .legal .copyright {
+  font-size: 13px;
+  white-space: nowrap;
+  -ms-text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.sidebar .legal .copyright img {
+  margin: 5px;
+  float: left;
+}
+
+.btextDir-rtl .sidebar .legal .copyright img {
+  float: right;
+}
+
+.sidebar .legal .copyright span {
+  float: right;
+  margin-top: 13px;
+}
+
+.btextDir-rtl .sidebar .legal .copyright span {
+  float: left;
+}
+
+.sidebar .legal .copyright a {
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.sidebar .legal .version {
+  white-space: nowrap;
+  -ms-text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin-top: 5px;
+  font-size: 13px;
+}
+
+.sidebar .user-info {
+  padding: 13px 15px 12px 15px;
+  white-space: nowrap;
+  position: relative;
+  border-bottom: 1px solid #e9e9e9;
+  height: 74px;
+}
+
+.sidebar .user-info .image {
+  margin-right: 12px;
+  display: inline-block;
+  max-width: 748px;
+}
+
+.sidebar .user-info .image img {
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  border-radius: 50%;
+  vertical-align: bottom !important;
+}
+
+.sidebar .user-info .info-container {
+  cursor: default;
+  display: block;
+  position: relative;
+  top: -5px;
+}
+
+.sidebar .user-info .info-container .name,
+.sidebar .user-info .info-container .email {
+  white-space: nowrap;
+  -ms-text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-size: 14px;
+  max-width: 195px;
+  color: #fff;
+}
+
+.sidebar .user-info .info-container .email {
+  font-size: 12px;
+}
+
+.sidebar .user-info .info-container .user-helper-dropdown {
+  position: absolute;
+  right: -3px;
+  bottom: 0px;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  -ms-box-shadow: none;
+  box-shadow: none;
+  cursor: pointer;
+  color: #fff;
+}
+
+.sidebar .user-info .user-info-container {
+  display: inline-block;
+}
+
+.sidebar .user-info .user-info-container .name,
+.sidebar .user-info .user-info-container .email {
+  white-space: nowrap;
+  -ms-text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-size: 14px;
+  max-width: 195px;
+  color: #fff;
+}
+
+.sidebar .user-info .user-info-container .email {
+  font-size: 12px;
+}
+
+.sidebar .menu {
+  position: relative;
+  overflow-y: auto;
+  height: 90vh;
+}
+
+.sidebar .menu .slimScrollBar:hover, .sidebar .menu .slimScrollBar:active, .sidebar .menu .slimScrollBar :focus {
+  border: 4px solid rgba(255, 255, 255, 0.7);
+}
+
+.sidebar .menu .list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.sidebar .menu .list li.active > :first-child span {
+  font-weight: bold;
+}
+
+.sidebar .menu .list .header {
+  background: #eee;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 16px;
+}
+
+.sidebar .menu .list i.material-icons {
+  margin-top: 4px;
+  color: #999999;
+}
+
+.sidebar .menu .list .menu-toggle:after, .sidebar .menu .list .menu-toggle:before {
+  position: absolute;
+  top: calc(50% - 14px);
+  right: 17px;
+  font-size: 19px;
+  -moz-transform: scale(0);
+  -ms-transform: scale(0);
+  -o-transform: scale(0);
+  -webkit-transform: scale(0);
+  transform: scale(0);
+  -moz-transition: all 0.3s;
+  -o-transition: all 0.3s;
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+}
+
+.sidebar .menu .list .menu-toggle:before {
+  content: '+';
+  -moz-transform: scale(1);
+  -ms-transform: scale(1);
+  -o-transform: scale(1);
+  -webkit-transform: scale(1);
+  transform: scale(1);
+}
+
+.sidebar .menu .list .menu-toggle:after {
+  content: '\2013';
+  -moz-transform: scale(0);
+  -ms-transform: scale(0);
+  -o-transform: scale(0);
+  -webkit-transform: scale(0);
+  transform: scale(0);
+}
+
+.sidebar .menu .list .menu-toggle.toggled:before {
+  -moz-transform: scale(0);
+  -ms-transform: scale(0);
+  -o-transform: scale(0);
+  -webkit-transform: scale(0);
+  transform: scale(0);
+}
+
+.sidebar .menu .list .menu-toggle.toggled:after {
+  -moz-transform: scale(1);
+  -ms-transform: scale(1);
+  -o-transform: scale(1);
+  -webkit-transform: scale(1);
+  transform: scale(1);
+}
+
+.sidebar .menu .list a {
+  color: #010101;
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+  width: 100%;
+  padding: 10px 13px;
+}
+
+.sidebar .menu .list a:hover, .sidebar .menu .list a:active, .sidebar .menu .list a:focus {
+  text-decoration: none !important;
+}
+
+.sidebar .menu .list a small {
+  position: absolute;
+  top: calc(50% - 7.5px);
+  right: 15px;
+}
+
+.sidebar .menu .list a span {
+  margin: 7px 0 7px 12px;
+  font-size: 14px;
+  overflow: hidden;
+}
+
+.sidebar .menu .list a .menuIcon {
+  width: 24px;
+  height: 24px;
+  margin-left: 3px;
+  margin-right: 0px;
+  margin-top: 3px;
+  vertical-align: top;
+  border-style: none;
+}
+
+.sidebar .menu .list .ml-menu {
+  list-style: none;
+  display: none;
+  padding-left: 0;
+}
+
+.sidebar .menu .list .ml-menu span {
+  font-weight: normal;
+  font-size: 14px;
+  margin: 3px 18px 1px 6px;
+  word-break: break-word;
+}
+
+.sidebar .menu .list .ml-menu li a {
+  padding-left: 55px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.sidebar .menu .list .ml-menu li.active a.toggled:not(.menu-toggle) {
+  font-weight: 600;
+  margin-left: 5px;
+}
+
+.sidebar .menu .list .ml-menu li.active a.toggled:not(.menu-toggle):before {
+  content: '\E315';
+  font-family: 'Material Icons Outlined';
+  position: relative;
+  font-size: 21px;
+  height: 20px;
+  top: -5px;
+  right: 0px;
+}
+
+.sidebar .menu .list .ml-menu li .ml-menu li a {
+  padding-left: 80px;
+}
+
+.sidebar .menu .list .ml-menu li .ml-menu .ml-menu li a {
+  padding-left: 95px;
+}
+
+.sidebar .menu .ml-menu i.material-icons {
+  margin-top: initial;
+}
+
+.right-sidebar,
+.right-notificationbar {
+  width: 280px;
+  height: calc(100vh - 70px);
+  position: fixed;
+  right: -300px;
+  top: 70px;
+  background: #fdfdfd;
+  z-index: 11 !important;
+  -webkit-box-shadow: -2px 2px 5px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: -2px 2px 5px rgba(0, 0, 0, 0.1);
+  -ms-box-shadow: -2px 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: -2px 2px 5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  -moz-transition: 0.5s;
+  -o-transition: 0.5s;
+  -webkit-transition: 0.5s;
+  transition: 0.5s;
+}
+
+.compressedModeUI .right-sidebar, .compressedModeUI
+.right-notificationbar {
+  height: -moz-calc(100vh - 50px);
+  height: -webkit-calc(100vh - 50px);
+  height: calc(100vh - 50px);
+  top: 50px;
+}
+
+.right-sidebar.open,
+.right-notificationbar.open {
+  right: 0;
+}
+
+.right-sidebar .nav-tabs,
+.right-notificationbar .nav-tabs {
+  font-weight: 600;
+  font-size: 13px;
+  width: 100%;
+  margin-left: 2px;
+}
+
+.right-sidebar .nav-tabs li,
+.right-notificationbar .nav-tabs li {
+  text-align: center;
+  width: 33.33%;
+}
+
+.right-sidebar .nav-tabs li > a,
+.right-notificationbar .nav-tabs li > a {
+  margin-right: 0;
+}
+
+.right-notificationbar ul li button {
+  top: 8px;
+  position: relative;
+  left: 83px;
+  background-color: transparent;
+  color: #000;
+  border: 0px;
+  float: right;
+}
+
+.right-notificationbar .setting-panel {
+  height: calc(100vh - 129px);
+  overflow: auto;
+}
+
+.right-notificationbar .setting-panel .demo-settings .notificationtabs {
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+  padding-top: 10px;
+}
+
+.right-notificationbar .setting-panel .demo-settings .notificationtabs span.close {
+  float: left;
+  width: 8%;
+  text-align: center;
+  background: #dfdfdf;
+  opacity: 1;
+  border-radius: 50%;
+  padding: 3px;
+  padding: 1px 5px 3px;
+  color: #999;
+  margin-left: 2px;
+  font-size: 18px;
+}
+
+.right-notificationbar .setting-panel .demo-settings .notificationtabs #settingsGeneral {
+  text-align: left;
+  float: left;
+  width: 80%;
+  font-size: 12px;
+  color: #656262;
+  margin-left: 5px;
+}
+
+.nav-tabs {
+  border-bottom: 2px solid #e6e6e6;
+}
+
+.nav-tabs > li {
+  position: relative;
+  top: 3px;
+  left: -2px;
+}
+
+.nav-tabs > li > a {
+  border: none !important;
+  color: #999999 !important;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  -ms-border-radius: 0;
+  border-radius: 0;
+}
+
+.nav-tabs > li > a:hover, .nav-tabs > li > a:active, .nav-tabs > li > a:focus {
+  background-color: transparent !important;
+}
+
+.nav-tabs > li > a:before {
+  content: '';
+  -moz-transform: scaleX(0);
+  -ms-transform: scaleX(0);
+  -o-transform: scaleX(0);
+  -webkit-transform: scaleX(0);
+  transform: scaleX(0);
+  -moz-transition: 0.1s ease-in;
+  -o-transition: 0.1s ease-in;
+  -webkit-transition: 0.1s ease-in;
+  transition: 0.1s ease-in;
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 0;
+  border-bottom: 2px solid #1976d2;
+  bottom: 2px;
+}
+
+.nav-tabs > li > a .material-icons {
+  position: relative;
+  top: 7px;
+  margin-bottom: 8px;
+}
+
+.nav-tabs li.active a {
+  color: #000 !important;
+}
+
+.nav-tabs li.active a:hover, .nav-tabs li.active a:active, .nav-tabs li.active a:focus {
+  background-color: transparent !important;
+}
+
+.nav-tabs li.active a:before {
+  -moz-transform: scaleX(1);
+  -ms-transform: scaleX(1);
+  -o-transform: scaleX(1);
+  -webkit-transform: scaleX(1);
+  transform: scaleX(1);
+}
+
+.nav-tabs + .tab-content {
+  padding: 15px 0;
+}
+
+.nav-tabs.tab-col-red > li > a:before {
+  border-bottom: 2px solid #F44336;
+}
+
+.nav-tabs.tab-col-pink > li > a:before {
+  border-bottom: 2px solid #E91E63;
+}
+
+.nav-tabs.tab-col-purple > li > a:before {
+  border-bottom: 2px solid #9C27B0;
+}
+
+.nav-tabs.tab-col-deep-purple > li > a:before {
+  border-bottom: 2px solid #673AB7;
+}
+
+.nav-tabs.tab-col-indigo > li > a:before {
+  border-bottom: 2px solid #3F51B5;
+}
+
+.nav-tabs.tab-col-blue > li > a:before {
+  border-bottom: 2px solid #2196F3;
+}
+
+.nav-tabs.tab-col-light-blue > li > a:before {
+  border-bottom: 2px solid #03A9F4;
+}
+
+.nav-tabs.tab-col-cyan > li > a:before {
+  border-bottom: 2px solid #00BCD4;
+}
+
+.nav-tabs.tab-col-teal > li > a:before {
+  border-bottom: 2px solid #009688;
+}
+
+.nav-tabs.tab-col-green > li > a:before {
+  border-bottom: 2px solid #4CAF50;
+}
+
+.nav-tabs.tab-col-light-green > li > a:before {
+  border-bottom: 2px solid #8BC34A;
+}
+
+.nav-tabs.tab-col-lime > li > a:before {
+  border-bottom: 2px solid #CDDC39;
+}
+
+.nav-tabs.tab-col-yellow > li > a:before {
+  border-bottom: 2px solid #ffe821;
+}
+
+.nav-tabs.tab-col-amber > li > a:before {
+  border-bottom: 2px solid #FFC107;
+}
+
+.nav-tabs.tab-col-orange > li > a:before {
+  border-bottom: 2px solid #FF9800;
+}
+
+.nav-tabs.tab-col-deep-orange > li > a:before {
+  border-bottom: 2px solid #FF5722;
+}
+
+.nav-tabs.tab-col-brown > li > a:before {
+  border-bottom: 2px solid #795548;
+}
+
+.nav-tabs.tab-col-grey > li > a:before {
+  border-bottom: 2px solid #9E9E9E;
+}
+
+.nav-tabs.tab-col-blue-grey > li > a:before {
+  border-bottom: 2px solid #607D8B;
+}
+
+.nav-tabs.tab-col-black > li > a:before {
+  border-bottom: 2px solid #000000;
+}
+
+.nav-tabs.tab-col-white > li > a:before {
+  border-bottom: 2px solid #ffffff;
+}
+
+.navbar {
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  -ms-border-radius: 0;
+  border-radius: 0;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+  border: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 12;
+  width: 100%;
+  height: auto;
+  margin-bottom: 0px;
+}
+
+.navbar .navbar-brand {
+  white-space: nowrap;
+  -ms-text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 257px;
+}
+
+.navbar .navbar-custom-right-menu {
+  float: right;
+}
+
+.navbar .navbar-toggle {
+  text-decoration: none;
+  color: white;
+  width: 20px;
+  height: 20px;
+  margin-top: -4px;
+  margin-right: 17px;
+}
+
+.navbar .navbar-toggle:before {
+  content: '\E8D5';
+  font-family: 'Material Icons Outlined';
+  font-size: 26px;
+}
+
+.navbar .navbar-collapse.in {
+  overflow: visible;
+}
+
+.ls-closed .sidebar {
+  margin-left: -300px;
+}
+
+.ls-closed section.content {
+  margin-left: 0px;
+}
+
+.ls-closed section.content .appBackBtn {
+  position: fixed;
+  z-index: 1;
+  top: 71px;
+}
+
+.ls-closed .bars:after, .ls-closed .bars:before {
+  font-family: 'Material Icons Outlined';
+  font-size: 24px;
+  -moz-transform: scale(0);
+  -ms-transform: scale(0);
+  -o-transform: scale(0);
+  -webkit-transform: scale(0);
+  transform: scale(0);
+  -moz-transition: all 0.3s;
+  -o-transition: all 0.3s;
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  margin-right: 10px;
+}
+
+.ls-closed .bars:before {
+  content: '\E5D2';
+  -moz-transform: scale(1);
+  -ms-transform: scale(1);
+  -o-transform: scale(1);
+  -webkit-transform: scale(1);
+  transform: scale(1);
+}
+
+.ls-closed .bars:after {
+  content: '\E5C4';
+  -moz-transform: scale(0);
+  -ms-transform: scale(0);
+  -o-transform: scale(0);
+  -webkit-transform: scale(0);
+  transform: scale(0);
+}
+
+.ls-closed .navbar-brand {
+  margin-left: 30px;
+}
+
+.ls-closed.compressedModeUI .bars:after, .ls-closed.compressedModeUI .bars:before {
+  top: 9px;
+}
+
+.overlay-open .bars:before {
+  -moz-transform: scale(0);
+  -ms-transform: scale(0);
+  -o-transform: scale(0);
+  -webkit-transform: scale(0);
+  transform: scale(0);
+}
+
+.overlay-open .bars:after {
+  -moz-transform: scale(1);
+  -ms-transform: scale(1);
+  -o-transform: scale(1);
+  -webkit-transform: scale(1);
+  transform: scale(1);
+}
+
+.navbar-left-panel {
+  float: left;
+}
+
+.navbar-left-panel .navbar-header {
+  padding: 10px 7px;
+}
+
+body:not(.enableExpandCollapse) .navbar-left-panel .navbar-header {
+  width: 100%;
+}
+
+.compressedModeUI .navbar-left-panel .navbar-header {
+  padding: 0px 7px;
+}
+
+.navbar-left-panel .navbar-header .bars {
+  float: left;
+  text-decoration: none;
+  color: #999999;
+}
+
+body:not(.enableExpandCollapse) .navbar-left-panel .navbar-header .navbar-brand {
+  width: 100%;
+  position: relative;
+  top: -2px;
+  white-space: nowrap;
+  -ms-text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: inline-block;
+}
+
+body.overlay-open .navbar-left-panel .navbar-header .navbar-brand {
+  color: #fff;
+}
+
+body:not(.overlay-open) .navbar-left-panel .navbar-header .navbar-brand {
+  color: #010101;
+}
+
+body:not(.enableExpandCollapse) .navbar-left-panel {
+  float: none;
+  white-space: nowrap;
+  -ms-text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding: 2px;
+}
+
+.enableExpandCollapse .navbar-right-panel {
+  width: -moz-calc(100vw - 300px);
+  width: -webkit-calc(100vw - 300px);
+  width: calc(100vw - 300px);
+  position: absolute;
+  right: 0px;
+  padding: 10px;
+}
+
+.enableExpandCollapse.compressedModeUI .navbar-right-panel {
+  padding: 0px;
+}
+
+.navbar-right-panel #navbar-collapse .navbar-nav > li > a {
+  padding: 8px;
+  height: 40px;
+  width: 40px;
+  color: #999999;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  border-radius: 50%;
+}
+
+.navbar-right-panel #navbar-collapse .navbar-nav > li > a:focus {
+  background: none;
+}
+
+.compressedModeUI .navbar-right-panel #navbar-collapse .navbar-nav > li > a {
+  padding: 8px;
+}
+
+body:not(.enableExpandCollapse) .navbar-right-panel {
+  float: right;
+}
+
+.navbar-nav {
+  position: relative;
+  height: 50px;
+}
+
+body:not(.enableExpandCollapse) .navbar-nav {
+  margin: 0px -15px;
+}
+
+.navbar-nav > li#userProfile {
+  position: static;
+}
+
+.navbar-nav > li#userProfile ul {
+  width: 250px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.navbar-nav > li#userProfile ul li {
+  border-bottom: 1px solid #ebebeb;
+}
+
+.navbar-nav > li#userProfile ul li a {
+  text-align: center;
+}
+
+.navbar-nav > li#userProfile ul li a span#userNameIcon {
+  background: #ebebeb;
+  padding-top: 14px;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  border-radius: 50%;
+  display: inline-block;
+  height: 55px;
+  width: 55px;
+  font-size: 22px;
+}
+
+.navbar-nav > li#userProfile ul li a span#userNameInfo {
+  margin-top: 10px;
+  display: block;
+  margin-bottom: 0px;
+}
+
+.navbar-nav > li#userProfile ul li a span#userNameInfo span {
+  color: #010101;
+}
+
+.navbar-nav > li#userProfile ul li a span#userNameInfo #AxUserEmail {
+  word-break: break-word;
+  white-space: normal;
+}
+
+.navbar-nav > li#userProfile ul li a span#userNameInfo #AxUserEmail span {
+  color: #010101;
+}
+
+.navbar-nav > li#userProfile ul li #AxGlo {
+  padding: 10px 20px;
+}
+
+.navbar-nav > li#userProfile ul li #AxGlo span {
+  display: table-cell;
+  padding: 5px 26px 5px 16px;
+}
+
+.navbar-nav > li#userProfile ul li #AxGlo span table tbody tr td {
+  color: #010101;
+}
+
+.navbar-nav > li#userProfile ul li #AxGlo span table tbody tr td b {
+  font-weight: normal;
+}
+
+.navbar-nav > li#userProfile ul li #AxGlo a {
+  color: #999999;
+  vertical-align: middle;
+}
+
+.navbar-nav > li#userProfile ul li#Logout {
+  border: none;
+  text-align: center;
+}
+
+.navbar-nav > li#userProfile ul li#Logout a {
+  display: inline-block;
+  border: 1px solid #ebebeb;
+  margin-top: 12px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  border-radius: 3px;
+}
+
+.navbar-nav > li#userProfile ul li#Logout a span {
+  color: #010101;
+}
+
+.navbar-nav > li#userProfile ul li#Logout a:hover {
+  background: #f2f2f2;
+}
+
+.navbar-nav > li > a {
+  padding: 7px 7px 2px 7px;
+  text-align: center;
+}
+
+.enableExpandCollapse.compressedModeUI .navbar-nav > li > a {
+  margin-top: 6px;
+  padding: 5px 7px 0px;
+}
+
+.enableExpandCollapse .navbar-nav > li > a {
+  margin-top: 9px;
+}
+
+body:not(.enableExpandCollapse) .navbar-nav > li > a {
+  margin-top: 12px;
+}
+
+body:not(.enableExpandCollapse).compressedModeUI .navbar-nav > li > a {
+  margin-top: 4px;
+}
+
+.enableExpandCollapse .navbar-nav > li > a.js-search {
+  display: none;
+}
+
+.navbar-nav .dropdown-menu {
+  margin-top: 1px !important;
+}
+
+.label-count {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  font-size: 10px;
+  line-height: 15px;
+  padding: 0 4px;
+  background-color: #000;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  border-radius: 3px;
+}
+
+.col-red .navbar .navbar-brand,
+.col-red .navbar .navbar-brand:hover,
+.col-red .navbar .navbar-brand:active,
+.col-red .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-red .navbar .nav > li > a:hover,
+.col-red .navbar .nav > li > a:focus,
+.col-red .navbar .nav .open > a,
+.col-red .navbar .nav .open > a:hover,
+.col-red .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-red .navbar .nav > li > a {
+  color: white;
+}
+
+.col-red .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-red .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-pink .navbar .navbar-brand,
+.col-pink .navbar .navbar-brand:hover,
+.col-pink .navbar .navbar-brand:active,
+.col-pink .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-pink .navbar .nav > li > a:hover,
+.col-pink .navbar .nav > li > a:focus,
+.col-pink .navbar .nav .open > a,
+.col-pink .navbar .nav .open > a:hover,
+.col-pink .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-pink .navbar .nav > li > a {
+  color: white;
+}
+
+.col-pink .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-pink .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-purple .navbar .navbar-brand,
+.col-purple .navbar .navbar-brand:hover,
+.col-purple .navbar .navbar-brand:active,
+.col-purple .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-purple .navbar .nav > li > a:hover,
+.col-purple .navbar .nav > li > a:focus,
+.col-purple .navbar .nav .open > a,
+.col-purple .navbar .nav .open > a:hover,
+.col-purple .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-purple .navbar .nav > li > a {
+  color: white;
+}
+
+.col-purple .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-purple .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-deep-purple .navbar .navbar-brand,
+.col-deep-purple .navbar .navbar-brand:hover,
+.col-deep-purple .navbar .navbar-brand:active,
+.col-deep-purple .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-deep-purple .navbar .nav > li > a:hover,
+.col-deep-purple .navbar .nav > li > a:focus,
+.col-deep-purple .navbar .nav .open > a,
+.col-deep-purple .navbar .nav .open > a:hover,
+.col-deep-purple .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-deep-purple .navbar .nav > li > a {
+  color: white;
+}
+
+.col-deep-purple .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-deep-purple .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-indigo .navbar .navbar-brand,
+.col-indigo .navbar .navbar-brand:hover,
+.col-indigo .navbar .navbar-brand:active,
+.col-indigo .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-indigo .navbar .nav > li > a:hover,
+.col-indigo .navbar .nav > li > a:focus,
+.col-indigo .navbar .nav .open > a,
+.col-indigo .navbar .nav .open > a:hover,
+.col-indigo .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-indigo .navbar .nav > li > a {
+  color: white;
+}
+
+.col-indigo .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-indigo .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-blue .navbar .navbar-brand,
+.col-blue .navbar .navbar-brand:hover,
+.col-blue .navbar .navbar-brand:active,
+.col-blue .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-blue .navbar .nav > li > a:hover,
+.col-blue .navbar .nav > li > a:focus,
+.col-blue .navbar .nav .open > a,
+.col-blue .navbar .nav .open > a:hover,
+.col-blue .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-blue .navbar .nav > li > a {
+  color: white;
+}
+
+.col-blue .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-blue .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-light-blue .navbar .navbar-brand,
+.col-light-blue .navbar .navbar-brand:hover,
+.col-light-blue .navbar .navbar-brand:active,
+.col-light-blue .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-light-blue .navbar .nav > li > a:hover,
+.col-light-blue .navbar .nav > li > a:focus,
+.col-light-blue .navbar .nav .open > a,
+.col-light-blue .navbar .nav .open > a:hover,
+.col-light-blue .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-light-blue .navbar .nav > li > a {
+  color: white;
+}
+
+.col-light-blue .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-light-blue .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-cyan .navbar .navbar-brand,
+.col-cyan .navbar .navbar-brand:hover,
+.col-cyan .navbar .navbar-brand:active,
+.col-cyan .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-cyan .navbar .nav > li > a:hover,
+.col-cyan .navbar .nav > li > a:focus,
+.col-cyan .navbar .nav .open > a,
+.col-cyan .navbar .nav .open > a:hover,
+.col-cyan .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-cyan .navbar .nav > li > a {
+  color: white;
+}
+
+.col-cyan .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-cyan .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-teal .navbar .navbar-brand,
+.col-teal .navbar .navbar-brand:hover,
+.col-teal .navbar .navbar-brand:active,
+.col-teal .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-teal .navbar .nav > li > a:hover,
+.col-teal .navbar .nav > li > a:focus,
+.col-teal .navbar .nav .open > a,
+.col-teal .navbar .nav .open > a:hover,
+.col-teal .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-teal .navbar .nav > li > a {
+  color: white;
+}
+
+.col-teal .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-teal .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-green .navbar .navbar-brand,
+.col-green .navbar .navbar-brand:hover,
+.col-green .navbar .navbar-brand:active,
+.col-green .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-green .navbar .nav > li > a:hover,
+.col-green .navbar .nav > li > a:focus,
+.col-green .navbar .nav .open > a,
+.col-green .navbar .nav .open > a:hover,
+.col-green .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-green .navbar .nav > li > a {
+  color: white;
+}
+
+.col-green .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-green .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-light-green .navbar .navbar-brand,
+.col-light-green .navbar .navbar-brand:hover,
+.col-light-green .navbar .navbar-brand:active,
+.col-light-green .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-light-green .navbar .nav > li > a:hover,
+.col-light-green .navbar .nav > li > a:focus,
+.col-light-green .navbar .nav .open > a,
+.col-light-green .navbar .nav .open > a:hover,
+.col-light-green .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-light-green .navbar .nav > li > a {
+  color: white;
+}
+
+.col-light-green .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-light-green .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-lime .navbar .navbar-brand,
+.col-lime .navbar .navbar-brand:hover,
+.col-lime .navbar .navbar-brand:active,
+.col-lime .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-lime .navbar .nav > li > a:hover,
+.col-lime .navbar .nav > li > a:focus,
+.col-lime .navbar .nav .open > a,
+.col-lime .navbar .nav .open > a:hover,
+.col-lime .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-lime .navbar .nav > li > a {
+  color: white;
+}
+
+.col-lime .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-lime .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-yellow .navbar .navbar-brand,
+.col-yellow .navbar .navbar-brand:hover,
+.col-yellow .navbar .navbar-brand:active,
+.col-yellow .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-yellow .navbar .nav > li > a:hover,
+.col-yellow .navbar .nav > li > a:focus,
+.col-yellow .navbar .nav .open > a,
+.col-yellow .navbar .nav .open > a:hover,
+.col-yellow .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-yellow .navbar .nav > li > a {
+  color: white;
+}
+
+.col-yellow .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-yellow .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-amber .navbar .navbar-brand,
+.col-amber .navbar .navbar-brand:hover,
+.col-amber .navbar .navbar-brand:active,
+.col-amber .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-amber .navbar .nav > li > a:hover,
+.col-amber .navbar .nav > li > a:focus,
+.col-amber .navbar .nav .open > a,
+.col-amber .navbar .nav .open > a:hover,
+.col-amber .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-amber .navbar .nav > li > a {
+  color: white;
+}
+
+.col-amber .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-amber .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-orange .navbar .navbar-brand,
+.col-orange .navbar .navbar-brand:hover,
+.col-orange .navbar .navbar-brand:active,
+.col-orange .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-orange .navbar .nav > li > a:hover,
+.col-orange .navbar .nav > li > a:focus,
+.col-orange .navbar .nav .open > a,
+.col-orange .navbar .nav .open > a:hover,
+.col-orange .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-orange .navbar .nav > li > a {
+  color: white;
+}
+
+.col-orange .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-orange .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-deep-orange .navbar .navbar-brand,
+.col-deep-orange .navbar .navbar-brand:hover,
+.col-deep-orange .navbar .navbar-brand:active,
+.col-deep-orange .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-deep-orange .navbar .nav > li > a:hover,
+.col-deep-orange .navbar .nav > li > a:focus,
+.col-deep-orange .navbar .nav .open > a,
+.col-deep-orange .navbar .nav .open > a:hover,
+.col-deep-orange .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-deep-orange .navbar .nav > li > a {
+  color: white;
+}
+
+.col-deep-orange .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-deep-orange .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-brown .navbar .navbar-brand,
+.col-brown .navbar .navbar-brand:hover,
+.col-brown .navbar .navbar-brand:active,
+.col-brown .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-brown .navbar .nav > li > a:hover,
+.col-brown .navbar .nav > li > a:focus,
+.col-brown .navbar .nav .open > a,
+.col-brown .navbar .nav .open > a:hover,
+.col-brown .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-brown .navbar .nav > li > a {
+  color: white;
+}
+
+.col-brown .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-brown .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-grey .navbar .navbar-brand,
+.col-grey .navbar .navbar-brand:hover,
+.col-grey .navbar .navbar-brand:active,
+.col-grey .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-grey .navbar .nav > li > a:hover,
+.col-grey .navbar .nav > li > a:focus,
+.col-grey .navbar .nav .open > a,
+.col-grey .navbar .nav .open > a:hover,
+.col-grey .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-grey .navbar .nav > li > a {
+  color: white;
+}
+
+.col-grey .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-grey .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-blue-grey .navbar .navbar-brand,
+.col-blue-grey .navbar .navbar-brand:hover,
+.col-blue-grey .navbar .navbar-brand:active,
+.col-blue-grey .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-blue-grey .navbar .nav > li > a:hover,
+.col-blue-grey .navbar .nav > li > a:focus,
+.col-blue-grey .navbar .nav .open > a,
+.col-blue-grey .navbar .nav .open > a:hover,
+.col-blue-grey .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-blue-grey .navbar .nav > li > a {
+  color: white;
+}
+
+.col-blue-grey .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-blue-grey .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-black .navbar .navbar-brand,
+.col-black .navbar .navbar-brand:hover,
+.col-black .navbar .navbar-brand:active,
+.col-black .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-black .navbar .nav > li > a:hover,
+.col-black .navbar .nav > li > a:focus,
+.col-black .navbar .nav .open > a,
+.col-black .navbar .nav .open > a:hover,
+.col-black .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-black .navbar .nav > li > a {
+  color: white;
+}
+
+.col-black .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-black .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.col-white .navbar .navbar-brand,
+.col-white .navbar .navbar-brand:hover,
+.col-white .navbar .navbar-brand:active,
+.col-white .navbar .navbar-brand:focus {
+  color: white;
+}
+
+.col-white .navbar .nav > li > a:hover,
+.col-white .navbar .nav > li > a:focus,
+.col-white .navbar .nav .open > a,
+.col-white .navbar .nav .open > a:hover,
+.col-white .navbar .nav .open > a:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.col-white .navbar .nav > li > a {
+  color: white;
+}
+
+.col-white .navbar .bars {
+  float: left;
+  padding: 10px 20px;
+  font-size: 22px;
+  color: white;
+  margin-right: 10px;
+  margin-left: -10px;
+  margin-top: 4px;
+}
+
+.col-white .navbar .bars:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.adminMain .adminLeftGap {
+  padding-left: 0px;
+  padding-right: 5px;
+}
+
+.adminMain .adminRightGap {
+  padding: 0px;
+}
+
+.adminMain .adminMainLeft {
+  background: #f5f5f5;
+  height: calc(100vh - 0px);
+}
+
+.adminMain .adminMainLeft .adminLeftMenu ul {
+  padding: 0px;
+}
+
+.adminMain .adminMainLeft .adminLeftMenu ul li {
+  list-style: none;
+  padding: 15px 25px;
+  position: relative;
+  position: relative;
+}
+
+.adminMain .adminMainLeft .adminLeftMenu ul li:hover .devsubmenu {
+  display: block;
+}
+
+.adminMain .adminMainLeft .adminLeftMenu ul li a {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background-color: inherit;
+  cursor: pointer;
+}
+
+.adminMain .adminMainLeft .adminLeftMenu ul li a .setting-icon {
+  float: left;
+  width: 30px;
+  color: #999999;
+}
+
+.adminMain .adminMainLeft .adminLeftMenu ul li a .setting-caption {
+  display: block;
+  width: calc(100% - 30px);
+  position: relative;
+  top: 3px;
+  float: left;
+  color: #010101;
+}
+
+.adminMain .adminMainLeft .adminLeftMenu ul li .devsubmenu {
+  position: absolute;
+  left: 100%;
+  background: #f5f5f5;
+  top: 0px;
+  width: 100%;
+  display: none;
+  z-index: 1;
+}
+
+.adminMain .adminMainRight {
+  height: 100vh;
+}
+
+.adminMain .adminMainRight iframe {
+  height: 100%;
+}
+
+@media (max-width: 768px) {
+  .adminMain .adminMainRight {
+    display: none;
+  }
+}

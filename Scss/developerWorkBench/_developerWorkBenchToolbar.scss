@@ -1,0 +1,105 @@
+.developerWorkBenchToolbar {
+    background-color: $applicationBackgroundColor;
+    width: 100%;
+    height: 50px;
+    margin-left: 2px;
+
+    .dwbiconsUl {
+        padding: $applicationTitlePadding;
+        text-align: right;
+        li {
+            list-style: none;
+            display: inline-block;
+            @include listStyleNone;
+            @include shadow;
+            color: $coldbtntext;
+            background-color: $coldbtnBackground;
+            margin: 0 5px 0 0;
+
+            &:focus {
+                outline: none;
+                text-decoration: none;
+                @include coldHotBtnFocus;
+            }
+
+            &:hover {
+                @include coldHotBtnHover
+            }
+
+            a {
+                color: $coldbtntext;
+                display: block;
+                text-decoration: none;
+                @include listPadding;
+                cursor: pointer;
+
+                &:focus {
+                    outline: none;
+                    text-decoration: none;
+                }
+                i{
+                    margin-right: 5px;
+                }
+            }
+
+            ul {
+                &.dropdown-menu {
+                    border: 0px;
+                    li {
+                        display: block;
+                        box-shadow: none;
+                        &.dropdown{
+                            box-shadow: none;
+                            &:hover{
+                                .dropdown-menu{
+                                    display: block;
+                                    right: 226px;
+                                    top: -6px;
+                                    left: auto;
+                                }
+                            }
+                            a{
+                                span{
+                                    &.icon-arrows-down{
+                                        position: relative;
+                                        top: 2px;
+                                        left: 120px;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .dropdown-menu-inner{
+                        width: 520px;
+                        background: #fff;
+                        ul{
+                            padding: 0px;
+                            float: left;
+                            li{
+                                box-shadow: none;
+                                a{
+                                    &:hover{
+                                        background: #e9e9e9;
+                                    }
+                                   i{
+                                        margin-right: 5px;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            &.createWizard{
+                @include floatRight;
+                box-shadow: none;
+                span{
+                    &.icon-arrows-plus{
+                        font-size: 23px;
+                        display: inline-block;
+                    }
+                }
+            }
+        }
+    }
+}

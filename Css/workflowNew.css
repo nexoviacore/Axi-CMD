@@ -1,0 +1,824 @@
+#breadcrumb-panel {
+  background-color: #fff;
+  border-bottom: 1px solid #e6e6e6;
+  padding: 0px 10px;
+}
+
+.btextDir-rtl #breadcrumb-panel {
+  padding: 0px 35px;
+}
+
+.isMobile .btextDir-rtl #breadcrumb-panel {
+  padding: 0px 25px 0px 0px;
+}
+
+#breadcrumb-panel #nextprevicons {
+  display: none;
+}
+
+#breadcrumb-panel .bcrumb {
+  height: 43px;
+}
+
+.isMobile #breadcrumb-panel .bcrumb {
+  padding: 0px 0px 0px 10px;
+}
+
+#breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).menuBreadCrumb {
+  color: #797878;
+  font-size: 12px;
+  padding-left: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+  width: calc(100vw - 125px);
+}
+
+.isMobile #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).menuBreadCrumb {
+  padding: 0px 0px 0px 5px;
+  width: calc(100vw - 23px);
+}
+
+#breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  color: #212121;
+  font-size: 24px;
+  font-weight: 600;
+  display: block;
+  margin: 0px 0px -3px;
+  padding: 4px 0px 0px 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.isMobile #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  width: -moz-calc(100vw - 110px);
+  width: -webkit-calc(100vw - 110px);
+  width: calc(100vw - 110px);
+  font-size: 15px;
+  line-height: 25px;
+  padding: 0px 0px 0px 5px;
+}
+
+#breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 3px 0px 0px 20px;
+}
+
+.isMobile #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  font-size: 16px;
+  padding: 10px 0 0 5px;
+}
+
+.isMobile.compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 10px 0 0 20px;
+}
+
+.btextDir-rtl #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 4px 20px 0px 0px;
+}
+
+.btextDir-rtl #breadcrumb-panel .bcrumb {
+  text-align: right;
+}
+
+.isMobile .compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).menuBreadCrumb {
+  padding: 0px 0px 0px 18px;
+}
+
+.isMobile .compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  padding: 0px 0px 0px 18px;
+}
+
+.isMobile .compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 8px 0px 0px 18px;
+}
+
+.btextDir-rtl #backforwrdbuttons {
+  float: none;
+  background: transparent;
+  margin-top: 2px;
+  padding-top: 4px;
+  position: fixed;
+  right: 4px;
+}
+
+.btextDir-rtl .navLeft {
+  border: 0px;
+}
+
+.isMobile .btextDir-rtl.compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).menuBreadCrumb {
+  padding: 0px 18px 0px 0px;
+}
+
+.isMobile .btextDir-rtl.compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  padding: 0px 18px 0px 0px;
+}
+
+.isMobile .btextDir-rtl.compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 8px 18px 0px 0px;
+}
+
+.btextDir-ltr #backforwrdbuttons {
+  float: none;
+  background: transparent;
+  margin-top: 2px;
+  padding-top: 4px;
+  position: fixed;
+}
+
+#backtohm {
+  display: none;
+  float: left;
+}
+
+.login .login-main .login-inner h2 {
+  text-align: center;
+  color: white;
+  font-weight: 400;
+  padding-top: 10px;
+  margin: 0px;
+}
+
+.login .login-main .login-inner h2 #lblSignin, .login .login-main .login-inner h2 #spnCpwdHeading {
+  position: relative;
+  display: block;
+  color: #000;
+  font-size: 22px;
+  margin-bottom: 15px;
+  margin-top: 5px;
+}
+
+#login-box h2 {
+  text-align: center;
+  color: white;
+  font-weight: 400;
+  padding-top: 10px;
+  margin: 0px;
+}
+
+#info-box h2 {
+  color: #000;
+  text-align: center;
+  font-weight: 600;
+}
+
+body {
+  font-family: 'Segoe UI',Roboto,sans-serif;
+}
+
+.tabBody {
+  padding: 10px;
+  background-color: #ffffff;
+  box-shadow: rgba(50, 50, 93, 0.03) 0px 2px 5px -1px, rgba(0, 0, 0, 0.05) 0px 1px 3px -1px;
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  -ms-border-radius: 6px;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+}
+
+.tabBody fieldset {
+  padding: 0 1.4em 1.4em 1.4em;
+  margin: 0 0 1.5em 0;
+  border: 1px solid #ccc;
+}
+
+.tabBody fieldset legend {
+  width: auto;
+  border-bottom: 0px;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.tabBody table {
+  width: 100%;
+}
+
+.tabBody table .workFlowSearch {
+  width: 100%;
+}
+
+.tabBody.customtabBody {
+  height: calc(100vh - 60px);
+  min-height: 300px;
+  overflow-y: auto;
+}
+
+.tabBody.customtabBody::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.tabBody.customtabBody::-webkit-scrollbar-track {
+  background: #fff;
+}
+
+.tabBody.customtabBody::-webkit-scrollbar-thumb {
+  background-color: #999999;
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  -ms-border-radius: 20px;
+  border-radius: 20px;
+  border: 1px solid #fff;
+  min-height: 15%;
+  min-width: 15%;
+}
+
+.tabBody.customtabBody::-webkit-scrollbar-thumb:hover {
+  border: 0px solid #999999;
+}
+
+.tabBody.customtabBody .workFlowSearchIcon {
+  position: relative;
+  text-align: center;
+  top: -9px;
+  background: #f7f9fc;
+  right: 33px;
+  padding: 4px;
+  border-radius: 6px;
+  color: #999;
+}
+
+.tabBody.customtabBody #lblSrcUser, .tabBody.customtabBody .userName {
+  font-size: 16px;
+  position: relative;
+  top: -13px;
+  font-weight: 500;
+}
+
+.tabBody.customtabBody .workFlowGetTaskBtnTd {
+  text-align: center;
+}
+
+.tabBody.customtabBody .workFlowGetTaskBtn {
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  position: relative;
+  top: -6px;
+  background: no-repeat;
+  border-radius: 4px;
+  color: #999;
+}
+
+.tabBody.customtabBody .workFlowGetTaskBtn:focus {
+  outline: none;
+}
+
+.td {
+  font-size: small;
+  font-weight: normal;
+  font-style: normal;
+}
+
+.style3 {
+  width: 395px;
+}
+
+.pageBody {
+  margin: 0px 2px 0px 2px;
+  height: auto;
+}
+
+.body {
+  /*font-family: Segoe UI, Arial, Helvetica, sans-serif;*/
+  font-size: 12px;
+  color: #000000;
+  font-weight: normal;
+}
+
+.frmiview {
+  background-color: #ffffff;
+  height: 100%;
+  width: 100%;
+}
+
+#divframe {
+  height: auto;
+  width: 100%;
+  background-color: #ffffff;
+}
+
+#Panel1 {
+  background-color: #ffffff;
+  width: 100%;
+}
+
+#Panel2 {
+  background-color: #ffffff;
+  width: 100%;
+}
+
+.bodybg {
+  background-color: #ffffff;
+}
+
+.bodymargin {
+  margin: 0px 0px 0px 0px;
+}
+
+.maindiv {
+  background-color: #ffffff;
+}
+
+.Mainbody {
+  background-color: #ffffff;
+}
+
+/*---------------------------------- Styles for Curve------------------- */
+.r1 {
+  margin: 0 5px;
+}
+
+.r2 {
+  margin: 0 3px;
+}
+
+.r3 {
+  margin: 0 2px;
+}
+
+.r4 {
+  margin: 0 1px;
+  height: 2px;
+}
+
+/*---------------------------------- Start of Main Div Curve------------------------------------- */
+.container {
+  background-color: #bac1cd;
+  color: #ffffff;
+}
+
+.rtop, .rbottom {
+  display: block;
+  background-color: #ffffff;
+}
+
+.rtop *, .rbottom * {
+  display: block;
+  height: 1px;
+  overflow: hidden;
+  background-color: #bac1cd;
+}
+
+/*---------------------------------- End of Main Div Curve-------------------------------------*/
+/*---------------------------------- Start of Menu Div Curve-------------------------------------*/
+.container1 {
+  background: #ffffff;
+  color: #bac1cd;
+}
+
+/*---------------------------------- End of Menu Div Curve-------------------------------------*/
+/*---------------------------------- Start of Header Div for TStruct,IView & ListIView---------*/
+.container3 {
+  background-color: #bac1cd;
+  color: #ffffff;
+}
+
+.rtop3 {
+  display: block;
+  background-color: #ffffff;
+}
+
+.rtop3 * {
+  display: block;
+  height: 1px;
+  overflow: hidden;
+  background-color: #bac1cd;
+}
+
+/*---------------------------------- End of Header Div for TStruct,IView & ListIView---------*/
+/*---------------------------------- Start of Footer Div for TStruct,IView & ListIView-------*/
+.container2 {
+  background-color: #bac1cd;
+  color: #ffffff;
+}
+
+/*-------------------------------- End of Footer Div for TStruct,IView & ListIView-----------*/
+/* ---------------------------------------------- styles for menu bar --------------------------------------------- */
+.DynamicMenuStyle {
+  background-color: #EFEEF0;
+  z-index: 9999;
+  border: 1px solid #bbb;
+}
+
+/* ---------------------------------------------- End of styles for menu bar ----------------------------------------------*/
+/*---------------------------------------------- Styles for Tstruct ------------------------------------------------------*/
+.DivMessage {
+  background-color: #EFEEF0;
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled='true', startColorstr=#EFEEF0, endColorstr=#bac1cd);
+  padding: 10px 0px 10px 0px;
+  height: 100%;
+  width: 100%;
+}
+
+/*------------------------------------ styles for the search div ------------------------------------*/
+.Bordercolor {
+  border: solid 1px;
+  color: Black;
+}
+
+/*------------------------------------ End of styles for the search div -----------------------------*/
+.Grid {
+  color: #000000;
+  font-size: 12px;
+  border-collapse: inherit;
+  border: solid 1px #bbb;
+}
+
+.l2:hover {
+  text-decoration: underline;
+}
+
+.Grid .GridHead {
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#bac1cd', endColorstr='#EFEEF0');
+  /* for IE */
+  background: -moz-linear-gradient(top, #bac1cd, #EFEEF0) !important;
+  /* for firefox 3.6+ */
+  font-weight: normal;
+  font-size: 10pt;
+  text-align: center;
+  text-transform: capitalize;
+  color: #000000;
+}
+
+.Grid tbody tr td, .Grid tbody tr th {
+  border: 1px solid #e6e6e6;
+  border-color: #e6e6e6 !important;
+  text-align: center;
+}
+
+.Grid tbody tr td a, .Grid tbody tr th a {
+  color: #000;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.Grid tbody tr td a:hover, .Grid tbody tr th a:hover {
+  outline: none;
+  text-decoration: none;
+}
+
+#chkFinalApp {
+  margin-right: 10px;
+}
+
+#chkFinalApp + label {
+  font-size: 13px;
+  font-weight: 500;
+  position: relative;
+  top: -2px;
+}
+
+.labelcap {
+  font-size: 12px;
+  font-weight: normal;
+  color: #000000;
+}
+
+/*-------------------------------------- end of styles for Grid frame -------------------------------*/
+/*---------------------------------------------- End of Styles for Iview --------------------------------------------------*/
+/*---------------------------------------------- Styles for Messages page -------------------------------------------------*/
+.lblMsg {
+  font-size: 10pt;
+  font-weight: bold;
+  color: #000000;
+}
+
+/*---------------------------------------------- End of Styles for Messages page -------------------------------------------*/
+/*------------------------- General styles ----------------------*/
+.font {
+  font-size: 12px;
+  font-weight: normal;
+  color: #000000;
+}
+
+.errmsg {
+  color: Red;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/*------------------------- End of General styles --------------------------*/
+/*------------------------ Styles for task button -----------------------------*/
+.PopTd1 {
+  width: auto;
+  border: solid 1px #DFE3EE;
+}
+
+.popDivBg {
+  cursor: hand;
+  cursor: pointer;
+  font-weight: normal;
+  font-size: 12px;
+  color: #000000;
+  background-color: #F8F9FB;
+  margin: 0px 0px 0px 0px;
+  padding: 0px 0px 0px 0px;
+  float: left;
+  width: 99%;
+}
+
+.popDivBghover {
+  cursor: hand;
+  cursor: pointer;
+  font-weight: normal;
+  font-size: 12px;
+  color: #000000;
+  background-color: #ffffff;
+  margin: 0px 0px 0px 0px;
+  padding: 0px 0px 0px 0px;
+  float: left;
+  width: 99%;
+}
+
+/*------------------------End of Styles for task button ------------------------*/
+/*-------------------------Styles for tab control------------------------------*/
+.tab {
+  border: solid 1px #bbb;
+  font: bold 10pt;
+  color: #000000;
+  text-decoration: none;
+  border-bottom: none;
+  padding: 0px 5px;
+  background-color: #EFEEF0;
+}
+
+.SelectedMenuTab {
+  color: #000000;
+  text-decoration: none;
+  border: solid 1px #bbb;
+  border-bottom: Solid 1px #ddddff;
+  padding: 0px 5px;
+  background-color: #bac1cd;
+  font-weight: bold;
+}
+
+.menuTabs {
+  font-size: 12px;
+  display: none;
+}
+
+/*-----------------------End of Styles for tab control--------------------------*/
+/*-----------------------Styles for Treeview------------------------------------*/
+.Treeview {
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.RootNode {
+  width: 300px;
+  text-decoration: none;
+  font-size: 10pt;
+  font-weight: bolder;
+}
+
+.ParentNode {
+  width: 300px;
+  color: #000000;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.LeafNode {
+  color: #000000;
+  width: 300px;
+  text-decoration: none;
+  background-color: #bac1cd;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.RootNodembox {
+  background-color: #ffffff;
+  border: solid 1px #ffffff;
+  width: 300px;
+  color: White;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.ParentNodembox {
+  height: 15px;
+  width: 300px;
+  color: White;
+  text-decoration: none;
+  background-color: #ffffff;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.LeafNodembox {
+  color: #ffffff;
+  width: 300px;
+  text-decoration: none;
+  background-color: #ffffff;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.Treeviewmbox {
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.Treeviewlinks {
+  font-size: 12px;
+  font-weight: normal;
+  color: #ffffff;
+}
+
+.SelectedNode {
+  background-color: #ffffff;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+/*-----------------------End of Styles for Treeview------------------------------------*/
+.label {
+  color: #000000;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+/*--------------------------- Start GridView New Style---------------------------------- */
+Table.Gridview {
+  background-color: #ffffff;
+  border-spacing: 0px;
+  border: solid 1px #d5d5d5;
+  /*font-family: Segoe UI, Arial, Helvetica, sans-serif;*/
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.Gridview th {
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#bac1cd', endColorstr='#EFEEF0');
+  background: -moz-linear-gradient(top, #bac1cd, #EFEEF0) !important;
+  color: #000000;
+  text-align: center;
+  border: solid 1px #d5d5d5;
+  font-weight: bold;
+}
+
+.Gridview td {
+  border: solid 1px #d5d5d5;
+  padding: 2pt 2pt 2pt 2pt;
+}
+
+.Gridview tr {
+  color: #000000;
+  text-align: left;
+}
+
+.GridviewCust td {
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#bac1cd', endColorstr='#EFEEF0');
+  /* for IE */
+  background: -moz-linear-gradient(top, #bac1cd, #EFEEF0) !important;
+  /* for firefox 3.6+ */
+  color: #000000;
+  text-align: center;
+  border: solid 1px #d5d5d5;
+  font-weight: bold;
+}
+
+.Gridview :link {
+  font-size: 12px;
+  font-weight: bold;
+  color: #666666;
+  text-decoration: none;
+}
+
+.Gridview :link:hover {
+  text-decoration: underline;
+}
+
+.Gridview a:visited {
+  font-size: 12px;
+  font-weight: bold;
+  color: #660066;
+  text-decoration: none;
+}
+
+.Gridviewph {
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#bac1cd', endColorstr='#EFEEF0');
+  /* for IE */
+  background: -moz-linear-gradient(top, #bac1cd, #EFEEF0) !important;
+  /* for firefox 3.6+ */
+  color: #000000;
+  text-align: center;
+  border: solid 1px #d5d5d5;
+  font-weight: bold;
+}
+
+/*--------------------------- End GridView New Style---------------------------------- */
+.divHomePageContainer {
+  background-color: #EFEEF0;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#EFEEF0', endColorstr='#bac1cd');
+  /* for IE */
+  background: -moz-linear-gradient(top, #EFEEF0, #bac1cd) !important;
+  /* for firefox 3.6+ */
+  padding: 10px 10px 10px 10px;
+  height: auto;
+}
+
+/*--------------------------- Start TreeView New Style---------------------------------- */
+Table.TreeView {
+  background-color: #ffffff;
+  border-spacing: 0px;
+  border: solid 1px #d5d5d5;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.TreeView th {
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#bac1cd', endColorstr='#EFEEF0');
+  /* for IE */
+  background: -moz-linear-gradient(top, #bac1cd, #EFEEF0) !important;
+  /* for firefox 3.6+ */
+  color: #000000;
+  text-align: center;
+  border: solid 1px #d5d5d5;
+  font-weight: bold;
+}
+
+.TreeView td {
+  padding: 2pt 2pt 2pt 2pt;
+}
+
+.TreeView tr {
+  color: #000000;
+  text-align: left;
+}
+
+.TreeView :link {
+  font-size: 12px;
+  font-weight: bold;
+  color: #000000;
+  text-decoration: none;
+}
+
+.TreeView :link:hover {
+  text-decoration: underline;
+}
+
+.TreeView a:visited {
+  font-size: 12px;
+  font-weight: bold;
+  color: #660066;
+  text-decoration: none;
+}
+
+/*--------------------------- End TreeView New Style---------------------------------- */
+.button {
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled='true', startColorstr=#EFEEF0, endColorstr=#bac1cd);
+  background: -moz-linear-gradient(top, #EFEEF0, #bac1cd);
+  color: #333333;
+  border: 1px solid #000000;
+  padding: 3px 10px 3px 10px;
+  /*width: 100px;*/
+  font: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 60px;
+}
+
+input[type=button], input[type=submit] {
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled='true', startColorstr=#EFEEF0, endColorstr=#bac1cd);
+  background: -moz-linear-gradient(top, #EFEEF0, #bac1cd);
+  /*color: #333333;*/
+  border: 1px solid #333333;
+  padding: 3px 10px 3px 10px;
+  /*width: 100px;*/
+  font: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.dvLeft {
+  float: left;
+  width: 30%;
+  vertical-align: top;
+  border: solid 1px gray;
+}
+
+.dvRight {
+  float: right;
+  width: 68%;
+  vertical-align: top;
+}
+
+#dvDispCond {
+  background-color: #bac1cd;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#bac1cd', endColorstr='#EFEEF0');
+  /* for IE */
+  background: -moz-linear-gradient(top, #bac1cd, #EFEEF0) !important;
+  /* for firefox 3.6+ */
+  border: solid 1px gray;
+}

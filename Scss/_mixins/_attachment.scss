@@ -1,0 +1,31 @@
+//* non grid and grid attachement for tstruct *//
+@mixin nonGridDcAttachment {
+    width: calc(#{$applicationMaximumWidth} - #{$applicationdivnonattachwidth});
+    height: $applicationdivnonattachheight;
+    border: 1px solid $applicationBorderColor;
+    //margin-left: $applicationdivnonattachmarginleft;
+    border-radius: $applicationdivnonattachborderradius;
+    position: $applicationdivnonattachposition;
+    //top : $applicationdivnonattachtop;
+}
+
+@mixin divnonattachgrdhandCur {
+    visibility: hidden;
+    border: 0;
+    position: $applicationlabelcolgrdhandCurposition;
+    top: $applicationlabelcolgrdhandCurtop;
+    width: $applicationMaximumWidth;
+    margin-left: $applicationlabelcolgrdhandCurleftmargin;
+    display: $applicationlabelcolgrdhandCurdisplay;
+}
+@mixin gridAttachmentIcon{
+    @include border-radius(50%);
+    @include floatLeft;
+    opacity: 1;
+    background: $applicationIconBackgroundColor;
+    color: $applicationBackgroundColor;
+    margin: $applicationgridAttachementCloseIconMarging; 
+    font-size: $applicationAttachmentCloseIconFontSize;
+    padding: $applicationAttachmentcloseIconPadding;
+}
+//* non grid and grid attachement for tstruct *//

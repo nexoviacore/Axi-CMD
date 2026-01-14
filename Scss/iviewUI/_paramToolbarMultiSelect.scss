@@ -1,0 +1,16 @@
+//* page multi select==================================== *//
+.tblresX{
+    #ivParamTable{
+        div{
+            &.spnSelectAll{
+                border:1px solid $applicationBorderColor;
+                padding: $multiSelectPadding;
+            }
+            &.chkListBdr{
+                border:1px solid $applicationBorderColor;
+                padding: $multiSelectPadding;
+            }
+        }
+    }
+}
+//* page multi select==================================== *//

@@ -1,0 +1,158 @@
+//* applications Dropdown ---------------- *//
+@mixin autoCompleteIcon{
+    position: $autoCompleteIconPosition;
+    right: 0;
+    top: 0;
+    z-index: 4;
+    display: none;
+    cursor: pointer;
+}
+@mixin autoCompleteClear{
+    padding-top: $applicationAutoCompleteClearTopPadding;
+    padding-right: $applicationAutoCompleteClearRightPadding;
+    font-size: $appliactionAutoCompleteIconFontsize;
+    @include autoCompleteIcon;
+}
+@mixin edit{
+    padding-top: $applicationAutoCompleteClearTopPadding;
+    padding-right: $applicationEditRightPadding;
+    @include autoCompleteIcon;
+    color: $applicationIconColor;
+}
+@mixin autoCompleteClearRtl{
+    right: auto;
+    left: $autoCompleteClearRtlLeftMargin;
+    padding-right: $autoCompleteClearRtlPaddingRight;
+}
+@mixin editRtl{
+    right: auto;
+    left: $editRtlLeftMargin;
+}
+@mixin autoCompleteSearchIcon{
+    display: block;
+    @include floatRight;
+    cursor: pointer;
+    z-index: $autoCompleteSearchIconZIndex;
+}
+@mixin autoCompleteContent{
+    max-height: $applicationAutoCompleteMaxHeight;
+    margin-bottom: $applicationAutoCompleteMarginBottom;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: $autoCompleteContentZIndex;
+    position:$autoCompleteContentPosition;
+}
+
+@mixin gridDcDropDown{
+    position: $gridDcDropDownPosition;
+    //background: $applicationBackgroundColor;
+    z-index: $gridDcDropDownZIndex;
+    top: $gridDcDropDownTopGap;
+}
+// @mixin  loginDropDownSelectProject {
+//         width: 100%;
+//         height: $loginSelectHeight;
+//         font-size: $materialInputFontSize;
+//         padding-right: $loginSelectBoxRightPadding;
+//         box-sizing: border-box;
+// }
+@mixin loginDropdownListAnchorStyle {
+    display: block;
+    padding: $loginDropdownCornerPadding;
+    text-decoration: none;
+    font-size: $materialInputFontSize;
+}
+// @mixin axSelectProjDropDown{
+//         width: 100%;
+//         height: $loginSelectHeight;
+//         font-size: $materialInputFontSize;
+//         padding-right: $loginSelectBoxRightPadding;
+// }
+@mixin  workFlowwfselectbox {
+    position: $workFlowWfselectboxPosition;
+    //margin-left: $workFlowWfselectboxMarginLeft;
+    margin-top: $workFlowWfselectboxMarginTop;
+    z-index: $workFlowWfselectboxZIndex;
+    left: $workFlowWfselectboxLeft;
+}
+@mixin  workFlowdownArrworkflowOptions {
+    margin-left: 0px;
+    color: $applicationBackgroundColor !important; 
+    position: $WorkflowdownArrworkflowOptions;
+    top: 1px;
+    cursor: pointer;
+}
+@mixin  workFlowwrkflwPendingCls {
+    background: $workFlowMsgwrkflwPendingColor;
+    //width: $workFlowMsgwrkflwPendingClsWidth;
+    border-radius: 3px;
+    border: 1px solid $workFlowMsgwrkflwPendingClsBorder;
+}
+@mixin pageToolbarDropelements {
+    margin-left: $pageToolbarDropelementsMarginLeft;
+    padding: $pageToolbarDropelementsPadding; 
+    left: $pageToolbarDropelementsLeftGap;
+    top: $pageToolbarDropelementsTopGap;
+}
+@mixin  applicationHomePagePageUserOptionList {
+    padding: $applicationMainPageUserOptionListPadding;
+    color: $applicationMainPageUserOptionListColor;
+    @include transition(all .5s);
+    font-size: $applicationMainPageUserOptionListFontSize;
+    line-height: $applicationMainPageUserOptionListLineHeight;
+}
+@mixin modernDropdownMenu {
+    width: $toolbar_ModernIviewOptions_DropdownMenu_width;
+    background: $applicationBackgroundColor;
+    @include border-radius($toolbar_ModernIviewOptions_DropdownMenu_border-radius);
+    @include toolbarDropdonShadow;
+    max-height: $toolbar_ModernIviewOptions_DropdownMenu_max_height;
+    min-height: $toolbar_ModernIviewOptions_DropdownMenu_min_height;
+    overflow-x: $toolbar_ModernIviewOptions_DropdownMenu_overflow-x;
+    margin: $toolbar_ModernIviewOptions_DropdownMenu_margin;
+    padding: $toolbar_ModernIviewOptions_DropdownMenu_padding;  
+}
+@mixin genericDropDownOption {
+    .header-dropdown {
+        position: absolute;
+        top: 20px;
+        right: 15px;
+        list-style: none;
+        .dropdown-menu {
+            li {
+                display: block !important;
+                a{                   
+                    display: block;
+                    padding: 7px 18px;
+                    &:hover{
+                        background-color: rgba(0, 0, 0, 0.075);
+                    }
+                }
+                &.dropDownTextOnly{
+                    span{
+                        display: block;
+                        padding: 7px 18px;
+                        &:hover{
+                            background-color: rgba(0, 0, 0, 0.075);
+                        }
+                    }
+                }
+            }
+        }
+
+        li {
+            display: inline-block;
+        }
+
+        i {
+            font-size: 20px;
+            color: #999;
+            //@include transition(all .5s);
+
+            &:hover {
+                color: #000;
+            }
+        }
+    } 
+}
+//* applications Dropdown ---------------- *//

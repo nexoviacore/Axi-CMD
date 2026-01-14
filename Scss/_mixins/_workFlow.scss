@@ -1,0 +1,37 @@
+//* workflow mixin *//
+// @mixin  workFlowHint{
+//     position: $workFlowHintPosition;
+//     border-radius: $applicationCircleBorderRadius;
+//     color: $applicationTextColor;
+//     top: $workFlowHintMarginTop;
+//     right: $workFlowHintMarginRight;
+//     background: $applicationBackgroundColor;
+//     padding: $workFlowHintPadding;
+//     z-index: 99;
+//     //@include shadow;
+//     border:1px solid $WorkFlowNotificationBorder;
+// }
+@mixin  workFlowHint{
+    position: $workFlowHintPosition;
+    border-radius: $applicationCircleBorderRadius;
+    color: $applicationTextColor;
+    top: $workFlowHintMarginTop;
+    left: $workFlowHintMarginLeft;
+    background: $applicationBackgroundColor;
+    padding: $workFlowHintPadding;
+    z-index: 99;
+    //@include shadow;
+    border:1px solid $WorkFlowNotificationBorder;
+}
+@mixin workFlowState{
+    width: $workFlowStateWidth;
+    height: $workFlowStateHeight;
+    padding: $workFlowStatePadding;
+    position: $workFlowStatePosition;
+    color: $workFlowTextColor;
+    font-size: $workFlowFontSize;
+    @include textRight;
+    margin: $workFlowStateMargin;
+}
+
+//* workflow mixin *//

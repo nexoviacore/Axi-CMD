@@ -1,0 +1,2901 @@
+﻿@charset "UTF-8";
+
+@font-face {
+    font-family: 'Nunito';
+    src: url('../../fonts/NunitoSans-Regular.eot');
+    src: local('☺'), url('../../fonts/NunitoSans-Regular.woff') format('woff'), url('../../fonts/NunitoSans-Regular.ttf') format('truetype'), url('../../fonts/NunitoSans-Regular.svg') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body, html {
+    font-family: apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important; /*! color: #333 !important; */
+}
+
+
+
+
+:root {
+    --En-blue: #4F96F7;
+    --Ver-rose: #E95A92;
+    --Dep-Orange: #F98036;
+    --off-pink: #D189E1;
+    --light-btn-text: #2F2F65
+}
+
+body {
+    font-size: 1.1rem !important;
+    overflow-x: hidden;
+}
+
+#Process_Flow .card {
+    border: 1px solid #eeeeef !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: #fff;
+}
+
+#Process_Flow .content {
+    padding: 0 !important;
+    width: 99.9%;
+}
+
+#Process_Flow .min-vh-100 {
+    min-height: 90vh !important;
+}
+
+#Process_Flow .vh-100 {
+    height: 90vh !important;
+}
+
+
+.PROFLOW-name {
+    font-size: 1.15rem;
+    font-weight: bold !important;
+}
+
+.PROFLOW-page-Title {
+    background: #f5f6f8;
+    padding: 8px 22px;
+    margin-bottom: 2px !important;
+}
+
+#PROFLOW_Left .tree-footer {
+    padding: 0 20px !important;
+    border-right: 1px solid #eeeeef;
+}
+
+#PROFLOW_Right .card-body {
+    padding-top: 0;
+}
+
+#PROFLOW_Right .PROFLOW-page-Title {
+    background: transparent;
+    text-align: center;
+    border-bottom: 1px dashed #eeeeef;
+    font-size: 1.3rem !important;
+    display: none;
+}
+
+#PROFLOW_Left {
+    padding-right: 0;
+    margin-top: 0;
+}
+
+#PROFLOW_Right {
+    padding-left: 0;
+    margin-top: 0;
+    padding-right: 0;
+}
+
+    #PROFLOW_Right .card {
+        border-left: 0 !important;
+    }
+
+/* -------------------------------------------------------------------------
+  VERTICAL STEPPERS
+-------------------------------------------------------------------------- */
+
+/* Steps */
+.step {
+    position: relative;
+    min-height: 1em;
+    color: gray;
+}
+
+    .step + .step {
+        margin-top: 1em
+    }
+
+    .step > div:first-child {
+        position: static;
+        height: 0;
+    }
+
+    .step > div:not(:first-child) {
+        margin-left: 1.5em;
+        padding-left: 1em;
+    }
+
+    .step.step-active {
+        color: #1bb587
+    }
+
+        /* .circle.success {
+	background: #1bb587; 	border-color: #1bb587 !important;
+} */
+
+        /* .step.step-active .circle {
+	background-color: #fff;
+	border: 1px solid #1bb587 !important;
+	color: #1bb587;
+} */
+
+        .step.step-active .circle {
+            background-color: #006cff;
+            border: 1px solid #006cff !important;
+            color: #fff;
+        }
+
+    .step.step-completed .circle {
+        color: #fff;
+        background: #1bb587;
+        border-color: #1bb587 !important;
+    }
+
+.circle.pending {
+    background: #ffbc20;
+    border-color: #ffbc20 !important;
+}
+
+/* Circle */
+.circle {
+    background: #fff;
+    position: relative;
+    width: 1.7em;
+    height: 1.7em;
+    line-height: 1.5em;
+    border-radius: 100%;
+    color: #838383;
+    text-align: center;
+    box-shadow: 0 0 0 3px #fff;
+    border: 1px solid #ccc !important;
+}
+
+
+.step .line {
+    top: 23px;
+    left: 12px;
+    height: 100%;
+    position: absolute;
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    ;
+}
+
+.step:last-child .line {
+    display: none
+}
+
+/* Stepper Titles */
+.PROFLOW-Info-Steps .title {
+    line-height: 1.5em;
+    font-weight: bold;
+    color: #3f4254 !important;
+    transition: all ease 0.3s;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eaeaee;
+}
+
+    .PROFLOW-Info-Steps .title:hover {
+        padding-left: 4px;
+    }
+
+    .PROFLOW-Info-Steps .title a {
+        color: inherit;
+        text-decoration: none;
+        transition: all ease 0.3s;
+    }
+
+.caption {
+    font-size: 0.8em;
+}
+
+.Task-process-list {
+    padding: 0.25rem 0 !important;
+}
+
+    .Task-process-list a {
+        color: #333 !important;
+        font-size: 1.11rem !important;
+    }
+
+/*Profile*/
+.PROFLOW-profile-wrap {
+    padding: 15px;
+    border-bottom: 1px solid #eeeeef;
+    /* margin-bottom: 25px; */
+    position: fixed;
+    z-index: 9;
+    width: 22.5%;
+    background: white;
+}
+
+.PROFLOW-steps-counts {
+    /* position: absolute;
+			left: 6px;
+			top: 1px; */ font-size: 12px;
+}
+
+.circle i {
+    display: none;
+}
+
+.circle.success .PROFLOW-steps-counts, .circle.pending .PROFLOW-steps-counts {
+    /* display: none; */ color: #fff;
+}
+
+/* .circle.success i,.circle.pending i  {
+			display: block;
+			color: #fff;
+			position: relative;
+			top: 5px;
+		} */
+
+.profile-progress-bar {
+    background: #d9d9d9 !important;
+}
+/* .step.step-active .Task-process-list.Active a::after { */
+.Task-process-list.Active a::after {
+    position: absolute;
+    content: "";
+    width: 8px;
+    height: 8px;
+    background: #1eb688;
+    border-radius: 50px;
+    margin-top: 8px;
+    /* left: 0; */
+    margin-left: 6px;
+}
+
+
+.circle.success:after {
+    background-color: #1eb588;
+}
+
+.circle.pending::after {
+    background-color: orange;
+}
+
+.step .title a {
+    text-decoration: none aliceblue;
+    color: #333 !important;
+    font-size: 1.1rem !important;
+}
+
+.accordion .accordion-header {
+    cursor: pointer;
+    border-bottom: 1px solid #eeeeef;
+}
+
+.accordion .accordion-body {
+    margin-top: 10px;
+}
+
+.accordion-header.collapsed h3 {
+    font-weight: normal !important;
+}
+
+.accordion.accordion-icon-toggle .mb-5 {
+    margin: 0 !important;
+}
+
+#PROFLOW_Left .card-body {
+    overflow-y: scroll;
+    padding-top: 0;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+
+.PROFLOW-Info-Steps {
+    padding-top: 20px;
+    padding-left: 0;
+}
+
+#PROFLOWloyeeInfoSteps .accordion-body {
+    padding-left: 10px !important;
+}
+
+#PROFLOWloyeeInfoSteps .accordion .accordion-header h3 {
+    font-size: 15px !important;
+    margin-left: 10px !important;
+}
+
+.step.step-active .title a {
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+::-webkit-scrollbar {
+    width: 2px;
+}
+
+#ProcessTitle.card-header {
+    padding: 8px 15px 12px 19px;
+}
+
+#Create_process {
+    background: #006cff !important;
+    border-radius: 4px;
+    color: #fff !important;
+    display: flex;
+}
+
+    #Create_process .material-icons {
+        color: white !important;
+        margin-right: 0;
+    }
+
+#ProcessTitle span {
+    padding-bottom: 4px;
+}
+
+#ProcessTitle .card-toolbar {
+    align-items: flex-start !important;
+}
+
+.Processflow-Icons .btn {
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+.Task-process-list.status-disabled {
+    /*! pointer-events: none; */
+    cursor: not-allowed !important;
+    opacity: 0.5;
+}
+
+
+.Task-process-list.Completed:after {
+    content: "\e86c";
+    color: #47BE7D;
+    margin-top: -4px;
+    margin-left: 16px;
+    font-family: "Material Icons Outlined";
+    position: absolute;
+    font-size: 21px;
+}
+
+.step.step-completed .line {
+    border-left: 1px solid rgb(31, 181, 136);
+}
+
+
+/* .Task-process-list.status-made:after {
+  content: "\e85d";
+ color: orange;
+ margin-top: -4px;
+ margin-left: 10px;
+ font-family: "Material Icons Outlined";
+ position: absolute;
+ font-size: 21px;
+}
+.Task-process-list.status-approved:after {
+  content: "\e86c";
+  color: #47BE7D;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+}
+.Task-process-list.status-rejected:after {
+  content: "\e5c9";
+  color: red;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+}
+.Task-process-list.status-returned:after {
+  content: "\e15e";
+  color: blueviolet;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+}
+.Task-process-list.status-forwarded:after {
+  content: "\e154";
+  color: brown;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+}
+.Task-process-list.status-checked:after {
+  content: "\e877";
+  color: #47BE7D;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+} */
+
+/* .Task-process-list.Completed:after {
+	content: "\e86c";
+   color: #47BE7D;
+   margin-top: -4px;
+   margin-left: 10px;
+   font-family: "Material Icons Outlined";
+   position: absolute;
+   font-size: 21px;
+} */
+.step.step-completed .line {
+    border-left: 1px solid rgb(31, 181, 136);
+}
+
+
+
+/*.Task-process-list.status-rejected::after, .Task-process-list.status-returned::after, .Task-process-list.status-forwarded::after, .Task-process-list.status-checked::after, .Task-process-list.status-made::after, .Task-process-list.status-approved::after {
+	margin-top: 1px;
+	margin-left: 5px;
+	font-size: 10px;
+	padding: 2px 10px;
+	border-radius: 50px;
+	position: absolute;
+	right: 0;
+}*/
+
+
+.Task-process-list.status-made:after, .Task-process-list.status-approved:after,
+.Task-process-list.status-rejected:after, .Task-process-list.status-returned:after, .Task-process-list.status-checked::after {
+    content: "\e86c";
+    color: #47BE7D;
+    margin-top: -4px;
+    margin-left: 16px;
+    font-family: "Material Icons Outlined";
+    position: absolute;
+    font-size: 21px;
+}
+
+
+
+.Process-flow.accordion-icon {
+    float: right;
+    cursor: pointer;
+    margin-right: 10px;
+    /* border: 1px solid #eeeeef; */
+    border-radius: 50px;
+    padding: 3px;
+    transition: all ease 0.3s;
+    /* background: #fff; */
+}
+
+.process-sub-flow {
+    /*display: none;*/
+}
+
+.Process-flow.accordion-icon.rotate {
+    transform: rotate(90deg);
+}
+
+.Task-process-list.status-.Active a {
+    font-weight: bold;
+}
+
+.process-sub-flow:last-child {
+    border-bottom: 1px solid #eeeeef;
+    padding-bottom: 10px;
+}
+
+/* begins:: Process defintion custom styles */
+.btn-custom-border-radius {
+    border-radius: 8px;
+}
+
+.bg-custom-checked,
+.text-custom-checked {
+    background-color: #3D821B !important;
+}
+
+.badge-light-custom-checked,
+.bg-light-custom-checked,
+.border-light-custom-checked {
+    background-color: #BBDDBB !important;
+}
+
+.symbol.symbol-10px > img {
+    width: 10px;
+    height: 10px
+}
+
+.symbol.symbol-10px .symbol-label {
+    width: 10px;
+    height: 10px
+}
+
+.symbol.symbol-10px.symbol-fixed .symbol-label {
+    width: 10px;
+    height: 10px
+}
+
+.symbol.symbol-10px.symbol-fixed > img {
+    width: 10px;
+    height: 10px;
+    max-width: auto
+}
+
+.symbol.symbol-10px.symbol-2by3 .symbol-label {
+    height: 20px;
+    width: 30px
+}
+
+.symbol.symbol-10px.symbol-2by3 > img {
+    height: 20px;
+    width: 30px;
+    max-width: auto
+}
+
+.custom-menu-item {
+    display: block;
+    padding: 0
+}
+
+    .custom-menu-item .custom-menu-link {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        padding: 0;
+        flex: 0 0 100%;
+        padding: .65rem 1rem;
+        transition: none;
+        outline: 0 !important
+    }
+
+#PROFLOW_Right_Last {
+    margin-top: 0;
+    padding-left: 0;
+}
+/* #PROFLOW_Right_Last .card {
+	padding: 15px;
+  }*/
+
+
+
+#kt_drawer_proFlw_button {
+    width: 32px;
+    height: 32px;
+}
+
+#pd_ann {
+    width: 32px;
+    height: 32px;
+}
+
+    #pd_ann span {
+        font-size: 16px;
+    }
+
+#kt_drawer_proFlw_button span {
+    font-size: 18px;
+}
+
+.Task-process-list.status-disabled a {
+    cursor: not-allowed !important;
+}
+
+/* ends:: Process defintion custom styles */
+
+@charset "UTF-8";
+
+@font-face {
+    font-family: 'Nunito';
+    src: url('../../fonts/NunitoSans-Regular.eot');
+    src: local('☺'), url('../../fonts/NunitoSans-Regular.woff') format('woff'), url('../../fonts/NunitoSans-Regular.ttf') format('truetype'), url('../../fonts/NunitoSans-Regular.svg') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body, html {
+    font-family: apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important; /*! color: #333 !important; */
+}
+
+
+
+
+:root {
+    --En-blue: #4F96F7;
+    --Ver-rose: #E95A92;
+    --Dep-Orange: #F98036;
+    --off-pink: #D189E1;
+    --light-btn-text: #2F2F65
+}
+
+body {
+    font-size: 1.1rem !important;
+    overflow-x: hidden;
+}
+
+#Process_Flow .card {
+    border: 1px solid #eeeeef !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    /*! background: #f6f6f7; */
+}
+
+#Process_Flow .content {
+    padding: 0 !important;
+    width: 99.9%;
+}
+
+#Process_Flow .min-vh-100 {
+    min-height: 90vh !important;
+}
+
+#Process_Flow .vh-100 {
+    height: 90vh !important;
+}
+
+/* #PROFLOW_Left.vh-100, #PROFLOW_Right.vh-100, #PROFLOW_Left.min-vh-100, #PROFLOW_Right.min-vh-100 {
+	height: 98vh !important;
+	min-height: 98vh !important;
+} */
+
+.PROFLOW-name {
+    font-size: 1.15rem;
+    font-weight: bold !important;
+}
+
+.PROFLOW-page-Title {
+    background: #f5f6f8;
+    padding: 8px 22px;
+    margin-bottom: 2px !important;
+}
+
+#PROFLOW_Left .tree-footer {
+    padding: 0 20px !important;
+    border-right: 1px solid #eeeeef;
+}
+
+#PROFLOW_Right .card-body {
+    padding-top: 0;
+}
+
+#PROFLOW_Right .PROFLOW-page-Title {
+    background: transparent;
+    text-align: center;
+    border-bottom: 1px dashed #eeeeef;
+    font-size: 1.3rem !important;
+    display: none;
+}
+
+#PROFLOW_Left {
+    padding-right: 0;
+    margin-top: 0;
+}
+
+#PROFLOW_Right {
+    padding-left: 0;
+    margin-top: 0;
+    padding-right: 0;
+}
+
+    #PROFLOW_Right .card {
+        border-left: 0 !important;
+    }
+
+/* -------------------------------------------------------------------------
+  VERTICAL STEPPERS
+-------------------------------------------------------------------------- */
+
+/* Steps */
+.step {
+    position: relative;
+    min-height: 1em;
+    color: gray;
+}
+
+    .step + .step {
+        margin-top: 1em;
+    }
+
+    .step > div:first-child {
+        position: static;
+        height: 0;
+    }
+
+    .step > div:not(:first-child) {
+        margin-left: 1.5em;
+        padding-left: 1em;
+    }
+
+    .step.step-active {
+        color: #1bb587
+    }
+
+        /* .circle.success {
+	background: #1bb587; 	border-color: #1bb587 !important;
+} */
+
+        /* .step.step-active .circle {
+	background-color: #fff;
+	border: 1px solid #1bb587 !important;
+	color: #1bb587;
+} */
+
+        .step.step-active .circle {
+            background-color: #006cff;
+            border: 1px solid #006cff !important;
+            color: #fff;
+        }
+
+    .step.step-completed .circle {
+        color: #fff;
+        background: #1bb587;
+        border-color: #1bb587 !important;
+    }
+
+.circle.pending {
+    background: #ffbc20;
+    border-color: #ffbc20 !important;
+}
+
+/* Circle */
+.circle {
+    background: #fff;
+    position: relative;
+    width: 1.7em;
+    height: 1.7em;
+    line-height: 1.5em;
+    border-radius: 100%;
+    color: #838383;
+    text-align: center;
+    box-shadow: 0 0 0 3px #fff;
+    border: 1px solid #ccc !important;
+}
+
+
+.step .line {
+    top: 23px;
+    left: 12px;
+    height: 100%;
+    position: absolute;
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    ;
+}
+
+.step:last-child .line {
+    display: none
+}
+
+/* Stepper Titles */
+.PROFLOW-Info-Steps .title {
+    line-height: 1.5em;
+    font-weight: bold;
+    color: #3f4254 !important;
+    transition: all ease 0.3s;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eaeaee;
+}
+
+    .PROFLOW-Info-Steps .title:hover {
+        padding-left: 4px;
+    }
+
+    .PROFLOW-Info-Steps .title a {
+        color: inherit;
+        text-decoration: none;
+        transition: all ease 0.3s;
+    }
+
+.caption {
+    font-size: 0.8em;
+}
+
+.Task-process-list {
+    padding: 0.25rem 0 !important;
+}
+
+    .Task-process-list a {
+        color: #333 !important;
+        font-size: 1.11rem !important;
+        /*! overflow: visible !important; */
+    }
+
+/*Profile*/
+.PROFLOW-profile-wrap {
+    padding: 15px;
+    border-bottom: 1px solid #eeeeef;
+    /* margin-bottom: 25px; */
+    position: fixed;
+    z-index: 9;
+    width: 22.5%;
+    background: white;
+}
+
+.PROFLOW-steps-counts {
+    /* position: absolute;
+			left: 6px;
+			top: 1px; */ font-size: 12px;
+}
+
+.circle i {
+    display: none;
+}
+
+.circle.success .PROFLOW-steps-counts, .circle.pending .PROFLOW-steps-counts {
+    /* display: none; */ color: #fff;
+}
+
+/* .circle.success i,.circle.pending i  {
+			display: block;
+			color: #fff;
+			position: relative;
+			top: 5px;
+		} */
+
+.profile-progress-bar {
+    background: #d9d9d9 !important;
+}
+/* .step.step-active .Task-process-list.Active a::after { */
+.Task-process-list.Active a::after {
+    position: absolute;
+    content: "";
+    width: 8px;
+    height: 8px;
+    background: #1eb688;
+    border-radius: 50px;
+    margin-top: 8px;
+    /* left: 0; */
+    margin-left: 6px;
+}
+
+
+.circle.success:after {
+    background-color: #1eb588;
+}
+
+.circle.pending::after {
+    background-color: orange;
+}
+
+.step .title a {
+    text-decoration: none aliceblue;
+    color: #333 !important;
+    font-size: 1.12rem !important;
+}
+
+.accordion .accordion-header {
+    cursor: pointer;
+    border-bottom: 1px solid #eeeeef;
+}
+
+.accordion .accordion-body {
+    margin-top: 10px;
+}
+
+.accordion-header.collapsed h3 {
+    font-weight: normal !important;
+}
+
+.accordion.accordion-icon-toggle .mb-5 {
+    margin: 0 !important;
+}
+
+#PROFLOW_Left .card-body {
+    overflow-y: scroll;
+    padding-top: 0;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+
+.PROFLOW-Info-Steps {
+    padding-top: 20px;
+    overflow-x: scroll
+}
+
+#PROFLOWloyeeInfoSteps .accordion-body {
+    padding-left: 10px !important;
+}
+
+#PROFLOWloyeeInfoSteps .accordion .accordion-header h3 {
+    font-size: 15px !important;
+    margin-left: 10px !important;
+}
+
+.step.step-active .title a {
+    font-weight: 580;
+    white-space: nowrap;
+}
+
+::-webkit-scrollbar {
+    width: 2px;
+}
+
+#ProcessTitle.card-header {
+    padding: 8px 15px 12px 19px;
+}
+
+#Create_process {
+    background: #006cff !important;
+    border-radius: 4px;
+    color: #fff !important;
+    display: flex;
+}
+
+    #Create_process .material-icons {
+        color: white !important;
+        margin-right: 0;
+    }
+
+#ProcessTitle span {
+    padding-bottom: 4px;
+}
+
+#ProcessTitle .card-toolbar {
+    align-items: flex-start !important;
+}
+
+.Processflow-Icons .btn {
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+.Task-process-list.status-disabled {
+    /*! pointer-events: none; */
+    cursor: not-allowed !important;
+    opacity: 0.5;
+}
+
+
+.Task-process-list.Completed:after {
+    content: "\e86c";
+    color: #47BE7D;
+    margin-top: -4px;
+    margin-left: 16px;
+    font-family: "Material Icons Outlined";
+    position: absolute;
+    font-size: 21px;
+}
+
+.step.step-completed .line {
+    border-left: 1px solid rgb(31, 181, 136);
+}
+
+
+/* .Task-process-list.status-made:after {
+  content: "\e85d";
+ color: orange;
+ margin-top: -4px;
+ margin-left: 10px;
+ font-family: "Material Icons Outlined";
+ position: absolute;
+ font-size: 21px;
+}
+.Task-process-list.status-approved:after {
+  content: "\e86c";
+  color: #47BE7D;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+}
+.Task-process-list.status-rejected:after {
+  content: "\e5c9";
+  color: red;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+}
+.Task-process-list.status-returned:after {
+  content: "\e15e";
+  color: blueviolet;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+}
+.Task-process-list.status-forwarded:after {
+  content: "\e154";
+  color: brown;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+}
+.Task-process-list.status-checked:after {
+  content: "\e877";
+  color: #47BE7D;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+} */
+
+/* .Task-process-list.Completed:after {
+	content: "\e86c";
+   color: #47BE7D;
+   margin-top: -4px;
+   margin-left: 10px;
+   font-family: "Material Icons Outlined";
+   position: absolute;
+   font-size: 21px;
+} */
+.step.step-completed .line {
+    border-left: 1px solid rgb(31, 181, 136);
+}
+
+
+
+/*.Task-process-list.status-rejected::after, .Task-process-list.status-returned::after, .Task-process-list.status-forwarded::after, .Task-process-list.status-checked::after, .Task-process-list.status-made::after, .Task-process-list.status-approved::after {
+	margin-top: 1px;
+	margin-left: 5px;
+	font-size: 10px;
+	padding: 2px 10px;
+	border-radius: 50px;
+	position: absolute;
+	right: 0;
+}*/
+
+
+.Task-process-list.status-made:after, .Task-process-list.status-approved:after,
+.Task-process-list.status-rejected:after, .Task-process-list.status-returned:after, .Task-process-list.status-checked::after {
+    content: "\e86c";
+    color: #47BE7D;
+    margin-top: -4px;
+    margin-left: 16px;
+    font-family: "Material Icons Outlined";
+    position: absolute;
+    font-size: 21px;
+}
+
+
+
+.Process-flow.accordion-icon {
+    float: right;
+    cursor: pointer;
+    margin-right: 10px;
+    /*! border: 1px solid #eeeeef; */
+    border-radius: 50px;
+    padding: 3px;
+    transition: all ease 0.3s;
+    /*! background: #fff; */
+}
+
+.process-sub-flow {
+    /*display: none;*/
+}
+
+.Process-flow.accordion-icon.rotate {
+    transform: rotate(90deg);
+}
+
+.Task-process-list.status-.Active a {
+    font-weight: bold;
+}
+
+.process-sub-flow:last-child {
+    border-bottom: 1px solid #eeeeef;
+    padding-bottom: 10px;
+}
+
+/* begins:: Process defintion custom styles */
+.btn-custom-border-radius {
+    border-radius: 8px;
+}
+
+.bg-custom-checked,
+.text-custom-checked {
+    background-color: #3D821B !important;
+}
+
+.badge-light-custom-checked,
+.bg-light-custom-checked,
+.border-light-custom-checked {
+    background-color: #BBDDBB !important;
+}
+
+.symbol.symbol-10px > img {
+    width: 10px;
+    height: 10px
+}
+
+.symbol.symbol-10px .symbol-label {
+    width: 10px;
+    height: 10px
+}
+
+.symbol.symbol-10px.symbol-fixed .symbol-label {
+    width: 10px;
+    height: 10px
+}
+
+.symbol.symbol-10px.symbol-fixed > img {
+    width: 10px;
+    height: 10px;
+    max-width: auto
+}
+
+.symbol.symbol-10px.symbol-2by3 .symbol-label {
+    height: 20px;
+    width: 30px
+}
+
+.symbol.symbol-10px.symbol-2by3 > img {
+    height: 20px;
+    width: 30px;
+    max-width: auto
+}
+
+.custom-menu-item {
+    display: block;
+    padding: 0
+}
+
+    .custom-menu-item .custom-menu-link {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        padding: 0;
+        flex: 0 0 100%;
+        padding: .65rem 1rem;
+        transition: none;
+        outline: 0 !important
+    }
+
+#PROFLOW_Right_Last {
+    margin-top: 0;
+    padding-left: 0;
+    overflow: auto;
+    border-bottom: 1px solid #f0f0f1 !important;
+}
+
+    #PROFLOW_Right_Last .card {
+        /*! padding: 15px; */
+    }
+
+
+
+#kt_drawer_proFlw_button {
+    width: 32px;
+    height: 32px;
+}
+
+#pd_ann {
+    width: 32px;
+    height: 32px;
+}
+
+    #pd_ann span {
+        font-size: 16px;
+    }
+
+#kt_drawer_proFlw_button span {
+    font-size: 18px;
+}
+
+/* ends:: Process defintion custom styles */
+.Task-process-list a::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    display: block;
+    border-radius: 50px;
+    position: absolute;
+    left: -27px;
+    top: 12px;
+    z-index: 9999999 !important;
+    /* background: red; */
+}
+
+.symbol-label.bg-make, div[data-tasktype="Make"].Task-process-list a::before {
+    background: #4b6ecc;
+}
+
+.symbol-label.bg-approved, div[data-tasktype="Approve"].Task-process-list a::before {
+    background: #5ac686;
+}
+
+.symbol-label.bg-checked, div[data-tasktype="Check"].Task-process-list a::before {
+    background: #3d821b;
+}
+
+.symbol-label.bg-If {
+    background: #ecab11;
+}
+
+.symbol-label.bg-If-else {
+    background: #9823e5;
+}
+
+.symbol-label.bg-Else {
+    background: #23d8e5;
+}
+
+.symbol-label.bg-end {
+    background: #e52323;
+}
+
+.footer-legend {
+    display: block;
+    font-size: 13px;
+    text-align: center;
+    border-right: 1px solid #ccc;
+    border-radius: 0 !important;
+}
+
+.legend-list {
+    display: inline-block;
+    margin-right: 15px;
+    margin-bottom: 5px;
+}
+
+    .legend-list .symbol-circle {
+        margin-right: 6px;
+    }
+
+    .legend-list .symbol .symbol-label {
+        width: 8px;
+        height: 8px;
+    }
+
+
+.card-footer.py-5 {
+    padding: 0;
+}
+
+.Task-process-list {
+    padding: 0.25rem 0 !important;
+    position: relative;
+    white-space: nowrap;
+}
+
+.Procurement-icon {
+    position: relative;
+    font-size: 18px;
+    position: relative;
+    top: 3px;
+    margin-right: 15px;
+}
+
+#PROFLOW_Left .card-header {
+    min-height: auto;
+    padding: 8px 10px;
+}
+
+#PROFLOW_Left .accordion-button {
+    background: #fff !important;
+    font-weight: bold;
+    color: #333 !important;
+    font-size: 15px;
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 13px !important;
+}
+
+#PROFLOW_Left .accordion-header {
+    border-top: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+}
+
+#PROFLOW_Left .accordion-item {
+    border: 0 !important;
+}
+
+#PROFLOW_Left .accordion-body {
+    padding: 0 !important;
+}
+
+#PROFLOW_Left table {
+    margin-bottom: 0;
+}
+
+#PROFLOW_Left .btn.btn-icon.btn-sm.border.shadow-sm.flex-column.me-2 {
+    background: #fff !important;
+    box-shadow: none !important;
+    border-radius: 50px !important;
+    border-color: #efefef !important;
+    /* border: 0 !important; */
+    margin-right: 15px !important;
+}
+
+.Pro-status {
+    display: block;
+    margin-left: 41px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #7c7c7c;
+    margin-top: -6px;
+    margin-bottom: 8px;
+}
+
+
+
+#pd_all_tasks .material-icons.material-icons-style {
+    font-size: 16px;
+}
+
+.Procurement-list-wrap {
+    display: flex;
+    align-items: center;
+}
+
+    .Procurement-list-wrap .Procurement-list {
+        width: 200px;
+        display: inline-block;
+    }
+
+    .Procurement-list-wrap .blinker {
+        bottom: -18px !important;
+    }
+
+#PROFLOW_Left .card-toolbar .material-icons {
+    font-size: 16px;
+}
+
+#PROFLOW_Right_Last .card {
+    /* padding: 15px; */
+    border-left: 0 !important;
+}
+
+#proFlw_Tree_button {
+    position: absolute;
+    margin-left: 15px;
+}
+
+    #proFlw_Tree_button span {
+        font-size: 17px;
+    }
+
+
+
+
+@media screen and (max-width: 768px) {
+
+
+    .visibleMobileCol {
+        word-break: inherit !important;
+    }
+
+    .buz-logo {
+        display: block;
+    }
+    /* .content {
+	  padding: 1.75rem 1rem 0 1rem !important;
+  } */
+    .card-body.iviewTableWrapper {
+        padding: 0 !important;
+    }
+
+    .PROFLOW-profile-wrap {
+        width: 100% !important;
+        position: inherit !important;
+    }
+
+    .PROFLOW-Info-Steps {
+        padding-top: 0 !important;
+    }
+}
+
+
+@media screen and (max-width: 768px) {
+
+
+    .visibleMobileCol {
+        word-break: inherit !important;
+    }
+
+    .buz-logo {
+        display: block;
+    }
+    /* .content {
+	  padding: 1.75rem 1rem 0 1rem !important;
+  } */
+    .card-body.iviewTableWrapper {
+        padding: 0 !important;
+    }
+
+    .PROFLOW-profile-wrap {
+        width: 100% !important;
+        position: inherit !important;
+    }
+
+    .PROFLOW-Info-Steps {
+        padding-top: 0 !important;
+    }
+}
+
+#Process_Flow .card {
+    border: 1px solid #eeeeef !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+#Process_Flow .content {
+    padding: 0 !important;
+    background: #fff;
+    width: 99.9%;
+}
+
+#Process_Flow .min-vh-100 {
+    min-height: 92vh !important;
+}
+
+#Process_Flow .vh-100 {
+    height: 92vh !important;
+}
+
+.PROFLOW-name {
+    font-size: 1.15rem;
+    font-weight: bold !important;
+}
+
+#process-name {
+    font-size: 19px !important;
+    color: #4b5356;
+    /*border-bottom:2px solid #e8eae9 !important;*/
+    /*padding-left:50px;*/
+}
+
+.proTitleBG {
+    background: #f5f6f8;
+    border-bottom: 1px solid #e8eae9;
+}
+
+.PROFLOW-page-Title {
+    padding: 8px 22px 8px 22px;
+    margin-bottom: 2px !important;
+    margin-top: 15px; /*jai added */
+}
+
+/* Steps */
+.step {
+    position: relative;
+    min-height: 1em;
+    color: gray;
+}
+
+    .step + .step {
+        margin-top: 0.75rem;
+    }
+
+    .step > div:first-child {
+        position: static;
+        height: 0;
+    }
+
+    .step > div:not(:first-child) {
+        margin-left: 1.5em;
+        padding-left: 1em;
+    }
+
+    .step.step-active {
+        color: #1bb587
+    }
+
+        .step.step-active .circle {
+            background-color: #006cff;
+            border: 1px solid #006cff !important;
+            color: #fff;
+        }
+
+    .step.step-completed .circle {
+        color: #fff;
+        background: #1bb587;
+        border-color: #1bb587 !important;
+    }
+
+.circle.pending {
+    background: #ffbc20;
+    border-color: #ffbc20 !important;
+}
+
+/* Circle */
+.circle {
+    background: #fff;
+    position: relative;
+    width: 1.7em;
+    height: 1.7em;
+    line-height: 1.5em;
+    border-radius: 100%;
+    color: #838383;
+    text-align: center;
+    box-shadow: 0 0 0 3px #fff;
+    border: 1px solid #ccc !important;
+}
+
+
+.step .line {
+    top: 23px;
+    left: 12px;
+    height: 100%;
+    position: absolute;
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    ;
+}
+
+.step:last-child .line {
+    display: none
+}
+
+/* Stepper Titles */
+.PROFLOW-Info-Steps .title {
+    line-height: 1.5em;
+    font-weight: bold;
+    color: #3f4254 !important;
+    transition: all ease 0.3s;
+    margin-bottom: 7px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid #eaeaee;
+}
+
+    .PROFLOW-Info-Steps .title:hover {
+        padding-left: 4px;
+    }
+
+    .PROFLOW-Info-Steps .title a {
+        color: inherit;
+        text-decoration: none;
+        transition: all ease 0.3s;
+    }
+
+.caption {
+    font-size: 0.8em;
+}
+
+.Task-process-list {
+    padding: 5px 0;
+}
+
+    .Task-process-list a {
+        color: #333;
+    }
+
+/*Profile*/
+.PROFLOW-profile-wrap {
+    padding: 15px;
+    border-bottom: 1px solid #eeeeef;
+    /* margin-bottom: 25px; */
+    position: fixed;
+    z-index: 9;
+    width: 22.5%;
+    background: white;
+}
+
+.PROFLOW-steps-counts {
+    /* position: absolute;
+			left: 6px;
+			top: 1px; */ font-size: 12px;
+}
+
+.circle i {
+    display: none;
+}
+
+.circle.success .PROFLOW-steps-counts, .circle.pending .PROFLOW-steps-counts {
+    /* display: none; */ color: #fff;
+}
+
+.profile-progress-bar {
+    background: #d9d9d9 !important;
+}
+/* .step.step-active .Task-process-list.Active a::after { */
+.Task-process-list.Active a::after {
+    position: absolute;
+    content: "";
+    width: 8px;
+    height: 8px;
+    background: #1eb688;
+    border-radius: 50px;
+    margin-top: 8px;
+    /* left: 0; */
+    margin-left: 6px;
+}
+
+
+.circle.success:after {
+    background-color: #1eb588;
+}
+
+.circle.pending::after {
+    background-color: orange;
+}
+
+.step .title a {
+    text-decoration: none aliceblue;
+    color: #333 !important;
+    font-size: 1.1rem !important;
+}
+
+.accordion .accordion-header {
+    cursor: pointer;
+    border-bottom: 1px solid #eeeeef;
+}
+
+.accordion .accordion-body {
+    margin-top: 10px;
+}
+
+.accordion-header.collapsed h3 {
+    font-weight: normal !important;
+}
+
+.accordion.accordion-icon-toggle .mb-5 {
+    margin: 0 !important;
+}
+
+
+
+.PROFLOW-Info-Steps {
+    padding-top: 11px;
+    /*padding-left: 7px;*/
+}
+
+#PROFLOWloyeeInfoSteps .accordion-body {
+    padding-left: 10px !important;
+}
+
+#PROFLOWloyeeInfoSteps .accordion .accordion-header h3 {
+    font-size: 15px !important;
+    margin-left: 10px !important;
+}
+
+.step.step-active .title a {
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+::-webkit-scrollbar {
+    width: 2px;
+}
+
+#ProcessTitle.card-header {
+    padding: 8px 15px 12px 19px;
+}
+
+#Create_process {
+    background: #006cff !important;
+    border-radius: 4px;
+    color: #fff !important;
+    display: flex;
+}
+
+    #Create_process .material-icons {
+        color: white !important;
+        margin-right: 0;
+    }
+
+#ProcessTitle span {
+    padding-bottom: 4px;
+}
+
+#ProcessTitle .card-toolbar {
+    align-items: flex-start !important;
+}
+
+.Processflow-Icons .btn {
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+.Task-process-list.status-disabled {
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+
+.Task-process-list.Completed:after {
+    content: "\e86c";
+    color: #47BE7D;
+    margin-top: -4px;
+    margin-left: 16px;
+    font-family: "Material Icons Outlined";
+    position: absolute;
+    font-size: 21px;
+}
+
+.step.step-completed .line {
+    border-left: 1px solid rgb(31, 181, 136);
+}
+
+.step.step-completed .line {
+    border-left: 1px solid rgb(31, 181, 136);
+}
+
+.Task-process-list.status-made:after, .Task-process-list.status-approved:after,
+.Task-process-list.status-rejected:after, .Task-process-list.status-returned:after, .Task-process-list.status-checked::after {
+    content: "\e86c";
+    color: #47BE7D;
+    margin-top: -4px;
+    margin-left: 16px;
+    font-family: "Material Icons Outlined";
+    position: absolute;
+    font-size: 21px;
+}
+
+
+
+.Process-flow.accordion-icon {
+    float: right;
+    cursor: pointer;
+    margin-right: 10px;
+    border: 1px solid #eeeeef;
+    border-radius: 50px;
+    padding: 3px;
+    transition: all ease 0.3s;
+    margin-top: -4px;
+}
+
+.process-sub-flow {
+    /*display: none;*/
+}
+
+.Process-flow.accordion-icon.rotate {
+    transform: rotate(90deg);
+}
+
+.Task-process-list.status-.Active a {
+    font-weight: bold;
+}
+
+.Task-process-list {
+    background-size: 60px 60px !important;
+    /* padding-left: 15px !important; */
+}
+
+/* Jai 14-02-2023 */
+.positionRel {
+    position: relative;
+}
+
+.plusactioncontainer {
+    display: none;
+    right: 5px;
+    top: 0;
+    widtH: 10px;
+    position: absolute;
+    height: 50px;
+    bottom: -12px;
+    width: 120px;
+}
+
+.addTopBtnlink {
+    top: 0;
+    position: absolute;
+    right: 10px;
+    cursor: pointer;
+}
+
+.addTopBtnHLine {
+    position: absolute;
+    right: 20px !important;
+    width: 0px;
+    height: 30px !important;
+    top: 10px;
+    border-left: 1px solid #ccc;
+}
+
+.addTopBtnVLine {
+    position: absolute;
+    right: 20px !important;
+    width: 20px;
+    height: 0 !important;
+    bottom: 25px;
+    border-bottom: 1px solid #ccc;
+}
+
+.addBotBtnlink {
+    bottom: 0;
+    position: absolute;
+    right: 10px;
+    cursor: pointer;
+}
+
+.addProcessHilight, .addSubProcessHilight {
+    display: none;
+    position: absolute;
+    right: 20px;
+    top: -10px;
+    background: #fff;
+    /*border:4px soild red !important;*/
+    z-index: 9999;
+    padding: 10px;
+}
+
+    .addProcessHilight a, .addSubProcessHilight a {
+        display: block;
+    }
+
+        .addProcessHilight a::after, .addSubProcessHilight a::after {
+            display: none;
+        }
+
+        .addProcessHilight a::before, .addSubProcessHilight a::before {
+            position: absolute;
+            content: "";
+            width: 8px;
+            height: 8px;
+            /* background: #1eb688;  VJ*/
+            border-radius: 50px;
+            margin-top: 8px;
+            left: 0 !important;
+            margin-left: 0;
+            padding-left: 3px;
+        }
+
+        .addProcessHilight a.make::before, .addSubProcessHilight a.make::before {
+            background: #4b6ecc !important;
+        }
+
+        .addProcessHilight a.approve::before, .addSubProcessHilight a.approve::before {
+            background: #5ac686 !important;
+        }
+
+        .addProcessHilight a.check::before, .addSubProcessHilight a.check::before {
+            background: #3d821b !important;
+        }
+
+        .addProcessHilight a.if::before, .addSubProcessHilight a.if::before {
+            background: #ecab11 !important;
+        }
+
+        .addProcessHilight a.else::before, .addSubProcessHilight a.else::before {
+            background: #23d8e5 !important;
+        }
+
+        .addProcessHilight a.IfElse::before, .addSubProcessHilight a.IfElse::before {
+            background: #9823e5 !important;
+        }
+
+        .addProcessHilight a.end::before, .addSubProcessHilight a.end::before {
+            background: #e52323 !important;
+        }
+
+.addTopBtnlink:hover .addProcessHilight, .addBotBtnlink:hover .addSubProcessHilight {
+    display: block;
+}
+
+.Task-process-list:hover .plusactioncontainer {
+    display: block !important;
+}
+
+.process-sub-flow:last-child {
+    border-bottom: 1px solid #eeeeef !important;
+    padding-bottom: 7px !important;
+}
+
+.posRel {
+    position: relative;
+}
+
+.processnameborBot {
+    border-bottom: 2px solid #e8eae9 !important;
+}
+
+.editBTN {
+    /*position:absolute;
+	top:25px;
+	left:100px;*/
+    font: bold 16px arial;
+    z-index: 9999;
+    margin-top: 25px;
+}
+
+.addBTN {
+    position: absolute;
+    top: 25px;
+    right: 100px;
+    font: bold 16px arial;
+    z-index: 9999;
+}
+
+.appBackBtn {
+    float: left;
+    top: -9px !important;
+}
+
+.fleft {
+    float: left;
+}
+
+.fright {
+    float: right;
+}
+
+.clr {
+    clear: both;
+}
+
+#pf_content_container, .panel-container {
+}
+
+.pt-3 {
+    padding-top: 0rem !important;
+}
+
+.displayNone {
+    display: none !important;
+}
+
+.displayBlock {
+    display: block !important;
+}
+/* VJ */
+.Task-process-list {
+    width: max-content;
+}
+
+.plusactioncontainer {
+    right: -50px !important;
+    top: -8px !important;
+    width: 50px !important;
+    z-index: 99;
+}
+
+.addTopBtnlink {
+    z-index: 9;
+}
+
+.addProcessHilight, .addSubProcessHilight {
+    padding: 17px 30px 17px 42px !important;
+    box-shadow: 0 0 35px #dcdcdc;
+    border: 1px solid #dedede;
+}
+
+    .addProcessHilight a, .addSubProcessHilight a {
+        margin-left: 12px;
+        padding: 2px 0;
+    }
+
+        .addProcessHilight a::before, .addSubProcessHilight a::before {
+            left: 30px !important;
+        }
+
+.material-icons.material-icons-style.material-icons-2.addTopBtn, .material-icons.material-icons-style.material-icons-2.addBotBtn {
+    font-size: 16px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 50px;
+}
+
+.addTopBtnVLine, . {
+    border-bottom: 1px solid #ccc;
+}
+
+    .addBotBtnlink {
+        bottom: -5px !important;
+        border: 1px solid #dedede !important;
+        border-radius: 50px;
+    }
+
+    .addTopBtnlink {
+        top: -5px !important;
+        border: 1px solid #dedede !important;
+        border-radius: 50px;
+    }
+
+    .addTopBtnVLine {
+        width: 25px !important;
+    }
+
+    .Task-process-list {
+        padding-top: 5px !important;
+        padding-bottom: 4px !important;
+    }
+
+
+    .footer-legend {
+        display: block;
+        font-size: 13px;
+        text-align: center;
+        border-right: 0;
+        border-radius: 0 !important;
+    }
+
+    .legend-list {
+        display: inline-block;
+        margin-right: 15px;
+        margin-bottom: 5px;
+    }
+
+        .legend-list .symbol-circle {
+            margin-right: 6px;
+        }
+
+        .legend-list .symbol .symbol-label {
+            width: 8px;
+            height: 8px;
+        }
+
+
+    .card-footer.py-5 {
+        padding: 0;
+    }
+
+    .symbol-label.bg-make, div[data-tasktype="Make"] .Task-process-list::before {
+        background: #4b6ecc;
+    }
+
+    .symbol-label.bg-approved, div[data-tasktype="Approve"] .Task-process-list::before {
+        background: #5ac686;
+    }
+
+    .symbol-label.bg-checked, div[data-tasktype="Check"] .Task-process-list::before {
+        background: #3d821b;
+    }
+
+    .symbol-label.bg-If {
+        background: #ecab11;
+    }
+
+    .symbol-label.bg-If-else {
+        background: #9823e5;
+    }
+
+    .symbol-label.bg-Else {
+        background: #23d8e5;
+    }
+
+div[data-tasktype="Make"] .Task-process-list::before {
+    background: #4b6ecc;
+}
+
+.symbol-label.bg-end {
+    background: #e52323;
+}
+
+div[data-tasktype="If"] .Task-process-list > a {
+    background: #ecab11;
+    padding: 4px 15px;
+    color: white !important;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+div[data-tasktype="End"] .Task-process-list > a {
+    background: #e52323;
+    padding: 4px 15px;
+    color: white !important;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+div[data-tasktype="Else"] .Task-process-list > a {
+    background: #23d8e5;
+    padding: 4px 15px;
+    color: white !important;
+    border-radius: 5px;
+}
+
+.Task-process-list::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    border-radius: 50px;
+    position: absolute;
+    left: 1px;
+    top: 12px;
+}
+
+#Process_Flow #process-name {
+    margin-top: 0;
+    margin-bottom: 0 !important;
+}
+
+.form-check-input.h-25px.w-25px {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.modal-content.border.border-3.border-gray-300.border-hover-warning {
+    border: 0 !important;
+}
+
+.Procurement-list-wrap .btn.btn-icon {
+    border-color: #E0E0E0 !important;
+    border-radius: 50px;
+    box-shadow: none !important;
+    background: #fff !important;
+}
+
+.Procurement-list-wrap .text-success {
+    background: #fff !important;
+    color: #333 !important;
+}
+
+.bg-custom-checked {
+    background-color: #3D821B !important;
+}
+
+.text-custom-checked {
+    background-color: #fff !important;
+}
+
+.modal-body .Task-process-list {
+    padding-left: 30px !important;
+}
+
+
+@media screen and (max-width: 768px) {
+
+
+    .visibleMobileCol {
+        word-break: inherit !important;
+    }
+
+    .buz-logo {
+        display: block;
+    }
+    /* .content {
+	  padding: 1.75rem 1rem 0 1rem !important;
+  } */
+    .card-body.iviewTableWrapper {
+        padding: 0 !important;
+    }
+
+    .PROFLOW-profile-wrap {
+        width: 100% !important;
+        position: inherit !important;
+    }
+
+    .PROFLOW-Info-Steps {
+        padding-top: 0 !important;
+    }
+}
+
+
+/*++START: Process Center Panel*/
+.Left-Center-Display, .Right-Center-Display {
+    border: 1px dashed #dcdcdc;
+    padding: 25px;
+    position: relative;
+}
+
+#process_centerpanel.Center-Display {
+    padding: 18px 25px;
+}
+
+.Right-Center-Display {
+    margin-top: 15px;
+}
+
+#process_centerpanel.Center-Display .content {
+    padding-top: 0;
+}
+
+#process_centerpanel.Center-Display h1 {
+    width: 50%;
+    text-align: center;
+    /*! margin-left: auto; */
+    font-size: 15px;
+    color: #7c7c7c;
+    /*! margin-top: -69px; */
+    position: relative;
+    top: -52px;
+    left: 36%;
+    line-height: 22px;
+}
+
+    #process_centerpanel.Center-Display h1 .highlight {
+        background: #006fef0a;
+        color: #0071f2;
+        padding: 0 4px;
+        margin: 0 5px;
+        border-radius: 4px;
+    }
+
+.bg-img {
+    max-width: 37%;
+    position: absolute;
+    opacity: 1.2;
+    left: 0;
+    z-index:;
+    bottom: -20px;
+}
+
+.bg-img1 {
+    max-width: 48%;
+    position: absolute;
+    right: 7px;
+    /* display: none; */
+    /*! top: -15px; */
+    bottom: 0 !important;
+}
+
+.Left-Center-Display, .Right-Center-Display {
+    border: 1px dashed #dcdcdc;
+    padding: 25px;
+    position: relative;
+    overflow: hidden;
+}
+
+.top-bg {
+    width: 90px !important;
+    height: 105px !important;
+    position: relative !important;
+    left: 14%;
+    top: -23px;
+}
+
+.bottom-bg {
+    width: 110px !important;
+    height: 97px !important;
+    position: relative !important;
+    right: 12% !important;
+    top: -2px;
+    margin-left: auto;
+}
+
+#process_centerpanel.Center-Display .Right-Center-Display h1 {
+    left: 2%;
+    /*! align-self: flex-start; */
+    /*! display: flex; */
+}
+
+#process_centerpanel.Center-Display h1 {
+    width: 50%;
+    /*! text-align: center; */
+    /*! margin-left: auto; */
+    /*! font-size: 15px; */
+    /*! color: #7c7c7c; */
+    /*! margin-top: -69px; */
+    position: relative;
+    top: -29px;
+    left: 44%;
+}
+
+.vh-45 {
+    height: 42vh;
+}
+
+.min-vh-45 {
+    min-height: 42vh;
+}
+/*--END: Process Center Panel*/
+
+/*++START: Process Right Panel*/
+body {
+    font-family: apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+}
+
+ul,
+li {
+    list-style: none;
+    padding: 0;
+    font-family: apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+}
+
+.Timel-sessions {
+    /*! margin-top: 2rem; */
+    border-radius: 12px;
+    position: relative;
+    height: 150px !important;
+    overflow: hidden;
+    padding-top: 25px;
+}
+
+    .Timel-sessions li {
+        /*! padding-bottom: 1.5rem; */
+        border-left: 1px solid #C3C3C3;
+        position: relative;
+        padding-left: 15px;
+        margin-left: 20px;
+        position: relative;
+        top: -5px;
+        /*! margin-top: -5px; */
+        /*! padding-top: 25px; */
+        padding-bottom: 19px;
+    }
+
+        .Timel-sessions li:last-child {
+            border: 0px;
+            padding-bottom: 0;
+        }
+
+        .Timel-sessions li:before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            background: white;
+            border: 1px solid #4e5ed3;
+            border-radius: 50%;
+            position: absolute;
+            left: -4px;
+            top: 0px;
+            box-shadow: 0 4px 5px #ccc;
+        }
+
+        .Timel-sessions li .time {
+            color: #606060;
+            font-weight: 500;
+            width: auto;
+        }
+
+#Timeline-Cards .kpiWrapper .card-body.heightControl {
+    height: auto !important;
+    padding-bottom: 14px !important;
+    padding-left: 0;
+    padding-right: 10px;
+}
+
+@media screen and (min-width: 601px) {
+    .Timel-sessions li .time {
+        font-size: 0.9rem;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .Timel-sessions li .time {
+        margin-bottom: 0.3rem;
+        font-size: 0.85rem;
+    }
+}
+
+.Timel-sessions li p {
+    color: #333;
+    font-family: apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+    /*! line-height: 0.5; */
+    /*! margin-top: 0.4rem; */
+    font-size: 1.11rem !important;
+    font-weight: 600;
+    width: 80%;
+    margin-bottom: 0 !important;
+    /*! margin-top: 5px; */
+    vertical-align: sub;
+    display: table;
+    position: relative;
+    top: -5px;
+}
+
+@media screen and (max-width: 600px) {
+    .Timel-sessions li p {
+        font-size: 0.9rem;
+    }
+}
+
+
+
+.Timel-sessions.full-session {
+    height: auto !important;
+}
+
+#Timeline-wrap {
+    padding: 14px 0;
+    background: #fff;
+    border-radius: 0 !important;
+    border-bottom: 1px solid #ebebeb;
+}
+
+.T-Heading {
+    font-weight: 600 !important;
+    /*! margin-bottom: 9px !important; */
+    /*! line-height: 9px !important; */
+}
+
+.T-Desc {
+    margin: 0 !important;
+}
+
+.Group-content a {
+    font-weight: 510;
+    /*! background: #ccc; */
+    /*! padding: 5px; */
+    color: #333;
+}
+
+.Group-content {
+    background: #fff !important;
+    border: 1px dashed #cccccc;
+    padding: 8px 14px;
+    border-radius: 5px;
+    position: relative;
+}
+
+    .Group-content:after {
+        /*! content: "+"; */
+        position: absolute;
+        right: 7px;
+        top: 6px;
+        background: #fff;
+        border: 1px solid #ccc;
+        color: #333;
+        border-radius: 50px;
+        padding: 0 5px;
+        font-size: 12px;
+    }
+
+.Timeline-heading {
+    border-bottom: 1px solid #eaeaee;
+    padding-bottom: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    padding-left: 15px;
+}
+
+#View-TLF {
+    float: right;
+    position: absolute;
+    top: 10px;
+    right: 25px;
+}
+
+.Timel-sessions li.make::before {
+    background: #4e70cc;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.Timel-sessions li.approve::before {
+    background: #50cd89;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.Group-content-body .time {
+    right: 13px !important;
+}
+
+.Group-content-title {
+    padding-bottom: 12px;
+    border-bottom: 1px solid #ececec;
+    margin-bottom: 8px;
+}
+
+.Timeline-acc-icon.accordion-icon {
+    float: right;
+    cursor: pointer;
+    margin-right: 0;
+    border: 1px solid #eeeeef;
+    border-radius: 50px;
+    padding: 1px;
+    transition: all ease 0.3s;
+    /* background: #fff; */
+}
+
+.TLine-Edits {
+    padding-bottom: 5px;
+    border-bottom: 1px dotted #ccc;
+    margin-bottom: 9px;
+}
+
+
+
+#Timeline-Cards h4 {
+    font-size: 1rem;
+    font-weight: 600 !important;
+}
+
+#Timeline-Cards .card > .card-header {
+    min-height: auto !important;
+}
+
+#Timeline-Cards .kpiWrapper .card > .card-header {
+    min-height: auto !important;
+    padding-bottom: 0;
+    padding-top: 15px;
+    padding-left: 0;
+    padding-right: 10px;
+}
+
+#Timeline-Cards .whiteLink.border-bottom {
+    font-size: 1.75rem !important;
+    color: #333 !important;
+    font-weight: 600 !important;
+    border-bottom: 0 !important;
+}
+
+#Timeline-Cards td, #Timeline-Cards th {
+    font-size: 1.18rem !important;
+    ! padding-left: 5px;
+    ! padding-right: 5px;
+}
+
+#Timeline-Cards {
+    background: #f6f6f7 !important;
+}
+
+    #Timeline-Cards .card.shadow-sm.h-100 {
+        box-shadow: none !important;
+        border-bottom: 1px solid #e9e9e9;
+        border-radius: 0 !important;
+    }
+
+.content.d-flex.flex-column.flex-column-fluid {
+    padding-top: 0 !important;
+}
+
+#Timeline-Cards .listWrapper .card > .card-header {
+    padding-bottom: 10px !important;
+    padding-left: 15px;
+    background: #f6f6f7;
+    border-radius: 0;
+    padding-right: 10px;
+}
+
+#Timeline-Cards .listwrapper h4 {
+    font-size: 14px;
+    font-weight: 600 !important;
+}
+
+#Timeline-Cards .widgetWrapper.kpiWrapper {
+    margin-top: 0 !important;
+    padding-left: 15px;
+}
+
+#TimeLine_overall {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+#Timeline-Cards .listWrapper .card > .card-body {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 10px;
+}
+
+#Timeline-Cards th {
+    display: none;
+}
+
+#Timeline-Cards .widgetWrapper.listWrapper {
+    padding: 0;
+}
+
+#Timeline-Cards .wrapper {
+    padding-left: 0;
+}
+
+
+#Timeline-Cards .cardsPlot.mb-8 {
+    margin-bottom: 0 !important;
+}
+
+#Timeline-Cards .mt-3.widgetWrapper.chartWrapper {
+    margin-top: 0 !important;
+}
+
+#PROFLOW_Right_Last .card {
+    border: 0 !important;
+    border-right: 1px solid #eeeeef !important;
+}
+
+.card-footer.py-5.footer-legend {
+    border-bottom: 1px solid #eeeeef !important;
+    padding: 10 !important;
+    background: #f9f9fa;
+}
+
+#PROFLOW_Right .card {
+    border-left: 0 !important;
+}
+
+#PROFLOW_Left .card {
+    border-bottom: 0 !important;
+}
+
+#PROFLOW_Left .menu.menu-sub.menu-sub-dropdown.menu-column.menu-rounded.menu-gray-600.menu-state-bg-light.fw-bolder.w-250px.py-3.initialized.show {
+    border: 1px solid #f1f3f5;
+    border-radius: 5px;
+    box-shadow: 0 12px 28px 6px #ccc;
+}
+
+#modal_ProcessTree .modal-content {
+    border-radius: 7px;
+}
+
+#modal_ProcessTree .btn.btn-icon.btn-white.btn-color-gray-500.btn-active-primary.btn-close--- {
+    box-shadow: none !important;
+}
+/*--END: Process Right Panel*/
+div[data-tasktype="Else if"] .Task-process-list > a {
+    background: lightseagreen;
+    padding: 4px 15px;
+    border-radius: 5px;
+    color: #fff !important;
+}
+
+
+
+/*Horizontal Stepper*/
+ul.stepper {
+    padding: 0 15px 5px 0;
+    margin-bottom: 0;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    counter-reset: section;
+    /* border-bottom: 1px solid #EFF2F5; */
+    display: block ruby;
+    margin-right: 45px;
+}
+
+    ul.stepper li {
+        height: -webkit-min-content;
+        height: -moz-min-content;
+        height: min-content;
+    }
+
+        ul.stepper li a {
+            padding: 0.75rem;
+            text-align: center;
+            /* margin-right: 15px; */
+            width: max-content;
+        }
+
+            ul.stepper li a .circle {
+                display: inline-block;
+                width: 25px;
+                height: 25px;
+                margin-right: .5rem;
+                line-height: 1.5;
+                color: #909090;
+                text-align: center;
+                background: #f1f4f8;
+                border-radius: 50%;
+                border: 0 !important;
+            }
+
+            ul.stepper li a .label {
+                display: inline-block;
+                color: rgba(0,0,0,0.38);
+                font-size: 12px;
+            }
+
+        ul.stepper li.active a .label,
+        ul.stepper li.completed a .label {
+            font-weight: 600;
+            color: rgba(0,0,0,0.87)
+        }
+
+.stepper-horizontal {
+    position: relative;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: flex-start;
+}
+
+    .stepper-horizontal li {
+        position: relative;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-flex: 1;
+        /* -ms-flex:1; */
+        /*! flex:1; */
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-transition: .5s;
+        transition: .5s
+    }
+
+        .stepper-horizontal li a .label {
+            margin-top: .63rem
+        }
+
+        .stepper-horizontal li:not(:last-child):after {
+            position: relative;
+            margin: 0 15px;
+            content: "\e5cc";
+            /*! background-color:rgba(0,0,0,0.1) */
+            color: #c6c7ca !important;
+            font-family: "Material Icons Outlined";
+            top: 3px;
+            font-size: 16px;
+        }
+
+        .stepper-horizontal li:hover {
+            content: "";
+            /*! background-color:rgba(0,0,0,0.1) */
+        }
+
+@media(max-width:47.9375rem) {
+    .stepper-horizontal {
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column
+    }
+
+        .stepper-horizontal li {
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
+            flex-direction: column;
+            -webkit-box-align: start;
+            -ms-flex-align: start;
+            align-items: flex-start
+        }
+
+            .stepper-horizontal li a .label {
+                -webkit-box-orient: vertical;
+                -webkit-box-direction: normal;
+                -ms-flex-flow: column nowrap;
+                flex-flow: column nowrap;
+                -webkit-box-ordinal-group: 3;
+                -ms-flex-order: 2;
+                order: 2;
+                margin-top: .2rem
+            }
+
+            .stepper-horizontal li:not(:last-child):after {
+                position: absolute;
+                top: 3.75rem;
+                left: 2.19rem;
+                width: 1px;
+                height: calc(100% - 40px);
+                content: ""
+            }
+}
+
+.stepper-horizontal > li:not(:last-of-type) {
+    margin-bottom: 0 !important
+}
+
+.stepper-vertical {
+    position: relative;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between
+}
+
+    .stepper-vertical li {
+        position: relative;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-flex: 1;
+        -ms-flex: 1;
+        flex: 1;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-box-align: start;
+        -ms-flex-align: start;
+        align-items: flex-start
+    }
+
+        .stepper-vertical li a {
+            position: relative;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -ms-flex-item-align: start;
+            align-self: flex-start
+        }
+
+            .stepper-vertical li a .circle {
+                -webkit-box-ordinal-group: 2;
+                -ms-flex-order: 1;
+                order: 1
+            }
+
+            .stepper-vertical li a .label {
+                -webkit-box-orient: vertical;
+                -webkit-box-direction: normal;
+                -ms-flex-flow: column nowrap;
+                flex-flow: column nowrap;
+                -webkit-box-ordinal-group: 3;
+                -ms-flex-order: 2;
+                order: 2;
+                margin-top: .2rem
+            }
+
+        .stepper-vertical li.completed a .label {
+            font-weight: 500
+        }
+
+        .stepper-vertical li .step-content {
+            display: block;
+            padding: .94rem;
+            margin-top: 0;
+            margin-left: 3.13rem
+        }
+
+            .stepper-vertical li .step-content p {
+                font-size: .88rem
+            }
+
+        .stepper-vertical li:not(:last-child):after {
+            position: absolute;
+            top: 3.44rem;
+            left: 2.19rem;
+            width: 1px;
+            height: calc(100% - 40px);
+            content: "";
+            background-color: rgba(0,0,0,0.1)
+        }
+
+.primary-color, ul.stepper li.active a .circle, ul.stepper li.completed a .circle {
+    background-color: #4285f4 !important;
+    color: #fff;
+}
+
+ul.stepper li.completed a .circle {
+    background: #50cd89 !important;
+    color: #fff !important;
+}
+
+.horizontal-processbar .disabled a {
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+#horizontal-processbar .disabled {
+    pointer-events: none !important;
+    cursor: not-allowed;
+}
+
+#horizontal-processbar .active {
+    background: aliceblue;
+}
+
+ul.stepper li.pending a .circle {
+    background: orange;
+    color: #fff;
+}
+
+#PROFLOW_Left .Procurement-list-wrap.active {
+    background: aliceblue;
+}
+
+    #PROFLOW_Left .Procurement-list-wrap.active a {
+        font-weight: 600;
+    }
+
+#process-name::after {
+    background: none;
+}
+
+#Show-Hide-TL {
+    position: absolute;
+    right: 9px;
+    top: 9px;
+    z-index: 9;
+    /* background: white; */ display: none;
+}
+
+    #Show-Hide-TL .material-icons.material-icons-style {
+        font-size: 18px;
+    }
+
+.Task-process-list.Active > a {
+    background: #00800012;
+    color: green !important;
+    font-weight: 600;
+    padding: 5px 13px;
+    display: block;
+    border-radius: 5px;
+}
+
+#PROFLOW_Right.right-only {
+    margin-left: 14px;
+}

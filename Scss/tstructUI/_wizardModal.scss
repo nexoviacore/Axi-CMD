@@ -1,0 +1,48 @@
+//*wizardModal  ==========*//
+   #wizardModal{
+    width: $wizardModalWidth;
+    height: $wizardModalHeight;
+    max-height: $wizardModalMaxHeight;
+    #wizarTypeSel {
+        .valign-wrapper {
+            @include textCenter;
+            height: calc(#{$wizardModalvalignWrapperMaxHeight} - #{$wizardModalvalignWrapperCalculateHeight});
+        }
+        a{
+            display: inline-block;
+            margin: 0 10px;
+            color: $applicationIconColor;
+            &.iconAnchr {
+                span {
+                    font-size: $wizardModalvalignWrapperIconAnchrSpanFontSize;
+                }
+            }
+            &:hover{
+                color: $applicationTextColor;
+            }
+        }
+    }
+    #wizardWrappper{
+        #wizardHeader{
+            @include wizardProgressForModalWizard;
+        }
+        #wizardBodyContent{
+            margin-top: $wizardModalWizardBodyContentMarginTop;
+        }
+    }
+    .modal-footer{
+        .cancelButton{
+            @include coldBtnColors;
+            margin-right: $wizardModalModalFooterMarginRight;
+        }
+        #wizardNextbtn{
+            @include hotBtnColors;
+            margin-right: $wizardModalModalFooterMarginRight;
+        }
+        #wizardPrevbtn{
+            @include coldBtnColors;
+            margin-right: $wizardModalModalFooterMarginRight;
+        }
+    }
+   }
+//*wizardModal  ==========*//

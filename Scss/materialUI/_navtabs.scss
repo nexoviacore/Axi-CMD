@@ -1,0 +1,15 @@
+﻿.nav-tabs {
+  @include applicationHomePageRightNavbarTab;
+}
+
+@each $key, $val in $colors {
+    .nav-tabs.tab-col-#{$key} {
+        > li {
+            > a {
+                &:before {
+                    border-bottom: 2px solid $val;
+                }
+            }
+        }
+    }
+}

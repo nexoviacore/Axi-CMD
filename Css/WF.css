@@ -1,0 +1,367 @@
+.workFlowTable {
+  /*---------------------------------------------- End of Styles for Messages page -------------------------------------------*/
+  /*------------------------- General styles ----------------------*/
+  /*-----------------------End of Styles for tab control--------------------------*/
+  /*-----------------------Styles for Treeview------------------------------------*/
+  /*-----------------------End of Styles for Treeview------------------------------------*/
+}
+
+.workFlowTable .tabBody {
+  background-color: #ffffff;
+}
+
+.workFlowTable .tabBody .dvLeft {
+  float: left;
+  width: 20%;
+  vertical-align: top;
+  background: #fff;
+}
+
+.workFlowTable .tabBody .dvLeft .dvLeftInner {
+  overflow: auto;
+  height: calc(100vh - 20px);
+}
+
+.workFlowTable .tabBody .dvLeft .dvLeftInner::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.workFlowTable .tabBody .dvLeft .dvLeftInner::-webkit-scrollbar-track {
+  background: #fff;
+}
+
+.workFlowTable .tabBody .dvLeft .dvLeftInner::-webkit-scrollbar-thumb {
+  background-color: #999999;
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  -ms-border-radius: 20px;
+  border-radius: 20px;
+  border: 3px solid #fff;
+  min-height: 15%;
+  min-width: 15%;
+}
+
+.workFlowTable .tabBody .dvLeft .GridHead {
+  background: none;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#bac1cd', endColorstr='#EFEEF0');
+  /* for IE */
+  background: -moz-linear-gradient(top, #bac1cd, #EFEEF0) !important;
+  /* for firefox 3.6+ */
+  font-weight: normal;
+  font-size: 10pt;
+  text-align: center;
+  text-transform: capitalize;
+  color: #000000;
+}
+
+.workFlowTable .tabBody .dvLeft .tvWorkflow_0 {
+  color: #333;
+  font-size: 13px;
+}
+
+.workFlowTable .tabBody .dvLeft .listForm {
+  font-size: 20px;
+  font-weight: 500;
+  padding-left: 22px;
+  margin-top: 10px;
+  margin-bottom: 0px;
+  border-bottom: 1px solid #ccc;
+}
+
+.workFlowTable .tabBody .dvLeft .listForm span {
+  position: relative;
+  top: -5px;
+  left: 8px;
+}
+
+.workFlowTable .tabBody .dvRight {
+  float: right;
+  width: 68%;
+  vertical-align: top;
+}
+
+.workFlowTable .tabBody .dvRight .dvRightMain {
+  overflow: auto;
+  height: calc(100vh - 20px);
+}
+
+.workFlowTable .tabBody .dvRight .dvRightMain textarea {
+  height: calc(100vh - 90px);
+}
+
+.workFlowTable .tabBody .dvRight .dvRightMain #btnDeleteWF, .workFlowTable .tabBody .dvRight .dvRightMain #btnSubmit, .workFlowTable .tabBody .dvRight .dvRightMain #btnCancel {
+  background: none;
+  border: 1px solid #ccc;
+}
+
+.workFlowTable .tabBody .dvRight .dvRightMain #btnDeleteWF:hover, .workFlowTable .tabBody .dvRight .dvRightMain #btnSubmit:hover, .workFlowTable .tabBody .dvRight .dvRightMain #btnCancel:hover {
+  opacity: 1;
+}
+
+.workFlowTable .tabBody .dvRight .dvRightMain::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.workFlowTable .tabBody .dvRight .dvRightMain::-webkit-scrollbar-track {
+  background: #fff;
+}
+
+.workFlowTable .tabBody .dvRight .dvRightMain::-webkit-scrollbar-thumb {
+  background-color: #999999;
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  -ms-border-radius: 20px;
+  border-radius: 20px;
+  border: 3px solid #fff;
+  min-height: 15%;
+  min-width: 15%;
+}
+
+.workFlowTable .tabBody .dvRight .dvRightMain textarea[readonly="readonly"], .workFlowTable .tabBody .dvRight .dvRightMain textarea[readonly] {
+  background-color: #f1f1f1;
+  font-size: 13px;
+  border: 1px solid #d3d3d3;
+}
+
+.workFlowTable .tabBody .dvRight .dvRightMain textarea[readonly="readonly"]:focus, .workFlowTable .tabBody .dvRight .dvRightMain textarea[readonly]:focus {
+  outline: none;
+}
+
+.workFlowTable .tabBody .dvRight .dvRightMain #dvShowAll #btnNew {
+  width: 150px;
+  border: 0px;
+  text-align: left;
+  font-family: "Segoe UI", Roboto, sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.workFlowTable .tabBody .dvRight .dvRightMain #dvShowAll #btnNew:focus {
+  outline: none;
+}
+
+.workFlowTable .tabBody .dvRight #dvDispCond {
+  background-color: #e0e0e0;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#bac1cd', endColorstr='#EFEEF0');
+  /* for IE */
+  background: -moz-linear-gradient(top, #bac1cd, #EFEEF0) !important;
+  /* for firefox 3.6+ */
+  padding: 3px 5px;
+}
+
+.workFlowTable .tabBody .dvRight legend, .workFlowTable .tabBody .dvRight #IE8#HACK {
+  font-size: 16px;
+  font-weight: 500;
+  color: #000;
+}
+
+.workFlowTable .tabBody .dvRight .ui-dialog-title {
+  padding-left: 0px !important;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: 'Segoe UI',Roboto,sans-serif;
+}
+
+.workFlowTable .tabBody .dvRight #dvShowRoles i {
+  background: #f1f1f1;
+  padding: 4px 8px;
+  color: #999;
+  cursor: pointer;
+}
+
+.workFlowTable .tabBody .dvRight .ui-dialog {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.workFlowTable .tabBody .dvRight .ui-dialog-titlebar {
+  background: #fff;
+}
+
+.workFlowTable .tabBody .dvRight label {
+  font-size: 13px;
+  font-weight: normal;
+  color: #000;
+  position: relative;
+  top: -3px;
+  left: 3px;
+}
+
+.workFlowTable .labelcap {
+  font-size: 12px;
+  font-weight: normal;
+  color: #000000;
+}
+
+.workFlowTable .lblMsg {
+  font-size: 10pt;
+  font-weight: bold;
+  color: #000000;
+}
+
+.workFlowTable .font {
+  font-size: 12px;
+  font-weight: normal;
+  color: #000000;
+}
+
+.workFlowTable .errmsg {
+  color: Red;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.workFlowTable .tab {
+  border: solid 1px #bbb;
+  font: bold 10pt;
+  color: #000000;
+  text-decoration: none;
+  border-bottom: none;
+  padding: 0px 5px;
+  background-color: #EFEEF0;
+}
+
+.workFlowTable .SelectedMenuTab {
+  color: #000000;
+  text-decoration: none;
+  border: solid 1px #bbb;
+  border-bottom: Solid 1px #ddddff;
+  padding: 0px 5px;
+  background-color: #bac1cd;
+  font-weight: bold;
+}
+
+.workFlowTable .menuTabs {
+  font-size: 12px;
+  display: none;
+}
+
+.workFlowTable .Treeview {
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.workFlowTable .RootNode {
+  width: 300px;
+  text-decoration: none;
+  font-size: 10pt;
+  font-weight: bolder;
+}
+
+.workFlowTable .ParentNode {
+  width: 300px;
+  color: #000000;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.workFlowTable .LeafNode {
+  color: #000000;
+  width: 300px;
+  text-decoration: none;
+  background-color: #bac1cd;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.workFlowTable .RootNodembox {
+  background-color: #ffffff;
+  border: solid 1px #ffffff;
+  width: 300px;
+  color: White;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.workFlowTable .ParentNodembox {
+  height: 15px;
+  width: 300px;
+  color: White;
+  text-decoration: none;
+  background-color: #ffffff;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.workFlowTable .LeafNodembox {
+  color: #ffffff;
+  width: 300px;
+  text-decoration: none;
+  background-color: #ffffff;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.workFlowTable .Treeviewmbox {
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.workFlowTable .Treeviewlinks {
+  font-size: 12px;
+  font-weight: normal;
+  color: #ffffff;
+}
+
+.workFlowTable .SelectedNode {
+  background-color: #ffffff;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.workFlowTable .divHomePageContainer {
+  background-color: #EFEEF0;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#EFEEF0', endColorstr='#bac1cd');
+  /* for IE */
+  background: -moz-linear-gradient(top, #EFEEF0, #bac1cd) !important;
+  /* for firefox 3.6+ */
+  padding: 10px 10px 10px 10px;
+  height: auto;
+}
+
+.workFlowTable .button {
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled='true', startColorstr=#EFEEF0, endColorstr=#bac1cd);
+  background: -moz-linear-gradient(top, #EFEEF0, #bac1cd);
+  color: #333333;
+  border: 1px solid #000000;
+  padding: 3px 10px 3px 10px;
+  /*width: 100px;*/
+  font: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 60px;
+}
+
+.workFlowTable input[type=button], .workFlowTable input[type=submit] {
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled='true', startColorstr=#EFEEF0, endColorstr=#bac1cd);
+  background: -moz-linear-gradient(top, #EFEEF0, #bac1cd);
+  padding: 6px 16px;
+  /*width: 100px;*/
+  cursor: pointer;
+  cursor: pointer;
+  font-family: 'Segoe UI',Roboto,sans-serif;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.75;
+}
+
+.workFlowTable .workFlowTable {
+  background: #e0e0e0;
+  padding: 0px 3px 0px 3px;
+}
+
+.workFlowTable .workFlowTable table tbody tr td a[href="#menuTabs_SkipLink"], .workFlowTable .dvLeftInner a[href="#tvWorkflow_SkipLink"] {
+  display: none;
+}
+
+.workFlowTable input:focus {
+  outline: none;
+}

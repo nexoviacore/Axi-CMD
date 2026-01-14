@@ -1,0 +1,87 @@
+// * Form Layout classes for - Single Column, Double Column and Triple Column * //
+.colFldGridStackWidth {
+    width: 100%;
+
+    &:hover {
+        background-color: rgba(32, 33, 36, 0.1);
+        cursor: pointer;
+    }
+}
+
+.colDivInputPadding {
+    left: unset;
+    right: unset;
+    border-bottom: 1px solid darken($applicationBackgroundColor, 13.5%);
+    padding: $formLayoutRowInputPadding; 
+    &.formLabelParent {
+        min-height: 55px;
+    }
+}
+
+.formPositionCenter {
+    position: $applicationPositionAbsolute;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+}
+
+.formPositionLeft {
+    position: $applicationPositionAbsolute;
+    left: 0;    
+}
+
+.formPositionRight {
+    position: $applicationPositionAbsolute;
+    right: 0;
+}
+
+.formLayoutWidth {
+    #breadcrumb-panel {
+        margin: $formLayoutBcrumbMargin;
+        border: none;
+    }
+
+    div.toolbarOptionsParent {
+        margin-right: $formLayoutToolBarMargin;
+    }
+}
+
+.single,
+.double,
+.triple {
+    .dvdcframe {
+       padding:  $formLayoutDcPadding;
+        .mainIframe {
+            padding: $formLayoutDcPadding;
+            &.grid-stack{ 
+                &.dynamicRunMode{
+                    &:not(.tstructDesignMode){
+                        .grid-stack-item{                           
+                            margin-bottom: 0px;
+                            
+                        }
+                    }
+                }
+            }
+            .tstformbutton {
+                margin-top: 0px;
+                width: auto;
+            }
+        }
+       
+    }
+
+    .tstructMainBottomFooter {
+        position: $applicationPositionRelative;;
+    }
+
+    .grid-stack{ 
+        &.dynamicRunMode{
+            &:not(.tstructDesignMode){
+                .grid-stack-item{                    
+                    margin-bottom: 0px;                    
+                }
+            }
+        }
+    }
+}

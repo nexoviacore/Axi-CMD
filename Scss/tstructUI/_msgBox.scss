@@ -1,0 +1,36 @@
+/*------- msgBox ---------*/
+  .msgBoxBackGround{
+      background: $applicationMsgBoxBackgroundColor;
+      top: 0;
+      left: 0;
+      position: absolute;
+  }
+.msgBox{
+    position: fixed;
+    padding: $msgBoxPadding;
+    @include shadow;
+    @include msgBoxRadius;
+    .msgBoxTitle{
+        @include msgBoxTitle;
+    }
+    .msgBoxContainer{
+        .msgBoxInputs{
+            .msgInput{
+                span{
+                        margin-left: 0px !important;
+                        font-size: $applicationFontSize;
+                        display: block;
+
+                    textarea{
+                        margin-top: $msgBoxTextareaTopMargin;
+                    }
+                }
+                
+            }
+        }
+    }
+    .msgBoxButtons{
+        margin-top: $msgBoxButtonsTopMargin !important;
+    }
+}
+/*-------msgBox---------*/

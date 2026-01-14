@@ -1,0 +1,142 @@
+//* List View designer ==================================== *//
+//* materialui mixin ==================================== *//
+@import 'materialUI/_mixins';
+//* Global Variable ==================================== *//
+@import '_variables/_genericVariables';
+@import '_variables/_globalVariable';
+//* iview mixin ==================================== *//
+@import '_mixins/_globalMixin'; 
+.topSplitDivision{
+    #GridView1Dnd_wrapper {
+        overflow-x: scroll;
+        .dataTables_scrollHead {
+            overflow: visible !important;
+        }
+        .dataTables_scrollBody {
+            .ivirMainGrid {
+                &.iviewBuilder {
+                    thead {
+                        th {
+                            .three-dot{
+                                display: none;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        @include scrollBar;
+        }
+    .ivirMainGrid {
+        &.iviewBuilder {
+            // overflow: hidden;
+            display: block;              
+            thead {
+                tr {                   
+                    th {
+                        background: #a8afb3;
+                        color: #fff;
+                        font-size: 14px;
+                        font-weight: normal;
+                        position: relative;
+                        padding: 10px;
+                        border-right: 1px solid #fff;
+                        // &.hiddenColumnUI {
+                        //     background: #d4dadd;
+                        //     .three-dot{
+                        //         button{
+                        //             color: #d4dadd;
+                        //         }
+                        //         a {
+                        //             &.ddMergeColOpt {
+                        //                 display: none;
+                        //             }
+
+                        //         }
+                        //     }
+                        // }
+                        a {
+                            color: #fff;
+                            width: 100%;
+                            display: inline-block;
+                            &:hover,&:focus {
+                                color: #fff;
+                                text-decoration: none;
+                            }
+                        }
+                        .three-dot {
+                            position: absolute;
+                            display: inline-block;
+                            top: 4px;
+                            right: 10px;
+                            button {
+                                background: transparent;
+                                color: #fff;
+                                box-shadow: none;
+                                padding: 6px 0px;
+                                &:focus{
+                                    outline: none;
+                                }
+                            }
+                            .dropdown-menu {
+                                top: 0px;
+                                right: 0px;
+                                left: auto;
+                                    a{
+                                        &.dropdown-item {
+                                            color: #000;
+                                            display:block;
+                                            padding:5px 10px;
+                                            &:hover,&:focus{
+                                                color: #000;
+                                                text-decoration: none;
+                                            }
+                                            i {
+                                                margin-right: 5px;
+                                            }
+                                        }
+                                    }                                                       
+                                }
+                            }
+                        // &:hover,&:focus{
+                        //     .three-dot {
+                        //         button{
+                        //             background: #989da0;
+                        //             color: #ffffff;
+                        //             padding: 1px 10px;
+                        //             border-radius: 50%;
+                        //             box-shadow: 0px 0px 11px 0px #bdbdbd;
+                        //             display: block;
+                        //         }
+                        //     }
+                        // }
+                        &:first-child{
+                            .dropdown-menu{
+                                right: auto;
+                                left: 0px;
+                            }
+                            // .three-dot {
+                            //     a {
+                            //         &.ddMergeColOpt {
+                            //             display: none;
+                            //         }
+                            //     }
+                            // }
+                        }
+                    }
+                }
+                
+            }
+            tbody{
+                tr{
+                    height: 25px;
+                    th, td {
+                        border: 1px solid #eee;
+                        padding: 10px;
+                    }
+                }                
+            }
+        }
+    }
+}
+//* List View designer ==================================== *//

@@ -1,0 +1,12 @@
+.inmemdb {
+    #ivInSearch {
+        right: $inmemdbSearchLtlRightPosition;
+    }
+
+    &.btextDir-rtl {
+        #ivInSearch {
+            left: $inmemdbSearchRtlLeftPosition;
+            right: auto;
+        }
+    }
+}

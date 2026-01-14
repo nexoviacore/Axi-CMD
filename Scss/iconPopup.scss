@@ -1,0 +1,122 @@
+//* materialui mixin ==================================== *//
+@import 'materialUI/_mixins';
+//* Global Variable ==================================== *//
+@import '_variables/_genericVariables';
+@import '_variables/_globalVariable';
+//* iview mixin ==================================== *//
+@import '_mixins/_globalMixin';
+#divModalIcons {
+    
+
+    .arrow {
+        display: none;
+    }
+
+    .modal-content {
+
+        // height: 380px;
+        // min-width: 800px;
+        .modal-header {
+          //  display: none;
+        }
+
+        .modal-body {
+
+            #iconWrapperData {
+                overflow-y: scroll;
+                height: 290px;
+
+                span {
+                    color: $applicationIconColor;
+                    padding: 5px;
+                    &.material-icons {
+                        font-size: 28px;
+                        cursor: pointer;
+                    }
+
+                    &:hover {
+                        color: #615f5f;
+                    }
+                }
+
+                .userIcons {
+                    border-bottom: 1px solid #adadad;
+                    padding-bottom: 2px;
+                    margin-bottom: 8px;
+
+                    span {
+                        display: inline-block;
+                        vertical-align: middle;
+                        cursor: pointer;
+                        img {
+                            width: 28px;
+                            height: 28px;
+                            padding: 3px;
+                            vertical-align: top;
+                            border-style: none;
+                        }
+
+                        a {
+                            position: relative;
+                            top: -5px;
+                            margin-left: -9px;
+                            background: #bfbebe1a;
+                            text-decoration: none;
+                            padding: 3px 2px 0px 2px;
+                            border-radius: 12px
+                        }
+
+                        &:hover {
+                            border: 1px solid #ccc;
+                        }
+                    }
+                }
+            }
+
+            .divBrwsIcon {
+                #brwsIcon {
+                    @include fileUploadButton;
+                    margin-top: 8px;
+
+                    &:hover {
+                        text-decoration: none;
+                    }
+                }
+
+                span {
+                    label {
+                        margin-left: 10px;
+                        font-size: 11px;
+                        text-overflow: ellipsis;
+                        width: 135px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        position: relative;
+                        top: 7px;
+                    }
+                }
+            }
+
+            #srchIcon {
+                font-size: 12px;
+                width: 100%;
+                height: 35px;
+                margin-bottom: 10px;
+                padding-left: 10px;
+                border-bottom: 1px solid #ccc;
+                border-top: 0px;
+                border-right: 0px;
+                border-left: 0px;
+
+                &:focus {
+                    border-bottom: 1px solid #000;
+                    box-shadow: none;
+                    outline: none;
+                }
+            }
+
+        }
+
+    }
+
+}

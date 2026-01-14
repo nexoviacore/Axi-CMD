@@ -1,0 +1,26 @@
+//* PopOver ==================================== *//
+.popover{
+            &.right{
+                width: auto;
+                border-radius: $applicationBorderRadius;
+                @include shadow;
+            }
+            .popover-content{
+                // font-size: $popOverFontSize;
+                font-family: "Roboto", sans-serif;
+                color: $popoverContent;
+                a{
+                    &:hover,&:focus{
+                        outline: none;
+                        text-decoration: none;
+                    }
+                }
+                span.tooltiptext{
+                    span{
+                        width: $applicationMaximumWidth;
+                        @include textOverflow;
+                    }
+                }
+            }
+        }
+//* PopOver ==================================== *//

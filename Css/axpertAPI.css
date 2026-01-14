@@ -1,0 +1,76 @@
+.main-api{
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+#ddlTstruct,
+#ddlIview,
+#ddlSQL {
+    padding: 2px 8px;
+}
+#apiUrl{
+    margin-top: 10px;
+    margin-bottom: 19px;
+    font-size: 16px;
+    /* padding:5px;
+    height: 30px;
+    background: #eee;
+    border: 1px solid #ccc;
+    margin-top: 10px;
+    margin-bottom: 10px; */
+    margin-top: 20px;
+}
+.url1{
+    color: #0a0a0a;
+    margin-right: 5px;
+}
+.url2{
+    color: #337ab7;
+}
+#btnAddSql{
+    /* margin-top: 10px;
+    margin-bottom: 10px;   */
+    float: right;
+}
+#dvParams{
+    height: 340px;
+    margin-top: 10px;
+    min-height: 30px;
+    margin-bottom: 20px;
+    /* box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 1px, rgba(0, 0, 0, 0.12) 0px 2px 10px; */
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 0px 0px 3px, rgba(0, 0, 0, 0.12) 7px 6px 10px;
+}
+#dvParams table{
+    width: 100%;
+}
+#dvParams table tr th,#dvParams table tr td{padding: 5px 7px;}
+#dvParams table tr:nth-child(odd){
+    background-color: #dadada;
+}
+#dvResponseString,
+#dvInputString {
+    height: 150px;
+    margin-top: 10px;
+    overflow: auto;
+    padding: 10px;
+    /* box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 1px, rgba(0, 0, 0, 0.12) 0px 2px 10px; */
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 0px 0px 3px, rgba(0, 0, 0, 0.12) 7px 6px 10px;
+    /* margin-bottom: 10px; */
+    overflow-wrap: break-word;
+    margin-bottom: 20px;
+}
+#lblParams,#lblRequest,#lblResponse{
+    font-size: 18px;
+}
+#lblResponse{
+    margin-top: 10px;
+}
+.dvName{
+   margin-top: 10px;
+   background: #747474;
+   color: #fff;
+   padding: 7px 15px;
+}
+.dvContent{
+    margin-top: 5px;
+}

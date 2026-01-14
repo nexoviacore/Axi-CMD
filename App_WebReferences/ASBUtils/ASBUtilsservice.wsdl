@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns:tns="http://tempuri.org/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" name="ASBUtilsservice" targetNamespace="http://tempuri.org/" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types />
+  <message name="ExportData0Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="ExportData0Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ImportData1Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="ImportData1Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <portType name="ASBUtils">
+    <operation name="ExportData">
+      <input message="tns:ExportData0Request" />
+      <output message="tns:ExportData0Response" />
+    </operation>
+    <operation name="ImportData">
+      <input message="tns:ImportData1Request" />
+      <output message="tns:ImportData1Response" />
+    </operation>
+  </portType>
+  <binding name="ASBUtilsbinding" type="tns:ASBUtils">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="rpc" />
+    <operation name="ExportData">
+      <soap:operation soapAction="urn:uASBUtils-ASBUtils#ExportData" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUtils-ASBUtils" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUtils-ASBUtils" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ImportData">
+      <soap:operation soapAction="urn:uASBUtils-ASBUtils#ImportData" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUtils-ASBUtils" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUtils-ASBUtils" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+  </binding>
+  <service name="ASBUtilsservice">
+    <port name="ASBUtilsPort" binding="tns:ASBUtilsbinding">
+      <soap:address location="http://localhost/scripts/ASBUtils.dll/soap/ASBUtils" />
+    </port>
+  </service>
+</definitions>

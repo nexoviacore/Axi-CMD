@@ -1,0 +1,20 @@
+.enableExpandCollapse {
+    .navbar {
+
+        >.container .navbar-brand,
+        >.container-fluid .navbar-brand {
+            margin-left: $applicationMainPageEnableExpandCollapseNavbarBrandMarginLeft;
+        }
+    }
+
+    &.overlay-open {
+        section.content {
+            margin: $applicationMainPageEnableExpandCollapseOverlayOpenContentMargin;
+            @include transition(0.5s);
+        }
+    }
+
+    .bars:after {
+        content: '\E5D2';
+    }
+}

@@ -1,0 +1,11 @@
+//* compress table ============== *//
+.table {
+    &.dataTable{
+        tbody{
+            th,td{
+                padding: 0;
+            }
+        }
+    }
+}
+//* compress table ============== *//

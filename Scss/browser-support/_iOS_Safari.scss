@@ -1,0 +1,67 @@
+html {
+    &.safari{
+        body{
+            &.iOS{
+                &.isHybrid{
+                    .navbar{
+                        top: $application-navbar-searchbar-top-safari;
+                    }
+                    &.enableExpandCollapse{
+                        &.compressedModeUI{
+                            section.content{
+                                margin: $application-compressedMode-section-content-margin-safari;
+                                .appBackBtn{
+                                    top: $application-appbckbtn-top-safari; 
+                                }
+                            }
+                            &.overlay-open{
+                                section.content {
+                                    margin: $application-compressedMode-overlay-open-section-content-margin-safari;
+                                    .appBackBtn{
+                                        top: $application-appbckbtn-top-safari; 
+                                    }
+                                }
+                            }
+                        }
+                        &.overlay-open {
+                            section.content {
+                                margin: $application-overlay-open-section-content-margin-safari;
+                                .appBackBtn{
+                                    top: $application-appbckbtn-top-safari; 
+                                }
+                            }
+                            
+                        }
+                    } 
+                    &.compressedModeUI{
+                        section.content{
+                            margin: $application-compressedMode-section-content-margin-safari;
+                            .appBackBtn{
+                                top: $application-appbckbtn-top-safari; 
+                            }
+                        }
+                    }   
+                    
+                    section.content {
+                        margin: $application-overlay-open-section-content-margin-safari;
+                        .appBackBtn{
+                            top: $application-appbckbtn-top-safari; 
+                        }
+                    }        
+               
+                    .sidebar{
+                        top:$application-sidebars-top-safari;
+                    }
+                    .right-sidebar{
+                        top:$application-sidebars-top-safari;
+                    }
+                    .search-bar{
+                        &.open{
+                            top:$application-navbar-searchbar-top-safari;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

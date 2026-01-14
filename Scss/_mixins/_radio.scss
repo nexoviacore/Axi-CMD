@@ -1,0 +1,14 @@
+//*radio -----------*//
+   @mixin radioButtonGap{
+    @include radioButtonRightGap;
+    margin-left: $applicationRadioButtonMarginLeft;
+    margin-top: $applicationRadioButtonMarginTop;
+   }
+   @mixin radioButtonRtlGap{
+      margin-right: $applicationRadioButtonRtlMarginRight;
+      margin-left: $applicationRadioButtonRtlMarginLeft;
+   }
+   @mixin radioButtonRightGap{
+    margin-right: $applicationRadioButtonMarginRight;
+   }
+//*radio -----------*//

@@ -1,0 +1,45 @@
+//* pop up box =====*//
+@mixin popUpWidth{
+    margin: 0;
+    position: $popUpWidthPosition;
+    z-index: 99;
+    width: 98%;
+    left:$applicationPopupLeftGap;
+}
+
+@mixin fileUploadInstruction{
+    font-size: $applicationFontSize;
+    margin: $applicationPopupMargin 0px;
+    display: block;
+}
+@mixin fileUploadSelectName{
+    display: $fileUploadSelectNameDisplay;
+    padding: 0 $applicationPopupPadding;
+}
+@mixin fileUploadButton{
+    background:$clearBtnHoverBackgroundColor;;
+    padding: 0 $applicationPopupPadding;
+    display: $fileUploadButtonDisplay;
+    height: $applicationPopupHeight;
+    line-height: $applicationPopupLineHeight;
+    color: $applicationFileUploadActiveColor;
+}
+@mixin popUpScaleIn{
+    -webkit-transform: scale(1);
+    transform: scale(1);
+}
+@mixin popUpScaleOut{
+    -webkit-transform: scale(0);
+    transform: scale(0);
+    transition: -webkit-transform .2s;
+    transition: transform .2s;
+    transition: transform .2s,-webkit-transform .2s;
+}
+@mixin gridPopUp {
+    @include shadow;
+    @include border-radius(3);
+    position: $bootstrapModalDataWrapperForEditFieldsPositionRelative;
+    height: calc(#{$applicationMaximumWidth} - #{$bootstrapModalDataWrapperForEditFieldsCalculateHeight});
+    padding: $bootstrapModalDataWrapperForEditFieldsPadding;
+}
+//* pop up box =====*//

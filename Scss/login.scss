@@ -1,0 +1,26 @@
+//* materialui mixin ==================================== *//
+@import 'materialUI/_mixins';
+//* Global Variable ==================================== *//
+@import '_variables/_genericVariables';
+@import '_variables/_globalVariable';
+//* iview mixin ==================================== *//
+@import '_mixins/_globalMixin';
+@import 'materialUI/_variables';
+//* Page Loader ================================= *//
+@import 'materialUI/_pageloader.scss';
+//* Preloaders ================================== *//
+@import 'materialUI/_preloaders.scss';
+//* card ==================================== *//
+@import 'materialUI/_card';
+//* page Title ==================================== *//
+@import 'iviewUI/_pageTitle';
+//* page video ==================================== *//
+@import 'generic/_pageVideo';
+//* page logo ==================================== *//
+@import 'generic/_pageLogo';
+//* page Input  ==================================== *//
+@import 'generic/_pageInput';
+//* page Input  ==================================== *//
+@import 'generic/_pageButton';
+//* for login page related all css and all section related to login page only  ==================================== *//
+@import 'generic/_loginMain';

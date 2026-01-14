@@ -1,0 +1,197 @@
+//* pills ==================================== *//
+   @mixin pillsMaterialCheckBox{
+    position: $pillsMaterialCheckBoxPosition;
+    //left: -9999px;
+    opacity: 0;
+   }
+   @mixin pillsCheckboxLabel{
+      position: $pillsCheckboxLabelPosition;
+      padding-left: $pillsCheckboxLabelPaddingLeft;
+      cursor: pointer;
+      display: $pillsCheckboxLabelDisplay;
+      height: $pillsCheckboxLabelHeight;
+      margin-right: $pillsCheckboxLabelMarginRight;
+   }
+   @mixin  pillsFilledInBefore{
+   content: '';
+   position: $pillsFilledInBeforePosition;
+   left: $pillsFilledInBeforeLeftGap;
+   top: $pillsFilledInBeforeTopGap;
+   width: $pillsFilledInBeforeWidth;
+   height: $pillsFilledInBeforeHeight;
+   border: 1px solid $applicationBorderColor;
+   background: $pillsFilledInBeforeBackground;
+   @include border-radius(4px);
+   @include pillsCheckBoxShadow;
+   }
+   @mixin pillsFilledInAfter {
+        content: '\2713\0020';
+        position: $pillsFilledInAfterPosition;
+        top: 0px;
+        left: $pillsFilledInAfterLeftGap;
+        font-size: $pillsFilledInAfterFontSize;
+        line-height: $pillsFilledInAfterLineHieght;
+        color: $pillsFilledInAfterTextColor;
+        font-family: 'Lucida Sans Unicode', 'Arial Unicode MS', Arial;
+   }
+   @mixin pillsFilledInLabelBeforeAfterContent {
+         left: 0;
+         position: $pillsFilledInLabelBeforeAfterContentPosition;
+         z-index: $pillsFilledInLabelBeforeAfterContentZIndex;
+         @include pillsCheckBoxShadow;
+   }
+   @mixin ivirCndtnIcon{
+      padding: $pilliIirCndtnIconPadding;
+      color: $applicationIconColor;
+      @include border-radius($pilliIirCndtnIconBorderRadius);
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      margin-right: $pilliIirCndtnIconMarginRight;
+   }
+   @mixin pillsCheckboxlabel {
+      position: $pillsCheckboxlabelPosition;
+      padding-left: $pillsCheckboxlabelPaddingLeft;
+      cursor: pointer;
+      display: $pillsCheckboxlabelDisPlayInline;
+      line-height: $pillsCheckboxlabelLineHeight;
+   }
+   @mixin pillsCheckLabelBefore {
+      content: '';
+      position: $pillsCheckLabelBeforePosition;
+      left: $pillsCheckLabelBeforeLeftGap;
+      top: $pillsCheckLabelBeforeTopGap;
+      width: $pillsCheckLabelBeforeeWidth;
+      height: $pillsCheckLabelBeforeHeight;
+      border: 1px solid $applicationBorderColor;
+      @include border-radius(4px);
+      @include pillsCheckBoxShadow;
+   }
+   @mixin pillsCheckLabelBeforeAfer {
+      content: '\2713\0020';
+      position: $pillsCheckLabelBeforeAferPosition;
+      top: $pillsCheckLabelBeforeAferTopGap;
+      left: $pillsCheckLabelBeforeAferLeftGap;
+      font-size: $pillsCheckLabelBeforeAferFontSize;
+      line-height: $pillsCheckLabelBeforeAferLineHieght;
+      color: $pillsCheckLabelBeforeAferTextColor;
+      font-family: 'Lucida Sans Unicode', 'Arial Unicode MS', Arial;
+   }
+   @mixin pillsMain {
+       &.open{
+           display: $pillsMainOpenDisplayInline;
+       }
+            display: none;
+            margin-left: $PillsIvirAllCndtnMargingLeft;
+            div[id^=ivir]{
+                display: $ivirAllCndtnPillsDisplay;
+                background: $pillsIvirDivBoxBackgroundColor;
+                padding: $pillsIvirDivBoxPadding;
+                @include border-radius(17px);
+                margin-right: $pillsIvirDivBoxMargin;
+            }
+            .materialCheckBox{
+                [type=checkbox]:checked,[type=checkbox]:not(:checked){
+                    @include pillsMaterialCheckBox;
+                }
+                label{
+                    @include pillsCheckboxLabel;
+                }
+                [type=checkbox]{
+                    &.filled-in{
+                        &:checked+label{
+                                &:before{
+                                    @include pillsFilledInBefore;
+                                }
+                                &:after{
+                                    @include pillsFilledInAfter;
+                                }
+                        }
+                        &:not(:checked)+label{
+                                &:after{
+                                    border: 1px solid $applicationBorderColor;
+                                    padding: $pillsCheckedLabelAfterPadding;
+                                    margin-top: $pillsCheckedLabelAfterMarginTop;
+                                    margin-left: $pillsCheckedLabelAfterMarginLeft;  
+                                    @include border-radius(4px);                         
+                                    background-color: $pillsCheckedLabelAfterBackground;
+                                }
+                        }
+                    }
+                    &.filled-in+label{
+                      &:after,&:before{
+                        content: '';
+                        @include pillsFilledInLabelBeforeAfterContent;
+                      }
+                    }
+                }
+            }
+            .pillMainWrapper{
+               // @include shadow;
+                //margin-left: $applicationActionFilterMargin;
+               //margin-right: $applicationActionFilterMargin;
+                button{
+                    border:0px;
+                    //background: 0px;
+                    &:hover,&:focus{
+                        outline: none;
+                        text-decoration: none;
+                    }
+                }
+                a{
+                   // padding-left: $pillMainWrapperPaddingLeft;
+                    &:hover{
+                        outline: none;
+                        text-decoration: none;
+                    }
+                }
+                span{
+                    &.ivirCndtnIcon{
+                        @include ivirCndtnIcon;
+                    }
+                }
+            }
+   }
+   @mixin pillsIvirBottomSpan {
+    color: $applicationIconColor;
+    background: $pillsIvirBottomSpanBackgroundColor;
+    padding: $pillsIvirBottomSpanPadding;
+    @include border-radius(20px);
+    @include shadow;
+    position: $pillsIvirBottomSpanPosition;
+    margin-top: $pillsIvirBottomSpanMarginTop;
+    font-size: $pillsIvirBottomSpanFontSize;
+   }
+   @mixin  pillsIvirBottomLabel {
+    background-color: $pillsIvirBottomLabelcheckBoxbackgroundColor;
+    border: 1px solid $pillsIvirBottomLabelcheckBorderColor;
+    @include border-radius(50%);
+    cursor: pointer;
+    height: $pillsIvirBottomLabelHeight;
+    left: $pillsIvirBottomLabelLeftGap;
+    position: $pillsIvirBottomLabelPosition;
+    top: $pillsIvirBottomLabelTopGap;
+    width: $pillsIvirBottomLabelWidth;
+    @include pillsCheckBoxShadow;
+   }
+   @mixin pillsIvirBottomLabelAfter{
+    border: 2px solid $applicationTextColor;
+    border-top: none;
+    border-right: none;
+    content: "";
+    height: $pillsIvirBottomLabelAfterHeight;
+    left: $pillsIvirBottomLabelAfterLeftGap;
+    opacity: 0;
+    position: $pillsIvirBottomLabelAfterPosition;
+    top: $pillsIvirBottomLabelAfterTopGap;
+    @include rotate(-45deg);
+    width: $pillsIvirBottomLabelAfterWidth;
+   }
+   @mixin pillsIvirBottomButton{
+    border: $pillsIvirBottomButtonBorder;
+    background: $applicationTransparent;
+    position: $pillsIvirBottomButtonPosition;
+    top: $pillsIvirBottomButtonTopGap;
+    margin-right: $pillsIvirBottomButtonMarginRight;
+    right: $pillsIvirBottomButtonRightGap;
+   }
+//* pills ==================================== *//

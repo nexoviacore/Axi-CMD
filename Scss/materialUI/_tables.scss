@@ -1,0 +1,229 @@
+﻿.table {
+    tbody {
+        tr {
+            td, th {
+                padding: 10px;
+                //border-top: 1px solid #eee;
+                //border-bottom: 1px solid #eee;
+               //border-color:#eee;
+               border-left: 0px;
+               border-right: 0px;
+                color: $moduleLabelsOrHeadingsColor; //$applicationTableThTdTextColor;
+                font-size: $moduleLabelsOrHeadingsFontSize;//$applicationTableThTdFontSize;
+            }
+        }
+
+        tr.primary {
+            td, th {
+                background-color: #1f91f3;
+                color: #fff;
+            }
+        }
+
+        tr.success {
+            td, th {
+                background-color: #2b982b;
+                color: #fff;
+            }
+        }
+
+        tr.info {
+            td, th {
+                background-color: #00b0e4;
+                color: #fff;
+            }
+        }
+
+        tr.warning {
+            td, th {
+                background-color: #ff9600;
+                color: #fff;
+            }
+        }
+
+        tr.danger {
+            td, th {
+                background-color: #fb483a;
+                color: #fff;
+            }
+        }
+    }
+    &>tfoot{
+        &>tr{
+           &>tr{
+               padding: 0px;
+           }
+        }  
+    }
+    thead {
+        tr {
+            th {
+                padding: 10px;
+                border-bottom: 1px solid #eee;
+                vertical-align: middle;
+                background: $iviewTstructTableHeaderBackground;
+                font-weight: $moduleLabelsOrHeadingsFontWeight;//$iviewTstructTableFontWeight;
+                color: $moduleLabelsOrHeadingsColor;
+                font-size: $moduleLabelsOrHeadingsFontSize;
+            }
+        }
+    }
+    &.iviewBuilder{
+        thead {
+            tr {
+                th {
+                    border: 1px solid #fff;
+                    &.DTCR_tableHeaderHover:hover{
+                        border-right: 1px solid #999;
+                    }
+                }
+            }
+        }
+    }
+    &.dataTable{
+        thead{
+            tr,th{
+                // padding-right: $tableTheadTrThPaddingRight;
+                &:hover,&:focus{
+                  outline: none;
+                  text-transform: none;
+                }
+                button{
+                    border:0px;
+                    &.rightClickMenuIcn{
+                        display: none;
+                    }
+                }
+            }
+            th{
+                &.sorting_disabled{
+                    padding: 10px;
+                }
+            }
+        }
+        &.stripe{
+           tbody{
+               tr{
+                   &.odd,&.even{
+                       background: $applicationBackgroundColor;
+                   }
+                   &:hover{
+                       background: $materialTableHoverColor;
+                   }
+                   &.specialRow{
+                       font-weight: bold;
+                       td{
+                         &.fontGreen{
+                            color: $pageTableGrandTotalTdGreenColor;
+                         }
+                         &.fontBlack{
+                             color: $applicationTextColor;
+                         }
+                         &.fontBlue{
+                            color: $pageTableGrandTotalTdBlueColor;
+                        }
+                       }
+                   }
+               }
+           }
+        }
+    }
+    tfoot{
+        tr{
+            td{
+                padding: 0px;
+            }
+        }
+    }
+    border-bottom: 1px solid $applicationCompressedTableBorderColor;
+}
+
+.table-bordered {
+    border-top: 1px solid #eee;
+    table-layout: fixed;
+    word-break: break-word;
+    tbody {
+        tr {
+            td, th {
+                padding: 10px;
+                border: 1px solid #eee;
+            }
+        }
+    }
+
+    thead {
+        tr {
+            th {
+                padding: 10px;
+                border: 1px solid #eee;
+            }
+        }
+    }
+}
+.compressedModeUI {
+    .table{
+        &.dataTable{
+            tbody{
+                th,td{
+                    // padding: $applicationCompressedDataTableTdPadding;
+                }
+            }
+            thead{
+                tr{
+                    th{
+                        // padding: $applicationCompressedDataTableThPadding;
+                        font-size: $moduleLabelsOrHeadingsFontSize; //$applicationCompressedDataTableTdFontSize;
+                    }
+                }
+            }
+        }
+        thead{
+            tr{
+                th{
+                    // padding: 0;
+                    padding-top: 0px;
+                    padding-bottom: 0px;
+                    font-size: $moduleLabelsOrHeadingsFontSize; //$applicationCompressedDataTableTdFontSize;
+                }
+            }
+        }
+        tbody{
+            tr{
+                td,th{
+                    // padding: 0;
+                    padding-top: 0px;
+                    padding-bottom: 0px;
+                    font-size: $moduleLabelsOrHeadingsFontSize; //$applicationCompressedDataTableTdFontSize;
+                }
+            }
+        }
+    }
+}
+
+.dataTables_wrapper{
+    .dt-buttons {
+        color: $moduleIconColor;
+    }
+}
+
+//*this is for table tfoot paading in html template with out this width is not coming*//
+// .dataTables_wrapper{
+//     .dataTables_scroll{
+//         div{
+//             &.dataTables_scrollBody{
+//                 th,td{
+//                     padding: 0px;
+//                     font-style: normal;
+//                     font-weight: bold;
+//                     height: auto; 
+//                 }
+//             }
+//         }
+//     }
+// }
+// tfoot td{
+//     padding: 0px;
+//     font-style: normal;
+//     font-weight: bold;
+//     height: auto;
+// }

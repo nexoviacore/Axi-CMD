@@ -1,0 +1,408 @@
+body {
+    @include scrollBar;
+    ul {
+        &.ui-autocomplete {
+            max-height: $loginLabelMaxHeight;
+            overflow-y: auto;
+            overflow-x: hidden;
+            @include border-radius(5px);
+            @include scrollBar;
+            li {
+                &.ui-menu-item {                                            
+                    div {
+                        &.ui-menu-item-wrapper {
+                            &.ui-state-active{
+                                @include loginDropdownListAnchorStyle;                                
+                                background: #ddd;
+                                color: $applicationTextColor;
+                                &:hover {
+                                    background: #ddd;
+                                    color: $applicationTextColor;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.configWrapper{
+    background: $applicationBackgroundColor;  
+    .configHeader{
+        margin-top: 25px;
+        img{
+            max-width: 400px;
+            max-height: 175px;            
+            padding: 10px;            
+            margin-bottom: 10px;
+        }
+        .configTitle {
+            margin-top: 15px;
+            #lblSignin{
+                font-size: 25px;
+                margin-left: 10px;
+                font-weight: 500;
+            }
+        }       
+        .configTopToolbar{
+            margin-top: 15px;
+            ul{
+                padding: 0px;
+                text-align: right;                
+                li{
+                    list-style: none;
+                    display: inline-block;
+                    color: lighten($applicationTextColor, 20%);
+                    background-color: $applicationBackgroundColor;
+                    margin: 0 5px 0 0;
+                    border: 1px solid lighten($applicationTextColor, 80%);                    
+                    @include border-radius(3px);
+                    a{
+                        color: lighten($applicationTextColor, 20%);
+                        display: block;
+                        text-decoration: none;
+                        padding: 2px 10px;
+                        cursor: pointer;
+                        .configTopToolbarIcon{
+                            position: relative;
+                            top: 2px;
+                            color: #999;
+                        }
+                        .configTopToolbarText{
+                            position: relative;
+                            top: -4px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    .dbConnectionWrapper {
+        border: 1px solid lighten($applicationTextColor, 80%);
+        padding: 0px;
+        margin: 0 15px;
+        @include border-radius(5px);
+        @include box-shadow(0px 2px 9px 2px lighten($applicationTextColor, 80%));
+        &.disabledDiv {
+            filter: opacity(0.5);
+            cursor: not-allowed;
+        }
+        .configLeftForm {
+            border: 1px solid lighten($applicationTextColor, 80%);
+            padding: 15px;
+            @include border-radius(5px);
+            //@include box-shadow(0px 2px 9px 2px lighten($applicationTextColor, 80%));
+            .configLeftFormButtons{
+                margin-top: 15px;
+                margin-bottom: 16px;
+                #btnaddcon,#btncdelete{
+                    span{
+                        color: #999;
+                        background: #f5f5f5;
+                        @include box-shadow(1px 2px 6px 2px lighten($applicationTextColor, 80%));
+                        @include border-radius(50%);
+                        padding: 5px;
+                    }
+                }
+                #btncdelete{
+                    @include floatRight;
+                }
+            }
+            .configConList {
+                select {
+                    @include scrollBar;
+                }
+            }
+            #lstconnection{
+                margin: 14px 0px;
+            }
+        }
+        .configRightForm{
+            border: 1px solid lighten($applicationTextColor, 80%);
+            padding: 15px;
+            @include border-radius(5px);
+            @include box-shadow(0px 2px 9px 2px lighten($applicationTextColor, 80%));
+            .configRightFormFields{
+                margin-bottom: 15px;
+                .configRightFormFooterButton{
+                    @include textRight;
+                    #btnTestConnection,#btnApply,#btnCancel, #btnChangePassword{
+                        color: lighten($applicationTextColor, 20%);
+                        background-color: $applicationBackgroundColor;
+                        border: 1px solid lighten($applicationTextColor, 80%);
+                        @include border-radius(3px);
+                        padding: 5px 15px;
+                        margin-top: 10px;
+                        &.btndisable{
+                            background-color: #eee;
+                            cursor: not-allowed;
+                        }
+                    }                    
+                }
+                #lblconname{
+                    height: 23px;
+                    display: inline-block;
+                }            
+            }        
+        }
+    }
+    .licActivationWrapper {
+        .licActivationForm{
+            border: 1px solid lighten($applicationTextColor, 80%);
+            padding: 15px;
+            @include border-radius(5px);
+            @include box-shadow(0px 2px 9px 2px lighten($applicationTextColor, 80%));       
+            .licKeyActTitle{
+                padding: 0px 20px;
+                span {
+                    padding: 0px 15px;
+                }
+            }
+            p {
+                margin-left: 40px;
+            }
+            .licKeyActDesc{
+                padding: 15px 20px;
+                span {
+                    padding: 15px;
+                }
+                .licInfoAccordion {
+                    @include floatRight;
+                    position: relative;
+                    top: -9px;
+                    span {
+                        color: #999;
+                        background: #f5f5f5;
+                        @include box-shadow(1px 2px 6px 2px lighten($applicationTextColor, 80%));
+                        @include border-radius(50%);
+                        padding: 5px;                        
+                    }
+                }
+            }
+            .licActOptions {
+                padding: 10px 20px;
+                table {
+                    tr {
+                        td {
+                            label {
+                                font-size: 14px;
+                                font-weight: 400;
+                            }                                
+                        }
+                    }
+                }
+            }
+            .licKeyInfoBox {
+                padding: 10px 20px;
+                min-height: 50px;
+                
+                span {
+                    margin-top: 5px;
+                    margin-left: 5px;
+                }
+                .licKeyActivateBtn {
+                    input {                
+                        color: lighten($applicationTextColor, 20%);
+                        background-color: $applicationBackgroundColor;
+                        border: 1px solid lighten($applicationTextColor, 80%);
+                        @include border-radius(3px);
+                        padding: 5px 15px;                    
+                        &.disabledButton {
+                            background-color: #eee;
+                            cursor: not-allowed;
+                        }
+                    }
+                    a {
+                        color: lighten($applicationTextColor, 20%);
+                        text-decoration: none;
+                        padding: 6px 12px;
+                        cursor: pointer;
+                        background-color: $applicationBackgroundColor;
+                        border: 1px solid lighten($applicationTextColor, 80%);
+                        @include border-radius(5px);
+                        .licActBtnIcon {
+                            position: relative;
+                            top: 7px;
+                            margin: 0px;
+                            color: #999;
+                        }
+                        &.disabledButton {
+                            background-color: #eee;
+                            cursor: not-allowed;
+                        }
+                    }
+                }               
+            }        
+        }
+    } 
+    .dbUIWrapper {
+        padding: 15px;
+        border: 1px solidlighten($applicationTextColor, 80%);
+        @include border-radius(5px);
+        @include box-shadow(0px 2px 9px 2px lighten($applicationTextColor, 80%));
+        .dbUIHeader {
+            padding: 20px;
+            height: 74px;             
+            .dbUIHeaderText {
+                margin: 0;                
+            }
+            .autoComIcon {
+                position: relative;
+                .autoComClearIcon {
+                    position: absolute;
+                    color: $applicationTextColor;
+                    right: 35px;
+                    top: 10px;
+                }
+                .autoComDdlIcon {
+                    position: absolute;
+                    color: $applicationTextColor;
+                    right: 10px;
+                    top: 10px;                    
+                }      
+            }                                                  
+        }
+        .dbUIBody {
+            padding: 15px;
+            .dbUIImgTitle {
+                padding: 10px;
+            }
+            .avatar-wrapper {
+                position: relative;
+                display: inline-block;
+                transition: all 0.3s ease;
+                padding: 18px;            
+                border: 1px solid lighten($applicationTextColor, 80%);
+                @include border-radius(6px);
+                @include box-shadow(2px 5px 5px 2px lighten($applicationTextColor, 80%));
+                .profile-pic {                    
+                    transition: all 0.3s ease;
+                    max-width: 300px;
+                    max-height: 175px;
+                    &:after {
+                        font-family: FontAwesome;
+                        content: "";
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        position: absolute;
+                        font-size: 190px;
+                        background: #ecf0f1;
+                        color: #34495e;
+                        text-align: center;
+                    }
+                }
+                .upload-button, .delete-button{
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    height: 100%;
+                    width: 100%;
+                    .imgBtn {
+                        position: absolute;
+                        bottom: 0px;
+                        right: 0px;
+                        text-align: center;            
+                        transition: all 0.3s ease;
+                        color: #34495e;
+                        background: #eee;
+                        padding: 10px;
+                        @include border-radius(50px);
+                        opacity: 1;
+                        @include box-shadow(1px 1px 1px 0px grey);
+                    }
+                }
+                .delete-button {
+                    position: static;
+                    .imgBtn {
+                        top: -2px;
+                        bottom: unset;
+                    }
+                }
+                &:hover {
+                    transform: scale(1.05);
+                    cursor: pointer;
+                    .profile-pic {
+                        opacity: 0.5;
+                    }
+                }
+            }
+            .dbUITemplate {
+                label {
+                    padding: 5px;
+                    font-size: 16px;
+                    font-weight: 500;
+                }
+            }
+        }        
+    }   
+    .disabledButton {
+        background-color: #eee;
+        cursor: not-allowed;
+    }
+}
+
+.modal {
+    text-align: center;
+    background: rgba(0,0,0,0.8);
+    &:before {
+        display: inline-block;
+        vertical-align: middle;
+        content: " ";
+        height: 100%;
+    }
+
+    .modal-dialog {
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .modal-footer, .licFileUploadFooterButton {
+        
+        input {
+            color: lighten($applicationTextColor, 20%);//#333;
+            background-color: $applicationBackgroundColor; //#fff;
+            border: 1px solid lighten($applicationTextColor, 80%);//#ccc;
+            @include border-radius(3px);
+            padding: 5px 15px;
+            margin-top: 10px;
+            &.btndisable{
+                background-color: #eee;
+                cursor: not-allowed;
+            }
+        }
+    }
+    .licFileUploadFooterButton {
+        text-align: left;        
+        border-top: 1px solid #e5e5e5;
+    }
+
+    .licFileUpload {
+        .licFileUploadDesc {
+            padding: 5px 0;
+            span {
+                font-size: 15px;
+            }
+        }
+        .licFileUploadStatus {
+            padding: 5px 0;
+            span {
+                color: rgb(219, 34, 34);
+                font-size: 14px;
+            }
+        }
+    }
+
+    .modal-body {
+        .changePasswordBody {
+            padding: 12px 2px;
+        }
+        .configRightFormFields {
+            padding: 10px;
+        }
+    }
+}

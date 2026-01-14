@@ -1,0 +1,31 @@
+//* toggleBtn ============== *// 
+@mixin toggleBtnEffect{  
+        -webkit-transition: left .3s cubic-bezier(.175,.885,.32,1.275),padding .3s ease,margin .3s ease;
+        transition: left .3s cubic-bezier(.175,.885,.32,1.275),padding .3s ease,margin .3s ease;
+}
+@mixin toggleBtnBackground{
+    background: $applicationBackgroundColor;
+}
+@mixin toggleBtn{
+        position: $toggleBtnPosition;
+        display: $toggleBtnDisplay;
+        content: "";
+        width: $toggleBtnWidth;
+        height: $applicationMaximumHeight;
+        top: 0;
+        cursor: pointer;
+}
+@mixin tglBtn{
+    background: $applicationBackgroundColor;
+    border-radius: $toggleBtnBorderRadius;
+    padding: $toggleBtnPadding;
+    -webkit-transition: all .4s ease;
+    transition: all .4s ease;
+    border: 1px solid $applicationBorderColor;
+    position:$tglBtnPosition;
+}
+@mixin gridStretch{
+        top: $gridStretchTopGap;
+        left: $gridStretchLeftGap;
+}
+//* toggleBtn ============== *// 

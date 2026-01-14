@@ -1,0 +1,88 @@
+.bs-example {
+    position: $appliactionNewgridBtnMainPosition;
+    ul{
+        li:not(.dropdown-menu>li){
+            a{
+                .wrapper &{
+                    #wBdr &{
+                        #heightframe &{
+                            .gridoptions{
+                                display: none;
+                            }
+                        }
+                    }
+                }
+                color: $moduleIconColor;
+            }
+        }
+        li{
+            a{
+                padding: 5px 10px;
+               .newgridbtn{
+                   display: none;
+               }
+           }
+           &.active{
+            a{
+                span{
+                    &:not(.gridoptions){
+                         color: $moduleIconColor; //$applicationIconColor;
+                    }
+                    &.text{
+                     //    position: $applicationTabActiveTextPosition;
+                     //    top: $applicationTabActiveTextTop;
+                     //    padding-left: $applicationTabActiveTextPaddingLeft;
+                    }
+                    &.gridoptions{
+                        top: $applicationTabActiveGridOptionTop;
+                    }
+                }
+                .newgridbtn{
+                     display: $applicationTabActiveNewGridBtnDisplay;
+                 }
+            }
+        }
+        }
+        span{
+            &#tabCollapseButton{
+                 @include floatLeft;
+                 padding-top: $appliactionArrowPadding;
+                 cursor: pointer;
+                 color: $moduleIconColor;
+                 display: none;
+            }
+            &.text{
+                 &:not(.gridoptions):not(#tabCollapseButton){
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: $moduleLabelsOrHeadingsColor;
+                 }
+            }
+        }
+    }
+    .tab-content{
+        .tab-pane{
+            .dvdcframe{
+                // margin-top: 5px;
+                // padding: 10px;
+            }
+            .newgridbtn{
+                @include floatLeft;
+                .btextDir-rtl &{
+                    @include floatRight;
+                }
+                ul{
+                    li{
+                        a{
+                            #wBdr &{
+                                #heightframe &{
+                                    padding: 0px;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

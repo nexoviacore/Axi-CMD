@@ -1,0 +1,17 @@
+@mixin workFlowApprovalBar {
+        position: $workFlowApprovalBarPosition;
+        margin-left: $workFlowApprovalBarMarginLeft;
+        // font-size: $workFlowApprovalBarFontSize;
+        margin-top: $workFlowApprovalBarMarginTop;
+        // font-weight: $workFlowApprovalBarFontWeight;
+        color: rgb(64, 56, 56);
+}
+
+@mixin workFlowPara {
+             margin: 0px;
+             color: $applicationBackgroundColor;
+             font-size: $WorkflowmsglableParaFontSize;
+        //      padding-left: $WorkflowmsglableParaPaddingLeft;
+        //      height: $WorkflowmsglableParaHeight;
+        //      padding-right: $WorkflowmsglableParaPaddingRight;
+}

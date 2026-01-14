@@ -1,0 +1,162 @@
+//* Global Variable ==================================== *//
+// @import '_variables/_globalVariable';
+//* iview mixin ==================================== *//
+// @import '_mixins/_globalMixin';
+//* Multi Group Select for tstruct ==================================== *//
+
+@include multiGroupSelectDropdownMainAnimationKeyFrames;
+
+.dropdown-multiple,.dropdown-multiple-label,.dropdown-single{
+    position: $dropdownMultiplePosition;
+}
+.dropdown-multiple-label,.dropdown-multiple,.dropdown-single{
+    &.active{
+        .dropdown-main{
+            display: $dropdownMultipleMainDisplay;
+            @include multiGroupSelectDropdownMainAnimation;
+        }
+    }
+}
+.dropdown-multiple-label,.dropdown-multiple,.dropdown-single{
+    &.active {
+        .dropdown-display{
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        .dropdown-display-label{
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+    }
+}
+.dropdown-display,.dropdown-display-label{
+    @include miltiGroupSelectDropdownDisplay;
+    &:after{
+        @include miltiGroupSelectDropdownDisplayAfter;
+    }
+}
+.dropdown-clear-all {
+    @include dropdownClearAll;
+    &:focus{
+        outline: 0;
+    }
+    &:hover{
+        color: $applicationIconColor;
+        text-decoration: none;
+    }
+}
+.dropdown-display {
+    white-space: nowrap;
+    padding: $miltiGroupSelectDropdownDisplayPadding;
+    .dropdown-chose-list {
+        @include dropdownChoseList;
+        span{
+            &:before{
+                content: ',';
+            }
+            &:first-child{
+                &:before{
+                    content: '';
+                }
+            }
+        }
+    }
+    .placeholder {
+        display: none;
+        &:first-child{
+            @include dropdownChoseListFirstChild;
+        }
+    }
+    input {
+        border: 0;
+        outline: 0;
+    }
+}
+.dropdown-multiple,.dropdown-single{
+    &:hover{
+        .dropdown-clear-all{
+            display: block;
+        }
+    }
+}
+.dropdown-display-label {
+    cursor: text;
+    padding: $miltiGroupSelectDropdownDisplayLabelPadding;
+    .dropdown-search {
+        display: $miltiGroupSelectDropdownSearchDisplay;
+    }
+    input{
+        border: none;
+        outline: 0;
+        &:focus{
+            border: none;
+            outline: 0;
+        }
+    }
+    .dropdown-chose-list {
+        display: $miltiGroupSelectDropdownChoseListDisplay;
+        padding: $miltiGroupSelectDropdownChoseListPadding;
+        .placeholder {
+            display: none;
+        }
+    }
+    .dropdown-selected {
+        @include multiGroupSelectDropDownSelected;
+        .del {
+            @include multiGroupSelectDropDownSelectedDel;
+            &:after {
+                content: '\D7';
+                font-size: $applicationFontSize;
+            }
+        }
+    }
+}
+.dropdown-main{
+    @include multiGroupSelectDropdownMain;
+    ul {
+        overflow-x: hidden;
+        overflow-y: auto;
+        max-height: $miltiGroupSelectMaxHeight;
+        margin: 0;
+        padding: 0;
+        div{
+            padding: 0px;
+        }
+    }
+    input {
+        @include multiGroupSelectInput;
+    }
+    .dropdown-search {
+        display: $multiSelectdropdownSearchDisplay;
+        padding: $multiSelectdropdownSearchPadding;
+    }
+}
+.dropdown-group{
+    font-weight: $applicationFontWeight;
+}
+.dropdown-group,.dropdown-option {
+   @include multiGroupSelectDropdownOptionSelect;
+}
+.dropdown-option {
+    cursor: pointer;
+    &:focus,&:hover{
+        background-color: $multiGroupSelectDropdownOptionSelectHoverBackgroud;
+        outline: 0;
+    }
+    &[disabled]{
+        color: $applicationIconColor;
+        background-color: $applicationBackgroundColor;
+        cursor: not-allowed;
+        text-decoration: line-through;
+    }
+    &.dropdown-chose{
+        &:after{
+            @include multiGroupSelectDropdownChose;
+        }
+    }
+}
+@include multiGroupSelectDropdownMainAnimationKeyFrames;
+.dropdown-maxItem-alert,.dropdown-minItem-alert{
+    @include dropdownMaxMinItemAlert;
+}
+//* Multi Group Select for tstruct ==================================== *//

@@ -1,0 +1,298 @@
+//* page toolbar -----------------*//
+div{
+    &.toolbarOptionsParent{
+        .btextDir-rtl &{
+            @include floatRight;
+        }
+       @include iviewToolbar;
+    }
+    #ivInSearch{
+        .toolbarOptionsParent{
+            position: $toolbarPositionAbsolute;
+            right: $toolbarRightGap;
+            top: $toolbarTopGap;
+            margin: $toolbarMargin;
+            .requestJSON &,.modernButtonOptions &{
+                top: $toolbarModernIviewOptionsTopGap;
+                right: $toolbarModernIviewOptionsRightGap;
+                position: $toolbarModernIviewOptionsPosition;
+            }
+            .requestJSON:not(.requestJsonOldUi).isMobile &{
+                position: $toolbarPositionRequestJSONMobile;
+                top: $toolbarTopRequestJSONMobile;
+                right: $toolbarRightRequestJSONMobile;
+                margin: $toolbarMarginRequestJSONMobile;
+               // border-bottom: 1px solid $applicationBorderColor;
+            }            
+        }
+    }
+}
+#ivContainer{
+    .container{
+        width:100%;
+        .bs-example{
+            button{
+                &:focus{
+                    outline: none;
+                }
+                i{
+                    &:focus{
+                        outline: none;
+                    }
+                }
+            }
+            #dvStagLoad,#dvPages,#dvRowsPerPage{
+                    display: none;
+            }
+            #dvSqlPages{
+                #rowsTxtCount{
+                    #lnkShowAll{
+                        display: none;
+                    }
+                }
+            }
+        }
+    }
+}
+.iviewTableWrapper{
+    .dvContent{
+        .sort,#leftPanel{
+            display: none;
+        }
+        #contentPanelGridIview{
+            #noRecccord{
+                display: none;
+            }
+        }
+    }
+}
+#lblTaskExcel,#lblTaskPDF{
+    display: none;
+}
+#dvRefreshParam{
+    .btextDir-rtl &{
+        @include floatLeft;
+    }
+}
+#cb_sactbu{
+    span{
+        padding-right: 0px;
+    }
+}
+
+
+//this is for new toolbar
+div#pinnedsearchBar{
+    margin:$toolbarPinMargin;
+    //@include floatLeft;
+    @media (max-width: $breakTabDevice){
+        display: inline-block;
+        // white-space: nowrap;
+        // overflow-x: auto;
+        // width: calc(100vw - 0px);
+        // //margin: 5px;
+        // /*Temporary Solution for dropdown hidden issue in toolbar in mobile resolution -- refer GIS000105*/
+        // margin-bottom: 35px;
+    }
+    #pinnedicons{
+        #pinnediconsUl{
+            white-space: $toolbarPinnedIconUlWhiteSpace;
+            @include textRight;
+            .btextDir-rtl &{
+                @include textLeft;
+            }
+        }
+       ul{
+        @media (max-width: $breakTabDevice){
+          /*Temporary Solution for dropdown hidden issue in toolbar in mobile resolution -- refer GIS000105*/
+        //   position: $pageToolbarIconsUlPositionFixed;
+        //   z-index: $pageToolbarIconsUlZIndex;
+        }
+        @include listStyleNone;
+        @include listStylePadding;
+        @include textLeft;
+        margin-bottom: 0px;
+        &:not(.dropDownButton__list):not(.dropdown-menu){
+            position: $toolbar_notDropDownButton__list_notDropdown-menu_position;
+            top: $toolbar_notDropDownButton__list_notDropdown-menu_top_gap;
+        }
+           li{
+               &#pinnedfilterWrapper{
+                  position: relative;
+               }
+               &:not(.dropDownButton__item):not(.liTaskItems){
+                display: inline-block;
+               }
+            
+            &:not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons){
+               @include listStyleNone;
+               @include shadow;
+               color: $coldbtntext;
+               background-color: $coldbtnBackground;
+               @include toolbarListGap;
+               margin-bottom: 0px;
+               margin-top: $toolbarPinListMarginTop;
+               &:focus{
+                outline: none;
+                text-decoration: none;
+                @include coldHotBtnFocus;
+                }
+                &:hover{
+                    @include coldHotBtnHover
+                } 
+            
+            }
+            &#pinneddvRefreshFromLoad{
+                box-shadow: none;
+                margin: 0;
+                span{
+                    button{
+                        color: $applicationIconColor;
+                        &:hover{
+                            box-shadow: none;
+                        }
+                    }
+                }
+            }
+            #pinneduldropelements .actionWrapper{
+                box-shadow: none;
+                margin: 0;
+            }
+            &#pinneddvRefreshFromLoad{
+                span{
+                    button{
+                        &:focus{
+                           box-shadow: none;
+                        }
+                    }
+                }
+            }
+            button{
+                color: $coldbtntext;
+                background-color: $applicationBackgroundColor;
+                @include toolbarBtnNormal;
+                @include btnRadius;
+                &:focus{
+                    outline: none;
+                    text-decoration: none;
+                    @include coldHotBtnFocus;
+                    }
+                    &:hover{
+                       // @include coldHotBtnHover
+                    } 
+               }
+               a{
+                color: $coldbtntext;
+                display: block;
+                text-decoration: none;
+                padding:$toolbarPinListPadding;
+                cursor: pointer;
+                &:focus{
+                    outline: none;
+                    text-decoration: none;
+                    // @include coldHotBtnFocus;
+                    }
+                    // &:hover{
+                    //     @include coldHotBtnHover
+                    // } 
+                span:not(#pinnedlblfilters){
+                    top: $pageToolbarListlblfiltersTopGap;
+                    position: $pageToolbarListlblfiltersPosition;
+                }
+                .dropdownIconUI{
+                    display: none;
+                }
+               }
+               .iconUIPin, .customIcon{
+                display: none;
+               }
+               
+               &.gropuedBtn{
+                   button{
+                       &:after{
+                           display: none;
+                       }
+                       span{
+                           &:before{
+                               position: $pageToolbargropuedBtnBeforePosition;
+                               top:$pageToolbargropuedBtnBeforeTopGap;
+                           }
+                       }
+                   }
+               }
+               &:focus{
+                text-decoration: none;
+                box-shadow: 0px 0px 2px $applicationPageToolbarHoverShadow;
+            }
+            &#pinnedmyFiltersLi{
+                a{
+                    span{
+                        &:before{
+                            display: none;
+                        }
+                    }
+                }
+            }
+            &:not(#pinnedivirCustomActionButtons):hover{
+                background-color:$coldBtnBackgroundHover;
+            }
+            #pinneddvSelectedFilters,#pinnedivirCustomActionButtons{
+                display: none;
+            }
+            &.lnkNext,&.lnkPrev{
+                position: $pageToolbarLnkNextLnkPrevPosition;
+                top:$pageToolbargropuedBtnBeforeTopGap;
+            }
+            &#pinnedivirCustomActionButtons{
+                button{
+                    @include shadow;
+                }
+            }
+            &.open{
+                .dropdown-menu {
+                    max-height: $pageToolbarDropdownMaxHight;
+                    height: auto;
+                    overflow-y: auto;
+                    border: 1px solid $applicationBorderColor;
+                    @include shadow;
+                }
+            }
+           }
+           .lnkPrev,.lnkNext{
+               padding: 0px 0px $pageToolbarListViewNextPrevBtnPaddingBottom;
+            }
+       }
+       li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons):not(.actionWrapper){
+           @include listStyleNone;
+           @include shadow;
+            color: $coldbtntext;
+            background-color: $coldbtnBackground;
+            display: $applicationDisplayInline;
+            &:focus{
+            outline: none;
+            text-decoration: none;
+            @include coldHotBtnFocus;
+            }
+            &:hover{
+                @include coldHotBtnHover
+            }
+            a{
+                color: $coldbtntext;
+                display: block;
+                text-decoration: none;
+                padding: $toolbarPinListPadding;
+                cursor: pointer;
+            }
+       }
+    }
+}
+.toolbarRightMenu{
+    display: $toolbar_Right_ToolbarRightMenu_Display;
+    position: $toolbar_Right_ToolbarRightMenu_Position;
+    padding: $toolbar_Right_ToolbarRightMenu_Padding;
+    @media (max-width: $breakTabDevice){
+        padding: $toolbar_Right_ToolbarRightMenu_Padding_Mobile;
+        top: $toolbar_Right_ToolbarRightMenu_Top_Mobile;
+    }
+}
+//* page toolbar -----------------*//

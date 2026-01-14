@@ -1,0 +1,56 @@
+.btn.btn-icon:not(.btn-sm) .material-icons::before {
+    content: "";
+    position: absolute;
+    background: #fbda8d;
+    width: 10px;
+    height: 10px;
+    border-radius: 50px;
+    z-index: -1;
+    margin-left: 16px;
+    margin-top: 14px;
+}
+
+// .toggle-btn.btn.btn-icon .material-icons::before {
+// 	background: transparent;
+// }
+
+// #Back-Btn .material-icons::before {
+// 	background: transparent !important;
+// }
+
+.h1.page-caption::before, .toolbar h1::before {
+	background: #fbda8d;
+	width: 6px;
+	height: 6px;
+	content: "";
+	position: absolute !important;
+	/* border-radius: 50px; */
+	z-index: 1;
+	/* left: -2px; */
+	top: 8px;
+	margin-left: -6px;
+}
+
+.h1.page-caption:after ,.toolbar h1:after{
+	background: #fbda8d;
+	width: 6px;
+	height: 6px;
+	content: "";
+	position: absolute !important;;
+	/* border-radius: 50px; */
+	z-index: 1;
+	/* left: -2px; */
+	top: 23px;
+	margin-left: 1px;
+}
+
+.aside .menu .menu-active .menu-title::after {
+	content: "";
+	/* position: absolute; */
+	width: 6px;
+	height: 6px;
+	background: #ffbc20;
+	/* right: 0; */
+	border-radius: 50px;
+	margin-left: 9px; 
+}

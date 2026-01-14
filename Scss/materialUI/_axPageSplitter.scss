@@ -1,0 +1,94 @@
+.splitter-wrapper, .cardsPageWrapper {
+  @include applicationMainPageSplitHorizantalVertical;
+  overflow-y: auto;
+}
+
+// this is related to older design (not related to materail template new design).
+.split-btn .fa-times {
+    color: #fff;
+}
+
+.split-btn-vertical .fa-times {
+    color: #fff;
+}
+
+.page-con {
+    height: auto;
+    font-size: 20px;
+    color: #000;
+    font-weight: 600px;
+    font-variant: 20px;
+}
+
+.page-modiniger {
+    height: 30px;
+}
+
+
+.split-btn {
+    float: right;
+    margin-bottom: 0px;
+    display: block;
+    margin-right: 0px;
+    position: absolute;
+    background: #07757f;
+    right: 2px;
+    padding: 9px 15px;
+    z-index: 555;
+    border-radius: 20px;
+    box-shadow: 0px 1px 17px 3px #a0a0a0;
+    top: 70px;
+}
+
+.splitter {
+    flex: 0 0 auto;
+    width: 20px;
+    background: #e9e9e9 !important;
+    min-height: 200px;
+    cursor: col-resize;
+}
+
+.split-btn-vertical {
+    float: left;
+    margin-right: 0px;
+    position: absolute;
+    bottom:5px;
+    z-index: 1;
+    background: #07757f;
+    padding: 9px 15px;
+    border-radius: 32px;
+    box-shadow: 0px 1px 17px 3px #a0a0a0;
+    margin-left: 4px;
+}
+
+.refresh {
+    float: right;
+}
+
+.sidebar-collapse .refresh {
+    float: left;
+    padding: 0 35%;
+}
+
+.split-vertical {
+    float: right;
+    margin-right: 0px;
+}
+
+.split-btn-new {
+    position: relative;
+    top: 5px;
+}
+
+/* vertical panel */
+
+.page-container {
+    margin: 20px;
+}
+.splitter-horizontal {
+    flex: 0 0 auto;
+    height: 20px;
+    background: #e9e9e9 !important;
+    // background: url(../img/hsizegrip.png) center center no-repeat #25c5da;
+    cursor: row-resize;
+}

@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" name="ASBMenuservice" targetNamespace="http://tempuri.org/" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types />
+  <message name="Login0Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="Login0Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="Logout1Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="Logout1Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetMultiLevelMenu2Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetMultiLevelMenu2Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetMenu3Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetMenu3Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetMultiLevelFilteredMenu4Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetMultiLevelFilteredMenu4Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SetAppProps5Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="SetAppProps5Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetAppProps6Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetAppProps6Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetNewGlobalVars7Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetNewGlobalVars7Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetChoices8Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="GetChoices8Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetSQLResult9Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="GetSQLResult9Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="MultiSQLExec10Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="MultiSQLExec10Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="VerifySessionValidity11Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="VerifySessionValidity11Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetHomePageDetails12Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="GetHomePageDetails12Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetIndividualWidgetDetails13Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="GetIndividualWidgetDetails13Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetCustomSqlResult14Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="GetCustomSqlResult14Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SetServerLicense15Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="SetServerLicense15Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ExecuteSQL16Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="ExecuteSQL16Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetIndividualCardDetails17Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetIndividualCardDetails17Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ContinueCurrentSession18Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="ContinueCurrentSession18Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ActivateLicense19Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="ActivateLicense19Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="OpenSessionForFlutter20Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="OpenSessionForFlutter20Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <portType name="ASBMenu">
+    <operation name="Login">
+      <input message="tns:Login0Request" />
+      <output message="tns:Login0Response" />
+    </operation>
+    <operation name="Logout">
+      <input message="tns:Logout1Request" />
+      <output message="tns:Logout1Response" />
+    </operation>
+    <operation name="GetMultiLevelMenu">
+      <input message="tns:GetMultiLevelMenu2Request" />
+      <output message="tns:GetMultiLevelMenu2Response" />
+    </operation>
+    <operation name="GetMenu">
+      <input message="tns:GetMenu3Request" />
+      <output message="tns:GetMenu3Response" />
+    </operation>
+    <operation name="GetMultiLevelFilteredMenu">
+      <input message="tns:GetMultiLevelFilteredMenu4Request" />
+      <output message="tns:GetMultiLevelFilteredMenu4Response" />
+    </operation>
+    <operation name="SetAppProps">
+      <input message="tns:SetAppProps5Request" />
+      <output message="tns:SetAppProps5Response" />
+    </operation>
+    <operation name="GetAppProps">
+      <input message="tns:GetAppProps6Request" />
+      <output message="tns:GetAppProps6Response" />
+    </operation>
+    <operation name="GetNewGlobalVars">
+      <input message="tns:GetNewGlobalVars7Request" />
+      <output message="tns:GetNewGlobalVars7Response" />
+    </operation>
+    <operation name="GetChoices">
+      <input message="tns:GetChoices8Request" />
+      <output message="tns:GetChoices8Response" />
+    </operation>
+    <operation name="GetSQLResult">
+      <input message="tns:GetSQLResult9Request" />
+      <output message="tns:GetSQLResult9Response" />
+    </operation>
+    <operation name="MultiSQLExec">
+      <input message="tns:MultiSQLExec10Request" />
+      <output message="tns:MultiSQLExec10Response" />
+    </operation>
+    <operation name="VerifySessionValidity">
+      <input message="tns:VerifySessionValidity11Request" />
+      <output message="tns:VerifySessionValidity11Response" />
+    </operation>
+    <operation name="GetHomePageDetails">
+      <input message="tns:GetHomePageDetails12Request" />
+      <output message="tns:GetHomePageDetails12Response" />
+    </operation>
+    <operation name="GetIndividualWidgetDetails">
+      <input message="tns:GetIndividualWidgetDetails13Request" />
+      <output message="tns:GetIndividualWidgetDetails13Response" />
+    </operation>
+    <operation name="GetCustomSqlResult">
+      <input message="tns:GetCustomSqlResult14Request" />
+      <output message="tns:GetCustomSqlResult14Response" />
+    </operation>
+    <operation name="SetServerLicense">
+      <input message="tns:SetServerLicense15Request" />
+      <output message="tns:SetServerLicense15Response" />
+    </operation>
+    <operation name="ExecuteSQL">
+      <input message="tns:ExecuteSQL16Request" />
+      <output message="tns:ExecuteSQL16Response" />
+    </operation>
+    <operation name="GetIndividualCardDetails">
+      <input message="tns:GetIndividualCardDetails17Request" />
+      <output message="tns:GetIndividualCardDetails17Response" />
+    </operation>
+    <operation name="ContinueCurrentSession">
+      <input message="tns:ContinueCurrentSession18Request" />
+      <output message="tns:ContinueCurrentSession18Response" />
+    </operation>
+    <operation name="ActivateLicense">
+      <input message="tns:ActivateLicense19Request" />
+      <output message="tns:ActivateLicense19Response" />
+    </operation>
+    <operation name="OpenSessionForFlutter">
+      <input message="tns:OpenSessionForFlutter20Request" />
+      <output message="tns:OpenSessionForFlutter20Response" />
+    </operation>
+  </portType>
+  <binding name="ASBMenubinding" type="tns:ASBMenu">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="rpc" />
+    <operation name="Login">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#Login" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="Logout">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#Logout" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetMultiLevelMenu">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#GetMultiLevelMenu" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetMenu">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#GetMenu" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetMultiLevelFilteredMenu">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#GetMultiLevelFilteredMenu" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SetAppProps">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#SetAppProps" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetAppProps">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#GetAppProps" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetNewGlobalVars">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#GetNewGlobalVars" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetChoices">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#GetChoices" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetSQLResult">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#GetSQLResult" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="MultiSQLExec">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#MultiSQLExec" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="VerifySessionValidity">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#VerifySessionValidity" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetHomePageDetails">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#GetHomePageDetails" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetIndividualWidgetDetails">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#GetIndividualWidgetDetails" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetCustomSqlResult">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#GetCustomSqlResult" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SetServerLicense">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#SetServerLicense" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ExecuteSQL">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#ExecuteSQL" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetIndividualCardDetails">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#GetIndividualCardDetails" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ContinueCurrentSession">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#ContinueCurrentSession" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ActivateLicense">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#ActivateLicense" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="OpenSessionForFlutter">
+      <soap:operation soapAction="urn:uASBMenu-ASBMenu#OpenSessionForFlutter" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+  </binding>
+  <service name="ASBMenuservice">
+    <port name="ASBMenuPort" binding="tns:ASBMenubinding">
+      <soap:address location="http://localhost/scripts/ASBMenu.dll/soap/ASBMenu" />
+    </port>
+  </service>
+</definitions>

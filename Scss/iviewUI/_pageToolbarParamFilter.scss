@@ -1,0 +1,76 @@
+//* page param Filter ==================================== *//
+#myFiltersLi{
+    #dvSelectedFilters{
+        background: $applicationBackgroundColor;
+        border: 1px solid $applicationBorderColor;
+        @include filter;
+        #FilterValues{
+            color: $applicationTextColor;
+        }
+        .close &{
+            float: initial;
+        }
+    }
+}
+.dropDownButton__item{
+    @include listPadding;
+    cursor: pointer;
+    color: $applicationTextColor;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    .btextDir-rtl &{
+        @include textRight;
+    }
+}
+.customIcon {
+   // margin: $customIconMargin;
+    padding-right: $customIconPaddingRight;
+    left: $customIconLeft;
+    top: $customIconTop;
+    .btextDir-rtl &{
+        padding-left: $customIconPaddingLeft;
+        padding-right: $customIconPaddingRight;
+    }
+    &.pinIcon{
+        @include pillsPinedShodow;
+        .btextDir-rtl &{
+            padding-left: $customIconPaddingLeftRTL;
+            @include rtlRightAlign;
+        }
+    }
+}
+.pinIcon{
+    padding:$pinIconPadding;
+    @include border-radius($pinIconBorderRadius);
+    margin-right: $pinIconMarginRight;
+    position: absolute;
+}
+.myview {
+    display: none;
+}
+.gridDataFilter{
+    tr{
+        td{
+            .ui-datepicker-trigger{
+                position: $GridDataFilterTableDatePickerPosition;
+                @include datePickerIcon;
+            }
+        }
+    }
+}
+#divModalAdvancedFilters{
+    .modal-dialog{
+        .modal-content{
+            .modal-header{
+                button{
+                    &:focus,&:hover{
+                        outline: none;
+                        text-transform: none;
+                    }
+                }
+            }
+        }
+    }
+}
+//* page param Filter ==================================== *//

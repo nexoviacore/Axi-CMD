@@ -1,0 +1,55 @@
+#divModalSignaturePad {
+    .modal-dialog {
+        width: 90%;
+        margin: 45px auto;
+        .modal-header {
+            display: none;
+        }
+    }
+    .modal-body {               
+        #htmlContentOriFrameUrl{ 
+            width: 100%;
+            .signature-pad {
+                max-width: 100%;
+                max-height: 100%;
+                .signature-pad--actions {
+                    button {
+                        border: none;
+                        color: darken($applicationBackgroundColor, 40);
+                        @include border-radius(50%);
+                        @include box-shadow(2px 2px 10px 2px darken($applicationBackgroundColor, 20));
+                        height: 35px;
+                        width: 35px;
+                        padding-top: 5px;
+                        background: $applicationBackgroundColor;
+                    }
+                }
+                .signatureImage {
+                    button {
+                        color: $applicationTextColor;
+                    }                
+                    .isMobile &{
+                        display: none;
+                    }
+                }
+                .signatureFooterButton {
+                    @include textRight;
+                    width: 100%;
+                    .sp-replacer {
+                        &.sp-light {
+                            width: 0px;
+                            height: 0px;
+                            border: none;
+                            position: $applicationPositionRelative;
+                            top: -25px;
+                        }
+                    }
+                    .isMobile & {
+                        @include textCenter;
+                        width: 100%;
+                    }
+                }
+            }
+        }
+    }    
+}

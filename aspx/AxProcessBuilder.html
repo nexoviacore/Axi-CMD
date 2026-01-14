@@ -1,0 +1,144 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+
+    <title>Process Flow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../UI/axpertUI/style.bundle.css">
+    <link rel="stylesheet" href="../UI/axpertUI/plugins.bundle.css">
+    <link rel="stylesheet" href="../ThirdParty/jquery-confirm-master/jquery-confirm.min.css">
+    <link rel="stylesheet" href="../Css/AxProcessBuilder.min.css?v=2" type="text/css">
+
+    <script language="javascript">
+        const modeurlParams = new URLSearchParams(window.location.search);
+        const curtransid = modeurlParams.get('transid');
+        const curact = modeurlParams.get('act');
+        const curindexNo = modeurlParams.get('indexNo');
+        const cursubIndexNo = modeurlParams.get('subIndexNo');
+        const curtaskType = modeurlParams.get('taskType');
+        const currecordid = modeurlParams.get('recordid');
+        const curprocessname = modeurlParams.get('processname');
+        const curMode = modeurlParams.get('mode');
+    </script>
+</head>
+
+<body id="Process_Flow" class="header-fixed header-tablet-and-mobile-fixed aside-fixed">
+    <div class="content d-flex flex-column flex-column-fluid ">
+        <div class="" id="pf_content_container">
+            <!--begin::Row-->
+            <div class="row g-xl-8" id="PROFLOW-overalldiv">
+                <div class="posRel processnameborBot">
+                    <div class="proTitleBG">
+                        <h1 class="PROFLOW-page-Title text-dark fw-bolder  fs-4 fleft" id="process-name"> Process Flow</h1>
+                        <a href="#" class="editBTN fleft" id="editBTN" onclick="axProcessObj.editTstruct('ad_pm', '0');">
+                            <span class="material-icons material-icons-style material-icons-2 addBotBtn">edit_circle</span>
+                        </a>
+                        <div class="clr"></div>
+                    </div>
+                </div>
+                <!--begin:::Col-->
+
+                <div class="col-xl-3 col-md-3 d-flex flex-column flex-column-fluid vh-100 min-vh-100" id="PROFLOW_Left">
+                    <div class="card card-xl-stretch shadow-sm flex-root h-1px addRecordsContainer" id="modeLeftActive">
+                    </div>
+                    <div class="card card-xl-stretch shadow-sm flex-root h-1px" id="modeLeftDeActive">
+                        <!--begin::Body-->
+                        <div class="card-body ">
+
+                            <div id="PROFLOW-profile-container">
+                                <div class="PROFLOW-Info-Steps ax-data accordion arrows" id="procflow-steps">
+                                </div>
+
+                            </div>
+                            <!--end::Body-->
+                        </div>
+                        <div class="card-footer py-5 d-none">
+                            <div class="d-flex gap-10 proFlw-status">
+                                <span class="d-flex gap-2">
+                                    <span class="symbol symbol-10px symbol-circle my-auto">
+                                        <span class="symbol-label bg-primary"></span>
+                                    </span>
+                                    <span class="fw-normal">Make</span>
+                                </span>
+                                <span class="d-flex gap-2">
+                                    <span class="symbol symbol-10px symbol-circle my-auto">
+                                        <span class="symbol-label bg-success"></span>
+                                    </span>
+                                    <span class="fw-normal">Approved</span>
+                                </span>
+                                <span class="d-flex gap-2">
+                                    <span class="symbol symbol-10px symbol-circle my-auto">
+                                        <span class="symbol-label bg-custom-checked"></span>
+                                    </span>
+                                    <span class="fw-normal">Checked</span>
+                                </span>
+                                <span class="d-flex gap-2">
+                                    <span class="symbol symbol-10px symbol-circle my-auto">
+                                        <span class="symbol-label bg-warning"></span>
+                                    </span>
+                                    <span class="fw-normal">Returned</span>
+                                </span>
+                                <span class="d-flex gap-2">
+                                    <span class="symbol symbol-10px symbol-circle my-auto">
+                                        <span class="symbol-label bg-danger"></span>
+                                    </span>
+                                    <span class="fw-normal">Rejected</span>
+                                </span>
+                            </div>
+
+                            <button class="btn btn-light-danger d-none" data-kt-drawer-dismiss="true">Dismiss drawer</button>
+                        </div>
+                    </div>
+
+                </div>
+                <!--end:::Col-->
+                <!--begin:::Col-->
+
+                <div class="col-xl-9  col-md-9 d-flex flex-column flex-column-fluid vh-100 min-vh-100" id="PROFLOW_Right">
+                    <div class="card card-xl-stretch shadow-sm flex-root h-1px">
+                        <iframe class="" style="height: calc(100% - 0px);width: calc(100% - 0px);" id="rightIframe"></iframe>
+
+                        <iframe class="" style="height: calc(100% - 0px);width: calc(100% - 0px);" id="newrightIframe"></iframe>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="waitDiv" class="page-loader rounded-2 bg-radial-gradient">
+        <div class="loader-box-wrapper d-flex bg-white p-20 shadow rounded">
+            <span class="loader"></span>
+        </div>
+    </div>
+    <script type="text/javascript" src="../UI/axpertUI/plugins.bundle.js"></script>
+    <script type="text/javascript" src="../UI/axpertUI/scripts.bundle.js"></script>
+    <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../Js/alerts.min.js?v=32"></script>
+    <script type="text/javascript" src="../Js/handlebars.min.js?v=2"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=158"></script>
+    <script type="text/javascript" src="../Js/AxProcessFlowCommon.min.js"></script>
+    <script type="text/javascript" src="../Js/AxProcessBuilder.min.js?v=1"></script>
+    <script type="text/javascript">
+        var _processName = 'AxProcessBuilder';
+    </script>
+
+    <script language="javascript">
+        var modeLeftActive = document.getElementById("modeLeftActive");
+        modeLeftActive.innerHTML = '<h3 class="noRecords">No Records Added Yet</h3>';
+        modeLeftActive.innerHTML += `<a href="#" onclick="axProcessObj.edOpenTstruct('ad__p','open','null','1','1','Make','0');" class="addRecords">Add Records</a>`;
+    </script>
+
+    <script language="javascript">
+        document.getElementById('modeLeftDeActive').classList.remove("displayNone");
+        document.getElementById('modeLeftDeActive').classList.add("displayBlock");
+
+        document.getElementById('rightIframe').classList.remove("displayNone");
+        document.getElementById('rightIframe').classList.add("displayBlock");
+
+        document.getElementById('newrightIframe').classList.remove("displayBlock");
+        document.getElementById('newrightIframe').classList.add("displayNone");
+
+        document.getElementById('modeLeftActive').classList.remove("displayBlock");
+        document.getElementById('modeLeftActive').classList.add("displayNone");
+    </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+//*floatleft  ==================================== *//
+@mixin floatLeft{
+    float: left;
+}
+//* floatright  ==================================== *//
+@mixin floatRight{
+float: right;
+}
+//* floatnone  ==================================== *//
+@mixin floatNone{
+    float: none;
+    }
+//* float ==================================== *//
+@mixin floatLeftmain{
+    left:0;
+}
+@mixin floatRightmain{
+    right:0;
+}
+//* margin and padding setup =========== *//
+
+@mixin marginPadingSet{
+    margin:0;
+    padding: 0;
+}
+//*--------------text align left*//
+@mixin textLeft{
+    text-align: left;
+}
+//*--------------text align left*//
+@mixin textRight{
+    text-align: right;
+}
+//*--------------text align Center*//
+@mixin textCenter{
+    text-align: center;
+}

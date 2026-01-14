@@ -1,0 +1,132 @@
+//* Wizard Dc Tab*//
+@mixin tabProgess{
+    display: table;
+    width: $applicationMaximumWidth;
+    table-layout: fixed;
+    position: $tabProgessPosition;
+}
+@mixin tabStep{
+    display: table-cell;
+    text-align: center;
+    vertical-align: top;
+    overflow: visible;
+    position: $tabStepPosition;
+}
+//*home page right side navtab*//
+@mixin applicationHomePageRightNavbarTab {
+    border-bottom: 2px solid $applicationBorderColor;
+    > li {
+        position: $applicationNavtabListPositionRelative;
+        top: $applicationNavtabListTopGap;
+        left: $applicationNavtabListLeftGap;
+        > a {
+            border: none !important;
+            color: $applicationIconColor !important;
+            @include border-radius(0);
+
+            &:hover,
+            &:active,
+            &:focus {
+                background-color: $applicationTransparent !important;
+            }
+
+            &:before {
+                content: '';
+                @include transform(scaleX(0));
+                @include transition(0.1s ease-in);
+                @include navtabActiveBottomBorder;
+            }
+
+            .material-icons {
+                position: $applicationMainPageNavtabMaterialIconPositionRelative;
+                top: $applicationMainPageNavtabMaterialIconTopGap;
+                margin-bottom: $applicationMainPageNavtabMaterialIconMarginBottom;
+            }
+        }
+    }
+
+    li.active {
+        a {
+            color: $applicationTextColor !important;
+
+            &:hover,
+            &:active,
+            &:focus {
+                background-color: $applicationTransparent !important;
+            }
+
+            &:before {
+                @include transform(scaleX(1));
+            }
+        }
+    }
+
+    + .tab-content {
+        padding: $applicationMainPageNavtabContentPadding 0;
+    }
+}
+//*application Homepage tabpanel list styleing*//
+@mixin applicationTabPanelStyle {
+    .nav-tabs + .tab-content {
+        padding: 0;
+    }
+
+    p {
+        margin: $applicationMainPageTabPanelContentParagraph;
+        font-weight: bold;
+        @include textCenter;
+    }
+
+    .setting-panel {
+
+        .setting-list {
+            @include listStyleNone;
+            padding-left: 0;
+            margin-bottom: $applicationMainPageTabPanelSettingPanelListMarginBottom;
+
+            li:not(.dropdown):not(.dropdown-list) {
+                padding: $applicationMainPageTabPanelListPadiing;
+                position: $applicationMainPageTabPanelListPositionRelative;
+                border-top: 1px solid $applicationMainPageTabPanelListBorder;
+
+                a{
+                    display: block;
+                    text-decoration: none;
+                    color: $moduleTextOrValueColor;
+                    background-color: inherit;
+                    cursor: pointer;
+                    i.setting-icon{
+                        @include floatLeft;
+                        width: $applicationMainPageSettingPanelIconsWidth;
+                        color: $moduleIconColor;
+                        +span.setting-caption{
+                            @include applicationHomePageSettingPanelCaption;
+                        }
+                    }
+                }
+
+                .switch {
+                    position: $applicationMainPageSettingPanelSwitchPositionAbsolute;
+                    top: $applicationMainPageSettingPanelSwitchTopGap;
+                    right: $applicationMainPageSettingPanelSwitchRightGap;
+                }
+                @include genericDropDownOption;
+            }
+        }
+    }
+}
+@mixin navtabActiveBottomBorder {
+    position: $applicationMainPageNavtabActiveBottomBorderPositionAbsolute;
+    left: 0;
+    width: 100%;
+    height: 0;
+    border-bottom: 2px solid $hotbtnbackgroundcolor;
+    bottom: $applicationMainPageNavtabActiveBottomBorderBottomGap;
+}
+@mixin applicationHomePageSettingPanelCaption {
+    display: block;
+    width: calc(#{$applicationMaximumWidth} - #{$applicationMainPageSettingPanelCaptionWidthCalc});
+    position: $applicationMainPageSettingPanelCaptionPositionRelative;
+    top: $applicationMainPageSettingPanelCaptionTopGap;
+    @include floatLeft;
+}

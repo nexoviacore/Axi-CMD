@@ -1,0 +1,36 @@
+//
+// Scroll mixins
+//
+
+@mixin scrollbar-color($color, $hover-color: null) {
+    // Firefox
+    scrollbar-color: $color transparent;
+
+    // Webkit
+    &::-webkit-scrollbar-thumb {
+        background-color: $color;
+    }
+    &.dark-scroll::-webkit-scrollbar-thumb{
+        background-color: $gray-700;
+    }
+
+    @if ($hover-color != null) {
+        // Hover state
+        &:hover {
+            // Firefox
+            scrollbar-color: $hover-color transparent;
+
+            // Webkit
+            &::-webkit-scrollbar-thumb {
+                background-color: $hover-color;
+                
+            }
+            &.dark-scroll::-webkit-scrollbar-thumb {
+                background-color: $gray-800;
+            }
+        }
+        &.dark-scroll:hover{
+            scrollbar-color: $gray-800 transparent;
+        }
+    }
+}

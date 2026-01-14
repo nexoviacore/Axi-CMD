@@ -1,0 +1,63 @@
+//* Grid Form ==================================== *//
+    .allowempty{
+        margin: 0px $compulsoryFieldStarMarginGrid;
+        color: $compulsoryFieldStar;
+    }
+#axPurposesodate{
+    display: none;
+    span{
+        color: $applicationColor;
+    }
+}
+.subGrid{
+    position: absolute;
+    top: 30px;
+    right: 21px;
+}
+.GridHelpdiv{
+    margin-bottom: 10px;
+}
+.clsPrps{
+    display: none;
+}
+.pickimg{
+    .picklisttxtclear{
+        position: absolute;
+        right: 39px;
+        z-index: 3;
+        font-size: 22px;
+        font-weight: bold;
+        color: black
+    }
+}
+.achklist{
+    span{
+        color: $applicationIconColor;
+        top:4px;
+    }
+}
+#pdfFName{
+    width:65%;
+    height:20px;
+    margin-bottom:10px;
+}
+.formGridRow{
+    .allowempty{
+        margin: 0px $compulsoryFieldStarMarginFormGridRow;
+        color: $compulsoryFieldStar;
+    }   
+}
+
+#DivFrame1{
+    #divDc1{
+        .fld-wrap1{
+            .fld-wrap2{
+                .allowempty{
+                    color: $compulsoryFieldStar;
+                    margin: 0px $compulsoryFieldStarMarginGrid;
+                }
+            }
+        }
+    }
+}
+//* Grid Form ==================================== *//

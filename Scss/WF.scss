@@ -1,0 +1,343 @@
+@import 'materialUI/_mixins';
+@import 'materialUI/_variables';
+//* Global Variable ==================================== *//
+@import '_variables/_genericVariables';
+@import '_variables/_globalVariable';
+//* iview mixin ==================================== *//
+@import '_mixins/_globalMixin';
+.workFlowTable{
+    .tabBody {
+        background-color: #ffffff;
+        .dvLeft {
+            float: left;
+            width: 20%;
+            vertical-align: top;
+            background: #fff;
+            .dvLeftInner{
+                overflow: auto;
+                height: calc(100vh - 20px);
+                &::-webkit-scrollbar {
+                    width: 12px;
+                    height: 12px;
+                }
+                
+                &::-webkit-scrollbar-track {
+                    background: #fff;
+                }
+                
+                &::-webkit-scrollbar-thumb {
+                    background-color: #999999;
+                    -webkit-border-radius: 20px;
+                    -moz-border-radius: 20px;
+                    -ms-border-radius: 20px;
+                    border-radius: 20px;
+                    border: 3px solid #fff;
+                    min-height: 15%;
+                    min-width: 15%;
+                }
+            }
+            .GridHead {
+                background:none;
+                filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#bac1cd', endColorstr='#EFEEF0'); /* for IE */
+                background: -moz-linear-gradient(top, #bac1cd, #EFEEF0) !important; /* for firefox 3.6+ */
+                font-weight: normal;
+                font-size: 10pt;
+                text-align: center;
+                text-transform: capitalize;
+                color: #000000;
+            }
+            .tvWorkflow_0 {
+                color: #333;
+                font-size: 13px;
+            }
+            .listForm{
+                font-size: 20px;
+                font-weight: 500;
+                padding-left: 22px;
+                margin-top: 10px;
+                margin-bottom: 0px;
+                border-bottom: 1px solid #ccc;
+                span{
+                    position: relative;
+                    top: -5px;
+                    left: 8px;
+                }
+            }
+        }
+        .dvRight{
+            float: right;
+            width: 68%;
+            vertical-align: top;
+            .dvRightMain{
+                overflow: auto;
+                height: calc(100vh - 20px);
+                textarea{
+                    height: calc(100vh - 90px);
+                }
+                #btnDeleteWF,#btnSubmit,#btnCancel{
+                    background: none;
+                    border: 1px solid #ccc;
+                    &:hover{
+                        opacity: 1;
+                    }
+                  }
+                &::-webkit-scrollbar {
+                    width: 12px;
+                    height: 12px;
+                }
+                
+                &::-webkit-scrollbar-track {
+                    background: #fff;
+                }
+                
+                &::-webkit-scrollbar-thumb {
+                    background-color: #999999;
+                    -webkit-border-radius: 20px;
+                    -moz-border-radius: 20px;
+                    -ms-border-radius: 20px;
+                    border-radius: 20px;
+                    border: 3px solid #fff;
+                    min-height: 15%;
+                    min-width: 15%;
+                }
+                textarea[readonly="readonly"], textarea[readonly]{
+                    background-color: #f1f1f1;
+                    font-size: 13px;
+                    border: 1px solid #d3d3d3;
+                    &:focus{
+                        outline: none;
+                    }
+                }
+                #dvShowAll {
+                    #btnNew{
+                        width: 150px;
+                        border: 0px;
+                        text-align: left;
+                        font-family: "Segoe UI", Roboto, sans-serif;
+                        font-weight: 500;
+                        font-size: 16px;
+                        margin-bottom: 10px;
+                        &:focus{
+                            outline: none;
+                        }
+                    }
+                }
+            }
+            #dvDispCond {
+                background-color: #e0e0e0;
+                filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#bac1cd', endColorstr='#EFEEF0'); /* for IE */
+                background: -moz-linear-gradient(top, #bac1cd, #EFEEF0) !important; /* for firefox 3.6+ */
+                padding: 3px 5px;
+            }
+            legend, #IE8#HACK {
+                font-size: 16px;
+                font-weight: 500;
+                color: #000;
+            }
+            .ui-dialog-title{
+                padding-left: 0px !important;
+                font-size: 16px;
+                font-weight: 500;
+                font-family: 'Segoe UI',Roboto,sans-serif;
+            }
+            #dvShowRoles i{
+                background: #f1f1f1;
+                padding: 4px 8px;
+                color: #999;
+                cursor: pointer;
+            }
+            .ui-dialog{
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+            }
+            .ui-dialog-titlebar{
+                background: #fff;
+            }
+            label {
+                font-size: 13px;
+                font-weight: normal;
+                color: #000;
+                position: relative;
+                top: -3px;
+                left: 3px;
+            }
+        }
+    }
+    .labelcap {
+        font-size: 12px;
+        font-weight: normal;
+        color: #000000;
+    }
+    
+    .lblMsg {
+        font-size: 10pt;
+        font-weight: bold;
+        color: #000000;
+    }
+    
+    /*---------------------------------------------- End of Styles for Messages page -------------------------------------------*/
+    /*------------------------- General styles ----------------------*/
+    
+    .font {
+        font-size: 12px;
+        font-weight: normal;
+        color: #000000;
+    }
+    
+    .errmsg {
+        color: Red;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .tab {
+        border: solid 1px #bbb;
+        font: bold 10pt;
+        color: #000000;
+        text-decoration: none;
+        border-bottom: none;
+        padding: 0px 5px;
+        background-color: #EFEEF0;
+    }
+    
+    .SelectedMenuTab {
+        color: #000000;
+        text-decoration: none;
+        border: solid 1px #bbb;
+        border-bottom: Solid 1px #ddddff;
+        padding: 0px 5px;
+        background-color: #bac1cd;
+        font-weight: bold;
+    }
+    
+    .menuTabs {
+        font-size: 12px;
+        display: none;
+    }
+    
+    /*-----------------------End of Styles for tab control--------------------------*/
+    /*-----------------------Styles for Treeview------------------------------------*/
+    
+    .Treeview {
+        font-size: 12px;
+        font-weight: normal;
+    }
+    
+    .RootNode {
+        width: 300px;
+        text-decoration: none;
+        font-size: 10pt;
+        font-weight: bolder;
+    }
+    
+    .ParentNode {
+        width: 300px;
+        color: #000000;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .LeafNode {
+        color: #000000;
+        width: 300px;
+        text-decoration: none;
+        background-color: #bac1cd;
+        font-size: 12px;
+        font-weight: normal;
+    }
+    
+    .RootNodembox {
+        background-color: #ffffff;
+        border: solid 1px #ffffff;
+        width: 300px;
+        color: White;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: normal;
+    }
+    
+    .ParentNodembox {
+        height: 15px;
+        width: 300px;
+        color: White;
+        text-decoration: none;
+        background-color: #ffffff;
+        font-size: 12px;
+        font-weight: normal;
+    }
+    
+    .LeafNodembox {
+        color: #ffffff;
+        width: 300px;
+        text-decoration: none;
+        background-color: #ffffff;
+        font-size: 12px;
+        font-weight: normal;
+    }
+    
+    .Treeviewmbox {
+        font-size: 12px;
+        font-weight: normal;
+    }
+    
+    .Treeviewlinks {
+        font-size: 12px;
+        font-weight: normal;
+        color: #ffffff;
+    }
+    
+    .SelectedNode {
+        background-color: #ffffff;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: normal;
+    }
+    
+    /*-----------------------End of Styles for Treeview------------------------------------*/
+    
+    .divHomePageContainer {
+        background-color: #EFEEF0;
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#EFEEF0', endColorstr='#bac1cd'); /* for IE */
+        background: -moz-linear-gradient(top, #EFEEF0, #bac1cd) !important; /* for firefox 3.6+ */
+        padding: 10px 10px 10px 10px;
+        height: auto;
+    }
+    
+    
+    .button {
+        filter: progid:DXImageTransform.Microsoft.gradient(enabled='true', startColorstr=#EFEEF0, endColorstr=#bac1cd);
+        background: -moz-linear-gradient(top, #EFEEF0, #bac1cd);
+        color: #333333;
+        border: 1px solid #000000;
+        padding: 3px 10px 3px 10px; /*width: 100px;*/
+        font: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        width: 60px;
+    }
+    
+    input[type=button], input[type=submit] {
+        filter: progid:DXImageTransform.Microsoft.gradient(enabled='true', startColorstr=#EFEEF0, endColorstr=#bac1cd);
+        background: -moz-linear-gradient(top, #EFEEF0, #bac1cd);
+        padding: 6px 16px; /*width: 100px;*/
+        cursor: pointer;
+        cursor: pointer;
+        font-family: 'Segoe UI',Roboto,sans-serif;
+        border: none;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.75;
+    }
+    .workFlowTable{
+        background: #e0e0e0;
+        padding: 0px 3px 0px 3px;
+    }
+    .workFlowTable table tbody tr td a[href="#menuTabs_SkipLink"], .dvLeftInner a[href="#tvWorkflow_SkipLink"]{
+        display: none;
+    }
+    input:focus{
+        outline: none;
+    }
+}

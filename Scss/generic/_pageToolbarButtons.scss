@@ -1,0 +1,498 @@
+//* Task List -----------------*//
+#ivInSearch {
+    position: $pageSearchPosition;
+    @include seacrhBox;
+    .btextDir-rtl &{
+        left: $applicationSearchLeftRtlGap;
+        right: $applicationSearchRightRtlGap;
+    }
+}
+.toolbarOptionsParent {
+    .requestJSON:not(.requestJsonOldUi) &{
+        width: $toolbar_searchBar_width;
+    }
+    .requestJSON:not(.requestJsonOldUi).isMobile.modernButtonOptions &{
+       width: auto;
+    }
+    // this class for  new iview button design. whatever code need to be added in new iview button design that has to implimented by using iconsNew id.
+    #icons, #iconsNew {
+        @include disableTextSelection;
+        @include textRight;
+        position: $toolbar_searchBar_iconsNew_position;
+        .btextDir-rtl &{
+            @include textLeft;
+        }
+        #iconsNewOption {
+            display: $toolbar_searchBar_iconsNewOption_display;
+        }
+        .newRequestJson.dropdown, .newRequestJson.dropdown .dropdown {
+            position: $toolbar_searchBar_newRequestJson_dropdown_position;
+        }
+        .searchBoxChildContainer {
+            top: $toolbar_iconsNew_searchBoxChildContainer_top_gap;
+            right: $toolbar_iconsNew_searchBoxChildContainer_right_gap;
+            .requestJSON:not(.requestJsonOldUi) &{
+                top: 44px;
+                right: 0px;
+            }
+            .btextDir-rtl &{
+                left: $toolbar_iconsNew_searchBoxChildContainer_left_rtl_gap;
+                right: $toolbar_iconsNew_searchBoxChildContainer_right_rtl_gap;
+            }
+            // .requestJSON:not(.requestJsonOldUi).isMobile &{                
+            //     right: $toolbar_iconsNew_searchBoxChildContainer_right_mobile_gap; 
+            //     top: $toolbar_iconsNew_searchBoxChildContainer_top_mobile_gap; 
+            // }
+            .isMobile.btextDir-rtl &{
+                right: $toolbar_iconsNew_searchBoxChildContainer_right_mobile_gap_rtl;
+            }
+            .icon {
+                font-size: $toolbar_iconsNew_searchBoxChildContainer_icon_font_size;
+            }
+            #ivInSearchInput {
+                width: $toolbar_iconsNew_ivInSearchInput_width;
+                height: $toolbar_iconsNew_ivInSearchInput_height;
+                // border: 0px;
+                background: $toolbar_iconsNew_ivInSearchInput_background_color;
+                @include border-radius($toolbar_iconsNew_ivInSearchInput_border_radius);
+                transition: $toolbar_iconsNew_ivInSearchInput_transition;
+                border: 1px solid $toolbar_iconsNew_ivInSearchInput_border_color;
+                &:focus,
+                :active {
+                    outline: none;
+                    @include calc(width, $toolbar_iconsNew_ivInSearchInput_active_width);
+                }
+            }
+        }
+        ul {
+            li {
+                .dropdown-menu{
+                    li{
+                        display: $toolbar_iconsNew_dropdown_display;
+                        a{
+                            background: $applicationBackgroundColor;
+                            color: $applicationTextColor;
+                            box-shadow:none;
+                            &:hover{
+                                background: $coldBtnBackgroundHover;
+                            }
+                            @include textOverflowModernUi;
+                        }
+                        
+                    }
+                }
+                &.dropdown-submenu {
+                    position: $toolbar_dropdown_subMenu_position;
+                    >a:after {
+                        // content: $toolbar_dropdown_subMenu_icon_content;
+                        // font-family: $toolbar_dropdown_subMenu_icon_fone_family;
+                        // float: $toolbar_dropdown_subMenu_icon_float;
+                        // top: $toolbar_dropdown_subMenu_icon_top_gap;
+                        // position: $toolbar_dropdown_subMenu_icon_position;
+                        // right: $toolbar_dropdown_subMenu_icon_right_gap;
+                        .btextDir-rtl &{
+                            left: $toolbar_dropdown_subMenu_icon_left_gap_rtl;
+                            right: $toolbar_dropdown_subMenu_icon_right_gap_rtl;
+                        }
+                        // this class for  modern Iview Options (just like google dropdown design) indroduced in (10.9_dev3) whatever code need to be added in Modern Iview options that has to impliment by using modernIviewOptions as parents class.
+                        .modernButtonOptions &{
+                            // bottom: -3px;
+                            // position: $toolbar_ModernIviewOptions_dropdown_subMenu_icon_position;
+                            // @include calc(left, $toolbar_ModernIviewOptions_dropdown_subMenu_icon_left_calc);
+                            // margin: $toolbar_ModernIviewOptions_dropdown_subMenu_icon_margin;
+                            // top: $toolbar_ModernIviewOptions_dropdown_subMenu_icon_top;
+                            // right: $toolbar_ModernIviewOptions_dropdown_subMenu_icon_right;
+                            @media (max-width: $breakTabMinimumDevice){
+                                @include calc(left, $toolbar_ModernIviewOptions_dropdown_subMenu_icon_left_mobile_calc);
+                            }
+                        }
+                    }
+                    .dropdown-menu {
+                        top: $toolbar_dropdown_sub_subMenu_top;
+                        left: $toolbar_dropdown_sub_subMenu_left;
+                        margin-top: $toolbar_dropdown_sub_subMenu_margin_top;
+                        margin-left: $toolbar_dropdown_sub_subMenu_margin_left;
+                        width: $toolbar_dropdown_sub_subMenu_width;
+                        .btextDir-rtl &{
+                            right: $toolbar_dropdown_sub_subMenu_right_rtl;
+                            left: $toolbar_dropdown_sub_subMenu_left_rtl;
+                            @media (max-width: $breakTabMinimumDevice){
+                                right: $toolbar_dropdown_sub_subMenu_right_mobile_rtl;
+                            }
+                        }
+                        .modernButtonOptions &{
+                            top: $toolbar_ModernIviewOptions_dropdown_sub_subMenu_top;
+                            left: $toolbar_ModernIviewOptions_dropdown_sub_subMenu_left;
+                            margin-top: $toolbar_ModernIviewOptions_dropdown_sub_subMenu_margin_top;
+                            margin-left: $toolbar_ModernIviewOptions_dropdown_sub_subMenu_margin_left;
+                            width: $toolbar_ModernIviewOptions_dropdown_sub_subMenu_width;
+                            position: $toolbar_ModernIviewOptions_dropdown_sub_subMenu_position;
+                            border: $toolbar_ModernIviewOptions_dropdown_sub_subMenu_border;
+                            @media (max-width : $breakTabMinimumDevice){
+                                width: $toolbar_ModernIviewOptions_dropdown_sub_subMenu_tab_width;
+                            }
+                            @media (max-width : $breakMobilemumDevice){
+                                width: $toolbar_ModernIviewOptions_dropdown_sub_subMenu_moble_width;
+                            }
+                            @media (max-width: $breakMobileMinimumDevice){
+                                @include calc(width, $toolbar_ModernIviewOptions_dropdown_sub_subMenu_mobile_width);
+                             }
+                        }
+                        .pinIcon{
+                            display: none;
+                        }
+                        li{
+                            a{
+                                .dropdownIconUI{
+                                    .iconUIPin{
+                                        display: none;
+                                    }
+                                }
+                            }
+                        }
+                        .modernButtonOptions &{
+                            box-shadow: initial;
+                        }
+                        @media (max-width: $breakTabMinimumDevice){
+                            top: initial;
+                            left: initial;
+                        }
+                    }
+                }
+            }
+
+            &#iconsUl{
+                > li:nth-of-type(3n+1){
+                    //first
+                    ul.dropdown-menu{
+                        .modernButtonOptions &{
+                            left: $toolbar_ModernIviewOptions_dropdown_menu_everyFirst_child_left;
+                        }
+                        .modernButtonOptions.btextDir-rtl &{
+                            right: $toolbar_ModernIviewOptions_dropdown_menu_everyFirst_child_right_rtl;
+                            left: $toolbar_ModernIviewOptions_dropdown_menu_everyFirst_child_left_rtl;
+                            @media (max-width: $breakTabMinimumDevice){
+                                right: $toolbar_ModernIviewOptions_dropdown_menu_everyFirst_child_left_rtl_mobile;
+                            }
+                        }
+                    }
+                }
+                > li:nth-of-type(3n+2){
+                    //second
+                    ul.dropdown-menu{
+                        .modernButtonOptions &{
+                            //left: $toolbar_ModernIviewOptions_dropdown_menu_secondFirst_child_left;
+                            @include calc(left,$toolbar_ModernIviewOptions_dropdown_menu_secondFirst_child_left_calc);
+                        }
+                        .modernButtonOptions.btextDir-rtl &{
+                            right: $toolbar_ModernIviewOptions_dropdown_menu_secondFirst_child_right_rtl;
+                            left: $toolbar_ModernIviewOptions_dropdown_menu_secondFirst_child_left_rtl;
+                            @media (max-width: $breakTabMinimumDevice){
+                                right: $toolbar_ModernIviewOptions_dropdown_menu_secondFirst_child_right_rtl_right;
+                            }
+                        }
+                    }
+                }
+                > li:nth-of-type(3n+0){
+                    //third
+                    ul.dropdown-menu{
+                        .modernButtonOptions &{
+                            //left: $toolbar_ModernIviewOptions_dropdown_menu_thirdFirst_child_left;
+                            @include calc(left,$toolbar_ModernIviewOptions_dropdown_menu_thirdFirst_child_left_calc);
+                        }
+                        .modernButtonOptions.btextDir-rtl &{
+                            left: $toolbar_ModernIviewOptions_dropdown_menu_thirdFirst_child_left_rtl;
+                            right: $toolbar_ModernIviewOptions_dropdown_menu_thirdFirst_child_right_rtl;
+                            @media (max-width: $breakTabMinimumDevice){
+                                right: $toolbar_ModernIviewOptions_dropdown_menu_thirdFirst_child_right_rtl_mobile;
+                            }
+                      }
+                    }
+                }
+            }
+        }
+		[data-target="#iconsNew"], #filterWrapper.newRequestJson #ivirActionButton, #iconsNewNewIcon, #iconsNewRemoveIcon, #iconsNewUtilityIcon, #iconsNewOptionIcon, #iconsNewSearchIcon,.tstructOutButton{
+            position: $toolbar_dropdown_button_position;
+            // top: $toolbar_dropdown_button_top;
+            // right: $toolbar_dropdown_button_right;
+            padding: $toolbar_dropdown_button_padding;
+            border-radius: $toolbar_dropdown_button_border_radius;
+            color: $moduleIconColor;
+            font-size: $toolbar_dropdown_button_font_size;
+            background-color: $toolbar_dropdown_button_background_color;
+            text-decoration: none;
+            cursor: pointer;
+            .requestJSON:not(.requestJsonOldUi).isMobile &{
+                top: $toolbar_dropdown_button_requestjson_mobile_top;
+            }
+        }
+        &.dropdown-submenu,
+        #iconsNewOption,
+        #iconsNewUtility {
+            #iconsUl,
+            #iconsExportUl {
+                &.dropdown-menu{
+                    .modernButtonOptions &{
+                        @include modernDropdownMenu;
+                        @media (max-width: $breakMobileMinimumDevice){
+                            @include calc(width, $toolbar_ModernIviewOptions_DropdownMenu_width_mobile);
+                        }
+                    }
+                    #ivInSearch &{
+                        left: $toolbar_dropdown_menu_left;
+                        right: $toolbar_dropdown_menu_right;
+                        top: $toolbar_dropdown_menu_top;
+                        .btextDir-rtl & {
+                            right: $toolbar_dropdown_menu_right_rtl;
+                            left: $toolbar_dropdown_menu_left_rtl;
+                        }
+                        @media (max-width: $breakTabMinimumDevice){
+                            @include calc(width, $toolbar_ivInSearch_dropdown_menu_mobile_width);
+                         }
+                         .modernButtonOptions &{
+                            @media (max-width: $breakTabMinimumDevice){
+                                @include calc(max-width, $toolbar_ModernIviewOptions_ivInSearch_dropdown_menu_mobile_max_width);
+                                width: $toolbar_ModernIviewOptions_ivInSearch_dropdown_menu_mobile_width;
+                             }
+                         }
+                        li{
+                            a{
+                                .dropdownIconUI{
+                                    display: none;
+                                    .modernButtonOptions &{
+                                        display: block;
+                                    }
+                                }
+                                .dropdownIconName{
+                                    margin-left: 10px;
+                                    .modernButtonOptions &{
+                                        margin-left: 0px;
+                                    }
+                                }
+                            }
+                            span{
+                                &.iconUIPin{
+                                    display: none;
+                                    @include dropdownPin;
+                                    .modernButtonOptions &{
+                                        display: block;
+                                    }
+                                }
+                            }
+                            .customIcon{
+                                .modernButtonOptions &{
+                                    display: none;
+                                }
+                            }
+                            &.pinned{
+                                .iconUIPin{
+                                    transform: rotate(60deg);
+                                    background-color: $pillsPinedBackground;
+                                    @include pillsPinedShodow;
+                                }
+                                .customIcon{
+                                        transform: rotate(60deg);
+                                        background-color: $pillsPinedBackground;
+                                        @include pillsPinedShodow;
+                                }
+                            }
+                            &.dropdown-submenu{
+                                .dropdown-menu{
+                                    span{
+                                        &.iconUIPin{
+                                            display: none;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        @media (max-width: $breakTabMinimumDevice){
+                            // @include calc(width, $toolbar_dropdown_menu_mobile_width);
+                            overflow: $toolbar_dropdown_menu_mobile_overflow;
+                        }
+                        .modernButtonOptions &{
+                            @media (max-width: $breakTabMinimumDevice){
+                                overflow: $toolbar_ModernIviewOptions_DropdownMenu_mobile_overflow;
+                                padding: $toolbar_ModernIviewOptions_DropdownMenu_mobile_padding;
+                            }
+                        }
+                        li{
+                            &.pinned{
+                              a{
+                                  i{
+                                      &.icon-basic-pin2{ 
+                                        transform: rotate(60deg);
+                                        background-color: $pillsPinedBackground;
+                                        @include pillsPinedShodow;
+                                      
+                                  }
+                              }
+                              .iconUIPin{
+                                transform: rotate(60deg);
+                                background-color: $pillsPinedBackground;
+                                @include pillsPinedShodow;
+                              }
+                            }
+                        }
+                    }
+                    .modernButtonOptions &{
+                        li{
+                            display: $toolbar_ModernIviewOptions_DropdownMenu_list_display;
+                            // height: $toolbar_ModernIviewOptions_DropdownMenu_list_height;
+                            height: auto;
+                            list-style-type: none;
+                            position: $toolbar_ModernIviewOptions_DropdownMenu_list_position;
+                            transition: $toolbar_ModernIviewOptions_DropdownMenu_list_transition;
+                            vertical-align: $toolbar_ModernIviewOptions_DropdownMenu_list_vertical_align;
+                            width: $toolbar_ModernIviewOptions_DropdownMenu_list_width;
+                            @include textCenter;
+                            @media (max-width : $breakTabMinimumDevice){
+                                width: $toolbar_ModernIviewOptions_DropdownMenu_list_tab_width;
+                            }
+                            &:hover{
+                                background-color: $toolbar_ModernIviewOptions_DropdownMenu_list_hover_focus_color;
+                                @include border-radius($toolbar_ModernIviewOptions_DropdownMenu_list_hover_border-radius);
+                                //height: $toolbar_ModernIviewOptions_DropdownMenu_list_hover_height;
+                                //position: $toolbar_ModernIviewOptions_DropdownMenu_list_hover_position;
+                                z-index: $toolbar_ModernIviewOptions_DropdownMenu_list_hover_zindex;
+                                a{
+                                    //height: $toolbar_ModernIviewOptions_DropdownMenu_list_hover_ancher_height;
+                                    width: $toolbar_ModernIviewOptions_DropdownMenu_list_hover_ancher_width;
+                                    @media (max-width : $breakTabMinimumDevice){
+                                        width: $toolbar_ModernIviewOptions_DropdownMenu_list_hover_ancher_tab_width;
+                                    }
+                                }
+                                .dropdown-menu{
+                                    height: auto;
+                                    box-shadow: initial;
+                                    // background-color: $toolbar_ModernIviewOptions_DropdownMenu_list_hover_focus_color;
+                                }
+                            }
+                            // @media (max-width: $breakTabMinimumDevice){
+                            //     margin: $toolbar_ModernIviewOptions_DropdownMenu_list_mobile_margin;
+                            //     width: $toolbar_ModernIviewOptions_DropdownMenu_list_mobile_width;
+                            // }
+                            @media (max-width : $breakMobilemumDevice){
+                               width:$toolbar_ModernIviewOptions_DropdownMenu_list_mobile_width;
+                            }
+                            a{
+                                padding: $toolbar_ModernIviewOptions_DropdownMenu_list_anchor_padding;
+                                height: $toolbar_ModernIviewOptions_DropdownMenu_list_anchor_height;
+                                width: $toolbar_ModernIviewOptions_DropdownMenu_list_anchor_width;
+                               @media (max-width : $breakTabMinimumDevice){
+                                width: $toolbar_ModernIviewOptions_DropdownMenu_list_anchor_tab_width;
+                                }
+                                &:hover{
+                                    background-color: $toolbar_ModernIviewOptions_DropdownMenu_list_anchor_hover_background_color;
+                                }
+                                &:focus{
+                                    background-color: $toolbar_ModernIviewOptions_DropdownMenu_list_hover_focus_color;
+                                    outline: none;
+                                    text-decoration:none;
+                                    @include border-radius($toolbar_ModernIviewOptions_DropdownMenu_list_hover_border-radius);
+                                }
+                                .dropdownIconUI{
+                                    @include textCenter;
+                                    position: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_position;
+                                    span{
+                                        &.iconUITitle{
+                                            @include applicationDropdownModernTitle;
+                                        }
+                                        // &.iconUIPin{
+                                        //     @include dropdownPin;
+                                        // }
+                                    }
+                                }
+                                // i{
+                                //     &.customIcon{
+                                //         display: none;
+                                //     }
+                                // }
+                            }
+                            .dropdownIconName{
+                                // overflow: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_overflow;
+                                // text-overflow: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_text_overflow;
+                                // width: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_width;
+                                display: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_diaply;
+                                white-space: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_white_space;
+                            }
+                            .modernDropdownIcon{
+                                position: $toolbar_ModernIviewOptions_DropdownMenu_list_modernDropdownIcon_position;
+                                top:$toolbar_ModernIviewOptions_DropdownMenu_list_modernDropdownIcon_top;
+                            }
+                            // &:hover{
+                            //     .dropdownIconName{
+                            //         word-break: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_hover_word_break;
+                            //         white-space: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_hover_white_space;
+                            //         z-index: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_hover_zindex;
+                            //         position: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_hover_position;
+                            //     }
+                            // }
+                            &.dropdown-submenu{
+                                ul{
+                                    li{
+                                        width: $toolbar_ModernIviewOptions_dropdown_subMenu_list_width;
+                                        @media (max-width : $breakTabMinimumDevice){
+                                            width: $toolbar_ModernIviewOptions_dropdown_subMenu_list_tab_width;
+                                        }
+                                        @media (max-width : $breakMobilemumDevice){
+                                            width: $toolbar_ModernIviewOptions_dropdown_subMenu_list_mobile_width;
+                                        }
+                                        a{
+                                            min-height: $toolbar_ModernIviewOptions_dropdown_subMenu_list_anchor_minheight;
+                                            width: $toolbar_ModernIviewOptions_dropdown_subMenu_list_anchor_width;
+                                            @media (max-width : $breakTabMinimumDevice){
+                                                width: $toolbar_ModernIviewOptions_dropdown_subMenu_list_anchor_tab_width;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+    }
+}
+
+    #iconsNew {
+        .dropDownButton__list.dropdown-menu {
+            position: $toolbar_iconsNew_dropdown_display_dropDownButton_list_position;
+            right: $toolbar_iconsNew_dropdown_display_dropDownButton_list_right_gap;
+            left: $toolbar_iconsNew_dropdown_display_dropDownButton_list_left_gap;
+            .btextDir-rtl &{
+                left: $toolbar_iconsNew_dropdown_display_dropDownButton_list_left_gap_rtl;
+                right: $toolbar_iconsNew_dropdown_display_dropDownButton_list_right_gap_rtl;
+            }
+        }
+    }
+
+div#pinnedsearchBar {
+    #pinnedicons {
+        ul {
+            li {
+                .dropdown-menu{
+                    li{
+                        display: block;
+                        .btextDir-rtl &{
+                            @include textRight;
+                        }
+                        a{
+                            background: $applicationBackgroundColor;
+                            color: $applicationTextColor;
+                            box-shadow:none;
+                            &:hover{
+                                background: $coldBtnBackgroundHover;
+                            }
+                        }
+                        
+                    }
+                }
+            }
+        }
+    }
+}
+}
+//* Task List -----------------*//

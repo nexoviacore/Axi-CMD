@@ -1,0 +1,205 @@
+//* serchbox icon-------------*//
+@mixin searchIcon{
+    position: $searchIconPosition;
+    top: $applicationSearchTopGap;
+    right: $applicationSearchIconRightGap;
+    margin-left: $applicationSearchIconMarginLeft;
+    z-index: $searchIconZIndex;
+    display: inherit;
+    font-size: large;
+}
+@mixin searchInput {
+    font-size: $applicationSearchFont;
+    color: $applicationPageTitleColor;
+    padding: 0px $applicationSearchPadding;
+    -webkit-border-radius: $applicationSearchBorderRadius;
+    -moz-border-radius: $applicationSearchBorderRadius;
+    border-radius: $applicationSearchBorderRadius;
+    margin-right: $applicationSearchInputMarginRight;
+    width: $applicationSearchInputWidth;
+    height: $applicationSearchInputHeight;
+    right: 0px;
+    left: auto;
+    position: $applicationSearchInputPositionAbsolute;
+}
+@mixin seacrhBox{
+    width: $applicationMaximumWidth;
+    //margin-top: $applicationSearchTopMargin;
+    right: $applicationSearchRightGap;
+    top:$applicationSearchTop;
+    body:not(.requestJsonOldUi).requestJSON &,.modernButtonOptions &{
+        @include floatRight;
+        width: $applicationModernIviewOptionsSearchWidth;
+        top: $applicationModernIviewOptionsSearchTopGap;
+    }
+    .isMobile.modernButtonOptions & {
+        float: $applicationModernIviewOptionsSearchMobileFloat;
+    }
+}
+@mixin searchInputHoverWidth{
+    outline: none;
+    width: $applicationSearchHoverWidth;
+}
+@mixin searchTransition{
+    -webkit-transition: width .55s ease;
+    -moz-transition: width .55s ease;
+    -ms-transition: width .55s ease;
+    -o-transition: width .55s ease;
+    transition: width .55s ease;
+}
+@mixin mobileSearchOption{
+    width: $applicationSearchOptionMobileWidth;
+    height: $applicationSearchOptionMobileHeight;
+    padding: 0px $applicationSearchOptionMobilePadding;
+    margin-right: $applicationSearchOptionMobilePadding;
+}
+@mixin searchIconMobile{
+    top: $searchIconMobileTopGap;
+    right: $searchIconMobileRightGap;
+    font-size: $applicationFontSize;
+}
+@mixin searchIconReponsibilities{
+    position: $searchIconReponsibilitiesPosition;
+    right: $searchIconReponsibilitiesRightGap;
+    top: $searchIconReponsibilitiesTopGap;
+    bottom: 0;
+    margin: auto;
+    font-size: $applicationFontSize;
+    cursor: pointer;
+}
+@mixin pageTollbarSearch{
+    width: calc(#{$pageTollbarSearchCalcMaxWidth} - #{$pageTollbarSearchCalcMinWidth});
+    display: inline-block;
+    min-width: $pageTollbarSearchMinWidth;
+}
+//* search box for iview *//
+@mixin searchBoxChildContainer{
+    vertical-align: middle;
+    white-space: nowrap;
+    position: $searchBoxChildContainerPosition;
+    z-index: 1;
+    .requestJSON:not(.requestJsonOldUi) &{
+        position: fixed;
+        left: 23px;
+        // top: 44px;
+        width: 100%;
+    }
+    .requestJSON:not(.requestJsonOldUi).isMobile &{
+        left: 14px;
+    }
+}
+
+////  applicationHomePageGlobalSearch 
+
+@mixin applicationHomePageSearch {
+    @include mainPageSearchBar;
+    &.open {
+        top: 0;
+    }
+    .search-icon {
+        @include mainPageSearchIcon;
+        .compressedModeUI &{
+            top: $applicationCompressedMainPageSearchIconTopGap;
+        }
+        .material-icons {
+            // font-size: 32px;
+            color: $moduleIconColor;
+        }
+    }
+    .close-search {
+        position: $applicationMainPageSearchCloseIconPositionAbsolute;
+        cursor: pointer;
+        // font-size: 30px;
+        top: $applicationMainPageSearchCloseIconTopGap;
+        right: $applicationMainPageSearchCloseIconRightGap;
+        .compressedModeUI &{
+            top: $applicationCompressedMainPageSearchCloseIconTopGap;
+        }
+        .material-icons {
+            color: $moduleIconColor;
+            opacity: 1;
+            @include transition(.5s);
+
+            &:hover {
+                opacity: .5;
+            }
+        }
+    }
+
+    input[type="text"] {
+        width: 100%;
+        font-size: 16px;
+        padding: $applicationSearchInputPadding;
+        border: none;
+        margin-top: $applicationSearchInputMarginTop;
+        @include border-radius($applicationSearchInputBorderRadius);
+        .compressedModeUI &{
+            padding: $applicationCompressedSearchInputPadding;
+            margin-top: $applicationCompressedSearchInputMarginTop;
+        }
+    }
+
+    .search-bar-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 767px;
+        margin: 0px auto;
+        // transform: translate(-50%);
+        // left: 50%;
+    }
+}
+
+@mixin mainPageSearchBar {
+    position: $applicationMainPageSearchBarPositionAbsolute;
+    top: $applicationMainPageSearchBarTopGap;
+    
+    .enableExpandCollapse &{
+        left: $applicationMainPageSearchBarLeftGap;
+        display: $applicationMainPageSearchBarEnableExpandCollapseDisplay;
+    }
+    z-index: $applicationMainPageSearchBarZIndex;
+    width: $applicationMainPageSearchBarWidth;
+    display: $applicationMainPageSearchBarDisplay;
+    @include transition(.25s);
+    .enableExpandCollapse.compressedModeUI &{
+        left: $applicationCompressedMainPageSearchBarLeftGap
+    }
+    &.open{
+        display: $applicationMainPageSearchBarOpenDisplay;
+        width: $applicationMainPageSearchBarOpenWidth;
+        .search-bar-wrapper{
+            max-width: $applicationMainPageSearchBarWrapperMaxWidth;
+        }
+    }
+}
+@mixin mainPageSearchIcon {
+    position: $applicationMainPageSearchIconPositionAbsolute;
+    cursor: pointer;
+    top: $applicationMainPageSearchIconTopGap;
+    left: $applicationMainPageSearchIconLeftGap;
+    background-color: $applicationMainPageSearchIconBackgroundColor;
+    // background-color: rgba(0, 0, 0, 0.075);
+    padding: $applicationMainPageSearchIconPadding;
+    height: $applicationMainPageSearchIconHeight;
+    width: $applicationMainPageSearchIconWidth;
+    @include border-radius(50px);
+}
+//* advance search for tstruct search edit *//
+@mixin  advSearchEdit{
+    position: $advSearchEditPositionAbsolute;
+    right: $advSearchEditRightGap;
+    top: $advSearchEditTopGap;
+    z-index: $advSearchEditZIndex;
+    display: $advSearchEditDisplayNone;
+    color: $applicationIconColor;
+}
+//* advance search for tstruct search *//
+@mixin advSearchNsearch {
+    left: $advSearchNsearchLeftGap;
+    display: $advSearchNsearchDisplayInherit;
+    padding-top: $advSearchNsearchPaddingTop;
+    right: $advSearchNsearchRightGap;
+    top: $advSearchNsearchTopGap;
+    left: $advSearchNsearchLeftGap;
+    position: $advSearchNsearchPositionRelative;
+}

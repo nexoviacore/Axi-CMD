@@ -1,0 +1,502 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head runat="server">
+    <title>Process Flow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../UI/axpertUI/style.bundle.css">
+    <link rel="stylesheet" href="../UI/axpertUI/plugins.bundle.css">
+    <link rel="stylesheet" href="../ThirdParty/jquery-confirm-master/jquery-confirm.min.css">
+    <link rel="stylesheet" href="../Css/AxProcessFlow.min.css?v=5" type="text/css">
+</head>
+<style>
+    div#ktMenu {
+        /* transform: translate(327px, 35px)!important; */
+        cursor: pointer;
+        padding: 8px;
+        font-size: small;
+        font-weight: 500;
+        position: absolute;
+        inset: unset !important;
+        transform: none !important;
+    }
+
+    .text-hover-primary:hover {
+        background: #d3d3d35c;
+        transition: color .2s ease, background-color .2s ease;
+        /* color: #0774fe!important; */
+        /* width: -webkit-fill-available; */
+        color: black !important;
+    }
+</style>
+
+<body id="Process_Flow"
+    class="header-fixed header-tablet-and-mobile-fixed aside-fixed overflow-hidden vh-100 min-vh-100">
+
+    <!--begin::Content-->
+    <div class="content-- d-flex flex-column flex-column-fluid">
+        <!--begin::Container-->
+        <div id="pf_content_container" class="">
+            <!--begin::Row-->
+
+            <div class="row overflow-hidden-- vh-100-- min-vh-100--" id="PROFLOW-overalldiv">
+                <div class="Page-Title-Bar">
+                    <div class="d-flex align-items-center flex-wrap d-grid gap-2 ">
+                        <div class="Page-Title" id="process-name">
+                            <input type="checkbox" class="maincheckbox">
+
+                            <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm  tb-btn btn-sm "
+                                data-kt-menu-attach="parent" data-bs-title="Hide record List" data-bs-toggle="tooltip"
+                                data-bs-placement="bottom" title="" id="collapseicon">
+                                <span class="material-icons material-icons-style material-icons-2">menu</span>
+                            </div>
+
+                            <span>My List</span>
+                            <div class="Tkts-toolbar-Left">
+                                <div class="d-flex gap-1">
+                                    <div class="d-flex-- align-items-stretch flex-shrink-0 gap-8 filterAlignChild">
+                                        <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm  tb-btn btn-sm d-none"
+                                            data-kt-menu-attach="parent" data-bs-title="Next Record"
+                                            data-bs-toggle="tooltip" data-bs-placement="bottom" id="nextrecord">
+                                            <span
+                                                class="material-icons material-icons-style material-icons-2">arrow_downward</span>
+                                        </div>
+                                        <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm  tb-btn btn-sm d-none"
+                                            data-kt-menu-attach="parent" data-bs-title="Previous Record"
+                                            data-bs-toggle="tooltip" data-bs-placement="bottom" id="previousrecord">
+                                            <span
+                                                class="material-icons material-icons-style material-icons-2">arrow_upward</span>
+                                        </div>
+
+
+
+                                        <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm  tb-btn btn-sm"
+                                            data-kt-menu-placement="bottom" data-kt-menu-flip="top"
+                                            data-kt-menu-attach="parent" id="filterButton" data-kt-menu-trigger="click">
+                                            <span class="material-icons material-icons-style material-icons-2"
+                                                data-bs-toggle="tooltip" data-bs-title="Filter">filter_list</span>
+                                        </div>
+
+                                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded  menu-title-gray-700 menu-icon-gray-500 menu-active-bg menu-state-color fw-semibold py-4 fs-base w-150px"
+                                            data-kt-menu="true" id="ktMenu" data-kt-element="theme-mode-menu">
+                                            <div class="menu-item cursor-pointer">
+                                                <a href="#" class="menu-link active" id="alllist" data-id="all">
+                                                    <span class="menu-icon">
+                                                        <span class="material-icons">mail</span></span> </span>
+                                                    <span class="menu-title">All</span>
+                                                </a>
+                                            </div>
+                                            <div class="menu-item cursor-pointer">
+                                                <a href="#" class="menu-link" id="activelist" data-id="active">
+                                                    <span class="menu-icon">
+                                                        <span class="material-icons">mark_email_unread</span></span>
+                                                    </span>
+                                                    <span class="menu-title">Active</span>
+                                                </a>
+                                            </div>
+                                            <div class="menu-item cursor-pointer">
+                                                <a href="#" class="menu-link" id="completedlist" data-id="completed">
+                                                    <span class="menu-icon">
+                                                        <span class="material-icons">mark_email_read</span></span>
+                                                    </span>
+                                                    <span class="menu-title">Completed</span>
+                                                </a>
+                                            </div>
+                                            <!-- <div class="menu-item">
+                                                <a href="#" class="menu-link" onclick="axProcessObj.openFilters()">
+                                                    <span class="menu-icon">
+                                                        <span class="material-icons">filter_list</span></span> </span>
+                                                    <span class="menu-title">Advanced Filter</span>
+                                                </a>
+                                            </div> -->
+
+                                        </div>
+
+                                        <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm  tb-btn btn-sm selectbtn"
+                                            data-kt-menu-placement="bottom" data-kt-menu-flip="top"
+                                            data-kt-menu-attach="parent">
+                                            <span class="material-icons material-icons-style material-icons-2"
+                                                data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                                data-bs-title="Select">copy</span>
+                                        </div>
+                                        <!-- <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm  tb-btn btn-sm"
+                                            data-kt-menu-trigger="click" data-kt-menu-placement="bottom"
+                                            data-kt-menu-flip="top" data-kt-menu-attach="parent">
+                                            <span
+                                                class="material-icons material-icons-style material-icons-2">filter_alt</span>
+                                        </div> -->
+                                        <!-- <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light fw-bolder w-75 py-3 mt-3"
+                                            id="filterProcess" data-kt-menu="true">
+                                            <div class="close d-flex ms-auto px-3" id="filterClose"><span
+                                                    class="material-icons material-icons-style">close</span></div>
+                                            <div class="d-flex row mx-6 mb-4">
+                                                <div class="col-3">
+                                                    <label for="pdFilUser" class="form-label col-form-label fw-bolder">
+                                                        From
+                                                        User
+                                                    </label>
+                                                    <input type="text" class="form-control rounded-0 border-gray-300"
+                                                        id="pdFilUser" placeholder="Enter User Name">
+                                                </div>
+                                                <div class="col-3">
+                                                    <label for="pdFilFrom" class="form-label col-form-label fw-bolder">
+                                                        From
+                                                        Date
+                                                    </label>
+                                                    <input
+                                                        class="form-control rounded-0 border-gray-300 flatpickr-input"
+                                                        id="pdFilFrom" type="text" readonly="readonly"
+                                                        placeholder="Select from date">
+                                                </div>
+                                                <div class="col-3">
+                                                    <label for="pdFilTo" class="form-label col-form-label fw-bolder">
+                                                        To
+                                                        Date
+                                                    </label>
+                                                    <input
+                                                        class="form-control rounded-0 border-gray-300 flatpickr-input"
+                                                        id="pdFilTo" type="text" readonly="readonly"
+                                                        placeholder="Select to date">
+                                                </div>
+                                                <div class="col-3 mt-10 text-center">
+                                                    <button
+                                                        class="btn btn-light-primary btn-sm mt-2 btn-custom-border-radius me-2"
+                                                        onclick="axProcessObj.taskFilter('reset')" id="reset">
+                                                        Reset
+                                                    </button>
+                                                    <button class="btn btn-primary btn-sm mt-2 btn-custom-border-radius"
+                                                        onclick="axProcessObj.taskFilter('filter')" id="filter">
+                                                        Filter
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div> -->
+                                    </div>
+
+                                    <div>
+                                        <div id="pd_all_tasksNew"
+                                            class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                            data-kt-menu-trigger="click" data-kt-menu-placement="bottom-start"
+                                            data-kt-menu-flip="top-start" data-kt-menu-attach="parent"
+                                            title="Bulk Approve">
+                                            <span
+                                                class="material-icons material-icons-style material-icons-2">checklist</span>
+                                        </div>
+                                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light fw-bolder w-300px py-3"
+                                            data-kt-menu="true" data-id="pd_all_tasksNew">
+                                            <pd-alltasksNew></pd-alltasksNew>
+                                        </div>
+                                    </div>
+
+                                    <!-- <div class="d-flex align-items-stretch flex-shrink-0 gap-8">
+                                        <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm  tb-btn btn-sm"
+                                            data-kt-menu-trigger="click" data-kt-menu-placement="bottom"
+                                            data-kt-menu-flip="top" data-kt-menu-attach="parent"
+                                            id="filterProcessSearch">
+                                            <span
+                                                class="material-icons material-icons-style material-icons-2">search</span>
+                                        </div>
+                                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light fw-bolder w-75 py-3 mt-3"
+                                            id="filterProcessAdvanced" data-kt-menu="true">
+                                            <div class="close d-flex ms-auto px-3" id="filterCloseAdvanced"><span
+                                                    class="material-icons material-icons-style">close</span></div>
+                                            <div class="d-flex row mx-6 mb-4">
+                                                <div class="col-9">
+                                                    <label for="pdFilUser" class="form-label col-form-label fw-bolder">
+                                                        Advanced
+                                                        Content Search
+                                                    </label>
+                                                    <input type="text" class="form-control rounded-0 border-gray-300"
+                                                        id="advTextSearch" placeholder="Enter search text">
+                                                </div>
+
+                                                <div class="col-3 mt-10 text-center">
+                                                    <button
+                                                        class="btn btn-light-primary btn-sm mt-2 btn-custom-border-radius me-2"
+                                                        onclick="axProcessObj.taskSearch('reset');"
+                                                        id="filterResetAdvanced">
+                                                        Reset
+                                                    </button>
+                                                    <button class="btn btn-primary btn-sm mt-2 btn-custom-border-radius"
+                                                        onclick="axProcessObj.taskSearch('search');"
+                                                        id="filterSearchAdvanced">
+                                                        Search
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div> -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row" id="Process-stepper">
+                            <div class="col-md-12" id="horizontal">
+                                <ul class="stepper stepper-horizontal d-none" id="horizontal-processbar">
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="Tkts-toolbar-Right">
+                            <button id="" type="submit"
+                                class="btn btn-sm btn-icon btn-primary btn-active-primary btn-custom-border-radius d-none">
+                                <span class="material-icons material-icons-style material-icons-2">add_task</span>
+                            </button>
+                            <button type="submit" id=""
+                                class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                title="Refresh Page" onclick="axProcessObj.refreshPage();">
+                                <span class="material-icons material-icons-style material-icons-2">refresh</span>
+                            </button>
+
+                            <button id="pd_timeline"
+                                class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm d-none"
+                                data-kt-menu-trigger="click" data-kt-menu-placement="bottom-start"
+                                data-kt-menu-flip="top-end" data-kt-menu-attach="parent" title="Timeline">
+                                <span
+                                    class="material-icons material-icons-style material-icons-2">history_toggle_off</span>
+                            </button>
+
+                            <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light fw-bolder w-400px py-3"
+                                data-kt-menu="true" data-id="pd_timeline">
+                                <div id="TimeLine_overall" class="content">
+                                    <div class="card" id="Timeline-wrap">
+                                        <h1 class="Timeline-heading">
+                                            Timeline
+                                        </h1>
+                                        <ul class="Timel-sessions full-session d-none">
+                                        </ul>
+                                        <span id="nodata" class="p-5">No Timeline data available.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!--begin:::Col-->
+                <div class="col-xl-4 col-md-4 d-flex flex-column flex-column-fluid vh-100 min-vh-100" id="PROFLOW_Left">
+                    <div class="card card-xl-stretch  flex-root h-1px  ">
+
+
+                        <div class="card-header">
+                            <!-- <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x mb-5 fs-6">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="pending" data-bs-toggle="tab" href="#Tickets_Pending"><span class="material-icons material-icons-style material-icons-2 text-warning">add_task</span> Pending</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="completed" data-bs-toggle="tab" href="#Tickets_Completed" onclick="axProcessObj.fetchProcessList('ProcessList','TaskCompletion')"><span class="material-icons material-icons-style material-icons-2 text-success">add_task</span> Completed</a>
+                                </li>
+                            </ul> -->
+                        </div>
+
+                        <!--begin::Body-->
+                        <div class="card-body h-300px mb-5" id="body_Container">
+                            <div id="ProcessFlow_New-container">
+
+                                <div class="tab-content" id="ProcessFlow_Content">
+                                    <!-- <div class="tab-pane fade active show" role="tabpanel" id="Tickets_Pending">
+                                        <div id="plistContentPending">
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" role="tabpanel" id="Tickets_Completed">
+                                        <div id="plistContentCompleted">
+                                        </div>
+                                    </div> -->
+
+                                    <div class="tab-pane fade active show" role="tabpanel" id="tickets">
+                                        <div id="plistContent">
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end::Body-->
+                        </div>
+
+                    </div>
+                    <!--end::Table Widget 1-->
+                </div>
+                <!--end:::Col-->
+                <!--begin:::Col-->
+                <div id="PROFLOW_Right"
+                    class="col-xl-8  col-md-8 d-flex flex-column flex-column-fluid vh-100 min-vh-100">
+                    <div class="card card-xl-stretch  flex-root h-1px  ">
+                        <iframe data-ignore-history="true" class="d-none horizontal-iframe"
+                            style="height: calc(100% - 0px);width: calc(100% - 0px);" id="rightIframe"
+                            src="about:blank"></iframe>
+                        <!--begin::Body-->
+                        <div class="card-body p-9 " id="Tickets_details_view">
+                            <div class="card mb-5 mb-xl-2 h-100" id="process_centerpanel">
+                                <div class="d-flex flex-column text-center h-100 justify-content-center">
+                                    <span
+                                        class="material-icons material-icons-style material-icons-5tx mx-auto text-gray-500">add_task</span>
+                                    <h3 class="fw-boldest">Select a task to load</h3>
+                                    <h6 class="fst-italic text-gray-400">Nothing is selected</h6>
+                                </div>
+                            </div>
+                            <!--end::Card body-->
+                        </div>
+
+                    </div>
+                    <!--end:::Col-->
+                </div>
+                <div id="ProcessFlow_New_Right_Last"
+                    class="col-xl-2 col-md-2 d-flex flex-column flex-column-fluid vh-100 min-vh-100 d-block d-none">
+                    <div class="card card-xl-stretch  flex-root h-1px  ">
+
+                        <!--begin::Body-->
+                        <div class="card-body h-300px ">
+                            <div class="row">
+                                <div class="col-xl-12 col-md-4 d-flex flex-column flex-column-fluid KPI_Section  ">
+                                    <div class="card ">
+                                        <div class="card-header collapsible cursor-pointer rotate "
+                                            data-bs-toggle="collapse" aria-expanded="false" data-bs-target="#KPI-1">
+                                            <h3 class="card-title">KPI Title</h3>
+                                            <div class="card-toolbar rotate-180">
+                                                <span class="material-icons material-icons-style material-icons-2">
+                                                    expand_circle_down
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="collapse show" style="" id="KPI-1">
+                                            <div class="card-body">
+                                                <figure>
+                                                    <img class="img-fluid"
+                                                        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAw1BMVEX////DIC8mMlL/PzTnLDX99fa/AAm/ABD24+WGi5kYJ0t7gJDr7/D/Oi3/LR7/09Hzo6bmGyfnJS/rYWbajZHBDSLr2Nfk1Nf/r6z/MiTtcnbnDx4AGUPR1tu1vMDa3d/Fys7g4+Sqsbf19/gAAAC/xcipsbaNkJbXhIn67e4KIEgVJUr/6ej/GwCdpqyOmaD2u73wj5LmAADsVlsAAjtyeIl1eH6Dh40mLz8WIjUAABwiLDxHTVdfY2w2PEkAACEEFyxohIB5AAAC50lEQVR4nO3dDU/TQByA8fMFUDgR8F28l3J0Q9ThCxbUbfr9P5XtTIS1S2+DHtdbnl8II8s/Wx+2NeFyG0IAAAAAAAAAAAAAAAAAAAAAAADAIxdCG2F0+ZOJfSxByCOhRZ7lQmth5f+rXSniUXWqbBPGmqowu/YgrlGhFkofiYE2prwAAAC4rY2T5w0n72MfVZc2Nl80bD6KfVRd2ti817BFYVIoTB+F6aMwffEKTSakFUJJ7+TtRCvMsoHULs/Lb2HvKFqh1IOssZoYQrRCa7QbKKvU4Oo6J2X3z9l4r0NZPjvl7CsszqXpozB9FArx+HS77nQn1uHewBKFH+7Xba9Z4TaF/UYhhf1HIYX9RyGF/Uchhf0XrdBpfTd7E6MV5tY2VoQjrZcGKrROGVvbIxxEvNehVcLkd7DPmzMNhf1HIYX9RyGF/df3wtcLfFzpFvpeuPum4dPTlW6h74VPHjTsUjiPQgpDo9CPQgpvYamdeykXqpGY7b5sXy9NuNCpXC6xXppwobJnUkvvLuiEC6tXoFTenexJFy6FQvH5bdOX6wPJF+4dHtTtP7s+kH7h/sO6AwoppLBTFFJIYYXCsCikkMIKhWFRSGHk/aVaZ1l5sa6Fwpp/66XZ1XU3WC/tb6FQxs32l7YvJyZcKAe5U9o5bVvHEi5cEoUUUlihMCwKKaSwQmFYFFJIYYXCsCikkMJK4ELP+4DTL/S9l3u3af49M3tfDxu+zRduNcx/rv7O+bu68+8dFl7tL62WS+teLjA3kL1aYG7CO2BUk1lwLPJGn5bL/3sCAABYI3rom7BFYdsn3EWRtU/kRaFWOKhOXU59nyY1OhLH7RM/rPnZPjEcyV+R/nmvKvSZZ2Q0nrQ/znLqvZuhXuLJEsbFdHzpGfE+hu539bdaq7JwOFrtyLpy7MTU8/QZTc7+tE9cjCeT9onhuPD9IgNx5RnC91l10nhfQdJzoilvwzcBAAAAAAAAAACAyP4CTKCchAxIOYAAAAAASUVORK5CYII=">
+                                                </figure>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card ">
+                                        <div class="card-header collapsible cursor-pointer rotate"
+                                            data-bs-toggle="collapse" aria-expanded="true" data-bs-target="#KPI-2">
+                                            <h3 class="card-title">KPI Title</h3>
+                                            <div class="card-toolbar rotate-180">
+                                                <span class="material-icons material-icons-style material-icons-2">
+                                                    expand_circle_down
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="collapse show" id="KPI-2">
+                                            <div class="card-body">
+                                                <figure>
+                                                    <img class="img-fluid"
+                                                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvyClOEGXUMdXM2DezoaC8GkYJ_Oo6BOSQAg&amp;usqp=CAU">
+                                                </figure>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--end::Container-->
+            </div>
+
+
+        </div>
+    </div>
+
+    <!--end::Content-->
+    <div id="waitDiv" class="page-loader rounded-2 bg-radial-gradient">
+        <div class="loader-box-wrapper d-flex bg-white p-20 shadow rounded">
+            <span class="loader"></span>
+        </div>
+    </div>
+
+    <div class="modal fade" id="filterModal">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <!-- Modal header -->
+                <div class="modal-header" style="padding: 1.75rem !important">
+                    <h4 class="modal-title">Filters</h4>
+                    <button type="button" title="Close"
+                        class=" btn btn-icon btn-danger btn-active-primary shadow-sm tb-btn btn-sm"
+                        onclick="axProcessObj.filterModelClose()">
+                        <span class="material-icons material-icons-style material-icons-2">close</span>
+                    </button>
+                </div>
+
+                <!-- Modal body -->
+                <div class="modal-body" style="max-height: 65vh">
+                    <div class="container" id="dvModalFilter"></div>
+                </div>
+
+                <!-- Modal footer -->
+                <div class="modal-footer d-flex flex-row justify-content-between w-100">
+                    <div class="filter_group_checkbox_input_wrapper mt-2 d-flex align-items-center gap-5"
+                        data-type="checkbox" style="flex-basis: 75%;">
+                        <!-- <div class="filter_group_checkbox_wrapper d-inline-flex gap-2">
+                            <label for="filter_group_checkbox" style="flex-basis: max-content;"> Save
+                                filters with a custom name ?</label>
+                            <input type="checkbox" name="filter_group_checkbox" id="filterGroupCheckbox"
+                                style="flex-basis: fit-content;"
+                                onchange="$('#filterGroupName').prop('disabled', !this.checked);">
+                        </div> 
+
+                        <input type="text" name="filterGroupName" id="filterGroupName" class="col-md-7"
+                            disabled>-->
+                    </div>
+                    <div class="action_buttons d-inline-flex gap-2">
+                        <!-- <button type="button" onclick="resetFilters()"
+                            class="btn btn-white btn-sm">Reset</button> -->
+                        <button type="button" onclick="axProcessObj.handleApply()"
+                            class="btn btn-primary">Apply</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="../UI/axpertUI/plugins.bundle.js"></script>
+    <script type="text/javascript" src="../UI/axpertUI/scripts.bundle.js"></script>
+    <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../Js/alerts.min.js?v=32"></script>
+    <script type="text/javascript" src="../Js/handlebars.min.js?v=2"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=158"></script>
+    <script type="text/javascript" src="../Js/xmlToJson.min.js"></script>
+    <script type="text/javascript" src="../Js/AxProcessFlowCommon.min.js?v=1"></script>
+    <script type="text/javascript" src="../Js/AxProcessFlow.min.js?v=17"></script>
+    <script type="text/javascript">
+        var _processName = 'AxProcessFlow';
+    </script>
+    <script>
+        $(document).ready(function () {
+            $("button.rotate").click(function () {
+                $(".task-activity-container").toggle();
+            });
+
+            var showChar = 450; // How many characters are shown by default
+            var ellipsestext = "...";
+            var moretext = "Show more >";
+            var lesstext = "Show less";
+
+            $('.more').each(function () {
+                var content = $(this).html();
+                if (content.length > showChar) {
+                    var c = content.substr(0, showChar);
+                    var h = content.substr(showChar, content.length - showChar);
+                    var html = c + '<span class="moreellipses">' + ellipsestext +
+                        '&nbsp;</span><span class="morecontent"><span>' + h +
+                        '</span>&nbsp;&nbsp;<a href="" class="morelink">' + moretext + '</a></span>';
+                    $(this).html(html);
+                }
+            });
+
+            $(".morelink").click(function () {
+                if ($(this).hasClass("less")) {
+                    $(this).removeClass("less");
+                    $(this).html(moretext);
+                } else {
+                    $(this).addClass("less");
+                    $(this).html(lesstext);
+                }
+                $(this).parent().prev().toggle();
+                $(this).prev().toggle();
+                return false;
+            });
+        });
+    </script>
+</body>
+
+</html>

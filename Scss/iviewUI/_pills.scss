@@ -1,0 +1,263 @@
+//* pills ==================================== *//
+#ivirMainChartWrapper{
+    // height: calc(#{$ivirMainChartWrapperMaximumHeight} - #{$ivirMainChartWrapperCalculatedHeight});
+    @include calc(height,$ivirMainChartWrapperCalculatedHeight);
+    .chartWrapper{
+        body:not(.requestJsonOldUi).requestJSON &{
+            @include calc(min-height, $ivirMainChartWrapperRequestJsonMinHeight);
+            overflow-x: $ivirMainChartWrapperRequestJsonOverflow;
+        }
+    }
+    body:not(.requestJsonOldUi).requestJSON &{
+        height: $ivirMainChartWrapperRequestJsonHeight;
+    }
+    display: none;
+    #ivirChartPills{
+        @include textCenter;
+    }
+}
+  div{
+      &.ivirChartPills{
+          @include textCenter;
+      }
+      &#ivirChartPills,#ivirFilteredAccordion{
+        //margin: $pillsFilterChartMargin 0;
+        .chartPills{
+            display:$chartPillsDisplay;
+            background: $pillsChartBackgroundColor;
+            margin-left: $pillsChartMarginLeft;
+            padding: $pillsChartPadding;
+            @include border-radius(17px);
+            .materialCheckBox{
+                [type=checkbox]:checked,[type=checkbox]:not(:checked){
+                    @include pillsMaterialCheckBox;
+                }
+                label{
+                    @include pillsCheckboxLabel;
+                }
+                [type=checkbox]+label{
+                    @include pillsCheckboxlabel;
+                    &:before{
+                        @include pillsCheckLabelBefore;
+                    }
+                }
+                [type=checkbox]:not(.filled-in)+label{
+                    &:after{
+                        @include pillsCheckLabelBeforeAfer;
+                    }
+                }
+                [type=checkbox]{
+                    &.filled-in{
+                        &:checked+label{
+                                &:before{
+                                    @include pillsFilledInBefore;
+                                }
+                                &:after{
+                                    @include pillsFilledInAfter;
+                                }
+                        }
+                    }
+                    &.filled-in+label{
+                      &:after{
+                        content: '';
+                        background: none;
+                       // @include pillsFilledInLabelBeforeAfterContent;
+                      }
+                    }
+                }
+            }
+        }
+        span{
+            &.pillMainWrapper{
+                position: $pillMainWrapperPosition;
+                @include textLeft;
+                display: $pillMainWrapperDisplay;
+                //@include shadow;
+                button{
+                    border:0px;
+                    //background: 0px;
+                    //background: rgb(255, 208, 208);
+                    @include border-radius(10px);
+                    padding: $pillsMainWrapperButtonPadding;
+                    margin-left: $pillsMainWrapperButtonMarginLeft;
+                    position: $pillsMainWrapperButtonPosition;
+                    top: $pillsMainWrapperButtonTopGap;
+                    span{
+                        position: relative;
+                        top: 2px;
+                     }
+                    &:hover,&:focus{
+                        outline: none;
+                        text-decoration: none;
+                    }
+                }
+                a{
+                   color: $applicationTextColor;
+                    &:hover{
+                        outline: none;
+                        text-decoration: none;
+                    }
+                }
+                span{
+                    &.ivirCndtnIcon{
+                        @include ivirCndtnIcon;
+                    }
+                }
+            }
+        }
+      }
+  }
+  #rowsTxtCountNew{
+    #ivirAllCndtnPillsDiv ,#ivirChartPillsDiv{
+        display: $pillsIvirAllCndtnPillsDivDisplay;
+        .requestJSON:not(.requestJsonOldUi).isMobile &{
+            position: $pillsIvirAllCndtnPillsDivRequestJSONMobilePosition;
+            top: $pillsIvirAllCndtnPillsDivRequestJSONMobileTop;
+        }
+        a {
+            span{
+              @include pillsIvirBottomSpan;
+            }
+            &:focus{
+                outline: none;
+                text-decoration: none;
+            }
+            &:hover{
+              color: $applicationTextColor;
+            }
+            &:active{
+                box-shadow: none;
+            }
+            &#lnkallCndtnPill{
+                &.btn{
+                    padding: $iviewLnkallCndtnPillButtonPadding;
+                }
+                .requestJSON:not(.requestJsonOldUi).isMobile &{
+                    padding: $pillsIvirAllCndtnPillsButtonRequestJSONMobilePadding;
+                }
+                
+            }
+            &#lnkChartPill{
+                &.btn{
+                    padding:$iviewLnkallCndtnPillButtonPadding;
+                }
+            }
+        }
+        div[id^='ivir']{
+            position: $pillsIvirDivPosition;
+            margin-bottom: $pillsIvirDivMarginBottom;
+            background: $pillsIvirDivBoxBackgroundColor;
+            padding: $pillsIvirDivPadding;
+            @include border-radius(15px);
+            .materialCheckBox{ 
+              label {
+                  @include pillsIvirBottomLabel;
+                  &:after {
+                      @include pillsIvirBottomLabelAfter;
+                    }
+                }
+                input[type="checkbox"]{
+                  visibility: hidden;
+                  &:checked + label{
+                      background-color: $applicationBackgroundColor;
+                      border-color: $applicationBorderColor;
+                      &:after{
+                          opacity: 1;
+                      }
+                  }
+                }
+            }
+            span{
+                &.pillMainWrapper{
+                   // margin-left: $pillsIvirPillsMainWrapperMarginLeft;
+                    button{
+                      @include pillsIvirBottomButton;
+                      &:hover,&:focus{
+                          outline: none;
+                          text-decoration: none;
+                      }
+                    }
+                    a{
+                      color: $applicationTextColor;
+                      margin-left: $pillsIvirPillsMainWrapperLinkMarginLeft;
+                      color: $pillsMainTextColor;
+                    }
+                    span{
+                      &.ivirCndtnIcon{
+                          position: $pillsIvirPillsMainWrapperSpanIvirCndtnIconPosition;
+                          top: $pillsIvirPillsMainWrapperSpanIvirCndtnIconTopGap;
+                          color: $applicationIconColor;
+                        }
+                    }
+                }
+                
+            }
+        }
+    }
+}
+  #ivirChartWrapper{
+      .chartWrapper{
+          .ivirNoDataTag{
+            @include textCenter;
+            font-size: $applicationFontSize;
+          }
+      }
+  }
+  #ivirFilteredAccordion{
+    #ivirPillsWrapper{
+        // #ivirCndtnToggleBtn{
+        //     margin-right: $applicationActionFilterMargin;
+        // }
+        margin-bottom: 5px;
+        span{
+            &:hover{
+                outline: none;
+                text-decoration: none;
+            }
+            a{
+                color: $applicationTextColor;
+            }
+        }
+        #ivirAllCndtns{
+            display: $ivirAllCndtnsDisplay;
+            margin-left: $applicationActionFilterMargin;
+            span{
+                &.ivirCndtnIcon{
+                  margin-right: $applicationActionFilterMargin;
+                }
+            }
+            .pillMainWrapper{ 
+               // @include shadow;
+                margin-right: $applicationActionFilterMargin;
+                display: $ivirAllCndtnPillsDisplay;
+                background: $pillsMainWrapperBackgroundColor;
+                margin-left: $pillsMainWrapperMarginLeft;
+                padding: $pillsMainWrapperPadding;
+                @include border-radius(17px);
+            }
+            #ivirfilterCndtnPill,#ivirgroupCndtnPill,#ivirhighlightCndtnPill{
+                span{
+                    &.ivirCndtnName{
+                        span{
+                            &.ivirCndtnLabel{
+                                color: $applicationTextColor;
+                                background:$applicationBackgroundColor;
+                                border: 1px solid $applicationBorderColor;
+                                border-radius: $pillsIvirCndtnLabelBorderRadius;
+                                position: $pillsIvirCndtnLabelPosition;
+                                top: $pillsIvirCndtnLabelTopGap;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        #ivirAllCndtnPills{
+            @include pillsMain;
+        }
+    }
+  }
+  #dvPills{
+      margin-left: $dvPillsMarginLeft;
+  }
+//* pills ==================================== *//

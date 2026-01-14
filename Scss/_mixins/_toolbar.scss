@@ -1,0 +1,410 @@
+//* page toolbar for iview and tstruct here is mixin for tollbar ============== *// 
+@mixin iviewToolbar {
+    margin-top: $toolbarMarginTop;
+    .modernButtonOptions &{
+        margin: $toolbarModernIvewOptionMargin;
+    }
+    @include floatLeft;
+    @media (max-width: $breakTabDevice){
+        display: inline-block;
+        // white-space: nowrap;
+        // overflow-x: auto;
+        // width: calc(100vw - 0px);
+        // //margin: 5px;
+        // /*Temporary Solution for dropdown hidden issue in toolbar in mobile resolution -- refer GIS000105*/
+        // margin-bottom: 35px;
+    }
+	.btextDir-rtl.requestJSON:not(.requestJsonOldUi).isMobile &{
+		@include floatLeft;
+	}
+    #icons{
+       ul{
+        box-shadow: none;
+        //border: none;
+           li{
+               .dropDownButton{
+                   position: $pageToolbarListDropDownButtonPosition;
+               }
+               ul{
+                   li{
+                       .btextDir-rtl &{
+                           @include textRight;
+                       }
+                   }
+               }
+               a{
+                border: 1px solid $pageToolbarListAncorBorderColor;
+                @include border-radius($pageToolbarListAncorBorderRadius);
+               }
+           }
+           @include pageToolbarList;
+       }
+       @include pageToolbarDropdownList;
+    }
+}
+@mixin tstructToolbar {
+    margin:$toolbarTstructMargin;
+    // @include floatLeft;
+    // @media (max-width: $breakTabDevice){
+    .isMobile &{
+        display: inline-block;
+        // white-space: nowrap;
+        // overflow-x: auto;
+        // width: calc(100vw - 0px);
+        // //margin: 5px;
+        // /*Temporary Solution for dropdown hidden issue in toolbar in mobile resolution -- refer GIS000105*/
+        // margin-bottom: 35px;
+    }
+    // .btextDir-rtl &{
+    //     @include floatRight;
+    // }
+    #icons{
+       ul{
+           .btextDir-rtl &{
+               @include textRight;
+           }
+        #tstToolBarBtn{
+            display: inline;
+            #tstIcons{
+                display: inline;
+            }
+        }
+           @include pageToolbarList;
+           li{
+            .dropdown-menu{
+                li{
+                    display: block;
+                    a{
+                        background: $applicationBackgroundColor;
+                        color: $applicationTextColor;
+                        box-shadow:none;
+                        padding: 4px 10px 10px;
+                        &:hover{
+                            background: $coldBtnBackgroundHover;
+                        }
+                    }
+                    
+                }
+            }
+            &.dwbBtn{
+                a{
+                    padding: 5px 18px 5px;
+                }
+            }
+            a{
+                padding:6px 18px 5px;
+                border: 1px solid $pageToolbarListAncorBorderColor;
+                @include border-radius($pageToolbarListAncorBorderRadius);
+                &.material-icons{
+                    color: #999;
+                    font-size: 17px;
+                    position: relative;
+                    top: 6px;
+                    right: 3px;
+                }
+            }
+            button{
+              padding: 6px 15px 5px;
+            }
+            &.dropdown-submenu{
+                ul{
+                    &.dropdown-menu{
+                        position: absolute;
+                        left: 158px;
+                        top: 0px;
+                        width: 175px;
+                    }
+                }
+            }
+           }
+       }
+       @include pageToolbarDropdownList;
+    }
+}
+@mixin pageToolbarList {
+    &.dropDownButton__list{
+        .btextDir-rtl &{
+            right: $toolbar_notDropDownButton__list_right_rtl;
+            left: $toolbar_notDropDownButton__list_left_rtl;
+        }
+       }
+    @media (max-width: $breakTabDevice){
+      /*Temporary Solution for dropdown hidden issue in toolbar in mobile resolution -- refer GIS000105*/
+    //   position: $pageToolbarIconsUlPositionFixed;
+    //   z-index: $pageToolbarIconsUlZIndex;
+    }
+    @include listStyleNone;
+    @include listStylePadding;
+    @include textLeft;
+    li{
+        &:not(.dropDownButton__item){
+        display: inline-block;
+        }
+        &.liTaskItems{
+            .requestJsonOldUi &{
+                display: block;
+            }
+        }
+        &:not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.listItem):not(.dropdown-submenu){
+           @include listStyleNone;
+           //@include shadow;
+           //border: 1px solid #ccc;
+           border-radius: 3px;
+           color: $coldbtntext;
+           background-color: $coldbtnBackground;
+           @include toolbarListGap;
+           height: 33px;
+           &:focus{
+            outline: none;
+            text-decoration: none;
+            @include coldHotBtnFocus;
+            }
+            &:hover{
+               // @include coldHotBtnHover
+            } 
+        
+        }
+        &#dvRefreshFromLoad{
+            box-shadow: none;
+            margin: 0;
+            border: 1px solid #ccc;
+            span{
+                button{
+                    color: $applicationIconColor;
+                    &:hover{
+                        box-shadow: none;
+                    }
+                }
+            }
+        }
+        #uldropelements .actionWrapper{
+            box-shadow: none;
+            margin: 0;
+        }
+        &#dvRefreshFromLoad{
+            span{
+                button{
+                    &:focus{
+                       box-shadow: none;
+                    }
+                }
+            }
+        }
+        button{
+            color: $coldbtntext;
+            background-color: $applicationBackgroundColor;
+            @include toolbarBtnNormal;
+            @include btnRadius;
+            &:focus{
+                outline: none;
+                text-decoration: none;
+                @include coldHotBtnFocus;
+                }
+                &:hover{
+                   // @include coldHotBtnHover
+                } 
+           }
+           a{
+            color: $coldbtntext;
+            display: block;
+            text-decoration: none;
+            //@include listPadding;
+            padding: 5px 13px;
+            cursor: pointer;
+            i{
+				&.material-icons{
+                    color: #999;
+                    font-size: 17px;
+                    position: relative;
+                    top: 3px;
+				}
+            }
+            .tbIcon{
+                width: 17px;
+                height: 17px;
+                margin: 4px 0px 5px 0px;
+                position: relative;
+                left: -2px;
+                top: 1px;
+            }
+            &:focus{
+                outline: none;
+                text-decoration: none;
+                // @include coldHotBtnFocus;
+                }
+                // &:hover{
+                //     @include coldHotBtnHover
+                // } 
+            span:not(#lblfilters):not(.icon-arrows-down){
+                //top: $pageToolbarListlblfiltersTopGap;
+                // position: $pageToolbarListlblfiltersPosition;
+                // top: 2px;
+                // left: 2px;
+                .btextDir-rtl &{
+                    right: 2px;
+                    left: auto;
+                }
+            }
+            span{
+                &.icon-arrows-down{
+                    position: relative;
+                    left:3px;
+                    top: 4px;
+                }
+            }
+           }
+           
+           &.gropuedBtn{
+               button{
+                   &:after{
+                       display: none;
+                   }
+                   span{
+                       &:before{
+                           position: $pageToolbargropuedBtnBeforePosition;
+                           top:$pageToolbargropuedBtnBeforeTopGap;
+                       }
+                   }
+               }
+           }
+           &:focus{
+            text-decoration: none;
+            box-shadow: 0px 0px 2px $applicationPageToolbarHoverShadow;
+        }
+        &#myFiltersLi{
+            a{
+                span{
+                    &:before{
+                        display: none;
+                    }
+                }
+            }
+        }
+        &:not(#ivirCButtonsWrapper):hover{
+            background-color:$coldBtnBackgroundHover;
+        }
+        #dvSelectedFilters,#ivirCButtonsWrapper{
+            display: none;
+        }
+        &.lnkNext,&.lnkPrev{
+            position: $pageToolbarLnkNextLnkPrevPosition;
+            top:$pageToolbargropuedBtnBeforeTopGap;
+            a{
+               // margin-top: 4px;
+                padding: 9px 18px 8px;
+            }
+        }
+        &#ivirCButtonsWrapper{
+            button{
+                @include shadow;
+                @include toolbarListGap;
+            }
+        }
+        &.open{
+            .dropdown-menu {
+                // max-height: $pageToolbarDropdownMaxHight;
+                // height: auto;
+                // overflow-y: auto;
+                //border: 1px solid $applicationBorderColor;
+                //@include shadow;
+            }
+        }
+        &.gropuedBtn{
+            .dropdown{
+                .actionsBtn{
+                    #uldropelements{
+                        @include pageToolbarDropelements;
+                    }
+                }
+            }
+            #uldropelements{
+                li{
+                    &.actionWrapper{
+                        box-shadow: none;
+                        margin: 0px;
+                    }
+                }
+            }
+        }
+       }
+       .lnkPrev,.lnkNext{
+           padding: 0px 0px $pageToolbarListViewNextPrevBtnPaddingBottom;
+        }
+}
+@mixin  pageToolbarDropdownList{
+    li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.actionWrapper):not(.listItem):not(.dropdown-submenu){
+        @include listStyleNone;
+       //@include shadow;
+       //border: 1px solid #ccc;
+       border-radius: 3px;
+         color: $coldbtntext;
+         background-color: $coldbtnBackground;
+         display: $applicationDisplayInline;
+         height: 33px;
+         &:focus{
+         outline: none;
+         text-decoration: none;
+         @include coldHotBtnFocus;
+         }
+         &:hover{
+            // @include coldHotBtnHover
+         }
+         a{
+             color: $coldbtntext;
+             display: block;
+             text-decoration: none;
+             //@include listPadding;
+             //padding:5px 18px 3px;
+             cursor: pointer;
+             border: 1px solid #ccc;
+             border-radius: 3px;
+             i{
+				&.material-icons{
+                    color: #999;
+                    font-size: 17px;
+                    position: relative;
+                    top: 4px;
+				}
+            }
+            .tbIcon{
+                width: 17px;
+                height: 17px;
+                margin: 4px 0px 5px 0px;
+            }
+         }
+    }
+}
+@mixin filtertooltip{
+    position: $filterToolTipPosition;
+    z-index: $filtertooltipZIndex;
+    font-size: $applicationBtnFontSize;
+    top: $filterToolTipTopGap;
+    left: 0px;
+    padding: $filterToolTipPadding;
+}
+@mixin designModeListStyle{
+    @include textCenter;
+    background: $designModeToolbarBackgroundcolor;
+    width: $applicationMaximumWidth;
+    line-height: $designModeToolbarLineHeight;
+    display: $applicationDisplayInline;
+    padding: $applicationDesignModeTollbarPadding;
+    border-radius: $designModeToolbarBorderRadius;
+    border:1px solid $applicationBorderColor;
+}
+@mixin designStatus{
+    padding: $designStatusPadding;
+    background: $applicationColor;
+    border-radius: $applicationCircleBorderRadius;
+    color: $applicationBackgroundColor;
+}
+@mixin designStatusIcon{
+    font-size: $designStatusIconFontSize;
+    position: $designStatusIconPosition;
+    top: $designStatusIconTopGap;
+}
+@mixin toolbarSearchbarRtl {
+    left: 0px;
+    right: auto;
+}
+//* page toolbar for iview and tstruct here is mixin for tollbar ============== *//

@@ -1,0 +1,11 @@
+//* List of Custom Variables for Forms Module (Axpert's Tstruct) ==================================== *//
+//* Forms Module's Icon Color  ==================================== */
+$moduleIconColor: lighten($applicationTextColor,33.5%); //#555
+//* Forms Module's Labels or Headings color  ==================================== */
+$moduleLabelsOrHeadingsColor: lighten($applicationTextColor,6.5%);
+//* Forms Module's Input's Text Or Value Color  ==================================== */
+$moduleTextOrValueColor: lighten($applicationTextColor,0.5%);
+//* Forms Module's Labels or Headings Font Size  ==================================== */
+$moduleLabelsOrHeadingsFontSize: 15px;
+//* Forms Module's Labels or Headings Font Weight  ==================================== */
+$moduleLabelsOrHeadingsFontWeight: 400;

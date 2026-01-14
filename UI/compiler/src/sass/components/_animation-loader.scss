@@ -1,0 +1,34 @@
+// animation loading
+.animationLoading {
+
+    @include border-radius($border-radius);
+    border: 1px solid $gray-200;
+    display: block;
+    position: fixed;
+    top: 41px;
+    height: 41px;
+    z-index: 0;
+
+    &.animationLoadingHide {
+        display: none;
+    }
+
+    th,
+    td {
+        height: 60px;
+        width: 100vw;
+        border: 10px solid $white;
+        position: relative;
+        @include border-radius($border-radius);
+
+        -webkit-animation: placeHolderSwept 1s infinite linear forwards;
+        -moz-animation: placeHolderSwept 1s infinite linear forwards;
+        -o-animation: placeHolderSwept 1s infinite linear forwards;
+        animation: placeHolderSwept 1s infinite linear forwards;
+
+        background: $gray-200;
+        background-image: linear-gradient(to right, $gray-200 0%, $gray-100 20%, $gray-200 40%, $gray-200 100%);
+        background-repeat: no-repeat;
+    }
+
+}

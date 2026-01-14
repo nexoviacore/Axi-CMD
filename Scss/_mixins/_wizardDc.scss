@@ -1,0 +1,212 @@
+//* wizard ==================================== *//
+@mixin wizardDcPadding{
+    padding: $wizardDcPadding;
+}
+@mixin wizardDcClassicPadding{
+    padding: $wizardDcClassicPadding;
+}
+@mixin wizardDcModernBackground{
+    background: $applicationColor;
+    background: -moz-linear-gradient(left,$applicationColor 0,$applicationBackgroundColor 120%);
+    background: -webkit-linear-gradient(left,$applicationColor 0,$applicationBackgroundColor 120%);
+    background: linear-gradient(to right,$applicationColor 0,$applicationBackgroundColor 120%);
+}
+@mixin wizardDcModernAnimation{
+    -webkit-animation-duration: 1s;
+    animation-duration: 1s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+    -webkit-animation-name: bounce;
+    animation-name: bounce;
+    -webkit-transform-origin: center bottom;
+    transform-origin: center bottom;
+}
+@mixin wizardDcModernArrow{
+    width: 0;
+    height: 0;
+    position: $wizardDcModernArrowPosition;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid $applicationColor;
+    top: $wizardDcModernArrowMarginTop;
+    visibility: hidden;
+}
+@mixin wizardDcClassicCircle{
+    display: inline-block;
+    border: 3px solid $applicationBorderColor;
+    background-color: $applicationBackgroundColor;
+    border-radius: $applicationCircleBorderRadius;
+    height: $wizardDcClassicCircleHeight;
+    width: $wizardDcClassicCircleWidth;
+    position: $wizardDcClassicCirclePosition;
+    top: $wizardDcClassicCircleTopGap;
+    left: $wizardDcClassicCircleLeftGap;
+    margin-left: $wizardDcClassicCircleLeftMargin;
+    cursor: pointer;
+}
+@mixin wizardDcClassicProgressBar{
+    content: '';
+    display: block;
+    position: $wizardDcClassicProgressBarPosition;
+    left: $wizardDcClassicCircleLeftGap;
+    top: $wizardDcClassicProgressBarTopGap;
+    background-color: $wizardProressBarSecondColor;
+    height: $wizardDcClassicProgressBarHeight;
+    width: $applicationMaximumWidth;
+    
+}
+@mixin wizardDcClassicProgressBarRtl {
+    right: $wizardDcClassicProgressBarRtlRightGap;
+    left: auto;
+}
+@mixin wizardDcClassicBackground{
+    background: $applicationColor;
+    background: -moz-linear-gradient(left,$applicationColor 0,$wizardProressBarSecondColor 100%);
+    background: -webkit-linear-gradient(left,$applicationColor 0,$wizardProressBarSecondColor 100%);
+    background: linear-gradient(to right,$applicationColor 0,$wizardProressBarSecondColor 100%);
+}
+@mixin wizardDcClassicBackgroundRtl{
+    background: $applicationColor;
+    background: -moz-linear-gradient(right,$applicationColor 0,$wizardProressBarSecondColor 100%);
+    background: -webkit-linear-gradient(right,$applicationColor 0,$wizardProressBarSecondColor 100%);
+    background: linear-gradient(to left,$applicationColor 0,$wizardProressBarSecondColor 100%);
+}
+@mixin wizardDcClassicCompleteState{
+    font-size: $appliactionCompleteStateFontSize;
+    color: $applicationBackgroundColor;
+    position: $wizardDcClassicCompleteStatePosition;
+    top: $wizardDcClassicCircleArrowTopGap;
+    content: "\e006";
+    font-family: linea-arrows-10;
+}
+@mixin wizardModalActiveIocn {
+        font-family: Linearicons;
+        content: "\e934";
+        color: #fff;
+        position: relative;
+        top: 2px;
+}
+@mixin wizardBodyContent{
+    height: calc(#{$applicationWizardMaximumHieght} - #{$applicationWizardBodyContent});
+    overflow-y: auto;
+}
+@mixin wizardProgress {
+    .wizard-progress{
+        @include tabProgess;
+        .step{
+             @include tabStep;
+            a{
+                color: $applicationTextColor;
+                &:hover{
+                    outline: none;
+                    text-decoration: none;
+                }
+            }
+            .node{
+                @include wizardDcClassicCircle;
+            }
+            &.in-progress:not(:last-child):not(.flat){
+              &:before{
+                @include wizardDcClassicBackground;
+              }
+            }
+            &:not(:last-child):not(.flat){
+                &:before{
+                    @include wizardDcClassicProgressBar;
+                }
+            }
+            &.in-progress{
+                .node{
+                    border-color: $applicationColor;                    
+                    &:before {
+                        font-size: 20px;
+                        color: $applicationColor;                    
+                        position: relative;
+                        top: -2px;
+                        content: "\e006";
+                        font-family: 'linea-arrows-10';
+                    }                    
+                }
+            }
+            &.complete:not(.flat){
+              .node:not(.flat){
+                  border-color: $applicationColor;
+                  background: $applicationColor;
+                  &:before{
+                    @include wizardDcClassicCompleteState;
+                  }
+              }
+            //   .node[title='Chart Type'],.node[title='Source'],.node[title='Attributes'],.node[title='Authorization']:not(.flat){
+            //     border-color: $applicationColor;
+            //     background: $applicationColor;
+            //     &:before{
+            //       @include wizardModalActiveIocn;
+            //     }
+            // }
+              &:before{
+                background: $applicationColor;
+              }
+            }
+        }
+    }
+}
+
+@mixin wizardProgressForModalWizard {
+    .wizard-progress{
+        @include tabProgess;
+        .step{
+             @include tabStep;
+            a{
+                color: $applicationTextColor;
+                &:hover{
+                    outline: none;
+                    text-decoration: none;
+                }
+            }
+            .node{
+                @include wizardDcClassicCircle;
+            }
+            &.in-progress:not(:last-child):not(.flat){
+              &:before{
+                @include wizardDcClassicBackground;
+                .btextDir-rtl &{
+                    @include wizardDcClassicBackgroundRtl;
+                }
+              }
+            }
+            &:not(:last-child):not(.flat){
+                &:before{
+                    @include wizardDcClassicProgressBar;
+                    .btextDir-rtl &{
+                        @include wizardDcClassicProgressBarRtl;
+                    }
+                }
+            }
+            &.in-progress{
+                .node{
+                    border-color:$applicationColor;
+                }
+            }
+            &.complete:not(.flat){
+              .node:not(.flat){
+                  border-color: $applicationColor;
+                  background: $applicationColor;
+                  &:before{
+                    @include wizardModalActiveIocn;
+                  }
+              }
+            //   .node[title='Chart Type'],.node[title='Source'],.node[title='Attributes'],.node[title='Authorization']:not(.flat){
+            //     border-color: $applicationColor;
+            //     background: $applicationColor;
+            //     &:before{
+            //       @include wizardModalActiveIocn;
+            //     }
+            // }
+              &:before{
+                background: $applicationColor;
+              }
+            }
+        }
+    }
+}
+//* wizard ==================================== *//

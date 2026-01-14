@@ -1,0 +1,465 @@
+﻿#lblTime{
+    position: fixed;
+    background: white;
+}
+
+#breadcrumb-panel {
+    margin-top: 1px;
+    background: #ffffff;
+    height: 40px;
+    border-bottom: 1px solid #cccccc;
+}
+
+#breadcrumb span {
+    font-size: 12px;
+}
+
+#breadcrumb .pd5 {
+    padding-top: 0px !important;
+}
+
+.icon-services {
+    padding-left: 0px !important;
+}
+
+#breadcrumb h3 {
+    color: #fff !important;
+    font-size: 18px !important;
+    font-weight: 500;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    top:6px !important;
+}
+
+.icon-services.left.bcrumb.pd5 {
+    margin: 0px !important;
+    line-height: 1.1;
+}
+
+#leftPanel h3 {
+    background: #565F67 !important;
+    padding-top: 3px !important;
+}
+
+div#dvToolbar p > span > img {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+.listViewDc div#contentPanelGrid {
+    width: 100%;
+    float: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+div#backforwrdbuttons {
+    background: transparent !important;
+}
+
+#backgroundDiv {
+    position: fixed;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    background-color: #d3d3d3;
+    filter: alpha(opacity=50);
+    z-index: 999999;
+}
+
+.iviewTableWrapper {
+    height: 70vh;
+    height: -webkit-calc(100vh - 68px);
+    height: -moz-calc(100vh - 68px);
+    height: calc(100vh - 68px);
+}
+
+#iviewFrame.hideDatatableFooter .dataTables_scrollFoot {
+    display: none !important;
+}
+
+.animationLoading {
+    border: 1px solid;
+    border-color: #e5e6e9;
+    border-radius: 3px;
+    display: block;
+    position: fixed;
+    /*top: 73px;*/
+    top: 41px;
+    height: 100vh;
+    z-index: 3;
+}
+
+
+.animationLoading th,
+.animationLoading td {
+    /*position: relative;*/
+    background-color: #ddd;
+    height: 60px;
+    /*animation-name: placeHolderSwept;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;*/
+    width: 100vw;
+    border: 10px solid white;
+    position: relative;
+    -webkit-animation: placeHolderSwept 1s infinite linear forwards;
+    -moz-animation: placeHolderSwept 1s infinite linear forwards;
+    -o-animation: placeHolderSwept 1s infinite linear forwards;
+    animation: placeHolderSwept 1s infinite linear forwards;
+    background: #ebebec;
+    background-image: linear-gradient(to right, #ebebec 0%, #e0e0e2 20%, #ebebec 40%, #ebebec 100%);
+    background-repeat: no-repeat;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+
+.animationLoading th {
+    /*animation-name: placeHolderSwept;*/
+}
+
+th.pivotHeaderStyle{
+    text-align: center;
+}
+
+@-webkit-keyframes placeHolderSwept {
+    0% {
+        background-position: -400px 0;
+    }
+
+    100% {
+        background-position: 400px 0;
+    }
+}
+
+@-moz-keyframes placeHolderSwept {
+    0% {
+        background-position: -400px 0;
+    }
+
+    100% {
+        background-position: 400px 0;
+    }
+}
+
+@-o-keyframes placeHolderSwept {
+    0% {
+        background-position: -400px 0;
+    }
+
+    100% {
+        background-position: 400px 0;
+    }
+}
+
+@keyframes placeHolderSwept {
+    0% {
+        background-position: -400px 0;
+    }
+
+    100% {
+        background-position: 400px 0;
+    }
+}
+
+
+#noRecccord {
+    height: 200px;
+    height: -webkit-calc(100vh - 140px);
+    height: -moz-calc(100vh - 140px);
+    height: calc(100vh - 140px);
+    display: table-cell;
+    vertical-align: middle;
+    width: 100vw;
+    font-size: 20px;
+    color: #646464;
+    text-align: center;
+}
+
+.listViewDc {
+    border: 0px solid !important;
+}
+
+#ivContainer li.liTaskItems {
+    width: 100% !important;
+}
+
+#ivContainer a.TaskItems {
+    width: 100% !important;
+    margin: 0px !important;
+    border: none !important;
+    padding-left: 10px !important;
+    box-shadow: 0px 0px #fff !important;
+    border-radius: 0px !important;
+}
+
+#ivContainer a#tasks:focus {
+    outline: 5px auto -webkit-focus-ring-color;
+}
+
+#ivInSearch {
+    position: absolute;
+    top: 8px;
+    /*right: 0px;*/
+    right: 20px;
+    /*width: 62px;*/
+    width: 100%;
+}
+
+.searchBox {
+    position: relative;
+    top: -3px;
+    display: inline-block;
+    width: 100%;
+}
+
+.searchBoxChildContainer {
+    vertical-align: middle;
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+}
+  .btextDir-rtl  .searchBoxChildContainer{
+
+          margin-left: 20px;
+  }
+    .searchBoxChildContainer input#ivInSearchInput {
+        float: right;
+        width: 100px;
+        height: 32px;
+        background: #ffffff;
+        border: 1px solid #607d8b;
+        padding-top: 13px;
+        padding-bottom: 13px;
+        font-size: 10pt;
+        /*float: left;*/
+        color: #262626;
+        padding-left: 10px;
+        padding-right: 20px;
+        -webkit-border-radius: 50px;
+        -moz-border-radius: 50px;
+        border-radius: 50px;
+        /*color: #fff;*/
+        -webkit-transition: width .55s ease;
+        -moz-transition: width .55s ease;
+        -ms-transition: width .55s ease;
+        -o-transition: width .55s ease;
+        transition: width .55s ease;
+        margin-right: 15px;
+    }
+  
+    .searchBoxChildContainer .icon {
+        /*position: relative;*/
+        position: absolute;
+        top: 4px;
+        right: 25px;
+        margin-left: 10px;
+        /*margin-top: 17px;*/
+        z-index: 1;
+        /*color: #4f5b66;*/
+        /*color: white;*/
+        color: #607d8b !important;
+        display: inherit;
+        font-size: large;
+    }
+
+    .searchBoxChildContainer .icon2 {
+        position: relative;
+        top: 8px;
+        right: 37px;
+        visibility: hidden;
+        margin-left: 17px;
+        /*margin-top: 17px;*/
+        z-index: 1;
+        color: #4f5b66;
+        cursor: pointer;
+        padding: 2px;
+    }
+
+    .searchBoxChildContainer input#ivInSearchInput:hover + .icon2, .searchBoxChildContainer input#ivInSearchInput:focus + .icon2, .searchBoxChildContainer input#ivInSearchInput:active + .icon2, .icon2:hover {
+        visibility: visible;
+    }
+
+    .searchBoxChildContainer input#ivInSearchInput:focus, .searchBoxChildContainer input#ivInSearchInput:active {
+        outline: none;
+        /*width: 300px;*/
+        width: 75%;
+        /*background: #ffffff;*/
+    }
+
+    .searchBoxChildContainer:hover input#ivInSearchInput {
+        /*width: 300px;*/
+        width: 75%;
+        /*background: #ffffff;*/
+    }
+
+    .searchBoxChildContainer:hover .icon {
+        /*color: #93a2ad;*/
+    }
+
+
+/*ivirsearch ui end*/
+
+#ivContainer.interactiveReport #myFiltersLi, #ivContainer.interactiveReport #ivInSearch {
+    /*position: absolute;*/
+    /*z-index: 9;
+    margin-top: 4px;
+    border: 1px solid #d8d8d8;
+    padding: 2px 6px;
+    box-shadow: 1px 1px 1px #d6d6d6;
+    border-radius: 13px;*/
+}
+
+#ivContainer:not(.interactiveReport) #ivirMoreButton {
+    /*display: none !important;*/
+    visibility: hidden;
+}
+
+#ivirCustomContainer #accordion {
+    margin-bottom: 0;
+}
+
+    #ivirCustomContainer #accordion .panel-collapse.collapse.in {
+        margin-bottom: 10px;
+    }
+
+    #ivirCustomContainer #accordion.panel-group {
+        margin: 0;
+        position: absolute;
+        z-index: 99;
+        width: 99%;
+    }
+
+    #ivirCustomContainer #accordion #myFiltersBody {
+        box-shadow: 0px 1px 9px #8a8a8a;
+        border-radius: 5px;
+    }
+
+#filterColumnSelect.filterExixts {
+    margin-left: 120px;
+}
+
+#customActionBtn button.cutomActionBtns {
+    padding: 0;
+    background-color: transparent !important;
+    border: 0;
+    color: #337ab7;
+    outline: 0;
+    box-shadow: none;
+    margin: 0;
+    cursor: pointer;
+    background-color: transparent !important;
+    background: #fff;
+    border: 1px solid #d8d8d8 !important;
+    box-shadow: 0 0 2px #f3f3f3;
+    margin: 0 3px;
+    padding: 0 6px;
+}
+
+div#customActionBtn, .dib {
+    display: inline-block !important;
+}
+
+#customActionBtn button.cutomActionBtns:hover, #customActionBtn button.cutomActionBtns:focus {
+    background: #efefef !important;
+    color: #337ab7 !important;
+    border: 1px solid #e3e3e3 !important;
+    box-shadow: 0 1px 2px #e3e3e3 !important;
+}
+
+.btextDir-rtl #uldropelements {
+    left: -102px;
+}
+
+@media (min-width: 600px) and (max-width: 767px) {
+    #filterWrapper {
+        height: 33px;
+    }
+
+    .dib, div#customActionBtn {
+        width: 90px;
+        margin-left: 15px;
+        margin-bottom: 10px;
+    }
+}
+
+@media (min-width: 480px) and (max-width: 599px) {
+    #filterWrapper {
+        height: 33px;
+    }
+
+    .dib, div#customActionBtn {
+        width: 90px;
+        margin-left: 15px;
+        margin-bottom: 10px;
+    }
+}
+
+@media (min-width: 321px) and (max-width: 479px) {
+    #filterWrapper {
+        height: 33px;
+    }
+
+    .dib, div#customActionBtn {
+        width: 90px;
+        margin-left: 15px;
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 320px) {
+
+    #filterWrapper {
+        height: 33px;
+    }
+
+    .dib, div#customActionBtn {
+        width: 90px;
+        margin-left: 15px;
+        margin-bottom: 10px;
+    }
+}
+
+.ui-autocomplete.ui-front {
+    z-index: 1051;
+}
+
+.ui-autocomplete {
+    max-height: 200px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+    /* add padding to account for vertical scrollbar */
+    padding-right: 20px;
+}
+.btextDir-rtl .searchBoxChildContainer input#ivInSearchInput {
+    text-align: left;
+    padding-left: 29px;
+    float:left;
+    margin-left:30px;
+}
+
+.btextDir-rtl #idsearch{
+
+    margin-left:3px;
+
+}
+
+
+.btextDir-rtl #breadcrumb h3 {margin-right: 20px;}
+.btextDir-rtl .searchBoxChildContainer .icon {left:30px;right:auto;}
+#GridView1_wrapper {
+    position:unset !important;
+}
+.dt-loading{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+  }
+/*.remodal-wrapper.remodal-is-opened #axpertPopupWrapper button.remodal-close.icon-basic-remove {right: -7px !important;}*/
+/*#GridView1_wrapper #ivirCustomContainer #ivirMainDataTableWrapper .dataTables_scrollHeadInner{width:100% !important;}*/

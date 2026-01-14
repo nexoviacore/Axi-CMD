@@ -1,0 +1,43 @@
+//* page Option Sort ==================================== *//
+.jconfirm-content{
+    .form-group{
+        label{
+            display: $applicationDisplayInline
+        }
+    }
+#ivirSortColumnWrapper{
+    input{
+        margin-left: 0px;
+    }
+    .ivirLabelWrapper{
+        label{
+            display: $applicationDisplayInline;
+        }
+    }
+    .ascDscWrapper{
+        button{
+            border:0px;background: none;
+            &:focus{
+                outline: none;
+                text-decoration: none;
+            }
+        }
+    }
+  }
+  .noBg 
+  {
+      &.arrowUpDown,&.clear{
+        @include clearBtn;
+        i{
+            font-size: $applicationTitleFont;
+        }
+        &:focus{
+            outline: none;
+        }
+      }
+  }
+.row{
+    margin: 0px;
+}
+}
+//* page Option Sort ==================================== *//

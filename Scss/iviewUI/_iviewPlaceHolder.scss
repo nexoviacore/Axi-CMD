@@ -1,0 +1,12 @@
+.iviewPlaceHolder {
+    position: $iviewPlaceholderPosition;
+    top: $iviewPlaceholderTop;
+    left: $iviewPlaceholderLeft;
+    @include transform(translate(-50%, -50%) scale(1.07, 1));
+    padding: $iviewPlaceholderPadding;
+    background-color: $toolbar_dropdown_button_background_color;
+    color: $applicationIconColor;
+    @include border-radius($iviewPlaceholderBorderRadius);
+    cursor: pointer;
+    box-shadow: 2px 2px 5px 0px $applicationShadowColor;
+}

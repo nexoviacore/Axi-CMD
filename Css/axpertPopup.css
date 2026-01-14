@@ -1,0 +1,151 @@
+#axpertPopupWrapper {
+  max-width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  margin: 4px;
+}
+
+#axpertPopupWrapper button {
+  border-radius: 50%;
+  width: 35px;
+  margin: 5px 10px;
+  font-size: 20px;
+  top: -4px;
+  right: -5px;
+}
+
+#axpertPopupWrapper button.remodal-close::before {
+  content: '';
+}
+
+.btextDir-rtl #axpertPopupWrapper button {
+  left: -8px;
+  right: auto;
+}
+
+.file-upload {
+  position: relative;
+}
+
+.file-upload .file-select {
+  border: 2px solid #b3b3b3;
+}
+
+.file-upload .file-select .file-select-button {
+  display: inline-block;
+  color: #333333;
+  background-color: #fff;
+  border: 0px;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  background: #b3b3b3;
+}
+
+.file-upload .file-select .file-select-button:hover, .file-upload .file-select .file-select-button:focus {
+  outline: none;
+}
+
+.file-upload .file-select input[type=file] {
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+  opacity: 0;
+  z-index: 100;
+  height: 30px;
+}
+
+.file-upload .file-select .file-select-name {
+  display: inline-block;
+}
+
+#heightframe {
+  height: calc(100vh - 132px);
+}
+
+.remodal-wrapper {
+  overflow: hidden;
+  padding: 0;
+}
+
+#axpertPopupWrapperDWB .dvOutput {
+  margin: 15px 5px;
+  border: 1px solid #ccc;
+  border-style: inset;
+  width: 100%;
+  height: calc(100vh - 260px);
+  font-family: "Roboto", sans-serif;
+  font-size: 14px;
+  font-weight: normal;
+}
+
+#axpertPopupWrapperDWB .dvOutput .rsltHeader {
+  background-color: #ececec;
+  color: #9999a4;
+  height: 25px;
+  padding: 1px 7px;
+  border: 1px solid #ccc;
+  font-weight: bold;
+}
+
+#axpertPopupWrapperDWB .dvOutput .rsltHeader #spnRowCnt {
+  float: right;
+  display: none;
+}
+
+#axpertPopupWrapperDWB .dvOutput #txtOutput {
+  padding: 5px 10px;
+}
+
+#axpertPopupWrapperDWB .dvOutput #tblOutput {
+  border-collapse: collapse;
+  max-width: 100%;
+  width: auto;
+  overflow: auto;
+  display: inline-block;
+}
+
+#axpertPopupWrapperDWB .dvOutput #tblOutput tbody {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: auto;
+  display: block;
+}
+
+#axpertPopupWrapperDWB .dvOutput #tblOutput tbody tr td {
+  min-width: 100px;
+  height: 25px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+  padding-left: 5px;
+}
+
+#axpertPopupWrapperDWB .dvOutput #tblOutput thead {
+  display: block;
+}
+
+#axpertPopupWrapperDWB .dvOutput #tblOutput thead tr th {
+  min-width: 100px;
+  height: 25px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+  padding-left: 5px;
+}
+
+#axpertPopupWrapperDWB button.remodalCloseBtn {
+  border: 0;
+  text-align: center;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  border-radius: 3px;
+  border-radius: 50%;
+  right: 6px;
+  width: 35px;
+  top: 2px;
+}

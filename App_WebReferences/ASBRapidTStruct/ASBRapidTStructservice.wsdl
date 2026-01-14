@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" name="ASBRapidTStructservice" targetNamespace="http://tempuri.org/" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types />
+  <message name="ServiceTest0Request">
+    <part name="input" type="xs:string" />
+  </message>
+  <message name="ServiceTest0Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="RapidDoFormLoad1Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="RapidDoFormLoad1Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="RapidGetDepentendFieldValues2Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="RapidGetDepentendFieldValues2Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="RapidGetSearchResult3Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="RapidGetSearchResult3Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="RapidDoFillGridValues4Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="RapidDoFillGridValues4Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <portType name="ASBRapidTStruct">
+    <operation name="ServiceTest">
+      <input message="tns:ServiceTest0Request" />
+      <output message="tns:ServiceTest0Response" />
+    </operation>
+    <operation name="RapidDoFormLoad">
+      <input message="tns:RapidDoFormLoad1Request" />
+      <output message="tns:RapidDoFormLoad1Response" />
+    </operation>
+    <operation name="RapidGetDepentendFieldValues">
+      <input message="tns:RapidGetDepentendFieldValues2Request" />
+      <output message="tns:RapidGetDepentendFieldValues2Response" />
+    </operation>
+    <operation name="RapidGetSearchResult">
+      <input message="tns:RapidGetSearchResult3Request" />
+      <output message="tns:RapidGetSearchResult3Response" />
+    </operation>
+    <operation name="RapidDoFillGridValues">
+      <input message="tns:RapidDoFillGridValues4Request" />
+      <output message="tns:RapidDoFillGridValues4Response" />
+    </operation>
+  </portType>
+  <binding name="ASBRapidTStructbinding" type="tns:ASBRapidTStruct">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="rpc" />
+    <operation name="ServiceTest">
+      <soap:operation soapAction="urn:uASBRapidTStruct-ASBRapidTStruct#ServiceTest" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="RapidDoFormLoad">
+      <soap:operation soapAction="urn:uASBRapidTStruct-ASBRapidTStruct#RapidDoFormLoad" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="RapidGetDepentendFieldValues">
+      <soap:operation soapAction="urn:uASBRapidTStruct-ASBRapidTStruct#RapidGetDepentendFieldValues" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="RapidGetSearchResult">
+      <soap:operation soapAction="urn:uASBRapidTStruct-ASBRapidTStruct#RapidGetSearchResult" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="RapidDoFillGridValues">
+      <soap:operation soapAction="urn:uASBRapidTStruct-ASBRapidTStruct#RapidDoFillGridValues" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+  </binding>
+  <service name="ASBRapidTStructservice">
+    <port name="ASBRapidTStructPort" binding="tns:ASBRapidTStructbinding">
+      <soap:address location="http://localhost/AxpertWebScripts/ASBRapidTStruct.dll/soap/ASBRapidTStruct" />
+    </port>
+  </service>
+</definitions>

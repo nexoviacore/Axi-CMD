@@ -1,0 +1,144 @@
+//* page Table ==================================== *//
+@import 'iviewUI/_table';
+//* advSearch ==================================== *//
+.dataTables_wrapper{
+    &.no-footer{
+        .dataTables_scrollBody{
+            border-bottom: none;
+        }
+        div{
+            &.dataTables_scrollHead{
+                .table{
+                    border-bottom: 1px solid $applicationCompressedTableBorderColor;
+                }
+            }
+        }
+    }
+}
+.dataTables_scrollBody,.dataTables_scrollHeadInner{
+    border-bottom: none;
+    .table{
+        tr{
+            &:focus{
+                outline: none;
+            }
+            th,td{
+                border: 0px;
+            }
+            th{
+                font-weight: bold;
+            }
+        }
+    }
+}
+.titlerow{
+    &.row{
+        @include applicationTitle;
+        border-bottom: 1px solid $applicationBorderColor;
+        height:$breadcrumbPanelHeight;
+        padding: $applicationAdSearchTitleNoBcrumbPadding;
+        .btextDir-rtl &{
+            padding: $applicationTitleNoBcrumbPaddingRtl;
+        }
+    }
+}
+.feeddesgin{
+   &.row{
+    padding-top: $advSearchfeeddesginPaddingTop;
+   }
+   .question{
+       .btndrop{
+            width: $advSearchBtndropWidth;
+            display: $advSearchBtndropDisplayInline;
+            .dropdown{
+                .search{
+                    min-width: $advSearchDropdownSearchMinWidth;
+                    max-width: $advSearchDropdownSearchMaxWidth;
+                }
+                
+            }
+       }
+       .condition{
+            width: auto;
+            display: $advSearchBtndropDisplayInline;
+            .profile-pic{
+                position: $advSearchConditionProfilePicPositionRelative;
+                display: $advSearchConditionProfilePicDisplayInlineBlock;
+                width: $advSearchConditionProfilePicWidth;
+                .edit{
+                    padding-top: $advSearchConditionProfilePicEditPaddingTop;
+                    padding-right: $advSearchConditionProfilePicEditPaddingRight;
+                    @include advSearchEdit;
+                    .btextDir-rtl &{
+                        left: $advSearchConditionProfilePicEditRtlLeftGap;
+                        right: auto;
+                    }
+                }
+                &:hover{
+                    .edit{
+                        display: $advSearchConditionProfilePicHoverEditDisplay;
+                        font-size: $advSerchRemoveFontSize;
+                    }
+                }
+            }
+        }
+        .btngoadv{
+            display: $advSearchBtngoadvDisplay;
+            .btn{
+                color: $applicationIconColor;
+            }
+        }
+        .btnsearch {
+            width: $advSearchBtnSearchWidth;
+            display: $advSearchBtnSearchDisplayInline;
+            padding-top: $advSearchBtnSearchPaddingTop;
+            input{
+                &#txtSrchText{
+                    padding-left: $advSearchInputTxtSrchTextPaddingLeft;
+                    border-radius: $advSearchInputTxtSrchTextBorderRadius;
+                    .btextDir-rtl &{
+                        padding-right: $advSearchInputTxtSrchTextPaddingRightRtl;
+                    }
+                }
+            }
+            
+            .profile-pic{
+                position: $advSearchBtnSearchProfilePicPositionRelative;
+                display: $advSearchBtnSearchProfilePicDisplayInline;
+                width: $advSearchBtnSearchProfilePicWidth;
+                .edit {
+                    padding-top: $advSearchBtnSearchProfilePicEditPaddingTop;
+                    padding-right: $advSearchBtnSearchProfilePicEditPaddingRight;
+                    @include advSearchEdit;
+                    .btextDir-rtl &{
+                        left: $advSearchBtnSearchProfilePicEditLeftGapRtl;
+                        top: $advSearchBtnSearchProfilePicEditTopGapRtl;
+                        right: auto;
+                    }
+                }
+                &:hover{
+                    .edit{
+                        display: $advSearchBtnSearchProfilePicHoverEditDisplay;
+                        font-size: $advSerchRemoveFontSize;
+                    }
+                }
+            }
+            .nsearch {
+                @include advSearchNsearch;
+                .btextDir-rtl &{
+                    right: $advSearchNsearchRightGapRtl;
+                    left: auto;
+                }
+                i{
+                    color: $applicationIconColor;    
+                }
+            }
+        }
+        }
+   }
+   #GridView1_wrapper{
+       #GridView1_filter{
+          display: $advSearchGridView1WrapperGridView1FilterDisplayNone;
+       }
+   }
+//* advSearch ==================================== *//

@@ -1,0 +1,315 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../UI/axpertUI/style.bundle.css">
+    <link rel="stylesheet" href="../UI/axpertUI/plugins.bundle.css">
+    <link rel="stylesheet" href="../ThirdParty/fullcalendar/lib/main.min.css">
+    <link rel="stylesheet" href="../ThirdParty/jquery-confirm-master/jquery-confirm.min.css">
+    <style>
+        #Homepage_CardsList .card {
+            box-shadow: none !important;
+            border: 0 !important;
+        }
+
+        .Hp-card-title,
+        .Hp-card-title a {
+            font-size: 13px !important;
+        }
+
+        @media screen and (max-width: 768px) {
+            #Homepage_CardsList .widgetWrapper.htmlDomWrapper {
+                width: 50%;
+            }
+
+                #Homepage_CardsList .widgetWrapper.htmlDomWrapper[title="empprofilecard"],
+                #Homepage_CardsList .widgetWrapper.htmlDomWrapper[title="empanniversary"] {
+                    width: 100%;
+                }
+
+            #Homepage_CardsList .row .row {
+                display: contents;
+            }
+
+            .Hp-card-title,
+            .Hp-card-title a {
+                font-size: 13px !important;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        }
+
+        #waitDiv {
+            width: 60%;
+            display: block;
+            /* height: inherit; */
+            top: 30%;
+            left: 25%;
+        }
+
+        .page-loader {
+            background: #fff;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 10000000;
+            display: none
+        }
+
+        .page-loading .page-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center
+        }
+
+        .page-loader .loader {
+            animation: rotate 5s infinite;
+            height: 50px;
+            width: 50px
+        }
+
+            .page-loader .loader:after,
+            .page-loader .loader:before {
+                border-radius: 50%;
+                content: "";
+                display: block;
+                height: 20px;
+                width: 20px
+            }
+
+            .page-loader .loader:before {
+                animation: ball1 2s infinite;
+                background-color: #47be7d;
+                margin-bottom: 10px
+            }
+
+            .page-loader .loader:after {
+                animation: ball2 2s infinite;
+                background-color: #d9214e
+            }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0) scale(.8)
+            }
+
+            50% {
+                transform: rotate(360deg) scale(1.2)
+            }
+
+            100% {
+                transform: rotate(720deg) scale(.8)
+            }
+        }
+
+        @keyframes ball1 {
+            0% {
+                box-shadow: 30px 0 0 #5014d0
+            }
+
+            50% {
+                box-shadow: 0 0 0 #5014d0;
+                margin-bottom: 0;
+                transform: translate(15px, 15px)
+            }
+
+            100% {
+                box-shadow: 30px 0 0 #5014d0;
+                margin-bottom: 10px
+            }
+        }
+
+        @keyframes ball2 {
+            0% {
+                box-shadow: 30px 0 0 #f1bc00
+            }
+
+            50% {
+                box-shadow: 0 0 0 #f1bc00;
+                margin-top: -20px;
+                transform: translate(15px, 15px)
+            }
+
+            100% {
+                box-shadow: 30px 0 0 #f1bc00;
+                margin-top: 0
+            }
+        }
+
+        .loader-box-wrapper.d-flex.bg-white.p-20.shadow.rounded {
+            width: fit-content;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page d-flex flex-row flex-column-fluid position-relative">
+        <div class="wrapper d-flex flex-column flex-row-fluid w-100 h-100">
+            <div class="content fs-6 d-flex flex-column flex-column-fluid px-3 py-0">
+                <div class="cardsPageWrapper d-none">
+                    <div class="designer toolbar ms-5 pb-0 d-none">
+                        <div class="d-flex flex-stack flex-wrap flex-sm-nowrap">
+                            <div class="d-flex flex-column align-items-start justify-content-center flex-wrap me-2">
+                                <h1 class="text-dark fw-boldest my-1 fs-2">
+                                    Dashboard Cards Setting
+                                    <small class="text-muted fs-6 fw-normal ms-1"></small>
+                                </h1>
+                            </div>
+                            <div class="d-flex align-items-center flex-nowrap text-nowrap py-1">
+                                <a href="javascript:void(0);" class="editSaveCardDesign btn btn-icon btn-white btn-active-primary me-4" onclick="$.axpertUI_calendar.calendarcardsPage.editSaveCardDesignToggle();">
+                                    <span class="material-icons material-icons-style">
+                                        edit
+                                    </span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="cardsDesigner card list-group d-none mt-6"></ul>
+                    <div class="cardsPlot mb-8--" id="Homepage_CardsList">
+                        <div class="row" id="Homepage_CardsList_Wrapper">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="waitDiv" class="page-loader rounded-2 bg-radial-gradient">
+        <div class="loader-box-wrapper d-flex bg-white p-20 shadow rounded">
+            <span class="loader"></span>
+        </div>
+    </div>
+    <script type="text/javascript" src="../UI/axpertUI/plugins.bundle.js"></script>
+    <script type="text/javascript" src="../UI/axpertUI/scripts.bundle.js"></script>
+    <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=158"></script>
+    <script type="text/javascript" src="../Js/alerts.min.js?v=32"></script>
+    <script type="text/javascript" src="../Js/xmlToJson.min.js"></script>
+
+    <script type="text/javascript" src="../ThirdParty/lodash.min.js?v=1"></script>
+    <script type="text/javascript" src="../ThirdParty/deepdash.min.js"></script>
+    <script type="text/javascript" src="../ThirdParty/fullcalendar/lib/main.min.js"></script>
+    <script type="text/javascript" src="../Js/axpertUI_calendar.min.js?v=6"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            deepdash(_);
+            var enableMasonry = false;
+            try {
+                var dashcardsData = "";// `[{"axp_cardsid": "1324330000000","cardname": "Test calender","cardtype": "calendar","charttype": "","chartjson": "{\\"attributes\\":{\\"cck\\":\\"\\",\\"shwLgnd\\":,\\"xAxisL\\":\\"\\",\\"yAxisL\\":\\"\\",\\"gradClrChart\\":,\\"shwChartVal\\":,\\"threeD\\":\\"remove\\",\\"enableSlick\\":,\\"numbSym\\":}}","cardicon": "list_alt","pagename": "","pagedesc": "","cardbgclr": "","width": "col-md-12","height": "100px","cachedata": "true","autorefresh": "30","cardsql": {"fields": [],"row": [],"paramvars": "username=admin"},"orderno": "1","accessstring": ",admin,default,","htransid": "","htype": "","hcaption": "","axpfile_imgcard": "","html_editor_card": "","calendarstransid": "axclr","exp_editor_buttons": "","cachedTime": "071120231958"}]`;
+                var cardsDesign = "";
+                $.ajax({
+                    url: 'processflow.aspx/GetCalendarData',
+                    type: 'POST',
+                    cache: false,
+                    async: false,
+                    dataType: 'json',
+                    contentType: "application/json",
+                    success: function (data) {
+                        if (data && data.d) {
+                            let result = JSON.parse(data.d);
+                            dashcardsData = result.data;
+                            cardsDesign = result.design;
+                        }
+                    },
+                    error: function (error) {
+                        //debugger;
+                    }
+                });
+
+                appGlobalVarsObject._CONSTANTS.calendarcardsPage = $.extend(true, {},
+                    appGlobalVarsObject._CONSTANTS.calendarcardsPage, {
+                    setCards: true,
+                    cards: (JSON.parse(dashcardsData !== "" ? ReverseCheckSpecialChars(dashcardsData) : "[]", function (k, v) {
+                        try {
+                            return (typeof v === "object" || isNaN(v) || v.toString().trim() === "") ? v : (typeof v == "string" && (v.startsWith("0") || v.startsWith("-")) ? parseFloat(v, 10) : JSON.parse(v));
+                        } catch (ex) {
+                            return v;
+                        }
+                    }) || []).map(arr => _.mapKeys(arr, (value, key) => key.toString().toLowerCase())),
+                    design: (JSON.parse(cardsDesign !== "" ? cardsDesign : "[]",
+                        function (k, v) {
+                            try {
+                                return (typeof v === "object" || isNaN(v) || v.toString().trim() === "") ? v : (typeof v == "string" && (v.startsWith("0") || v.startsWith("-")) ? parseFloat(v, 10) : JSON.parse(v));
+                            } catch (ex) {
+                                return v;
+                            }
+                        }
+                    ) || []).map(arr => _.mapKeys(arr, (value, key) => key.toString().toLowerCase())),
+                    enableMasonry: enableMasonry,
+                    staging: {
+                        cardsFrame: {
+                            div: ".cardsPageWrapper",
+                            cardsDiv: "#Homepage_CardsList_Wrapper",
+                            cardsDesigner: ".cardsDesigner",
+                            cardsDesignerToolbar: ".designer",
+                            editSaveButton: ".editSaveCardDesign",
+                            icon: "span.material-icons",
+                            divControl: "#arrangeCards"
+                        },
+                    }
+                });
+            } catch (ex) { }
+
+            try {
+                var lcm = appGlobalVarsObject.lcm;
+                var tempaxpertUIObj = $.axpertUI_calendar
+                    .init({
+                        calendarcardsPage: appGlobalVarsObject._CONSTANTS
+                            .calendarcardsPage
+                    });
+
+                appGlobalVarsObject._CONSTANTS.calendarcardsPage = tempaxpertUIObj.calendarcardsPage;
+
+            } catch (ex) { }
+            ShowDimmer(false);
+        });
+
+        function ShowDimmer(status) {
+
+            DimmerCalled = true;
+            var dv = $("#waitDiv");
+
+            if (dv.length > 0 && dv != undefined) {
+                if (status == true) {
+
+                    var currentfr = $("#middle1", parent.document);
+                    if (currentfr) {
+                        dv.width(currentfr.width());
+                    }
+                    dv.show();
+                    document.onkeydown = function EatKeyPress() {
+                        return false;
+                    }
+                } else {
+                    dv.hide();
+                    document.onkeydown = function EatKeyPress() {
+                        if (DimmerCalled == true) {
+                            return true;
+                        }
+                    }
+                }
+            } else {
+                //TODO:Needs to be tested
+                if (window.opener != undefined) {
+
+                    dv = $("#waitDiv", window.opener.document);
+                    if (dv.length > 0) {
+                        if (status == true)
+                            dv.show();
+                        else
+                            dv.hide();
+                    }
+                }
+            }
+            DimmerCalled = false;
+        }
+    </script>
+</body>
+</html>

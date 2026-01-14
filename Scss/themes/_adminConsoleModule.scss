@@ -1,0 +1,24 @@
+@mixin _adminConsoleModule($theme, $colors) {
+    .adminMain{
+        .adminMainLeft{
+            background: getMapByPath($colors, 'primary.default.background');
+            .adminLeftMenu {
+                ul{
+                    li{
+                        a{
+                            .setting-caption{
+                                color: lighten(getMapByPath($colors, 'primary.default.color'), 50%);
+                            }
+                            .setting-icon{
+                                color: darken(getMapByPath($colors, 'primary.default.color'), 26.5%);
+                            }
+                        }
+                        .devsubmenu{
+                            background: getMapByPath($colors, 'primary.default.background');
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

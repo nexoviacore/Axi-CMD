@@ -1,0 +1,137 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../UI/axpertUI/style.bundle.css">
+    <link rel="stylesheet" href="../UI/axpertUI/plugins.bundle.css">
+    <link rel="stylesheet" href="../ThirdParty/jquery-confirm-master/jquery-confirm.min.css">
+    <link rel="stylesheet" href="../Css/ActiveList.min.css?v=2" type="text/css">
+
+</head>
+<body id="Task_activity" class="header-fixed header-tablet-and-mobile-fixed aside-fixed">
+    <div class="content d-flex flex-column flex-column-fluid ">
+        <!--begin::Container-->
+        <div id="kt_content_container" class="">
+            <!--begin::Row-->
+
+            <h1 class="Task-page-Title text-dark fw-bolder my-1 fs-4" id="task-page-title">
+                Active List
+                <div class="form-check form-check-custom form-check-success form-check-solid task-select-all">
+                    <input class="form-check-input" type="checkbox" id="select-all">
+                    <label class="form-check-label" for="select-all">Select All</label>
+                </div>
+
+                <div class="d-flex align-items-center Activelist-Tools">
+                    <div id="" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-dismiss="click" data-bs-original-title="Search" class="d-none">
+                        <button type="submit" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 tb-btn btn-sm disabled" id="">
+                            <span class="material-icons material-icons-style material-icons-2">search</span>
+                        </button>
+                    </div>
+                    <div id="" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-dismiss="click" data-bs-original-title="Filter" class="d-none">
+                        <button type="button" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 tb-btn btn-sm disabled" onclick="axTasksObj.toggleFilters();">
+                            <span class="material-icons material-icons-style material-icons-2">filter_alt</span>
+                        </button>
+                    </div>
+                    <div data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-dismiss="click" data-bs-original-title="List View" class="d-none">
+                        <button type="button" value="List" onclick="axTasksObj.toggleViews(this);" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 tb-btn btn-sm task-view active" id="list-view">
+                            <span class="material-icons material-icons-style material-icons-2">checklist</span>
+                        </button>
+                    </div>
+                    <div data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-dismiss="click" data-bs-original-title="Card View" class="d-none">
+                        <button type="button" value="Card" onclick="axTasksObj.toggleViews(this);" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 tb-btn btn-sm task-view" id="card-view">
+                            <span class="material-icons material-icons-style material-icons-2">view_stream</span>
+                        </button>
+                    </div>
+                </div>
+            </h1>
+
+
+            <div class="row " id="ActiveList-overalldiv">
+
+                <!--begin:::Col-->
+                <div class="col-xl-3 col-md-3 d-flex flex-column flex-column-fluid vh-100 min-vh-100" id="ActiveTask_Left">
+                    <div id="AllTask_Header" class="d-flex align-items-center task-process-selected">
+                        <div class="d-flex justify-content-center  TotalTask-Wrap">
+                            <div class="symbol symbol-40px symbol-circle me-5">
+                                <div class="symbol-label bg-dark">
+                                    <span class="material-icons material-icons-style material-icons-2">receipt_long</span>
+                                </div>
+                            </div>
+                            <div class="all-tasks-container" onclick="axTasksObj.filterTasks('all','',this)">
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-xl-stretch shadow-sm flex-root h-1px  ">
+                        <!--begin::Body-->
+                        <div class="card-body h-300px ">
+
+                            <div id="Active-List-container">
+                            </div>
+                            <!--end::Body-->
+                        </div>
+                    </div>
+                    <!--end::Table Widget 1-->
+                </div>
+                <!--end:::Col-->
+                <!--begin:::Col-->
+                <div class="col-xl-9  col-md-9 d-flex flex-column flex-column-fluid vh-100 min-vh-100" id="ActiveTask_Right">
+
+                    <div class="d-flex flex-row filter-wrapper d-none">
+
+                        <div class="col-md-4 pe-5">
+                            <label class="form-label col-form-label   required">User Name</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 pe-5">
+                            <label class="form-label col-form-label   required">From Date</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-3 pe-5">
+                            <label class="form-label col-form-label   required">To Date</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class=" col-md-1 d-flex align-items-end">
+                            <button class="btn btn-sm btn-primary task-submit-btn  " onclick="axTasksObj.doReject('1712330000003')" title="Reject">Filter</button>
+                        </div>
+
+
+                    </div>
+
+                    <!--begin::List Widget 3-->
+                    <div class="card card-xl-stretch shadow-sm flex-root task-view-container d-none" id="Card_view">
+                    </div>
+                    <!--end::List Widget 3-->
+
+                    <div class="card card-xl-stretch shadow-sm flex-root task-view-container" id="List_view">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="waitDiv" class="page-loader rounded-2 bg-radial-gradient">
+        <div class="loader-box-wrapper d-flex bg-white p-20 shadow rounded">
+            <span class="loader"></span>
+        </div>
+    </div>
+    <script type="text/javascript" src="../UI/axpertUI/plugins.bundle.js"></script>
+    <script type="text/javascript" src="../UI/axpertUI/scripts.bundle.js"></script>
+    <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../Js/alerts.min.js?v=32"></script>
+    <script type="text/javascript" src="../Js/handlebars.min.js?v=2"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=158"></script>
+    <script type="text/javascript" src="../Js/AxProcessFlowCommon.min.js"></script>
+    <script type="text/javascript" src="../Js/ActiveList.min.js?v=8"></script>
+    <script type="text/javascript" src="../Js/AxHTMLActiveList.min.js?v=1"></script>
+    <script type="text/javascript">
+        var _processName = 'ActiveList';
+    </script>
+</body>
+</html>

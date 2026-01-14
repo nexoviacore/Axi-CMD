@@ -1,0 +1,132 @@
+//*picklist ======*//
+.pickLstResultWrapper {
+    display: none;
+}
+
+.form-inline {
+    .inputClass2parent {
+        position: $picklistInputClass2ParentPosition;
+        top: $picklistInputClass2ParentTopGap;
+        @include inputpadding;
+        margin-bottom: $picklistInputBottomMargin;
+        .form-group {
+            width: $applicationMaximumWidth;
+
+            input {
+                width: $applicationMaximumWidth;
+            }
+            span{
+                &.form-control-clear{
+                    z-index: $picklistInputClass2ParentFormControlClearZIndex;
+                    pointer-events: auto;
+                    cursor: pointer;
+                    font-size: $applicationTitleFont;
+                }
+                
+            }
+        }
+
+        .input-group-btn {
+            width: 1%;
+            button{
+                &:focus{
+                    outline: none;
+                }
+            }
+        }
+    }
+}
+.inputClass2parent{
+    .form-group {
+        span{
+            &.form-control-clear{
+                z-index: $picklistInputClass2ParentFormControlClearZIndex;
+                pointer-events: auto;
+                cursor: pointer;
+                font-size: $applicationTitleFont;
+            }
+        }
+    }
+    span{
+        button{
+            @include pickListSearchBtn;
+        }
+    }
+}
+#dvPickList{
+    position: $picklistDropdownPosition;
+    z-index: $dvPickListZIndex;
+    background: $applicationBackgroundColor;
+    @include shadow;
+    #dvPickHead{
+        @include pickListOption;
+        table{
+            width: $applicationMaximumWidth;
+            &#tblPickData{
+                tr{
+                    td{
+                        padding: $pickListDropdownPadding;
+                        a{
+                            color: $applicationTextColor;
+                            &:hover{
+                                outline: none;
+                                text-decoration: none;   
+                            }
+                        }
+                        &:hover{
+                            background: $applicationBorderColor;
+                        }
+                    }
+                }
+                .active{
+                    background: $applicationBorderColor;
+                }
+            }
+        }
+    }
+    #dvPickFooter{
+        .pickListFLP{
+            display: $applicationDisplayInline;
+            button{
+                @include clearBtn;
+                &:focus{
+                    outline: none;
+                }
+                span{
+                    i{
+                        margin-right: $pickListAdvSearchRightLeft;
+                        margin-left: $pickListAdvSearchRightLeft;
+                    }
+                }
+                &:hover{
+                    background: $clearBtnHoverBackgroundColor;
+                }
+                i{
+                    top:0;
+                    left:$pickListFLPButtonIconLeftGap;
+                }
+            }
+        }
+        .pickListFRP{
+          @include floatRight;
+          .btextDir-rtl &{
+              @include floatLeft;
+          }
+          button{
+            @include clearBtn;
+            &:focus{
+                outline: none;
+            }
+            &:hover{
+                background: $clearBtnHoverBackgroundColor;
+            }
+            i{
+                .btextDir-rtl &{
+                    @include rotate180;
+                }
+            }
+          }
+        }
+    }
+}
+//*picklist ======*//

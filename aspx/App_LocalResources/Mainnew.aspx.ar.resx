@@ -1,0 +1,219 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="lbldocs.Text" xml:space="preserve">
+    <value>طباعة المستندات (0-0)</value>
+  </data>
+  <data name="lbldrafts.Text" xml:space="preserve">
+    <value>لعبة الداما</value>
+  </data>
+  <data name="lblMyProfile.Text" xml:space="preserve">
+    <value>ملفي</value>
+  </data>
+  <data name="lblthemeclt.Text" xml:space="preserve">
+    <value>موضوع الجلاد</value>
+  </data>
+  <data name="lblwelcome.Text" xml:space="preserve">
+    <value>أهلا بك</value>
+  </data>
+  <data name="lblChangePwd.Text" xml:space="preserve">
+    <value>تغيير كلمة السر</value>
+  </data>
+  <data name="lblItems.Text" xml:space="preserve">
+    <value>البنود</value>
+  </data>
+  <data name="lblLogout.Text" xml:space="preserve">
+    <value>الخروج</value>
+  </data>
+  <data name="lblTrace.Text" xml:space="preserve">
+    <value>التتبع</value>
+  </data>
+  <data name="lblClearCache.Text" xml:space="preserve">
+    <value>مسح ذاكرة التخزين المؤقت</value>
+  </data>
+  <data name="lblExport.Text" xml:space="preserve">
+    <value>تصدير</value>
+  </data>
+  <data name="lblExportData.Text" xml:space="preserve">
+    <value>تصدير البيانات</value>
+  </data>
+  <data name="lblFastUtility.Text" xml:space="preserve">
+    <value>في الذاكرة دب</value>
+  </data>
+  <data name="lblIEHistory.Text" xml:space="preserve">
+    <value>استيراد / تصدير التاريخ</value>
+  </data>
+  <data name="lblImpHistory.Text" xml:space="preserve">
+    <value>استيراد السجل</value>
+  </data>
+  <data name="lblImport.Text" xml:space="preserve">
+    <value>استيراد</value>
+  </data>
+  <data name="lblImportData.Text" xml:space="preserve">
+    <value>بيانات الاستيراد</value>
+  </data>
+  <data name="lblOpenSupport.Text" xml:space="preserve">
+    <value>فتح الدعم</value>
+  </data>
+  <data name="lblppd.Text" xml:space="preserve">
+    <value>في انتظار طباعة المستندات</value>
+  </data>
+  <data name="lblRespons.Text" xml:space="preserve">
+    <value>المسئولية</value>
+  </data>
+  <data name="lblTracefile.Text" xml:space="preserve">
+    <value>ملف التتبع</value>
+  </data>
+  <data name="lblAppSettings.Text" xml:space="preserve">
+    <value>إعدادات التطبيقات</value>
+  </data>
+  <data name="lblConfigApp.Text" xml:space="preserve">
+    <value>تكوين التطبيق</value>
+  </data>
+  <data name="lblDownload.Text" xml:space="preserve">
+    <value>التحميل</value>
+  </data>
+  <data name="lblWidBuilder.Text" xml:space="preserve">
+    <value>القطعة منشئ</value>
+  </data>
+  <data name="lblsearch.Text" xml:space="preserve">
+    <value>بحث...</value>
+  </data>
+  <data name="lblAxpertLogs.Text" xml:space="preserve">
+    <value>سجلات Axpert</value>
+  </data>
+  <data name="lblDashboard.Text" xml:space="preserve">
+    <value>لوحة القيادة</value>
+  </data>
+  <data name="lblpagebuilder.Text" xml:space="preserve">
+    <value>منشئ الصفحة</value>
+  </data>
+  <data name="lblChangePassword.Text" xml:space="preserve">
+    <value>غير كلمة السر</value>
+  </data>
+  <data name="lblabout.Text" xml:space="preserve">
+    <value>حول</value>
+  </data>
+  <data name="lblAppConfig.Text" xml:space="preserve">
+    <value>إعدادات متقدمة</value>
+  </data>
+  <data name="lblWorkFlow.Text" xml:space="preserve">
+    <value>سير العمل</value>
+  </data>
+</root>

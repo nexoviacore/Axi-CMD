@@ -1,0 +1,113 @@
+//* pageToolbarPieCharts ==================================== *//
+@import '_mixins/_buttons';
+//* chart size ==================================== *//
+@import '_mixins/_charts';
+//* Global title ==================================== *//
+@import '_mixins/_title';
+//* float ==================================== *//
+@import '_mixins/_float';
+//* listStyle ==================================== *//
+@import '_mixins/_list';
+//* IviewSearch ==================================== *//
+@import '_mixins/_search';
+//* paramToolbarPickList ==================================== *//
+@import '_mixins/_pickList';
+//* applicationCenterAlign ==================================== *//
+@import '_mixins/_centerAlign';
+//* applicationInput ==================================== *//
+@import '_mixins/_input';
+//* applicationPopup ==================================== *//
+@import '_mixins/_popUp';
+//* datePickerIcon ==================================== *//
+@import '_mixins/_datePicker';
+//* tablecard ==================================== *//
+@import '_mixins/_tableCard';
+//* applicationarrow ==================================== *//
+@import '_mixins/_arrow';
+//* toolbar ==================================== *//
+@import '_mixins/_toolbar';
+//* filter ==================================== *//
+@import '_mixins/_filter';
+//* loader ==================================== *//
+@import '_mixins/_loader';
+//* Tab ==================================== *//
+@import '_mixins/_tab';
+//* DropDown ==================================== *//
+@import '_mixins/_dropDown';
+//* Radio ==================================== *//
+@import '_mixins/_radio';
+//* compressed  ==================================== *//
+@import '_mixins/_compressed';
+//* toggleBtn  ==================================== *//
+@import '_mixins/_toggleBtn';
+//* Wizard Dc  ==================================== *//
+@import '_mixins/_wizardDc';
+//* msgBox  ==================================== *//
+@import '_mixins/_msgBox';
+//* shadow  ==================================== *//
+@import '_mixins/_shadow';  
+//* border radius  ==================================== *//
+@import '_mixins/_borderRadius';   
+//* circle  ==================================== *//
+@import '_mixins/_circle';   
+//* workFlow  ==================================== *//
+@import '_mixins/_workFlow';   
+//* progressBar  ==================================== *//
+@import '_mixins/_progress'; 
+//* Pills for smart iview  ==================================== *//
+@import '_mixins/_pills';   
+//* textoverflow for allover site ==================================== *//
+@import '_mixins/_text';  
+//* video for login page ==================================== *//
+@import '_mixins/_video';  
+//* login page ==================================== *//
+@import '_mixins/_login'; 
+//* animation effects for all over application ==================================== *//
+@import '_mixins/_animation'; 
+//* animation effects for all over application ==================================== *//
+@import '_mixins/_multiGroupSelect';  
+//* label ==================================== *//
+@import '_mixins/_label.scss';   
+//* notification ==================================== *//
+@import '_mixins/_notification.scss';  
+////////// application home page  mixin 
+//* navbar home page  ==================================== *//
+@import '_mixins/_navbar.scss'; 
+//* split  ==================================== *//
+@import '_mixins/_split.scss';  
+//* form control  ==================================== *//
+@import '_mixins/_formControl.scss';  
+//* attachment  ==================================== *//
+@import '_mixins/_attachment.scss';  
+//* applicatopn pin  ==================================== *//
+@import '_mixins/_pin.scss';   
+
+//* global font mixin for global fonts roboto *//
+@mixin globalFontFamilyRoboto {
+    font-family: 'Segoe UI', 'Roboto';
+    font-style: $globalconFontWeightStyle;
+    font-weight: $globalconFontWeight;
+}
+@mixin materialIcons {
+  font-family: 'Material Icons Outlined' !important;
+  font-weight: normal;
+  font-style: $materialIconFontStyle;
+  font-size: $materialIconFontSize;
+  line-height: $materialIconLineHeight;
+  letter-spacing: $materialIconLetterSpace;
+  text-transform: none;
+  display: $materialIconsDisplay;
+  white-space: $materialIconWhiteSpace;
+  word-wrap: $materialIconWordWrap;
+  direction: $materialIconDiraction;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+}
+@mixin  materialIconFontFamily{
+  font-family: 'Material Icons Outlined';
+  font-style: $materialIconFontStyle;
+  font-weight: $materialIconFontWeight;
+}

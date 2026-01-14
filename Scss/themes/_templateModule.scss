@@ -1,0 +1,246 @@
+// /**
+//  * mixin for application template which gets automated for each and every available themes
+//  * @author Prashik
+//  * @Date   2021-03-10
+//  */
+@mixin _templateModule($theme, $colors) {
+
+    // part where theme bases alterations can be made in special scenarioes where color patterms need to be changed for seperate themes
+    // $menuBackground: getMapByPath($colors, 'primary.default.background');
+    // $menuColor: getMapByPath($colors, 'primary.default.color');
+    // @if $theme == 'mixed' {
+    //     $menuBackground: getMapByPath($colors, 'background.default.background');
+    //     $menuColor: getMapByPath($colors, 'background.default.color');
+    // } @else if $theme == 'dark' {
+    //     // else if code
+    // } @else {
+    //     // else code
+    // }
+
+    // .application{
+    //     background: getMapByPath($colors, 'primary.default.background');
+    //     color: getMapByPath($colors, 'primary.default.color');
+    // }
+    // .hotBtn{
+    //     background: getMapByPath($colors, 'secondary.default.background');
+    //     color: getMapByPath($colors, 'secondary.default.color');
+    // }
+    // .card{
+    //     background: getMapByPath($colors, 'surface.default.background');
+    //     color: getMapByPath($colors, 'surface.default.color');
+    // }
+    // .background{
+    //     background: getMapByPath($colors, 'background.default.background');
+    //     color: getMapByPath($colors, 'background.default.color');
+    // }
+    // .menuBackground{
+    //     background: $menuBackground;
+    //     color: $menuColor;
+    // }
+    // body{
+    background: getMapByPath($colors, 'background.default.background');
+    // }
+    &:not(.overlay-open){
+        .navbar {
+            background-color: getMapByPath($colors, 'secondary.default.background');
+        }
+        .navbar-brand {
+                // color: lighten(getMapByPath($colors, 'secondary.dark.color'), 0.5%);
+                // color: getMapByPath($colors, 'secondary.dark.color');
+            // &:hover {
+            //     color: $theme-material-mixed-navbar-brand_hover;
+            // }
+    
+            //     &:active {
+            //         color: $theme-material-mixed-navbar-brand_active;
+            //     }
+    
+            // &:focus {
+            //     color: $theme-material-mixed-navbar-brand_focus;
+            // }
+        }
+        .bars {
+            // color: lighten(getMapByPath($colors, 'secondary.dark.color'), 33.5%);
+            // color: lighten(getMapByPath($colors, 'secondary.dark.color'), 60%);
+        }
+    }
+    .navbar {
+        background-color:getMapByPath($colors, 'primary.default.background');
+        .navbar-right-panel{
+            .navbar-nav{
+                > li{
+                    &#userProfile{
+                        ul{
+                            li{
+                                a{
+                                    span{
+                                        &#userNameIcon{
+                                            background: lighten(getMapByPath($colors, 'primary.default.background'), 30%);
+                                            color: lighten(getMapByPath($colors, 'primary.default.color'), 50%);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            #navbar-collapse{
+                .navbar-nav > {
+                    li > {
+                        a{
+                            // color: darken(getMapByPath($colors, 'primary.default.color'), 26.5%);                            
+                            // color:  darken(getMapByPath($colors, 'primary.default.color'), 53.5%);
+                            &:hover{
+                                background-color: darken(getMapByPath($colors, 'secondary.default.background'), 5%);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    &.enableExpandCollapse{
+        .navbar-right-panel{
+                background-color: getMapByPath($colors, 'secondary.default.background');
+                #navbar-collapse{
+                    .navbar-nav > {
+                        li > {
+                            a{
+                                //color: darken(getMapByPath($colors, 'primary.default.color'), 26.5%);
+                                // color:  darken(getMapByPath($colors, 'primary.default.color'), 53.5%);
+                                &:hover{
+                                    background-color: darken(getMapByPath($colors, 'secondary.default.background'), 5%);
+                                }
+                            }
+                        }
+                    }
+                }
+        }
+    }
+    .navbar-brand {
+            color: lighten(getMapByPath($colors, 'primary.default.color'), 50%);
+        // &:hover {
+        //     color: $theme-material-mixed-navbar-brand_hover;
+        // }
+
+        //     &:active {
+        //         color: $theme-material-mixed-navbar-brand_active;
+        //     }
+
+        // &:focus {
+        //     color: $theme-material-mixed-navbar-brand_focus;
+        // }
+    }
+
+    // .nav {
+    //     > li {
+    //         > a {
+    //             color: $theme-material-mixed-nav-anchor;
+
+    //             &:hover {
+    //                 background-color: $theme-material-mixed-nav-anchor_hover;
+    //             }
+
+    //             &:focus {
+    //                 background-color: $theme-material-mixed-nav-anchor_focus;
+    //             }
+    //         }
+    //     }
+
+    //     .open {
+    //         > a {
+    //             background-color: $theme-material-mixed-nav-anchor-opened;
+
+    //             &:hover {
+    //                 background-color: $theme-material-mixed-nav-anchor-opened_hover;
+    //             }
+
+    //             &:focus {
+    //                 background-color: $theme-material-mixed-nav-anchor-opened_focus;
+    //             }
+    //         }
+    //     }
+    //     &.nav-tabs{
+    //         > li{
+    //             > a{
+    //                 &::before{
+    //                     border-bottom: 2px solid $theme-material-mixed-primary-light;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+
+        .bars {
+            color: lighten(getMapByPath($colors, 'primary.default.color'), 50%);
+        }
+
+    .sidebar {
+        background: getMapByPath($colors, 'primary.default.background');
+        .menu {
+            .list {
+                // li.active {
+                //     background-color: $theme-material-mixed-menu-list-active;
+
+                //     > :first-child {
+                //         i, span {
+                //             color: $theme-material-mixed;
+                //         }
+                //     }
+                // }
+
+                // .toggled {
+                //     background-color: $theme-material-mixed-menu-list-toggled;
+                // }
+
+                // .ml-menu {
+                //     background-color: $theme-material-mixed-menu-list-submenu;
+                // }
+                a{
+                   color: darken(getMapByPath($colors, 'primary.default.color'), 26.5%);
+                    span{
+                        color: lighten(getMapByPath($colors, 'primary.default.color'), 50%);
+                    }
+                }
+            }
+        }
+
+        .legal {
+            // border-top: 1px solid $theme-material-mixed;
+            background: getMapByPath($colors, 'primary.dark.background');
+            .copyright {
+                // a {
+                //     color: $theme-material-mixed !important;
+                // }
+                img{
+                    //background: lighten(getMapByPath($colors, 'primary.default.background'), 30%);
+                    // box-shadow: 0px 0px 3px 0px lighten(getMapByPath($colors, 'primary.default.background'), 30%);
+                }
+                span{
+                    color: lighten(getMapByPath($colors, 'primary.default.color'), 50%);
+                    a{
+                        color: lighten(getMapByPath($colors, 'primary.default.color'), 50%);
+                    }
+                }
+            }
+        }
+    }
+    .search-bar {
+        input[type="text"] {
+            background: darken(getMapByPath($colors, 'surface.default.background'), 3%);
+        }
+    }
+    .dataTables_wrapper{
+        .dt-buttons {
+            background: lighten(getMapByPath($colors, 'primary.default.background'), 30%);
+            // color: lighten(getMapByPath($colors, 'primary.default.color'), 50%);
+            // color: darken(getMapByPath($colors, 'primary.default.color'), 53.5%);            
+        }
+    }
+    .sidebar {
+        .user-info {
+            background: lighten(getMapByPath($colors, 'primary.default.background'), 30%);
+        }
+    }
+}

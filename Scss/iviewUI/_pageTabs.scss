@@ -1,0 +1,99 @@
+//*iview tabs *//
+.mainTabs{
+    #viewTabs{
+        li{
+          &.active{
+                  a{
+                      color: $applicationTextColor;
+                  }
+          }
+          a{
+            padding: $applicationTabPadding;
+            .btextDir-rtl &{
+                padding: $applicationTabPaddingRtl;
+            }
+            span{
+                &.viewtabRemove{
+                    position: $applicationTabRemoveIconPosition;
+                    right: $applicationTabRemoveIconRightGap;
+                    top: $applicationTabRemoveIconTopGap;
+                    .btextDir-rtl &{
+                        right: $applicationTabRemoveIconRightRtl;
+                        left: $applicationTabRemoveIconLeftRtl;
+                    }
+                }
+                &.viewtabEdit{
+                    position: $applicationTabEditIconPosition;
+                    right: $applicationTabEditIconRightGap;
+                    top: $applicationTabTopEditIconTopGap;
+                    font-size: $applicationTabTopEditIconFontSize;
+                    &:hover{
+                        background: $applicationBackgroundColor;
+                        @include border-radius($applicationTabEditIconHoverBorderRadius);
+                        padding: $applicationTabEditIconHoverPadding;
+                        border: $applicationTabEditIconHoverBorder;
+                        margin: $applicationTabEditIconHoverMargin;
+                    }
+                    .btextDir-rtl &{
+                        right: $applicationTabEditIconRightRtl;
+                        left: $applicationTabEditIconLeftRtl;
+                    }
+                }
+            }
+            &.viewAddTab{
+                padding: $applicationTabAddTabIcon;
+            }
+          }
+          &:not(.active){
+              a{
+                  color: $applicationTabTextColor;
+                  border-color:$applicationTabInNotActiveBoderColor;
+              }
+          }
+    
+        }
+    }
+    .badge{
+        background: $applicationColor;
+    }
+    
+    #dvViewtabs {
+      display:$applicationTabDvViewtabsDisplay;
+      position:$applicationTabDvViewtabsPosition;
+      margin:0 auto;
+      overflow:$applicationTabDvViewtabsOverflow;
+      padding:$applicationTabDvViewtabsPadding;
+      height:$applicationTabDvViewtabsHeight;
+    }
+    
+    #viewTabs {
+      position:$applicationTabViewTabsPosition;
+      left:0px;
+      top:0px;
+      min-width:$applicationTabViewTabsMinWidth;
+      margin-left:$applicationTabViewTabsMarginLeft;
+      .btextDir-rtl &{
+          @include rtlRightAlign;
+      }
+    }
+    .scroller {
+        cursor:pointer;
+        display:$applicationTabScrollerDisplay;
+        padding:$applicationTabScrollerPadding;
+    }
+    .scroller-right{
+      @include floatRight;
+      i{
+          color: $applicationIconColor;
+      }
+    }
+    .scroller-left {
+       @include floatLeft;
+       i{
+        color: $applicationIconColor;
+        }
+    }
+}
+
+
+//*iview tabs *//

@@ -1,0 +1,37 @@
+//*Wizard Dc classic Header---------------*//
+.wizard-type-classic{
+    &.btextDir-rtl{
+        #wizardWrappper{
+            .wizardContent{
+                #wizardHeader{
+                    .wizard-progress{
+                      .step{
+                          &:not(:last-child):not(.flat){
+                              &::before{
+                                   @include wizardDcClassicProgressBarRtl;
+                              }
+                          }
+                          &.in-progress{
+                            &:not(:last-child):not(.flat){
+                                &::before{
+                                    @include wizardDcClassicBackgroundRtl;
+                                }
+                            }
+                          }
+                      }
+                    }
+                }
+            }
+        }
+    }
+    #wizardWrappper{
+        .wizardContent{
+            #wizardHeader{
+                @include wizardDcClassicPadding;
+                @include wizardProgress;
+            }
+        }
+    }
+}
+
+//*Wizard Dc Header---------------*//

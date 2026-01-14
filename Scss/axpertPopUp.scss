@@ -1,0 +1,142 @@
+@import '_variables/_genericVariables';
+@import '_variables/_globalVariable';
+@import '_mixins/_globalMixin';
+//* materialui mixin ==================================== *//
+@import 'materialUI/_mixins';
+#axpertPopupWrapper {
+    max-width: calc(#{$applicationMaximumWidth} - #{$applicationAxpertPopUpHeightCalc});
+    height: calc(#{$applicationMaximumWidth} - #{$applicationAxpertPopUpHeightCalc});
+    margin: $applicationAxpertPopWrapperUpMargin;
+    button{
+        //@include coldBtnDefault;
+        border-radius: $applicationCircleBorderRadius;
+        width: $applicationPopUpCloseBtnWidtht;
+        margin: $applicationPopUpCloseBtnMargin;
+        font-size: $applicationPopUpCloseBtnFonSize;
+        top: $applicationPopUpCloseBtnTop;
+        right: $applicationPopUpCloseBtnRight;
+        &.remodal-close::before{
+            content: '';
+        }
+        .btextDir-rtl &{
+            left: $applicationPopUpCloseBtnLeftRtl;
+            right: $applicationPopUpCloseBtnRightRtl;
+          } 
+    }
+    
+    
+}
+// #form1{
+//     @include centerAlign;
+// }
+.file-upload{
+    position: $applicationPositionRelative;
+    .file-select{
+        border:2px solid $applicationFileUploadBorder;
+        .file-select-button{
+            &:hover,&:focus{
+                outline: none;
+            }
+            display: $applicationDisplayInline;
+            @include clearBtn;
+            cursor: pointer;
+            background:$clearBtnHoverBackgroundColor;
+        }
+        input[type=file]{
+            @include fileUploadInput;
+        }
+        .file-select-name{
+            display: inline-block;
+        }
+    }
+    
+}
+#heightframe {
+    height: calc(#{$nonGridDcMaximumHeightFrame} - #{$nonGridDcCalcHeightFrame});
+}
+.remodal-wrapper {
+    overflow: hidden;
+    padding: 0;
+}
+
+// div#heightframe[data-submitcancel=false] {
+//     height: calc(100vh - 125px);
+//     height: -webkit-calc(100vh - 125px);
+//     height: -moz-calc(100vh - 125px);
+//     height: -o-calc(100vh - 125px);
+//     overflow: auto;
+//     overflow-x: hidden;
+// }
+
+#axpertPopupWrapperDWB{
+    .dvOutput{
+        margin: 15px 5px;
+        border: 1px solid #ccc;
+        border-style: inset; 
+        width: 100%;
+        height: calc(100vh - 260px);
+        font-family: "Roboto", sans-serif;
+        font-size: 14px;
+        font-weight: normal;
+        .rsltHeader{
+            background-color: #ececec;
+            color: #9999a4;
+            height: 25px;
+            padding: 1px 7px;
+            border: 1px solid #ccc;
+            font-weight:bold;
+            #spnRowCnt{
+                float:right;
+                display:none;
+            }
+        }
+        #txtOutput{
+            padding: 5px 10px;
+        }
+        #tblOutput {
+            border-collapse: collapse;
+            max-width: 100%;  
+            width:auto;
+            overflow:auto ;
+            display: inline-block;
+            tbody {
+                overflow-y: auto;
+                overflow-x: hidden;
+                height:auto;
+                display: block;
+                tr{
+                    td{
+                        min-width: 100px;
+                        height: 25px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        max-width: 100px;
+                        padding-left:5px;
+                    }
+                }
+            }
+            thead{
+                display: block;
+                tr{
+                    th{
+                        min-width: 100px;
+                        height: 25px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        max-width: 100px;
+                        padding-left:5px;
+                    }
+                }
+            }
+        }
+    }
+    button{
+        &.remodalCloseBtn{
+            @include coldBtnDefault;
+            border-radius: $applicationCircleBorderRadius;
+            right: 6px;
+            width: 35px;
+            top: 2px;
+        }
+    }
+}

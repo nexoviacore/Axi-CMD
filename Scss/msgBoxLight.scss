@@ -1,0 +1,61 @@
+//* Global Variable ==================================== *//
+@import '_variables/_genericVariables';
+@import '_variables/_globalVariable';
+//* iview mixin ==================================== *//
+@import '_mixins/_globalMixin';
+//*------- msgBox ---------*//
+.msgBoxBackGround{
+      background: $applicationMsgBoxBackgroundColor;
+      top: 0;
+      left: 0;
+      position: $msgBoxBackGroundPosition;
+}
+.coverBackGround
+{
+    top:0;
+    left:0;
+    @include marginPadingSet;
+    position:$coverBackGroundPosition;
+    width:$msgBoxCoverBackgroundWidth;
+    height:$msgBoxCoverBackgroundHeight;
+    background: $applicationMsgBoxBackgroundColor;
+    opacity:0.1;
+}
+.msgBox{
+    position: $msgBoxPosition;
+    padding: $msgBoxPadding;
+    width: $applicationMaximumWidth;
+    @include shadow;
+    @include msgBoxRadius;
+    z-index: 1;
+    .msgBoxTitle{
+        @include msgBoxTitle;
+    }
+    .msgBoxContainer{
+        .msgBoxInputs{
+            .msgInput{
+                span{
+                        margin-left: 0px;
+                        font-size: $applicationFontSize;
+                        display: block;
+
+                    textarea{
+                        margin-top: $msgBoxTextareaTopMargin;
+                        width:$applicationMaximumWidth;
+                        @include border-radius(5);
+                        border:1px solid $applicationBorderColor;
+                    }
+                    #charcount{ 
+                        border:1px solid $applicationBorderColor;
+                        @include textCenter;
+                    }
+                }
+                
+            }
+        }
+    }
+    .msgBoxButtons{
+        margin-top: $msgBoxButtonsTopMargin;
+    }
+}
+//*-------msgBox---------*//

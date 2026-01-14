@@ -1,0 +1,205 @@
+//* gridDcTitle ==================================== *//
+@import 'tstructUI/_gridDcTitle';
+//* gridDcButton ==================================== *//
+@import 'tstructUI/_gridDcButton';
+//* gridDcTable ==================================== *//
+@import 'tstructUI/_gridDcTable';
+//* Grid Attachement ==================================== *//
+@import 'tstructUI/_gridAttachment';
+//* Grid Form ==================================== *//
+@import 'tstructUI/_gridDcForm';
+/* Grid DcPopUp ==================================== */
+@import 'tstructUI/_gridDcPopUp';
+//* Grid toggle ==================================== *//
+@import 'tstructUI/_gridDcToggle';
+//* dc checklist Form ==================================== *//
+@import 'tstructUI/_dcChecklist.scss';
+//* GridDc ==================================== *//
+.tab-content {
+    .dvdcframe {
+        display: block;
+        //margin-top: $gridDcFrameTopMargin;
+        .grdButtons{
+            .tgl-ios{
+                display: none;
+            }
+        }
+    }
+}
+.grdButtons{
+    .tgl-ios{
+        display: none;
+    }
+}
+.bs-example {
+    position: $appliactionNewgridBtnMainPosition;
+    .newgridbtn{
+        display: inline-block;
+        @include floatRight;
+        ul{
+            padding: 0px;
+            li:not(.dropdown-menu>li){
+                @include gridList;
+                cursor: pointer;
+                .dropdown-menu{
+                    border: 0px;
+                    left: $appliactionNewgridbtnDropdwonMenuLeft;
+                    right: $appliactionNewgridbtnDropdwonMenuRight;
+                    li{
+                        width: $appliactionNewgridbtnDropdwonMenuListWidth;
+                        margin: $appliactionNewgridbtnDropdwonMenuListMargin;
+                        padding: $appliactionNewgridbtnDropdwonMenuListPadding;
+                        // &:hover{
+                        //     background-color: #f5f5f5;
+                        // }
+                    }
+                }
+                a{
+                    color: $moduleIconColor;
+                }
+            }
+            .gridAddRow{
+                border:none;
+                background: none;
+                color: $moduleIconColor;
+                // padding: 0px;
+                &:focus{
+                    outline: none;
+                }
+            }
+        }
+    }
+    .container-fluid{
+        &.mainContent{
+            padding-left: 0px;
+        }
+    }
+    ul{
+        li{
+            a{
+                span{
+                    &.gridoptions{
+                        font-size: $appliactionGridOptionFontSize;
+                        position: $appliactionGridOptionPosition;
+                        top: $appliactionGridOptionTop;
+                        left: $appliactionGridOptionLeft;
+                        color: $moduleIconColor;
+                        display: none;
+                    }   
+                }
+            }
+        }
+    }
+}
+.grid-stack  {
+    > .grid-stack-item{
+        min-width: $gridStackItemMinWidth;
+        position: $gridStackItemPositionAbsolute;
+        padding: 0;
+    }
+}
+.dvheightframe {
+    .input-group-addon{
+        padding: $inputGridAddonPadding;
+    }
+}
+.frameCap{
+    vertical-align:$appliactionGridDcTitleFrameCapVerticalAlign;
+    margin-left:$appliactionGridDcTitleFrameCapMarginLeft;
+    display: $appliactionGridDcTitleFrameCapDisplay;
+    padding-top: $appliactionGridDcTitleFrameCapPaddingTop;
+    font-size: $appliactionGridDcTitleFrameCapFontsize;
+    font-weight: $appliactionGridDcTitleFrameCapFontWeight;
+}
+.formGridRow{
+  background: $applicationBackgroundColor;
+  @include shadow;
+  @include border-radius(4);
+  margin: $formGridRowMargin;
+  padding: $formGridRowPadding;
+  .isMobile & {
+      padding: $formGridRowPaddingMobile;
+  }
+  .removeformGridbutton,.addFormGridbutton{
+    display: $formGridRowButtonsDisplay;
+    @include floatLeft;
+  }
+}
+.dcContent{
+    width: 80%;
+}
+
+.dcTablePopup {
+    overflow : scroll;
+    height: calc(100vh - 130px);
+    table {
+        display: block;
+        border-top: 1px solid #ccc;
+        text-align: center;
+        font-size: 14px;
+        thead, tbody {
+            tr {
+                th:first-child, td:first-child {
+                    display: none;
+                }
+                th,td {
+                    border: 1px solid #ccc;
+                    textarea {
+                        border: 1px solid #ccc;
+                        resize: none;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.isMobile{
+    .dcCaptionBtn {
+        width: 100%;
+        .mobGridOptionsIcon {
+            margin-right: 9px;
+        }
+    }
+}
+
+
+[id^=colScroll] {
+    padding-left: $gridDCcolScrollPaddingLeft;
+    width: $gridDCcolScrollWidth;
+    overflow: $gridDCcolScrollOverflow;
+    @include scrollBar;
+    &.griddivColumn{
+        &.gridFixedHeader{
+            overflow: $gridDCcolScrollOverflowGridFixedHeader;
+            @include calc(max-height,$gridDCcolScrollGridFixedHeaderHeightclac);
+            border-top: 1px solid $gridDCcolScrollGridFixedHeaderBorder;
+            table{
+                thead{
+                    tr{
+                        th{
+                            background: #fff;
+                            position: -webkit-sticky;
+                            position: $gridDCcolScrollGridFixedHeaderBorderPosition;
+                            top: $gridDCcolScrollGridFixedHeaderBorderTop;
+                            z-index: $gridDCcolScrollGridFixedHeaderBorderZIndex;
+                            border-color: $gridDCcolScrollGridFixedHeaderBorder;
+                            border-style: $gridDCcolScrollGridFixedHeaderBorderStyle;
+                            border-width: $gridDCcolScrollGridFixedHeaderBorderWidth;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+div#wBdr {
+    input{
+        &.form-control{
+            color: $moduleLabelsOrHeadingsColor;
+        }
+    }
+}
+
+//* GridDc ==================================== *//

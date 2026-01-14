@@ -1,0 +1,210 @@
+//* Page Param Form -----------------*//
+#ivirCustomContainer, #ivContainer{
+    #accordion{
+        &.panel-group{
+          @include popUpWidth;
+          top: $accordionPanelGroupTopMargin;
+        }
+        #myFiltersBody{
+            box-shadow: 0 1px 9px $applicationShadowColor;
+            @include btnRadius;
+            border:0px;
+            @media only screen and (max-width:$breakTabDevice){
+                margin-right: $myFiltersBodyMobileMediaRightMargin;
+            }
+            #Filterscollapse{
+               #dvRefreshParam{
+                    @include floatRight;
+                    position: $pageDvRefreshParamPosition;
+                    top: $pageDvRefreshParamTopGap;
+                    right: $pageDvRefreshParamRightGap;
+                    color: $moduleIconColor;
+                    span{
+                        button{
+                            border: 0;
+                            background: no-repeat;
+                            right: $pageRefreshParamRightGap;
+                            top: $pageRefreshParamTopGap;
+                            position: $pageRefreshParamPosition;
+                            z-index: $pageRefreshParamZIndex;
+                            i{
+                                color:$moduleIconColor;
+                            }
+                        }
+                    }
+               }  
+            }
+        }
+    }
+    .tblresX{
+        tr{
+            .tdheadbar{
+                .tblheadbar{width: $applicationMaximumWidth;}
+            }
+        }
+        p{
+            span{
+                color: $compulsoryFieldStar;
+            }
+            select{
+
+                &:focus{
+                    outline: none;
+                    box-shadow: none;
+                    
+                }
+            }
+        }
+        #ivParamTable{
+            tbody{
+                tr{
+                    td{
+                        p{
+                            &.paramtd2{
+                                input,select{
+                                    width: $applicationMaximumWidth;
+                                }
+                            }
+                        }
+                        div{
+                            &.input-group{
+                                @include inputpadding;
+                            }
+                            &.paramtd2{
+                                @include inputpadding;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+#ivContainer{
+    #accordion{
+        &.panel-group{
+            @include popUpWidth;
+            top:$pageIvContainerAccordionPanelGroupTop;
+           .panel-body{
+                // .isMobile &{
+                    @include calc(max-height,$pageIvContainerAccordionPanelGroupPanelBodyMaxCalcHeight);
+                    overflow-y: auto;
+                // }
+           }
+        }
+        #myFiltersBody{
+            box-shadow: 0 1px 9px $applicationShadowColor;
+            @include btnRadius;
+            border:0px;
+        }
+    }
+    .tblresX{
+        tr{
+            .tdheadbar{
+                .tblheadbar{
+                    width: $applicationMaximumWidth;
+                    
+                }
+            }
+        }
+        p{
+            span{
+                color: $compulsoryFieldStar;
+            }
+        }
+    }
+}
+.tblresX{
+    width: $applicationMaximumWidth;
+    #dvRefreshParam{
+        @include floatRight;
+        color: $moduleIconColor;
+        &:hover,&:active{
+            outline: none;
+            text-decoration: none;
+        }
+    }
+    .btextDir-rtl &{
+        margin-left: 0;
+    }
+    td{
+        @media only screen and(max-width:$breakTabDevice){
+           display: block;
+        }
+    }
+    tr{
+        .tdheadbar{
+            .tblheadbar{
+                tbody{
+                    tr{
+                        td{
+                            @include textCenter;
+                            input{
+                                margin-top: $pageIvParamtableInputMarginTop;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    #ivParamTable{
+        tbody{
+            tr{
+                td{
+                    .chkListBdr{
+                        overflow-y: auto;
+                        height: $chkListBdrHeight;
+                    }
+                }
+            }
+        }
+    }
+}
+@media (min-width:$breakTabDevice){
+    #ivParamTable{
+        tr{
+            td{
+                width: $pageIvParamTableTdMobileWidth;  
+                vertical-align: top;
+            }
+        }
+    }
+}
+#ivParamTable {
+    p{
+        position: $ivParamTablePosition;
+        @include inputpadding;
+        color: $moduleLabelsOrHeadingsColor;
+        font-weight: $moduleLabelsOrHeadingsFontWeight;
+        &.paramtd2{
+            width: $applicationMaximumWidth;
+            .ui-datepicker-trigger{
+                position: $ivParamTableDatePickerPosition;
+                @include datePickerIcon;
+                .btextDir-rtl &{
+                    @include datePickerIconRtl;
+                }
+            }
+            &picklist{
+                margin-top: 0px;
+            }
+        }
+    }
+    div{
+        &.paramtd2{
+            .multiChkSpan {
+                &.gridstackCalcChecklist{
+                    .tokenfield {
+                        &.form-control{
+                            max-height: $ivParamTableMultiChkSpanTokenFieldMAxHeight;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+}
+//* Page Param Form -----------------*//
+

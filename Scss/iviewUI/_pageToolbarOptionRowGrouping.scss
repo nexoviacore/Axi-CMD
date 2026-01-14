@@ -1,0 +1,55 @@
+//* Row Group ==================================== *//
+.jconfirm{
+    .jconfirm-box {
+        div{
+            &.jconfirm-content-pane {
+                .jconfirm-content{
+                    .form-group{
+                        .red{
+                            color: $compulsoryFieldStar;
+                            margin: 0 $compulsoryFieldStarMargin;
+                        }
+                        a{
+                            font-size: $applicationInfoIconFontSize;
+                            &:focus,&:hover{
+                                outline: none;
+                                text-decoration: none;
+                            }
+                        }
+                        .popover{
+                            &.right{
+                                width: $applicationMaximumWidth;
+                                border-radius: $applicationBorderRadius;
+                                @include shadow;
+                            }
+                            .popover-content{
+                                font-size: $popOverFontSize;;
+                                color: lighten($applicationPageTitleColor, 50%)
+                            }
+                        }
+                    }
+                    #ivirTotalCndtnWrapper{
+                        display: none;
+                        .grndTotalWrapper{
+                            display: $grndTotalWrapperDisplay;
+                            margin: 0px;
+                        }
+                        button{
+                            background:0px;
+                            border:0px;
+                            font-size: $gowGroupingGrandTotalPlusIconFontSize;
+                            &:focus{
+                                outline: none;
+                                text-transform: none;
+                            }
+                        }
+                        .grpaddDltBtnWrapper{
+                            font-weight: bold;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+//* Row Group ==================================== *//

@@ -1,0 +1,123 @@
+@mixin border-radius($radius) {
+    -webkit-border-radius: $radius;
+    -moz-border-radius: $radius;
+    -ms-border-radius: $radius;
+    border-radius: $radius;
+}
+
+@mixin box-shadow($shadowinfo) {
+    -webkit-box-shadow: $shadowinfo;
+    -moz-box-shadow: $shadowinfo;
+    -ms-box-shadow: $shadowinfo;
+    box-shadow: $shadowinfo;
+}
+
+@mixin transform($transform) {
+    -moz-transform: $transform;
+    -ms-transform: $transform;
+    -o-transform: $transform;
+    -webkit-transform: $transform;
+    transform: $transform;
+}
+
+@mixin transition($transition) {
+    -moz-transition: $transition;
+    -o-transition: $transition;
+    -webkit-transition: $transition;
+    transition: $transition;
+}
+
+@mixin calc($property, $expression) {
+    #{$property}: -moz-calc(#{$expression});
+    #{$property}: -webkit-calc(#{$expression});
+    #{$property}: calc(#{$expression});
+}
+@mixin scrollBar {
+    &::-webkit-scrollbar {
+        width: $iviewTableWrapperNewRequestJsonScrollbarWidth;
+        height: $iviewTableWrapperNewRequestJsonScrollbarHeight;
+    }
+    &::-webkit-scrollbar-track {
+        background: $applicationBackgroundColor;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: $applicationScrollBarThumbBackgroundColor;
+        @include border-radius($iviewTableWrapperNewRequestJsonScrollbarThumBorderRadius);
+        border: 1px solid $iviewTableWrapperNewRequestJsonScrollbarThumBorderColor;
+        min-height:$applicationScrollBarThumbMinHeight;
+        min-width:$applicationScrollBarThumbMinWidth;
+    }
+    &::-webkit-scrollbar-thumb:hover{
+        border: 0px solid $applicationScrollBarThumbBackgroundColor;
+    }
+}
+@mixin three-dots-overflow() {
+    white-space: nowrap;
+    -ms-text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+@mixin disableTextSelection {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently supported by Chrome, Opera and Firefox */
+}
+
+@mixin navbar-link-color($textcolor, $navbarcolor, $opacity) {
+    .navbar-brand,
+    .navbar-brand:hover,
+    .navbar-brand:active,
+    .navbar-brand:focus {
+        color: $textcolor;
+    }
+
+    .nav > li > a:hover,
+    .nav > li > a:focus,
+    .nav .open > a,
+    .nav .open > a:hover,
+    .nav .open > a:focus {
+        background-color: transparentize($navbarcolor, $opacity);
+    }
+
+    .nav > li > a {
+        color: $textcolor;
+    }
+
+    .bars {
+        float: left;
+        padding: 10px 20px;
+        font-size: 22px;
+        color: $textcolor;
+        margin-right: 10px;
+        margin-left: -10px;
+        margin-top: 4px;
+    }
+
+    .bars:hover {
+        background-color: rgba(0,0,0,0.08);
+    }
+}
+
+@mixin rotate180 {
+    @include transform(scaleX(-1));
+}
+@mixin rotate ($rotate){
+    -ms-transform: rotate($rotate);
+    -moz-transform: rotate($rotate);
+    -o-transform: rotate($rotate);
+    -webkit-transform: rotate($rotate);
+    transform: rotate($rotate);
+}
+@mixin rtlLeftAlign {
+    left:0;
+    right: auto;
+}
+@mixin rtlRightAlign {
+    right:0;
+    left: auto;
+}

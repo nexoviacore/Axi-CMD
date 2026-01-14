@@ -1,0 +1,167 @@
+//* materialui mixin ==================================== *//
+@import 'materialUI/_mixins';
+//* Global Variable ==================================== *//
+@import '_variables/_genericVariables';
+@import '_variables/_globalVariable';
+//* iview mixin ==================================== *//
+@import '_mixins/_globalMixin';
+//* page Title ==================================== *//
+@import 'iviewUI/_pageTitle';
+//* page Loader ==================================== *//
+@import 'iviewUI/_loader';
+//* page iframe loder (tstruct and iview) ==================================== *//
+@import 'iviewUI/_pageLoader';
+//* page Loader ==================================== *//
+@import 'iviewUI/_popOver';
+//* Import Header ==================================== *//
+@import 'tstructUI/_importHeader';
+//* File Upload ==================================== *//
+@import 'tstructUI/_fileUpload';
+//* Import Data ==================================== *//
+
+#wizardBodyContent{
+    margin-top: $importContainerMarginTop;
+    .wizardContainer{
+        .allowempty{
+            color: $compulsoryFieldStar;
+            margin-left: $compulsoryFieldStarMargin;
+        }
+        .upload-section{
+            @include textCenter;
+            margin-bottom: $importDownloadMarginBottom;
+            a{
+                span{
+                    &#ico{
+                        margin-right: $importDownloadIconMarginRight;
+                    }
+                }
+            }
+            #dropdowncss{
+                display: inline-block;
+            }
+            #dopdownmenucss{
+                top: $importDopdownmenucssTopGap;
+                width: $importDopdownmenucssWidth;
+            }
+        }
+        #plnUpdate1{
+            input[type=submit]{
+                display: none;
+            }
+        }
+        table{
+            width: $applicationMaximumWidth;
+            td:nth-child(1),td:nth-child(3){
+                width: $importTableHeadFirstThirdColoumWidth;
+            }
+            td:nth-child(2){
+                width: $importTableHeadSecondColoumWidth;
+                text-align: center;
+                div{
+                    a{
+                      padding: $appliactionArrowPadding;
+                    }
+                }
+            }
+            tr{
+                td{
+                    .multiselect{
+                        height: $applicationImportTableHieght;
+                        padding: 0px;
+                        option{
+                            padding: $appliactionArrowPadding;
+                            border-bottom: 1px solid $applicationBorderColor;
+                        }
+                    }
+                }
+            }
+        }
+        #btnFileUpload,#UploadButton{
+            display: none;
+        }
+        #divProgress{
+            display: none;
+        }
+        .file-upload{
+            @include floatLeft;
+            width: $applicationMaximumWidth;
+            #spnFileSelect{
+                width: $applicationMaximumWidth;
+                @include floatLeft;
+            }
+        }
+        #ddlSeparator{
+            margin-bottom: $importSelectMarginBottom;
+        }
+        .customclscol{
+            .form-group{
+             @include importProgressBar;   
+            }
+        }
+        .importrecordtable{
+            overflow: auto;
+            max-height: $importEditTableHeight;
+        }
+        .importrecord{
+            @include textRight;
+        }
+        #summaryText{
+            .form-group{
+                @include textCenter;
+            }
+        }
+        #divProgress{
+            .progress-bar-success {
+                @include textCenter;
+                color:$progressBarIconColor;
+            }
+        }
+    } 
+    table{
+        .select-button{
+            font-size: $importTableSelectBtnFontSize;
+        }
+    } 
+}
+#wizardFooter{
+    border-top: 1px solid $applicationBorderColor;
+    padding: $exportFooterPadding;
+    .pull-left{
+        button{
+            display: none;
+        }
+    }
+    .pull-right{
+        button{
+            &#wizardCompbtn{
+                display: none;
+            }
+        }
+    }
+    #wizardNextbtn,#wizardCancelbtn,#wizardPrevbtn,#wizardCompbtn{
+        padding: $applicationwizardNextbtnPadding;
+        span{
+            &.wizard-icon{
+                position: $applicationwizardNextbtnIconPosition;
+                top: $applicationwizardNextbtnIconTopGap;
+            }
+            &.material-icons{
+                color: $applicationIconColor;
+            }
+        }
+    }
+    #wizardNextbtn,#wizardPrevbtn,#wizardCompbtn{
+        span{
+            &.material-icons{
+                color: $applicationwizardCompbtnIconColor;
+            }
+        }
+    }
+}
+#wizardFooter{
+    @include floatLeft;
+    width: $applicationMaximumWidth;
+    margin-top: $importFooterBtnMargin;
+    padding-top:$importFooterBtnPadding;
+    border-top:1px solid $applicationBorderColor;
+}

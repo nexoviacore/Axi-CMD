@@ -1,0 +1,30 @@
+﻿.search-bar {
+
+    @include applicationHomePageSearch;
+
+    /*
+        .close-search, .search-options {
+        position: absolute;
+        cursor: pointer;
+        // font-size: 30px;
+        top: 24px;
+        right: 30px;
+
+        &.material-icons, .material-icons {
+            color: #999;
+            opacity: 1;
+            @include transition(.5s);
+
+            &:hover {
+                opacity: .5;
+            }
+        }
+    }
+
+    .search-options{
+        // top: 20px;
+        right: 5px;
+    }
+    
+    */
+}

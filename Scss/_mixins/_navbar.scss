@@ -1,0 +1,98 @@
+//* navbar for home page  ==================================== *//
+  @mixin navbarStyleMainPage {
+    //font-family: $navbar-font-family;
+    @include border-radius(0);
+    //@include box-shadow(0 1px 5px rgba(0,0,0,.3));
+    @include shadow;
+    border: none;
+    position: $applicationMainPageNavbarPositionFixed;
+    top: 0;
+    left: 0;
+    z-index: $applicationMainPageNavbarZindex;
+    width: $applicationMainPageNavbarWidth;
+    height: $applicationMainPage-navbar-brand_height;
+    .navbar-brand {
+        @include three-dots-overflow();
+        width: $applicationMainPageNavbarBrandWidth;
+        // body:not(.enableExpandCollapse) &{
+        //    @include calc(width,$applicationMainPageNavbarBrandCalcWidthMobile);
+        // }
+    }
+    .navbar-custom-right-menu {
+        @include floatRight;
+    }
+    .navbar-toggle {
+        @include navbarToggleHomepage;
+        &:before {
+            content: '\E8D5';
+            font-family: 'Material Icons Outlined';
+            font-size: $applicationMainPageRightSideSettingFontSizeMobile;
+        }
+    }
+    .navbar-collapse {
+        &.in {
+            overflow: visible;
+        }
+    }
+  }
+  @mixin applicationHomePageToggleIsClosed {
+    .sidebar {
+        margin-left: $applicationMainPageToggleIsClosedMarginLeft;
+    }
+    section.content {
+        margin-left: $applicationMainPageToggleIsClosedContentMarginLeft;
+        .appBackBtn{
+            @include applicationBackBtn;
+        }
+    }
+
+    .bars {
+        &:after,
+        &:before {
+            font-family: 'Material Icons Outlined';
+            font-size: $materialIconFontSize;
+            @include transform(scale(0));
+            @include transition(all .3s);
+            position: $applicationToggleBarPositionAbsolute;
+            top: $applicationToggleBarTopGap;
+            left: $applicationToggleBarLeftGap;
+            margin-right: $applicationToggleBarMarginRight;
+        }
+
+        &:before {
+            content: '\E5D2';
+            @include transform(scale(1));
+        }
+
+        &:after {
+            content: '\E5C4';
+            @include transform(scale(0));
+        }
+    }
+
+    .navbar-brand {
+        margin-left: $applicationMainPage-navbar-brand-Margin-left;
+    }
+  }
+  @mixin navbarToggleHomepage {
+    text-decoration: none;
+    color: $applicationMainPageToggleColor;
+    width: $applicationMainPageToggleWidth;
+    height: $applicationMainPageToggleHeight;
+    margin-top: $applicationMainPageToggleMarginTop;
+    margin-right: $applicationMainPageToggleMarginRight;
+  }
+  @mixin applicationBackBtn {
+    position: $applicationMainPage-section-content-appBackBtn-Position-Fixed;
+    z-index: $applicationMainPage-section-content-appBackBtn-Zindex;
+    top: $applicationMainPage-section-content-appBackBtn-MarginTop;
+  }
+  @mixin applicationLabelCount {
+    position: $applicationLabelCountPositionAbsolute;
+    top: $applicationLabelCountTopGap;
+    right: $applicationLabelCountRightGap;
+    font-size: $applicationLabelCountfontSize;
+    line-height: $applicationLabelCountLineHeight;
+    padding: $applicationLabelCountPadding;
+  }
+//* navbar for home page  ==================================== *//

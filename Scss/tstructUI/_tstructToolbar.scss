@@ -1,0 +1,83 @@
+//* page toolbar -----------------*//
+div{
+    &.toolbarOptionsParent{
+       @include tstructToolbar;
+        &.tstructSearch{
+            position: $toolbarTstructSearchPosition;
+            top: $toolbarTstructSearchTop;
+            .modernTstructOptions &{
+                top: $toolbarTstructSearchModernTstructOptionTop;
+                &:not(.enableExpandCollapse) &{
+                    top: $toolbarTstructSearchModernTstructOptionNotEnableExpandCollapseTop;
+                }
+            }
+        }
+    }
+    &.toolbarOptionsParent{
+        .isMobile &{
+            @include floatRight;
+            top: $toolbarOptionsParentMobileTop;
+            right: $toolbarOptionsParentMobileRight;
+        }
+        .isMobile.btextDir-rtl &{
+            @include floatLeft;
+            margin: $toolbarOptionsParentMobileMarginRTL;
+        }
+    }
+}
+#lblTaskExcel,#lblTaskPDF{
+    display: none;
+}
+#cb_sactbu{
+    span{
+        padding-right: 0px;
+    }
+}
+.rightToolbarMain{
+    // position: $toolbarLeftToolbarMainPosition;
+    // right: $toolbarLeftToolbarMainRight;
+    // top: $toolbarLeftToolbarMainLeft;
+    .isMobile &{
+        //position: $toolbarLeftToolbarMainForMobilePosition;
+        top: $toolbarLeftToolbarMainForMobileTop;
+        right: $toolbarLeftToolbarMainForMobileRight;
+    }
+}
+
+.BottomToolbarBar {
+    display: $BottomToolbarBarDisplay;
+    @include floatLeft;
+    ul {
+        padding: $BottomToolbarBarUlPaddong;
+        @include textLeft;
+        // position: $BottomToolbarBarUlPosition;
+        // left: $BottomToolbarBarUlLeft;
+        // bottom: $BottomToolbarBarUlBottom;
+        margin-top: $BottomToolbarBarUlMarginTop;
+        li {
+            list-style: none;
+            display: $BottomToolbarBarUlListDisplay;
+            background-color: $BottomToolbarBarUlListBackground;
+            //margin-top: $BottomToolbarBarUlListMarginTop;
+            a {
+                color: $moduleTextOrValueColor; //$BottomToolbarBarUlListAchorColor;
+                display: $BottomToolbarBarUlListModernDisplay;
+                text-decoration: none;
+                padding: $BottomToolbarBarUlListAchorPadding;
+                cursor: pointer;
+                border: 1px solid $BottomToolbarBarUlListAchorBorderColor;
+                @include border-radius($BottomToolbarBarUlListAchorBorderRadius);
+                span {
+                    margin-right: $BottomToolbarBarUlListAchorSpanMarginRight;
+                    color: $moduleIconColor;
+                    font-size: $BottomToolbarBarUlListAchorSpanFontSize;
+                    position: $BottomToolbarBarUlListAchorSpanPosition;
+                    top: $BottomToolbarBarUlListAchorSpanTop;
+                }
+            }
+        }
+    }
+}
+
+
+//* page toolbar -----------------*//

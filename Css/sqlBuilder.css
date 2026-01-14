@@ -1,0 +1,105 @@
+#SQLslctData .CodeMirror {
+    border: 1px solid #dcdcdc;
+    height: calc(100vh - 440px) !important;
+    box-shadow: 1px 1px 3px #bfbfbf;
+}
+.btn{
+    text-transform:capitalize !important;
+}
+
+span.keyExisted {
+    padding: 3px 7px !important;
+    font-size: 14px !important;
+    color: black !important;
+}
+
+.ui-autocomplete {
+    max-height: 100px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+    z-index: 99999999 !important;
+}
+
+.ui-widget.ui-widget-content {
+    z-index: 99999999 !important;
+}
+
+[class^="col-md-12"] {
+    width: 100% !important;
+}
+#wtrFldsData{
+        margin-top: 10px;
+}
+#wtrFldsData select {
+    background-color: rgba(255,255,255,0.9);
+    width: 100%;
+}
+
+select.rlmultiSlectFld {
+    border: 1px solid #b7b7b7;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+}
+
+.multiSelWrapOpt button.smallBtn {
+    padding: 0;
+    display: block;
+    width: 44px;
+}
+
+.multiSelWrapOpt i.scndIcn {
+    position: relative;
+    left: -6px;
+}
+
+.multiSelWrapOpt i.frstIcn {
+    position: relative;
+    left: 8px;
+}
+
+select[multiple],
+select[size] {
+    height: auto;
+}
+
+.multiSelWrap {
+    width: calc(50% - 30px);
+    float: left;
+}
+
+.multiSelWrapOpt {
+    text-align: center;
+    float: left;
+    width: 60px;
+    margin-top: 35px;
+    display: inline-block;
+}
+
+.multiSelWrap2 {
+    margin-top: 23px;
+}
+
+div#tableSqlData {
+    margin-top: 21px;
+}
+
+.jconfirm-content-pane {
+    overflow: auto !important;
+}
+div#sqlFldColSlctWrapper button {
+    font-size: 21px;
+    background: none;
+    border: 0;
+    position: relative;
+    left: -6px;
+}
+div#SLCTradioBtns {
+    margin-bottom: 10px;
+}
+#TBLslctData .row {
+    margin: 0 -11px !important;
+}
+/*if confirm box is there then message is coming behind*/
+.shortMessageWrapper {
+        z-index: 99999999;
+}

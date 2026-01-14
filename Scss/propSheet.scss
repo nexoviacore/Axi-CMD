@@ -1,0 +1,83 @@
+//* Global Variable ==================================== *//
+@import '_variables/_genericVariables';
+@import '_variables/_globalVariable';
+//* iview mixin ==================================== *//
+@import '_mixins/_globalMixin';
+//* Design Mode toggle btn==================================== *//
+@import 'tstructUI/_toggleBtn';
+//* Tstruct Design Property=======*//
+#Wrapperpropsheet{
+    .scale-transition{
+        &.scale-in{
+            @include popUpScaleIn;
+        }
+        &.scale-out{
+            @include popUpScaleOut;
+        }
+    }
+    #propertySheet {
+        position: $propertySheetPosition;
+        top: $appliactionDeisgnModeToolbarPropertyTopMargin;
+        width: $appliactionDeisgnModeToolbarPropertyPopUpWidth;
+        z-index: $propertySheetZIndex;
+        padding: 0;
+        left: 0;
+        #pagebdy &{
+            width: auto;
+        }
+        .hpbHeaderTitle{
+            background: $applicationColor;
+            color: $applicationBackgroundColor;
+            padding: $propertySheetHeaderPadding;
+            button{
+                background: 0;
+                border:none;
+                &:focus{
+                    outline: none;
+                }
+                i{
+                    font-size: $designModeToolbarFontSize;
+                }
+            }
+        }
+        #propertySheetDataWrapper{
+            padding:$propertySheetDataWrapperPadding;
+            max-height: $propertySheetDataWrapperMinWidth;
+            overflow: auto;
+            #propertySearchFld{
+                border: 0;
+                @include shadow;
+                margin-top: $appliactionPopUpPadding;
+                display: $propertySearchFldDisplay;
+                padding-left: $appliactionPopUpPadding;
+                width: $propertySearchFldWidth;
+            }
+            #propTableContent{
+                table{
+                    width: $propTableContentWidth;
+                    tr{
+                        td{
+                            padding: $appliactionPopUpPadding;
+                            font-size: $applicationFontSize;
+                            border:1px solid $applicationBorderColor;
+                            .propShtDataToggleIcon{
+                                cursor: pointer;
+                                @include floatRight;
+                            }
+                            sup{
+                                color: $compulsoryFieldStar;
+                                font-size: $applicationFontSize;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    .card{
+        background: $applicationBackgroundColor;
+        @include shadow;
+        margin-left: $appliactionPopUpMargin;
+    }
+}
+//* Tstruct Design Property=======*//

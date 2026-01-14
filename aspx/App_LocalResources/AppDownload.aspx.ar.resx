@@ -1,0 +1,189 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="lblclntreq.Text" xml:space="preserve">
+    <value>متطلبات عميل إكسيركت ديسكتوب</value>
+  </data>
+  <data name="lblcontrolpanel.Text" xml:space="preserve">
+    <value>1. من القائمة ابدأ ويندوز، انقر فوق لوحة التحكم.</value>
+  </data>
+  <data name="lbldisplay.Text" xml:space="preserve">
+    <value>&lt;b&gt; العرض: &lt;/ b&gt; 1366 × 768 أو أعلى</value>
+  </data>
+  <data name="lbldoubleclick.Text" xml:space="preserve">
+    <value>انقر نقرا مزدوجا فوق ملف برنامج Filename.exe على القرص الثابت لبدء برنامج الإعداد.</value>
+  </data>
+  <data name="lbldtls.Text" xml:space="preserve">
+    <value>تفاصيل</value>
+  </data>
+  <data name="lbldwnd.Text" xml:space="preserve">
+    <value>إذا لم يبدأ التنزيل بعد،&lt;a href="javascript:void(0)" onclick="OpenDownload();"&gt;&lt;b&gt;انقر هنا&lt;/b&gt;&lt;/a&gt; للمحاولة مرة أخرى.</value>
+  </data>
+  <data name="lbldwnld.Text" xml:space="preserve">
+    <value>شكرا لك لتحميل..</value>
+  </data>
+  <data name="lblharddisk.Text" xml:space="preserve">
+    <value>&lt;b&gt; مساحة القرص الثابت: &lt;/ b&gt; 100 ميغابايت</value>
+  </data>
+  <data name="lblinstall.Text" xml:space="preserve">
+    <value>التركيب</value>
+  </data>
+  <data name="lblinstalldwn.Text" xml:space="preserve">
+    <value>لتثبيت هذا التحميل</value>
+  </data>
+  <data name="lblinstalldwnld.Text" xml:space="preserve">
+    <value>3. في قائمة البرامج المثبتة حاليا، حدد فلنام ثم انقر فوق إزالة أو إضافة / إزالة. إذا ظهر مربع حوار، اتبع الإرشادات لإزالة البرنامج.</value>
+  </data>
+  <data name="lblinstalledprog.Text" xml:space="preserve">
+    <value>3. في قائمة البرامج المثبتة حاليا، حدد فلنام ثم انقر فوق إزالة أو إضافة / إزالة. إذا ظهر مربع حوار، اتبع الإرشادات لإزالة البرنامج.</value>
+  </data>
+  <data name="lblinstruction.Text" xml:space="preserve">
+    <value>3. اتبع الإرشادات التي تظهر على الشاشة لإكمال التثبيت.</value>
+  </data>
+  <data name="lblntwrk.Text" xml:space="preserve">
+    <value>&lt;b&gt; أخرى: &lt;/ b&gt; اتصال الشبكة ب دب</value>
+  </data>
+  <data name="lblorcldb.Text" xml:space="preserve">
+    <value>&lt;b&gt; قاعدة بيانات أوراكل: &lt;/ b&gt; 10g R2 أو أحدث</value>
+  </data>
+  <data name="lblorcldb1.Text" xml:space="preserve">
+    <value>&lt;b&gt; مس سكل سيرفر: &lt;/ b&gt; 2008 R2 أو أحدث</value>
+  </data>
+  <data name="lblos.Text" xml:space="preserve">
+    <value>&lt;b&gt; نظام التشغيل: &lt;/ b&gt; ميكروسوفت ويندوز زب المزود بحزمة الخدمة SP2 / SP3Microsoft ويندوز 7 (بروفيسيونال أو بيتر)</value>
+  </data>
+  <data name="lblos1.Text" xml:space="preserve">
+    <value>&lt;b&gt; البرامج الأخرى: &lt;/ b&gt; عميل أوراكل / مس سكل دب</value>
+  </data>
+  <data name="lblproc.Text" xml:space="preserve">
+    <value>&lt;b&gt; المعالج: &lt;/ b&gt; بسرعة 1.6 جيجاهرتز أو معالج أسرع</value>
+  </data>
+  <data name="lblremovedwnld.Text" xml:space="preserve">
+    <value>لإزالة هذا التنزيل</value>
+  </data>
+  <data name="lblremoveprog.Text" xml:space="preserve">
+    <value>2.Select إضافة / إزالة البرامج.</value>
+  </data>
+  <data name="lblserverreq.Text" xml:space="preserve">
+    <value>متطلبات الخادم</value>
+  </data>
+  <data name="lblsysrqr.Text" xml:space="preserve">
+    <value>متطلبات النظام</value>
+  </data>
+</root>

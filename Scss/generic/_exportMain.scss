@@ -1,0 +1,163 @@
+#wizardBodyContent{
+    margin-top: $importContainerMarginTop;
+    .wizardContainer{
+        i{
+            &:focus{
+                outline: none;
+            }
+        }
+        #UpdatePanel1{
+            text-align: center;
+        }
+        .allowempty{
+            color: $compulsoryFieldStar;
+            margin-left: $compulsoryFieldStarMargin;
+        }
+        table:not(#tblpanel):not(#tblFilter){
+            width: 100%;
+            td:nth-child(1),td:nth-child(3){
+                width: 45%;
+            }
+            td:nth-child(2){
+                width: 10%;
+                text-align: center;
+                div{
+                    a{
+                      padding: $appliactionArrowPadding;
+                    }
+                }
+            }
+            tr{
+                td{
+                    .multiselect{
+                        height: $applicationImportTableHieght;
+                        padding: 0px;
+                        option{
+                            padding: $appliactionArrowPadding;
+                            border-bottom: 1px solid $applicationBorderColor;
+                        }
+                    }
+                    
+                }
+            }
+        }
+        #filtersection{
+            padding: $exportConditionTablePadding;
+            max-height: $importFiltersectionMaxHeight;
+            overflow-y: auto;
+            min-height: $importFiltersectionMinHeight;
+            table{
+                &#tblpanel{
+                    margin: auto;
+                    tr{
+                        td{
+                            padding: $exportPaddingTable;
+                            &#lvfld,&#filcond{
+                                select{
+                                    width: 200px;
+                                }
+                            }
+                            a{
+                                &#btnAddNew,&#clearCond{
+                                    font-size: $importExportFontSize;
+                                    color: $exportConditionPlusMinusIconColor;
+                                    &:focus{
+                                        outline: none;
+                                        text-decoration: none;
+                                    }
+                                }
+                                
+                            }
+                        }
+                    }
+                }
+                
+            }
+        }
+        #dvNewrow{
+            table{
+                &#tblFilter{
+                    tr{
+                        td{
+                            padding: $exportPaddingTable;
+                            a{
+                                span{
+                                    &.curHand {
+                                        &.icon-arrows-circle-minus{
+                                            font-size: $importExportFontSize;
+                                            color: $exportConditionPlusMinusIconColor;
+                                            &:focus{
+                                                outline: none;
+                                                text-decoration: none;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        h2{
+            &.con{
+                font-size: $importExportFontSize;
+                @include textCenter;
+            }
+        }
+        .btnExport{
+            display: none;
+        }
+        // #lnkExpFile{
+        //     display: none;
+        // }
+        
+    }
+    table{
+        .select-button{
+            font-size: $importExportFontSize;
+            &:hover{
+                outline: none;
+                text-decoration: none;
+            }
+        }
+    } 
+}
+#wizardFooter{
+    border-top: 1px solid $applicationBorderColor;
+    padding: $exportFooterPadding;
+    .pull-left{
+        button{
+            display: none;
+        }
+    }
+    .pull-right{
+        button{
+            &#wizardCompbtn{
+                display: none;
+            }
+        }
+    }
+    #wizardNextbtn,#wizardCancelbtn,#wizardPrevbtn,#wizardCompbtn{
+        padding: $applicationwizardNextbtnPadding;
+        span{
+            &.wizard-icon{
+                position: $applicationwizardNextbtnIconPosition;
+                top: $applicationwizardNextbtnIconTopGap;
+            }
+            &.material-icons{
+                color: $applicationIconColor;
+            }
+        }
+    }
+    #wizardNextbtn,#wizardPrevbtn,#wizardCompbtn{
+        span{
+            &.material-icons{
+                color: $applicationwizardCompbtnIconColor;
+            }
+        }
+    }
+}
+#backgroundDiv{
+    @include loaderFixedPoisionMiddel;
+}

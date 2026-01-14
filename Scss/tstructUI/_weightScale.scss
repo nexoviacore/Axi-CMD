@@ -1,0 +1,33 @@
+.dvdcframe { 
+    .weightScale{
+        position: $applicationPositionRelative;         
+        color: darken($applicationBackgroundColor, 40);
+        cursor: pointer;
+        .weightScaleIcon {
+            position: $applicationPositionAbsolute;
+            bottom: 3px;              
+            right: 5px;
+            .isMobile & {
+                bottom: 7px;
+            }
+        }        
+    }
+    #containerDc {
+        .edit-mode-content {
+            position: $applicationPositionRelative;
+            .weightScale {  
+                .weightScaleIcon {
+                    top: 5px;
+                }                          
+            }
+        }
+        .weightScale {
+            .weightScaleIcon {         
+                .isMobile & {
+                    top: 7px;
+                } 
+            }
+        }
+        
+    }
+}

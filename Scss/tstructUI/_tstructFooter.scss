@@ -1,0 +1,35 @@
+.tstructMainBottomFooter{
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+    .isMobile & {
+        white-space: nowrap;
+        overflow-x: auto;
+        width: calc(100vw - 20px);
+    }
+        .tstructBottomLeftButton,.tstructBottomRightButton{
+            @include floatLeft;
+            margin-right: $tstructBottomLeftButtonMargingRight;
+            ul{
+                padding: 0px;
+                li:not(.dropdown-list){
+                    list-style: none;
+                    display: inline-block;
+                    @include border-radius(50%);
+                    height: $wizardTstructBottomButtonListHieght;
+                    width: $wizardTstructBottomButtonListWidth;
+                    padding: $wizardTstructBottomButtonListPadding;
+                    a{
+                        color: $applicationIconColor;
+                    }
+                    ul{
+                        right: 0px;
+                        left: auto;
+                    }
+                }
+            }
+        } 
+        .tstructBottomRightButton{
+            @include floatRight;
+        }
+}

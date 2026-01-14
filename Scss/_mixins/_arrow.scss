@@ -1,0 +1,36 @@
+@mixin arrowStyle{
+    top: $arrowTopGap;
+    right: $arrowRightGap;
+    width: 0;
+    height: 0;
+    border: 5px solid $applicationTransparent;
+    border-top-color:$applicationTextColor;
+}
+@mixin arrowWorkFlowAfter{
+    left: 0;
+    bottom: 0;
+    height: 0;
+    border-left: $workFlowArrowAfterBorder solid $applicationBackgroundColor;
+    border-bottom: $workFlowArrowAfterBorder solid $applicationTransparent;
+}
+@mixin arrowWorkFlowBefore{
+    left: $workFlowArrowAfterLeftGap;
+    border-top: $workFlowArrowAfterBorderTop solid $applicationTransparent;
+    top: 0;
+    border-bottom: $workFlowArrowAfterBorderBottom solid $applicationTransparent;
+    z-index: 1;
+}
+@mixin inputIconCross{
+    position: $inputCrossIconPositionAbsolute;
+    color: $applicationIconColor;
+    right: $inputCrossIconRightGap;
+    top: $inputCrossIconTopGap;
+    z-index: 1;
+}
+@mixin inputIconChevronDown{
+    position: $inputIconChevronDownPositionAbsolute;
+    right: $inputIconChevronDownRightGap;
+    top: $inputIconChevronDownTopGap;
+    color: $applicationIconColor;
+    z-index: 1;
+}

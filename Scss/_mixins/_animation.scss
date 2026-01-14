@@ -1,0 +1,111 @@
+//* Multi Group Select animation effects ==================================== *//
+@mixin multiGroupSelectDropdownMainAnimationKeyFrames {
+    @-webkit-keyframes iui-fadeIn {
+        0% {
+            opacity: 0;
+        }
+    
+        100% {
+            opacity: 1;
+        }
+    }
+    
+    @-moz-keyframes iui-fadeIn {
+        0% {
+            opacity: 0;
+        }
+    
+        100% {
+            opacity: 1;
+        }
+    }
+    
+    @-ms-keyframes iui-fadeIn {
+        0% {
+            opacity: 0;
+        }
+    
+        100% {
+            opacity: 1;
+        }
+    }
+    
+    @-o-keyframes iui-fadeIn {
+        0% {
+            opacity: 0;
+        }
+    
+        100% {
+            opacity: 1;
+        }
+    }
+    
+    @keyframes iui-fadeIn {
+        0% {
+            opacity: 0;
+        }
+    
+        100% {
+            opacity: 1;
+        }
+    }
+    
+    @-webkit-keyframes iui-fadeOut {
+        0% {
+            opacity: 1;
+        }
+    
+        100% {
+            opacity: 0;
+        }
+    }
+    
+    @-moz-keyframes iui-fadeOut {
+        0% {
+            opacity: 1;
+        }
+    
+        100% {
+            opacity: 0;
+        }
+    }
+    
+    @-ms-keyframes iui-fadeOut {
+        0% {
+            opacity: 1;
+        }
+    
+        100% {
+            opacity: 0;
+        }
+    }
+    
+    @-o-keyframes iui-fadeOut {
+        0% {
+            opacity: 1;
+        }
+    
+        100% {
+            opacity: 0;
+        }
+    }
+    
+    @keyframes iui-fadeOut {
+        0% {
+            opacity: 1;
+        }
+    
+        100% {
+            opacity: 0;
+        }
+    }
+}
+
+@mixin multiGroupSelectDropdownMainAnimation {
+    -webkit-animation: iui-fadeIn .2s ease-in forwards;
+    -moz-animation: iui-fadeIn .2s ease-in forwards;
+    -ms-animation: iui-fadeIn .2s ease-in forwards;
+    -o-animation: iui-fadeIn .2s ease-in forwards;
+    animation: iui-fadeIn .2s ease-in forwards;
+}
+//* Multi Group Select animation effects ==================================== *//

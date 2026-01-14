@@ -1,0 +1,42 @@
+//*pageToolBarSearch ==========*//
+#searchoverrelay{
+    .panel-heading{
+        background: $applicationColor;
+    }
+    h4{
+        margin: 0px;
+        font-size: $applicationFontSize;
+        .icon-arrows-remove{
+            color: $applicationSearchIconColor;
+            font-size: $pageTollbarSearchRemoveIconFontSize;
+            top:$pageTollbarSearchRemoveIconTopGap;
+        }
+    }
+    #UpdatePanel1{
+        select{
+            &#ddlSearch{
+                @include pageTollbarSearch;
+            }
+        }
+        input{
+            &#searstr{
+                @include pageTollbarSearch;
+            }
+            &#Button1{
+                margin-top: $pageTollbarSearchButtonMarginTop;
+            }
+        }
+        #grdSearchRes{
+            tr{
+                &:hover,&:focus{
+                    input[type="radio"]{
+                        outline: $pageTollbarSearchgrdSearchResHoverOutline;
+                        outline-offset: $pageTollbarSearchgrdSearchResHoverOutlineOffset;
+                    }
+                }
+            }
+        }
+    }
+}
+
+//*pageToolBarSearch ==========*//

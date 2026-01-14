@@ -1,0 +1,16 @@
+.AXinfo{
+    background:$applicationBackgroundColor url(../axpimages/icons/24x24/information.png) no-repeat;
+    color: $applicationColor;
+    border-color: $applicationColor;
+    padding: $appliactionAttachmentDataPadding;
+    background-position: $applicationPageInfoBackgroundPosition;
+    .btextDir-rtl &{
+        background-position: $applicationPageInfoRtlBackgroundPosition;
+    }
+    table{  
+        margin: $applicationAXinfoMargin;
+        height: $applicationMaximumHeight;
+        @include verticalallginMiddle;
+    }
+
+}

@@ -1,0 +1,50 @@
+.dvdcframe{
+    box-shadow: rgba(50, 50, 93, 0.03%) 0px 2px 5px -1px, rgba(0, 0, 0, 0.05%) 0px 1px 3px -1px;
+    @include border-radius(6px);
+    padding: $tsructFormDvdcframePadding;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    &.nonGridDcTab{
+        padding: 0px;
+        .mainIframe{
+            padding: $tsructFormDvdcframePadding;
+            @include border-radius(6px);
+            background-color: $applicationBackgroundColor;
+        }
+    }
+    &:not(#DivFrame1){
+        min-height: 195px;
+    }
+    .mainIframe{
+        body:not(.borderInput) &{
+            input,select,textarea{
+                @include materialInput;
+                &.form-control[disabled], &.form-control[readonly], fieldset[disabled] .form-control{
+                    background: none;
+                    //border-bottom: 1px dotted #ccc;
+                    //color: #ccc;
+                }
+            }
+            span{
+                &.input-group-addon{
+                    //border-bottom: 1px solid #ccc;
+                    @include materialInput;
+                    background: none;
+                }
+            }
+        }
+        label{
+            font-size: $moduleLabelsOrHeadingsFontSize; //$tsructFormFieldFontSize;
+            color: $moduleLabelsOrHeadingsColor; //$applicationIconColor;
+            font-weight: $moduleLabelsOrHeadingsFontWeight;
+            margin-bottom: -5px;
+        }
+        .inputs{
+            input[type="button"]{
+                font-size: $tsructFormFieldFontSize;
+                font-weight: $tsructFormInputFontWeight;
+            }
+        }
+    }
+}
+

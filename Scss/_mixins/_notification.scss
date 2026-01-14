@@ -1,0 +1,16 @@
+@mixin workFlowItemOne {
+          background-color: $workFlowMsgitemoneBackgroundColor;
+          width: $workFlowMsgitemoneWidth;
+          height: $workFlowMsgitemoneHeight;
+          font-size: $workFlowMsgitemoneFontSize;
+          z-index: 1;
+          color: $applicationBackgroundColor;
+          padding: 2px;
+          border-radius: $workFlowMsgitemoneBorderRadius;
+          position: $workFlowMsgitemonePosition;
+          top: $workFlowMsgitemoneTop;
+          right: 10px;
+        //   margin-left: $workFlowMsgitemoneMarginLeft;
+          @include textCenter;
+        //   @include floatRight;
+}

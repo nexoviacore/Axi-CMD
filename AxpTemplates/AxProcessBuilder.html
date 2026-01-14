@@ -1,0 +1,250 @@
+<html xmlns="http://www.w3.org/1999/xhtml"><head runat="server">
+
+    <title>Process Flow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../UI/axpertUI/style.bundle.css">
+    <link rel="stylesheet" href="../../UI/axpertUI/plugins.bundle.css">
+    <link rel="stylesheet" href="../../ThirdParty/jquery-confirm-master/jquery-confirm.min.css">
+    <link rel="stylesheet" href="css/AxProcessBuilder.css?v=1" type="text/css">
+
+    <script language="javascript">
+        // New Mode Get Script --->
+        /*callParentNew(`LoadIframe(htmlPages.aspx?loadcaption=AxProcessFlow&
+        transid='ad__p'&
+        act='open'&
+        indexNo='1'&
+        subIndexNo='1'&
+        taskType='Make'&
+        recordid='0'&
+        mode='new'&
+        processname='')`, "function");
+        */
+        const modeurlParams = new URLSearchParams(window.location.search);
+        // alert(modeurlParams);
+        const curtransid = modeurlParams.get('transid');
+        const curact = modeurlParams.get('act');
+        const curindexNo = modeurlParams.get('indexNo');
+        const cursubIndexNo = modeurlParams.get('subIndexNo');
+        const curtaskType = modeurlParams.get('taskType');
+        const currecordid = modeurlParams.get('recordid');
+        const curprocessname = modeurlParams.get('processname');
+        const curMode = modeurlParams.get('mode');
+
+
+        // New Mode Get Script --->
+    </script>
+</head>
+
+<body id="Process_Flow" class="header-fixed header-tablet-and-mobile-fixed aside-fixed">
+    <div class="content d-flex flex-column flex-column-fluid ">
+        <!--begin::Container-->
+
+        <div class="" id="pf_content_container">
+            <!--begin::Row-->
+            <div class="row g-xl-8" id="PROFLOW-overalldiv">
+                <div class="posRel processnameborBot">
+                    <div class="proTitleBG">
+                        <h1 class="PROFLOW-page-Title text-dark fw-bolder  fs-4 fleft" id="process-name"> Process Flow</h1>
+                        <a href="#" class="editBTN fleft" id="editBTN" onclick="axProcessObj.editTstruct('ad_pm', '0');">
+                            <span class="material-icons material-icons-style material-icons-2 addBotBtn d-none">edit_circle</span>
+                        </a>
+                        <div class="clr"></div>
+                    </div><!-- proTitleBG -->
+                    <!-- a href="#" class="addBTN" id="addBTN" onclick="axProcessObj.openTstruct('ad__p');">Add</a -->
+                </div>
+                <!--begin:::Col-->
+
+                <div class="col-xl-3 col-md-3 d-flex flex-column flex-column-fluid vh-100 min-vh-100" id="PROFLOW_Left">
+                    <div class="card card-xl-stretch shadow-sm flex-root h-1px addRecordsContainer displayNone" id="modeLeftActive">
+
+                        <!-- a href="#" onclick="axProcessObj.edOpenTstruct('ad__p','1','-1','Make')" class="addRecords">Add Records</a -->
+                        <!-- edOpenTstruct(transId, keyField, keyValue, recordId, processname,indexNo,subIndexNo,taskType) { -->
+                        <!--  tstruct.aspx?transid=ad__p&act=open&indexNo=1&subIndexNo=1&taskType=Make&recordid=0 -->
+
+
+                    </div>
+                    <div class="card card-xl-stretch shadow-sm flex-root h-1px displayBlock" id="modeLeftDeActive">
+                        <div class="card-body ">
+
+                            <div id="PROFLOW-profile-container">
+                                <div class="PROFLOW-Info-Steps ax-data accordion arrows" id="procflow-steps">
+                                </div>
+
+                                <div id="NoRecords" class="d-none">
+                                    <!-- <h3 class="noRecords">No Records Added Yet</h3> -->
+                                    <img alt="Logo" class="NORecords-img" src="img/flow-chart1.png">
+
+                                </div>
+
+                            </div>
+
+
+
+
+
+                            <!--end::Body-->
+                        </div>
+
+                    </div>
+
+                    <div class="card-footer py-5 footer-legend ">
+                        <div class="footer-legend">
+                            <span class="legend-list">
+                                <span class="symbol symbol-10px symbol-circle my-auto">
+                                    <span class="symbol-label bg-make"></span>
+                                </span>
+                                <span class="fw-normal">Make</span>
+                            </span>
+                            <span class="legend-list">
+                                <span class="symbol symbol-10px symbol-circle my-auto">
+                                    <span class="symbol-label bg-approved"></span>
+                                </span>
+                                <span class="fw-normal">Approve</span>
+                            </span>
+                            <span class="legend-list">
+                                <span class="symbol symbol-10px symbol-circle my-auto">
+                                    <span class="symbol-label bg-checked"></span>
+                                </span>
+                                <span class="fw-normal">Check</span>
+                            </span>
+
+
+
+                            <span class="legend-list">
+                                <span class="symbol symbol-10px symbol-circle my-auto">
+                                    <span class="symbol-label bg-If"></span>
+                                </span>
+                                <span class="fw-normal">If</span>
+                            </span>
+
+                            <span class="legend-list">
+                                <span class="symbol symbol-10px symbol-circle my-auto">
+                                    <span class="symbol-label bg-Else"></span>
+                                </span>
+                                <span class="fw-normal">Else</span>
+                            </span>
+
+                            <span class="legend-list">
+                                <span class="symbol symbol-10px symbol-circle my-auto">
+                                    <span class="symbol-label bg-If-Else"></span>
+                                </span>
+                                <span class="fw-normal">If Else</span>
+                            </span>
+
+                            <span class="legend-list">
+                                <span class="symbol symbol-10px symbol-circle my-auto">
+                                    <span class="symbol-label bg-end"></span>
+                                </span>
+                                <span class="fw-normal">End</span>
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+
+
+                </div>
+                <!--end:::Col-->
+                <!--begin:::Col-->
+
+                <div class="col-xl-9  col-md-9 d-flex flex-column flex-column-fluid vh-100 min-vh-100" id="PROFLOW_Right">
+                    <div class="card card-xl-stretch shadow-sm flex-root h-1px">
+                        <iframe class="displayBlock" style="height: calc(100% - 0px);width: calc(100% - 0px);" id="rightIframe"></iframe>
+
+                        <iframe class="displayNone" style="height: calc(100% - 0px);width: calc(100% - 0px);" id="newrightIframe"></iframe>
+                    </div>
+                </div>
+
+                <!--<div id="PROFLOW_Right_Last" class="col-xl-3  col-md-3 d-flex flex-column flex-column-fluid vh-100 min-vh-100">
+                    <div class="card card-xl-stretch shadow-sm flex-root h-1px">
+                        <iframe src="about:blank" id="rideSideCards" frameborder="0" style="position: relative; height: 100vh; width: 100%;"></iframe>
+
+                    </div>
+                </div>-->
+
+
+
+            </div>
+
+        </div>
+    </div>
+    <div id="waitDiv" class="page-loader rounded-2 bg-radial-gradient">
+        <div class="loader-box-wrapper d-flex bg-white p-20 shadow rounded">
+            <span class="loader"></span>
+        </div>
+    </div>
+    <script src="../../UI/axpertUI/plugins.bundle.js"></script>
+    <script src="../../UI/axpertUI/scripts.bundle.js"></script>
+    <script type="text/javascript" src="../../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../../Js/alerts.min.js"></script>
+    <script src="../../js/handlebars.js"></script>
+
+    <script src="../../js/common.js"></script>
+    <script src="js/custom_common.js"></script>
+    <!-- script src="../HTMLPages/js/AxProcessFlow.js?v=1"></script -->
+    <script src="../../js/AxHTML.js"></script>
+    <script src="js/AxProcessBuilder.js"></script>
+    <script type="text/javascript">
+        var _processName = 'AxProcessBuilder';
+    </script>
+
+    <script language="javascript">
+
+        var modeLeftActive = document.getElementById("modeLeftActive");
+        modeLeftActive.innerHTML = '<h3 class="noRecords">No Records Added Yet</h3>';
+        // modeLeftActive.innerHTML += '<a href="#" onclick="axProcessObj.edOpenTstruct('+curtransid+','+curact+','+curprocessname+','+curindexNo+','+cursubIndexNo+','+curtaskType+','+currecordid+');" class="addRecords">Add Records</a>';
+        modeLeftActive.innerHTML += `<a href="#" onclick="axProcessObj.edOpenTstruct('ad__p','open','null','1','1','Make','0');" class="addRecords">Add Records</a>`;
+    </script>
+
+    <script language="javascript">
+            // alert(curMode);
+            //if (curMode == 'new') {
+            //    //  alert("i am enter"+curMode);
+            //    document.getElementById('modeLeftDeActive').classList.add("displayNone");
+            //    document.getElementById('modeLeftDeActive').classList.remove("displayBlock");
+
+            //    document.getElementById('rightIframe').classList.add("displayNone");
+            //    document.getElementById('rightIframe').classList.remove("displayBlock");
+
+            //    document.getElementById('newrightIframe').classList.add("displayBlock");
+            //    document.getElementById('newrightIframe').classList.remove("displayNone");
+
+            //    document.getElementById('modeLeftActive').classList.add("displayBlock");
+            //    document.getElementById('modeLeftActive').classList.remove("displayNone");
+            //} else if (curMode == 'edit') {
+            //    //  alert("i am enter else not"+curMode);
+            //    document.getElementById('modeLeftDeActive').classList.remove("displayNone");
+            //    document.getElementById('modeLeftDeActive').classList.add("displayBlock");
+
+            //    document.getElementById('rightIframe').classList.remove("displayNone");
+            //    document.getElementById('rightIframe').classList.add("displayBlock");
+
+            //    document.getElementById('newrightIframe').classList.remove("displayBlock");
+            //    document.getElementById('newrightIframe').classList.add("displayNone");
+
+            //    document.getElementById('modeLeftActive').classList.remove("displayBlock");
+            //    document.getElementById('modeLeftActive').classList.add("displayNone");
+            //}
+
+            //document.getElementById('modeLeftActive').classList.remove("displayBlock");
+            //document.getElementById('modeLeftActive').classList.add("displayNone");
+
+            //document.getElementById('modeLeftDeActive').classList.remove("displayNone");
+            //document.getElementById('modeLeftDeActive').classList.add("displayBlock");
+
+            //document.getElementById('rightIframe').classList.remove("displayNone");
+            //document.getElementById('rightIframe').classList.add("displayBlock");
+
+            //document.getElementById('newrightIframe').classList.remove("displayBlock");
+            //document.getElementById('newrightIframe').classList.add("displayNone");
+
+
+                // New Mode Script
+
+    </script>
+
+
+
+</body></html>

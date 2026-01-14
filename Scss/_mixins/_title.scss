@@ -1,0 +1,30 @@
+//* applicationTitle overall  ========= *// 
+@mixin applicationTitle{
+    color: $applicationPageTitleColor;
+   // font-size: $applicationTitleFont;
+    font-size: $applicationTitleFontSize;
+    font-weight: $applicationTitleFontWeight;
+    //padding: $applicationTitlePadding;
+    //padding: $applicationTitlegPadding;
+}
+@mixin applicationJconfirmTitle{
+    color: $applicationJconfirmTitleColor;
+    font-size: $applicationJconfirmTitleFontSize;
+    font-weight: $applicationJconfirmTitleFontWeight;
+}
+@mixin applicationDropdownModernTitle {
+    // background: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_background;
+    background: $applicationColor;
+    height: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_height;
+    width: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_width;
+    padding-top: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_padding_top;
+    color: $hotbtntext;
+    @include border-radius($toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_border_radius);
+    margin-bottom: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_margin_bottom;
+    display: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_display;
+    //box-shadow: 2px 2px 2px $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_shadow_color;
+    box-shadow: 2px 2px 5px 0px $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_shodow;
+    font-size: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_font_size;
+    margin-top: $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_margin_top;
+}
+//* applicationTitle overall  ========= *//

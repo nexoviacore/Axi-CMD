@@ -1,0 +1,9 @@
+////////////* loader for iview and tstruct used for show Dimmer function. ==================================== *//
+//* loader ==================================== *//
+#backgroundDiv{
+    @include loaderFixedPoisionMiddel;
+}
+#backgroundDiv{
+    @include pageLoaderImg;
+  }
+//* loader ==================================== *//

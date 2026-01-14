@@ -1,0 +1,6 @@
+//* tablewithcard ==================================== *//
+@mixin tableCardMainGrid{
+    min-width: inherit;
+    table-layout: fixed;
+    margin-left: $tableCardMainGridMarginLeft;
+}

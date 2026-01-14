@@ -1,0 +1,66 @@
+//* animation Laoding ---------------------*//
+.animationLoading {
+    border: 1px solid $applicationBorderColor;
+    @include btnRadius;
+    @include animationLoader;
+    &.animationLoadingHide{
+      display: none;
+    }
+      th,td{
+            height: $animationLoadingTableDataHeight;
+            width: 100vw;
+            border: 10px solid $applicationBackgroundColor;
+            position: $animationLoadingTdPoisitionRelative;
+            @include animationLoaderBorder;
+            @include animationLoaderEffect;
+            @include animationLoaderBackground;
+    }
+    
+}
+@-webkit-keyframes placeHolderSwept {
+  0% {
+      background-position: -400px 0;
+  }
+
+  100% {
+      background-position: 400px 0;
+  }
+}
+
+@-moz-keyframes placeHolderSwept {
+  0% {
+      background-position: -400px 0;
+  }
+
+  100% {
+      background-position: 400px 0;
+  }
+}
+
+@-o-keyframes placeHolderSwept {
+  0% {
+      background-position: -400px 0;
+  }
+
+  100% {
+      background-position: 400px 0;
+  }
+}
+
+@keyframes placeHolderSwept {
+  0% {
+      background-position: -400px 0;
+  }
+
+  100% {
+      background-position: 400px 0;
+  }
+}
+//* animation Laoding ---------------------*//
+.dataTables_scrollHeadInner {
+  th {
+    button{
+      display: none;
+    }
+  }
+}

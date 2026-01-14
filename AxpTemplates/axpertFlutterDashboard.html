@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Page Title</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+
+    <link rel="stylesheet" href="../../UI/axpertUI/style.bundle.css" />
+    <link rel="stylesheet" href="../../UI/axpertUI/plugins.bundle.css" />
+    <link rel="stylesheet" href="../../ThirdParty/jquery-confirm-master/jquery-confirm.min.css" />
+</head>
+
+<body class="page-loading stay-page-loading">
+
+    <div class="page d-flex flex-row flex-column-fluid position-relative">
+        <div class="wrapper d-flex flex-column flex-row-fluid w-100 h-100">
+            <div class="content fs-6 d-flex flex-column flex-column-fluid px-3 pt-3 pb-2 pb-2">
+                <div class="cardsPageWrapper d-none">
+                    <div class="designer toolbar ms-5 pb-0 d-none">
+                        <div class="d-flex flex-stack flex-wrap flex-sm-nowrap">
+                            <div class="d-flex flex-column align-items-start justify-content-center flex-wrap me-2">
+                                <h1 class="text-dark fw-boldest my-1 fs-2">Cards Setting
+                                    <small class="text-muted fs-6 fw-normal ms-1"></small>
+                                </h1>
+                            </div>
+                            <div class="d-flex align-items-center flex-nowrap text-nowrap py-1">
+                                <a href="javascript:void(0);"
+                                    class="editSaveCardDesign btn btn-icon btn-white btn-active-primary me-4"
+                                    onclick="$.axpertUI.cardsPage.editSaveCardDesignToggle();">
+                                    <span class="material-icons material-icons-style">
+                                        edit
+                                    </span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="cardsDesigner card list-group d-none mt-6"></ul>
+                    <div class="cardsPlot mb-8">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="waitDiv" class="page-loader rounded-2 bg-radial-gradient">
+        <div class="loader-box-wrapper d-flex bg-white p-20 shadow rounded">
+            <span class="loader"></span>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="../../UI/axpertUI/plugins.bundle.js"></script>
+    <script type="text/javascript" src="../../UI/axpertUI/scripts.bundle.js"></script>
+    <script type="text/javascript" src="../../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../../Js/common.min.js"></script>
+    <script type="text/javascript" src="../../Js/alerts.min.js"></script>
+    <script type="text/javascript" src="../../Js/xmlToJson.js"></script>
+
+    <script type="text/javascript">
+        /* Variables from mainpage */
+        var LoadIframe = callParentNew("LoadIframe");
+        var cardsData = {}, cardsDesign = {}, xmlMenuData = "", menuJson = "";
+
+        let cardsDashboardObj = {
+            dirLeft: true,
+            enableMasonry: false,
+            homePageType: "cards",
+            isCardsDashboard: true,
+            isMobile: isMobileDevice(),
+        };
+        var files = {
+            css: [],
+            js: []
+        };
+        let filePath = "/../";
+        files.js.push(`${filePath}ThirdParty/lodash.min.js`);
+        files.js.push(`${filePath}ThirdParty/deepdash.min.js`);
+
+        files.js.push(`${filePath}Js/handlebars.min.js`);
+        files.js.push(`${filePath}Js/handleBarsHelpers.min.js`);
+
+        files.js.push(`${filePath}Js/AxInterface.min.js`);
+
+        files.js.push(`${filePath}ThirdParty/Highcharts/highcharts.js`);
+        files.js.push(`${filePath}ThirdParty/Highcharts/highcharts-3d.js`);
+        files.js.push(`${filePath}ThirdParty/Highcharts/highcharts-more.js`);        
+        files.js.push(`${filePath}ThirdParty/Highcharts/highcharts-exporting.js`);
+        files.js.push(`${filePath}Js/high-charts-functions.min.js`);        
+
+        files.js.push(`${filePath}ThirdParty/DataTables-1.10.13/media/js/jquery.dataTables.js`);
+        files.js.push(`${filePath}ThirdParty/DataTables-1.10.13/media/js/dataTables.bootstrap.js`);
+
+        files.js.push(`${filePath}ThirdParty/DataTables-1.10.13/extensions/Extras/moment.min.js`);
+        files.css.push(`${filePath}ThirdParty/fullcalendar/lib/main.min.css`);
+        files.js.push(`${filePath}ThirdParty/fullcalendar/lib/main.min.js`);
+
+        if (cardsDashboardObj.isMobile) {
+            files.js.push(`${filePath}ThirdParty/jquery-ui-touch-punch-master/jquery.ui.touch-punch.min.js`);
+        }
+
+        if (cardsDashboardObj.enableMasonry) {
+            files.js.push(`${filePath}ThirdParty/masonry/masonry.pkgd.min.js`);
+        }
+
+        // files.js.push(`/HTMLPages/js/axpertFlutterDashboard.js?v=1`);
+
+        if (document.getElementsByTagName("body")[0].classList.contains("btextDir-rtl")) {
+            cardsDashboardObj.dirLeft = false;
+        }
+
+        loadAndCall({
+            files: files,
+            callBack: () => {
+
+                $(function () {
+                    deepdash(_);
+
+                    $.ajax({
+                        url: "../../aspx/cardsDashboard.aspx/GetMenuAndCardsData",
+                        type: 'POST',
+                        cache: false,
+                        async: false,
+                        // data: JSON.stringify({ }),
+                        dataType: 'json',
+                        contentType: "application/json",
+                        success: (data) => {
+                            if (data.d && data.d != "") {
+                                let result = JSON.parse(data.d);
+                                cardsData.value = result.data;
+                                cardsDesign.value = result.design;
+                                xmlMenuData = result.menu;
+                            } else {
+                                showAlertDialog("error", "Error while loading cards dashboard..!!");
+                                return;
+                            }
+                        },
+                        error: (error) => {
+                            showAlertDialog("error", "Error while loading cards dashboard..!!");
+                            return;
+                        },
+                        failure: (error) => {
+                            showAlertDialog("error", "Error while loading cards dashboard..!!");
+                            return;
+                        },
+                    });
+
+                    //start cards dasboard Init
+
+                    if (xmlMenuData != "") {
+                        xmlMenuData = xmlMenuData.replace(/&apos;/g, "'");
+                        var xml = parseXml(xmlMenuData)
+                        var xmltojson = xml2json(xml, "");
+                        menuJson = JSON.parse(xmltojson);
+                    }
+                    appGlobalVarsObject._CONSTANTS.menuConfiguration = $.extend(true, {},
+                        appGlobalVarsObject._CONSTANTS.menuConfiguration, {
+                        menuJson: menuJson,
+                    });
+                    appGlobalVarsObject._CONSTANTS.cardsPage = {
+                        setCards: false,
+                        cards: []
+                    }
+                    // try {
+                    appGlobalVarsObject._CONSTANTS.cardsPage = $.extend(true, {},
+                        appGlobalVarsObject._CONSTANTS.cardsPage, {
+                        setCards: true,
+                        cards: (JSON.parse(cardsData.value !== "" ? ReverseCheckSpecialChars(cardsData.value) : "[]",
+                            function (k, v) {
+                                try {
+                                    return (typeof v === "object" || isNaN(v) || v.toString().trim() === "") ? v : (typeof v == "string" && (v.startsWith("0") || v.startsWith("-")) ? parseFloat(v, 10) : JSON.parse(v));
+                                } catch (ex) {
+                                    return v;
+                                }
+                                //0 & - starting with does not gets parsed in json.parse
+                                //json.parse is used because it porcess int, float and boolean together
+                            }
+                        ) || []).map(arr => _.mapKeys(arr, (value, key) => key.toString().toLowerCase())),
+                        design: (JSON.parse(cardsDesign.value !== "" ? cardsDesign.value : "[]",
+                            function (k, v) {
+                                try {
+                                    return (typeof v === "object" || isNaN(v) || v.toString().trim() === "") ? v : (typeof v == "string" && (v.startsWith("0") || v.startsWith("-")) ? parseFloat(v, 10) : JSON.parse(v));
+                                } catch (ex) {
+                                    return v;
+                                }
+                            }
+                        ) || []).map(arr => _.mapKeys(arr, (value, key) => key.toString().toLowerCase())),
+                        enableMasonry: cardsDashboardObj.enableMasonry,
+                        staging: {
+                            iframes: ".splitter-wrapper",
+                            cardsFrame: {
+                                div: ".cardsPageWrapper",
+                                cardsDiv: ".cardsPlot",
+                                cardsDesigner: ".cardsDesigner",
+                                cardsDesignerToolbar: ".designer",
+                                editSaveButton: ".editSaveCardDesign",
+                                icon: "span.material-icons",
+                                divControl: "#arrangeCards"
+                            },
+                        }
+                    });
+
+                    var lcm = appGlobalVarsObject.lcm;
+                    var tempaxpertUIObj = $.axpertUI
+                        .init({
+                            isHybrid: appGlobalVarsObject._CONSTANTS.isHybrid,
+                            isMobile: cardsDashboardObj.isMobile,
+                            compressedMode: appGlobalVarsObject._CONSTANTS.compressedMode,
+                            dirLeft: cardsDashboardObj.dirLeft,
+                            axpertUserSettings: {
+                                settings: appGlobalVarsObject._CONSTANTS.axpertUserSettings
+                            },
+                            cardsPage: appGlobalVarsObject._CONSTANTS.cardsPage
+                        });
+
+                    appGlobalVarsObject._CONSTANTS.cardsPage = tempaxpertUIObj.cardsPage;
+
+                    // } catch (ex) {
+                    //     showAlertDialog("error", ex.Message);
+                    // }
+                });
+            }
+        });
+        //End cards dashboard Code
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,6 @@
+@mixin formControlStaticMode {
+    height: $formControlStaticModeHeight;
+    //padding: $formControlStaticModePadding;
+    font-size: $moduleLabelsOrHeadingsFontSize;
+    line-height: 1.5;
+}

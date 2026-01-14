@@ -1,0 +1,24 @@
+/*------------- Radio Button --------- */
+   #dvSelectProduct,.grid-stack-item-content{
+       span{
+           &.radio{
+               &.rdinput{
+                @include radioButtonGap;
+                &.radiohori{
+                    display: inline-block;
+                }
+                .btextDir-rtl &{
+                    @include radioButtonRtlGap;
+                }
+               }
+           }
+       }
+   }
+   .grid-stack-item-content {
+       span{
+           input{
+            @include radioButtonRightGap;
+           }
+       }
+   }
+/*------------- Radio Button --------- */

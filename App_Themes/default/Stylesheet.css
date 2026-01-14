@@ -1,0 +1,994 @@
+.content .dashboard h3, .ui-state-default {
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#d4d4d4', endColorstr='#ffffff');
+}
+
+#btnSearch, #btnShowCond, #leftPanel li, #refreshFilter, .btnExpImp, .button, a.rowdelete {
+    cursor: pointer;
+}
+
+button.btn.btn-primary.dropdown-toggle:focus, button.noBg.icon-basic-gear:focus {
+    outline: -webkit-focus-ring-color auto 5px !important;
+}
+
+body {
+    background-color: #fff;
+    font-size: 14px;
+    color: #707070;
+    margin: 0;
+    line-height: normal !important;
+}
+
+option {
+    background: #efefef;
+}
+
+.gridHeader {
+    background: gray;
+    clear: both;
+    float: left;
+}
+
+    .gridHeader th {
+        height: 30px;
+        float: left;
+        border-right: 1px solid #fff;
+        text-align: center;
+        color: #fff;
+        padding: 2px;
+        font-size: 14px;
+        font-weight: 100;
+    }
+
+.gridContent td, .subGridContent td {
+    height: 28px;
+    float: left;
+    border-bottom: 1px solid #fff;
+    color: #000;
+    font-size: 14px;
+    font-weight: 100;
+}
+
+.gridContent {
+    background: #ededed !important;
+    clear: both;
+}
+
+    .gridContent td {
+        vertical-align: middle;
+        padding: 2px 3px 2px 2px;
+    }
+
+#column, .column, .dc, .listViewDc {
+    vertical-align: top;
+}
+
+.subGridContent td {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+a:focus, a:hover {
+    color: #999;
+}
+
+a {
+    color: #666;
+}
+
+#header {
+    background-color: #fff;
+    padding: 5px 10px;
+    height: 70px;
+}
+
+#navbar {
+    border-top: 1px #d5d5d5 solid;
+    border-bottom: 2px #999 solid;
+    height: 35px;
+}
+
+.navbar {
+    background: #0483ad;
+}
+
+.MainMenu {
+    font-size: 8pt;
+    color: #fff;
+    padding-top: 2px;
+}
+
+.DynamicMenuStyle {
+    background-color: #595959;
+    border: 1px solid #d5d5d5;
+    z-index: 9999;
+}
+
+    .DynamicMenuStyle td {
+        background-color: #f5f5f5 !important;
+    }
+
+    .DynamicMenuStyle a {
+        background-color: #f5f5f5;
+    }
+
+#right {
+    float: right;
+    text-align: right;
+}
+
+#prouct-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #000;
+    padding: 13px 0 0;
+    margin-top: 12px;
+}
+
+#top-selectBox {
+    padding-top: 20px;
+}
+
+    #top-selectBox .ddlwidth {
+        width: 200px;
+    }
+
+#breadcrumb-panel {
+    margin-top: 1px;
+    background: #565f67;
+    height: 42px;
+}
+
+#breadcrumb-panelpopup {
+    height: 40px;
+    background: #cacaca;
+}
+
+#nextprevicons a.next, #nextprevicons a.next img, #nextprevicons a.previous img {
+    width: 16px;
+    height: 16px;
+}
+
+.icon-services {
+    background: 10px 10px no-repeat;
+    padding-left: 10px;
+}
+
+#breadcrumb {
+    color: #CCC;
+}
+
+    #breadcrumb span {
+        color: #fff !important;
+        font-weight: 400;
+        font-size: 14px;
+    }
+
+    #breadcrumb a {
+        color: #f90;
+        font-weight: 400;
+    }
+
+    #breadcrumb h3 {
+        font-size: 18px;
+        color: #fff;
+        margin: 0;
+    }
+
+#nextprevicons a.previous {
+    background: url(../../axpimages/icons/16x16/navigate_wtleft.png) center center no-repeat;
+    width: 16px;
+    height: 16px;
+    float: left;
+    padding-right: 4px;
+}
+
+#nextprevicons a.next {
+    background: url(../../axpimages/icons/16x16/navigate_wtright.png) center center no-repeat;
+    float: left;
+    padding-right: 4px;
+}
+
+.tstructcontent {
+    padding: 0;
+    border: 1px solid #bbb;
+    background: #efefef;
+}
+
+.dc {
+    margin: 2px 0 10px;
+    background: #efefef;
+    width: 100%;
+    top: 0;
+}
+
+.dcTitle {
+    width: 100%;
+    height: 40px;
+    background: #0483ad;
+    color: #fff;
+    font-size: 20px;
+    text-align: left;
+    border-radius: 5px 5px 0 0;
+}
+
+.gridForm td, .gridForm th {
+    border: 1px solid #fff;
+}
+
+.dcContent {
+    background: #fff;
+    margin: 10px;
+}
+
+.content {
+    background-color: #fff;
+    padding: 5px 10px;
+}
+
+.tstruct-content {
+    background-color: #fff;
+    padding: 5px;
+    margin-top: 5px;
+}
+
+.gridForm th {
+    background-color: #c5c5c5;
+    height: 25px;
+}
+
+.gridForm input[type=text] {
+    margin: 1px !important;
+}
+
+.pickbg {
+    background: #bac1cd;
+}
+
+.gridData {
+    min-width: 919px;
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #eee;
+    box-shadow: 0 0 20px rgba(0,0,0,.1),0 10px 20px rgba(0,0,0,.05),0 20px 20px rgba(0,0,0,.05),0 30px 20px rgba(0,0,0,.05);
+}
+
+table.gridData.clonedHtml {
+    box-shadow: none;
+}
+
+
+
+.gridData td, .gridData th {
+    padding: 5px;
+    border-collapse: collapse;
+}
+
+.gridData th {
+    background: #6d7373;
+    color: #fff;
+    font-size: 13px;
+    padding: 8px 5px;
+}
+
+    .gridData th.last {
+        border-right: 0;
+    }
+
+.gridData tr.grey1 {
+    background-color: #EEE;
+}
+
+.gridData th span {
+    color: #c00;
+    font-size: 16px;
+}
+
+.gridData .borderRight {
+    border-right: 1px solid #ccc;
+}
+
+.grid-icons {
+    background: #f8f8f8;
+    height: 30px;
+}
+
+    .grid-icons ul {
+        margin: 0;
+        padding: 0;
+    }
+
+    .grid-icons li {
+        display: inline;
+        padding: 2px;
+    }
+
+.button {
+    background-color: #0483ad;
+    color: #fff;
+    border: 1px solid #333;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 2px 10px;
+}
+
+#searchoverlay {
+    margin: 0 auto;
+    border: thin solid #bac1cd;
+}
+
+.close-button, .tstructclose-button {
+    height: 34px;
+    border-radius: 9px 9px 0 0;
+}
+
+#searchoverlay input.text, #searchoverlay input[type=password], #searchoverlay input[type=text], #searchoverlay select {
+    margin: .1em 0;
+    font-size: 12px;
+    width: 200px;
+}
+
+#searchoverlay p {
+    margin-left: 80px;
+}
+
+.overlay {
+    background: #fff;
+    border-color: #666;
+}
+
+.tstructclose-button {
+    background: gray;
+}
+
+.close-button {
+    background: #0483ad;
+}
+
+#attachment-overlay, #grid-overlay, #workflowoverlay {
+    margin: 10px 10px 0;
+}
+
+    #attachment-overlay .import-icon {
+        background: url(../../axpimages/icons/16x16/text.png) left center no-repeat;
+        padding: 0 10px 0 20px;
+    }
+
+    #workflowoverlay textarea {
+        height: 50px;
+        width: 320px;
+    }
+
+    #workflowoverlay .workflow-buttons {
+        padding: 42px 0 0 10px;
+    }
+
+.width47per {
+    width: 47% !important;
+}
+
+#column, .column {
+    display: inline-block;
+    float: left;
+    margin: 0 10px 0 0;
+    overflow-x: visible !important;
+    padding: 0;
+    position: static;
+    width: 350px;
+}
+
+.content .dashboard {
+    overflow: auto;
+    float: left;
+    border-top: 1px solid #d4d4d4;
+    margin-bottom: 10px;
+}
+
+    .content .dashboard table {
+        margin-bottom: 0 !important;
+    }
+
+    .content .dashboard h3 {
+        padding: 6px 0 3px 10px;
+        margin: 0;
+        background: -moz-linear-gradient(top,#d4d4d4,#fff);
+        background: -webkit-gradient(linear,left top,left bottom,from(#d4d4d4),to(#fff));
+        background: -ms-linear-gradient(top,#d4d4d4,#fff);
+        height: 18px;
+        font-weight: 700;
+        border-left: 1px solid #d4d4d4;
+        border-right: 1px solid #d4d4d4;
+    }
+
+.content .column1 {
+    width: 100%;
+}
+
+.content .column2 {
+    width: 478px;
+    margin-right: 10px;
+}
+
+.content .column3 {
+    width: 315px;
+    margin-right: 10px;
+}
+
+a.disabledelete, a.rowdelete {
+    display: block;
+    height: 16px;
+    width: 16px;
+}
+
+a.rowdelete {
+    background: url(../../axpimages/icons/16x16/delete-fade.png) center center no-repeat;
+}
+
+    a.rowdelete:hover {
+        background: url(../../axpimages/icons/16x16/delete.png) center center no-repeat;
+    }
+
+a.disabledelete {
+    background: url(../../axpimages/icons/16x16/delete-fade.png) center center no-repeat;
+}
+
+.arrow-down, .arrow-up {
+    padding-right: 15px;
+    color: #666;
+}
+
+.arrow-up {
+    background: url(../../axpimages/arrow-up.gif) right center no-repeat;
+}
+
+.arrow-down {
+    background: url(../../axpimages/arrow-down.gif) right center no-repeat;
+}
+
+.gridData th a {
+    color: #000;
+    text-decoration: underline;
+}
+
+    .gridData th a:hover {
+        color: #666;
+        text-decoration: none;
+    }
+
+.ui-state-hover a, .ui-state-hover a:hover {
+    color: #212121 !important;
+}
+
+#dvAppearance {
+    display: none;
+    margin-top: 5%;
+    text-align: center;
+    height: 130px;
+    overflow-y: auto;
+}
+
+#divAppearanceLeft {
+    padding: 5px;
+    margin: 5px 5px 5px 5%;
+    float: left;
+    width: 90%;
+    background-color: #bac1cd;
+}
+
+.ui-state-active, .ui-state-default {
+    background: -moz-linear-gradient(top,#d4d4d4,#fff);
+    background: -webkit-gradient(linear,left top,left bottom,from(#d4d4d4),to(#fff));
+    background: -ms-linear-gradient(top,#d4d4d4,#fff);
+}
+
+#divAppearanceLeft ul {
+    list-style-type: none;
+    margin-bottom: 0 !important;
+}
+
+#divAppearanceLeft li {
+    float: left;
+    margin-left: 5px;
+}
+
+#divAppearanceLeft image {
+    border: 1px solid #d5d5d5;
+}
+
+.allowempty {
+    color: red;
+}
+
+.ui-state-active {
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#d4d4d4', endColorstr='#ffffff') !important;
+}
+
+#waitDiv {
+    height: DYNAMIC;
+    left: 0;
+    position: absolute;
+    top: 0;
+    visibility: visible;
+    width: DYNAMIC;
+    z-index: 100000;
+}
+
+#backgroundDiv {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    background-color: #d3d3d3;
+    filter: alpha(opacity=50);
+    z-index: 999999;
+}
+
+.divFilter {
+    color: #333;
+    padding: 0 10px 10px;
+}
+
+.listViewDc {
+    margin: 0;
+    top: 0;
+    background-color: #fff;
+    border-color: #bac1cd;
+    border-width: thin;
+    border-style: solid;
+}
+
+.tstcap {
+    font-size: 13pt;
+    color: #000;
+}
+
+.dvFoot, .dvadminheader {
+    color: #666;
+    font-weight: 700;
+}
+
+.dvFoot {
+    background-color: #bac1cd;
+    border: 1 solid #bac1cd;
+    height: 35px;
+    font-size: 7.5pt;
+}
+
+.paramtd1, .paramtd2, .rbottom3, .rtop3 {
+    background-color: #fff;
+}
+
+.r1 {
+    margin: 0 5px;
+}
+
+.r2 {
+    margin: 0 3px;
+}
+
+.r3 {
+    margin: 0 2px;
+}
+
+.r4 {
+    margin: 0 1px;
+    height: 2px;
+}
+
+.rbottom3, .rtop3 {
+    display: block;
+}
+
+.dvadminheader {
+    background: #0483ad;
+    font-size: 15px;
+}
+
+.backbutton {
+    margin-top: 0;
+    float: left;
+    padding-top: 4px;
+    background: 0 0;
+    position: relative;
+    top: 2px;
+}
+
+.dvadminsubheader {
+    color: #fff;
+    font-size: 16px;
+}
+
+#leftPanel {
+    min-width: 220px;
+    width: 20%;
+    position: relative;
+    margin: 5px 0 0 5px;
+    color: #666;
+    padding-top: 0;
+}
+
+    #leftPanel li {
+        list-style: none;
+    }
+
+    #leftPanel ul {
+        width: 100%;
+    }
+
+    #leftPanel h3 {
+        height: 25px;
+        background: #0483ad;
+        padding-top: 7px;
+        padding-left: 30px;
+        margin-top: 0;
+        font-size: 14px;
+    }
+
+#contentPanelGrid {
+    width: 75%;
+    position: relative;
+    float: left;
+}
+
+.containerDc {
+    background: #f8f8f8;
+    width: 99%;
+    height: inherit;
+    clear: all;
+    float: left;
+    margin: 10px 10px 10px 7px;
+}
+
+#btnSearch {
+    background-image: url(../../AxpImages/icons/search-back.jpg);
+    width: 40px;
+    height: 30px;
+    border: 0;
+    text-indent: 9999px;
+    margin-left: 0;
+}
+
+#searchInput {
+    border: 1px solid #b8b8b7;
+    width: 170px;
+    height: 30px;
+    padding-left: 10px;
+    border-radius: 3px;
+}
+
+#dvFillGrid .gridData {
+    border-top: 0;
+    border-left: none;
+    border-right: 0;
+    border-bottom: 0;
+    background-color: #fff;
+    margin-bottom: 10px;
+}
+
+    #dvFillGrid .gridData tr:nth-child(even) td, #dvFillGrid .gridData tr:nth-child(odd) td {
+        border-top: 1px solid #d4d4d4;
+        border-bottom: 1px solid #d4d4d4;
+        border-right: 1px solid #d4d4d4;
+        border-left: 1px solid #d4d4d4;
+    }
+
+    #dvFillGrid .gridData tr:nth-child(odd) td {
+        background: #f5f6f8;
+    }
+
+    #dvFillGrid .gridData tr:nth-child(even) td {
+        background: #fff;
+    }
+
+.ui-dialog .ui-dialog-titlebar {
+    background-color: #0483ad;
+}
+
+    .ui-dialog .ui-dialog-titlebar .ui-dialog-titlebar-close ui-corner-all {
+        background-image: url(../AxpImages/icons/close-button.png);
+    }
+
+#tdAdvSrch {
+    width: 50%;
+    background: #1497c2;
+    color: #fff;
+    height: 15px;
+    font-size: 12px;
+    border-radius: 12px;
+}
+
+#dvPickFooter {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    height: 30px;
+    width: 99%;
+}
+
+.main-content {
+    margin: 0 auto;
+    width: 100%;
+    height: auto;
+    min-height: 600px;
+    padding-top: 5px;
+}
+
+.breadcrumb-panel {
+    width: 100%;
+    height: 50px;
+    padding-bottom: 5px;
+    color: #fff;
+    background: #0483ad;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.text {
+    float: left;
+    color: #fff;
+    padding-top: 8px;
+    padding-left: 19px;
+}
+
+#dvExport .gridData td, #dvimp .gridData td {
+    padding-left: 13px;
+    text-align: left;
+}
+
+.divcontainer {
+    margin-right: 14px;
+    margin-top: 0;
+    background: #efefef;
+    height: auto;
+    float: left;
+    width: 100%;
+    padding-bottom: 10px;
+}
+
+.divcont {
+    background: #fff;
+    margin-left: 10px;
+    margin-top: 10px;
+    margin-right: 10px;
+    padding-top: 21px;
+    padding-bottom: 21px;
+}
+
+#New, #btnClearimp, #btnExport, #btnImport, #btnView, .btnExpImp, .btncancel, .btnwfcancel, .btnwfsavenew {
+    margin-right: 21px;
+    color: #fff;
+}
+
+#lvPageUser {
+    width: 50px;
+}
+
+#dvInfo {
+    margin-top: 13px;
+    margin-left: 13px;
+    color: #484848;
+}
+
+select {
+    border: 1px solid #b8b8b7;
+}
+
+#refreshFilter {
+    background: #0483ad;
+    border: 0;
+    font-size: 16px;
+    border-radius: 3px;
+    color: #fff;
+}
+
+#btnShowCond {
+    background: url(../../AxpImages/icons/round.png) no-repeat;
+    color: #0483ad;
+    text-indent: -9999px;
+    border: 0;
+    width: 28px;
+    height: 29px;
+}
+
+#New, .btnExpImp, .btncancel {
+    border: 0;
+    width: 75px;
+    height: 30px;
+    font-size: 18px;
+    border-radius: 5px;
+}
+
+.btnExpImp {
+    background: #9c9c9c;
+}
+
+#New, .btncancel {
+    background: #707070;
+    cursor: pointer;
+}
+
+#btnExport, .btnwfcancel {
+    border: 0;
+    cursor: pointer;
+}
+
+.btnwfcancel {
+    background: #707070;
+    width: 70px;
+    height: 25px;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#btnExport {
+    background: #1998c2;
+    width: 75px;
+    height: 32px;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.btnwfsavenew {
+    background: #0483ad;
+    border: 0;
+    width: 100px;
+    height: 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#dvExport .gridData tr:nth-child(even) td, #dvExport .gridData tr:nth-child(odd) td, #dvimp .gridData tr:nth-child(even) td, #dvimp .gridData tr:nth-child(odd) td {
+    border-top: 1px solid #d4d4d4;
+    border-bottom: 1px solid #d4d4d4;
+    border-right: 1px solid #d4d4d4;
+    border-left: 1px solid #d4d4d4;
+}
+
+.spanTd {
+    margin-left: 0 !important;
+}
+
+#dvExport .gridData tr:nth-child(odd) td {
+    background: #f5f6f8;
+}
+
+#dvExport .gridData tr:nth-child(even) td {
+    background: #fff;
+}
+
+#dvimp .gridData tr:nth-child(odd) td {
+    background: #f5f6f8;
+}
+
+#dvimp .gridData tr:nth-child(even) td {
+    background: #fff;
+}
+
+#btnImport, #btnView {
+    background: #1998c2;
+    height: 30px;
+}
+
+#btnClearimp, #btnImport {
+    border: 0;
+    cursor: pointer;
+}
+
+#btnImport {
+    width: 75px;
+    border-radius: 5px;
+    font-size: 18px;
+}
+
+#btnClearimp {
+    background: #707070;
+    width: 133px;
+    height: 40px;
+    border-radius: 5px;
+    font-size: 20px;
+}
+
+#btnView {
+    border: 0;
+    width: 100%;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.ivcaptions, span#btnAddNew, span#btnDelete {
+    font-size: 15px;
+}
+
+.framecap {
+    margin-left: 5px;
+}
+
+.ivcaptions {
+    background-color: #0483ad;
+    color: #fff;
+}
+
+.clonedHtml {
+    position: fixed;
+}
+
+table.gridData.clonedHtml th {
+    border: 1px solid #eee;
+}
+
+button.btn.btn-primary.dropdown-toggle:focus {
+    opacity: .8;
+}
+
+span#delCond1 {
+    font-size: 15PX;
+}
+
+.header .nav .dropdown-toggle:focus {
+    background: #383838 !important;
+    opacity: .8;
+}
+
+span.icon-tstructMenuBgIcn {
+    background-image: url('images/tstruct.png') !important;
+}
+
+span.icon-pageMenuBgIcn {
+    background-image: url(images/page.png) !important;
+}
+
+span.icon-iviewMenuBgIcn {
+    background-image: url('images/iview.png') !important;
+}
+
+span.icon-linkMenuBgIcn {
+    background-image: url('images/menu.png') !important;
+}
+
+span.icon-helpMenuBgIcn {
+    background-image: url(images/help.png) !important;
+}
+
+span.mobileMenu.icon-tstructMenuBgIcn {
+    background-image: url('images/mobile-tstruct.png') !important;
+}
+
+span.mobileMenu.icon-iviewMenuBgIcn {
+    background-image: url('images/mobile-iview.png') !important;
+}
+
+span.mobileMenu.icon-linkMenuBgIcn {
+    background-image: url('images/mobile-menu.png') !important;
+}
+.popover,.popover-title,.popover-content{
+   background: #000 !important;
+   color: #fff !important;
+   font-size: 11px;
+}
+.popover.right>.arrow:after {
+ border-right-color: #000;
+}
+div#icons li:not(.dropDownLst) a {background: #8c8c8c !important;}
+div#icons li.gropuedBtn button {background: #8c8c8c !important;}
+div#icons li .dropdown-menu li a:hover{background:#8c8c8c !important}
+div#icons li .dropdown-menu li a{background:#fff !important;color:#000;}
+div#icons li#myFiltersLi {background: #a7a7a7 !important;}
+.c-button--dropdown, .c-button--dropdown:focus, .c-button--dropdown:hover {
+    background-color: #a7a7a7;
+}
+div#icons li.gropuedBtn {background: #a7a7a7 !important;}
+.modal-header, .modal-title {background-color: #757575 !important;color: #fff !important;}
+.modal-header button#btnModalClose {color:#fff;opacity:1;}
+.modal-header {background-color: #757575 !important;}
+.modal-title{color:#fff !important;}
+.modal-header button#btnModalClose {
+   float: right !important;
+   color: #fff;
+   opacity: 1;
+}
+
+.btextDir-rtl .modal-header button#btnModalClose {float: left!important;}

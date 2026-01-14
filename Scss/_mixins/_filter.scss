@@ -1,0 +1,7 @@
+//* page param Filter ==================================== *//
+@mixin filter{
+    position: $pageParamFilterPosition;
+    left: $filterLeftGap;
+    top: $filterTopGap;
+}
+//* page param Filter ==================================== *//

@@ -1,0 +1,7 @@
+// * tstruct griddc toggle for toggle table */// 
+.tgl-btn{
+    &.gridStretch{
+        @include gridStretch;
+    }
+}
+// * tstruct griddc toggle for toggle table */// 

@@ -1,0 +1,902 @@
+.header .navbar-inner {
+    background-color: #512da8 !important;
+}
+
+span#goback {
+    color: #fff !important;
+}
+
+button.ui-datepicker-close.ui-state-default.ui-priority-primary.ui-corner-all, button.ui-datepicker-current.ui-state-default.ui-priority-secondary.ui-corner-all:hover {
+    color: blue !important;
+}
+
+button.icon-cog.icon-basic-gear {
+    color: #fff;
+    background: 0;
+}
+
+.icon-services.bcrumb.left {
+    color: #fff !important;
+}
+
+.appGlobalParams {
+    color: #fff;
+}
+
+.header .nav .dropdown-toggle:hover, .header .nav .dropdown.open .dropdown-toggle {
+    background-color: #512da8 !important;
+    opacity: 1;
+}
+
+.header .nav .dropdown-toggle:hover {
+    background-color: #512da8 !important;
+    opacity: .8;
+}
+
+#moduleSelector:focus {
+    border: 1px solid #512da8 !important;
+}
+
+#moduleSelector {
+    background: #7850d8;
+    color: #fff !important;
+    border: 1px solid #c7c7c7;
+}
+
+.ui-autocomplete .ui-state-active {
+    color: #fff !important;
+    background: #9fa8da !important;
+}
+
+#header {
+    background-color: #fff;
+}
+
+.navbar {
+    background: #5c6bc0;
+}
+
+.MainMenu {
+    color: #FFF;
+}
+
+#prouct-name {
+    color: #000;
+}
+
+#breadcrumb-panel, .wizard-progress .step.complete:before, #chartSelData .selectedIcon {
+    background: #673ab7 !important;
+    COLOR: #fff !important;
+}
+
+.wizard-progress .step.in-progress:before {
+    background: #673ab7 !important;
+    background: -moz-linear-gradient(left,#673ab7 0,#fff 100%) !important;
+    background: -webkit-linear-gradient(left,#673ab7 0,#fff 100%) !important;
+    background: linear-gradient(to right,#673ab7 0,#fff 100%) !important;
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#673ab7',endColorstr='#fff',GradientType=1);
+}
+
+.wizard-progress .step.in-progress .node, #chartSelData a.selected .card {
+    border-color: #673ab7;
+}
+
+.wizard-progress .step.complete .node, .AXpaginationWrapper .pageNumberBtn.active {
+    border-color: #673ab7;
+    background-color: #673ab7;
+}
+
+input.themeInp:focus, textarea.themeInp:focus {
+    border-bottom: 1px solid #673ab7 !important;
+    box-shadow: 0 1px 0 0 #673ab7 !important;
+}
+
+
+
+#breadcrumb span {
+    color: #fff;
+}
+
+#breadcrumb a {
+    color: #5c6bc0;
+}
+
+.gridForm th {
+    background-color: #c5c5c5;
+    border: 1px solid #fff;
+}
+
+.button {
+    color: #FFF;
+}
+
+.arrow-down, .arrow-up {
+    color: #666;
+}
+
+.ui-state-hover a, .ui-state-hover a:hover {
+    color: #212121 !important;
+}
+
+#divAppearanceLeft {
+    background-color: #bac1cd;
+}
+
+    #divAppearanceLeft image {
+        border: 1px solid #d5d5d5;
+    }
+
+#backgroundDiv {
+    background-color: #d3d3d3;
+}
+
+.divFilter {
+    color: #333;
+}
+
+#leftPanel, .dvFoot, .dvadminheader {
+    color: #666;
+}
+
+.listViewDc {
+    border-color: #bac1cd;
+}
+
+.focusTheField, .form-control:focus {
+    border-color: #5c6bc0 !important;
+    outline: 0 !important;
+}
+
+button.btn.btn-primary.dropdown-toggle:focus, button.noBg.colorButton.icon-basic-settings:focus, button.noBg.icon-basic-gear:focus {
+    outline: -webkit-focus-ring-color auto 5px !important;
+}
+
+.dvFoot {
+    background-color: #bac1cd;
+}
+
+.backbutton {
+    background: 0;
+}
+
+.containerDc {
+    background: #f8f8f8;
+}
+
+.ui-dialog .ui-dialog-titlebar {
+    background-color: #5c6bc0;
+}
+
+#tdAdvSrch {
+    background: #1497c2;
+    color: #fff;
+}
+
+.leftPartAC .panelHeading {
+    background: #7850d8 !important;
+    color: #fff;
+}
+
+.breadcrumb-panel {
+    background: #00b0ff !important;
+}
+
+.divcontainer {
+    background: #efefef;
+}
+
+.divcont {
+    background: #fff;
+}
+
+#dvInfo {
+    color: #484848;
+}
+
+#refreshFilter {
+    background: #5c6bc0;
+    color: #fff;
+}
+
+.btnExpImp {
+    color: #fff;
+    background: #9c9c9c;
+}
+
+#New, .btncancel, .btnwfcancel {
+    color: #fff;
+    background: #707070;
+}
+
+#btnExport {
+    color: #fff;
+    background: #1998c2;
+}
+
+.btnwfsavenew {
+    color: #fff;
+    background: #5c6bc0;
+}
+
+#btnImport, #btnView {
+    color: #fff;
+    background: #1998c2;
+}
+
+#btnClearimp {
+    color: #fff;
+    background: #707070;
+}
+
+.ivcaptions {
+    background-color: #5c6bc0;
+    color: #fff;
+}
+
+.leftPartAC ul.listUl li a:hover {
+    text-decoration: none !important;
+    color: #fff !important;
+    background-color: #9fa8da !important;
+}
+
+.form-control:focus {
+    -webkit-box-shadow: inset 0 1px 1px rgba(110,211,207,.08),0 0 8px #5c6bc0 !important;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px #5c6bc0 !important;
+}
+
+#leftMenuToggleBtn, span#homeIcon {
+    color: #2c40b4!important;
+}
+
+.colorIcon, span#dashBoardIcon, #wizarTypeSel a.iconAnchr:hover, #wizarTypeSel a.iconAnchr:focus, .wizard-progress .step.active a, button.iconBtn.nextPrevBtn {
+    color: #4d5db9;
+}
+
+.impExpHis li.active a, .leftPartACHeader .dropdown-menu li.active a {
+    background: #8166c1 !important;
+    color: #fff !important;
+}
+
+#wrapperForSearch .closeGLSearch {
+    color: #3e50b5 !important;
+}
+
+.impExpHis li.dropdown ul.dropdown-menu li a:hover, .leftPartACHeader .dropdown-menu li a:hover {
+    color: #000 !important;
+    background: #ccd3ff !important;
+}
+
+.search-button {
+    color: #3650e6 !important;
+}
+
+.hotbtn, .hotbtntiny ,.hotbtntiny:focus{
+    color: #FFF !important;
+    background-color: #e040fb !important;
+}
+.jconfirm-light .jconfirm-buttons button.hotbtntiny:focus{
+    opacity:0.8;
+      color: #FFF !important;
+    background-color: #e040fb !important;
+    }
+
+
+#breadcrumb h3, #editAxGlo, .gridData th, .navLeft, span.pull-right.glyphicon.glyphicon-refresh.icon-arrows-rotate {
+    color: #fff !important;
+}
+
+.gridData th {
+    background-color: #5c6bc0 !important;
+}
+
+.focusTheField {
+    -webkit-box-shadow: inset 0 1px 1px rgba(110,211,207,.08),0 0 8px #5c6bc0;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px #5c6bc0;
+}
+
+.panelsHeader {
+    color: #fff;
+    background: #bfc9ff !important;
+}
+
+i#showGLSearch {
+    color: #fff;
+}
+
+#searchoverrelay .panel-heading {
+    background: #8a95d0;
+    color: #fff !important;
+}
+
+    #searchoverrelay .panel-heading h4, span.glyphicon.glyphicon-remove.icon-arrows-remove {
+        color: #fff !important;
+    }
+
+/*#GridView1 tr.even:hover,#GridView1 tr.odd:hover {
+    background: #dbe0ff !important;
+    color: #000;
+}*/
+
+.dataTables_scrollHeadInner, .gridThemeHeader {
+    background-color: #8699ff;
+    color: #fff;
+}
+
+.icon-cog {
+    background: 0 0 !important;
+    color: #fff !important;
+}
+
+button.icon-cog {
+    background: 0;
+    color: #fff !important;
+}
+
+button.remodal-close.icon-basic-remove {
+    color: #512da8 !important;
+}
+
+#Button1 span.icon-software-pencil, #ExportImportCogIcon button.noBg.icon-basic-gear, #newMenuIconsWrapper span#themeIcon,.colorIcon {
+    color: #512da8 !important;
+}
+span#themeIcon, span#themeIcon:focus, span#themeIcon:hover, .colorIcon{
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    color: #fff !important;
+}
+
+div#hamburgerMenuIcon button:focus .line, div#hamburgerMenuIcon button:hover .line {
+    background-color: #512da8;
+}
+
+.gridHeader th {
+    background: #6980ff !important;
+    color: #fff;
+}
+
+.dropdown .btn-primary, .dropdown .btn-primary:hover {
+    color: #fff;
+    background-color: #e040fb !important;
+    border-color: #e040fb !important;
+}
+
+    .dropdown .btn-primary:hover {
+        opacity: .8;
+    }
+
+.customSetupTableMN tr.activeSearchTr td, .customSetupTableMN tr.activeSearchTr th {
+    color: #1b1b1b !important;
+}
+
+.modal-header .close {
+    color: #512da8;
+    opacity: 1;
+}
+
+    .modal-header .close:hover {
+     
+        opacity: .8;
+    }
+
+.dropdown-menu > li > a:focus, .dropdown-menu > li > a:hover {
+    background: #512da8 !important;
+    color: #fff !important;
+}
+
+#moduleSelector span.icon-arrows-down {
+    color: #fff !important;
+}
+
+label#lblProperty {
+    background-color: #9d74ff !important;
+    color: #fff !important;
+}
+
+input#btnSave {
+    background-color: #512da8 !important;
+}
+
+#divtr4 tr {
+    background: #7485e0 !important;
+}
+
+table.table.table-bordered.firstble thead {
+    background-color: #7e8bd8 !important;
+    color: #fff !important;
+}
+
+table#gridHd2 th {
+    background: #7e8bd8 !important;
+}
+
+.c-button--dropdown, .c-button--dropdown:focus, .c-button--dropdown:hover {
+    background-color: #7e8bd8;
+}
+
+.c-button--dropdown {
+    color: #e6e9ed;
+}
+
+.gridHeader th {
+    background-color: #7e8bd8 !important;
+}
+
+.jconfirm .jconfirm-box.jconfirm-type-blue {
+    border-top: solid 7px #5165d0 !important;
+    -webkit-animation-name: inherit;
+    animation-name: inherit;
+}
+
+.menuSetWrapper .menuTitle {
+    border-bottom: 2px solid #512da8;
+}
+
+.menuSetWrapper p a:focus, .menuSetWrapper p a:focus [class^=icon-], .menuSetWrapper p a:hover, .menuSetWrapper p a:hover [class^=icon-] {
+    text-decoration: none;
+    background: #9fa8da;
+    color: #fff;
+}
+
+.menuSetItem.activeItem [class^=icon-], .menuSetItem.activeItem a, span.hirarchy.activeItem {
+    background: #7986cb !important;
+    color: #fff;
+}
+
+#menuContentFooter button.activeItem {
+    background: #7986cb;
+    color: #fff;
+}
+
+.customSetupTableMN tr:hover {
+    background: #e8eaf6;
+}
+
+button.btn.btn-primary.dropdown-toggle:focus {
+    opacity: .8;
+}
+
+.dashBoardTitle.hpbHeaderTitle {
+    background: #3f51b5;
+    color: #fff;
+}
+
+#HPBmainWrapper .tabs .indicator {
+    background-color: #1a237e;
+}
+
+#HPBmainWrapper .tabs .tab a.active, #HPBmainWrapper .tabs .tab a:hover {
+    color: #3f51b5;
+}
+
+.collectionListUl .collection-item:hover, li.collection-item.activeLi {
+    background: #9fa8da;
+    color: #000;
+}
+
+
+
+.customSetupTableMN tr.activeSearchTr:not(:first-child) {
+    background: #ffffff !important;
+}
+
+i.glyphicon.glyphicon-remove.icon-arrows-remove {
+    color: #512da8;
+}
+
+span#btnAddNew, span#btnDelete {
+    font-size: 15px;
+}
+
+span#delCond1 {
+    font-size: 15PX;
+}
+
+#ivirChatWrapper button.ivirChartButton.active span.ivirGraphIcon, #ivirDownloadWrapper button.active span.ivirDownload {
+    color: #9fa8da !important;
+}
+
+    #ivirChatWrapper button.ivirChartButton:focus span.ivirGraphIcon, #ivirDownloadWrapper button.active span.ivirDownload:focus, button.noBg:focus span[class*=fa] {
+        color: #3949ab !important;
+    }
+
+    #ivirChatWrapper button.ivirChartButton:hover span.ivirGraphIcon, #ivirDownloadWrapper button.active span.ivirDownload:hover, button.noBg:hover span[class*=fa], button.noBg:hover span[class*=icon], span.ivirDownload.fa.fa-file-excel-o.CSV:hover, span.ivirDownload.fa.fa-file-excel-o.EXCEL:hover, span.ivirDownload.fa.fa-file-pdf-o.PDF:hover, span.ivirDownload.fa.fa-print.PRINT:hover {
+        color: #283593 !important;
+    }
+
+.colorButton {
+    color: #512da8 !important;
+}
+
+.remodal-wrapper.remodal-is-opened #axpertPopupWrapper button.remodal-close.icon-basic-remove {
+    color: #fff !important;
+    right: 7px;
+}
+
+    .remodal-wrapper.remodal-is-opened #axpertPopupWrapper button.remodal-close.icon-basic-remove:hover {
+        opacity: .7 !important;
+    }
+
+.colorButton:hover, .hotbtndynamic:focus {
+    opacity: .8;
+}
+
+button.noBg.panel-control .iconforom, button.noBg.panel-control .iconforom:focus, button.noBg.panel-control .iconforom:hover {
+    color: #fff !important;
+}
+
+.ui-button, .ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default, html .ui-button.ui-state-disabled:active, html .ui-button.ui-state-disabled:hover {
+    background: #fff !important;
+}
+
+a.ui-state-default:hover {
+    background: #7d5ad4 !important;
+    color: #fff !important;
+    border: 0;
+}
+
+tr.tblrowcolor:focus, tr.tblrowcolor:hover {
+    background-color: #d2d8ff;
+    cursor: pointer;
+}
+
+.hotbtndynamic {
+    color: #FFF !important;
+    background-color: #e040fb !important;
+}
+
+.header .nav .dropdown-toggle:focus {
+    background-color: #7552c7 !important;
+    opacity: .8;
+}
+
+.leftico.ico, .reload, .rightico, .addOption {
+    color: #512da8 !important;
+}
+
+
+span#tabCollapseButton {
+    color: #673ab7;
+}
+
+.firstble tr:nth-of-type(even), .gridData:not(.ivirMainGrid) tr:nth-of-type(even) {
+    background: #eff1ff !important;
+}
+
+    .firstble tr:nth-of-type(even):hover, .gridData:not(.ivirMainGrid) tr:hover, .gridData:not(.ivirMainGrid) tr:nth-of-type(even):hover {
+        background: #c9d0f9 !important;
+    }
+
+span.mobIleMenuIcon {
+    color: #512da8;
+    text-shadow: 0 0 5px #303f9f;
+}
+
+.hasMobMenuChilds .selected {
+    background: #512da8;
+    color: #fff !important;
+}
+
+.ms-container .ms-list:focus {
+    border-color: #5c6bc0 !important;
+    -webkit-box-shadow: inset 0 1px 1px rgba(110,211,207,.08),0 0 8px #5c6bc0;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px #5c6bc0;
+}
+
+#header p.fdata {
+    background: #673ab7 !important;
+    COLOR: #fff !important;
+}
+
+a#listep2 span.round-tab.glyphicon.glyphicon-pencil.icon-software-pencil.disabled {
+    color: #777 !important;
+}
+
+#main div#divTitle {
+    background: #673ab7 !important;
+    color: #fff !important;
+}
+
+span.icon-tstructMenuBgIcn {
+    background-image: url(images/tstruct.png) !important;
+}
+
+span.icon-iviewMenuBgIcn {
+    background-image: url(images/iview.png) !important;
+}
+
+span.icon-pageMenuBgIcn {
+    background-image: url(images/page.png) !important;
+}
+
+span.icon-linkMenuBgIcn {
+    background-image: url(images/menu.png) !important;
+}
+
+span.icon-helpMenuBgIcn {
+    background-image: url(images/help.png) !important;
+}
+
+button.noBg:-moz-focusring {
+    outline: green dotted 1px !important;
+}
+
+.panel-heading .accordion-toggle:after {
+    color: #303f9f !important;
+}
+
+.gridData span.icon-software-pencil, table#GridView1 span.icon-basic-sheet-multiple {
+    color: #6a27de !important;
+}
+
+span.mobileMenu.icon-tstructMenuBgIcn {
+    background-image: url(images/mobile-tstruct.png) !important;
+}
+
+span.mobileMenu.icon-iviewMenuBgIcn {
+    background-image: url(images/mobile-iview.png) !important;
+}
+
+span.mobileMenu.icon-linkMenuBgIcn {
+    background-image: url(images/mobile-menu.png) !important;
+}
+
+.file-upload .file-select:focus {
+    border: 1px solid #5c6bc0 !important;
+    outline: #5c6bc0 solid 1px !important;
+    -webkit-box-shadow: inset 0 1px 1px rgba(110,211,207,.08),0 0 8px #5c6bc0 !important;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px #5c6bc0 !important;
+}
+
+button.noBg.colorButton.icon-basic-settings:focus {
+    padding: 0 !important;
+    outline: -webkit-focus-ring-color auto !important;
+}
+
+.uploadfile {
+    background: #815bde;
+}
+
+label.lbluploadtxt {
+    color: #fff !important;
+}
+
+.ui-datepicker td {
+    padding: .19px !important;
+}
+
+span#GSclearBtn:hover,#GSclearBtn {
+    color: #3f51b5 !important;
+}
+
+#nextPick {
+    color: #512da8 !important;
+}
+
+
+
+.modal-header .close:focus {
+    opacity: 0.8;
+    outline: -webkit-focus-ring-color auto 5px !important;
+}
+
+.modal-header .close:-moz-focusring {
+    opacity: 0.8;
+    outline: 1px dotted #6e6d6d;
+}
+
+.coldbtn {
+    border-radius: 4px !important;
+}
+
+#customizer:focus {
+    outline: none !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover,.dataTables_wrapper .dataTables_paginate .paginate_button:active {
+    color: white !important;
+     background-color: #512da8 !important;
+    background: linear-gradient(to bottom, #673ab7 0%, #512da8 100%) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current, .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+       background: #bbc5f9 !important;
+     background-color: #bbc5f9 !important;
+}
+
+
+@media(max-width:414px) {
+    .jconfirm.jconfirm-material .jconfirm-box .jconfirm-buttons {
+        text-align: center;
+    }
+}
+
+@media(max-width:618px) {
+    .editLayoutFooter .coldbtn {
+        margin: 3px !important;
+    }
+
+    .editLayoutFooter .previousNextEditButton {
+        padding-left: 0px;
+    }
+}
+
+.grdButtons .normalbtntiny:focus,.grdButtons .normalbtntiny:hover {
+    opacity: 0.8 !important;
+      -webkit-box-shadow: inset 0 1px 1px rgba(110,211,207,.08),0 0 8px #5c6bc0 !important;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px #5c6bc0 !important;
+    border-color: #5c6bc0 !important;
+     outline: 0px !important;
+}
+
+.grdButtons .normalbtntiny:-moz-focusring {
+    outline: #000 dotted 1px !important;
+    }
+
+
+button.btn.btn-primary.dropdown-toggle:hover {
+    opacity: .8;
+}
+
+
+button.btn.btn-primary.dropdown-toggle:focus {
+    opacity: 0.8 !important;
+    outline: 0px !important;
+    box-shadow: 0 0 0 2px rgba(206, 94, 94, 0.59);
+        -webkit-box-shadow: inset 0 1px 1px rgba(110,211,207,.08),0 0 8px #5c6bc0 !important;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px #5c6bc0 !important;
+    border-color: #5c6bc0 !important;
+
+}
+.tgl-ios:checked+.tgl-btn.togglecustom{
+    background: #673ab7 !important;
+}
+.popover,.popover-title,.popover-content{
+   background: #000 !important;
+   color: #fff !important;
+   font-size: 11px;
+}
+.popover.right>.arrow:after{
+ border-right-color: #000;
+}
+
+.popover.left>.arrow:after{
+ border-left-color: #000;
+}
+.popover.top>.arrow:after{
+ border-top-color: #000;
+}
+
+.popover.bottom>.arrow:after{
+ border-bottom-color: #000;
+}
+#propertySheet .hpbHeaderTitle,.cutsomColorbtn,.createBadge::after {
+        background: #1a237e !important;  /* light-blue darken-4 */
+    color: white;
+}
+
+.highlightOption,.highlightOption:hover{
+         background-color: #673ab7 !important;
+    color: white !important;
+}
+button.noBg.custombuilderico .iconforom, button.noBg.custombuilderico .iconforom:focus, button.noBg.custombuilderico .iconforom:hover {
+    color: #fff !important;
+}
+
+a#tblResponsibilities_previous:hover,a#tblResponsibilities_next:hover {
+    color: #fff !important;
+}
+.pagination>.active>a, .pagination>.active>a:focus, .pagination>.active>a:hover, .pagination>.active>span, .pagination>.active>span:focus, .pagination>.active>span:hover {
+    z-index: 3;
+    color: #fff;
+    cursor: default;
+      background-color: #5c6bc0 !important; 
+    border-color: #5c6bc0 !important;
+}
+.pickListFooter {
+    color: #512da8 !important;
+}
+#uldropelements li a:hover, #uldropelements li a:focus {
+    border-left: 5px solid #512da8 !important;
+    background: #ddcaff !important;
+    padding-left: 15px;
+    color: black !important;
+}
+
+th.sorting:focus, th.sorting_asc:focus {
+    outline: 1px solid #fff !important;
+}
+
+.modal-header button#btnModalClose {
+   float: right !important;
+   color: #fff;
+   opacity: 1;
+}
+
+.btextDir-rtl .modal-header button#btnModalClose {float: left!important;}
+
+.badge {
+    background-color: #7e8bd8;
+}
+.wizard-progress .step.active.flat:before {
+    border-top-color: #673ab7 !important;
+}
+.wizard-progress .step.complete.flat {
+    background: #9771db;
+}
+.wizard-progress .step.in-progress.flat {
+    background: #9771db;
+    background: -moz-linear-gradient(left, #9771db 0, #fff 120%);
+    background: -webkit-linear-gradient(left, #9771db 0, #fff 120%);
+    background: linear-gradient(to right, #9771db 0, #fff 120%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='$secondary-color', endColorstr='#fff', GradientType=1);
+}
+
+.gridDataimport th {
+       background-color: hsla(231, 48%, 48%, 0.5) !important;
+}
+
+.themecolorbg{     
+    background-color:#673ab7 !important;
+    background:#673ab7 !important;
+}
+.jconfirm-title-c {
+    background-color: #7443cc !important;
+    color: #fff !important;
+    padding: 24px 0px 0px 17px;
+    margin: -30px -25px 16px -25px !important;
+    font-weight: normal !important;
+
+}
+.modal-header, .modal-title {
+    background-color:#7443cc !important;
+    color: #fff !important;
+   }
+.modal-header .close {
+    color: #fff !important;
+    opacity:1;
+}
+#breadcrumb-panelpopup #lblcustom, #closeList {
+    color: #fff !important;
+}
+
+#breadcrumb-panelpopup {
+    background:#7443cc !important;
+}
+.homePageBody .main-header .navbar.cloud-header {
+    background-image: linear-gradient(141deg, #f7f9f8 10%, #520df5 51%, #5229b5 75%);
+}
+.homePageBody .main-header .navbar {
+    background-color: #9e79f6 !important;
+}
+#nav-searchbox input {background: #8152ef!important;}
+.homePageBody .sidebar-menu > li.active > a {
+    border-left-color: #9e79f6!important;
+}
+.homePageBody .sidebar-menu > li:hover > a, .homePageBody .sidebar-menu > li.active > a, .homePageBody .sidebar-menu > li.menu-open > a {
+    color: #ffffff;
+    background: #9e79f6!important;
+}
+.homePageBody .sidebar-menu .treeview-menu > li.active > a, .homePageBody .sidebar-menu .treeview-menu > li > a:hover {
+    color: #9e79f6!important;
+}
+.homePageBody .sidebar-menu .treeview-menu > li > a {
+    color: #9e79f6!important;
+}
+.header-list li i {color: #9e79f6!important;}
+.split-btn {background: #9e79f6!important;}
+.split-btn-vertical {background: #9e79f6!important;}
+/*.splitter {background: #9e79f6!important;}
+.splitter-horizontal {background: #9e79f6!important;}*/
+.head-list li:hover {
+    background: #9e79f6;
+}
+.item-list li:hover {background: #9e79f6 !important;}
+div#icons li:not(.dropDownLst) a {background: #9e79f6 !important;}
+div#icons li.gropuedBtn button {background: #9e79f6 !important;}
+div#icons li .dropdown-menu li a:hover{background:#9e79f6 !important}
+div#icons li .dropdown-menu li a{background:#fff !important;color:#000;}
+div#icons li#myFiltersLi {background: #9e79f6 !important;}
+div#icons li.gropuedBtn {background: #9e79f6 !important;}
+@media only screen and (min-width:320px) and (max-width:767px) {
+    .homePageBody .main-header .navbar.cloud-header {
+    background-image: linear-gradient(180deg,#0e1f88 0%,#f7f9f8 1%, #f7f9f8 20%, #0e25b1 80%, #081880 90%) !important;
+}
+}

@@ -1,0 +1,43 @@
+#AllDevOptions .notif-new {
+    width: 17px;
+}
+
+.DevOptions a {
+    border: 1px dashed #eee !important;
+    padding-block: 25px !important;
+    text-align: center;
+}
+
+.DevOptions img {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 15px;
+}
+
+.DevOptions .divTitle {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+#AllUserOptions .notif-new {
+    width: 20px !important;
+}
+
+.DevOptions a {
+    padding-bottom: 10px !important;
+}
+
+@media screen and (max-height: 660px) {
+    .DevOptions a {
+        padding-block: 10px !important
+    }
+}
+
+.DevOptions .card-body {
+    height: calc(100vh - 70px);
+    overflow: overlay;
+}
+
+.DevOptions a {
+    justify-content: start !important;
+}

@@ -1,0 +1,109 @@
+#arrangeMenu {
+    overflow-y: scroll;
+    height: calc(100vh - 43px);
+
+    ul {
+        li {
+            span {
+                span {
+
+                    &.fancytree-checkbox,
+                    &.fancytree-expander,
+                    &.fancytree-icon,
+                    &.fancytree-custom-icon {
+                        color: $applicationIconColor;
+                    }
+
+                    &.fancytree-title {
+                        font-size: 14px;
+                        padding: 3px 10px;
+                        font-family: Roboto, sans-serif;
+                        color: #333;
+                        background: #fff;
+
+                        input {
+                            color: #333;
+                            font-size: 14px;
+                            height: 20px;
+                            margin-bottom: 0px;
+                            padding: 5px 10px;
+                            border: 01px solid #000;
+                            background: #fff;
+                        }
+                    }
+                }
+
+                &.fancytree-selected {
+                    .fancytree-title {
+                        background-color: #e4e4e4;
+                    }
+                }
+
+                .fancytree-title {
+                    &:hover {
+                        background-color: #d4d4d4;
+                        color: #333;
+                    }
+                }
+            }
+
+            &:focus {
+                border: 0px;
+                outline: none;
+            }
+        }
+
+        &:focus {
+            border: 0px;
+            outline: none;
+        }
+
+        &.fancytree-container {
+            border: 0px;
+        }
+    }
+}
+
+#iconWrapperData>span {
+    cursor: pointer;
+}
+
+#draggableSample,
+#droppableSample {
+    height: 100px;
+    padding: 0.5em;
+    width: 150px;
+    border: 1px solid #AAAAAA;
+}
+
+#draggableSample {
+    background-color: silver;
+    color: #222222;
+}
+
+#droppableSample {
+    background-color: maroon;
+    color: white;
+}
+
+#droppableSample.drophover {
+    border: 1px solid green;
+}
+
+span.pending span.fancytree-title:after {
+    content: "\2026";
+    /* ellipsis */
+}
+
+#waitDiv {
+    z-index: 100000;
+    display: none;
+    #backgroundDiv {
+      @include loaderFixedPoisionMiddel;
+    }
+  
+    #backgroundDiv {
+      @include pageLoaderImg;
+    }
+  }
+  

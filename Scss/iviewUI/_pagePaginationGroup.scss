@@ -1,0 +1,42 @@
+//* page pagination ==================================== *//
+#rowsTxtCount,#rowsTxtCountNew {
+    @include floatRight;
+    margin: $pagePaginationMargin;
+    .btextDir-rtl &{
+        @include floatLeft;
+    }
+    #dvRefreshParam{
+        display: $pageDvRefreshParamDisplay;
+    }
+    span {
+        #lblCurPage {
+            color: $moduleTextOrValueColor;
+            a{
+                color: $moduleIconColor;
+            }
+        }
+    }
+    #lblNoOfRecs,#lnkShowAll{
+        color: $moduleIconColor;
+    }
+}
+#rowsTxtCountNew{
+    margin: $pageBottomPaginationMargin;
+    .requestJSON:not(.requestJsonOldUi).isMobile &{
+        margin: $pageBottomPaginationMarginRequestJSONMobile;
+    }
+    #dvSelectedFilters {
+        @include filter;
+    }
+}
+.dataTables_wrapper{
+    .dataTables_paginate{
+        .paginate_button{
+            padding: 0;
+            &:hover{
+                background: none;
+            }
+        }
+    }
+}
+//* page pagination ==================================== *//

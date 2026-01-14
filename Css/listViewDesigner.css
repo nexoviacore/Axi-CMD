@@ -1,0 +1,113 @@
+.topSplitDivision #GridView1Dnd_wrapper {
+  overflow-x: scroll;
+}
+
+.topSplitDivision #GridView1Dnd_wrapper .dataTables_scrollHead {
+  overflow: visible !important;
+}
+
+.topSplitDivision #GridView1Dnd_wrapper .dataTables_scrollBody .ivirMainGrid.iviewBuilder thead th .three-dot {
+  display: none;
+}
+
+.topSplitDivision #GridView1Dnd_wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.topSplitDivision #GridView1Dnd_wrapper::-webkit-scrollbar-track {
+  background: #fff;
+}
+
+.topSplitDivision #GridView1Dnd_wrapper::-webkit-scrollbar-thumb {
+  background-color: #999999;
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  -ms-border-radius: 20px;
+  border-radius: 20px;
+  border: 1px solid #fff;
+  min-height: 15%;
+  min-width: 15%;
+}
+
+.topSplitDivision #GridView1Dnd_wrapper::-webkit-scrollbar-thumb:hover {
+  border: 0px solid #999999;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder {
+  display: block;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder thead tr th {
+  background: #a8afb3;
+  color: #fff;
+  font-size: 14px;
+  font-weight: normal;
+  position: relative;
+  padding: 10px;
+  border-right: 1px solid #fff;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder thead tr th a {
+  color: #fff;
+  width: 100%;
+  display: inline-block;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder thead tr th a:hover, .topSplitDivision .ivirMainGrid.iviewBuilder thead tr th a:focus {
+  color: #fff;
+  text-decoration: none;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder thead tr th .three-dot {
+  position: absolute;
+  display: inline-block;
+  top: 4px;
+  right: 10px;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder thead tr th .three-dot button {
+  background: transparent;
+  color: #fff;
+  box-shadow: none;
+  padding: 6px 0px;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder thead tr th .three-dot button:focus {
+  outline: none;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder thead tr th .three-dot .dropdown-menu {
+  top: 0px;
+  right: 0px;
+  left: auto;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder thead tr th .three-dot .dropdown-menu a.dropdown-item {
+  color: #000;
+  display: block;
+  padding: 5px 10px;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder thead tr th .three-dot .dropdown-menu a.dropdown-item:hover, .topSplitDivision .ivirMainGrid.iviewBuilder thead tr th .three-dot .dropdown-menu a.dropdown-item:focus {
+  color: #000;
+  text-decoration: none;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder thead tr th .three-dot .dropdown-menu a.dropdown-item i {
+  margin-right: 5px;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder thead tr th:first-child .dropdown-menu {
+  right: auto;
+  left: 0px;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder tbody tr {
+  height: 25px;
+}
+
+.topSplitDivision .ivirMainGrid.iviewBuilder tbody tr th, .topSplitDivision .ivirMainGrid.iviewBuilder tbody tr td {
+  border: 1px solid #eee;
+  padding: 10px;
+}

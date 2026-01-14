@@ -1,0 +1,7 @@
+.btextDir-rtl{
+    .appBackBtn{
+        i{
+            @include rotate180;
+        }
+    }
+}

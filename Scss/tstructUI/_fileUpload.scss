@@ -1,0 +1,55 @@
+.file-upload{
+    position: $fileUploadPosition;
+    .file-select{
+        border:2px solid $applicationFileUploadBorder;
+        cursor: pointer;
+        &:focus{
+            outline: none;
+        }
+        .file-select-button{
+            @include fileUploadButton;
+            &:hover,&:focus{
+                outline: none;
+            }
+        }
+        input[type=file]{
+            @include fileUploadInput;
+        }
+        .file-select-name{
+            @include fileUploadSelectName;
+        }
+    }
+}
+#rowbor{
+    margin-top: 10px;
+    #fname,#filepathna{
+        display: none;
+    }
+    #btnUpload{
+        font-size: $applicationFontSize;
+    }
+}
+#dvCam{ 
+    #flip-btn{
+        display: none;
+    }
+    video{
+        width: 100%;
+    }
+    input,button{
+        margin: 5px 0px; 
+    }
+}
+
+
+#dvNavigate{
+    #divFile,#divCamera{
+        label{
+            input{
+                .btextDir-rtl &{
+                    margin-right: $applicationFileUploadRadioBtnRtlMarginRight;
+                } 
+            }
+        }
+    }
+}

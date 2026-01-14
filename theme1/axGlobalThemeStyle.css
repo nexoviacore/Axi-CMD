@@ -1,0 +1,37 @@
+/*Main Menu */
+.menu-item .menu-link .menu-title {
+    font-weight: 510 !important;
+}
+
+.menu-item .menu-link {
+    padding: 17px !important;
+    border-radius: 4px;
+}
+
+.rounded {
+    border-radius: 4px !important;
+}
+
+/*Admin Console*/
+.adminLeftMenu .pt-lg-20 {
+    padding-top: 5px !important;
+}
+
+.adminLeftMenu .menu-link {
+    padding-block: 15px !important;
+    border-radius: 6px !important;
+    margin-top: 0.25rem;
+}
+
+    .adminLeftMenu .menu-link .menu-icon {
+        margin-right: 17px !important;
+    }
+
+    .adminLeftMenu .menu-link .menu-title {
+        font-weight: 600 !important;
+    }
+
+.adminMain .header .text-dark {
+    font-weight: bold !important;
+    font-size: 22px !important;
+}

@@ -1,0 +1,141 @@
+//* data table and iview table  ==================================== *//
+.pageInformationNew {
+    //background-color: #fff;
+    @include border-radius(4px);
+    margin: $iviewTablePageInformationNewMargin;
+    .requestJSON:not(.requestJsonOldUi).isMobile &{
+        padding: $pageInfoBarPaddingRequestJSONMobile;
+    }
+    .pageInformationLeft{
+        @include textOverflowFillgridPopUp;
+        padding: 2px;
+        .requestJSON:not(.requestJsonOldUi).isMobile &{
+            padding: $pageInfoBarParamTextPaddingRequestJSONMobile;
+        }
+        .paramPillContent, .filterPillContent{
+            width: 100%;
+            position: relative;
+            top: 3px;
+            // padding: 3px;
+            @include textOverflow;
+            &.half{
+                // width: 50%;
+                width: calc(50% - 5px);
+                // max-width: 50%;
+            }
+        }
+    }
+}
+
+.iviewTableWrapper {
+    height: $iviewTableWrapperHeight;
+    @include calc(height, $iviewTableWrapperHeightCalc);
+    table{
+        &.table{
+            margin-left: $iviewTableWrapperTableMargin;
+            max-width: none;
+            .btextDir-rtl &{
+                margin-right: $iviewTableWrapperTableMarginRtl;
+            }
+        }
+    }
+}
+.iviewCardContentWrapper{
+    margin: $iviewCardContentWrapperMargin;
+    .iviewTableWrapperNew {
+        @include calc(height, $iviewTableWrapperNewHeightCalc);
+        body:not(.requestJsonOldUi).requestJSON &{
+            @include calc(height, $iviewTableWrapperNewRequestJsonHeightCalc);
+            overflow-y: $iviewTableWrapperNewRequestJsonOverflow;
+            &.chartsAdded{
+                @include calc(height, $iviewTableWrapperNewRequestJsonChartsAddedHeightCalc);
+            }
+        }
+        .inmemdb &{
+            overflow-x: $iviewTableWrapperNewRequestJsonInMemoryDBOverflow;
+        }
+        .viewTabsAdded + &{
+            body:not(.requestJsonOldUi).requestJSON &{
+                @include calc(height, $iviewTableWrapperNewRequestJsonWithTabHeightCalc);
+            }
+        }
+        .dataTables_scrollBody{
+            body:not(.requestJsonOldUi).requestJSON &{
+                /* Works on Chrome/Edge/Safari */
+                @include scrollBar;
+            }
+            tbody{
+                tr{
+                    td{
+                        &.isHyperlinkUI{
+                            padding: $iviewDataTablesScrollBodyTbodyIsHyperlinkUIPadding;
+                            .compressedModeUI &{
+                                padding: $iviewDataTablesScrollBodyTbodyIsHyperlinkUICompressedPadding;
+                            }
+                            a{
+                                padding: $iviewDataTablesScrollBodyTbodyIsHyperlinkUIAnchorPadding;
+                                @include border-radius(6px);
+                                cursor: pointer;
+                                .compressedModeUI &{
+                                    padding: $iviewDataTablesScrollBodyTbodyIsHyperlinkUIAnchorCompressedPadding;
+                                }
+                                &:hover{
+                                    //text-decoration: none;
+                                    //outline: none;
+                                }
+                            }
+                        }
+                        .rowOptionsExist{
+                            i{
+                                font-size: 16px;
+                            }
+                            .btn-group.open .dropdown-toggle {
+                                box-shadow:none;
+                            }
+                            .btn:active{
+                                box-shadow:none;
+                            }
+                            .dropdown-menu a{
+                                color:#000;
+                            }
+                            .dropdown-menu a:hover{
+                                text-decoration:none;
+                                background-color:#eee;
+                                color:#000;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .dataTables_scrollFoot{
+            .dataTables_scrollFootInner{
+                table{
+                   &.table{
+                       border-bottom: none;
+                   }
+                }
+            }
+        }
+    }
+}
+
+
+.listViewDc{
+    overflow: $iviewListViewDcOverflow;
+}
+//* data table and iview table  ==================================== *//
+
+#iviewFrame{
+    &.alignIview{
+        position: absolute;
+        margin: 0px auto;
+        &.center{
+            left: 0;
+            right: 0;
+        }
+        &.right{
+            right: 0;
+        }
+    }
+}

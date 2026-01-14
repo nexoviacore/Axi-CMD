@@ -1,0 +1,38 @@
+//* imageField ==================================== *//
+.divImgBorder{
+    border: 1px dotted $applicationImageFieldBorder;
+    .dvImgClear{
+        i{
+            font-size: $applicationFontSize;
+            color: $applicationColor;
+            @include floatRight;
+        }
+    }
+}
+.grid-stack-item{
+    .divImgBorder,.divReadOnly{
+        // img[src=\.\.\/AxpImages\/upload\.png] {
+        .axpImg {
+            max-height: 100px;
+            max-width: 100px;
+            position: $applicationCenterAlignPosition;
+            left: $applicationCenterAlignLeft;
+            top: $applicationCenterAlignTop;
+            transform: translate(-#{$applicationCenterAlignLeft}, -#{$applicationCenterAlignTop});
+            cursor: pointer;
+        }
+        .signaturePad {
+            max-height: 100px;
+            max-width: 90%;
+            position: $applicationCenterAlignPosition;
+            left: $applicationCenterAlignLeft;
+            top: $applicationCenterAlignTop;
+            transform: translate(-#{$applicationCenterAlignLeft}, -#{$applicationCenterAlignTop});
+            cursor: pointer;            
+            .isMobile & {
+                max-height: 75%;
+            }
+        }
+    }
+}
+//* imageField ==================================== *//

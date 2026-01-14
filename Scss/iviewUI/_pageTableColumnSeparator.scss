@@ -1,0 +1,13 @@
+.table {
+    &.columnSeparator {
+        tbody,thead{
+            tr {
+
+                td,
+                th {
+                    border-right: 1px solid $applicationTableColumnSeparatorBorderColor;
+                }
+            }
+        }
+    }
+}

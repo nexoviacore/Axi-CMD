@@ -1,0 +1,234 @@
+/* Design Mode Toolbar ==================================== */
+@import 'tstructUI/_designModeToolbar';
+/* Design Mode ==================================== */
+// .picklist {
+//     &.input-group{
+//         width: 100%;
+//     }
+// }
+// .grid-stack{
+//     >.grid-stack-item{
+        
+//     }
+// }
+// .dvdcframe{
+//      .staticRunMode{
+//         &.grid-stack{
+//             .grid-stack-item{
+//                 .grid-stack-item-content{
+//                     .form-control {                        
+//                         @include border-radius(4);
+//                     }
+//                 }
+//             }
+//         }
+//      }   
+// }
+.dvdcframe{
+.tstructDesignMode{
+    .form-control{
+        height: $tstructDesignModeFormControlHeight;
+    }
+    min-height: $tstructDesignModeHeight;
+    &.grid-stack {
+        background: url(../images/b3.png);
+        .ui-draggable {
+            .grid-stack-item-content{
+                &.ui-draggable-handle:not(.form-group){
+                    z-index: 1!important;
+                    cursor: move;
+                }
+            } 
+        }
+        .grid-stack-item{
+            .badge-grid-stack{
+                position: $tstructDesignModeBadgeGridStackPosition;
+                right: $tstructDesignModeBadgeGridStackRightGap;
+                z-index: 1;
+            }
+            .grid-stack-item-content {
+                .picklist {
+                    &.input-group{
+                        width: 100%;
+                    }
+                }
+                border: 1px dashed $tstructDesignModeBoxBorder;
+                padding: $gridStackItemContentPadding;
+                .form-control{
+                    height: $tstructDesignModeFormControlHeight;
+                }
+                .fld-wrap1{
+                    span{
+                        &.fld-wrap2{
+                            position: $tstructDesignModefld-wrapPositionAbsolute;
+                        }
+                    }
+                }
+                .labelcolid{
+                    cursor: default;
+                }
+            }
+            >.ui-resizable-se, .ui-resizable-sw{
+                max-width: $tstructDesignModeUiresizable-se-sw-MaxWidth;
+                max-height: $tstructDesignModeUiresizable-se-sw-MaxHeight;
+                background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAeUlEQVQ4T+XU0Q2AIAxF0ctkroKbuYqTaWpSogi0Cn/0j5CcvLSFwOAKgz0mBSOwDejl5UgPBTuAtQPVQFGH0oMmTALdp/wHfWA5KOcv6AsrgV60iNVAC61iLbCGNjELzFET84CKLsAOyPI2y/s5uF+TF7SCpfsJwRPV6B0V56lidQAAAABJRU5ErkJggg==");
+                bottom: $tstructDesignModeUiresizable-se-sw-BottomGap;
+                right: $tstructDesignModeUiresizable-se-sw-RightGap;
+            }
+            // .ui-resizable-se{
+            //     //right: 5px;
+            // }
+            
+        }
+    }
+}
+}
+.grid-stack-item{
+    .divImgBorder,.divReadOnly,.gridstackCalc{
+        height: calc(#{$tstructDivImgBorderMaximumHeight} - #{$tstructDivImgBorderCalcHeight});
+    }
+}
+.tstructDesignMode{
+    .form-control{
+        height: $tstructDesignModeFormControlHeight;
+    }
+}
+// .dynamicRunMode{
+//     &.grid-stack {
+//         .grid-stack-item{
+//             .grid-stack-item-content {
+//                 .fld-wrap1{
+//                     span{
+//                         .fld-wrap2{
+//                             position: absolute;
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
+// span.fld-wrap2 {
+//     // position: absolute;
+//     //margin-left: -23px;
+// }
+// .grid-stack:not(.staticRunMode)>.grid-stack-item {
+//     position: relative;
+//     display: inline-block;
+//     vertical-align: top;
+//     top: 0px !important;
+//     float: left;
+//     padding-left: 10px;
+//     padding-right: 10px;
+//     margin-bottom: 20px;
+// }
+/* Design Mode ==================================== */
+
+.designTstruct-layout {
+    .column {
+        @include floatLeft;
+        padding: $formLayoutOptionPadding;
+
+        .layout-title {
+            padding: $formLayoutOptionTitlePadding;
+        }        
+
+        .layout-info {
+            padding: $formLayoutOptionInfoPadding;
+            font-size: $formLayoutOptionInfoIconFontSize;
+            width: 100%;
+            position: $applicationPositionRelative;
+            top: $formLayoutOptionInfoPositionTop;
+            .layout-info-icon {
+                font-size: 20px;
+                position: $applicationPositionRelative;
+                top: $formLayoutOptionInfoIconPositionTop;
+                padding: $formLayoutOptionInfoIconPadding;
+            }
+        }
+
+        .layout-icon {
+            width: 100%;
+            cursor: pointer;
+            font-size: 100px;
+            padding: $formLayoutOptionIconPadding;
+            @include textCenter;
+            color: lighten($applicationTextColor, 37.25);
+        }
+
+        .active-icon {
+            position: $applicationPositionAbsolute;
+            right: $formLayoutOptionActiveIconPositionRight;
+            top: $formLayoutOptionActiveIconPositionTop;
+            padding: $formLayoutOptionActiveIconPadding;
+            background: adjust_hue(saturate(darken($applicationBackgroundColor, 21.75), 100), 88);
+            color: $applicationTextColor;
+            @include border-radius(50%);
+            @include box-shadow(1px 1px 1px 1px #64DD17);            
+            display: none;
+        }
+
+        &.active {
+            .active-icon {
+                display: block;
+            }
+        }
+    }
+}
+
+// designContextMenu
+.designContextMenu, .designContextMenuLabelEdit {
+    position: $applicationPositionAbsolute;
+    @include textLeft;
+    background: $applicationBackgroundColor;
+    border: 1px solid darken($applicationBackgroundColor, 20);
+    display: none;
+    z-index: 90;
+
+    ul {
+        @include marginPadingSet;
+        min-width: 150px;
+        list-style: none;
+
+        li {
+            padding: 7px 20px;
+            border: 1px solid darken($applicationBackgroundColor, 20);
+            &:hover {
+                background: darken($applicationBackgroundColor, 13.5);
+                cursor: pointer;
+            }
+
+            a {
+                text-decoration: none;
+                color: $applicationTextColor;
+            }
+        }
+    }
+}
+
+#divModalHyperlink {
+    #htmlContentOriFrameUrl {
+        overflow-y: auto;
+        @include scrollBar;
+        .designTableHyperlink {
+            thead {
+                th {
+                    font-weight: normal;
+                }
+            }
+            .col-fit {
+                width: 34px;
+            }                        
+        }
+        .designTableBtns {
+            background: darken($applicationBackgroundColor, 13.5);
+        
+            .designTableIcons {
+                position: $applicationPositionRelative;
+                top: 3px;
+            }
+        }
+        
+    }
+}
+

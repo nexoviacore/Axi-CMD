@@ -1,0 +1,3929 @@
+#breadcrumb-panel {
+  background-color: #fff;
+  border-bottom: 1px solid #e6e6e6;
+  padding: 0px 10px;
+}
+
+.btextDir-rtl #breadcrumb-panel {
+  padding: 0px 35px;
+}
+
+.isMobile .btextDir-rtl #breadcrumb-panel {
+  padding: 0px 25px 0px 0px;
+}
+
+#breadcrumb-panel #nextprevicons {
+  display: none;
+}
+
+#breadcrumb-panel .bcrumb {
+  height: 43px;
+}
+
+.isMobile #breadcrumb-panel .bcrumb {
+  padding: 0px 0px 0px 10px;
+}
+
+#breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).menuBreadCrumb {
+  color: #797878;
+  font-size: 12px;
+  padding-left: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+  width: calc(100vw - 125px);
+}
+
+.isMobile #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).menuBreadCrumb {
+  padding: 0px 0px 0px 5px;
+  width: calc(100vw - 23px);
+}
+
+#breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  color: #212121;
+  font-size: 24px;
+  font-weight: 600;
+  display: block;
+  margin: 0px 0px -3px;
+  padding: 4px 0px 0px 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.isMobile #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  width: -moz-calc(100vw - 110px);
+  width: -webkit-calc(100vw - 110px);
+  width: calc(100vw - 110px);
+  font-size: 15px;
+  line-height: 25px;
+  padding: 0px 0px 0px 5px;
+}
+
+#breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 3px 0px 0px 20px;
+}
+
+.isMobile #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  font-size: 16px;
+  padding: 10px 0 0 5px;
+}
+
+.isMobile.compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 10px 0 0 20px;
+}
+
+.btextDir-rtl #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 4px 20px 0px 0px;
+}
+
+.btextDir-rtl #breadcrumb-panel .bcrumb {
+  text-align: right;
+}
+
+.isMobile .compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).menuBreadCrumb {
+  padding: 0px 0px 0px 18px;
+}
+
+.isMobile .compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  padding: 0px 0px 0px 18px;
+}
+
+.isMobile .compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 8px 0px 0px 18px;
+}
+
+.btextDir-rtl #backforwrdbuttons {
+  float: none;
+  background: transparent;
+  margin-top: 2px;
+  padding-top: 4px;
+  position: fixed;
+  right: 4px;
+}
+
+.btextDir-rtl .navLeft {
+  border: 0px;
+}
+
+.isMobile .btextDir-rtl.compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).menuBreadCrumb {
+  padding: 0px 18px 0px 0px;
+}
+
+.isMobile .btextDir-rtl.compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  padding: 0px 18px 0px 0px;
+}
+
+.isMobile .btextDir-rtl.compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 8px 18px 0px 0px;
+}
+
+.btextDir-ltr #backforwrdbuttons {
+  float: none;
+  background: transparent;
+  margin-top: 2px;
+  padding-top: 4px;
+  position: fixed;
+}
+
+#backtohm {
+  display: none;
+  float: left;
+}
+
+.login .login-main .login-inner h2 {
+  text-align: center;
+  color: white;
+  font-weight: 400;
+  padding-top: 10px;
+  margin: 0px;
+}
+
+.login .login-main .login-inner h2 #lblSignin, .login .login-main .login-inner h2 #spnCpwdHeading {
+  position: relative;
+  display: block;
+  color: #000;
+  font-size: 22px;
+  margin-bottom: 15px;
+  margin-top: 5px;
+}
+
+#login-box h2 {
+  text-align: center;
+  color: white;
+  font-weight: 400;
+  padding-top: 10px;
+  margin: 0px;
+}
+
+#info-box h2 {
+  color: #000;
+  text-align: center;
+  font-weight: 600;
+}
+
+.modernButtonOptions #breadcrumb-panel #breadcrumb {
+  float: left;
+}
+
+.modernButtonOptions.btextDir-rtl #breadcrumb-panel #breadcrumb {
+  float: right;
+}
+
+.isMobile.requestJSON #breadcrumb-panel #breadcrumb, .isMobile.modernButtonOptions #breadcrumb-panel #breadcrumb {
+  float: left;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.btextDir-rtl.isMobile.requestJSON #breadcrumb-panel #breadcrumb, .btextDir-rtl.isMobile.modernButtonOptions #breadcrumb-panel #breadcrumb {
+  float: right;
+}
+
+#breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  width: auto;
+}
+
+.isMobile #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  width: -moz-calc(100vw - 152px);
+  width: -webkit-calc(100vw - 152px);
+  width: calc(100vw - 152px);
+}
+
+#breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 3px 20px 3px 20px;
+}
+
+.requestJSON:not(.requestJsonOldUi).isMobile #ivInSearch {
+  position: absolute;
+}
+
+.requestJSON:not(.requestJsonOldUi).isMobile.btextDir-rtl #ivInSearch {
+  left: 0px;
+}
+
+@media only screen and (max-width: 960px) {
+  .btextDir-rtl #ivInSearch {
+    left: 6px;
+    right: auto;
+  }
+}
+
+#ivInSearch .searchBoxChildContainer {
+  vertical-align: middle;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+}
+
+.requestJSON:not(.requestJsonOldUi) #ivInSearch .searchBoxChildContainer {
+  position: fixed;
+  left: 23px;
+  width: 100%;
+}
+
+.requestJSON:not(.requestJsonOldUi).isMobile #ivInSearch .searchBoxChildContainer {
+  left: 14px;
+}
+
+#ivInSearch .searchBoxChildContainer input#ivInSearchInput {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  font-size: 13px;
+  color: #212121;
+  padding: 0px 10px;
+  -webkit-border-radius: 50px;
+  -moz-border-radius: 50px;
+  border-radius: 50px;
+  margin-right: 24px;
+  width: 100px;
+  height: 32px;
+  right: 0px;
+  left: auto;
+  position: absolute;
+  -webkit-transition: width .55s ease;
+  -moz-transition: width .55s ease;
+  -ms-transition: width .55s ease;
+  -o-transition: width .55s ease;
+  transition: width .55s ease;
+}
+
+@media only screen and (max-width: 960px) {
+  #ivInSearch .searchBoxChildContainer input#ivInSearchInput {
+    width: 18px;
+    height: 32px;
+    padding: 0px 16px;
+    margin-right: 16px;
+  }
+  .btextDir-rtl #ivInSearch .searchBoxChildContainer input#ivInSearchInput {
+    padding: 0px 22px;
+  }
+}
+
+#ivInSearch .searchBoxChildContainer input#ivInSearchInput:focus, #ivInSearch .searchBoxChildContainer input#ivInSearchInput:active {
+  outline: none;
+  width: 75%;
+}
+
+.btextDir-rtl #ivInSearch .searchBoxChildContainer input#ivInSearchInput {
+  left: 0;
+  right: auto;
+}
+
+#ivInSearch .searchBoxChildContainer .icon {
+  position: absolute;
+  top: 4px;
+  right: 35px;
+  margin-left: 10px;
+  z-index: 1;
+  display: inherit;
+  font-size: large;
+  color: #999999;
+}
+
+@media only screen and (max-width: 960px) {
+  #ivInSearch .searchBoxChildContainer .icon {
+    top: 6px;
+    right: 22px;
+    font-size: 13px;
+  }
+}
+
+.btextDir-rtl #ivInSearch .searchBoxChildContainer .icon {
+  left: 0;
+  right: auto;
+}
+
+.jconfirm .jconfirm-box.jconfirm-type-blue {
+  border-top: 0px;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-title-c .jconfirm-title {
+  color: #000;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-bottom: 1px solid #e6e6e6;
+  display: block;
+}
+
+.columList {
+  border: 1px solid #e6e6e6;
+  padding: 10px;
+  box-shadow: 0 0 5px #e6e6e6;
+}
+
+#ivirshowHideColumnWrapper input {
+  margin-left: 3px;
+}
+
+#ivirChatWrapper #ivirChartsRow button {
+  background: 0 0;
+  border: 0;
+  padding: 0;
+  margin: 3px 0 0 0;
+}
+
+.popover.right {
+  width: auto;
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.popover .popover-content {
+  font-family: "Roboto", sans-serif;
+  color: #a1a1a1;
+}
+
+.popover .popover-content a:hover, .popover .popover-content a:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+.popover .popover-content span.tooltiptext span {
+  width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+}
+
+#ivirChatWrapper #ivirChartsRow button span {
+  font-size: 70px;
+  color: #233044;
+}
+
+#ivirChatWrapper #ivirChartsRow button span:focus {
+  outline: none;
+  color: #1976d2;
+}
+
+#ivirChatWrapper #ivirChartsRow button:focus {
+  outline: none;
+}
+
+#ivirChatWrapper #ivirChartsRow button.ivirChartButton.active span.ivirGraphIcon {
+  color: #1976d2;
+}
+
+#ivirChatWrapper #ivirChartsRow label {
+  display: block;
+  margin-bottom: 20px;
+}
+
+#ivirChatWrapper hr {
+  display: none;
+}
+
+#ivirChatWrapper #ivirchartsCndtn span {
+  color: red;
+  margin: 0 5px;
+}
+
+#ivirChatWrapper #ivirchartsCndtn a {
+  font-size: 10px;
+}
+
+#ivirChatWrapper #ivirchartsCndtn a:focus, #ivirChatWrapper #ivirchartsCndtn a:hover {
+  outline: none;
+  text-decoration: none;
+}
+
+#ivirChatWrapper #ivirchartsCndtn .form-group label {
+  display: inline-block;
+}
+
+.jconfirm-content .row {
+  margin: 0px;
+}
+
+.chart_div {
+  height: auto;
+  margin: 0 auto;
+  overflow-x: auto;
+}
+
+.bodyAndFooter-cont {
+  height: 100%;
+}
+
+.bodyAndFooter-cont .footer-cont {
+  border-top: 1px solid #e6e6e6;
+  padding: 5px;
+}
+
+.bodyAndFooter-cont .footer-cont div {
+  display: inline-block;
+}
+
+.bodyAndFooter-cont .body-cont {
+  height: calc(100% - 70px);
+  overflow: auto;
+  margin-top: 5px;
+}
+
+.gridDataFilter {
+  width: 100%;
+}
+
+.gridDataFilter tr td {
+  padding: 2px 1px 2px;
+}
+
+.ui-autocomplete.ui-front {
+  z-index: 1051;
+}
+
+.dropDownButton__list {
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  left: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  display: none;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  z-index: 555;
+}
+
+.dropDownButton.is-open .dropDownButton__list {
+  visibility: visible !important;
+}
+
+#lnkChartPill.change-trigger + .popover {
+  min-width: 180px;
+}
+
+#ivirCustomContainer #accordion.panel-group, #ivContainer #accordion.panel-group {
+  margin: 0;
+  position: absolute;
+  z-index: 99;
+  width: 98%;
+  left: 12px;
+  top: 10px;
+}
+
+#ivirCustomContainer #accordion #myFiltersBody, #ivContainer #accordion #myFiltersBody {
+  box-shadow: 0 1px 9px #b3b3b3;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  border: 0px;
+}
+
+@media only screen and (max-width: 960px) {
+  #ivirCustomContainer #accordion #myFiltersBody, #ivContainer #accordion #myFiltersBody {
+    margin-right: 25px;
+  }
+}
+
+#ivirCustomContainer #accordion #myFiltersBody #Filterscollapse #dvRefreshParam, #ivContainer #accordion #myFiltersBody #Filterscollapse #dvRefreshParam {
+  float: right;
+  position: relative;
+  top: 10px;
+  right: 20px;
+  color: #555555;
+}
+
+#ivirCustomContainer #accordion #myFiltersBody #Filterscollapse #dvRefreshParam span button, #ivContainer #accordion #myFiltersBody #Filterscollapse #dvRefreshParam span button {
+  border: 0;
+  background: no-repeat;
+  right: -5px;
+  top: 0px;
+  position: absolute;
+  z-index: 1;
+}
+
+#ivirCustomContainer #accordion #myFiltersBody #Filterscollapse #dvRefreshParam span button i, #ivContainer #accordion #myFiltersBody #Filterscollapse #dvRefreshParam span button i {
+  color: #555555;
+}
+
+#ivirCustomContainer .tblresX tr .tdheadbar .tblheadbar, #ivContainer .tblresX tr .tdheadbar .tblheadbar {
+  width: 100%;
+}
+
+#ivirCustomContainer .tblresX p span, #ivContainer .tblresX p span {
+  color: red;
+}
+
+#ivirCustomContainer .tblresX p select:focus, #ivContainer .tblresX p select:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+#ivirCustomContainer .tblresX #ivParamTable tbody tr td p.paramtd2 input, #ivirCustomContainer .tblresX #ivParamTable tbody tr td p.paramtd2 select, #ivContainer .tblresX #ivParamTable tbody tr td p.paramtd2 input, #ivContainer .tblresX #ivParamTable tbody tr td p.paramtd2 select {
+  width: 100%;
+}
+
+#ivirCustomContainer .tblresX #ivParamTable tbody tr td div.input-group, #ivContainer .tblresX #ivParamTable tbody tr td div.input-group {
+  padding: 0px 7px;
+}
+
+#ivirCustomContainer .tblresX #ivParamTable tbody tr td div.paramtd2, #ivContainer .tblresX #ivParamTable tbody tr td div.paramtd2 {
+  padding: 0px 7px;
+}
+
+#ivContainer #accordion.panel-group {
+  margin: 0;
+  position: absolute;
+  z-index: 99;
+  width: 98%;
+  left: 12px;
+  top: 90px;
+}
+
+#ivContainer #accordion.panel-group .panel-body {
+  max-height: -moz-calc(100vh - 100px);
+  max-height: -webkit-calc(100vh - 100px);
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+
+#ivContainer #accordion #myFiltersBody {
+  box-shadow: 0 1px 9px #b3b3b3;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  border: 0px;
+}
+
+#ivContainer .tblresX tr .tdheadbar .tblheadbar {
+  width: 100%;
+}
+
+#ivContainer .tblresX p span {
+  color: red;
+}
+
+.tblresX {
+  width: 100%;
+}
+
+.tblresX #dvRefreshParam {
+  float: right;
+  color: #555555;
+}
+
+.tblresX #dvRefreshParam:hover, .tblresX #dvRefreshParam:active {
+  outline: none;
+  text-decoration: none;
+}
+
+.btextDir-rtl .tblresX {
+  margin-left: 0;
+}
+
+@media only screen and (max-width: 960px) {
+  .tblresX td {
+    display: block;
+  }
+}
+
+.tblresX tr .tdheadbar .tblheadbar tbody tr td {
+  text-align: center;
+}
+
+.tblresX tr .tdheadbar .tblheadbar tbody tr td input {
+  margin-top: 15px;
+}
+
+.tblresX #ivParamTable tbody tr td .chkListBdr {
+  overflow-y: auto;
+  height: 80px;
+}
+
+@media (min-width: 960px) {
+  #ivParamTable tr td {
+    width: 33.33%;
+    vertical-align: top;
+  }
+}
+
+#ivParamTable p {
+  position: relative;
+  padding: 0px 7px;
+  color: #111111;
+  font-weight: 600;
+}
+
+#ivParamTable p.paramtd2 {
+  width: 100%;
+}
+
+#ivParamTable p.paramtd2 .ui-datepicker-trigger {
+  position: absolute;
+  right: 18px;
+  width: 18px;
+  top: 7px;
+}
+
+.btextDir-rtl #ivParamTable p.paramtd2 .ui-datepicker-trigger {
+  left: 18px;
+  right: auto;
+}
+
+#ivParamTable p.paramtd2picklist {
+  margin-top: 0px;
+}
+
+#ivParamTable div.paramtd2 .multiChkSpan.gridstackCalcChecklist .tokenfield.form-control {
+  max-height: 100px;
+}
+
+.tblresX #ivParamTable div.spnSelectAll {
+  border: 1px solid #e6e6e6;
+  padding: 5px;
+}
+
+.tblresX #ivParamTable div.chkListBdr {
+  border: 1px solid #e6e6e6;
+  padding: 5px;
+}
+
+.pickLstResultWrapper {
+  display: none;
+}
+
+.form-inline .inputClass2parent {
+  position: relative;
+  top: -5px;
+  padding: 0px 7px;
+  margin-bottom: 20px;
+}
+
+.form-inline .inputClass2parent .form-group {
+  width: 100%;
+}
+
+.form-inline .inputClass2parent .form-group input {
+  width: 100%;
+}
+
+.form-inline .inputClass2parent .form-group span.form-control-clear {
+  z-index: 10;
+  pointer-events: auto;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.form-inline .inputClass2parent .input-group-btn {
+  width: 1%;
+}
+
+.form-inline .inputClass2parent .input-group-btn button:focus {
+  outline: none;
+}
+
+.inputClass2parent .form-group span.form-control-clear {
+  z-index: 10;
+  pointer-events: auto;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.inputClass2parent span button {
+  padding-top: 7px;
+}
+
+#dvPickList {
+  position: absolute;
+  z-index: 111;
+  background: #fff;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+#dvPickList #dvPickHead {
+  height: 200px;
+  overflow-y: auto;
+  margin: 3px 0px;
+}
+
+#dvPickList #dvPickHead table {
+  width: 100%;
+}
+
+#dvPickList #dvPickHead table#tblPickData tr td {
+  padding: 5px 15px;
+}
+
+#dvPickList #dvPickHead table#tblPickData tr td a {
+  color: #000;
+}
+
+#dvPickList #dvPickHead table#tblPickData tr td a:hover {
+  outline: none;
+  text-decoration: none;
+}
+
+#dvPickList #dvPickHead table#tblPickData tr td:hover {
+  background: #e6e6e6;
+}
+
+#dvPickList #dvPickHead table#tblPickData .active {
+  background: #e6e6e6;
+}
+
+#dvPickList #dvPickFooter .pickListFLP {
+  display: inline-block;
+}
+
+#dvPickList #dvPickFooter .pickListFLP button {
+  color: #333333;
+  background-color: #fff;
+  border: 0px;
+  font-weight: 600;
+  padding: 6px 12px;
+}
+
+#dvPickList #dvPickFooter .pickListFLP button:focus {
+  outline: none;
+}
+
+#dvPickList #dvPickFooter .pickListFLP button span i {
+  margin-right: 5px;
+  margin-left: 5px;
+}
+
+#dvPickList #dvPickFooter .pickListFLP button:hover {
+  background: #b3b3b3;
+}
+
+#dvPickList #dvPickFooter .pickListFLP button i {
+  top: 0;
+  left: 2px;
+}
+
+#dvPickList #dvPickFooter .pickListFRP {
+  float: right;
+}
+
+.btextDir-rtl #dvPickList #dvPickFooter .pickListFRP {
+  float: left;
+}
+
+#dvPickList #dvPickFooter .pickListFRP button {
+  color: #333333;
+  background-color: #fff;
+  border: 0px;
+  font-weight: 600;
+  padding: 6px 12px;
+}
+
+#dvPickList #dvPickFooter .pickListFRP button:focus {
+  outline: none;
+}
+
+#dvPickList #dvPickFooter .pickListFRP button:hover {
+  background: #b3b3b3;
+}
+
+.btextDir-rtl #dvPickList #dvPickFooter .pickListFRP button i {
+  -moz-transform: scaleX(-1);
+  -ms-transform: scaleX(-1);
+  -o-transform: scaleX(-1);
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+}
+
+#ivInSearch {
+  position: absolute;
+  width: 100%;
+  right: 0px;
+  top: 5px;
+}
+
+body:not(.requestJsonOldUi).requestJSON #ivInSearch, .modernButtonOptions #ivInSearch {
+  float: right;
+  width: auto;
+  top: 0px;
+}
+
+.isMobile.modernButtonOptions #ivInSearch {
+  float: none;
+}
+
+.btextDir-rtl #ivInSearch {
+  left: 15px;
+  right: auto;
+}
+
+.requestJSON:not(.requestJsonOldUi) .toolbarOptionsParent {
+  width: 100%;
+}
+
+.requestJSON:not(.requestJsonOldUi).isMobile.modernButtonOptions .toolbarOptionsParent {
+  width: auto;
+}
+
+.toolbarOptionsParent #icons, .toolbarOptionsParent #iconsNew {
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Old versions of Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  /* Non-prefixed version, currently supported by Chrome, Opera and Firefox */
+  text-align: right;
+  position: relative;
+}
+
+.btextDir-rtl .toolbarOptionsParent #icons, .btextDir-rtl .toolbarOptionsParent #iconsNew {
+  text-align: left;
+}
+
+.toolbarOptionsParent #icons #iconsNewOption, .toolbarOptionsParent #iconsNew #iconsNewOption {
+  display: inline-block;
+}
+
+.toolbarOptionsParent #icons .newRequestJson.dropdown, .toolbarOptionsParent #icons .newRequestJson.dropdown .dropdown, .toolbarOptionsParent #iconsNew .newRequestJson.dropdown, .toolbarOptionsParent #iconsNew .newRequestJson.dropdown .dropdown {
+  position: static;
+}
+
+.toolbarOptionsParent #icons .searchBoxChildContainer, .toolbarOptionsParent #iconsNew .searchBoxChildContainer {
+  top: 0px;
+  right: -29px;
+}
+
+.requestJSON:not(.requestJsonOldUi) .toolbarOptionsParent #icons .searchBoxChildContainer, .requestJSON:not(.requestJsonOldUi) .toolbarOptionsParent #iconsNew .searchBoxChildContainer {
+  top: 44px;
+  right: 0px;
+}
+
+.btextDir-rtl .toolbarOptionsParent #icons .searchBoxChildContainer, .btextDir-rtl .toolbarOptionsParent #iconsNew .searchBoxChildContainer {
+  left: -5px;
+  right: auto;
+}
+
+.isMobile.btextDir-rtl .toolbarOptionsParent #icons .searchBoxChildContainer, .isMobile.btextDir-rtl .toolbarOptionsParent #iconsNew .searchBoxChildContainer {
+  right: -4px;
+}
+
+.toolbarOptionsParent #icons .searchBoxChildContainer .icon, .toolbarOptionsParent #iconsNew .searchBoxChildContainer .icon {
+  font-size: 15px;
+}
+
+.toolbarOptionsParent #icons .searchBoxChildContainer #ivInSearchInput, .toolbarOptionsParent #iconsNew .searchBoxChildContainer #ivInSearchInput {
+  width: 36px;
+  height: 28px;
+  background: #f2f2f2;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  border-radius: 5px;
+  transition: none;
+  border: 1px solid #ababab;
+}
+
+.toolbarOptionsParent #icons .searchBoxChildContainer #ivInSearchInput:focus,
+.toolbarOptionsParent #icons .searchBoxChildContainer #ivInSearchInput :active, .toolbarOptionsParent #iconsNew .searchBoxChildContainer #ivInSearchInput:focus,
+.toolbarOptionsParent #iconsNew .searchBoxChildContainer #ivInSearchInput :active {
+  outline: none;
+  width: -moz-calc(100% - 3px);
+  width: -webkit-calc(100% - 3px);
+  width: calc(100% - 3px);
+}
+
+.toolbarOptionsParent #icons ul li .dropdown-menu li, .toolbarOptionsParent #iconsNew ul li .dropdown-menu li {
+  display: block;
+}
+
+.toolbarOptionsParent #icons ul li .dropdown-menu li a, .toolbarOptionsParent #iconsNew ul li .dropdown-menu li a {
+  background: #fff;
+  color: #000;
+  box-shadow: none;
+  white-space: normal;
+}
+
+.toolbarOptionsParent #icons ul li .dropdown-menu li a:hover, .toolbarOptionsParent #iconsNew ul li .dropdown-menu li a:hover {
+  background: #e6e6e6;
+}
+
+.toolbarOptionsParent #icons ul li.dropdown-submenu, .toolbarOptionsParent #iconsNew ul li.dropdown-submenu {
+  position: relative;
+}
+
+.btextDir-rtl .toolbarOptionsParent #icons ul li.dropdown-submenu > a:after, .btextDir-rtl .toolbarOptionsParent #iconsNew ul li.dropdown-submenu > a:after {
+  left: 10px;
+  right: auto;
+}
+
+@media (max-width: 768px) {
+  .modernButtonOptions .toolbarOptionsParent #icons ul li.dropdown-submenu > a:after, .modernButtonOptions .toolbarOptionsParent #iconsNew ul li.dropdown-submenu > a:after {
+    left: -moz-calc(50% - 7px);
+    left: -webkit-calc(50% - 7px);
+    left: calc(50% - 7px);
+  }
+}
+
+.toolbarOptionsParent #icons ul li.dropdown-submenu .dropdown-menu, .toolbarOptionsParent #iconsNew ul li.dropdown-submenu .dropdown-menu {
+  top: 0px;
+  left: -100%;
+  margin-top: 0px;
+  margin-left: 0px;
+  width: 100%;
+}
+
+.btextDir-rtl .toolbarOptionsParent #icons ul li.dropdown-submenu .dropdown-menu, .btextDir-rtl .toolbarOptionsParent #iconsNew ul li.dropdown-submenu .dropdown-menu {
+  right: -100%;
+  left: auto;
+}
+
+@media (max-width: 768px) {
+  .btextDir-rtl .toolbarOptionsParent #icons ul li.dropdown-submenu .dropdown-menu, .btextDir-rtl .toolbarOptionsParent #iconsNew ul li.dropdown-submenu .dropdown-menu {
+    right: auto;
+  }
+}
+
+.modernButtonOptions .toolbarOptionsParent #icons ul li.dropdown-submenu .dropdown-menu, .modernButtonOptions .toolbarOptionsParent #iconsNew ul li.dropdown-submenu .dropdown-menu {
+  top: 0px;
+  left: auto;
+  margin-top: 0px;
+  margin-left: 0px;
+  width: 345px;
+  position: relative;
+  border: 0px;
+}
+
+@media (max-width: 768px) {
+  .modernButtonOptions .toolbarOptionsParent #icons ul li.dropdown-submenu .dropdown-menu, .modernButtonOptions .toolbarOptionsParent #iconsNew ul li.dropdown-submenu .dropdown-menu {
+    width: 314px;
+  }
+}
+
+@media (max-width: 320px) {
+  .modernButtonOptions .toolbarOptionsParent #icons ul li.dropdown-submenu .dropdown-menu, .modernButtonOptions .toolbarOptionsParent #iconsNew ul li.dropdown-submenu .dropdown-menu {
+    width: 298px;
+  }
+}
+
+@media (max-width: 240px) {
+  .modernButtonOptions .toolbarOptionsParent #icons ul li.dropdown-submenu .dropdown-menu, .modernButtonOptions .toolbarOptionsParent #iconsNew ul li.dropdown-submenu .dropdown-menu {
+    width: -moz-calc(100vw - 10px);
+    width: -webkit-calc(100vw - 10px);
+    width: calc(100vw - 10px);
+  }
+}
+
+.toolbarOptionsParent #icons ul li.dropdown-submenu .dropdown-menu .pinIcon, .toolbarOptionsParent #iconsNew ul li.dropdown-submenu .dropdown-menu .pinIcon {
+  display: none;
+}
+
+.toolbarOptionsParent #icons ul li.dropdown-submenu .dropdown-menu li a .dropdownIconUI .iconUIPin, .toolbarOptionsParent #iconsNew ul li.dropdown-submenu .dropdown-menu li a .dropdownIconUI .iconUIPin {
+  display: none;
+}
+
+.modernButtonOptions .toolbarOptionsParent #icons ul li.dropdown-submenu .dropdown-menu, .modernButtonOptions .toolbarOptionsParent #iconsNew ul li.dropdown-submenu .dropdown-menu {
+  box-shadow: initial;
+}
+
+@media (max-width: 768px) {
+  .toolbarOptionsParent #icons ul li.dropdown-submenu .dropdown-menu, .toolbarOptionsParent #iconsNew ul li.dropdown-submenu .dropdown-menu {
+    top: initial;
+    left: initial;
+  }
+}
+
+.modernButtonOptions .toolbarOptionsParent #icons ul#iconsUl > li:nth-of-type(3n+1) ul.dropdown-menu, .modernButtonOptions .toolbarOptionsParent #iconsNew ul#iconsUl > li:nth-of-type(3n+1) ul.dropdown-menu {
+  left: 0%;
+}
+
+.modernButtonOptions.btextDir-rtl .toolbarOptionsParent #icons ul#iconsUl > li:nth-of-type(3n+1) ul.dropdown-menu, .modernButtonOptions.btextDir-rtl .toolbarOptionsParent #iconsNew ul#iconsUl > li:nth-of-type(3n+1) ul.dropdown-menu {
+  right: 200%;
+  left: auto;
+}
+
+@media (max-width: 768px) {
+  .modernButtonOptions.btextDir-rtl .toolbarOptionsParent #icons ul#iconsUl > li:nth-of-type(3n+1) ul.dropdown-menu, .modernButtonOptions.btextDir-rtl .toolbarOptionsParent #iconsNew ul#iconsUl > li:nth-of-type(3n+1) ul.dropdown-menu {
+    right: 229%;
+  }
+}
+
+.modernButtonOptions .toolbarOptionsParent #icons ul#iconsUl > li:nth-of-type(3n+2) ul.dropdown-menu, .modernButtonOptions .toolbarOptionsParent #iconsNew ul#iconsUl > li:nth-of-type(3n+2) ul.dropdown-menu {
+  left: -moz-calc(-100% + -3px);
+  left: -webkit-calc(-100% + -3px);
+  left: calc(-100% + -3px);
+}
+
+.modernButtonOptions.btextDir-rtl .toolbarOptionsParent #icons ul#iconsUl > li:nth-of-type(3n+2) ul.dropdown-menu, .modernButtonOptions.btextDir-rtl .toolbarOptionsParent #iconsNew ul#iconsUl > li:nth-of-type(3n+2) ul.dropdown-menu {
+  right: 100%;
+  left: auto;
+}
+
+@media (max-width: 768px) {
+  .modernButtonOptions.btextDir-rtl .toolbarOptionsParent #icons ul#iconsUl > li:nth-of-type(3n+2) ul.dropdown-menu, .modernButtonOptions.btextDir-rtl .toolbarOptionsParent #iconsNew ul#iconsUl > li:nth-of-type(3n+2) ul.dropdown-menu {
+    right: 118%;
+  }
+}
+
+.modernButtonOptions .toolbarOptionsParent #icons ul#iconsUl > li:nth-of-type(3n+0) ul.dropdown-menu, .modernButtonOptions .toolbarOptionsParent #iconsNew ul#iconsUl > li:nth-of-type(3n+0) ul.dropdown-menu {
+  left: -moz-calc(-200% + -6px);
+  left: -webkit-calc(-200% + -6px);
+  left: calc(-200% + -6px);
+}
+
+.modernButtonOptions.btextDir-rtl .toolbarOptionsParent #icons ul#iconsUl > li:nth-of-type(3n+0) ul.dropdown-menu, .modernButtonOptions.btextDir-rtl .toolbarOptionsParent #iconsNew ul#iconsUl > li:nth-of-type(3n+0) ul.dropdown-menu {
+  left: 0%;
+  right: auto;
+}
+
+@media (max-width: 768px) {
+  .modernButtonOptions.btextDir-rtl .toolbarOptionsParent #icons ul#iconsUl > li:nth-of-type(3n+0) ul.dropdown-menu, .modernButtonOptions.btextDir-rtl .toolbarOptionsParent #iconsNew ul#iconsUl > li:nth-of-type(3n+0) ul.dropdown-menu {
+    right: 7%;
+  }
+}
+
+.toolbarOptionsParent #icons [data-target="#iconsNew"], .toolbarOptionsParent #icons #filterWrapper.newRequestJson #ivirActionButton, .toolbarOptionsParent #icons #iconsNewNewIcon, .toolbarOptionsParent #icons #iconsNewRemoveIcon, .toolbarOptionsParent #icons #iconsNewUtilityIcon, .toolbarOptionsParent #icons #iconsNewOptionIcon, .toolbarOptionsParent #icons #iconsNewSearchIcon, .toolbarOptionsParent #icons .tstructOutButton, .toolbarOptionsParent #iconsNew [data-target="#iconsNew"], .toolbarOptionsParent #iconsNew #filterWrapper.newRequestJson #ivirActionButton, .toolbarOptionsParent #iconsNew #iconsNewNewIcon, .toolbarOptionsParent #iconsNew #iconsNewRemoveIcon, .toolbarOptionsParent #iconsNew #iconsNewUtilityIcon, .toolbarOptionsParent #iconsNew #iconsNewOptionIcon, .toolbarOptionsParent #iconsNew #iconsNewSearchIcon, .toolbarOptionsParent #iconsNew .tstructOutButton {
+  position: relative;
+  padding: 6px;
+  border-radius: 50px;
+  color: #555555;
+  font-size: 20px;
+  background-color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #icons [data-target="#iconsNew"], .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #icons #filterWrapper.newRequestJson #ivirActionButton, .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #icons #iconsNewNewIcon, .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #icons #iconsNewRemoveIcon, .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #icons #iconsNewUtilityIcon, .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #icons #iconsNewOptionIcon, .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #icons #iconsNewSearchIcon, .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #icons .tstructOutButton, .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #iconsNew [data-target="#iconsNew"], .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #iconsNew #filterWrapper.newRequestJson #ivirActionButton, .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #iconsNew #iconsNewNewIcon, .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #iconsNew #iconsNewRemoveIcon, .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #iconsNew #iconsNewUtilityIcon, .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #iconsNew #iconsNewOptionIcon, .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #iconsNew #iconsNewSearchIcon, .requestJSON:not(.requestJsonOldUi).isMobile .toolbarOptionsParent #iconsNew .tstructOutButton {
+  top: 0px;
+}
+
+.modernButtonOptions .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu, .modernButtonOptions
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu, .modernButtonOptions
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu, .modernButtonOptions
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu, .modernButtonOptions
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu, .modernButtonOptions
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu, .modernButtonOptions .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu, .modernButtonOptions
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu, .modernButtonOptions
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu, .modernButtonOptions
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu, .modernButtonOptions
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu, .modernButtonOptions
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu {
+  width: 370px;
+  background: #fff;
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  -ms-border-radius: 8px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+  max-height: 70vh;
+  min-height: 131px;
+  overflow-x: hidden;
+  margin: 0px;
+  padding: 5px;
+}
+
+@media (max-width: 240px) {
+  .modernButtonOptions .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu, .modernButtonOptions
+  .toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu, .modernButtonOptions
+  .toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu, .modernButtonOptions
+  .toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu, .modernButtonOptions
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu, .modernButtonOptions
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu, .modernButtonOptions .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu, .modernButtonOptions
+  .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu, .modernButtonOptions
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu, .modernButtonOptions
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu, .modernButtonOptions
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu, .modernButtonOptions
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu {
+    width: -moz-calc(100vw - 20px);
+    width: -webkit-calc(100vw - 20px);
+    width: calc(100vw - 20px);
+  }
+}
+
+#ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu, #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu, #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu, #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu {
+  left: auto;
+  right: 15px;
+  top: 40px;
+}
+
+.btextDir-rtl #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu, .btextDir-rtl #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu, .btextDir-rtl #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu, .btextDir-rtl #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu, .btextDir-rtl #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu, .btextDir-rtl #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu, .btextDir-rtl #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu, .btextDir-rtl #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu, .btextDir-rtl #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu, .btextDir-rtl #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu, .btextDir-rtl #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu, .btextDir-rtl #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu {
+  right: initial;
+  left: -2px;
+}
+
+@media (max-width: 768px) {
+  #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu, #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu {
+    width: -moz-calc(100vw - 20px);
+    width: -webkit-calc(100vw - 20px);
+    width: calc(100vw - 20px);
+  }
+}
+
+@media (max-width: 768px) {
+  .modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu {
+    max-width: -moz-calc(100vw - 20px);
+    max-width: -webkit-calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    width: 316px;
+  }
+}
+
+#ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li a .dropdownIconUI, #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li a .dropdownIconUI, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li a .dropdownIconUI, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li a .dropdownIconUI, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li a .dropdownIconUI, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li a .dropdownIconUI, #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li a .dropdownIconUI, #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li a .dropdownIconUI, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li a .dropdownIconUI, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li a .dropdownIconUI, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li a .dropdownIconUI, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li a .dropdownIconUI {
+  display: none;
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li a .dropdownIconUI {
+  display: block;
+}
+
+#ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li a .dropdownIconName, #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li a .dropdownIconName, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li a .dropdownIconName, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li a .dropdownIconName, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li a .dropdownIconName, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li a .dropdownIconName, #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li a .dropdownIconName, #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li a .dropdownIconName, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li a .dropdownIconName, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li a .dropdownIconName, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li a .dropdownIconName, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li a .dropdownIconName {
+  margin-left: 10px;
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li a .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li a .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li a .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li a .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li a .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li a .dropdownIconName, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li a .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li a .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li a .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li a .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li a .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li a .dropdownIconName {
+  margin-left: 0px;
+}
+
+#ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li span.iconUIPin, #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li span.iconUIPin {
+  display: none;
+  color: #999999;
+  position: absolute;
+  background: #fff;
+  top: 9px;
+  right: 31px;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  border-radius: 50%;
+  box-shadow: 1px 1px 7px 1px #b3b3b3;
+  height: 13px;
+  width: 13px;
+  font-size: 10px;
+  z-index: 1;
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li span.iconUIPin, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li span.iconUIPin, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li span.iconUIPin, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li span.iconUIPin, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li span.iconUIPin, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li span.iconUIPin, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li span.iconUIPin, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li span.iconUIPin, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li span.iconUIPin, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li span.iconUIPin, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li span.iconUIPin, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li span.iconUIPin {
+  display: block;
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li .customIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li .customIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li .customIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li .customIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li .customIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li .customIcon, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li .customIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li .customIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li .customIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li .customIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li .customIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li .customIcon {
+  display: none;
+}
+
+#ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li.pinned .iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li.pinned .iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li.pinned .iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li.pinned .iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li.pinned .iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li.pinned .iconUIPin, #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li.pinned .iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li.pinned .iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li.pinned .iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li.pinned .iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li.pinned .iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li.pinned .iconUIPin {
+  transform: rotate(60deg);
+  background-color: #f4f4f4;
+  box-shadow: 1px 0px 3px 1px #d1d1d1;
+}
+
+#ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li.pinned .customIcon, #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li.pinned .customIcon, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li.pinned .customIcon, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li.pinned .customIcon, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li.pinned .customIcon, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li.pinned .customIcon, #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li.pinned .customIcon, #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li.pinned .customIcon, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li.pinned .customIcon, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li.pinned .customIcon, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li.pinned .customIcon, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li.pinned .customIcon {
+  transform: rotate(60deg);
+  background-color: #f4f4f4;
+  box-shadow: 1px 0px 3px 1px #d1d1d1;
+}
+
+#ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li.dropdown-submenu .dropdown-menu span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li.dropdown-submenu .dropdown-menu span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li.dropdown-submenu .dropdown-menu span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li.dropdown-submenu .dropdown-menu span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li.dropdown-submenu .dropdown-menu span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li.dropdown-submenu .dropdown-menu span.iconUIPin, #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li.dropdown-submenu .dropdown-menu span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li.dropdown-submenu .dropdown-menu span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li.dropdown-submenu .dropdown-menu span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li.dropdown-submenu .dropdown-menu span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li.dropdown-submenu .dropdown-menu span.iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li.dropdown-submenu .dropdown-menu span.iconUIPin {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu, #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu, #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu {
+    overflow: initial;
+  }
+}
+
+@media (max-width: 768px) {
+  .modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu {
+    overflow: scroll;
+    padding: 0px;
+  }
+}
+
+#ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li.pinned a i.icon-basic-pin2, #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li.pinned a i.icon-basic-pin2, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li.pinned a i.icon-basic-pin2, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li.pinned a i.icon-basic-pin2, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li.pinned a i.icon-basic-pin2, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li.pinned a i.icon-basic-pin2, #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li.pinned a i.icon-basic-pin2, #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li.pinned a i.icon-basic-pin2, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li.pinned a i.icon-basic-pin2, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li.pinned a i.icon-basic-pin2, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li.pinned a i.icon-basic-pin2, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li.pinned a i.icon-basic-pin2 {
+  transform: rotate(60deg);
+  background-color: #f4f4f4;
+  box-shadow: 1px 0px 3px 1px #d1d1d1;
+}
+
+#ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li.pinned a .iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li.pinned a .iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li.pinned a .iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li.pinned a .iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li.pinned a .iconUIPin, #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li.pinned a .iconUIPin, #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li.pinned a .iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li.pinned a .iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li.pinned a .iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li.pinned a .iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li.pinned a .iconUIPin, #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li.pinned a .iconUIPin {
+  transform: rotate(60deg);
+  background-color: #f4f4f4;
+  box-shadow: 1px 0px 3px 1px #d1d1d1;
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li {
+  display: inline-block;
+  height: auto;
+  list-style-type: none;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.333, 0, 0, 1);
+  vertical-align: top;
+  width: 110px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li {
+    width: 99px;
+  }
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li:hover, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li:hover {
+  background-color: #edf6ff;
+  -webkit-border-radius: 12px;
+  -moz-border-radius: 12px;
+  -ms-border-radius: 12px;
+  border-radius: 12px;
+  z-index: 1;
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li:hover a {
+  width: 112px;
+}
+
+@media (max-width: 768px) {
+  .modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li:hover a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li:hover a {
+    width: 99px;
+  }
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li:hover .dropdown-menu, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li:hover .dropdown-menu, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li:hover .dropdown-menu, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li:hover .dropdown-menu, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li:hover .dropdown-menu, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li:hover .dropdown-menu, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li:hover .dropdown-menu, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li:hover .dropdown-menu, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li:hover .dropdown-menu, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li:hover .dropdown-menu, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li:hover .dropdown-menu, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li:hover .dropdown-menu {
+  height: auto;
+  box-shadow: initial;
+}
+
+@media (max-width: 320px) {
+  .modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li {
+    width: 92px;
+  }
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li a, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li a {
+  padding: 3px 3px 3px;
+  height: 110px;
+  width: 112px;
+}
+
+@media (max-width: 768px) {
+  .modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li a, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li a {
+    width: 99px;
+  }
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li a:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li a:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li a:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li a:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li a:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li a:hover, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li a:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li a:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li a:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li a:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li a:hover, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li a:hover {
+  background-color: transparent;
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li a:focus, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li a:focus, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li a:focus, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li a:focus, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li a:focus, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li a:focus, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li a:focus, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li a:focus, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li a:focus, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li a:focus, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li a:focus, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li a:focus {
+  background-color: #edf6ff;
+  outline: none;
+  text-decoration: none;
+  -webkit-border-radius: 12px;
+  -moz-border-radius: 12px;
+  -ms-border-radius: 12px;
+  border-radius: 12px;
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li a .dropdownIconUI, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li a .dropdownIconUI {
+  text-align: center;
+  position: relative;
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li a .dropdownIconUI span.iconUITitle, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li a .dropdownIconUI span.iconUITitle, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li a .dropdownIconUI span.iconUITitle, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li a .dropdownIconUI span.iconUITitle, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li a .dropdownIconUI span.iconUITitle, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li a .dropdownIconUI span.iconUITitle, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li a .dropdownIconUI span.iconUITitle, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li a .dropdownIconUI span.iconUITitle, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li a .dropdownIconUI span.iconUITitle, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li a .dropdownIconUI span.iconUITitle, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li a .dropdownIconUI span.iconUITitle, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li a .dropdownIconUI span.iconUITitle {
+  background: #233044;
+  height: 45px;
+  width: 45px;
+  padding-top: 6px;
+  color: #fff;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  border-radius: 50%;
+  margin-bottom: 6px;
+  display: inline-block;
+  box-shadow: 2px 2px 5px 0px #b3b3b3;
+  font-size: 22px;
+  margin-top: 10px;
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li .dropdownIconName, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li .dropdownIconName, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li .dropdownIconName {
+  display: block;
+  white-space: normal;
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li .modernDropdownIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li .modernDropdownIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li .modernDropdownIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li .modernDropdownIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li .modernDropdownIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li .modernDropdownIcon, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li .modernDropdownIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li .modernDropdownIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li .modernDropdownIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li .modernDropdownIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li .modernDropdownIcon, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li .modernDropdownIcon {
+  position: relative;
+  top: -5px;
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li.dropdown-submenu ul li {
+  width: 112px;
+}
+
+@media (max-width: 768px) {
+  .modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li.dropdown-submenu ul li {
+    width: 102px;
+  }
+}
+
+@media (max-width: 320px) {
+  .modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li.dropdown-submenu ul li, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li.dropdown-submenu ul li {
+    width: 95px;
+  }
+}
+
+.modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+.toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li.dropdown-submenu ul li a {
+  min-height: 126px;
+  width: 116px;
+}
+
+@media (max-width: 768px) {
+  .modernButtonOptions #ivInSearch .toolbarOptionsParent #icons.dropdown-submenu #iconsUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons.dropdown-submenu #iconsExportUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewOption #iconsExportUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #icons #iconsNewUtility #iconsExportUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew.dropdown-submenu #iconsExportUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewOption #iconsExportUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsUl.dropdown-menu li.dropdown-submenu ul li a, .modernButtonOptions #ivInSearch
+  .toolbarOptionsParent #iconsNew #iconsNewUtility #iconsExportUl.dropdown-menu li.dropdown-submenu ul li a {
+    width: 102px;
+  }
+}
+
+.toolbarOptionsParent #iconsNew .dropDownButton__list.dropdown-menu {
+  position: absolute;
+  right: 0px;
+  left: auto;
+}
+
+.btextDir-rtl .toolbarOptionsParent #iconsNew .dropDownButton__list.dropdown-menu {
+  left: 10px;
+  right: initial;
+}
+
+.toolbarOptionsParent div#pinnedsearchBar #pinnedicons ul li .dropdown-menu li {
+  display: block;
+}
+
+.btextDir-rtl .toolbarOptionsParent div#pinnedsearchBar #pinnedicons ul li .dropdown-menu li {
+  text-align: right;
+}
+
+.toolbarOptionsParent div#pinnedsearchBar #pinnedicons ul li .dropdown-menu li a {
+  background: #fff;
+  color: #000;
+  box-shadow: none;
+}
+
+.toolbarOptionsParent div#pinnedsearchBar #pinnedicons ul li .dropdown-menu li a:hover {
+  background: #e6e6e6;
+}
+
+.jconfirm-content .form-group label {
+  display: inline-block;
+}
+
+.jconfirm-content #ivirSortColumnWrapper input {
+  margin-left: 0px;
+}
+
+.jconfirm-content #ivirSortColumnWrapper .ivirLabelWrapper label {
+  display: inline-block;
+}
+
+.jconfirm-content #ivirSortColumnWrapper .ascDscWrapper button {
+  border: 0px;
+  background: none;
+}
+
+.jconfirm-content #ivirSortColumnWrapper .ascDscWrapper button:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+.jconfirm-content .noBg.arrowUpDown, .jconfirm-content .noBg.clear {
+  color: #333333;
+  background-color: #fff;
+  border: 0px;
+  font-weight: 600;
+  padding: 6px 12px;
+}
+
+.jconfirm-content .noBg.arrowUpDown i, .jconfirm-content .noBg.clear i {
+  font-size: 16px;
+}
+
+.jconfirm-content .noBg.arrowUpDown:focus, .jconfirm-content .noBg.clear:focus {
+  outline: none;
+}
+
+.jconfirm-content .row {
+  margin: 0px;
+}
+
+#myFiltersLi #dvSelectedFilters {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  position: relative;
+  left: -4px;
+  top: -1px;
+}
+
+#myFiltersLi #dvSelectedFilters #FilterValues {
+  color: #000;
+}
+
+.close #myFiltersLi #dvSelectedFilters {
+  float: initial;
+}
+
+.dropDownButton__item {
+  padding: 5px 9px;
+  cursor: pointer;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btextDir-rtl .dropDownButton__item {
+  text-align: right;
+}
+
+.customIcon {
+  padding-right: 0px;
+  left: 8px;
+  top: 6px;
+}
+
+.btextDir-rtl .customIcon {
+  padding-left: 10px;
+  padding-right: 0px;
+}
+
+.customIcon.pinIcon {
+  box-shadow: 1px 0px 3px 1px #d1d1d1;
+}
+
+.btextDir-rtl .customIcon.pinIcon {
+  padding-left: 0px;
+  right: 0;
+  left: auto;
+}
+
+.pinIcon {
+  padding: 0px 1px;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  border-radius: 50%;
+  margin-right: 5px;
+  position: absolute;
+}
+
+.myview {
+  display: none;
+}
+
+.gridDataFilter tr td .ui-datepicker-trigger {
+  position: absolute;
+  right: 18px;
+  width: 18px;
+  top: 7px;
+}
+
+#divModalAdvancedFilters .modal-dialog .modal-content .modal-header button:focus, #divModalAdvancedFilters .modal-dialog .modal-content .modal-header button:hover {
+  outline: none;
+  text-transform: none;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content .form-group .red {
+  color: red;
+  margin: 0 5px;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content .form-group a {
+  font-size: 10px;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content .form-group a:focus, .jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content .form-group a:hover {
+  outline: none;
+  text-decoration: none;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content .form-group .popover.right {
+  width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content .form-group .popover .popover-content {
+  font-size: 13px;
+  color: #a1a1a1;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content #ivirTotalCndtnWrapper {
+  display: none;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content #ivirTotalCndtnWrapper .grndTotalWrapper {
+  display: inline-block;
+  margin: 0px;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content #ivirTotalCndtnWrapper button {
+  background: 0px;
+  border: 0px;
+  font-size: 20px;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content #ivirTotalCndtnWrapper button:focus {
+  outline: none;
+  text-transform: none;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content #ivirTotalCndtnWrapper .grpaddDltBtnWrapper {
+  font-weight: bold;
+}
+
+#ivirbgColorValue, #ivirtxtColorValue {
+  width: 70%;
+}
+
+.sp-replacer {
+  height: 34px;
+  padding: 5px;
+}
+
+#ivirHighlightWrapper legend {
+  font-size: 13px;
+}
+
+.sp-container {
+  z-index: 99999999;
+}
+
+.filtertooltip .tooltiptext {
+  visibility: hidden;
+  border: 1px solid #fff;
+  background-color: #fff;
+  color: #000;
+  text-align: left;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  position: absolute;
+  z-index: 111;
+  font-size: 13px;
+  top: 20px;
+  left: 0px;
+  padding: 9px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.btextDir-rtl .filtertooltip .tooltiptext {
+  right: 0;
+  left: auto;
+  text-align: right;
+}
+
+.filtertooltip .tooltiptext table tr td {
+  font-weight: normal;
+  padding: 2px;
+}
+
+.filtertooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
+#Filterscollapse .panel-body {
+  max-height: -moz-calc(100vh - 100px);
+  max-height: -webkit-calc(100vh - 100px);
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+
+.tooltiptext {
+  color: #010101;
+}
+
+div.toolbarOptionsParent {
+  margin-top: 20px;
+  float: left;
+}
+
+.btextDir-rtl div.toolbarOptionsParent {
+  float: right;
+}
+
+.modernButtonOptions div.toolbarOptionsParent {
+  margin: 0px;
+}
+
+@media (max-width: 960px) {
+  div.toolbarOptionsParent {
+    display: inline-block;
+  }
+}
+
+.btextDir-rtl.requestJSON:not(.requestJsonOldUi).isMobile div.toolbarOptionsParent {
+  float: left;
+}
+
+div.toolbarOptionsParent #icons ul {
+  box-shadow: none;
+  list-style: none;
+  padding: 0;
+  text-align: left;
+}
+
+div.toolbarOptionsParent #icons ul li .dropDownButton {
+  position: relative;
+}
+
+.btextDir-rtl div.toolbarOptionsParent #icons ul li ul li {
+  text-align: right;
+}
+
+div.toolbarOptionsParent #icons ul li a {
+  border: 1px solid #ccc;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  border-radius: 3px;
+}
+
+.btextDir-rtl div.toolbarOptionsParent #icons ul.dropDownButton__list {
+  right: 0px;
+  left: auto;
+}
+
+@media (max-width: 960px) {
+  div.toolbarOptionsParent #icons ul {
+    /*Temporary Solution for dropdown hidden issue in toolbar in mobile resolution -- refer GIS000105*/
+  }
+}
+
+div.toolbarOptionsParent #icons ul li:not(.dropDownButton__item) {
+  display: inline-block;
+}
+
+.requestJsonOldUi div.toolbarOptionsParent #icons ul li.liTaskItems {
+  display: block;
+}
+
+div.toolbarOptionsParent #icons ul li:not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.listItem):not(.dropdown-submenu) {
+  list-style: none;
+  border-radius: 3px;
+  color: #333;
+  background-color: #fff;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  height: 33px;
+}
+
+div.toolbarOptionsParent #icons ul li:not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.listItem):not(.dropdown-submenu):focus {
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div.toolbarOptionsParent #icons ul li#dvRefreshFromLoad {
+  box-shadow: none;
+  margin: 0;
+  border: 1px solid #ccc;
+}
+
+div.toolbarOptionsParent #icons ul li#dvRefreshFromLoad span button {
+  color: #999999;
+}
+
+div.toolbarOptionsParent #icons ul li#dvRefreshFromLoad span button:hover {
+  box-shadow: none;
+}
+
+div.toolbarOptionsParent #icons ul li #uldropelements .actionWrapper {
+  box-shadow: none;
+  margin: 0;
+}
+
+div.toolbarOptionsParent #icons ul li#dvRefreshFromLoad span button:focus {
+  box-shadow: none;
+}
+
+div.toolbarOptionsParent #icons ul li button {
+  color: #333;
+  background-color: #fff;
+  border: 0px;
+  padding: 5px 15px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+}
+
+div.toolbarOptionsParent #icons ul li button:focus {
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div.toolbarOptionsParent #icons ul li a {
+  color: #333;
+  display: block;
+  text-decoration: none;
+  padding: 5px 13px;
+  cursor: pointer;
+}
+
+div.toolbarOptionsParent #icons ul li a i.material-icons {
+  color: #999;
+  font-size: 17px;
+  position: relative;
+  top: 3px;
+}
+
+div.toolbarOptionsParent #icons ul li a .tbIcon {
+  width: 17px;
+  height: 17px;
+  margin: 4px 0px 5px 0px;
+  position: relative;
+  left: -2px;
+  top: 1px;
+}
+
+div.toolbarOptionsParent #icons ul li a:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+.btextDir-rtl div.toolbarOptionsParent #icons ul li a span:not(#lblfilters):not(.icon-arrows-down) {
+  right: 2px;
+  left: auto;
+}
+
+div.toolbarOptionsParent #icons ul li a span.icon-arrows-down {
+  position: relative;
+  left: 3px;
+  top: 4px;
+}
+
+div.toolbarOptionsParent #icons ul li.gropuedBtn button:after {
+  display: none;
+}
+
+div.toolbarOptionsParent #icons ul li.gropuedBtn button span:before {
+  position: relative;
+  top: 2px;
+}
+
+div.toolbarOptionsParent #icons ul li:focus {
+  text-decoration: none;
+  box-shadow: 0px 0px 2px #333333;
+}
+
+div.toolbarOptionsParent #icons ul li#myFiltersLi a span:before {
+  display: none;
+}
+
+div.toolbarOptionsParent #icons ul li:not(#ivirCButtonsWrapper):hover {
+  background-color: #e6e6e6;
+}
+
+div.toolbarOptionsParent #icons ul li #dvSelectedFilters, div.toolbarOptionsParent #icons ul li #ivirCButtonsWrapper {
+  display: none;
+}
+
+div.toolbarOptionsParent #icons ul li.lnkNext, div.toolbarOptionsParent #icons ul li.lnkPrev {
+  position: relative;
+  top: 2px;
+}
+
+div.toolbarOptionsParent #icons ul li.lnkNext a, div.toolbarOptionsParent #icons ul li.lnkPrev a {
+  padding: 9px 18px 8px;
+}
+
+div.toolbarOptionsParent #icons ul li#ivirCButtonsWrapper button {
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+  margin-right: 5px;
+  margin-bottom: 5px;
+}
+
+div.toolbarOptionsParent #icons ul li.gropuedBtn .dropdown .actionsBtn #uldropelements {
+  margin-left: -12px;
+  padding: 1px 0px;
+  left: 6px;
+  top: 25px;
+}
+
+div.toolbarOptionsParent #icons ul li.gropuedBtn #uldropelements li.actionWrapper {
+  box-shadow: none;
+  margin: 0px;
+}
+
+div.toolbarOptionsParent #icons ul .lnkPrev, div.toolbarOptionsParent #icons ul .lnkNext {
+  padding: 0px 0px 4px;
+}
+
+div.toolbarOptionsParent #icons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.actionWrapper):not(.listItem):not(.dropdown-submenu) {
+  list-style: none;
+  border-radius: 3px;
+  color: #333;
+  background-color: #fff;
+  display: inline-block;
+  height: 33px;
+}
+
+div.toolbarOptionsParent #icons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.actionWrapper):not(.listItem):not(.dropdown-submenu):focus {
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div.toolbarOptionsParent #icons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.actionWrapper):not(.listItem):not(.dropdown-submenu) a {
+  color: #333;
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+div.toolbarOptionsParent #icons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.actionWrapper):not(.listItem):not(.dropdown-submenu) a i.material-icons {
+  color: #999;
+  font-size: 17px;
+  position: relative;
+  top: 4px;
+}
+
+div.toolbarOptionsParent #icons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.actionWrapper):not(.listItem):not(.dropdown-submenu) a .tbIcon {
+  width: 17px;
+  height: 17px;
+  margin: 4px 0px 5px 0px;
+}
+
+div #ivInSearch .toolbarOptionsParent {
+  position: absolute;
+  right: -8px;
+  top: -7px;
+  margin: 0px;
+}
+
+.requestJSON div #ivInSearch .toolbarOptionsParent, .modernButtonOptions div #ivInSearch .toolbarOptionsParent {
+  top: 1px;
+  right: 0px;
+  position: relative;
+}
+
+.requestJSON:not(.requestJsonOldUi).isMobile div #ivInSearch .toolbarOptionsParent {
+  position: relative;
+  top: 0px;
+  right: -15px;
+  margin: 0px;
+}
+
+#ivContainer .container {
+  width: 100%;
+}
+
+#ivContainer .container .bs-example button:focus {
+  outline: none;
+}
+
+#ivContainer .container .bs-example button i:focus {
+  outline: none;
+}
+
+#ivContainer .container .bs-example #dvStagLoad, #ivContainer .container .bs-example #dvPages, #ivContainer .container .bs-example #dvRowsPerPage {
+  display: none;
+}
+
+#ivContainer .container .bs-example #dvSqlPages #rowsTxtCount #lnkShowAll {
+  display: none;
+}
+
+.iviewTableWrapper .dvContent .sort, .iviewTableWrapper .dvContent #leftPanel {
+  display: none;
+}
+
+.iviewTableWrapper .dvContent #contentPanelGridIview #noRecccord {
+  display: none;
+}
+
+#lblTaskExcel, #lblTaskPDF {
+  display: none;
+}
+
+.btextDir-rtl #dvRefreshParam {
+  float: left;
+}
+
+#cb_sactbu span {
+  padding-right: 0px;
+}
+
+div#pinnedsearchBar {
+  margin: 0px;
+}
+
+@media (max-width: 960px) {
+  div#pinnedsearchBar {
+    display: inline-block;
+  }
+}
+
+div#pinnedsearchBar #pinnedicons #pinnediconsUl {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.btextDir-rtl div#pinnedsearchBar #pinnedicons #pinnediconsUl {
+  text-align: left;
+}
+
+div#pinnedsearchBar #pinnedicons ul {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+  margin-bottom: 0px;
+}
+
+@media (max-width: 960px) {
+  div#pinnedsearchBar #pinnedicons ul {
+    /*Temporary Solution for dropdown hidden issue in toolbar in mobile resolution -- refer GIS000105*/
+  }
+}
+
+div#pinnedsearchBar #pinnedicons ul:not(.dropDownButton__list):not(.dropdown-menu) {
+  position: relative;
+  top: -15px;
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinnedfilterWrapper {
+  position: relative;
+}
+
+div#pinnedsearchBar #pinnedicons ul li:not(.dropDownButton__item):not(.liTaskItems) {
+  display: inline-block;
+}
+
+div#pinnedsearchBar #pinnedicons ul li:not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons) {
+  list-style: none;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+  color: #333;
+  background-color: #fff;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  margin-bottom: 0px;
+  margin-top: -4px;
+}
+
+div#pinnedsearchBar #pinnedicons ul li:not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons):focus {
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons ul li:not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons):hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinneddvRefreshFromLoad {
+  box-shadow: none;
+  margin: 0;
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinneddvRefreshFromLoad span button {
+  color: #999999;
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinneddvRefreshFromLoad span button:hover {
+  box-shadow: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li #pinneduldropelements .actionWrapper {
+  box-shadow: none;
+  margin: 0;
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinneddvRefreshFromLoad span button:focus {
+  box-shadow: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li button {
+  color: #333;
+  background-color: #fff;
+  border: 0px;
+  padding: 5px 15px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+}
+
+div#pinnedsearchBar #pinnedicons ul li button:focus {
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons ul li a {
+  color: #333;
+  display: block;
+  text-decoration: none;
+  padding: 3px 9px 7px;
+  cursor: pointer;
+}
+
+div#pinnedsearchBar #pinnedicons ul li a:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li a span:not(#pinnedlblfilters) {
+  top: 3px;
+  position: relative;
+}
+
+div#pinnedsearchBar #pinnedicons ul li a .dropdownIconUI {
+  display: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li .iconUIPin, div#pinnedsearchBar #pinnedicons ul li .customIcon {
+  display: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li.gropuedBtn button:after {
+  display: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li.gropuedBtn button span:before {
+  position: relative;
+  top: 2px;
+}
+
+div#pinnedsearchBar #pinnedicons ul li:focus {
+  text-decoration: none;
+  box-shadow: 0px 0px 2px #333333;
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinnedmyFiltersLi a span:before {
+  display: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li:not(#pinnedivirCustomActionButtons):hover {
+  background-color: #e6e6e6;
+}
+
+div#pinnedsearchBar #pinnedicons ul li #pinneddvSelectedFilters, div#pinnedsearchBar #pinnedicons ul li #pinnedivirCustomActionButtons {
+  display: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li.lnkNext, div#pinnedsearchBar #pinnedicons ul li.lnkPrev {
+  position: relative;
+  top: 2px;
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinnedivirCustomActionButtons button {
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons ul li.open .dropdown-menu {
+  max-height: 200px;
+  height: auto;
+  overflow-y: auto;
+  border: 1px solid #e6e6e6;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons ul .lnkPrev, div#pinnedsearchBar #pinnedicons ul .lnkNext {
+  padding: 0px 0px 4px;
+}
+
+div#pinnedsearchBar #pinnedicons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons):not(.actionWrapper) {
+  list-style: none;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+  color: #333;
+  background-color: #fff;
+  display: inline-block;
+}
+
+div#pinnedsearchBar #pinnedicons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons):not(.actionWrapper):focus {
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons):not(.actionWrapper):hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons):not(.actionWrapper) a {
+  color: #333;
+  display: block;
+  text-decoration: none;
+  padding: 3px 9px 7px;
+  cursor: pointer;
+}
+
+.toolbarRightMenu {
+  display: inline-block;
+  position: relative;
+  padding: 5px 10px 8px 0px;
+}
+
+@media (max-width: 960px) {
+  .toolbarRightMenu {
+    padding: 4px 10px 0px 0px;
+    top: 0px;
+  }
+}
+
+#rowsTxtCount, #rowsTxtCountNew {
+  float: right;
+  margin: 30px 13px 0;
+}
+
+.btextDir-rtl #rowsTxtCount, .btextDir-rtl #rowsTxtCountNew {
+  float: left;
+}
+
+#rowsTxtCount #dvRefreshParam, #rowsTxtCountNew #dvRefreshParam {
+  display: inline-block;
+}
+
+#rowsTxtCount span #lblCurPage, #rowsTxtCountNew span #lblCurPage {
+  color: #010101;
+}
+
+#rowsTxtCount span #lblCurPage a, #rowsTxtCountNew span #lblCurPage a {
+  color: #555555;
+}
+
+#rowsTxtCount #lblNoOfRecs, #rowsTxtCount #lnkShowAll, #rowsTxtCountNew #lblNoOfRecs, #rowsTxtCountNew #lnkShowAll {
+  color: #555555;
+}
+
+#rowsTxtCountNew {
+  margin: 0px 7px;
+}
+
+.requestJSON:not(.requestJsonOldUi).isMobile #rowsTxtCountNew {
+  margin: 5px 7px 0px;
+}
+
+#rowsTxtCountNew #dvSelectedFilters {
+  position: relative;
+  left: -4px;
+  top: -1px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  padding: 0;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: none;
+}
+
+#dvActions {
+  display: none;
+}
+
+.table {
+  border-bottom: 1px solid #cccccc;
+}
+
+.table tbody tr td, .table tbody tr th {
+  padding: 10px;
+  border-left: 0px;
+  border-right: 0px;
+  color: #111111;
+  font-size: 15px;
+}
+
+.table tbody tr.primary td, .table tbody tr.primary th {
+  background-color: #1f91f3;
+  color: #fff;
+}
+
+.table tbody tr.success td, .table tbody tr.success th {
+  background-color: #2b982b;
+  color: #fff;
+}
+
+.table tbody tr.info td, .table tbody tr.info th {
+  background-color: #00b0e4;
+  color: #fff;
+}
+
+.table tbody tr.warning td, .table tbody tr.warning th {
+  background-color: #ff9600;
+  color: #fff;
+}
+
+.table tbody tr.danger td, .table tbody tr.danger th {
+  background-color: #fb483a;
+  color: #fff;
+}
+
+.table > tfoot > tr > tr {
+  padding: 0px;
+}
+
+.table thead tr th {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+  background: #f2f2f2;
+  font-weight: 600;
+  color: #111111;
+  font-size: 15px;
+}
+
+.table.iviewBuilder thead tr th {
+  border: 1px solid #fff;
+}
+
+.table.iviewBuilder thead tr th.DTCR_tableHeaderHover:hover {
+  border-right: 1px solid #999;
+}
+
+.table.dataTable thead tr:hover, .table.dataTable thead tr:focus, .table.dataTable thead th:hover, .table.dataTable thead th:focus {
+  outline: none;
+  text-transform: none;
+}
+
+.table.dataTable thead tr button, .table.dataTable thead th button {
+  border: 0px;
+}
+
+.table.dataTable thead tr button.rightClickMenuIcn, .table.dataTable thead th button.rightClickMenuIcn {
+  display: none;
+}
+
+.table.dataTable thead th.sorting_disabled {
+  padding: 10px;
+}
+
+.table.dataTable.stripe tbody tr.odd, .table.dataTable.stripe tbody tr.even {
+  background: #fff;
+}
+
+.table.dataTable.stripe tbody tr:hover {
+  background: #fafafa;
+}
+
+.table.dataTable.stripe tbody tr.specialRow {
+  font-weight: bold;
+}
+
+.table.dataTable.stripe tbody tr.specialRow td.fontGreen {
+  color: #1f911f;
+}
+
+.table.dataTable.stripe tbody tr.specialRow td.fontBlack {
+  color: #000;
+}
+
+.table.dataTable.stripe tbody tr.specialRow td.fontBlue {
+  color: #0000ff;
+}
+
+.table tfoot tr td {
+  padding: 0px;
+}
+
+.table-bordered {
+  border-top: 1px solid #eee;
+  table-layout: fixed;
+  word-break: break-word;
+}
+
+.table-bordered tbody tr td, .table-bordered tbody tr th {
+  padding: 10px;
+  border: 1px solid #eee;
+}
+
+.table-bordered thead tr th {
+  padding: 10px;
+  border: 1px solid #eee;
+}
+
+.compressedModeUI .table.dataTable thead tr th {
+  font-size: 15px;
+}
+
+.compressedModeUI .table thead tr th {
+  padding-top: 0px;
+  padding-bottom: 0px;
+  font-size: 15px;
+}
+
+.compressedModeUI .table tbody tr td, .compressedModeUI .table tbody tr th {
+  padding-top: 0px;
+  padding-bottom: 0px;
+  font-size: 15px;
+}
+
+.dataTables_wrapper .dt-buttons {
+  color: #555555;
+}
+
+#ivirMainDataTableWrapper table.cards tbody tr {
+  width: calc(100vw - 1rem - 10px);
+  margin: 0.5rem;
+  border: #e6e6e6;
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+  display: inline-block;
+}
+
+#ivirMainDataTableWrapper table.cards tbody td {
+  display: block;
+  border: none;
+  width: calc(100vw - 1rem - 30px);
+  padding: 0px 10px;
+  text-align: left;
+}
+
+#ivirMainDataTableWrapper table.cards tbody td.visibleMobileCol:nth-of-type(1n+6) {
+  display: none;
+}
+
+#ivirMainDataTableWrapper table.cards tbody td.visibleMobileCol.forceShow {
+  display: block;
+}
+
+#ivirMainDataTableWrapper table.cards tbody td.visibleMobileCol.forceShow label {
+  display: block;
+}
+
+#ivirMainDataTableWrapper table.cards tbody td .rowOptionsExist {
+  float: right;
+}
+
+#ivirMainDataTableWrapper table.cards tbody td input {
+  width: 15px;
+}
+
+#ivirMainDataTableWrapper table.cards tbody label {
+  color: #000;
+  margin-right: 3px;
+}
+
+#ivirMainDataTableWrapper table.cards tr td .cardLabelContent {
+  display: inline-block;
+}
+
+#ivirMainDataTableWrapper table.cards tr.selector label {
+  color: #000;
+}
+
+#ivirMainDataTableWrapper table.cards.gridData.ivirMainGrid {
+  min-width: inherit;
+  table-layout: fixed;
+  margin-left: 2px;
+  border-color: transparent;
+}
+
+.menu {
+  width: 150px;
+  position: absolute;
+  z-index: 999999;
+  background: #fff;
+}
+
+.menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: #e6e6e6;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  border: 1px solid #e6e6e6;
+}
+
+.menu ul li {
+  cursor: pointer;
+  text-decoration: none;
+  padding: 5px 10px;
+}
+
+.menu ul li.highlightOption {
+  background: #e6e6e6;
+  color: #000;
+}
+
+.menu ul li:hover {
+  background: #e6e6e6;
+  color: #000;
+}
+
+.gridData.ivirMainGrid thead th:not(.sorting_disabled):hover button {
+  background: 0;
+  border: 0;
+}
+
+.gridData.ivirMainGrid thead th:not(.sorting_disabled):hover button.rightClickMenuIcn {
+  display: inline-block;
+}
+
+.pageInformationNew {
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  margin: 2px 0px 0px 5px;
+}
+
+.requestJSON:not(.requestJsonOldUi).isMobile .pageInformationNew {
+  padding: 5px 0px 0px 0px;
+}
+
+.pageInformationNew .pageInformationLeft {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  padding: 2px;
+}
+
+.requestJSON:not(.requestJsonOldUi).isMobile .pageInformationNew .pageInformationLeft {
+  padding: 3px 2px;
+}
+
+.pageInformationNew .pageInformationLeft .paramPillContent, .pageInformationNew .pageInformationLeft .filterPillContent {
+  width: 100%;
+  position: relative;
+  top: 3px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.pageInformationNew .pageInformationLeft .paramPillContent.half, .pageInformationNew .pageInformationLeft .filterPillContent.half {
+  width: calc(50% - 5px);
+}
+
+.iviewTableWrapper {
+  height: 70vh;
+  height: -moz-calc(100vh - 68px);
+  height: -webkit-calc(100vh - 68px);
+  height: calc(100vh - 68px);
+}
+
+.iviewTableWrapper table.table {
+  margin-left: 0px;
+  max-width: none;
+}
+
+.btextDir-rtl .iviewTableWrapper table.table {
+  margin-right: 0px;
+}
+
+.iviewCardContentWrapper {
+  margin: 3px;
+}
+
+.iviewCardContentWrapper .iviewTableWrapperNew {
+  height: -moz-calc(100vh - 43px);
+  height: -webkit-calc(100vh - 43px);
+  height: calc(100vh - 43px);
+}
+
+body:not(.requestJsonOldUi).requestJSON .iviewCardContentWrapper .iviewTableWrapperNew {
+  height: -moz-calc(100vh - 72px);
+  height: -webkit-calc(100vh - 72px);
+  height: calc(100vh - 72px);
+  overflow-y: auto;
+}
+
+body:not(.requestJsonOldUi).requestJSON .iviewCardContentWrapper .iviewTableWrapperNew.chartsAdded {
+  height: -moz-calc(100vh - 127px);
+  height: -webkit-calc(100vh - 127px);
+  height: calc(100vh - 127px);
+}
+
+.inmemdb .iviewCardContentWrapper .iviewTableWrapperNew {
+  overflow-x: hidden;
+}
+
+body:not(.requestJsonOldUi).requestJSON .viewTabsAdded + .iviewCardContentWrapper .iviewTableWrapperNew {
+  height: -moz-calc(100vh - 109px);
+  height: -webkit-calc(100vh - 109px);
+  height: calc(100vh - 109px);
+}
+
+body:not(.requestJsonOldUi).requestJSON .iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody {
+  /* Works on Chrome/Edge/Safari */
+}
+
+body:not(.requestJsonOldUi).requestJSON .iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body:not(.requestJsonOldUi).requestJSON .iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody::-webkit-scrollbar-track {
+  background: #fff;
+}
+
+body:not(.requestJsonOldUi).requestJSON .iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody::-webkit-scrollbar-thumb {
+  background-color: #999999;
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  -ms-border-radius: 20px;
+  border-radius: 20px;
+  border: 1px solid #fff;
+  min-height: 15%;
+  min-width: 15%;
+}
+
+body:not(.requestJsonOldUi).requestJSON .iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody::-webkit-scrollbar-thumb:hover {
+  border: 0px solid #999999;
+}
+
+.iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody tbody tr td.isHyperlinkUI {
+  padding: 10px 3px;
+}
+
+.compressedModeUI .iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody tbody tr td.isHyperlinkUI {
+  padding: 1px 1px;
+}
+
+.iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody tbody tr td.isHyperlinkUI a {
+  padding: 3px 7px;
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  -ms-border-radius: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.compressedModeUI .iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody tbody tr td.isHyperlinkUI a {
+  padding: 1px 7px;
+}
+
+.iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody tbody tr td .rowOptionsExist i {
+  font-size: 16px;
+}
+
+.iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody tbody tr td .rowOptionsExist .btn-group.open .dropdown-toggle {
+  box-shadow: none;
+}
+
+.iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody tbody tr td .rowOptionsExist .btn:active {
+  box-shadow: none;
+}
+
+.iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody tbody tr td .rowOptionsExist .dropdown-menu a {
+  color: #000;
+}
+
+.iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollBody tbody tr td .rowOptionsExist .dropdown-menu a:hover {
+  text-decoration: none;
+  background-color: #eee;
+  color: #000;
+}
+
+.iviewCardContentWrapper .iviewTableWrapperNew .dataTables_scrollFoot .dataTables_scrollFootInner table.table {
+  border-bottom: none;
+}
+
+.listViewDc {
+  overflow: hidden;
+}
+
+#iviewFrame.alignIview {
+  position: absolute;
+  margin: 0px auto;
+}
+
+#iviewFrame.alignIview.center {
+  left: 0;
+  right: 0;
+}
+
+#iviewFrame.alignIview.right {
+  right: 0;
+}
+
+.table.columnSeparator tbody tr td,
+.table.columnSeparator tbody tr th, .table.columnSeparator thead tr td,
+.table.columnSeparator thead tr th {
+  border-right: 1px solid #dedede;
+}
+
+#ivirMainChartWrapper {
+  height: -moz-calc(100vh - 150px);
+  height: -webkit-calc(100vh - 150px);
+  height: calc(100vh - 150px);
+  display: none;
+}
+
+body:not(.requestJsonOldUi).requestJSON #ivirMainChartWrapper .chartWrapper {
+  min-height: -moz-calc(50vh);
+  min-height: -webkit-calc(50vh);
+  min-height: calc(50vh);
+  overflow-x: hidden;
+}
+
+body:not(.requestJsonOldUi).requestJSON #ivirMainChartWrapper {
+  height: 100%;
+}
+
+#ivirMainChartWrapper #ivirChartPills {
+  text-align: center;
+}
+
+div.ivirChartPills {
+  text-align: center;
+}
+
+div#ivirChartPills .chartPills, div #ivirFilteredAccordion .chartPills {
+  display: inline-block;
+  background: #ebebeb;
+  margin-left: 5px;
+  padding: 5px;
+  -webkit-border-radius: 17px;
+  -moz-border-radius: 17px;
+  -ms-border-radius: 17px;
+  border-radius: 17px;
+}
+
+div#ivirChartPills .chartPills .materialCheckBox [type=checkbox]:checked, div#ivirChartPills .chartPills .materialCheckBox [type=checkbox]:not(:checked), div #ivirFilteredAccordion .chartPills .materialCheckBox [type=checkbox]:checked, div #ivirFilteredAccordion .chartPills .materialCheckBox [type=checkbox]:not(:checked) {
+  position: absolute;
+  opacity: 0;
+}
+
+div#ivirChartPills .chartPills .materialCheckBox label, div #ivirFilteredAccordion .chartPills .materialCheckBox label {
+  position: relative;
+  padding-left: 13px;
+  cursor: pointer;
+  display: inline-block;
+  height: 7px;
+  margin-right: 20px;
+}
+
+div#ivirChartPills .chartPills .materialCheckBox [type=checkbox] + label, div #ivirFilteredAccordion .chartPills .materialCheckBox [type=checkbox] + label {
+  position: relative;
+  padding-left: 9px;
+  cursor: pointer;
+  display: inline-block;
+  line-height: 25px;
+}
+
+div#ivirChartPills .chartPills .materialCheckBox [type=checkbox] + label:before, div #ivirFilteredAccordion .chartPills .materialCheckBox [type=checkbox] + label:before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: -4px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #e6e6e6;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+div#ivirChartPills .chartPills .materialCheckBox [type=checkbox]:not(.filled-in) + label:after, div #ivirFilteredAccordion .chartPills .materialCheckBox [type=checkbox]:not(.filled-in) + label:after {
+  content: '\2713\0020';
+  position: absolute;
+  top: 0px;
+  left: 8px;
+  font-size: 17px;
+  line-height: 0.8;
+  color: #4d4d4d;
+  font-family: 'Lucida Sans Unicode', 'Arial Unicode MS', Arial;
+}
+
+div#ivirChartPills .chartPills .materialCheckBox [type=checkbox].filled-in:checked + label:before, div #ivirFilteredAccordion .chartPills .materialCheckBox [type=checkbox].filled-in:checked + label:before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: -4px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #e6e6e6;
+  background: white;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+div#ivirChartPills .chartPills .materialCheckBox [type=checkbox].filled-in:checked + label:after, div #ivirFilteredAccordion .chartPills .materialCheckBox [type=checkbox].filled-in:checked + label:after {
+  content: '\2713\0020';
+  position: absolute;
+  top: 0px;
+  left: 8px;
+  font-size: 17px;
+  line-height: 0.8;
+  color: #4d4d4d;
+  font-family: 'Lucida Sans Unicode', 'Arial Unicode MS', Arial;
+}
+
+div#ivirChartPills .chartPills .materialCheckBox [type=checkbox].filled-in + label:after, div #ivirFilteredAccordion .chartPills .materialCheckBox [type=checkbox].filled-in + label:after {
+  content: '';
+  background: none;
+}
+
+div#ivirChartPills span.pillMainWrapper, div #ivirFilteredAccordion span.pillMainWrapper {
+  position: relative;
+  text-align: left;
+  display: inline-block;
+}
+
+div#ivirChartPills span.pillMainWrapper button, div #ivirFilteredAccordion span.pillMainWrapper button {
+  border: 0px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  -ms-border-radius: 10px;
+  border-radius: 10px;
+  padding: 0px 3px 0px;
+  margin-left: 5px;
+  position: relative;
+  top: -1px;
+}
+
+div#ivirChartPills span.pillMainWrapper button span, div #ivirFilteredAccordion span.pillMainWrapper button span {
+  position: relative;
+  top: 2px;
+}
+
+div#ivirChartPills span.pillMainWrapper button:hover, div#ivirChartPills span.pillMainWrapper button:focus, div #ivirFilteredAccordion span.pillMainWrapper button:hover, div #ivirFilteredAccordion span.pillMainWrapper button:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+div#ivirChartPills span.pillMainWrapper a, div #ivirFilteredAccordion span.pillMainWrapper a {
+  color: #000;
+}
+
+div#ivirChartPills span.pillMainWrapper a:hover, div #ivirFilteredAccordion span.pillMainWrapper a:hover {
+  outline: none;
+  text-decoration: none;
+}
+
+div#ivirChartPills span.pillMainWrapper span.ivirCndtnIcon, div #ivirFilteredAccordion span.pillMainWrapper span.ivirCndtnIcon {
+  padding: 3px;
+  color: #999999;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  border-radius: 5px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-right: 0px;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv, #rowsTxtCountNew #ivirChartPillsDiv {
+  display: none;
+}
+
+.requestJSON:not(.requestJsonOldUi).isMobile #rowsTxtCountNew #ivirAllCndtnPillsDiv, .requestJSON:not(.requestJsonOldUi).isMobile #rowsTxtCountNew #ivirChartPillsDiv {
+  position: relative;
+  top: -2px;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv a span, #rowsTxtCountNew #ivirChartPillsDiv a span {
+  color: #999999;
+  background: #e6e6e6;
+  padding: 7px;
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  -ms-border-radius: 20px;
+  border-radius: 20px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+  position: relative;
+  margin-top: -3px;
+  font-size: 11px;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv a:focus, #rowsTxtCountNew #ivirChartPillsDiv a:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv a:hover, #rowsTxtCountNew #ivirChartPillsDiv a:hover {
+  color: #000;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv a:active, #rowsTxtCountNew #ivirChartPillsDiv a:active {
+  box-shadow: none;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv a#lnkallCndtnPill.btn, #rowsTxtCountNew #ivirChartPillsDiv a#lnkallCndtnPill.btn {
+  padding: 0px 12px;
+}
+
+.requestJSON:not(.requestJsonOldUi).isMobile #rowsTxtCountNew #ivirAllCndtnPillsDiv a#lnkallCndtnPill, .requestJSON:not(.requestJsonOldUi).isMobile #rowsTxtCountNew #ivirChartPillsDiv a#lnkallCndtnPill {
+  padding: 0px;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv a#lnkChartPill.btn, #rowsTxtCountNew #ivirChartPillsDiv a#lnkChartPill.btn {
+  padding: 0px 12px;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv div[id^='ivir'], #rowsTxtCountNew #ivirChartPillsDiv div[id^='ivir'] {
+  position: relative;
+  margin-bottom: 5px;
+  background: #ebebeb;
+  padding: 5px 35px 5px 18px;
+  -webkit-border-radius: 15px;
+  -moz-border-radius: 15px;
+  -ms-border-radius: 15px;
+  border-radius: 15px;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv div[id^='ivir'] .materialCheckBox label, #rowsTxtCountNew #ivirChartPillsDiv div[id^='ivir'] .materialCheckBox label {
+  background-color: #ebebeb;
+  border: 1px solid #cccccc;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  border-radius: 50%;
+  cursor: pointer;
+  height: 28px;
+  left: -6px;
+  position: absolute;
+  top: 2px;
+  width: 28px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv div[id^='ivir'] .materialCheckBox label:after, #rowsTxtCountNew #ivirChartPillsDiv div[id^='ivir'] .materialCheckBox label:after {
+  border: 2px solid #000;
+  border-top: none;
+  border-right: none;
+  content: "";
+  height: 6px;
+  left: 7px;
+  opacity: 0;
+  position: absolute;
+  top: 8px;
+  -ms-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+  width: 12px;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv div[id^='ivir'] .materialCheckBox input[type="checkbox"], #rowsTxtCountNew #ivirChartPillsDiv div[id^='ivir'] .materialCheckBox input[type="checkbox"] {
+  visibility: hidden;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv div[id^='ivir'] .materialCheckBox input[type="checkbox"]:checked + label, #rowsTxtCountNew #ivirChartPillsDiv div[id^='ivir'] .materialCheckBox input[type="checkbox"]:checked + label {
+  background-color: #fff;
+  border-color: #e6e6e6;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv div[id^='ivir'] .materialCheckBox input[type="checkbox"]:checked + label:after, #rowsTxtCountNew #ivirChartPillsDiv div[id^='ivir'] .materialCheckBox input[type="checkbox"]:checked + label:after {
+  opacity: 1;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv div[id^='ivir'] span.pillMainWrapper button, #rowsTxtCountNew #ivirChartPillsDiv div[id^='ivir'] span.pillMainWrapper button {
+  border: 0px;
+  background: transparent;
+  position: absolute;
+  top: 9px;
+  margin-right: 0px;
+  right: 7px;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv div[id^='ivir'] span.pillMainWrapper button:hover, #rowsTxtCountNew #ivirAllCndtnPillsDiv div[id^='ivir'] span.pillMainWrapper button:focus, #rowsTxtCountNew #ivirChartPillsDiv div[id^='ivir'] span.pillMainWrapper button:hover, #rowsTxtCountNew #ivirChartPillsDiv div[id^='ivir'] span.pillMainWrapper button:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv div[id^='ivir'] span.pillMainWrapper a, #rowsTxtCountNew #ivirChartPillsDiv div[id^='ivir'] span.pillMainWrapper a {
+  color: #000;
+  margin-left: 3px;
+  color: #999999;
+}
+
+#rowsTxtCountNew #ivirAllCndtnPillsDiv div[id^='ivir'] span.pillMainWrapper span.ivirCndtnIcon, #rowsTxtCountNew #ivirChartPillsDiv div[id^='ivir'] span.pillMainWrapper span.ivirCndtnIcon {
+  position: relative;
+  top: -1px;
+  color: #999999;
+}
+
+#ivirChartWrapper .chartWrapper .ivirNoDataTag {
+  text-align: center;
+  font-size: 13px;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper {
+  margin-bottom: 5px;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper span:hover {
+  outline: none;
+  text-decoration: none;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper span a {
+  color: #000;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtns {
+  display: inline-block;
+  margin-left: 10px;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtns span.ivirCndtnIcon {
+  margin-right: 10px;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtns .pillMainWrapper {
+  margin-right: 10px;
+  display: inline-block;
+  background: #ebebeb;
+  margin-left: 5px;
+  padding: 5px;
+  -webkit-border-radius: 17px;
+  -moz-border-radius: 17px;
+  -ms-border-radius: 17px;
+  border-radius: 17px;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtns #ivirfilterCndtnPill span.ivirCndtnName span.ivirCndtnLabel, #ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtns #ivirgroupCndtnPill span.ivirCndtnName span.ivirCndtnLabel, #ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtns #ivirhighlightCndtnPill span.ivirCndtnName span.ivirCndtnLabel {
+  color: #000;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 9px;
+  position: relative;
+  top: -1px;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills {
+  display: none;
+  margin-left: 15px;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills.open {
+  display: inline-block;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills div[id^=ivir] {
+  display: inline-block;
+  background: #ebebeb;
+  padding: 5px;
+  -webkit-border-radius: 17px;
+  -moz-border-radius: 17px;
+  -ms-border-radius: 17px;
+  border-radius: 17px;
+  margin-right: 5px;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills .materialCheckBox [type=checkbox]:checked, #ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills .materialCheckBox [type=checkbox]:not(:checked) {
+  position: absolute;
+  opacity: 0;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills .materialCheckBox label {
+  position: relative;
+  padding-left: 13px;
+  cursor: pointer;
+  display: inline-block;
+  height: 7px;
+  margin-right: 20px;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills .materialCheckBox [type=checkbox].filled-in:checked + label:before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: -4px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #e6e6e6;
+  background: white;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills .materialCheckBox [type=checkbox].filled-in:checked + label:after {
+  content: '\2713\0020';
+  position: absolute;
+  top: 0px;
+  left: 8px;
+  font-size: 17px;
+  line-height: 0.8;
+  color: #4d4d4d;
+  font-family: 'Lucida Sans Unicode', 'Arial Unicode MS', Arial;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills .materialCheckBox [type=checkbox].filled-in:not(:checked) + label:after {
+  border: 1px solid #e6e6e6;
+  padding: 8px;
+  margin-top: -2px;
+  margin-left: 6px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  background-color: #fafafa;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills .materialCheckBox [type=checkbox].filled-in + label:after, #ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills .materialCheckBox [type=checkbox].filled-in + label:before {
+  content: '';
+  left: 0;
+  position: absolute;
+  z-index: 1;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills .pillMainWrapper button {
+  border: 0px;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills .pillMainWrapper button:hover, #ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills .pillMainWrapper button:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills .pillMainWrapper a:hover {
+  outline: none;
+  text-decoration: none;
+}
+
+#ivirFilteredAccordion #ivirPillsWrapper #ivirAllCndtnPills .pillMainWrapper span.ivirCndtnIcon {
+  padding: 3px;
+  color: #999999;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  border-radius: 5px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-right: 0px;
+}
+
+#dvPills {
+  margin-left: 17px;
+}
+
+.mainTabs #viewTabs li.active a {
+  color: #000;
+}
+
+.mainTabs #viewTabs li a {
+  padding: 10px 25px 10px 15px;
+}
+
+.btextDir-rtl .mainTabs #viewTabs li a {
+  padding: 10px 15px 10px 25px;
+}
+
+.mainTabs #viewTabs li a span.viewtabRemove {
+  position: absolute;
+  right: 6px;
+  top: 12px;
+}
+
+.btextDir-rtl .mainTabs #viewTabs li a span.viewtabRemove {
+  right: auto;
+  left: 6px;
+}
+
+.mainTabs #viewTabs li a span.viewtabEdit {
+  position: absolute;
+  right: 7px;
+  top: 13px;
+  font-size: 12px;
+}
+
+.mainTabs #viewTabs li a span.viewtabEdit:hover {
+  background: #fff;
+  -webkit-border-radius: 50px;
+  -moz-border-radius: 50px;
+  -ms-border-radius: 50px;
+  border-radius: 50px;
+  padding: 4px 4px 0px 4px;
+  border: 1px solid #eee;
+  margin: -4px -4px;
+}
+
+.btextDir-rtl .mainTabs #viewTabs li a span.viewtabEdit {
+  right: auto;
+  left: 7px;
+}
+
+.mainTabs #viewTabs li a.viewAddTab {
+  padding: 10px;
+}
+
+.mainTabs #viewTabs li:not(.active) a {
+  color: #999999;
+  border-color: #f2f2f2 #f2f2f2 transparent #f2f2f2;
+}
+
+.mainTabs .badge {
+  background: #233044;
+}
+
+.mainTabs #dvViewtabs {
+  display: none;
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  padding: 5px;
+  height: 43px;
+}
+
+.mainTabs #viewTabs {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  min-width: 3000px;
+  margin-left: 2px;
+}
+
+.btextDir-rtl .mainTabs #viewTabs {
+  right: 0;
+  left: auto;
+}
+
+.mainTabs .scroller {
+  cursor: pointer;
+  display: none;
+  padding: 11px 7px;
+}
+
+.mainTabs .scroller-right {
+  float: right;
+}
+
+.mainTabs .scroller-right i {
+  color: #999999;
+}
+
+.mainTabs .scroller-left {
+  float: left;
+}
+
+.mainTabs .scroller-left i {
+  color: #999999;
+}
+
+.animationLoading {
+  border: 1px solid #e6e6e6;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  display: block;
+  position: fixed;
+  top: 41px;
+  height: 41px;
+  z-index: 3;
+}
+
+.animationLoading.animationLoadingHide {
+  display: none;
+}
+
+.animationLoading th, .animationLoading td {
+  height: 60px;
+  width: 100vw;
+  border: 10px solid #fff;
+  position: relative;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-animation: placeHolderSwept 1s infinite linear forwards;
+  -moz-animation: placeHolderSwept 1s infinite linear forwards;
+  -o-animation: placeHolderSwept 1s infinite linear forwards;
+  animation: placeHolderSwept 1s infinite linear forwards;
+  background: #e6e6e6;
+  background-image: linear-gradient(to right, #e6e6e6 0%, #d9d9d9 20%, #e6e6e6 40%, #e6e6e6 100%);
+  background-repeat: no-repeat;
+}
+
+@-webkit-keyframes placeHolderSwept {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+@-moz-keyframes placeHolderSwept {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+@-o-keyframes placeHolderSwept {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+@keyframes placeHolderSwept {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.dataTables_scrollHeadInner th button {
+  display: none;
+}
+
+#backgroundDiv {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  z-index: 999999;
+}
+
+#backgroundDiv {
+  background: url(../Axpimages/loadingBars.gif) center center no-repeat rgba(255, 255, 255, 0.4);
+  background-size: 135px;
+}
+
+/* autoComplete ==================================== */
+.autoinput-parent {
+  position: relative;
+  display: block;
+}
+
+.autoinput-parent input {
+  font-size: 14px;
+}
+
+.btextDir-rtl .autoinput-parent input {
+  padding-left: 30px;
+}
+
+.autoinput-parent:hover .edit {
+  display: block;
+  top: 3px;
+}
+
+.isMobile .autoinput-parent:hover .edit {
+  top: 0px;
+}
+
+.autoinput-parent:hover .autoclear {
+  display: inline-block;
+  cursor: pointer;
+  top: 3px;
+  color: #999999;
+}
+
+@media (max-width: 960px) {
+  .autoinput-parent:hover .autoclear {
+    top: 1px;
+  }
+}
+
+.autoinput-parent:hover .virtualKeyboard i {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.autoinput-parent:hover .virtualKeyboard i.green {
+  color: green;
+}
+
+.autoinput-parent .autoclear {
+  padding-top: 6px;
+  padding-right: 22px;
+  font-size: 10px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 4;
+  display: none;
+  cursor: pointer;
+}
+
+.btextDir-rtl .autoinput-parent .autoclear {
+  right: auto;
+  left: 20px;
+  padding-right: 0px;
+}
+
+.autoinput-parent .edit {
+  padding-top: 6px;
+  padding-right: 7px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 4;
+  display: none;
+  cursor: pointer;
+  color: #999999;
+}
+
+.autoinput-parent .edit .autoClickddl {
+  font-size: 13px;
+  color: #999999;
+  top: -2px;
+}
+
+.isMobile .autoinput-parent .edit .autoClickddl {
+  top: 3px;
+}
+
+.autoinput-parent .edit .fldavdsearch {
+  font-size: 11px;
+  color: #999999;
+  top: -2px;
+}
+
+.btextDir-rtl .autoinput-parent .edit {
+  right: auto;
+  left: 4px;
+}
+
+.isMobile .autoinput-parent .edit {
+  display: block;
+  background-color: #eee;
+  padding: 6px 12px 7px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.autoinput-parent .ui-autocomplete-input:focus .edit {
+  display: block;
+  top: 3px;
+}
+
+.autoinput-parent .ui-autocomplete-input:focus .autoclear {
+  display: inline-block;
+  cursor: pointer;
+  top: 3px;
+}
+
+.autoinput-parent .virtualKeyboard i {
+  top: 1px;
+  color: #999999;
+  padding: 3px;
+  font-size: 16px;
+  position: absolute;
+  right: 0;
+  margin-right: 35px;
+  display: none;
+  z-index: 11;
+}
+
+.autoinput-parent .fldAutocomplete:focus + .autoclear {
+  display: inline-block;
+  cursor: pointer;
+  color: #999999;
+  top: 3px;
+}
+
+.autoinput-parent .fldAutocomplete:focus + .autoclear + .edit {
+  display: inline-block;
+  cursor: pointer;
+  top: 3px;
+}
+
+.autoinput-parent .fldCustTable:focus + .edit {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.autoinput-parent:hover .tblIcon {
+  top: 0px;
+}
+
+.advsearchexist.autoclear {
+  padding-right: 35px;
+}
+
+.btextDir-rtl .advsearchexist.autoclear {
+  padding-left: 10px;
+}
+
+#DivFrame1 #divDc1 .fld-wrap1 .fld-wrap2 .allowempty {
+  color: red;
+}
+
+.ui-menu-item-wrapper.ui-state-active {
+  color: #000;
+  background: #e6e6e6;
+}
+
+.ui-autocomplete .autoComFooter {
+  z-index: 999999;
+  background: #e6e6e6;
+}
+
+.ui-autocomplete .autoComFooter div.name {
+  padding: 3px;
+  background-color: #e6e6e6;
+  width: 100%;
+  border-top: 0px;
+  border: 1px solid #e6e6e6;
+}
+
+.ui-autocomplete .autoComFooter div.name .addOption, .ui-autocomplete .autoComFooter div.name .reload {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.btextDir-rtl .ui-autocomplete .autoComFooter div.name .addOption, .btextDir-rtl .ui-autocomplete .autoComFooter div.name .reload {
+  text-align: right;
+}
+
+.ui-autocomplete .autoComFooter div.name .rightico {
+  display: block;
+  float: right;
+  cursor: pointer;
+  z-index: 99999;
+}
+
+.ui-autocomplete .autoComFooter div.name .leftico {
+  display: inline-block;
+}
+
+.ui-autocomplete .autoComFooter div.name .addOption {
+  float: right;
+}
+
+.isMobile .ui-autocomplete .autoComFooter {
+  position: absolute;
+  width: 100%;
+  padding: 6px 12px;
+}
+
+.ui-autocomplete.ui-front {
+  z-index: 1051;
+}
+
+.ui-autocomplete.ui-widget.ui-widget-content.ui-menu {
+  max-height: 230px;
+  margin-bottom: 25px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 999999;
+  position: absolute;
+}
+
+.isMobile .ui-autocomplete.ui-widget.ui-widget-content.ui-menu .ui-menu-item-wrapper {
+  padding: 6px 1em 6px 0.4em;
+}
+
+.ui-autocomplete.ui-widget.ui-widget-content.ui-menu .ui-menu-divider {
+  height: 22px;
+  font-size: 28px;
+  margin: 0px;
+}
+
+.ui-autocomplete.ui-widget.ui-widget-content.ui-menu .ui-menu-divider div {
+  padding: 6px 12px;
+}
+
+.listreload {
+  display: none;
+}
+
+/* autoComplete ==================================== */
+.inmemdb #ivInSearch {
+  right: 42px;
+}
+
+.inmemdb.btextDir-rtl #ivInSearch {
+  left: 25px;
+  right: auto;
+}
+
+.iviewPlaceHolder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -moz-transform: translate(-50%, -50%) scale(1.07, 1);
+  -ms-transform: translate(-50%, -50%) scale(1.07, 1);
+  -o-transform: translate(-50%, -50%) scale(1.07, 1);
+  -webkit-transform: translate(-50%, -50%) scale(1.07, 1);
+  transform: translate(-50%, -50%) scale(1.07, 1);
+  padding: 50px;
+  background-color: #fff;
+  color: #999999;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 2px 2px 5px 0px #b3b3b3;
+}
+
+body:not(.borderInput) #ivParamTable tbody tr td .paramtd2 input, body:not(.borderInput) #ivParamTable tbody tr td .paramtd2 select {
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  box-shadow: none;
+  border-radius: 0px;
+  padding: 0px;
+}
+
+.input-sm.selectPaddingFix {
+  padding: 0px 10px;
+}

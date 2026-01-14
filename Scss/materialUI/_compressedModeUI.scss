@@ -1,0 +1,49 @@
+.enableExpandCollapse{
+    &.compressedModeUI{
+        section.content{
+            .appBackBtn{
+                top: $application-compressedMode-appBackBtn-top;
+                left: $application-compressedMode-appBackBtn-left;
+            }
+        }
+        &.overlay-open{
+            section.content {
+                margin: $application-compressed-mode-section-content-overlayOpen-margin;
+                .row{
+                    .col-lg-12.col-md-12.col-sm-12.col-xs-12{
+                        padding-right: 0px;
+                        padding-left: 0px;
+                    }
+                }
+                .appBackBtn{
+                    top: $application-appBackBtn-top;
+                    left: $application-appBackBtn-left;
+                    //z-index: $application-appBackBtn-Z-index;
+                }
+            }
+        }
+    }
+}
+
+.compressedModeUI{
+    section.content{
+        margin: $application-overlay-open-section-content-margin;
+        .row{
+            .col-lg-12.col-md-12.col-sm-12.col-xs-12{
+                padding-right: 0px;
+                padding-left: 0px;
+            }
+        }
+        .appBackBtn{
+            top: $application-compressedMode-section-content-appBackBtn-Top-Gap;
+            left: $application-compressedMode-section-content-appBackBtn-Left-Gap;
+            &:not(.enableExpandCollapse){
+                top: $applicationCompressedModeAppBackBtnNotEnableExpandCollapseTop;
+            }
+        }
+    }
+    .splitter-wrapper, .cardsPageWrapper{
+        margin: 0px;
+        @include calc(height,$application-compressedMode-SplitterWrapper-CalculateHeight);
+    }
+}

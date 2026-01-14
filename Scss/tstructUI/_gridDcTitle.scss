@@ -1,0 +1,39 @@
+//* gridDcTitle ==================================== *//
+#pagebdy{
+    #heightframe{
+        .tstructcontent {
+            .dvdcframe{
+                    hr{
+                        margin: 0px 0px $appliactionLineMargin;
+                        border: none;
+                        display: none;
+                    }
+            }
+            .dcTitle{
+                a{
+                    display: $applicationGlobalVarDcTittleAnchorDisplay;
+                }
+                margin: $appliactionGridDcTitleMargin;
+                display: inline-block;
+                span{
+                    &[id^=dcButspan]{
+                        position: $applicationGlobalVarDcTittleSpanPosition;
+                        top: $applicationGlobalVarDcTittleSpanTop;
+                        color: $applicationIconColor;
+                    }
+                    &.gridoptions{
+                        cursor: pointer;
+                        @include floatRight;
+                        color: $applicationIconColor;
+                        font-size: $applicationGridOptionFontSize;
+                        display: none;
+                    }
+                    &:focus{
+                        outline: none;
+                    }
+                }
+            }
+        }
+    }
+}
+//* gridDcTitle ==================================== *//

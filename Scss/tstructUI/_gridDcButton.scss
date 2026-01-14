@@ -1,0 +1,141 @@
+//* pagePaginationGroup ==================================== *//
+@import 'tstructUI/_gridDcArrow';
+//* gridDcButton ==================================== *//
+#containerDc{
+    position: $gridDcContainerDcPosition;
+    .grdButtons{
+        //display: inline-block;
+        @include gridDcBtnMargin;
+        @include gridDcDropDown;
+        @media only screen and(max-width:$breakTabDevice) {
+            position: $grdButtonsMobilePosition;
+            top:0px;
+        }
+        &.btnMobile{
+            padding: $grdButtonsBtnMobilePadding;
+            margin: $grdButtonsBtnMobileMargin;
+            background: $gridDcBtnMobileBackground;
+            @include textCenter;
+            position: relative;
+            z-index: 999;
+            white-space: nowrap;
+            overflow-x: auto;
+            width: calc(100vw - 40px);
+            margin: 5px;
+            ul{
+                padding: 0px;
+                margin: 0px;
+                li{
+                    border: none;
+                    padding: 0 8px;
+                    margin-right: 5px;
+                    &:last-child{
+                        margin-right: 15px;
+                    }
+                }
+            }
+        }
+        ul{
+            padding: 0px;
+            @include shadow;
+            margin-left: $appliactionGridDcMargin;
+            background: $applicationBackgroundColor;
+            @media only screen and(max-width:$breakTabDevice) {
+                background: none;
+                box-shadow: none;
+            }
+            li:not(.gridDcBtnfirst){
+                border-bottom: 1px solid $applicationBorderColor;
+                padding: $gridDcBtnPadding;
+                @include textCenter;
+                @media only screen and(max-width:$breakTabDevice) {
+                    display: inline-block;
+                    background: none;
+                }
+                &.gridDcBtnfirst{
+                    display: $gridDcBtnfirstDisplay;
+                }
+                &:hover{
+                    background-color:$coldBtnBackgroundHover;
+                    button{
+                        background-color:$coldBtnBackgroundHover;
+                    }
+                }
+            }
+            a{
+                color: $coldbtntext;
+                &:hover{
+                    outline: none;
+                    text-decoration: none; 
+                }
+                &:focus{
+                    text-decoration: none;
+                }
+            }
+            button{
+                width: 100%;
+                border:0px;
+                background: $applicationBackgroundColor;
+                @media only screen and(max-width:$breakTabDevice) {
+                    background: none;
+                }
+                &:focus{
+                    outline: none;
+                }
+                &:hover{
+                    background-color:$coldBtnBackgroundHover;
+                }
+            }
+            li{
+                list-style: none;
+                &:last-child{
+                    border:none;
+                }
+            }
+            i{
+                margin-left: $applicationHintGap;
+                &:focus{
+                    outline: none;
+                }
+            }
+        }
+        &.grdUlButtons{
+            display: inline-block;
+            ul{
+                padding-left: 0px;
+                li{
+                    a{
+                        &:focus{
+                            outline: none;
+                            text-decoration: none;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    [id^=contentScroll] {
+        display: none;
+    }
+    .mobilewrapperForEditFields
+    {
+        &.row{
+            margin: 0px;
+        }
+    }
+}
+// .labelcolid{
+//     cursor: default;
+//     //height:calc(100% - 41px);
+// }
+.grdliHover {
+    background-color: $gridBtnBackground;
+    text-decoration: none;
+    a{
+        &:focus{
+            outline: none;
+            text-decoration: none;
+        }
+    }
+}
+//* gridDcButton ==================================== *//

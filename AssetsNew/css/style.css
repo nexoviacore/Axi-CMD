@@ -1,0 +1,251 @@
+﻿@charset "utf-8";
+/* CSS Document */
+
+body {
+   color: #606060 ;
+   background: white !important;
+}
+
+h1 {
+   font-size: 18px;
+   color: #000;
+}
+
+
+
+p {
+   margin: 17px 0;
+}
+
+.clear {
+   clear: both;
+}
+
+h4 {
+   font-size: 16px;
+   font-weight: bold;
+   color: #444343 ;
+}
+
+.central_monitoring {
+   margin-top: 20px;
+}
+
+/**********Header Top***********/
+.navbar-inverse .navbar-brand, .navbar-inverse .navbar-nav > li > a {
+   color: #fff;
+   outline: 0 none;
+}
+
+.navbar-inverse {
+   min-height: 58px;
+}
+
+
+
+.navbar-inverse, .navbar-header {
+   background-color: transparent;
+}
+
+.navbar-nav a span {
+   position: relative;
+   top: 4px;
+   left: 4px;
+   font-size: 15px;
+}
+
+.navbar-right {
+   margin-right: 0;
+   background-color: #242b32 ;
+}
+/**********Header End***********/
+.dropdown-submenu > a:after {
+   display: block;
+   content: " ";
+   float: right;
+   width: 0;
+   right: 17px;
+   height: 0;
+   border-color: transparent;
+   border-style: solid;
+   border-width: 5px 0 5px 5px;
+   border-left-color: #ccc;
+   margin-top: 5px;
+   margin-right: -10px;
+}
+
+
+
+.dropdown-menu > li > a {
+   padding: 5px 20px;
+}
+
+
+
+.menu {
+   display: inline-block;
+   width: 100%;
+}
+
+.submenu {
+   position: absolute;
+   background-color: #ffffff ;
+   width: 250px;
+   right: 100%;
+   padding: 10px 0;
+   display: inline-block;
+   left: auto !important;
+   /*top: auto !important;*/
+   border: 1px solid #a9a9a9 ;
+   box-shadow: 1px 1px 4px;
+   -moz-box-shadow: 1px 1px 4px;
+   -webkit-box-shadow: 1px 1px 4px;
+}
+
+   .submenu a {
+       color: #606060 ;
+       display: block;
+       padding: 1px 20px 1px 25px;
+       font-size: 12px;
+   }
+
+#ds1 a {
+   display: block;
+}
+
+.dropdown-menu > li > a {
+   color: #606060 ;
+}
+
+
+/* .pointer{
+    cursor:pointer;
+    text-align:center;
+} */
+.valign {
+   vertical-align: middle !important;
+}
+
+
+
+
+
+
+
+.row {
+   margin: 0px !important;
+}
+
+
+
+.navbar-inverse, .navbar-header {
+   background-color: white !important;
+   background-image: -webkit-gradient(linear, left top, left bottom, from(#f5f5f5 ), to(#f5f5f5 )) !important;
+}
+
+.navbar-right {
+   background-color: transparent !important;
+}
+
+.middle1_isCloudApp {
+   height: 100vh;
+}
+
+.middle1_isNotCloudApp {
+   height: -webkit-calc(100vh - 65px);
+   height: -moz-calc(100vh - 65px);
+   height: calc(100vh - 65px);
+}
+#middle1.searchOpened.middle1_isCloudApp {
+   height: -webkit-calc(100vh - 42px) !important;
+   height: -moz-calc(100vh - 42px) !important;
+   height: calc(100vh - 42px) !important;
+}
+
+.maMenu {
+   position: absolute;
+   top: 6px;
+   left: 2px;
+}
+
+.submenu.rightSubmenu {
+   left: 100% !important;
+   right: auto !important;
+   top: 0px !important;
+}
+
+.submenu a:hover {
+   background-color: #777 !important;
+   color: White !important;
+}
+
+.dropdown-menu > li > a {
+   color: #606060 ;
+}
+
+   .dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {
+       background: #777;
+       color: White !important;
+   }
+
+.dropdown-menu.multi-level {
+   padding: 0px;
+}
+
+#mn123 > ul {
+   list-style: none;
+   padding: 0px;
+   margin: 0px;
+   position: relative;
+   top: 6px;
+   left: 2px;
+}
+
+#mn123 {
+   position: absolute;
+}
+
+.visible767px.mn767px {
+   padding: 0px;
+}
+
+
+
+.appGlobalParams {
+   top: 71px !important;
+   font-size: 13px;
+}
+
+.navLeft {
+   position: relative;
+   top: 5px;
+   width: 19px;
+   left: 6px;
+}
+
+.icon-bar-chart:before {
+   content: "\f080";
+   cursor:pointer;
+}
+
+span#goback {
+   top: 2px;
+   left: 6px;
+   font-size: 26px;
+   color: black;
+   text-decoration: none;
+}
+span#imgTogTrace {
+   padding-left: 13px;
+   font-size: 25px;
+   margin-top: -1px;
+}
+li#Li1 ul li i { left: -4px;position: relative;text-transform: capitalize;font-style: normal;}
+
+#icons .dropdown-menu a.TaskItems:hover {
+    background: #777;
+}
+
+.btextDir-rtl li#Li1 ul li i {
+    left: 4px;
+}

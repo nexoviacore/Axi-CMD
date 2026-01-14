@@ -1,0 +1,8 @@
+//* page footer buttons for tstruct (submit, cancel , prev ,next, save) -----------------*//
+#dvsubmitCancelBtns{
+    @include pageFooterBtn;
+    table{
+        width: 100%;
+    }
+}
+//* page footer buttons for tstruct (submit, cancel , prev ,next, save) -----------------*//

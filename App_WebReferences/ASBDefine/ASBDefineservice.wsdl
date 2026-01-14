@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" name="ASBDefineservice" targetNamespace="http://tempuri.org/" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types />
+  <message name="SaveDocument0Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="SaveDocument0Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetStructure1Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetStructure1Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="LoadWorkFlowPage2Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="LoadWorkFlowPage2Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="LoadWorkFlow3Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="LoadWorkFlow3Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SaveWorkFlow4Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="SaveWorkFlow4Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="RemoveWorkFlow5Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="RemoveWorkFlow5Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="AttachWorkFlow6Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="AttachWorkFlow6Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetAttachWFDetails7Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetAttachWFDetails7Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetUserTasks8Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetUserTasks8Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SaveDelegatedTasks9Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="SaveDelegatedTasks9Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="AttachMultiCondWorkFlow10Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="AttachMultiCondWorkFlow10Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetMultiCondAttachWFDetails11Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetMultiCondAttachWFDetails11Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetModuleWiseTStruct12Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetModuleWiseTStruct12Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="LoadWF13Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="LoadWF13Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SaveAndAttachWorkflow14Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="SaveAndAttachWorkflow14Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="LoadWorkFlowCondition15Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="LoadWorkFlowCondition15Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="RemoveWorkFlowCondition16Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="RemoveWorkFlowCondition16Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="PublishAtUrl17Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="PublishAtUrl17Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ConnectORClose18Request">
+    <part name="DBType" type="xs:string" />
+    <part name="Host" type="xs:string" />
+    <part name="DBUsernm" type="xs:string" />
+    <part name="DBpwd" type="xs:string" />
+    <part name="action" type="xs:string" />
+  </message>
+  <message name="ConnectORClose18Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ISServiceAvailable19Request" />
+  <message name="ISServiceAvailable19Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="CreateDomain20Request">
+    <part name="Xml" type="xs:string" />
+  </message>
+  <message name="CreateDomain20Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="PublishToCloud21Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="PublishToCloud21Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetConfirmationCode22Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetConfirmationCode22Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="IsDomainAvailable23Request">
+    <part name="Xml" type="xs:string" />
+  </message>
+  <message name="IsDomainAvailable23Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ValidateAppkey24Request">
+    <part name="Xml" type="xs:string" />
+  </message>
+  <message name="ValidateAppkey24Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GenerateAppkey25Request">
+    <part name="Xml" type="xs:string" />
+  </message>
+  <message name="GenerateAppkey25Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="UploadPublishingStructures26Request">
+    <part name="FileName" type="xs:string" />
+    <part name="FileData" type="xs:base64Binary" />
+  </message>
+  <message name="UploadPublishingStructures26Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="RearrangeMenu27Request">
+    <part name="Xml" type="xs:string" />
+  </message>
+  <message name="RearrangeMenu27Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetToolBar28Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="GetToolBar28Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SaveToolBar29Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="SaveToolBar29Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <portType name="ASBDefine">
+    <operation name="SaveDocument">
+      <input message="tns:SaveDocument0Request" />
+      <output message="tns:SaveDocument0Response" />
+    </operation>
+    <operation name="GetStructure">
+      <input message="tns:GetStructure1Request" />
+      <output message="tns:GetStructure1Response" />
+    </operation>
+    <operation name="LoadWorkFlowPage">
+      <input message="tns:LoadWorkFlowPage2Request" />
+      <output message="tns:LoadWorkFlowPage2Response" />
+    </operation>
+    <operation name="LoadWorkFlow">
+      <input message="tns:LoadWorkFlow3Request" />
+      <output message="tns:LoadWorkFlow3Response" />
+    </operation>
+    <operation name="SaveWorkFlow">
+      <input message="tns:SaveWorkFlow4Request" />
+      <output message="tns:SaveWorkFlow4Response" />
+    </operation>
+    <operation name="RemoveWorkFlow">
+      <input message="tns:RemoveWorkFlow5Request" />
+      <output message="tns:RemoveWorkFlow5Response" />
+    </operation>
+    <operation name="AttachWorkFlow">
+      <input message="tns:AttachWorkFlow6Request" />
+      <output message="tns:AttachWorkFlow6Response" />
+    </operation>
+    <operation name="GetAttachWFDetails">
+      <input message="tns:GetAttachWFDetails7Request" />
+      <output message="tns:GetAttachWFDetails7Response" />
+    </operation>
+    <operation name="GetUserTasks">
+      <input message="tns:GetUserTasks8Request" />
+      <output message="tns:GetUserTasks8Response" />
+    </operation>
+    <operation name="SaveDelegatedTasks">
+      <input message="tns:SaveDelegatedTasks9Request" />
+      <output message="tns:SaveDelegatedTasks9Response" />
+    </operation>
+    <operation name="AttachMultiCondWorkFlow">
+      <input message="tns:AttachMultiCondWorkFlow10Request" />
+      <output message="tns:AttachMultiCondWorkFlow10Response" />
+    </operation>
+    <operation name="GetMultiCondAttachWFDetails">
+      <input message="tns:GetMultiCondAttachWFDetails11Request" />
+      <output message="tns:GetMultiCondAttachWFDetails11Response" />
+    </operation>
+    <operation name="GetModuleWiseTStruct">
+      <input message="tns:GetModuleWiseTStruct12Request" />
+      <output message="tns:GetModuleWiseTStruct12Response" />
+    </operation>
+    <operation name="LoadWF">
+      <input message="tns:LoadWF13Request" />
+      <output message="tns:LoadWF13Response" />
+    </operation>
+    <operation name="SaveAndAttachWorkflow">
+      <input message="tns:SaveAndAttachWorkflow14Request" />
+      <output message="tns:SaveAndAttachWorkflow14Response" />
+    </operation>
+    <operation name="LoadWorkFlowCondition">
+      <input message="tns:LoadWorkFlowCondition15Request" />
+      <output message="tns:LoadWorkFlowCondition15Response" />
+    </operation>
+    <operation name="RemoveWorkFlowCondition">
+      <input message="tns:RemoveWorkFlowCondition16Request" />
+      <output message="tns:RemoveWorkFlowCondition16Response" />
+    </operation>
+    <operation name="PublishAtUrl">
+      <input message="tns:PublishAtUrl17Request" />
+      <output message="tns:PublishAtUrl17Response" />
+    </operation>
+    <operation name="ConnectORClose">
+      <input message="tns:ConnectORClose18Request" />
+      <output message="tns:ConnectORClose18Response" />
+    </operation>
+    <operation name="ISServiceAvailable">
+      <input message="tns:ISServiceAvailable19Request" />
+      <output message="tns:ISServiceAvailable19Response" />
+    </operation>
+    <operation name="CreateDomain">
+      <input message="tns:CreateDomain20Request" />
+      <output message="tns:CreateDomain20Response" />
+    </operation>
+    <operation name="PublishToCloud">
+      <input message="tns:PublishToCloud21Request" />
+      <output message="tns:PublishToCloud21Response" />
+    </operation>
+    <operation name="GetConfirmationCode">
+      <input message="tns:GetConfirmationCode22Request" />
+      <output message="tns:GetConfirmationCode22Response" />
+    </operation>
+    <operation name="IsDomainAvailable">
+      <input message="tns:IsDomainAvailable23Request" />
+      <output message="tns:IsDomainAvailable23Response" />
+    </operation>
+    <operation name="ValidateAppkey">
+      <input message="tns:ValidateAppkey24Request" />
+      <output message="tns:ValidateAppkey24Response" />
+    </operation>
+    <operation name="GenerateAppkey">
+      <input message="tns:GenerateAppkey25Request" />
+      <output message="tns:GenerateAppkey25Response" />
+    </operation>
+    <operation name="UploadPublishingStructures">
+      <input message="tns:UploadPublishingStructures26Request" />
+      <output message="tns:UploadPublishingStructures26Response" />
+    </operation>
+    <operation name="RearrangeMenu">
+      <input message="tns:RearrangeMenu27Request" />
+      <output message="tns:RearrangeMenu27Response" />
+    </operation>
+    <operation name="GetToolBar">
+      <input message="tns:GetToolBar28Request" />
+      <output message="tns:GetToolBar28Response" />
+    </operation>
+    <operation name="SaveToolBar">
+      <input message="tns:SaveToolBar29Request" />
+      <output message="tns:SaveToolBar29Response" />
+    </operation>
+  </portType>
+  <binding name="ASBDefinebinding" type="tns:ASBDefine">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="rpc" />
+    <operation name="SaveDocument">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#SaveDocument" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetStructure">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#GetStructure" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="LoadWorkFlowPage">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#LoadWorkFlowPage" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="LoadWorkFlow">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#LoadWorkFlow" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SaveWorkFlow">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#SaveWorkFlow" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="RemoveWorkFlow">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#RemoveWorkFlow" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="AttachWorkFlow">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#AttachWorkFlow" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetAttachWFDetails">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#GetAttachWFDetails" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetUserTasks">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#GetUserTasks" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SaveDelegatedTasks">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#SaveDelegatedTasks" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="AttachMultiCondWorkFlow">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#AttachMultiCondWorkFlow" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetMultiCondAttachWFDetails">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#GetMultiCondAttachWFDetails" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetModuleWiseTStruct">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#GetModuleWiseTStruct" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="LoadWF">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#LoadWF" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SaveAndAttachWorkflow">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#SaveAndAttachWorkflow" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="LoadWorkFlowCondition">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#LoadWorkFlowCondition" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="RemoveWorkFlowCondition">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#RemoveWorkFlowCondition" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="PublishAtUrl">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#PublishAtUrl" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ConnectORClose">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#ConnectORClose" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ISServiceAvailable">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#ISServiceAvailable" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="CreateDomain">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#CreateDomain" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="PublishToCloud">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#PublishToCloud" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetConfirmationCode">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#GetConfirmationCode" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="IsDomainAvailable">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#IsDomainAvailable" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ValidateAppkey">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#ValidateAppkey" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GenerateAppkey">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#GenerateAppkey" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="UploadPublishingStructures">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#UploadPublishingStructures" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="RearrangeMenu">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#RearrangeMenu" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetToolBar">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#GetToolBar" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SaveToolBar">
+      <soap:operation soapAction="urn:uASBDefine-ASBDefine#SaveToolBar" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+  </binding>
+  <service name="ASBDefineservice">
+    <port name="ASBDefinePort" binding="tns:ASBDefinebinding">
+      <soap:address location="http://localhost/AxpertWebscripts10.8DWB/ASBDefine.dll/soap/ASBDefine" />
+    </port>
+  </service>
+</definitions>

@@ -1,0 +1,13 @@
+#arngmnuFooter {
+    @include textRight;
+    margin-top: 6px;
+
+    // input{
+    //     border:0px;
+    //     background-color: $applicationBackgroundColor;
+    //     @include shadow;
+    // }
+    #uploadIcon {
+        display: none;
+    }
+}

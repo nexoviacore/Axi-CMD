@@ -1,0 +1,34 @@
+//* iview pageOptionColumns ==================================== *//
+@import 'iviewUI/_pageOptionColumns';
+//* iview pageToolbarCharts ==================================== *//
+@import 'iviewUI/_pageToolbarCharts';
+//* iview pageOptionFilter ==================================== *//
+@import 'iviewUI/_pageOptionFilter';
+//* page Option ==================================== *//
+.dropDownButton__list {
+    @include btnRadius;
+    @include floatLeftmain;
+    @include listStyle;
+    position: $pageOptionDropdownPositionAbsolute;
+    display: none;
+    background:$applicationBackgroundColor;
+    border: 1px solid $applicationBorderColor;
+    z-index: $pageOptionDropDownButtonZIndex;
+}
+.dropDownButton{
+    &.is-open{
+        .dropDownButton__list{
+            visibility: visible!important;
+        }
+    }
+}
+//* page Option ==================================== *//
+
+//*pills popover*//
+#lnkChartPill{
+    &.change-trigger{
+        +.popover{
+            min-width: $iviewLnkChartPillPopOverMinWidth;
+        }
+    }
+}

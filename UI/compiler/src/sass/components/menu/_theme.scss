@@ -1,0 +1,271 @@
+//
+// Menu Theme
+//
+
+// Theme text colors
+@each $name, $color in $theme-text-colors {
+    .menu-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-default-state( $color, $color, $color, $color, null );
+        }
+    }
+
+    .menu-title-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-default-state( $color, null, null, null, null );
+        }
+    }
+
+    .menu-icon-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-default-state( null, $color, null, null, null );
+        }
+    }
+
+    .menu-bullet-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-default-state( null, null, $color, null, null );
+        }
+    }
+
+    .menu-arrow-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-default-state( null, null, null, $color, null );
+        }
+    }
+}
+
+// Default background states
+.menu-hover-bg {
+    .menu-item {
+        @include menu-link-hover-state( null, null, null, null, get($menu, link, self, bg-color, hover) );
+    }
+}
+
+.menu-show-bg {
+    .menu-item {
+        @include menu-link-show-state( null, null, null, null, get($menu, link, self, bg-color, show) );
+    }
+}
+
+.menu-active-bg {
+    .menu-item {
+        @include menu-link-active-state( null, null, null, null, get($menu, link, self, bg-color, active) );
+    }
+}
+
+.menu-state-bg {
+    .menu-item {
+        @include menu-link-hover-state( null, null, null, null, get($menu, link, self, bg-color, hover) );
+        @include menu-link-show-state( null, null, null, null, get($menu, link, self, bg-color, show) );
+        @include menu-link-active-state( null, null, null, null, get($menu, link, self, bg-color, active) );
+    }
+}
+
+@each $name, $color in $theme-colors {
+    // Primary text states
+    .menu-hover-#{$name} {
+        .menu-item {
+            @include menu-link-hover-state( $color, $color, $color, $color, null );
+        }
+    }
+
+    .menu-show-#{$name} {
+        .menu-item {
+            @include menu-link-show-state( $color, $color, $color, $color, null );
+        }
+    }
+
+    .menu-active-#{$name} {
+        .menu-item {
+            @include menu-link-active-state( $color, $color, $color, $color, null );
+        }
+    }
+
+    .menu-state-#{$name} {
+        .menu-item {
+            @include menu-link-hover-state( $color, $color, $color, $color, null );
+            @include menu-link-show-state( $color, $color, $color, $color, null );
+            @include menu-link-active-state( $color, $color, $color, $color, null );
+        }
+    }
+
+    // Primary background states
+    .menu-hover-bg-#{$name} {
+        .menu-item {
+            @include menu-link-hover-state( get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), $color );
+        }
+    }
+
+    .menu-show-bg-#{$name} {
+        .menu-item {
+            @include menu-link-show-state( get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), $color );
+        }
+    }
+
+    .menu-active-bg-#{$name} {
+        .menu-item {
+            @include menu-link-active-state( get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), $color );
+        }
+    }
+
+    .menu-state-bg-#{$name} {
+        .menu-item {
+            @include menu-link-hover-state( get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), $color );
+            @include menu-link-show-state( get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), $color );
+            @include menu-link-active-state( get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), get($theme-inverse-colors, $color), $color );
+        }
+    }
+
+    // Light primary background states
+    .menu-show-bg-light-#{$name} {
+        .menu-item {
+            @include menu-link-show-state( $color, $color, $color, $color, get($theme-light-colors, $color) );
+        }
+    }
+
+    .menu-hover-bg-light-#{$name} {
+        .menu-item {
+            @include menu-link-hover-state( $color, $color, $color, $color, get($theme-light-colors, $color) );
+        }
+    }
+
+    .menu-active-bg-light-#{$name} {
+        .menu-item {
+            @include menu-link-active-state( $color, $color, $color, $color, get($theme-light-colors, $color) );
+        }
+    }
+
+    .menu-state-bg-light-#{$name} {
+        .menu-item {
+            @include menu-link-show-state( $color, $color, $color, $color, get($theme-light-colors, $color) );
+            @include menu-link-hover-state( $color, $color, $color, $color, get($theme-light-colors, $color) );
+            @include menu-link-active-state( $color, $color, $color, $color, get($theme-light-colors, $color) );
+        }
+    }
+
+    // Primary title states
+    .menu-hover-title-#{$name} {
+        .menu-item {
+            @include menu-link-hover-state( $color, null, null, null, null );
+        }
+    }
+
+    .menu-show-title-#{$name} {
+        .menu-item {
+            @include menu-link-show-state( $color, null, null, null, null );
+        }
+    }
+
+    .menu-active-title-#{$name} {
+        .menu-item {
+            @include menu-link-active-state( $color, null, null, null, null );
+        }
+    }
+
+    .menu-state-title-#{$name} {
+        .menu-item {
+            @include menu-link-hover-state( $color, null, null, null, null );
+            @include menu-link-show-state( $color, null, null, null, null );
+            @include menu-link-active-state( $color, null, null, null, null );
+        }
+    }
+
+    // Primary icon states
+    .menu-hover-icon-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-hover-state( null, $color, null, null, null );
+        }
+    }
+
+    .menu-show-icon-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-show-state( null, $color, null, null, null );
+        }
+    }
+
+    .menu-active-icon-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-active-state( null, $color, null, null, null );
+        }
+    }
+
+    .menu-state-icon-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-hover-state( null, $color, null, null, null );
+            @include menu-link-show-state( null, $color, null, null, null );
+            @include menu-link-active-state( null, $color, null, null, null );
+        }
+    }
+
+    // Primary bullet states
+    .menu-hover-bullet-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-hover-state( null, null, $color, null, null );
+        }
+    }
+
+    .menu-show-bullet-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-show-state( null, null, $color, null, null );
+        }
+    }
+
+    .menu-active-bullet-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-active-state( null, null, $color, null, null );
+        }
+    }
+
+    .menu-state-bullet-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-hover-state( null, null, $color, null, null );
+            @include menu-link-show-state( null, null, $color, null, null );
+            @include menu-link-active-state( null, null, $color, null, null );
+        }
+    }
+
+    // Primary arrow states
+    .menu-hover-arrow-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-hover-state( null, null, null, $color, null );
+        }
+    }
+
+    .menu-show-arrow-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-show-state( null, null, null, $color, null );
+        }
+    }
+
+    .menu-active-arrow-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-active-state( null, null, null, $color, null );
+        }
+    }
+
+    .menu-state-arrow-#{$name} {
+        .menu-item {
+            //$title-color, $icon-color, $bullet-color, $arrow-color, $bg-color
+            @include menu-link-hover-state( null, null, null, $color, null );
+            @include menu-link-show-state( null, null, null, $color, null );
+            @include menu-link-active-state( null, null, null, $color, null );
+        }
+    }
+}

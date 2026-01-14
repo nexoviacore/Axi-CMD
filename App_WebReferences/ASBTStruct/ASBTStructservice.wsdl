@@ -1,0 +1,843 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" name="ASBTStructservice" targetNamespace="http://tempuri.org/" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types />
+  <message name="DoFormLoad0Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="DoFormLoad0Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetDepentendFieldValues1Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="GetDepentendFieldValues1Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="LoadData2Request">
+    <part name="s" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="LoadData2Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="LoadDataFromHTML3Request">
+    <part name="s" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="LoadDataFromHTML3Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SaveData4Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="SaveData4Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="DeleteData5Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="DeleteData5Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetFillGridValues6Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="GetFillGridValues6Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="DoFillGridValues7Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="DoFillGridValues7Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetFieldChoices8Request">
+    <part name="s" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="GetFieldChoices8Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="AddGridRowValues9Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="AddGridRowValues9Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="DeleteGridRowValues10Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="DeleteGridRowValues10Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="LoadDCCombos11Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="LoadDCCombos11Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SetAtachments12Request">
+    <part name="S" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="SetAtachments12Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ViewAtachments13Request">
+    <part name="S" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="ViewAtachments13Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="RemoveAtachments14Request">
+    <part name="S" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="RemoveAtachments14Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetHistoryData15Request">
+    <part name="S" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="GetHistoryData15Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetSearchResult16Request">
+    <part name="s" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="GetSearchResult16Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="AutoGetSearchResult17Request">
+    <part name="s" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="AutoGetSearchResult17Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="AutoGetSearchResultNew18Request">
+    <part name="s" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="AutoGetSearchResultNew18Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="WorkFlowAction19Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="WorkFlowAction19Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ViewComments20Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="ViewComments20Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetSearchVal21Request">
+    <part name="s" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="GetSearchVal21Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetRecordId22Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetRecordId22Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="DeleteRows23Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="DeleteRows23Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="RefreshGridDependents24Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="RefreshGridDependents24Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetSubGridDropDown25Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="GetSubGridDropDown25Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="RefreshDC26Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="RefreshDC26Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ExportData27Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="ExportData27Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ImportData28Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="ImportData28Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetWFButtons29Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetWFButtons29Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="StartWFAction30Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="StartWFAction30Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="UnlockTstructsRecord31Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="UnlockTstructsRecord31Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetMultiSelectValues32Request">
+    <part name="s" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="GetMultiSelectValues32Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetAxMemLoadVars33Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetAxMemLoadVars33Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="DoExcelImportValues34Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="DoExcelImportValues34Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="FastDoFormLoad35Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="FastDoFormLoad35Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="FastLoadData36Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="FastLoadData36Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="FastGetDepentendFieldValues37Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="FastGetDepentendFieldValues37Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="FastLoadDCCombos38Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="FastLoadDCCombos38Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="FastDoFillGridValues39Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="FastDoFillGridValues39Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="FastGetSearchResult40Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="FastGetSearchResult40Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="FastFieldChoices41Request">
+    <part name="xml" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="FastFieldChoices41Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <portType name="ASBTStruct">
+    <operation name="DoFormLoad">
+      <input message="tns:DoFormLoad0Request" />
+      <output message="tns:DoFormLoad0Response" />
+    </operation>
+    <operation name="GetDepentendFieldValues">
+      <input message="tns:GetDepentendFieldValues1Request" />
+      <output message="tns:GetDepentendFieldValues1Response" />
+    </operation>
+    <operation name="LoadData">
+      <input message="tns:LoadData2Request" />
+      <output message="tns:LoadData2Response" />
+    </operation>
+    <operation name="LoadDataFromHTML">
+      <input message="tns:LoadDataFromHTML3Request" />
+      <output message="tns:LoadDataFromHTML3Response" />
+    </operation>
+    <operation name="SaveData">
+      <input message="tns:SaveData4Request" />
+      <output message="tns:SaveData4Response" />
+    </operation>
+    <operation name="DeleteData">
+      <input message="tns:DeleteData5Request" />
+      <output message="tns:DeleteData5Response" />
+    </operation>
+    <operation name="GetFillGridValues">
+      <input message="tns:GetFillGridValues6Request" />
+      <output message="tns:GetFillGridValues6Response" />
+    </operation>
+    <operation name="DoFillGridValues">
+      <input message="tns:DoFillGridValues7Request" />
+      <output message="tns:DoFillGridValues7Response" />
+    </operation>
+    <operation name="GetFieldChoices">
+      <input message="tns:GetFieldChoices8Request" />
+      <output message="tns:GetFieldChoices8Response" />
+    </operation>
+    <operation name="AddGridRowValues">
+      <input message="tns:AddGridRowValues9Request" />
+      <output message="tns:AddGridRowValues9Response" />
+    </operation>
+    <operation name="DeleteGridRowValues">
+      <input message="tns:DeleteGridRowValues10Request" />
+      <output message="tns:DeleteGridRowValues10Response" />
+    </operation>
+    <operation name="LoadDCCombos">
+      <input message="tns:LoadDCCombos11Request" />
+      <output message="tns:LoadDCCombos11Response" />
+    </operation>
+    <operation name="SetAtachments">
+      <input message="tns:SetAtachments12Request" />
+      <output message="tns:SetAtachments12Response" />
+    </operation>
+    <operation name="ViewAtachments">
+      <input message="tns:ViewAtachments13Request" />
+      <output message="tns:ViewAtachments13Response" />
+    </operation>
+    <operation name="RemoveAtachments">
+      <input message="tns:RemoveAtachments14Request" />
+      <output message="tns:RemoveAtachments14Response" />
+    </operation>
+    <operation name="GetHistoryData">
+      <input message="tns:GetHistoryData15Request" />
+      <output message="tns:GetHistoryData15Response" />
+    </operation>
+    <operation name="GetSearchResult">
+      <input message="tns:GetSearchResult16Request" />
+      <output message="tns:GetSearchResult16Response" />
+    </operation>
+    <operation name="AutoGetSearchResult">
+      <input message="tns:AutoGetSearchResult17Request" />
+      <output message="tns:AutoGetSearchResult17Response" />
+    </operation>
+    <operation name="AutoGetSearchResultNew">
+      <input message="tns:AutoGetSearchResultNew18Request" />
+      <output message="tns:AutoGetSearchResultNew18Response" />
+    </operation>
+    <operation name="WorkFlowAction">
+      <input message="tns:WorkFlowAction19Request" />
+      <output message="tns:WorkFlowAction19Response" />
+    </operation>
+    <operation name="ViewComments">
+      <input message="tns:ViewComments20Request" />
+      <output message="tns:ViewComments20Response" />
+    </operation>
+    <operation name="GetSearchVal">
+      <input message="tns:GetSearchVal21Request" />
+      <output message="tns:GetSearchVal21Response" />
+    </operation>
+    <operation name="GetRecordId">
+      <input message="tns:GetRecordId22Request" />
+      <output message="tns:GetRecordId22Response" />
+    </operation>
+    <operation name="DeleteRows">
+      <input message="tns:DeleteRows23Request" />
+      <output message="tns:DeleteRows23Response" />
+    </operation>
+    <operation name="RefreshGridDependents">
+      <input message="tns:RefreshGridDependents24Request" />
+      <output message="tns:RefreshGridDependents24Response" />
+    </operation>
+    <operation name="GetSubGridDropDown">
+      <input message="tns:GetSubGridDropDown25Request" />
+      <output message="tns:GetSubGridDropDown25Response" />
+    </operation>
+    <operation name="RefreshDC">
+      <input message="tns:RefreshDC26Request" />
+      <output message="tns:RefreshDC26Response" />
+    </operation>
+    <operation name="ExportData">
+      <input message="tns:ExportData27Request" />
+      <output message="tns:ExportData27Response" />
+    </operation>
+    <operation name="ImportData">
+      <input message="tns:ImportData28Request" />
+      <output message="tns:ImportData28Response" />
+    </operation>
+    <operation name="GetWFButtons">
+      <input message="tns:GetWFButtons29Request" />
+      <output message="tns:GetWFButtons29Response" />
+    </operation>
+    <operation name="StartWFAction">
+      <input message="tns:StartWFAction30Request" />
+      <output message="tns:StartWFAction30Response" />
+    </operation>
+    <operation name="UnlockTstructsRecord">
+      <input message="tns:UnlockTstructsRecord31Request" />
+      <output message="tns:UnlockTstructsRecord31Response" />
+    </operation>
+    <operation name="GetMultiSelectValues">
+      <input message="tns:GetMultiSelectValues32Request" />
+      <output message="tns:GetMultiSelectValues32Response" />
+    </operation>
+    <operation name="GetAxMemLoadVars">
+      <input message="tns:GetAxMemLoadVars33Request" />
+      <output message="tns:GetAxMemLoadVars33Response" />
+    </operation>
+    <operation name="DoExcelImportValues">
+      <input message="tns:DoExcelImportValues34Request" />
+      <output message="tns:DoExcelImportValues34Response" />
+    </operation>
+    <operation name="FastDoFormLoad">
+      <input message="tns:FastDoFormLoad35Request" />
+      <output message="tns:FastDoFormLoad35Response" />
+    </operation>
+    <operation name="FastLoadData">
+      <input message="tns:FastLoadData36Request" />
+      <output message="tns:FastLoadData36Response" />
+    </operation>
+    <operation name="FastGetDepentendFieldValues">
+      <input message="tns:FastGetDepentendFieldValues37Request" />
+      <output message="tns:FastGetDepentendFieldValues37Response" />
+    </operation>
+    <operation name="FastLoadDCCombos">
+      <input message="tns:FastLoadDCCombos38Request" />
+      <output message="tns:FastLoadDCCombos38Response" />
+    </operation>
+    <operation name="FastDoFillGridValues">
+      <input message="tns:FastDoFillGridValues39Request" />
+      <output message="tns:FastDoFillGridValues39Response" />
+    </operation>
+    <operation name="FastGetSearchResult">
+      <input message="tns:FastGetSearchResult40Request" />
+      <output message="tns:FastGetSearchResult40Response" />
+    </operation>
+    <operation name="FastFieldChoices">
+      <input message="tns:FastFieldChoices41Request" />
+      <output message="tns:FastFieldChoices41Response" />
+    </operation>
+  </portType>
+  <binding name="ASBTStructbinding" type="tns:ASBTStruct">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="rpc" />
+    <operation name="DoFormLoad">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#DoFormLoad" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetDepentendFieldValues">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#GetDepentendFieldValues" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="LoadData">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#LoadData" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="LoadDataFromHTML">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#LoadDataFromHTML" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SaveData">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#SaveData" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="DeleteData">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#DeleteData" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetFillGridValues">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#GetFillGridValues" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="DoFillGridValues">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#DoFillGridValues" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetFieldChoices">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#GetFieldChoices" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="AddGridRowValues">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#AddGridRowValues" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="DeleteGridRowValues">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#DeleteGridRowValues" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="LoadDCCombos">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#LoadDCCombos" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SetAtachments">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#SetAtachments" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ViewAtachments">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#ViewAtachments" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="RemoveAtachments">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#RemoveAtachments" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetHistoryData">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#GetHistoryData" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetSearchResult">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#GetSearchResult" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="AutoGetSearchResult">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#AutoGetSearchResult" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="AutoGetSearchResultNew">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#AutoGetSearchResultNew" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="WorkFlowAction">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#WorkFlowAction" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ViewComments">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#ViewComments" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetSearchVal">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#GetSearchVal" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetRecordId">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#GetRecordId" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="DeleteRows">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#DeleteRows" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="RefreshGridDependents">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#RefreshGridDependents" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetSubGridDropDown">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#GetSubGridDropDown" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="RefreshDC">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#RefreshDC" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ExportData">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#ExportData" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ImportData">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#ImportData" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetWFButtons">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#GetWFButtons" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="StartWFAction">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#StartWFAction" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="UnlockTstructsRecord">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#UnlockTstructsRecord" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetMultiSelectValues">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#GetMultiSelectValues" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetAxMemLoadVars">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#GetAxMemLoadVars" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="DoExcelImportValues">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#DoExcelImportValues" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="FastDoFormLoad">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#FastDoFormLoad" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="FastLoadData">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#FastLoadData" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="FastGetDepentendFieldValues">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#FastGetDepentendFieldValues" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="FastLoadDCCombos">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#FastLoadDCCombos" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="FastDoFillGridValues">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#FastDoFillGridValues" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="FastGetSearchResult">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#FastGetSearchResult" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="FastFieldChoices">
+      <soap:operation soapAction="urn:uASBTStruct-ASBTStruct#FastFieldChoices" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+  </binding>
+  <service name="ASBTStructservice">
+    <port name="ASBTStructPort" binding="tns:ASBTStructbinding">
+      <soap:address location="http://localhost/scripts10.2/ASBTstruct.dll/soap/ASBTStruct" />
+    </port>
+  </service>
+</definitions>

@@ -1,0 +1,58 @@
+//*Wizard Dc Modern Header---------------*//
+.wizard-type-modern{
+    #wizardWrappper{
+        .wizardContent{
+            #wizardHeader{
+                @include wizardDcPadding;
+                //overflow-x: scroll;
+                .wizard-progress{
+                    border: 1px solid $applicationBorderColor;
+                    @include tabProgess;
+                    a{
+                        color: $applicationTextColor;
+                        width: $wizardDcModernWizardProgressTextoverflowWidth;
+                        padding: 0;
+                        margin: $wizardDcModernWizardProgressTextoverflowMargin;
+                        text-align: center;
+                        text-decoration: none;
+                         @include textOverflow;
+                        &:hover{
+                            outline: none;
+                            text-decoration: none;
+                        }
+                    }
+                    .step{
+                        @include tabStep;
+                        &.in-progress{
+                            @include wizardDcModernBackground;
+                        }
+                        &.active{
+                            &.flat{
+                             &:before{
+                                visibility: visible;
+                                @include wizardDcModernAnimation;
+                             }
+                            }
+                        }
+                        &.flat{
+                                &:before{
+                                content: '';
+                                @include wizardDcModernArrow;
+                            }
+                        }
+                        &.complete{
+                            &.flat{
+                                background: $applicationColor;
+                            }
+                            a{
+                                color: $applicationBackgroundColor;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+//*Wizard Dc Modern Header---------------*//

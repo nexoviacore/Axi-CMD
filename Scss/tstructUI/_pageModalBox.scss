@@ -1,0 +1,23 @@
+//* Modal box ==================================== *//
+#bootstrapModal{
+    .modal-dialog{
+        @media (max-width: $breakTabDevice){
+           width: auto !important;
+        }
+    }
+    .modal-title{
+        width: $textOverflowWidthBootstrapModelForModalTitle;
+        @include textOverflowFillgridPopUp;
+        margin-bottom: $modalTitleMarginBottom;
+    }
+}
+#dvFillGrid{
+    table{
+        thead{
+            tr{
+                background: $iviewTstructTableHeaderBackground;
+            }
+        }
+    }
+}
+//* Modal box ==================================== *//

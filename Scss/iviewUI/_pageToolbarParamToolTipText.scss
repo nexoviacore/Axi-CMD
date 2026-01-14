@@ -1,0 +1,43 @@
+//* iview  pageToolbarParamToolTipText==================================== *//
+.filtertooltip{
+    .tooltiptext{
+    visibility: hidden;
+    border: 1px solid $applicationBackgroundColor;
+    background-color: $applicationBackgroundColor;
+    //box-shadow: 1px 1px 1px $applicationShadowColor;
+    color: $applicationTextColor;
+    @include textLeft;
+    @include btnRadius;
+    @include filtertooltip;
+    @include shadow;
+    .btextDir-rtl &{
+        @include rtlRightAlign;
+        @include textRight;
+    }
+    table{
+        tr{
+            td{
+                font-weight: normal;
+                padding: $tooltiptextTableThPadding;
+            }
+        }
+    }
+    }
+    &:hover{
+        .tooltiptext{
+            visibility: visible;
+        }
+    }
+}
+#Filterscollapse{
+    .panel-body{
+        // .isMobile &{
+            @include calc(max-height,$pageIvContainerAccordionPanelGroupPanelBodyMaxCalcHeight);
+            overflow-y: auto;
+        // }
+    }
+}
+.tooltiptext {
+    color: $moduleTextOrValueColor; 
+}
+//* iview  pageToolbarParamToolTipText==================================== *//

@@ -1,0 +1,15 @@
+body:not(.borderInput){
+    #ivParamTable{
+        tbody{
+            tr{
+                td{
+                    .paramtd2{
+                        input,select{
+                            @include materialInput;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

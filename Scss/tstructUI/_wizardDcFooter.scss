@@ -1,0 +1,118 @@
+//*-------------Wizard Dc Footer *-----------*//
+#wizardBodyFooterWrapper{
+    display: block;
+    clear: both;
+    .wizardBodyContent{
+        @include wizardBodyContent;
+        .dvdcframe{
+            margin: 0px;
+        }
+        .gridoptions{
+            display: none;
+        }
+        .gridoptionlabel{
+            position: $wizardBodyContentGridOptionLabelPosition;
+            top: $wizardBodyContentGridOptionLabelTop;
+            left: $wizardBodyContentGridOptionLabelLeft;
+            font-size: $wizardBodyContentGridOptionLabelFontsize;
+            font-weight: $wizardBodyContentGridOptionLabelFontWeight;
+        }
+    }
+    .tstructBottomButton{
+        ul{
+            padding: 0px;
+            margin-bottom: 0px;
+            .wizardBtns {
+                list-style: none;
+                display: inline-block;
+                background-color: white;
+                width: auto;
+                padding: 5px;
+                a{
+                    color: #333;
+                    display: block;
+                    text-decoration: none;
+                    padding: 3px 9px;
+                    cursor: pointer;
+                    border: 1px solid #ccc;
+                    @include border-radius(3px);
+                    span {
+                        margin-right: 5px;
+                        color: #999999;
+                        font-size: 18px;
+                        position: relative;
+                        top: 4px;
+                    }
+                }
+
+            }
+        }
+    } 
+    .wizardFooter{
+        .tstructBottomLeftButton{
+            display: inline-block;
+            ul{
+                padding: 0px;
+                margin-bottom: $wizardTstructBottomLeftButtonMarginBottom;
+                margin-top: $wizardTstructBottomLeftButtonMarginTop;
+                li:not(.dropdown-list){
+                    list-style: none;
+                    display: inline-block;
+                    @include border-radius(50%);
+                    height: $wizardTstructBottomButtonListHieght;
+                    width: $wizardTstructBottomButtonListWidth;
+                    padding: $wizardTstructBottomButtonListPadding;
+                    a{
+                        color: $applicationIconColor;
+                    }
+                    ul{
+                        right: 0px;
+                        left: auto;
+                    }
+                }
+            }
+        } 
+        .tstructBottomLeftButton{
+            @include floatLeft;
+        }
+        .tstructBottomRightButton{
+            @include floatLeft;
+            
+                ul {
+                    padding: $BottomToolbarBarUlPaddong;
+                    @include textRight;
+                    margin-bottom: 0px;
+                    li {
+                        list-style: none;
+                        display: $BottomToolbarBarUlListDisplay;
+                        background-color: $BottomToolbarBarUlListBackground;
+                        width: auto;
+                        a {
+                            color: $BottomToolbarBarUlListAchorColor;
+                            display: $BottomToolbarBarUlListAchorDisplay;
+                            text-decoration: none;
+                            padding: $BottomToolbarBarUlListAchorPadding;
+                            cursor: pointer;
+                            border: 1px solid $BottomToolbarBarUlListAchorBorderColor;
+                            @include border-radius($BottomToolbarBarUlListAchorBorderRadius);
+                            span {
+                                margin-right: $BottomToolbarBarUlListAchorSpanMarginRight;
+                                color: $applicationIconColor;
+                                font-size: $BottomToolbarBarUlListAchorSpanFontSize;
+                                position: $BottomToolbarBarUlListAchorSpanPosition;
+                                top: $BottomToolbarBarUlListAchorSpanTop;
+                            }
+                        }
+                    }
+                }
+        }
+        // @media (max-width:$breakTabDevice) {
+        //     position: relative;
+        // }
+        background: $applicationBackgroundColor;
+        position: $wizardFooterPositionAbsolute;
+        width: $wizardFooterWidth;
+        bottom: $wizardFooterBottomGap;
+    }
+}
+//*-------------Wizard Dc Footer *-----------*//

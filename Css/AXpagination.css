@@ -1,0 +1,53 @@
+.AXpaginationWrapper .nextPrevBtn {
+  border: 0;
+  margin: 6px;
+  position: relative;
+  top: 1px;
+  padding: 2px 10px;
+  box-shadow: 0 4px 5px 0 rgba(156, 39, 176, 0.14), 0 1px 10px 0 rgba(156, 39, 176, 0.12), 0 2px 4px -1px rgba(156, 39, 176, 0.2);
+  background: #9c27b0;
+  color: white;
+  text-align: center;
+  padding: 0; }
+  .AXpaginationWrapper .nextPrevBtn:not(.iconBtn):hover, .AXpaginationWrapper .nextPrevBtn:not(.iconBtn):focus {
+    background: #bc37d3 !important; }
+.AXpaginationWrapper .nextPrevBtn.iconBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%; }
+  .AXpaginationWrapper .nextPrevBtn.iconBtn:not(.disabled):hover, .AXpaginationWrapper .nextPrevBtn.iconBtn:not(.disabled):focus {
+    background: #cececea6 !important; }
+.AXpaginationWrapper .pageNumberBtn {
+  border: 0;
+  background: #efefef;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow: 0 4px 5px 0 rgba(156, 39, 176, 0.14), 0 1px 10px 0 rgba(156, 39, 176, 0.12), 0 2px 4px -1px rgba(156, 39, 176, 0.2);
+  margin: 0 5px; }
+  .AXpaginationWrapper .pageNumberBtn:hover, .AXpaginationWrapper .pageNumberBtn:focus {
+    background: #cccccc; }
+.AXpaginationWrapper .pageNumberBtn.active {
+  background-color: #9c27b0;
+  border-color: #9c27b0;
+  color: white; }
+.AXpaginationWrapper button {
+  cursor: pointer;
+  outline: 0;
+  text-align: center;
+  padding: 0; }
+.AXpaginationWrapper .nextPrevBtn.disabled {
+  cursor: no-drop; }
+  .AXpaginationWrapper .nextPrevBtn.disabled:not(.iconBtn) {
+    background: #bdbdbd; }
+    .AXpaginationWrapper .nextPrevBtn.disabled:not(.iconBtn):hover, .AXpaginationWrapper .nextPrevBtn.disabled:not(.iconBtn):focus {
+      background: #bdbdbd !important; }
+.AXpaginationWrapper .axPaginationOnlyPages {
+  display: inline-block; }
+.AXpaginationWrapper .threeDotBtn {
+  background: none;
+  border: none;
+  position: relative;
+  top: -3px; }
+
+/*# sourceMappingURL=Axpagination.css.map */

@@ -1,0 +1,139 @@
+   //* applicationcoldbutton  ==================================== *//
+   @mixin coldbtn{
+    @include coldBtnDefault;
+    @include btnRadius;
+    min-width: $hotColdBtnMaxWidth;
+    @include coldBtnColors;
+   }
+     //* applicationHotbutton  ==================================== *//
+     @mixin hotbtn{
+      @include hotBtnDefault;
+      @include btnRadius;
+      @include hotBtnColors;
+      min-width: $hotColdBtnMaxWidth; 
+     }
+     //* applicationHotbuttonDisable  ==================================== *//
+     @mixin hotbtnDisable{
+      @include hotBtnDefault;
+      @include btnRadius;
+      @include hotBtnDisableColors;
+      min-width: $hotColdBtnMaxWidth; 
+     }
+     //* applicationcoldbuttonDisable  ==================================== *//
+   @mixin coldbtn{
+    @include coldBtnDefault;
+    @include btnRadius;
+    min-width: $hotColdBtnMaxWidth;
+    @include coldBtnColors;
+   }
+   //* applicationhottinybutton  ==================================== *//
+   @mixin hottiny{
+    @include hotBtnDefault;
+    @include btnRadius;
+    margin-right: $hotColdBtnMargin;
+    min-width: $hotColdBtnMaxWidth;
+   }
+          //* coldBtnDefault ==================================== *//
+          @mixin coldBtnDefault{
+            //@include shadow;
+            border: 0;
+            text-align: center;
+            padding: $hotColdBtnPadding;
+            border: 1px solid $coldBtnBorderColor;
+            @include border-radius($coldBtnBorderRadius);
+          }
+      
+          //* hotBtnDefault ==================================== *//
+          @mixin hotBtnDefault{
+            @include shadow;
+            border: 0;
+            text-align: center;
+            padding: $hotColdBtnPadding;
+          }
+          //* hotBtnColors ==================================== *//
+          @mixin hotBtnColors{
+            color: $hotbtntext;
+            background: $hotbtnbackgroundcolor;
+          }
+          //* hotBtnColors ==================================== *//
+          @mixin hotBtnDisableColors{
+            color: $hotbtntext;
+            background: $hotbtnDisablebackgroundcolor;
+          }
+          //* coldBtnColors ==================================== *//
+          @mixin coldBtnColors{
+            color: $applicationTextColor ;
+            background: $applicationBackgroundColor;
+          }
+          
+          //* hotBtn&hotbtnFocus ==================================== *//
+          @mixin coldHotBtnFocus {
+            box-shadow: 0 2px 5px $applicationShadowFirstColor, 0 2px 10px $applicationShadowSecondColor;
+          }
+      
+          //* hotBtn&hotbtnHover ==================================== *//
+          @mixin coldHotBtnHover {
+            box-shadow: 0 2px 5px $applicationShadowFirstColor, 0 2px 10px $applicationShadowSecondColor;
+          }
+    @mixin toolbarBtnNormal{
+      border:0px;
+      padding: $toolbarBtnNormalPadding;
+    }
+    //* claerBtn ==================================== *//
+    @mixin  clearBtn {
+    color: $clearBtnColor;
+    background-color: $applicationBackgroundColor;
+    border:0px;
+    font-weight: $applicationFontWeight;
+    padding: $hotColdBtnPadding;
+    }
+    //*gridDc buutton Margin ================*//
+    @mixin gridDcBtnMargin{
+      margin-bottom: $gridDcBtnMargin;
+    }
+    //* btnRadius ==================================== *//
+    @mixin btnRadius{
+      -webkit-border-radius: $applicationBorderRadius;
+      -moz-border-radius: $applicationBorderRadius;
+      -ms-border-radius: $applicationBorderRadius;
+      border-radius: $applicationBorderRadius;
+    }
+    @mixin pickListSearchBtn{
+      padding-top: $pickListSearchBtnPading;
+  }
+  @mixin ivirChartsBtn{
+    background: 0 0;
+    border: 0;
+    padding: 0;
+    margin: 3px 0 0 0;
+  }
+
+  @mixin  hybridAppButton{
+    color: $applicationColor;
+    background-color: $coldbtnBackground;
+    padding: $hotColdBtnPadding;
+    border: 0px;
+    position: $hybridAppButtonPosition;
+    right: $hybridAppButtonRightGap;
+    top: $hybridAppButtonTopGap;
+    font-size: $hybridAppButtonFontSize;
+    @include shadow;
+    @include btnRadius;
+  }
+  @mixin pageFooterBtn {
+    position:$pageFooterBtnPosition;
+    height:auto;
+    display: block;
+    width:$pageFooterBtnWidth;
+    top:$pageFooterBtnTopGap;
+    padding-bottom: $pageFooterBtnPaddingBottom;
+    margin-top: $pageFooterBtnMarginTop;
+  }
+  //* btns for tstruct footer (reset, submit etc) ==================================== *//
+  @mixin pageFooterbackforwrdbuttons{
+        @include floatNone;
+        background: $applicationTransparent;
+        margin-top: $pageFooterbackforwrdbuttonsMarginTop;
+        padding-top: $pageFooterbackforwrdbuttonsPaddingTop;
+        position: $pageFooterbackforwrdbuttonsPosition;
+  }

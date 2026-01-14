@@ -1,0 +1,17 @@
+/*-------datePicker---------*/
+#ui-datepicker-div {
+    min-width: $applicationDatePickerMinWidth;
+	max-height: $applicationDatePickerMaxHeight;
+	height: $applicationDatePickerHeight;
+}
+.input-group-addon {
+    padding: $applicationInputGroupAddonPadding;
+}
+input{
+	&.tstOnlyTime{
+		&+span{
+			display: none !important;
+		}
+	}
+}
+/*-------datePicker---------*/

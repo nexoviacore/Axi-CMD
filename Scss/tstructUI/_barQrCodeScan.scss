@@ -1,0 +1,107 @@
+.dvdcframe { 
+    .divBarQrScan {
+        position: $applicationPositionRelative;         
+        color: darken($applicationBackgroundColor, 40);
+        cursor: pointer;
+        .barQrIcon {
+            position: $applicationPositionAbsolute;
+            top: 3px;              
+            right: 5px;
+            .isMobile & {
+                top: 7px;
+            }
+        }        
+    }
+    #containerDc {
+        .edit-mode-content {
+            position: $applicationPositionRelative;
+            .divBarQrScan {  
+                .barQrIcon {
+                    top: 5px;
+                }                          
+            }
+        }
+        .divBarQrScan {
+            .barQrIcon {         
+                .isMobile & {
+                    top: 7px;
+                } 
+            }
+        }
+        
+    }
+}
+
+#divModalScanner {
+    .modal-dialog {
+        width: 90%;
+        margin: 18px auto;
+        .modal-header {
+            padding: 5px 15px;
+            h4 {
+                display: none;
+            }
+        }
+    }
+    .modal-body {               
+        #htmlContentOriFrameUrl { 
+            width: 100%;
+            .html5-qrcode-basic-layout {
+                width: 100%;
+                height: 100%;
+                .html5-qrcode-scan-region {
+                    height: 74%;
+                    img {
+                        width: 250px;
+                        height: 250px;
+                        opacity: 0.6 !important;
+                    }  
+                    video {
+                        width: 100%;
+                        height: 100%;
+                    }                
+                }
+                .html5-qrcode-dashboard-section-file-scan {
+                    width: 100% !important;
+                    border: 1px solid darken($applicationBackgroundColor, 40);
+                    padding: 10px;
+                    background: #dcdcdc;
+                    &:focus {
+                        outline: none;
+                        border: none;
+                    }
+                    span {
+                        display: none;
+                    }
+                }
+                .html5-qrcode-scan-swap-option {
+                    padding: 4px 20px;                    
+                    background: #e2e2e2;
+                    color: $applicationTextColor;
+                    text-decoration: none !important;
+                    @include box-shadow(2px 1px 7px 2px darken($applicationBackgroundColor, 20));
+                    margin-top: 10px;
+                    display: inline-block;
+                }
+                .html5-qrcode-dashboard-section-camera-scan {                    
+                    .form-control {
+                        display: inline-block;
+                        margin: 0px 20px;
+                        width: 30% !important;
+                    }
+                    span {
+                        button {
+                            margin-top: -8px;
+                            .isMobile & {
+                                margin-top: 15px;
+                            }
+                        }
+                    }
+                }
+            }
+            .infoIcon {
+                display: none;
+            }
+        }
+    }    
+}

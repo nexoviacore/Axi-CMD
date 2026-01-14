@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" name="ASBScriptservice" targetNamespace="http://tempuri.org/" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types />
+  <message name="RemoteDoScript0Request">
+    <part name="S" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="RemoteDoScript0Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="CreatePDF1Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="CreatePDF1Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="CreatePrintForm2Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="CreatePrintForm2Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetDocList3Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetDocList3Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="AxpSendMail4Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="AxpSendMail4Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetPrintDocList5Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="GetPrintDocList5Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="CreateFastreport6Request">
+    <part name="S" type="xs:string" />
+    <part name="sxml" type="xs:string" />
+  </message>
+  <message name="CreateFastreport6Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <portType name="ASBScript">
+    <operation name="RemoteDoScript">
+      <input message="tns:RemoteDoScript0Request" />
+      <output message="tns:RemoteDoScript0Response" />
+    </operation>
+    <operation name="CreatePDF">
+      <input message="tns:CreatePDF1Request" />
+      <output message="tns:CreatePDF1Response" />
+    </operation>
+    <operation name="CreatePrintForm">
+      <input message="tns:CreatePrintForm2Request" />
+      <output message="tns:CreatePrintForm2Response" />
+    </operation>
+    <operation name="GetDocList">
+      <input message="tns:GetDocList3Request" />
+      <output message="tns:GetDocList3Response" />
+    </operation>
+    <operation name="AxpSendMail">
+      <input message="tns:AxpSendMail4Request" />
+      <output message="tns:AxpSendMail4Response" />
+    </operation>
+    <operation name="GetPrintDocList">
+      <input message="tns:GetPrintDocList5Request" />
+      <output message="tns:GetPrintDocList5Response" />
+    </operation>
+    <operation name="CreateFastreport">
+      <input message="tns:CreateFastreport6Request" />
+      <output message="tns:CreateFastreport6Response" />
+    </operation>
+  </portType>
+  <binding name="ASBScriptbinding" type="tns:ASBScript">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="rpc" />
+    <operation name="RemoteDoScript">
+      <soap:operation soapAction="urn:uASBScript-ASBScript#RemoteDoScript" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="CreatePDF">
+      <soap:operation soapAction="urn:uASBScript-ASBScript#CreatePDF" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="CreatePrintForm">
+      <soap:operation soapAction="urn:uASBScript-ASBScript#CreatePrintForm" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetDocList">
+      <soap:operation soapAction="urn:uASBScript-ASBScript#GetDocList" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="AxpSendMail">
+      <soap:operation soapAction="urn:uASBScript-ASBScript#AxpSendMail" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetPrintDocList">
+      <soap:operation soapAction="urn:uASBScript-ASBScript#GetPrintDocList" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="CreateFastreport">
+      <soap:operation soapAction="urn:uASBScript-ASBScript#CreateFastreport" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uAxpertLic-AxpertLic" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+  </binding>
+  <service name="ASBScriptservice">
+    <port name="ASBScriptPort" binding="tns:ASBScriptbinding">
+      <soap:address location="http://localhost/AxpertWebScriptsDWB/ASBScript.dll/soap/ASBScript" />
+    </port>
+  </service>
+</definitions>

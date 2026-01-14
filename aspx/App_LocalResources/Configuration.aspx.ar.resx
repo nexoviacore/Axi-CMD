@@ -1,0 +1,481 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="lblactsess.Text" xml:space="preserve">
+    <value>عرض الجلسات النشطة في صفحة تسجيل الدخول.</value>
+  </data>
+  <data name="lblapplication.Text" xml:space="preserve">
+    <value>الوضعية</value>
+  </data>
+  <data name="lblapptitle.Text" xml:space="preserve">
+    <value>عنوان التطبيق&lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="أدخل عنوان التطبيق للكتابة فوق العنوان الحالي." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblattachpath.Text" xml:space="preserve">
+    <value>مسار تخزين مرفق النموذج. &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="مسار تخزين المرفقات" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblautognr.Text" xml:space="preserve">
+    <value>إظهار قيمة الحقل التي تم إنشاؤها تلقائيا &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="سيتم عرض قيم الحقول التي تم إنشاؤها تلقائيا للسجلات الجديدة نص آخر سيتم عرض تلقائي." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblcopyright.Text" xml:space="preserve">
+    <value>نص حقوق الطبع والنشر&lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="أدخل نص حقوق الطبع والنشر. سيكون هذا مرئيا في صفحة تسجيل الدخول." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblcpwd.Text" xml:space="preserve">
+    <value>السماح تغيير كلمة المرور في المرة الأولى تسجيل الدخول &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="سيتم إعادة توجيه المستخدمين الجدد في التطبيق إلى صفحة تشانجيباسورد في أول مرة تسجيل الدخول." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbldate.Text" xml:space="preserve">
+    <value>التاريخ تنسيق الثقافة &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="سيتم تطبيق تنسيق التاريخ المختار عبر التطبيق فقط إذا كان ملقم قاعدة البيانات أيضا نفس تنسيق التاريخ." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbldbpag.Text" xml:space="preserve">
+    <value>تمكين ترقيم صفحات دب  &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="باجينات دب الخاص بك" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblenablebreadcrumb.Text" xml:space="preserve">
+    <value>تمكين مسار التنقل</value>
+  </data>
+  <data name="lblenableCards.Text" xml:space="preserve">
+    <value>تمكين الصفحة الرئيسية كبطاقات &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="سيتم تمكين وظيفة صفحة البطاقات في حالة تمكين هذا الخيار ، وتعطي البطاقات مظهرًا جديدًا ومحسّنًا وحديثًا للتطبيق ، وتحتوي البطاقات على مجموعة متنوعة من خيارات البطاقات والتكوينات للاختيار من بينها" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblexepath.Text" xml:space="preserve">
+    <value>مسار خادم الطباعة &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="المسار حيث wktohtmlpdf.exe تم تنصيبه." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblForm.Text" xml:space="preserve">
+    <value>شكل</value>
+  </data>
+  <data name="lblgeneral.Text" xml:space="preserve">
+    <value>جنرال لواء</value>
+  </data>
+  <data name="lblgeneralc5.Text" xml:space="preserve">
+    <value>جنرال لواء</value>
+  </data>
+  <data name="lblgeneralc6.Text" xml:space="preserve">
+    <value>جنرال لواء</value>
+  </data>
+  <data name="lblgeneralsel1.Text" xml:space="preserve">
+    <value>وصول بناة المنزل (يرجى تحديد المسؤوليات) &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="Sستسمح الأدوار المنتخبة ببناء صفحتها الرئيسية الخاصة بها." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblgeneralsel2.Text" xml:space="preserve">
+    <value>الحد الأقصى لعدد الحاجيات في البناء المنزل &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content=" الحد الأقصى لعدد الحاجيات في البناء المنزل." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblglobal.Text" xml:space="preserve">
+    <value>العولمة</value>
+  </data>
+  <data name="lblgridattachpath.Text" xml:space="preserve">
+    <value>مسار تخزين مرفق الشبكة  &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-html="true" data-content=" Grid_Attachments &lt;br/&gt; D: \\ Grid_Attachments &lt;br/&gt; \\ 192.168.1.1 \ Grid_Attachments &lt;br/&gt; فتب: \\ 192.168.1.1 \ Grid_Attachments" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblMaxDraftsCount.Text" xml:space="preserve">
+    <value>مسار تخزين مرفق الشبكة  &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-html="true" data-content=" Grid_Attachments &lt;br/&gt; D: \\ Grid_Attachments &lt;br/&gt; \\ 192.168.1.1 \ Grid_Attachments &lt;br/&gt; فتب: \\ 192.168.1.1 \ Grid_Attachments" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblgrpdup.Text" xml:space="preserve">
+    <value>قيمة مكررة للمجموعة. &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="أدخل قيمة مجموعة" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblhelpview.Text" xml:space="preserve">
+    <value>صفحة المساعدة &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="في خدمتكم" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblhtmlpath.Text" xml:space="preserve">
+    <value>مسار القالب (هتمل( &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="مسار تخزين هتمل" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblimgfld.Text" xml:space="preserve">
+    <value>مسار تخزين حقل الصورة &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="مسار تخزين حقل الصورة، سيتم تخزين جميع الصور مع فيلدنام مسبوقة مع 'nodb_' في هذا المسار." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblimptmp.Text" xml:space="preserve">
+    <value>مسار قالب الاستيراد&lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-html="true" data-content="استيراد مسار مجلد قالب. &lt;br/&gt; مثال - D: \ إكسيرت \ إيمبورت تمبلاتس" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbllanguage.Text" xml:space="preserve">
+    <value>لغة التطبيق&lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="اختر لغات التطبيق." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbllanguage1.Text" xml:space="preserve">
+    <value>الإنجليزية.</value>
+  </data>
+  <data name="lbllanguage2.Text" xml:space="preserve">
+    <value>الهندية.</value>
+  </data>
+  <data name="lbllanguage3.Text" xml:space="preserve">
+    <value>عربى.</value>
+  </data>
+  <data name="lblmargins.Text" xml:space="preserve">
+    <value>طباعة الهوامش - أعلى، يمين، أسفل، يسار.  &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="قيم الهامش لتنسيق الطباعة." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblmaxprint.Text" xml:space="preserve">
+    <value>الحد الأقصى لعدد الصفوف المراد طباعتها &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content=" الحد الأقصى لعدد الصفوف المسموح بها في الحفظ كخيارات مثل برينت و إكسيل و بدف." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblmenu.Text" xml:space="preserve">
+    <value>نمط القائمة</value>
+  </data>
+  <data name="lbloptactsess.Text" xml:space="preserve">
+    <value>نعم فعلا</value>
+  </data>
+  <data name="lbloptactsess1.Text" xml:space="preserve">
+    <value>لا</value>
+  </data>
+  <data name="lbloptautognr.Text" xml:space="preserve">
+    <value>نعم فعلا</value>
+  </data>
+  <data name="lbloptautognr1.Text" xml:space="preserve">
+    <value>لا </value>
+  </data>
+  <data name="lbloptbcrum.Text" xml:space="preserve">
+    <value>نعم فعلا</value>
+  </data>
+  <data name="lbloptbcrum1.Text" xml:space="preserve">
+    <value>لا</value>
+  </data>
+  <data name="lbloptcpwd.Text" xml:space="preserve">
+    <value>نعم فعلا</value>
+  </data>
+  <data name="lbloptcpwd1.Text" xml:space="preserve">
+    <value>لا</value>
+  </data>
+  <data name="lbloptculture.Text" xml:space="preserve">
+    <value>لنا</value>
+  </data>
+  <data name="lbloptculture1.Text" xml:space="preserve">
+    <value>ألمانية</value>
+  </data>
+  <data name="lbloptdbpag.Text" xml:space="preserve">
+    <value>نعم فعلا</value>
+  </data>
+  <data name="lbloptdbpag1.Text" xml:space="preserve">
+    <value>لا </value>
+  </data>
+  <data name="lbloptdcgrid.Text" xml:space="preserve">
+    <value>الشبكة دس المنبثقة مرئية على حفظ. &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="على النقر على حفظ في دس الشبكة المنبثقة سوف تكون متاحة لتعديل الصفوف السابقة والقادمة." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbloptdcgrid1.Text" xml:space="preserve">
+    <value>نعم فعلا </value>
+  </data>
+  <data name="lbloptdcgrid2.Text" xml:space="preserve">
+    <value>لا </value>
+  </data>
+  <data name="lbloptCards.Text" xml:space="preserve">
+    <value>نعم فعلا</value>
+  </data>
+  <data name="lbloptCards1.Text" xml:space="preserve">
+    <value>لا</value>
+  </data>
+  <data name="lbloptmenu.Text" xml:space="preserve">
+    <value>كلاسيكي</value>
+  </data>
+  <data name="lbloptmenu1.Text" xml:space="preserve">
+    <value>حديث</value>
+  </data>
+  <data name="lbloptprint32.Text" xml:space="preserve">
+    <value>32-بت</value>
+  </data>
+  <data name="lbloptprint64.Text" xml:space="preserve">
+    <value>64-بت</value>
+  </data>
+  <data name="lbloptsess.Text" xml:space="preserve">
+    <value>نعم فعلا</value>
+  </data>
+  <data name="lbloptsess1.Text" xml:space="preserve">
+    <value>لا</value>
+  </data>
+  <data name="lbloptslct.Text" xml:space="preserve">
+    <value>نعم فعلا </value>
+  </data>
+  <data name="lbloptslct1.Text" xml:space="preserve">
+    <value>لا </value>
+  </data>
+  <data name="lblopttally.Text" xml:space="preserve">
+    <value>نعم فعلا</value>
+  </data>
+  <data name="lblopttally1.Text" xml:space="preserve">
+    <value>لا</value>
+  </data>
+  <data name="lblopttitleprint.Text" xml:space="preserve">
+    <value>نعم فعلا </value>
+  </data>
+  <data name="lblopttitleprint1.Text" xml:space="preserve">
+    <value>لا </value>
+  </data>
+  <data name="lblopttrace.Text" xml:space="preserve">
+    <value>نعم فعلا</value>
+  </data>
+  <data name="lblopttrace1.Text" xml:space="preserve">
+    <value>لا</value>
+  </data>
+  <data name="lbloptwrapc5.Text" xml:space="preserve">
+    <value>نعم فعلا </value>
+  </data>
+  <data name="lblopwrapc5.Text" xml:space="preserve">
+    <value>لا </value>
+  </data>
+  <data name="lblprint.Text" xml:space="preserve">
+    <value>طباعة.</value>
+  </data>
+  <data name="lblprint32.Text" xml:space="preserve">
+    <value>طباعة ل 32 بت / 64 بت &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="اختر النظام المستخدم للطباعة." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblrowpage.Text" xml:space="preserve">
+    <value>الصفوف في الصفحة &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="عدد الصفوف التي يجب عرضها في التقارير والقوائم." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblsess.Text" xml:space="preserve">
+    <value>تمديد تلقائي للجلسة&lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="ستعرض إضافة الجلسة رسالة إلى المستخدم حول انتهاء صلاحية الجلسة. يمكن للمستخدم ثم اختيار تمديد أو الخروج." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblslct.Text" xml:space="preserve">
+    <value>تمكين حقول الإكمال التلقائي للحقول المحددة وقائمة التحديد &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="سوف يستكمل عنصر الإكمال التلقائي القائمة المنسدلة و بيليست مع سكل. وهذا يتيح تحميل الصفحة بشكل أسرع." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltally.Text" xml:space="preserve">
+    <value>تمكين التصدير إلى تالي&lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="تصدير إلى رصيده يتيح زر شريط أدوات إضافية إذا كان هناك معاملة (كوفكس) المتاحة." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltextwrapc5.Text" xml:space="preserve">
+    <value>عمود كلمة التفاف &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="سيتم ملفوفة ملف الخلية إذا تمكين، وإلا سيتم عرض في سطر واحد. ينطبق على إيفيوس الكلاسيكية فقط." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltitle.Text" xml:space="preserve">
+    <value>عنوان الطباعة&lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="طباعة عنوان المستند." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltitlealign.Text" xml:space="preserve">
+    <value>محاذاة العنوان &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="محاذاة العنوان" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltitledwn.Text" xml:space="preserve">
+    <value>عرض عنوان التطبيق في التنزيلات &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="سيتم عرض عنوان التطبيق في رأس لحفظ كخيارات مثل طباعة و إكسيل و بدف." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltrace.Text" xml:space="preserve">
+    <value>تمكين التتبع</value>
+  </data>
+  <data name="lblusr.Text" xml:space="preserve">
+    <value>تمكين أزرار إرسال وإلغاء في Tstruct Footer &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="لن يتم تمكين أزرار شريط الأدوات إلا إذا تم اختيارها." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbldeveloper.Text" xml:space="preserve">
+    <value>منشئ الصفحة</value>
+  </data>
+  <data name="lblforms.Text" xml:space="preserve">
+    <value>إستمارات</value>
+  </data>
+  <data name="lblreport.Text" xml:space="preserve">
+    <value>تقارير</value>
+  </data>
+  <data name="lbltabapp.Text" xml:space="preserve">
+    <value>الوضعية</value>
+  </data>
+  <data name="lbluserset.Text" xml:space="preserve">
+    <value>المستعمل</value>
+  </data>
+  <data name="lblsettitle.Text" xml:space="preserve">
+    <value>عرض تنبيه قبل التنقل الصف في شكل الشبكة</value>
+  </data>
+  <data name="pagetitle.Text" xml:space="preserve">
+    <value>ترتيب</value>
+  </data>
+  <data name="lblGlobalization.Text" xml:space="preserve">
+    <value>العولمة او الوافدين الاجانب</value>
+  </data>
+  <data name="lblGlobe.Text" xml:space="preserve">
+    <value>العولمة او الوافدين الاجانب</value>
+  </data>
+  <data name="lblLangSelect.Text" xml:space="preserve">
+    <value>لغة التطبيق&lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="سيتم تعيين تهيئة اللغة المحددة استنادا إلى اللغة المحددة" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblDesignMode.Text" xml:space="preserve">
+    <value>تمكين وضع التصميم (يرجى تحديد المسؤوليات) &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="سيتم تمكين "وضع التصميم" في النماذج للمستخدمين وجود أي من المسؤوليات المحددة." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblaxMenuColCount.Text" xml:space="preserve">
+    <value>أعمدة&lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="حدد عدد الأعمدة فقط إذا كان نمط القائمة مخصص" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblaxMenuStyleSel.Text" xml:space="preserve">
+    <value>نمط القائمة&lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="اختر نمط القائمة" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblaxMenusubCntPerView.Text" xml:space="preserve">
+    <value>القائمة الفرعية لكل مشاهدة&lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="حدد عدد العناصر التي يجب أن تظهر في القائمة الفرعية" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblaxMenuWrdWrap.Text" xml:space="preserve">
+    <value>كلمة التفاف&lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="تبديل هذا الشريط لتمكين / تعطيل كلمة التفاف" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblin.Text" xml:space="preserve">
+    <value>ترجمة سلسلة</value>
+  </data>
+  <data name="lbllang.Text" xml:space="preserve">
+    <value>اللغة المستهدفة&lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="حدد اللغة التي سيتم فيها عرض تفاصيل النموذج" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblmenuSet.Text" xml:space="preserve">
+    <value>قائمة طعام</value>
+  </data>
+  <data name="lblsource.Text" xml:space="preserve">
+    <value>شكل&lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="حدد نموذجا للترجمة" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblall.Text" xml:space="preserve">
+    <value>الكل</value>
+  </data>
+  <data name="lblDirSubMenuCount.Text" xml:space="preserve">
+    <value>عدد سوبينو المباشر&lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="اكتب أو حدد سلسلة القوائم التي يجب أن تظهر ضمن قائمة فرعية" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblLimited.Text" xml:space="preserve">
+    <value>محدود</value>
+  </data>
+  <data name="lblSubMenuCount.Text" xml:space="preserve">
+    <value>سوبينو العد&lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="اكتب أو حدد عدد القوائم الفرعية التي يجب أن تظهر تحت رأس قائمة" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblAttachmentSize.Text" xml:space="preserve">
+    <value>حجم المرفقات بالميغا بايت &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_AttachSize" data-toggle="popover" data-content="الحد الأقصى لحجم الملف للمرفقات" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblUploadAppImg.Text" xml:space="preserve">
+    <value>صورة الخلفية / الفيديو &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_AttachSize" data-toggle="popover" data-content="للفيديو الحد الأقصى المسموح به هو 10MB و يجب أن يكون تنسيق MP4 و إيماج الحد الأقصى لحجم الملف المسموح به هو 5 ميغابايت و تنسيق يجب جيف، ينغ، جبغ، جبيغ، تيف، بمب، بيبغ، بيبيغ" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblUploadAppLogoImg.Text" xml:space="preserve">
+    <value>شعار &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_AttachSize" data-toggle="popover" data-content="الحد الأقصى لحجم الشعار هو 1MB ويجب أن يكون تنسيق جيف، ينغ، جبغ، جبيغ، تيف، بمب، بيبرج، بيبيغ" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblUploadMobAppImage.Text" xml:space="preserve">
+    <value>صورة خلفية الجوال &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_AttachSize" data-toggle="popover" data-content="ماكسيموم موبيل باكغروند إيماج سيز هو 1MB ويجب أن يكون التنسيق جيف، ينغ، جبغ، جبيغ، تيف، بمب، بيبغ، بيبيغ" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblDevInstance.Text" xml:space="preserve">
+    <value>تطور التنمية &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="Dev_instance" data-toggle="popover" data-content="تمكين هذا لجلب البيانات مباشرة من قاعدة البيانات" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblGetIviewRowCountTitle.Text" xml:space="preserve">
+    <value>الحصول على IView مع عدد صفوف &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_GetIviewRowCount" data-toggle="popover" data-content="تمكين الحصول على rowcount IView (موصى به: معطل)" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblIviewDataWSRowsTitle.Text" xml:space="preserve">
+    <value>حجم صفوف ذاكرة التخزين المؤقت لصفيف Iview &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_IviewDataWSRows" data-toggle="popover" data-content="حجم ذاكرة التخزين المؤقت لصفوف Iview عند تعطيل IView مع تعطيل عدد الصفوف" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblInlineGridEdit.Text" xml:space="preserve">
+    <value>شبكة تحرير البيانات&lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_InlineGridEdit" data-toggle="popover" data-content="بناء خيار تحرير الشبكة العاصمة" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;
+    </value>
+  </data>
+  <data name="lblAlertTimeout.Text" xml:space="preserve">
+    <value>مهلة التنبيهات بالمللي ثانية &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="سيتم إغلاق التنبيهات تلقائيًا بعد الثواني التي تمت تهيئتها" data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblWizardType.Text" xml:space="preserve">
+    <value>نوع المعالج &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="نوع المعالج ليتم عرضه عبر التطبيق." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblWizardTstruct.Text" xml:space="preserve">
+    <value>تمكين المعالجات القائمة على المعالجات في النماذج &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="تمكين المعالجات القائمة على المعالجات في النماذج." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblSaveAndPublish.Text" xml:space="preserve">
+    <value>حفظ ونشر تلقائي &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="تمكين حفظ والنشر التلقائي. تساعدك على حفظ ونشر بنقرة واحدة." data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblGlobalSrchTxt.Text" xml:space="preserve">
+    <value>الحد الأقصى لجلب البحث العالمي</value>
+  </data>
+  <data name="lblErrorTimeout.Text" xml:space="preserve">
+    <value>رسالة خطأ التنبيه / مهلة الفشل في ثوان &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="سيتم إغلاق رسائل الخطأ تلقائيًا بعد الثواني التي تمت تهيئتها "data-placement="left" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lblDisableSplit.Text" xml:space="preserve">
+    <value>تعطيل الانقسام</value>
+  </data>
+  <data name="lblenableErrormsg.Text" xml:space="preserve">
+    <value>إخفاء رسائل الخطأ</value>
+  </data>
+  <data name="lblSessionExpiryDays.Text" xml:space="preserve">
+    <value>انتهاء جلسة تطبيق الهاتف المحمول في غضون أيام &lt;i tabindex="-1" style="cursor: pointer; outline: none;" class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="انتهاء جلسة تطبيق الهاتف المحمول في غضون أيام." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbltimezone.Text" xml:space="preserve">
+    <value>السماح باختلاف المنطقة الزمنية &lt;i tabindex="-1" style="cursor: pointer; outline: none;"  class="icon-arrows-question" id="ico_cl" data-toggle="popover" data-content="السماح باختلاف المنطقة الزمنية." data-placement="right" data-original-title="" title=""&gt;&lt;/i&gt;</value>
+  </data>
+  <data name="lbluiconfig.text" xml:space="preserve">
+    <value>تكوين واجهة المستخدم</value>
+  </data>
+</root>

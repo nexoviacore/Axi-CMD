@@ -1,0 +1,97 @@
+ //* avoid browser level touch actions *//
+
+ @mixin applicationMainPageSplitHorizantalVertical {
+    margin: $applicationSplitterWrapperMargin;
+    height: calc(#{$applicationSplitterWrapperMaximumHeight} - #{$applicationSplitterWrapperCalcHeight});
+.panel-container {
+    display: flex;
+    flex-direction: row;
+    // overflow: hidden;
+    /* avoid browser level touch actions */
+    xtouch-action: none;
+    height: $applicationSplitterWrapperPanelContainerMaximumHeight;
+    .panel-left{
+        @include splitPanelLeftRight;
+        flex: 0 0 auto;
+        .panel-left-inner,.panel-right-inner {
+            width: $applicationSplitterWrapperPanelLeftRightInnerWidth;
+            height: $applicationSplitterWrapperPanelLeftRightInnerHeight;
+            iframe {
+                width: $applicationSplitterWrapperPanelLeftRightInnerIframeWidth;
+                height: $applicationSplitterWrapperPanelLeftRightInnerIframeHeight;
+                border: 0px;
+            }
+        }
+    }
+    .panel-right{
+        @include splitPanelLeftRight;
+        flex: 1 1 auto;
+        .panel-left-inner,.panel-right-inner {
+            width: $applicationSplitterWrapperPanelLeftRightInnerWidth;
+            height: $applicationSplitterWrapperPanelLeftRightInnerHeight;
+            iframe {
+                width: $applicationSplitterWrapperPanelLeftRightInnerIframeWidth;
+                height: $applicationSplitterWrapperPanelLeftRightInnerIframeHeight;
+                border: 0px;
+            }
+        }
+    }
+}
+.panel-container-vertical {
+    display: flex;
+    flex-direction: column;
+    height: $applicationHomePagePanelVerticalHeight;
+    // border: 1px solid silver;
+    overflow: hidden;
+    height: $applicationSplitterWrapperPanelContainerMaximumHeight;
+    .panel-top{
+        flex: 0 0 auto;
+        padding: 0;
+        height: 150px;
+        width: 100%;
+        white-space: nowrap;
+        color: $applicationMainPageSplitColor;
+        height: $applicationSplitterWrapperPanelTopHeight;
+        width: 100%!important;
+        .panel-left-inner {
+            width: $applicationSplitterWrapperPanelLeftRightInnerWidth;
+            height: $applicationSplitterWrapperPanelLeftRightInnerHeight;
+            iframe {
+                width: $applicationSplitterWrapperPanelLeftRightInnerIframeWidth;
+                height: $applicationSplitterWrapperPanelLeftRightInnerIframeHeight;
+                border: 0px;
+            }
+        }
+    }
+    .panel-bottom {
+        flex: 0 0 auto;
+        height: 150px;
+        width: 100%;
+        white-space: nowrap;
+        color:$applicationMainPageSplitColor;
+        height: $applicationSplitterWrapperPanelBottomHeight;
+        .panel-right-inner{
+            width: $applicationSplitterWrapperPanelLeftRightInnerWidth;
+            height: $applicationSplitterWrapperPanelLeftRightInnerHeight;
+            iframe {
+                width: $applicationSplitterWrapperPanelLeftRightInnerIframeWidth;
+                height: $applicationSplitterWrapperPanelLeftRightInnerIframeHeight;
+                border: 0px;
+            }
+        }
+    }
+}
+}
+
+@mixin splitPanelLeftRight {
+    /* only manually resize */
+    padding: 0px;
+    width: 100%;
+    min-height: $applicationHomePageSplitPanelLeftRightMinHeight;
+    min-width: $applicationHomePageSplitPanelLeftRightMinWidth;
+    /* background: #25c5da; */
+    color: $applicationMainPageSplitColor;
+}
+
+
+  //* avoid browser level touch actions *//

@@ -1,0 +1,19 @@
+﻿#axpertPopupWrapper{
+	max-width: 96vw;
+	height: 90vh;
+}
+.remodal-wrapper{
+    overflow:hidden !important;
+}
+.dvheightframe {
+    height: calc(100vh - 74px) !important;
+    height: -webkit-calc(100vh - 74px) !important;
+    height: -moz-calc(100vh - 74px) !important;
+    height: -o-calc(100vh - 74px) !important;
+    overflow: auto;
+    overflow-x: hidden;
+}
+
+.appHeader {
+    border: 0px;
+}

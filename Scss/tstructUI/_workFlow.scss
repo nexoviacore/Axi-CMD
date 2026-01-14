@@ -1,0 +1,285 @@
+//* workFlow ================ *//
+  .maincls{
+      margin-top: $workFlowMainContainerTopMargin;
+      @include textLeft;
+
+      .workflowdisplayinline{
+        display: inline-block;
+        word-break: break-all; 
+        word-wrap: break-word;
+      }
+      .wrkflw-col-sm-12 {
+        padding-top: $workFlowwrkflw-col-sm-12Padding;
+        margin-bottom: $workFlowwrkflw-col-sm-12MArgin-Bottom;
+    }
+      .workflowdropdownCls{
+        // background: $workflowdropdownClsBackground;
+        // margin: 0 0 0 -2px; 
+        // padding: 6px 9px 5px 0;
+        vertical-align: $workflowdropdownClsVerticalAlign;
+        //top: $workflowdropdownClsTop;
+        //left: $workflowdropdownClsLeft;
+        color: $applicationIconColor;
+        position: $workflowdropdownClsPosition;
+        margin-top: $workFlowIconMarginTop;
+
+      }
+      .itemone {
+        @include workFlowHint;
+        @include workFlowNotificationShodow;
+      }
+      // .downArr {
+      //     .workflowOptions{
+      //       @include workFlowdownArrworkflowOptions;
+      //     }
+      // }
+      .workflowMsg {
+        width: $workFlowMsgWidth;
+        font-size: $workFlowMsgFontSize;
+        font-weight: $workFlowMsgFontWeight;
+        @include textOverflow;
+        @include calc(max-width,$workFlowMsgMaxWidthCalc);
+        cursor: $workFlowCursor;
+        //margin-left: $workFlowMsgMarginLeft;
+
+        .wrkflwPendingCls{
+            @include workFlowwrkflwPendingCls;
+        }
+          .wrkflwapproved{
+            background: $workFlowMsgwrkflwApprovedColor;
+            padding: $listPadding;
+          }
+          .wrkflwrejected{
+            background: $workFlowMsgwrkflwRejectColor;
+            padding: $listPadding;
+        }
+        
+        .wrkflwreturned{
+            background: $workFlowMsgwrkflwReturnColor;
+            padding: $listPadding;
+        }
+        
+        .wrkflwPending{
+            background: $workFlowMsgwrkflwPendingColor;
+            padding: $listPadding;
+        }
+        
+        .wrkflwreviewed{
+            background: $workFlowMsgwrkflwReviewedColor;
+            padding:$listPadding;
+        }
+        
+          .msglable {
+              .para{ 
+                @include workFlowPara;
+              }
+              .wrkflwicons{
+                font-size: $applicationFontSize;
+                color:$applicationBackgroundColor;
+                padding: $wrkflwiconsPadding;
+                top:$wrkflwiconsTop;
+                position: $wrkflwiconsPosition;
+              }
+          }
+      }
+      .ApprovalBar {
+        @include workFlowApprovalBar;
+      }
+      .circle{
+          @include workFlowCircle;
+      }
+      .workflow{
+          display: $workflowDisplay;
+          position: $workflowPosition;
+          .itemone{
+              @include workFlowHint;
+          }
+          .Pending{
+            background: $pendingStateBackgroundColor;
+            @include workFlowState;
+            &:before{
+                border-left: 14px solid $pendingStateBackgroundColor;
+                left: $workFlowArrowAfterLeftGap;
+                top: 0;
+            }
+            &:after{
+                @include arrowWorkFlowAfter;
+            }
+            &:before,&:after{
+                position: $workflowBeforeAfterPosition;
+                width: 0;
+            }
+            &:before{
+                border-bottom: 14px solid $applicationTransparent;
+                z-index: 1;
+            }
+            .para{
+                margin-top: -7px;
+                font-size: 11px;
+            }
+          }
+          .returned{
+            &:before{
+                border-bottom: 14px solid $applicationTransparent;
+                z-index: 1;
+            }
+          }
+          .approved{
+            background: $workFlowApproveStatus;
+            &:before{
+                @include arrowWorkFlowBefore;
+                border-left: 14px solid $workFlowApproveStatus;
+            }
+            &:after{
+                @include arrowWorkFlowAfter;
+            }
+            &:before,&:after{
+                position: $workflowApproveBeforeAfterPosition;
+                width: 0;
+                text-transform: capitalize;
+            }
+          }
+          .rejected{
+              background: $workFlowRejectedState;
+              &:before{
+                border-left: 14px solid $workFlowRejectedState;
+                @include arrowWorkFlowBefore;
+            }
+              &:after{
+                @include arrowWorkFlowAfter;
+            }
+            &:before,&:after{
+                position: $workflowRejectBeforeAfterPosition;
+                width: 0;
+                text-transform: capitalize;
+            }
+          }
+          .returned{
+              background: $workFlowReturnState;
+              &:before{
+                border-left: 14px solid $workFlowReturnState;
+                @include arrowWorkFlowBefore;
+            }
+              &:after{
+                @include arrowWorkFlowAfter;
+            }
+            &:before,&:after{
+                position: $workflowReturnedBeforeAfterPosition;
+                width: 0;
+                text-transform: capitalize;
+            }
+          }
+          .Pending,.approved,.rejected,.returned,.reviewed{
+            @include workFlowState;
+              &:before,&:after{
+                content: "";
+                border-top: 16px solid $applicationTransparent;
+              }
+          }
+      }
+      .dropbox,.icobtn{
+          display: inline-block;
+      }
+      .dropbox{
+          // margin-left: 20px;
+          // height: $workFlowStateHeight;
+         
+          .wfselectbox{
+            @include workFlowwfselectbox;
+            #selectbox{
+                // margin-left: $workFlowWfselectboxMarginLeft;
+                // margin-bottom: -1px;
+                @include btnRadius;
+                @include floatLeftmain;
+                @include listStyle;
+                //position: $pageOptionDropdownPositionAbsolute;
+                //display: none;
+                //font-style: $applicationDropdownListFontStyle;
+                background:$applicationBackgroundColor;
+                border: 1px solid $applicationBorderColor;
+                z-index: $pageOptionDropDownButtonZIndex;
+            }
+            ul{
+                li{
+                    //@include workFlowselectboxList;
+                    @include listPadding;
+                    cursor: pointer;
+                    color: $applicationTextColor;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    .btextDir-rtl &{
+                        @include textRight;
+                    }
+                }
+                li:hover{
+                    background-color: $workFlowWfselectboxBackground;
+                    text-decoration: none;
+                }
+            }
+          }
+      }
+      
+      .icobtn{
+          // width: 25px;
+          vertical-align: middle;
+          color: $applicationIconColor;
+          //padding-top: $workflowIconBtnPaddingTop;
+          margin-top:$workFlowIconMarginTop;
+          #btnViewCommts{
+            font-size: $workflowViewCommentIconFontSize;
+            cursor: $workFlowCursor;
+          }
+          &:focus{
+              outline: none;
+          }
+          button{
+              border:0px;
+              background: $applicationBackgroundColor;
+              @include shadow;
+              padding: $workFlowViewCommentButtonPadding;
+              &:focus{
+                  outline: none;
+              }
+              span{
+                font-size: $applicationFontSize;
+                position: $workflowIconBtnSpan;
+                top: $workFlowViewCommentButtonIconTopMargin;
+              }
+          }
+      }
+  }
+  #commentimp{
+      color: $compulsoryFieldStar;
+      margin-left: $compulsoryFieldStarMargin;
+  }
+  .consumergoodsworkflow{
+      &.panel-default{
+        .consumergoodsworkflow{
+            &.panel-heading{
+                background: $applicationBackgroundColor;
+                border:0px;
+            }
+        }
+      }
+  }
+  #tblWrk{
+    .table{
+      tr{
+        th{
+          color: $applicationTextColor;
+          font-weight: $workflowTableTdThFontWeight;
+          @include textCenter;
+        }
+        th,td{
+          padding: $workflowTableTdThPadding;
+          border: 1px solid $applicationGridDcTableBorderColor;
+          font-size: $workflowTableTdThFontSize;
+        }
+        &:focus{
+          outline: none;
+        }
+      }
+    }
+  }
+//* workFlow ================ *//

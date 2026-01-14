@@ -1,0 +1,29 @@
+//* developer work bench header ============================== *//
+  .developerworkbench{
+      .navbar{
+          @include textCenter;
+          @include border-radius(0px);
+          height: 30px;
+          margin-bottom: 0px;
+          .navbar-header {
+            .navbar-brand {
+                height: 30px;
+                padding-right: 0px;
+            }
+        }
+        .navbar-nav{
+            li{
+                a{
+                    padding:10px;
+                }
+            }
+        }
+        .developer-heading{
+            color: #fff;
+            font-size: 20px;
+            margin-top: 10px;
+            display: inline-block;
+        }
+      }
+  }
+//* developer work bench header ============================== *//

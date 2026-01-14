@@ -1,0 +1,13 @@
+#schemaBrwsr {
+    #dataView{
+        table{
+            &.dataTable{
+                tbody{
+                    th,td{
+                        padding: 8px 20px;
+                    }
+                }
+            }
+        }
+    }
+}

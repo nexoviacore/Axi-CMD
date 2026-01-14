@@ -1,0 +1,283 @@
+<head runat="server">
+    <title>Process Flow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../UI/axpertUI/style.bundle.css">
+    <link rel="stylesheet" href="../UI/axpertUI/plugins.bundle.css">
+    <link rel="stylesheet" href="../ThirdParty/fullcalendar/lib/main.min.css">
+    <link rel="stylesheet" href="../ThirdParty/jquery-confirm-master/jquery-confirm.min.css">
+    <link rel="stylesheet" href="../css/axpertUI_dashboard.min.css?v=5">
+</head>
+<body>
+    <div class="d-flex flex-column flex-root page-loading stay-page-loading">
+        <!--begin::Page-->
+        <div class="page d-flex flex-row flex-column-fluid">
+            <!--begin::Wrapper-->
+            <div class="wrapper d-flex flex-column flex-row-fluid position-relative bg-light">
+                <!-- Grouping Button -->
+                <div class="grouping-button-container">
+                    <button class="grouping-button" onclick="$.axpertUI_dashboard.dashboardGrouping.openCardGrouping()">
+                        <span class="material-icons">settings</span>
+                    </button>
+
+                </div>
+                <!--begin::Content-->
+                <div class="content fs-6 d-flex flex-column flex-column-fluid px-3 pt-5 pb-2" id="dvdashboard">
+                    <div class="cardsPageWrapper d-none">
+                        <div class="designer toolbar ms-5 pb-0 d-none">
+                            <div class="d-flex flex-stack flex-wrap flex-sm-nowrap">
+                                <!--begin::Info-->
+                                <div class="d-flex flex-column align-items-start justify-content-center flex-wrap me-2">
+                                    <!--begin::Title-->
+                                    <h1 class="text-dark fw-boldest my-1 fs-2">
+                                        Dashboard Cards Setting
+                                        <small class="text-muted fs-6 fw-normal ms-1"></small>
+                                    </h1>
+                                    <!--end::Title-->
+                                </div>
+                                <!--end::Info-->
+                                <!--begin::Actions-->
+                                <div class="d-flex align-items-center flex-nowrap text-nowrap py-1">
+                                    <a href="javascript:void(0);" class="editSaveCardDesign btn btn-icon btn-white btn-active-primary me-4" onclick="$.axpertUI_dashboard.dashboardcardsPage.editSaveCardDesignToggle();">
+                                        <span class="material-icons material-icons-style">
+                                            edit
+                                        </span>
+                                    </a>
+                                </div>
+                                <!--end::Actions-->
+                            </div>
+                        </div>
+
+
+                        <ul class="cardsDesigner card list-group d-none mt-6"></ul>
+                        <div class="cardsPlot mb-1">
+                            <!-- Customized for Activelist Homepage -->
+                            <div id="New-Landing-layout" class="row">
+                                <div class="cardsPlot mb-8 col-md-12" id="Homepage_CardsList">
+                                    <div class="row" id="Dashboard_CardsList_Wrapper">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- </div> -->
+
+                        <div class="d-none toolbar ms-5 pb-0">
+                            <div class="container-fluid d-flex flex-stack flex-wrap flex-sm-nowrap">
+                                <!--begin::Info-->
+                                <div class="d-flex flex-column align-items-start justify-content-center flex-wrap me-2">
+                                    <!--begin::Title-->
+                                    <h1 class="text-dark fw-boldest my-1 fs-2">
+                                        Cards
+                                        <small class="text-muted fs-6 fw-normal ms-1"></small>
+                                    </h1>
+                                    <!--end::Title-->
+                                    <!--begin::Breadcrumb-->
+                                    <ul class="breadcrumb fw-bold fs-base my-1 d-none">
+                                        <li class="breadcrumb-item text-muted">
+                                            <a href="/craft/index.html" class="text-muted text-hover-primary">Home</a>
+                                        </li>
+                                        <li class="breadcrumb-item text-muted">Dashboards</li>
+                                        <li class="breadcrumb-item text-dark">Default</li>
+                                    </ul>
+                                    <!--end::Breadcrumb-->
+                                </div>
+                                <!--end::Info-->
+                                <!--begin::Actions-->
+                                <div class="d-flex align-items-center flex-nowrap text-nowrap py-1">
+                                    <a href="javascript:void(0);" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary me-4" data-bs-toggle="modal" data-bs-target="#kt_modal_invite_friends">
+                                        <span class="material-icons material-icons-style">
+                                            edit
+                                        </span>
+                                    </a>
+                                </div>
+                                <!--end::Actions-->
+                            </div>
+                        </div>
+
+                        <!--begin::Container-->
+                        <div class="d-none container">
+                            <!--begin::Row-->
+                            <div class="row">
+                            </div>
+                        </div>
+                        <!--end::Container-->
+
+                    </div>
+                    <!--end::Content-->
+                </div>
+                <!--end::Wrapper-->
+            </div>
+            <!--end::Page-->
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel">Confirm</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Apply this change for?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btnAllUsers">All Users</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btnJustMyself">Myself</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="groupingModal" tabindex="-1" aria-labelledby="groupingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="groupingModalLabel">Cards Grouping Configuration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="grid-container">
+                        <div class="grid-header">
+                            <div>S.No</div>
+                            <div>Group Name</div>
+                            <div>Charts selection</div>
+                            <div>Order No.</div>
+                            <div></div>
+                        </div>
+                        <div id="grid-body" class="scrollable-grid-body"></div>
+                        <button class="add-btn" onclick="$.axpertUI_dashboard.dashboardGrouping.addCardGroupingRow()">Add Row</button>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex flex-row justify-content-between w-100">
+                    <div class="action_buttons d-inline-flex gap-2">
+                        <button type="button" onclick="$.axpertUI_dashboard.dashboardGrouping.resetCardGrouping()"
+                                class="btn btn-white btn-sm">
+                            Reset
+                        </button>
+                        <button type="button" onclick="$.axpertUI_dashboard.dashboardGrouping.validateAndSubmit()" class="btn btn-primary">Apply</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="text/javascript" src="../UI/axpertUI/plugins.bundle.js"></script>
+    <script type="text/javascript" src="../UI/axpertUI/scripts.bundle.js"></script>
+    <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../Js/alerts.min.js"></script>
+    <script type="text/javascript" src="../Js/helper.min.js?v=172"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=158"></script>
+    <script type="text/javascript" src="../ThirdParty/lodash.min.js?v=1"></script>
+    <script type="text/javascript" src="../ThirdParty/deepdash.min.js"></script>
+    <script type="text/javascript" src="../Js/handlebars.min.js?v=2"></script>
+    <script type="text/javascript" src="../Js/handleBarsHelpers.min.js"></script>
+    <script type="text/javascript" src="../Js/AxInterface.min.js?v=16"></script>
+    <script type="text/javascript" src="../ThirdParty/Highcharts/highcharts.js"></script>
+    <script type="text/javascript" src="../ThirdParty/Highcharts/highcharts-3d.js"></script>
+    <script type="text/javascript" src="../ThirdParty/Highcharts/highcharts-more.js"></script>
+    <script type="text/javascript" src="../ThirdParty/Highcharts/highcharts-exporting.js"></script>
+    <script type="text/javascript" src="../Js/high-charts-functions.min.js?v=23"></script>
+    <script type="text/javascript" src="../ThirdParty/DataTables-1.10.13/media/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="../ThirdParty/DataTables-1.10.13/media/js/dataTables.bootstrap.js"></script>
+    <script type="text/javascript" src="../ThirdParty/DataTables-1.10.13/extensions/Extras/moment.min.js"></script>
+    <script type="text/javascript" src="../ThirdParty/fullcalendar/lib/main.min.js"></script>
+    <script type="text/javascript" src="../Js/Entity-common.min.js?v=14"></script>
+    <script type="text/javascript" src="../Js/axpertUI_dashboard.min.js?v=9"></script>
+
+    <script type="text/javascript">
+        var _entityCommon = new EntityCommon();
+        $(document).ready(function () {
+            ShowDimmer(true);
+            deepdash(_);
+            var enableMasonry = false;
+
+            try {
+                var dashcardsData = "";
+                var cardsDesign = "";
+                $.ajax({
+                    url: 'processflow.aspx/GetDashBoardCardsData',
+                    type: 'POST',
+                    cache: false,
+                    async: false,
+                    dataType: 'json',
+                    contentType: "application/json",
+                    success: function (data) {
+                        if (data && data.d) {
+                            if (data.d !== "" && data.d.indexOf("SESSION_TIMEOUT") > -1) {
+                                window.location.href = "../aspx/sess.aspx";
+                                return;
+                            }
+
+
+                            let _dbcards = data.d;
+                            dashcardsData = _dbcards.split('♦')[0];
+                            cardsDesign = _dbcards.split('♦')[1];
+                        }
+                    },
+                    error: function (error) {
+                        //debugger;
+                    }
+                });
+                if (dashcardsData == "") {
+                    showAlertDialog("error", "No dashboard cards available.");
+                    return;
+                }
+                appGlobalVarsObject._CONSTANTS.dashboardcardsPage = {
+                    setCards: false,
+                    cards: []
+                }
+                appGlobalVarsObject._CONSTANTS.dashboardcardsPage = $.extend(true, {},
+                    appGlobalVarsObject._CONSTANTS.dashboardcardsPage, {
+                    setCards: true,
+                    cards: (JSON.parse(dashcardsData !== "" ? ReverseCheckSpecialChars(dashcardsData) : "[]", function (k, v) {
+                        try {
+                            return (typeof v === "object" || isNaN(v) || v.toString().trim() === "") ? v : (typeof v == "string" && (v.startsWith("0") || v.startsWith("-")) ? parseFloat(v, 10) : JSON.parse(v));
+                        } catch (ex) {
+                            return v;
+                        }
+                    }) || []).map(arr => _.mapKeys(arr, (value, key) => key.toString().toLowerCase())),
+                    design: (JSON.parse(cardsDesign !== "" ? cardsDesign : "[]",
+                        function (k, v) {
+                            try {
+                                return (typeof v === "object" || isNaN(v) || v.toString().trim() === "") ? v : (typeof v == "string" && (v.startsWith("0") || v.startsWith("-")) ? parseFloat(v, 10) : JSON.parse(v));
+                            } catch (ex) {
+                                return v;
+                            }
+                        }
+                    ) || []).map(arr => _.mapKeys(arr, (value, key) => key.toString().toLowerCase())),
+                    enableMasonry: enableMasonry,
+                    staging: {
+                        cardsFrame: {
+                            div: ".cardsPageWrapper",
+                            cardsDiv: "#Dashboard_CardsList_Wrapper",
+                            cardsDesigner: ".cardsDesigner",
+                            cardsDesignerToolbar: ".designer",
+                            editSaveButton: ".editSaveCardDesign",
+                            icon: "span.material-icons",
+                            divControl: "#arrangeCards"
+                        },
+                    }
+                });
+                ShowDimmer(false);
+            } catch (ex) { }
+
+            try {
+                var lcm = appGlobalVarsObject.lcm;
+                var tempaxpertUIObj = $.axpertUI_dashboard
+                    .init({
+                        dashboardcardsPage: appGlobalVarsObject._CONSTANTS
+                            .dashboardcardsPage
+                    });
+
+                appGlobalVarsObject._CONSTANTS.dashboardcardsPage = tempaxpertUIObj.dashboardcardsPage;
+
+            } catch (ex) { }
+        });
+    </script>
+</body>
+

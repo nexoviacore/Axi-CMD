@@ -1,0 +1,40 @@
+//* animation Laoding=====*//
+@mixin animationLoader{
+    display: $animationLoaderDisplay;
+    position: $animationLoaderPosition;
+    top: $applicationAnimationLoaderTopGap;
+    height: $applicationAnimationLoaderHeight;
+    z-index: 3;
+}
+@mixin animationLoaderEffect{
+    -webkit-animation: $applicationAnimationLoaderEffetct;
+    -moz-animation: $applicationAnimationLoaderEffetct;
+    -o-animation: $applicationAnimationLoaderEffetct;
+    animation: $applicationAnimationLoaderEffetct;
+}
+@mixin animationLoaderBorder{
+    -webkit-border-radius: $applicationBorderRadius;
+    -moz-border-radius: $applicationBorderRadius;
+    border-radius: $applicationBorderRadius;
+}
+@mixin animationLoaderBackground{
+    background: $applicationLoaderBackground;
+    background-image: linear-gradient(to right, $applicationLoaderBackground 0%, $applicationLoaderBackgroundSecond 20%, $applicationLoaderBackground 40%, $applicationLoaderBackground 100%);
+    background-repeat: no-repeat;
+}
+@mixin pageLoaderImg{
+    background: url(../Axpimages/loadingBars.gif) center center no-repeat rgba(255, 255, 255, 0.4); 
+    background-size: 135px;
+}
+@mixin loaderFixedPoisionMiddel {
+    position: $loaderFixedPoisionMiddelPosition;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    z-index: $loaderFixedPoisionMiddelZIndex;
+}
+//* animation Laoding=====*//

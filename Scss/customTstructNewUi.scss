@@ -1,0 +1,78 @@
+// Note: Please compile this file only if custom variables are added and updated as per customization requirement from "_formsVariables.scss" to "_customFormsVariables.scss" file or from "_genericVariables.scss" to "_customGenericVariables.scss" file as per the customization requirement, then only compile "customTstructNewUi.scss" using "EasySass" Extension for "Visual Studio Code" Editor.
+
+
+//* materialui mixin ==================================== *//
+@import 'materialUI/_mixins';
+//* Global Variable ==================================== *//
+@import '_variables/_genericVariables';
+@import '_variables/_customGenericVariables';
+
+@import '_variables/_globalVariable';
+
+@import '_variables/_formsVariables';
+@import '_variables/_customFormsVariables';
+//* iview mixin ==================================== *//
+@import '_mixins/_globalMixin';
+//* iview pageOptionColumns ==================================== *//
+@import 'iviewUI/_pageToolbarOptionTitle';
+//* iview  pagetoolbarOptionSort==================================== *//
+@import 'iviewUI/_pageToolbarOptionSort';
+//* iview  pagetoolbarOptionRowGrouping==================================== *//
+@import 'iviewUI/_pageToolbarOptionRowGrouping';
+//* page toolbar ==================================== *//
+@import 'tstructUI/_tstructToolbar';
+//* page Title ==================================== *//
+@import 'iviewUI/_pageTitle';
+//* page Table ==================================== *//
+@import 'materialUI/_tables';
+//* tstruct Field Table ==================================== *//
+@import 'tstructUI/_tstructFieldTable';
+//* popOver ==================================== *//
+@import 'iviewUI/_popOver';
+//* page iframe loder (tstruct and iview) ==================================== *//
+@import 'iviewUI/_pageLoader';
+//* autocomplete ==================================== *//
+@import 'tstructUI/_autoComplete';
+//*Non GirdDc ==========*//
+@import 'tstructUI/_formTab';
+//*Non GirdDc ==========*//
+@import 'tstructUI/_nonGridDc';
+//*GirdDc ==========*//
+@import 'tstructUI/_gridDc';
+//*tstruct form ==========*//
+@import 'tstructUI/_tstructMaterialForm.scss';
+//*tstruct footer ==========*//
+@import 'tstructUI/_tstructFooter.scss';
+//*WorkFlow ==========*//
+@import 'tstructUI/_workFlow';      
+//*WorkFlow ==========*//
+//*WizardDc ==========*//
+//@import 'tstructUI/_wizardDc';  
+//*GirdDc ==========*//
+@import 'tstructUI/_designMode';
+//*pageToolBarSearch ==========*//
+@import 'tstructUI/_pageToolBarSearch';
+//*modal Box ==========*//
+@import 'tstructUI/_pageModalBox';
+//*MultiGroupSelect ==========*//
+@import 'tstructUI/_multiGroupSelect';
+
+@import 'tstructUI/_pageFooter';
+// page info  leave request form page================
+@import 'tstructUI/_page-info';
+
+//*advance search for tstruct ==========*//
+@import 'tstructUI/_advSearch';
+//* developer work bench html pages ============================== *//
+@import 'developerWorkBench/_htmlPages';
+//* Modern Button option ==================================== *//
+@import 'generic/_pageToolbarButtons';
+
+//* Excel grid Import ==================================== *//
+@import 'tstructUI/_excelImportGrid';
+//*page form  ==================================== *//
+@import 'generic/_pageForm';
+//*tstruct signature pad ==================================== *//
+@import 'tstructUI/_signaturePad';
+//*tstruct bar code - qr code scan ==================================== *//
+@import 'tstructUI/_barQrCodeScan';

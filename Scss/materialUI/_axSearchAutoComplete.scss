@@ -1,0 +1,47 @@
+.cutsomautocomplete {
+    /*min-height: 50px !important;*/
+    max-height: $applicationMainPageCustomAutoCompleteSearchMaxHeight !important;
+    height: auto !important;
+    padding-bottom: 1px;
+    overflow: auto;
+    // height: 300px;
+    // display: block !important;
+}
+
+.ui-autocomplete.ui-widget {
+    font-family: 'Lato', sans-serif !important;
+    text-rendering: optimizeLegibility !important;
+    -webkit-font-smoothing: antialiased !important;
+    font-size: $applicationMainPageCustomAutoCompleteSearchListFontSize;
+}
+
+.ui-menu-item {
+margin: $applicationMainPageCustomAutoCompleteSearchListItemMargin;
+.gblSearch{
+    position: $applicationMainPageCustomAutoCompleteSearchListItemTextPositionRelative;
+    top: $applicationMainPageCustomAutoCompleteSearchListItemTextTopGap;
+    left: $applicationMainPageCustomAutoCompleteSearchListItemTextLeftGap;
+}
+}
+
+.ui-menu{
+    .ui-menu-item-wrapper{
+        padding: $applicationMainPageCustomAutoCompleteSearchListUiMenuItemWrapperPadding;
+    }
+}
+
+.ui-autocomplete .ui-state-active {
+    // color: #0073ea !important;
+    color: $applicationColor;
+    width: 100%;
+    background: $applicationMainPageSearchListHoverBackgroundColor;
+    font-size: larger;
+}
+
+span.menuBgIcon {
+    display: $applicationMainPageMenuBgIconDisplayInline;
+    width: $applicationMainPageMenuBgIconWidth;
+    height: $applicationMainPageMenuBgIconHeight;
+    margin: $applicationMainPageMenuBgIconMargin;
+    // margin-left: 10px
+}

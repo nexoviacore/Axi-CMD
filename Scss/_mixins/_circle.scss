@@ -1,0 +1,12 @@
+//* WorkFlowcircle  ==================================== *//
+@mixin workFlowCircle {
+    display: $workFlowCircleDisplay;
+    background-color:$hotbtnbackgroundcolor;
+    color: $workFlowIconColor;
+    border-radius: $applicationCircleBorderRadius;
+    padding: $workFlowPadding;
+    font-size: $applicationFontSize;
+    position: $workFlowCirclePosition;
+    top: $workFlowCircleTopMargin;
+}
+//* WorkFlowcircle  ==================================== *//

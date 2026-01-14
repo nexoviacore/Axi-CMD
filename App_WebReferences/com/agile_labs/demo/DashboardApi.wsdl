@@ -1,0 +1,2475 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://tempuri.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://tempuri.org/">
+      <s:element name="ivnGetImplicitFilterDetails">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="ImplicitFilterName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetImplicitFilterDetailsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetImplicitFilterDetailsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnSetAuthorPermission">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="GroupID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="UserID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnSetAuthorPermissionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnSetAuthorPermissionResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnSetResourcePermission">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="GroupID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ResourceID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ResourceType" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnSetResourcePermissionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnSetResourcePermissionResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetResourcePermission">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="GroupID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ResourceType" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetResourcePermissionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetResourcePermissionResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnSetReportPermission">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="GroupID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="UserID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="Permission" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnSetReportPermissionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnSetReportPermissionResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetReportPermission">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="GroupID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="UserID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetReportPermissionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetReportPermissionResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetFilterDetails">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="FilterType" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ValuesSet" type="s:boolean" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetFilterDetailsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetFilterDetailsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetFilterValues">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="FilterName" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="FilterType" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetFilterValuesResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetFilterValuesResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetFilterValuesByDataTable">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="FilterName" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="FilterType" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetFilterValuesByDataTableResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetFilterValuesByDataTableResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnSetFilterValues">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="FilterValuesXML" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnSetFilterValuesResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnSetFilterValuesResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetUIElementStatus">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="UIElementType" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetUIElementStatusResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetUIElementStatusResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnSetUIElementStatus">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="UIElementType" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="Status" type="s:boolean" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnSetUIElementStatusResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnSetUIElementStatusResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetReportDetails">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="ReportName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetReportDetailsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetReportDetailsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetSubReportDetails">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetSubReportDetailsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetSubReportDetailsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetWidgetDetails">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="SubReportName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetWidgetDetailsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetWidgetDetailsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnShowWidget">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="SubReportName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="WidgetName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="ExtraParam" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnShowWidgetResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnShowWidgetResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnShowReport">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="SubReportName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="ExtraParam" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnShowReportResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnShowReportResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnExportReport">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="SubReportName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="WidgetName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="ExportFormat" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnExportReportResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnExportReportResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnSetUserPermission">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="GroupID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="UserID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="PermissionType" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="SetResetFlag" type="s:boolean" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnSetUserPermissionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnSetUserPermissionResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetCompanyDetails">
+        <s:complexType />
+      </s:element>
+      <s:element name="GetCompanyDetailsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetCompanyDetailsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetCompanyDetailsExt">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetCompanyDetailsExtResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetCompanyDetailsExtResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetReportFilters">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="reportID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="userID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetReportFiltersResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetReportFiltersResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetReportFiltersExt">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="reportID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="userID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetReportFiltersExtResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetReportFiltersExtResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetReportLayouts">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="reportID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="userID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetReportLayoutsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetReportLayoutsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetReportLayoutsExt">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="reportID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="userID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetReportLayoutsExtResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetReportLayoutsExtResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetReportList">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="reportType" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="userID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetReportListResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetReportListResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetReportListExt">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="reportType" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="userID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetReportListExtResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetReportListExtResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="InitializeSession">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="companyShortName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="InitializeSessionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="InitializeSessionResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="InitializeSessionExt">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="companyShortName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="InitializeSessionExtResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="InitializeSessionExtResult" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="EndSession">
+        <s:complexType />
+      </s:element>
+      <s:element name="EndSessionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="EndSessionResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ShowDashboard">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="dashboardID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="filterId" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="layoutID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="RoleType" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="userID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="filters" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ShowDashboardResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ShowDashboardResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ShowDashboardExt">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="dashboardID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="filterId" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="layoutID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="RoleType" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="userID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="filters" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ShowDashboardExtResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ShowDashboardExtResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnInitializeSession">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="CompanyShortName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="UserName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="Password" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="Timeout" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="AuthType" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ApplicationType" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="Language" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="ExtraParam" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnInitializeSessionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnInitializeSessionResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnCloseSession">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="UserName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="Password" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnCloseSessionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnCloseSessionResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnCreateCompany">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="CompanyShortName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="CompanyName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="CompanyDescription" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="CompanyWebURL" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="AdminUserXML" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="ExtraParam" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnCreateCompanyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnCreateCompanyResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnUpdateCompany">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="CompanyDescription" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyActiveStatus" type="s:boolean" />
+            <s:element minOccurs="0" maxOccurs="1" name="ExtraParam" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnUpdateCompanyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnUpdateCompanyResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetCompanyDetails">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="CompanyShortName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetCompanyDetailsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetCompanyDetailsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetCompanyDetailsByID">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetCompanyDetailsByIDResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetCompanyDetailsByIDResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetAllCompanyDetails">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetAllCompanyDetailsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetAllCompanyDetailsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnCreateConnection">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="ConnectionName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="ConnectionType" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="DatabaseServer" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="DatabasePort" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="DatabaseName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="DatabaseUser" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="DatabasePassword" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="AuthenticationMethod" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnCreateConnectionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnCreateConnectionResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnUpdateConnection">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ConnectionID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="ConnectionType" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="DatabaseServer" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="DatabasePort" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="DatabaseName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="DatabaseUser" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="DatabasePassword" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="AuthenticationMethod" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnUpdateConnectionResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnUpdateConnectionResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetConnectionDetails">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="ConnectionName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetConnectionDetailsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetConnectionDetailsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnCreateDataModel">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="DataModelName" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="ConnectionID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ScheduleRefreshTimeOption" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="TimeOut" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="DataModelType" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="DataModelQuery" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnCreateDataModelResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnCreateDataModelResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnUpdateDataModel">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="DataModelID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ScheduleRefreshTimeOption" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="TimeOut" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="DataModelQuery" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnUpdateDataModelResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnUpdateDataModelResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetDataModelDetails">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ConnectionID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="DataModelID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetDataModelDetailsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetDataModelDetailsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetDataModelFields">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="DataModelID" type="s:int" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetDataModelFieldsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetDataModelFieldsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnCreateUser">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="UserName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="Password" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="FirstName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="LastName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="EmailID" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="Department" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="PhoneNo" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="GroupNameList" type="tns:ArrayOfString" />
+            <s:element minOccurs="1" maxOccurs="1" name="AdminUser" type="s:boolean" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ArrayOfString">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="string" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ivnCreateUserResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnCreateUserResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnUpdateUser">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="UserID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="Password" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="FirstName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="LastName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="EmailID" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="Department" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="PhoneNo" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="GroupNameList" type="tns:ArrayOfString" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnUpdateUserResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnUpdateUserResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetUserDetails">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="GroupName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="UserName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetUserDetailsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetUserDetailsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnCreateGroup">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="GroupName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="GroupDescription" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="UserNameList" type="tns:ArrayOfString" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnCreateGroupResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnCreateGroupResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnUpdateGroup">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="GroupID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="GroupDescription" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="UserNameList" type="tns:ArrayOfString" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnUpdateGroupResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnUpdateGroupResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetGroupDetails">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="GroupName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnGetGroupDetailsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnGetGroupDetailsResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnCreateImplicitFilter">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="ImplicitFilterName" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="ImplicitFilterDesc" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="DataModelID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="ImplicitFilterXML" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnCreateImplicitFilterResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnCreateImplicitFilterResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnUpdateImplicitFilter">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SessionToken" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="CompanyID" type="s:int" />
+            <s:element minOccurs="1" maxOccurs="1" name="ImplicitFilterID" type="s:int" />
+            <s:element minOccurs="0" maxOccurs="1" name="ImplicitFilterDesc" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="ImplicitFilterXML" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ivnUpdateImplicitFilterResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ivnUpdateImplicitFilterResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="ivnGetImplicitFilterDetailsSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetImplicitFilterDetails" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetImplicitFilterDetailsSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetImplicitFilterDetailsResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnSetAuthorPermissionSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnSetAuthorPermission" />
+  </wsdl:message>
+  <wsdl:message name="ivnSetAuthorPermissionSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnSetAuthorPermissionResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnSetResourcePermissionSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnSetResourcePermission" />
+  </wsdl:message>
+  <wsdl:message name="ivnSetResourcePermissionSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnSetResourcePermissionResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetResourcePermissionSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetResourcePermission" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetResourcePermissionSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetResourcePermissionResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnSetReportPermissionSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnSetReportPermission" />
+  </wsdl:message>
+  <wsdl:message name="ivnSetReportPermissionSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnSetReportPermissionResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetReportPermissionSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetReportPermission" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetReportPermissionSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetReportPermissionResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetFilterDetailsSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetFilterDetails" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetFilterDetailsSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetFilterDetailsResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetFilterValuesSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetFilterValues" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetFilterValuesSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetFilterValuesResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetFilterValuesByDataTableSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetFilterValuesByDataTable" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetFilterValuesByDataTableSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetFilterValuesByDataTableResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnSetFilterValuesSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnSetFilterValues" />
+  </wsdl:message>
+  <wsdl:message name="ivnSetFilterValuesSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnSetFilterValuesResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetUIElementStatusSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetUIElementStatus" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetUIElementStatusSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetUIElementStatusResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnSetUIElementStatusSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnSetUIElementStatus" />
+  </wsdl:message>
+  <wsdl:message name="ivnSetUIElementStatusSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnSetUIElementStatusResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetReportDetailsSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetReportDetails" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetReportDetailsSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetReportDetailsResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetSubReportDetailsSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetSubReportDetails" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetSubReportDetailsSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetSubReportDetailsResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetWidgetDetailsSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetWidgetDetails" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetWidgetDetailsSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetWidgetDetailsResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnShowWidgetSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnShowWidget" />
+  </wsdl:message>
+  <wsdl:message name="ivnShowWidgetSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnShowWidgetResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnShowReportSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnShowReport" />
+  </wsdl:message>
+  <wsdl:message name="ivnShowReportSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnShowReportResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnExportReportSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnExportReport" />
+  </wsdl:message>
+  <wsdl:message name="ivnExportReportSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnExportReportResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnSetUserPermissionSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnSetUserPermission" />
+  </wsdl:message>
+  <wsdl:message name="ivnSetUserPermissionSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnSetUserPermissionResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetCompanyDetailsSoapIn">
+    <wsdl:part name="parameters" element="tns:GetCompanyDetails" />
+  </wsdl:message>
+  <wsdl:message name="GetCompanyDetailsSoapOut">
+    <wsdl:part name="parameters" element="tns:GetCompanyDetailsResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetCompanyDetailsExtSoapIn">
+    <wsdl:part name="parameters" element="tns:GetCompanyDetailsExt" />
+  </wsdl:message>
+  <wsdl:message name="GetCompanyDetailsExtSoapOut">
+    <wsdl:part name="parameters" element="tns:GetCompanyDetailsExtResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetReportFiltersSoapIn">
+    <wsdl:part name="parameters" element="tns:GetReportFilters" />
+  </wsdl:message>
+  <wsdl:message name="GetReportFiltersSoapOut">
+    <wsdl:part name="parameters" element="tns:GetReportFiltersResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetReportFiltersExtSoapIn">
+    <wsdl:part name="parameters" element="tns:GetReportFiltersExt" />
+  </wsdl:message>
+  <wsdl:message name="GetReportFiltersExtSoapOut">
+    <wsdl:part name="parameters" element="tns:GetReportFiltersExtResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetReportLayoutsSoapIn">
+    <wsdl:part name="parameters" element="tns:GetReportLayouts" />
+  </wsdl:message>
+  <wsdl:message name="GetReportLayoutsSoapOut">
+    <wsdl:part name="parameters" element="tns:GetReportLayoutsResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetReportLayoutsExtSoapIn">
+    <wsdl:part name="parameters" element="tns:GetReportLayoutsExt" />
+  </wsdl:message>
+  <wsdl:message name="GetReportLayoutsExtSoapOut">
+    <wsdl:part name="parameters" element="tns:GetReportLayoutsExtResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetReportListSoapIn">
+    <wsdl:part name="parameters" element="tns:GetReportList" />
+  </wsdl:message>
+  <wsdl:message name="GetReportListSoapOut">
+    <wsdl:part name="parameters" element="tns:GetReportListResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetReportListExtSoapIn">
+    <wsdl:part name="parameters" element="tns:GetReportListExt" />
+  </wsdl:message>
+  <wsdl:message name="GetReportListExtSoapOut">
+    <wsdl:part name="parameters" element="tns:GetReportListExtResponse" />
+  </wsdl:message>
+  <wsdl:message name="InitializeSessionSoapIn">
+    <wsdl:part name="parameters" element="tns:InitializeSession" />
+  </wsdl:message>
+  <wsdl:message name="InitializeSessionSoapOut">
+    <wsdl:part name="parameters" element="tns:InitializeSessionResponse" />
+  </wsdl:message>
+  <wsdl:message name="InitializeSessionExtSoapIn">
+    <wsdl:part name="parameters" element="tns:InitializeSessionExt" />
+  </wsdl:message>
+  <wsdl:message name="InitializeSessionExtSoapOut">
+    <wsdl:part name="parameters" element="tns:InitializeSessionExtResponse" />
+  </wsdl:message>
+  <wsdl:message name="EndSessionSoapIn">
+    <wsdl:part name="parameters" element="tns:EndSession" />
+  </wsdl:message>
+  <wsdl:message name="EndSessionSoapOut">
+    <wsdl:part name="parameters" element="tns:EndSessionResponse" />
+  </wsdl:message>
+  <wsdl:message name="ShowDashboardSoapIn">
+    <wsdl:part name="parameters" element="tns:ShowDashboard" />
+  </wsdl:message>
+  <wsdl:message name="ShowDashboardSoapOut">
+    <wsdl:part name="parameters" element="tns:ShowDashboardResponse" />
+  </wsdl:message>
+  <wsdl:message name="ShowDashboardExtSoapIn">
+    <wsdl:part name="parameters" element="tns:ShowDashboardExt" />
+  </wsdl:message>
+  <wsdl:message name="ShowDashboardExtSoapOut">
+    <wsdl:part name="parameters" element="tns:ShowDashboardExtResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnInitializeSessionSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnInitializeSession" />
+  </wsdl:message>
+  <wsdl:message name="ivnInitializeSessionSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnInitializeSessionResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnCloseSessionSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnCloseSession" />
+  </wsdl:message>
+  <wsdl:message name="ivnCloseSessionSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnCloseSessionResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnCreateCompanySoapIn">
+    <wsdl:part name="parameters" element="tns:ivnCreateCompany" />
+  </wsdl:message>
+  <wsdl:message name="ivnCreateCompanySoapOut">
+    <wsdl:part name="parameters" element="tns:ivnCreateCompanyResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnUpdateCompanySoapIn">
+    <wsdl:part name="parameters" element="tns:ivnUpdateCompany" />
+  </wsdl:message>
+  <wsdl:message name="ivnUpdateCompanySoapOut">
+    <wsdl:part name="parameters" element="tns:ivnUpdateCompanyResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetCompanyDetailsSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetCompanyDetails" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetCompanyDetailsSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetCompanyDetailsResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetCompanyDetailsByIDSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetCompanyDetailsByID" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetCompanyDetailsByIDSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetCompanyDetailsByIDResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetAllCompanyDetailsSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetAllCompanyDetails" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetAllCompanyDetailsSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetAllCompanyDetailsResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnCreateConnectionSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnCreateConnection" />
+  </wsdl:message>
+  <wsdl:message name="ivnCreateConnectionSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnCreateConnectionResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnUpdateConnectionSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnUpdateConnection" />
+  </wsdl:message>
+  <wsdl:message name="ivnUpdateConnectionSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnUpdateConnectionResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetConnectionDetailsSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetConnectionDetails" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetConnectionDetailsSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetConnectionDetailsResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnCreateDataModelSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnCreateDataModel" />
+  </wsdl:message>
+  <wsdl:message name="ivnCreateDataModelSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnCreateDataModelResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnUpdateDataModelSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnUpdateDataModel" />
+  </wsdl:message>
+  <wsdl:message name="ivnUpdateDataModelSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnUpdateDataModelResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetDataModelDetailsSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetDataModelDetails" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetDataModelDetailsSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetDataModelDetailsResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetDataModelFieldsSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetDataModelFields" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetDataModelFieldsSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetDataModelFieldsResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnCreateUserSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnCreateUser" />
+  </wsdl:message>
+  <wsdl:message name="ivnCreateUserSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnCreateUserResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnUpdateUserSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnUpdateUser" />
+  </wsdl:message>
+  <wsdl:message name="ivnUpdateUserSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnUpdateUserResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetUserDetailsSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetUserDetails" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetUserDetailsSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetUserDetailsResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnCreateGroupSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnCreateGroup" />
+  </wsdl:message>
+  <wsdl:message name="ivnCreateGroupSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnCreateGroupResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnUpdateGroupSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnUpdateGroup" />
+  </wsdl:message>
+  <wsdl:message name="ivnUpdateGroupSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnUpdateGroupResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetGroupDetailsSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnGetGroupDetails" />
+  </wsdl:message>
+  <wsdl:message name="ivnGetGroupDetailsSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnGetGroupDetailsResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnCreateImplicitFilterSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnCreateImplicitFilter" />
+  </wsdl:message>
+  <wsdl:message name="ivnCreateImplicitFilterSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnCreateImplicitFilterResponse" />
+  </wsdl:message>
+  <wsdl:message name="ivnUpdateImplicitFilterSoapIn">
+    <wsdl:part name="parameters" element="tns:ivnUpdateImplicitFilter" />
+  </wsdl:message>
+  <wsdl:message name="ivnUpdateImplicitFilterSoapOut">
+    <wsdl:part name="parameters" element="tns:ivnUpdateImplicitFilterResponse" />
+  </wsdl:message>
+  <wsdl:portType name="DashboardApiSoap">
+    <wsdl:operation name="ivnGetImplicitFilterDetails">
+      <wsdl:input message="tns:ivnGetImplicitFilterDetailsSoapIn" />
+      <wsdl:output message="tns:ivnGetImplicitFilterDetailsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetAuthorPermission">
+      <wsdl:input message="tns:ivnSetAuthorPermissionSoapIn" />
+      <wsdl:output message="tns:ivnSetAuthorPermissionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetResourcePermission">
+      <wsdl:input message="tns:ivnSetResourcePermissionSoapIn" />
+      <wsdl:output message="tns:ivnSetResourcePermissionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetResourcePermission">
+      <wsdl:input message="tns:ivnGetResourcePermissionSoapIn" />
+      <wsdl:output message="tns:ivnGetResourcePermissionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetReportPermission">
+      <wsdl:input message="tns:ivnSetReportPermissionSoapIn" />
+      <wsdl:output message="tns:ivnSetReportPermissionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetReportPermission">
+      <wsdl:input message="tns:ivnGetReportPermissionSoapIn" />
+      <wsdl:output message="tns:ivnGetReportPermissionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetFilterDetails">
+      <wsdl:input message="tns:ivnGetFilterDetailsSoapIn" />
+      <wsdl:output message="tns:ivnGetFilterDetailsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetFilterValues">
+      <wsdl:input message="tns:ivnGetFilterValuesSoapIn" />
+      <wsdl:output message="tns:ivnGetFilterValuesSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetFilterValuesByDataTable">
+      <wsdl:input message="tns:ivnGetFilterValuesByDataTableSoapIn" />
+      <wsdl:output message="tns:ivnGetFilterValuesByDataTableSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetFilterValues">
+      <wsdl:input message="tns:ivnSetFilterValuesSoapIn" />
+      <wsdl:output message="tns:ivnSetFilterValuesSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetUIElementStatus">
+      <wsdl:input message="tns:ivnGetUIElementStatusSoapIn" />
+      <wsdl:output message="tns:ivnGetUIElementStatusSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetUIElementStatus">
+      <wsdl:input message="tns:ivnSetUIElementStatusSoapIn" />
+      <wsdl:output message="tns:ivnSetUIElementStatusSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetReportDetails">
+      <wsdl:input message="tns:ivnGetReportDetailsSoapIn" />
+      <wsdl:output message="tns:ivnGetReportDetailsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetSubReportDetails">
+      <wsdl:input message="tns:ivnGetSubReportDetailsSoapIn" />
+      <wsdl:output message="tns:ivnGetSubReportDetailsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetWidgetDetails">
+      <wsdl:input message="tns:ivnGetWidgetDetailsSoapIn" />
+      <wsdl:output message="tns:ivnGetWidgetDetailsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnShowWidget">
+      <wsdl:input message="tns:ivnShowWidgetSoapIn" />
+      <wsdl:output message="tns:ivnShowWidgetSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnShowReport">
+      <wsdl:input message="tns:ivnShowReportSoapIn" />
+      <wsdl:output message="tns:ivnShowReportSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnExportReport">
+      <wsdl:input message="tns:ivnExportReportSoapIn" />
+      <wsdl:output message="tns:ivnExportReportSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetUserPermission">
+      <wsdl:input message="tns:ivnSetUserPermissionSoapIn" />
+      <wsdl:output message="tns:ivnSetUserPermissionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetCompanyDetails">
+      <wsdl:input message="tns:GetCompanyDetailsSoapIn" />
+      <wsdl:output message="tns:GetCompanyDetailsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetCompanyDetailsExt">
+      <wsdl:input message="tns:GetCompanyDetailsExtSoapIn" />
+      <wsdl:output message="tns:GetCompanyDetailsExtSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetReportFilters">
+      <wsdl:input message="tns:GetReportFiltersSoapIn" />
+      <wsdl:output message="tns:GetReportFiltersSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetReportFiltersExt">
+      <wsdl:input message="tns:GetReportFiltersExtSoapIn" />
+      <wsdl:output message="tns:GetReportFiltersExtSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetReportLayouts">
+      <wsdl:input message="tns:GetReportLayoutsSoapIn" />
+      <wsdl:output message="tns:GetReportLayoutsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetReportLayoutsExt">
+      <wsdl:input message="tns:GetReportLayoutsExtSoapIn" />
+      <wsdl:output message="tns:GetReportLayoutsExtSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetReportList">
+      <wsdl:input message="tns:GetReportListSoapIn" />
+      <wsdl:output message="tns:GetReportListSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetReportListExt">
+      <wsdl:input message="tns:GetReportListExtSoapIn" />
+      <wsdl:output message="tns:GetReportListExtSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="InitializeSession">
+      <wsdl:input message="tns:InitializeSessionSoapIn" />
+      <wsdl:output message="tns:InitializeSessionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="InitializeSessionExt">
+      <wsdl:input message="tns:InitializeSessionExtSoapIn" />
+      <wsdl:output message="tns:InitializeSessionExtSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="EndSession">
+      <wsdl:input message="tns:EndSessionSoapIn" />
+      <wsdl:output message="tns:EndSessionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ShowDashboard">
+      <wsdl:input message="tns:ShowDashboardSoapIn" />
+      <wsdl:output message="tns:ShowDashboardSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ShowDashboardExt">
+      <wsdl:input message="tns:ShowDashboardExtSoapIn" />
+      <wsdl:output message="tns:ShowDashboardExtSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnInitializeSession">
+      <wsdl:input message="tns:ivnInitializeSessionSoapIn" />
+      <wsdl:output message="tns:ivnInitializeSessionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnCloseSession">
+      <wsdl:input message="tns:ivnCloseSessionSoapIn" />
+      <wsdl:output message="tns:ivnCloseSessionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateCompany">
+      <wsdl:input message="tns:ivnCreateCompanySoapIn" />
+      <wsdl:output message="tns:ivnCreateCompanySoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateCompany">
+      <wsdl:input message="tns:ivnUpdateCompanySoapIn" />
+      <wsdl:output message="tns:ivnUpdateCompanySoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetCompanyDetails">
+      <wsdl:input message="tns:ivnGetCompanyDetailsSoapIn" />
+      <wsdl:output message="tns:ivnGetCompanyDetailsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetCompanyDetailsByID">
+      <wsdl:input message="tns:ivnGetCompanyDetailsByIDSoapIn" />
+      <wsdl:output message="tns:ivnGetCompanyDetailsByIDSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetAllCompanyDetails">
+      <wsdl:input message="tns:ivnGetAllCompanyDetailsSoapIn" />
+      <wsdl:output message="tns:ivnGetAllCompanyDetailsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateConnection">
+      <wsdl:input message="tns:ivnCreateConnectionSoapIn" />
+      <wsdl:output message="tns:ivnCreateConnectionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateConnection">
+      <wsdl:input message="tns:ivnUpdateConnectionSoapIn" />
+      <wsdl:output message="tns:ivnUpdateConnectionSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetConnectionDetails">
+      <wsdl:input message="tns:ivnGetConnectionDetailsSoapIn" />
+      <wsdl:output message="tns:ivnGetConnectionDetailsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateDataModel">
+      <wsdl:input message="tns:ivnCreateDataModelSoapIn" />
+      <wsdl:output message="tns:ivnCreateDataModelSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateDataModel">
+      <wsdl:input message="tns:ivnUpdateDataModelSoapIn" />
+      <wsdl:output message="tns:ivnUpdateDataModelSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetDataModelDetails">
+      <wsdl:input message="tns:ivnGetDataModelDetailsSoapIn" />
+      <wsdl:output message="tns:ivnGetDataModelDetailsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetDataModelFields">
+      <wsdl:input message="tns:ivnGetDataModelFieldsSoapIn" />
+      <wsdl:output message="tns:ivnGetDataModelFieldsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateUser">
+      <wsdl:input message="tns:ivnCreateUserSoapIn" />
+      <wsdl:output message="tns:ivnCreateUserSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateUser">
+      <wsdl:input message="tns:ivnUpdateUserSoapIn" />
+      <wsdl:output message="tns:ivnUpdateUserSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetUserDetails">
+      <wsdl:input message="tns:ivnGetUserDetailsSoapIn" />
+      <wsdl:output message="tns:ivnGetUserDetailsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateGroup">
+      <wsdl:input message="tns:ivnCreateGroupSoapIn" />
+      <wsdl:output message="tns:ivnCreateGroupSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateGroup">
+      <wsdl:input message="tns:ivnUpdateGroupSoapIn" />
+      <wsdl:output message="tns:ivnUpdateGroupSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetGroupDetails">
+      <wsdl:input message="tns:ivnGetGroupDetailsSoapIn" />
+      <wsdl:output message="tns:ivnGetGroupDetailsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateImplicitFilter">
+      <wsdl:input message="tns:ivnCreateImplicitFilterSoapIn" />
+      <wsdl:output message="tns:ivnCreateImplicitFilterSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateImplicitFilter">
+      <wsdl:input message="tns:ivnUpdateImplicitFilterSoapIn" />
+      <wsdl:output message="tns:ivnUpdateImplicitFilterSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="DashboardApiSoap" type="tns:DashboardApiSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ivnGetImplicitFilterDetails">
+      <soap:operation soapAction="http://tempuri.org/ivnGetImplicitFilterDetails" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetAuthorPermission">
+      <soap:operation soapAction="http://tempuri.org/ivnSetAuthorPermission" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetResourcePermission">
+      <soap:operation soapAction="http://tempuri.org/ivnSetResourcePermission" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetResourcePermission">
+      <soap:operation soapAction="http://tempuri.org/ivnGetResourcePermission" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetReportPermission">
+      <soap:operation soapAction="http://tempuri.org/ivnSetReportPermission" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetReportPermission">
+      <soap:operation soapAction="http://tempuri.org/ivnGetReportPermission" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetFilterDetails">
+      <soap:operation soapAction="http://tempuri.org/ivnGetFilterDetails" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetFilterValues">
+      <soap:operation soapAction="http://tempuri.org/ivnGetFilterValues" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetFilterValuesByDataTable">
+      <soap:operation soapAction="http://tempuri.org/ivnGetFilterValuesByDataTable" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetFilterValues">
+      <soap:operation soapAction="http://tempuri.org/ivnSetFilterValues" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetUIElementStatus">
+      <soap:operation soapAction="http://tempuri.org/ivnGetUIElementStatus" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetUIElementStatus">
+      <soap:operation soapAction="http://tempuri.org/ivnSetUIElementStatus" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetReportDetails">
+      <soap:operation soapAction="http://tempuri.org/ivnGetReportDetails" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetSubReportDetails">
+      <soap:operation soapAction="http://tempuri.org/ivnGetSubReportDetails" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetWidgetDetails">
+      <soap:operation soapAction="http://tempuri.org/ivnGetWidgetDetails" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnShowWidget">
+      <soap:operation soapAction="http://tempuri.org/ivnShowWidget" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnShowReport">
+      <soap:operation soapAction="http://tempuri.org/ivnShowReport" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnExportReport">
+      <soap:operation soapAction="http://tempuri.org/ivnExportReport" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetUserPermission">
+      <soap:operation soapAction="http://tempuri.org/ivnSetUserPermission" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetCompanyDetails">
+      <soap:operation soapAction="http://tempuri.org/GetCompanyDetails" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetCompanyDetailsExt">
+      <soap:operation soapAction="http://tempuri.org/GetCompanyDetailsExt" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReportFilters">
+      <soap:operation soapAction="http://tempuri.org/GetReportFilters" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReportFiltersExt">
+      <soap:operation soapAction="http://tempuri.org/GetReportFiltersExt" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReportLayouts">
+      <soap:operation soapAction="http://tempuri.org/GetReportLayouts" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReportLayoutsExt">
+      <soap:operation soapAction="http://tempuri.org/GetReportLayoutsExt" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReportList">
+      <soap:operation soapAction="http://tempuri.org/GetReportList" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReportListExt">
+      <soap:operation soapAction="http://tempuri.org/GetReportListExt" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="InitializeSession">
+      <soap:operation soapAction="http://tempuri.org/InitializeSession" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="InitializeSessionExt">
+      <soap:operation soapAction="http://tempuri.org/InitializeSessionExt" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="EndSession">
+      <soap:operation soapAction="http://tempuri.org/EndSession" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ShowDashboard">
+      <soap:operation soapAction="http://tempuri.org/ShowDashboard" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ShowDashboardExt">
+      <soap:operation soapAction="http://tempuri.org/ShowDashboardExt" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnInitializeSession">
+      <soap:operation soapAction="http://tempuri.org/ivnInitializeSession" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCloseSession">
+      <soap:operation soapAction="http://tempuri.org/ivnCloseSession" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateCompany">
+      <soap:operation soapAction="http://tempuri.org/ivnCreateCompany" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateCompany">
+      <soap:operation soapAction="http://tempuri.org/ivnUpdateCompany" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetCompanyDetails">
+      <soap:operation soapAction="http://tempuri.org/ivnGetCompanyDetails" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetCompanyDetailsByID">
+      <soap:operation soapAction="http://tempuri.org/ivnGetCompanyDetailsByID" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetAllCompanyDetails">
+      <soap:operation soapAction="http://tempuri.org/ivnGetAllCompanyDetails" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateConnection">
+      <soap:operation soapAction="http://tempuri.org/ivnCreateConnection" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateConnection">
+      <soap:operation soapAction="http://tempuri.org/ivnUpdateConnection" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetConnectionDetails">
+      <soap:operation soapAction="http://tempuri.org/ivnGetConnectionDetails" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateDataModel">
+      <soap:operation soapAction="http://tempuri.org/ivnCreateDataModel" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateDataModel">
+      <soap:operation soapAction="http://tempuri.org/ivnUpdateDataModel" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetDataModelDetails">
+      <soap:operation soapAction="http://tempuri.org/ivnGetDataModelDetails" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetDataModelFields">
+      <soap:operation soapAction="http://tempuri.org/ivnGetDataModelFields" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateUser">
+      <soap:operation soapAction="http://tempuri.org/ivnCreateUser" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateUser">
+      <soap:operation soapAction="http://tempuri.org/ivnUpdateUser" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetUserDetails">
+      <soap:operation soapAction="http://tempuri.org/ivnGetUserDetails" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateGroup">
+      <soap:operation soapAction="http://tempuri.org/ivnCreateGroup" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateGroup">
+      <soap:operation soapAction="http://tempuri.org/ivnUpdateGroup" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetGroupDetails">
+      <soap:operation soapAction="http://tempuri.org/ivnGetGroupDetails" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateImplicitFilter">
+      <soap:operation soapAction="http://tempuri.org/ivnCreateImplicitFilter" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateImplicitFilter">
+      <soap:operation soapAction="http://tempuri.org/ivnUpdateImplicitFilter" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="DashboardApiSoap12" type="tns:DashboardApiSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ivnGetImplicitFilterDetails">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetImplicitFilterDetails" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetAuthorPermission">
+      <soap12:operation soapAction="http://tempuri.org/ivnSetAuthorPermission" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetResourcePermission">
+      <soap12:operation soapAction="http://tempuri.org/ivnSetResourcePermission" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetResourcePermission">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetResourcePermission" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetReportPermission">
+      <soap12:operation soapAction="http://tempuri.org/ivnSetReportPermission" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetReportPermission">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetReportPermission" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetFilterDetails">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetFilterDetails" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetFilterValues">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetFilterValues" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetFilterValuesByDataTable">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetFilterValuesByDataTable" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetFilterValues">
+      <soap12:operation soapAction="http://tempuri.org/ivnSetFilterValues" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetUIElementStatus">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetUIElementStatus" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetUIElementStatus">
+      <soap12:operation soapAction="http://tempuri.org/ivnSetUIElementStatus" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetReportDetails">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetReportDetails" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetSubReportDetails">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetSubReportDetails" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetWidgetDetails">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetWidgetDetails" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnShowWidget">
+      <soap12:operation soapAction="http://tempuri.org/ivnShowWidget" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnShowReport">
+      <soap12:operation soapAction="http://tempuri.org/ivnShowReport" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnExportReport">
+      <soap12:operation soapAction="http://tempuri.org/ivnExportReport" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnSetUserPermission">
+      <soap12:operation soapAction="http://tempuri.org/ivnSetUserPermission" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetCompanyDetails">
+      <soap12:operation soapAction="http://tempuri.org/GetCompanyDetails" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetCompanyDetailsExt">
+      <soap12:operation soapAction="http://tempuri.org/GetCompanyDetailsExt" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReportFilters">
+      <soap12:operation soapAction="http://tempuri.org/GetReportFilters" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReportFiltersExt">
+      <soap12:operation soapAction="http://tempuri.org/GetReportFiltersExt" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReportLayouts">
+      <soap12:operation soapAction="http://tempuri.org/GetReportLayouts" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReportLayoutsExt">
+      <soap12:operation soapAction="http://tempuri.org/GetReportLayoutsExt" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReportList">
+      <soap12:operation soapAction="http://tempuri.org/GetReportList" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReportListExt">
+      <soap12:operation soapAction="http://tempuri.org/GetReportListExt" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="InitializeSession">
+      <soap12:operation soapAction="http://tempuri.org/InitializeSession" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="InitializeSessionExt">
+      <soap12:operation soapAction="http://tempuri.org/InitializeSessionExt" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="EndSession">
+      <soap12:operation soapAction="http://tempuri.org/EndSession" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ShowDashboard">
+      <soap12:operation soapAction="http://tempuri.org/ShowDashboard" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ShowDashboardExt">
+      <soap12:operation soapAction="http://tempuri.org/ShowDashboardExt" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnInitializeSession">
+      <soap12:operation soapAction="http://tempuri.org/ivnInitializeSession" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCloseSession">
+      <soap12:operation soapAction="http://tempuri.org/ivnCloseSession" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateCompany">
+      <soap12:operation soapAction="http://tempuri.org/ivnCreateCompany" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateCompany">
+      <soap12:operation soapAction="http://tempuri.org/ivnUpdateCompany" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetCompanyDetails">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetCompanyDetails" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetCompanyDetailsByID">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetCompanyDetailsByID" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetAllCompanyDetails">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetAllCompanyDetails" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateConnection">
+      <soap12:operation soapAction="http://tempuri.org/ivnCreateConnection" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateConnection">
+      <soap12:operation soapAction="http://tempuri.org/ivnUpdateConnection" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetConnectionDetails">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetConnectionDetails" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateDataModel">
+      <soap12:operation soapAction="http://tempuri.org/ivnCreateDataModel" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateDataModel">
+      <soap12:operation soapAction="http://tempuri.org/ivnUpdateDataModel" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetDataModelDetails">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetDataModelDetails" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetDataModelFields">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetDataModelFields" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateUser">
+      <soap12:operation soapAction="http://tempuri.org/ivnCreateUser" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateUser">
+      <soap12:operation soapAction="http://tempuri.org/ivnUpdateUser" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetUserDetails">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetUserDetails" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateGroup">
+      <soap12:operation soapAction="http://tempuri.org/ivnCreateGroup" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateGroup">
+      <soap12:operation soapAction="http://tempuri.org/ivnUpdateGroup" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnGetGroupDetails">
+      <soap12:operation soapAction="http://tempuri.org/ivnGetGroupDetails" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnCreateImplicitFilter">
+      <soap12:operation soapAction="http://tempuri.org/ivnCreateImplicitFilter" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ivnUpdateImplicitFilter">
+      <soap12:operation soapAction="http://tempuri.org/ivnUpdateImplicitFilter" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="DashboardApi">
+    <wsdl:port name="DashboardApiSoap" binding="tns:DashboardApiSoap">
+      <soap:address location="http://demo.agile-labs.com:8081/IntelliviewNXT/ServiceApi/DashboardApi.asmx" />
+    </wsdl:port>
+    <wsdl:port name="DashboardApiSoap12" binding="tns:DashboardApiSoap12">
+      <soap12:address location="http://demo.agile-labs.com:8081/IntelliviewNXT/ServiceApi/DashboardApi.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

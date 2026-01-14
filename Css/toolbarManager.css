@@ -1,0 +1,100 @@
+#dvToolbar ul li {
+  display: inline-block;
+  list-style: none;
+  color: #333;
+  background-color: #fff;
+  margin: 10px 5px 0 0;
+}
+
+#buttonTree {
+  margin-left: 35px;
+  margin-top: 20px;
+}
+
+#buttonTree #draggableSample,
+#buttonTree #droppableSample {
+  height: 100px;
+  padding: 0.5em;
+  width: 150px;
+  border: 1px solid #AAAAAA;
+}
+
+#buttonTree #draggableSample {
+  background-color: silver;
+  color: #222222;
+}
+
+#buttonTree #droppableSample {
+  background-color: maroon;
+  color: white;
+}
+
+#buttonTree #droppableSample.drophover {
+  border: 1px solid green;
+}
+
+#buttonTree ul {
+  font-family: "Roboto Regular", tahoma, arial, helvetica;
+  font-size: 24px;
+  white-space: nowrap;
+  padding: 10px;
+  margin-right: 32px;
+  background-color: #e0e0e0;
+  /* border: 1px solid #cac9c9 !important; */
+  min-height: 0%;
+  position: relative;
+}
+
+#buttonTree ul.fancytree-container {
+  height: calc(100vh - 60px);
+  box-shadow: 3px 4px 3px 2px #737171;
+  padding: 30px;
+  border: 0px;
+  overflow-y: auto;
+}
+
+#buttonTree ul li span span.fancytree-checkbox, #buttonTree ul li span span.fancytree-expander, #buttonTree ul li span span.fancytree-icon, #buttonTree ul li span span.fancytree-custom-icon {
+  color: #999999;
+}
+
+#buttonTree ul li span span.fancytree-title {
+  font-size: 14px;
+  padding: 3px 10px;
+  font-family: Roboto, sans-serif;
+  color: #333;
+  background: #fff;
+  box-shadow: 1px 2px 3px 0 #9a9a9a;
+}
+
+#buttonTree ul li span span.fancytree-title input {
+  color: #333;
+  font-size: 14px;
+  height: 20px;
+  margin-bottom: 0px;
+  padding: 5px 10px;
+  border: 01px solid #000;
+  background: #fff;
+}
+
+#buttonTree ul li span.fancytree-selected .fancytree-title {
+  background-color: #e4e4e4;
+}
+
+#buttonTree ul li span .fancytree-title:hover {
+  background-color: #d4d4d4;
+  color: #333;
+}
+
+#buttonTree ul li:focus {
+  border: 0px;
+  outline: none;
+}
+
+#buttonTree ul:focus {
+  border: 0px;
+  outline: none;
+}
+
+#divModalButton .CodeMirror {
+  height: 60px;
+}

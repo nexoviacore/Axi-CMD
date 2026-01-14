@@ -1,0 +1,1463 @@
+.theme-blue-grey .navbar {
+  background-color: #607D8B;
+}
+
+.theme-blue-grey .navbar-brand {
+  color: #fff;
+  color: #fff;
+}
+
+.theme-blue-grey .navbar-brand:active {
+  color: #fff;
+}
+
+.theme-blue-grey .navbar-brand:focus {
+  color: #fff;
+}
+
+.theme-blue-grey .nav > li > a {
+  color: #fff;
+}
+
+.theme-blue-grey .nav > li > a:hover {
+  background-color: transparent;
+}
+
+.theme-blue-grey .nav > li > a:focus {
+  background-color: transparent;
+}
+
+.theme-blue-grey .nav .open > a {
+  background-color: transparent;
+}
+
+.theme-blue-grey .nav .open > a:hover {
+  background-color: transparent;
+}
+
+.theme-blue-grey .nav .open > a:focus {
+  background-color: transparent;
+}
+
+.theme-blue-grey .bars {
+  color: #fff;
+}
+
+.theme-blue-grey .sidebar .menu .list li.active {
+  background-color: transparent;
+}
+
+.theme-blue-grey .sidebar .menu .list li.active > :first-child i, .theme-blue-grey .sidebar .menu .list li.active > :first-child span {
+  color: #607D8B;
+}
+
+.theme-blue-grey .sidebar .menu .list .toggled {
+  background-color: transparent;
+}
+
+.theme-blue-grey .sidebar .menu .list .ml-menu {
+  background-color: transparent;
+}
+
+.theme-blue-grey .sidebar .legal {
+  background-color: #fff;
+}
+
+.theme-blue-grey .sidebar .legal .copyright a {
+  color: #607D8B !important;
+}
+
+.card {
+  background: #fff;
+  min-height: 50px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+  position: relative;
+  margin-bottom: 30px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+}
+
+.card .card-inside-title {
+  margin-top: 25px;
+  margin-bottom: 15px;
+  display: block;
+  font-size: 15px;
+  color: #000;
+}
+
+.card .card-inside-title small {
+  color: #999;
+  display: block;
+  font-size: 11px;
+  margin-top: 5px;
+}
+
+.card .card-inside-title small a {
+  color: #777;
+  font-weight: bold;
+}
+
+.card .card-inside-title:first-child {
+  margin-top: 0;
+}
+
+.card .bg-red,
+.card .bg-pink,
+.card .bg-purple,
+.card .bg-deep-purple,
+.card .bg-indigo,
+.card .bg-blue,
+.card .bg-light-blue,
+.card .bg-cyan,
+.card .bg-teal,
+.card .bg-green,
+.card .bg-light-green,
+.card .bg-lime,
+.card .bg-yellow,
+.card .bg-amber,
+.card .bg-orange,
+.card .bg-deep-orange,
+.card .bg-brown,
+.card .bg-grey,
+.card .bg-blue-grey,
+.card .bg-black {
+  border-bottom: none !important;
+  color: #fff !important;
+}
+
+.card .bg-red h2, .card .bg-red small, .card .bg-red .material-icons,
+.card .bg-pink h2,
+.card .bg-pink small,
+.card .bg-pink .material-icons,
+.card .bg-purple h2,
+.card .bg-purple small,
+.card .bg-purple .material-icons,
+.card .bg-deep-purple h2,
+.card .bg-deep-purple small,
+.card .bg-deep-purple .material-icons,
+.card .bg-indigo h2,
+.card .bg-indigo small,
+.card .bg-indigo .material-icons,
+.card .bg-blue h2,
+.card .bg-blue small,
+.card .bg-blue .material-icons,
+.card .bg-light-blue h2,
+.card .bg-light-blue small,
+.card .bg-light-blue .material-icons,
+.card .bg-cyan h2,
+.card .bg-cyan small,
+.card .bg-cyan .material-icons,
+.card .bg-teal h2,
+.card .bg-teal small,
+.card .bg-teal .material-icons,
+.card .bg-green h2,
+.card .bg-green small,
+.card .bg-green .material-icons,
+.card .bg-light-green h2,
+.card .bg-light-green small,
+.card .bg-light-green .material-icons,
+.card .bg-lime h2,
+.card .bg-lime small,
+.card .bg-lime .material-icons,
+.card .bg-yellow h2,
+.card .bg-yellow small,
+.card .bg-yellow .material-icons,
+.card .bg-amber h2,
+.card .bg-amber small,
+.card .bg-amber .material-icons,
+.card .bg-orange h2,
+.card .bg-orange small,
+.card .bg-orange .material-icons,
+.card .bg-deep-orange h2,
+.card .bg-deep-orange small,
+.card .bg-deep-orange .material-icons,
+.card .bg-brown h2,
+.card .bg-brown small,
+.card .bg-brown .material-icons,
+.card .bg-grey h2,
+.card .bg-grey small,
+.card .bg-grey .material-icons,
+.card .bg-blue-grey h2,
+.card .bg-blue-grey small,
+.card .bg-blue-grey .material-icons,
+.card .bg-black h2,
+.card .bg-black small,
+.card .bg-black .material-icons {
+  color: #fff !important;
+}
+
+.card .bg-red .badge,
+.card .bg-pink .badge,
+.card .bg-purple .badge,
+.card .bg-deep-purple .badge,
+.card .bg-indigo .badge,
+.card .bg-blue .badge,
+.card .bg-light-blue .badge,
+.card .bg-cyan .badge,
+.card .bg-teal .badge,
+.card .bg-green .badge,
+.card .bg-light-green .badge,
+.card .bg-lime .badge,
+.card .bg-yellow .badge,
+.card .bg-amber .badge,
+.card .bg-orange .badge,
+.card .bg-deep-orange .badge,
+.card .bg-brown .badge,
+.card .bg-grey .badge,
+.card .bg-blue-grey .badge,
+.card .bg-black .badge {
+  background-color: #fff;
+  color: #555;
+}
+
+.card .header {
+  color: #555;
+  padding: 20px;
+  position: relative;
+  border-bottom: 1px solid rgba(204, 204, 204, 0.35);
+}
+
+.card .header .header-dropdown {
+  position: absolute;
+  top: 20px;
+  right: 15px;
+  list-style: none;
+}
+
+.card .header .header-dropdown .dropdown-menu li {
+  display: block !important;
+}
+
+.card .header .header-dropdown .dropdown-menu li a {
+  display: block;
+  padding: 7px 18px;
+}
+
+.card .header .header-dropdown .dropdown-menu li a:hover {
+  background-color: rgba(0, 0, 0, 0.075);
+}
+
+.card .header .header-dropdown .dropdown-menu li.dropDownTextOnly span {
+  display: block;
+  padding: 7px 18px;
+}
+
+.card .header .header-dropdown .dropdown-menu li.dropDownTextOnly span:hover {
+  background-color: rgba(0, 0, 0, 0.075);
+}
+
+.card .header .header-dropdown li {
+  display: inline-block;
+}
+
+.card .header .header-dropdown i {
+  font-size: 20px;
+  color: #999;
+}
+
+.card .header .header-dropdown i:hover {
+  color: #000;
+}
+
+.card .header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: normal;
+  color: #111111;
+}
+
+.card .header h2 small {
+  display: block;
+  font-size: 12px;
+  margin-top: 5px;
+  color: #999;
+  line-height: 15px;
+}
+
+.card .header h2 small a {
+  font-weight: bold;
+  color: #777;
+}
+
+.card .header .col-xs-12 h2 {
+  margin-top: 5px;
+}
+
+.card .body {
+  font-size: 14px;
+  color: #555;
+  padding: 20px;
+}
+
+.card .body .col-xs-1,
+.card .body .col-sm-1,
+.card .body .col-md-1,
+.card .body .col-lg-1 {
+  margin-bottom: 20px;
+}
+
+.card .body .col-xs-2,
+.card .body .col-sm-2,
+.card .body .col-md-2,
+.card .body .col-lg-2 {
+  margin-bottom: 20px;
+}
+
+.card .body .col-xs-3,
+.card .body .col-sm-3,
+.card .body .col-md-3,
+.card .body .col-lg-3 {
+  margin-bottom: 20px;
+}
+
+.card .body .col-xs-4,
+.card .body .col-sm-4,
+.card .body .col-md-4,
+.card .body .col-lg-4 {
+  margin-bottom: 20px;
+}
+
+.card .body .col-xs-5,
+.card .body .col-sm-5,
+.card .body .col-md-5,
+.card .body .col-lg-5 {
+  margin-bottom: 20px;
+}
+
+.card .body .col-xs-6,
+.card .body .col-sm-6,
+.card .body .col-md-6,
+.card .body .col-lg-6 {
+  margin-bottom: 20px;
+}
+
+.card .body .col-xs-7,
+.card .body .col-sm-7,
+.card .body .col-md-7,
+.card .body .col-lg-7 {
+  margin-bottom: 20px;
+}
+
+.card .body .col-xs-8,
+.card .body .col-sm-8,
+.card .body .col-md-8,
+.card .body .col-lg-8 {
+  margin-bottom: 20px;
+}
+
+.card .body .col-xs-9,
+.card .body .col-sm-9,
+.card .body .col-md-9,
+.card .body .col-lg-9 {
+  margin-bottom: 20px;
+}
+
+.card .body .col-xs-10,
+.card .body .col-sm-10,
+.card .body .col-md-10,
+.card .body .col-lg-10 {
+  margin-bottom: 20px;
+}
+
+.card .body .col-xs-11,
+.card .body .col-sm-11,
+.card .body .col-md-11,
+.card .body .col-lg-11 {
+  margin-bottom: 20px;
+}
+
+.card .body .col-xs-12,
+.card .body .col-sm-12,
+.card .body .col-md-12,
+.card .body .col-lg-12 {
+  margin-bottom: 20px;
+}
+
+.cardStyle {
+  background: #fff;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  border: 0px;
+}
+
+div.toolbarOptionsParent {
+  margin-top: 20px;
+  float: left;
+}
+
+.btextDir-rtl div.toolbarOptionsParent {
+  float: right;
+}
+
+.modernButtonOptions div.toolbarOptionsParent {
+  margin: 0px;
+}
+
+@media (max-width: 960px) {
+  div.toolbarOptionsParent {
+    display: inline-block;
+  }
+}
+
+.btextDir-rtl.requestJSON:not(.requestJsonOldUi).isMobile div.toolbarOptionsParent {
+  float: left;
+}
+
+div.toolbarOptionsParent #icons ul {
+  box-shadow: none;
+  list-style: none;
+  padding: 0;
+  text-align: left;
+}
+
+div.toolbarOptionsParent #icons ul li .dropDownButton {
+  position: relative;
+}
+
+.btextDir-rtl div.toolbarOptionsParent #icons ul li ul li {
+  text-align: right;
+}
+
+div.toolbarOptionsParent #icons ul li a {
+  border: 1px solid #ccc;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  border-radius: 3px;
+}
+
+.btextDir-rtl div.toolbarOptionsParent #icons ul.dropDownButton__list {
+  right: 0px;
+  left: auto;
+}
+
+@media (max-width: 960px) {
+  div.toolbarOptionsParent #icons ul {
+    /*Temporary Solution for dropdown hidden issue in toolbar in mobile resolution -- refer GIS000105*/
+  }
+}
+
+div.toolbarOptionsParent #icons ul li:not(.dropDownButton__item) {
+  display: inline-block;
+}
+
+.requestJsonOldUi div.toolbarOptionsParent #icons ul li.liTaskItems {
+  display: block;
+}
+
+div.toolbarOptionsParent #icons ul li:not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.listItem):not(.dropdown-submenu) {
+  list-style: none;
+  border-radius: 3px;
+  color: #333;
+  background-color: #fff;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  height: 33px;
+}
+
+div.toolbarOptionsParent #icons ul li:not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.listItem):not(.dropdown-submenu):focus {
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div.toolbarOptionsParent #icons ul li#dvRefreshFromLoad {
+  box-shadow: none;
+  margin: 0;
+  border: 1px solid #ccc;
+}
+
+div.toolbarOptionsParent #icons ul li#dvRefreshFromLoad span button {
+  color: #999999;
+}
+
+div.toolbarOptionsParent #icons ul li#dvRefreshFromLoad span button:hover {
+  box-shadow: none;
+}
+
+div.toolbarOptionsParent #icons ul li #uldropelements .actionWrapper {
+  box-shadow: none;
+  margin: 0;
+}
+
+div.toolbarOptionsParent #icons ul li#dvRefreshFromLoad span button:focus {
+  box-shadow: none;
+}
+
+div.toolbarOptionsParent #icons ul li button {
+  color: #333;
+  background-color: #fff;
+  border: 0px;
+  padding: 5px 15px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+}
+
+div.toolbarOptionsParent #icons ul li button:focus {
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div.toolbarOptionsParent #icons ul li a {
+  color: #333;
+  display: block;
+  text-decoration: none;
+  padding: 5px 13px;
+  cursor: pointer;
+}
+
+div.toolbarOptionsParent #icons ul li a i.material-icons {
+  color: #999;
+  font-size: 17px;
+  position: relative;
+  top: 3px;
+}
+
+div.toolbarOptionsParent #icons ul li a .tbIcon {
+  width: 17px;
+  height: 17px;
+  margin: 4px 0px 5px 0px;
+  position: relative;
+  left: -2px;
+  top: 1px;
+}
+
+div.toolbarOptionsParent #icons ul li a:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+.btextDir-rtl div.toolbarOptionsParent #icons ul li a span:not(#lblfilters):not(.icon-arrows-down) {
+  right: 2px;
+  left: auto;
+}
+
+div.toolbarOptionsParent #icons ul li a span.icon-arrows-down {
+  position: relative;
+  left: 3px;
+  top: 4px;
+}
+
+div.toolbarOptionsParent #icons ul li.gropuedBtn button:after {
+  display: none;
+}
+
+div.toolbarOptionsParent #icons ul li.gropuedBtn button span:before {
+  position: relative;
+  top: 2px;
+}
+
+div.toolbarOptionsParent #icons ul li:focus {
+  text-decoration: none;
+  box-shadow: 0px 0px 2px #333333;
+}
+
+div.toolbarOptionsParent #icons ul li#myFiltersLi a span:before {
+  display: none;
+}
+
+div.toolbarOptionsParent #icons ul li:not(#ivirCButtonsWrapper):hover {
+  background-color: #e6e6e6;
+}
+
+div.toolbarOptionsParent #icons ul li #dvSelectedFilters, div.toolbarOptionsParent #icons ul li #ivirCButtonsWrapper {
+  display: none;
+}
+
+div.toolbarOptionsParent #icons ul li.lnkNext, div.toolbarOptionsParent #icons ul li.lnkPrev {
+  position: relative;
+  top: 2px;
+}
+
+div.toolbarOptionsParent #icons ul li.lnkNext a, div.toolbarOptionsParent #icons ul li.lnkPrev a {
+  padding: 9px 18px 8px;
+}
+
+div.toolbarOptionsParent #icons ul li#ivirCButtonsWrapper button {
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+  margin-right: 5px;
+  margin-bottom: 5px;
+}
+
+div.toolbarOptionsParent #icons ul li.gropuedBtn .dropdown .actionsBtn #uldropelements {
+  margin-left: -12px;
+  padding: 1px 0px;
+  left: 6px;
+  top: 25px;
+}
+
+div.toolbarOptionsParent #icons ul li.gropuedBtn #uldropelements li.actionWrapper {
+  box-shadow: none;
+  margin: 0px;
+}
+
+div.toolbarOptionsParent #icons ul .lnkPrev, div.toolbarOptionsParent #icons ul .lnkNext {
+  padding: 0px 0px 4px;
+}
+
+div.toolbarOptionsParent #icons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.actionWrapper):not(.listItem):not(.dropdown-submenu) {
+  list-style: none;
+  border-radius: 3px;
+  color: #333;
+  background-color: #fff;
+  display: inline-block;
+  height: 33px;
+}
+
+div.toolbarOptionsParent #icons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.actionWrapper):not(.listItem):not(.dropdown-submenu):focus {
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div.toolbarOptionsParent #icons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.actionWrapper):not(.listItem):not(.dropdown-submenu) a {
+  color: #333;
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+div.toolbarOptionsParent #icons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.actionWrapper):not(.listItem):not(.dropdown-submenu) a i.material-icons {
+  color: #999;
+  font-size: 17px;
+  position: relative;
+  top: 4px;
+}
+
+div.toolbarOptionsParent #icons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#ivirCButtonsWrapper):not(.actionWrapper):not(.listItem):not(.dropdown-submenu) a .tbIcon {
+  width: 17px;
+  height: 17px;
+  margin: 4px 0px 5px 0px;
+}
+
+div #ivInSearch .toolbarOptionsParent {
+  position: absolute;
+  right: -8px;
+  top: -7px;
+  margin: 0px;
+}
+
+.requestJSON div #ivInSearch .toolbarOptionsParent, .modernButtonOptions div #ivInSearch .toolbarOptionsParent {
+  top: 1px;
+  right: 0px;
+  position: relative;
+}
+
+.requestJSON:not(.requestJsonOldUi).isMobile div #ivInSearch .toolbarOptionsParent {
+  position: relative;
+  top: 0px;
+  right: -15px;
+  margin: 0px;
+}
+
+#ivContainer .container {
+  width: 100%;
+}
+
+#ivContainer .container .bs-example button:focus {
+  outline: none;
+}
+
+#ivContainer .container .bs-example button i:focus {
+  outline: none;
+}
+
+#ivContainer .container .bs-example #dvStagLoad, #ivContainer .container .bs-example #dvPages, #ivContainer .container .bs-example #dvRowsPerPage {
+  display: none;
+}
+
+#ivContainer .container .bs-example #dvSqlPages #rowsTxtCount #lnkShowAll {
+  display: none;
+}
+
+.iviewTableWrapper .dvContent .sort, .iviewTableWrapper .dvContent #leftPanel {
+  display: none;
+}
+
+.iviewTableWrapper .dvContent #contentPanelGridIview #noRecccord {
+  display: none;
+}
+
+#lblTaskExcel, #lblTaskPDF {
+  display: none;
+}
+
+.btextDir-rtl #dvRefreshParam {
+  float: left;
+}
+
+#cb_sactbu span {
+  padding-right: 0px;
+}
+
+div#pinnedsearchBar {
+  margin: 0px;
+}
+
+@media (max-width: 960px) {
+  div#pinnedsearchBar {
+    display: inline-block;
+  }
+}
+
+div#pinnedsearchBar #pinnedicons #pinnediconsUl {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.btextDir-rtl div#pinnedsearchBar #pinnedicons #pinnediconsUl {
+  text-align: left;
+}
+
+div#pinnedsearchBar #pinnedicons ul {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+  margin-bottom: 0px;
+}
+
+@media (max-width: 960px) {
+  div#pinnedsearchBar #pinnedicons ul {
+    /*Temporary Solution for dropdown hidden issue in toolbar in mobile resolution -- refer GIS000105*/
+  }
+}
+
+div#pinnedsearchBar #pinnedicons ul:not(.dropDownButton__list):not(.dropdown-menu) {
+  position: relative;
+  top: -15px;
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinnedfilterWrapper {
+  position: relative;
+}
+
+div#pinnedsearchBar #pinnedicons ul li:not(.dropDownButton__item):not(.liTaskItems) {
+  display: inline-block;
+}
+
+div#pinnedsearchBar #pinnedicons ul li:not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons) {
+  list-style: none;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+  color: #333;
+  background-color: #fff;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  margin-bottom: 0px;
+  margin-top: -4px;
+}
+
+div#pinnedsearchBar #pinnedicons ul li:not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons):focus {
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons ul li:not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons):hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinneddvRefreshFromLoad {
+  box-shadow: none;
+  margin: 0;
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinneddvRefreshFromLoad span button {
+  color: #999999;
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinneddvRefreshFromLoad span button:hover {
+  box-shadow: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li #pinneduldropelements .actionWrapper {
+  box-shadow: none;
+  margin: 0;
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinneddvRefreshFromLoad span button:focus {
+  box-shadow: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li button {
+  color: #333;
+  background-color: #fff;
+  border: 0px;
+  padding: 5px 15px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+}
+
+div#pinnedsearchBar #pinnedicons ul li button:focus {
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons ul li a {
+  color: #333;
+  display: block;
+  text-decoration: none;
+  padding: 3px 9px 7px;
+  cursor: pointer;
+}
+
+div#pinnedsearchBar #pinnedicons ul li a:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li a span:not(#pinnedlblfilters) {
+  top: 3px;
+  position: relative;
+}
+
+div#pinnedsearchBar #pinnedicons ul li a .dropdownIconUI {
+  display: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li .iconUIPin, div#pinnedsearchBar #pinnedicons ul li .customIcon {
+  display: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li.gropuedBtn button:after {
+  display: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li.gropuedBtn button span:before {
+  position: relative;
+  top: 2px;
+}
+
+div#pinnedsearchBar #pinnedicons ul li:focus {
+  text-decoration: none;
+  box-shadow: 0px 0px 2px #333333;
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinnedmyFiltersLi a span:before {
+  display: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li:not(#pinnedivirCustomActionButtons):hover {
+  background-color: #e6e6e6;
+}
+
+div#pinnedsearchBar #pinnedicons ul li #pinneddvSelectedFilters, div#pinnedsearchBar #pinnedicons ul li #pinnedivirCustomActionButtons {
+  display: none;
+}
+
+div#pinnedsearchBar #pinnedicons ul li.lnkNext, div#pinnedsearchBar #pinnedicons ul li.lnkPrev {
+  position: relative;
+  top: 2px;
+}
+
+div#pinnedsearchBar #pinnedicons ul li#pinnedivirCustomActionButtons button {
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons ul li.open .dropdown-menu {
+  max-height: 200px;
+  height: auto;
+  overflow-y: auto;
+  border: 1px solid #e6e6e6;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons ul .lnkPrev, div#pinnedsearchBar #pinnedicons ul .lnkNext {
+  padding: 0px 0px 4px;
+}
+
+div#pinnedsearchBar #pinnedicons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons):not(.actionWrapper) {
+  list-style: none;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+  color: #333;
+  background-color: #fff;
+  display: inline-block;
+}
+
+div#pinnedsearchBar #pinnedicons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons):not(.actionWrapper):focus {
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons):not(.actionWrapper):hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+div#pinnedsearchBar #pinnedicons li:not(.dropdown):not(.dropDownButton__item):not(.liTaskItems):not(#pinnedivirCustomActionButtons):not(.actionWrapper) a {
+  color: #333;
+  display: block;
+  text-decoration: none;
+  padding: 3px 9px 7px;
+  cursor: pointer;
+}
+
+.toolbarRightMenu {
+  display: inline-block;
+  position: relative;
+  padding: 5px 10px 8px 0px;
+}
+
+@media (max-width: 960px) {
+  .toolbarRightMenu {
+    padding: 4px 10px 0px 0px;
+    top: 0px;
+  }
+}
+
+body {
+  background-color: #e9e9e9;
+}
+
+.left-section {
+  position: absolute;
+  top: 50px;
+  display: block;
+  width: 96px;
+  left: 0px;
+}
+
+.left-section .developer-menu ul {
+  padding: 0;
+  text-align: center;
+  background: #f6f6f6;
+  margin-bottom: 0px;
+}
+
+.left-section .developer-menu ul.devsubmenu {
+  display: none;
+  background: #fff;
+}
+
+.left-section .developer-menu ul li {
+  list-style: none;
+  display: block;
+  padding: 12px 7px;
+  position: relative;
+}
+
+.left-section .developer-menu ul li a i {
+  color: #747474;
+  font-size: 34px;
+}
+
+.left-section .developer-menu ul li a:hover {
+  text-decoration: none;
+}
+
+.left-section .developer-menu ul li a span {
+  display: block;
+  color: #000;
+  word-break: break-all;
+  font-size: 12px;
+}
+
+.left-section .developer-menu ul li.sub-menu:hover .devsubmenu {
+  display: block;
+  left: 95px;
+  position: absolute;
+  bottom: 0px;
+  z-index: 9999;
+  width: 272px;
+}
+
+.left-section .developer-menu ul li.sub-menu:hover .devsubmenu li {
+  display: inline-block;
+}
+
+.right-section {
+  position: absolute;
+  width: calc(100vw - 110px);
+  padding: 0px;
+  left: 100px;
+}
+
+.right-section .right-iviewmain {
+  height: calc(100vh - 110px);
+  margin-bottom: 0px;
+}
+
+.right-section .right-iviewmain#dvMiddle1 {
+  margin-top: 5px;
+  margin-left: 2px;
+}
+
+.right-section .right-iviewmain#divaxpiframe {
+  margin-left: 10px;
+  margin-top: 5px;
+}
+
+.right-section .col-lg-6, .right-section .col-md-6, .right-section .col-sm-6, .right-section .col-xs-12 {
+  padding: 0px;
+}
+
+.developerworkbench .navbar {
+  text-align: center;
+  -webkit-border-radius: 0px;
+  -moz-border-radius: 0px;
+  -ms-border-radius: 0px;
+  border-radius: 0px;
+  height: 30px;
+  margin-bottom: 0px;
+}
+
+.developerworkbench .navbar .navbar-header .navbar-brand {
+  height: 30px;
+  padding-right: 0px;
+}
+
+.developerworkbench .navbar .navbar-nav li a {
+  padding: 10px;
+}
+
+.developerworkbench .navbar .developer-heading {
+  color: #fff;
+  font-size: 20px;
+  margin-top: 10px;
+  display: inline-block;
+}
+
+.developerWorkBenchToolbar {
+  background-color: #fff;
+  width: 100%;
+  height: 50px;
+  margin-left: 2px;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl {
+  padding: 10px 20px;
+  text-align: right;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li {
+  list-style: none;
+  display: inline-block;
+  list-style: none;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+  color: #333;
+  background-color: #fff;
+  margin: 0 5px 0 0;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li:focus {
+  outline: none;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li:hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li a {
+  color: #333;
+  display: block;
+  text-decoration: none;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li a:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li a i {
+  margin-right: 5px;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li ul.dropdown-menu {
+  border: 0px;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li ul.dropdown-menu li {
+  display: block;
+  box-shadow: none;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li ul.dropdown-menu li.dropdown {
+  box-shadow: none;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li ul.dropdown-menu li.dropdown:hover .dropdown-menu {
+  display: block;
+  right: 226px;
+  top: -6px;
+  left: auto;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li ul.dropdown-menu li.dropdown a span.icon-arrows-down {
+  position: relative;
+  top: 2px;
+  left: 120px;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li ul.dropdown-menu .dropdown-menu-inner {
+  width: 520px;
+  background: #fff;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li ul.dropdown-menu .dropdown-menu-inner ul {
+  padding: 0px;
+  float: left;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li ul.dropdown-menu .dropdown-menu-inner ul li {
+  box-shadow: none;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li ul.dropdown-menu .dropdown-menu-inner ul li a:hover {
+  background: #e9e9e9;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li ul.dropdown-menu .dropdown-menu-inner ul li a i {
+  margin-right: 5px;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li.createWizard {
+  float: right;
+  box-shadow: none;
+}
+
+.developerWorkBenchToolbar .dwbiconsUl li.createWizard span.icon-arrows-plus {
+  font-size: 23px;
+  display: inline-block;
+}
+
+.developerWorkBenchToolbarMain {
+  background-color: #fff;
+}
+
+.developerWorkBenchToolbarMain .developerbreadcrumb-panel {
+  background-color: #fff;
+  width: 100%;
+  height: 42px;
+  margin: 5px 0 0 5px;
+}
+
+.developerWorkBenchToolbarMain .developerbreadcrumb-panel .developerbreadcrumb span.developerbreadcrumbTitle {
+  color: #212121;
+  font-size: 24px;
+  font-weight: 600;
+  display: inline-block;
+  padding: 10px 10px;
+  position: relative;
+}
+
+.btextDir-rtl .developerWorkBenchToolbarMain .developerbreadcrumb-panel {
+  text-align: right;
+}
+
+.searchBox {
+  position: absolute;
+  width: 100%;
+  right: 0px;
+  top: 10px;
+}
+
+.searchBox .searchBoxChildContainer {
+  vertical-align: middle;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+}
+
+.btextDir-rtl .searchBox .searchBoxChildContainer {
+  margin-left: 20px;
+}
+
+.searchBox .searchBoxChildContainer input#ivInSearchInput {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  font-size: 13px;
+  color: #000;
+  padding: 0px 10px;
+  margin-right: 15px;
+  -webkit-border-radius: 50px;
+  -moz-border-radius: 50px;
+  border-radius: 50px;
+  width: 100px;
+  height: 32px;
+  right: 0px;
+  left: auto;
+  position: absolute;
+}
+
+.searchBox .searchBoxChildContainer input#ivInSearchInput:focus, .searchBox .searchBoxChildContainer input#ivInSearchInput:active {
+  outline: none;
+  width: 75%;
+}
+
+.btextDir-rtl .searchBox .searchBoxChildContainer input#ivInSearchInput {
+  left: 0;
+  right: auto;
+}
+
+.searchBox .searchBoxChildContainer .icon {
+  position: absolute;
+  top: 4px;
+  right: 27px;
+  margin-left: 10px;
+  z-index: 1;
+  display: inherit;
+  font-size: large;
+  color: #999999;
+}
+
+.btextDir-rtl .searchBox .searchBoxChildContainer .icon {
+  left: 0;
+  right: auto;
+}
+
+.wizardMain-container .wizardLeftMenu {
+  margin-top: 10px;
+}
+
+.wizardMain-container .wizardLeftMenu ul {
+  border: none;
+  padding: 0px;
+}
+
+.wizardMain-container .wizardLeftMenu ul:focus {
+  outline: none;
+  border: none;
+}
+
+.wizardMain-container .wizardLeftMenu ul li {
+  list-style: none;
+  padding: 5px 15px;
+  border-bottom: 1px solid #e4e3e3;
+  background: #f6f6f6;
+  font-size: 16px;
+  display: inline-block;
+  border-radius: 2px;
+}
+
+.wizardMain-container .wizardLeftMenu ul li a {
+  color: #000;
+}
+
+.wizardMain-container .wizardLeftMenu ul li a:hover {
+  text-decoration: none;
+}
+
+.wizardMain-container .wizardLeftMenu ul li .wizard-drop {
+  float: right;
+}
+
+.wizardMain-container .wizardLeftMenu ul li .wizard-drop button {
+  background: transparent;
+  color: #999;
+  padding: 0px;
+}
+
+.wizardMain-container .wizardLeftMenu ul li .wizard-drop button i {
+  font-size: 20px;
+  right: -2px;
+  position: relative;
+  top: 0px;
+}
+
+.wizardMain-container .wizardLeftMenu ul li .wizard-drop button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.wizardMain-container .wizardLeftMenu ul li .wizard-drop .dropdown-menu a {
+  display: block;
+  padding: 5px 10px;
+}
+
+.wizardMain-container .wizardLeftMenu ul li .wizard-drop .dropdown-menu a i {
+  margin-right: 5px;
+}
+
+.wizardMain-container .wizardLeftMenu ul li .wizard-drop .dropdown-menu a:hover {
+  background: #ece8e8;
+}
+
+.wizardMain-container .wizardLeftMenu ul li span.fancytree-node .fancytree-expander {
+  display: none;
+}
+
+.wizardMain-container .wizardLeftMenu ul li span.fancytree-node .fancytree-icon {
+  display: none;
+}
+
+.wizardMain-container .wizardLeftMenu ul li span.fancytree-node span.fancytree-title {
+  display: block;
+  background: none;
+}
+
+.wizardMain-container .wizardLeftMenu ul li:hover {
+  background: #fff;
+}
+
+.wizardMain-container .wizardLeftMenu #lstWizardLeftMenu {
+  background-color: #fff;
+}
+
+.wizardMain-container .wizardLeftMenu #lstWizardLeftMenu .box-item {
+  border: none;
+  background: #dcd8d8;
+  box-shadow: none;
+  border-radius: 0px;
+  text-align: left;
+  padding: 10px 15px;
+  margin-bottom: 1px;
+}
+
+.wizardMain-container .wizardMid iframe {
+  margin-top: 10px;
+  height: calc(100vh - 76px);
+}
+
+.wizardMain-container .wizardRight h2 {
+  font-size: 20px;
+}
+
+.wizardMain-container .wizardRight iframe {
+  height: calc(100vh - 118px);
+}
+
+.wizardMain-container .wizardpop {
+  color: #fff;
+}
+
+#rightMenu #background {
+  position: absolute;
+  z-index: 0;
+  background: white;
+  display: block;
+  min-height: 100%;
+  min-width: 100%;
+  color: yellow;
+}
+
+#rightMenu #bg-text {
+  color: lightgrey;
+  font-size: 58px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 64px;
+  text-align: center;
+}
+
+.column {
+  width: 100%;
+  float: left;
+  padding-bottom: 100px;
+  background: #fff;
+  overflow-y: scroll;
+  height: calc(100vh - 52px);
+}
+
+.column .ui-widget-header {
+  background: #e2e2e2;
+  border: 1px solid #f5f5f5;
+  padding: 10px;
+}
+
+.column .ui-widget.ui-widget-content {
+  border: none;
+}
+
+.column .portlet-content ul {
+  padding: 0px;
+}
+
+.column .portlet-content ul li {
+  list-style: none;
+  display: inline-block;
+  border: 1px solid #ccc;
+  padding: 4px 10px;
+}
+
+.column .portlet-content ul li .modal-icon {
+  font-size: 13px;
+  margin-right: 10px;
+  position: relative;
+  top: 1px;
+}
+
+.portlet {
+  background: #dad9d9;
+  padding: 10px 10px 2px;
+  margin: 5px;
+  font-size: 14px;
+}
+
+.portlet ul {
+  padding: 0px;
+}
+
+.portlet ul li {
+  list-style: none;
+  display: inline-block;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  margin-right: 5px;
+}
+
+.portlet ul li span.modal-icon {
+  font-size: 13px;
+  position: relative;
+  right: 5px;
+  top: 0px;
+}
+
+.portlet-header {
+  margin-bottom: 0.5em;
+  position: relative;
+}
+
+.portlet-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  margin-top: -8px;
+}
+
+.portlet-content {
+  padding: 0.4em;
+  display: none;
+}
+
+.portlet-placeholder {
+  border: 1px dotted black;
+  margin: 0 1em 1em 0;
+  height: 50px;
+}
+
+.main-tab {
+  padding-top: 20px;
+  margin-top: 10px;
+}
+
+.main-tab p {
+  font-size: 15px;
+}
+
+.main-tab ul {
+  padding: 0px;
+}
+
+.main-tab ul li {
+  list-style: none;
+  font-size: 15px;
+  padding-top: 10px;
+}

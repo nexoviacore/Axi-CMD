@@ -1,0 +1,64 @@
+﻿html {
+    &.ie10 {
+        .sidebar {
+            .menu {
+                .list {
+                    li {
+                        line-height: 30px;
+                    }
+
+                    .ml-menu {
+                        li {
+                            &.active {
+                                a {
+                                    &:not(.menu-toggle) {
+                                        &.toggled {
+                                            &:before {
+                                                top: 6px !important;
+                                                line-height: 20px !important;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            .user-info {
+                .info-container {
+                    top: -15px;
+                }
+            }
+        }
+
+        .search-bar {
+            input[type="text"] {
+                padding: $applicationIE10BrowserSerachBarInputPadding;
+            }
+        }
+
+        .dropdown-menu {
+            ul {
+                &.menu {
+                    li {
+                        a {
+                            margin-top: -22px;
+                        }
+                    }
+                }
+            }
+        }
+
+        .bs-searchbox {
+            .form-control {
+                width: 90%;
+            }
+        }
+        // IE renders transitions very slow, so disabling transitions for performance improvements
+        * {
+            transition: none !important;
+        }
+    }
+}

@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" name="ASBUserservice" targetNamespace="http://tempuri.org/" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types />
+  <message name="GetUserGroupDetails0Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetUserGroupDetails0Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetUserDetails1Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetUserDetails1Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ProcessRole2Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="ProcessRole2Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ProcessGroup3Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="ProcessGroup3Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ProcessUser4Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="ProcessUser4Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetAccessRightsDetails5Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetAccessRightsDetails5Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetUserAccessTstDetails6Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetUserAccessTstDetails6Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetUserAccessIviewDetails7Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetUserAccessIviewDetails7Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SaveAccessTstDetails8Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="SaveAccessTstDetails8Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SaveAccessIviewDetails9Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="SaveAccessIviewDetails9Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetResponsibilityList10Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetResponsibilityList10Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetRolesList11Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetRolesList11Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetUsersList12Request">
+    <part name="xml" type="xs:string" />
+  </message>
+  <message name="GetUsersList12Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetUserProfile13Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="GetUserProfile13Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="SaveUserProfile14Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="SaveUserProfile14Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="ChangePassword15Request">
+    <part name="S" type="xs:string" />
+  </message>
+  <message name="ChangePassword15Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <message name="GetEncryptedValue16Request">
+    <part name="s" type="xs:string" />
+  </message>
+  <message name="GetEncryptedValue16Response">
+    <part name="return" type="xs:string" />
+  </message>
+  <portType name="ASBUser">
+    <operation name="GetUserGroupDetails">
+      <input message="tns:GetUserGroupDetails0Request" />
+      <output message="tns:GetUserGroupDetails0Response" />
+    </operation>
+    <operation name="GetUserDetails">
+      <input message="tns:GetUserDetails1Request" />
+      <output message="tns:GetUserDetails1Response" />
+    </operation>
+    <operation name="ProcessRole">
+      <input message="tns:ProcessRole2Request" />
+      <output message="tns:ProcessRole2Response" />
+    </operation>
+    <operation name="ProcessGroup">
+      <input message="tns:ProcessGroup3Request" />
+      <output message="tns:ProcessGroup3Response" />
+    </operation>
+    <operation name="ProcessUser">
+      <input message="tns:ProcessUser4Request" />
+      <output message="tns:ProcessUser4Response" />
+    </operation>
+    <operation name="GetAccessRightsDetails">
+      <input message="tns:GetAccessRightsDetails5Request" />
+      <output message="tns:GetAccessRightsDetails5Response" />
+    </operation>
+    <operation name="GetUserAccessTstDetails">
+      <input message="tns:GetUserAccessTstDetails6Request" />
+      <output message="tns:GetUserAccessTstDetails6Response" />
+    </operation>
+    <operation name="GetUserAccessIviewDetails">
+      <input message="tns:GetUserAccessIviewDetails7Request" />
+      <output message="tns:GetUserAccessIviewDetails7Response" />
+    </operation>
+    <operation name="SaveAccessTstDetails">
+      <input message="tns:SaveAccessTstDetails8Request" />
+      <output message="tns:SaveAccessTstDetails8Response" />
+    </operation>
+    <operation name="SaveAccessIviewDetails">
+      <input message="tns:SaveAccessIviewDetails9Request" />
+      <output message="tns:SaveAccessIviewDetails9Response" />
+    </operation>
+    <operation name="GetResponsibilityList">
+      <input message="tns:GetResponsibilityList10Request" />
+      <output message="tns:GetResponsibilityList10Response" />
+    </operation>
+    <operation name="GetRolesList">
+      <input message="tns:GetRolesList11Request" />
+      <output message="tns:GetRolesList11Response" />
+    </operation>
+    <operation name="GetUsersList">
+      <input message="tns:GetUsersList12Request" />
+      <output message="tns:GetUsersList12Response" />
+    </operation>
+    <operation name="GetUserProfile">
+      <input message="tns:GetUserProfile13Request" />
+      <output message="tns:GetUserProfile13Response" />
+    </operation>
+    <operation name="SaveUserProfile">
+      <input message="tns:SaveUserProfile14Request" />
+      <output message="tns:SaveUserProfile14Response" />
+    </operation>
+    <operation name="ChangePassword">
+      <input message="tns:ChangePassword15Request" />
+      <output message="tns:ChangePassword15Response" />
+    </operation>
+    <operation name="GetEncryptedValue">
+      <input message="tns:GetEncryptedValue16Request" />
+      <output message="tns:GetEncryptedValue16Response" />
+    </operation>
+  </portType>
+  <binding name="ASBUserbinding" type="tns:ASBUser">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="rpc" />
+    <operation name="GetUserGroupDetails">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#GetUserGroupDetails" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetUserDetails">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#GetUserDetails" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ProcessRole">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#ProcessRole" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ProcessGroup">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#ProcessGroup" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ProcessUser">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#ProcessUser" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetAccessRightsDetails">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#GetAccessRightsDetails" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetUserAccessTstDetails">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#GetUserAccessTstDetails" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetUserAccessIviewDetails">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#GetUserAccessIviewDetails" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SaveAccessTstDetails">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#SaveAccessTstDetails" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SaveAccessIviewDetails">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#SaveAccessIviewDetails" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetResponsibilityList">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#GetResponsibilityList" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetRolesList">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#GetRolesList" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetUsersList">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#GetUsersList" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetUserProfile">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#GetUserProfile" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="SaveUserProfile">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#SaveUserProfile" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="ChangePassword">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#ChangePassword" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+    <operation name="GetEncryptedValue">
+      <soap:operation soapAction="urn:uASBUser-ASBUser#GetEncryptedValue" style="rpc" />
+      <input>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:uASBUser-ASBUser" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+      </output>
+    </operation>
+  </binding>
+  <service name="ASBUserservice">
+    <port name="ASBUserPort" binding="tns:ASBUserbinding">
+      <soap:address location="http://localhost/axpertwebscripts/ASBUser.dll/soap/ASBUser" />
+    </port>
+  </service>
+</definitions>

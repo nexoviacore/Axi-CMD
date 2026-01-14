@@ -1,0 +1,131 @@
+
+/*grid Attachment */
+ .griddivColumn{
+     table{
+         tr{
+             td{
+                 .fa-paperclip{
+                     font-size: $griddivColumnTableIconFontSize;
+                     cursor: pointer;
+                     color: $applicationIconColor;
+                     &:focus{
+                         outline: none;
+                     }
+                 }
+                 textarea{
+                     &.labelInp{
+                         &[data-type='gridattach']{
+                             display: none;
+                         }
+                     }
+                 }
+             }
+     }
+  }
+ }
+//*grid Attachment *//
+
+//* Non Grid Attachment for tstruct *//
+.rowDUMMY {
+    .labelcol{
+        .focus-input{
+            position: $applicationfocusinputposition;
+        }
+        .nongridAttachIcon{
+            margin-left: $applicationnongridAttachIconmarginleft;
+            z-index: $applicationnongridAttachIconzindex;
+            top: $applicationnongridAttachIcontop;
+        }
+        .divnonattach, .divNonGridAxpFile{
+            @include nonGridDcAttachment;
+            .nongridAttachIcon {
+               position: $applicationdivnonattachattachiconposition;
+            }
+            .attach-files{
+                margin-right: $applicationdivnonattachfilesmarginright;
+                display: $applicationdivnonattachfilesdisplay;
+                margin-left: $applicationdivnonattachfilesmarginleft;
+                
+
+                .atchfile{
+                    @include shadow;
+                    border: 1px solid $applicationBorderColor;
+                    padding: $applicationdivnonattachatchfilepadding;
+                    margin-right: $applicationdivnonattachatchfilemarginright;
+
+                    .a-colorbutton{
+                        margin-right: $applicationdivnonattachatchfile-acolorbuttonmarginright;
+                        text-decoration: $applicationdivnonattachatchfile-acolorbuttontextdecoration;
+                    }
+                }
+            }
+            .attachment-count{
+                padding: $applicationattachfilesattachmentcountpadding;
+                position: $applicationattachfilesattachmentcountposition;
+                right: $applicationattachfilesattachmentcountright;
+                top: $applicationattachfilesattachmentcounttop;
+            }
+
+        }
+        .divNonGridAxpFile{
+            height: $applicationdivNonGridAxpFileheight;
+            border: 1px solid $applicationBorderColor; 
+            border-radius: $applicationdivNonGridAxpFileborder-radius;
+            position: $applicationdivNonGridAxpFileposition;
+
+            .nongridAttachIcon {
+                position: $applicationdivnonattachattachiconposition;
+             }
+        }
+        .grdhandCur{
+            @include divnonattachgrdhandCur;
+        }
+    }
+}
+//* Non Grid Attachment for tstruct *//
+
+//* Grid Attachment for tstruct *//
+.grdattch{
+    .focus-input{
+        position: $applicationgrdattchfocusinputposition;
+    }
+    .attach-files{
+        margin-right: $applicationgrdattch-attachfilesrightmargin;
+        display: $applicationgrdattch-attachfilesdisplay;
+        //width: $applicationgrdattch-attachfileswidth;
+        .atchfile{
+            i{
+                //@include gridAttachmentIcon;
+                &:focus{
+                    outline: none;
+                    text-decoration: none;
+                }
+            }
+        }
+    }
+    .attachment-count{
+        padding: $applicationgrdattch-attachmentcountpadding;
+        width: $applicationgrdattch-attachmentcountwidth;
+    }
+}
+
+//* Non Grid Attachment for tstruct *//
+// below two is for handling display in functionality
+.inlinediv{
+    display: $applicationinlinedivdisplay;
+    word-break: $applicationwordbreak; 
+}
+.revrseInlinediv{
+    display: $applicationrevrseInlinedivdisplay;
+    word-break: $applicationwordbreak; 
+}
+.attachmentcrossicon{
+    @include gridAttachmentIcon;
+}
+.axpFilePathFld{
+    width: $applicationaxpfilepathwidth;
+    border: 1px solid $applicationBorderColor;
+    &:focus{
+        outline: $applicationaxpfilepathoutlineonfocus;
+    }
+}

@@ -1,0 +1,62 @@
+#divTable{
+    padding: $tstructFieldTableDivTablePadding;
+    .pull-left{
+        background: $applicationColor;
+        padding: $tstructFieldTableDivTableIconPadding;
+        color: $tstructFieldTableDivTableIconColor;
+        margin-right: $tstructFieldTableDivTableIconMarginRight;
+        margin-bottom: $tstructFieldTableDivTableIconMarginBottom;
+    }
+    .table{
+        thead{
+            tr{
+                background: $applicationBackgroundColor;
+                th{
+                    background: $applicationBackgroundColor;
+                    padding: 3px 5px;
+                }
+            }
+        }
+        &#fldTable{
+            background: $tstructFieldTableDivTableFldTableBackground;
+            tr{
+                background: $applicationBackgroundColor;
+                th{
+                    border-bottom: 1px solid  $applicationGridDcTableBorderColor;
+                    //background: $tstructFieldTableDivTableFldTableThBackground;
+                   // border-right: 1px solid  $applicationGridDcTableBorderColor;
+                    border: 1px solid  $applicationGridDcTableBorderColor;
+                }
+                td{
+                    border: 1px solid  $applicationGridDcTableBorderColor;
+                    padding: 0px;
+                    .form-control {
+                        padding: 0px;
+                        height: 23px;
+                    }
+                    .fldtableinput{
+                        @media (max-width: $breakTabMinimumDevice){
+                            width:$tstructFieldTableDivTableTdFldtableinputWidth;
+                        }
+                        
+                    }
+                }       
+            }
+        }
+    }
+    #divtblForm{
+        input,select{
+            height: 23px;
+            padding: 0px;
+            margin-bottom: 10px;
+        }
+    }
+}
+#divModalTable{
+    .modal-dialog {
+        width: $tstructFieldTableDivModalDailogWidth;
+        @media (max-width: $breakTabDevice){
+            width: auto;
+        }
+    }
+}

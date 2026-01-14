@@ -1,0 +1,247 @@
+/*blue*/
+/*blue lighten-2*/
+/* light-blue darken-4 */
+/* light-blue accent-1 */
+/*#e3f2fd blue lighten-5*/
+/*blue lighten-4*/
+.primaryBackground {
+  /* for future */ }
+
+.secondaryBackground {
+  background: #00bcd4;
+  color: white; }
+
+.terinaryBackground {
+  background: #77c9d4;
+  color: white; }
+
+.themeTable thead {
+  background: #77c9d4; }
+  .themeTable thead th {
+    color: #fff; }
+.themeTable tbody tr:nth-child(even) {
+  background-color: #e0f2f1 !important; }
+.themeTable tbody tr:hover {
+  background-color: #e0f2f1 !important; }
+
+.themeDarkenBackground {
+  background: #004d40;
+  color: white; }
+
+.themeButton {
+  background: #004d40 !important;
+  background-color: #004d40 !important; }
+  .themeButton:hover {
+    background: #009a80 !important; }
+  .themeButton:focus {
+    background: black !important; }
+
+.cancelButton {
+  background: gray !important; }
+  .cancelButton:hover {
+    background: #a6a6a6 !important; }
+  .cancelButton:focus {
+    background: #4d4d4d !important; }
+
+.themeTextColor {
+  color: #004d40; }
+
+.hoverFocusThemeColor:hover,
+.hoverFocusThemeColor:focus {
+  color: #004d40 !important; }
+
+.hoverFocusThemeBgColor:hover,
+.hoverFocusThemeBgColor:focus {
+  background: #e0f2f1 !important; }
+
+.themeBorderColor {
+  border-color: #004d40; }
+
+.themeBorder {
+  border-bottom: 1px solid #004d40 !important; }
+
+.switch label input[type=checkbox]:checked + .lever:after {
+  background-color: #004d40 !important; }
+
+.switch label input[type=checkbox]:checked + .lever {
+  /* switch box before */
+  background-color: #a7ffeb !important; }
+
+input:not([type]):focus:not([readonly]),
+input[type=text]:focus:not([readonly]),
+input[type=password]:focus:not([readonly]),
+input[type=email]:focus:not([readonly]),
+input[type=url]:focus:not([readonly]),
+input[type=time]:focus:not([readonly]),
+input[type=date]:focus:not([readonly]),
+input[type=datetime]:focus:not([readonly]),
+input[type=datetime-local]:focus:not([readonly]),
+input[type=tel]:focus:not([readonly]),
+input[type=number]:focus:not([readonly]),
+input[type=search]:focus:not([readonly]),
+textarea.materialize-textarea:focus:not([readonly]) {
+  border-bottom: 1px solid #004d40 !important;
+  box-shadow: 0 1px 0 0 #004d40 !important; }
+
+[type="checkbox"]:checked + label:before {
+  border-right: 1px solid #004d40 !important;
+  border-bottom: 1px solid #004d40 !important; }
+
+input:not([type]):focus:not([readonly]) + label,
+input[type=text]:focus:not([readonly]) + label,
+input[type=password]:focus:not([readonly]) + label,
+input[type=email]:focus:not([readonly]) + label,
+input[type=url]:focus:not([readonly]) + label,
+input[type=time]:focus:not([readonly]) + label,
+input[type=date]:focus:not([readonly]) + label,
+input[type=datetime]:focus:not([readonly]) + label,
+input[type=datetime-local]:focus:not([readonly]) + label,
+input[type=tel]:focus:not([readonly]) + label,
+input[type=number]:focus:not([readonly]) + label,
+input[type=search]:focus:not([readonly]) + label,
+textarea.materialize-textarea:focus:not([readonly]) + label {
+  color: #004d40; }
+
+.tabs .indicator {
+  background-color: #004d40; }
+
+.tabs .tab a:hover,
+.tabs .tab a.active {
+  color: #004d40; }
+
+.tabs .tab a {
+  color: #00bcd4; }
+
+[type="radio"]:checked + label:after,
+[type="radio"].with-gap:checked + label:after {
+  background-color: #004d40; }
+
+[type="radio"]:checked + label:after,
+[type="radio"].with-gap:checked + label:before,
+[type="radio"].with-gap:checked + label:after {
+  border: 2px solid #004d40; }
+
+.wizard-progress .step.in-progress .node {
+  border-color: #00bcd4; }
+.wizard-progress .step.in-progress:not(.flat):before {
+  background: #00bcd4;
+  background: -moz-linear-gradient(left, #00bcd4 0, #fff 100%);
+  background: -webkit-linear-gradient(left, #00bcd4 0, #fff 100%);
+  background: linear-gradient(to right, #00bcd4 0, #fff 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='$secondary-color', endColorstr='#fff', GradientType=1); }
+.wizard-progress .step.in-progress.flat {
+  background: #00bcd4;
+  background: -moz-linear-gradient(left, #00bcd4 0, #fff 120%);
+  background: -webkit-linear-gradient(left, #00bcd4 0, #fff 120%);
+  background: linear-gradient(to right, #00bcd4 0, #fff 120%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='$secondary-color', endColorstr='#fff', GradientType=1); }
+  .wizard-progress .step.in-progress.flat:not(.active) a {
+    color: white !important; }
+.wizard-progress .step.complete .node {
+  border-color: #00bcd4;
+  background-color: #00bcd4; }
+.wizard-progress .step.complete.flat {
+  background: #00bcd4; }
+  .wizard-progress .step.complete.flat:not(.active) a {
+    color: white !important; }
+.wizard-progress .step.complete:not(.flat):before {
+  background: #00bcd4 !important; }
+.wizard-progress .step.active.flat:before {
+  border-top-color: #004d40; }
+.wizard-progress .step.active a {
+  color: #004d40; }
+
+#chartSelData a.selected .card {
+  border-color: #00bcd4; }
+
+.AXpaginationWrapper .pageNumberBtn.active {
+  border-color: #00bcd4;
+  background-color: #00bcd4; }
+
+.wizard-progress.wizardRtl .step.in-progress:not(.flat):before {
+  background: #00bcd4;
+  background: -moz-linear-gradient(right, #00bcd4 0, #fff 100%);
+  background: -webkit-linear-gradient(right, #00bcd4 0, #fff 100%);
+  background: linear-gradient(to left, #00bcd4 0, #fff 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='$secondary-color', endColorstr='#fff', GradientType=1); }
+
+.collectionListUl .collection-item:hover,
+li.collection-item.activeLi {
+  background: #e0f2f1;
+  color: black; }
+
+table.dataTable th.focus,
+table.dataTable td.focus {
+  outline: 1px solid #004d40;
+  outline-offset: -1px; }
+
+.dropdown-content li:hover,
+.dropdown-content li.active,
+.dropdown-content li.selected {
+  background-color: #e0f2f1 !important; }
+
+.createBadge::after {
+  background: #004d40;
+  color: white; }
+
+div#iconWrapperData span[class^="icon-"],
+#prpShtTargetWrapper .autocomplete-content li .highlight {
+  color: #004d40; }
+
+#prpShtImgUpload.progress .determinate,
+div#iconWrapperData span.active,
+.fixed-action-btn .btn-floating {
+  background-color: #004d40; }
+
+div#customTxtAreaWrapper textarea:focus {
+  box-shadow: 0px 0px 6px #004d40; }
+
+#prpShtImgUpload {
+  background-color: #a7ffeb !important; }
+
+/* table related need to remove once finalized */
+/* table related need to remove once finalized */
+#mainSearchFldSpn .dataTables_filter label input:focus {
+  box-shadow: -1px 1px 1px #00bcd4; }
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button:active {
+  color: white !important;
+  background-color: #00bcd4;
+  background: linear-gradient(to bottom, #00bcd4 0%, #00bcd4 100%); }
+
+li.CodeMirror-hint-active {
+  background: #004d40 !important;
+  /*  light-blue darken-4  */
+  color: white; }
+
+.colorBorder,
+#chartSelData a.selected .card,
+.chartImgWrapper a:hover .card,
+.chartImgWrapper a:focus .card,
+#iviewType a.active.iconAnchr span {
+  border: 1px solid #004d40 !important; }
+
+#wizarTypeSel a.iconAnchr:hover,
+#wizarTypeSel a.iconAnchr:focus {
+  color: #004d40; }
+
+div#ivirChartsRow button.active [class*="icon-"] {
+  color: #004d40; }
+
+div.DTE_Inline div.DTE_Inline_Field div.DTE_Field input:focus,
+div.DTE_Inline div.DTE_Inline_Buttons div.DTE_Field input:focus {
+  border-color: #004d40 !important;
+  box-shadow: 0px 0px 7px #004d40 !important; }
+
+.createTick::after {
+  background: #004d40; }
+
+.dataBodyParent .card-image .btn-floating:last-child:not(#prevDesignData):not(#nextDesignData),
+.dataBodyParent .card-image .btn-floating:last-child:not(#prevDesignData):not(#nextDesignData) i,
+#filterModal .btn-floating:last-child:not(#prevDesignData):not(#nextDesignData),
+#filterModal .btn-floating:last-child:not(#prevDesignData):not(#nextDesignData) i {
+  background-color: #004d40 !important;
+  color: #f0f0f0; }
+
+/*# sourceMappingURL=green.css.map */

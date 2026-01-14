@@ -1,0 +1,201 @@
+//* file upload input ==================================== *//
+@mixin fileUploadInput{
+    position: $fileUploadInputPosition;
+    width: $applicationMaximumWidth;
+    top: 0;
+    left: 0;
+    cursor: pointer;
+    opacity: 0;
+    z-index: $fileUploadInputZIndex;
+    height: $fileUploadInputHeight;
+}
+@mixin inputpadding{
+    padding: 0px $inputPaddingLeftRight;
+}
+@mixin inputRadius {
+    -webkit-border-radius: $applicationBorderRadius;
+    -moz-border-radius: $applicationBorderRadius;
+    -ms-border-radius: $applicationBorderRadius;
+    border-radius: $applicationBorderRadius;
+}
+@mixin materialInputBorderRadius {
+    @include inputRadius;
+    border: 1px solid $materialInputBorderColor;
+}
+@mixin  materialInputStyle {
+    width: 100%;
+    height: $materialInputHeight;
+    padding-left: $materialInputPaddingLeft;
+    font-size: $materialInputFontSize;
+    box-sizing: border-box;
+    border:1px solid $materialInputBorderColor;
+}
+@mixin materialInputPlaceHolderStyle{
+    font-size: $materialInputPlaceHolderFontSize;
+    position: $materialInputPlaceHolderPosition;
+    bottom: $materialInputPlaceHolderBottomGap;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    color: $materialInputPlaceHolderColor;
+    left: $materialInputPlaceHolderLeftGap;
+    padding: $materialInputPlaceHolderPadding;
+    -webkit-transition: transform 150ms cubic-bezier(0.4,0,0.2,1),opacity 150ms cubic-bezier(0.4,0,0.2,1);
+    -moz-transition: transform 150ms cubic-bezier(0.4,0,0.2,1),opacity 150ms cubic-bezier(0.4,0,0.2,1);
+    transition: transform 150ms cubic-bezier(0.4,0,0.2,1),opacity 150ms cubic-bezier(0.4,0,0.2,1);
+    z-index: 1;
+    @include textLeft;
+    width: 100%;
+}
+@mixin materialInputSpanPlaceholderStyle {
+    background: $applicationBackgroundColor;
+    font-size: $materialInputFontSize;
+    display: block;
+    width: 100%;
+    padding-left: $materialInputSpanPlaceholderPaddingLeft;
+    padding-right: $materialInputSpanPlaceholderPaddingRight;
+    box-sizing: border-box;
+    @include textLeft;
+}
+@mixin materialInputFieldPlaceholderAfterFocusStyle {
+    color: $materialFieldPlaceholderAfterFocusColor;
+    font-size: $materialInputFontSize;
+    //top: $loginFieldPlaceholderTopGap;
+    //left: $loginFieldPlaceholderLeftGap;
+    //padding: $loginFieldPlaceholderPadding;
+}
+//*Input autocomplete*//
+@mixin inputAutoComplete {
+    input{
+        @include materialInputBorderRadius;
+        &:focus{
+            outline: none;
+            border-color: $hotbtnbackgroundcolor;
+            .field-placeholder{
+               span{
+                span{
+                    display: $loginInputFocusDisplay;
+                    width: auto;
+                   }
+               }
+            }
+        }
+        
+    }
+    .input-icon{
+        position: $loginInputIconPosition;
+        .icon-cross{
+            @include inputIconCross;
+        }
+        .icon-chevron-down{
+            @include inputIconChevronDown;
+        }
+    }
+}
+//*Input placeholder*//
+@mixin materialInputsStyle {
+    .field-wrapper{
+        position: $materialFieldWrapperPositionRelative;
+        margin-bottom: $materialFieldWrapperMarginBootom;
+        input:not([disabled]){
+            @include materialInputStyle;
+            @include materialInputBorderRadius;
+            &:focus{
+                outline: none;
+                border-color: $materialinputFieldPlaceholderFocusBorderColor;
+                &~.field-placeholder{
+                    @include materialInputFieldPlaceholderAfterFocusStyle;
+                    span{
+                        display: $materialFieldPlaceholderSpanDisplayInlineBlock;
+                        width: auto;
+                    }
+                }
+            }
+            &#language{
+                padding-right: $loginSelectBoxRightPadding;
+            }
+        }
+        .field-placeholder{
+            @include materialInputPlaceHolderStyle;
+            @media (max-width: $breakTabMinimumDevice) {
+               left:$materialFieldWrapperMobileLeftGap;
+            }
+            span{
+              @include materialInputSpanPlaceholderStyle;
+                  &#lblslctproj{
+                    background: $applicationBackgroundColor;
+                    // bottom: 5px;
+                    // position: relative;
+                    //padding-right: $loginPlaceholderlblslctprojPaddingRight;
+                    //padding-left: $loginPlaceholderlblslctprojPaddingLeft;
+                  }
+                //   &#lblslctproj,&#lblpwd,&#lblusername,&#lblslctlang,&#lblproj{
+                      display: inline-block;
+                      width: auto;
+                //   }
+            }
+        }  
+        input{
+            &:not([disabled]){
+               &:focus{
+                ~.field-placeholder{
+                    @include materialAnimationInputEffectActiveFocus;
+                }
+               }
+            }
+        }
+        &.hasValue{
+            input{
+                &:not([disabled]){
+                    ~.field-placeholder{
+                        @include materialAnimationInputEffectActiveFocus;
+                    }
+                }
+            }
+        }
+        input{
+            &:-webkit-autofill{
+                &:not([disabled]){
+                    ~.field-placeholder{
+                        @include materialAnimationInputEffectActiveFocus;
+                    }
+                }
+            }
+            &:-moz-autofill{
+                &:not([disabled]){
+                    ~.field-placeholder{
+                        @include materialAnimationInputEffectActiveFocus;
+                    }
+                }
+            }
+        }      
+    }
+}
+@mixin materialAnimationInputEffectActiveFocus {
+    -webkit-transform: scale(0.7) translateY(-30px) translateX(-82px);
+    transform: scale(0.7) translateY(-30px) translateX(-82px);
+}
+@mixin materialAnimationInputEffectActiveFocus {
+    -moz-transform: scale(0.7) translateY(-30px) translateX(-82px);
+    transform: scale(0.7) translateY(-30px) translateX(-82px);
+}
+@mixin multiGroupSelectInput {
+        margin-top: 0;
+        display: block;
+        box-sizing: border-box;
+        height: $multiGroupSelectInputHieght;
+        border: 1px solid $applicationBorderColor;
+        width: $multiGroupSelectInputWidth;
+        text-indent: 5px;
+        @include btnRadius;
+}
+@mixin materialInput {
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    box-shadow: none;
+    border-radius: 0px;
+    padding: 0px;
+}
+
+//* file upload input ==================================== *//

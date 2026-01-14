@@ -1,0 +1,52 @@
+//* login -----------*//
+  @mixin loginMain{
+    display: $loginMainDisplayTable;
+    position: $loginMainPosition;
+    width: $loginMainWidth;
+    height: $loginMainHeight;
+  }
+  @mixin mainLogo {
+    // background:$applicationColor;
+    padding: $loginMainIconPadding;
+    // border-radius: $loginMainIconBorderRadius;
+    margin-bottom: $loginMainIconMarginBottom;
+    max-width: 400px;
+    max-height: 175px;
+  }
+  @mixin mainHeadingLogin {
+    @include textCenter;
+    //background: $applicationColor;
+    color: $loginHeaderTextColor;
+    font-weight: 400;
+    padding-top: $mainHeadingLoginPadding;
+    margin: 0px;
+  }
+  @mixin mainHeadingSignIn {
+    position: $mainHeadingSignInPosition;
+    //top: $mainHeadingSignInTopGap;
+    display: block;
+    color: $applicationTextColor;
+    font-size: $mainHeadingSignInFontSize;
+    margin-bottom: $mainHeadingSignInBottomMargin;
+    margin-top: $mainHeadingSignInTopMargin;
+  }
+  @mixin loginBtn {
+    width: 100%;
+    margin: auto;
+    display: block;
+    padding: $loginBtnPadding;
+    margin-bottom: $loginBtnPaddingMarginBottom;
+    cursor: pointer;
+    font-size: $applicationFontSize;
+  }
+  @mixin loginLabel {
+    padding: $loginFormPadding;
+    font-size: $loginFormLabelFontSize;
+    color:$loginLabelInfoColor;
+    text-decoration: none;
+    padding-bottom: $loginLabelPaddingBottom;
+    display: block;
+    @include textCenter;
+  }
+  
+//* login -----------*//

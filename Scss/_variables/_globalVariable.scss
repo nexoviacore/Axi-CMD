@@ -1,0 +1,3195 @@
+
+
+
+
+//* pills arraow border on before after upload ==================================== *//
+$pillsArrowBorderColor:darken($applicationBackgroundColor, 0%);
+//* pills arraow border on before after upload ==================================== *//
+$pillsIvirCndtnIconTextColor:darken($applicationBackgroundColor, 0%);
+//* applicationGridDcTableBackground color  ==================================== *//
+$applicationGridDcTableBackground:lighten($applicationTextColor, 90%);
+//* applicationGridDcTableTextareaDataTypeNumericTextalign ====================== *//
+$applicationGridDcTableTextareaDataTypeNumericTextalign: right;
+$applicationGridDcTableBorderColor:lighten($applicationTextColor, 90%);
+
+
+
+
+//* iviewTable header background color  ==================================== *//
+$iviewTstructTableHeaderBackground:darken($applicationBackgroundColor, 5%);
+//* iviewTableWrapperNewHeightCalc ==================================== *//
+//$iviewTableWrapperHeightCalc:"100vh - 68px";
+//* iviewTableWrapperNewHeight ==================================== *//
+$iviewTableWrapperHeight:70vh;
+//* iviewTableWrapperTableMargin ==================================== *//
+$iviewTableWrapperTableMargin:0px;
+//* iviewTableWrapperTableMarginRtl ==================================== *//
+$iviewTableWrapperTableMarginRtl:0px;
+//* iview List view overflow==================================== *//
+$iviewListViewDcOverflow:hidden;
+//* iviewTable header font weight ==================================== *//
+$iviewTstructTableFontWeight:500;
+//* iviewTable toolbar wrapper height calc  ==================================== *//
+$iviewTableWrapperHeightCalc:"100vh - 68px";
+//* iviewTable toolbar wrapper new height calc  ==================================== *//
+$iviewTableWrapperNewHeightCalc:"100vh - 43px";
+//* iviewTablePageInformationNewMargin  ==================================== *//
+$iviewTablePageInformationNewMargin:2px 0px 0px 5px;
+//* iviewTable toolbar wrapper new with requestjson height calc  ==================================== *//
+$iviewTableWrapperNewRequestJsonHeightCalc:"100vh - 72px";
+//* iviewTable toolbar wrapper new with requestjson charts added height calc  ==================================== *//
+$iviewTableWrapperNewRequestJsonChartsAddedHeightCalc:"100vh - 127px";
+//* iviewTable toolbar wrapper new with tab height calc ==================================== *//
+$iviewTableWrapperNewRequestJsonWithTabHeightCalc:"100vh - 109px";
+//* iviewTable toolbar wrapper new overflow  ==================================== *//
+$iviewTableWrapperNewRequestJsonOverflow:auto;
+//* iviewTable toolbar wrapper new overflow for inmemorydb  ==================================== *//
+$iviewTableWrapperNewRequestJsonInMemoryDBOverflow:hidden;
+//* iviewTable toolbar wrapper new scrollbar width ==================================== *//
+$iviewTableWrapperNewRequestJsonScrollbarWidth:8px;
+//* iviewTable toolbar wrapper new scrollbar height ==================================== *//
+$iviewTableWrapperNewRequestJsonScrollbarHeight:8px;
+//* iviewTable toolbar wrapper new scrollbar thumbackground color ==================================== *//
+$iviewTableWrapperNewRequestJsonScrollbarThumBackgroundColor:#ddd;
+//* iviewTable toolbar wrapper new scrollbar thum border radius ==================================== *//
+$iviewTableWrapperNewRequestJsonScrollbarThumBorderRadius:20px;
+//* iviewTable toolbar wrapper new scrollbar thum border color ==================================== *//
+$iviewTableWrapperNewRequestJsonScrollbarThumBorderColor:#fff;
+
+//* iviewTablePageInformationNewMargin  ==================================== *//
+$iviewCardContentWrapperMargin:3px;
+//* iviewDataTablesScrollBodyTbodyIsHyperlinkUIPadding  ==================================== *//
+$iviewDataTablesScrollBodyTbodyIsHyperlinkUIPadding:10px 3px;
+//* iviewDataTablesScrollBodyTbodyIsHyperlinkUIPadding  ==================================== *//
+$iviewDataTablesScrollBodyTbodyIsHyperlinkUICompressedPadding:1px 1px;
+//* iviewDataTablesScrollBodyTbodyIsHyperlinkUIAnchorPadding  ==================================== *//
+$iviewDataTablesScrollBodyTbodyIsHyperlinkUIAnchorPadding:3px 7px;
+//* iviewDataTablesScrollBodyTbodyIsHyperlinkUIAnchorCompressedPadding  ==================================== *//
+$iviewDataTablesScrollBodyTbodyIsHyperlinkUIAnchorCompressedPadding:1px 7px;
+//* iview List view overflow==================================== *//
+$iviewListViewDcOverflow:hidden;
+//* iview chart pills popover min width==================================== *//
+$iviewLnkChartPillPopOverMinWidth:180px;
+
+//* iviewTable header background color  ==================================== *//
+$gridDcBtnMobileBackground:darken($applicationBackgroundColor, 10%);
+//* popoverContent for poup box  ==================================== *//
+$popoverContent:lighten($applicationPageTitleColor, 50%);
+$gridBtnBackground:darken($applicationBackgroundColor, 40%);
+
+//* progressbar Icon color  ==================================== *//
+$progressBarIconColor:lighten($applicationTextColor,90%);
+//* WorkFlowNotificationBorder  ==================================== *//
+$WorkFlowNotificationBorder:lighten($applicationTextColor,80%);
+//* applicationFontSize  ==================================== *//
+$applicationFontSize :13px;
+//*appliactionPopUpPadding =======*//
+//$appliactionPopUpPadding:10px;
+$appliactionPopUpPadding:5px;
+//*propertySheetDataWrapperPadding =======*//
+$propertySheetDataWrapperPadding:10px;
+//*applicationCardPosition =======*//
+$applicationCardPosition:relative;
+//*appliactionPopUpMargin =======*//
+$appliactionPopUpMargin:10px;
+//* applicationInfoFontSize==================================== *//
+$applicationInfoIconFontSize:10px;
+//* applicationTitle ==================================== *//
+$applicationTitleFont:16px;
+//* applicationTitle for mobile for tstruct and iview ==================================== *//
+$applicationTitleFontSizeMobile:15px;
+//* applicationTitle for mobile for tstruct and iview ==================================== *//
+$applicationTitleLineHeightMobile:25px;
+//* applicationTitle ==================================== *//
+$applicationSearchFont:13px;
+$applicationJconfirmTitleColor:#000;
+$applicationJconfirmTitleFontSize:16px;
+$applicationJconfirmTitleFontWeight:500;
+//* applicationSearchPadding ==================================== *//
+$applicationSearchPadding:10px;
+//*applicationSearchRightGap=========*//
+$applicationSearchRightGap:0px;
+//*applicationmodernIviewOptionsSearchTopGap=========*//
+$applicationModernIviewOptionsSearchTopGap:0px;
+//*applicationmodernIviewOptionsSearchWidth=========*//
+$applicationModernIviewOptionsSearchWidth:auto;
+//*applicationModernIviewOptionsSearchMobileFloat=========*//
+$applicationModernIviewOptionsSearchMobileFloat:none;
+//*applicationSearchRight rtl Gap=========*//
+$applicationSearchRightRtlGap:auto;
+//*applicationSearchleft rtl Gap=========*//
+$applicationSearchLeftRtlGap:15px;
+//*applicationSearchleft rtl Gap=========*//
+$applicationSearchLeftRtlMobileGap:6px;
+//*applicationSearchright mobile rtl Gap=========*//
+$applicationSearchRightRtlMobileGap:auto;
+//*applicationSearchright mobile rtl padding=========*//
+$applicationSearchPaddingMobile:0px 22px;
+//*applicationSearchIconRightGap=========*//
+$applicationSearchIconRightGap:35px;
+//*applicationSearchIconRightGap=========*//
+$applicationSearchInputMarginRight:24px;
+//*$applicationSearchIconMarginLeft=========*//
+$applicationSearchIconMarginLeft:10px;
+//*applicationSearchOptionMobileWidth=========*//
+$applicationSearchOptionMobileWidth:18px;
+//*applicationSearchOptionMobileHeight=========*//
+$applicationSearchOptionMobileHeight:32px;
+//*applicationSearchOptionMobilePadding=========*//
+$applicationSearchOptionMobilePadding:16px;
+//*applicationSearchOptionMobileRight=========*//
+$applicationSearchOptionMobileRight:18px;
+//*applicationSearchTopGap=========*//
+$applicationSearchTopGap:4px;
+//*applicationSearchTop=========*//
+$applicationSearchTop:5px;
+//*applicationSearchBorderRadius=========*//
+$applicationSearchBorderRadius:50px;
+//*applicationSearchInputWidth=========*//
+$applicationSearchInputWidth:100px;
+//*applicationSearchInputHeight=========*//
+$applicationSearchInputHeight:32px;
+//*applicationSearchInput Position=========*//
+$applicationSearchInputPositionAbsolute:absolute;
+//*applicationSearchHoverWidth=========*//
+$applicationSearchHoverWidth:75%;
+//*applicationSearchTopMargin=========*//
+$applicationSearchTopMargin:-27px;
+//*applicationSearchMarginRightMobile =========*//
+$applicationSearchMarginRightMobile:90px;
+//*applicationSearchPaddingTopMobile =========*//
+$applicationSearchPaddingTopMobile:13px;
+//*applicationSearchPaddingTopMobile =========*//
+$applicationSearchDisplayMobile:block;
+//*applicationNavBarCollapseDisplayMobile =========*//
+$applicationNavBarCollapseDisplayMobile:block;
+//*applicationNavBarCollapseUlDisplayMobile =========*//
+$applicationNavBarCollapseUlDisplayMobile:inline-block;
+//*applicationNavBarCollapseUlMarginTopMobile =========*//
+$applicationNavBarCollapseUlMarginTopMobile:-71px;
+//*applicationSearchBarTopGapMobile =========*//
+$applicationSearchBarTopGapMobile:-100px;
+//*applicationSearchBarWidthMobile =========*//
+$applicationSearchBarWidthMobile:100%;
+//*applicationSearchBarInutPaddingMobile =========*//
+$applicationSearchBarInutPaddingMobile:25px 60px 25px 56px;
+//*applicationSearchBarInutBorderRadiusMobile =========*//
+$applicationSearchBarInutBorderRadiusMobile:0px;
+//*applicationSearchBarInutMarginTopMobile =========*//
+$applicationSearchBarInutMarginTopMobile:0px;
+//*applicationSearchInputPadding =========*//
+$applicationSearchInputPadding:12px 60px 12px 55px;
+//*applicationSearchInputMarginTop =========*//
+$applicationSearchInputMarginTop:12px;
+//*applicationSearchInputBorderRadius =========*//
+$applicationSearchInputBorderRadius:5px;
+//* searchIconMobileTopGap =============*//
+$searchIconMobileTopGap:6px;
+//* searchIconMobileRightGap =============*//
+$searchIconMobileRightGap:22px;
+//* applicationSearchIconColor  ==================================== *//
+$applicationSearchIconColor:darken($applicationBackgroundColor, 10%);
+//* applicationTitlegWeight ==================================== *//
+$applicationTitleFontWeight:600;
+//* applicationTitleFontSize ==================================== *//
+$applicationTitleFontSize:24px;
+//* applicationTitlegPadding ==================================== *//
+$applicationTitlePadding:10px 20px;
+//* applicationTitlegPadding without breadcrumb ==================================== *//
+$applicationResponsiveTitleNoBcrumbPadding:3px 20px 3px 20px;
+//* applicationResponsiveTitleTstivCaptionWidth ==================================== *//
+$applicationResponsiveTitleTstivCaptionWidth:auto;
+//* applicationResponsiveTitleTstivCaptionWidthCalcMobile ==================================== *//
+$applicationResponsiveTitleTstivCaptionWidthCalcMobile:"100vw - 152px";
+//* applicationResponsiveTitleBreadcrumbMobileFloat ==================================== *//
+$applicationResponsiveTitleBreadcrumbMobileFloat:none;
+//* applicationTitlegPadding without breadcrumb ==================================== *//
+$applicationAdSearchTitleNoBcrumbPadding:10px 0px 0px 20px;
+//* applicationTitlegPadding without breadcrumb ==================================== *//
+$applicationTitleNoBcrumbPadding:3px 0px 0px 20px;
+//* applicationTitlegPadding without breadcrumb for RTL==================================== *//
+$applicationTitleNoBcrumbPaddingRtl:4px 20px 0px 0px;
+$applicationTitleNoBcrumbPaddingMobile:10px 0 0 5px; 
+$applicationTitleNoBcrumbCompressedModePaddingMobile:10px 0 0 20px; 
+//* applicationTitlegPadding with breadcrumb ==================================== *//
+$applicationTitleBcrumbPadding:4px 0px 0px 20px;
+//* applicationTitleBcrumbMobileWidthCalc ==================================== *//
+$applicationTitleBcrumbMobileWidthCalc:"100vw - 110px";
+//* applicationTitlegPaddingMobile ==================================== *//
+$applicationTitlePaddingMobile:0px 0px 0px 10px;
+//* applicationToolbarOptionFilterFooterCountPadding ==================================== *//
+$applicationToolbarOptionFilterFooterCountPadding:5px;
+//* applicationBorderRadius ==================================== *//
+//$applicationBorderRadius:2px;
+$applicationBorderRadius:4px;
+//* applicationAxpertPopUpHeightClac ==================================== *//
+$applicationAxpertPopUpHeightCalc:8px;
+//* applicationAxpertPopWrapperUpMargin ==================================== *//
+$applicationAxpertPopWrapperUpMargin:4px;
+//* applicationCircleBorderRadius ==================================== *//
+$applicationCircleBorderRadius:50%;
+//* applicationCenterAlignLeft  ==================================== *//
+$applicationCenterAlignLeft:50%;
+//* applicationCenterAlignTop  ==================================== *//
+$applicationCenterAlignTop:50%;
+//* applicationCenterAlignPosition  ==================================== *//
+$applicationCenterAlignPosition:absolute;
+//* applicationActionFilterMargin  ==================================== *//
+$applicationActionFilterMargin:10px;
+//* applicationTransparent ============================= *//
+$applicationTransparent:transparent;
+//*applicationLabelBottomMargin ===============*//
+$applicationLabelBottomMargin:3px;
+//*applicationAnimationLoaderHeight=============*//
+$applicationAnimationLoaderHeight:41px;
+//*applicationAnimationLoaderEffetct======*//
+$applicationAnimationLoaderEffetct:placeHolderSwept 1s infinite linear forwards;
+//* applicationLoaderBackground  ==================================== *//
+$applicationLoaderBackground:darken($applicationBackgroundColor, 10%);
+//* applicationLoaderBackgroundSecond  ==================================== *//
+$applicationLoaderBackgroundSecond:darken($applicationBackgroundColor, 15%);
+//*applicationRtlSearchBoxMarginLeft---------------*//
+$applicationRtlSearchBoxMarginLeft:20px;
+//*applicationMaximumHeight---------------*//
+$applicationMaximumHeight:100%;
+//*applicationMaximumWidth---------------*//
+$applicationMaximumWidth:100%;
+//*applicationPageOptionFilterBodyCountHeight---------------*//
+$applicationPageOptionFilterBodyCountHeight:70px;
+//*pageOptionDropDownButtonZIndex for Iview page option dropdown---------------*//
+$pageOptionDropDownButtonZIndex:555;
+//*applicationWizardMaximumHieght =============== *//
+$applicationWizardMaximumHieght:100vh;
+//*applicationwizardNextPrvBtnIconPosition =============*//
+$applicationwizardNextPrvBtnIconPosition:relative;
+//*applicationwizardNextPrvBtnIconTopGap =============*//
+$applicationwizardNextPrvBtnIconTopGap:2px;
+//*applicationwizardNextPrvBtnIconTopColor =============*//
+$applicationwizardNextPrvBtnIconTopColor:#fff;
+//*applicationwizardNextBtnIconPosition =============*//
+$applicationwizardNextBtnIconPosition:relative;
+//*applicationwizardNextBtnIconTopGap =============*//
+$applicationwizardNextBtnIconTopGap:-5px;
+//*applicationwizardNextbtnPadding =============*//
+$applicationwizardNextbtnPadding:4px 12px 0px;
+//*applicationwizardNextbtnIconPosition =============*//
+$applicationwizardNextbtnIconPosition:relative;
+//*applicationwizardNextbtnIconTopGap =============*//
+$applicationwizardNextbtnIconTopGap:-6px;
+//*applicationwizardCompbtnIconColor =============*//
+$applicationwizardCompbtnIconColor:#fff;
+
+$applicationWizardBodyContent:220px;
+//* applicationDropdownBackground color  ==================================== *//
+$applicationDropdownBackground:darken($applicationBackgroundColor, 10%);
+//* applicationDropdownIconBackgroundPadding  ==================================== *//
+$applicationDropdownIconBackgroundPadding:3px;
+//* applicationRadioButtonMarginRight  ==================================== *//
+$applicationRadioButtonMarginRight:10px;
+//* applicationRadioButtonRtlMarginRight  ==================================== *//
+$applicationRadioButtonRtlMarginRight:20px;
+//* applicationRadioButtonRtlMarginLeft  ==================================== *//
+$applicationRadioButtonRtlMarginLeft:10px;
+//* applicationRadioButtonMarginLeft  ==================================== *//
+$applicationRadioButtonMarginLeft:20px;
+//* applicationRadioButtonMarginTop  ==================================== *//
+$applicationRadioButtonMarginTop:4px;
+//* applicationButtonMinWidth ==================================== *//
+$applicationButtonMinWidth:35px;
+//* applicationEditAutoClearTopMargin  ==================================== *//
+$applicationAutocompleteEditAutoClearTopMargin:3px;
+//* applicationAutocompleteSearchIconRightPadding ==================================== *//
+$applicationAutocompleteSearchIconRightPadding:35px;
+//* applicationAutocompleteSearchIconRtlLeftPadding ==================================== *//
+$applicationAutocompleteSearchIconRtlLeftPadding:10px;
+//*applicationAutoCompleteMaxHeight* ======================*//
+$applicationAutoCompleteMaxHeight:230px;
+//*applicationAutoCompleteMaxHeight* ======================*//
+$applicationAutoCompleteMarginBottom:25px;
+//*appliactionAutoCompleteIconFontsize==========*//
+$appliactionAutoCompleteIconFontsize:10px;
+//* applicationAutoCompleteClearRightPadding ============  *//
+$applicationAutoCompleteClearRightPadding:22px;
+//* applicationAutoCompleteClearTopPadding ============  *//
+$applicationAutoCompleteClearTopPadding:6px;
+//* applicationAutoCompleteOnHoverArrowFontSize ============  *//
+$applicationAutoCompleteOnHoverArrowFontSize:13px;
+//* autoComFooterHeight ============  *//
+$autoComFooterHeight:24px;
+//* autoComFooterWidth ============  *//
+$autoComFooterWidth:100%;
+//* applicationEditRightPadding ============  *//
+$applicationEditRightPadding:7px;
+//* applicationDatePickerMinWidth ============  *//
+$applicationDatePickerMinWidth:225px;
+//* applicationDatePickerMinHeight ============  *//
+$applicationDatePickerMinHeight:228px;
+//* applicationDatePickerMaxHeight ============  *//
+$applicationDatePickerMaxHeight:258px;
+//* applicationDatePickerHeight ============  *//
+$applicationDatePickerHeight:auto;
+//*applicationDesignModeTollbarPadding ===========*//
+$applicationDesignModeTollbarPadding:9px 12px 6px;
+//*formControlStaticModePadding ===========*//
+$formControlStaticModePadding:5px 4px;
+//*formControlStaticModeHeight ===========*//
+$formControlStaticModeHeight:28px;
+//*formControlStaticModeFontSize ===========*//
+$formControlStaticModeFontSize:12px;
+//*applicationmsgBoxBackgroundColor =======*// 
+$applicationMsgBoxBackgroundColor:lighten($applicationTextColor,5%);
+//* applicationBoxRadius  ========*//
+$applicationBoxRadius:8px;
+//* applicationHintGap ==========*//
+$applicationHintGap:5px;
+//* applicationHintGapFldWrap2 ==========*//
+$applicationHintGapFldWrap2:-23px;
+//* applicationHintGapFldWrap2MobileMarginLeft ==========*//
+$applicationHintGapFldWrap2MobileMarginLeft:5px;
+//*applicationAnimationLoaderTopGap=============*//
+$applicationAnimationLoaderTopGap:41px;
+//* applicationPopupPadding ==========*//
+$applicationPopupPadding:10px;
+//* applicationPopupLeftGap ==========*//
+$applicationPopupLeftGap:12px;
+//* applicationPopupHeight ==========*// 
+$applicationPopupHeight:30px;
+//* applicationPopupLineHeight ==========*// 
+$applicationPopupLineHeight:30px;
+//* applicationPopupMargin==========*// 
+$applicationPopupMargin:10px;
+//* applicationInputGroupAddonPadding==========*// 
+$applicationInputGroupAddonPadding:5px 12px;
+//* applicationInputGroupAddonPaddingRtl==========*// 
+$applicationInputGroupAddonPaddingRtl:2px 12px;
+//* applicationDisplayInline==========*// 
+$applicationDisplayInline:inline-block;
+//* applicationPositionRelative==========*// 
+$applicationPositionRelative:relative;
+//* applicationPositionAbsolute==========*// 
+$applicationPositionAbsolute:absolute;
+//*applicationImageFieldBorder =======*//
+$applicationImageFieldBorder:lighten($applicationTextColor, 10%);
+//* applicationBtnFontSize  ==================================== *//
+$applicationBtnFontSize :13px;
+//* applicationPopUpCloseBtnWidth  ==================================== *//
+$applicationPopUpCloseBtnWidtht:35px;
+//* applicationPopUpCloseBtnMargin  ==================================== *//
+
+//////* application video  ==================================== *//
+//* applicationPopUpCloseBtnMargin ============================ *//
+$applicationPopUpCloseBtnMargin:5px 10px;
+//* applicationPopUpCloseBtnFonSize ============================ *//
+$applicationPopUpCloseBtnFonSize:20px;
+//* applicationPopUpCloseBtnTop ============================ *//
+$applicationPopUpCloseBtnTop:-4px;
+//* applicationPopUpCloseBtnRight ============================ *//
+$applicationPopUpCloseBtnRight:-5px;
+//* applicationPopUpCloseBtnrtlleft ============================ *//
+$applicationPopUpCloseBtnLeftRtl:-8px;
+//* applicationPopUpCloseBtnrtlRight ============================ *//
+$applicationPopUpCloseBtnRightRtl:auto;
+//* applicationVideoPositionFixed ============================ *//
+$applicationVideoPositionFixed:fixed;
+//* applicationVideoTopGap ============================ *//
+$applicationVideoTopGap:50%;
+//* applicationVideoLeftGap ============================ *//
+$applicationVideoLeftGap:50%;
+//* applicationVideoMinWidth ============================ *//
+$applicationVideoMinWidth:100%;
+//* applicationVideoMinHeight ============================ *//
+$applicationVideoMinHeight:100%;
+//* applicationVideoZIndex ============================ *//
+$applicationVideoZIndex:-100;
+//* pagetoolbarListlblfiltersPosition   ==================================== *//
+$pageToolbarListlblfiltersPosition:relative;
+//* pagetoolbarListlblfiltersTopGap   ==================================== *//
+$pageToolbarListlblfiltersTopGap:3px;
+//* pageToolbargropuedBtnBeforePosition   ==================================== *//
+$pageToolbargropuedBtnBeforePosition:relative;
+//* pageToolbargropuedBtnBeforeTopGap   ==================================== *//
+$pageToolbargropuedBtnBeforeTopGap:3px;
+//* pageToolbarLnkNextLnkPrevPosition for list prev and next after list view   ==================================== *//
+$pageToolbarLnkNextLnkPrevPosition:relative;
+//* pageToolbarLnkNextLnkPrevTopGap   ==================================== *//
+$pageToolbargropuedBtnBeforeTopGap:2px;
+//* pageToolbarDropelementsMarginLeft   ==================================== *//
+$pageToolbarDropelementsMarginLeft:-12px;
+//* pageToolbarDropelementsPadding   ==================================== *//
+$pageToolbarDropelementsPadding:1px 0px;
+//* pageToolbarDropelementsLeftGap   ==================================== *//
+$pageToolbarDropelementsLeftGap:6px;
+//* pageToolbarDropelementsTopGap   ==================================== *//
+$pageToolbarDropelementsTopGap:25px;
+//* pageToolbarDropdownMaxHight   ==================================== *//
+$pageToolbarDropdownMaxHight:200px;
+//* pageToolbarIconsUlPositionFixed   ==================================== *//
+$pageToolbarIconsUlPositionFixed:fixed;
+//* pageToolbarIconsUlZIndex   ==================================== *//
+$pageToolbarIconsUlZIndex:1;
+//* pageToolbarListDropDownButtonPosition   ==================================== *//
+$pageToolbarListDropDownButtonPosition:relative;
+//* pageToolbarListAncorBorderColor   ==================================== *//
+$pageToolbarListAncorBorderColor:#ccc;
+//* pageToolbarListAncorBorderRadius   ==================================== *//
+$pageToolbarListAncorBorderRadius:3px;
+$toolbarOptionsParentMobileTop:-25px;
+$toolbarOptionsParentMobileRight:-17px;
+$toolbarOptionsParentMobileMarginRTL:7px 0px 0px;
+//* pageRefreshParamPosition for iview refresh button   ==================================== *//
+$pageRefreshParamPosition:absolute;
+//* param tooltip info for iview refresh button ==================================== *//
+$pageParamFilterTooltipPosition:relative;
+//* filtertooltipPosition used for tollbar option in mixin==================================== *//
+$filterToolTipPosition:absolute;
+//* filtertooltip param Info (notification for iview and list view)
+$filtertooltipZIndex:111;
+//* designStatusIconPosition used for tollbar option in mixin==================================== *//
+$designStatusIconPosition:relative;
+//* pageRefreshParamTopGap   ==================================== *//
+$pageRefreshParamTopGap:0px;
+//* pageRefreshParamRightGap   ==================================== *//
+$pageRefreshParamRightGap:-5px;
+//* pageRefreshParamZIndex   ==================================== *//
+$pageRefreshParamZIndex:1;
+//* wizard dc position   for mixin==================================== *//
+$wizardDcModernArrowPosition:absolute;
+//* wizard dc position   for wizard dc circle mixin==================================== *//
+$wizardDcClassicCirclePosition:absolute;
+//* wizard dc position   for wizard dc progress bar mixin==================================== *//
+$wizardDcClassicProgressBarPosition:absolute;
+//* wizard dc position   for wizard dc comletestate bar mixin==================================== *//
+$wizardDcClassicCompleteStatePosition:relative;
+//* wizardfooter dc position   ==================================== *//
+$wizardFooterPositionAbsolute:absolute;
+//* wizardFooterWidth   ==================================== *//
+$wizardFooterWidth:100%;
+//* wizardFooterBottomGap   ==================================== *//
+$wizardFooterBottomGap:3px;
+
+//* workflowViewCommentIconFontSize==================================== *//
+$workflowViewCommentIconFontSize:20px;
+//* pageDropDownButtonPosition   ==================================== *//
+$pageDropDownButtonPosition:relative;
+//* pageDropDownButtonDisplay   ==================================== *//
+$pageDropDownButtonDisplay:inline-block;
+//*animationLoaderPosition for animation loader mixin file ======*//
+$animationLoaderPosition:fixed;
+//*loaderFixedPoisionMiddelPosition for animation loader mixin file ======*//
+$loaderFixedPoisionMiddelPosition:fixed;
+//*loaderFixedPoisionMiddelZIndex for animation loader mixin file ======*//
+$loaderFixedPoisionMiddelZIndex:999999;
+//*animationLoaderDisplay for animation loader mixin file ======*//
+$animationLoaderDisplay:block;
+//* autoCompleteInputParentPosition for main parent position ============  *//
+$autoCompleteInputParentPosition:relative;
+//* autoCompleteInputParentPosition for main parent Display ============  *//
+$autoCompleteInputParentDisplay:block;
+//*autoCompleteInputFontSize for main parent Display ============  *//
+$autoCompleteInputFontSize:14px;
+//* autoCompleteIconPosition for main parent ============  *//
+$autoCompleteIconPosition:absolute;
+//* autoCompleteContentPosition for main parent ============  *//
+$autoCompleteContentPosition:absolute;
+$autoCompleteContentItemPaddingMobile:6px 1em 6px .4em;
+$autoCompleteMenuDividerHeight:22px;
+$autoCompleteMenuDividerFontSize:28px;
+$autoCompleteMenuDividerMargin:0px;
+$autoCompleteMenuDividerDivPadding:6px 12px;
+//* autoCompleteEditAutoClickddl top gap in autocomplete for main parent ============  *//
+$autoCompleteEditAutoClickddTopGap:-2px;
+$autoCompleteEditAutoClickddTopGapMobile:3px;
+$autoCompleteEditPaddingMobile:6px 12px 7px;
+//* autoComplete Virtual Keyboard top gap in autocomplete Mobile only============  *//
+$autoCompleteVirtualKeyboardTopGap:1px;
+//* autoComplete Virtual Keyboard in autocomplete Mobile only============  *//
+$autoCompleteVirtualKeyboardFontSize:16px;
+//* autoComplete Virtual Keyboard in autocomplete Mobile only============  *//
+$autoCompleteVirtualKeyboardPadding:3px;
+//* autoComplete Virtual Keyboard in autocomplete Mobile only============  *//
+$autoCompleteVirtualKeyboardPosition:absolute;
+//* autoComplete Virtual Keyboard in autocomplete Mobile only============  *//
+$autoCompleteVirtualKeyboardMarginRight:35px;
+//* autoComplete Virtual Keyboard in autocomplete Mobile only============  *//
+$autoCompleteVirtualKeyboardZIndex:11;
+//* autoComplete Virtual Keyboard in autocomplete Mobile only============  *//
+$autoCompleteVirtualKeyboardIconDisplay:inline-block;
+//* auto complete keyboard icon color in autocomplte in mobile============  *//
+$autoCompleteVirtualKeyboardFocusColor:green;
+//* designmode img border with height calculation========= *//
+$tstructDivImgBorderMaximumHeight:100%;
+//* tstructDesignModeBoxBorder========= *//
+$tstructDesignModeBoxBorder:darken($applicationBackgroundColor, 20%);
+//* tstructDesignModeUiresizable-se-sw-RightGap:========= *//
+$tstructDesignModeUiresizable-se-sw-RightGap:5px;
+//* designmode img border with height calculation========= *//
+$tstructDivImgBorderCalcHeight:33px;
+//* autoComplete in autocomplete Mobile only============  *//
+$autoCompleteUiAutocompleteInputAutoclearDisplay:inline-block;
+//* autoComplete footer in autocomplete Mobile only============  *//
+$autoComFooterZIndex:999999;
+//* autoclearDisplay in autocomplete Mobile only============  *//
+$autoclearDisplay:inline-block;
+//* autoComFooterAddOptionRelaodDisplay in autocomplete Mobile only============  *//
+$autoComFooterAddOptionRelaodDisplay:inline-block;
+//* autoComFooterAddOptionRelaodDisplay in autocomplete Mobile only============  *//
+$autoComFooterlefticoDisplay:inline-block;
+//* autoComFooterAddOptionRelaodDisplay in autocomplete Mobile only============  *//
+$autoCompleteAdvSearchIconFontSizeIcon:11px;
+//* autoComFooterAddOptionRelaodDisplay in autocomplete Mobile only============  *//
+$autoCompleteAdvSearchIconTopGap:-2px;
+//* autoCompleteContentZIndex in autocomplete Mobile only============  *//
+$autoCompleteContentZIndex:999999;
+//*appliactionDeisgnModeToolbarPropertyTopMargin =======*//
+$appliactionDeisgnModeToolbarPropertyTopMargin:90px;
+//*appliactionDeisgnModeToolbarPropertyPopUpWidth =======*//
+$appliactionDeisgnModeToolbarPropertyPopUpWidth:280px;
+//*popUpWidthPosition for pop in grid dc =======*//
+$popUpWidthPosition:absolute;
+//*popUpWidthPosition for pop in pop box =======*//
+$fileUploadSelectNameDisplay:inline-block;
+//*fileUploadButtonDisplay for pop in pop box =======*//
+$fileUploadButtonDisplay:inline-block;
+//*appliactionHintLeftMargin =======*//
+$appliactionHintLeftMargin:10px;
+//*appliactionLineMargin =======*//
+$appliactionLineMargin:5px;
+//*appliactionGridDcMargin =======*//
+$appliactionGridDcMargin:15px;
+//*appliactionGridDcTitleMargin =======*//
+$appliactionGridDcTitleMargin:0px 0px 10px;
+$applicationGlobalVarDcTittleAnchorDisplay:none;
+$applicationGlobalVarDcTittleSpanPosition:relative;
+$applicationGlobalVarDcTittleSpanTop:1px;
+$applicationGridOptionFontSize:20px;
+$applicationTabActiveTextPosition:relative;
+$applicationTabActiveTextTop:-4px;
+$applicationTabActiveTextPaddingLeft:14px;
+$applicationTabActiveGridOptionTop:1px;
+$applicationTabActiveNewGridBtnDisplay:inline-block;
+
+$appliactionNewgridBtnMainPosition:relative;
+$appliactionNewgridbtnDropdwonMenuLeft:auto;
+$appliactionNewgridbtnDropdwonMenuRight:0px;
+$appliactionNewgridbtnDropdwonMenuListWidth:100%;
+$appliactionNewgridbtnDropdwonMenuListMargin:0px;
+$appliactionNewgridbtnDropdwonMenuListPadding:5px;
+$appliactionGridOptionFontSize:20px;
+$appliactionGridOptionPosition:relative;
+$appliactionGridOptionTop:6px;
+$appliactionGridOptionLeft:5px;
+$applicationStaticRunModeFontWeight:400;
+$applicationScrollBarWidth:12px;
+$applicationScrollBarHeight:12px;
+//*appliactionGridDcPadding =======*//
+$appliactionGridDcPadding:10px;
+//*appliactionGridDcBackground =======*//
+$appliactionGridDcBackground:#e0dfdf;
+//*appliactionGridDcBoxShadow =======*//
+$appliactionGridDcBoxShadow:2px 1px 2px 2px #cacaca;
+//*appliactionGridDcTitleFrameCapVerticalAlign =======*//
+$appliactionGridDcTitleFrameCapVerticalAlign:top;
+//*appliactionGridDcTitleFrameCapMarginLeft =======*//
+$appliactionGridDcTitleFrameCapMarginLeft:5px;
+//*appliactionGridDcTitleFrameCapDisplay =======*//
+$appliactionGridDcTitleFrameCapDisplay:inline-block;
+//*appliactionGridDcTitleFrameCapPaddingTop =======*//
+$appliactionGridDcTitleFrameCapPaddingTop:3px;
+//*appliactionGridDcTitleFrameCapFontWeight =======*//
+$appliactionGridDcTitleFrameCapFontWeight:500;
+//*appliactionGridDcTitleFrameCapFontsize =======*//
+$appliactionGridDcTitleFrameCapFontsize:16px;
+//*appliactionNonGridDDvdcframeDisplay =======*//
+$appliactionNonGridDDvdcframeDisplay:block;
+//*appliactionNonGridDDvdcframeMargin =======*//
+$appliactionNonGridDDvdcframeMargin:0px;
+//*appliactionNonGridDDvdcframeBackground =======*//
+$appliactionNonGridDDvdcframeBackground:#f3f3f3;
+//*appliactionNonGridDDvdcframePadding =======*//
+$appliactionNonGridDDvdcframePadding:10px 10px;
+//*appliactionNonGridDDvdcframeMarginBottom =======*//
+$appliactionNonGridDDvdcframeMarginBottom:10px;
+//*gridDcDropDownPosition for griddc  =======*//
+$gridDcDropDownPosition:absolute;
+//*gridDcDropDowngap from top for griddc  =======*//
+//$gridDcDropDownTopGap:-30px;
+$gridDcDropDownTopGap:0px;
+//*gridDcDropDown z-index for griddc  =======*//
+$gridDcDropDownZIndex:1;
+
+$gridDCcolScrollPaddingLeft:0px;
+$gridDCcolScrollWidth:100%;
+$gridDCcolScrollOverflow:auto;
+$gridDCcolScrollOverflowGridFixedHeader:auto;
+$gridDCcolScrollGridFixedHeaderHeightclac:'100vh - 130px';
+$gridDCcolScrollGridFixedHeaderBorder:#e6e6e6;
+$gridDCcolScrollGridFixedHeaderBorderStyle:solid;
+$gridDCcolScrollGridFixedHeaderBorderWidth:0px 1px 1px 1px;
+$gridDCcolScrollGridFixedHeaderBorderPosition:sticky;
+$gridDCcolScrollGridFixedHeaderBorderTop:0px;
+$gridDCcolScrollGridFixedHeaderBorderZIndex:1;
+$gridDCcolScrollGridFixedHeaderCompressedModeHeightCalc:'100vh - 108px';
+
+//*appliactionCompleteStateFontSize =======*//
+$appliactionCompleteStateFontSize:20px;
+//*appliactionArrowPadding =======*//
+$appliactionArrowPadding:10px;
+//*appliactionAttachmentDataPadding =======*//
+$appliactionAttachmentDataPadding:10px;
+//* GridDataFilterTableDatePickerPosition ==========*//
+$GridDataFilterTableDatePickerPosition:absolute;
+//* applicationNonGridPasswordtogglePosition ==========*//
+$applicationNonGridPasswordtogglePosition:absolute;
+//* applicationNonGridPasswordtoggleRightGap ==========*//
+$applicationNonGridPasswordtoggleRightGap:5px;
+//* applicationNonGridPasswordtoggleTopGap ==========*//
+$applicationNonGridPasswordtoggleTopGap:35px;
+$applicationNonGridPasswordtoggleLeftRTL:5px;
+$applicationNonGridPasswordtoggleRightRTL:auto;
+
+
+
+
+
+//* tabledifferent color  ==================================== *//
+$tableTypeColors: ((primary, #1f91f3, #fff), (success, #2b982b, #fff), (info, #00b0e4, #fff), (warning, #ff9600, #fff),(danger,#fb483a,#fff));
+//* alertbackground color  ==================================== *//
+$alertTypeColors: ((success, #5bb240, #2bb500), (info, #31708f, #006596), (error, #e44b4b, #de2e2e), (warning, #8a6d3b, #8e5a00));
+//* designModePublishedBackgroundColor ==================================== *//
+$designModePublishedBackgroundColor:#8a6d3b;
+//* compulsory Field Star ==================================== *//
+$compulsoryFieldStar:red;
+//* compulsory Info ==================================== *//
+//$compulsoryInfo:lighten($compulsoryFieldStar, 10%);
+$compulsoryInfo:red;
+//* compulsory Field Star Margin==================================== *//
+//$compulsoryFieldStarMarginGrid:30px;
+$compulsoryFieldStarMarginGrid:10px;
+//* compulsory Field Star Margin for grid for formGridRow ==================================== *//
+$compulsoryFieldStarMarginFormGridRow:30px;
+//* red toolbar star margin ==================================== *//
+$compulsoryFieldStarMargin:5px;
+//* popOverFontSize ==================================== *//
+$popOverFontSize:13px;
+//* toolbarMargin ==================================== *//
+$toolbarTstructMargin:15px 15px 0px;
+$toolbarTstructSearchPosition:relative;
+$toolbarTstructSearchTop:-11px;
+$toolbarTstructSearchModernTstructOptionTop:-20px;
+$toolbarTstructSearchModernTstructOptionNotEnableExpandCollapseTop:-15px;
+$toolbarLeftToolbarMainPosition:absolute;
+$toolbarLeftToolbarMainRight:0px;
+$toolbarLeftToolbarMainLeft:0px;
+$toolbarLeftToolbarMainForMobilePosition:relative;
+$toolbarLeftToolbarMainForMobileTop:2px;
+$toolbarLeftToolbarMainForMobileRight:-15px;
+$BottomToolbarBarDisplay:none;
+$BottomToolbarBarUlPaddong:0px;
+$BottomToolbarBarUlPosition:absolute;
+$BottomToolbarBarUlLeft:10px;
+$BottomToolbarBarUlBottom:-5px;
+$BottomToolbarBarUlMarginLeft:15px;
+$BottomToolbarBarUlMarginTop:3px;
+$BottomToolbarBarUlListDisplay:inline-block;
+$BottomToolbarBarUlListBackground:darken($applicationBackgroundColor, 0%);
+$BottomToolbarBarUlListMarginTop:20px;
+$BottomToolbarBarUlListAchorColor:#333;
+$BottomToolbarBarUlListModernDisplay:none;
+$BottomToolbarBarUlListAchorDisplay:block;
+$BottomToolbarBarUlListAchorPadding:3px 9px;
+$BottomToolbarBarUlListAchorBorderRadius:3px;
+$BottomToolbarBarUlListAchorBorderColor:#ccc;
+$BottomToolbarBarUlListAchorSpanMarginRight:5px;
+$BottomToolbarBarUlListAchorSpanFontSize:18px;
+$BottomToolbarBarUlListAchorSpanPosition:relative;
+$BottomToolbarBarUlListAchorSpanTop:4px;
+//* toolbarModernIvewOptionMargin ==================================== *//
+$toolbarModernIvewOptionMargin:0px;
+//* toolbar Position ==================================== *//
+$toolbarPositionAbsolute:absolute;
+//* toolbar Margin ==================================== *//
+$toolbarMargin:0px;
+$toolbarMarginTop:20px;
+//* toolbarModernIviewOptionsTopGap ==================================== *//
+$toolbarModernIviewOptionsTopGap:1px;
+//* toolbarModernIviewOptionsRightGap ==================================== *//
+$toolbarModernIviewOptionsRightGap:0px;
+//* toolbarModernIviewOptionsPosition ==================================== *//
+$toolbarModernIviewOptionsPosition:relative;
+//* toolbar right gap ==================================== *//
+$toolbarRightGap:-8px;
+//* toolbar top gap ==================================== *//
+$toolbarTopGap:-7px;
+$toolbarPositionRequestJSONMobile: relative;
+$toolbarTopRequestJSONMobile: 0px;
+$toolbarRightRequestJSONMobile: -15px;
+$toolbarMarginRequestJSONMobile: 0px;
+//* toolbarOptionPadding ==================================== *//
+$toolbarOptionPadding:10px;
+//* toolbarOptionColumnsCheckBoxMargingLeft ==================================== *//
+$toolbarOptionColumnsCheckBoxMargingLeft:3px;
+//* Picklistdropdownpadding ==================================== *//
+$pickListDropdownPadding:5px 15px;
+//* pickListSearchBtnPading ==================================== *//
+$pickListSearchBtnPading:7px;
+//* pickListAdvSearchRightLeft ==================================== *//
+$pickListAdvSearchRightLeft:5px;
+//* picklistInputClass2ParentPosition input box ==================================== *//
+$picklistInputClass2ParentPosition:relative;
+//* picklistInputClass2ParentPosition input box ==================================== *//
+$picklistInputClass2ParentTopGap:-5px;
+//* picklistInputClass2ParentPosition input box ==================================== *//
+$picklistInputClass2ParentFormControlClearZIndex:10;
+//* dvPickListZIndex for picklist in iview input box ==================================== *//
+$dvPickListZIndex:111;
+//* pickListFLPButtonIconLeftGap for picklist in iview button icon  ==================================== *//
+$pickListFLPButtonIconLeftGap:2px;
+//* picklistDropdownPosition for list ==================================== *//
+$picklistDropdownPosition:absolute;
+//* picklist icon background color  ==================================== *//
+$picklistIconBackgroundColor:lighten($applicationTextColor, 90%);
+//* toolbarOptionPadding ==================================== *//
+$toolbarOptionPadding:10px;
+//* pageToolbarParamsPadding ============================= *//
+$pageToolbarParamsPadding:5px 20px 0px 5px;
+//* pageToolbarListViewNextPrevBtnPaddingBottom used for after listview load data nxt and prev btn ============================= *//
+$pageToolbarListViewNextPrevBtnPaddingBottom:4px;
+//* pagePaginationMargin ============================= *//
+$pagePaginationMargin: 30px 13px 0;
+//* pageBottomPaginationMargin ============================= *//
+$pageBottomPaginationMargin: 0px 7px;
+$pageBottomPaginationMarginRequestJSONMobile: 5px 7px 0px;
+$pageInfoBarPaddingRequestJSONMobile: 5px 0px 0px 0px;
+$pageInfoBarParamTextPaddingRequestJSONMobile: 3px 2px;
+//* page refresh param ============================= *//
+$pageDvRefreshParamDisplay: inline-block;//20px 13px 0
+//* pageDvRefreshParamPosition ============================= *//
+$pageDvRefreshParamPosition:relative;
+//* pageDvRefreshParamPosition ============================= *//
+$pageDvRefreshParamTopGap:10px;
+//* pageDvRefreshParamRightGap ============================= *//
+$pageDvRefreshParamRightGap:20px;
+//* inputPaddingLeftRight ============================= *//
+$inputPaddingLeftRight:7px;
+//* datePickerRightGap ============================= *//
+$datePickerRightGap:18px;
+//* datePickerLeftGapRtl ============================= *//
+$datePickerLeftGapRtl:18px;
+//* datePickerWidth ============================= *//
+$datePickerWidth:18px;
+//* datePickerTopGap ============================= *//
+$datePickerTopGap:7px;
+//* arrowRightGap---------------------*//
+$arrowRightGap:-3px;
+//* arrowTopGap---------------------*//
+$arrowTopGap :10px;
+//* cardTableInputWidth---------------------*//
+$cardTableInputWidth :15px;
+//* cardTablePadding---------------------*//
+$cardTablePadding :10px;
+//* cardTableRowMargin---------------------*//
+$cardTableRowMargin:0.5rem;
+//* pageToolbarOptionSortFont ==================================== *//
+$pageToolbarOptionSortFont:22px;
+//*cardTableLabelRightMargin===============*//
+$cardTableLabelRightMargin:3px;
+//*gridDcPopBorderRadius============*//
+$gridDcPopBorderRadius:4px;
+//*designModeToolbarBorderRadius============*//
+$designModeToolbarBorderRadius:4px;
+//* designModeToolbarBackgroundcolor  ==================================== *//
+$designModeToolbarBackgroundcolor:lighten($applicationTextColor, 85%);
+//* designModeToolbarFontSize  ==================================== *//
+$designModeToolbarFontSize :18px;
+//* designModeToolbarLineHeight  ==================================== *//
+$designModeToolbarLineHeight :16px;
+//* designModeToolbarHovercolor  ==================================== *//
+$designModeToolbarHovercolor:lighten($applicationTextColor, 75%);
+//* designModeToolbarListMargin  ==================================== *//
+$designModeToolbarListMargin:10px;
+//*wizardProressColor ---------*//
+$wizardProressBarSecondColor:darken($applicationBackgroundColor, 10%);
+//*wizardProress textOverflow ---------*//
+$wizardProressTextOverflowWidth:90%;
+//*filtertooltip============*//
+$filterToolTipPadding:9px;
+//*filterToolTipTopGap============*//
+$filterToolTipTopGap:20px;
+//*customIconMargin==============*//
+$customIconMargin:4px;
+//*customIconPaddingRight==============*//
+$customIconPaddingRight:10px;
+$customIconLeft:8px;
+$customIconTop:6px;
+$customIconPaddingLeft:10px;
+$customIconPaddingRight:0px;
+$customIconPaddingLeftRTL:0px;
+//*pinIconMargin==============*//
+$pinIconMargin:4px 5px 0px 0px;
+//*pillsPinedBackground==============*//
+$pillsPinedBackground:darken($applicationBackgroundColor, 4.5%);
+//*pillsPinedShodowColor==============*//
+$pillsPinedShodowColor:darken($applicationBackgroundColor, 18%);
+//*pinIconPading==============*//
+$pinIconPadding:0px 1px;
+//*pinIconMarginRight==============*//
+$pinIconMarginRight:5px;
+//*pinIconBorderRadius==============*//
+$pinIconBorderRadius:50%;
+//*chartFontSize ==================*//
+$chartFontSize:70px;
+//* multiSelectPadding =============*//
+$multiSelectPadding:5px;
+//*picklistInputBottom ============*//
+$picklistInputBottomMargin:20px;
+//*picklistoptionheight===========*//
+$picklistOptionHeight:200px;
+//*picklistOptionMargin===========*//
+$picklistOptionMargin:3px;
+//*breadcrumbpanelpading=============*//
+//$breadcrumbPanelPading:10px;
+$breadcrumbPanelPading:0px 10px;
+//*breadcrumbPanelPadingRtl=============*//
+$breadcrumbPanelPadingRtl:0px 35px;
+//*breadcrumbPanelPadingRtlMobile=============*//
+$breadcrumbPanelPadingRtlMobile:0px 25px 0px 0px;
+//* menuBreadcrumbTitleFont ==================================== *//
+$menuBreadcrumbTitleFont:12px;
+//* menuBreadcrumbleftpadding ==================================== *//
+$menuBreadcrumbLeftPadding:20px;
+//* breadCrumbPanelPaddingMobile ==================================== *//
+$breadCrumbPanelPaddingMobile:0px 0px 0px 5px;
+//* breadCrumbCaptionMargin ==================================== *//
+$breadCrumbCaptionMargin: 0px 0px -3px;
+//* breadcrumbpanelHeight=============*//
+$breadcrumbPanelHeight:43px;
+$breadCrumbPanelCompressedModePaddingMobile: 0px 0px 0px 18px;
+$breadCrumbPanelTitleCompressedModePaddingMobile:8px 0px 0px 18px;
+$breadCrumbPanelCompressedModePaddingMobileRtl: 0px 18px 0px 0px;
+$breadCrumbPanelTitleCompressedModePaddingMobileRtl:8px 18px 0px 0px;
+//*filterLeftGap =============*//
+$filterLeftGap:-4px;
+//*filterLeftGap =============*//
+$filterTopGap:-1px;
+//*fileUploadInputHeight =============*//
+$fileUploadInputHeight:30px;
+//*fileUploadInputZIndex =============*//
+$fileUploadInputZIndex:100;
+//*fileUploadInputPosition =============*//
+$fileUploadInputPosition:absolute;
+//*fileUploadPosition  for file upload all over application=============*//
+$fileUploadPosition:relative;
+//* listPadding =============*//
+$listPadding:5px 9px;
+//* toolbarListMargin =============*//
+$toolbarListMargin:5px;
+//* msgBoxTitleFontSize =============*//
+$msgBoxTitleFontSize:18px;
+//* msgBoxTitleMarginBottom =============*//
+$msgBoxTitleMarginBottom:20px;
+//* msgBoxBackGroundPosition =============*//
+$msgBoxBackGroundPosition:absolute;
+//* coverBackGroundPosition =============*//
+$coverBackGroundPosition:absolute;
+//* msgBoxPosition =============*//
+$msgBoxPosition:fixed; 
+//* workflowdropdownClsBackground =============*//
+$workflowdropdownClsBackground:#666666;
+//* workflowdropdownClsVerticalAlign =============*//
+$workflowdropdownClsVerticalAlign:middle;
+//* workflowdropdownClsTop =============*//
+$workflowdropdownClsTop:2px;
+//* workflowdropdownClsLeft =============*//
+$workflowdropdownClsLeft:15px;
+//* workflowdropdownClsPosition =============*//
+$workflowdropdownClsPosition:relative;
+//* workFlowMsgWidth =============*//
+$workFlowMsgWidth:auto;
+//* workFlowMsgFontSize =============*//
+$workFlowMsgFontSize:15px;
+//* workFlowMsgFontWeight =============*//
+$workFlowMsgFontWeight:400;
+$workFlowMsgMaxWidthCalc:"100% - 5%";
+$workFlowCursor:pointer;
+$workFlowIconMarginTop:-5px;
+//* workflowIconBtnPaddingTop =============*//
+$workflowIconBtnPaddingTop:3px;
+//* workflowTableTdThPadding =============*//
+$workflowTableTdThPadding:3px 5px;
+//* workflowTableTdThFontSize =============*//
+$workflowTableTdThFontSize:13px;
+//* workflowTableTdThFontWeight =============*//
+$workflowTableTdThFontWeight:500;
+//* workFlowWfselectboxLeft =============*//
+$workFlowWfselectboxLeft:0px;
+//* msgBox cover box height=============*//
+$msgBoxCoverBackgroundHeight:100%;
+//* msgBox  =============*//
+$msgBoxCoverBackgroundWidth:100%;
+//* tableCardMainGridMarginLeft =========== *// 
+$tableCardMainGridMarginLeft:2px;
+//* nonGridDcMaximumHeight =========== *// 
+$nonGridDcMaximumHeight:33px;
+//* nonGridDcMaximumHeight =========== *// 
+$nonGridDcMaximumHeightFrame:100vh;
+//* nonGridDcCalcHeightFrame =========== *// 
+$nonGridDcCalcHeightFrame:132px;
+//* nonGridDcMainIframePadding =========== *// 
+//$nonGridDcMainIframePadding:15px;
+$nonGridDcMainIframePadding:0px;
+//* nonGridDctstbtnIcon for icon that we can upload for button (left,right,tpo,bottom) =========== *// 
+$nonGridDctstbtnIconPosition:absolute;
+//* nonGridDctstbtnIcon for icon that we can upload for button (left,right,tpo,bottom) =========== *// 
+$nonGridDctstbtnIconTopGap:50%;
+//* nonGridDctstbtnIcon for icon that we can upload for button (left,right,tpo,bottom) =========== *// 
+$nonGridDctstbtnIconZIndex:1;
+//* gridDcContainerDcPosition for grid dc main container=========== *// 
+$gridDcContainerDcPosition:relative;
+//* gridDcBtnfirstDisplay for grid dc main container=========== *// 
+$gridDcBtnfirstDisplay:inline-block;
+//* workFlowIconColor  ==================================== *//
+$workFlowIconColor:darken($applicationBackgroundColor, 5%);
+//* workFlowPadding  ==================================== *//
+$workFlowPadding:9px 10px 5px;
+//* pendingStateBackgroundColor  ==================================== *//
+$pendingStateBackgroundColor:darken($applicationBackgroundColor, 70%);
+//* workFlowTextColor  ==================================== *//
+$workFlowTextColor:darken($applicationBackgroundColor, 5%);
+//* workFlowApproveStatus  ==================================== *//
+$workFlowApproveStatus:#62c986;
+//* workFlowRejectedState  ==================================== *//
+$workFlowRejectedState:#e74c3c;
+//* workFlowReturnState  ==================================== *//
+$workFlowReturnState:#3f51b5;
+//* workFlowMainContainerTopMargin  ==================================== *//
+$workFlowMainContainerTopMargin:0px;
+//* workFlowViewCommentButtonIconTopMargin ==================================== *//
+$workFlowViewCommentButtonIconTopMargin:2px;
+//* workFlowViewCommentButtonLeftMargin ==================================== *//
+$workFlowViewCommentButtonLeftMargin:10px;
+//* workFlowViewCommentButtonPadding ==================================== *//
+$workFlowViewCommentButtonPadding:6px 10px 5px;
+//* workFlowCircleTopMargin ==================================== *//
+$workFlowCircleTopMargin:2px;
+//* workFlow dispaly Mixixn ==================================== *//
+$workFlowCircleDisplay:inline-block;
+//* workFlow Position Mixixn ==================================== *//
+$workFlowCirclePosition:relative;
+//* workFlowHintMarginTop ==================================== *//
+$workFlowHintMarginTop:-12px; 
+//* wrkflwiconsPosition ==================================== *//
+$wrkflwiconsPosition:relative; 
+//* wrkflwiconsTop ==================================== *//
+$wrkflwiconsTop:2px; 
+//* wrkflwiconsPadding ==================================== *//
+$wrkflwiconsPadding:0 4px 0 0;
+//* workFlowHintMarginRight ==================================== *//
+$workFlowHintMarginRight:10px;
+//* workFlowHintMarginLeft ==================================== *//
+$workFlowHintMarginLeft:4px;
+//* workFlowHintPadding ==================================== *//
+$workFlowHintPadding:1px 7px;
+//* workFlowHintPosition for workflow form workflow mixin==================================== *//
+$workFlowHintPosition:relative;
+//* workFlowHintPosition for workflow form workflow mixin==================================== *//
+$workFlowStatePosition:relative;
+//* workFlowStateWidth ==================================== *//
+$workFlowStateWidth:124px;
+//* workFlowStateHeight ==================================== *//
+$workFlowStateHeight:30px;
+//* workFlowStatePadding ==================================== *//
+$workFlowStatePadding:6px 23px 0px 0px;
+//* workFlowWfselectboxPosition ==================================== *//
+$workFlowWfselectboxPosition:absolute;
+//* workFlowWfselectboxMarginLeft ==================================== *//
+$workFlowWfselectboxMarginLeft:-15px;
+//* workFlowWfselectboxUlLiPadding ==================================== *//
+$workFlowWfselectboxUlLiPadding:8px 10px 0 10px;
+//* workFlowWfselectboxUlLiHeight ==================================== *//
+$workFlowWfselectboxUlLiHeight:35px;
+//* $workFlowWfselectboxUlLiDisplay ==================================== *//
+$workFlowWfselectboxUlLiDisplay:block;
+//* workFlowWfselectboxMarginTop ==================================== *//
+$workFlowWfselectboxMarginTop:11px;
+//* workFlowWfselectboxZIndex ==================================== *//
+$workFlowWfselectboxZIndex:9;
+//* workFlowWfselectboxUlLi ==================================== *//
+$workFlowWfselectboxZIndex:9;
+//* workFlowApprovalBarPosition ==================================== *//
+$workFlowApprovalBarPosition:relative;
+//* workFlowApprovalBarMarginLeft ==================================== *//
+$workFlowApprovalBarMarginLeft:-15px;
+//* workFlowApprovalBarMarginTop ==================================== *//
+$workFlowApprovalBarMarginTop:4px;
+//* workFlowApprovalBarFontWeight ==================================== *//
+$workFlowApprovalBarFontWeight:700;
+//* workFlowApprovalBarFontSize ==================================== *//
+$workFlowApprovalBarFontSize:12px;
+//* workFlowMsgwrkflwIconSize ==================================== *//
+$workFlowMsgwrkflwIconSize:3px;
+//* workFlowMsgwrkflwApprovedColor ==================================== *//
+$workFlowMsgwrkflwApprovedColor:darken($workFlowApproveStatus, 3%);
+//* workFlowMsgwrkflwRejectColor ==================================== *//
+$workFlowMsgwrkflwRejectColor:darken($workFlowRejectedState, 3%);
+//* workFlowMsgwrkflwReturnColor ==================================== *//
+$workFlowMsgwrkflwReturnColor:darken($workFlowReturnState, 2%);
+//* workFlowMsgwrkflwPendingColor ==================================== *//
+$workFlowMsgwrkflwPendingColor:lighten($applicationPageTitleColor, 40%);
+//* workFlowMsgwrkflwReviewedColor ==================================== *//
+$workFlowMsgwrkflwReviewedColor:darken($workFlowReturnState, 10%);
+// //* workFlowMsgwrkflwPendingClsWidth ==================================== *//
+// $workFlowMsgwrkflwPendingClsWidth:70px;
+//* workFlowMsgwrkflwPendingClsBorder ==================================== *//
+$workFlowMsgwrkflwPendingClsBorder:lighten($applicationBackgroundColor, 80%);
+//* workFlowworkflowdropdownClsMarginLeft ==================================== *//
+$workFlowworkflowdropdownClsMarginLeft:-25px;
+//* workFlowwrkflw-col-sm-12Padding ==================================== *//
+$workFlowwrkflw-col-sm-12Padding:11px;
+//* $workFlowwrkflw-col-sm-12MArgin-Bottom ==================================== *//
+$workFlowwrkflw-col-sm-12MArgin-Bottom:10px;
+//* workFlowMsgMarginLeft ==================================== *//
+$workFlowMsgMarginLeft:10px;
+//* WorkflowdownArrworkflowOptions ==================================== *//
+$WorkflowdownArrworkflowOptions:relative;
+//* workFlowWfselectboxMarginLeft ==================================== *//
+//$workFlowWfselectboxMarginLeft:-40px; 
+//* workFlowWfselectboxBackground ==================================== *//
+$workFlowWfselectboxBackground:darken($applicationBackgroundColor, 5%);
+//* WorkflowmsglableParaFontSize ==================================== *//
+$WorkflowmsglableParaFontSize:13px;
+//* WorkflowmsglableParaPaddingLeft ==================================== *//
+$WorkflowmsglableParaPaddingLeft:5px; 
+//* WorkflowmsglableParaHeight ==================================== *//
+$WorkflowmsglableParaHeight:16px;
+//* WorkflowmsglableParaPaddingRight ==================================== *//
+$WorkflowmsglableParaPaddingRight:5px;
+// //* workFlowicobtnbtnViewCommtsBackgroundColor ==================================== *//
+// $workFlowicobtnbtnViewCommtsBackgroundColor:#5bc0de;
+// //* workFlowicobtnbtnViewCommtsBorderColor ==================================== *//
+// $workFlowicobtnbtnViewCommtsBorderColor:#46b8da; 
+
+
+//* workFlowMsgitemoneWidth ==================================== *//
+$workFlowMsgitemoneWidth:18px;
+//* workFlowMsgitemoneHeight ==================================== *//
+$workFlowMsgitemoneHeight:18px;
+//* workFlowMsgitemoneFontSize ==================================== *//
+$workFlowMsgitemoneFontSize:12px;
+//* workFlowMsgitemoneBorderRadius ==================================== *//
+$workFlowMsgitemoneBorderRadius:50%;
+//* workFlowMsgitemonePosition ==================================== *//
+$workFlowMsgitemonePosition:relative;
+//* workFlowMsgitemoneTop ==================================== *//
+$workFlowMsgitemoneTop:-11px;
+//* workFlowMsgitemoneMarginLeft ==================================== *//
+$workFlowMsgitemoneMarginLeft:-10px;
+
+
+//* workFlowStateMargin ==================================== *//
+$workFlowStateMargin:2px;
+//* WorkFlowArrowAfterBorder ==================================== *//
+$workFlowArrowAfterBorder:13px;
+//* WorkFlowArrowAfterBorderTop ==================================== *//
+$workFlowArrowAfterBorderTop:16px;
+//* WorkFlowArrowAfterBorderBottom ==================================== *//
+$workFlowArrowAfterBorderBottom:14px;
+//* WorkFlowArrowAfterLeftGap ==================================== *//
+$workFlowArrowAfterLeftGap:124px;
+//* workFlowFontSize ==================================== *//
+$workFlowFontSize:12px;
+//* workflowPosition ==================================== *//
+$workflowPosition:relative;
+//* workflowPosition ==================================== *//
+$workflowDisplay:inline-block;
+//* workflowBeforeAfterPosition ==================================== *//
+$workflowBeforeAfterPosition:absolute;
+//* workflowApproveBeforeAfterPosition ==================================== *//
+$workflowApproveBeforeAfterPosition:absolute;
+//* workflowReturnedBeforeAfterPosition ==================================== *//
+$workflowReturnedBeforeAfterPosition:absolute;
+//* workflowRejectBeforeAfterPosition ==================================== *//
+$workflowRejectBeforeAfterPosition:absolute;
+//* workflowIconBtnSpan ==================================== *//
+$workflowIconBtnSpan:relative;
+//* griddivColumnTableIconFontSize==========*// 
+$griddivColumnTableIconFontSize:25px;
+//* previousNextEditButtonRightMargin==========*// 
+$previousNextEditButtonRightMargin:5px;
+//* animationLoadingTableDataHeight==========*// 
+$animationLoadingTableDataHeight:60px;
+//* animationLoadingTd ========= *//
+$animationLoadingTdPoisitionRelative:relative;
+//* gridDataFilterTableDataPadding==========*// 
+$gridDataFilterTableDataPadding:2px 1px 2px;
+//* gridCodeMirrorMaximumHeight==========*// 
+$gridCodeMirrorMaximumHeight:100%;
+//* gridCodeMirrorCalcHeight==========*// 
+$gridCodeMirrorCalcHeight:35px;
+//* accordionPanelGroupTopMargin==========*// 
+$accordionPanelGroupTopMargin:10px;
+//* myFiltersBodyMobileMediaRightMargin ==========*// 
+$myFiltersBodyMobileMediaRightMargin:25px;
+//* chkListBdrHeight ==========*// 
+$chkListBdrHeight:80px;
+//* optionHighlightColorInputWidth ==========*//
+$optionHighlightColorInputWidth:70%;
+//* optionHighlightColorInputHeight ==========*//
+$optionHighlightColorInputHeight:34px;
+//* optionHighlightColorInputPadding ==========*//
+$optionHighlightColorInputPadding:5px;
+//* msgBoxPading =============*// 
+$msgBoxPadding:10px;
+//* msgBoxButtonsTopMargin =============*// 
+$msgBoxButtonsTopMargin:10px;
+//* msgBoxTextAreaTopMargin =============*// 
+//$msgBoxTextareaTopMargin:20px;
+$msgBoxTextareaTopMargin:10px;
+//* switchWidth =============*// 
+$switchWidth:30px;
+//* switchHeight =============*// 
+$switchHeight:17px;
+//* wizardDcPadding =============*// 
+$wizardDcPadding:20px 13px 0px 13px;
+//* wizardDcClassicPadding =============*// 
+$wizardDcClassicPadding:20px 13px 30px 13px;
+//* wizardDcModernArrowMarginTop =============*// 
+$wizardDcModernArrowMarginTop:-13px;
+//* wizardDcModernWizardProgressTextoverflowWidth for wixard dc =============*//
+$wizardDcModernWizardProgressTextoverflowWidth:98%;
+//* wizardDcModernWizardProgressTextoverflowMargin for wixard dc  =============*//
+$wizardDcModernWizardProgressTextoverflowMargin:0 5px 0 5px;
+//* wizardDcClassicCircleWidth =============*// 
+$wizardDcClassicCircleWidth:30px;
+//* wizardDcClassicCircleHeight =============*// 
+$wizardDcClassicCircleHeight:30px;
+//* wizardDcClassicCircleTopGap =============*// 
+$wizardDcClassicCircleTopGap:25px;
+//* wizardDcClassicCircleLeftGap =============*// 
+$wizardDcClassicCircleLeftGap:50%;
+//* wizardDcClassicCircleLeftMargin =============*// 
+$wizardDcClassicCircleLeftMargin:-18px;
+//* wizardDcClassicProgressBarTopGap =============*// 
+$wizardDcClassicProgressBarTopGap:39px;
+//* wizardDcClassicProgressBarHeight =============*// 
+$wizardDcClassicProgressBarHeight:3px;
+//* wizardDcClassicProgressBarRtlRightGap =============*// 
+$wizardDcClassicProgressBarRtlRightGap:50%;
+//* wizardDcClassicCircleArrowTopGap =============*// 
+$wizardDcClassicCircleArrowTopGap:-2px;
+//* designStatusPadding =============*// 
+$designStatusPadding:10px 9px;
+//* designStatusIconFontSize =============*// 
+$designStatusIconFontSize:20px;
+//* designStatusIconTopGap =============*// 
+$designStatusIconTopGap:3px;
+//* pageToolbarChartLabelBottomMargin =============*// 
+$pageToolbarChartLabelBottomMargin:20px;
+//* searchIconReponsibilitiesRightGap==========*// 
+$searchIconReponsibilitiesRightGap:18px;
+//* searchIconReponsibilitiesPosition for iview search==========*// 
+$searchIconReponsibilitiesPosition:absolute;
+//* searchIconReponsibilitiesPosition search child container==========*// 
+$searchBoxChildContainerPosition:relative;
+//* searchIconReponsibilitiesTopGap==========*// 
+$searchIconReponsibilitiesTopGap:5px;
+//* searchIconReponsibilitiesMarginTop==========*// 
+$searchIconReponsibilitiesMarginTop:10px;
+//* searchIconPosition used for iview search box==========*// 
+$searchIconPosition:absolute;
+//* searchIconZIndex used for iview search box==========*// 
+$searchIconZIndex:1;
+//* ivirMainChartWrapperMaximumHeight==========*// 
+$ivirMainChartWrapperMaximumHeight:100vh;
+//* searchIconZIndex used for iview search box==========*// 
+$ivirMainChartWrapperCalculatedHeight: "100vh - 150px";
+//* iview main chart wrapper min height==========*// 
+$ivirMainChartWrapperRequestJsonMinHeight:"50vh";
+//* iview main chart wrapper overflow ==========*// 
+$ivirMainChartWrapperRequestJsonOverflow:hidden;
+//* iview main chart wrapper height=========*// 
+$ivirMainChartWrapperRequestJsonHeight:100%;
+//* iview LnkallCndtnPill button==========*// 
+$iviewLnkallCndtnPillButtonPadding:0px 12px;
+//* pageTollbarSearchMinWidth==========*// 
+$pageTollbarSearchMinWidth:100px;
+//* pageTollbarSearchCalcMaxWidth ==========*// 
+$pageTollbarSearchCalcMaxWidth:50%;
+//* pageTollbarSearchCalcMinWidth ==========*//
+$pageTollbarSearchCalcMinWidth:80px;
+//* pageTollbarSearchRemoveIconFontSize ==========*//
+$pageTollbarSearchRemoveIconFontSize:22px;
+//* pageTollbarSearchRemoveIconTopGap ==========*//
+$pageTollbarSearchRemoveIconTopGap:-4px;
+//* pageTollbarSearchButtonMarginTop ==========*//
+$pageTollbarSearchButtonMarginTop:-4px;
+//* pageTollbarSearchgrdSearchResHoverOutline ==========*//
+$pageTollbarSearchgrdSearchResHoverOutline:2px auto #000;
+//* pageTollbarSearchgrdSearchResHoverOutlineOffset ==========*//
+$pageTollbarSearchgrdSearchResHoverOutlineOffset:-2px;
+//* pageTollbarDropDownButtonListRtl page tool bar ul with  DropDownButtonList class for rtl ==========*//
+$pageTollbarDropDownButtonListRtlLeftGap:0px;
+//* gridStaticItemPaddingRight for non grid dc==========*// 
+$gridStaticItemPaddingRight:10px;
+//* gridStaticItemMarginBottom for non grid dc==========*// 
+$gridStaticItemMarginBottom:10px;
+//* gridStaticLabelMarginBottom ========= *// 
+$gridStaticLabelMarginBottom:-5px;
+//* gridStretchTopGap ========= *// 
+$gridStretchTopGap:10px;
+//* gridStackItemPosition ========= *// 
+$gridStackItemPosition:relative;
+//* gridStackItemDisplay ========= *// 
+$gridStackItemDisplay:inline-block;
+//* gridStretchLeftGap ========= *// 
+$gridStretchLeftGap:10px;
+//* wrapperForEditFieldsHeight ========= *// 
+$wrapperForEditFieldsHeight:100%;
+//* tableTheadTrThPaddingRight ========= *// 
+$tableTheadTrThPaddingRight:18px;
+//* tabProgessPosition for tab grid dc from tab mixin========= *// 
+$tabProgessPosition:relative;
+//* tabStepPosition for tab grid dc from tab mixin========= *// 
+$tabStepPosition:relative;
+//* tblFillGrid2WrapperMinWidth ========= *// 
+$tblFillGrid2WrapperMinWidth:100%;
+//* fillGridPopMaximumHeight ========= *// 
+$fillGridPopMaximumHeight:100%;
+//* fillGridPopCalcHeight ========= *// 
+$fillGridPopCalcHeight:65px;
+$fillgridFormGroupMarginTop:-2px;
+//* pageOptionFilterZindex ========= *// 
+$pageOptionFilterZindex:1051;
+//* pageParamFilterPosition used for param filter in toolbar  ========= *// 
+$pageParamFilterPosition:relative;
+//* pageOptionFilterBodyCountMarginTop ========= *// 
+$pageOptionFilterBodyCountMarginTop:5px;
+//* pageOptionDropdownPostitionAbsolute========= *// 
+$pageOptionDropdownPositionAbsolute:absolute;
+//* pageIvParamTableTdMobileWidth ========= *// 
+$pageIvParamTableTdMobileWidth:33.33%;
+//* pageIvParamtableInputMarginTop ========= *// 
+$pageIvParamtableInputMarginTop:15px;
+//* ivParamTablePosition for param option like dropdown input field date etc ========= *//
+$ivParamTablePosition:relative;
+//* ivParamTablePosition for param option date picker etc ========= *//
+$ivParamTableDatePickerPosition:absolute;
+//* ivParamTableMultiChkSpanTokenFieldMAxHeight ========= *//
+$ivParamTableMultiChkSpanTokenFieldMAxHeight:100px;
+//* page search position for iview right hand side ========= *//
+$pageSearchPosition:absolute;
+$pageSearchPositionRequestJSONMobile:absolute;
+$pageSearchPositionRequestJSONMobileLeftRTL:0px;
+//* pagetblresXRtlMarginRight ========= *// 
+$pagetblresXRtlMarginRight:5%;
+//* pageIvContainerAccordionPanelGroupTop ========= *// 
+$pageIvContainerAccordionPanelGroupTop:90px;
+//* pageIvContainerAccordionPanelGroupPanelBodyMaxWidth ========= *// 
+$pageIvContainerAccordionPanelGroupPanelBodyMaxWidth:250px;
+//* pageIvContainerAccordionPanelGroupPanelBodyMaxCalcHeight ========= *// 
+$pageIvContainerAccordionPanelGroupPanelBodyMaxCalcHeight:"100vh - 100px";
+//* pageOptionHighlightSpcontainerZindex ========= *// 
+$pageOptionHighlightSpcontainerZindex:99999999;
+//* propertySheetPosition for design mode design property ========= *//
+$propertySheetPosition:fixed;
+//* propertySheetPosition for design mode design property ========= *//
+$propTableContentWidth:100%;
+//* propertySheetPosition for design mode design property ========= *//
+$propertySheetZIndex:9999;
+//* propertySearchFldWidth for design mode design property ========= *//
+$propertySearchFldWidth:100%;
+//* propertySheetDataWrapperMinWidth for design mode design property ========= *//
+$propertySheetDataWrapperMinWidth:75vh;
+$propertySheetHeaderPadding:10px 5px;
+//* propertySearchFldDisplay for design mode design property ========= *//
+$propertySearchFldDisplay:block;
+//* $tstructDesignModeBadgeGridStackPosition for design mode========= *//
+$tstructDesignModeBadgeGridStackPosition:absolute;
+//* $tstructDesignModeBadgeGridStackRightGap========= *//
+$tstructDesignModeBadgeGridStackRightGap:11px;
+//* $gridStacknotTstructDesignModeGridStackItemPosition========= *//
+$gridStacknotTstructDesignModeGridStackItemPosition:relative;
+//* $gridStacknotTstructDesignModeGridStackItemDisplay========= *//
+$gridStacknotTstructDesignModeGridStackItemDisplay:inline-block;
+$gridStackItemContentPadding:0 2px 0 2px;
+//* $tstructDesignModeHeight ========= *//
+$tstructDesignModeHeight:46px;
+//* $tstructDesignModeFormControlHeight ========= *//
+$tstructDesignModeFormControlHeight:28px;
+//* $tstructDesignModeFormControlHeight ========= *//
+$tstructDesignModeFormControlHeight:28px;
+//* $tstructDesignModefld-wrapPositionAbsolute ========= *//
+$tstructDesignModefld-wrapPositionAbsolute:absolute;
+//* $tstructDesignModefld-wrapPositionAbsolute ========= *//
+$tstructDesignModefld-wrap2PositionAbsolute:absolute;
+//* $tstructDesignModeUiresizable-se-sw-MaxWidth ========= *//
+$tstructDesignModeUiresizable-se-sw-MaxWidth:256px;
+//* $tstructDesignModeUiresizable-se-sw-MaxHeight ========= *//
+$tstructDesignModeUiresizable-se-sw-MaxHeight:256px;
+//* $tstructDesignModeUiresizable-se-sw-BottomGap ========= *//
+$tstructDesignModeUiresizable-se-sw-BottomGap:-5px;
+//* subGridPosition for non gridDc========= *//
+$subGridPosition:absolute;
+//* subGridTopGap for non gridDc========= *//
+$subGridTopGap:5px;
+//* subGridRightGap for non gridDc========= *//
+$subGridRightGap:5px;
+//* gridStackItemFldWrap2Position for non gridDc========= *//
+$gridStackItemFldWrap2Position:absolute;
+//* gridStackItemFldWrap2RtlPosition for non gridDc========= *//
+$gridStackItemFldWrap2RtlPosition:relative;
+//* smartviewpilssdisplay for non gridDc========= *//
+$chartPillsDisplay:inline-block;
+//* gowGroupingGrandTotalPlusIconFontSize for non gridDc========= *//
+$gowGroupingGrandTotalPlusIconFontSize:20px;
+//* bootstrapModalDialogResizableMinWidth for resizeable modal box for fill grid pop========= *//
+$bootstrapModalDialogResizableMinWidth:250px;
+//* bootstrapModalDialogResizableMinWidth for resizeable modal box for fill grid pop========= *//
+$bootstrapModalDialogResizableMinHeight:200px;
+//* bootstrapModalDataWrapperForEditFieldsPositionRelative ========= *// 
+$bootstrapModalDataWrapperForEditFieldsPositionRelative:relative;
+//* bootstrapModalDataWrapperForEditFieldsPadding ========= *// 
+$bootstrapModalDataWrapperForEditFieldsPadding:0px 10px;
+//* bootstrapModalDataWrapperForEditFieldsCalculateHeight ========= *// 
+$bootstrapModalDataWrapperForEditFieldsCalculateHeight:1px;
+//* tooltiptextTableThPadding used for iview param tooltips information ========= *//
+$tooltiptextTableThPadding:2px;
+//* check list footer input used for Tstruct ========= *//
+$checklistfooterInputPosition:relative;
+//* check list footer input used for Tstruct ========= *//
+$checklistfooterInputTopGap:2px;
+//* for text overflow in modalbox title (for bootstrap modal box) ========= *//
+$textOverflowWidthBootstrapModelForModalTitle:85%;
+//* for text overflow in modalbox title (for bootstrap modal box) ========= *//
+$textOverflowEllipsis:ellipsis;
+//* for text overflow in modalbox title (for bootstrap modal box) ========= *//
+$textoverflowWhiteSpaceNowrap:nowrap;
+//* for text overflow in modalbox title (for bootstrap modal box) ========= *//
+$textOverflowDisplay:inline-block;
+//* for text overflow in modalbox title (for bootstrap modal box) ========= *//
+$textOverflowHidden:hidden;
+$modalTitleMarginBottom:-10px;
+//* autocomplete footer  ========= *//
+$autoComFooterPositionMobile:absolute;
+$autoComFooterPaddingMobile:6px 12px;
+//* grndTotalWrapperDisplay for iview option row grouping  ========= *//
+$grndTotalWrapperDisplay:inline-block;
+// filter for param height for mobile device
+$FilterscollapsePanelBodyMobileMinHeight:250px;
+// materialI icon display
+$materialIconsDisplay:inline-block;
+// materialHoverColor
+$materialHoverColor:rgba($applicationTextColor,0.075);
+// materialTableHoverColor
+$materialTableHoverColor:lighten($applicationTextColor, 98%);
+//*pageTableHeaderMenu Position*//
+$pageTableHeaderMenuMainPosition:absolute;
+//*pageTableHeaderMenu main width*//
+$pageTableHeaderMenuMainWidth:150px;
+$pageTableHeaderBackgroundColor:darken($applicationBackgroundColor, 10%);
+//*pageTableHeaderMenu main z-index*//
+$pageTableHeaderMenuMainZIndex:999999;
+//* pageTableHeaderMenuListColor  ==================================== *//
+$pageTableHeaderMenuListColor:darken($applicationBackgroundColor, 2%);
+//* pageTableHeaderMenuListPadding  ==================================== *//
+$pageTableHeaderMenuListPadding:5px 10px;
+//* pageTableHeaderMenRightClickMenuIcnDisplay  ==================================== *//
+$pageTableHeaderMenRightClickMenuIcnDisplay:inline-block;
+//* pageTableGrandTotalTdColor  ==================================== *//
+$pageTableGrandTotalTdGreenColor:#1f911f;
+//* pageTableGrandTotalTdBlueColor  ==================================== *//
+$pageTableGrandTotalTdBlueColor:#0000ff;
+
+//*** tstruct Form buttons  ------------ *//
+$tstructFormButtonColor:#333;
+$tstructFormButtonPadding:2px 9px;
+$tstructFormButtonBorder:1px solid #ccc;
+$tstructFormButtonBorderRadius:3px;
+$tstructFormButtonMarginTop:29px;
+$tstructFormButtonDisplayInline:inline-block;
+$tstructFormButtonIconMarginRight:5px;
+$tstructFormButtonIconFontSize:18px;
+$tstructFormButtonIconPosition:relative;
+$tstructFormButtonIconTop:3px;
+$tstructFormButtonSpanPosition:relative;
+$tstructFormButtonSpanTop:-2px;
+$tstructFormButtonCompressedModePadding:0px 9px;
+$tstructFormButtonCompressedModeMarginTop:20px;
+
+//*** tstruct Field Table  ------------ *//
+$tstructFieldTableDivTablePadding:10px;
+$tstructFieldTableDivTableIconPadding:7px 10px;
+$tstructFieldTableDivTableIconColor:#fff;
+$tstructFieldTableDivTableIconMarginRight:5px;
+$tstructFieldTableDivTableIconMarginBottom:10px;
+$tstructFieldTableDivTableFldTableBackground:lighten($applicationTextColor, 95%);
+$tstructFieldTableDivTableFldTableThBackground:lighten($applicationTextColor, 85%);
+$tstructFieldTableDivTableTdThBorderColor:lighten($applicationTextColor, 80%);
+$tstructFieldTableDivTableTdFldtableinputWidth:100%;
+$tstructFieldTableDivModalDailogWidth:900px;
+$tsructFormFieldFontSize:13px;
+$tsructFormInputFontWeight:500;
+$tsructFormDvdcframePadding:10px;
+
+//*** formGridRow card layout structure  ------------ *//
+//* formGridRowMargin *//
+$formGridRowMargin:2px 2px 15px;
+//* formGridRowPadding *//
+$formGridRowPadding:5px;
+$formGridRowPaddingMobile: 5px 5px 5px 12px;
+//* formGridRowButtonsDisplay *//
+$formGridRowButtonsDisplay:inline-block;
+
+
+
+
+
+//*** application button *//
+
+//* hotbtnbackground color  ==================================== *//
+//$hotbtnbackgroundcolor:#1f91f3;
+$hotbtnbackgroundcolor:#1976d2;
+//* workFlowMsgitemoneBackgroundColor ==================================== *//
+$workFlowMsgitemoneBackgroundColor:lighten($hotbtnbackgroundcolor, 8%);
+//* application hot btn disable color (punch in and punch out color for disable) ==================================== *//
+$hotbtnDisablebackgroundcolor:lighten($hotbtnbackgroundcolor, 30%);
+//* hotbtntext color  ==================================== *//
+$hotbtntext:#fff;
+//* hot btn color for hover ============== *// 
+$hotBtnHoverColor:darken($hotbtnbackgroundcolor,5%);
+//* hotColdBtnMaxWidth  ==================================== *//
+$hotColdBtnMaxWidth:100px;
+//* hotColdBtnMaxWidth  ==================================== *//
+$hotColdBtnMinWidthMobile:64px;
+//* hotColdBtnMaxWidth  ==================================== *//
+$hotColdBtnMinWidthMobileForWizardDc:64px;
+//* hotColdBtnHeight  ==================================== *//
+$hotColdBtnHeight:30px;
+//* hotColdBtnPadding  ==================================== *//
+$hotColdBtnPadding:6px 12px;
+//* hotColdBtnRightMargin  ==================================== *//
+$hotColdBtnRightMargin:5px;
+//* hotColdBtnMarging  ==================================== *//
+$hotColdBtnMargin:3px;
+//* clearBtnColor color  ==================================== *//
+$clearBtnColor: lighten($applicationTextColor,20%);
+//* clearBtnHoverBackgroundColor color  ==================================== *//
+$clearBtnHoverBackgroundColor: lighten($applicationTextColor,70%);
+//* coldbtntext color  ==================================== *//
+$coldbtntext:#333;
+//* coldbtnbackground color  ==================================== *//
+$coldbtnBackground:#fff;
+//* coldBtnBackgroundHover color  ==================================== *//
+$coldBtnBackgroundHover: lighten($applicationTextColor,90%);
+//* coldBtnBorder color  ==================================== *//
+$coldBtnBorderColor:#ccc;
+//* coldBtnBorder radius color  ==================================== *//
+$coldBtnBorderRadius:3px;
+//* btnOpacity  ==================================== *//
+$btnOpacity:.55;
+/////* hybrid mobile application button for mobile only position  ==================================== *//
+$hybridAppButtonPosition:absolute;
+//* hybridAppButtonRightGap  ==================================== *//
+$hybridAppButtonRightGap:10px;
+//* hybridAppButtonTopGap  ==================================== *//
+$hybridAppButtonTopGap:10px;
+//* hybridAppButtonFontSize  ==================================== *//
+$hybridAppButtonFontSize:20px;
+
+
+//* toolbarBtnNormalPadding ============== *// 
+$toolbarBtnNormalPadding:5px 15px;
+//* gridDcBtnMargin ============== *// 
+$gridDcBtnMargin:15px;
+//* gridDcBtnPadding ============== *// 
+$gridDcBtnPadding:7px;
+//* pageFooterBtnPosition ============== *// 
+$pageFooterBtnPosition:relative;
+//* pageFooterBtnWidth ============== *// 
+$pageFooterBtnWidth:100%;
+//* pageFooterBtnTopGap ============== *// 
+$pageFooterBtnTopGap:10px;
+//* pageFooterBtnPaddingBottom ============== *// 
+$pageFooterBtnPaddingBottom:15px;
+//* pageFooterBtnMarginTop ============== *// 
+$pageFooterBtnMarginTop:-9px;
+//* pageFooterbackforwrdbuttonsRightGapRtl ============== *// 
+$pageFooterbackforwrdbuttonsRightGapRtl:4px;
+//* pageFooterbackforwrdbuttonsPosition ============== *// 
+$pageFooterbackforwrdbuttonsPosition:fixed;
+//* pageFooterbackforwrdbuttonsMarginTop ============== *// 
+$pageFooterbackforwrdbuttonsMarginTop:2px;
+//* pageFooterbackforwrdbuttonsPaddingTop ============== *// 
+$pageFooterbackforwrdbuttonsPaddingTop:4px;
+
+
+//* gridDcFrameTopMargin ============== *// 
+$gridDcFrameTopMargin:20px;
+//* gridDc arrow down margin for tstruct============== *// 
+$gridDcArrowMarginLeft:10px;
+//* gridDcAddBtnMargin ============== *// 
+$gridDcAddBtnMargin:-3px;
+//* dcTitleTopGap ============== *// 
+$dcTitleTopGap:3px;
+//* dcTitleLeftGap ============== *// 
+$dcTitleLeftGap:5px;
+//* toggleBtnWidth =============*// 
+$toggleBtnWidth:50%;
+//* toggleBtnLeft =============*// 
+$toggleBtnLeft:50%;
+//* toggleBtnRight =============*// 
+$toggleBtnRight:50%;
+//* toggleBtnBorderRadius used for  toggle btn =============*// 
+$toggleBtnBorderRadius:2em;
+//* toggleBtnPadding used for toggle btn =============*// 
+$toggleBtnPadding:10px 20px;
+//* toggleBtnSwitchDisplay used for tstruct Design toggle btn  =============*// 
+$toggleBtnSwitchDisplay:inline-block;
+//* toggleBtnPosition overall toggle btn  for tstruct Design toggle btn  =============*// 
+$toggleBtnPosition:absolute;
+//* toggleBtnPosition overall toggle btn  for tstruct Design toggle btn  =============*// 
+$toggleBtnDisplay:block;
+//* tglBtnPosition overall toggle btn  for tstruct Design toggle btn  =============*// 
+$tglBtnPosition:relative;
+//* griddc button for mobile   =============*// 
+$grdButtonsBtnMobilePadding:10px 15px;
+//* griddc button for mobile   =============*// 
+$grdButtonsBtnMobileMargin:0 15px 20px;
+
+
+
+
+
+
+
+
+//**** rtl Varibale *//
+
+//*appliactionRtlInputPaddingLeft =======*//
+$appliactionRtlInputPaddingLeft:30px;
+//*autoCompleteClearRtlLeftMargin =======*//
+$autoCompleteClearRtlLeftMargin:20px;
+//*autoCompleteClearRtlPaddingLeft =======*//
+$autoCompleteClearRtlPaddingLeft:22px;
+//*autoCompleteClearRtlPaddingRight =======*//
+$autoCompleteClearRtlPaddingRight:0px;
+//*autoCompleteClearRtlTopGap =======*//
+$autoCompleteClearRtlTopGap:2px;
+//*autoCompleteClearRtlLeftGap =======*//
+$autoCompleteClearRtlLeftGap:0px;
+//*editRtlLeftMargin for autocomplete =======*//
+$editRtlLeftMargin:4px;
+//*editRtlTopMargin for autocomplete =======*//
+$editRtlTopMargin:4px;
+//*autoclearRtlRightGap =======*//
+$autoclearRtlRightGap:auto;
+//*autoclearRtlLeftGap =======*//
+$autoclearRtlLeftGap:0px;
+
+
+
+//*** application + tstruct compressed Mode *//
+
+//*appliactionCompressedInputSelectHeight =======*//
+$appliactionCompressedInputSelectHeight:23px;
+//*appliactionCompressedTextareaSelectHeight =======*//
+$appliactionCompressedTextareaSelectHeight:23px;
+//*appliactionCompressedInputPadding =======*//
+$appliactionCompressedInputPadding:2px;
+//*appliactionCompressedInputMarginBottom =======*//
+$appliactionCompressedInputMarginBottom:0px;
+//*appliactionCompressedCheckBoxMarginTop =======*//
+$appliactionCompressedCheckBoxMarginTop:3px;
+//*appliactionCompressedFontSize =======*//
+$appliactionCompressedFontSize:12px;
+//*appliactionCompressedFontSize =======*//
+$appliactionCompressedIconSize:20px;
+//*applicationCompressedHintFontSize =================*//
+$applicationCompressedHintFontSize:12px;
+//*appliactionCompressedLevelFontSize =======*//
+$appliactionCompressedLevelFontSize:14px;
+//*appliactionCompressedTitleMainFontSize =======*//
+$appliactionCompressedTitleMainFontSize:16px;
+//*appliactionCompressedLevelMarginBottom =======*//
+$appliactionCompressedLevelMarginBottom:-5px;
+//*appliactionCompressedBtnHeight =======*//
+$appliactionCompressedBtnHeight:20px;
+//*appliactionCompressedBtnPadding =======*//
+$appliactionCompressedBtnPadding:2px 2px;
+//*appliactionCompressedNotGridoptionsFontSize =======*//
+$appliactionCompressedNotGridoptionsFontSize:16px;
+//*appliactionCompressedGridoptionsFontSize =======*//
+$appliactionCompressedGridoptionsFontSize:18px;
+//*appliactionCompressedGridoptionsLeft =======*//
+$appliactionCompressedGridoptionsLeft:2px;
+//*appliactionCompressedGridoptionsActiveFontSize =======*//
+$appliactionCompressedGridoptionsActiveFontSize:16px;
+//*appliactionCompressedGridoptionsActiveSapnTextFontSize =======*//
+$appliactionCompressedGridoptionsActiveSapnTextFontSize:12px;
+//*appliactionCompressedNewgridBtnListSpanFontSize =======*//
+$appliactionCompressedNewgridBtnListSpanFontSize:16px;
+//*gridstackCalcCompressedModeHeight =======*//
+$gridstackCalcCompressedModeHeight:20px;
+//*applicationCompressedAllowemptyFontSize =================*//
+$applicationCompressedAllowemptyFontSize:10px;
+//*applicationCompressedAllowemptyFontSize =================*//
+$applicationCompressedAllowemptyFontSize:-5px;
+//*inputGroupAdonCompressedPadding =================*//
+$inputGroupAdonCompressedPadding:2px 12px;
+//*dcTitleCompressedPadding =================*//
+$dcTitleCompressedPadding:2px 1px;
+//*wrapperCompressedPadding =================*//
+$wrapperCompressedPadding:7px 0px;
+//*applicationCompressedUpdatePanelBottomMargin =================*//
+$applicationCompressedUpdatePanelBottomMargin:-15px;
+//*applicationCompressedCustomGridchkBoxMarginTop =================*//
+$applicationCompressedCustomGridchkBoxMarginTop:-2px;
+//*applicationCompressedCustInpChk =================*//
+$applicationCompressedCustInpChk:25px;
+//*wizardBodyContentCompressed =================*//
+$wizardBodyContentCompressed:185px;
+//*wizardBodyContentCompressedProgress_Flat =================*//
+//$wizardBodyContentCompressedProgress_Flat:175px;
+$wizardBodyContentCompressedProgress_Flat:190px;
+$wizardBodyContentGridOptionLabelPosition:relative;
+$wizardBodyContentGridOptionLabelTop:45px;
+$wizardBodyContentGridOptionLabelLeft:16px;
+$wizardBodyContentGridOptionLabelFontsize:16px;
+$wizardBodyContentGridOptionLabelFontWeight:500;
+$wizardTstructBottomButtonListHieght:35px;
+$wizardTstructBottomButtonListWidth:35px;
+$wizardTstructBottomButtonListPadding:5px;
+$wizardTstructBottomLeftButtonMarginBottom:0px;
+$wizardTstructBottomLeftButtonMarginTop:2px;
+$tstructBottomLeftButtonMargingRight:5px;
+//* autoinputCompressedTopMargin ========= *// 
+$autoinputCompressedTopMargin:5px;
+//* autoclearCompressedTopMargin ========= *// 
+$autoclearCompressedTopMargin:4px;
+//* editCompressedTopMargin ========= *// 
+$editCompressedTopMargin:3px;
+//* gridTableDataCompressedPadding ========= *// 
+$gridTableDataCompressedPadding:0px 2px;
+//* gridTableHeadingCompressedPadding ========= *// 
+$gridTableHeadingCompressedPadding:3px 5px;
+//* compressedTableDataThirdChildPadding ========= *// 
+$compressedTableDataThirdChildPadding:5px;
+//* compressedCheckboxFormGroupMarginTop ========= *// 
+$compressedCheckboxFormGroupMarginTop:5px;
+//* compressedDatePickerMinHeight ========= *// 
+$compressedDatePickerMinHeight:180px;
+//* compressedFieldsGapMarginBottom ========= *// 
+$compressedFieldsGapMarginBottom:1px;
+//* compressedFieldsGapPaddingRight ========= *// 
+$compressedFieldsGapPaddingRight:1px;
+//* editLayoutFooterCompressedMargintop ========= *// 
+//$editLayoutFooterCompressedMargintop:0px;
+$editLayoutFooterCompressedMargintop:-2px;
+// Compressed mode section content margin while overlay open
+$application-compressed-mode-section-content-overlayOpen-margin: 55px 5px 0px 305px;
+// Compressed mode section content margin without overlay
+$application-compressedMode-section-content-margin: 55px 5px 5px 5px;
+// Compressed mode appBackBtn top margin
+$application-compressedMode-appBackBtn-top: 56px;
+// application-compressedMode-appBackBtn-left
+$application-compressedMode-appBackBtn-left: -8px;
+// application-compressedMode-section-content-appBackBtn-Top-Gap
+$application-compressedMode-section-content-appBackBtn-Top-Gap:69px;
+// application-compressedMode-section-content-appBackBtn-Left-Gap
+$application-compressedMode-section-content-appBackBtn-Left-Gap:1px;
+// application-compressedMode-SplitterWrapper-MaximumHeight
+$application-compressedMode-SplitterWrapper-MaximumHeight:100vh;
+// application-compressedMode-SplitterWrapper-CalculateHeight
+$application-compressedMode-SplitterWrapper-CalculateHeight:"100vh - 60px";
+// for section content in mobile compressed mode
+$application-compressedmode-section-content-mobile-margin: 55px 5px 5px 5px; 
+// for appbackbtn top margin in mobile compressed mode
+$application-compressedmode-appBackBtn-mobile-top: 58px;
+// for appbackbtn left margin in mobile compressed mode
+$application-compressedmode-appBackBtn-mobile-left: -8px;
+//*comprssed Mode for application header
+//application compressed Mode navbar  *// 
+$applicationCompressedNavberHeight:30px;
+//application compressed Mode toggle bar top gap  *// 
+$applicationCompressedToggleBarTopGap:9px;
+//application compressed Mode navbar Padding  *// 
+$applicationCompressedNavbarPadding:0px 7px;
+//application compressed Mode main page navbar margin  *// 
+$applicationCompressedMainPageNavbarNavMarginTop: 6px;
+//application compressed Mode main page navbar margin  *// 
+//$applicationCompressedMainPageNavbarCollapseNavbarNavPadding: 9px 7px 9px 7px;
+$applicationCompressedMainPageNavbarCollapseNavbarNavPadding:8px;
+//application compressed Mode main page navbar Padding  *// 
+$applicationCompressedMainPageNavbarNavPadding: 5px 7px 0px;
+//application compressed Mode search icon top gap  *// 
+$applicationCompressedMainPageSearchIconTopGap:6px;
+//application compressed Mode search close icon top gap  *// 
+$applicationCompressedMainPageSearchCloseIconTopGap:12px;
+//application compressed Mode search bar left gap for compressed  *// 
+$applicationCompressedMainPageSearchBarLeftGap:305px;
+//application compressed Mode search input padding gap  *// 
+$applicationCompressedSearchInputPadding:10px 60px 10px 56px;
+//application compressed Mode search input margin top  *// 
+$applicationCompressedSearchInputMarginTop:4px;
+//application compressed NavBar CollapseUlMarginTopMobile  *// 
+$applicationCompressedNavBarCollapseUlMarginTopMobile:-50px;
+//*applicationCompressedSearchBarInutPaddingMobile =========*//
+$applicationCompressedSearchBarInutPaddingMobile:16px 60px 16px 56px;
+//application compressed Mode right slide bar top   *// 
+$applicationCompressedRightSlidebarTopGap:50px;
+//application compressed Mode right slide bar height  *// 
+$applicationCompressedRightSlidebarHeightCalc:"100vh - 50px";
+//application compressed Mode left slide bar top  *// 
+$applicationCompressedLeftSlidebarHeightTopGap:50px;
+//application compressed Mode left slide bar height  *// 
+$aapplicationCompressedLeftSlidebarHeightCalc:"100vh - 50px";
+//application compressed Mode table td padding  *// 
+$applicationCompressedDataTableTdPadding:1px 5px;
+//application compressed Mode table th padding  *// 
+$applicationCompressedDataTableThPadding:4px 20px;
+//application compressed Mode table boder *// 
+$applicationCompressedTableBorderColor:lighten($applicationTextColor, 80%);
+//application table  ColumnSeparator boder *// 
+$applicationTableColumnSeparatorBorderColor:lighten($applicationTextColor, 87%);
+//application compressed Mode table th fontsize  *// 
+$applicationCompressedDataTableTdFontSize:12px;
+// TableColor Td and Th
+$applicationTableColor:lighten($applicationTextColor, 80%);
+//application compressed Mode table th color  *// 
+$applicationCompressedDataTableTdThColor:$applicationTableColor;
+//application compressed Mode table td , th text color *// 
+$applicationTableThTdTextColor:lighten($applicationTextColor, 23%);
+//applicationTableThTdFontSize*// 
+$applicationTableThTdFontSize:13px;
+//applicationCompressedNonGridPasswordtoggleTopGap  *// 
+$applicationCompressedNonGridPasswordtoggleTopGap:23px;
+//applicationCompressedNonGridPasswordtoggleTopGap  *// 
+$applicationCompressedModeAppBackBtnNotEnableExpandCollapseTop:55px;
+//* applicationMainPageNavbarNotEnableExpandCollapseComprssedMarginTop *//
+$applicationMainPageNavbarNotEnableExpandCollapseComprssedMarginTop:10px;
+
+//* gridStackContantCompressedRightGap ========= *// 
+$gridStackContantCompressedRightGap:1px;
+//* gridStretchtoggleBtnCompressedModeTopGap *//
+$gridStretchtoggleBtnCompressedModeTopGap:1px;
+//* gridStretchtoggleBtnCompressedModeLeftGap *//
+$gridStretchtoggleBtnCompressedModeLeftGap:4px;
+//* dvheightframeInputGroupAddonCompressedModePadding *//
+$dvheightframeInputGroupAddonCompressedModePadding:2px 12px;
+
+//* gridStackItemMinWidth ========= *// 
+$gridStackItemMinWidth:8.3333333333%;
+//* gridStackItemPositionAbsolute ========= *// 
+$gridStackItemPositionAbsolute:absolute;
+//* inputGridAddonPadding ========= *// 
+$inputGridAddonPadding:2px 12px;
+//* attachment close icon margin *//
+$applicationgridAttachementCloseIconMarging:2px 5px 0px;
+//* attachment close icon font size *//
+$applicationAttachmentCloseIconFontSize: 16px;
+//* attachment close icon padding *//
+$applicationAttachmentcloseIconPadding: 0px 1px 0px 0px; 
+//*searcHoverRelayPenalHeadingPadding =================*//
+$searcHoverRelayPenalHeadingPadding:5px 7px 5px 3px;
+//*searchPagetoolBarSearchButtonPadding =================*//
+$searchPagetoolBarSearchButtonPadding:2px;
+//*searcHoverRelayPenalBodyPadding =================*//
+$searcHoverRelayPenalBodyPadding:6px 5px 14px 7px;
+//*wizardModalWidth =================*//
+$wizardModalWidth:95vw;
+//*wizardModalWidth =================*//
+$wizardModalHeight:80vh;
+//*wizardModalMaxHeight =================*//
+$wizardModalMaxHeight:80vh;
+//*wizardModalvalignWrapperMaxHeight =================*//
+$wizardModalvalignWrapperMaxHeight:100vh;
+//*wizardModalvalignWrapperCalculateHeight =================*//
+$wizardModalvalignWrapperCalculateHeight:270px;
+//*wizardModalvalignWrapperIconAnchrSpanFontSize =================*//
+$wizardModalvalignWrapperIconAnchrSpanFontSize:121px;
+//*wizardModalWizardBodyContentMarginTop =================*//
+$wizardModalWizardBodyContentMarginTop:45px;
+//*wizardModalModalFooterMarginRight =================*//
+$wizardModalModalFooterMarginRight:5px;
+//*wrapperPadding =================*//
+$wrapperPadding:15px;
+//* gridStackMargin ========= *// 
+$gridStackMargin:-5px;
+//* wizardBodyFooterWrapperCommprssedTopMargin ========= *// 
+$wizardBodyFooterWrapperCommprssedTopMargin:-7px;
+
+
+
+
+
+
+////// Impot variables
+//* applicationImportTableHieght ========= *// 
+$applicationImportTableHieght:151px;
+//* importDownloadMarginBottom ========= *// 
+$importDownloadMarginBottom:15px;
+//* importFooterBtnMargin ========= *// 
+$importFooterBtnMargin:5px;
+//* importFooterBtnPadding ========= *// 
+$importFooterBtnPadding:5px;
+//* importFooterBtnPadding ========= *// 
+$importSelectMarginBottom:5px;
+//* importEditTableHeight ========= *// 
+$importEditTableHeight:200px;
+//* importContainerMarginTop ========= *// 
+$importContainerMarginTop:10px;
+//* importExportFontSize *//
+$importExportFontSize:20px;
+//* importTableSelectBtnFontSize *//
+$importTableSelectBtnFontSize:20px;
+//* importTableHeadFirstThirdColoumWidth *//
+$importTableHeadFirstThirdColoumWidth:45%;
+//* importTableHeadSecondColoumWidth *//
+$importTableHeadSecondColoumWidth:10%;
+//* importDownloadIconMarginRight *//
+$importDownloadIconMarginRight:5px;
+//* import table condition table scroll *//
+$importFiltersectionMinHeight:100px;
+//* import table condition table scroll *//
+$importFiltersectionMaxHeight:190px;
+//* import importDopdownmenucssTopGap *//
+$importDopdownmenucssTopGap:32px;
+//* import importDopdownmenucssWidth *//
+$importDopdownmenucssWidth:195px;
+//* exportFooterPadding *//
+$exportFooterPadding:10px;
+//* exportConditionTablePadding *//
+$exportConditionTablePadding:10px;
+//* exportConditionPlusMinusIconColor color  ==================================== *//
+$exportConditionPlusMinusIconColor:darken($applicationTextColor, 10%);
+//* exportPaddingTable *//
+$exportPaddingTable:2px 5px;
+$excelimportGridBtnMarginTop:20px;
+
+
+//// pills variable for smartviews
+
+//* pillsMaterialCheckBoxPosition using for smart pills *//
+$pillsMaterialCheckBoxPosition:absolute;
+//* pillsFilterChartMargin using for smart top div *//
+$pillsFilterChartMargin:10px;
+//* pillsCheckboxLabelPosition using for smart top div *//
+$pillsCheckboxLabelPosition:relative;
+//* pillsCheckboxLabelPaddingLeft  *//
+$pillsCheckboxLabelPaddingLeft:13px;
+//* pillsCheckboxLabelMarginRight  *//
+$pillsCheckboxLabelMarginRight:20px;
+//* pillsCheckboxLabelHeight  *//
+$pillsCheckboxLabelHeight:7px;
+//* pillsCheckboxLabelDisplay  *//
+$pillsCheckboxLabelDisplay:inline-block;
+//* pillsFilledInBeforeWidth  *//
+$pillsFilledInBeforeWidth:6px;
+//* pillsFilledInBeforeHeight  *//
+$pillsFilledInBeforeHeight:11px;
+//* pillsArrowRotateicons  *//
+$pillsArrowRotate:rotateZ(37deg);
+//* pillsFilledInAfterHeight  *//
+$pillsFilledInAfterHeight:17px;
+//* pillsArrowRotateicons  *//
+$pillsFilledInAfterWidth:17px;
+//* pillsFilledInLabelBeforeAfterContentPosition  *//
+$pillsFilledInLabelBeforeAfterContentPosition:absolute;
+//* pillsFilledInLabelBeforeAfterContentZIndex  *//
+$pillsFilledInLabelBeforeAfterContentZIndex:1;
+//* pillMainWrapperPaddingLeft used for pills smart iviews  *//
+$pillMainWrapperPaddingLeft:10px;
+//* pillMainWrapperPaddingLeft used for pills smart iviews   *//
+$pilliIirCndtnIconBorderRadius:5px;
+//* pillMainWrapperPaddingLeft used for pills smart iviews  *//
+$pilliIirCndtnIconPadding:3px;
+//* pilliIirCndtnIconMarginRight used for pills smart iviews  *//
+$pilliIirCndtnIconMarginRight:0px;
+//* pillMainWrapperPosition used for pills smart iviews *//
+$pillMainWrapperPosition:relative;
+//* pillMainWrapperPosition used for pills smart iviews *//
+$pillMainWrapperDisplay:inline-block;
+//* pillsIvirCndtnLabelBorderRadius used for pills smart iviews *//
+$pillsIvirCndtnLabelBorderRadius:9px;
+//* pillsIvirCndtnLabelPosition used for pills smart iviews *//
+$pillsIvirCndtnLabelPosition:relative;
+//* pillsIvirCndtnLabelBorderRadius used for pills smart iviews *//
+$pillsIvirCndtnLabelTopGap:-1px;
+//* ivirAllCndtnsDisplay used for pills smart iviews *//
+$ivirAllCndtnsDisplay:inline-block;
+//* ivirAllCndtnPillsDisplay used for pills smart iviews *//
+$ivirAllCndtnPillsDisplay:inline-block;
+//* pillsCheckedBoxPadding used for pills smart iviews *//
+$pillsCheckedBoxPadding:7px;
+
+//* pills Ivir cdn div display ==================================== *//
+$pillsIvirAllCndtnPillsDivDisplay:none;
+$pillsIvirAllCndtnPillsDivRequestJSONMobilePosition: relative;
+$pillsIvirAllCndtnPillsDivRequestJSONMobileTop: -2px;
+$pillsIvirAllCndtnPillsButtonRequestJSONMobilePadding: 0px;
+//* pills Ivir mainwrapper margin left  ==================================== *//
+$pillsIvirPillsMainWrapperMarginLeft:10px;
+//* pills Ivir mainwrapper link margin left  ==================================== *//
+$pillsIvirPillsMainWrapperLinkMarginLeft:3px;
+//* pills Ivir mainwrapper background color  ==================================== *//
+$pillsMainWrapperBackgroundColor:lighten($applicationTextColor, 92%);
+//* pills Ivir mainwrapper button padding  ==================================== *//
+$pillsMainWrapperButtonPadding:0px 3px 0px;
+//* pills Ivir mainwrapper button margin left  ==================================== *//
+$pillsMainWrapperButtonMarginLeft:5px;
+//* pills Ivir mainwrapper button position ==================================== *//
+$pillsMainWrapperButtonPosition:relative;
+//* pills Ivir mainwrapper button top gap  ==================================== *//
+$pillsMainWrapperButtonTopGap:-1px;
+//* pills Ivir mainwrapper margin left  ==================================== *//
+$pillsMainWrapperMarginLeft:5px;
+//* pills Ivir mainwrapper padding  ==================================== *//
+$pillsMainWrapperPadding:5px;
+//* pills Ivirmainwrapper span ivir icon position ==================================== *//
+$pillsIvirPillsMainWrapperSpanIvirCndtnIconPosition:relative;
+//* pills Ivir mainwrapper spancdn topgap  ==================================== *//
+$pillsIvirPillsMainWrapperSpanIvirCndtnIconTopGap:-1px;
+//* pills Ivir button border  ==================================== *//
+$pillsIvirBottomButtonBorder:0px;
+//* pills Ivir button position  ==================================== *//
+$pillsIvirBottomButtonPosition:absolute;
+//* pills Ivir button top gap  ==================================== *//
+$pillsIvirBottomButtonTopGap:9px;
+//* pills Ivir button border  margin right ==================================== *//
+$pillsIvirBottomButtonMarginRight:0px;
+//* pills Ivir button border  right gap ==================================== *//
+$pillsIvirBottomButtonRightGap:7px;
+//* pills Ivir label  after height ==================================== *//
+$pillsIvirBottomLabelAfterHeight:6px;
+//* pills Ivir label  after left gap ==================================== *//
+$pillsIvirBottomLabelAfterLeftGap:7px;
+//* pills Ivir label  after position ==================================== *//
+$pillsIvirBottomLabelAfterPosition:absolute;
+//* pills Ivir label  after top gap==================================== *//
+$pillsIvirBottomLabelAfterTopGap:8px;
+//* pills Ivir label  after width ==================================== *//
+$pillsIvirBottomLabelAfterWidth:12px;
+//* pills bottom button color  ==================================== *//
+$PillsBottomButtonColor:lighten($applicationTextColor, 90%);
+//* pills bottom span box shadow color  ==================================== *//
+$pillsIvirBottomSpanBoxShadowColor:$PillsBottomButtonColor;
+//* pills bottom span background color  ==================================== *//
+$pillsIvirBottomSpanBackgroundColor:$PillsBottomButtonColor;
+//* pills bottom span position  ==================================== *//
+$pillsIvirBottomSpanPosition:relative;
+//* pills bottom span margin top  ==================================== *//
+$pillsIvirBottomSpanMarginTop:-3px;
+//* pills bottom span fpnt size ==================================== *//
+$pillsIvirBottomSpanFontSize:11px;
+//* pills bottom span padding  ==================================== *//
+$pillsIvirBottomSpanPadding:7px;
+//* pills bottom span margin top  ==================================== *//
+$pillsIvirBottomSpanMarginTop:-3px;
+//* pills main icon text color  ==================================== *//
+$pillsMainTextColor:lighten($applicationTextColor, 60%);
+//* pills ivir bottom label height  ==================================== *//
+$pillsIvirBottomLabelHeight:28px;
+//* pills ivir bottom label left gap  ==================================== *//
+$pillsIvirBottomLabelLeftGap:-6px;
+//* pills ivir bottom label position  ==================================== *//
+$pillsIvirBottomLabelPosition:absolute;
+//* pills ivir bottom label top gap  ==================================== *//
+$pillsIvirBottomLabelTopGap:2px;
+//* pills ivir bottom label width  ==================================== *//
+$pillsIvirBottomLabelWidth:28px;
+//* pills ivir bottom label check box backgrond color  ==================================== *//
+$pillsIvirBottomLabelcheckBoxbackgroundColor:lighten($applicationTextColor, 92%);
+//* pills ivir bottom label check box border color  ==================================== *//
+$pillsIvirBottomLabelcheckBorderColor:lighten($applicationTextColor, 80%);
+//* pills ivir div padding ==================================== *//
+$pillsIvirDivPadding:5px 35px 5px 18px;
+//* pills ivir div margin bottom ==================================== *//
+$pillsIvirDivMarginBottom:5px;
+//* pills ivir div position relative ==================================== *//
+$pillsIvirDivPosition:relative;
+//* pills ivir div box background color ==================================== *//
+$pillsIvirDivBoxBackgroundColor:lighten($applicationTextColor, 92%);
+//* pills chart background color ==================================== *//
+$pillsChartBackgroundColor:lighten($applicationTextColor, 92%);
+//* pills chart margin left ==================================== *//
+$pillsChartMarginLeft:5px;
+//* pills chart padding ==================================== *//
+$pillsChartPadding:5px;
+//* pills ivir padding ==================================== *//
+$pillsIvirDivBoxPadding:5px;
+//* pills ivir Margin ==================================== *//
+$pillsIvirDivBoxMargin:5px;
+//* pills ivir cndt margin left ==================================== *//
+$PillsIvirAllCndtnMargingLeft:15px;
+//* pills main open display ==================================== *//
+$pillsMainOpenDisplayInline:inline-block;
+//* pills filled checkbox before position ==================================== *//
+$pillsFilledInBeforePosition:absolute;
+//* pills filled checkbox before left gap ==================================== *//
+$pillsFilledInBeforeLeftGap:4px;
+//* pills filled checkbox top gap ==================================== *//
+$pillsFilledInBeforeTopGap:-4px;
+//* pills filled checkbox before width==================================== *//
+$pillsFilledInBeforeWidth:20px;
+//* pills filled checkbox before height ==================================== *//
+$pillsFilledInBeforeHeight:20px;
+//* pillsFilledInBeforeBackground ==================================== *//
+$pillsFilledInBeforeBackground:darken($applicationBackgroundColor, 0%);
+//* pillsFilledInAfterPosition ==================================== *//
+$pillsFilledInAfterPosition:absolute;
+//* pillsFilledInAfterLeftGap ==================================== *//
+$pillsFilledInAfterLeftGap:8px;
+//* pillsFilledInAfterFontSize ==================================== *//
+$pillsFilledInAfterFontSize:17px;
+//* pillsFilledInAfterTextColor ==================================== *//
+$pillsFilledInAfterTextColor:darken($applicationBackgroundColor, 70%);
+//* pillsFilledInAfterLineHieght ==================================== *//
+$pillsFilledInAfterLineHieght:0.8;
+//* pillsCheckboxlabelPosition ==================================== *//
+$pillsCheckboxlabelPosition:relative;
+//* pillsCheckboxlabelPaddingLeft ==================================== *//
+$pillsCheckboxlabelPaddingLeft:9px;
+//* pillsCheckboxlabelDisPlayInline ==================================== *//
+$pillsCheckboxlabelDisPlayInline:inline-block;
+//* pillsCheckboxlabelLineHeight ==================================== *//
+$pillsCheckboxlabelLineHeight:25px;
+//* pillsCheckLabelBeforeLeftGap ==================================== *//
+$pillsCheckLabelBeforeLeftGap:4px;
+//* pillsCheckLabelBeforeTopGap ==================================== *//
+$pillsCheckLabelBeforeTopGap:-4px;
+//* pillsCheckLabelBeforeeWidth ==================================== *//
+$pillsCheckLabelBeforeeWidth:20px;
+//* pillsCheckLabelBeforeHeight ==================================== *//
+$pillsCheckLabelBeforeHeight:20px;
+//* pillsCheckLabelBeforeAferPosition ==================================== *//
+$pillsCheckLabelBeforeAferPosition:absolute;
+//* pillsCheckLabelBeforeAferLeftGap ==================================== *//
+$pillsCheckLabelBeforeAferLeftGap:8px;
+//* pillsCheckLabelBeforeAferFontSize ==================================== *//
+$pillsCheckLabelBeforeAferFontSize:17px;
+//* pillsCheckLabelBeforeAferTextColor ==================================== *//
+$pillsCheckLabelBeforeAferTextColor:darken($applicationBackgroundColor, 70%);
+//* pillsCheckLabelBeforeAferLineHieght ==================================== *//
+$pillsCheckLabelBeforeAferLineHieght:0.8;
+//* pillsCheckLabelBeforeAferTopGap ==================================== *//
+$pillsCheckLabelBeforeAferTopGap:0px;
+//* pillsCheckLabelBeforePosition ==================================== *//
+$pillsCheckLabelBeforePosition:absolute;
+//* pillsCheckedLabelAfterPadding ==================================== *//
+$pillsCheckedLabelAfterPadding:8px;
+//* pillsCheckedLabelAfterMarginTop ==================================== *//
+$pillsCheckedLabelAfterMarginTop:-2px;
+//* pillsCheckedLabelAfterBackground ==================================== *//
+$pillsCheckedLabelAfterBackground:darken($applicationBackgroundColor, 2%);
+//* pillsCheckedLabelAfterMarginLeft ==================================== *//
+$pillsCheckedLabelAfterMarginLeft:6px;
+//* pillsCheckBoxShadowColor ==================================== *//
+$pillsCheckBoxShadowColor:rgba(0, 0, 0, 0.1);
+//* dvPillsMarginLeft ==================================== *//
+$dvPillsMarginLeft:17px;
+
+///////////////// advance search variables for tstruct 
+
+//* advSearchfeeddesginPaddingTop padding for advSearchfeeddesgin *//
+$advSearchfeeddesginPaddingTop:8px;
+//* advSearchBtndropDisplayInline display for advSearchBtndrop *//
+$advSearchBtndropDisplayInline:inline-block;
+//* advSearchBtndropWidth width for advSearchBtndrop *//
+$advSearchBtndropWidth:35%;
+//* advSearchDropdownSearchMinWidth width for advSearchDropdownSearch *//
+$advSearchDropdownSearchMinWidth:100%;
+//* advSearchDropdownSearchMaxWidth maxwidth for advSearchDropdownSearch *//
+$advSearchDropdownSearchMaxWidth:100%;
+//* advSearchConditionProfilePicWidth width for advSearchCondition *//
+$advSearchConditionProfilePicWidth: 100%;
+//* advSearchConditionProfilePicPositionRelative position for advSearchCondition *//
+$advSearchConditionProfilePicPositionRelative: relative;
+//* advSearchConditionProfilePicDisplayInlineBlock display for advSearchCondition *//
+$advSearchConditionProfilePicDisplayInlineBlock:inline-block;
+//* advSearchBtngoadvDisplay display for advSearchBtngoadv *//
+$advSearchBtngoadvDisplay:inline-block;
+//* advSearchBtnSearchWidth display for advSearchBtnSearch *//
+$advSearchBtnSearchWidth:60%;
+//* advSearchBtnSearchDisplayInline display for advSearchBtnSearch *//
+$advSearchBtnSearchDisplayInline:inline-block;
+//* advSearchBtnSearchPaddingTop display for advSearchBtnSearch *//
+$advSearchBtnSearchPaddingTop:25px;
+//* advSearchInputTxtSrchTextPaddingLeft display for advSearchInputTxtSrchText *//
+$advSearchInputTxtSrchTextPaddingLeft:30px;
+//* advSearchInputTxtSrchTextBorderRadius display for advSearchInputTxtSrchText *//
+$advSearchInputTxtSrchTextBorderRadius: 40px;
+//* advSearchBtnSearchProfilePicPositionRelative display for advSearchBtnSearchProfilePic *//
+$advSearchBtnSearchProfilePicPositionRelative:relative;
+//* advSearchBtnSearchProfilePicDisplayInline display for advSearchBtnSearchProfilePic *//
+$advSearchBtnSearchProfilePicDisplayInline:inline-block;
+//* advSearchBtnSearchProfilePicWidth display for advSearchBtnSearchProfilePic *//
+$advSearchBtnSearchProfilePicWidth:100%;
+//* advSearchEditPositionAbsolute display for advSearchEditPosition *//
+$advSearchEditPositionAbsolute:absolute;
+//* advSearchEditRightGap display for advSearchEdit *//
+$advSearchEditRightGap:0;
+//* advSearchEditTopGap display for advSearchEdit *//
+$advSearchEditTopGap:6px;
+//* advSearchEditZIndex display for advSearchEdit *//
+$advSearchEditZIndex:1099;
+//* advSearchEditDisplayNone display for advSearchEdit *//
+$advSearchEditDisplayNone:none;
+//* advSearchNsearchLeftGap display for advSearchNsearch *//
+$advSearchNsearchLeftGap:7px;
+//* advSearchNsearchDisplayInherit display for advSearchNsearch *//
+$advSearchNsearchDisplayInherit:inherit;
+//* advSearchNsearchPaddingTop display for advSearchNsearch *//
+$advSearchNsearchPaddingTop:4px;
+//* advSearchNsearchRightGap display for advSearchNsearch *//
+$advSearchNsearchRightGap:inherit;
+//* advSearchNsearchTopGap display for advSearchNsearch *//
+$advSearchNsearchTopGap:3px;
+//* advSearchNsearchLeftGap display for advSearchNsearch *//
+$advSearchNsearchLeftGap:10px;
+//* advSearchNsearchPositionRelative display for advSearchNsearch *//
+$advSearchNsearchPositionRelative:absolute;
+//* advSearchConditionProfilePicEditPaddingTop display for advSearchConditionProfilePic *//
+$advSearchConditionProfilePicEditPaddingTop:3px;
+//* advSearchConditionProfilePicEditPaddingRight display for advSearchConditionProfilePic *//
+$advSearchConditionProfilePicEditPaddingRight:7px;
+//* advSearchConditionProfilePicEditRtlLeftGap display for advSearchConditionProfilePicEditRtl *//
+$advSearchConditionProfilePicEditRtlLeftGap:5px;
+//* advSearchConditionProfilePicHoverEditDisplay display for advSearchConditionProfilePicHoverEdit *//
+$advSearchConditionProfilePicHoverEditDisplay:block;
+//* advSearchBtnSearchProfilePicEditPaddingTop display for advSearchBtnSearchProfilePic *//
+$advSearchBtnSearchProfilePicEditPaddingTop:3px;
+//* advSearchBtnSearchProfilePicEditPaddingRight display for advSearchBtnSearchProfilePic *//
+$advSearchBtnSearchProfilePicEditPaddingRight:10px;
+//* advSearchBtnSearchProfilePicHoverEditDisplay display for advSearchBtnSearchProfilePicHoverEdit *//
+$advSearchBtnSearchProfilePicHoverEditDisplay:block;
+//* advSearchBtnSearchNsearchGlyphiconSearchFontSize display for advSearchBtnSearchNsearchGlyphiconSearch *//
+$advSearchBtnSearchNsearchGlyphiconSearchFontSize:12px;
+//* advSearchGridView1WrapperGridView1FilterDisplayNone display for advSearchGridView1WrapperGridView1Filter *//
+$advSearchGridView1WrapperGridView1FilterDisplayNone:none;
+//* advSerchRemoveFontSize remove font size *//
+$advSerchRemoveFontSize:13px;
+
+///////////////// advance search variables for tstruct Rtl 
+//* advSearchInputTxtSrchTextPaddingRightRtl display for advSearchInputTxtSrchTextRtl *//
+$advSearchInputTxtSrchTextPaddingRightRtl:30px;
+//* advSearchNsearchRightGapRtl display for advSearchNsearchRtl *//
+$advSearchNsearchRightGapRtl:10px;
+//* advSearchBtnSearchProfilePicEditLeftGapRtl display for advSearchBtnSearchProfilePicEditRtl *//
+$advSearchBtnSearchProfilePicEditLeftGapRtl:9px;
+//* advSearchBtnSearchProfilePicEditTopGapRtl display for advSearchBtnSearchProfilePicEdit *//
+$advSearchBtnSearchProfilePicEditTopGapRtl:6px;
+
+////// login variables
+//* login variables *//
+$loginHeaderTextColor:darken($applicationBackgroundColor, 0%);
+//* login form maximum width *//
+$loginFormMaxWidth:444px;
+//* login form Minimum height *//
+$loginFormMinHeight:120px;
+//* login form padding *//
+$loginFormPadding:5px 20px;
+//* login form input border radisu *//
+//$loginInputBorderRadius:4px;
+//* login form Input focus span Display *//
+$loginInputFocusDisplay:inline-block;
+//* login form Input focus span Display *//
+$loginInputIconPosition:relative;
+//* login form icon cross position *//
+$inputCrossIconPositionAbsolute:absolute;
+//* login form icon cross *//
+$inputCrossIconRightGap:30px;
+//* inputCrossIconRightGap *//
+$inputCrossIconTopGap:12px;
+//* login form loginIconChevronDownPosition *//
+$inputIconChevronDownPositionAbsolute:absolute;
+//* login form  loginIcon Chevron DownRightGap*//
+$inputIconChevronDownRightGap:10px;
+//* login form icon cross *//
+$inputIconChevronDownTopGap:12px;
+//* login form label like forgot pass and powered by axpert  *//
+$loginFormLabelFontSize:14px;
+//* login form label padding Bottom *//
+$loginLabelPaddingBottom:20px;
+//* login form label padding Bottom *//
+$loginLabelMaxHeight:250px;
+//* login form input *//
+$loginSelectHeight:40px;
+//* login form input select box padding *//
+$loginSelectBoxRightPadding:45px;
+//*login form info box display property*//
+$loginInfoBoxDisplay:inline-block;
+//*login form info box margin gap form top*//
+$loginInfoBoxMarginTop:20px;
+//*login form label Info color*//
+$loginLabelInfoColor:darken($hotbtnbackgroundcolor,5%);
+//*login Placeholder top gap*//
+$loginFieldPlaceholderTopGap:15px;
+//*login Placeholder left gap*//
+$loginFieldPlaceholderLeftGap:-5px;
+//*login Placeholder Padding*//
+//$loginFieldPlaceholderPadding:0px 8px;
+//*login Placeholder Padding*//
+$loginDropdownCornerPadding:5px;
+//*login Placeholder Padding*//
+$autoCompleteSearchIconZIndex:99999;
+
+//*login main div margin *//
+$loginMainwrapperMargin:15px;
+//*login icon background color *//
+$loginIconBackgroundColor:lighten($applicationTextColor, 60%);
+//*loginInfoBox padding for logout main heading *//
+$loginInfoBoxPadding:5px;
+//*loginInfoBox padding display proprty *//
+$loginMainDisplayTable:table;
+//*loginInfoBox position proprty *//
+$loginMainPosition:absolute;
+//*loginMainWidth width *//
+$loginMainWidth:100%;
+//*loginMainWidth height *//
+$loginMainHeight:100%;
+//*loginMainWidth height *//
+$loginMainIconPadding:10px;
+//*loginMainWidth height *//
+$loginMainIconBorderRadius:50%;
+//*loginMainWidth height *//
+$loginMainIconMarginBottom:10px;
+//*loginPlaceholderlblslctprojPaddingRight  *//
+//$loginPlaceholderlblslctprojPaddingRight:31px;
+//*loginPlaceholderlblslctprojPaddingLeft *//
+//$loginPlaceholderlblslctprojPaddingLeft:15px;
+//*mainHeadingLoginPadding *//
+$mainHeadingLoginPadding:10px;
+//*mainHeadingSignInPosition  *//
+$mainHeadingSignInPosition:relative;
+//*mainHeadingSignInTopGap  *//
+$mainHeadingSignInTopGap:-5px;
+//*mainHeadingSignInTopMargin  *//
+$mainHeadingSignInTopMargin:5px;
+//*mainHeadingSignInBottomMargin  *//
+$mainHeadingSignInBottomMargin:15px;
+//*mainHeadingSignInFontSize  *//
+$mainHeadingSignInFontSize:22px;
+//*loginBtnPadding  *//
+$loginBtnPadding:10px;
+//*loginBtnPaddingMarginBottom  *//
+$loginBtnPaddingMarginBottom:10px;
+//*login form list for sess expire page  *//
+$loginListFontSize:14px;
+//*login form list for sess expire page  *//
+$loginListMarginTop:5px;
+//* login list color for example sess expire page  ==================================== *//
+$loginListColor:lighten($applicationTextColor,40%);
+//*loginInnerPadding  *//
+$loginInnerPadding:5px;
+//*changePassControlGroupMarginBottom for change pass word page  *//
+$changePassControlGroupMarginBottom:10px;
+//*changePassFormActionMarginRight for change pass word page  *//
+$changePassFormActionMarginRight:10px;
+//*changePassFormActionMarginTop for change pass word page  *//
+$changePassFormActionMarginTop:15px;
+//*changePassDvMsgMarginBottom for change pass word page  *//
+$changePassDvMsgMarginBottom:10px;
+
+///// marterial input styles
+
+//* material form input *//
+$materialInputHeight:40px;
+//* material form input *//
+$materialInputPaddingLeft:15px;
+//* material form input *//
+$materialInputFontSize:16px;
+//*material Placeholder Padding*//
+$materialInputSpanPlaceholderPaddingLeft:15px;
+//*material Placeholder Padding*//
+$materialInputSpanPlaceholderPaddingRight:15px;
+//*material Placeholder *//
+$materialInputPlaceHolderFontSize:14px;
+//*material Placeholder *//
+$materialInputPlaceHolderPosition:absolute;
+//*material Placeholder *//
+$materialInputPlaceHolderBottomGap:10px;
+//*material Placeholder *//
+$materialInputPlaceHolderLeftGap:0px;
+//*material loginInputPlaceHolderPadding *//
+$materialInputPlaceHolderPadding:0 8px;
+//*material loginInputPlaceHolderColor *//
+$materialInputPlaceHolderColor:lighten($applicationTextColor, 70%);
+//*material form label Info color*//
+$materialFieldPlaceholderAfterFocusColor:darken($hotbtnbackgroundcolor,5%);
+//*material form Input border  color after focus*//
+$materialinputFieldPlaceholderFocusBorderColor:darken($hotbtnbackgroundcolor,5%);
+//*material Placeholder display*//
+$materialFieldPlaceholderSpanDisplayInlineBlock:inline-block;
+//* material form placeholder position *//
+$materialFieldWrapperPositionRelative:relative;
+//* material form placeholder margin mottom *//
+$materialFieldWrapperMarginBootom:15px;
+//* materialFieldWrapperMobileLeftGap *//
+$materialFieldWrapperMobileLeftGap:10px;
+
+////// MultiSelect variables
+
+
+//* dropdownMultiplePosition *//
+$dropdownMultiplePosition:relative;
+//* dropdownMultipleMainDisplay *//
+$dropdownMultipleMainDisplay:block;
+//* miltiGroupSelectDropdownDisplayPosition *//
+$miltiGroupSelectDropdownDisplayPosition:relative;
+//* miltiGroupSelect for multi select group *//
+$miltiGroupSelectDropdownDisplayPadding:6px 20px 6px 12px;
+//* miltiGroupSelect for multi select group *//
+$miltiGroupSelectDropdownDisplayLabelPadding:6px 25px 5px 0;
+//* miltiGroupSelect for multi select group *//
+$miltiGroupSelectDropdownFontSize:12px;
+//* miltiGroupSelect for multi select group *//
+$miltiGroupSelectDropdownLineHeight:1.5;
+//* miltiGroupSelect for multi select group *//
+$miltiGroupSelectDropdownSearchDisplay:inline-block;
+//* miltiGroupSelect for multi select group *//
+$miltiGroupSelectDropdownChoseListDisplay:inline-block;
+//* miltiGroupSelect for multi select group *//
+$miltiGroupSelectDropdownChoseListPadding:0 5px;
+//* miltiGroupSelect for multi select group *//
+$miltiGroupSelectMaxHeight:280px;
+//* miltiGroupSelect for multi select group *//
+$multiSelectdropdownSearchPadding:5px 0;
+//* miltiGroupSelect for multi select group *//
+$multiSelectdropdownSearchDisplay:block;
+//* miltiGroupSelect for multi select group *//
+$miltiGroupSelectDropdownDisplayAfterTopGap:12px;
+//* miltiGroupSelect for multi select group *//
+$miltiGroupSelectDropdownDisplayAfterRightGap:8px;
+//* miltiGroupSelect for multi select group *//
+$dropdownClearAllFontSize:22px;
+//* miltiGroupSelect for multi select group *//
+$dropdownClearAllPosition:absolute;
+//* miltiGroupSelect for multi select group *//
+$dropdownClearAllZIndex:999;
+//* miltiGroupSelect for multi select group *//
+$dropdownClearLineHeight:30px;
+//* miltiGroupSelect for multi select group *//
+$dropdownClearHeight:30px;
+//* miltiGroupSelect for multi select group *//
+$dropdownClearWidth:25px;
+//* miltiGroupSelect for multi select group *//
+$dropdownClearRightTopGap:2px;
+//* miltiGroupSelect for multi select group *//
+$dropdownChoseListFirstChildPosition:absolute;
+//* miltiGroupSelect for multi select group *//
+$dropdownChoseListFirstChildFontSize:13px;
+//* miltiGroupSelect for multi select group *//
+$dropdownChoseListFirstChildLineHeight:32px;
+//* miltiGroupSelect for multi select group *//
+$dropdownChoseListFirstChildTextIndent:10px;
+//* miltiGroupSelect for multi select group *//
+$multiGroupSelectDropDownSelectedPosition:relative;
+//* multiGroupSelectDropdownOptionSelectHoverBackgroud  ==================================== *//
+$multiGroupSelectDropdownOptionSelectHoverBackgroud:lighten($applicationTextColor,80%);
+//* multiGroupSelectInputHieght *//
+$multiGroupSelectInputHieght:30px;
+//* multiGroupSelectInputWidth *//
+$multiGroupSelectInputWidth:100%;
+
+
+//////////// application homepage variables
+
+//* applicationHomePageNavbarPositionFixed *//
+$applicationMainPageNavbarPositionFixed:fixed;
+//* applicationHomePageNavbarZindex *//
+$applicationMainPageNavbarZindex:12;
+//* applicationHomePageNavbarWidth *//
+$applicationMainPageNavbarWidth:100%;
+$applicationNavbarRightPanelEnableExpandCollapseWidthCalc:"100vw - 300px";
+$applicationNavbarRightPanelEnableExpandCollapsePosition:absolute;
+$applicationNavbarRightPanelEnableExpandCollapseRight:0px;
+$applicationNavbarRightPanelEnableExpandCollapsePadding:10px;
+$applicationNavbarRightPanelEnableExpandCollapseCompressedUIPadding:0px;
+$applicationNavbarRightPanelNavbarCollapseListAchorPadding:8px;
+$applicationNavbarRightPanelNavbarCollapseListAchorHeight:40px;
+$applicationNavbarRightPanelNavbarCollapseListAchorWidth:40px;
+$applicationNavbarNavHeight:50px;
+$applicationNavbarNavTop:5px;
+$applicationNavbarNavCopressedTop:2px;
+$applicationMainPageNavbarNavMarginTop: 9px;
+$applicationMainPageNavbarNavMarginTopMobile:12px;
+$applicationMainPageCompressedNavbarNavMarginTopMobile:4px;
+$applicationMainPageNavbarLeftPanelPadding:2px;
+$applicationMainPageNavbarLeftPanelEnableExpandCollapseWidth:100%;
+$applicationMainPageNavbarBrandLeftPanelEnableExpandCollapseWidth:100%;
+$applicationMainPageNavbarBrandLeftPanelEnableExpandCollapsePosition:relative;
+$applicationMainPageNavbarBrandLeftPanelEnableExpandCollapseTopGap:-2px;
+$applicationMainPageNavbarBrandLeftPanelEnableExpandCollapseDisplay:inline-block;
+//* applicationHomePage toggle color *//
+$applicationMainPageToggleColor:darken($applicationBackgroundColor, 0%);
+//* applicationHomePage toggle height *//
+$applicationMainPageToggleHeight:20px;
+//* applicationHomePage toggle width *//
+$applicationMainPageToggleWidth:20px;
+//* applicationHomePage toggle margin *//
+$applicationMainPageToggleMarginTop:-4px;
+//* applicationHomePage toggle margin *//
+$applicationMainPageToggleMarginRight:17px;
+//* applicationHomePage toggle margin *//
+$applicationMainPageToggleIsClosedMarginLeft:-300px;
+//* applicationHomePage toggle margin *//
+$applicationMainPageToggleIsClosedContentMarginLeft:0px;
+$applicationHomePagePanelVerticalHeight:450px;
+//* applicationToggleBarPositionAbsolute *//
+$applicationToggleBarPositionAbsolute:absolute;
+//* applicationToggleBarTopGap *//
+$applicationToggleBarTopGap:18px;
+//* applicationToggleBarLeftGap *//
+$applicationToggleBarLeftGap:20px;
+//* applicationToggleBarMarginRight *//
+$applicationToggleBarMarginRight:10px;
+//* gridStretchtoggleBtnCompressedModeTopGap *//
+$gridStretchtoggleBtnCompressedModeTopGap:1px;
+//* gridStretchtoggleBtnCompressedModeLeftGap *//
+$gridStretchtoggleBtnCompressedModeLeftGap:4px;
+//  applicationNavbarNavDropdownMarginTop
+$applicationNavbarNavDropdownMarginTop:1px;
+//  applicationLabelCountPositionAbsolute
+$applicationLabelCountPositionAbsolute:absolute;
+// applicationLabelCountTopGap
+$applicationLabelCountTopGap:2px;
+// applicationLabelCountRightGap
+$applicationLabelCountRightGap:6px;
+// applicationLabelCountPadding
+$applicationLabelCountPadding:0 4px;
+// applicationLabelCountLineHeight
+$applicationLabelCountLineHeight:15px;
+// applicationLabelCountfontSize
+$applicationLabelCountfontSize:10px;
+// applicationNavtabListPositionRelative
+$applicationNavtabListPositionRelative:relative;
+// applicationNavtabListTopGap
+$applicationNavtabListTopGap:3px;
+// applicationNavtabListLeftGap
+$applicationNavtabListLeftGap:-2px;
+// applicationHomePageNavtabMaterialIconPositionRelative
+$applicationMainPageNavtabMaterialIconPositionRelative:relative;
+// applicationHomePageNavtabMaterialIconTopGap for tabnav
+$applicationMainPageNavtabMaterialIconTopGap:7px;
+// applicationHomePageNavtabMaterialIconMarginBottom for tab nav
+$applicationMainPageNavtabMaterialIconMarginBottom:8px;
+// applicationHomePageNavtabActiveBottomBorderPositionAbsolute for tab nav
+$applicationMainPageNavtabActiveBottomBorderPositionAbsolute:absolute;
+// applicationHomePageNavtabActiveBottomBorderBottomGap for tab nav
+$applicationMainPageNavtabActiveBottomBorderBottomGap:2px;
+// applicationHomePageNvatabContentPadding for tab nav
+$applicationMainPageNavtabContentPadding:15px;
+// applicationMainPageTabPanelContentParagraph
+$applicationMainPageTabPanelContentParagraph:20px 15px 15px 15px;
+// applicationMainPageTabPanelSettingPanelListMarginBottom
+$applicationMainPageTabPanelSettingPanelListMarginBottom:20px;
+//* applicationMainPageTabPanelListBorder  ==================================== *//
+$applicationMainPageTabPanelListBorder:darken($applicationBackgroundColor, 8%);
+//* applicationMainPageTabPanelListPadiing  ==================================== *//
+$applicationMainPageTabPanelListPadiing:15px;
+$aapplicationMainPageMenuHoverBorderColor:4px solid rgba(255, 255, 255, 0.7);
+
+
+//* applicationMainPageTabPanelListPositionRelative  ==================================== *//
+$applicationMainPageTabPanelListPositionRelative:relative;
+//* applicationMainPageRightSideSettingFontSizeMobile  ==================================== *//
+$applicationMainPageRightSideSettingFontSizeMobile:26px;
+//* applicationMainPageSettingPanelIconsWidth  ==================================== *//
+$applicationMainPageSettingPanelIconsWidth:30px;
+//* applicationMainPageSettingPanelCaptionPositionRelative  ==================================== *//
+$applicationMainPageSettingPanelCaptionPositionRelative:relative;
+//* applicationMainPageSettingPanelCaptionTopGap  ==================================== *//
+$applicationMainPageSettingPanelCaptionTopGap:3px;
+//* applicationMainPageSettingPanelCaptionWidthCalc  ==================================== *//
+$applicationMainPageSettingPanelCaptionWidthCalc:30px;
+//* applicationMainPageSettingPanelSwitchPositionAbsolute  ==================================== *//
+$applicationMainPageSettingPanelSwitchPositionAbsolute:absolute;
+//* applicationMainPageSettingPanelSwitchTopGap  ==================================== *//
+$applicationMainPageSettingPanelSwitchTopGap:15px;
+//* applicationMainPageSettingPanelSwitchRightGap  ==================================== *//
+$applicationMainPageSettingPanelSwitchRightGap:5px;
+//* applicationMainPageUserOptionDropdownMarginTop  ==================================== *//
+$applicationMainPageUserOptionDropdownMarginTop:-35px;
+//* applicationMainPageUserOptionShadow  ==================================== *//
+$applicationMainPageUserOptionShadow:rgba($applicationTextColor,.2);
+//* applicationMainPageUserOptionDropdownDividerMargin  ==================================== *//
+$applicationMainPageUserOptionDropdownDividerMargin:5px 0;
+//* applicationMainPageUserOptionListColor  ==================================== *//
+$applicationMainPageUserOptionListColor:lighten($applicationTextColor,30%);
+//* applicationMainPageUserOptionListPadding  ==================================== *//
+$applicationMainPageUserOptionListPadding:7px 18px;
+//* applicationMainPageUserOptionListFontSize  ==================================== *//
+$applicationMainPageUserOptionListFontSize:14px;
+//* applicationMainPageUserOptionListLineHeight  ==================================== *//
+$applicationMainPageUserOptionListLineHeight:25px;
+//* applicationMainPageUserOptionListMaterialIconFontSize  ==================================== *//
+$applicationMainPageUserOptionListMaterialIconFontSize:20px;
+//* applicationMainPageUserOptionListMaterialIconMarginRightGap  ==================================== *//
+$applicationMainPageUserOptionListMaterialIconMarginRightGap:7px;
+//* applicationMainPageUserOptionListMaterialIconMarginTopGap  ==================================== *//
+$applicationMainPageUserOptionListMaterialIconMarginTopGap:2px;
+//* application-navbar-brand-Margin-left *//
+$applicationMainPage-navbar-brand-Margin-left:30px;
+//* application-navbar-header-padding *//
+$applicationMainPage-navbar-header-padding:10px 7px;
+//* application-navbar-nav-li-a-padding *//
+$applicationMainPage-navbar-nav-li-a-padding:7px 7px 2px 7px;
+//  application-navbar-nav-li-a-margin-top
+$applicationMainPage-navbar-nav-li-a-margin-top: 17px;
+//  application-navbar-nav-li-a-margin-left
+$applicationMainPage-navbar-nav-li-a-margin-left: 5px;
+//* applicationHomePage-navbar height *//
+$applicationMainPage-navbar-brand_height:auto;
+//* applicationHomePage-navbar max width for title *//
+$applicationMainPageNavbarBrandWidth:257px;
+//* applicationHomePage-navbar max width for title for mobile calc*//
+$applicationMainPageNavbarBrandCalcWidthMobile:"100vw - 167px";
+//* applicationNavbarMarginBottom *//
+$applicationMainPageNavbarMarginBottom:0px;
+//* applicationMainPageNavbarNotEnableExpandCollapseMarginTop *//
+$applicationMainPageNavbarNotEnableExpandCollapseMarginTop:20px;
+//* applicationHomePage toggle margin *//
+$applicationMainPage-section-content-appBackBtn-Position-Fixed:fixed;
+//* applicationHomePage toggle margin *//
+$applicationMainPage-section-content-appBackBtn-Zindex:1;
+//* applicationHomePage toggle margin *//
+$applicationMainPage-section-content-appBackBtn-MarginTop:71px;
+//* applicationHomePage toggle margin *//
+$applicationMainPageCustomAutoCompleteSearchMaxHeight:300px;
+//* applicationHomePage toggle margin *//
+$applicationMainPageCustomAutoCompleteSearchListFontSize:12px;
+//* applicationHomePage toggle margin *//
+$applicationMainPageCustomAutoCompleteSearchListItemMargin:12px;
+//* applicationHomePage toggle margin *//
+$applicationMainPageCustomAutoCompleteSearchListItemTextPositionRelative:relative;
+//* applicationHomePage toggle margin *//
+$applicationMainPageCustomAutoCompleteSearchListItemTextTopGap:-6px;
+//* applicationHomePage toggle margin *//
+$applicationMainPageCustomAutoCompleteSearchListItemTextLeftGap:5px;
+//* applicationHomePage toggle margin *//
+$applicationMainPageCustomAutoCompleteSearchListUiMenuItemWrapperPadding:7px 1em 7px .4em;
+//* applicationMainPageSearchListHoverBackgroundColor  ==================================== *//
+$applicationMainPageSearchListHoverBackgroundColor:darken($applicationBackgroundColor, 10%);
+//* applicationMainPageMenuBgIconDisplayInline *//
+$applicationMainPageMenuBgIconDisplayInline:inline-block;
+//* applicationMainPageMenuBgIconWidth *//
+$applicationMainPageMenuBgIconWidth:20px;
+//* applicationMainPageMenuBgIconHeight *//
+$applicationMainPageMenuBgIconHeight:20px;
+//* applicationMainPageMenuBgIconMargin *//
+$applicationMainPageMenuBgIconMargin:3px 10px 3px 3px;
+//* applicationSplitterWrapperMargin *//
+$applicationSplitterWrapperMargin:0px 0px 0px;
+//* applicationSplitterWrapperMaximumHeight *//
+$applicationSplitterWrapperMaximumHeight:100vh;
+//* applicationSplitterWrapperCalcHeight *//
+$applicationSplitterWrapperCalcHeight:70px;
+//* applicationSplitterWrapperPanelContainerMaximumHeight *//
+$applicationSplitterWrapperPanelContainerMaximumHeight:100%;
+//* applicationSplitterWrapperPanelLeftRightInnerWidth *//
+$applicationSplitterWrapperPanelLeftRightInnerWidth:100%;
+//* applicationSplitterWrapperPanelLeftRightInnerHeight *//
+$applicationSplitterWrapperPanelLeftRightInnerHeight:100%;
+//* applicationSplitterWrapperPanelLeftRightInnerIframeWidth *//
+$applicationSplitterWrapperPanelLeftRightInnerIframeWidth:100%;
+//* applicationSplitterWrapperPanelLeftRightInnerIframeHeight *//
+$applicationSplitterWrapperPanelLeftRightInnerIframeHeight:100%;
+//* applicationSplitterWrapperPanelTopHeight *//
+$applicationSplitterWrapperPanelTopHeight:450px;
+//* applicationSplitterWrapperPanelBottomHeight *//
+$applicationSplitterWrapperPanelBottomHeight:717px;
+//* applicationMainPageSplitColor *//
+$applicationMainPageSplitColor:darken($applicationBackgroundColor, 0%);
+//* applicationMainPageEnableExpandCollapseNavbarBrandMarginLeft *//
+$applicationMainPageEnableExpandCollapseNavbarBrandMarginLeft:20px;
+//* applicationMainPageEnableExpandCollapseOverlayOpenContentMargin *//
+$applicationMainPageEnableExpandCollapseOverlayOpenContentMargin:70px 5px 0px 305px;
+//* applicationMainPageContentMargin *//
+$applicationMainPageContentMargin:70px 5px 0px 305px;
+//* applicationMainPageSearchBarPositionFixed *//
+$applicationMainPageSearchBarPositionFixed:fixed;
+//* applicationMainPageSearchBarPositionAbsolute *//
+$applicationMainPageSearchBarPositionAbsolute:absolute;
+//* applicationMainPageSearchBarTopGap *//
+$applicationMainPageSearchBarTopGap:0px;
+//* applicationMainPageSearchBarLeftGap *//
+$applicationMainPageSearchBarLeftGap:310px;
+//* applicationMainPageSearchBarEnableExpandCollapseDisplay *//
+$applicationMainPageSearchBarEnableExpandCollapseDisplay:block;
+//* applicationMainPageSearchBarDisplay *//
+$applicationMainPageSearchBarDisplay:none;
+//* applicationMainPageSearchBarDisplay *//
+$applicationMainPageSearchBarOpenDisplay:block;
+//* applicationMainPageSearchBarOpenWidth *//
+$applicationMainPageSearchBarOpenWidth:100%;
+//* applicationMainPageSearchBarWrapperMaxWidth *//
+$applicationMainPageSearchBarWrapperMaxWidth:100%;
+//* applicationMainPageSearchBarRightGap *//
+$applicationMainPageSearchBarRightGap:0px;
+//* applicationMainPageSearchBarZIndex *//
+$applicationMainPageSearchBarZIndex:13;
+//* applicationMainPageSearchBarWidth *//
+$applicationMainPageSearchBarWidth:640px;
+//* applicationMainPageSearchBarBackgroundColor *//
+$applicationMainPageSearchBarBackgroundColor:rgba(96, 125, 139, 0.8);
+//* applicationMainPageSearchIconPositionAbsolute *//
+$applicationMainPageSearchIconPositionAbsolute:absolute;
+//* applicationMainPageSearchIconTopGap *//
+$applicationMainPageSearchIconTopGap:16px;
+//* applicationMainPageSearchIconLeftGap *//
+$applicationMainPageSearchIconLeftGap:10px;
+//* applicationMainPageSearchIconBackgroundColor *//
+$applicationMainPageSearchIconBackgroundColor:darken($applicationBackgroundColor, 8%);
+//* applicationMainPageSearchIconPadding *//
+$applicationMainPageSearchIconPadding:7px;
+//* applicationMainPageSearchIconHeight *//
+$applicationMainPageSearchIconHeight:38px;
+//* applicationMainPageSearchIconWidth *//
+$applicationMainPageSearchIconWidth:38px;
+//* applicationMainPageSearchCloseIconPositionAbsolute *//
+$applicationMainPageSearchCloseIconPositionAbsolute:absolute;
+//* applicationMainPageSearchCloseIconTopGap *//
+$applicationMainPageSearchCloseIconTopGap:24px;
+//* applicationMainPageSearchCloseIconRightGap *//
+$applicationMainPageSearchCloseIconRightGap:18px;
+//* applicationShadowOverlayPosition *//
+$applicationShadowOverlayPosition:fixed;
+//* applicationHomePageSplitPanelLeftRightMinHeight *//
+$applicationHomePageSplitPanelLeftRightMinHeight:200px;
+//* applicationHomePageSplitPanelLeftRightMinWidth *//
+$applicationHomePageSplitPanelLeftRightMinWidth:150px;
+//* application-overlay-open-section-content-margin: *//
+$application-overlay-open-section-content-margin:55px 5px 5px 5px;
+
+$applicationNavbarNavPosition:relative;
+$applicationNavbarNavUserProfilePosition:static;
+$applicationNavbarNavUserProfileUlWidth:250px;
+$applicationNavbarNavUserProfileListBorderColor:darken($applicationBackgroundColor, 8%);
+$applicationNavbarNavUserNameIconBackground:darken($applicationBackgroundColor, 8%);
+$applicationNavbarNavUserNameIconPadding:14px;
+$applicationNavbarNavUserNameIconWidth:55px;
+$applicationNavbarNavUserNameIconHeight:55px;
+$applicationNavbarNavUserNameIconFontSize:22px;
+$applicationNavbarNavUserNameIconBorderRadius:50%;
+$applicationNavbarNavUserNameIconDisplay:inline-block;
+$applicationNavbarNavUserNameInfoMarginTop:10px;
+$applicationNavbarNavUserNameInfoDisplay:block;
+$applicationNavbarNavUserNameInfoMarginBottom:0px;
+$applicationNavbarNavUserNameInfoAxUserEmailWordBreak:break-word;
+$applicationNavbarNavUserNameInfoAxUserEmailWhiteSpace:normal;
+$applicationNavbarNavUserProfileAxGloPadding:10px 20px;
+$applicationNavbarNavUserProfileAxGloSpanDisplay:table-cell;
+$applicationNavbarNavUserProfileAxGloSpanPadding:5px 26px 5px 16px;
+$applicationNavbarNavUserProfileAxGloSpanTableTdFontWeight:normal;
+$applicationNavbarNavUserProfileListAnchorDisplay:table-cell;
+$applicationNavbarNavUserProfileListAnchorVerticalAlign:middle;
+$applicationNavbarNavUserProfileLogoutAnchorDisplay:inline-block;
+$applicationNavbarNavUserProfileLogoutAnchorMarginTop:12px;
+$applicationNavbarNavUserProfileLogoutAnchorBorderRadius:3px;
+$applicationNavbarNavUserProfileLogoutAnchorBorderColor:darken($applicationBackgroundColor, 8%);
+$applicationNavbarNavUserProfileLogoutAnchorBackgroundHoverColor:darken($applicationBackgroundColor, 5%);
+$applicationCopyrightFooterLogoImgPadding:5px;
+$applicationCopyrightFooterLogoImgBorderRadius:50%;
+$applicationCopyrightFooterLogoCotentMarginTop:13px;
+$applicationNavbarNavUserNameIconMobilePadding:15px 20px;
+$applicationNavbarNavMobileMargin:0px -15px;
+
+
+
+
+// For calculating the height
+$splitter-wrapper: 112px;
+$sidebar-height: 50px;
+$splitterWrapper-height: 60px;
+
+// ls-closed bar top margin
+$application-ls-closed-bars-top: 8px; 
+// Content padding while overlay open
+// application-navbar-toggle-margin-top
+$application-navbar-toggle-margin-top: -13px;
+//  Header right nav bar lists padding
+//$application-navbar-nav-li-a-padding: 5px 7px;
+//  Header right nav bar lists top margin
+//$application-navbar-nav-li-a-margin-top: 9px;
+//  Header right nav bar lists left margin
+//$application-navbar-nav-li-a-margin-left: 5px;
+// Header search barr padding
+$application-search-bar-padding: 14px 60px 14px 56px;
+// Header search bar icon top margin
+$application-search-bar-search-icon-top: 7px;
+// Header search bar close icon top margin
+$application-search-bar-search-close-search-top: 14px;
+// Right sidebar top margin
+$application-right-sidebar-top: 50px;
+//Splitter Wrapper margin
+$application-splitterWrapper-Margin:27px 0px 30px; 
+// Section content margins
+$application-section-content-margin: 55px 15px 0 315px;
+// AppBackBtn top margin
+$application-section-content-appBackBtn: 65px;
+// Left sidebar top margin
+$application-sidebar-top: 50px;
+// Header left navbar lists height
+$application-navbar-brand_height: 30px;
+// Header left navbar lists padding
+$application-navbar-brand_padding: 5px 15px;
+
+//// Grid DC tabs
+$application-Grid-Dc-nav-tabs-li-margin_bottom: 5px;
+$application-Grid-Dc-nav-tabs-li-height: 30px;
+// AppBackBtn width
+$application-btn-circle-width: 35px;
+// AppBackBtn height
+$application-btn-circle-height: 35px;
+// AppBackBtn icon left margin
+$application-btn-circle-i-left: -4px;
+// AppBackBtn icon top margin
+$application-btn-circle-i-top: -2px;
+// appBackBtn top margin
+$application-appBackBtn-top: 55px;
+// appBackBtn left margin
+$application-appBackBtn-left: 292px;
+// appBackBtn z-index
+$application-appBackBtn-Z-index:11;
+
+// js search bar top margin when max-width: 767px
+$application-js-Searchbar-margin-top: 15px;
+// dropdown toogle top margin when max-width: 767px
+$toolbar-dropdown-toggle-margin-top: 15px;
+
+//Application dropdown sub menu variables
+$toolbar_dropdown_subMenu_position: relative;
+$toolbar_dropdown_subMenu_icon_content: "\e019";
+$toolbar_dropdown_subMenu_icon_fone_family: "linea-arrows-10";
+$toolbar_dropdown_subMenu_icon_float: right;
+$toolbar_dropdown_subMenu_icon_top_gap:5px;
+$toolbar_dropdown_subMenu_icon_position:absolute;
+$toolbar_dropdown_subMenu_icon_right_gap:10px;
+$toolbar_dropdown_subMenu_icon_left_gap_rtl:10px;
+$toolbar_dropdown_subMenu_icon_right_gap_rtl:auto;
+$toolbar_dropdown_sub_subMenu_top: 0px;
+$toolbar_dropdown_sub_subMenu_left: -100%;
+$toolbar_dropdown_sub_subMenu_margin_top: 0px;
+$toolbar_dropdown_sub_subMenu_margin_left: 0px;
+$toolbar_dropdown_sub_subMenu_width: 100%;
+$toolbar_dropdown_sub_subMenu_right_rtl:-100%;
+$toolbar_dropdown_sub_subMenu_right_mobile_rtl:auto;
+$toolbar_dropdown_sub_subMenu_left_rtl:auto;
+$toolbar_dropdown_button_position: relative;
+$toolbar_dropdown_button_top: 6px;
+$toolbar_dropdown_button_right: -5px;
+$toolbar_dropdown_button_padding: 6px;
+$toolbar_dropdown_button_border_radius: 50px;
+$toolbar_dropdown_button_background_color: #fff;
+$toolbar_dropdown_button_font_size:20px;
+$toolbar_dropdown_menu_right: 15px;
+$toolbar_dropdown_menu_left:auto;
+$toolbar_dropdown_menu_top: 40px;
+$toolbar_dropdown_menu_left_rtl:-2px;
+$toolbar_dropdown_menu_right_rtl:initial;
+$toolbar_dropdown_menu_mobile_width: "100vw - 10px";
+$toolbar_dropdown_menu_mobile_overflow: initial;
+$toolbar_dropdown_button_requestjson_mobile_top: 0px;
+
+$toolbar_searchBar_width:100%;
+$toolbar_searchBar_iconsNew_position:relative;
+$toolbar_searchBar_iconsNewOption_display: inline-block;
+$toolbar_searchBar_newRequestJson_dropdown_position: static;
+$toolbar_iconsNew_searchBoxChildContainer_top_gap:0px;
+$toolbar_iconsNew_searchBoxChildContainer_right_gap:-29px;
+$toolbar_iconsNew_searchBoxChildContainer_right_rtl_gap:auto;
+$toolbar_iconsNew_searchBoxChildContainer_left_rtl_gap:-5px;
+$toolbar_iconsNew_searchBoxChildContainer_right_mobile_gap:-12px;
+$toolbar_iconsNew_searchBoxChildContainer_right_mobile_gap_rtl:-4px;
+$toolbar_iconsNew_searchBoxChildContainer_top_mobile_gap: -35px;
+$toolbar_iconsNew_searchBoxChildContainer_icon_font_size:15px;
+$toolbar_iconsNew_ivInSearchInput_width:36px;
+$toolbar_iconsNew_ivInSearchInput_height:28px;
+$toolbar_iconsNew_ivInSearchInput_background_color:darken($applicationBackgroundColor, 5%);
+$toolbar_iconsNew_ivInSearchInput_border_radius:5px;
+$toolbar_iconsNew_ivInSearchInput_transition:none;
+$toolbar_iconsNew_ivInSearchInput_border_color:darken($applicationBackgroundColor, 33%);
+$toolbar_iconsNew_ivInSearchInput_active_width:"100% - 3px";
+$toolbar_iconsNew_dropdown_display:block;
+$toolbar_iconsNew_dropdown_display_dropDownButton_list_position:absolute;
+$toolbar_iconsNew_dropdown_display_dropDownButton_list_right_gap:0px;
+$toolbar_iconsNew_dropdown_display_dropDownButton_list_right_gap_rtl:initial;
+$toolbar_iconsNew_dropdown_display_dropDownButton_list_left_gap:auto;
+$toolbar_iconsNew_dropdown_display_dropDownButton_list_left_gap_rtl:10px;
+$toolbar_notDropDownButton__list_notDropdown-menu_position:relative;
+$toolbar_notDropDownButton__list_right_rtl:0px;
+$toolbar_notDropDownButton__list_left_rtl:auto;
+$toolbar_notDropDownButton__list_notDropdown-menu_top_gap:-15px;
+$toolbar_Right_ToolbarRightMenu_Display:inline-block;
+$toolbar_Right_ToolbarRightMenu_Position:relative;
+$toolbar_Right_ToolbarRightMenu_Padding:5px 10px 8px 0px;
+$toolbar_Right_ToolbarRightMenu_Padding_Mobile:4px 10px 0px 0px;
+$toolbar_Right_ToolbarRightMenu_Top_Mobile:0px;
+$toolbar_ModernIviewOptions_DropdownMenu_width:370px;
+$toolbar_ModernIviewOptions_DropdownMenu_border-radius:8px;
+$toolbar_ModernIviewOptions_DropdownMenu_max_height:70vh;
+$toolbar_ModernIviewOptions_DropdownMenu_min_height:131px;
+$toolbar_textOverflow_ModernUi_Wordspace:normal;
+$toolbar_ModernIviewOptions_DropdownMenu_overflow-x:hidden;
+$toolbar_ModernIviewOptions_DropdownMenu_margin:0px;
+$toolbar_ModernIviewOptions_DropdownMenu_padding:5px;
+$toolbar_ModernIviewOptions_DropdownMenu_mobile_overflow:scroll;
+$toolbar_ModernIviewOptions_DropdownMenu_mobile_padding:0px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_display:inline-block;
+$toolbar_ModernIviewOptions_DropdownMenu_list_height:90px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_position:relative;
+$toolbar_ModernIviewOptions_DropdownMenu_list_transition:transform .2s cubic-bezier(.333,0,0,1);
+$toolbar_ModernIviewOptions_DropdownMenu_list_vertical_align:top;
+$toolbar_ModernIviewOptions_DropdownMenu_list_width:110px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_tab_width:99px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_hover_focus_color:#edf6ff;
+$toolbar_ModernIviewOptions_DropdownMenu_list_hover_height:auto;
+$toolbar_ModernIviewOptions_DropdownMenu_list_hover_position:absolute;
+$toolbar_ModernIviewOptions_DropdownMenu_list_hover_zindex:1;
+$toolbar_ModernIviewOptions_DropdownMenu_list_hover_ancher_height:auto;
+$toolbar_ModernIviewOptions_DropdownMenu_list_hover_ancher_width:112px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_hover_ancher_tab_width:99px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_hover_border-radius:12px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_mobile_margin:10px 0px 10px 0px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_mobile_width:92px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_anchor_padding:3px 3px 3px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_anchor_height:110px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_anchor_width:112px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_anchor_tab_width:99px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_anchor_hover_background_color:transparent;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_position:relative;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_height:45px;
+// $toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_background:darken($applicationBackgroundColor, 2%);
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_shodow:darken($applicationBackgroundColor, 30%);
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_width:45px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_padding_top:6px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_color:darken($applicationBackgroundColor, 0%);
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_border_radius:50%;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_margin_bottom:6px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_display:inline-block;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_shadow_color:darken($applicationBackgroundColor, 10%);
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_font_size:22px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUITitle_margin_top:10px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_position:absolute;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_top:9px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_right:31px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_border-radius:50%;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_box-shadow-color:darken($applicationBackgroundColor, 30%);
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_height:13px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_width:13px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconUI_iconUIPin_font_size:10px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_overflow:hidden;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_text_overflow:ellipsis;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_white_space:normal;
+$toolbar_ModernIviewOptions_DropdownMenu_list_modernDropdownIcon_position:relative;
+$toolbar_ModernIviewOptions_DropdownMenu_list_modernDropdownIcon_top:-5px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_width:60px;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_diaply:block;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_hover_word_break:break-word;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_hover_white_space:normal;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_hover_zindex:99999;
+$toolbar_ModernIviewOptions_DropdownMenu_list_dropdownIconName_hover_position:relative;
+$toolbar_ModernIviewOptions_dropdown_subMenu_icon_position:absolute;
+$toolbar_ModernIviewOptions_dropdown_subMenu_icon_left_calc:"50% - 6px";
+$toolbar_ModernIviewOptions_dropdown_subMenu_icon_left_mobile_calc:"50% - 7px";
+$toolbar_ModernIviewOptions_dropdown_subMenu_icon_margin:0px auto;
+$toolbar_ModernIviewOptions_dropdown_subMenu_icon_top:74px;
+$toolbar_ModernIviewOptions_dropdown_subMenu_icon_right:auto;
+$toolbar_ModernIviewOptions_dropdown_subMenu_list_width:112px;
+$toolbar_ModernIviewOptions_dropdown_subMenu_list_tab_width:102px;
+$toolbar_ModernIviewOptions_dropdown_subMenu_list_mobile_width:95px;
+$toolbar_ModernIviewOptions_dropdown_subMenu_list_anchor_minheight:126px;
+$toolbar_ModernIviewOptions_dropdown_subMenu_list_anchor_width:116px;
+$toolbar_ModernIviewOptions_dropdown_subMenu_list_anchor_tab_width:102px;
+$toolbar_ModernIviewOptions_dropdown_sub_subMenu_top:0px;
+$toolbar_ModernIviewOptions_dropdown_sub_subMenu_left:auto;
+$toolbar_ModernIviewOptions_dropdown_sub_subMenu_margin_top:0px;
+$toolbar_ModernIviewOptions_dropdown_sub_subMenu_margin_left:0px;
+$toolbar_ModernIviewOptions_dropdown_sub_subMenu_width:345px;
+$toolbar_ModernIviewOptions_dropdown_sub_subMenu_tab_width:314px;
+$toolbar_ModernIviewOptions_dropdown_sub_subMenu_moble_width:298px;
+$toolbar_ModernIviewOptions_dropdown_sub_subMenu_position:relative;
+$toolbar_ModernIviewOptions_dropdown_sub_subMenu_border:0px;
+$toolbar_ModernIviewOptions_dropdown_sub_subMenu_mobile_width:"100vw - 10px";
+$toolbar_ModernIviewOptions_DropdownMenu_width_mobile:"100vw - 20px";
+$toolbar_ivInSearch_dropdown_menu_mobile_width:"100vw - 20px";
+$toolbar_ModernIviewOptions_ivInSearch_dropdown_menu_mobile_max_width:"100vw - 20px";
+$toolbar_ModernIviewOptions_ivInSearch_dropdown_menu_mobile_width:316px;
+$toolbar_ModernIviewOptions_dropdown_menu_everyFirst_child_left:0%;
+$toolbar_ModernIviewOptions_dropdown_menu_everyFirst_child_right_rtl:200%;
+$toolbar_ModernIviewOptions_dropdown_menu_everyFirst_child_left_rtl:auto;
+$toolbar_ModernIviewOptions_dropdown_menu_everyFirst_child_left_rtl_mobile:229%;
+$toolbar_ModernIviewOptions_dropdown_menu_secondFirst_child_left:-110%;
+$toolbar_ModernIviewOptions_dropdown_menu_secondFirst_child_left_calc:"-100% + -3px";
+$toolbar_ModernIviewOptions_dropdown_menu_secondFirst_child_right_rtl:100%;
+$toolbar_ModernIviewOptions_dropdown_menu_secondFirst_child_left_rtl:auto;
+$toolbar_ModernIviewOptions_dropdown_menu_secondFirst_child_right_rtl_right:118%;
+$toolbar_ModernIviewOptions_dropdown_menu_thirdFirst_child_left:-220%;
+$toolbar_ModernIviewOptions_dropdown_menu_thirdFirst_child_left_calc:"-200% + -6px";
+$toolbar_ModernIviewOptions_dropdown_menu_thirdFirst_child_left_rtl:0%;
+$toolbar_ModernIviewOptions_dropdown_menu_thirdFirst_child_right_rtl:auto;
+$toolbar_ModernIviewOptions_dropdown_menu_thirdFirst_child_right_rtl_mobile:7%;
+///////Application tabs variables
+
+//* tabscroll padding for iview *//
+$applicationTabScrollerPadding:11px 7px;
+//* tabscroll display for iview *//
+$applicationTabScrollerDisplay:none;
+//* tab position for iview *//
+$applicationTabViewTabsPosition:absolute;
+//* tabscroll width for iview *//
+$applicationTabViewTabsMinWidth:3000px;
+//* tabscroll margin left for iview *//
+$applicationTabViewTabsMarginLeft:2px;
+//* tabs amin div display for iview *//
+$applicationTabDvViewtabsDisplay:none;
+//* tabs amin div position for iview *//
+$applicationTabDvViewtabsPosition:relative;
+//* tabs amin div overflow for iview *//
+$applicationTabDvViewtabsOverflow:hidden;
+//* tabs amin div padding for iview *//
+$applicationTabDvViewtabsPadding:5px;
+//* tabs amin div height for iview *//
+$applicationTabDvViewtabsHeight:43px;
+$applicationTabInNotActiveBoderColor: $applicationTabBorderColor $applicationTabBorderColor $applicationTransparent $applicationTabBorderColor;
+//* applicationTabTextColor without active  ==================================== *//
+$applicationTabTextColor:lighten($applicationTextColor,60%);
+//* applicationTabPadding  ==================================== *//
+$applicationTabPadding:10px 25px 10px 15px;
+//* applicationTabPaddingRtl  ==================================== *//
+$applicationTabPaddingRtl:10px 15px 10px 25px;
+//* applicationTabRemoveIconPosition  ==================================== *//
+$applicationTabRemoveIconPosition:absolute;
+//* applicationTabRemoveIconRightGap  ==================================== *//
+$applicationTabRemoveIconRightGap:6px;
+//* applicationTabRemoveIconTopGap  ==================================== *//
+$applicationTabRemoveIconTopGap:12px;
+//* applicationTabRemoveIconRightRtl  ==================================== *//
+$applicationTabRemoveIconRightRtl:auto;
+//* applicationTabRemoveIconLeftRtl  ==================================== *//
+$applicationTabRemoveIconLeftRtl:6px;
+//* applicationTabAddTabIcon  ==================================== *//
+$applicationTabAddTabIcon: 10px;
+
+//* applicationTabRemoveIconPosition  ==================================== *//
+$applicationTabEditIconPosition:absolute;
+//* applicationTabRemoveIconRightGap  ==================================== *//
+$applicationTabEditIconRightGap:7px;
+//* applicationTabRemoveIconTopGap  ==================================== *//
+$applicationTabTopEditIconTopGap:13px;
+//* applicationTabTopEditIconFontSize  ==================================== *//
+$applicationTabTopEditIconFontSize:12px;
+//* applicationTabRemoveIconRightRtl  ==================================== *//
+$applicationTabEditIconRightRtl:auto;
+//* applicationTabRemoveIconLeftRtl  ==================================== *//
+$applicationTabEditIconLeftRtl:7px;
+
+//* applicationTabEditIconHoverBorderRadius  ==================================== *//
+$applicationTabEditIconHoverBorderRadius:50px;
+//* applicationTabEditIconHoverPadding  ==================================== *//
+$applicationTabEditIconHoverPadding:4px 4px 0px 4px;
+//* applicationTabEditIconHoverBorder  ==================================== *//
+$applicationTabEditIconHoverBorder:1px solid #eee;
+//* applicationTabEditIconHoverMargin  ==================================== *//
+$applicationTabEditIconHoverMargin:-4px -4px;
+
+
+//////////////// Pin toolbar for iview
+//* toolbarPinMargin =============*//
+$toolbarPinMargin:0px;
+//* toolbarPinListMargin =============*//
+$toolbarPinListMargin:0px;
+//* toolbarPinListPadding =============*//
+$toolbarPinListPadding:3px 9px 7px;
+//* toolbarPinListMarginTop =============*//
+$toolbarPinListMarginTop:-4px;
+//* toolbarPinnedIconUlWhiteSpace =============*//
+$toolbarPinnedIconUlWhiteSpace:nowrap;
+////// Material variables for Input style in login page(input style for application)
+//* materialIconFontWeight *//
+$materialIconFontWeight:400;
+//* materialIconFontStyle *//
+$materialIconFontStyle:normal;
+//* materialIconFontSize *//
+$materialIconFontSize:24px;
+//* materialIconLetterSpace *//
+$materialIconLetterSpace:normal;
+//* materialIconFontSize *//
+$materialIconWordWrap:normal;
+//* materialIcon diraction *//
+$materialIconDiraction:ltr;
+//* materialIcon white space *//
+$materialIconWhiteSpace:nowrap;
+//* materialIcon line height *//
+$materialIconLineHeight:1;
+
+
+
+////// Global variables
+//* globalconFontWeight *//
+$globalconFontWeight:400;
+//* globalconFontWeight *//
+$globalconFontWeightStyle:normal;
+
+
+///////*=======MediaQuerys===========*//
+//* mobile device view port device size *//
+$breakTabDevice:960px;
+//* mobile device view port device size *//
+$breakTabMinimumDevice:768px;
+//* mobile device view port size*//
+$breakMobilemumDevice:320px;
+//* mobile device minimum view port size*//
+$breakMobileMinimumDevice:240px;
+//* grid button position used for mobile exm: add row delete row *//
+$grdButtonsMobilePosition:relative;
+
+
+
+////////**** for page-info
+//* for AXinfo background position *//
+$applicationPageInfoBackgroundPosition:left;
+//* for AXinfo background position *//
+$applicationPageInfoRtlBackgroundPosition:right;
+//* for AXinfo table margin*//
+$applicationAXinfoMargin: 0px 18px;
+
+
+//////////////// For attachments  ===========
+//* for divnonattach height
+$applicationdivnonattachheight: 25px;
+//* for divnonattach margin left
+//$applicationdivnonattachmarginleft: 25px;
+//* for divnonattach top margin
+$applicationdivnonattachtop: -24px;
+//* for divnonattach border radius
+$applicationdivnonattachborderradius : 5px;
+//* for nongridAttachIcon left margin
+$applicationnongridAttachIconmarginleft: 7px;
+//* for nongridAttachIcon z-index
+$applicationnongridAttachIconzindex: 11;
+//* for nongridAttachIcon top
+$applicationnongridAttachIcontop: 1px;
+//* for divnonattach nongrid attach icon position
+$applicationdivnonattachattachiconposition: absolute;
+//* for divnonattach attach files left margin
+$applicationdivnonattachfilesmarginright: 24px;
+//* for divnonattach attach files right margin
+$applicationdivnonattachfilesmarginleft: 26px;
+//* for divnonattach attach files atchfile padding
+$applicationdivnonattachatchfilepadding: 0 5px;
+//* for divnonattach attach files atchfile right margin
+$applicationdivnonattachatchfilemarginright: 5px;
+//* for divnonattach attach files a-colorbutton
+$applicationdivnonattachatchfile-acolorbuttonmarginright: 7px;
+//*
+$applicationdivnonattachatchfile-acolorbuttontextdecoration: none;
+//* for divnonattach attach files attachment count padding
+$applicationattachfilesattachmentcountpadding: 5px 5px 0 0;
+//* for divnonattach attach files attachment count right margin
+$applicationattachfilesattachmentcountright: -3px;
+//* for divnonattach attach files attachment count top *//
+$applicationattachfilesattachmentcounttop: 0px;
+//* for labelcol grdhandCur top margin
+$applicationlabelcolgrdhandCurtop: -51px;
+//*  for labelcol grdhandCur left margin
+$applicationlabelcolgrdhandCurleftmargin: 28px;
+//* for grdattch attachfiles right margin
+$applicationgrdattch-attachfilesrightmargin: 5px;
+//* for grdattch attachfiles width
+$applicationgrdattch-attachfileswidth: 190px;
+//* for grdattch attachfiles attachment count padding
+$applicationgrdattch-attachmentcountpadding: 6px 9px 0 3px;
+//* for grdattch attachfiles attachment count width
+$applicationgrdattch-attachmentcountwidth: 20px;
+// for divnonattach width
+$applicationdivnonattachwidth: 25px;
+// for divnonattach position
+$applicationdivnonattachposition: relative;
+// for divnonattach attach files display
+$applicationdivnonattachfilesdisplay: inline-block;
+//* for attach files attachment count position
+$applicationattachfilesattachmentcountposition: absolute;
+//* for grdattch focus input position
+$applicationgrdattchfocusinputposition: relative;
+//* for grdattch attach files display
+$applicationgrdattch-attachfilesdisplay: inline-block;
+//* for grdhandCur position
+$applicationlabelcolgrdhandCurposition : relative;
+//* for grd attch popover display
+$applicationgrd-attach-popoverdisplay: block;
+//* for grdhandCur display
+$applicationlabelcolgrdhandCurdisplay: none;
+//* for attach files display
+$applicationattachfilesdisplay: inline-block;
+//* for grd-attach-content-display
+$applicationgrd-attach-content-display: grid;
+//* for inline div display
+$applicationinlinedivdisplay: inline-block;
+//* for revrseInline div display
+$applicationrevrseInlinedivdisplay: none;
+//* for wrapping the files
+$applicationwordbreak: break-all;
+//* for focus iput position
+$applicationfocusinputposition : relative;
+//* for axpfilepath field width
+$applicationaxpfilepathwidth : 100%;
+//* for axpfilepath field outline on focus
+$applicationaxpfilepathoutlineonfocus : none;
+//* for divNonGridAxpFile height
+$applicationdivNonGridAxpFileheight: 25px;
+//* for divNonGridAxpFile border radius
+$applicationdivNonGridAxpFileborder-radius: 5px;
+//* for divNonGridAxpFile position
+$applicationdivNonGridAxpFileposition: relative;
+
+
+
+///////////////////////////
+//*$application-compressedMode-section-content-margin-safari*//
+$application-compressedMode-section-content-margin-safari: 125px 5px 5px 5px;
+//*$application-compressedMode-overlay-open-section-content-margin-safari*//
+$application-compressedMode-overlay-open-section-content-margin-safari:125px 5px 5px 305px;
+//*$application-overlay-open-section-content-margin-safari*//
+$application-overlay-open-section-content-margin-safari:125px 15px 0 15px;
+//*$application-appbckbtn-top-safari*//
+$application-appbckbtn-top-safari:125px;
+//*$application-sidebars-top-safari*//
+$application-sidebars-top-safari:95px;
+//*$application-navbar-searchbar-top-safari*//
+$application-navbar-searchbar-top-safari:25px;
+
+
+//* inmemory db page search and action bar ltr right position *//
+$inmemdbSearchLtlRightPosition:42px;
+//*inmemory db page search and action bar rtl left position*//
+$inmemdbSearchRtlLeftPosition:25px;
+
+
+///////////////////////////
+//*$application-IE broser *//
+$applicationIE10BrowserSerachBarInputPadding:11px 60px 11px 56px;
+$applicationIE11BrowserSerachBarInputPadding:11px 60px 11px 56px;
+
+///*iview placeholder styles*/
+$iviewPlaceholderPosition: absolute;
+$iviewPlaceholderTop: 50%;
+$iviewPlaceholderLeft: 50%;
+$iviewPlaceholderPadding: 50px;
+$iviewPlaceholderBorderRadius: 50%;
+
+//* Form Layout Design *//
+$formLayoutRowInputPadding: 16px 10px 10px;
+$formLayoutBcrumbMargin: 0 0 0 -15px;
+$formLayoutToolBarMargin: 25px;
+$formLayoutDcPadding: 0px;
+$formLayoutOptionPadding: 0 10px;
+$formLayoutOptionTitlePadding: 10px;
+$formLayoutOptionIconPadding: 10px;
+$formLayoutOptionActiveIconPositionRight: 5px;
+$formLayoutOptionActiveIconPositionTop: 5px;
+$formLayoutOptionActiveIconPadding: 4px;
+$formLayoutOptionInfoPadding: 0 10px;
+$formLayoutOptionInfoIconFontSize: 12px;
+$formLayoutOptionInfoPositionTop: -5px;
+$formLayoutOptionInfoIconPositionTop: 5px;
+$formLayoutOptionInfoIconPadding: 0 5px 0 0;

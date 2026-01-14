@@ -1,0 +1,650 @@
+@charset "UTF-8";
+@import url(materialize.css);
+.file-upload {
+  position: relative;
+}
+
+.file-upload .file-select {
+  border: 2px solid #b3b3b3;
+  cursor: pointer;
+}
+
+.file-upload .file-select:focus {
+  outline: none;
+}
+
+.file-upload .file-select .file-select-button {
+  background: #b3b3b3;
+  padding: 0 10px;
+  display: inline-block;
+  height: 30px;
+  line-height: 30px;
+  color: white;
+}
+
+.file-upload .file-select .file-select-button:hover, .file-upload .file-select .file-select-button:focus {
+  outline: none;
+}
+
+.file-upload .file-select input[type=file] {
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+  opacity: 0;
+  z-index: 100;
+  height: 30px;
+}
+
+.file-upload .file-select .file-select-name {
+  display: inline-block;
+  padding: 0 10px;
+}
+
+#rowbor {
+  margin-top: 10px;
+}
+
+#rowbor #fname, #rowbor #filepathna {
+  display: none;
+}
+
+#rowbor #btnUpload {
+  font-size: 13px;
+}
+
+#dvCam #flip-btn {
+  display: none;
+}
+
+#dvCam video {
+  width: 100%;
+}
+
+#dvCam input, #dvCam button {
+  margin: 5px 0px;
+}
+
+.btextDir-rtl #dvNavigate #divFile label input, .btextDir-rtl #dvNavigate #divCamera label input {
+  margin-right: -20px;
+}
+
+body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body::-webkit-scrollbar-track {
+  background: #fff;
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: #999999;
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  -ms-border-radius: 20px;
+  border-radius: 20px;
+  border: 1px solid #fff;
+  min-height: 15%;
+  min-width: 15%;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  border: 0px solid #999999;
+}
+
+body ul.ui-autocomplete {
+  max-height: 250px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  border-radius: 5px;
+}
+
+body ul.ui-autocomplete::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body ul.ui-autocomplete::-webkit-scrollbar-track {
+  background: #fff;
+}
+
+body ul.ui-autocomplete::-webkit-scrollbar-thumb {
+  background-color: #999999;
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  -ms-border-radius: 20px;
+  border-radius: 20px;
+  border: 1px solid #fff;
+  min-height: 15%;
+  min-width: 15%;
+}
+
+body ul.ui-autocomplete::-webkit-scrollbar-thumb:hover {
+  border: 0px solid #999999;
+}
+
+body ul.ui-autocomplete li.ui-menu-item div.ui-menu-item-wrapper.ui-state-active {
+  display: block;
+  padding: 5px;
+  text-decoration: none;
+  font-size: 16px;
+  background: #ddd;
+  color: #000;
+}
+
+body ul.ui-autocomplete li.ui-menu-item div.ui-menu-item-wrapper.ui-state-active:hover {
+  background: #ddd;
+  color: #000;
+}
+
+.configWrapper {
+  background: #fff;
+}
+
+.configWrapper .configHeader {
+  margin-top: 25px;
+}
+
+.configWrapper .configHeader img {
+  max-width: 400px;
+  max-height: 175px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.configWrapper .configHeader .configTitle {
+  margin-top: 15px;
+}
+
+.configWrapper .configHeader .configTitle #lblSignin {
+  font-size: 25px;
+  margin-left: 10px;
+  font-weight: 500;
+}
+
+.configWrapper .configHeader .configTopToolbar {
+  margin-top: 15px;
+}
+
+.configWrapper .configHeader .configTopToolbar ul {
+  padding: 0px;
+  text-align: right;
+}
+
+.configWrapper .configHeader .configTopToolbar ul li {
+  list-style: none;
+  display: inline-block;
+  color: #333333;
+  background-color: #fff;
+  margin: 0 5px 0 0;
+  border: 1px solid #cccccc;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  border-radius: 3px;
+}
+
+.configWrapper .configHeader .configTopToolbar ul li a {
+  color: #333333;
+  display: block;
+  text-decoration: none;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+
+.configWrapper .configHeader .configTopToolbar ul li a .configTopToolbarIcon {
+  position: relative;
+  top: 2px;
+  color: #999;
+}
+
+.configWrapper .configHeader .configTopToolbar ul li a .configTopToolbarText {
+  position: relative;
+  top: -4px;
+}
+
+.configWrapper .dbConnectionWrapper {
+  border: 1px solid #cccccc;
+  padding: 0px;
+  margin: 0 15px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  border-radius: 5px;
+  -webkit-box-shadow: 0px 2px 9px 2px #cccccc;
+  -moz-box-shadow: 0px 2px 9px 2px #cccccc;
+  -ms-box-shadow: 0px 2px 9px 2px #cccccc;
+  box-shadow: 0px 2px 9px 2px #cccccc;
+}
+
+.configWrapper .dbConnectionWrapper.disabledDiv {
+  filter: opacity(0.5);
+  cursor: not-allowed;
+}
+
+.configWrapper .dbConnectionWrapper .configLeftForm {
+  border: 1px solid #cccccc;
+  padding: 15px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  border-radius: 5px;
+}
+
+.configWrapper .dbConnectionWrapper .configLeftForm .configLeftFormButtons {
+  margin-top: 15px;
+  margin-bottom: 16px;
+}
+
+.configWrapper .dbConnectionWrapper .configLeftForm .configLeftFormButtons #btnaddcon span, .configWrapper .dbConnectionWrapper .configLeftForm .configLeftFormButtons #btncdelete span {
+  color: #999;
+  background: #f5f5f5;
+  -webkit-box-shadow: 1px 2px 6px 2px #cccccc;
+  -moz-box-shadow: 1px 2px 6px 2px #cccccc;
+  -ms-box-shadow: 1px 2px 6px 2px #cccccc;
+  box-shadow: 1px 2px 6px 2px #cccccc;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  border-radius: 50%;
+  padding: 5px;
+}
+
+.configWrapper .dbConnectionWrapper .configLeftForm .configLeftFormButtons #btncdelete {
+  float: right;
+}
+
+.configWrapper .dbConnectionWrapper .configLeftForm .configConList select::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.configWrapper .dbConnectionWrapper .configLeftForm .configConList select::-webkit-scrollbar-track {
+  background: #fff;
+}
+
+.configWrapper .dbConnectionWrapper .configLeftForm .configConList select::-webkit-scrollbar-thumb {
+  background-color: #999999;
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  -ms-border-radius: 20px;
+  border-radius: 20px;
+  border: 1px solid #fff;
+  min-height: 15%;
+  min-width: 15%;
+}
+
+.configWrapper .dbConnectionWrapper .configLeftForm .configConList select::-webkit-scrollbar-thumb:hover {
+  border: 0px solid #999999;
+}
+
+.configWrapper .dbConnectionWrapper .configLeftForm #lstconnection {
+  margin: 14px 0px;
+}
+
+.configWrapper .dbConnectionWrapper .configRightForm {
+  border: 1px solid #cccccc;
+  padding: 15px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  border-radius: 5px;
+  -webkit-box-shadow: 0px 2px 9px 2px #cccccc;
+  -moz-box-shadow: 0px 2px 9px 2px #cccccc;
+  -ms-box-shadow: 0px 2px 9px 2px #cccccc;
+  box-shadow: 0px 2px 9px 2px #cccccc;
+}
+
+.configWrapper .dbConnectionWrapper .configRightForm .configRightFormFields {
+  margin-bottom: 15px;
+}
+
+.configWrapper .dbConnectionWrapper .configRightForm .configRightFormFields .configRightFormFooterButton {
+  text-align: right;
+}
+
+.configWrapper .dbConnectionWrapper .configRightForm .configRightFormFields .configRightFormFooterButton #btnTestConnection, .configWrapper .dbConnectionWrapper .configRightForm .configRightFormFields .configRightFormFooterButton #btnApply, .configWrapper .dbConnectionWrapper .configRightForm .configRightFormFields .configRightFormFooterButton #btnCancel, .configWrapper .dbConnectionWrapper .configRightForm .configRightFormFields .configRightFormFooterButton #btnChangePassword {
+  color: #333333;
+  background-color: #fff;
+  border: 1px solid #cccccc;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  border-radius: 3px;
+  padding: 5px 15px;
+  margin-top: 10px;
+}
+
+.configWrapper .dbConnectionWrapper .configRightForm .configRightFormFields .configRightFormFooterButton #btnTestConnection.btndisable, .configWrapper .dbConnectionWrapper .configRightForm .configRightFormFields .configRightFormFooterButton #btnApply.btndisable, .configWrapper .dbConnectionWrapper .configRightForm .configRightFormFields .configRightFormFooterButton #btnCancel.btndisable, .configWrapper .dbConnectionWrapper .configRightForm .configRightFormFields .configRightFormFooterButton #btnChangePassword.btndisable {
+  background-color: #eee;
+  cursor: not-allowed;
+}
+
+.configWrapper .dbConnectionWrapper .configRightForm .configRightFormFields #lblconname {
+  height: 23px;
+  display: inline-block;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm {
+  border: 1px solid #cccccc;
+  padding: 15px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  border-radius: 5px;
+  -webkit-box-shadow: 0px 2px 9px 2px #cccccc;
+  -moz-box-shadow: 0px 2px 9px 2px #cccccc;
+  -ms-box-shadow: 0px 2px 9px 2px #cccccc;
+  box-shadow: 0px 2px 9px 2px #cccccc;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licKeyActTitle {
+  padding: 0px 20px;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licKeyActTitle span {
+  padding: 0px 15px;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm p {
+  margin-left: 40px;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licKeyActDesc {
+  padding: 15px 20px;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licKeyActDesc span {
+  padding: 15px;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licKeyActDesc .licInfoAccordion {
+  float: right;
+  position: relative;
+  top: -9px;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licKeyActDesc .licInfoAccordion span {
+  color: #999;
+  background: #f5f5f5;
+  -webkit-box-shadow: 1px 2px 6px 2px #cccccc;
+  -moz-box-shadow: 1px 2px 6px 2px #cccccc;
+  -ms-box-shadow: 1px 2px 6px 2px #cccccc;
+  box-shadow: 1px 2px 6px 2px #cccccc;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  border-radius: 50%;
+  padding: 5px;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licActOptions {
+  padding: 10px 20px;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licActOptions table tr td label {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licKeyInfoBox {
+  padding: 10px 20px;
+  min-height: 50px;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licKeyInfoBox span {
+  margin-top: 5px;
+  margin-left: 5px;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licKeyInfoBox .licKeyActivateBtn input {
+  color: #333333;
+  background-color: #fff;
+  border: 1px solid #cccccc;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  border-radius: 3px;
+  padding: 5px 15px;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licKeyInfoBox .licKeyActivateBtn input.disabledButton {
+  background-color: #eee;
+  cursor: not-allowed;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licKeyInfoBox .licKeyActivateBtn a {
+  color: #333333;
+  text-decoration: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  background-color: #fff;
+  border: 1px solid #cccccc;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  border-radius: 5px;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licKeyInfoBox .licKeyActivateBtn a .licActBtnIcon {
+  position: relative;
+  top: 7px;
+  margin: 0px;
+  color: #999;
+}
+
+.configWrapper .licActivationWrapper .licActivationForm .licKeyInfoBox .licKeyActivateBtn a.disabledButton {
+  background-color: #eee;
+  cursor: not-allowed;
+}
+
+.configWrapper .dbUIWrapper {
+  padding: 15px;
+  border: 1px solidlighten(#000, 80%);
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  border-radius: 5px;
+  -webkit-box-shadow: 0px 2px 9px 2px #cccccc;
+  -moz-box-shadow: 0px 2px 9px 2px #cccccc;
+  -ms-box-shadow: 0px 2px 9px 2px #cccccc;
+  box-shadow: 0px 2px 9px 2px #cccccc;
+}
+
+.configWrapper .dbUIWrapper .dbUIHeader {
+  padding: 20px;
+  height: 74px;
+}
+
+.configWrapper .dbUIWrapper .dbUIHeader .dbUIHeaderText {
+  margin: 0;
+}
+
+.configWrapper .dbUIWrapper .dbUIHeader .autoComIcon {
+  position: relative;
+}
+
+.configWrapper .dbUIWrapper .dbUIHeader .autoComIcon .autoComClearIcon {
+  position: absolute;
+  color: #000;
+  right: 35px;
+  top: 10px;
+}
+
+.configWrapper .dbUIWrapper .dbUIHeader .autoComIcon .autoComDdlIcon {
+  position: absolute;
+  color: #000;
+  right: 10px;
+  top: 10px;
+}
+
+.configWrapper .dbUIWrapper .dbUIBody {
+  padding: 15px;
+}
+
+.configWrapper .dbUIWrapper .dbUIBody .dbUIImgTitle {
+  padding: 10px;
+}
+
+.configWrapper .dbUIWrapper .dbUIBody .avatar-wrapper {
+  position: relative;
+  display: inline-block;
+  transition: all 0.3s ease;
+  padding: 18px;
+  border: 1px solid #cccccc;
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  -ms-border-radius: 6px;
+  border-radius: 6px;
+  -webkit-box-shadow: 2px 5px 5px 2px #cccccc;
+  -moz-box-shadow: 2px 5px 5px 2px #cccccc;
+  -ms-box-shadow: 2px 5px 5px 2px #cccccc;
+  box-shadow: 2px 5px 5px 2px #cccccc;
+}
+
+.configWrapper .dbUIWrapper .dbUIBody .avatar-wrapper .profile-pic {
+  transition: all 0.3s ease;
+  max-width: 300px;
+  max-height: 175px;
+}
+
+.configWrapper .dbUIWrapper .dbUIBody .avatar-wrapper .profile-pic:after {
+  font-family: FontAwesome;
+  content: "";
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  font-size: 190px;
+  background: #ecf0f1;
+  color: #34495e;
+  text-align: center;
+}
+
+.configWrapper .dbUIWrapper .dbUIBody .avatar-wrapper .upload-button, .configWrapper .dbUIWrapper .dbUIBody .avatar-wrapper .delete-button {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.configWrapper .dbUIWrapper .dbUIBody .avatar-wrapper .upload-button .imgBtn, .configWrapper .dbUIWrapper .dbUIBody .avatar-wrapper .delete-button .imgBtn {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  text-align: center;
+  transition: all 0.3s ease;
+  color: #34495e;
+  background: #eee;
+  padding: 10px;
+  -webkit-border-radius: 50px;
+  -moz-border-radius: 50px;
+  -ms-border-radius: 50px;
+  border-radius: 50px;
+  opacity: 1;
+  -webkit-box-shadow: 1px 1px 1px 0px grey;
+  -moz-box-shadow: 1px 1px 1px 0px grey;
+  -ms-box-shadow: 1px 1px 1px 0px grey;
+  box-shadow: 1px 1px 1px 0px grey;
+}
+
+.configWrapper .dbUIWrapper .dbUIBody .avatar-wrapper .delete-button {
+  position: static;
+}
+
+.configWrapper .dbUIWrapper .dbUIBody .avatar-wrapper .delete-button .imgBtn {
+  top: -2px;
+  bottom: unset;
+}
+
+.configWrapper .dbUIWrapper .dbUIBody .avatar-wrapper:hover {
+  transform: scale(1.05);
+  cursor: pointer;
+}
+
+.configWrapper .dbUIWrapper .dbUIBody .avatar-wrapper:hover .profile-pic {
+  opacity: 0.5;
+}
+
+.configWrapper .dbUIWrapper .dbUIBody .dbUITemplate label {
+  padding: 5px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.configWrapper .disabledButton {
+  background-color: #eee;
+  cursor: not-allowed;
+}
+
+.modal {
+  text-align: center;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.modal:before {
+  display: inline-block;
+  vertical-align: middle;
+  content: " ";
+  height: 100%;
+}
+
+.modal .modal-dialog {
+  display: inline-block;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.modal .modal-footer input, .modal .licFileUploadFooterButton input {
+  color: #333333;
+  background-color: #fff;
+  border: 1px solid #cccccc;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  border-radius: 3px;
+  padding: 5px 15px;
+  margin-top: 10px;
+}
+
+.modal .modal-footer input.btndisable, .modal .licFileUploadFooterButton input.btndisable {
+  background-color: #eee;
+  cursor: not-allowed;
+}
+
+.modal .licFileUploadFooterButton {
+  text-align: left;
+  border-top: 1px solid #e5e5e5;
+}
+
+.modal .licFileUpload .licFileUploadDesc {
+  padding: 5px 0;
+}
+
+.modal .licFileUpload .licFileUploadDesc span {
+  font-size: 15px;
+}
+
+.modal .licFileUpload .licFileUploadStatus {
+  padding: 5px 0;
+}
+
+.modal .licFileUpload .licFileUploadStatus span {
+  color: #db2222;
+  font-size: 14px;
+}
+
+.modal .modal-body .changePasswordBody {
+  padding: 12px 2px;
+}
+
+.modal .modal-body .configRightFormFields {
+  padding: 10px;
+}

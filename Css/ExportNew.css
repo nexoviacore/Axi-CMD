@@ -1,0 +1,584 @@
+#breadcrumb-panel {
+  background-color: #fff;
+  border-bottom: 1px solid #e6e6e6;
+  padding: 0px 10px;
+}
+
+.btextDir-rtl #breadcrumb-panel {
+  padding: 0px 35px;
+}
+
+.isMobile .btextDir-rtl #breadcrumb-panel {
+  padding: 0px 25px 0px 0px;
+}
+
+#breadcrumb-panel #nextprevicons {
+  display: none;
+}
+
+#breadcrumb-panel .bcrumb {
+  height: 43px;
+}
+
+.isMobile #breadcrumb-panel .bcrumb {
+  padding: 0px 0px 0px 10px;
+}
+
+#breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).menuBreadCrumb {
+  color: #797878;
+  font-size: 12px;
+  padding-left: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+  width: calc(100vw - 125px);
+}
+
+.isMobile #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).menuBreadCrumb {
+  padding: 0px 0px 0px 5px;
+  width: calc(100vw - 23px);
+}
+
+#breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  color: #212121;
+  font-size: 24px;
+  font-weight: 600;
+  display: block;
+  margin: 0px 0px -3px;
+  padding: 4px 0px 0px 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.isMobile #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  width: -moz-calc(100vw - 110px);
+  width: -webkit-calc(100vw - 110px);
+  width: calc(100vw - 110px);
+  font-size: 15px;
+  line-height: 25px;
+  padding: 0px 0px 0px 5px;
+}
+
+#breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 3px 0px 0px 20px;
+}
+
+.isMobile #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  font-size: 16px;
+  padding: 10px 0 0 5px;
+}
+
+.isMobile.compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 10px 0 0 20px;
+}
+
+.btextDir-rtl #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 4px 20px 0px 0px;
+}
+
+.btextDir-rtl #breadcrumb-panel .bcrumb {
+  text-align: right;
+}
+
+.isMobile .compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).menuBreadCrumb {
+  padding: 0px 0px 0px 18px;
+}
+
+.isMobile .compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  padding: 0px 0px 0px 18px;
+}
+
+.isMobile .compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 8px 0px 0px 18px;
+}
+
+.btextDir-rtl #backforwrdbuttons {
+  float: none;
+  background: transparent;
+  margin-top: 2px;
+  padding-top: 4px;
+  position: fixed;
+  right: 4px;
+}
+
+.btextDir-rtl .navLeft {
+  border: 0px;
+}
+
+.isMobile .btextDir-rtl.compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).menuBreadCrumb {
+  padding: 0px 18px 0px 0px;
+}
+
+.isMobile .btextDir-rtl.compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivCaption {
+  padding: 0px 18px 0px 0px;
+}
+
+.isMobile .btextDir-rtl.compressedModeUI #breadcrumb-panel .bcrumb span:not(.ivirCButton):not(.icon-arrows-down).tstivtitle {
+  padding: 8px 18px 0px 0px;
+}
+
+.btextDir-ltr #backforwrdbuttons {
+  float: none;
+  background: transparent;
+  margin-top: 2px;
+  padding-top: 4px;
+  position: fixed;
+}
+
+#backtohm {
+  display: none;
+  float: left;
+}
+
+.login .login-main .login-inner h2 {
+  text-align: center;
+  color: white;
+  font-weight: 400;
+  padding-top: 10px;
+  margin: 0px;
+}
+
+.login .login-main .login-inner h2 #lblSignin, .login .login-main .login-inner h2 #spnCpwdHeading {
+  position: relative;
+  display: block;
+  color: #000;
+  font-size: 22px;
+  margin-bottom: 15px;
+  margin-top: 5px;
+}
+
+#login-box h2 {
+  text-align: center;
+  color: white;
+  font-weight: 400;
+  padding-top: 10px;
+  margin: 0px;
+}
+
+#info-box h2 {
+  color: #000;
+  text-align: center;
+  font-weight: 600;
+}
+
+.animationLoading {
+  border: 1px solid #e6e6e6;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  display: block;
+  position: fixed;
+  top: 41px;
+  height: 41px;
+  z-index: 3;
+}
+
+.animationLoading.animationLoadingHide {
+  display: none;
+}
+
+.animationLoading th, .animationLoading td {
+  height: 60px;
+  width: 100vw;
+  border: 10px solid #fff;
+  position: relative;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-animation: placeHolderSwept 1s infinite linear forwards;
+  -moz-animation: placeHolderSwept 1s infinite linear forwards;
+  -o-animation: placeHolderSwept 1s infinite linear forwards;
+  animation: placeHolderSwept 1s infinite linear forwards;
+  background: #e6e6e6;
+  background-image: linear-gradient(to right, #e6e6e6 0%, #d9d9d9 20%, #e6e6e6 40%, #e6e6e6 100%);
+  background-repeat: no-repeat;
+}
+
+@-webkit-keyframes placeHolderSwept {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+@-moz-keyframes placeHolderSwept {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+@-o-keyframes placeHolderSwept {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+@keyframes placeHolderSwept {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.dataTables_scrollHeadInner th button {
+  display: none;
+}
+
+#backgroundDiv {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  z-index: 999999;
+}
+
+#backgroundDiv {
+  background: url(../Axpimages/loadingBars.gif) center center no-repeat rgba(255, 255, 255, 0.4);
+  background-size: 135px;
+}
+
+.popover.right {
+  width: auto;
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.popover .popover-content {
+  font-family: "Roboto", sans-serif;
+  color: #a1a1a1;
+}
+
+.popover .popover-content a:hover, .popover .popover-content a:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+.popover .popover-content span.tooltiptext span {
+  width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+}
+
+#wizardWrappper #wizardHeader {
+  padding: 20px 13px 30px 13px;
+}
+
+#wizardWrappper #wizardHeader .wizard-progress {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  position: relative;
+}
+
+#wizardWrappper #wizardHeader .wizard-progress .step {
+  display: table-cell;
+  text-align: center;
+  vertical-align: top;
+  overflow: visible;
+  position: relative;
+}
+
+#wizardWrappper #wizardHeader .wizard-progress .step a {
+  color: #000;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+  width: 90%;
+}
+
+#wizardWrappper #wizardHeader .wizard-progress .step a:hover {
+  outline: none;
+  text-decoration: none;
+}
+
+#wizardWrappper #wizardHeader .wizard-progress .step .node {
+  display: inline-block;
+  border: 3px solid #e6e6e6;
+  background-color: #fff;
+  border-radius: 50%;
+  height: 30px;
+  width: 30px;
+  position: absolute;
+  top: 25px;
+  left: 50%;
+  margin-left: -18px;
+  cursor: pointer;
+}
+
+#wizardWrappper #wizardHeader .wizard-progress .step.in-progress:not(:last-child):not(.flat):before {
+  background: #233044;
+  background: -moz-linear-gradient(left, #233044 0, #e6e6e6 100%);
+  background: -webkit-linear-gradient(left, #233044 0, #e6e6e6 100%);
+  background: linear-gradient(to right, #233044 0, #e6e6e6 100%);
+}
+
+#wizardWrappper #wizardHeader .wizard-progress .step:not(:last-child):not(.flat):before {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 39px;
+  background-color: #e6e6e6;
+  height: 3px;
+  width: 100%;
+}
+
+#wizardWrappper #wizardHeader .wizard-progress .step.in-progress .node {
+  border-color: #233044;
+}
+
+#wizardWrappper #wizardHeader .wizard-progress .step.complete:not(.flat) .node:not(.flat) {
+  border-color: #233044;
+  background: #233044;
+}
+
+#wizardWrappper #wizardHeader .wizard-progress .step.complete:not(.flat) .node:not(.flat):before {
+  font-size: 20px;
+  color: #fff;
+  position: relative;
+  top: -2px;
+  content: "\e006";
+  font-family: linea-arrows-10;
+}
+
+#wizardWrappper #wizardHeader .wizard-progress .step.complete:not(.flat):before {
+  background: #233044;
+}
+
+.file-upload {
+  position: relative;
+}
+
+.file-upload .file-select {
+  border: 2px solid #b3b3b3;
+  cursor: pointer;
+}
+
+.file-upload .file-select:focus {
+  outline: none;
+}
+
+.file-upload .file-select .file-select-button {
+  background: #b3b3b3;
+  padding: 0 10px;
+  display: inline-block;
+  height: 30px;
+  line-height: 30px;
+  color: white;
+}
+
+.file-upload .file-select .file-select-button:hover, .file-upload .file-select .file-select-button:focus {
+  outline: none;
+}
+
+.file-upload .file-select input[type=file] {
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+  opacity: 0;
+  z-index: 100;
+  height: 30px;
+}
+
+.file-upload .file-select .file-select-name {
+  display: inline-block;
+  padding: 0 10px;
+}
+
+#rowbor {
+  margin-top: 10px;
+}
+
+#rowbor #fname, #rowbor #filepathna {
+  display: none;
+}
+
+#rowbor #btnUpload {
+  font-size: 13px;
+}
+
+#dvCam #flip-btn {
+  display: none;
+}
+
+#dvCam video {
+  width: 100%;
+}
+
+#dvCam input, #dvCam button {
+  margin: 5px 0px;
+}
+
+.btextDir-rtl #dvNavigate #divFile label input, .btextDir-rtl #dvNavigate #divCamera label input {
+  margin-right: -20px;
+}
+
+#wizardBodyContent {
+  margin-top: 10px;
+}
+
+#wizardBodyContent .wizardContainer i:focus {
+  outline: none;
+}
+
+#wizardBodyContent .wizardContainer #UpdatePanel1 {
+  text-align: center;
+}
+
+#wizardBodyContent .wizardContainer .allowempty {
+  color: red;
+  margin-left: 5px;
+}
+
+#wizardBodyContent .wizardContainer table:not(#tblpanel):not(#tblFilter) {
+  width: 100%;
+}
+
+#wizardBodyContent .wizardContainer table:not(#tblpanel):not(#tblFilter) td:nth-child(1), #wizardBodyContent .wizardContainer table:not(#tblpanel):not(#tblFilter) td:nth-child(3) {
+  width: 45%;
+}
+
+#wizardBodyContent .wizardContainer table:not(#tblpanel):not(#tblFilter) td:nth-child(2) {
+  width: 10%;
+  text-align: center;
+}
+
+#wizardBodyContent .wizardContainer table:not(#tblpanel):not(#tblFilter) td:nth-child(2) div a {
+  padding: 10px;
+}
+
+#wizardBodyContent .wizardContainer table:not(#tblpanel):not(#tblFilter) tr td .multiselect {
+  height: 151px;
+  padding: 0px;
+}
+
+#wizardBodyContent .wizardContainer table:not(#tblpanel):not(#tblFilter) tr td .multiselect option {
+  padding: 10px;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+#wizardBodyContent .wizardContainer #filtersection {
+  padding: 10px;
+  max-height: 190px;
+  overflow-y: auto;
+  min-height: 100px;
+}
+
+#wizardBodyContent .wizardContainer #filtersection table#tblpanel {
+  margin: auto;
+}
+
+#wizardBodyContent .wizardContainer #filtersection table#tblpanel tr td {
+  padding: 2px 5px;
+}
+
+#wizardBodyContent .wizardContainer #filtersection table#tblpanel tr td#lvfld select, #wizardBodyContent .wizardContainer #filtersection table#tblpanel tr td#filcond select {
+  width: 200px;
+}
+
+#wizardBodyContent .wizardContainer #filtersection table#tblpanel tr td a#btnAddNew, #wizardBodyContent .wizardContainer #filtersection table#tblpanel tr td a#clearCond {
+  font-size: 20px;
+  color: black;
+}
+
+#wizardBodyContent .wizardContainer #filtersection table#tblpanel tr td a#btnAddNew:focus, #wizardBodyContent .wizardContainer #filtersection table#tblpanel tr td a#clearCond:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+#wizardBodyContent .wizardContainer #dvNewrow table#tblFilter tr td {
+  padding: 2px 5px;
+}
+
+#wizardBodyContent .wizardContainer #dvNewrow table#tblFilter tr td a span.curHand.icon-arrows-circle-minus {
+  font-size: 20px;
+  color: black;
+}
+
+#wizardBodyContent .wizardContainer #dvNewrow table#tblFilter tr td a span.curHand.icon-arrows-circle-minus:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+#wizardBodyContent .wizardContainer h2.con {
+  font-size: 20px;
+  text-align: center;
+}
+
+#wizardBodyContent .wizardContainer .btnExport {
+  display: none;
+}
+
+#wizardBodyContent table .select-button {
+  font-size: 20px;
+}
+
+#wizardBodyContent table .select-button:hover {
+  outline: none;
+  text-decoration: none;
+}
+
+#wizardFooter {
+  border-top: 1px solid #e6e6e6;
+  padding: 10px;
+}
+
+#wizardFooter .pull-left button {
+  display: none;
+}
+
+#wizardFooter .pull-right button#wizardCompbtn {
+  display: none;
+}
+
+#wizardFooter #wizardNextbtn, #wizardFooter #wizardCancelbtn, #wizardFooter #wizardPrevbtn, #wizardFooter #wizardCompbtn {
+  padding: 4px 12px 0px;
+}
+
+#wizardFooter #wizardNextbtn span.wizard-icon, #wizardFooter #wizardCancelbtn span.wizard-icon, #wizardFooter #wizardPrevbtn span.wizard-icon, #wizardFooter #wizardCompbtn span.wizard-icon {
+  position: relative;
+  top: -6px;
+}
+
+#wizardFooter #wizardNextbtn span.material-icons, #wizardFooter #wizardCancelbtn span.material-icons, #wizardFooter #wizardPrevbtn span.material-icons, #wizardFooter #wizardCompbtn span.material-icons {
+  color: #999999;
+}
+
+#wizardFooter #wizardNextbtn span.material-icons, #wizardFooter #wizardPrevbtn span.material-icons, #wizardFooter #wizardCompbtn span.material-icons {
+  color: #fff;
+}
+
+#backgroundDiv {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  z-index: 999999;
+}

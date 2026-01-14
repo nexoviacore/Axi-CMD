@@ -1,0 +1,141 @@
+// /**
+//  * theme framework for automating theme pallet generation based of theme-colors
+//  * @author Prashik
+//  * @Date   2021-03-10
+//  */
+@import '_functions/_globalFunctions';
+$themes-colors: (
+    mixed: (
+        'primary':(
+            'background': #233044,
+            'color':#ddd
+        ),
+        'secondary':(
+            'background': #fff,
+            'color':#000    
+        ),
+        'hot':(
+            'background': #1976d2,
+            'color':#fff    
+        ),
+        'surface':(
+            'background': #fff,
+            'color':#000    
+        ),
+        'background':(
+            'background': #f7f9fc,
+            'color':#000    
+        )
+    ),
+    dark: (
+        'primary':(
+            'background': #233044,
+            'color':#ddd
+        ),
+        'secondary':(
+            'background': #1976d2,
+            'color':#fff    
+        ),
+        'hot':(
+            'background': #1976d2,
+            'color':#fff    
+        ),
+        'surface':(
+            'background': #fff,
+            'color':#000    
+        ),
+        'background':(
+            'background': #f7f9fc,
+            'color':#000    
+        )
+    ),
+    light: (
+        'primary':(
+            'background': #233044,
+            'color':#ddd
+        ),
+        'secondary':(
+            'background': #1976d2,
+            'color':#fff    
+        ),
+        'hot':(
+            'background': #1976d2,
+            'color':#fff    
+        ),
+        'surface':(
+            'background': #fff,
+            'color':#000    
+        ),
+        'background':(
+            'background': #f7f9fc,
+            'color':#000    
+        )
+    )
+);
+
+@function generateThemes($themes-colors) {
+    $returnMap: ();
+    @each $theme, $colors in $themes-colors {
+        $returnMap: map-merge($returnMap, ($theme : 
+        
+        (
+            'primary': (
+                'default': (
+                    'background': getMapByPath($colors, 'primary.background'),
+                    'color': getMapByPath($colors, 'primary.color')    
+                ),
+                'light': (
+                    'background': lighten(getMapByPath($colors, 'primary.background'), 30%),//lighten
+                    'color': getMapByPath($colors, 'primary.color')    
+                ),
+                'dark': (
+                    'background': darken(getMapByPath($colors, 'primary.background'), 2%),//darken
+                    'color': getMapByPath($colors, 'primary.color')    
+                )
+            ),
+            'secondary': (
+                'default': (
+                    'background': getMapByPath($colors, 'secondary.background'),
+                    'color': getMapByPath($colors, 'secondary.color')    
+                ),
+                'light': (
+                    'background': lighten(getMapByPath($colors, 'secondary.background'), 30%),//lighten
+                    'color': getMapByPath($colors, 'secondary.color')    
+                ),
+                'dark': (
+                    'background': darken(getMapByPath($colors, 'secondary.background'), 2%),//darken
+                    'color': getMapByPath($colors, 'secondary.color')    
+                )
+            ),
+            'hot':(
+                'default': (
+                    'background': getMapByPath($colors, 'hot.background'),
+                    'color': getMapByPath($colors, 'hot.color')    
+                )
+            ),
+            'surface':(
+                'default': (
+                    'background': getMapByPath($colors, 'surface.background'),
+                    'color': getMapByPath($colors, 'surface.color')    
+                )
+            ),
+            'background':(
+                'default': (
+                    'background': getMapByPath($colors, 'background.background'),
+                    'color': getMapByPath($colors, 'background.color')    
+                )
+            ),
+            'alert': (
+                (success, #5bb240, #2bb500), 
+                (info, #31708f, #006596), 
+                (error, #e44b4b, #de2e2e), 
+                (warning, #8a6d3b, #8e5a00)
+            )
+        )
+        
+        ));
+    }
+    @return $returnMap;
+}
+
+$themes: generateThemes($themes-colors);

@@ -1,0 +1,73 @@
+//* pageToolbarPieCharts ==================================== *//
+@import 'iviewUI/_pageToolbarOptionCharts';
+//* popOver ==================================== *//
+@import 'iviewUI/_popOver';
+
+//* page toolbar chart-----------------*//
+// #ivirMainChartWrapper {
+//     height: calc(#{$ivirMainChartWrapperMaximumHeight} - #{$ivirMainChartWrapperCalculatedHeight});
+// }
+#ivirChatWrapper{
+    #ivirChartsRow{
+        button{
+            span{
+                font-size: $chartFontSize;
+                color: $applicationColor;
+                &:focus{
+                    outline: none;
+                    color: $hotbtnbackgroundcolor;
+                }
+                
+            }
+            &:focus{
+                outline: none;
+            }
+            &.ivirChartButton{
+             &.active{
+                 span{
+                     &.ivirGraphIcon{
+                        color: $hotbtnbackgroundcolor;
+                     }
+                 }
+             }
+            }
+        }
+        label{
+            display: block;
+            margin-bottom: $pageToolbarChartLabelBottomMargin;
+        }
+    }
+    hr{
+        display: none;
+    }
+    #ivirchartsCndtn{
+        span{
+            color: $compulsoryFieldStar;
+            margin: 0 $compulsoryFieldStarMargin;
+        }
+        a{
+            font-size: $applicationInfoIconFontSize;
+            &:focus,&:hover{
+                outline: none;
+                text-decoration: none;
+            }
+        }
+        .form-group{
+            label{
+                display: inline-block;
+            }
+        }
+    }
+}
+
+.jconfirm-content{
+    .row{
+        margin: 0px;
+    }
+}
+.chart_div{
+    height: auto; 
+    margin: 0 auto; 
+    overflow-x: auto;
+}
+//* page toolbar chart-----------------*//

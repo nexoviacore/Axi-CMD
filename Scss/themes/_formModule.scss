@@ -1,0 +1,136 @@
+@mixin _formModule($theme, $colors) {
+    #breadcrumb-panel{
+        background: getMapByPath($colors, 'background.default.background');
+    }
+    .dvdcframe {
+        background: getMapByPath($colors, 'surface.default.background');
+        .newgridbtn{
+            ul{
+                li:not(.dropdown-menu>li){
+                    a{
+                        // color: darken(getMapByPath($colors, 'primary.default.color'), 26.5%);
+                        // color: #555;
+                    }
+                    .dropdown-menu{
+                        li{
+                            &:hover{
+                                background-color: darken(getMapByPath($colors, 'secondary.default.background'), 4.2%);
+                            }
+                        }
+                    }
+                }
+                .gridAddRow{
+                    // color: darken(getMapByPath($colors, 'primary.default.color'), 26.5%);
+                    // color: #555;
+                }
+                li{
+                    a{
+                        // color: darken(getMapByPath($colors, 'primary.default.color'), 26.5%);
+                        // color:#555;
+                    }
+                }
+            }
+        }
+    }
+    &:not(.borderInput){
+    .mainIframe{
+            input,select,textarea{
+                //border-bottom: 1px solid darken(getMapByPath($colors, 'primary.default.color'), 6.5%);
+                &:focus{
+                    border-bottom: 2px solid getMapByPath($colors, 'hot.default.background');
+                }
+                &.form-control[disabled], &.form-control[readonly], fieldset[disabled] .form-control{
+                    color: darken(getMapByPath($colors, 'primary.default.color'), 5%);
+                }
+            }
+        }
+        #ivParamTable{
+            tbody{
+                tr{
+                    td{
+                        .paramtd2{
+                            input,select{
+                                &:focus{
+                                    border-bottom: 2px solid getMapByPath($colors, 'hot.default.background');
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    #heightframe{
+        #wBdr{
+            .wrapper{
+                .bs-example{
+                    ul{
+                        span{
+                            &#tabCollapseButton{
+                                // color: darken(getMapByPath($colors, 'primary.default.color'), 26.5%);
+                            }
+                            &.text{
+                                // color: getMapByPath($colors, 'secondary.default.color');
+                            }
+                        }
+                        li{
+                            &.active{
+                                a{
+                                    span{
+                                        &:not(.gridoptions){
+                                            // color: darken(getMapByPath($colors, 'primary.default.color'), 40%);
+                                            // color: #010101;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    .bs-example {
+        .newgridbtn{
+            ul{
+                li:not(.dropdown-menu>li){
+                    a{
+                        // color: darken(getMapByPath($colors, 'primary.default.color'), 26.5%);
+                        // color:#555;
+                    }
+                    .dropdown-menu{
+                        li{
+                            &:hover{
+                                background-color: darken(getMapByPath($colors, 'secondary.default.background'), 4.2%);
+                            }
+                        }
+                    }
+                }
+                .gridAddRow{
+                    // color: darken(getMapByPath($colors, 'primary.default.color'), 26.5%);
+                    // color:#555;
+                }
+            }
+        }
+        ul{
+            li{
+                a{
+                    span{
+                        &.gridoptions{
+                            // color: darken(getMapByPath($colors, 'primary.default.color'), 26.5%);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    [id^=colScroll] {
+        // &::-webkit-scrollbar-track {
+        //     background: getMapByPath($colors, 'secondary.default.background');
+        // }
+        // &::-webkit-scrollbar-thumb {
+        //     background: darken(getMapByPath($colors, 'primary.default.color'), 26.5%);
+        //     border: 3px solid getMapByPath($colors, 'secondary.default.background');
+        // }
+    }
+}

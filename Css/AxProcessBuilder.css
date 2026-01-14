@@ -1,0 +1,874 @@
+@charset "UTF-8";
+
+:root {
+	--En-blue: #4F96F7;
+	--Ver-rose: #E95A92;
+	--Dep-Orange: #F98036;
+	--off-pink: #D189E1;
+	--light-btn-text: #2F2F65
+}
+
+body {
+	font-size: 1.1rem !important;
+	overflow-x: hidden;
+}
+
+#Process_Flow .card {
+	border: 1px solid #eeeeef !important;
+	box-shadow: none !important;
+	border-radius: 0 !important;
+}
+
+#Process_Flow .content {
+	padding: 0 !important;
+	background: #fff;
+	width: 99.9%;
+}
+
+#Process_Flow .min-vh-100 {
+	min-height: 90vh !important;
+}
+
+#Process_Flow .vh-100 {
+	height: 90vh !important;
+}
+
+/* #PROFLOW_Left.vh-100, #PROFLOW_Right.vh-100, #PROFLOW_Left.min-vh-100, #PROFLOW_Right.min-vh-100 {
+	height: 98vh !important;
+	min-height: 98vh !important;
+} */
+
+.PROFLOW-name {
+	font-size: 1.15rem;
+	font-weight: bold !important;
+	
+}
+#process-name{
+	font-size:19px !important;
+	color:#4b5356;
+	/*border-bottom:2px solid #e8eae9 !important;*/
+	/*padding-left:50px;*/
+}
+.proTitleBG{
+	background: #f5f6f8;
+	border-bottom:1px solid #e8eae9;
+}
+.PROFLOW-page-Title {
+	padding: 8px 22px 8px 22px; 
+	margin-bottom: 2px !important;
+	margin-top:15px; /*jai added */
+}
+
+#PROFLOW_Left .tree-footer {
+	padding: 0 20px !important;
+	border-right: 1px solid #eeeeef;
+}
+
+#PROFLOW_Right .card-body {
+	padding-top: 0;
+}
+
+#PROFLOW_Right .PROFLOW-page-Title {
+	background: transparent;
+	text-align: center;
+	border-bottom: 1px dashed #eeeeef;
+	font-size: 1.3rem !important;
+	display: none;
+}
+
+#PROFLOW_Left {
+	padding-right: 0;
+	margin-top: 0;
+}
+
+#PROFLOW_Right {
+	padding-left: 0;
+	margin-top: 0;
+}
+
+	#PROFLOW_Right .card {
+		border-left: 0 !important;
+	}
+
+/* -------------------------------------------------------------------------
+  VERTICAL STEPPERS
+-------------------------------------------------------------------------- */
+
+/* Steps */
+.step {
+	position: relative;
+	min-height: 1em;
+	color: gray;
+}
+
+	.step + .step {
+		margin-top: 1em
+	}
+
+	.step > div:first-child {
+		position: static;
+		height: 0;
+	}
+
+	.step > div:not(:first-child) {
+		margin-left: 1.5em;
+		padding-left: 1em;
+	}
+
+	.step.step-active {
+		color: #1bb587
+	}
+
+		/* .circle.success {
+	background: #1bb587; 	border-color: #1bb587 !important;
+} */
+
+		/* .step.step-active .circle {
+	background-color: #fff;
+	border: 1px solid #1bb587 !important;
+	color: #1bb587;
+} */
+
+		.step.step-active .circle {
+			background-color: #006cff;
+			border: 1px solid #006cff !important;
+			color: #fff;
+		}
+
+	.step.step-completed .circle {
+		color: #fff;
+		background: #1bb587;
+		border-color: #1bb587 !important;
+	}
+
+.circle.pending {
+	background: #ffbc20;
+	border-color: #ffbc20 !important;
+}
+
+/* Circle */
+.circle {
+	background: #fff;
+	position: relative;
+	width: 1.7em;
+	height: 1.7em;
+	line-height: 1.5em;
+	border-radius: 100%;
+	color: #838383;
+	text-align: center;
+	box-shadow: 0 0 0 3px #fff;
+	border: 1px solid #ccc !important;
+}
+
+
+.step .line {
+	top: 23px;
+	left: 12px;
+	height: 100%;
+	position: absolute;
+	border-left: 1px solid rgba(0, 0, 0, 0.1);
+	;
+}
+
+.step:last-child .line {
+	display: none
+}
+
+/* Stepper Titles */
+.PROFLOW-Info-Steps .title {
+	line-height: 1.5em;
+	font-weight: bold;
+	color: #3f4254 !important;
+	transition: all ease 0.3s;
+	margin-bottom: 15px;
+	padding-bottom: 15px;
+	border-bottom: 1px solid #eaeaee;
+}
+
+	.PROFLOW-Info-Steps .title:hover {
+		padding-left: 4px;
+	}
+
+	.PROFLOW-Info-Steps .title a {
+		color: inherit;
+		text-decoration: none;
+		transition: all ease 0.3s;
+	}
+
+.caption {
+	font-size: 0.8em;
+}
+
+.Task-process-list {
+	padding: 5px 0;
+}
+
+	.Task-process-list a {
+		color: #333;
+	}
+
+/*Profile*/
+.PROFLOW-profile-wrap {
+	padding: 15px;
+	border-bottom: 1px solid #eeeeef;
+	/* margin-bottom: 25px; */
+	position: fixed;
+	z-index: 9;
+	width: 22.5%;
+	background: white;
+}
+
+.PROFLOW-steps-counts {
+	/* position: absolute;
+			left: 6px;
+			top: 1px; */ font-size: 12px;
+}
+
+.circle i {
+	display: none;
+}
+
+.circle.success .PROFLOW-steps-counts, .circle.pending .PROFLOW-steps-counts {
+	/* display: none; */ color: #fff;
+}
+
+/* .circle.success i,.circle.pending i  {
+			display: block;
+			color: #fff;
+			position: relative;
+			top: 5px;
+		} */
+
+.profile-progress-bar {
+	background: #d9d9d9 !important;
+}
+/* .step.step-active .Task-process-list.Active a::after { */
+.Task-process-list.Active a::after {
+	position: absolute;
+	content: "";
+	width: 8px;
+	height: 8px;
+	background: #1eb688;
+	border-radius: 50px;
+	margin-top: 8px;
+	/* left: 0; */
+	margin-left: 6px;
+}
+
+
+.circle.success:after {
+	background-color: #1eb588;
+}
+
+.circle.pending::after {
+	background-color: orange;
+}
+
+.step .title a {
+	text-decoration: none aliceblue;
+	color: #333 !important;
+	font-size: 1.1rem !important;
+}
+
+.accordion .accordion-header {
+	cursor: pointer;
+	border-bottom: 1px solid #eeeeef;
+}
+
+.accordion .accordion-body {
+	margin-top: 10px;
+}
+
+.accordion-header.collapsed h3 {
+	font-weight: normal !important;
+}
+
+.accordion.accordion-icon-toggle .mb-5 {
+	margin: 0 !important;
+}
+
+#PROFLOW_Left .card-body {
+	overflow-y: scroll;
+	padding-top: 0;
+	padding-left: 10px !important;
+	padding-right: 10px !important;
+}
+
+.PROFLOW-Info-Steps {
+	padding-top: 20px;
+	/*padding-left: 7px;*/
+}
+
+#PROFLOWloyeeInfoSteps .accordion-body {
+	padding-left: 10px !important;
+}
+
+#PROFLOWloyeeInfoSteps .accordion .accordion-header h3 {
+	font-size: 15px !important;
+	margin-left: 10px !important;
+}
+
+.step.step-active .title a {
+	font-weight: bold;
+	white-space: nowrap;
+}
+
+::-webkit-scrollbar {
+	width: 2px;
+}
+
+#ProcessTitle.card-header {
+	padding: 8px 15px 12px 19px;
+}
+
+#Create_process {
+	background: #006cff !important;
+	border-radius: 4px;
+	color: #fff !important;
+	display: flex;
+}
+
+	#Create_process .material-icons {
+		color: white !important;
+		margin-right: 0;
+	}
+
+#ProcessTitle span {
+	padding-bottom: 4px;
+}
+
+#ProcessTitle .card-toolbar {
+	align-items: flex-start !important;
+}
+
+.Processflow-Icons .btn {
+	padding: 0 !important;
+	background: transparent !important;
+}
+
+.Task-process-list.status-disabled {
+	pointer-events: none;
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+
+.Task-process-list.Completed:after {
+	content: "\e86c";
+	color: #47BE7D;
+	margin-top: -4px;
+	margin-left: 16px;
+	font-family: "Material Icons Outlined";
+	position: absolute;
+	font-size: 21px;
+}
+
+.step.step-completed .line {
+	border-left: 1px solid rgb(31, 181, 136);
+}
+
+
+/* .Task-process-list.status-made:after {
+  content: "\e85d";
+ color: orange;
+ margin-top: -4px;
+ margin-left: 10px;
+ font-family: "Material Icons Outlined";
+ position: absolute;
+ font-size: 21px;
+}
+.Task-process-list.status-approved:after {
+  content: "\e86c";
+  color: #47BE7D;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+}
+.Task-process-list.status-rejected:after {
+  content: "\e5c9";
+  color: red;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+}
+.Task-process-list.status-returned:after {
+  content: "\e15e";
+  color: blueviolet;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+}
+.Task-process-list.status-forwarded:after {
+  content: "\e154";
+  color: brown;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+}
+.Task-process-list.status-checked:after {
+  content: "\e877";
+  color: #47BE7D;
+  margin-top: -4px;
+  margin-left: 10px;
+  font-family: "Material Icons Outlined";
+  position: absolute;
+  font-size: 21px;
+} */
+
+/* .Task-process-list.Completed:after {
+	content: "\e86c";
+   color: #47BE7D;
+   margin-top: -4px;
+   margin-left: 10px;
+   font-family: "Material Icons Outlined";
+   position: absolute;
+   font-size: 21px;
+} */
+.step.step-completed .line {
+	border-left: 1px solid rgb(31, 181, 136);
+}
+
+
+
+/*.Task-process-list.status-rejected::after, .Task-process-list.status-returned::after, .Task-process-list.status-forwarded::after, .Task-process-list.status-checked::after, .Task-process-list.status-made::after, .Task-process-list.status-approved::after {
+	margin-top: 1px;
+	margin-left: 5px;
+	font-size: 10px;
+	padding: 2px 10px;
+	border-radius: 50px;
+	position: absolute;
+	right: 0;
+}*/
+
+
+.Task-process-list.status-made:after, .Task-process-list.status-approved:after,
+.Task-process-list.status-rejected:after, .Task-process-list.status-returned:after, .Task-process-list.status-checked::after {
+	content: "\e86c";
+	color: #47BE7D;
+	margin-top: -4px;
+	margin-left: 16px;
+	font-family: "Material Icons Outlined";
+	position: absolute;
+	font-size: 21px;
+}
+
+
+
+.Process-flow.accordion-icon {
+	float: right;
+	cursor: pointer;
+	margin-right: 10px;
+	border: 1px solid #eeeeef;
+	border-radius: 50px;
+	padding: 3px;
+	transition: all ease 0.3s;
+}
+.process-sub-flow {
+	/*display: none;*/
+}
+.Process-flow.accordion-icon.rotate {
+	transform: rotate(90deg);
+}
+
+.Task-process-list.status-.Active a {
+	font-weight: bold;
+}
+
+.Task-process-list{
+	/* Jai */
+
+	/*height: 25px;
+	width: 25px;
+	background-color: #4275c8;
+	border-radius: 50%;
+	*/
+	/* background: radial-gradient(#4275c8 12%, transparent 11%) no-repeat -25px !important; */
+    background-size: 60px 60px !important;
+    /*background-position: 0 0, 30px 30px !important;*/
+	padding-left:25px !important;
+
+}
+
+/* Jai 14-02-2023 */
+.positionRel{
+	position:relative;
+}
+.plusactioncontainer{
+	display:none;
+	right:5px;
+	top:0;
+	widtH:10px;
+	position:absolute;
+	height:50px;
+	bottom:-12px;
+	width:120px;
+}
+.addTopBtnlink{
+	top:0;
+	position:absolute;
+	right:10px;
+	cursor:pointer;
+}
+.addTopBtnHLine{
+	position:absolute;
+	right:20px  !important;
+	width:0px; 
+	height:30px !important;
+	top:10px;
+	border-left:1px solid #ccc;
+}
+.addTopBtnVLine{
+	position:absolute;
+	right:20px  !important;
+	width:20px; 
+	height:0 !important;
+	bottom:25px;
+	border-bottom:1px solid #ccc;
+}
+.addBotBtnlink{
+	bottom:0;
+	position:absolute;
+	right:10px;
+	cursor:pointer;
+}
+.addProcessHilight, .addSubProcessHilight{
+	display:none;
+	position:absolute;
+	right:20px;
+	top:-10px;
+	background:#fff;
+	/*border:4px soild red !important;*/
+	z-index:9999;
+	padding:10px;
+}
+.addProcessHilight a, .addSubProcessHilight a{
+	display:block;
+}
+.addProcessHilight a::after, .addSubProcessHilight a::after{
+	display:none;
+}
+.addProcessHilight a::before, .addSubProcessHilight a::before{
+	
+		position: absolute;
+		content: "";
+		width: 8px;
+		height: 8px;
+		/* background: #1eb688;  VJ*/
+		border-radius: 50px;
+		margin-top: 8px;
+		left: 0 !important;
+		margin-left:0;
+		padding-left:3px;
+
+}
+.addProcessHilight a.make::before, .addSubProcessHilight a.make::before{
+	background: #4b6ecc !important;
+}
+.addProcessHilight a.approve::before, .addSubProcessHilight a.approve::before{
+	background: #5ac686 !important;
+}
+.addProcessHilight a.check::before, .addSubProcessHilight a.check::before{
+	background: #3d821b !important;
+}
+.addProcessHilight a.if::before, .addSubProcessHilight a.if::before{
+	background: #ecab11 !important;
+}
+.addProcessHilight a.else::before, .addSubProcessHilight a.else::before{
+	background: #23d8e5 !important;
+}
+.addProcessHilight a.IfElse::before, .addSubProcessHilight a.IfElse::before{
+	background: #9823e5 !important;
+}
+.addProcessHilight a.end::before, .addSubProcessHilight a.end::before{
+	background: #e52323 !important;
+}
+.addTopBtnlink:hover .addProcessHilight, .addBotBtnlink:hover .addSubProcessHilight{
+	display:block;
+}
+.Task-process-list:hover .plusactioncontainer{
+	display:block !important;
+}
+.process-sub-flow:last-child {
+	border-bottom: 1px solid #eeeeef !important;
+	padding-bottom: 10px !important;
+}
+.posRel{
+	position:relative;
+}
+.processnameborBot{
+    border-bottom: 2px solid #e8eae9 !important;
+}
+.editBTN{
+	/*position:absolute;
+	top:25px;
+	left:100px;*/
+	font:bold 16px arial;
+	z-index:9999;
+	margin-top:25px;
+}
+.addBTN{
+	position:absolute;
+	top:25px;
+	right:100px;
+	font:bold 16px arial;
+	z-index:9999;
+}
+.appBackBtn{
+	float:left;
+	top:-9px !important;
+}
+.fleft{
+	float:left;
+}
+.fright{
+	float:right;
+}
+.clr{
+	clear:both;
+}
+#pf_content_container, .panel-container{
+	
+}
+.pt-3{
+	padding-top: 0rem!important;
+}
+.displayNone{
+	display:none !important;
+}
+.displayBlock{
+	display:block!important;
+}
+.addRecordsContainer{
+	width:180px !important;
+	margin:40px auto 0 auto!important;
+	text-align:center;
+}
+.noRecords{
+	padding:50px 0;
+}
+.addRecords{
+	background:#1970ff;
+	display:block;
+	padding:8px;
+	border: 1px solid #1970ff !important;
+	border-radius: 10px !important;
+	color:#fff;
+	text-decoration:none;
+}
+.addRecords:hover{
+	color:#aecdff;
+}
+
+/* VJ */
+.Task-process-list {
+	width: max-content;
+	max-width: 85%;
+}
+.plusactioncontainer {
+	right: -50px !important;
+	top: -8px !important;
+	width: 50px !important; z-index: 99;
+}
+.addTopBtnlink {
+	z-index: 9;
+}
+.addProcessHilight, .addSubProcessHilight {
+	padding: 17px 30px 17px 42px !important;
+	box-shadow: 0 0 35px #dcdcdc;
+	border: 1px solid #dedede;
+}
+.addProcessHilight a, .addSubProcessHilight a {
+	margin-left: 12px; padding: 2px 0;
+}
+.addProcessHilight a::before, .addSubProcessHilight a::before {
+	left: 30px !important;
+}
+.material-icons.material-icons-style.material-icons-2.addTopBtn, .material-icons.material-icons-style.material-icons-2.addBotBtn {
+	font-size: 16px !important;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #fff;
+	border-radius: 50px;
+}
+.addTopBtnVLine,. {
+	border-bottom: 1px solid #ccc;
+}
+.addBotBtnlink{ bottom:-5px !important; border: 1px solid #dedede !important; border-radius: 50px; }
+.addTopBtnlink{top: -5px !important; border: 1px solid #dedede !important;border-radius: 50px; }
+.addTopBtnVLine{width: 25px !important;}
+.Task-process-list {
+	padding-top: 7px !important;padding-bottom: 7px !important;
+}
+#PROFLOW_Left #modeLeftDeActive .card-body {
+	overflow-y: visible !important;
+}
+.footer-legend {
+	display: block;
+	font-size: 13px;
+	text-align: center;
+	border-right: 1px solid #ccc;
+	border-radius: 0 !important;
+}
+  .legend-list {
+	display: inline-block;
+	margin-right: 15px;
+	margin-bottom: 5px;
+}
+  .legend-list .symbol-circle {
+	margin-right: 6px;
+  }
+  .legend-list .symbol .symbol-label {
+	width: 8px;
+	height: 8px;
+}
+
+
+.card-footer.py-5 {
+	padding: 0;
+  }
+  .symbol-label.bg-make,div[data-tasktype="Make"] .Task-process-list::before {
+	background: #4b6ecc;
+  }
+  .symbol-label.bg-approved,div[data-tasktype="Approve"] .Task-process-list::before {
+	background: #5ac686;
+  }
+  .symbol-label.bg-checked,div[data-tasktype="Check"] .Task-process-list::before {
+	background: #3d821b;
+  }
+
+  .symbol-label.bg-If {
+	background: #ecab11;
+  }
+  .symbol-label.bg-If-else {
+	background: #9823e5;
+  }
+  .symbol-label.bg-Else {
+	background: #23d8e5;
+  }
+  .symbol-label.bg-end{
+	background: #e52323;
+  }
+
+  div[data-tasktype="If"] .Task-process-list > a {
+	background: #ecab11;
+	padding: 4px 15px;
+	color: white;
+	border-radius: 5px; font-size: 12px;
+}
+div[data-tasktype="End"] .Task-process-list > a {
+	background: #e52323;
+	padding: 4px 15px;
+	color: white;
+	border-radius: 5px; font-size:12px;
+}
+
+div[data-tasktype="Else"] .Task-process-list > a {
+	background: #23d8e5;
+	padding: 4px 15px;
+	color: white;
+	border-radius: 5px;
+}
+
+  .Task-process-list::before{
+	content: "";
+	width: 10px;
+	height: 10px;
+	display: inline-block;
+	border-radius: 50px;
+	position: absolute;
+	left: -3px;
+	top: 12px;
+}
+#PROFLOW_Right_Last {
+	margin-top: 0;
+	padding-left: 0;
+}
+#PROFLOW_Right {
+	padding-right: 0;
+}
+#PROFLOW_Right_Last .card {
+	padding: 15px;
+}
+#Process_Flow #process-name {
+	margin-top: 0;
+	margin-bottom: 0 !important;
+}
+
+
+
+#NoRecords {
+	padding: 45px;
+	text-align: center;
+	height: 75vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.noRecords {
+	padding: 20px 0;
+	font-size: 17px;
+	font-weight: normal;
+	color: #737373;
+	}
+.NORecords-img {
+max-width: 50%;
+text-align: center;
+margin-bottom: 30px;
+	}
+	
+	.Task-process-wrapper .process-sub-flow {
+	margin-left: -25px !important;
+}
+#modeLeftDeActive {
+	overflow: auto;
+}
+
+.Task-process-wrapper .process-sub-flow:nth-last-child(-n+4)  .addSubProcessHilight,.Task-process-wrapper .process-sub-flow:nth-last-child(-n+4)  .addProcessHilight{
+top: -160px !important;
+}
+#procflow-steps .step:first-child .Task-process-wrapper .process-sub-flow:nth-child(-n+4) .addSubProcessHilight, #procflow-steps .step:first-child .Task-process-wrapper .process-sub-flow:nth-child(-n+4) .addProcessHilight {
+	top: -61px !important;
+}
+div[data-tasktype="Else if"] .Task-process-list > a {
+	background: #9823e5;
+	padding: 4px 15px;
+	color: #fff;
+	border-radius: 5px;
+}
+
+/* Jai 14-02-2023 */
+@media screen and (max-width: 768px) {
+
+
+	.visibleMobileCol {
+		word-break: inherit !important;
+	}
+
+	.buz-logo {
+		display: block;
+	}
+	/* .content {
+	  padding: 1.75rem 1rem 0 1rem !important;
+  } */
+	.card-body.iviewTableWrapper {
+		padding: 0 !important;
+	}
+
+	.PROFLOW-profile-wrap {
+		width: 100% !important;
+		position: inherit !important;
+	}
+
+	.PROFLOW-Info-Steps {
+		padding-top: 0 !important;
+	}
+}

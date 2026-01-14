@@ -1,0 +1,120 @@
+.htmlPagesCls {
+    #containerDc {
+        .CodeMirror {
+            height: 386px; 
+            box-shadow: 5px 3px 3px 1px #c5c2c2;
+        }
+    }
+
+    .CodeMirror {
+        height: 440px;
+        box-shadow: 5px 3px 3px 1px #c5c2c2;
+    }
+
+    .formGridRow {
+        padding: 12px;
+
+        .editWrapTr {
+            height: 516px !important;
+        }
+    }
+
+    .addFormGridbutton {
+        display: none;
+    }
+
+    &#wBdr {
+        label {
+            font-family: 'Poppins', 'sans-serif';
+            font-size: 14px;
+        }
+
+        .divNonGridAxpFile {
+            border: 1px solid #afadad;
+        }
+
+        input.form-control {
+            background: #ececec;
+            border: 1px solid #afadad;
+            font-family: 'Poppins', 'sans-serif';
+        }
+    }
+
+    .hpCustBtns {
+        border: 1px solid #bbb;
+        box-shadow: none;
+        text-align: center;
+        padding: 6px 12px;
+        min-width: 100px;
+        color: #000;
+        background: #fff;
+        @include border-radius(4px);
+        // @include coldbtn;
+
+        &:focus {
+            @include coldHotBtnFocus;
+            opacity: 1;
+            outline: none;
+        }
+
+        &:hover {
+            @include coldHotBtnHover;
+        }
+    }
+
+    #divDc1 {
+        background: #ececec;
+        width: 90%;
+        margin: 0px auto;
+        display: block;
+        position: absolute;
+        left: 50%;
+        top: 40%;
+        transform: translate(-50%, -50%);
+        padding: 20px;
+        box-shadow: 2px 2px 8px 2px #ccc;
+    }
+
+    #divDc2,
+    #dvhtml_editor_htmlsrc {
+        height: calc(100vh - 50px) !important;
+    }
+
+    #dvGridcss_js_src {
+        height: 450px;
+        min-height: 300px;
+    }
+
+    [id^=colScroll] {
+        overflow: initial;
+    }
+}
+
+.wizard-type-modern,
+.wizard-type-classic {
+    .htmlPagesCls {
+        #wizardWrappper {
+            .wizardContent {
+                #wizardHeader {
+                    opacity: 0;
+                    padding: 0;
+                    margin: -22px 0 0 0;
+                }
+            }
+        }
+    }
+}
+
+.htmlPagesCls {
+    #wizardBodyFooterWrapper {
+        .wizardFooter {
+            .wizardNextPrevWrapper {
+                #wizardPrevbtn,
+                .coldbtn {
+                    border: 1px solid #bbb;
+                    box-shadow: none;
+                }
+            }
+        }
+    }
+}

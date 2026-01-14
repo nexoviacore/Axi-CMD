@@ -1,0 +1,40 @@
+/*
+Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
+For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
+*/
+.cke_autocomplete_panel {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: unset !important;
+	max-height: 45vh !important;
+	overflow: auto;
+	display: none;
+	z-index: 999999;
+	max-width: 80vw !important;
+	width: unset !important;
+	box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+	font-weight: 600;
+}
+
+.cke_autocomplete_selected,
+.cke_autocomplete_panel>li:hover {
+	cursor: pointer;
+	background-color: #f1faff;
+	color: #0774fe;
+	transition: color .2s ease, background-color .2s ease;
+}
+
+.cke_autocomplete_panel.cke_autocomplete_opened {
+	margin: 0;
+	margin-top: 2px;
+	padding: 0;
+	list-style: none;
+	background: #ffff;
+	display: block;	
+}
+
+.cke_autocomplete_opened li {
+	padding: 5px 5px;
+	cursor: pointer;
+}

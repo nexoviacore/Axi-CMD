@@ -1,0 +1,67 @@
+//* table card -----------------*//
+#ivirMainDataTableWrapper{
+    table{
+        &.cards{
+            tbody{
+                tr{
+                    width: calc(100vw - 1rem - 10px);
+                    margin: $cardTableRowMargin;
+                    border: $applicationBorderColor;
+                    border-radius: $applicationBorderRadius;
+                    @include shadow;
+                    display: $applicationDisplayInline;
+                }
+                td{
+                    display: block;
+                    border: none;
+                    width: calc(100vw - 1rem - 30px);
+                    padding: 0px $cardTablePadding;
+                    @include textLeft;
+                    &.visibleMobileCol{
+                        &:nth-of-type(1n+6){
+                            display: none;
+                        }
+                        &.forceShow{
+                            display: block;
+                            label{
+                                display: block;
+                            }
+                        }
+                    }
+                    .rowOptionsExist{
+                        float: right;
+                    }
+                    input{
+                        width: $cardTableInputWidth;
+                    }
+                }
+                label{
+                    color: $applicationTextColor;
+                    margin-right: $cardTableLabelRightMargin;
+                }
+            }
+            tr{
+                td{
+                    .cardLabelContent{
+                        display: $applicationDisplayInline;
+                    }
+                }
+                &.selector{
+                    label{
+                        color: $applicationTextColor;
+                    }
+                }
+            }
+            &.gridData{
+                &.ivirMainGrid {
+                   @include tableCardMainGrid;
+                   border-color: $applicationTransparent;
+                }
+            }
+        }
+       
+        
+    }
+}
+
+//* table card -----------------*//

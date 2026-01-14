@@ -1,0 +1,12 @@
+//* Variables for AxpertUI MainPage Template Module ==================================== *//
+
+//* Main Page Module's Icon Color  ==================================== */
+$moduleIconColor: lighten($applicationTextColor,60%);
+//* Main Page Module's Labels or Headings color  ==================================== */
+$moduleLabelsOrHeadingsColor: lighten($applicationTextColor,6.5%);
+//* Main Page Module's Input's Text Or Value Color  ==================================== */
+$moduleTextOrValueColor: lighten($applicationTextColor,0.5%);
+//* Main Page Module's Labels or Headings Font Size  ==================================== */
+$moduleLabelsOrHeadingsFontSize: 15px;
+//* Main Page Labels or Headings Font Weight  ==================================== */
+$moduleLabelsOrHeadingsFontWeight: 600;

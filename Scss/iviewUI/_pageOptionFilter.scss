@@ -1,0 +1,28 @@
+//* page filter ==================================== *//
+.bodyAndFooter-cont{
+    height: $applicationMaximumHeight;
+    .footer-cont{
+        border-top:1px solid $applicationBorderColor;
+        padding: $applicationToolbarOptionFilterFooterCountPadding;
+        div{display: $applicationDisplayInline;}
+    }
+    .body-cont{
+        height: calc(#{$applicationMaximumHeight} - #{$applicationPageOptionFilterBodyCountHeight});
+        overflow: auto;
+        margin-top: $pageOptionFilterBodyCountMarginTop;
+    }
+}
+.gridDataFilter{
+    width: $applicationMaximumWidth;
+    tr{
+        td{
+            padding: $gridDataFilterTableDataPadding;
+        }
+    }
+}
+.ui-autocomplete{
+    &.ui-front{
+        z-index: $pageOptionFilterZindex;
+    }
+}
+//* page filter ==================================== *//

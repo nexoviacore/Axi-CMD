@@ -1,0 +1,55 @@
+/* gridDcArrow ==================================== */
+//    #heightframe{
+//        #wBdr{
+//            .wrapper{
+//                .bs-example{
+//                    ul{
+//                        span{
+//                            &#tabCollapseButton{
+//                                 @include floatLeft;
+//                                 padding-top: $appliactionArrowPadding;
+//                                 cursor: pointer;
+//                                 //color: $applicationIconColor;
+//                                 display: none;
+//                            }
+//                            &.text{
+//                                 &:not(.gridoptions):not(#tabCollapseButton){
+//                                     font-size: $applicationFontSize;
+//                                     //color: #000;
+//                                 }
+//                            }
+//                        }
+//                        li{
+//                            a{
+//                                 padding: 5px 10px;
+//                                .newgridbtn{
+//                                    display: none;
+//                                }
+//                            }
+//                            &.active{
+//                                a{
+//                                    span{
+//                                        &:not(.gridoptions){
+//                                             //color: $applicationIconColor;
+//                                        }
+//                                        &.text{
+//                                         //    position: $applicationTabActiveTextPosition;
+//                                         //    top: $applicationTabActiveTextTop;
+//                                         //    padding-left: $applicationTabActiveTextPaddingLeft;
+//                                        }
+//                                        &.gridoptions{
+//                                            top: $applicationTabActiveGridOptionTop;
+//                                        }
+//                                    }
+//                                    .newgridbtn{
+//                                         display: $applicationTabActiveNewGridBtnDisplay;
+//                                     }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+/* gridDcArrow ==================================== */

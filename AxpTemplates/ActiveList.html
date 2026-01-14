@@ -1,0 +1,454 @@
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../UI/axpertUI/style.bundle.css">
+    <link rel="stylesheet" href="../../UI/axpertUI/plugins.bundle.css">
+    <link rel="stylesheet" href="../../ThirdParty/jquery-confirm-master/jquery-confirm.min.css">
+    <link type="text/css" rel="stylesheet" href="Css/ActiveList.css?v=1667890884781">
+	
+</head>
+<body id="Task_activity" class="header-fixed header-tablet-and-mobile-fixed aside-fixed">
+    <div class="content d-flex flex-column flex-column-fluid ">
+        <!--begin::Container-->
+        <div id="kt_content_container" class="">
+            <!--begin::Row-->
+
+            <h1 class="Task-page-Title text-dark fw-bolder my-1 fs-4" id="task-page-title">
+                Active List
+                <div class="form-check form-check-custom form-check-success form-check-solid task-select-all">
+                    <input class="form-check-input" type="checkbox" id="select-all">
+                    <label class="form-check-label" for="select-all">Select All</label>
+                </div>
+
+                <div class="d-flex align-items-center Activelist-Tools">
+                    <div id="" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-dismiss="click" data-bs-original-title="Search" class="d-none">
+                        <button type="submit" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 tb-btn btn-sm disabled" id="">
+                            <span class="material-icons material-icons-style material-icons-2">search</span>
+                        </button>
+                    </div>
+                    <div id="" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-dismiss="click" data-bs-original-title="Filter" class="d-none">
+                        <button type="button" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 tb-btn btn-sm disabled" onclick="axTasksObj.toggleFilters();">
+                            <span class="material-icons material-icons-style material-icons-2">filter_alt</span>
+                        </button>
+                    </div>
+                    <div data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-dismiss="click" data-bs-original-title="List View" class="d-none">
+                        <button type="button" value="List" onclick="axTasksObj.toggleViews(this);" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 tb-btn btn-sm task-view active" id="list-view">
+                            <span class="material-icons material-icons-style material-icons-2">checklist</span>
+                        </button>
+                    </div>
+                    <div data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-dismiss="click" data-bs-original-title="Card View" class="d-none">
+                        <button type="button" value="Card" onclick="axTasksObj.toggleViews(this);" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 tb-btn btn-sm task-view" id="card-view">
+                            <span class="material-icons material-icons-style material-icons-2">view_stream</span>
+                        </button>
+                    </div>
+
+
+                </div>
+
+
+            </h1>
+
+
+            <div class="row " id="ActiveList-overalldiv">
+
+                <!--begin:::Col-->
+                <div class="col-xl-3 col-md-3 d-flex flex-column flex-column-fluid vh-100 min-vh-100" id="ActiveTask_Left">
+                    <div id="AllTask_Header" class="d-flex align-items-center task-process-selected">
+                        <div class="d-flex justify-content-center  TotalTask-Wrap">
+                            <div class="symbol symbol-40px symbol-circle me-5">
+                                <div class="symbol-label bg-dark">
+                                    <span class="material-icons material-icons-style material-icons-2">receipt_long</span>
+                                </div>
+                            </div>
+                            <div class="all-tasks-container" onclick="axTasksObj.filterTasks('all','',this)">
+                                
+                            </div>
+                        </div>
+                        <!--<a href="#" title="Create Task" class="btn  add_task_btn" id="add-task">
+                            <span class="material-icons material-icons-style material-icons-2">add</span>
+                        </a>-->
+                    </div>
+
+
+                    <div class="card card-xl-stretch shadow-sm flex-root h-1px  ">
+
+                        <!--begin::Body-->
+                        <div class="card-body h-300px ">
+
+                            <div id="Active-List-container">
+                            </div>
+                            <!--end::Body-->
+                        </div>
+                    </div>
+
+
+                    <!--end::Table Widget 1-->
+
+
+
+                </div>
+                <!--end:::Col-->
+                <!--begin:::Col-->
+                <div class="col-xl-9  col-md-9 d-flex flex-column flex-column-fluid vh-100 min-vh-100" id="ActiveTask_Right">
+
+                    <div class="d-flex flex-row filter-wrapper d-none">
+
+                        <div class="col-md-4 pe-5">
+                            <label class="form-label col-form-label   required">User Name</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 pe-5">
+                            <label class="form-label col-form-label   required">From Date</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-3 pe-5">
+                            <label class="form-label col-form-label   required">To Date</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class=" col-md-1 d-flex align-items-end">
+                            <button class="btn btn-sm btn-primary task-submit-btn  " onclick="axTasksObj.doReject('1712330000003')" title="Reject">Filter</button>
+                        </div>
+
+
+                    </div>
+
+                    <!--begin::List Widget 3-->
+                    <div class="card card-xl-stretch shadow-sm flex-root task-view-container d-none" id="Card_view">
+                        <!--<div class="row mb-10">
+
+                            <div class="col-md-12 pb-8 task-listing-card">
+                                <h2 class="task-heading">
+                                    <input type="checkbox" value="" class="form-check-input task-list-checkbox">
+                                    <a href="#">
+                                        <span class="material-icons material-icons-style material-icons-1 display-icon">thumb_up</span>
+                                        Approve Offer for Candidate Kumarvel
+                                    </a>
+                                </h2>
+
+                                <div class="mobile-more-btns">
+                                    <button class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 tb-btn btn-sm" id="Mobile_more-btns">
+                                        <span class="material-icons material-icons-style material-icons-2">more_horiz</span>
+
+
+                                    </button><ul class="total-activity">
+                                        <li>
+                                            <a href="">
+                                                <span class="material-icons material-icons-style material-icons-2">
+                                                    <span class="material-symbols-outlined">open_in_new</span>
+                                                </span><span class="TA-name">Open </span>
+                                            </a>
+
+                                        </li>
+                                        <li>
+                                            <a href="">
+                                                <span class="material-icons material-icons-style material-icons-2" style="color: green;">
+                                                    <span class="material-symbols-outlined">
+                                                        check_circle
+                                                    </span>
+                                                </span><span class="TA-name">Approve</span>
+                                            </a>
+                                        </li>
+                                        <li><a href="">   <span class="material-icons material-icons-style material-icons-2" style="color: red;">cancel</span><span class="TA-name">Reject</span></a></li>
+
+                                        <li><a href="">   <span class="material-icons material-icons-style material-icons-2" style="color: blueviolet;">reply</span><span class="TA-name">Return</span></a></li>
+
+                                        <li>
+                                            <a href="">
+                                                <span class="material-icons material-icons-style material-icons-2" style="color: brown;">
+                                                    <span class="material-symbols-outlined">
+                                                        fast_forward
+                                                    </span>
+                                                </span><span class="TA-name">Forward</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="d-flex flex-row task-date  ">
+                                    <span title="Assigned From" class="task-assignedBy"> From : Vaidheesh</span>
+                                    <span title="Assigned On" class="start-date">On : 20/11/22</span>
+                                </div>
+
+
+                                <div class="d-flex flex-row Task-content">
+                                    <div class="fs-6 fw-semibold  py-2 col-md-12">
+                                        The display content to be provided
+                                        here along with key candidate data. The important data about the transaction
+                                        being approved is to be displayed here.
+                                    </div>
+
+
+
+                                </div>
+
+                                <div class="d-flex flex-row Task-Reasons">
+                                    <div class="fs-6 pe-5 fw-semibold text-gray-600 col-md-4">
+                                        <div class="btn-group  approval-radio-group" role="group"
+                                             aria-label="Basic radio toggle button group">
+                                            <input type="radio" class="btn-check approval-radio"
+                                                   data-tasktype="Approve" name="approval1680770000009"
+                                                   id="approve1680770000009" autocomplete="off">
+                                            <label class="btn-toggle btn" for="approve1680770000009">
+                                                <span class="material-icons material-icons-style material-icons-2"
+                                                      style="color: #47BE7D;">check_circle</span>Approve
+                                            </label>
+
+                                            <input type="radio" class="btn-check approval-radio "
+                                                   data-tasktype="Reject" name="approval1680770000009"
+                                                   id="reject1680770000009" autocomplete="off">
+                                            <label class="btn-toggle btn " for="reject1680770000009">
+                                                <span class="material-icons material-icons-style material-icons-2"
+                                                      style="color: red;">cancel</span>Reject
+                                            </label>
+
+                                            <input type="radio" class="btn-check approval-radio"
+                                                   data-tasktype="Return" name="approval1680770000009"
+                                                   id="return1680770000009" autocomplete="off">
+                                            <label class="btn-toggle btn " for="return1680770000009">
+                                                <span class="material-icons material-icons-style material-icons-2"
+                                                      style="color: blueviolet;">reply</span>Return
+                                            </label>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-md-3 pe-5">
+                                        <label class="form-label col-form-label   required">Reject reasons</label>
+                                        <div class="input-group">
+                                            <select data-tasktype="Reject" data-taskid="REJECT1712330000003"
+                                                    class="form-select ">
+                                                <option value="">NA</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col-md-4 pe-5">
+                                        <label class="form-label col-form-label  required">Comments</label>
+                                        <div class="input-group">
+                                            <textarea style="height: 32px;" data-tasktype="Reject"
+                                                      data-taskid="REJECT1712330000003" class="form-control"></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class=" col-md-1 d-flex align-items-end">
+                                        <button class="btn btn-sm btn-primary task-submit-btn  "
+                                                onclick="axTasksObj.doReject('1712330000003')"
+                                                title="Reject">
+                                            Reject
+                                        </button>
+                                    </div>
+
+
+                                </div>
+
+                                <div class="text-end task-more-btns">
+                                    <div class="d-flex align-items-center  task-more-btns">
+
+
+                                        <a href="#" title="Open"
+                                           class="btn btn-primary d-inline-flex align-items-center me-2  btn-sm">
+                                            <span class="material-icons material-icons-style material-icons-2">ios_share</span>
+                                        </a>
+                                        <a href="#" title="Approve"
+                                           class="btn btn-white btn-color-gray-700 btn-active-primary d-inline-flex align-items-center  btn-sm  me-2">
+                                            <span class="material-icons material-icons-style material-icons-2"
+                                                  style="color: green;">check_circle</span>
+                                        </a>
+                                        <a href="#" title="Reject"
+                                           class="btn btn-white btn-color-gray-700 btn-active-primary d-inline-flex align-items-center  me-2  btn-sm">
+                                            <span class="material-icons material-icons-style material-icons-2"
+                                                  style="color: red;">cancel</span>
+                                        </a>
+                                        <a href="#" title="Return"
+                                           class="btn btn-white btn-color-gray-700 btn-active-primary d-inline-flex align-items-center  me-2  btn-sm">
+                                            <span class="material-icons material-icons-style material-icons-2"
+                                                  style="color: blueviolet;">reply</span>
+                                        </a>
+                                        <a href="#" title="Forward"
+                                           class="btn btn-white btn-color-gray-700 btn-active-primary d-inline-flex align-items-center  me-2  btn-sm">
+                                            <span class="material-icons material-icons-style material-icons-2"
+                                                  style="color: brown;">forward</span>
+                                        </a>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+
+
+
+                        </div>-->
+
+                    </div>
+                    <!--end::List Widget 3-->
+
+                    <div class="card card-xl-stretch shadow-sm flex-root task-view-container" id="List_view">
+
+
+                        <!--<table class="table align-middle  fs-6 gy-5 mb-0 dataTable no-footer task-listing-card">
+                            <tbody>
+                                <tr class="d-flex header">
+
+                                    <td class="d-flex align-items-center task-name">
+                                        <div class="d-flex flex-column">
+                                            <span class="List_view accordion-icon rotate">
+                                                <span class="material-icons material-icons-style material-icons-2">chevron_right</span>
+                                            </span>
+                                            <input type="checkbox" value="" class="form-check-input task-list-checkbox">
+                                            <a href="#" class="text-gray-800 fw-bold fs-6  mb-1 task-title"> <span class="material-icons material-icons-style material-icons-1 text-success">check_circle</span> Interview Call - HR00000014</a>
+                                            <span class="task-subtitle">Vijay's Interview process</span>
+                                        </div>
+                                    </td>
+
+                                    <td class="d-flex align-items-center MObile-task-more-btns">
+                                        <div class="mobile-more-btns">
+                                            <button class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 tb-btn btn-sm" id="Mobile_more-btns">
+                                                <span class="material-icons material-icons-style material-icons-2">more_horiz</span>
+
+
+                                            </button><ul class="total-activity">
+                                                <li>
+                                                    <a href="">
+                                                        <span class="material-icons material-icons-style material-icons-2">
+                                                            <span class="material-symbols-outlined">open_in_new</span>
+                                                        </span><span class="TA-name">Open </span>
+                                                    </a>
+
+                                                </li>
+                                                <li>
+                                                    <a href="">
+                                                        <span class="material-icons material-icons-style material-icons-2" style="color: green;">
+                                                            <span class="material-symbols-outlined">
+                                                                check_circle
+                                                            </span>
+                                                        </span><span class="TA-name">Approve</span>
+                                                    </a>
+                                                </li>
+                                                <li><a href="">   <span class="material-icons material-icons-style material-icons-2" style="color: red;">cancel</span><span class="TA-name">Reject</span></a></li>
+
+                                                <li><a href="">   <span class="material-icons material-icons-style material-icons-2" style="color: blueviolet;">reply</span><span class="TA-name">Return</span></a></li>
+
+                                                <li>
+                                                    <a href="">
+                                                        <span class="material-icons material-icons-style material-icons-2" style="color: brown;">
+                                                            <span class="material-symbols-outlined">
+                                                                fast_forward
+                                                            </span>
+                                                        </span><span class="TA-name">Forward</span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+
+                                    <td class="task-right">
+
+                                        <div class="d-flex flex-row task-process">
+                                            <a href="#" class="text-gray-800 fs-6 mb-1 task-assignedBy" title="Assigned By">
+                                                By : HR Manager
+                                            </a>
+                                            <a href="#" title="Assigned By" class="text-gray-800 fs-6 mb-1 task-date">From : 23/12/022 17:47:17</a>
+                                        </div>
+                                    </td>
+
+                                    <td class="text-end task-more-btns">
+                                        <div class="d-flex align-items-center task-more-btns">
+
+
+                                            <a href="#" title="Open" class="btn btn-primary d-inline-flex align-items-center me-2  btn-sm"><span class="material-icons material-icons-style material-icons-2">ios_share</span></a>
+                                            <a href="#" title="Approve" class="btn btn-white btn-color-gray-700 btn-active-primary d-inline-flex align-items-center  btn-sm  me-2"><span class="material-icons material-icons-style material-icons-2" style="color: green;">check_circle</span></a>
+                                            <a href="#" title="Reject" class="btn btn-white btn-color-gray-700 btn-active-primary d-inline-flex align-items-center  me-2  btn-sm"><span class="material-icons material-icons-style material-icons-2" style="color: red;">cancel</span></a>
+                                            <a href="#" title="Return" class="btn btn-white btn-color-gray-700 btn-active-primary d-inline-flex align-items-center  me-2  btn-sm"><span class="material-icons material-icons-style material-icons-2" style="color: blueviolet;">reply</span></a>
+                                            <a href="#" title="Forward" class="btn btn-white btn-color-gray-700 btn-active-primary d-inline-flex align-items-center  me-2  btn-sm"><span class="material-icons material-icons-style material-icons-2" style="color: brown;">forward</span></a>
+
+                                        </div>
+                                    </td>
+
+
+
+                                </tr>
+                                <tr>
+
+                                    <td class="task-description">
+                                        <span class="more">
+                                            The display content to be provided
+                                            here along with key candidate data. The important data about the transaction
+                                            being approved is to be displayed here.
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="approval-Wrap">
+
+                                        <div class="d-flex flex-row Task-Reasons approval-reasons approval1680770000009 active" data-tasktype="Approve" data-taskid="1680770000009">
+                                            <div class="fs-6 fw-semibold text-gray-600 py-2 pe-5 col-md-4 status-btn-wrap">
+                                                <div class="btn-group approval-radio-group" role="group" aria-label="Basic radio toggle button group">
+                                                    <input type="radio" class="btn-check approval-radio" data-tasktype="Approve" name="approval1680770000009" id="approve1680770000009" autocomplete="off">
+                                                    <label class="btn-toggle btn active" for="approve1680770000009"><span class="material-icons material-icons-style material-icons-2" style="color: #47BE7D;">check_circle</span>Approve</label>
+
+                                                    <input type="radio" class="btn-check approval-radio " data-tasktype="Reject" name="approval1680770000009" id="reject1680770000009" autocomplete="off">
+                                                    <label class="btn-toggle btn" for="reject1680770000009"><span class="material-icons material-icons-style material-icons-2" style="color: red;">cancel</span>Reject</label>
+
+                                                    <input type="radio" class="btn-check approval-radio" data-tasktype="Return" name="approval1680770000009" id="return1680770000009" autocomplete="off">
+                                                    <label class="btn-toggle btn" for="return1680770000009"><span class="material-icons material-icons-style material-icons-2" style="color: blueviolet;">reply</span>Return</label>
+                                                </div>
+
+                                            </div><div class="col-md-3 pe-5">
+                                                <label class="form-label col-form-label   required">Approve reasons</label>
+                                                <div class="input-group">
+                                                    <select data-tasktype="Approve" data-taskid="APPROVE1680770000009" class="form-select "><option value="">NA</option></select>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="col-md-4 pe-5">
+                                                <label class="form-label col-form-label  required">Comments</label>
+                                                <div class="input-group">
+                                                    <textarea data-tasktype="Approve" data-taskid="APPROVE1680770000009" class="form-control" style="height: 31px;"></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class=" col-md-1 d-flex align-items-end">
+                                                <button class="btn btn-sm btn-primary task-submit-btn  " onclick="axTasksObj.doApprove('1680770000009')" title="Approve">Approve</button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="waitDiv" class="page-loader rounded-2 bg-radial-gradient">
+        <div class="loader-box-wrapper d-flex bg-white p-20 shadow rounded">
+            <span class="loader"></span>
+        </div>
+    </div>
+    <script src="../../UI/axpertUI/plugins.bundle.js"></script>
+    <script src="../../UI/axpertUI/scripts.bundle.js"></script>
+    <script type="text/javascript" src="../../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../../Js/alerts.min.js"></script>
+    <script src="../../js/handlebars.js"></script>
+
+    <script src="../../js/common.js"></script>
+    <script src="js/custom_common.js"></script>
+    <script src="js/ActiveList.js?v=1"></script>
+    <script src="../../Js/AxHTML.js"></script>
+    <script type="text/javascript">
+        var _processName = 'ActiveList';
+    </script>
+
+
+</body></html>

@@ -1,0 +1,389 @@
+//* datePicker ==================================== *//
+@import 'tstructUI/_datePicker';
+//* radio Button ==================================== *//
+@import 'tstructUI/_radioButton';
+//* imageField ==================================== *//
+@import 'tstructUI/_imageField';
+//* attachmentData==================================== *//
+@import 'tstructUI/_attachmentData';
+//* msgBox ==================================== *//
+//@import 'tstructUI/_msgBox';
+@import 'tstructUI/_fillGridPopUp';
+
+//* nonGridDc ==================================== *//
+#designModeToolbar{
+    display: none;
+}
+#pagebdy{
+    .btnAxCustomParents,.subres{
+        display: none;
+    }
+    #heightframe{
+       //height: calc(#{$nonGridDcMaximumHeightFrame} - #{$nonGridDcCalcHeightFrame});
+       overflow-y: auto;
+       overflow-x: hidden;
+       float:none;
+       @include scrollBar;
+    }
+    .dvheightframe{
+        #formContainer{
+            #dvPDFDocList,#addFieldPsWrapper,#Wrapperpropsheet,#tstructPsWrapper,#srchMulSelFlds,#searchFields,#searchoverrelay,#workflowoverlay,#lblTaskBtn{
+                display: none;
+            }
+        }
+        .pickLstResultWrapper{
+            display: none;
+        }
+    }
+}
+#reloaddiv{
+    display: none;
+}
+.dvdcframe {
+    display: $appliactionNonGridDDvdcframeDisplay;
+    margin: $appliactionNonGridDDvdcframeMargin;
+    background: $appliactionNonGridDDvdcframeBackground;
+    padding: $appliactionNonGridDDvdcframePadding;
+    margin-bottom: $appliactionNonGridDDvdcframeMarginBottom;
+    .mainIframe{
+        padding:$nonGridDcMainIframePadding;
+        &.grid-stack{
+            &.dynamicRunMode{
+                &:not(.tstructDesignMode){
+                    .grid-stack-item{
+                        position: $applicationPositionRelative;
+                        display: $applicationDisplayInline;
+                        vertical-align: top;
+                        padding-right: $gridStaticItemPaddingRight;
+                        margin-bottom: $gridStaticItemMarginBottom;
+                        .badge-grid-stack{
+                            display: none;
+                        }
+                        label{
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            &:hover{
+                                .isMobile &{
+                                    overflow: visible;
+                                    white-space: normal;
+                                }
+                            }
+                        }
+                        .fld-wrap2{
+                            position: $gridStackItemFldWrap2Position;
+                            margin-left: $applicationHintGap;
+                            i{
+                                color: $applicationIconColor;
+                                &:hover,&:focus{
+                                    outline: none;
+                                    text-decoration: none;
+                                }
+                            }
+                        }
+                        .divImgBorder,.divReadOnly,.gridstackCalc{
+                            height: calc(#{$applicationMaximumHeight} - #{$nonGridDcMaximumHeight}) !important;
+                        }
+                        .gridstackCalc{
+                            resize: none;
+                        }
+                        .fld-wrap1{
+                            .btextDir-rtl &{
+                                @include textRight;
+                            }
+                        }
+                        .fld-wrap2{
+                            .btextDir-rtl &{
+                                position: $gridStackItemFldWrap2RtlPosition;
+                            }
+                        }
+                        .badge-grid-stack{
+                            display: none;
+                        }
+                        .grid-stack-item-content{
+                            .labelcolid{
+                                cursor: default;
+                            }
+                            select{
+                                @media (max-width: $breakTabDevice) {
+                                    padding: 0px;
+                                }
+                            }
+                        }
+                        .CodeMirror {
+                            &.cm-s-default{
+                                height: calc(#{$gridCodeMirrorMaximumHeight} - #{$gridCodeMirrorCalcHeight});
+                                border: 1px solid $applicationBorderColor;
+                                @include shadow;
+                            }
+                        }
+                    }
+                }
+            }
+            &.staticRunMode{
+                .grid-stack-item{
+                    label{
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        font-weight: $moduleLabelsOrHeadingsFontWeight;//$applicationStaticRunModeFontWeight;
+                    }
+                }
+                &.grid-stack{
+                    .grid-stack-item{
+                        .grid-stack-item-content{
+                            .form-control {    
+                                @include formControlStaticMode;                    
+                                @include border-radius(4px);
+                            }
+                            select{
+                                @media (max-width: $breakTabDevice) {
+                                    padding: 0px;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .btextDir-rtl &{
+                &:not(.staticRunMode){
+                    .grid-stack-item{
+                        @include floatRight;
+                    }
+                }
+                
+            }
+            &:not(.tstructDesignMode){
+                .grid-stack-item{
+                    .badge-grid-stack{
+                        display: none;
+                    }
+                }
+            }
+            .grid-stack-item{
+                .grid-stack-item-content{
+                    .fld-wrap1 {
+                        display: inline-block;      
+                        position: relative;
+                        span{
+                            &.fld-wrap2 {
+                                position: absolute;
+                                
+                            }
+                        }
+                        &:not(.single,.double,.triple) & {
+                            width: 100%;
+                        }
+                    }                    
+                    .picklist{
+                        &.input-group {
+                            width: 100%;
+                        }
+                    }
+                    select{
+                        @media (max-width: $breakTabDevice) {
+                            padding: 0px;
+                        }
+                    }
+                }
+            } 
+        }
+        .grid-stack{
+            &:not(.tstructDesignMode){
+                .grid-stack-item{
+                    .badge-grid-stack{
+                        display: none;
+                    }
+                }
+            }
+            .grid-stack-item{
+                .grid-stack-item-content{                    
+                    .fld-wrap1 {
+                        display: inline-block;                        
+                        position: relative;
+                        span{
+                            &.fld-wrap2 {
+                                position: absolute;
+                                margin-left: $applicationHintGapFldWrap2;
+                                @media (max-width: $breakTabDevice) {
+                                    margin-left: $applicationHintGapFldWrap2MobileMarginLeft;
+                                }
+                            }
+                        }
+                        &:not(.single,.double,.triple) & {
+                            width: 100%;
+                        }
+                    }
+                    select{
+                        @media (max-width: $breakTabDevice) {
+                            padding: 0px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    #head1{
+        display: none;
+    }
+    .newgridbtn{
+        display: inline-block;
+        @include floatRight;
+        .btextDir-rtl &{
+            @include floatLeft;
+        }
+        .mobGridOptionsIcon {
+            border-radius: 50%;
+            padding: 5px;
+        }
+        ul{
+            padding: 0px;
+            .isMobile & {
+                right: 0px;
+                left: auto;
+            }
+            li:not(.dropdown-menu>li){
+                @include gridList;
+                cursor: pointer;
+                .dropdown-menu{
+                    border: 0px;
+                    left: $appliactionNewgridbtnDropdwonMenuLeft;
+                    right: $appliactionNewgridbtnDropdwonMenuRight;
+                    li{
+                        width: $appliactionNewgridbtnDropdwonMenuListWidth;
+                        margin: $appliactionNewgridbtnDropdwonMenuListMargin;
+                        padding: $appliactionNewgridbtnDropdwonMenuListPadding;
+                        // &:hover{
+                        //     background-color: #f5f5f5;
+                        // }
+                    }
+                }
+                a{
+                   color: $moduleIconColor; //$applicationIconColor;
+                }
+            }
+            .gridAddRow{
+                border:none;
+                background: none;
+                color: $moduleIconColor; //$applicationIconColor;
+                // padding: 0px;
+                &:focus{
+                    outline: none;
+                }
+            }
+        }
+    }
+}
+.grid-stack{ 
+    &.dynamicRunMode{
+        &:not(.tstructDesignMode){
+            .grid-stack-item{
+                position: $gridStacknotTstructDesignModeGridStackItemPosition;
+                display: $gridStacknotTstructDesignModeGridStackItemDisplay;
+                vertical-align: top;
+                padding-right: $gridStaticItemPaddingRight;
+                margin-bottom: $gridStaticItemMarginBottom;
+                
+            }
+        }
+    }
+}
+#containerDc{
+    .row{
+        &.mobilewrapperForEditFields{
+            margin: 0px;
+        }
+    }
+}
+.grid-stack {
+	>.grid-stack-item {
+		>.grid-stack-item-content {
+			overflow-x: hidden;
+			overflow-y: hidden;
+            bottom: -1px;
+            // .fld-wrap3{
+            //     margin-bottom: $gridStaticLabelMarginBottom;
+            // }
+            .tstbtnIcon{
+                position: $nonGridDctstbtnIconPosition;
+                top: $nonGridDctstbtnIconTopGap;
+                z-index: $nonGridDctstbtnIconZIndex;
+            }
+            .tstsqleditorbtn{
+                position: absolute;
+                top: 0;
+                right: 0;
+                i{
+                    font-size: 17px;
+                    color: $applicationIconColor;
+                }
+            }
+            .pwdtoggle{
+                position: $applicationNonGridPasswordtogglePosition;
+                right: $applicationNonGridPasswordtoggleRightGap;
+                top: $applicationNonGridPasswordtoggleTopGap;
+                .btextDir-rtl &{
+                    left:$applicationNonGridPasswordtoggleLeftRTL;
+                    right: $applicationNonGridPasswordtoggleRightRTL;
+                }
+            }
+		}
+	}
+}
+.subGrid{
+    position: $subGridPosition;
+    top: $subGridTopGap;
+    right: $subGridRightGap;
+    cursor: pointer;
+}
+#axPurposeptype,#axPurposepodate,#axPurposecurrency,#axPurposeexrate,#axPurposeduedate{
+    display: none;
+    .help-block{
+        color: $compulsoryInfo;
+    }
+}
+.tstformbutton{
+    color: $tstructFormButtonColor;
+    text-decoration: none;
+    padding: $tstructFormButtonPadding;
+    cursor: pointer;
+    border: $tstructFormButtonBorder;
+    @include border-radius($tstructFormButtonBorderRadius);
+    margin-top: $tstructFormButtonMarginTop;
+    display: $tstructFormButtonDisplayInline;
+    i{
+        margin-right: $tstructFormButtonIconMarginRight;
+        color: $applicationIconColor;
+        font-size: $tstructFormButtonIconFontSize;
+        position: $tstructFormButtonIconPosition;
+        top: $tstructFormButtonIconTop;
+    }
+    span{
+        position: $tstructFormButtonSpanPosition;
+        top: $tstructFormButtonSpanTop;
+    }
+    &:hover{
+        color: $tstructFormButtonColor;
+        text-decoration: none;
+    }
+}
+// .grid-stack  {
+//     > .grid-stack-item{
+//         min-width: 8.3333333333%;
+//         position: absolute;
+//         padding: 0;
+//     }
+// }
+
+//* checklist code ==================================== *//
+.checklistfooter{
+    .tokenSelectAll{
+        top:$checklistfooterInputTopGap;
+        position:$checklistfooterInputPosition;
+    }
+}
+
+//* checklist code ==================================== *//
+
+
+//* nonGridDc ==================================== *//

@@ -1,0 +1,98 @@
+//* GridDcTable ==================================== *//
+.griddivColumn{
+    //overflow: auto;
+   table{
+    margin-bottom: 0px;
+    table-layout: fixed;
+        th{
+         background: $applicationGridDcTableBackground;
+         border-right: 1px solid $applicationBackgroundColor;
+         text-align: center;
+         .thhead{
+             i{
+                 margin-left: $appliactionHintLeftMargin;
+                 color: $applicationIconColor;
+                 &:hover,&:focus{
+                     outline: none;
+                     text-decoration: none;
+                 }
+             }
+         }
+        }
+        td{
+            textarea{
+                &[data-type=numeric]{
+                    text-align: $applicationGridDcTableTextareaDataTypeNumericTextalign;
+                }
+                &.labelInp{
+                    border: 0;
+                    resize: none;
+                    outline: 0;
+                    width: 100%;
+                    overflow: hidden;
+                    background-color: transparent;
+                    @include shadow;
+                    box-shadow: none;
+                }
+            }
+            button{
+                border:0;background: none;
+                &:focus{
+                    outline: none;
+                }
+            }
+        }
+        &.gridHeader, &.gridContent {
+            table-layout: fixed;
+        }
+        thead{
+            &:first-child{
+                tr{
+                    &:first-child{
+                        th{
+                            border: 1px solid $applicationGridDcTableBorderColor;
+                        }
+                    }
+                    
+                }
+            }
+            
+        }
+        tbody{
+            tr{
+                td{
+                    border:1px solid $applicationGridDcTableBorderColor;
+                }
+            }
+        }
+}
+}
+.wrapper {
+    padding: $wrapperPadding 0;
+}
+// .customSetupTableMN{
+//     min-width: 100%;
+// }
+.gridcolslno{
+    display: inline;
+    width: 30px;
+}
+#FrameAttach{
+    table{
+        border:0px; 
+        border-spacing:0px; 
+        padding:1px;
+        td{
+            &.gridcolslno{
+                width: 30px;
+            }
+        }
+    }
+}
+.tsthiddentable{
+    width:500px;
+    border:0px;
+    padding:0px;
+    border-spacing:2px;
+}
+//* GridDcTable ==================================== *//
