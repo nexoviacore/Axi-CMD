@@ -1569,7 +1569,7 @@
     }
 
     function cleanCommandToken(val = "") {
-        return val.replace(/['"]/g, "").toLowerCase().trim();
+        return val.replace(/['"]/g, "").trim();
     }
 
     function dispatchCommand(cmdTokens) {
