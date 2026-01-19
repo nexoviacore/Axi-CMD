@@ -12,15 +12,15 @@
     --danger: #ef4444;
 }
 
-#Homepage_CardsList_Wrapper .row:last-child .widgetWrapper {
+/* #Homepage_CardsList_Wrapper .row:last-child .widgetWrapper {
     margin-bottom: 55px !important;
-}
+} */
 
-body:not(.sidebar-collapse) {
+/* body:not(.sidebar-collapse) {
     padding-bottom: 100px !important;
 
 
-}
+} */
 
 /* .axi-logo {
     display: flex;
@@ -50,7 +50,7 @@ body:not(.sidebar-collapse) {
 
 
 /* =========================================
-   4. AXI SECTION STYLING (CORRECTED)
+   4. AXI SECTION STYLING 
    ========================================= */
 
 #Homepage_CardsList_Wrapper .row:last-child .widgetWrapper {
@@ -359,7 +359,7 @@ body:not(.sidebar-collapse) {
 }
 
 
-.tstructMainBottomFooter {
+/* .tstructMainBottomFooter {
 
     bottom: 45px !important;
 
@@ -368,4 +368,4 @@ body:not(.sidebar-collapse) {
 
 
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
-}
+} */

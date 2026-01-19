@@ -467,7 +467,7 @@
         lastTypedTokens = [...currentTokens];
         items = suggestLocal(text);
 
-
+      
         render();
     }
 
@@ -742,8 +742,7 @@
     function render() {
         console.log("Render called");
         list.innerHTML = "";
-        // activeIndex = -1;
-        if (activeIndex < 0) activeIndex = 0;
+        activeIndex = -1;
 
         const validItems = items.filter(item => {
             if (!item) return false;
@@ -776,10 +775,6 @@
             const text = typeof item === "string" ? item : item.displaydata;
             li.textContent = text;
             li.className = "axi-suggestion";
-
-            if (i === activeIndex) {
-                li.classList.add("active");
-            }
 
             li.addEventListener("mousedown", e => {
                 e.preventDefault();
@@ -1752,14 +1747,14 @@
 
         //  var url = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${recordId}`;
 
-
+       
 
         if (!rawName) {
-            targetUrl = "../aspx/Entity.aspx?tstid=axusr";
+             targetUrl = "../aspx/Entity.aspx?tstid=axusr";
             window.LoadIframe(targetUrl);
 
         } else {
-            targetUrl = "../aspx/EntityForm.aspx?tstid=axusr";
+             targetUrl = "../aspx/EntityForm.aspx?tstid=axusr";
             targetUrl += `&pusername=${rawName}`;
 
             window.LoadIframe(targetUrl);
@@ -1783,14 +1778,14 @@
 
         //  var url = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${recordId}`;
 
-
+       
 
         if (!rawName) {
-            targetUrl = "../aspx/Entity.aspx?tstid=ad_am";
+             targetUrl = "../aspx/Entity.aspx?tstid=ad_am";
             window.LoadIframe(targetUrl);
 
         } else {
-            targetUrl = "../aspx/EntityForm.aspx?tstid=ad_am";
+             targetUrl = "../aspx/EntityForm.aspx?tstid=ad_am";
             targetUrl += `&actorname=${rawName}`;
 
             window.LoadIframe(targetUrl);
@@ -1814,7 +1809,7 @@
 
         //  var url = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${recordId}`;
 
-
+        
 
         if (!rawName) {
             targetUrl = "../aspx/Entity.aspx?tstid=ad_ur";
