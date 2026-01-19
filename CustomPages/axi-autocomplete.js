@@ -37,7 +37,7 @@
             data: handleViewData  // Partially Completed
         },
         configure: {
-            peg: handleConfigurePeg, // Note: Need to Discuss
+            peg: handleConfigurePeg, 
             appvar: handleConfigureAppVar, 
             api: handleConfigureApi, 
             devoptions: handleConfigureDevOptions,
@@ -1964,7 +1964,7 @@
 
             const list = axDatasourceObj[listKey];
             const found = list?.find(
-                x => x.caption?.toLowerCase() === rawName
+                x => x.caption?.toLowerCase() === rawName.toLowerCase()
             );
 
             if (!found || !found.name) {
