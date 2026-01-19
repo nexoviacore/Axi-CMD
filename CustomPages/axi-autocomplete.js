@@ -17,7 +17,7 @@
             source: handleEditSource,
             data: handleEditData,
             user: handleEditUser
-            
+
         },
         create: {
             new: handleCreateNew,
@@ -34,15 +34,18 @@
         view: {
             report: handleViewReport,
             dbconsole: handleViewDbConsole,
-            data: handleViewData  // Partially Completed
+            data: handleViewData,  // Partially Completed
+            inbox: handleViewInbox
+
+
         },
         configure: {
-            peg: handleConfigurePeg, 
-            appvar: handleConfigureAppVar, 
-            api: handleConfigureApi, 
+            peg: handleConfigurePeg,
+            appvar: handleConfigureAppVar,
+            api: handleConfigureApi,
             devoptions: handleConfigureDevOptions,
             properties: handleConfigureProperties,
-            job: handleConfigureJob, 
+            job: handleConfigureJob,
             rule: handleConfigureRule,
             server: handleConfigureServer,
             notification: handleConfigureNotification
@@ -1748,6 +1751,12 @@
 
     }
 
+    function handleViewInbox() {
+        // LoadIframe('processflow.aspx?activelist=t')
+        window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+
+    }
+
     function handleViewData({ tokens, commandConfig }) {
 
         let rawStruct = cleanCommandToken(tokens[2]);
@@ -1774,7 +1783,7 @@
 
         }
 
-         let targetUrl = `../aspx/Entity.aspx?tstid=${transid}`;
+        let targetUrl = `../aspx/Entity.aspx?tstid=${transid}`;
 
         if (!searchField && !searchValue) {
             // targetUrl += "&dummyload=false♠"
@@ -1783,17 +1792,17 @@
             targetUrl += `&${searchField}=${searchValue}`;
             // targetUrl += "&act=open";
             // targetUrl += "&dummyload=false♠"
-            
+
         }
 
-       
-        
+
+
 
         // LoadIframe('Entity.aspx?tstid=mrplo')
 
 
 
-        
+
 
 
     }
@@ -2034,11 +2043,11 @@
         redirectToTstruct(transId, true, fieldName, fieldValue);
     }
 
-     function handleEditUser({ tokens, commandConfig }) {
+    function handleEditUser({ tokens, commandConfig }) {
 
-       
 
-       
+
+
         let rawUserName = cleanCommandToken(tokens[2]);
 
         let resolvedUserName = tryResolveToken(2, rawUserName, commandConfig, false);
@@ -2070,39 +2079,39 @@
         //     resolvedName = found.name;
         // }
 
-         targetUrl = "../aspx/tstruct.aspx?transid=axusr";
+        targetUrl = "../aspx/tstruct.aspx?transid=axusr";
 
-           targetUrl += `&hltype=load`;
-            targetUrl += `&torecid=false`;
-            targetUrl += `&openerIV=axusr`;
-            targetUrl += `&isIV=false`;
-            targetUrl += `&isDupTab=false`;
-            
+        targetUrl += `&hltype=load`;
+        targetUrl += `&torecid=false`;
+        targetUrl += `&openerIV=axusr`;
+        targetUrl += `&isIV=false`;
+        targetUrl += `&isDupTab=false`;
+
 
         // if (!paramName) {
         //     window.LoadIframe(targetUrl);
 
         // } else {
-            targetUrl += `&nickname=${rawUserName}`;
-            
-            targetUrl += "&dummyload=false♠"
-            window.LoadIframe(targetUrl);
+        targetUrl += `&nickname=${rawUserName}`;
+
+        targetUrl += "&dummyload=false♠"
+        window.LoadIframe(targetUrl);
 
         // }
 
 
-        
+
     }
 
-     /***************************************************
-     * End
-     * **************************************************
-    */
+    /***************************************************
+    * End
+    * **************************************************
+   */
 
-     /***************************************************
-      * Configure Commands Functions
-      * *************************************************
-      */
+    /***************************************************
+     * Configure Commands Functions
+     * *************************************************
+     */
 
     function handleConfigureAppVar({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;iaxvars&quot;);
@@ -2114,155 +2123,155 @@
     function handleConfigureApi({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;iexapidef&quot;);
         // window.openDeveloperStudio("iexapidef"); 
-        let rawApiName = cleanCommandToken(tokens[2]); 
+        let rawApiName = cleanCommandToken(tokens[2]);
         let targetUrl = "../aspx/tstruct.aspx?transid=apidg";
-        
+
         if (!rawApiName) {
-            window.LoadIframe(targetUrl); 
+            window.LoadIframe(targetUrl);
         } else {
 
-             targetUrl += `&hltype=load`;
+            targetUrl += `&hltype=load`;
             targetUrl += `&torecid=false`;
             targetUrl += `&openerIV=apidg`;
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=false`;
-            
 
-       
+
+
             targetUrl += `&ExecAPIDefName=${rawApiName}`;
-            
+
             targetUrl += "&dummyload=false♠"
 
 
-        window.LoadIframe(targetUrl);
+            window.LoadIframe(targetUrl);
 
         }
 
-        
+
 
     }
 
-     function handleConfigureRule({ tokens, commandConfig }) {
+    function handleConfigureRule({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;iexapidef&quot;);
         // window.openDeveloperStudio("iexapidef"); 
-        let rawParamName = cleanCommandToken(tokens[2]); 
+        let rawParamName = cleanCommandToken(tokens[2]);
         let targetUrl = "../aspx/tstruct.aspx?transid=ad_re";
-        
+
         if (!rawParamName) {
-            window.LoadIframe(targetUrl); 
+            window.LoadIframe(targetUrl);
         } else {
 
-             targetUrl += `&hltype=load`;
+            targetUrl += `&hltype=load`;
             targetUrl += `&torecid=false`;
             targetUrl += `&openerIV=ad_re`;
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=false`;
-            
 
-       
+
+
             targetUrl += `&rulename=${rawParamName}`;
-            
+
             targetUrl += "&dummyload=false♠"
 
 
-        window.LoadIframe(targetUrl);
+            window.LoadIframe(targetUrl);
 
         }
 
-        
+
 
     }
 
-     function handleConfigureServer({ tokens, commandConfig }) {
+    function handleConfigureServer({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;iexapidef&quot;);
         // window.openDeveloperStudio("iexapidef"); 
-        let rawParamName = cleanCommandToken(tokens[2]); 
+        let rawParamName = cleanCommandToken(tokens[2]);
         let targetUrl = "../aspx/tstruct.aspx?transid=axpub";
-        
+
         if (!rawParamName) {
-            window.LoadIframe(targetUrl); 
+            window.LoadIframe(targetUrl);
         } else {
 
-             targetUrl += `&hltype=load`;
+            targetUrl += `&hltype=load`;
             targetUrl += `&torecid=false`;
             targetUrl += `&openerIV=axpub`;
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=false`;
-            
 
-       
+
+
             targetUrl += `&servername=${rawParamName}`;
-            
+
             targetUrl += "&dummyload=false♠"
 
 
-        window.LoadIframe(targetUrl);
+            window.LoadIframe(targetUrl);
 
         }
 
-        
+
 
     }
 
     function handleConfigurePeg({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;iexapidef&quot;);
         // window.openDeveloperStudio("iexapidef"); 
-        let rawParamName = cleanCommandToken(tokens[2]); 
+        let rawParamName = cleanCommandToken(tokens[2]);
         let targetUrl = "../aspx/tstruct.aspx?transid=ad_pn";
-        
+
         if (!rawParamName) {
-            window.LoadIframe(targetUrl); 
+            window.LoadIframe(targetUrl);
         } else {
 
-             targetUrl += `&hltype=load`;
+            targetUrl += `&hltype=load`;
             targetUrl += `&torecid=false`;
             targetUrl += `&openerIV=ad_pn`;
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=false`;
-            
 
-       
+
+
             targetUrl += `&servername=${rawParamName}`;
-            
+
             targetUrl += "&dummyload=false♠"
 
 
-        window.LoadIframe(targetUrl);
+            window.LoadIframe(targetUrl);
 
         }
 
-        
+
 
     }
 
-     function handleConfigureNotification({ tokens, commandConfig }) {
+    function handleConfigureNotification({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;iexapidef&quot;);
         // window.openDeveloperStudio("iexapidef"); 
-        let rawParamName = cleanCommandToken(tokens[2]); 
+        let rawParamName = cleanCommandToken(tokens[2]);
         let targetUrl = "../aspx/tstruct.aspx?transid=a__fn";
-        
+
         if (!rawParamName) {
-            window.LoadIframe(targetUrl); 
+            window.LoadIframe(targetUrl);
         } else {
 
-             targetUrl += `&hltype=load`;
+            targetUrl += `&hltype=load`;
             targetUrl += `&torecid=false`;
             targetUrl += `&openerIV=a__fn`;
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=false`;
-            
 
-       
+
+
             targetUrl += `&servername=${rawParamName}`;
-            
+
             targetUrl += "&dummyload=false♠"
 
 
-        window.LoadIframe(targetUrl);
+            window.LoadIframe(targetUrl);
 
         }
 
-        
+
 
     }
 
@@ -2283,27 +2292,27 @@
     function handleConfigureJob({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;idop_list&quot;);
         // window.openDeveloperStudio("idop_list"); 
-         let rawParamName = cleanCommandToken(tokens[2]); 
+        let rawParamName = cleanCommandToken(tokens[2]);
         let targetUrl = "../aspx/tstruct.aspx?transid=job_s";
-        
+
         if (!rawParamName) {
-            window.LoadIframe(targetUrl); 
+            window.LoadIframe(targetUrl);
         } else {
 
-             targetUrl += `&hltype=load`;
+            targetUrl += `&hltype=load`;
             targetUrl += `&torecid=false`;
             targetUrl += `&openerIV=job_s`;
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=false`;
-            
 
-       
+
+
             targetUrl += `&jname=${rawParamName}`;
-            
+
             targetUrl += "&dummyload=false♠"
 
 
-        window.LoadIframe(targetUrl);
+            window.LoadIframe(targetUrl);
 
         }
         // window.LoadIframe("../aspx/tstruct.aspx?transid=job_s")
