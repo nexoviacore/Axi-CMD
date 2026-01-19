@@ -35,7 +35,11 @@
             report: handleViewReport,
             dbconsole: handleViewDbConsole,
             data: handleViewData,  // Partially Completed
-            inbox: handleViewInbox
+            inbox: handleViewInbox,
+            dimension: handleViewDimension,
+            user: handleViewUser,
+            actor: handleViewActor,
+            role: handleViewRole,
 
 
         },
@@ -462,6 +466,8 @@
 
         lastTypedTokens = [...currentTokens];
         items = suggestLocal(text);
+
+      
         render();
     }
 
@@ -1728,6 +1734,101 @@
        ----------------- Start ------------------------------------------
     */
 
+    function handleViewUser({ tokens, commandConfig }) {
+        let targetUrl;
+        let paramName;
+        let rawName = cleanCommandToken(tokens[2]);
+
+        //   if (!rawName) return;
+        // if (rawName) {
+        //     paramName = tryResolveToken(2, rawName, commandConfig, false);
+
+        // }
+
+        //  var url = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${recordId}`;
+
+       
+
+        if (!rawName) {
+             targetUrl = "../aspx/Entity.aspx?tstid=axusr";
+            window.LoadIframe(targetUrl);
+
+        } else {
+             targetUrl = "../aspx/EntityForm.aspx?tstid=axusr";
+            targetUrl += `&pusername=${rawName}`;
+
+            window.LoadIframe(targetUrl);
+
+        }
+
+
+        // window.LoadIframe("../aspx/tstruct.aspx?transid=axusr"); 
+    }
+
+    function handleViewActor({ tokens, commandConfig }) {
+        let targetUrl;
+        let paramName;
+        let rawName = cleanCommandToken(tokens[2]);
+
+        //   if (!rawName) return;
+        // if (rawName) {
+        //     paramName = tryResolveToken(2, rawName, commandConfig, false);
+
+        // }
+
+        //  var url = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${recordId}`;
+
+       
+
+        if (!rawName) {
+             targetUrl = "../aspx/Entity.aspx?tstid=ad_am";
+            window.LoadIframe(targetUrl);
+
+        } else {
+             targetUrl = "../aspx/EntityForm.aspx?tstid=ad_am";
+            targetUrl += `&actorname=${rawName}`;
+
+            window.LoadIframe(targetUrl);
+
+        }
+
+
+        // window.LoadIframe("../aspx/tstruct.aspx?transid=axusr"); 
+    }
+
+    function handleViewRole({ tokens, commandConfig }) {
+        let targetUrl;
+        let paramName;
+        let rawName = cleanCommandToken(tokens[2]);
+
+        //   if (!rawName) return;
+        // if (rawName) {
+        //     paramName = tryResolveToken(2, rawName, commandConfig, false);
+
+        // }
+
+        //  var url = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${recordId}`;
+
+        
+
+        if (!rawName) {
+            targetUrl = "../aspx/Entity.aspx?tstid=ad_ur";
+            window.LoadIframe(targetUrl);
+
+        } else {
+            targetUrl = "../aspx/EntityForm.aspx?tstid=ad_ur";
+            targetUrl += `&axusergroup=${rawName}`;
+
+            window.LoadIframe(targetUrl);
+
+        }
+
+
+        // window.LoadIframe("../aspx/tstruct.aspx?transid=axusr"); 
+    }
+
+
+
     function handleViewReport({ tokens, commandConfig }) {
         let rawName = cleanCommandToken(tokens[2]);
         if (!rawName) return;
@@ -1754,6 +1855,18 @@
     function handleViewInbox() {
         // LoadIframe('processflow.aspx?activelist=t')
         window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+
+    }
+
+    function handleViewDimension({ tokens, commandConfig }) {
+        // LoadIframe('processflow.aspx?activelist=t')
+
+
+
+        var url = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${recordId}`;
+
+        let targetUrl = `../aspx/Entity.aspx?tstid=a__na`;
+        window.LoadIframe(targetUrl);
 
     }
 
@@ -1913,22 +2026,22 @@
         let rawFieldName = cleanCommandToken(tokens[2]);
         let rawFieldValue = cleanCommandToken(tokens[3]);
 
-       let fieldName = tryResolveToken(2, rawFieldName, commandConfig, false); 
-       let fieldValue = tryResolveToken(3, rawFieldValue, commandConfig, false); 
+        let fieldName = tryResolveToken(2, rawFieldName, commandConfig, false);
+        let fieldValue = tryResolveToken(3, rawFieldValue, commandConfig, false);
 
 
 
         targetUrl = "../aspx/tstruct.aspx?transid=a__na";
 
-        if (rawFieldName  && rawFieldValue) {
-             targetUrl += `&${rawFieldName}=${rawFieldValue}`;
+        if (rawFieldName && rawFieldValue) {
+            targetUrl += `&${rawFieldName}=${rawFieldValue}`;
             targetUrl += "&act=open";
             targetUrl += "&dummyload=false♠"
             window.LoadIframe(targetUrl);
-            
+
 
         } else {
-           
+
             window.LoadIframe(targetUrl);
 
         }
