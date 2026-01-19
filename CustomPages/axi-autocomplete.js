@@ -1910,25 +1910,25 @@
     function handleCreateDimension({ tokens, commandConfig }) {
         let targetUrl;
         let paramName;
-        let rawName = cleanCommandToken(tokens[3]);
+        let rawFieldName = cleanCommandToken(tokens[2]);
+        let rawFieldValue = cleanCommandToken(tokens[3]);
 
-        //   if (!rawName) return;
-        if (rawName) {
-            paramName = tryResolveToken(2, rawName, commandConfig, false);
-
-        }
+       let fieldName = tryResolveToken(2, rawFieldName, commandConfig, false); 
+       let fieldValue = tryResolveToken(3, rawFieldValue, commandConfig, false); 
 
 
 
-        targetUrl = "../aspx/tstruct.aspx?transid=a__ag";
+        targetUrl = "../aspx/tstruct.aspx?transid=a__na";
 
-        if (!paramName) {
-            window.LoadIframe(targetUrl);
-
-        } else {
-            targetUrl += `&grpname=${paramName}`;
+        if (rawFieldName  && rawFieldValue) {
+             targetUrl += `&${rawFieldName}=${rawFieldValue}`;
             targetUrl += "&act=open";
             targetUrl += "&dummyload=false♠"
+            window.LoadIframe(targetUrl);
+            
+
+        } else {
+           
             window.LoadIframe(targetUrl);
 
         }
