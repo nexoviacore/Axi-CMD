@@ -34,13 +34,12 @@
         view: {
             report: handleViewReport,
             dbconsole: handleViewDbConsole,
-            data: handleViewData, 
+            data: handleViewData,
             inbox: handleViewInbox,
             dimension: handleViewDimension,
             user: handleViewUser,
             actor: handleViewActor,
             role: handleViewRole,
-            
 
 
         },
@@ -387,7 +386,14 @@
 
         if (isEdit) {
 
+            let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+            let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+            let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
 
+            if (_transidArray.includes(transId)) {
+                _transidArray = _transidArray.filter(x => x.toLowerCase() !== transId.toLowerCase());
+                localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
+            }
 
 
             if (fieldName && fieldValue) {
@@ -398,6 +404,7 @@
             targetUrl += `&openerIV=${transId}`;
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=false`;
+
             targetUrl += `&dummyload=false♠`;
 
         } else {
@@ -1910,7 +1917,7 @@
 
     function handleViewDimension({ tokens, commandConfig }) {
         // LoadIframe('processflow.aspx?activelist=t')
-         let targetUrl;
+        let targetUrl;
         let paramName;
         let rawName = cleanCommandToken(tokens[2]);
         // let rawFieldName = cleanCommandToken(tokens[3]);
@@ -1943,14 +1950,14 @@
 
 
 
-        
 
-       
+
+
 
     }
 
     function handleViewData({ tokens, commandConfig }) {
-        let targetUrl; 
+        let targetUrl;
 
         let rawStruct = cleanCommandToken(tokens[2]);
         let rawField = cleanCommandToken(tokens[3]);
@@ -1976,21 +1983,21 @@
 
         }
 
-        
 
-        
+
+
 
         if (!searchField && !searchValue) {
             // targetUrl += "&dummyload=false♠"
-             targetUrl = `../aspx/Entity.aspx?tstid=${transid}`;
+            targetUrl = `../aspx/Entity.aspx?tstid=${transid}`;
             window.LoadIframe(targetUrl);
         } else {
-             targetUrl = `../aspx/EntityForm.aspx?tstid=${transid}`;
+            targetUrl = `../aspx/EntityForm.aspx?tstid=${transid}`;
             targetUrl += `&${searchField}=${searchValue}`;
             // targetUrl += "&act=open";
             // targetUrl += "&dummyload=false♠"
 
-             window.LoadIframe(targetUrl);
+            window.LoadIframe(targetUrl);
 
         }
 
@@ -2111,24 +2118,24 @@
         let paramName;
         let rawField = cleanCommandToken(tokens[2]);
         let rawFieldValue = cleanCommandToken(tokens[3]);
-        
 
-       
 
-// LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;)
+
+
+        // LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;)
 
         targetUrl = "../aspx/tstruct.aspx?transid=a__ag";
 
         if (!rawFieldValue && !rawField) {
             window.LoadIframe(targetUrl);
 
-          
+
 
 
         } else {
 
 
-              targetUrl += `&${rawField}=${rawFieldValue}`;
+            targetUrl += `&${rawField}=${rawFieldValue}`;
             targetUrl += "&act=open";
             targetUrl += "&dummyload=false♠"
             window.LoadIframe(targetUrl);
