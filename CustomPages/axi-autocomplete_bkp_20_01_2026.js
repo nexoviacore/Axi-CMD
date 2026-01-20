@@ -492,55 +492,19 @@
     /* ===============================
        3. TOKENIZER
     =============================== */
-    // function getTokens(str) {
-    //     // const regex = /"[^"]+"|[^\s]+/g;
-    //     const regex = /"[^"]*"?|[^\s]+/g;
-    //     return str.match(regex) || [];
-    // }
-
-
     function getTokens(str) {
-        const tokens = [];
-        let currentToken = "";
-        let inQuote = false;
-
-        for (let i = 0; i < str.length; i++) {
-            const char = str[i];
-
-            if (char === '"') {
-                inQuote = !inQuote;
-                currentToken += char;
-            } else if (char === ' ' && !inQuote) {
-                
-                if (currentToken.length > 0) {
-                    tokens.push(currentToken);
-                    currentToken = "";
-                }
-            } else {
-                currentToken += char;
-            }
-        }
-
-        
-        if (currentToken.length > 0) {
-            tokens.push(currentToken);
-        }
-
-        
-        if (str.endsWith(" ") && !inQuote) {
-            tokens.push("");
-        }
-
-        return tokens;
+        // const regex = /"[^"]+"|[^\s]+/g;
+        const regex = /"[^"]*"?|[^\s]+/g;
+        return str.match(regex) || [];
     }
 
     /* ===============================
-       4. Suggestion Logic
+       4. LOGIC ENGINE
     =============================== */
     function suggestLocal(inputText) {
         const endsWithSpace = inputText.endsWith(" ");
         const tokens = getTokens(inputText);
-        // if (endsWithSpace) tokens.push("");
+        if (endsWithSpace) tokens.push("");
 
 
 
