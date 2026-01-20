@@ -389,17 +389,21 @@
 
         if (isEdit) {
 
-            let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-            let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
-            let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
+            // let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+            // let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+            // let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
          /** Filter the transId from the transid array and setting in local storage 
           *  Important logic for edit command
           *  */
+
          
-            if (_transidArray.includes(transId)) {
-                _transidArray = _transidArray.filter(x => x.toLowerCase() !== transId.toLowerCase());
-                localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
-            }
+         
+            // if (_transidArray.includes(transId)) {
+            //     _transidArray = _transidArray.filter(x => x.toLowerCase() !== transId.toLowerCase());
+            //     localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
+            // }
+
+            
 
 
             if (fieldName && fieldValue) {
@@ -2255,6 +2259,8 @@
             `Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
         );
 
+        setEditSessionState(transId); 
+
         redirectToTstruct(transId, true, fieldName, fieldValue);
     }
 
@@ -2268,14 +2274,14 @@
 
         let resolvedUserName = tryResolveToken(2, rawUserName, commandConfig, false);
 
-          let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-            let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
-            let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
+        //   let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        //     let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+        //     let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
 
-            if (_transidArray.includes(transId)) {
-                _transidArray = _transidArray.filter(x => x.toLowerCase() !== transId.toLowerCase());
-                localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
-            }
+        //     if (_transidArray.includes(transId)) {
+        //         _transidArray = _transidArray.filter(x => x.toLowerCase() !== transId.toLowerCase());
+        //         localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
+        //     }
 
 
 
@@ -2305,23 +2311,26 @@
         //     resolvedName = found.name;
         // }
 
-        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+        setEditSessionState(transId); 
 
-        targetUrl += `&hltype=load`;
-        targetUrl += `&torecid=false`;
-        targetUrl += `&openerIV=${transId}`;
-        targetUrl += `&isIV=false`;
-        targetUrl += `&isDupTab=false`;
+        // targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+
+        // targetUrl += `&hltype=load`;
+        // targetUrl += `&torecid=false`;
+        // targetUrl += `&openerIV=${transId}`;
+        // targetUrl += `&isIV=false`;
+        // targetUrl += `&isDupTab=false`;
 
 
-        // if (!paramName) {
-        //     window.LoadIframe(targetUrl);
+        // // if (!paramName) {
+        // //     window.LoadIframe(targetUrl);
 
-        // } else {
-        targetUrl += `&pusername=${rawUserName}`;
+        // // } else {
+        // targetUrl += `&pusername=${rawUserName}`;
 
-        targetUrl += "&dummyload=false♠"
-        window.LoadIframe(targetUrl);
+        // targetUrl += "&dummyload=false♠"
+        // window.LoadIframe(targetUrl);
+        redirectToTstruct(transId, true, "pusername", rawUserName); 
 
         // }
 
@@ -2549,5 +2558,60 @@
       * End 
       * ******************************************************
       */
+
+    function getEditSessionState() {
+    const href = top.window.location.href.toLowerCase();
+    const idx = href.indexOf("/aspx/");
+    if (idx === -1) {
+        console.warn("ASPX not found in URL:", href);
+        return { key: null, list: [] };
+    }
+
+    const appSessUrl = href.substring(0, idx);
+    const storageKey = `originaltrIds-${appSessUrl}`;
+    const list = JSON.parse(localStorage.getItem(storageKey) || "[]");
+
+    return {
+        appSessUrl,
+        storageKey,
+        list
+    };
+}
+
+function setEditSessionState(transId) {
+    if (!transId) return;
+
+    const href = top.window.location.href.toLowerCase();
+    const aspxIndex = href.indexOf("/aspx/");
+
+    if (aspxIndex === -1) {
+        console.warn("setEditSessionState: '/aspx/' not found in URL", href);
+        return;
+    }
+
+    const appSessUrl = href.substring(0, aspxIndex);
+    const storageKey = `originaltrIds-${appSessUrl}`;
+
+    const transIdArray = JSON.parse(
+        localStorage.getItem(storageKey) || "[]"
+    );
+
+    if (!Array.isArray(transIdArray)) {
+        console.warn("setEditSessionState: invalid stored value", transIdArray);
+        return;
+    }
+
+    const normalizedTransId = transId.toLowerCase();
+
+    if (transIdArray.some(x => x.toLowerCase() === normalizedTransId)) {
+        const updated = transIdArray.filter(
+            x => x.toLowerCase() !== normalizedTransId
+        );
+
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+    }
+}
+
+
 
 })();
