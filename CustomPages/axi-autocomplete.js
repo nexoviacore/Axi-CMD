@@ -64,6 +64,9 @@
     let runBtn;
     let axiClearBtn;
     let isCommandTypingCompleted = false;
+    //  let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+    //         let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+    //         let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
 
 
     let signingInPromise = null;
@@ -389,7 +392,10 @@
             let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
             let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
             let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
-
+         /** Filter the transId from the transid array and setting in local storage 
+          *  Important logic for edit command
+          *  */
+         
             if (_transidArray.includes(transId)) {
                 _transidArray = _transidArray.filter(x => x.toLowerCase() !== transId.toLowerCase());
                 localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
@@ -2258,8 +2264,19 @@
 
 
         let rawUserName = cleanCommandToken(tokens[2]);
+        let transId = "axusr"; 
 
         let resolvedUserName = tryResolveToken(2, rawUserName, commandConfig, false);
+
+          let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+            let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+            let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
+
+            if (_transidArray.includes(transId)) {
+                _transidArray = _transidArray.filter(x => x.toLowerCase() !== transId.toLowerCase());
+                localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
+            }
+
 
 
         // if (resolvedName === rawName) {
@@ -2288,11 +2305,11 @@
         //     resolvedName = found.name;
         // }
 
-        targetUrl = "../aspx/tstruct.aspx?transid=axusr";
+        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         targetUrl += `&hltype=load`;
         targetUrl += `&torecid=false`;
-        targetUrl += `&openerIV=axusr`;
+        targetUrl += `&openerIV=${transId}`;
         targetUrl += `&isIV=false`;
         targetUrl += `&isDupTab=false`;
 
@@ -2301,7 +2318,7 @@
         //     window.LoadIframe(targetUrl);
 
         // } else {
-        targetUrl += `&nickname=${rawUserName}`;
+        targetUrl += `&pusername=${rawUserName}`;
 
         targetUrl += "&dummyload=false♠"
         window.LoadIframe(targetUrl);
