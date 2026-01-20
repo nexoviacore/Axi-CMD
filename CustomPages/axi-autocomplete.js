@@ -34,12 +34,13 @@
         view: {
             report: handleViewReport,
             dbconsole: handleViewDbConsole,
-            data: handleViewData,  // Partially Completed
+            data: handleViewData, 
             inbox: handleViewInbox,
             dimension: handleViewDimension,
             user: handleViewUser,
             actor: handleViewActor,
             role: handleViewRole,
+            
 
 
         },
