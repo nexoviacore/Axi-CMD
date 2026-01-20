@@ -475,7 +475,8 @@
        3. TOKENIZER
     =============================== */
     function getTokens(str) {
-        const regex = /"[^"]+"|[^\s]+/g;
+        // const regex = /"[^"]+"|[^\s]+/g;
+        const regex = /"[^"]*"?|[^\s]+/g;
         return str.match(regex) || [];
     }
 
@@ -486,6 +487,8 @@
         const endsWithSpace = inputText.endsWith(" ");
         const tokens = getTokens(inputText);
         if (endsWithSpace) tokens.push("");
+
+
 
         if (tokens.length === 0) {
             hintDiv.textContent = "";
@@ -541,7 +544,7 @@
             }
         }
 
-        const partialTyped = tokens[targetIndex].replace(/"/g, "").toLowerCase();
+        const partialTyped = tokens[targetIndex].replace(/"/g, "").toLowerCase().trim();
 
         // Generic list handler
         if (activePrompt && activePrompt.promptSource) {
@@ -1491,6 +1494,47 @@
                 hide();
                 return;
             }
+            // // Auto Double quotes 
+            // // --------------------------------------------------------
+            // if (e.key === " " && items.length > 0) {
+            //     const val = input.value;
+            //     const selStart = input.selectionStart;
+
+            //     // Only if cursor is at the end
+            //     if (selStart === val.length) {
+            //         const tokens = getTokens(val);
+            //         const lastTokenRaw = tokens[tokens.length - 1] || "";
+
+            //         // Only if it's NOT already a quoted string
+            //         if (!lastTokenRaw.startsWith('"')) {
+            //             // Check if what we typed matches the START of a suggestion that HAS A SPACE
+            //             const hasMultiWordMatch = items.some(item => {
+            //                 const str = (typeof item === 'string' ? item : item.displaydata).toLowerCase();
+            //                 // Example: typed "App", suggestion "Application Variable"
+            //                 return str.startsWith(lastTokenRaw.toLowerCase()) && str.includes(" ");
+            //             });
+
+            //             if (hasMultiWordMatch) {
+            //                 e.preventDefault(); // Stop normal space
+
+            //                 // Find the start of the current word
+            //                 const lastIndex = val.lastIndexOf(lastTokenRaw);
+            //                 if (lastIndex !== -1) {
+            //                     const prefix = val.substring(0, lastIndex);
+
+            //                     // CHANGE: Replaces "app" with "app " (Opening Double Quote + Space)
+            //                     // We keep the quote OPEN so "Application Variable" remains one token.
+            //                     input.value = prefix + '"' + lastTokenRaw + ' ';
+
+            //                     handleInput(); // Trigger filter immediately
+            //                     return;
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+
+            // ---------------------------------------------------
             if (list.style.display !== "block" || items.length === 0) return;
             if (e.key === "ArrowDown") { e.preventDefault(); activeIndex = (activeIndex + 1) % items.length; highlight(); }
             if (e.key === "ArrowUp") { e.preventDefault(); activeIndex = (activeIndex - 1 + items.length) % items.length; highlight(); }
@@ -1865,17 +1909,47 @@
 
     function handleViewDimension({ tokens, commandConfig }) {
         // LoadIframe('processflow.aspx?activelist=t')
+         let targetUrl;
+        let paramName;
+        let rawName = cleanCommandToken(tokens[2]);
+        // let rawFieldName = cleanCommandToken(tokens[3]);
+        // let rawFieldValue = cleanCommandToken(tokens[4]);
 
 
 
-        var url = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${recordId}`;
+        //   if (!rawName) return;
+        // if (rawName) {
+        //     paramName = tryResolveToken(2, rawName, commandConfig, false);
 
-        let targetUrl = `../aspx/Entity.aspx?tstid=a__na`;
-        window.LoadIframe(targetUrl);
+        // }
+
+        //  var url = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${recordId}`;
+
+
+
+        if (!rawName) {
+            targetUrl = "../aspx/Entity.aspx?tstid=a__ag";
+            window.LoadIframe(targetUrl);
+
+        } else {
+            targetUrl = "../aspx/EntityForm.aspx?tstid=a__ag";
+            targetUrl += `&grpname=${rawName}`;
+
+            window.LoadIframe(targetUrl);
+
+        }
+
+
+
+
+        
+
+       
 
     }
 
     function handleViewData({ tokens, commandConfig }) {
+        let targetUrl; 
 
         let rawStruct = cleanCommandToken(tokens[2]);
         let rawField = cleanCommandToken(tokens[3]);
@@ -1901,15 +1975,21 @@
 
         }
 
-        let targetUrl = `../aspx/Entity.aspx?tstid=${transid}`;
+        
+
+        
 
         if (!searchField && !searchValue) {
             // targetUrl += "&dummyload=false♠"
+             targetUrl = `../aspx/Entity.aspx?tstid=${transid}`;
             window.LoadIframe(targetUrl);
         } else {
+             targetUrl = `../aspx/EntityForm.aspx?tstid=${transid}`;
             targetUrl += `&${searchField}=${searchValue}`;
             // targetUrl += "&act=open";
             // targetUrl += "&dummyload=false♠"
+
+             window.LoadIframe(targetUrl);
 
         }
 
@@ -2028,25 +2108,28 @@
     function handleCreateDimension({ tokens, commandConfig }) {
         let targetUrl;
         let paramName;
-        let rawFieldName = cleanCommandToken(tokens[2]);
+        let rawField = cleanCommandToken(tokens[2]);
         let rawFieldValue = cleanCommandToken(tokens[3]);
+        
 
-        let fieldName = tryResolveToken(2, rawFieldName, commandConfig, false);
-        let fieldValue = tryResolveToken(3, rawFieldValue, commandConfig, false);
+       
 
+// LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;)
 
+        targetUrl = "../aspx/tstruct.aspx?transid=a__ag";
 
-        targetUrl = "../aspx/tstruct.aspx?transid=a__na";
-
-        if (rawFieldName && rawFieldValue) {
-            targetUrl += `&${rawFieldName}=${rawFieldValue}`;
-            targetUrl += "&act=open";
-            targetUrl += "&dummyload=false♠"
+        if (!rawFieldValue && !rawField) {
             window.LoadIframe(targetUrl);
+
+          
 
 
         } else {
 
+
+              targetUrl += `&${rawField}=${rawFieldValue}`;
+            targetUrl += "&act=open";
+            targetUrl += "&dummyload=false♠"
             window.LoadIframe(targetUrl);
 
         }
