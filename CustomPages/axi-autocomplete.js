@@ -1,4 +1,5 @@
 ﻿(() => {
+    // Latest Changes
     // ENDPOINTS
     const API_METADATA = "http://localhost:5000/api/v1/Axi/axi_get";
     const API_AXLIST = "http://localhost:5000/api/v1/AxList";
@@ -2265,31 +2266,35 @@
     function handleCreateDimension({ tokens, commandConfig }) {
         let targetUrl;
         let paramName;
+        let transId = "a__ag"; 
+        
         let rawField = cleanCommandToken(tokens[2]);
         let rawFieldValue = cleanCommandToken(tokens[3]);
+        const fieldname = tryResolveToken(2, rawField, commandConfig, false); 
 
-
+        setEditSessionState(transId)
+        redirectToTstruct(transId, true, fieldname, rawFieldValue); 
 
 
         // LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;)
 
-        targetUrl = "../aspx/tstruct.aspx?transid=a__ag";
+        // targetUrl = "../aspx/tstruct.aspx?transid=a__ag";
 
-        if (!rawFieldValue && !rawField) {
-            window.LoadIframe(targetUrl);
-
-
+        // if (!rawFieldValue && !rawField) {
+        //     window.LoadIframe(targetUrl);
 
 
-        } else {
 
 
-            targetUrl += `&${rawField}=${rawFieldValue}`;
-            targetUrl += "&act=open";
-            targetUrl += "&dummyload=false♠"
-            window.LoadIframe(targetUrl);
+        // } else {
 
-        }
+
+        //     targetUrl += `&${rawField}=${rawFieldValue}`;
+        //     targetUrl += "&act=open";
+        //     targetUrl += "&dummyload=false♠"
+        //     window.LoadIframe(targetUrl);
+
+        // }
 
 
         // window.LoadIframe("../aspx/tstruct.aspx?transid=a__ag");
