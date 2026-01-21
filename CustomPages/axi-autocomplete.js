@@ -29,9 +29,9 @@
             page: handleCreatePage,
             card: handleCreateCard,
             user: handleCreateUser,
-            usergroup: handleCreateUserGroup, 
+            usergroup: handleCreateUserGroup,
             role: handleCreateRole,
-            dimension: handleCreateDimension,  
+            dimension: handleCreateDimension,
             actor: handleCreateActor
 
         },
