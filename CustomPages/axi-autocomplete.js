@@ -252,12 +252,25 @@
         activeFetches.add(key);
 
         console.log(`Fetching list: ${sourceName} params: ${paramValue}`);
-        const data = await getList(sourceName, paramValue);
 
+        try {
+        const data = await getList(sourceName, paramValue);
         axDatasourceObj[key] = data;
         console.log(JSON.stringify(axDatasourceObj));
-        activeFetches.delete(key);
         handleInput();
+
+
+
+
+
+        }catch(error) {
+            console.error("loadlist failed", error); 
+        } finally {
+        activeFetches.delete(key);
+
+
+        }
+
     }
 
     /* ===============================
