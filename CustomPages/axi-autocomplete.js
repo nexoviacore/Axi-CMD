@@ -16,7 +16,11 @@
         edit: {
             source: handleEditSource,
             data: handleEditData,
-            user: handleEditUser
+            user: handleEditUser,
+            role: handleEditRole,
+            usergroup: handleEditUsergroup,
+            actor: handleEditActor,
+            dimension: handleEditDimension
 
         },
         create: {
@@ -25,9 +29,9 @@
             page: handleCreatePage,
             card: handleCreateCard,
             user: handleCreateUser,
-            usergroup: handleCreateUserGroup, // Partially Completed
+            usergroup: handleCreateUserGroup, 
             role: handleCreateRole,
-            dimension: handleCreateDimension,  // Partially Completed 
+            dimension: handleCreateDimension,  
             actor: handleCreateActor
 
         },
@@ -38,6 +42,7 @@
             inbox: handleViewInbox,
             dimension: handleViewDimension,
             user: handleViewUser,
+            usergroup: handleViewUsergroup,
             actor: handleViewActor,
             role: handleViewRole,
 
@@ -511,7 +516,7 @@
                 inQuote = !inQuote;
                 currentToken += char;
             } else if (char === ' ' && !inQuote) {
-                
+
                 if (currentToken.length > 0) {
                     tokens.push(currentToken);
                     currentToken = "";
@@ -521,12 +526,12 @@
             }
         }
 
-        
+
         if (currentToken.length > 0) {
             tokens.push(currentToken);
         }
 
-        
+
         if (str.endsWith(" ") && !inQuote) {
             tokens.push("");
         }
@@ -703,7 +708,7 @@
 
     //        if (foundItem) {
     //            const realValue = foundItem.name || foundItem.sqlname || foundItem.displaydata;
-    //            console.log(`✅ Lazy Resolved: "${tokenText}" → "${realValue}"`);
+    //            console.log(`Lazy Resolved: "${tokenText}" → "${realValue}"`);
     //            resolvedParams[tokenIndex] = realValue;
     //            return realValue;
     //        }
@@ -883,9 +888,15 @@
 
         // Identify Token Position
         const currentInput = input.value;
-        const endsWithSpace = currentInput.endsWith(" ");
+        // const endsWithSpace = currentInput.endsWith(" ");
         const tokens = getTokens(currentInput);
-        const targetIndex = endsWithSpace ? tokens.length : tokens.length - 1;
+        // const targetIndex = endsWithSpace ? tokens.length : tokens.length - 1;
+        const targetIndex = tokens.length - 1;
+
+        if (targetIndex < 0) {
+            targetIndex = 0;
+            tokens.push("");
+        }
 
         // Store Real Value
         resolvedParams[targetIndex] = realValue;
@@ -897,11 +908,13 @@
         }
 
         // Update Input
-        if (endsWithSpace) {
-            tokens.push(displayName);
-        } else {
-            tokens[targetIndex] = displayName;
-        }
+        // if (endsWithSpace) {
+        //     tokens.push(displayName);
+        // } else {
+        //     tokens[targetIndex] = displayName;
+        // }
+
+        tokens[targetIndex] = displayName;
 
         input.value = tokens.join(" ") + " ";
         handleInput();
@@ -1701,6 +1714,11 @@
         handler(cmdTokens);
     }
 
+    /**
+     * =================== Create Commands ==============================
+     *  
+     */
+
     function handleCreateNew({ tokens, commandConfig }) {
         let rawName = cleanCommandToken(tokens[2]);
         let transId = tryResolveToken(2, rawName, commandConfig, false);
@@ -1719,7 +1737,11 @@
     function handleCreateAds({ tokens, commandConfig }) {
         let targetUrl;
         let paramName;
+        const transId = "b_sql";
+        let fieldname = "sqlname";
+
         let rawName = cleanCommandToken(tokens[2]);
+
 
         //   if (!rawName) return;
         if (rawName) {
@@ -1727,15 +1749,17 @@
 
         }
 
+        setEditSessionState(transId);
 
 
-        targetUrl = "../aspx/tstruct.aspx?transid=b_sql";
+
+        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
             window.LoadIframe(targetUrl);
 
         } else {
-            targetUrl += `&sqlname=${paramName}`;
+            targetUrl += `&${fieldname}=${paramName}`;
             targetUrl += "&act=open";
             targetUrl += "&dummyload=false♠"
             window.LoadIframe(targetUrl);
@@ -1749,6 +1773,8 @@
         // window.LoadIframe("ivtoivload.aspx?ivname=axpcards");
         let targetUrl;
         let paramName;
+        let transId = "a__cd";
+        let fieldname = "cardname";
         let rawName = cleanCommandToken(tokens[2]);
 
         //   if (!rawName) return;
@@ -1758,14 +1784,15 @@
         }
 
 
-
-        targetUrl = "../aspx/tstruct.aspx?transid=a__cd";
+        setEditSessionState(transId);
+        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
             window.LoadIframe(targetUrl);
 
         } else {
-            targetUrl += `&cardname=${paramName}`;
+            // targetUrl += `&cardname=${paramName}`;
+            targetUrl += `&${fieldname}=${paramName}`;
             targetUrl += "&act=open";
             targetUrl += "&dummyload=false♠"
             window.LoadIframe(targetUrl);
@@ -1782,6 +1809,8 @@
     function handleCreateUser({ tokens, commandConfig }) {
         let targetUrl;
         let paramName;
+        let transId = "axusr";
+        let fieldname = "pusername";
         let rawName = cleanCommandToken(tokens[2]);
 
         //   if (!rawName) return;
@@ -1790,15 +1819,17 @@
 
         }
 
+        setEditSessionState(transId);
 
 
-        targetUrl = "../aspx/tstruct.aspx?transid=axusr";
+
+        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
             window.LoadIframe(targetUrl);
 
         } else {
-            targetUrl += `&nickname=${paramName}`;
+            targetUrl += `&${fieldname}=${paramName}`;
             targetUrl += "&act=open";
             targetUrl += "&dummyload=false♠"
             window.LoadIframe(targetUrl);
@@ -1813,6 +1844,8 @@
 
         let targetUrl;
         let paramName;
+        let transId = "a__ug";
+        let fieldname = "users_group_name";
         let rawName = cleanCommandToken(tokens[2]);
 
         //   if (!rawName) return;
@@ -1822,14 +1855,14 @@
         }
 
 
-
-        targetUrl = "../aspx/tstruct.aspx?transid=a__ug";
+        setEditSessionState(transId);
+        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
             window.LoadIframe(targetUrl);
 
         } else {
-            targetUrl += `&users_group_name=${paramName}`;
+            targetUrl += `&${fieldname}=${paramName}`;
             targetUrl += "&act=open";
             targetUrl += "&dummyload=false♠"
             window.LoadIframe(targetUrl);
@@ -1839,6 +1872,11 @@
 
     }
 
+    /**
+     * ======================== END ==================================
+     * 
+     */
+
     /* ============== View Commands Functions =========================
        ----------------- Start ------------------------------------------
     */
@@ -1846,6 +1884,7 @@
     function handleViewUser({ tokens, commandConfig }) {
         let targetUrl;
         let paramName;
+
         let rawName = cleanCommandToken(tokens[2]);
 
         //   if (!rawName) return;
@@ -1873,6 +1912,41 @@
 
         // window.LoadIframe("../aspx/tstruct.aspx?transid=axusr"); 
     }
+
+    function handleViewUsergroup({ tokens, commandConfig }) {
+        let targetUrl;
+        let paramName;
+        let transId = "a__ug";
+        let fieldname = "users_group_name";
+
+        let rawName = cleanCommandToken(tokens[2]);
+
+        //   if (!rawName) return;
+        // if (rawName) {
+        //     paramName = tryResolveToken(2, rawName, commandConfig, false);
+
+        // }
+
+        //  var url = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${recordId}`;
+
+
+
+        if (!rawName) {
+            targetUrl = `../aspx/Entity.aspx?tstid=${transId}`;
+            window.LoadIframe(targetUrl);
+
+        } else {
+            targetUrl = `../aspx/EntityForm.aspx?tstid=${transId}`;
+            targetUrl += `&${fieldname}=${rawName}`;
+
+            window.LoadIframe(targetUrl);
+
+        }
+
+
+        // window.LoadIframe("../aspx/tstruct.aspx?transid=axusr"); 
+    }
+
 
     function handleViewActor({ tokens, commandConfig }) {
         let targetUrl;
@@ -2072,6 +2146,8 @@
 
         let targetUrl;
         let paramName;
+        let transId = "sect";
+        let fieldname = "caption";
         let rawName = cleanCommandToken(tokens[2]);
 
         //   if (!rawName) return;
@@ -2080,15 +2156,15 @@
 
         }
 
+        setEditSessionState(transId);
 
-
-        targetUrl = "../aspx/tstruct.aspx?transid=sect";
+        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
             window.LoadIframe(targetUrl);
 
         } else {
-            targetUrl += `&cardname=${paramName}`;
+            targetUrl += `&${fieldname}=${paramName}`;
             targetUrl += "&act=open";
             targetUrl += "&dummyload=false♠"
             window.LoadIframe(targetUrl);
@@ -2105,6 +2181,8 @@
     function handleCreateRole({ tokens, commandConfig }) {
         let targetUrl;
         let paramName;
+        let transId = "ad_ur";
+        let fieldname = "axusergroup";
         let rawName = cleanCommandToken(tokens[2]);
 
         //   if (!rawName) return;
@@ -2113,15 +2191,15 @@
 
         }
 
+        setEditSessionState(transId);
 
-
-        targetUrl = "../aspx/tstruct.aspx?transid=ad_ur";
+        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
             window.LoadIframe(targetUrl);
 
         } else {
-            targetUrl += `&axusergroup=${paramName}`;
+            targetUrl += `&${fieldname}=${paramName}`;
             targetUrl += "&act=open";
             targetUrl += "&dummyload=false♠"
             window.LoadIframe(targetUrl);
@@ -2137,6 +2215,8 @@
     function handleCreateActor({ tokens, commandConfig }) {
         let targetUrl;
         let paramName;
+        let transId = "ad_am";
+        let fieldName = "actorname";
         let rawName = cleanCommandToken(tokens[2]);
 
         //   if (!rawName) return;
@@ -2145,15 +2225,15 @@
 
         }
 
+        setEditSessionState(transId);
 
-
-        targetUrl = "../aspx/tstruct.aspx?transid=ad_am";
+        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
             window.LoadIframe(targetUrl);
 
         } else {
-            targetUrl += `&actorname=${paramName}`;
+            targetUrl += `&${fieldName}=${paramName}`;
             targetUrl += "&act=open";
             targetUrl += "&dummyload=false♠"
             window.LoadIframe(targetUrl);
@@ -2380,6 +2460,306 @@
 
     }
 
+    function handleEditDimension({ tokens, commandConfig }) {
+
+
+
+
+        let rawName = cleanCommandToken(tokens[2]);
+        let transId = "a__ag";
+        let fieldName = "grpname";
+
+        let resolvedUserName = tryResolveToken(2, rawName, commandConfig, false);
+
+        //   let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        //     let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+        //     let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
+
+        //     if (_transidArray.includes(transId)) {
+        //         _transidArray = _transidArray.filter(x => x.toLowerCase() !== transId.toLowerCase());
+        //         localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
+        //     }
+
+
+
+        // if (resolvedName === rawName) {
+        //     const listKey =
+        //         type === "tstruct"
+        //             ? "Axi_TStructList"
+        //             : type === "iview"
+        //                 ? "Axi_IViewList"
+        //                 : null;
+
+        //     if (!listKey) {
+        //         alert("Unknown source type: " + type);
+        //         return;
+        //     }
+
+        //     const list = axDatasourceObj[listKey];
+        //     const found = list?.find(
+        //         x => x.caption?.toLowerCase() === rawName
+        //     );
+
+        //     if (!found || !found.name) {
+        //         console.error(`Source not found: ${rawName}`);
+        //         return;
+        //     }
+
+        //     resolvedName = found.name;
+        // }
+
+        setEditSessionState(transId);
+
+        // targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+
+        // targetUrl += `&hltype=load`;
+        // targetUrl += `&torecid=false`;
+        // targetUrl += `&openerIV=${transId}`;
+        // targetUrl += `&isIV=false`;
+        // targetUrl += `&isDupTab=false`;
+
+
+        // // if (!paramName) {
+        // //     window.LoadIframe(targetUrl);
+
+        // // } else {
+        // targetUrl += `&pusername=${rawUserName}`;
+
+        // targetUrl += "&dummyload=false♠"
+        // window.LoadIframe(targetUrl);
+        redirectToTstruct(transId, true, fieldName, rawName);
+
+        // }
+
+
+
+    }
+
+    function handleEditRole({ tokens, commandConfig }) {
+
+
+
+
+        let rawName = cleanCommandToken(tokens[2]);
+        let transId = "ad_ur";
+        let fieldName = "axusergroup";
+
+        let resolvedUserName = tryResolveToken(2, rawName, commandConfig, false);
+
+        //   let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        //     let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+        //     let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
+
+        //     if (_transidArray.includes(transId)) {
+        //         _transidArray = _transidArray.filter(x => x.toLowerCase() !== transId.toLowerCase());
+        //         localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
+        //     }
+
+
+
+        // if (resolvedName === rawName) {
+        //     const listKey =
+        //         type === "tstruct"
+        //             ? "Axi_TStructList"
+        //             : type === "iview"
+        //                 ? "Axi_IViewList"
+        //                 : null;
+
+        //     if (!listKey) {
+        //         alert("Unknown source type: " + type);
+        //         return;
+        //     }
+
+        //     const list = axDatasourceObj[listKey];
+        //     const found = list?.find(
+        //         x => x.caption?.toLowerCase() === rawName
+        //     );
+
+        //     if (!found || !found.name) {
+        //         console.error(`Source not found: ${rawName}`);
+        //         return;
+        //     }
+
+        //     resolvedName = found.name;
+        // }
+
+        setEditSessionState(transId);
+
+        // targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+
+        // targetUrl += `&hltype=load`;
+        // targetUrl += `&torecid=false`;
+        // targetUrl += `&openerIV=${transId}`;
+        // targetUrl += `&isIV=false`;
+        // targetUrl += `&isDupTab=false`;
+
+
+        // // if (!paramName) {
+        // //     window.LoadIframe(targetUrl);
+
+        // // } else {
+        // targetUrl += `&pusername=${rawUserName}`;
+
+        // targetUrl += "&dummyload=false♠"
+        // window.LoadIframe(targetUrl);
+        redirectToTstruct(transId, true, fieldName, rawName);
+
+        // }
+
+
+
+    }
+
+    function handleEditUsergroup({ tokens, commandConfig }) {
+
+
+
+
+        let rawName = cleanCommandToken(tokens[2]);
+        let transId = "a__ug";
+        let fieldName = "users_group_name";
+
+        let resolvedUserName = tryResolveToken(2, rawName, commandConfig, false);
+
+        //   let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        //     let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+        //     let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
+
+        //     if (_transidArray.includes(transId)) {
+        //         _transidArray = _transidArray.filter(x => x.toLowerCase() !== transId.toLowerCase());
+        //         localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
+        //     }
+
+
+
+        // if (resolvedName === rawName) {
+        //     const listKey =
+        //         type === "tstruct"
+        //             ? "Axi_TStructList"
+        //             : type === "iview"
+        //                 ? "Axi_IViewList"
+        //                 : null;
+
+        //     if (!listKey) {
+        //         alert("Unknown source type: " + type);
+        //         return;
+        //     }
+
+        //     const list = axDatasourceObj[listKey];
+        //     const found = list?.find(
+        //         x => x.caption?.toLowerCase() === rawName
+        //     );
+
+        //     if (!found || !found.name) {
+        //         console.error(`Source not found: ${rawName}`);
+        //         return;
+        //     }
+
+        //     resolvedName = found.name;
+        // }
+
+        setEditSessionState(transId);
+
+        // targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+
+        // targetUrl += `&hltype=load`;
+        // targetUrl += `&torecid=false`;
+        // targetUrl += `&openerIV=${transId}`;
+        // targetUrl += `&isIV=false`;
+        // targetUrl += `&isDupTab=false`;
+
+
+        // // if (!paramName) {
+        // //     window.LoadIframe(targetUrl);
+
+        // // } else {
+        // targetUrl += `&pusername=${rawUserName}`;
+
+        // targetUrl += "&dummyload=false♠"
+        // window.LoadIframe(targetUrl);
+        redirectToTstruct(transId, true, fieldName, rawName);
+
+        // }
+
+
+
+    }
+
+    function handleEditActor({ tokens, commandConfig }) {
+
+
+
+
+        let rawName = cleanCommandToken(tokens[2]);
+        let transId = "ad_am";
+        let fieldName = "actorname";
+
+        let resolvedUserName = tryResolveToken(2, rawName, commandConfig, false);
+
+        //   let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        //     let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+        //     let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
+
+        //     if (_transidArray.includes(transId)) {
+        //         _transidArray = _transidArray.filter(x => x.toLowerCase() !== transId.toLowerCase());
+        //         localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
+        //     }
+
+
+
+        // if (resolvedName === rawName) {
+        //     const listKey =
+        //         type === "tstruct"
+        //             ? "Axi_TStructList"
+        //             : type === "iview"
+        //                 ? "Axi_IViewList"
+        //                 : null;
+
+        //     if (!listKey) {
+        //         alert("Unknown source type: " + type);
+        //         return;
+        //     }
+
+        //     const list = axDatasourceObj[listKey];
+        //     const found = list?.find(
+        //         x => x.caption?.toLowerCase() === rawName
+        //     );
+
+        //     if (!found || !found.name) {
+        //         console.error(`Source not found: ${rawName}`);
+        //         return;
+        //     }
+
+        //     resolvedName = found.name;
+        // }
+
+        setEditSessionState(transId);
+
+        // targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+
+        // targetUrl += `&hltype=load`;
+        // targetUrl += `&torecid=false`;
+        // targetUrl += `&openerIV=${transId}`;
+        // targetUrl += `&isIV=false`;
+        // targetUrl += `&isDupTab=false`;
+
+
+        // // if (!paramName) {
+        // //     window.LoadIframe(targetUrl);
+
+        // // } else {
+        // targetUrl += `&pusername=${rawUserName}`;
+
+        // targetUrl += "&dummyload=false♠"
+        // window.LoadIframe(targetUrl);
+        redirectToTstruct(transId, true, fieldName, rawName);
+
+        // }
+
+
+
+    }
+
     /***************************************************
     * End
     * **************************************************
@@ -2399,30 +2779,39 @@
 
     function handleConfigureApi({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;iexapidef&quot;);
-        // window.openDeveloperStudio("iexapidef"); 
-        let rawApiName = cleanCommandToken(tokens[2]);
-        let targetUrl = "../aspx/tstruct.aspx?transid=apidg";
+        // window.openDeveloperStudio("iexapidef");
+        console.log("commandConfig: " + JSON.stringify(commandConfig));
+        let fieldname = "ExecAPIDefName";
+        let transId = "apidg";
+        let param1Position = commandConfig.prompts[0].wordPos - 1;
+        // let rawApiName = cleanCommandToken(tokens[2]);
+        let rawApiName = cleanCommandToken(tokens[param1Position]);
 
-        if (!rawApiName) {
-            window.LoadIframe(targetUrl);
-        } else {
+        // let targetUrl = "../aspx/tstruct.aspx?transid=apidg";
 
-            targetUrl += `&hltype=load`;
-            targetUrl += `&torecid=false`;
-            targetUrl += `&openerIV=apidg`;
-            targetUrl += `&isIV=false`;
-            targetUrl += `&isDupTab=false`;
+        setEditSessionState(transId);
+        redirectToTstruct(transId, true, fieldname, rawApiName);
+
+        // if (!rawApiName) {
+        //     window.LoadIframe(targetUrl);
+        // } else {
+
+        //     targetUrl += `&hltype=load`;
+        //     targetUrl += `&torecid=false`;
+        //     targetUrl += `&openerIV=apidg`;
+        //     targetUrl += `&isIV=false`;
+        //     targetUrl += `&isDupTab=false`;
 
 
 
-            targetUrl += `&ExecAPIDefName=${rawApiName}`;
+        //     targetUrl += `&ExecAPIDefName=${rawApiName}`;
 
-            targetUrl += "&dummyload=false♠"
+        //     targetUrl += "&dummyload=false♠"
 
 
-            window.LoadIframe(targetUrl);
+        //     window.LoadIframe(targetUrl);
 
-        }
+        // }
 
 
 
@@ -2431,29 +2820,36 @@
     function handleConfigureRule({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;iexapidef&quot;);
         // window.openDeveloperStudio("iexapidef"); 
+        let transId = "ad_re";
+        let fieldname = "rulename";
+
         let rawParamName = cleanCommandToken(tokens[2]);
-        let targetUrl = "../aspx/tstruct.aspx?transid=ad_re";
 
-        if (!rawParamName) {
-            window.LoadIframe(targetUrl);
-        } else {
+        // let targetUrl = "../aspx/tstruct.aspx?transid=ad_re";
 
-            targetUrl += `&hltype=load`;
-            targetUrl += `&torecid=false`;
-            targetUrl += `&openerIV=ad_re`;
-            targetUrl += `&isIV=false`;
-            targetUrl += `&isDupTab=false`;
+        setEditSessionState(transId);
+        redirectToTstruct(transId, true, fieldname, rawParamName);
 
+        // if (!rawParamName) {
+        //     window.LoadIframe(targetUrl);
+        // } else {
 
-
-            targetUrl += `&rulename=${rawParamName}`;
-
-            targetUrl += "&dummyload=false♠"
+        //     targetUrl += `&hltype=load`;
+        //     targetUrl += `&torecid=false`;
+        //     targetUrl += `&openerIV=ad_re`;
+        //     targetUrl += `&isIV=false`;
+        //     targetUrl += `&isDupTab=false`;
 
 
-            window.LoadIframe(targetUrl);
 
-        }
+        //     targetUrl += `&rulename=${rawParamName}`;
+
+        //     targetUrl += "&dummyload=false♠"
+
+
+        //     window.LoadIframe(targetUrl);
+
+        // }
 
 
 
@@ -2462,29 +2858,37 @@
     function handleConfigureServer({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;iexapidef&quot;);
         // window.openDeveloperStudio("iexapidef"); 
-        let rawParamName = cleanCommandToken(tokens[2]);
-        let targetUrl = "../aspx/tstruct.aspx?transid=axpub";
+        let transId = "axpub";
+        let fieldname = "servername";
+        // let param1Position = commandConfig.prompts[0].wordPos - 1;
+        const params = extractParams(tokens, commandConfig);
+        const rawParamName = params[0].rawValue;
 
-        if (!rawParamName) {
-            window.LoadIframe(targetUrl);
-        } else {
+        // let rawParamName = cleanCommandToken(tokens[2]);
+        // let targetUrl = "../aspx/tstruct.aspx?transid=axpub";
+        setEditSessionState(transId);
+        redirectToTstruct(transId, true, fieldname, rawParamName);
 
-            targetUrl += `&hltype=load`;
-            targetUrl += `&torecid=false`;
-            targetUrl += `&openerIV=axpub`;
-            targetUrl += `&isIV=false`;
-            targetUrl += `&isDupTab=false`;
+        // if (!rawParamName) {
+        //     window.LoadIframe(targetUrl);
+        // } else {
+
+        //     targetUrl += `&hltype=load`;
+        //     targetUrl += `&torecid=false`;
+        //     targetUrl += `&openerIV=axpub`;
+        //     targetUrl += `&isIV=false`;
+        //     targetUrl += `&isDupTab=false`;
 
 
 
-            targetUrl += `&servername=${rawParamName}`;
+        //     targetUrl += `&servername=${rawParamName}`;
 
-            targetUrl += "&dummyload=false♠"
+        //     targetUrl += "&dummyload=false♠"
 
 
-            window.LoadIframe(targetUrl);
+        //     window.LoadIframe(targetUrl);
 
-        }
+        // }
 
 
 
@@ -2493,29 +2897,35 @@
     function handleConfigurePeg({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;iexapidef&quot;);
         // window.openDeveloperStudio("iexapidef"); 
+        let transId = "ad_pn";
+        let fieldname = "name";
         let rawParamName = cleanCommandToken(tokens[2]);
-        let targetUrl = "../aspx/tstruct.aspx?transid=ad_pn";
 
-        if (!rawParamName) {
-            window.LoadIframe(targetUrl);
-        } else {
+        // let targetUrl = "../aspx/tstruct.aspx?transid=ad_pn";
+        setEditSessionState(transId);
 
-            targetUrl += `&hltype=load`;
-            targetUrl += `&torecid=false`;
-            targetUrl += `&openerIV=ad_pn`;
-            targetUrl += `&isIV=false`;
-            targetUrl += `&isDupTab=false`;
+        redirectToTstruct(transId, true, fieldname, rawParamName);
 
+        // if (!rawParamName) {
+        //     window.LoadIframe(targetUrl);
+        // } else {
 
-
-            targetUrl += `&servername=${rawParamName}`;
-
-            targetUrl += "&dummyload=false♠"
+        //     targetUrl += `&hltype=load`;
+        //     targetUrl += `&torecid=false`;
+        //     targetUrl += `&openerIV=ad_pn`;
+        //     targetUrl += `&isIV=false`;
+        //     targetUrl += `&isDupTab=false`;
 
 
-            window.LoadIframe(targetUrl);
 
-        }
+        //     targetUrl += `&servername=${rawParamName}`;
+
+        //     targetUrl += "&dummyload=false♠"
+
+
+        //     window.LoadIframe(targetUrl);
+
+        // }
 
 
 
@@ -2524,29 +2934,41 @@
     function handleConfigureNotification({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;iexapidef&quot;);
         // window.openDeveloperStudio("iexapidef"); 
-        let rawParamName = cleanCommandToken(tokens[2]);
-        let targetUrl = "../aspx/tstruct.aspx?transid=a__fn";
+        let transId = "a__fn";
 
-        if (!rawParamName) {
-            window.LoadIframe(targetUrl);
-        } else {
 
-            targetUrl += `&hltype=load`;
-            targetUrl += `&torecid=false`;
-            targetUrl += `&openerIV=a__fn`;
-            targetUrl += `&isIV=false`;
-            targetUrl += `&isDupTab=false`;
+        let rawFieldname = cleanCommandToken(tokens[2]);
+        const fieldname = tryResolveToken(2, rawFieldname, commandConfig, false);
+        let rawParamValue = cleanCommandToken(tokens[3]);
+        // let targetUrl = "../aspx/tstruct.aspx?transid=a__fn";
+
+        setEditSessionState(transId);
+        redirectToTstruct(transId, true, fieldname, rawParamValue);
 
 
 
-            targetUrl += `&servername=${rawParamName}`;
-
-            targetUrl += "&dummyload=false♠"
 
 
-            window.LoadIframe(targetUrl);
+        // if (!rawParamName) {
+        //     window.LoadIframe(targetUrl);
+        // } else {
 
-        }
+        //     targetUrl += `&hltype=load`;
+        //     targetUrl += `&torecid=false`;
+        //     targetUrl += `&openerIV=a__fn`;
+        //     targetUrl += `&isIV=false`;
+        //     targetUrl += `&isDupTab=false`;
+
+
+
+        //     targetUrl += `&servername=${rawParamName}`;
+
+        //     targetUrl += "&dummyload=false♠"
+
+
+        //     window.LoadIframe(targetUrl);
+
+        // }
 
 
 
@@ -2569,30 +2991,36 @@
     function handleConfigureJob({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;idop_list&quot;);
         // window.openDeveloperStudio("idop_list"); 
+        let transId = "job_s";
+        let fieldname = "jname";
+
         let rawParamName = cleanCommandToken(tokens[2]);
-        let targetUrl = "../aspx/tstruct.aspx?transid=job_s";
+        // let targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
-        if (!rawParamName) {
-            window.LoadIframe(targetUrl);
-        } else {
+        setEditSessionState(transId);
+        redirectToTstruct(transId, true, fieldname, rawParamName);
 
-            targetUrl += `&hltype=load`;
-            targetUrl += `&torecid=false`;
-            targetUrl += `&openerIV=job_s`;
-            targetUrl += `&isIV=false`;
-            targetUrl += `&isDupTab=false`;
+        // if (!rawParamName) {
+        //     window.LoadIframe(targetUrl);
+        // } else {
 
-
-
-            targetUrl += `&jname=${rawParamName}`;
-
-            targetUrl += "&dummyload=false♠"
+        //     targetUrl += `&hltype=load`;
+        //     targetUrl += `&torecid=false`;
+        //     targetUrl += `&openerIV=job_s`;
+        //     targetUrl += `&isIV=false`;
+        //     targetUrl += `&isDupTab=false`;
 
 
-            window.LoadIframe(targetUrl);
 
-        }
-        // window.LoadIframe("../aspx/tstruct.aspx?transid=job_s")
+        //     targetUrl += `&jname=${rawParamName}`;
+
+        //     targetUrl += "&dummyload=false♠"
+
+
+        //     window.LoadIframe(targetUrl);
+
+        // }
+        // // window.LoadIframe("../aspx/tstruct.aspx?transid=job_s")
 
     }
 
@@ -2652,6 +3080,16 @@
 
             localStorage.setItem(storageKey, JSON.stringify(updated));
         }
+    }
+
+    function extractParams(tokens, commandConfig) {
+        return commandConfig.prompts.map(prompt => {
+            const tokenIndex = prompt.wordPos - 1;
+            return {
+                prompt,
+                rawValue: cleanCommandToken(tokens[tokenIndex] || "")
+            };
+        });
     }
 
 
