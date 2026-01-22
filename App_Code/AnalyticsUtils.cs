@@ -16,7 +16,7 @@ public class AnalyticsUtils
 {
     public string ARM_URL
     {
-        get { return GetARM_URL(); }
+        get {  return GetARM_URL(); }
     }
     public string ARMSessionId
     {
