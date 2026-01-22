@@ -1,4 +1,5 @@
 ﻿(() => {
+    // Latest Changes
     // ENDPOINTS
     const API_METADATA = "http://localhost:5000/api/v1/Axi/axi_get";
     const API_AXLIST = "http://localhost:5000/api/v1/AxList";
@@ -251,12 +252,25 @@
         activeFetches.add(key);
 
         console.log(`Fetching list: ${sourceName} params: ${paramValue}`);
-        const data = await getList(sourceName, paramValue);
 
+        try {
+        const data = await getList(sourceName, paramValue);
         axDatasourceObj[key] = data;
         console.log(JSON.stringify(axDatasourceObj));
-        activeFetches.delete(key);
         handleInput();
+
+
+
+
+
+        }catch(error) {
+            console.error("loadlist failed", error); 
+        } finally {
+        activeFetches.delete(key);
+
+
+        }
+
     }
 
     /* ===============================
@@ -437,6 +451,23 @@
         window.LoadIframe(targetUrl);
 
 
+    }
+
+    function redirectToProcessFlow(caption) {
+        console.log(`Redirecting to Process flox for caption:  ${caption}`);
+
+        // clickOnDemand($(this), true, `<a title=&quot;PEGTestQA&quot; href=&quot;processflow.aspx?loadcaption=AxProcessBuilder&processname=PEGTestQA&quot; style=&quot;cursor: pointer;&quot;>PEGTestQA  </a>`, `3`, `1`);      
+
+
+        let targetUrl = `../aspx/processflow.aspx`;
+        targetUrl += "?loadcaption=AxProcessBuilder"
+
+        if (caption) {
+            targetUrl += `&processname=${encodeURIComponent(caption)}`;
+        }
+
+
+        top.window.LoadIframe(targetUrl);
     }
 
     /* ===============================
@@ -1491,7 +1522,7 @@
 
             } else if (verbKey.toLowerCase() === "dbconsole") {
                 // openDeveloperStudio(&quot;AxDBScript.aspx&quot;);
-                window.openDeveloperStudio("AxDBScript.aspx");
+                window.openDeveloperStudio("open", "AxDBScript.aspx", true);
             }
 
 
@@ -2031,7 +2062,7 @@
     }
 
     function handleViewDbConsole() {
-        window.openDeveloperStudio("AxDBScript.aspx");
+        window.openDeveloperStudio("open", "AxDBScript.aspx", true);
 
     }
 
@@ -2248,31 +2279,35 @@
     function handleCreateDimension({ tokens, commandConfig }) {
         let targetUrl;
         let paramName;
+        let transId = "a__ag"; 
+        
         let rawField = cleanCommandToken(tokens[2]);
         let rawFieldValue = cleanCommandToken(tokens[3]);
+        const fieldname = tryResolveToken(2, rawField, commandConfig, false); 
 
-
+        setEditSessionState(transId)
+        redirectToTstruct(transId, true, fieldname, rawFieldValue); 
 
 
         // LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;)
 
-        targetUrl = "../aspx/tstruct.aspx?transid=a__ag";
+        // targetUrl = "../aspx/tstruct.aspx?transid=a__ag";
 
-        if (!rawFieldValue && !rawField) {
-            window.LoadIframe(targetUrl);
-
-
+        // if (!rawFieldValue && !rawField) {
+        //     window.LoadIframe(targetUrl);
 
 
-        } else {
 
 
-            targetUrl += `&${rawField}=${rawFieldValue}`;
-            targetUrl += "&act=open";
-            targetUrl += "&dummyload=false♠"
-            window.LoadIframe(targetUrl);
+        // } else {
 
-        }
+
+        //     targetUrl += `&${rawField}=${rawFieldValue}`;
+        //     targetUrl += "&act=open";
+        //     targetUrl += "&dummyload=false♠"
+        //     window.LoadIframe(targetUrl);
+
+        // }
 
 
         // window.LoadIframe("../aspx/tstruct.aspx?transid=a__ag");
@@ -2327,9 +2362,9 @@
 
 
         if (type === "tstruct") {
-            window.openDeveloperStudio("tstreact", resolvedName);
+            window.openDeveloperStudio("tstreact", resolvedName, true);
         } else if (type === "iview") {
-            window.openDeveloperStudio("ivreact", resolvedName);
+            window.openDeveloperStudio("ivreact", resolvedName, true);
         } else {
             alert("Unknown source type: " + type);
         }
@@ -2340,6 +2375,8 @@
 
         if (tokens.length < 5) {
             console.warn("edit data requires <tstruct> <field> <value>");
+            // alert("edit data requires <tstruct> <field> <value>");
+            showToast("edit data requires <tstruct> <field> <value>"); 
             return;
         }
 
@@ -2897,14 +2934,15 @@
     function handleConfigurePeg({ tokens, commandConfig }) {
         // openDeveloperStudio(&quot;iexapidef&quot;);
         // window.openDeveloperStudio("iexapidef"); 
-        let transId = "ad_pn";
-        let fieldname = "name";
+        // let transId = "ad_pn";
+        // let fieldname = "name";
         let rawParamName = cleanCommandToken(tokens[2]);
 
         // let targetUrl = "../aspx/tstruct.aspx?transid=ad_pn";
-        setEditSessionState(transId);
+        // setEditSessionState(transId);
 
-        redirectToTstruct(transId, true, fieldname, rawParamName);
+        // redirectToTstruct(transId, true, fieldname, rawParamName);
+        redirectToProcessFlow(rawParamName); 
 
         // if (!rawParamName) {
         //     window.LoadIframe(targetUrl);

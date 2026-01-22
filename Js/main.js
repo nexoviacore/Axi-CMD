@@ -5716,7 +5716,7 @@ function openPluginEditor() {
 //    }
 //}
 
-function openDeveloperStudio(ivtstName, structname) {
+function openDeveloperStudio(ivtstName, structname, callFromAxi = false) {
     if (ivtstName == "tstreact" || ivtstName == "ivreact") {
         try {
             let _adInfo = "";
@@ -5799,15 +5799,26 @@ function openDeveloperStudio(ivtstName, structname) {
                     } catch (exp) { }
                 }
             }
+
             function SuccOpenDevStudioRedis() {
                 ShowDimmer(false);
                 //   newWindow = window.open(_axstudioReactUri + _adInfo);
                 //LoadIframe(_axstudioReactUri + _adInfo);
                 if (structname && structname != "") {
                     _adInfo += `♦${structname}`;
-                }
+                } 
 
+                if (callFromAxi) {
                 LoadIframe(_axstudioReactUri + _adInfo); //single struct mode
+
+                    
+                } else {
+                     newWindow = window.open(_axstudioReactUri + _adInfo);
+
+                }
+                
+              
+
             }
         } catch (ex) { }
     } else {
