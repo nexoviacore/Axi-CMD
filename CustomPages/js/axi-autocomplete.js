@@ -190,6 +190,8 @@
         const cached = localStorage.getItem("axi_commands_v1");
         if (cached && !isForced) {
             commands = JSON.parse(cached);
+            console.log(JSON.stringify(commands)); 
+
         } else {
             try {
                 //const accessToken = localStorage.getItem("arm_accessToken_v1");
@@ -198,6 +200,7 @@
                 if (!res.ok) throw new Error("Metadata fetch failed");
                 const data = await res.json();
                 commands = data.commands;
+                console.log(JSON.stringify(commands)); 
                 localStorage.setItem("axi_commands_v1", JSON.stringify(commands));
             } catch (err) {
                 console.error("Critical: Could not load commands", err);
