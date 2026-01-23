@@ -1,25 +1,39 @@
 ﻿(() => {
-    // Commands Structure Change
+    // Latest Changes
     // ENDPOINTS
     const API_METADATA = "http://localhost:5000/api/v1/Axi/axi_get";
-   
+    const API_AXLIST = "http://localhost:5000/api/v1/AxList";
+    const API_ARM_SIGNIN = "http://localhost:5000/api/v1/Signin";
 
-   
+    // DOM ELEMENTS
+    //const input = document.getElementById("Axi-Searchinp");
+    //console.log("Input Element Found?", input);
+    //const hintDiv = document.getElementById("axiHint");
+    //const list = document.getElementById("axiSuggestions");
+    //const btnRefresh = document.getElementById("btnRefresh");
+    //const runBtn = document.getElementById("runBtn); 
 
     const COMMAND_HANDLERS = {
         edit: {
-            default: handleEditSource, 
+            source: handleEditSource,
             data: handleEditData,
-            user: handleEditUser
-           
-            
+            user: handleEditUser,
+            role: handleEditRole,
+            usergroup: handleEditUsergroup,
+            actor: handleEditActor,
+            dimension: handleEditDimension
 
         },
         create: {
-          default: handleCreateNew,
-          ads: handleCreateAds,
-          card: handleCreateCard,
-          page: handleCreatePage
+            new: handleCreateNew,
+            ads: handleCreateAds,
+            page: handleCreatePage,
+            card: handleCreateCard,
+            user: handleCreateUser,
+            usergroup: handleCreateUserGroup,
+            role: handleCreateRole,
+            dimension: handleCreateDimension,
+            actor: handleCreateActor
 
         },
         view: {
@@ -45,15 +59,6 @@
             rule: handleConfigureRule,
             server: handleConfigureServer,
             notification: handleConfigureNotification
-        },
-        open: {
-            default: (ctx) => console.log("Open handler", ctx) 
-        },
-        upload: {
-            default: handleUpload
-        },
-        download:{
-            default: handleDownload
         }
     };
 
@@ -82,6 +87,16 @@
     let lastTypedTokens = [];
 
     // DATA CACHES
+    let tstructList = null;
+    let isFetchingTStructs = false;
+    let adsList = null;
+    let isFetchingAdsList = false;
+    let fieldList = null;
+    let isFetchingFieldList = false;
+    let fieldValueList = null;
+    let isFetchingFieldValueList = false;
+    let lastLoadedTStruct = null;
+
     let axDatasourceObj = {};
     let activeFetches = new Set();
     let filteredObjects = [];
@@ -160,7 +175,8 @@
        1. INITIALIZATION
     =============================== */
     async function initCommands(isForced = false) {
-       
+        //localStorage.setItem("arm_appname_v1", "pgbase114");
+        //const origin = window.location.origin;
         let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
         console.log("Origin: " + appSessUrl);
         const projInfoKey = `projInfo-${appSessUrl}`;
@@ -168,7 +184,8 @@
         const appname = localStorage.getItem(projInfoKey);
         console.log(appname);
 
-       
+        //await ensureSignedIn(appname);
+        //logAuthExpiry();
 
         const cached = localStorage.getItem("axi_commands_v1");
         if (cached && !isForced) {
@@ -177,7 +194,8 @@
 
         } else {
             try {
-               
+                //const accessToken = localStorage.getItem("arm_accessToken_v1");
+                //const appname = localStorage.getItem("arm_appname_v1");
                 const res = await fetch(`${API_METADATA}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
                 if (!res.ok) throw new Error("Metadata fetch failed");
                 const data = await res.json();
@@ -189,58 +207,47 @@
             }
         }
     }
-    
+    //initCommands(false);
 
+    /* ===============================
+       ASYNC LOADERS
+    =============================== */
+    //async function loadTStructs() {
+    //    if (isFetchingTStructs) return;
+    //    isFetchingTStructs = true;
+    //    console.log("Fetching TStruct List...");
+    //    tstructList = await getTStructList();
+    //    isFetchingTStructs = false;
+    //    handleInput();
+    //}
 
-    /**
-     * Determines the active prompt and the specific source string to use.
-     * Handles the logic where "Source A, Source B" maps to "Type A, Type B".
-     *
-     */
-    function getActivePromptAndSource(commandConfig, tokens, targetIndex) {
-       
-        const currentWordPos = targetIndex + 1; 
-        
-        const prompt = commandConfig.prompts.find(p => p.wordPos === currentWordPos);
-        if (!prompt) return null;
+    //async function loadAds() {
+    //    if (isFetchingAdsList) return;
+    //    isFetchingAdsList = true;
+    //    console.log("Fetching Ads List...");
+    //    adsList = await getAdsList();
+    //    isFetchingAdsList = false;
+    //    handleInput();
+    //}
 
-        let activeSource = prompt.promptSource || "";
+    //async function loadFieldList(tstructname) {
+    //    if (isFetchingFieldList) return;
+    //    isFetchingFieldList = true;
+    //    console.log("Fetching Field List...");
+    //    fieldList = await getFieldList(tstructname);
+    //    lastLoadedTStruct = tstructname;
+    //    isFetchingFieldList = false;
+    //    handleInput();
+    //}
 
-      
-        if (activeSource.includes(",")) {
-           
-            const prevWordPos = currentWordPos - 1;
-            const prevPrompt = commandConfig.prompts.find(p => p.wordPos === prevWordPos);
-
-            if (prevPrompt && prevPrompt.promptValues) {
-               
-                const prevTokenIndex = targetIndex - 1;
-                const prevValue = cleanString(tokens[prevTokenIndex]);
-                
-             
-                const allowedValues = prevPrompt.promptValues.split(',').map(v => v.trim().toLowerCase());
-                const valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
-
-                if (valueIndex !== -1) {
-                    const sources = activeSource.split(',');
-                   
-                    if (sources[valueIndex]) {
-                        activeSource = sources[valueIndex].trim();
-                    } else {
-                      
-                        activeSource = ""; 
-                    }
-                }
-            }
-        }
-
-        return {
-            config: prompt,
-            realSource: activeSource
-        };
-    }
-
-    
+    //async function loadFieldValueList() {
+    //    if (isFetchingFieldValueList) return;
+    //    isFetchingFieldValueList = true;
+    //    console.log("Fetching Field value List...");
+    //    fieldValueList = await getFieldValueList();
+    //    isFetchingFieldValueList = false;
+    //    handleInput();
+    //}
 
     async function loadList(sourceName, paramValue = "") {
         const key = paramValue ? `${sourceName}_${paramValue}` : sourceName;
@@ -269,13 +276,130 @@
 
     }
 
-   
+    /* ===============================
+       REFRESH LOGIC
+    =============================== */
+    //if (btnRefresh) {
+    //    btnRefresh.addEventListener("click", async () => {
+    //        localStorage.clear();
+    //        commands = null;
+    //        tstructList = null;
+    //        adsList = null;
+    //        axDatasourceObj = {};
+    //        resolvedParams = {};
+    //        await initCommands(true);
+    //        alert("Refreshed!");
+    //        input.focus();
+    //    });
+    //}
 
-   
+    //if (runBtn) {
+    //    runBtn.addEventListener("click", () => {
+    //        const text = input.value.trim();
+    //        if (!text || !commands) return;
+
+    //        // 1. Tokenize Input
+    //        const tokens = getTokens(text);
+    //        if (tokens.length < 2) return;
+
+    //        const groupKey = tokens[0].replace(/"/g, "").toLowerCase();
+    //        const verbKey = tokens[1].replace(/"/g, "").toLowerCase();
+
+    //        const commandConfig = commands[groupKey]?.[verbKey]; // Access nested config
+
+    //        // Identify Command Logic
+    //        if (groupKey === "edit" && verbKey === "source") {
+
+    //            // Get config to help resolution
+
+    //            if (!commandConfig) return;
+
+
+    //            const type = tokens[2].replace(/"/g, "").toLowerCase();
+
+
+    //            let rawName = tokens[3] || "";
+    //            let structName = tryResolveToken(3, rawName, commandConfig, true); // forceResolve=true
+
+    //            console.log(`Run Command: Type=${type}, Name=${structName}`);
+
+    //            if (type === "tstruct") {
+    //                openDeveloperStudio("tstreact", structName);
+    //            } else if (type === "iview") {
+    //                openDeveloperStudio("ivreact", structName);
+    //            } else {
+    //                alert("Unknown source type: " + type);
+    //            }
+    //        }  else if(groupKey === "create" && verbKey==="new") {
+    //            console.log(text);
+
+    //            if (!commandConfig) {
+    //                console.error("No command Config");
+    //            }
+
+    //            //const type = tokens[2].replace(/"/g, "").toLowerCase();
+
+    //            let rawName = tokens[2] || "";
+
+
+    //            //console.log(`Structname : ${structName}`)
+
+    //            let transId = tryResolveToken(2, rawName, commandConfig, true);
+
+
+    //            redirectToTstruct(transId);
+
+
+
+    //        }
+    //    });
+    //}
+
+    //function redirectToTstruct(transId, isEdit = false, fieldname = "") {
+    //    console.log("Redirecting to Tstruct: " + transId);
+
+    //    let targetUrl;
+    //    if (!transId) {
+    //        alert("There is no Tstruct name provided!");
+    //        return;
+    //    }
+
+    //    if (isEdit) targetUrl = `../aspx/tstruct.aspx?transid=${transId}fieldname=${fieldname}&act=open`;
+    //    else targetUrl = `../aspx/tstruct.aspx?transid=${transId}&dummyload=false`;
+    //    window.LoadIframe(targetUrl);
+
+    //    //if (typeof LoadIframe === "function") {
+    //    //    LoadIframe(targetUrl);
+    //    //}
+    //    //else if (window.parent && typeof window.parent.LoadIframe === "function") {
+
+    //    //    window.parent.LoadIframe(targetUrl);
+    //    //}
+    //    //else {
+
+    //    //    console.error("LoadIframe function not found");
+    //    //    window.location.href = targetUrl;
+    //    //}
+
+    //    //if (typeof window.LoadIframe === "function") {
+    //    //    window.LoadIframe(targetUrl);
+    //    //}
+
+    //    //else if (window.parent && typeof window.parent.LoadIframe === "function") {
+    //    //    window.parent.LoadIframe(targetUrl);
+    //    //}
+
+    //    //else {
+    //    //    console.error("Critical: 'LoadIframe' function not found in window or parent.");
+    //    //    alert("Unable to load form: Application context missing.");
+    //    //}
+
+    //}
+
     function redirectToTstruct(transId, isEdit = false, fieldName = "", fieldValue = "") {
         console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
 
-       
+        //LoadIframe("../aspx/tstruct.aspx?transid=tstcn&empid=HSR0019&hltype=load&torecid=false&openerIV=tstcn&isIV=false&isDupTab=false&dummyload=false♠")
 
         if (!transId) {
             alert("There is no Tstruct name provided!");
@@ -287,7 +411,19 @@
 
         if (isEdit) {
 
-           
+            // let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+            // let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+            // let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
+            /** Filter the transId from the transid array and setting in local storage 
+             *  Important logic for edit command
+             *  */
+
+
+
+            // if (_transidArray.includes(transId)) {
+            //     _transidArray = _transidArray.filter(x => x.toLowerCase() !== transId.toLowerCase());
+            //     localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
+            // }
 
 
 
@@ -323,7 +459,7 @@
     function redirectToProcessFlow(caption) {
         console.log(`Redirecting to Process flox for caption:  ${caption}`);
 
-        
+        // clickOnDemand($(this), true, `<a title=&quot;PEGTestQA&quot; href=&quot;processflow.aspx?loadcaption=AxProcessBuilder&processname=PEGTestQA&quot; style=&quot;cursor: pointer;&quot;>PEGTestQA  </a>`, `3`, `1`);      
 
 
         let targetUrl = `../aspx/processflow.aspx`;
@@ -401,184 +537,303 @@
     //     return str.match(regex) || [];
     // }
 
+
     function getTokens(str) {
-        const regex = /"[^"]*"?|[^\s]+/g;
-        return str.match(regex) || [];
+        const tokens = [];
+        let currentToken = "";
+        let inQuote = false;
+
+        for (let i = 0; i < str.length; i++) {
+            const char = str[i];
+
+            if (char === '"') {
+                inQuote = !inQuote;
+                currentToken += char;
+            } else if (char === ' ' && !inQuote) {
+
+                if (currentToken.length > 0) {
+                    tokens.push(currentToken);
+                    currentToken = "";
+                }
+            } else {
+                currentToken += char;
+            }
+        }
+
+
+        if (currentToken.length > 0) {
+            tokens.push(currentToken);
+        }
+
+
+        if (str.endsWith(" ") && !inQuote) {
+            tokens.push("");
+        }
+
+        return tokens;
     }
 
-    function cleanString(val) {
-        return (val || "").replace(/['"]/g, "").trim();
-    }
-
-
-
-
-   
     /* ===============================
        4. Suggestion Logic
     =============================== */
-   function suggestLocal(inputText) {
-        const tokens = getTokens(inputText);
+    function suggestLocal(inputText) {
         const endsWithSpace = inputText.endsWith(" ");
-        
-        // Handle unclosed quotes logic for space
-        const lastTokenRaw = tokens[tokens.length - 1];
-        const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
-        
-        if (endsWithSpace && !isUnclosedString) {
-            tokens.push("");
-        }
+        const tokens = getTokens(inputText);
+        // if (endsWithSpace) tokens.push("");
+
+
 
         if (tokens.length === 0) {
             hintDiv.textContent = "";
             return Object.keys(commands);
         }
 
-        const groupKey = cleanString(tokens[0]);
+        const groupKey = tokens[0].replace(/"/g, "").toLowerCase();
 
-        // 1. Suggest Group (create, edit, etc.)
+        // 1. Group
         if (tokens.length === 1 && !endsWithSpace) {
             hintDiv.textContent = "";
             return Object.keys(commands).filter(k => k.startsWith(groupKey));
         }
 
-        const commandConfig = commands[groupKey];
-        if (!commandConfig) {
-            hintDiv.textContent = "";
-            return [];
-        }
+        const groupParams = commands[groupKey];
+        if (!groupParams) { hintDiv.textContent = ""; return []; }
 
-        // 2. Suggest Parameters based on Prompts
         const targetIndex = tokens.length - 1;
-        const promptInfo = getActivePromptAndSource(commandConfig, tokens, targetIndex);
 
-        if (!promptInfo) {
-             // No prompt definition for this position
-            hintDiv.textContent = "";
-            updateDynamicHintFromPrompt(null);
-            isCommandTypingCompleted = true; // Likely finished
-            return [];
+        // 2. Verb
+        if (targetIndex === 1) {
+            const verbInput = tokens[1].replace(/"/g, "").toLowerCase();
+            const matchingVerbs = Object.keys(groupParams).filter(k => k.startsWith(verbInput));
+            updateDynamicHintForVerb(matchingVerbs);
+            return matchingVerbs;
         }
 
-        const { config: activePrompt, realSource } = promptInfo;
+        // 3. Parameters
+        const verbKey = tokens[1].replace(/"/g, "").toLowerCase();
+        const commandConfig = groupParams[verbKey];
+        if (!commandConfig) { hintDiv.textContent = ""; return []; }
+
+        const currentWordPos = targetIndex + 1;
+        let activePrompt = commandConfig.prompts.find(p => p.wordPos === currentWordPos);
+
         updateDynamicHintFromPrompt(activePrompt);
-        
-        const partialTyped = cleanString(tokens[targetIndex]);
 
-        // Scenario A: Suggest from Static Values (promptValues)
-        // This is usually the "Verb" or "Type" selector (e.g. 'peg' in 'configure peg')
-        if (!realSource && activePrompt.promptValues) {
-             const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
-             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
-             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
-             return result;
+        // Dynamic source switching
+        const prevIndex = targetIndex - 1;
+        if (prevIndex >= 1) {
+            const prevWordPos = currentWordPos - 1;
+            const prevPrompt = commandConfig.prompts.find(p => p.wordPos === prevWordPos);
+            if (prevPrompt && prevPrompt.promptValues) {
+                const prevValue = tokens[prevIndex].replace(/"/g, "").toLowerCase();
+                const allowedValues = prevPrompt.promptValues.split(',').map(v => v.trim().toLowerCase());
+                const valueIndex = allowedValues.indexOf(prevValue);
+                if (valueIndex !== -1 && activePrompt && activePrompt.promptSource) {
+                    const sources = activePrompt.promptSource.split(',');
+                    if (sources.length > valueIndex) {
+                        activePrompt = { ...activePrompt, promptSource: sources[valueIndex].trim() };
+                    }
+                }
+            }
         }
 
-        // Scenario B: Suggest from Data Source (promptSource)
-        if (realSource) {
-            // Resolve dependencies if promptParams exists
+        const partialTyped = tokens[targetIndex].replace(/"/g, "").toLowerCase().trim();
+
+        // Generic list handler
+        if (activePrompt && activePrompt.promptSource) {
+            const sourceName = activePrompt.promptSource;
             let paramValue = "";
+
             if (activePrompt.promptParams) {
                 const indices = activePrompt.promptParams.toString().split(',');
                 const values = indices.map(idx => {
-                    const depTokenIndex = parseInt(idx.trim()) - 1; // Convert wordPos to token index
-                     // Resolve the dependency token
-                    const depToken = cleanString(tokens[depTokenIndex] || "");
-                    return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+                    const dependencyIndex = parseInt(idx.trim()) - 1;
+                    if (resolvedParams[dependencyIndex]) {
+                        return resolvedParams[dependencyIndex];
+                    }
+                    let tokenText = (tokens[dependencyIndex] || "").replace(/"/g, "");
+                    // Try to resolve this token NOW
+                    const resolved = tryResolveToken(dependencyIndex, tokenText, commandConfig);
+                    return resolved;
                 });
                 paramValue = values.join(',');
             }
 
-            let apiSourceName = realSource.toLowerCase();
-            // Special case mapping
-          
-
-            // Case-insensitive cache key
-            const sourceKey = (paramValue ? `${apiSourceName}_${paramValue}` : apiSourceName).toLowerCase();
+            let apiSourceName = sourceName.toLowerCase();
+            const sourceKey = paramValue ? `${apiSourceName}_${paramValue}` : apiSourceName;
 
             if (!axDatasourceObj[sourceKey]) {
                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
-                
                 if (hasValidParams) {
-                    // Trigger fetch
+                    console.log(`Triggering load for ${apiSourceName} with param: ${paramValue}`);
                     loadList(apiSourceName, paramValue);
-                    return [`Loading ${realSource}...`];
+                    return [`Loading ${sourceName}...`];
                 } else {
-                    return ["Waiting for previous input..."];
+                    return ["Waiting for input..."];
                 }
             }
 
-            // Filter cached list
             const dataList = axDatasourceObj[sourceKey];
             const filtered = dataList.filter(item => {
-                const display = item.displaydata || item.name || item.caption || "";
-                return display.toLowerCase().includes(partialTyped.toLowerCase());
+                const display = item.displaydata;
+                if (display == null) return false;
+                return display.toLowerCase().includes(partialTyped);
             });
 
             filteredObjects = filtered;
             return filtered.map(item => item.displaydata);
         }
 
+        // Static Values
+        if (activePrompt && activePrompt.promptValues) {
+            const staticValues = activePrompt.promptValues.split(',');
+            const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped));
+            filteredObjects = result.map(val => ({ name: val, displaydata: val }));
+            return result;
+        }
+
         return [];
     }
-   
+
+    /* ===============================
+       LAZY RESOLUTION HELPER
+    =============================== */
+    //function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
+    //    tokenText = tokenText.replace(/"/g, "");
+
+    //    if (resolvedParams[tokenIndex] && !forceResolve) {
+    //        return resolvedParams[tokenIndex];
+    //    }
+
+    //    const wordPos = tokenIndex + 1;
+    //    const prompt = commandConfig.prompts.find(p => p.wordPos === wordPos);
+
+    //    if (!prompt || !prompt.promptSource) return tokenText;
+
+    //    if (prompt.promptValues) {
+    //        const staticValues = prompt.promptValues.split(',').map(v => v.trim().toLowerCase());
+    //        if (staticValues.includes(tokenText.toLowerCase())) {
+    //            resolvedParams[tokenIndex] = tokenText.toLowerCase();
+    //            return tokenText.toLowerCase();
+    //        }
+    //        return tokenText;
+    //    }
+
+    //    const sourceName = prompt.promptSource;
+    //    let cacheKey = sourceName;
+    //    if (prompt.promptParams) {
+    //        const indices = prompt.promptParams.toString().split(',');
+    //        const values = indices.map(idx => {
+    //            const depIndex = parseInt(idx.trim()) - 1;
+    //            const depToken = (getTokens(input.value)[depIndex] || "").replace(/"/g, "");
+    //            return tryResolveToken(depIndex, depToken, commandConfig);
+    //        });
+    //        const paramValue = values.join(',');
+    //        if (paramValue) cacheKey = `${sourceName}_${paramValue}`;
+    //    }
+
+    //    const cachedList = axDatasourceObj[cacheKey];
+    //    if (cachedList) {
+    //        const foundItem = cachedList.find(item =>
+    //            (item.displaydata && item.displaydata.toLowerCase() === tokenText.toLowerCase()) ||
+    //            (item.caption && item.caption.toLowerCase() === tokenText.toLowerCase()) ||
+    //            (item.name && item.name.toLowerCase() === tokenText.toLowerCase())
+    //        );
+
+    //        if (foundItem) {
+    //            const realValue = foundItem.name || foundItem.sqlname || foundItem.displaydata;
+    //            console.log(`Lazy Resolved: "${tokenText}" → "${realValue}"`);
+    //            resolvedParams[tokenIndex] = realValue;
+    //            return realValue;
+    //        }
+    //    }
+
+    //    return tokenText;
+    //}
+
     /* ===============================
        LAZY RESOLUTION HELPER 
     =============================== */
-  function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
-        tokenText = cleanString(tokenText);
+    function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
 
-        if (resolvedParams[tokenIndex] && !forceResolve) return resolvedParams[tokenIndex];
-        if (!commandConfig) return tokenText;
+        tokenText = tokenText.replace(/"/g, "").trim();
 
-        const promptInfo = getActivePromptAndSource(commandConfig, getTokens(input.value), tokenIndex);
-        if (!promptInfo) return tokenText;
 
-        const { config: prompt, realSource } = promptInfo;
-
-        // Static Value Check
-        if (!realSource && prompt.promptValues) {
-             const staticValues = prompt.promptValues.split(',').map(v => v.trim().toLowerCase());
-             if (staticValues.includes(tokenText.toLowerCase())) return tokenText.toLowerCase();
-             return tokenText;
+        if (resolvedParams[tokenIndex] && !forceResolve) {
+            return resolvedParams[tokenIndex];
         }
 
-        // Data Source Check
-        if (realSource) {
-            let cacheKey = realSource;
-            if (prompt.promptParams) {
-                const indices = prompt.promptParams.toString().split(',');
-                const values = indices.map(idx => {
-                    // Recursion for dependencies
-                    const depIndex = parseInt(idx.trim()) - 1; 
-                    const depToken = cleanString(getTokens(input.value)[depIndex] || "");
-                    return tryResolveToken(depIndex, depToken, commandConfig, true);
-                });
-                const paramVal = values.join(',');
-                let apiName = realSource === "FieldList" ? "AxpFieldList" : realSource;
-                if (paramVal) cacheKey = `${apiName}_${paramVal}`;
-            }
+        // Get Configuration
+        if (!commandConfig || !commandConfig.prompts) return tokenText;
+        const wordPos = tokenIndex + 1;
+        const prompt = commandConfig.prompts.find(p => p.wordPos === wordPos);
 
-            const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
-            if (cachedList) {
-                const found = cachedList.find(item => 
-                    (item.displaydata && item.displaydata.toLowerCase() === tokenText.toLowerCase()) ||
-                    (item.name && item.name.toLowerCase() === tokenText.toLowerCase()) || 
-                    (item.caption && item.caption.toLowerCase() === tokenText.toLowerCase() )
-                );
-                if (found) {
-                    const realValue = found.name || found.sqlname || found.displaydata;
-                    resolvedParams[tokenIndex] = realValue; // Cache it
-                    return realValue;
-                }
+        if (!prompt || !prompt.promptSource) return tokenText;
+
+        // Handle Static Values (e.g. "tstruct, iview")
+        if (prompt.promptValues) {
+            const staticValues = prompt.promptValues.split(',').map(v => v.trim().toLowerCase());
+            if (staticValues.includes(tokenText.toLowerCase())) {
+                return tokenText.toLowerCase();
             }
+            return tokenText;
         }
+
+        // Determine Cache Key (Handle Dependencies)
+        const sourceName = prompt.promptSource;
+        let cacheKey = sourceName.toLowerCase();
+
+        // Handle dependencies (e.g. FieldList needs TStruct name)
+        if (prompt.promptParams) {
+            const indices = prompt.promptParams.toString().split(',');
+            const values = indices.map(idx => {
+                const depIndex = parseInt(idx.trim()) - 1;
+                const depToken = (getTokens(input.value)[depIndex] || "").replace(/"/g, "");
+
+                return tryResolveToken(depIndex, depToken, commandConfig, true);
+            });
+            const paramValue = values.join(',');
+
+
+            let apiSourceName = sourceName;
+            // if (sourceName === "FieldList") apiSourceName = "AxpFieldList";
+
+            if (paramValue) cacheKey = `${apiSourceName}_${paramValue}`.toLowerCase();
+        }
+
+        // Look in Cache
+        const cachedList = axDatasourceObj[cacheKey];
+
+        if (cachedList) {
+
+            const foundItem = cachedList.find(item =>
+                (item.displaydata && item.displaydata.toLowerCase() === tokenText.toLowerCase()) ||
+                (item.caption && item.caption.toLowerCase() === tokenText.toLowerCase()) ||
+                (item.name && item.name.toLowerCase() === tokenText.toLowerCase()) ||
+                (item.sqlname && item.sqlname.toLowerCase() === tokenText.toLowerCase())
+            );
+
+            if (foundItem) {
+
+                const realValue = foundItem.name || foundItem.sqlname || foundItem.displaydata;
+                console.log(`Auto-Resolved: "${tokenText}" -> "${realValue}"`);
+
+
+                resolvedParams[tokenIndex] = realValue;
+                return realValue;
+            } else {
+                console.warn(`Cache Hit for ${cacheKey}, but item "${tokenText}" not found in list.`);
+            }
+        } else {
+            console.warn(`Cache Miss for key: ${cacheKey}. List not loaded yet.`);
+        }
+
 
         return tokenText;
     }
 
     /* ===============================
-       RENDER & APPLY
+       5. RENDER & APPLY
     =============================== */
     function render() {
         console.log("Render called");
@@ -647,67 +902,80 @@
         return selectedValue;
     }
 
-   function apply(index) {
+    function apply(index) {
         if (!items[index] || items[index] === "Loading options...") return;
 
         let suggestion = items[index];
         let displayName = suggestion;
-        
-        // Get Real Value logic
-        const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
-        let realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
+        let realValue = suggestion;
 
-        // Clean up display name if it contains parens like "Name (ID)"
+        // Get Real Value using Lookup
+        realValue = GetObjectName(suggestion);
+
+        // Clean up Display Name
         if (suggestion.includes("(") && suggestion.includes(")")) {
             const lastBracketIndex = suggestion.lastIndexOf("(");
             displayName = suggestion.substring(0, lastBracketIndex).trim();
+        } else {
+            displayName = suggestion;
         }
 
+        // Identify Token Position
         const currentInput = input.value;
+        // const endsWithSpace = currentInput.endsWith(" ");
         const tokens = getTokens(currentInput);
+        // const targetIndex = endsWithSpace ? tokens.length : tokens.length - 1;
+        const targetIndex = tokens.length - 1;
 
-       
-        const endsWithSpace = currentInput.endsWith(" ");
-        const lastTokenRaw = tokens[tokens.length - 1];
-        
-        // Check if we are inside an unclosed quote
-        const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
-
-        // If ends with space and NOT inside a quote, we are adding a NEW parameter
-        if (endsWithSpace && !isUnclosedString) {
+        if (targetIndex < 0) {
+            targetIndex = 0;
             tokens.push("");
         }
-       
 
-        let targetIndex = tokens.length - 1;
-        if (targetIndex < 0) { 
-            targetIndex = 0; 
-            tokens.push(""); 
-        }
-
+        // Store Real Value
         resolvedParams[targetIndex] = realValue;
-        
-        // Auto-Quote if necessary
+        console.log("Updated Params:", resolvedParams);
+
+        // Auto-Quote Display Name if needed
         if (displayName.includes(" ")) {
             displayName = `"${displayName}"`;
         }
-        
+
+        // Update Input
+        // if (endsWithSpace) {
+        //     tokens.push(displayName);
+        // } else {
+        //     tokens[targetIndex] = displayName;
+        // }
+
         tokens[targetIndex] = displayName;
-        
+
         input.value = tokens.join(" ") + " ";
         handleInput();
         hide();
         input.focus();
     }
-  
-   
+
+    /* ===============================
+       HELPERS & EVENTS
+    =============================== */
+    function updateDynamicHintForVerb(matchingVerbs) {
+        if (matchingVerbs.length === 1) {
+            hintDiv.textContent = `Next: ${matchingVerbs[0]}`;
+            hintDiv.style.color = "#f59e0b";
+        } else if (matchingVerbs.length > 0) {
+            hintDiv.textContent = `Suggestion: ${matchingVerbs[0]}...`;
+            hintDiv.style.color = "#9ca3af";
+        } else {
+            hintDiv.textContent = "";
+        }
+    }
 
     function updateDynamicHintFromPrompt(prompt) {
         if (prompt) {
             let label = prompt.prompt || "value";
             if (prompt.promptValues && !prompt.prompt) {
-                // label = prompt.promptValues.split(',').join(' / ');
-                label = prompt.promptValues.split(',').slice(0,3);
+                label = prompt.promptValues.split(',').join(' / ');
             }
             hintDiv.textContent = `Next: <${label}>`;
             hintDiv.style.color = "#f59e0b";
@@ -719,7 +987,40 @@
         }
     }
 
-   
+    // Add event listeners
+    //if (input) {
+    //    input.addEventListener("input", handleInput);
+    //    //input.addEventListener("blur", () => {
+    //    //    setTimeout(() => {
+    //    //        if (!input.value) hintDiv.textContent = "";
+    //    //    }, 200);
+    //    //});
+
+    //    input.addEventListener("keydown", e => {
+    //        if (list.style.display !== "block" || items.length === 0) return;
+
+    //        if (e.key === "ArrowDown") {
+    //            e.preventDefault();
+    //            activeIndex = (activeIndex + 1) % items.length;
+    //            highlight();
+    //        }
+    //        if (e.key === "ArrowUp") {
+    //            e.preventDefault();
+    //            activeIndex = (activeIndex - 1 + items.length) % items.length;
+    //            highlight();
+    //        }
+    //        if (e.key === "Tab") {
+    //            e.preventDefault();
+    //            if (activeIndex === -1) activeIndex = 0;
+    //            apply(activeIndex);
+    //        }
+    //        if (e.key === "Enter" && activeIndex >= 0) {
+    //            e.preventDefault();
+    //            apply(activeIndex);
+    //        }
+    //        if (e.key === "Escape") hide();
+    //    });
+    //}
 
     function highlight() {
         if (list.children.length > 0) {
@@ -735,7 +1036,14 @@
         }
     });
 
-   
+    function getDataFromAxListSuccess(result) {
+        console.log(`AxList data` + JSON.stringify(result));
+    }
+
+    function getDataFromAxListFail(error) {
+        showToast(error)
+        console.error(`AxList data` + error);
+    }
 
     async function getAxListAsync(data) {
         return new Promise((resolve, reject) => {
@@ -1259,7 +1567,9 @@
             });
         }
 
-       
+        //function getName(caption, type = "") {
+
+        //}
 
         if (axiClearBtn) {
             axiClearBtn.addEventListener("click", () => {
@@ -1289,31 +1599,47 @@
             // // --------------------------------------------------------
 
             // AUTO DOUBLE-QUOTE FOR MULTI-WORD SUGGESTIONS
-           if (e.key === " " && items.length > 0) {
-                const val = input.value;
-                if (input.selectionStart === val.length) {
-                    const tokens = getTokens(val);
-                    const lastTokenRaw = tokens[tokens.length - 1] || "";
-                    
-                    if (!lastTokenRaw.startsWith('"')) {
-                        const hasMultiWordMatch = items.some(item => {
-                            const str = (typeof item === 'string' ? item : item.displaydata).toLowerCase();
-                            return str.startsWith(lastTokenRaw.toLowerCase()) && str.includes(" ");
-                        });
+            if (e.key === " " && items.length > 0) {
+                const value = input.value;
+                const cursor = input.selectionStart;
 
-                        if (hasMultiWordMatch) {
-                            e.preventDefault();
-                            const lastIndex = val.lastIndexOf(lastTokenRaw);
-                            if (lastIndex !== -1) {
-                                const prefix = val.substring(0, lastIndex);
-                                input.value = prefix + '"' + lastTokenRaw + ' '; 
-                                handleInput();
-                                return;
-                            }
-                        }
-                    }
-                }
+                // Only when typing at the end
+                if (cursor !== value.length) return;
+
+                const tokens = getTokens(value);
+                const lastToken = tokens[tokens.length - 1] || "";
+
+                // Ignore if already quoted
+                if (lastToken.startsWith('"')) return;
+
+                const lowerLast = lastToken.toLowerCase();
+
+                const hasMultiWordMatch = items.some(item => {
+                    const text =
+                        typeof item === "string"
+                            ? item
+                            : item.displaydata;
+
+                    return (
+                        text.toLowerCase().startsWith(lowerLast) &&
+                        text.includes(" ")
+                    );
+                });
+
+                if (!hasMultiWordMatch) return;
+
+                e.preventDefault();
+
+                // Replace last token with opening quote
+                const lastIndex = value.lastIndexOf(lastToken);
+                const prefix = value.substring(0, lastIndex);
+
+                input.value = `${prefix}"${lastToken} `;
+                handleInput();
+                return;
             }
+
+
 
             // ---------------------------------------------------
             if (list.style.display !== "block" || items.length === 0) return;
@@ -1368,32 +1694,17 @@
         }
     }
 
-   function executeCommandsV2() {
+    function executeCommandsV2() {
         const text = input.value.trim();
         if (!text || !commands) return;
 
         const tokens = getTokens(text);
-        if (tokens.length === 0) return; // Need at least the command group
+        if (tokens.length < 2) return;
 
-        const groupKey = cleanString(tokens[0]);
-        const groupConfig = commands[groupKey];
+        const commandTokens = buildCommandTokens(tokens);
+        if (!commandTokens) return;
 
-        if (!groupConfig) {
-            console.warn(`Unknown command group: ${groupKey}`);
-            return;
-        }
-
-        // Build the context object to pass to the dispatcher
-        const context = {
-            text: text,
-            tokens: tokens,
-            group: groupKey,
-            config: groupConfig,
-            resolvedParams: resolvedParams
-        };
-
-        dispatchCommand(context);
-        hide(); // Close suggestions after running
+        dispatchCommand(commandTokens);
     }
 
     function buildCommandTokens(tokens) {
@@ -1426,51 +1737,15 @@
         return val.replace(/['"]/g, "").trim();
     }
 
-   function dispatchCommand(ctx) {
-        const { group, config, tokens } = ctx;
-        
-       
-        
-        const firstParamPrompt = config.prompts.find(p => p.wordPos === 2);
-        const firstParamValue = cleanString(tokens[1]); 
-
-        let handlerKey = 'default';
-
-        if (firstParamPrompt && firstParamPrompt.promptValues) {
-            
-            if (firstParamValue) {
-                handlerKey = firstParamValue.toLowerCase();
-            }
-        }
-
-        // Locate the handler function in the mapping
-        const groupHandlers = COMMAND_HANDLERS[group];
-        
-        if (!groupHandlers) {
-            console.error(`System Error: No handlers object defined for command group '${group}'`);
-            return;
-        }
-
-        
-        const handler = groupHandlers[handlerKey] || groupHandlers['default'];
+    function dispatchCommand(cmdTokens) {
+        const handler = COMMAND_HANDLERS[cmdTokens.group]?.[cmdTokens.verb];
 
         if (!handler) {
-            console.error(`Dispatch Error: No handler function found for '${group}' -> '${handlerKey}'`);
+            console.error(`No handler for ${cmdTokens.group} ${cmdTokens.verb}`);
             return;
         }
 
-        console.log(`Dispatching to: ${group}.${handlerKey}`);
-        
-      
-        try {
-            handler({
-                tokens: tokens,
-                commandConfig: config,
-                resolvedParams: resolvedParams
-            });
-        } catch (err) {
-            console.error(`Error executing handler for ${group}.${handlerKey}:`, err);
-        }
+        handler(cmdTokens);
     }
 
     /**
@@ -1479,19 +1754,15 @@
      */
 
     function handleCreateNew({ tokens, commandConfig }) {
-        let rawName = cleanCommandToken(tokens[1]);
-        let transId = tryResolveToken(1, rawName, commandConfig, false);
+        let rawName = cleanCommandToken(tokens[2]);
+        let transId = tryResolveToken(2, rawName, commandConfig, false);
 
         if (transId === rawName) {
             const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
             const found = list?.find(
-                x => x.caption.toLowerCase() === rawName.toLowerCase()
+                x => x.caption.toLowerCase() === rawName
             );
-            if (found) transId = found.name
-            else {
-                 console.error("Invalid Tstruct name");  
-                 return; 
-                }
+            if (found) transId = found.name;
         }
 
         redirectToTstruct(transId);
@@ -1794,7 +2065,7 @@
     }
 
     function handleViewDbConsole() {
-        window.openDeveloperStudio("AxDBScript.aspx");
+        window.openDeveloperStudio("open", "AxDBScript.aspx", true);
 
     }
 
@@ -2113,8 +2384,8 @@
         }
 
 
-        let rawStruct = cleanCommandToken(tokens[1]);
-        let transId = tryResolveToken(1, rawStruct, commandConfig, false);
+        let rawStruct = cleanCommandToken(tokens[2]);
+        let transId = tryResolveToken(2, rawStruct, commandConfig, false);
 
         if (transId === rawStruct) {
             const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
@@ -2129,8 +2400,8 @@
         }
 
 
-        let rawField = cleanCommandToken(tokens[2]);
-        const fieldName = tryResolveToken(2, rawField, commandConfig, true);
+        let rawField = cleanCommandToken(tokens[3]);
+        const fieldName = tryResolveToken(3, rawField, commandConfig, true);
 
         if (!fieldName) {
             console.error("Field resolution failed:", rawField);
@@ -2138,8 +2409,8 @@
         }
 
 
-        let rawValue = cleanCommandToken(tokens[3]);
-        const fieldValue = tryResolveToken(3, rawValue, commandConfig, true);
+        let rawValue = cleanCommandToken(tokens[4]);
+        const fieldValue = tryResolveToken(4, rawValue, commandConfig, true);
 
         if (fieldValue == null) {
             console.error("Field value resolution failed:", rawValue);
@@ -2799,21 +3070,24 @@
       * ******************************************************
       */
 
-    function handleUpload({tokens, commandConfig}) {
-          window.LoadIframe("../aspx/ImportAll.aspx");
+    function getEditSessionState() {
+        const href = top.window.location.href.toLowerCase();
+        const idx = href.indexOf("/aspx/");
+        if (idx === -1) {
+            console.warn("ASPX not found in URL:", href);
+            return { key: null, list: [] };
+        }
 
+        const appSessUrl = href.substring(0, idx);
+        const storageKey = `originaltrIds-${appSessUrl}`;
+        const list = JSON.parse(localStorage.getItem(storageKey) || "[]");
 
-
+        return {
+            appSessUrl,
+            storageKey,
+            list
+        };
     }
-
-     function handleDownload({tokens, commandConfig}) {
-          window.LoadIframe("../aspx/ExportNew.aspx");
-
-        
-
-    }
-
-   
 
     function setEditSessionState(transId) {
         if (!transId) return;
