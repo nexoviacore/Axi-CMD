@@ -29,7 +29,7 @@
 
         if (!('from' in Array)) {
             // IE 11: Load Browser Polyfill
-            document.write('<script src="../Js/polyfill.min.js"><\/script>');
+            document.write('<script src="../Js/polyfill.min.js"></script>');
         }
     </script>
     <script>
