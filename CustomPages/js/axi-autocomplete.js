@@ -3195,14 +3195,16 @@
       */
 
     function handleUpload({ tokens, commandConfig }) {
-        window.LoadIframe("../aspx/ImportAll.aspx");
+        // window.LoadIframe("../aspx/ImportAll.aspx");
+        window.openDeveloperStudio("ImportAll.aspx"); 
 
 
 
     }
 
     function handleDownload({ tokens, commandConfig }) {
-        window.LoadIframe("../aspx/ExportNew.aspx");
+        // window.LoadIframe("../aspx/ExportNew.aspx");
+        window.openDeveloperStudio("ExportNew.aspx"); 
 
 
 
@@ -3464,8 +3466,12 @@
         const item = viewList.find(v => v.displaydata.includes(text)); 
 
         const requestUrl = item.name;
+        console.log(requestUrl); 
         
         window.LoadIframe(`../aspx/${requestUrl}`); 
+        // window.openDeveloperStudio(requestUrl); 
+
+        // window.openDeveloperStudio(requestUrl);
 
     }
 
