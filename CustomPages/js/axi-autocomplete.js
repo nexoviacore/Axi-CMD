@@ -8,7 +8,7 @@
 
     const COMMAND_HANDLERS = {
         edit: {
-            default: handleEditSource, 
+            default: handleEditData, 
             data: handleEditData,
             user: handleEditUser
            
@@ -240,6 +240,39 @@
         };
     }
 
+    function getActivePromptInfo(commandConfig, tokens, targetIndex) {
+        // targetIndex is 0-based. WordPos is 1-based.
+        // Since the user DOES NOT type the extraParam, the mapping is direct.
+        const currentWordPos = targetIndex + 1; 
+        
+        const sortedPrompts = commandConfig.prompts.sort((a, b) => a.wordPos - b.wordPos);
+        const prompt = sortedPrompts.find(p => p.wordPos === currentWordPos);
+        
+        if (!prompt) return null;
+
+        let activeSource = prompt.promptSource || "";
+
+        // Handle Dynamic Source Switching (,,, logic)
+        if (activeSource.includes(",")) {
+            const prevWordPos = currentWordPos - 1;
+            const prevPrompt = sortedPrompts.find(p => p.wordPos === prevWordPos);
+
+            if (prevPrompt && prevPrompt.promptValues) {
+                const prevTokenIndex = targetIndex - 1;
+                const prevValue = cleanString(tokens[prevTokenIndex]);
+                const allowedValues = prevPrompt.promptValues.split(',').map(v => v.trim().toLowerCase());
+                const valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
+
+                if (valueIndex !== -1) {
+                    const sources = activeSource.split(',');
+                    activeSource = sources[valueIndex] ? sources[valueIndex].trim() : "";
+                }
+            }
+        }
+
+        return { config: prompt, realSource: activeSource };
+    }
+
   
 
     
@@ -419,57 +452,179 @@
     /* ===============================
        4. Suggestion Logic
     =============================== */
-   function suggestLocal(inputText) {
+//    function suggestLocal(inputText, ignoreExtraParams = false) {
+//         const tokens = getTokens(inputText);
+//         const endsWithSpace = inputText.endsWith(" ");
+        
+//         // Handle unclosed quotes logic for space
+//         const lastTokenRaw = tokens[tokens.length - 1];
+//         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
+        
+//         if (endsWithSpace && !isUnclosedString) {
+//             tokens.push("");
+//         }
+
+//         if (tokens.length === 0) {
+//             hintDiv.textContent = "";
+//             return Object.keys(commands);
+//         }
+
+//         const groupKey = cleanString(tokens[0]);
+
+//         // 1. Suggest Group (create, edit, etc.)
+//         if (tokens.length === 1 && !endsWithSpace) {
+//             hintDiv.textContent = "";
+//             return Object.keys(commands).filter(k => k.startsWith(groupKey));
+//         }
+
+//         const commandConfig = commands[groupKey];
+//         if (!commandConfig) {
+//             hintDiv.textContent = "";
+//             return [];
+//         }
+
+//         // 2. Suggest Parameters based on Prompts
+//         const targetIndex = tokens.length - 1;
+//         const promptInfo = getActivePromptAndSource(commandConfig, tokens, targetIndex);
+
+//         if (!promptInfo) {
+//              // No prompt definition for this position
+//             hintDiv.textContent = "";
+//             updateDynamicHintFromPrompt(null);
+//             isCommandTypingCompleted = true; // Likely finished
+//             return [];
+//         }
+
+//         const { config: activePrompt, realSource} = promptInfo;
+//         updateDynamicHintFromPrompt(activePrompt);
+        
+//         const partialTyped = cleanString(tokens[targetIndex]);
+
+       
+
+
+//         if (!realSource && activePrompt.promptValues) {
+//              const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
+//              const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
+//              filteredObjects = result.map(val => ({ name: val, displaydata: val }));
+//              return result;
+//         }
+
+      
+        
+//         if (realSource) {
+//             // Resolve dependencies if promptParams exists
+//             let paramValue = "";
+//             if (activePrompt.promptParams) {
+//                 const indices = activePrompt.promptParams.toString().split(',');
+//                 const values = indices.map(idx => {
+//                     const depTokenIndex = parseInt(idx.trim()) - 1; // Convert wordPos to token index
+//                      // Resolve the dependency token
+//                     const depToken = cleanString(tokens[depTokenIndex] || "");
+//                     return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+//                 });
+//                 paramValue = values.join(',');
+//             }
+
+//             if (activePrompt.extraParams && !ignoreExtraParams) {
+              
+//                 const extraSource = activePrompt.extraParams.toLowerCase(); 
+              
+//                 const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
+
+             
+//                 if (!axDatasourceObj[extraKey]) {
+                  
+//                     console.log(`Fetching Hidden Param Source: ${extraSource}`);
+//                     loadList(extraSource, paramValue);
+                  
+//                     // return [`Loading configuration...`];
+//                 }
+
+             
+//                 const extraList = axDatasourceObj[extraKey];
+//                 if (extraList && extraList.length > 0) {
+//                     const hiddenValue = extraList[0].name || extraList[0].displaydata;
+//                     console.log(`Hidden Param Found: ${hiddenValue}`);
+                    
+//                     if (paramValue) paramValue += "," + hiddenValue;
+//                     else paramValue = hiddenValue;
+//                 } else {
+//                     return ["Error: Configuration not found"];
+//                 }
+
+                
+//             }
+
+          
+
+//             let apiSourceName = realSource.toLowerCase();
+            
+          
+
+//             // Case-insensitive cache key
+//             const sourceKey = (paramValue ? `${apiSourceName}_${paramValue}` : apiSourceName).toLowerCase();
+
+//             if (!axDatasourceObj[sourceKey]) {
+//                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
+                
+//                 if (hasValidParams) {
+//                     // Trigger fetch
+//                     loadList(apiSourceName, paramValue);
+//                     return [`Loading ${realSource}...`];
+//                 } else {
+//                     return ["Waiting for previous input..."];
+//                 }
+//             }
+
+//             // Filter cached list
+//             const dataList = axDatasourceObj[sourceKey];
+//             const filtered = dataList.filter(item => {
+//                 const display = item.displaydata || item.name || item.caption || "";
+//                 return display.toLowerCase().includes(partialTyped.toLowerCase());
+//             });
+
+//             filteredObjects = filtered;
+//             return filtered.map(item => item.displaydata || item.caption || item.name);
+//         }
+
+//         return [];
+//     }
+
+
+    function suggestLocal(inputText) {
         const tokens = getTokens(inputText);
         const endsWithSpace = inputText.endsWith(" ");
         
-        // Handle unclosed quotes logic for space
         const lastTokenRaw = tokens[tokens.length - 1];
         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
-        
-        if (endsWithSpace && !isUnclosedString) {
-            tokens.push("");
-        }
+        if (endsWithSpace && !isUnclosedString) tokens.push("");
 
-        if (tokens.length === 0) {
-            hintDiv.textContent = "";
-            return Object.keys(commands);
-        }
+        if (tokens.length === 0) { hintDiv.textContent = ""; return Object.keys(commands); }
 
         const groupKey = cleanString(tokens[0]);
-
-        // 1. Suggest Group (create, edit, etc.)
         if (tokens.length === 1 && !endsWithSpace) {
             hintDiv.textContent = "";
             return Object.keys(commands).filter(k => k.startsWith(groupKey));
         }
 
         const commandConfig = commands[groupKey];
-        if (!commandConfig) {
-            hintDiv.textContent = "";
-            return [];
-        }
+        if (!commandConfig) { hintDiv.textContent = ""; return []; }
 
-        // 2. Suggest Parameters based on Prompts
         const targetIndex = tokens.length - 1;
-        const promptInfo = getActivePromptAndSource(commandConfig, tokens, targetIndex);
+        const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
 
         if (!promptInfo) {
-             // No prompt definition for this position
-            hintDiv.textContent = "";
             updateDynamicHintFromPrompt(null);
-            isCommandTypingCompleted = true; // Likely finished
             return [];
         }
 
-        const { config: activePrompt, realSource} = promptInfo;
+        const { config: activePrompt, realSource } = promptInfo;
         updateDynamicHintFromPrompt(activePrompt);
         
         const partialTyped = cleanString(tokens[targetIndex]);
 
-       
-
-
+        // Scenario A: Static Values
         if (!realSource && activePrompt.promptValues) {
              const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
              const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
@@ -477,74 +632,67 @@
              return result;
         }
 
-      
-        
+        // Scenario B: Data Source
         if (realSource) {
-            // Resolve dependencies if promptParams exists
             let paramValue = "";
+            
+            // 1. Resolve Standard Dependencies (e.g. TransId)
             if (activePrompt.promptParams) {
                 const indices = activePrompt.promptParams.toString().split(',');
                 const values = indices.map(idx => {
-                    const depTokenIndex = parseInt(idx.trim()) - 1; // Convert wordPos to token index
-                     // Resolve the dependency token
+                    const logicalWordPos = parseInt(idx.trim());
+                    const depTokenIndex = logicalWordPos - 1;
                     const depToken = cleanString(tokens[depTokenIndex] || "");
                     return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
                 });
                 paramValue = values.join(',');
             }
 
+            // 2. Handle Hidden Extra Params (The Chained Fetch)
             if (activePrompt.extraParams) {
-              
-                const extraSource = activePrompt.extraParams.toLowerCase(); 
-              
+                const extraSource = activePrompt.extraParams.toLowerCase();
+                // Use the SAME paramValue we just resolved (e.g. 'tst_001')
                 const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
 
-             
+                // Check if the Extra List is cached
                 if (!axDatasourceObj[extraKey]) {
-                  
+                    // Not cached? Fetch it FIRST and stop here.
                     console.log(`Fetching Hidden Param Source: ${extraSource}`);
                     loadList(extraSource, paramValue);
                     return [`Loading configuration...`];
                 }
 
-             
+                // Extra List is cached, extract Index 0
                 const extraList = axDatasourceObj[extraKey];
                 if (extraList && extraList.length > 0) {
-                    const hiddenValue = extraList[0].name || extraList[0].displaydata;
-                    console.log(`Hidden Param Found: ${hiddenValue}`);
+                    const hiddenValue = extraList[0].name || extraList[0].displaydata || extraList[0].fname;
+                    console.log(`Hidden Param Found (Index 0): ${hiddenValue}`);
                     
+                    // Append hidden value to params for the MAIN list
                     if (paramValue) paramValue += "," + hiddenValue;
                     else paramValue = hiddenValue;
                 } else {
-                    return ["Error: Configuration not found"];
+                    return ["Error: Configuration not found (Empty List)"];
                 }
             }
 
-          
-
-            let apiSourceName = realSource.toLowerCase();
             
-          
-
-            // Case-insensitive cache key
+            let apiSourceName = realSource.toLowerCase();
             const sourceKey = (paramValue ? `${apiSourceName}_${paramValue}` : apiSourceName).toLowerCase();
 
             if (!axDatasourceObj[sourceKey]) {
                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
-                
                 if (hasValidParams) {
-                    // Trigger fetch
                     loadList(apiSourceName, paramValue);
                     return [`Loading ${realSource}...`];
-                } else {
-                    return ["Waiting for previous input..."];
                 }
+                return ["Waiting for input..."];
             }
 
-            // Filter cached list
+            // Filter Cache
             const dataList = axDatasourceObj[sourceKey];
             const filtered = dataList.filter(item => {
-                const display = item.displaydata || item.name || item.caption || "";
+                const display = item.displaydata || item.caption || item.name || "";
                 return display.toLowerCase().includes(partialTyped.toLowerCase());
             });
 
@@ -554,6 +702,7 @@
 
         return [];
     }
+    
    
     /* ===============================
        LAZY RESOLUTION HELPER 
@@ -631,67 +780,129 @@
 //         return tokenText;
 //     }
 
-function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
+// function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
+//         tokenText = cleanString(tokenText);
+
+        
+//         if (resolvedParams[tokenIndex] && !forceResolve) return resolvedParams[tokenIndex];
+        
+        
+//         if (!tokenText && !forceResolve) return ""; 
+
+//         if (!commandConfig) return tokenText;
+
+//         const promptInfo = getActivePromptAndSource(commandConfig, getTokens(input.value), tokenIndex);
+//         if (!promptInfo) return tokenText;
+
+//         const { config: prompt, realSource } = promptInfo;
+
+//         // Static Value Check
+//         if (!realSource && prompt.promptValues) {
+//              const staticValues = prompt.promptValues.split(',').map(v => v.trim().toLowerCase());
+//              if (staticValues.includes(tokenText.toLowerCase())) return tokenText.toLowerCase();
+//              return tokenText;
+//         }
+
+//         // Data Source Check
+//         if (realSource) {
+//             let paramValue = "";
+            
+//             // Resolve PromptParams (Dependencies)
+//             if (prompt.promptParams) {
+//                 const indices = prompt.promptParams.toString().split(',');
+//                 const values = indices.map(idx => {
+//                     const logicalWordPos = parseInt(idx.trim());
+//                     // Calculate token index based on WordPos. 
+//                     // WordPos 1 = Group (Token 0). WordPos 2 = Param 1 (Token 1).
+//                     const depTokenIndex = logicalWordPos - 1; 
+                    
+//                     const currentTokens = getTokens(input.value);
+//                     const depToken = cleanString(currentTokens[depTokenIndex] || "");
+                    
+//                     // Recursive Resolution
+//                     return tryResolveToken(depTokenIndex, depToken, commandConfig, true); 
+//                 });
+//                 paramValue = values.join(',');
+//             }
+
+//             // Handle Hidden Extra Params for Resolution context
+//             if (prompt.extraParams) {
+//                  const currentTokens = getTokens(input.value);
+//                  // If we are at the value, the previous token *might* be relevant if it wasn't hidden.
+//                  // But since it IS hidden, we have to look it up from cache based on the dependencies.
+                 
+//                  const extraSource = prompt.extraParams;
+//                  // Note: We use the paramValue (Tstruct Name) we just resolved above
+//                  const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
+//                  const extraList = axDatasourceObj[extraKey];
+                 
+//                  if (extraList && extraList.length > 0) {
+//                      const hiddenValue = extraList[0].name || extraList[0].displaydata;
+//                      if (paramValue) paramValue += "," + hiddenValue;
+//                      else paramValue = hiddenValue;
+//                  }
+//             }
+
+//             let apiName = realSource;
+//             let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
+
+//             const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
+//             if (cachedList) {
+//                 const found = cachedList.find(item => 
+//                     (item.displaydata && item.displaydata.toLowerCase() === tokenText.toLowerCase()) ||
+//                     (item.caption && item.caption.toLowerCase() === tokenText.toLowerCase()) ||
+//                     (item.name && item.name.toLowerCase() === tokenText.toLowerCase())
+//                 );
+//                 if (found) {
+//                     const real = found.name || found.sqlname || found.displaydata;
+//                     resolvedParams[tokenIndex] = real;
+//                     return real;
+//                 }
+//             }
+//         } 
+        
+//         return tokenText;
+//     }
+
+
+
+    function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
         tokenText = cleanString(tokenText);
-
-        
         if (resolvedParams[tokenIndex] && !forceResolve) return resolvedParams[tokenIndex];
-        
-        
         if (!tokenText && !forceResolve) return ""; 
-
         if (!commandConfig) return tokenText;
 
-        const promptInfo = getActivePromptAndSource(commandConfig, getTokens(input.value), tokenIndex);
+        const promptInfo = getActivePromptInfo(commandConfig, getTokens(input.value), tokenIndex);
         if (!promptInfo) return tokenText;
 
         const { config: prompt, realSource } = promptInfo;
 
-        // Static Value Check
-        if (!realSource && prompt.promptValues) {
-             const staticValues = prompt.promptValues.split(',').map(v => v.trim().toLowerCase());
-             if (staticValues.includes(tokenText.toLowerCase())) return tokenText.toLowerCase();
-             return tokenText;
-        }
-
-        // Data Source Check
         if (realSource) {
             let paramValue = "";
             
-            // Resolve PromptParams (Dependencies)
+            // Resolve Dependencies
             if (prompt.promptParams) {
                 const indices = prompt.promptParams.toString().split(',');
                 const values = indices.map(idx => {
                     const logicalWordPos = parseInt(idx.trim());
-                    // Calculate token index based on WordPos. 
-                    // WordPos 1 = Group (Token 0). WordPos 2 = Param 1 (Token 1).
-                    const depTokenIndex = logicalWordPos - 1; 
-                    
-                    const currentTokens = getTokens(input.value);
-                    const depToken = cleanString(currentTokens[depTokenIndex] || "");
-                    
-                    // Recursive Resolution
-                    return tryResolveToken(depTokenIndex, depToken, commandConfig, true); 
+                    const depTokenIndex = logicalWordPos - 1;
+                    const depToken = cleanString(getTokens(input.value)[depTokenIndex] || "");
+                    return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
                 });
                 paramValue = values.join(',');
             }
 
-            // Handle Hidden Extra Params for Resolution context
-            if (!isVirtual && prompt.extraParams) {
-                 const currentTokens = getTokens(input.value);
-                 // If we are at the value, the previous token *might* be relevant if it wasn't hidden.
-                 // But since it IS hidden, we have to look it up from cache based on the dependencies.
-                 
-                 const extraSource = prompt.extraParams === "FieldList" ? "AxpFieldList" : prompt.extraParams;
-                 // Note: We use the paramValue (Tstruct Name) we just resolved above
-                 const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
-                 const extraList = axDatasourceObj[extraKey];
-                 
-                 if (extraList && extraList.length > 0) {
-                     const hiddenValue = extraList[0].name || extraList[0].displaydata;
-                     if (paramValue) paramValue += "," + hiddenValue;
-                     else paramValue = hiddenValue;
-                 }
+            // Append Hidden Param for Resolution Context
+            if (prompt.extraParams) {
+                const extraSource = prompt.extraParams === "FieldList" ? "AxpFieldList" : prompt.extraParams;
+                const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
+                const extraList = axDatasourceObj[extraKey];
+                
+                if (extraList && extraList.length > 0) {
+                    const hiddenValue = extraList[0].name || extraList[0].displaydata;
+                    if (paramValue) paramValue += "," + hiddenValue;
+                    else paramValue = hiddenValue;
+                }
             }
 
             let apiName = realSource === "FieldList" ? "AxpFieldList" : realSource;
@@ -700,9 +911,9 @@ function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = fa
             const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
             if (cachedList) {
                 const found = cachedList.find(item => 
-                    (item.displaydata && item.displaydata.toLowerCase() === tokenText.toLowerCase()) ||
-                    (item.caption && item.caption.toLowerCase() === tokenText.toLowerCase()) ||
-                    (item.name && item.name.toLowerCase() === tokenText.toLowerCase())
+                    (item.displaydata || "").toLowerCase() === tokenText.toLowerCase() ||
+                    (item.caption || "").toLowerCase() === tokenText.toLowerCase() ||
+                    (item.name || "").toLowerCase() === tokenText.toLowerCase()
                 );
                 if (found) {
                     const real = found.name || found.sqlname || found.displaydata;
@@ -714,6 +925,7 @@ function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = fa
         
         return tokenText;
     }
+    
 
     /* ===============================
        RENDER & APPLY
@@ -972,6 +1184,19 @@ function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = fa
             //    }
             //}
             const list = dataObj?.result?.data?.[0]?.data ?? [];
+
+            if (dataObj?.result?.data?.[0].error) {
+                 showToast(`Error: ${dataObj?.result?.data?.[0].error}`); 
+                console.log(`Error: ${list[0].error}`); 
+                return; 
+
+            }
+
+            // if (list[0].error) {
+            //     showToast(`Error: ${list[0].error}`); 
+            //     console.log(`Error: ${list[0].error}`); 
+            //     return; 
+            // }
 
             if (list.length > 0) {
                 localStorage.setItem(cacheKey, JSON.stringify(list));
@@ -2204,31 +2429,31 @@ function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = fa
         let resolvedName = tryResolveToken(3, rawName, commandConfig, false);
 
 
-        if (resolvedName === rawName) {
-            const listKey =
-                type === "tstruct"
-                    ? "Axi_TStructList".toLowerCase()
-                    : type === "iview"
-                        ? "Axi_IViewList".toLowerCase()
-                        : null;
+        // if (resolvedName === rawName) {
+        //     const listKey =
+        //         type === "tstruct"
+        //             ? "Axi_TStructList".toLowerCase()
+        //             : type === "iview"
+        //                 ? "Axi_IViewList".toLowerCase()
+        //                 : null;
 
-            if (!listKey) {
-                alert("Unknown source type: " + type);
-                return;
-            }
+        //     if (!listKey) {
+        //         alert("Unknown source type: " + type);
+        //         return;
+        //     }
 
-            const list = axDatasourceObj[listKey];
-            const found = list?.find(
-                x => x.caption?.toLowerCase() === rawName.toLowerCase()
-            );
+        //     const list = axDatasourceObj[listKey];
+        //     const found = list?.find(
+        //         x => x.caption?.toLowerCase() === rawName.toLowerCase()
+        //     );
 
-            if (!found || !found.name) {
-                console.error(`Source not found: ${rawName}`);
-                return;
-            }
+        //     if (!found || !found.name) {
+        //         console.error(`Source not found: ${rawName}`);
+        //         return;
+        //     }
 
-            resolvedName = found.name;
-        }
+        //     resolvedName = found.name;
+        // }
 
 
         if (type === "tstruct") {
@@ -2243,7 +2468,7 @@ function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = fa
 
     function handleEditData({tokens, commandConfig, resolvedParams }) {
 
-        if (tokens.length < 5) {
+        if (tokens.length < 3) {
             console.warn("edit data requires <tstruct> <field> <value>");
             // alert("edit data requires <tstruct> <field> <value>");
             showToast("edit data requires <tstruct> <field> <value>"); 
@@ -2281,14 +2506,14 @@ function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = fa
 
         let fieldName = ""; 
         if (extraList && extraList.length > 0) {
-            fieldName = extraList[0].displaydata; 
+            fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname; 
         } else {
             console.warn("Hidden field name not found in cache"); 
         }
 
 
-        let rawValue = cleanCommandToken(tokens[3]);
-        const fieldValue = tryResolveToken(3, rawValue, commandConfig, true);
+        let rawValue = cleanCommandToken(tokens[2]);
+        const fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
 
         if (fieldValue == null) {
             console.error("Field value resolution failed:", rawValue);
