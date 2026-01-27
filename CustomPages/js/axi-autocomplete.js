@@ -2,27 +2,44 @@
     // Commands Structure Change
     // ENDPOINTS
     const API_METADATA = "http://localhost:5000/api/v1/Axi/axi_get";
-   
 
-   
+    const VIEW_HANDLERS = {
+        tstruct: ({ transId, fieldName, fieldValue }) =>
+            redirectToEntity(transId, fieldName, fieldValue),
+
+        iview: ({ transId }) =>
+            redirectToIView(transId),
+
+        page: ({ transId, fieldName, fieldValue }) =>
+            redirectToEntity(transId, fieldName, fieldValue),
+
+        ads: ({ transId, fieldName, fieldValue }) => redirectToEntity(transId, fieldName, fieldValue )
+
+
+
+    };
+
+
+
 
     const COMMAND_HANDLERS = {
         edit: {
-            default: handleEditSource, 
+            default: handleEditData,
             data: handleEditData,
             user: handleEditUser
-           
-            
+
+
 
         },
         create: {
-          default: handleCreateNew,
-          ads: handleCreateAds,
-          card: handleCreateCard,
-          page: handleCreatePage
+            default: handleCreateNew,
+            ads: handleCreateAds,
+            card: handleCreateCard,
+            page: handleCreatePage
 
         },
         view: {
+            default: handleViewCommand,
             report: handleViewReport,
             dbconsole: handleViewDbConsole,
             data: handleViewData,
@@ -47,12 +64,12 @@
             notification: handleConfigureNotification
         },
         open: {
-            default: (ctx) => console.log("Open handler", ctx) 
+            default: (ctx) => console.log("Open handler", ctx)
         },
         upload: {
             default: handleUpload
         },
-        download:{
+        download: {
             default: handleDownload
         }
     };
@@ -160,7 +177,7 @@
        1. INITIALIZATION
     =============================== */
     async function initCommands(isForced = false) {
-       
+
         let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
         console.log("Origin: " + appSessUrl);
         const projInfoKey = `projInfo-${appSessUrl}`;
@@ -168,28 +185,28 @@
         const appname = localStorage.getItem(projInfoKey);
         console.log(appname);
 
-       
+
 
         const cached = localStorage.getItem("axi_commands_v1");
         if (cached && !isForced) {
             commands = JSON.parse(cached);
-            console.log(JSON.stringify(commands)); 
+            console.log(JSON.stringify(commands));
 
         } else {
             try {
-               
+
                 const res = await fetch(`${API_METADATA}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
                 if (!res.ok) throw new Error("Metadata fetch failed");
                 const data = await res.json();
                 commands = data.commands;
-                console.log(JSON.stringify(commands)); 
+                console.log(JSON.stringify(commands));
                 localStorage.setItem("axi_commands_v1", JSON.stringify(commands));
             } catch (err) {
                 console.error("Critical: Could not load commands", err);
             }
         }
     }
-    
+
 
 
     /**
@@ -198,37 +215,37 @@
      *
      */
     function getActivePromptAndSource(commandConfig, tokens, targetIndex) {
-       
-        const currentWordPos = targetIndex + 1; 
-        
+
+        const currentWordPos = targetIndex + 1;
+
         const prompt = commandConfig.prompts.find(p => p.wordPos === currentWordPos);
         if (!prompt) return null;
 
         let activeSource = prompt.promptSource || "";
 
-      
+
         if (activeSource.includes(",")) {
-           
+
             const prevWordPos = currentWordPos - 1;
             const prevPrompt = commandConfig.prompts.find(p => p.wordPos === prevWordPos);
 
             if (prevPrompt && prevPrompt.promptValues) {
-               
+
                 const prevTokenIndex = targetIndex - 1;
                 const prevValue = cleanString(tokens[prevTokenIndex]);
-                
-             
+
+
                 const allowedValues = prevPrompt.promptValues.split(',').map(v => v.trim().toLowerCase());
                 const valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
 
                 if (valueIndex !== -1) {
                     const sources = activeSource.split(',');
-                   
+
                     if (sources[valueIndex]) {
                         activeSource = sources[valueIndex].trim();
                     } else {
-                      
-                        activeSource = ""; 
+
+                        activeSource = "";
                     }
                 }
             }
@@ -240,7 +257,42 @@
         };
     }
 
-    
+    function getActivePromptInfo(commandConfig, tokens, targetIndex) {
+        // targetIndex is 0-based. WordPos is 1-based.
+        // Since the user DOES NOT type the extraParam, the mapping is direct.
+        const currentWordPos = targetIndex + 1;
+
+        const sortedPrompts = commandConfig.prompts.sort((a, b) => a.wordPos - b.wordPos);
+        const prompt = sortedPrompts.find(p => p.wordPos === currentWordPos);
+
+        if (!prompt) return null;
+
+        let activeSource = prompt.promptSource || "";
+
+        // Handle Dynamic Source Switching (,,, logic)
+        if (activeSource.includes(",")) {
+            const prevWordPos = currentWordPos - 1;
+            const prevPrompt = sortedPrompts.find(p => p.wordPos === prevWordPos);
+
+            if (prevPrompt && prevPrompt.promptValues) {
+                const prevTokenIndex = targetIndex - 1;
+                const prevValue = cleanString(tokens[prevTokenIndex]);
+                const allowedValues = prevPrompt.promptValues.split(',').map(v => v.trim().toLowerCase());
+                const valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
+
+                if (valueIndex !== -1) {
+                    const sources = activeSource.split(',');
+                    activeSource = sources[valueIndex] ? sources[valueIndex].trim() : "";
+                }
+            }
+        }
+
+        return { config: prompt, realSource: activeSource };
+    }
+
+
+
+
 
     async function loadList(sourceName, paramValue = "") {
         const key = paramValue ? `${sourceName}_${paramValue}` : sourceName;
@@ -250,32 +302,32 @@
         console.log(`Fetching list: ${sourceName} params: ${paramValue}`);
 
         try {
-        const data = await getList(sourceName, paramValue);
-        axDatasourceObj[key] = data;
-        console.log(JSON.stringify(axDatasourceObj));
-        handleInput();
+            const data = await getList(sourceName, paramValue);
+            axDatasourceObj[key] = data;
+            console.log(JSON.stringify(axDatasourceObj));
+            handleInput();
 
 
 
 
 
-        }catch(error) {
-            console.error("loadlist failed", error); 
+        } catch (error) {
+            console.error("loadlist failed", error);
         } finally {
-        activeFetches.delete(key);
+            activeFetches.delete(key);
 
 
         }
 
     }
 
-   
 
-   
+
+
     function redirectToTstruct(transId, isEdit = false, fieldName = "", fieldValue = "") {
         console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
 
-       
+
 
         if (!transId) {
             alert("There is no Tstruct name provided!");
@@ -287,7 +339,7 @@
 
         if (isEdit) {
 
-           
+
 
 
 
@@ -323,7 +375,7 @@
     function redirectToProcessFlow(caption) {
         console.log(`Redirecting to Process flox for caption:  ${caption}`);
 
-        
+
 
 
         let targetUrl = `../aspx/processflow.aspx`;
@@ -413,169 +465,486 @@
 
 
 
-   
+
     /* ===============================
        4. Suggestion Logic
     =============================== */
-   function suggestLocal(inputText) {
+    //    function suggestLocal(inputText, ignoreExtraParams = false) {
+    //         const tokens = getTokens(inputText);
+    //         const endsWithSpace = inputText.endsWith(" ");
+
+    //         // Handle unclosed quotes logic for space
+    //         const lastTokenRaw = tokens[tokens.length - 1];
+    //         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
+
+    //         if (endsWithSpace && !isUnclosedString) {
+    //             tokens.push("");
+    //         }
+
+    //         if (tokens.length === 0) {
+    //             hintDiv.textContent = "";
+    //             return Object.keys(commands);
+    //         }
+
+    //         const groupKey = cleanString(tokens[0]);
+
+    //         // 1. Suggest Group (create, edit, etc.)
+    //         if (tokens.length === 1 && !endsWithSpace) {
+    //             hintDiv.textContent = "";
+    //             return Object.keys(commands).filter(k => k.startsWith(groupKey));
+    //         }
+
+    //         const commandConfig = commands[groupKey];
+    //         if (!commandConfig) {
+    //             hintDiv.textContent = "";
+    //             return [];
+    //         }
+
+    //         // 2. Suggest Parameters based on Prompts
+    //         const targetIndex = tokens.length - 1;
+    //         const promptInfo = getActivePromptAndSource(commandConfig, tokens, targetIndex);
+
+    //         if (!promptInfo) {
+    //              // No prompt definition for this position
+    //             hintDiv.textContent = "";
+    //             updateDynamicHintFromPrompt(null);
+    //             isCommandTypingCompleted = true; // Likely finished
+    //             return [];
+    //         }
+
+    //         const { config: activePrompt, realSource} = promptInfo;
+    //         updateDynamicHintFromPrompt(activePrompt);
+
+    //         const partialTyped = cleanString(tokens[targetIndex]);
+
+
+
+
+    //         if (!realSource && activePrompt.promptValues) {
+    //              const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
+    //              const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
+    //              filteredObjects = result.map(val => ({ name: val, displaydata: val }));
+    //              return result;
+    //         }
+
+
+
+    //         if (realSource) {
+    //             // Resolve dependencies if promptParams exists
+    //             let paramValue = "";
+    //             if (activePrompt.promptParams) {
+    //                 const indices = activePrompt.promptParams.toString().split(',');
+    //                 const values = indices.map(idx => {
+    //                     const depTokenIndex = parseInt(idx.trim()) - 1; // Convert wordPos to token index
+    //                      // Resolve the dependency token
+    //                     const depToken = cleanString(tokens[depTokenIndex] || "");
+    //                     return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+    //                 });
+    //                 paramValue = values.join(',');
+    //             }
+
+    //             if (activePrompt.extraParams && !ignoreExtraParams) {
+
+    //                 const extraSource = activePrompt.extraParams.toLowerCase(); 
+
+    //                 const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
+
+
+    //                 if (!axDatasourceObj[extraKey]) {
+
+    //                     console.log(`Fetching Hidden Param Source: ${extraSource}`);
+    //                     loadList(extraSource, paramValue);
+
+    //                     // return [`Loading configuration...`];
+    //                 }
+
+
+    //                 const extraList = axDatasourceObj[extraKey];
+    //                 if (extraList && extraList.length > 0) {
+    //                     const hiddenValue = extraList[0].name || extraList[0].displaydata;
+    //                     console.log(`Hidden Param Found: ${hiddenValue}`);
+
+    //                     if (paramValue) paramValue += "," + hiddenValue;
+    //                     else paramValue = hiddenValue;
+    //                 } else {
+    //                     return ["Error: Configuration not found"];
+    //                 }
+
+
+    //             }
+
+
+
+    //             let apiSourceName = realSource.toLowerCase();
+
+
+
+    //             // Case-insensitive cache key
+    //             const sourceKey = (paramValue ? `${apiSourceName}_${paramValue}` : apiSourceName).toLowerCase();
+
+    //             if (!axDatasourceObj[sourceKey]) {
+    //                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
+
+    //                 if (hasValidParams) {
+    //                     // Trigger fetch
+    //                     loadList(apiSourceName, paramValue);
+    //                     return [`Loading ${realSource}...`];
+    //                 } else {
+    //                     return ["Waiting for previous input..."];
+    //                 }
+    //             }
+
+    //             // Filter cached list
+    //             const dataList = axDatasourceObj[sourceKey];
+    //             const filtered = dataList.filter(item => {
+    //                 const display = item.displaydata || item.name || item.caption || "";
+    //                 return display.toLowerCase().includes(partialTyped.toLowerCase());
+    //             });
+
+    //             filteredObjects = filtered;
+    //             return filtered.map(item => item.displaydata || item.caption || item.name);
+    //         }
+
+    //         return [];
+    //     }
+
+
+    function suggestLocal(inputText) {
         const tokens = getTokens(inputText);
         const endsWithSpace = inputText.endsWith(" ");
-        
-        // Handle unclosed quotes logic for space
+
         const lastTokenRaw = tokens[tokens.length - 1];
         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
-        
-        if (endsWithSpace && !isUnclosedString) {
-            tokens.push("");
-        }
+        if (endsWithSpace && !isUnclosedString) tokens.push("");
 
-        if (tokens.length === 0) {
-            hintDiv.textContent = "";
-            return Object.keys(commands);
-        }
+        if (tokens.length === 0) { hintDiv.textContent = ""; return Object.keys(commands); }
 
         const groupKey = cleanString(tokens[0]);
-
-        // 1. Suggest Group (create, edit, etc.)
         if (tokens.length === 1 && !endsWithSpace) {
             hintDiv.textContent = "";
             return Object.keys(commands).filter(k => k.startsWith(groupKey));
         }
 
         const commandConfig = commands[groupKey];
-        if (!commandConfig) {
-            hintDiv.textContent = "";
-            return [];
-        }
+        if (!commandConfig) { hintDiv.textContent = ""; return []; }
 
-        // 2. Suggest Parameters based on Prompts
         const targetIndex = tokens.length - 1;
-        const promptInfo = getActivePromptAndSource(commandConfig, tokens, targetIndex);
+        const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
 
         if (!promptInfo) {
-             // No prompt definition for this position
-            hintDiv.textContent = "";
             updateDynamicHintFromPrompt(null);
-            isCommandTypingCompleted = true; // Likely finished
             return [];
         }
 
         const { config: activePrompt, realSource } = promptInfo;
         updateDynamicHintFromPrompt(activePrompt);
-        
+
         const partialTyped = cleanString(tokens[targetIndex]);
 
-        // Scenario A: Suggest from Static Values (promptValues)
-        // This is usually the "Verb" or "Type" selector (e.g. 'peg' in 'configure peg')
+        // Scenario A: Static Values
         if (!realSource && activePrompt.promptValues) {
-             const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
-             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
-             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
-             return result;
+            const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
+            const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
+            filteredObjects = result.map(val => ({ name: val, displaydata: val }));
+            return result;
         }
 
-        // Scenario B: Suggest from Data Source (promptSource)
+        // Scenario B: Data Source
         if (realSource) {
-            // Resolve dependencies if promptParams exists
             let paramValue = "";
+
+            // 1. Resolve Standard Dependencies (e.g. TransId)
             if (activePrompt.promptParams) {
                 const indices = activePrompt.promptParams.toString().split(',');
                 const values = indices.map(idx => {
-                    const depTokenIndex = parseInt(idx.trim()) - 1; // Convert wordPos to token index
-                     // Resolve the dependency token
+                    const logicalWordPos = parseInt(idx.trim());
+                    const depTokenIndex = logicalWordPos - 1;
                     const depToken = cleanString(tokens[depTokenIndex] || "");
                     return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
                 });
                 paramValue = values.join(',');
             }
 
-            let apiSourceName = realSource.toLowerCase();
-            // Special case mapping
-          
+            // 2. Handle Hidden Extra Params (The Chained Fetch)
+            if (activePrompt.extraParams) {
+                const extraSource = activePrompt.extraParams.toLowerCase();
+                // Use the SAME paramValue we just resolved (e.g. 'tst_001')
+                const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
 
-            // Case-insensitive cache key
+                // Check if the Extra List is cached
+                if (!axDatasourceObj[extraKey]) {
+                    // Not cached? Fetch it FIRST and stop here.
+                    console.log(`Fetching Hidden Param Source: ${extraSource}`);
+                    loadList(extraSource, paramValue);
+                    return [];
+                }
+
+                // Extra List is cached, extract Index 0
+                const extraList = axDatasourceObj[extraKey];
+                if (extraList && extraList.length > 0) {
+                    const hiddenValue = extraList[0].name || extraList[0].displaydata || extraList[0].fname;
+                    console.log(`Hidden Param Found (Index 0): ${hiddenValue}`);
+
+                    // Append hidden value to params for the MAIN list
+                    if (paramValue) paramValue += "," + hiddenValue;
+                    else paramValue = hiddenValue;
+                } else {
+                    // console.error("Error: Configuration not found (Empty List)"); 
+                    // showToast("Error: Configuration not found (Empty List)"); 
+                    return [];
+                }
+            }
+
+
+            let apiSourceName = realSource.toLowerCase();
             const sourceKey = (paramValue ? `${apiSourceName}_${paramValue}` : apiSourceName).toLowerCase();
 
             if (!axDatasourceObj[sourceKey]) {
                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
-                
                 if (hasValidParams) {
-                    // Trigger fetch
                     loadList(apiSourceName, paramValue);
                     return [`Loading ${realSource}...`];
-                } else {
-                    return ["Waiting for previous input..."];
                 }
+                return ["Waiting for input..."];
             }
 
-            // Filter cached list
+            // Filter Cache
             const dataList = axDatasourceObj[sourceKey];
             const filtered = dataList.filter(item => {
-                const display = item.displaydata || item.name || item.caption || "";
+                const display = item.displaydata || item.caption || item.name || "";
                 return display.toLowerCase().includes(partialTyped.toLowerCase());
             });
 
             filteredObjects = filtered;
-            return filtered.map(item => item.displaydata);
+            return filtered.map(item => item.displaydata || item.caption || item.name);
         }
 
         return [];
     }
-   
+
+
     /* ===============================
        LAZY RESOLUTION HELPER 
     =============================== */
-  function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
-        tokenText = cleanString(tokenText);
+    //   function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
+    //         tokenText = cleanString(tokenText);
 
+    //         if (resolvedParams[tokenIndex] && !forceResolve) return resolvedParams[tokenIndex];
+    //         if (!commandConfig) return tokenText;
+
+    //         const promptInfo = getActivePromptAndSource(commandConfig, getTokens(input.value), tokenIndex);
+    //         if (!promptInfo) return tokenText;
+
+    //         const { config: prompt, realSource } = promptInfo;
+
+    //         // Static Value Check
+    //         // if (!realSource && prompt.promptValues) {
+    //         //      const staticValues = prompt.promptValues.split(',').map(v => v.trim().toLowerCase());
+    //         //      if (staticValues.includes(tokenText.toLowerCase())) return tokenText.toLowerCase();
+    //         //      return tokenText;
+    //         // }
+
+    //         // Data Source Check
+    //         if (realSource) {
+    //             // let cacheKey = realSource;
+    //             let paramVal
+    //             if (prompt.promptParams) {
+    //                 const indices = prompt.promptParams.toString().split(',');
+    //                 const values = indices.map(idx => {
+    //                     // Recursion for dependencies
+    //                     const depIndex = parseInt(idx.trim()) - 1; 
+    //                     const depToken = cleanString(getTokens(input.value)[depIndex] || "");
+    //                     return tryResolveToken(depIndex, depToken, commandConfig, true);
+    //                 });
+    //                 paramVal = values.join(',');
+
+    //             }
+
+    //             // if (!isVirtual && prompt.extraParams) {
+
+    //             //      const prevToken = cleanString(getTokens(input.value)[tokenIndex - 1] || "");
+    //             //      if(paramValue) paramValue += "," + prevToken;
+    //             //      else paramValue = prevToken;
+    //             // }
+
+    //             if (prompt.extraParams) {
+    //                 const extraSource = prompt.extraParams; 
+    //                 const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
+    //                 const extraList = axDatasourceObj[extraKey];
+
+    //                 if (extraList && extraList.length > 0) {
+    //                     const hiddenValue = extraList[0].name;
+    //                     if (paramValue) paramValue += "," + hiddenValue;
+    //                     else paramValue = hiddenValue;
+    //                 }
+    //             }
+
+    //             let apiName = realSource; 
+    //             let cacheKey = `${apiName}_${paramVal}`;
+    //             const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
+    //             if (cachedList) {
+    //                 const found = cachedList.find(item => 
+    //                     (item.displaydata && item.displaydata.toLowerCase() === tokenText.toLowerCase()) ||
+    //                     (item.name && item.name.toLowerCase() === tokenText.toLowerCase()) || 
+    //                     (item.caption && item.caption.toLowerCase() === tokenText.toLowerCase() )
+    //                 );
+    //                 if (found) {
+    //                     const realValue = found.name || found.sqlname || found.displaydata;
+    //                     resolvedParams[tokenIndex] = realValue; // Cache it
+    //                     return realValue;
+    //                 }
+    //             }
+    //         }
+
+    //         return tokenText;
+    //     }
+
+    // function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
+    //         tokenText = cleanString(tokenText);
+
+
+    //         if (resolvedParams[tokenIndex] && !forceResolve) return resolvedParams[tokenIndex];
+
+
+    //         if (!tokenText && !forceResolve) return ""; 
+
+    //         if (!commandConfig) return tokenText;
+
+    //         const promptInfo = getActivePromptAndSource(commandConfig, getTokens(input.value), tokenIndex);
+    //         if (!promptInfo) return tokenText;
+
+    //         const { config: prompt, realSource } = promptInfo;
+
+    //         // Static Value Check
+    //         if (!realSource && prompt.promptValues) {
+    //              const staticValues = prompt.promptValues.split(',').map(v => v.trim().toLowerCase());
+    //              if (staticValues.includes(tokenText.toLowerCase())) return tokenText.toLowerCase();
+    //              return tokenText;
+    //         }
+
+    //         // Data Source Check
+    //         if (realSource) {
+    //             let paramValue = "";
+
+    //             // Resolve PromptParams (Dependencies)
+    //             if (prompt.promptParams) {
+    //                 const indices = prompt.promptParams.toString().split(',');
+    //                 const values = indices.map(idx => {
+    //                     const logicalWordPos = parseInt(idx.trim());
+    //                     // Calculate token index based on WordPos. 
+    //                     // WordPos 1 = Group (Token 0). WordPos 2 = Param 1 (Token 1).
+    //                     const depTokenIndex = logicalWordPos - 1; 
+
+    //                     const currentTokens = getTokens(input.value);
+    //                     const depToken = cleanString(currentTokens[depTokenIndex] || "");
+
+    //                     // Recursive Resolution
+    //                     return tryResolveToken(depTokenIndex, depToken, commandConfig, true); 
+    //                 });
+    //                 paramValue = values.join(',');
+    //             }
+
+    //             // Handle Hidden Extra Params for Resolution context
+    //             if (prompt.extraParams) {
+    //                  const currentTokens = getTokens(input.value);
+    //                  // If we are at the value, the previous token *might* be relevant if it wasn't hidden.
+    //                  // But since it IS hidden, we have to look it up from cache based on the dependencies.
+
+    //                  const extraSource = prompt.extraParams;
+    //                  // Note: We use the paramValue (Tstruct Name) we just resolved above
+    //                  const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
+    //                  const extraList = axDatasourceObj[extraKey];
+
+    //                  if (extraList && extraList.length > 0) {
+    //                      const hiddenValue = extraList[0].name || extraList[0].displaydata;
+    //                      if (paramValue) paramValue += "," + hiddenValue;
+    //                      else paramValue = hiddenValue;
+    //                  }
+    //             }
+
+    //             let apiName = realSource;
+    //             let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
+
+    //             const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
+    //             if (cachedList) {
+    //                 const found = cachedList.find(item => 
+    //                     (item.displaydata && item.displaydata.toLowerCase() === tokenText.toLowerCase()) ||
+    //                     (item.caption && item.caption.toLowerCase() === tokenText.toLowerCase()) ||
+    //                     (item.name && item.name.toLowerCase() === tokenText.toLowerCase())
+    //                 );
+    //                 if (found) {
+    //                     const real = found.name || found.sqlname || found.displaydata;
+    //                     resolvedParams[tokenIndex] = real;
+    //                     return real;
+    //                 }
+    //             }
+    //         } 
+
+    //         return tokenText;
+    //     }
+
+
+
+    function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
+        tokenText = cleanString(tokenText);
         if (resolvedParams[tokenIndex] && !forceResolve) return resolvedParams[tokenIndex];
+        if (!tokenText && !forceResolve) return "";
         if (!commandConfig) return tokenText;
 
-        const promptInfo = getActivePromptAndSource(commandConfig, getTokens(input.value), tokenIndex);
+        const promptInfo = getActivePromptInfo(commandConfig, getTokens(input.value), tokenIndex);
         if (!promptInfo) return tokenText;
 
         const { config: prompt, realSource } = promptInfo;
 
-        // Static Value Check
-        if (!realSource && prompt.promptValues) {
-             const staticValues = prompt.promptValues.split(',').map(v => v.trim().toLowerCase());
-             if (staticValues.includes(tokenText.toLowerCase())) return tokenText.toLowerCase();
-             return tokenText;
-        }
-
-        // Data Source Check
         if (realSource) {
-            let cacheKey = realSource;
+            let paramValue = "";
+
+            // Resolve Dependencies
             if (prompt.promptParams) {
                 const indices = prompt.promptParams.toString().split(',');
                 const values = indices.map(idx => {
-                    // Recursion for dependencies
-                    const depIndex = parseInt(idx.trim()) - 1; 
-                    const depToken = cleanString(getTokens(input.value)[depIndex] || "");
-                    return tryResolveToken(depIndex, depToken, commandConfig, true);
+                    const logicalWordPos = parseInt(idx.trim());
+                    const depTokenIndex = logicalWordPos - 1;
+                    const depToken = cleanString(getTokens(input.value)[depTokenIndex] || "");
+                    return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
                 });
-                const paramVal = values.join(',');
-                let apiName = realSource === "FieldList" ? "AxpFieldList" : realSource;
-                if (paramVal) cacheKey = `${apiName}_${paramVal}`;
+                paramValue = values.join(',');
             }
+
+            // Append Hidden Param for Resolution Context
+            if (prompt.extraParams) {
+                const extraSource = prompt.extraParams === "FieldList" ? "AxpFieldList" : prompt.extraParams;
+                const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
+                const extraList = axDatasourceObj[extraKey];
+
+                if (extraList && extraList.length > 0) {
+                    const hiddenValue = extraList[0].name || extraList[0].displaydata;
+                    if (paramValue) paramValue += "," + hiddenValue;
+                    else paramValue = hiddenValue;
+                }
+            }
+
+            let apiName = realSource === "FieldList" ? "AxpFieldList" : realSource;
+            let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
 
             const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
             if (cachedList) {
-                const found = cachedList.find(item => 
-                    (item.displaydata && item.displaydata.toLowerCase() === tokenText.toLowerCase()) ||
-                    (item.name && item.name.toLowerCase() === tokenText.toLowerCase()) || 
-                    (item.caption && item.caption.toLowerCase() === tokenText.toLowerCase() )
+                const found = cachedList.find(item =>
+                    (item.displaydata || "").toLowerCase() === tokenText.toLowerCase() ||
+                    (item.caption || "").toLowerCase() === tokenText.toLowerCase() ||
+                    (item.name || "").toLowerCase() === tokenText.toLowerCase()
                 );
                 if (found) {
-                    const realValue = found.name || found.sqlname || found.displaydata;
-                    resolvedParams[tokenIndex] = realValue; // Cache it
-                    return realValue;
+                    const real = found.name || found.sqlname || found.displaydata;
+                    resolvedParams[tokenIndex] = real;
+                    return real;
                 }
             }
         }
 
         return tokenText;
     }
+
 
     /* ===============================
        RENDER & APPLY
@@ -647,12 +1016,12 @@
         return selectedValue;
     }
 
-   function apply(index) {
+    function apply(index) {
         if (!items[index] || items[index] === "Loading options...") return;
 
         let suggestion = items[index];
         let displayName = suggestion;
-        
+
         // Get Real Value logic
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
         let realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
@@ -666,10 +1035,10 @@
         const currentInput = input.value;
         const tokens = getTokens(currentInput);
 
-       
+
         const endsWithSpace = currentInput.endsWith(" ");
         const lastTokenRaw = tokens[tokens.length - 1];
-        
+
         // Check if we are inside an unclosed quote
         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
 
@@ -677,37 +1046,37 @@
         if (endsWithSpace && !isUnclosedString) {
             tokens.push("");
         }
-       
+
 
         let targetIndex = tokens.length - 1;
-        if (targetIndex < 0) { 
-            targetIndex = 0; 
-            tokens.push(""); 
+        if (targetIndex < 0) {
+            targetIndex = 0;
+            tokens.push("");
         }
 
         resolvedParams[targetIndex] = realValue;
-        
+
         // Auto-Quote if necessary
         if (displayName.includes(" ")) {
             displayName = `"${displayName}"`;
         }
-        
+
         tokens[targetIndex] = displayName;
-        
+
         input.value = tokens.join(" ") + " ";
         handleInput();
         hide();
         input.focus();
     }
-  
-   
+
+
 
     function updateDynamicHintFromPrompt(prompt) {
         if (prompt) {
             let label = prompt.prompt || "value";
             if (prompt.promptValues && !prompt.prompt) {
                 // label = prompt.promptValues.split(',').join(' / ');
-                label = prompt.promptValues.split(',').slice(0,3);
+                label = prompt.promptValues.split(',').slice(0, 3);
             }
             hintDiv.textContent = `Next: <${label}>`;
             hintDiv.style.color = "#f59e0b";
@@ -719,7 +1088,7 @@
         }
     }
 
-   
+
 
     function highlight() {
         if (list.children.length > 0) {
@@ -735,7 +1104,7 @@
         }
     });
 
-   
+
 
     async function getAxListAsync(data) {
         return new Promise((resolve, reject) => {
@@ -834,6 +1203,19 @@
             //    }
             //}
             const list = dataObj?.result?.data?.[0]?.data ?? [];
+
+            if (dataObj?.result?.data?.[0].error) {
+                showToast(`Error: ${dataObj?.result?.data?.[0].error}`);
+                console.log(`Error: ${list[0].error}`);
+                return;
+
+            }
+
+            // if (list[0].error) {
+            //     showToast(`Error: ${list[0].error}`); 
+            //     console.log(`Error: ${list[0].error}`); 
+            //     return; 
+            // }
 
             if (list.length > 0) {
                 localStorage.setItem(cacheKey, JSON.stringify(list));
@@ -1259,7 +1641,7 @@
             });
         }
 
-       
+
 
         if (axiClearBtn) {
             axiClearBtn.addEventListener("click", () => {
@@ -1289,12 +1671,12 @@
             // // --------------------------------------------------------
 
             // AUTO DOUBLE-QUOTE FOR MULTI-WORD SUGGESTIONS
-           if (e.key === " " && items.length > 0) {
+            if (e.key === " " && items.length > 0) {
                 const val = input.value;
                 if (input.selectionStart === val.length) {
                     const tokens = getTokens(val);
                     const lastTokenRaw = tokens[tokens.length - 1] || "";
-                    
+
                     if (!lastTokenRaw.startsWith('"')) {
                         const hasMultiWordMatch = items.some(item => {
                             const str = (typeof item === 'string' ? item : item.displaydata).toLowerCase();
@@ -1306,7 +1688,7 @@
                             const lastIndex = val.lastIndexOf(lastTokenRaw);
                             if (lastIndex !== -1) {
                                 const prefix = val.substring(0, lastIndex);
-                                input.value = prefix + '"' + lastTokenRaw + ' '; 
+                                input.value = prefix + '"' + lastTokenRaw + ' ';
                                 handleInput();
                                 return;
                             }
@@ -1368,7 +1750,7 @@
         }
     }
 
-   function executeCommandsV2() {
+    function executeCommandsV2() {
         const text = input.value.trim();
         if (!text || !commands) return;
 
@@ -1426,18 +1808,18 @@
         return val.replace(/['"]/g, "").trim();
     }
 
-   function dispatchCommand(ctx) {
+    function dispatchCommand(ctx) {
         const { group, config, tokens } = ctx;
-        
-       
-        
+
+
+
         const firstParamPrompt = config.prompts.find(p => p.wordPos === 2);
-        const firstParamValue = cleanString(tokens[1]); 
+        const firstParamValue = cleanString(tokens[1]);
 
         let handlerKey = 'default';
 
         if (firstParamPrompt && firstParamPrompt.promptValues) {
-            
+
             if (firstParamValue) {
                 handlerKey = firstParamValue.toLowerCase();
             }
@@ -1445,13 +1827,13 @@
 
         // Locate the handler function in the mapping
         const groupHandlers = COMMAND_HANDLERS[group];
-        
+
         if (!groupHandlers) {
             console.error(`System Error: No handlers object defined for command group '${group}'`);
             return;
         }
 
-        
+
         const handler = groupHandlers[handlerKey] || groupHandlers['default'];
 
         if (!handler) {
@@ -1460,8 +1842,8 @@
         }
 
         console.log(`Dispatching to: ${group}.${handlerKey}`);
-        
-      
+
+
         try {
             handler({
                 tokens: tokens,
@@ -1489,9 +1871,9 @@
             );
             if (found) transId = found.name
             else {
-                 console.error("Invalid Tstruct name");  
-                 return; 
-                }
+                console.error("Invalid Tstruct name");
+                return;
+            }
         }
 
         redirectToTstruct(transId);
@@ -1845,6 +2227,8 @@
 
     }
 
+
+
     function handleViewData({ tokens, commandConfig }) {
         let targetUrl;
 
@@ -2011,14 +2395,14 @@
     function handleCreateDimension({ tokens, commandConfig }) {
         let targetUrl;
         let paramName;
-        let transId = "a__ag"; 
-        
+        let transId = "a__ag";
+
         let rawField = cleanCommandToken(tokens[2]);
         let rawFieldValue = cleanCommandToken(tokens[3]);
-        const fieldname = tryResolveToken(2, rawField, commandConfig, false); 
+        const fieldname = tryResolveToken(2, rawField, commandConfig, false);
 
         setEditSessionState(transId)
-        redirectToTstruct(transId, true, fieldname, rawFieldValue); 
+        redirectToTstruct(transId, true, fieldname, rawFieldValue);
 
 
         // LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;)
@@ -2066,31 +2450,31 @@
         let resolvedName = tryResolveToken(3, rawName, commandConfig, false);
 
 
-        if (resolvedName === rawName) {
-            const listKey =
-                type === "tstruct"
-                    ? "Axi_TStructList".toLowerCase()
-                    : type === "iview"
-                        ? "Axi_IViewList".toLowerCase()
-                        : null;
+        // if (resolvedName === rawName) {
+        //     const listKey =
+        //         type === "tstruct"
+        //             ? "Axi_TStructList".toLowerCase()
+        //             : type === "iview"
+        //                 ? "Axi_IViewList".toLowerCase()
+        //                 : null;
 
-            if (!listKey) {
-                alert("Unknown source type: " + type);
-                return;
-            }
+        //     if (!listKey) {
+        //         alert("Unknown source type: " + type);
+        //         return;
+        //     }
 
-            const list = axDatasourceObj[listKey];
-            const found = list?.find(
-                x => x.caption?.toLowerCase() === rawName.toLowerCase()
-            );
+        //     const list = axDatasourceObj[listKey];
+        //     const found = list?.find(
+        //         x => x.caption?.toLowerCase() === rawName.toLowerCase()
+        //     );
 
-            if (!found || !found.name) {
-                console.error(`Source not found: ${rawName}`);
-                return;
-            }
+        //     if (!found || !found.name) {
+        //         console.error(`Source not found: ${rawName}`);
+        //         return;
+        //     }
 
-            resolvedName = found.name;
-        }
+        //     resolvedName = found.name;
+        // }
 
 
         if (type === "tstruct") {
@@ -2103,18 +2487,22 @@
     }
 
 
-    function handleEditData({ tokens, commandConfig }) {
+    function handleEditData({ tokens, commandConfig, resolvedParams }) {
 
-        if (tokens.length < 5) {
+        if (tokens.length < 3) {
             console.warn("edit data requires <tstruct> <field> <value>");
             // alert("edit data requires <tstruct> <field> <value>");
-            showToast("edit data requires <tstruct> <field> <value>"); 
+            showToast("edit data requires <tstruct> <field> <value>");
             return;
         }
 
 
         let rawStruct = cleanCommandToken(tokens[1]);
         let transId = tryResolveToken(1, rawStruct, commandConfig, false);
+
+        const extraSourceKey = `axi_fieldlist_${transId}`.toLowerCase();
+
+        const extraList = axDatasourceObj[extraSourceKey];
 
         if (transId === rawStruct) {
             const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
@@ -2129,17 +2517,24 @@
         }
 
 
-        let rawField = cleanCommandToken(tokens[2]);
-        const fieldName = tryResolveToken(2, rawField, commandConfig, true);
+        // let rawField = cleanCommandToken(tokens[2]);
+        // const fieldName = tryResolveToken(2, rawField, commandConfig, true);
 
-        if (!fieldName) {
-            console.error("Field resolution failed:", rawField);
-            return;
+        // if (!fieldName) {
+        //     console.error("Field resolution failed:", rawField);
+        //     return;
+        // }
+
+        let fieldName = "";
+        if (extraList && extraList.length > 0) {
+            fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
+        } else {
+            console.warn("Hidden field name not found in cache");
         }
 
 
-        let rawValue = cleanCommandToken(tokens[3]);
-        const fieldValue = tryResolveToken(3, rawValue, commandConfig, true);
+        let rawValue = cleanCommandToken(tokens[2]);
+        const fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
 
         if (fieldValue == null) {
             console.error("Field value resolution failed:", rawValue);
@@ -2674,7 +3069,7 @@
         // setEditSessionState(transId);
 
         // redirectToTstruct(transId, true, fieldname, rawParamName);
-        redirectToProcessFlow(rawParamName); 
+        redirectToProcessFlow(rawParamName);
 
         // if (!rawParamName) {
         //     window.LoadIframe(targetUrl);
@@ -2799,21 +3194,23 @@
       * ******************************************************
       */
 
-    function handleUpload({tokens, commandConfig}) {
-          window.LoadIframe("../aspx/ImportAll.aspx");
+    function handleUpload({ tokens, commandConfig }) {
+        // window.LoadIframe("../aspx/ImportAll.aspx");
+        window.openDeveloperStudio("ImportAll.aspx"); 
 
 
 
     }
 
-     function handleDownload({tokens, commandConfig}) {
-          window.LoadIframe("../aspx/ExportNew.aspx");
+    function handleDownload({ tokens, commandConfig }) {
+        // window.LoadIframe("../aspx/ExportNew.aspx");
+        window.openDeveloperStudio("ExportNew.aspx"); 
 
-        
+
 
     }
 
-   
+
 
     function setEditSessionState(transId) {
         if (!transId) return;
@@ -2857,6 +3254,225 @@
                 rawValue: cleanCommandToken(tokens[tokenIndex] || "")
             };
         });
+    }
+
+    function redirectToEntity(transId, fieldName, fieldValue) {
+        let targetUrl;
+        if (!fieldName || !fieldValue) {
+            // targetUrl += "&dummyload=false♠"
+            targetUrl = `../aspx/Entity.aspx?tstid=${transId}`;
+
+        } else {
+            targetUrl = `../aspx/EntityForm.aspx?tstid=${transId}`;
+            targetUrl += `&${fieldName}=${fieldValue}`;
+            // targetUrl += "&act=open";
+            // targetUrl += "&dummyload=false♠"
+
+
+
+        }
+
+        window.LoadIframe(targetUrl);
+
+    }
+
+    function handleViewCommand({ tokens, commandConfig }) {
+
+        let transId = "";
+        let type = ""; 
+
+
+        if (tokens.length < 2) {
+            console.warn("View Command required atleast two tokens");
+            // alert("edit data requires <tstruct> <field> <value>");
+            showToast("view command requires atleast two tokens");
+            return;
+        }
+
+        console.log(JSON.stringify(commandConfig));
+
+
+        const promptValues = commandConfig?.prompts?.[0].promptValues;
+        const viewDataSourceKey = `axi_viewlist`.toLowerCase();
+        let rawStruct = cleanCommandToken(tokens[1]);
+
+
+        type = getTypeByCaption(viewDataSourceKey, rawStruct, promptValues);
+
+        const handler = VIEW_HANDLERS[type];
+        
+
+
+
+        if (!handler) {
+            console.log("Error: Unsupported View Type");
+            showToast("Error: Unsupported View Type");
+            return;
+        }
+
+
+        if (type === "ads") {
+            const transId = "b_sql";
+            let fieldName = "sqlname";
+            let fieldValue = cleanCommandToken(tokens[1]);
+
+
+            handler({ transId, fieldName, fieldValue });
+            return;
+
+
+        } else if (type === "page") {
+            const viewList = axDatasourceObj[viewDataSourceKey]; 
+            
+
+
+        // const requestUrl = item.requestUrl;
+            let transId = "sect";
+            let fieldName = "caption";
+            let rawFieldValue = cleanCommandToken(tokens[1]);
+            // let fieldValue = tryResolveToken(1, rawFieldValue, commandConfig, false); 
+            // const item = viewList.find(v => v.displaydata === rawFieldValue);
+            
+            // const fieldValue = item.caption; 
+            
+
+
+            // handler({ transId, fieldName, fieldValue });
+            redirectToHtmlPages(rawFieldValue); 
+            return; 
+
+        }
+
+        transId = tryResolveToken(1, rawStruct, commandConfig, false);
+        // if (transId === rawStruct) {
+        //     const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+        //     const found = list?.find(
+        //         x => x.caption?.toLowerCase() === rawStruct
+        //     );
+        //     if (!found || !found.name) {
+        //         console.error("TStruct not found:", rawStruct);
+        //         return;
+        //     }
+        //     transId = found.name;
+        // }
+
+
+        // let rawField = cleanCommandToken(tokens[2]);
+        // const fieldName = tryResolveToken(2, rawField, commandConfig, true);
+
+        // if (!fieldName) {
+        //     console.error("Field resolution failed:", rawField);
+        //     return;
+        // }
+
+        const extraSourceKey = `axi_fieldlist_${transId}`.toLowerCase();
+        const extraList = axDatasourceObj[extraSourceKey];
+
+        let fieldName = "";
+        if (extraList && extraList.length > 0) {
+            fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
+        } else {
+            console.warn("Hidden field name not found in cache");
+        }
+
+
+        let rawValue = cleanCommandToken(tokens[2]);
+        const fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
+
+
+
+        console.log(
+            `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
+        );
+
+        // setEditSessionState(transId);
+
+        // switch(type) {
+        //     case "tstruct":
+        //         redirectToEntity(transId, fieldName, fieldValue); 
+
+
+        // }
+
+        // if (type === "tstruct") {
+        //      redirectToEntity(transId, fieldName, fieldValue); 
+
+        // } else {
+        //     redirectToIView(transId); 
+        // }
+
+
+
+        handler({
+            transId,
+            fieldName,
+            fieldValue
+        })
+
+
+    }
+
+    function getTypeByCaption(axDatasourceKey, caption, paramValuesCsv) {
+        const paramList = paramValuesCsv?.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
+        const VALID_TYPES = new Set(paramList);
+
+        const data = axDatasourceObj?.[axDatasourceKey];
+        console.log(JSON.stringify(data)); 
+
+        // const item = data.find(d => d.caption === caption);
+        const item = data.find(d => d.displaydata.includes(caption));
+
+        if (!item || typeof item.displaydata !== "string") {
+            return null;
+        }
+
+        const matches = [...item.displaydata.matchAll(/\[([^\]]+)\]/g)];
+
+        if (matches.length === 0) {
+            return null;
+        }
+
+        const candidate = matches[matches.length - 1][1].toLowerCase();
+
+        return VALID_TYPES.has(candidate) ? candidate : null;
+    }
+
+    function handleViewAds(tokens) {
+        let targetUrl;
+        let paramName;
+        const transId = "b_sql";
+        let fieldname = "sqlname";
+
+        let rawName = cleanCommandToken(tokens[2]);
+
+
+        //   if (!rawName) return;
+        if (rawName) {
+            paramName = tryResolveToken(2, rawName, commandConfig, false);
+
+        }
+
+        redirectToEntity(tranId, fieldName)
+
+
+
+
+
+    }
+
+    function redirectToHtmlPages(text) {
+        const viewList = axDatasourceObj["axi_viewlist".toLowerCase()]; 
+
+        const item = viewList.find(v => v.displaydata.includes(text)); 
+
+        const requestUrl = item.name;
+        console.log(requestUrl); 
+        
+        window.LoadIframe(`../aspx/${requestUrl}`); 
+        // window.openDeveloperStudio(requestUrl); 
+
+        // window.openDeveloperStudio(requestUrl);
+
     }
 
 
