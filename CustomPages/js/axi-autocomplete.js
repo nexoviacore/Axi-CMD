@@ -13,7 +13,7 @@
         page: ({ transId, fieldName, fieldValue }) =>
             redirectToEntity(transId, fieldName, fieldValue),
 
-        ads: ({ transId, fieldName, fieldValue }) => redirectToEntity(transId, fieldName, fieldValue )
+        ads: ({ transId, fieldName, fieldValue }) => redirectToEntity(transId, fieldName, fieldValue)
 
 
 
@@ -61,7 +61,10 @@
             job: handleConfigureJob,
             rule: handleConfigureRule,
             server: handleConfigureServer,
-            notification: handleConfigureNotification
+            formnotification: handleConfigureFormNotification,
+            pegformnotification: handleCofigurePegFormNotification,
+            permission: handleEditUser,
+            access: handleConfigureAccess
         },
         open: {
             default: (ctx) => console.log("Open handler", ctx)
@@ -359,6 +362,23 @@
 
             targetUrl += `&dummyload=false`;
         }
+
+        top.window.LoadIframe(targetUrl);
+    }
+
+     function redirectToResponsibilitiesPage(fieldName = "", fieldValue = "") {   
+
+
+
+       
+
+
+        let targetUrl = `../aspx/Responsibilities.aspx`;    
+
+     
+          
+
+      
 
         top.window.LoadIframe(targetUrl);
     }
@@ -913,7 +933,7 @@
 
             // Append Hidden Param for Resolution Context
             if (prompt.extraParams) {
-                const extraSource = prompt.extraParams === "FieldList" ? "AxpFieldList" : prompt.extraParams;
+                const extraSource = prompt.extraParams;
                 const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
                 const extraList = axDatasourceObj[extraKey];
 
@@ -924,7 +944,7 @@
                 }
             }
 
-            let apiName = realSource === "FieldList" ? "AxpFieldList" : realSource;
+            let apiName = realSource;
             let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
 
             const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
@@ -1029,7 +1049,12 @@
         // Clean up display name if it contains parens like "Name (ID)"
         if (suggestion.includes("(") && suggestion.includes(")")) {
             const lastBracketIndex = suggestion.lastIndexOf("(");
+
+            // if (lastBracketIndex > 0 && suggestion[lastBracketIndex - 1] === '-') {
+            //     lastBracketIndex = lastBracketIndex - 1; 
+            // }
             displayName = suggestion.substring(0, lastBracketIndex).trim();
+
         }
 
         const currentInput = input.value;
@@ -2624,6 +2649,32 @@
 
     }
 
+     function handleConfigureAccess({ tokens, commandConfig }) {
+
+
+
+
+        let fieldValue = cleanCommandToken(tokens[2]);
+        let transId = "axusr";
+
+       
+      
+
+
+
+       
+
+        setEditSessionState(transId);
+
+        
+        redirectToResponsibilitiesPage("", fieldValue);
+
+        
+
+
+
+    }
+
     function handleEditDimension({ tokens, commandConfig }) {
 
 
@@ -2982,210 +3033,112 @@
     }
 
     function handleConfigureRule({ tokens, commandConfig }) {
-        // openDeveloperStudio(&quot;iexapidef&quot;);
-        // window.openDeveloperStudio("iexapidef"); 
+        
         let transId = "ad_re";
         let fieldname = "rulename";
 
         let rawParamName = cleanCommandToken(tokens[2]);
 
-        // let targetUrl = "../aspx/tstruct.aspx?transid=ad_re";
+      
 
         setEditSessionState(transId);
         redirectToTstruct(transId, true, fieldname, rawParamName);
 
-        // if (!rawParamName) {
-        //     window.LoadIframe(targetUrl);
-        // } else {
-
-        //     targetUrl += `&hltype=load`;
-        //     targetUrl += `&torecid=false`;
-        //     targetUrl += `&openerIV=ad_re`;
-        //     targetUrl += `&isIV=false`;
-        //     targetUrl += `&isDupTab=false`;
-
-
-
-        //     targetUrl += `&rulename=${rawParamName}`;
-
-        //     targetUrl += "&dummyload=false♠"
-
-
-        //     window.LoadIframe(targetUrl);
-
-        // }
+      
 
 
 
     }
 
     function handleConfigureServer({ tokens, commandConfig }) {
-        // openDeveloperStudio(&quot;iexapidef&quot;);
-        // window.openDeveloperStudio("iexapidef"); 
+       
         let transId = "axpub";
         let fieldname = "servername";
-        // let param1Position = commandConfig.prompts[0].wordPos - 1;
-        const params = extractParams(tokens, commandConfig);
-        const rawParamName = params[0].rawValue;
+       
+        const rawParamName = cleanCommandToken(tokens[2]);
 
-        // let rawParamName = cleanCommandToken(tokens[2]);
-        // let targetUrl = "../aspx/tstruct.aspx?transid=axpub";
+       
         setEditSessionState(transId);
         redirectToTstruct(transId, true, fieldname, rawParamName);
 
-        // if (!rawParamName) {
-        //     window.LoadIframe(targetUrl);
-        // } else {
-
-        //     targetUrl += `&hltype=load`;
-        //     targetUrl += `&torecid=false`;
-        //     targetUrl += `&openerIV=axpub`;
-        //     targetUrl += `&isIV=false`;
-        //     targetUrl += `&isDupTab=false`;
+       
 
 
 
-        //     targetUrl += `&servername=${rawParamName}`;
+    }
 
-        //     targetUrl += "&dummyload=false♠"
+    function handleCofigurePegFormNotification({ tokens, commandConfig }) {
+
+        let transId = "ad_pn";
+        let fieldname = "name";
+
+        const rawParamName = cleanCommandToken(tokens[2]);
 
 
-        //     window.LoadIframe(targetUrl);
+        setEditSessionState(transId);
+        redirectToTstruct(transId, true, fieldname, rawParamName);
 
-        // }
+
 
 
 
     }
 
     function handleConfigurePeg({ tokens, commandConfig }) {
-        // openDeveloperStudio(&quot;iexapidef&quot;);
-        // window.openDeveloperStudio("iexapidef"); 
-        // let transId = "ad_pn";
-        // let fieldname = "name";
+       
         let rawParamName = cleanCommandToken(tokens[2]);
-
-        // let targetUrl = "../aspx/tstruct.aspx?transid=ad_pn";
-        // setEditSessionState(transId);
-
-        // redirectToTstruct(transId, true, fieldname, rawParamName);
-        redirectToProcessFlow(rawParamName);
-
-        // if (!rawParamName) {
-        //     window.LoadIframe(targetUrl);
-        // } else {
-
-        //     targetUrl += `&hltype=load`;
-        //     targetUrl += `&torecid=false`;
-        //     targetUrl += `&openerIV=ad_pn`;
-        //     targetUrl += `&isIV=false`;
-        //     targetUrl += `&isDupTab=false`;
-
-
-
-        //     targetUrl += `&servername=${rawParamName}`;
-
-        //     targetUrl += "&dummyload=false♠"
-
-
-        //     window.LoadIframe(targetUrl);
-
-        // }
+       
+        redirectToProcessFlow(rawParamName);  
 
 
 
     }
 
-    function handleConfigureNotification({ tokens, commandConfig }) {
-        // openDeveloperStudio(&quot;iexapidef&quot;);
-        // window.openDeveloperStudio("iexapidef"); 
+    function handleConfigureFormNotification({ tokens, commandConfig }) {
+
         let transId = "a__fn";
+        const fieldname = "form"; 
+        
 
 
-        let rawFieldname = cleanCommandToken(tokens[2]);
-        const fieldname = tryResolveToken(2, rawFieldname, commandConfig, false);
-        let rawParamValue = cleanCommandToken(tokens[3]);
-        // let targetUrl = "../aspx/tstruct.aspx?transid=a__fn";
+        // let rawFieldname = cleanCommandToken(tokens[2]);
+        // const fieldname = tryResolveToken(2, rawFieldname, commandConfig, false);
+        let rawParamValue = cleanCommandToken(tokens[2]);
+
 
         setEditSessionState(transId);
         redirectToTstruct(transId, true, fieldname, rawParamValue);
 
 
 
-
-
-        // if (!rawParamName) {
-        //     window.LoadIframe(targetUrl);
-        // } else {
-
-        //     targetUrl += `&hltype=load`;
-        //     targetUrl += `&torecid=false`;
-        //     targetUrl += `&openerIV=a__fn`;
-        //     targetUrl += `&isIV=false`;
-        //     targetUrl += `&isDupTab=false`;
-
-
-
-        //     targetUrl += `&servername=${rawParamName}`;
-
-        //     targetUrl += "&dummyload=false♠"
-
-
-        //     window.LoadIframe(targetUrl);
-
-        // }
-
-
-
     }
 
     function handleConfigureDevOptions({ tokens, commandConfig }) {
-        // openDeveloperStudio(&quot;idop_list&quot;);
-        // window.openDeveloperStudio("idop_list"); 
+
         window.LoadIframe("../aspx/tstruct.aspx?transid=axstc");
 
     }
 
     function handleConfigureProperties({ tokens, commandConfig }) {
-        // openDeveloperStudio(&quot;idop_list&quot;);
-        // window.openDeveloperStudio("idop_list"); 
+
         window.LoadIframe("../aspx/tstruct.aspx?transid=ad_pr");
 
     }
 
     function handleConfigureJob({ tokens, commandConfig }) {
-        // openDeveloperStudio(&quot;idop_list&quot;);
-        // window.openDeveloperStudio("idop_list"); 
+
         let transId = "job_s";
         let fieldname = "jname";
 
         let rawParamName = cleanCommandToken(tokens[2]);
-        // let targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+
 
         setEditSessionState(transId);
         redirectToTstruct(transId, true, fieldname, rawParamName);
 
-        // if (!rawParamName) {
-        //     window.LoadIframe(targetUrl);
-        // } else {
-
-        //     targetUrl += `&hltype=load`;
-        //     targetUrl += `&torecid=false`;
-        //     targetUrl += `&openerIV=job_s`;
-        //     targetUrl += `&isIV=false`;
-        //     targetUrl += `&isDupTab=false`;
 
 
 
-        //     targetUrl += `&jname=${rawParamName}`;
-
-        //     targetUrl += "&dummyload=false♠"
-
-
-        //     window.LoadIframe(targetUrl);
-
-        // }
-        // // window.LoadIframe("../aspx/tstruct.aspx?transid=job_s")
 
     }
 
@@ -3196,7 +3149,7 @@
 
     function handleUpload({ tokens, commandConfig }) {
         // window.LoadIframe("../aspx/ImportAll.aspx");
-        window.openDeveloperStudio("ImportAll.aspx"); 
+        window.openDeveloperStudio("ImportAll.aspx");
 
 
 
@@ -3204,7 +3157,7 @@
 
     function handleDownload({ tokens, commandConfig }) {
         // window.LoadIframe("../aspx/ExportNew.aspx");
-        window.openDeveloperStudio("ExportNew.aspx"); 
+        window.openDeveloperStudio("ExportNew.aspx");
 
 
 
@@ -3259,14 +3212,13 @@
     function redirectToEntity(transId, fieldName, fieldValue) {
         let targetUrl;
         if (!fieldName || !fieldValue) {
-            // targetUrl += "&dummyload=false♠"
+
             targetUrl = `../aspx/Entity.aspx?tstid=${transId}`;
 
         } else {
             targetUrl = `../aspx/EntityForm.aspx?tstid=${transId}`;
             targetUrl += `&${fieldName}=${fieldValue}`;
-            // targetUrl += "&act=open";
-            // targetUrl += "&dummyload=false♠"
+
 
 
 
@@ -3279,7 +3231,7 @@
     function handleViewCommand({ tokens, commandConfig }) {
 
         let transId = "";
-        let type = ""; 
+        let type = "";
 
 
         if (tokens.length < 2) {
@@ -3300,7 +3252,7 @@
         type = getTypeByCaption(viewDataSourceKey, rawStruct, promptValues);
 
         const handler = VIEW_HANDLERS[type];
-        
+
 
 
 
@@ -3322,24 +3274,24 @@
 
 
         } else if (type === "page") {
-            const viewList = axDatasourceObj[viewDataSourceKey]; 
-            
+            const viewList = axDatasourceObj[viewDataSourceKey];
 
 
-        // const requestUrl = item.requestUrl;
+
+            // const requestUrl = item.requestUrl;
             let transId = "sect";
             let fieldName = "caption";
             let rawFieldValue = cleanCommandToken(tokens[1]);
             // let fieldValue = tryResolveToken(1, rawFieldValue, commandConfig, false); 
             // const item = viewList.find(v => v.displaydata === rawFieldValue);
-            
+
             // const fieldValue = item.caption; 
-            
+
 
 
             // handler({ transId, fieldName, fieldValue });
-            redirectToHtmlPages(rawFieldValue); 
-            return; 
+            redirectToHtmlPages(rawFieldValue);
+            return;
 
         }
 
@@ -3385,22 +3337,7 @@
             `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
         );
 
-        // setEditSessionState(transId);
-
-        // switch(type) {
-        //     case "tstruct":
-        //         redirectToEntity(transId, fieldName, fieldValue); 
-
-
-        // }
-
-        // if (type === "tstruct") {
-        //      redirectToEntity(transId, fieldName, fieldValue); 
-
-        // } else {
-        //     redirectToIView(transId); 
-        // }
-
+        
 
 
         handler({
@@ -3417,7 +3354,7 @@
         const VALID_TYPES = new Set(paramList);
 
         const data = axDatasourceObj?.[axDatasourceKey];
-        console.log(JSON.stringify(data)); 
+        console.log(JSON.stringify(data));
 
         // const item = data.find(d => d.caption === caption);
         const item = data.find(d => d.displaydata.includes(caption));
@@ -3461,17 +3398,15 @@
     }
 
     function redirectToHtmlPages(text) {
-        const viewList = axDatasourceObj["axi_viewlist".toLowerCase()]; 
+        const viewList = axDatasourceObj["axi_viewlist".toLowerCase()];
 
-        const item = viewList.find(v => v.displaydata.includes(text)); 
+        const item = viewList.find(v => v.displaydata.includes(text));
 
         const requestUrl = item.name;
-        console.log(requestUrl); 
-        
-        window.LoadIframe(`../aspx/${requestUrl}`); 
-        // window.openDeveloperStudio(requestUrl); 
+        console.log(requestUrl);
 
-        // window.openDeveloperStudio(requestUrl);
+        window.LoadIframe(requestUrl);
+        
 
     }
 
