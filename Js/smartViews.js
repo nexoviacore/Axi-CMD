@@ -4186,6 +4186,10 @@ function clickOnDemand(elem, open = true, cellData, row, col){
         } catch (ex) {}
 
         $(returnString).click();
+        console.log("HLINK =", ivHeadRows[colID]["@hlink"]);
+console.log("HLACTION =", ivHeadRows[colID]["@hlaction"]);
+console.log("FINAL HTML =", returnString);
+
     }else{
         return returnString;
     }

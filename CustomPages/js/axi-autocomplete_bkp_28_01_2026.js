@@ -19,7 +19,7 @@
 
     };
 
-
+    
 
 
 
@@ -56,9 +56,9 @@
         },
         configure: {
             peg: handleConfigurePeg,
-
+            appvar: handleConfigureAppVar,
             api: handleConfigureApi,
-
+            devoptions: handleConfigureDevOptions,
             properties: handleConfigureProperties,
             job: handleConfigureJob,
             rule: handleConfigureRule,
@@ -70,15 +70,8 @@
             schdulednotification: handleConfigureSchduledNotification
         },
         open: {
-            default: handleOpenSource,
-            ads: handleOpenAds,
-            card: handleOpenCard,
-            page: handleOpenPage,
-            appvars: handleOpenAppVar,
-            devoption: handleOpenDevOptions,
+            default: (ctx) => console.log("Open handler", ctx),
             dbconsole: handleViewDbConsole
-            //default: handleOpen
-            //default: (ctx) => console.log("Open handler", ctx) 
         },
         upload: {
             default: handleUpload
@@ -373,24 +366,24 @@
         top.window.LoadIframe(targetUrl);
     }
 
-    function redirectToResponsibilitiesPage(fieldValue = "") {
+     function redirectToResponsibilitiesPage(fieldValue = "") {   
 
 
 
-        //    LoadIframe('AddEditResponsibility.aspx?status=true&action=edit&name=demorole')
+    //    LoadIframe('AddEditResponsibility.aspx?status=true&action=edit&name=demorole')
 
 
-        let targetUrl = "../aspx/AddEditResponsibility.aspx";
+        let targetUrl = "../aspx/AddEditResponsibility.aspx";  
 
         if (fieldValue) {
-            targetUrl += "?status=true";
-            targetUrl += "&action=edit";
-            targetUrl += `&name=${encodeURIComponent(fieldValue)}`
+             targetUrl += "?status=true"; 
+        targetUrl += "&action=edit"; 
+        targetUrl += `&name=${encodeURIComponent(fieldValue)}`
         } else {
-            targetUrl += "?status=true";
-            targetUrl += "&action=add";
+            targetUrl += "?status=true"; 
+            targetUrl += "&action=add"; 
         }
-
+           
 
         top.window.LoadIframe(targetUrl);
     }
@@ -1066,14 +1059,14 @@
             //     lastBracketIndex = lastBracketIndex - 1; 
             // }
             const text = suggestion.substring(0, lastBracketIndex)
-                // .replace(/\-\s*\([^)]*\)\s*$/, "")
-                .trim();
+                                    // .replace(/\-\s*\([^)]*\)\s*$/, "")
+                                    .trim();
 
+             
+            displayName = text.replace(/-$/, ""); 
 
-            displayName = text.replace(/-$/, "");
-
-
-            // displayName = suggestion.replace(/\-\s*\([^)]*\)\s*$/, "").trim();
+            
+// displayName = suggestion.replace(/\-\s*\([^)]*\)\s*$/, "").trim();
 
 
         }
@@ -2672,16 +2665,16 @@
 
     }
 
-    function handleConfigureAccess({ tokens, commandConfig }) {
+     function handleConfigureAccess({ tokens, commandConfig }) {
 
-        let fieldValue = cleanCommandToken(tokens[2]);
+        let fieldValue = cleanCommandToken(tokens[2]);      
 
+    
 
-
-
+        
         redirectToResponsibilitiesPage(fieldValue);
 
-
+        
 
 
 
@@ -3045,53 +3038,53 @@
     }
 
     function handleConfigureRule({ tokens, commandConfig }) {
-
+        
         let transId = "ad_re";
         let fieldname = "rulename";
 
         let rawParamName = cleanCommandToken(tokens[2]);
 
-
+      
 
         setEditSessionState(transId);
         redirectToTstruct(transId, true, fieldname, rawParamName);
 
-
+      
 
 
 
     }
 
-    function handleConfigureSchduledNotification({ tokens, commandConfig }) {
-
+     function handleConfigureSchduledNotification ({ tokens, commandConfig }) {
+        
         let transId = "a__pn";
         let fieldname = "name";
 
         let rawParamName = cleanCommandToken(tokens[2]);
 
-
+      
 
         setEditSessionState(transId);
         redirectToTstruct(transId, true, fieldname, rawParamName);
 
-
+      
 
 
 
     }
 
     function handleConfigureServer({ tokens, commandConfig }) {
-
+       
         let transId = "axpub";
         let fieldname = "servername";
-
+       
         const rawParamName = cleanCommandToken(tokens[2]);
 
-
+       
         setEditSessionState(transId);
         redirectToTstruct(transId, true, fieldname, rawParamName);
 
-
+       
 
 
 
@@ -3115,10 +3108,10 @@
     }
 
     function handleConfigurePeg({ tokens, commandConfig }) {
-
+       
         let rawParamName = cleanCommandToken(tokens[2]);
-
-        redirectToProcessFlow(rawParamName);
+       
+        redirectToProcessFlow(rawParamName);  
 
 
 
@@ -3127,14 +3120,14 @@
     function handleConfigureFormNotification({ tokens, commandConfig }) {
 
         let transId = "a__fn";
-        const fieldname = "stransid";
-
+        const fieldname = "stransid"; 
+        
 
 
         // let rawFieldname = cleanCommandToken(tokens[2]);
         // const fieldname = tryResolveToken(2, rawFieldname, commandConfig, false);
         let rawParamValue = cleanCommandToken(tokens[2]);
-        const fieldValue = tryResolveToken(2, rawParamValue, commandConfig, false);
+        const fieldValue = tryResolveToken(2, rawParamValue, commandConfig, false); 
 
 
         setEditSessionState(transId);
@@ -3187,7 +3180,7 @@
     }
 
     function handleDownload({ tokens, commandConfig }) {
-        let targetUrl = "../aspx/ExportNew.aspx";
+        let targetUrl = "../aspx/ExportNew.aspx"; 
         targetUrl += "?action=export"
         window.LoadIframe(targetUrl);
         // window.openDeveloperStudio("ExportNew.aspx");
@@ -3370,7 +3363,7 @@
             `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
         );
 
-
+        
 
 
         handler({
@@ -3439,187 +3432,9 @@
         console.log(requestUrl);
 
         window.LoadIframe(requestUrl);
-
-
-    }
-
-    /***************************************************
-* OPEN COMMAND FUNCTION
-* **************************************************
-*/
-
-    function handleOpenSource({ tokens, commandConfig }) {
-
-        //if (tokens.length < 4) {
-        //    console.warn("edit source requires <type> <name>");
-        //    return;
-        //}
-
-        const type = cleanCommandToken(tokens[1]);
-        let rawName = cleanCommandToken(tokens[2]);
-
-        let resolvedName = tryResolveToken(2, rawName, commandConfig, false);
-
-
-        if (resolvedName === rawName) {
-            const listKey =
-                type === "tstruct"
-                    ? "Axi_TStructList".toLowerCase()
-                    : type === "iview"
-                        ? "Axi_IViewList".toLowerCase()
-                        : null;
-
-            if (!listKey) {
-                alert("Unknown source type: " + type);
-                return;
-            }
-
-            const list = axDatasourceObj[listKey];
-            const found = list?.find(
-                x => x.caption?.toLowerCase() === rawName.toLowerCase()
-            );
-
-            if (!found || !found.name) {
-                console.error(`Source not found: ${rawName}`);
-                return;
-            }
-
-            resolvedName = found.name;
-        }
-
-
-        if (type === "tstruct") {
-            window.openDeveloperStudio("tstreact", resolvedName, true);
-        } else if (type === "iview") {
-            window.openDeveloperStudio("ivreact", resolvedName, true);
-        } else {
-            alert("Unknown source type: " + type);
-        }
-    }
-
-    function handleOpenAds({ tokens, commandConfig }) {
-        let targetUrl;
-        let paramName;
-        const transId = "b_sql";
-        let fieldname = "sqlname";
-
-        let rawName = cleanCommandToken(tokens[2]);
-
-
-        //   if (!rawName) return;
-        if (rawName) {
-            paramName = tryResolveToken(2, rawName, commandConfig, false);
-
-        }
-
-        setEditSessionState(transId);
-
-
-
-        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
-
-        if (!paramName) {
-            window.LoadIframe(targetUrl);
-
-        } else {
-            targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
-            targetUrl += "&act=load";
-            targetUrl += "&dummyload=false♠"
-            window.LoadIframe(targetUrl);
-
-        }
-        // window.LoadIframe("../aspx/tstruct.aspx?transid=b_sql");
-    }
-
-    function handleOpenCard({ tokens, commandConfig }) {
-        // LoadIframeac(&quot;ivtoivload.aspx?ivname=axusers
-        // window.LoadIframe("ivtoivload.aspx?ivname=axpcards");
-        let targetUrl;
-        let paramName;
-        let transId = "a__cd";
-        let fieldname = "cardname";
-        let rawName = cleanCommandToken(tokens[2]);
-
-        //   if (!rawName) return;
-        if (rawName) {
-            paramName = tryResolveToken(2, rawName, commandConfig, false);
-
-        }
-
-
-        setEditSessionState(transId);
-        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
-
-        if (!paramName) {
-            window.LoadIframe(targetUrl);
-
-        } else {
-            // targetUrl += `&cardname=${paramName}`;
-            targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
-            targetUrl += "&act=load";
-            targetUrl += "&dummyload=false♠"
-            window.LoadIframe(targetUrl);
-
-        }
-    }
-
-    function handleOpenPage({ tokens, commandConfig }) {
-
-        let targetUrl;
-        let paramName;
-        let transId = "sect";
-        let fieldname = "caption";
-        let rawName = cleanCommandToken(tokens[2]);
-
-        //   if (!rawName) return;
-        if (rawName) {
-            paramName = tryResolveToken(2, rawName, commandConfig, false);
-
-        }
-
-        setEditSessionState(transId);
-
-        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
-
-        if (!paramName) {
-            window.LoadIframe(targetUrl);
-
-        } else {
-            targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
-            targetUrl += "&act=load";
-            targetUrl += "&dummyload=false♠"
-            window.LoadIframe(targetUrl);
-
-        }
-
-        // window.openDeveloperStudio("ihplist");
-        //  window.LoadIframe("../aspx/tstruct.aspx?transid=sect"); 
+        
 
     }
-
-    function handleOpenAppVar({ tokens, commandConfig }) {
-        // openDeveloperStudio(&quot;iaxvars&quot;);
-        // window.openDeveloperStudio("iaxvars"); 
-        window.LoadIframe("../aspx/tstruct.aspx?transid=axvar");
-
-    }
-
-    function handleOpenDevOptions({ tokens, commandConfig }) {
-        // openDeveloperStudio(&quot;idop_list&quot;);
-        // window.openDeveloperStudio("idop_list"); 
-        window.LoadIframe("../aspx/tstruct.aspx?transid=axstc");
-
-    }
-
-    function handleOpenDbConsole() {
-        window.openDeveloperStudio("AxDBScript.aspx");
-
-    }
-
-    /**
-     * ======================= End =============================
-     */
-
 
 
 
