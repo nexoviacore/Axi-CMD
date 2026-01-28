@@ -19,6 +19,8 @@
 
     };
 
+    
+
 
 
 
@@ -64,7 +66,8 @@
             formnotification: handleConfigureFormNotification,
             pegformnotification: handleCofigurePegFormNotification,
             permission: handleEditUser,
-            access: handleConfigureAccess
+            access: handleConfigureAccess,
+            schdulednotification: handleConfigureSchduledNotification
         },
         open: {
             default: (ctx) => console.log("Open handler", ctx)
@@ -298,7 +301,7 @@
 
 
     async function loadList(sourceName, paramValue = "") {
-        const key = paramValue ? `${sourceName}_${paramValue}` : sourceName;
+        const key = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
         if (activeFetches.has(key)) return;
         activeFetches.add(key);
 
@@ -309,10 +312,6 @@
             axDatasourceObj[key] = data;
             console.log(JSON.stringify(axDatasourceObj));
             handleInput();
-
-
-
-
 
         } catch (error) {
             console.error("loadlist failed", error);
@@ -366,19 +365,24 @@
         top.window.LoadIframe(targetUrl);
     }
 
-     function redirectToResponsibilitiesPage(fieldName = "", fieldValue = "") {   
+     function redirectToResponsibilitiesPage(fieldValue = "") {   
 
 
 
-       
+    //    LoadIframe('AddEditResponsibility.aspx?status=true&action=edit&name=demorole')
 
 
-        let targetUrl = `../aspx/Responsibilities.aspx`;    
+        let targetUrl = "../aspx/AddEditResponsibility.aspx";  
 
-     
-          
-
-      
+        if (fieldValue) {
+             targetUrl += "?status=true"; 
+        targetUrl += "&action=edit"; 
+        targetUrl += `&name=${encodeURIComponent(fieldValue)}`
+        } else {
+            targetUrl += "?status=true"; 
+            targetUrl += "&action=add"; 
+        }
+           
 
         top.window.LoadIframe(targetUrl);
     }
@@ -1053,7 +1057,16 @@
             // if (lastBracketIndex > 0 && suggestion[lastBracketIndex - 1] === '-') {
             //     lastBracketIndex = lastBracketIndex - 1; 
             // }
-            displayName = suggestion.substring(0, lastBracketIndex).trim();
+            const text = suggestion.substring(0, lastBracketIndex)
+                                    // .replace(/\-\s*\([^)]*\)\s*$/, "")
+                                    .trim();
+
+             
+            displayName = text.replace(/-$/, ""); 
+
+            
+// displayName = suggestion.replace(/\-\s*\([^)]*\)\s*$/, "").trim();
+
 
         }
 
@@ -1297,6 +1310,7 @@
     function showToast(message, duration = 5000) {
 
         const toast = document.createElement("div");
+
         toast.textContent = message;
 
 
@@ -2651,23 +2665,12 @@
 
      function handleConfigureAccess({ tokens, commandConfig }) {
 
+        let fieldValue = cleanCommandToken(tokens[2]);      
 
-
-
-        let fieldValue = cleanCommandToken(tokens[2]);
-        let transId = "axusr";
-
-       
-      
-
-
-
-       
-
-        setEditSessionState(transId);
+    
 
         
-        redirectToResponsibilitiesPage("", fieldValue);
+        redirectToResponsibilitiesPage(fieldValue);
 
         
 
@@ -2998,7 +3001,7 @@
         console.log("commandConfig: " + JSON.stringify(commandConfig));
         let fieldname = "ExecAPIDefName";
         let transId = "apidg";
-        let param1Position = commandConfig.prompts[0].wordPos - 1;
+        let param1Position = commandConfig.prompts[1].wordPos - 1;
         // let rawApiName = cleanCommandToken(tokens[2]);
         let rawApiName = cleanCommandToken(tokens[param1Position]);
 
@@ -3036,6 +3039,24 @@
         
         let transId = "ad_re";
         let fieldname = "rulename";
+
+        let rawParamName = cleanCommandToken(tokens[2]);
+
+      
+
+        setEditSessionState(transId);
+        redirectToTstruct(transId, true, fieldname, rawParamName);
+
+      
+
+
+
+    }
+
+     function handleConfigureSchduledNotification ({ tokens, commandConfig }) {
+        
+        let transId = "a__pn";
+        let fieldname = "name";
 
         let rawParamName = cleanCommandToken(tokens[2]);
 
@@ -3217,7 +3238,7 @@
 
         } else {
             targetUrl = `../aspx/EntityForm.aspx?tstid=${transId}`;
-            targetUrl += `&${fieldName}=${fieldValue}`;
+            targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
 
 
 
