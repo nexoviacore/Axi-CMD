@@ -95,10 +95,10 @@
     let btnRefresh;
     let runBtn;
     let axiClearBtn;
-    let axiLogo; 
-    let searchWrapper; 
     let isCommandTypingCompleted = false;
-   
+    //  let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+    //         let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+    //         let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
 
 
     let signingInPromise = null;
@@ -116,7 +116,6 @@
     let axDatasourceObj = {};
     let activeFetches = new Set();
     let filteredObjects = [];
-    
 
     function init() {
 
@@ -131,23 +130,6 @@
 
         console.log("Axi Input Found!", input);
 
-        axiLogo = document.getElementById("axiLogo"); 
-
-        if (!axiLogo) {
-              console.log("Axi Logo not ready yet... waiting.");
-            setTimeout(init, 200);
-            return;
-
-        }
-
-        searchWrapper = document.querySelector(".searchwrap-AXI"); 
-
-        if (!searchWrapper) {
-             console.log("Axi search wrapper not ready yet... waiting.");
-            setTimeout(init, 200);
-            return;
-
-        }
 
         hintDiv = document.getElementById("axiHint");
         if (!hintDiv) {
@@ -206,7 +188,7 @@
     init();
 
     /* ===============================
-        INITIALIZATION
+       1. INITIALIZATION
     =============================== */
     async function initCommands(isForced = false) {
 
@@ -563,19 +545,12 @@
                 axiClearBtn.style.display = "none";
             }
         }
-        // if (!text.trim()) {
-        //     hintDiv.textContent = "";
-        //     hide();
-        //     return;
-        // }
-        if (!commands) return;
-
         if (!text.trim()) {
-            items = Object.keys(commands); 
-            hintDiv.textContent = ""; 
-            render(); 
-            return; 
+            hintDiv.textContent = "";
+            hide();
+            return;
         }
+        if (!commands) return;
 
         // Clear stale resolutions when input changes
         const currentTokens = getTokens(text);
@@ -1283,9 +1258,6 @@
         if (input && list && e.target !== input && !list.contains(e.target)) {
             hide();
         }
-        if (list.style.display === "block" && searchWrapper && !searchWrapper.contains(e.target)) {
-            hide(); 
-        }
     });
 
 
@@ -1836,16 +1808,6 @@
             })
         }
 
-        if (axiLogo) {
-            axiLogo.addEventListener("click", (e) => {
-                e.stopPropagation(); 
-                e.preventDefault(); 
-                input.value=""; 
-                handleInput(); 
-                input.focus(); 
-            })
-        }
-
 
 
         if (runBtn) {
@@ -1855,33 +1817,12 @@
         input.addEventListener("input", handleInput);
         input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
         input.addEventListener("keydown", e => {
-            // if (e.key === "Enter" && e.ctrlKey) {
-            //     e.preventDefault();
-            //     console.log("Debug: Enter + shift Detected Executing..........");
-            //     executeCommandsV2();
-            //     hide();
-            //     return;
-            // }
-
-           
-
-            if (e.key === "Enter") {
-                 if (e.ctrlKey) {
-                e.preventDefault(); 
-                executeCommandsV2(); 
-                hide(); 
-                return; 
-            }
-                if (list.style.display === "none") {
-                    e.preventDefault(); 
-                    handleInput(); 
-                    return; 
-                }
-
-                if (activeIndex >= 0) {
-                    e.preventDefault(); 
-                    apply(activeIndex); 
-                }
+            if (e.key === "Enter" && e.ctrlKey) {
+                e.preventDefault();
+                console.log("Debug: Enter + shift Detected Executing..........");
+                executeCommandsV2();
+                hide();
+                return;
             }
             // // Auto Double quotes 
             // // --------------------------------------------------------
@@ -1963,23 +1904,6 @@
     function highlight() {
         if (list.children.length > 0) {
             [...list.children].forEach((li, i) => li.classList.toggle("active", i === activeIndex));
-
-            const activeItem = list.children[activeIndex]; 
-            if (activeItem) {
-               const itemTop = activeItem.offsetTop;
-                const itemBottom = itemTop + activeItem.clientHeight;
-                const listScrollTop = list.scrollTop;
-                const listHeight = list.clientHeight;
-
-                
-                if (itemBottom > listScrollTop + listHeight) {
-                    list.scrollTop = itemBottom - listHeight;
-                }
-               
-                else if (itemTop < listScrollTop) {
-                    list.scrollTop = itemTop;
-                }
-            }
         }
     }
 
@@ -2409,8 +2333,8 @@
     }
 
     function handleViewDbConsole() {
-        window.openDeveloperStudio("AxDBScript.aspx");
-        // window.LoadIframe("AxDBScript.aspx");
+        // window.openDeveloperStudio("AxDBScript.aspx");
+        window.LoadIframe("AxDBScript.aspx");
 
     }
 
@@ -3465,7 +3389,7 @@
 
     function redirectToEntity(transId, fieldName, fieldValue) {
         let targetUrl;
-        if (!fieldValue) {
+        if (!fieldName || !fieldValue) {
 
             targetUrl = `../aspx/Entity.aspx?tstid=${transId}`;
 
@@ -3591,12 +3515,12 @@
 
 
         let rawValue = cleanCommandToken(tokens[2]);
-        // const fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
+        const fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
 
 
 
         console.log(
-            `view Data → TStruct=${transId}, Field=${fieldName}, Value=${rawValue}`
+            `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
         );
 
 
@@ -3605,7 +3529,7 @@
         handler({
             transId,
             fieldName,
-            fieldValue: rawValue
+            fieldValue
         })
 
 

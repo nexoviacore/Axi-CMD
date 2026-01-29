@@ -96,10 +96,9 @@
     max-height: calc(100vh - 120px) !important;
 }
 
-/* .Axi-Logo {
-    color: red; 
-    padding-left: 20px;
-} */
+.AXI-Logo {
+    cursor: pointer !important;
+}
 
 .searchwrap-AXI .AXI-Logo {
     display: flex;
