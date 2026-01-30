@@ -1,5 +1,5 @@
 ﻿(() => {
-    // 29/01/2026 - New Axi Command Pallete Behaviour Changes
+    // Commands Structure Change
     // ENDPOINTS
     const API_METADATA = "http://localhost:5000/api/v1/Axi/axi_get";
 
@@ -95,10 +95,10 @@
     let btnRefresh;
     let runBtn;
     let axiClearBtn;
-    let axiLogo; 
-    let searchWrapper; 
     let isCommandTypingCompleted = false;
-   
+    //  let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+    //         let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+    //         let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
 
 
     let signingInPromise = null;
@@ -116,7 +116,6 @@
     let axDatasourceObj = {};
     let activeFetches = new Set();
     let filteredObjects = [];
-    
 
     function init() {
 
@@ -131,23 +130,6 @@
 
         console.log("Axi Input Found!", input);
 
-        axiLogo = document.getElementById("axiLogo"); 
-
-        if (!axiLogo) {
-              console.log("Axi Logo not ready yet... waiting.");
-            setTimeout(init, 200);
-            return;
-
-        }
-
-        searchWrapper = document.querySelector(".searchwrap-AXI"); 
-
-        if (!searchWrapper) {
-             console.log("Axi search wrapper not ready yet... waiting.");
-            setTimeout(init, 200);
-            return;
-
-        }
 
         hintDiv = document.getElementById("axiHint");
         if (!hintDiv) {
@@ -206,7 +188,7 @@
     init();
 
     /* ===============================
-        INITIALIZATION
+       1. INITIALIZATION
     =============================== */
     async function initCommands(isForced = false) {
 
@@ -353,7 +335,6 @@
     function redirectToSmartView(adsname) {
         let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
         
-        
         targetUrl += `?ads=${adsname}`;
         targetUrl += "&load=1769601086182"; 
         
@@ -384,8 +365,7 @@
          
 
           targetUrl +="&isIV=true"; 
-        //   targetUrl += `&isDupTab=true-${Date.now()}`;
-          targetUrl += `&isDupTab=true`;
+          targetUrl += "&isDupTab=true-1769600154391";
 
          
           targetUrl += "&dummyload=false";   
@@ -398,45 +378,6 @@
     }
 
 
-
-    // function redirectToTstruct(transId, isEdit = false, fieldName = "", fieldValue = "") {
-    //     console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
-
-
-
-    //     if (!transId) {
-    //         alert("There is no Tstruct name provided!");
-    //         return;
-    //     }
-
-
-    //     let targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
-
-    //     if (isEdit) {
-
-
-
-
-
-
-    //         if (fieldName && fieldValue) {
-    //             targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
-    //         }
-    //         targetUrl += `&hltype=load`;
-    //         targetUrl += `&torecid=false`;
-    //         targetUrl += `&openerIV=${transId}`;
-    //         targetUrl += `&isIV=false`;
-    //         targetUrl += `&isDupTab=false`;
-
-    //         targetUrl += `&dummyload=false♠`;
-
-    //     } else {
-
-    //         targetUrl += `&dummyload=false`;
-    //     }
-
-    //     top.window.LoadIframe(targetUrl);
-    // }
 
     function redirectToTstruct(transId, isEdit = false, fieldName = "", fieldValue = "") {
         console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
@@ -452,8 +393,13 @@
         let targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (isEdit) {
-            if (fieldName && fieldValue)
-            {
+
+
+
+
+
+
+            if (fieldName && fieldValue) {
                 targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
             }
             targetUrl += `&hltype=load`;
@@ -464,19 +410,13 @@
 
             targetUrl += `&dummyload=false♠`;
 
-        }
-        else
-        {
-            if (fieldName && fieldValue) {
-                targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
-            }
-            targetUrl += `&hltype=open`;
+        } else {
+
             targetUrl += `&dummyload=false`;
         }
 
         top.window.LoadIframe(targetUrl);
     }
-
 
     function redirectToResponsibilitiesPage(fieldValue = "") {
 
@@ -509,45 +449,22 @@
 
     }
 
-    // function redirectToProcessFlow(caption) {
-    //     console.log(`Redirecting to Process flox for caption:  ${caption}`);
-
-
-
-
-    //     let targetUrl = `../aspx/processflow.aspx`;
-    //     targetUrl += "?loadcaption=AxProcessBuilder"
-
-    //     if (caption) {
-    //         targetUrl += `&processname=${encodeURIComponent(caption)}`;
-    //     }
-
-
-    //     top.window.LoadIframe(targetUrl);
-    // }
-
     function redirectToProcessFlow(caption) {
         console.log(`Redirecting to Process flox for caption:  ${caption}`);
 
 
 
 
-        let targetUrl;
+        let targetUrl = `../aspx/processflow.aspx`;
+        targetUrl += "?loadcaption=AxProcessBuilder"
 
         if (caption) {
-            targetUrl = `../aspx/processflow.aspx`;
-            targetUrl += "?loadcaption=AxProcessBuilder"
             targetUrl += `&processname=${encodeURIComponent(caption)}`;
-        }
-        else {
-            targetUrl =`../aspx/tstruct.aspx?transid=ad_pm`;
         }
 
 
         top.window.LoadIframe(targetUrl);
     }
-
-
 
     /* ===============================
        2. INPUT HANDLER
@@ -563,21 +480,12 @@
                 axiClearBtn.style.display = "none";
             }
         }
-        // if (!text.trim()) {
-        //     hintDiv.textContent = "";
-        //     hide();
-        //     return;
-        // }
-        if (!commands) return;
-
         if (!text.trim()) {
-            items = Object.keys(commands); 
-            hintDiv.textContent = ""; 
-            render(); 
-            return; 
+            hintDiv.textContent = "";
+            hide();
+            return;
         }
-
-        render(); 
+        if (!commands) return;
 
         // Clear stale resolutions when input changes
         const currentTokens = getTokens(text);
@@ -1195,7 +1103,7 @@
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
         let realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
 
-       
+        // Clean up display name if it contains parens like "Name (ID)"
         if (suggestion.includes("(") && suggestion.includes(")")) {
             const lastBracketIndex = suggestion.lastIndexOf("(");
 
@@ -1225,7 +1133,7 @@
         // Check if we are inside an unclosed quote
         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
 
-       
+        // If ends with space and NOT inside a quote, we are adding a NEW parameter
         if (endsWithSpace && !isUnclosedString) {
             tokens.push("");
         }
@@ -1284,9 +1192,6 @@
     document.addEventListener("click", e => {
         if (input && list && e.target !== input && !list.contains(e.target)) {
             hide();
-        }
-        if (list.style.display === "block" && searchWrapper && !searchWrapper.contains(e.target)) {
-            hide(); 
         }
     });
 
@@ -1798,31 +1703,6 @@
         }
     }
 
-function isSuggestionVisible() {
-    return list && list.style.display === "block" && items.length > 0;
-}
-
-function hasActiveSuggestion() {
-    return activeIndex >= 0 && activeIndex < items.length;
-}
-
-function canRunCommand() {
-    const text = input.value.trim();
-    if (!text || !commands) return false;
-
-    const tokens = getTokens(text);
-    const groupKey = cleanString(tokens[0]);
-    const groupConfig = commands[groupKey];
-    if (!groupConfig) return false;
-
-    const targetIndex = tokens.length - 1;
-    const promptInfo = getActivePromptInfo(groupConfig, tokens, targetIndex);
-
-    
-    return !promptInfo;
-}
-
-
     /* ===============================
        SETUP LISTENERS
     =============================== */
@@ -1863,87 +1743,21 @@ function canRunCommand() {
             })
         }
 
-        if (axiLogo) {
-            axiLogo.addEventListener("click", (e) => {
-                e.stopPropagation(); 
-                e.preventDefault(); 
-                input.value=""; 
-                handleInput(); 
-                input.focus(); 
-            })
-        }
-
 
 
         if (runBtn) {
             runBtn.addEventListener("click", executeCommandsV2);
         }
 
-        input.addEventListener("focus", () => {
-            if (input.value.trim() === "") {
-                handleInput(); 
-            }
-        })
-
         input.addEventListener("input", handleInput);
         input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
-        input.addEventListener("keydown", e => { 
-            console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey); 
-            
-           
-            
-            if (e.ctrlKey && e.code === "Space") {
-                e.preventDefault(); 
-                handleInput(); 
-                return; 
-            }
-
-          
-
-            if (e.key === "Enter") {
-                e.preventDefault(); 
-           
-
-            // if (list.style.display === "block" && active >= 0) {
-            //     e.preventDefault(); 
-            //     apply(activeIndex); 
-            //     return; 
-            // }
-            //     if (list.style.display === "none") {
-            //         e.preventDefault(); 
-            //         handleInput(); 
-            //         return; 
-            //     }
-
-            // const isListOpen = list.style.display === "block"; 
-            // const hasActiveItem = isListOpen && activeIndex >= 0; 
-
-            // if (hasActiveItem) {
-            //     e.preventDefault(); 
-            //     apply(activeIndex); 
-            //     return; 
-            // }
-
-            // executeCommandsV2(); 
-            // hide(); 
-            // return; 
-            
-            if (isSuggestionVisible() && hasActiveSuggestion()) {
-                e.preventDefault(); 
-                apply(activeIndex); 
-                return; 
-            }
-
-        
-            
-                executeCommandsV2(); 
-                hide(); 
-                return; 
-            
-
-            // e.preventDefault(); 
-            // handleInput();
-
+        input.addEventListener("keydown", e => {
+            if (e.key === "Enter" && e.ctrlKey) {
+                e.preventDefault();
+                console.log("Debug: Enter + shift Detected Executing..........");
+                executeCommandsV2();
+                hide();
+                return;
             }
             // // Auto Double quotes 
             // // --------------------------------------------------------
@@ -2025,23 +1839,6 @@ function canRunCommand() {
     function highlight() {
         if (list.children.length > 0) {
             [...list.children].forEach((li, i) => li.classList.toggle("active", i === activeIndex));
-
-            const activeItem = list.children[activeIndex]; 
-            if (activeItem) {
-               const itemTop = activeItem.offsetTop;
-                const itemBottom = itemTop + activeItem.clientHeight;
-                const listScrollTop = list.scrollTop;
-                const listHeight = list.clientHeight;
-
-                
-                if (itemBottom > listScrollTop + listHeight) {
-                    list.scrollTop = itemBottom - listHeight;
-                }
-               
-                else if (itemTop < listScrollTop) {
-                    list.scrollTop = itemTop;
-                }
-            }
         }
     }
 
@@ -2471,8 +2268,8 @@ function canRunCommand() {
     }
 
     function handleViewDbConsole() {
-        window.openDeveloperStudio("AxDBScript.aspx");
-        // window.LoadIframe("AxDBScript.aspx");
+        // window.openDeveloperStudio("AxDBScript.aspx");
+        window.LoadIframe("AxDBScript.aspx");
 
     }
 
@@ -2783,69 +2580,6 @@ function canRunCommand() {
     }
 
 
-    // function handleEditData({ tokens, commandConfig, resolvedParams }) {
-
-    //     if (tokens.length < 3) {
-    //         console.warn("edit data requires <tstruct> <field> <value>");
-    //         // alert("edit data requires <tstruct> <field> <value>");
-    //         showToast("edit data requires <tstruct> <field> <value>");
-    //         return;
-    //     }
-
-
-    //     let rawStruct = cleanCommandToken(tokens[1]);
-    //     let transId = tryResolveToken(1, rawStruct, commandConfig, false);
-
-    //     const extraSourceKey = `axi_fieldlist_${transId}`.toLowerCase();
-
-    //     const extraList = axDatasourceObj[extraSourceKey];
-
-    //     if (transId === rawStruct) {
-    //         const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
-    //         const found = list?.find(
-    //             x => x.caption?.toLowerCase() === rawStruct
-    //         );
-    //         if (!found || !found.name) {
-    //             console.error("TStruct not found:", rawStruct);
-    //             return;
-    //         }
-    //         transId = found.name;
-    //     }
-
-
-    //     // let rawField = cleanCommandToken(tokens[2]);
-    //     // const fieldName = tryResolveToken(2, rawField, commandConfig, true);
-
-    //     // if (!fieldName) {
-    //     //     console.error("Field resolution failed:", rawField);
-    //     //     return;
-    //     // }
-
-    //     let fieldName = "";
-    //     if (extraList && extraList.length > 0) {
-    //         fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
-    //     } else {
-    //         console.warn("Hidden field name not found in cache");
-    //     }
-
-
-    //     let rawValue = cleanCommandToken(tokens[2]);
-    //     const fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
-
-    //     if (fieldValue == null) {
-    //         console.error("Field value resolution failed:", rawValue);
-    //         return;
-    //     }
-
-    //     console.log(
-    //         `Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
-    //     );
-
-    //     setEditSessionState(transId);
-
-    //     redirectToTstruct(transId, true, fieldName, fieldValue);
-    // }
-
     function handleEditData({ tokens, commandConfig, resolvedParams }) {
 
         if (tokens.length < 3) {
@@ -2862,7 +2596,6 @@ function canRunCommand() {
         const extraSourceKey = `axi_fieldlist_${transId}`.toLowerCase();
 
         const extraList = axDatasourceObj[extraSourceKey];
-
 
         if (transId === rawStruct) {
             const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
@@ -2886,36 +2619,11 @@ function canRunCommand() {
         // }
 
         let fieldName = "";
-
-        if (!Array.isArray(extraList)) {
-            console.warn("Hidden field list is missing or invalid", extraList);
-    fieldName = null;
-    return; 
-
-        } else if (extraList.length === 0) {
-            console.log("hidden field List is Empty!"); 
-            fieldName = null; 
-            return; 
-
+        if (extraList && extraList.length > 0) {
+            fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
         } else {
-            const field = extraList[0]; 
-
-            fieldName = field.fname ?? field.name ?? field.displaydata; 
-
-
+            console.warn("Hidden field name not found in cache");
         }
-        // if (extraList && extraList.length > 0) {
-        //     if (extraList[0].fname) {
-        //         fieldName = extraList[0].fname; 
-                
-        //     } else {
-        //     fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
-
-
-        //     }
-        // } else {
-        //     console.warn("Hidden field name not found in cache");
-        // }
 
 
         let rawValue = cleanCommandToken(tokens[2]);
@@ -2926,37 +2634,14 @@ function canRunCommand() {
             return;
         }
 
-        const extraFieldValueList = axDatasourceObj[`axi_fieldvaluelist_${transId},${fieldName}`.toLowerCase()];
-
-
-        console.log(`Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
+        console.log(
+            `Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
+        );
 
         setEditSessionState(transId);
 
-        let valuePresentInList = false;
-
-       
-
-        if (Array.isArray(extraFieldValueList) && extraFieldValueList.length > 0) {
-
-            valuePresentInList = extraFieldValueList.some(item =>
-                item.displaydata === fieldValue ||
-                item.name === fieldValue ||
-                item.fname === fieldValue
-            );
-
-            if (valuePresentInList)
-                redirectToTstruct(transId, true, fieldName, fieldValue);
-            else
-                redirectToTstruct(transId, false, fieldName, fieldValue);
-        }
-        else {
-
-            redirectToTstruct(transId, false, fieldName, fieldValue);
-        }
-
+        redirectToTstruct(transId, true, fieldName, fieldValue);
     }
-
 
     function handleConfigurePermissions({ tokens, commandConfig }) {
 
@@ -3547,7 +3232,7 @@ function canRunCommand() {
 
     function redirectToEntity(transId, fieldName, fieldValue) {
         let targetUrl;
-        if (!fieldValue) {
+        if (!fieldName || !fieldValue) {
 
             targetUrl = `../aspx/Entity.aspx?tstid=${transId}`;
 
@@ -3659,26 +3344,19 @@ function canRunCommand() {
 
         let fieldName = "";
         if (extraList && extraList.length > 0) {
-            fieldName = extraList[0].fname ?? extraList[0].name ?? extraList[0].displaydata ?? null; 
-            // if (extraList[0].fname) {
-            //     fieldName = extraList[0].fname; 
-            // } else {
-            // fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
-
-
-            // }
+            fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
         } else {
             console.warn("Hidden field name not found in cache");
         }
 
 
         let rawValue = cleanCommandToken(tokens[2]);
-        // const fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
+        const fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
 
 
 
         console.log(
-            `view Data → TStruct=${transId}, Field=${fieldName}, Value=${rawValue}`
+            `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
         );
 
 
@@ -3687,7 +3365,7 @@ function canRunCommand() {
         handler({
             transId,
             fieldName,
-            fieldValue: rawValue
+            fieldValue
         })
 
 
@@ -3701,22 +3379,7 @@ function canRunCommand() {
         console.log(JSON.stringify(data));
 
         // const item = data.find(d => d.caption === caption);
-        // const item = data.find(d => d.displaydata.includes(caption));
-
-         const normalizedCaption = caption.trim().toLowerCase();
-
-         const item = data.find(d => {
-        if (typeof d.displaydata !== "string") return false;
-
-        
-        const pureCaption = d.displaydata
-            .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "") 
-        .replace(/\s*\[[^\]]+\]\s*$/, "")  
-            .trim()
-            .toLowerCase();
-
-        return pureCaption === normalizedCaption;
-    });
+        const item = data.find(d => d.displaydata.includes(caption));
 
         if (!item || typeof item.displaydata !== "string") {
             return null;

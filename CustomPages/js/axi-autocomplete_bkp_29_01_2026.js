@@ -1,7 +1,7 @@
 ﻿(() => {
-    // 29/01/2026 - New Axi Command Pallete Behaviour Changes
+    // 28/01/2026
     // ENDPOINTS
-    const API_METADATA = "http://localhost:5000/api/v1/Axi/axi_get";
+    const API_METADATA = "https://alpha.agilecloud.biz/AxiDevARM/api/v1/Axi/axi_get";
 
     const VIEW_HANDLERS = {
         tstruct: ({ transId, fieldName, fieldValue }) =>
@@ -95,10 +95,10 @@
     let btnRefresh;
     let runBtn;
     let axiClearBtn;
-    let axiLogo; 
-    let searchWrapper; 
     let isCommandTypingCompleted = false;
-   
+    //  let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+    //         let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+    //         let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
 
 
     let signingInPromise = null;
@@ -116,7 +116,6 @@
     let axDatasourceObj = {};
     let activeFetches = new Set();
     let filteredObjects = [];
-    
 
     function init() {
 
@@ -131,23 +130,6 @@
 
         console.log("Axi Input Found!", input);
 
-        axiLogo = document.getElementById("axiLogo"); 
-
-        if (!axiLogo) {
-              console.log("Axi Logo not ready yet... waiting.");
-            setTimeout(init, 200);
-            return;
-
-        }
-
-        searchWrapper = document.querySelector(".searchwrap-AXI"); 
-
-        if (!searchWrapper) {
-             console.log("Axi search wrapper not ready yet... waiting.");
-            setTimeout(init, 200);
-            return;
-
-        }
 
         hintDiv = document.getElementById("axiHint");
         if (!hintDiv) {
@@ -206,7 +188,7 @@
     init();
 
     /* ===============================
-        INITIALIZATION
+       1. INITIALIZATION
     =============================== */
     async function initCommands(isForced = false) {
 
@@ -351,7 +333,7 @@
 
 
     function redirectToSmartView(adsname) {
-        let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
+        let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
         
         
         targetUrl += `?ads=${adsname}`;
@@ -563,21 +545,12 @@
                 axiClearBtn.style.display = "none";
             }
         }
-        // if (!text.trim()) {
-        //     hintDiv.textContent = "";
-        //     hide();
-        //     return;
-        // }
-        if (!commands) return;
-
         if (!text.trim()) {
-            items = Object.keys(commands); 
-            hintDiv.textContent = ""; 
-            render(); 
-            return; 
+            hintDiv.textContent = "";
+            hide();
+            return;
         }
-
-        render(); 
+        if (!commands) return;
 
         // Clear stale resolutions when input changes
         const currentTokens = getTokens(text);
@@ -1195,7 +1168,7 @@
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
         let realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
 
-       
+        // Clean up display name if it contains parens like "Name (ID)"
         if (suggestion.includes("(") && suggestion.includes(")")) {
             const lastBracketIndex = suggestion.lastIndexOf("(");
 
@@ -1225,7 +1198,7 @@
         // Check if we are inside an unclosed quote
         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
 
-       
+        // If ends with space and NOT inside a quote, we are adding a NEW parameter
         if (endsWithSpace && !isUnclosedString) {
             tokens.push("");
         }
@@ -1284,9 +1257,6 @@
     document.addEventListener("click", e => {
         if (input && list && e.target !== input && !list.contains(e.target)) {
             hide();
-        }
-        if (list.style.display === "block" && searchWrapper && !searchWrapper.contains(e.target)) {
-            hide(); 
         }
     });
 
@@ -1798,31 +1768,6 @@
         }
     }
 
-function isSuggestionVisible() {
-    return list && list.style.display === "block" && items.length > 0;
-}
-
-function hasActiveSuggestion() {
-    return activeIndex >= 0 && activeIndex < items.length;
-}
-
-function canRunCommand() {
-    const text = input.value.trim();
-    if (!text || !commands) return false;
-
-    const tokens = getTokens(text);
-    const groupKey = cleanString(tokens[0]);
-    const groupConfig = commands[groupKey];
-    if (!groupConfig) return false;
-
-    const targetIndex = tokens.length - 1;
-    const promptInfo = getActivePromptInfo(groupConfig, tokens, targetIndex);
-
-    
-    return !promptInfo;
-}
-
-
     /* ===============================
        SETUP LISTENERS
     =============================== */
@@ -1863,87 +1808,21 @@ function canRunCommand() {
             })
         }
 
-        if (axiLogo) {
-            axiLogo.addEventListener("click", (e) => {
-                e.stopPropagation(); 
-                e.preventDefault(); 
-                input.value=""; 
-                handleInput(); 
-                input.focus(); 
-            })
-        }
-
 
 
         if (runBtn) {
             runBtn.addEventListener("click", executeCommandsV2);
         }
 
-        input.addEventListener("focus", () => {
-            if (input.value.trim() === "") {
-                handleInput(); 
-            }
-        })
-
         input.addEventListener("input", handleInput);
         input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
-        input.addEventListener("keydown", e => { 
-            console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey); 
-            
-           
-            
-            if (e.ctrlKey && e.code === "Space") {
-                e.preventDefault(); 
-                handleInput(); 
-                return; 
-            }
-
-          
-
-            if (e.key === "Enter") {
-                e.preventDefault(); 
-           
-
-            // if (list.style.display === "block" && active >= 0) {
-            //     e.preventDefault(); 
-            //     apply(activeIndex); 
-            //     return; 
-            // }
-            //     if (list.style.display === "none") {
-            //         e.preventDefault(); 
-            //         handleInput(); 
-            //         return; 
-            //     }
-
-            // const isListOpen = list.style.display === "block"; 
-            // const hasActiveItem = isListOpen && activeIndex >= 0; 
-
-            // if (hasActiveItem) {
-            //     e.preventDefault(); 
-            //     apply(activeIndex); 
-            //     return; 
-            // }
-
-            // executeCommandsV2(); 
-            // hide(); 
-            // return; 
-            
-            if (isSuggestionVisible() && hasActiveSuggestion()) {
-                e.preventDefault(); 
-                apply(activeIndex); 
-                return; 
-            }
-
-        
-            
-                executeCommandsV2(); 
-                hide(); 
-                return; 
-            
-
-            // e.preventDefault(); 
-            // handleInput();
-
+        input.addEventListener("keydown", e => {
+            if (e.key === "Enter" && e.ctrlKey) {
+                e.preventDefault();
+                console.log("Debug: Enter + shift Detected Executing..........");
+                executeCommandsV2();
+                hide();
+                return;
             }
             // // Auto Double quotes 
             // // --------------------------------------------------------
@@ -2025,23 +1904,6 @@ function canRunCommand() {
     function highlight() {
         if (list.children.length > 0) {
             [...list.children].forEach((li, i) => li.classList.toggle("active", i === activeIndex));
-
-            const activeItem = list.children[activeIndex]; 
-            if (activeItem) {
-               const itemTop = activeItem.offsetTop;
-                const itemBottom = itemTop + activeItem.clientHeight;
-                const listScrollTop = list.scrollTop;
-                const listHeight = list.clientHeight;
-
-                
-                if (itemBottom > listScrollTop + listHeight) {
-                    list.scrollTop = itemBottom - listHeight;
-                }
-               
-                else if (itemTop < listScrollTop) {
-                    list.scrollTop = itemTop;
-                }
-            }
         }
     }
 
@@ -2471,8 +2333,8 @@ function canRunCommand() {
     }
 
     function handleViewDbConsole() {
-        window.openDeveloperStudio("AxDBScript.aspx");
-        // window.LoadIframe("AxDBScript.aspx");
+        // window.openDeveloperStudio("AxDBScript.aspx");
+        window.LoadIframe("AxDBScript.aspx");
 
     }
 
@@ -2886,36 +2748,18 @@ function canRunCommand() {
         // }
 
         let fieldName = "";
-
-        if (!Array.isArray(extraList)) {
-            console.warn("Hidden field list is missing or invalid", extraList);
-    fieldName = null;
-    return; 
-
-        } else if (extraList.length === 0) {
-            console.log("hidden field List is Empty!"); 
-            fieldName = null; 
-            return; 
-
-        } else {
-            const field = extraList[0]; 
-
-            fieldName = field.fname ?? field.name ?? field.displaydata; 
-
-
-        }
-        // if (extraList && extraList.length > 0) {
-        //     if (extraList[0].fname) {
-        //         fieldName = extraList[0].fname; 
+        if (extraList && extraList.length > 0) {
+            if (extraList[0].fname) {
+                fieldName = extraList[0].fname; 
                 
-        //     } else {
-        //     fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
+            } else {
+            fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
 
 
-        //     }
-        // } else {
-        //     console.warn("Hidden field name not found in cache");
-        // }
+            }
+        } else {
+            console.warn("Hidden field name not found in cache");
+        }
 
 
         let rawValue = cleanCommandToken(tokens[2]);
@@ -2933,11 +2777,9 @@ function canRunCommand() {
 
         setEditSessionState(transId);
 
-        let valuePresentInList = false;
+        let valuePresentInList = true;
 
-       
-
-        if (Array.isArray(extraFieldValueList) && extraFieldValueList.length > 0) {
+        if (extraFieldValueList && extraFieldValueList.length > 0) {
 
             valuePresentInList = extraFieldValueList.some(item =>
                 item.displaydata === fieldValue ||
@@ -2952,7 +2794,7 @@ function canRunCommand() {
         }
         else {
 
-            redirectToTstruct(transId, false, fieldName, fieldValue);
+            redirectToTstruct(transId, true, fieldName, fieldValue);
         }
 
     }
@@ -3547,7 +3389,7 @@ function canRunCommand() {
 
     function redirectToEntity(transId, fieldName, fieldValue) {
         let targetUrl;
-        if (!fieldValue) {
+        if (!fieldName || !fieldValue) {
 
             targetUrl = `../aspx/Entity.aspx?tstid=${transId}`;
 
@@ -3673,12 +3515,12 @@ function canRunCommand() {
 
 
         let rawValue = cleanCommandToken(tokens[2]);
-        // const fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
+        const fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
 
 
 
         console.log(
-            `view Data → TStruct=${transId}, Field=${fieldName}, Value=${rawValue}`
+            `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
         );
 
 
@@ -3687,7 +3529,7 @@ function canRunCommand() {
         handler({
             transId,
             fieldName,
-            fieldValue: rawValue
+            fieldValue
         })
 
 
