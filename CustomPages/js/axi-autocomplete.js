@@ -1,7 +1,7 @@
 ﻿(() => {
-    // 28/01/2026
+    // 29/01/2026 - New Axi Command Pallete Behaviour Changes
     // ENDPOINTS
-    const API_METADATA = "https://alpha.agilecloud.biz/AxiDevARM/api/v1/Axi/axi_get";
+    const API_METADATA = "http://localhost:5000/api/v1/Axi/axi_get";
 
     const VIEW_HANDLERS = {
         tstruct: ({ transId, fieldName, fieldValue }) =>
@@ -1851,6 +1851,12 @@
         if (runBtn) {
             runBtn.addEventListener("click", executeCommandsV2);
         }
+
+        input.addEventListener("focus", () => {
+            if (input.value.trim() === "") {
+                handleInput(); 
+            }
+        })
 
         input.addEventListener("input", handleInput);
         input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
