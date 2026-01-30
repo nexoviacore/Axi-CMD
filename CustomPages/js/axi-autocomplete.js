@@ -74,7 +74,7 @@
             ads: handleOpenAds,
             card: handleOpenCard,
             page: handleOpenPage,
-            appvars: handleOpenAppVar,
+            appvar: handleOpenAppVar,
             devoption: handleOpenDevOptions,
             dbconsole: handleViewDbConsole
             //default: handleOpen
@@ -301,7 +301,7 @@
 
         let activeSource = prompt.promptSource || "";
 
-        // Handle Dynamic Source Switching (,,, logic)
+        // Handle Dynamic Source Switching 
         if (activeSource.includes(",")) {
             const prevWordPos = currentWordPos - 1;
             const prevPrompt = sortedPrompts.find(p => p.wordPos === prevWordPos);
@@ -364,14 +364,20 @@
 
     function redirectToPermissionScreeen(username) {
         // aspx/tstruct.aspx?act=open&transid=a__up&axusername=aarav&fromsource=U&openerIV=axusers&isIV=true&isDupTab=true-1769600154391&dummyload=false
+        
         const transId = "a__up"; 
           let targetUrl = "../aspx/tstruct.aspx";
 
-          targetUrl += "?act=open"; 
+         
+          targetUrl += "?act=load"; 
           targetUrl +=`&transid=${transId}`; 
+          
 
           if (username) {
+            
             targetUrl +=`&axusername=${username}`;
+            
+
            
             
           }
@@ -388,9 +394,11 @@
           targetUrl += `&isDupTab=true`;
 
          
+        //   targetUrl += "&dummyload=false♠";   
           targetUrl += "&dummyload=false";   
           
           setEditSessionState(transId); 
+          console.log(`LoadIframe called with Url: ${targetUrl}`); 
       
         
         top.window.LoadIframe(targetUrl); 
@@ -822,7 +830,7 @@
         if (realSource) {
             let paramValue = "";
 
-            // 1. Resolve Standard Dependencies (e.g. TransId)
+            // Resolve Standard Dependencies 
             if (activePrompt.promptParams) {
                 const indices = activePrompt.promptParams.toString().split(',');
                 const values = indices.map(idx => {
@@ -834,15 +842,15 @@
                 paramValue = values.join(',');
             }
 
-            // 2. Handle Hidden Extra Params (The Chained Fetch)
+        
             if (activePrompt.extraParams) {
                 const extraSource = activePrompt.extraParams.toLowerCase();
-                // Use the SAME paramValue we just resolved (e.g. 'tst_001')
+                
                 const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
 
-                // Check if the Extra List is cached
+                
                 if (!axDatasourceObj[extraKey]) {
-                    // Not cached? Fetch it FIRST and stop here.
+                    
                     console.log(`Fetching Hidden Param Source: ${extraSource}`);
                     loadList(extraSource, paramValue);
                     return [];
@@ -872,6 +880,7 @@
                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
                 if (hasValidParams) {
                     loadList(apiSourceName, paramValue);
+                    console.log(axDatasourceObj); 
                     return [`Loading ${realSource}...`];
                 }
                 return ["Waiting for input..."];
@@ -885,7 +894,7 @@
             });
 
             filteredObjects = filtered;
-            return filtered.map(item => item.displaydata || item.caption || item.name);
+            return filtered.map(item => item.displaydata || item.caption || item.name || item.fname);
         }
 
         return [];
@@ -1060,10 +1069,48 @@
         if (!tokenText && !forceResolve) return "";
         if (!commandConfig) return tokenText;
 
+        const currentTokens = getTokens(input.value); 
+
+
         const promptInfo = getActivePromptInfo(commandConfig, getTokens(input.value), tokenIndex);
         if (!promptInfo) return tokenText;
 
         const { config: prompt, realSource } = promptInfo;
+
+      if (prompt.extraParams) {
+             let extraParamParentValue = "";
+             
+             // We must resolve the parent dependency to build the cache key (e.g., TStruct Name)
+             // We look at promptParams to find what this token depends on.
+             if (prompt.promptParams) {
+                 const indices = prompt.promptParams.toString().split(',');
+                 const values = indices.map(idx => {
+                     const logicalWordPos = parseInt(idx.trim());
+                     const depIndex = logicalWordPos - 1; 
+                     
+                     // RECURSIVE CALL: Resolve the parent token (e.g., Word 2 / TStruct)
+                     // strict=true prevents infinite recursion if circular (unlikely here)
+                     const depToken = cleanString(currentTokens[depIndex] || "");
+                     return tryResolveToken(depIndex, depToken, commandConfig, true);
+                 });
+                 extraParamParentValue = values.join(',');
+             }
+
+             // Reconstruct the cache key: "axi_keyfieldlist_mytstruct"
+             const extraSource = prompt.extraParams.toLowerCase();
+             const extraKey = `${extraSource}_${extraParamParentValue}`.toLowerCase();
+             const extraList = axDatasourceObj[extraKey];
+
+             // If the hidden list exists, RETURN THE FIELD NAME immediately.
+             if (extraList && extraList.length > 0) {
+                 // Prioritize fname, fall back to name or displaydata
+                 const fieldName = extraList[0].fname || extraList[0].name || extraList[0].displaydata;
+                 
+                 console.log(`[tryResolveToken] Intercepted Token ${tokenIndex}: Swapping '${tokenText}' for Hidden Field '${fieldName}'`);
+                 
+                 return fieldName; 
+             }
+        }
 
         if (realSource) {
             let paramValue = "";
@@ -1081,17 +1128,17 @@
             }
 
             // Append Hidden Param for Resolution Context
-            if (prompt.extraParams) {
-                const extraSource = prompt.extraParams;
-                const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
-                const extraList = axDatasourceObj[extraKey];
+            // if (prompt.extraParams) {
+            //     const extraSource = prompt.extraParams;
+            //     const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
+            //     const extraList = axDatasourceObj[extraKey];
 
-                if (extraList && extraList.length > 0) {
-                    const hiddenValue = extraList[0].name || extraList[0].displaydata;
-                    if (paramValue) paramValue += "," + hiddenValue;
-                    else paramValue = hiddenValue;
-                }
-            }
+            //     if (extraList && extraList.length > 0) {
+            //         const hiddenValue = extraList[0].name || extraList[0].displaydata;
+            //         if (paramValue) paramValue += "," + hiddenValue;
+            //         else paramValue = hiddenValue;
+            //     }
+            // }
 
             let apiName = realSource;
             let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
@@ -1273,13 +1320,13 @@
 
 
 
-    function highlight() {
-        if (list.children.length > 0) {
-            [...list.children].forEach((li, i) => {
-                li.classList.toggle("active", i === activeIndex);
-            });
-        }
-    }
+    // function highlight() {
+    //     if (list.children.length > 0) {
+    //         [...list.children].forEach((li, i) => {
+    //             li.classList.toggle("active", i === activeIndex);
+    //         });
+    //     }
+    // }
 
     document.addEventListener("click", e => {
         if (input && list && e.target !== input && !list.contains(e.target)) {
@@ -2960,14 +3007,19 @@ function canRunCommand() {
 
     function handleConfigurePermissions({ tokens, commandConfig }) {
 
+        let transId = "a__up"
+
         let rawUserName = cleanCommandToken(tokens[2]);       
 
         let resolvedUserName = tryResolveToken(2, rawUserName, commandConfig, false);
 
 
+
+
        
         // redirectToTstruct(transId, true, "pusername", rawUserName);
         redirectToPermissionScreeen(rawUserName); 
+        
 
         
 
