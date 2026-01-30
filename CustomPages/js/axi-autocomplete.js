@@ -351,7 +351,7 @@
 
 
     function redirectToSmartView(adsname) {
-        let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
+        let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
         
         
         targetUrl += `?ads=${adsname}`;
@@ -1880,20 +1880,25 @@ function canRunCommand() {
         }
 
         input.addEventListener("focus", () => {
-            // if (input.value.trim() === "") {
+            if (input.value.trim() === "") {
                 handleInput(); 
-            // }
+            }
         })
 
         input.addEventListener("input", handleInput);
         input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
-        input.addEventListener("keydown", e => {    
+        input.addEventListener("keydown", e => { 
+            console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey); 
+            
+           
             
             if (e.ctrlKey && e.code === "Space") {
                 e.preventDefault(); 
                 handleInput(); 
                 return; 
             }
+
+          
 
             if (e.key === "Enter") {
                 e.preventDefault(); 
@@ -2881,18 +2886,36 @@ function canRunCommand() {
         // }
 
         let fieldName = "";
-        if (extraList && extraList.length > 0) {
-            if (extraList[0].fname) {
-                fieldName = extraList[0].fname; 
-                
-            } else {
-            fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
 
+        if (!Array.isArray(extraList)) {
+            console.warn("Hidden field list is missing or invalid", extraList);
+    fieldName = null;
+    return; 
 
-            }
+        } else if (extraList.length === 0) {
+            console.log("hidden field List is Empty!"); 
+            fieldName = null; 
+            return; 
+
         } else {
-            console.warn("Hidden field name not found in cache");
+            const field = extraList[0]; 
+
+            fieldName = field.fname ?? field.name ?? field.displaydata; 
+
+
         }
+        // if (extraList && extraList.length > 0) {
+        //     if (extraList[0].fname) {
+        //         fieldName = extraList[0].fname; 
+                
+        //     } else {
+        //     fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
+
+
+        //     }
+        // } else {
+        //     console.warn("Hidden field name not found in cache");
+        // }
 
 
         let rawValue = cleanCommandToken(tokens[2]);
@@ -2910,9 +2933,11 @@ function canRunCommand() {
 
         setEditSessionState(transId);
 
-        let valuePresentInList = true;
+        let valuePresentInList = false;
 
-        if (extraFieldValueList && extraFieldValueList.length > 0) {
+       
+
+        if (Array.isArray(extraFieldValueList) && extraFieldValueList.length > 0) {
 
             valuePresentInList = extraFieldValueList.some(item =>
                 item.displaydata === fieldValue ||
@@ -2927,7 +2952,7 @@ function canRunCommand() {
         }
         else {
 
-            redirectToTstruct(transId, true, fieldName, fieldValue);
+            redirectToTstruct(transId, false, fieldName, fieldValue);
         }
 
     }

@@ -241,29 +241,21 @@ function applySelectedAds() {
     alert('Please select an ADS first');
     return;
   }
-
+  
   const selectedAdsName = window._selectedAd.name;
   console.log('Selected ADS:', selectedAdsName);
-
+  
   // Close modal
   closeAdsPickerModal();
-
-  // Ensure global entity state updated and page header set
-  window._entity = window._entity || {};
-  window._entity.adsName = selectedAdsName;
-
-  const titleEl = document.getElementById('EntityTitle') || document.querySelector('.page-header-title');
-  if (titleEl) {
-    titleEl.textContent = selectedAdsName;
-  }
-  document.title = selectedAdsName;
-
-  // Initialize or update controller with selected ADS
+  
+  // Initialize controller with selected ADS
   if (window.smartTableController) {
+    // If controller already exists, update it
     window.smartTableController.adsName = selectedAdsName;
     window.smartTableController.resetPaging();
     window.smartTableController.loadNextPage();
   } else {
+    // Create new controller
     window.smartTableController = new SmartViewTableController({
       adsName: selectedAdsName,
       pageSize: 100,
@@ -272,7 +264,6 @@ function applySelectedAds() {
     });
   }
 }
-
 
 function escapeHtml(s) {
   if (s == null) return '';
@@ -446,291 +437,269 @@ function initializeDataTable() {
    createTableViewHTML
    -------------------------- */
 
-   function createTableViewHTML(listJson, _pageNo) {
-    console.log('=== createTableViewHTML called ===');
-    console.log('listJson has', listJson.length, 'rows');
-    console.log('First row:', listJson[0]);
-    console.log('_entity.metaData:', _entity.metaData);
-    
-    if (rowCountManager) {
-      const totalLoaded = listJson.length;
-      rowCountManager.setLoadedRecords(totalLoaded);
-      rowCountManager.setCurrentView('table');
+function createTableViewHTML(listJson, _pageNo) {
+  console.log('=== createTableViewHTML called ===');
+  console.log('listJson has', listJson.length, 'rows');
+  console.log('First row:', listJson[0]);
+  console.log('_entity.metaData:', _entity.metaData);
   
-      if (listJson.length < _entity.pageSize && listJson.length > 0) {
-        rowCountManager.setLastPageReached(true);
-      }
-  
-      rowCountManager.refresh();
-  
-      setTimeout(() => {
-        rowCountManager.attachToView();
-      }, 100);
+  if (rowCountManager) {
+    const totalLoaded = listJson.length;
+    rowCountManager.setLoadedRecords(totalLoaded);
+    rowCountManager.setCurrentView('table');
+
+    if (listJson.length < _entity.pageSize && listJson.length > 0) {
+      rowCountManager.setLastPageReached(true);
     }
-  
-    let tableBodyContainer = $('#table-body_Container');
-    let tableExists = tableBodyContainer.find('table').length > 0;
-    let keyCol = _entity.keyField || '';
-    let html = '';
-    let excludedFields = new Set(['transid', 'ftransid']);
-  
-    let hideTransid = !listJson.some(rowData => rowData[keyCol]);
-  
-    // DEBUG: Check what's in metaData
-    console.log('Original metaData:', _entity.metaData);
-  
-    // Build set of fields that actually contain data across rows (exclude known excludedFields)
-    const fieldsWithData = new Set();
-    listJson.forEach(rowData => {
-      for (let field in rowData) {
-        if (rowData.hasOwnProperty(field)) {
-          const fieldLower = field.toLowerCase();
-          if (rowData[field] !== null && rowData[field] !== undefined && String(rowData[field]).trim() !== '' && !excludedFields.has(fieldLower)) {
-            fieldsWithData.add(fieldLower);
-          }
-        }
-      }
-    });
-  
-    console.log('fieldsWithData:', Array.from(fieldsWithData));
-  
-    // If keyField missing from metaData, try to infer a sensible one
-    if (!keyCol || !_entity.metaData.some(field => {
-      const fieldName = (field.fldname || '').toString().toLowerCase();
-      return fieldName === keyCol.toLowerCase();
-    })) {
-      const keyField = getKeyField();
-      keyCol = keyField ? keyField.fldname : _entity.keyField;
-    }
-  
-    const keyColLower = (keyCol || '').toString().toLowerCase();
-    console.log('keyCol:', keyCol, 'keyColLower:', keyColLower);
-  
-    /*
-      New metadata merging logic:
-      - Start with existing _entity.metaData (if present)
-      - Append any fields found in data (fieldsWithData) that are not present in metaData
-      - Respect explicit hide === 'T' where possible
-    */
-    const metaMap = {};
-    const originalMeta = Array.isArray(_entity.metaData) ? _entity.metaData.slice() : [];
-  
-    originalMeta.forEach(item => {
-      const key = (item.fldname || '').toString().toLowerCase();
-      metaMap[key] = Object.assign({}, item, { fldname: key });
-    });
-  
-    // Add any data fields not present in metaMap
-    Array.from(fieldsWithData).forEach(f => {
-      if (!metaMap[f] && !excludedFields.has(f)) {
-        metaMap[f] = { fldname: f, fldcap: formatFieldName(f), fdatatype: 't', cdatatype: 'Text', listingfld: 'T' };
-      }
-    });
-  
-    // Build ordered metadata array: keep original order, then append fieldsWithData order
-    const metaOrdered = [];
-    originalMeta.forEach(item => {
-      const k = (item.fldname || '').toString().toLowerCase();
-      if (metaMap[k]) { metaOrdered.push(metaMap[k]); delete metaMap[k]; }
-    });
-    Array.from(fieldsWithData).forEach(f => {
-      if (metaMap[f]) { metaOrdered.push(metaMap[f]); delete metaMap[f]; }
-    });
-    // any remaining keys (edge cases) append
-    Object.keys(metaMap).forEach(k => { metaOrdered.push(metaMap[k]); });
-  
-    // filteredMetaData is now the merged metadata we will render from
-    const filteredMetaData = metaOrdered;
-  
-    const addedFields = new Set();
-    
-    const dynamicFields = ['modifiedby', 'modifiedon', 'createdby', 'createdon'];
-  
-    // If there are modification fields present in rows, ensure they are present
-    if (_entity.modificationFields && typeof _entity.modificationFields === 'string') {
-      const modificationFieldsArray = _entity.modificationFields.split(",");
-  
-      if (modificationFieldsArray.length > 0) {
-        dynamicFields.forEach(field => {
-          if (modificationFieldsArray.includes(field)) {
-            const fl = field.toLowerCase();
-            if (!filteredMetaData.some(m => m.fldname === fl)) {
-              filteredMetaData.push({ fldname: fl, fldcap: formatFieldName(field), fdatatype: 't', cdatatype: 'Text', listingfld: 'T' });
-            }
-          }
-        });
-      }
-    } else {
-      dynamicFields.forEach(field => {
+
+    rowCountManager.refresh();
+
+    setTimeout(() => {
+      rowCountManager.attachToView();
+    }, 100);
+  }
+
+  let tableBodyContainer = $('#table-body_Container');
+  let tableExists = tableBodyContainer.find('table').length > 0;
+  let keyCol = _entity.keyField || '';
+  let html = '';
+  let excludedFields = new Set(['transid', 'ftransid']);
+
+  let hideTransid = !listJson.some(rowData => rowData[keyCol]);
+
+  // DEBUG: Check what's in metaData
+  console.log('Original metaData:', _entity.metaData);
+
+  // Build set of fields that actually contain data across rows (exclude known excludedFields)
+  const fieldsWithData = new Set();
+  listJson.forEach(rowData => {
+    for (let field in rowData) {
+      if (rowData.hasOwnProperty(field)) {
         const fieldLower = field.toLowerCase();
-        if (listJson.some(rowData => rowData[fieldLower]) && !filteredMetaData.some(m => m.fldname === fieldLower)) {
-          filteredMetaData.push({ fldname: fieldLower, fldcap: formatFieldName(field), fdatatype: 't', cdatatype: 'Text', listingfld: 'T' });
+        if (rowData[field] !== null && rowData[field] !== undefined && String(rowData[field]).trim() !== '' && !excludedFields.has(fieldLower)) {
+          fieldsWithData.add(fieldLower);
+        }
+      }
+    }
+  });
+
+  console.log('fieldsWithData:', Array.from(fieldsWithData));
+
+  // If keyField missing from metaData, try to infer a sensible one
+  if (!keyCol || !_entity.metaData.some(field => {
+    const fieldName = (field.fldname || '').toString().toLowerCase();
+    return fieldName === keyCol.toLowerCase();
+  })) {
+    const keyField = getKeyField();
+    keyCol = keyField ? keyField.fldname : _entity.keyField;
+  }
+
+  const keyColLower = (keyCol || '').toString().toLowerCase();
+  console.log('keyCol:', keyCol, 'keyColLower:', keyColLower);
+
+  /*
+    New metadata merging logic:
+    - Start with existing _entity.metaData (if present)
+    - Append any fields found in data (fieldsWithData) that are not present in metaData
+    - Respect explicit hide === 'T' where possible
+  */
+  const metaMap = {};
+  const originalMeta = Array.isArray(_entity.metaData) ? _entity.metaData.slice() : [];
+
+  originalMeta.forEach(item => {
+    const key = (item.fldname || '').toString().toLowerCase();
+    metaMap[key] = Object.assign({}, item, { fldname: key });
+  });
+
+  // Add any data fields not present in metaMap
+  Array.from(fieldsWithData).forEach(f => {
+    if (!metaMap[f] && !excludedFields.has(f)) {
+      metaMap[f] = { fldname: f, fldcap: formatFieldName(f), fdatatype: 't', cdatatype: 'Text', listingfld: 'T' };
+    }
+  });
+
+  // Build ordered metadata array: keep original order, then append fieldsWithData order
+  const metaOrdered = [];
+  originalMeta.forEach(item => {
+    const k = (item.fldname || '').toString().toLowerCase();
+    if (metaMap[k]) { metaOrdered.push(metaMap[k]); delete metaMap[k]; }
+  });
+  Array.from(fieldsWithData).forEach(f => {
+    if (metaMap[f]) { metaOrdered.push(metaMap[f]); delete metaMap[f]; }
+  });
+  // any remaining keys (edge cases) append
+  Object.keys(metaMap).forEach(k => { metaOrdered.push(metaMap[k]); });
+
+  // filteredMetaData is now the merged metadata we will render from
+  const filteredMetaData = metaOrdered;
+
+  const addedFields = new Set();
+  
+  const dynamicFields = ['modifiedby', 'modifiedon', 'createdby', 'createdon'];
+
+  // If there are modification fields present in rows, ensure they are present
+  if (_entity.modificationFields && typeof _entity.modificationFields === 'string') {
+    const modificationFieldsArray = _entity.modificationFields.split(",");
+
+    if (modificationFieldsArray.length > 0) {
+      dynamicFields.forEach(field => {
+        if (modificationFieldsArray.includes(field)) {
+          const fl = field.toLowerCase();
+          if (!filteredMetaData.some(m => m.fldname === fl)) {
+            filteredMetaData.push({ fldname: fl, fldcap: formatFieldName(field), fdatatype: 't', cdatatype: 'Text', listingfld: 'T' });
+          }
         }
       });
     }
+  } else {
+    dynamicFields.forEach(field => {
+      const fieldLower = field.toLowerCase();
+      if (listJson.some(rowData => rowData[fieldLower]) && !filteredMetaData.some(m => m.fldname === fieldLower)) {
+        filteredMetaData.push({ fldname: fieldLower, fldcap: formatFieldName(field), fdatatype: 't', cdatatype: 'Text', listingfld: 'T' });
+      }
+    });
+  }
+
+  if (!tableExists) {
+    html += '<div class="table-responsive"><table class="table table-striped">';
+
+    html += '<thead class="sticky-header"><tr>';
+    html += '<th><input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll(this)"></th>';
   
-    // Determine whether the key column should actually be rendered:
-    // render only if key is present in either fieldsWithData OR metadata
-    const keyFieldPresentInMeta = (_entity.metaData || []).some(f => (f.fldname || '').toString().toLowerCase() === keyColLower);
-    const keyFieldHasData = fieldsWithData.has(keyColLower) || keyFieldPresentInMeta;
-    console.log('keyFieldPresentInMeta:', keyFieldPresentInMeta, 'keyFieldHasData:', keyFieldHasData);
-  
-    if (!tableExists) {
-      html += '<div class="table-responsive"><table class="table table-striped">';
-  
-      html += '<thead class="sticky-header"><tr>';
-      html += '<th><input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll(this)"></th>';
-    
-      // Render key header only if it is present (avoid rendering "--" placeholder header)
-      if (keyFieldHasData) {
-        if (fieldsWithData.has(keyColLower)) {
-          const keyField = (_entity.metaData || []).find(field => {
-            const fieldName = (field.fldname || '').toString().toLowerCase();
-            return fieldName === keyColLower;
-          });
-          if (keyField) {
-            html += `<th>${keyField.fldcap || formatFieldName(keyField.fldname)}</th>`;
-          } else {
-            html += `<th>${formatFieldName(keyCol)}</th>`;
-          }
-        } else {
-          // if metadata indicates key present but fieldsWithData doesn't, still show header from metadata
-          const keyField = (_entity.metaData || []).find(field => {
-            const fieldName = (field.fldname || '').toString().toLowerCase();
-            return fieldName === keyColLower;
-          });
-          if (keyField) {
-            html += `<th>${keyField.fldcap || formatFieldName(keyField.fldname)}</th>`;
-          } else {
-            html += `<th>${formatFieldName(keyCol)}</th>`;
-          }
-        }
-      } // else: intentionally skip rendering the key column header
-  
-      // Render headers using the merged metadata but only for fields that actually have data and are not the key
-      filteredMetaData.forEach(field => {
+
+    if (fieldsWithData.has(keyColLower)) {
+      const keyField = (_entity.metaData || []).find(field => {
         const fieldName = (field.fldname || '').toString().toLowerCase();
-        // skip key col
-        if (fieldName === keyColLower) return;
-        // skip excluded fields
-        if (excludedFields.has(fieldName)) return;
-        // show only columns that have data OR explicitly marked listingfld === 'T'
-        const hasData = fieldsWithData.has(fieldName);
-        const allowShow = hasData || (field.listingfld && (field.listingfld === 'T' || field.listingfld === 't'));
-        if (allowShow) {
-          if (!addedFields.has(fieldName)) {
-            html += `<th>${field.fldcap || formatFieldName(field.fldname)}</th>`;
-            addedFields.add(fieldName);
-            console.log('Added header for:', fieldName);
-          }
-        }
+        return fieldName === keyColLower;
       });
-      html += '</tr></thead><tbody>';
+      if (keyField) {
+        html += `<th>${keyField.fldcap || formatFieldName(keyField.fldname)}</th>`;
+      } else {
+        html += `<th>${formatFieldName(keyCol)}</th>`;
+      }
     } else {
+      html += `<th>--</th>`;
+    }
+
+    // Render headers using the merged metadata but only for fields that actually have data and are not the key
+    filteredMetaData.forEach(field => {
+      const fieldName = (field.fldname || '').toString().toLowerCase();
+      // skip key col
+      if (fieldName === keyColLower) return;
+      // skip excluded fields
+      if (excludedFields.has(fieldName)) return;
+      // show only columns that have data OR explicitly marked listingfld === 'T'
+      const hasData = fieldsWithData.has(fieldName);
+      const allowShow = hasData || (field.listingfld && (field.listingfld === 'T' || field.listingfld === 't'));
+      if (allowShow) {
+        if (!addedFields.has(fieldName)) {
+          html += `<th>${field.fldcap || formatFieldName(field.fldname)}</th>`;
+          addedFields.add(fieldName);
+          console.log('Added header for:', fieldName);
+        }
+      }
+    });
+    html += '</tr></thead><tbody>';
+  } else {
+    tableBodyContainer.find('tbody').empty();
+  }
+
+  console.log('Headers added:', Array.from(addedFields));
+
+  _entity.navigationRecords = [];
+  listJson.forEach((rowData, index) => {
+    html += `<tr>`;
+    html += `<td><input type="checkbox" class="rowCheckbox" data-index="${index}" data-recordid="${rowData.recordid || ''}"></td>`;
+
+    const entityName = _entity.entityName;
+    const transId = _entity.entityTransId || rowData.transid || "axusr";
+    const recordId = rowData.recordid || '';
+    _entity.navigationRecords.push(recordId);
+    const rowNo = rowData.rno || index;
+
+    if (fieldsWithData.has(keyColLower)) {
+      let keyValue = '';
+      // Try to get key value from rowData
+      if (rowData[keyColLower] !== undefined) {
+        keyValue = rowData[keyColLower];
+      } else if (rowData[keyCol] !== undefined) {
+        keyValue = rowData[keyCol];
+      } else {
+        // Try case-insensitive match
+        const rowKey = Object.keys(rowData).find(k => k.toLowerCase() === keyColLower);
+        keyValue = rowKey ? rowData[rowKey] : '';
+      }
+      
+      const keyValueStr = (keyValue || '').toString();
+      const keyColProps = filteredMetaData.find(x => x.fldname.toLowerCase() === keyColLower);
+      let displayValue = keyValueStr;
+      
+      if (keyColProps && (keyColProps.fdatatype === 'd' || keyColProps.cdatatype === 'Date')) {
+        displayValue = formatDateString(keyValueStr);
+      }
+
+      const escapedValue = displayValue.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\"/g, '&quot;');
+      html += `<td><a href="#" onclick="_entity.openEntityForm('${entityName}','${transId}', '${recordId}', '${escapedValue}', ${rowNo}); return false;">${_entityCommon.inValid(displayValue) ? "--" : displayValue}</a></td>`;
+    } else {
+      html += `<td><a href="#" onclick="_entity.openEntityForm('${entityName}','${transId}', '${recordId}', '', ${rowNo}); return false;">--</a></td>`;
+    }
+
+    // Render cells using merged metadata order and only for fields that have data or are explicitly listed
+    filteredMetaData.forEach(field => {
+      const fieldName = (field.fldname || '').toString().toLowerCase();
+      if (fieldName === keyColLower) return;
+      if (excludedFields.has(fieldName)) return;
+
+      const hasData = fieldsWithData.has(fieldName);
+      const allowShow = hasData || (field.listingfld && (field.listingfld === 'T' || field.listingfld === 't'));
+      if (!allowShow) return;
+
+      // Try to get field value from rowData
+      let fieldValue = '';
+      if (rowData[fieldName] !== undefined) {
+        fieldValue = rowData[fieldName];
+      } else {
+        // Try case-insensitive match
+        const rowKey = Object.keys(rowData).find(k => k.toLowerCase() === fieldName);
+        fieldValue = rowKey ? rowData[rowKey] : '';
+      }
+      
+      let cellContent = '';
+
+      if (field.cdatatype === 'Check box' || field.fdatatype === 'Check box') {
+        const isChecked = (fieldValue === 'T' || fieldValue === true || fieldValue === 'true');
+        cellContent = `<div class="form-check"><input class="form-check-input" type="checkbox" ${isChecked ? 'checked' : ''} disabled></div>`;
+      } else if ((fieldName === 'modifiedon' || fieldName === 'createdon' || field.fdatatype === 'd' || field.cdatatype === 'Date') && fieldValue) {
+        cellContent = formatDateString(fieldValue);
+      } else if (field.cdatatype === 'Currency' || field.fdatatype === 'Currency') {
+        cellContent = formatNumberBasedOnMillions(fieldValue);
+      } else {
+        cellContent = `${fieldValue || ''}`;
+      }
+
+      html += `<td>${cellContent}</td>`;
+    });
+
+    html += `</tr>`;
+  });
+
+  if (!tableExists) {
+    html += '</tbody></table></div>';
+    tableBodyContainer.empty().append(html);
+    console.log('Table HTML generated');
+    initializeDataTable();
+  } else {
+    const dataTableInstance = $('#table-body_Container .table').DataTable ? $('#table-body_Container .table').DataTable() : null;
+    if (dataTableInstance && $.fn.DataTable) {
+      dataTableInstance.destroy();
       tableBodyContainer.find('tbody').empty();
     }
-  
-    console.log('Headers added:', Array.from(addedFields));
-  
-    _entity.navigationRecords = [];
-    listJson.forEach((rowData, index) => {
-      html += `<tr>`;
-      html += `<td><input type="checkbox" class="rowCheckbox" data-index="${index}" data-recordid="${rowData.recordid || ''}"></td>`;
-  
-      const entityName = _entity.entityName;
-      const transId = _entity.entityTransId || rowData.transid || "axusr";
-      const recordId = rowData.recordid || '';
-      _entity.navigationRecords.push(recordId);
-      const rowNo = rowData.rno || index;
-  
-      // Render key cell only if key column should be shown
-      if (keyFieldHasData) {
-        if (fieldsWithData.has(keyColLower)) {
-          let keyValue = '';
-          // Try to get key value from rowData
-          if (rowData[keyColLower] !== undefined) {
-            keyValue = rowData[keyColLower];
-          } else if (rowData[keyCol] !== undefined) {
-            keyValue = rowData[keyCol];
-          } else {
-            // Try case-insensitive match
-            const rowKey = Object.keys(rowData).find(k => k.toLowerCase() === keyColLower);
-            keyValue = rowKey ? rowData[rowKey] : '';
-          }
-          
-          const keyValueStr = (keyValue || '').toString();
-          const keyColProps = filteredMetaData.find(x => x.fldname.toLowerCase() === keyColLower);
-          let displayValue = keyValueStr;
-          
-          if (keyColProps && (keyColProps.fdatatype === 'd' || keyColProps.cdatatype === 'Date')) {
-            displayValue = formatDateString(keyValueStr);
-          }
-  
-          const escapedValue = displayValue.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\"/g, '&quot;');
-          html += `<td><a href="#" onclick="_entity.openEntityForm('${entityName}','${transId}', '${recordId}', '${escapedValue}', ${rowNo}); return false;">${_entityCommon.inValid(displayValue) ? "--" : displayValue}</a></td>`;
-        } else {
-          // metadata says key exists but no data in rows: render empty clickable cell (keeps behaviour but avoids '--' placeholder)
-          html += `<td><a href="#" onclick="_entity.openEntityForm('${entityName}','${transId}', '${recordId}', '', ${rowNo}); return false;"></a></td>`;
-        }
-      } // else: skip rendering key cell entirely (keeps column alignment by not outputting a placeholder)
-  
-      // Render cells using merged metadata order and only for fields that have data or are explicitly listed
-      filteredMetaData.forEach(field => {
-        const fieldName = (field.fldname || '').toString().toLowerCase();
-        if (fieldName === keyColLower) return;
-        if (excludedFields.has(fieldName)) return;
-  
-        const hasData = fieldsWithData.has(fieldName);
-        const allowShow = hasData || (field.listingfld && (field.listingfld === 'T' || field.listingfld === 't'));
-        if (!allowShow) return;
-  
-        // Try to get field value from rowData
-        let fieldValue = '';
-        if (rowData[fieldName] !== undefined) {
-          fieldValue = rowData[fieldName];
-        } else {
-          // Try case-insensitive match
-          const rowKey = Object.keys(rowData).find(k => k.toLowerCase() === fieldName);
-          fieldValue = rowKey ? rowData[rowKey] : '';
-        }
-        
-        let cellContent = '';
-  
-        if (field.cdatatype === 'Check box' || field.fdatatype === 'Check box') {
-          const isChecked = (fieldValue === 'T' || fieldValue === true || fieldValue === 'true');
-          cellContent = `<div class="form-check"><input class="form-check-input" type="checkbox" ${isChecked ? 'checked' : ''} disabled></div>`;
-        } else if ((fieldName === 'modifiedon' || fieldName === 'createdon' || field.fdatatype === 'd' || field.cdatatype === 'Date') && fieldValue) {
-          cellContent = formatDateString(fieldValue);
-        } else if (field.cdatatype === 'Currency' || field.fdatatype === 'Currency') {
-          cellContent = formatNumberBasedOnMillions(fieldValue);
-        } else {
-          cellContent = `${fieldValue || ''}`;
-        }
-  
-        html += `<td>${cellContent}</td>`;
-      });
-  
-      html += `</tr>`;
-    });
-  
-    if (!tableExists) {
-      html += '</tbody></table></div>';
-      tableBodyContainer.empty().append(html);
-      console.log('Table HTML generated');
-      initializeDataTable();
-    } else {
-      const dataTableInstance = $('#table-body_Container .table').DataTable ? $('#table-body_Container .table').DataTable() : null;
-      if (dataTableInstance && $.fn.DataTable) {
-        dataTableInstance.destroy();
-        tableBodyContainer.find('tbody').empty();
-      }
-      tableBodyContainer.find('tbody').append(html);
-      initializeDataTable();
-    }
-    
-    console.log('=== createTableViewHTML completed ===');
+    tableBodyContainer.find('tbody').append(html);
+    initializeDataTable();
   }
   
+  console.log('=== createTableViewHTML completed ===');
+}
 /* --------------------------
    Normalizer + render function
    -------------------------- */
@@ -766,19 +735,16 @@ function normalizeAndRenderFromDsResponse(parsed, pageNo, pageSize) {
     const totalRecords = Number(dsBlock?.totalrecords ?? dsBlock?.recordcount ?? parsedObj?.result?.totalrecords ?? rows.length) || rows.length;
 
     // --- page title (best-effort)
-    (dsBlock && (dsBlock.adsname || dsBlock.adsName)) ||
-    (parsedObj?.result?.ADSNames && parsedObj.result.ADSNames[0]) ||
-    (parsedObj?.ADSNames && parsedObj.ADSNames?.[0]) ||
-    (window.smartTableController && window.smartTableController.adsName) ||
-    (window._entity && window._entity.adsName) ||
-    '';
+    const pageTitle =
+      (dsBlock && (dsBlock.adsname || dsBlock.adsName)) ||
+      (parsedObj?.result?.ADSNames && parsedObj.result.ADSNames[0]) ||
+      (parsedObj?.ADSNames && parsedObj.ADSNames?.[0]) ||
+      (window.smartTableController && window.smartTableController.adsName) ||
+      '';
 
-  const titleEl = document.getElementById('EntityTitle') || document.querySelector('.page-header-title');
-  if (titleEl && pageTitle) {
-    titleEl.textContent = pageTitle;
-  } else if (pageTitle) {
-    document.title = pageTitle;
-  }
+    const titleEl = document.getElementById('EntityTitle') || document.querySelector('.page-header-title');
+    if (titleEl && pageTitle) titleEl.textContent = pageTitle;
+    else if (pageTitle) document.title = pageTitle;
 
     // --- ensure _entity exists and set basic state
     window._entity = window._entity || {};
@@ -1114,6 +1080,8 @@ function getQueryParam(name) {
     return null;
   }
 }
+
+// --- helper: safe instantiate controller & auto-load ---
 function startSmartTableFromAdsName(adsName) {
   if (!adsName) {
     console.warn('startSmartTableFromAdsName: no adsName supplied');
@@ -1121,13 +1089,6 @@ function startSmartTableFromAdsName(adsName) {
   }
 
   console.log('Starting SmartViewTableController with ADS from query param:', adsName);
-
-  // Set header right away (so user sees it even while data is loading)
-  window._entity = window._entity || {};
-  window._entity.adsName = adsName;
-  const titleEl = document.getElementById('EntityTitle') || document.querySelector('.page-header-title');
-  if (titleEl) titleEl.textContent = adsName;
-  document.title = adsName;
 
   if (window.smartTableController) {
     window.smartTableController.adsName = adsName;
@@ -1145,50 +1106,7 @@ function startSmartTableFromAdsName(adsName) {
   return true;
 }
 
-function bindSearchToggleFocus() {
-  const searchInput =
-    document.getElementById('searchBox');
 
-  const searchToggleBtn =
-    document.getElementById('searchBoxButton') ||
-    document.getElementById('searchBtn');
-
-  if (!searchInput || !searchToggleBtn) return;
-
-  // Remove broken inline onclick if present
-  try { searchToggleBtn.onclick = null; } catch (e) {}
-
-  searchToggleBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-
-    // Toggle visibility
-    searchInput.classList.toggle('show');
-
-    // Focus after render so typing works immediately
-    setTimeout(() => {
-      searchInput.focus();
-
-      // Move caret to end
-      const len = searchInput.value.length;
-      if (searchInput.setSelectionRange) {
-        searchInput.setSelectionRange(len, len);
-      }
-    }, 40);
-  });
-
-  // ESC → close search
-  searchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      searchInput.value = '';
-      searchInput.classList.remove('show');
-      searchInput.blur();
-
-      if (typeof liveSearch === 'function') {
-        liveSearch(); // refresh results
-      }
-    }
-  });
-}
 
 /* --------------------------
    Class controller
@@ -1214,20 +1132,11 @@ class SmartViewTableController {
     window._entity = window._entity || {};
     window._entity.listJson = [];
     window._entity.pageSize = this.pageSize;
-  
-    // Ensure global adsName stored
-    if (this.adsName) {
-      window._entity.adsName = this.adsName;
-      const titleEl = document.getElementById('EntityTitle') || document.querySelector('.page-header-title');
-      if (titleEl) titleEl.textContent = this.adsName;
-      document.title = this.adsName;
-    }
-  
+
     this.wireDom();
     this.setupSortingHeaders();
     this.loadNextPage();
 
-  
     setTimeout(() => {
       this.attachScrollListener();
     }, 150);
@@ -1343,9 +1252,9 @@ wireDom() {
   try { if (this._resizeHandler) window.removeEventListener('resize', this._resizeHandler); } catch (e) {}
   this._resizeHandler = () => { try { if (rowCountManager && typeof rowCountManager.attachToView === 'function') rowCountManager.attachToView(); } catch (e) {} };
   window.addEventListener('resize', this._resizeHandler, { passive: true });
-  bindSearchToggleFocus();
 
-
+  /*************** Search bindings (Entity-like) ***************/
+  // Debounced live search so typing doesn't spam reflows
   const searchInput = document.getElementById('searchBox');
   const searchBtn = document.getElementById('searchBtn');
   const clearSearchBtn = document.getElementById('clearSearchBtn'); // optional
@@ -1643,7 +1552,6 @@ attachScrollListener() {
 }
 
 
-
   setupSortingHeaders() {
     document.querySelectorAll("#employeeTable thead th.sortable").forEach(th => {
       th.addEventListener("click", () => {
@@ -1664,7 +1572,9 @@ attachScrollListener() {
 
 
 
-
+/* --------------------------
+   Initialize on page load with ADS picker
+   -------------------------- */
 
 document.addEventListener('DOMContentLoaded', function () {
   const adsFromQuery = getQueryParam('ads') || getQueryParam('adsName') || getQueryParam('adsname');
