@@ -577,6 +577,8 @@
             return; 
         }
 
+        render(); 
+
         // Clear stale resolutions when input changes
         const currentTokens = getTokens(text);
         currentTokens.forEach((token, idx) => {
@@ -1193,7 +1195,7 @@
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
         let realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
 
-        // Clean up display name if it contains parens like "Name (ID)"
+       
         if (suggestion.includes("(") && suggestion.includes(")")) {
             const lastBracketIndex = suggestion.lastIndexOf("(");
 
@@ -1223,7 +1225,7 @@
         // Check if we are inside an unclosed quote
         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
 
-        // If ends with space and NOT inside a quote, we are adding a NEW parameter
+       
         if (endsWithSpace && !isUnclosedString) {
             tokens.push("");
         }
@@ -1796,6 +1798,31 @@
         }
     }
 
+function isSuggestionVisible() {
+    return list && list.style.display === "block" && items.length > 0;
+}
+
+function hasActiveSuggestion() {
+    return activeIndex >= 0 && activeIndex < items.length;
+}
+
+function canRunCommand() {
+    const text = input.value.trim();
+    if (!text || !commands) return false;
+
+    const tokens = getTokens(text);
+    const groupKey = cleanString(tokens[0]);
+    const groupConfig = commands[groupKey];
+    if (!groupConfig) return false;
+
+    const targetIndex = tokens.length - 1;
+    const promptInfo = getActivePromptInfo(groupConfig, tokens, targetIndex);
+
+    
+    return !promptInfo;
+}
+
+
     /* ===============================
        SETUP LISTENERS
     =============================== */
@@ -1853,41 +1880,65 @@
         }
 
         input.addEventListener("focus", () => {
-            if (input.value.trim() === "") {
+            // if (input.value.trim() === "") {
                 handleInput(); 
-            }
+            // }
         })
 
         input.addEventListener("input", handleInput);
         input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
-        input.addEventListener("keydown", e => {
-            // if (e.key === "Enter" && e.ctrlKey) {
-            //     e.preventDefault();
-            //     console.log("Debug: Enter + shift Detected Executing..........");
-            //     executeCommandsV2();
-            //     hide();
-            //     return;
-            // }
-
-           
+        input.addEventListener("keydown", e => {    
+            
+            if (e.ctrlKey && e.code === "Space") {
+                e.preventDefault(); 
+                handleInput(); 
+                return; 
+            }
 
             if (e.key === "Enter") {
-                 if (e.ctrlKey) {
                 e.preventDefault(); 
+           
+
+            // if (list.style.display === "block" && active >= 0) {
+            //     e.preventDefault(); 
+            //     apply(activeIndex); 
+            //     return; 
+            // }
+            //     if (list.style.display === "none") {
+            //         e.preventDefault(); 
+            //         handleInput(); 
+            //         return; 
+            //     }
+
+            // const isListOpen = list.style.display === "block"; 
+            // const hasActiveItem = isListOpen && activeIndex >= 0; 
+
+            // if (hasActiveItem) {
+            //     e.preventDefault(); 
+            //     apply(activeIndex); 
+            //     return; 
+            // }
+
+            // executeCommandsV2(); 
+            // hide(); 
+            // return; 
+            
+            if (isSuggestionVisible() && hasActiveSuggestion()) {
+                e.preventDefault(); 
+                apply(activeIndex); 
+                return; 
+            }
+
+        
+            
                 executeCommandsV2(); 
                 hide(); 
                 return; 
-            }
-                if (list.style.display === "none") {
-                    e.preventDefault(); 
-                    handleInput(); 
-                    return; 
-                }
+            
 
-                if (activeIndex >= 0) {
-                    e.preventDefault(); 
-                    apply(activeIndex); 
-                }
+            // e.preventDefault(); 
+            // handleInput();
+
             }
             // // Auto Double quotes 
             // // --------------------------------------------------------
