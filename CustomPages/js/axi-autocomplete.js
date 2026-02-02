@@ -1184,7 +1184,15 @@
                     (item.name || "").toLowerCase() === tokenText.toLowerCase()
                 );
                 if (found) {
-                    const real = found.name || found.sqlname || found.displaydata;
+                    let real = found.name || found.sqlname || found.displaydata;
+
+                    if (real.includes("(") && real.includes(")")) {
+                        const match = real.match(/\(([^)]+)\)/); 
+
+                        real = match ? match[1]: real; 
+
+                     } 
+
                     resolvedParams[tokenIndex] = real;
                     return real;
                 }
@@ -1270,10 +1278,21 @@
 
         let suggestion = items[index];
         let displayName = suggestion;
+        let realValue = ""; 
 
         // Get Real Value logic
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
-        let realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
+
+        if (foundObj?.displaydata?.includes("(") && foundObj?.displaydata?.includes(")")) {
+            const match = foundObj.displaydata.match(/\(([^)]+)\)/); 
+
+            realValue = match ? match[1]: null; 
+
+        } else {
+        realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
+
+
+        }
 
 
         if (suggestion.includes("(") && suggestion.includes(")")) {
@@ -1547,6 +1566,7 @@
         const toast = document.createElement("div");
 
         toast.textContent = message;
+        
 
 
         Object.assign(toast.style, {
@@ -3782,9 +3802,10 @@
 
         const viewDataSourceKey = `${viewDataSource}`.toLowerCase();
         let rawStruct = cleanCommandToken(tokens[1]);
+         transId = tryResolveToken(1, rawStruct, commandConfig, false);
 
 
-        type = getTypeByCaption(viewDataSourceKey, rawStruct, promptValues);
+        type = getType(viewDataSourceKey, transId, promptValues);
 
         const handler = VIEW_HANDLERS[type];
 
@@ -3829,7 +3850,7 @@
 
         }
 
-        transId = tryResolveToken(1, rawStruct, commandConfig, false);
+       
         const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
 
         // if (transId === rawStruct) {
@@ -3948,20 +3969,25 @@
         }
     }
 
-    function getTypeByCaption(axDatasourceKey, caption, paramValuesCsv) {
+    function getType(axDatasourceKey, text, paramValuesCsv) {
         const paramList = paramValuesCsv?.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
         const VALID_TYPES = new Set(paramList);
 
         const data = axDatasourceObj?.[axDatasourceKey];
+        // const inputLower = text.trim().toLowerCase(); 
         console.log(JSON.stringify(data));
 
         // const item = data.find(d => d.caption === caption);
         // const item = data.find(d => d.displaydata.includes(caption));
 
-        const normalizedCaption = caption.trim().toLowerCase();
+        const normalizedText = text.trim().toLowerCase();
 
         const item = data.find(d => {
             if (typeof d.displaydata !== "string") return false;
+
+            if (d.name && d.name.toLowerCase() === normalizedText) {
+            return true;
+        }
 
 
             const pureCaption = d.displaydata
@@ -3970,7 +3996,7 @@
                 .trim()
                 .toLowerCase();
 
-            return pureCaption === normalizedCaption;
+            return pureCaption === normalizedText;
         });
 
         if (!item || typeof item.displaydata !== "string") {
