@@ -25,6 +25,10 @@
 
 
     const COMMAND_HANDLERS = {
+        show: {
+            toast: () => showToast(input.value)
+
+        },
         edit: {
             default: handleEditData,
             data: handleEditData,
@@ -100,6 +104,7 @@
     let axiLogo;
     let searchWrapper;
     let isCommandTypingCompleted = false;
+    let example 
 
 
 
@@ -134,6 +139,8 @@
         console.log("Axi Input Found!", input);
 
         axiLogo = document.getElementById("axiLogo");
+
+
 
         if (!axiLogo) {
             console.log("Axi Logo not ready yet... waiting.");
@@ -195,11 +202,16 @@
             return;
         }
 
+        example = document.getElementById("middle1").contentWindow.document.body.id; 
+
+        console.log("transId = " + example); 
+
         console.log("Axi Clear button found!", axiClearBtn);
 
 
 
         setupEventListeners();
+        showToast("Axi is Readyddddddddddddddddddddddddddddddddddddddddddddddddddd", 10000000, true); 
 
 
         initCommands(false);
@@ -619,7 +631,7 @@
             return;
         }
 
-        render();
+        // render();
 
         // Clear stale resolutions when input changes
         const currentTokens = getTokens(text);
@@ -851,6 +863,8 @@
         updateDynamicHintFromPrompt(activePrompt);
 
         const partialTyped = cleanString(tokens[targetIndex]);
+
+        
 
         // Scenario A: Static Values
         if (!realSource && activePrompt.promptValues) {
@@ -1102,6 +1116,7 @@
         if (resolvedParams[tokenIndex] && !forceResolve) return resolvedParams[tokenIndex];
         if (!tokenText && !forceResolve) return "";
         if (!commandConfig) return tokenText;
+        
 
         const currentTokens = getTokens(input.value);
 
@@ -1147,6 +1162,12 @@
 
         if (realSource) {
             let paramValue = "";
+
+            // if (prompt.promptValues) {
+            //     tokenText = tryResolveToken(tokenIndex, tokenText, commandConfig, false); 
+
+            //     return tokenText; 
+            // }
 
             // Resolve Dependencies
             if (prompt.promptParams) {
@@ -1353,6 +1374,8 @@
         tokens[targetIndex] = displayName;
 
         input.value = tokens.join(" ") + " ";
+
+        lastTypedTokens = [...tokens]; 
         handleInput();
         hide();
         input.focus();
@@ -1566,16 +1589,39 @@
 
         const toast = document.createElement("div");
 
-        toast.textContent = message;
-         const color = isSuccess ? "green" : "red";
+       const textSpan = document.createElement("span");
+        textSpan.textContent = message;
+        textSpan.style.flexGrow = "1";
+        textSpan.style.marginRight = "15px"; 
+
+        
+        const closeBtn = document.createElement("span");
+        closeBtn.innerHTML = "&times;"; 
+        closeBtn.style.cursor = "pointer";
+        closeBtn.style.fontWeight = "bold";
+        closeBtn.style.fontSize = "20px";
+        closeBtn.style.lineHeight = "1";
+        
+        
+        closeBtn.onclick = () => {
+            toast.style.opacity = "0";
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    document.body.removeChild(toast);
+                }
+            }, 300);
+        };
+         const bgColor = isSuccess ? "rgba(34, 197, 94, 0.9)" : "rgba(239, 68, 68, 0.9)";
         
 
 
         Object.assign(toast.style, {
             position: "fixed",
-            bottom: "20px",
+            bottom: "50px",
             right: "20px",
-            backgroundColor: color,
+            minWidth: "300px",
+            width: "fit-content",
+            backgroundColor: bgColor,
             color: "white",
             padding: "12px 24px",
             borderRadius: "8px",
@@ -1584,7 +1630,8 @@
             fontFamily: "sans-serif",
             fontSize: "14px",
             opacity: "0",
-            transition: "opacity 0.3s ease-in-out"
+            transition: "opacity 0.3s ease-in-out",
+            backdropFilter: "blur(4px)"
         });
 
         document.body.appendChild(toast);
@@ -2166,7 +2213,7 @@
 
         if (!groupConfig) {
             console.warn(`Unknown command group: ${groupKey}`);
-            return;
+            // return;
         }
 
         // Build the context object to pass to the dispatcher
