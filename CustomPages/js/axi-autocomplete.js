@@ -1457,6 +1457,7 @@
                 action: "view",
                 adsNames: [axDatasourceName],
                 trace: true,
+                refreshCache: true,
                 sqlParams: sqlParams
             };
 
@@ -1561,11 +1562,12 @@
     /* ===============================
        TOAST HELPER
     =============================== */
-    function showToast(message, duration = 5000) {
+    function showToast(message, duration = 5000, isSuccess=false) {
 
         const toast = document.createElement("div");
 
         toast.textContent = message;
+         const color = isSuccess ? "green" : "red";
         
 
 
@@ -1573,7 +1575,7 @@
             position: "fixed",
             bottom: "20px",
             right: "20px",
-            backgroundColor: "#ef4444", // Red-500
+            backgroundColor: color,
             color: "white",
             padding: "12px 24px",
             borderRadius: "8px",
@@ -3919,55 +3921,112 @@
 
     }
 
+    // async function handleKeyfield({ tokens, commandConfig }) {
+
+    //     const tstructName = cleanString(tokens[2]);
+    //     const keyField = cleanString(tokens[3]);
+    //     const actualFieldName = tryResolveToken(3, keyField, commandConfig, false);
+    //     const transId = tryResolveToken(2, tstructName, commandConfig, false);
+    //     if (!tstructName || !keyField) {
+    //         showToast("TStruct and Key Field are required")
+    //         console.log("TStruct and Key Field are required");
+    //         return;
+    //     }
+
+    //     //const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+    //     //const found = list?.find(
+    //     //    x => x.caption?.trim().toLowerCase() === tstructName.trim().toLowerCase()
+    //     //);
+
+    //     //if (!found || !found.name) {
+    //     //    console.error("TStruct not found:", rawStruct);
+    //     //    return;
+    //     //}
+    //     //    transId = found.name;
+
+    //     const requestBody = {
+    //         action: "view",   ///edit
+    //         adsNames: ["axi_tstructprops_insupd"],
+    //         sqlParams: {
+    //             param1: "axp_tstructprops",
+    //             param2: "name,keyfield,userconfigured",
+    //             param3: `'${transId}','${actualFieldName}','t'`,
+    //             param4: `name = '${transId}'`
+    //         }
+    //     };
+
+    //     const res = await getAxListAsync(requestBody);
+
+    //     const dataObj = typeof res === "string" ? JSON.parse(res) : res;
+
+    //     console.log("DATA obj is :", dataObj);
+    //     console.log("Type of DATA OBJ:", typeof dataObj);
+
+    //     const resultBlock = dataObj?.result?.data?.[0];
+
+    //     if (resultBlock?.error) {
+    //         showToast(`Error: ${resultBlock.error}`);
+    //         console.log(`Error: ${resultBlock.error}`);
+    //         return;
+    //     }
+    // }
+
     async function handleKeyfield({ tokens, commandConfig }) {
 
-        const tstructName = cleanString(tokens[2]);
-        const keyField = cleanString(tokens[3]);
-        const actualFieldName = tryResolveToken(3, keyField, commandConfig, false);
-        const transId = tryResolveToken(2, tstructName, commandConfig, false);
-        if (!tstructName || !keyField) {
-            showToast("TStruct and Key Field are required")
-            console.log("TStruct and Key Field are required");
-            return;
-        }
-
-        //const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
-        //const found = list?.find(
-        //    x => x.caption?.trim().toLowerCase() === tstructName.trim().toLowerCase()
-        //);
-
-        //if (!found || !found.name) {
-        //    console.error("TStruct not found:", rawStruct);
-        //    return;
-        //}
-        //    transId = found.name;
-
-        const requestBody = {
-            action: "view",   ///edit
-            adsNames: ["axi_tstructprops_insupd"],
-            sqlParams: {
-                param1: "axp_tstructprops",
-                param2: "name,keyfield,userconfigured",
-                param3: `'${transId}','${actualFieldName}','t'`,
-                param4: `name = '${transId}'`
-            }
-        };
-
-        const res = await getAxListAsync(requestBody);
-
-        const dataObj = typeof res === "string" ? JSON.parse(res) : res;
-
-        console.log("DATA obj is :", dataObj);
-        console.log("Type of DATA OBJ:", typeof dataObj);
-
-        const resultBlock = dataObj?.result?.data?.[0];
-
-        if (resultBlock?.error) {
-            showToast(`Error: ${resultBlock.error}`);
-            console.log(`Error: ${resultBlock.error}`);
-            return;
-        }
+    const tstructName = cleanString(tokens[2]);
+    const keyField = cleanString(tokens[3]);
+    const actualFieldName = tryResolveToken(3, keyField, commandConfig, false);
+    const transId = tryResolveToken(2, tstructName, commandConfig, false);
+    if (!tstructName || !keyField) {
+        showToast("TStruct and Key Field are required")
+        console.log("TStruct and Key Field are required");
+        return;
     }
+
+    //const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+    //const found = list?.find(
+    //    x => x.caption?.trim().toLowerCase() === tstructName.trim().toLowerCase()
+    //);
+
+    //if (!found || !found.name) {
+    //    console.error("TStruct not found:", rawStruct);
+    //    return;
+    //}
+    //    transId = found.name;
+
+    const requestBody = {
+        action: "view",   ///edit
+        adsNames: ["axi_tstructprops_insupd"],
+        sqlParams: {
+            param1: "axp_tstructprops",
+            param2: "name,keyfield,userconfigured",
+            param3: `'${transId}','${actualFieldName}','t'`,
+            param4: `name = '${transId}'`
+        }
+    };
+
+    const res = await getAxListAsync(requestBody);
+
+    const dataObj = typeof res === "string" ? JSON.parse(res) : res;
+
+    console.log("DATA obj is :", dataObj);
+    console.log("Type of DATA OBJ:", typeof dataObj);
+
+    const resultBlock = dataObj?.result?.data?.[0];
+
+    if (dataObj?.result?.success && dataObj?.result?.message?.toLowerCase() === "success") {
+        showToast(`Key field-${keyField} has been set for the form ${tstructName}`,5000, true);
+        console.log(`Key field-${keyField} has been set for the form ${tstructName}`);
+        return;
+    }
+
+
+    if (resultBlock?.error) {
+        showToast(`Error: ${resultBlock.error}`);
+        console.log(`Error: ${resultBlock.error}`);
+        return;
+    }
+}
 
     function getType(axDatasourceKey, text, paramValuesCsv) {
         const paramList = paramValuesCsv?.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
