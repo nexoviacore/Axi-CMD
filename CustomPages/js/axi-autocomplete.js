@@ -211,7 +211,7 @@
 
 
         setupEventListeners();
-        showToast("Axi is Readyddddddddddddddddddddddddddddddddddddddddddddddddddd", 10000000, true); 
+        showToast("Axi is Readyddddddddddddddddddddddddddddddddddddddddddddddddddd", 10000000, false); 
 
 
         initCommands(false);
@@ -1163,11 +1163,11 @@
         if (realSource) {
             let paramValue = "";
 
-            // if (prompt.promptValues) {
-            //     tokenText = tryResolveToken(tokenIndex, tokenText, commandConfig, false); 
+            if (prompt.promptValues) {
+                tokenText = tryResolveToken(tokenIndex, tokenText, commandConfig, false); 
 
-            //     return tokenText; 
-            // }
+                return tokenText; 
+            }
 
             // Resolve Dependencies
             if (prompt.promptParams) {
@@ -1616,6 +1616,10 @@
 
 
         Object.assign(toast.style, {
+           display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "10px",
             position: "fixed",
             bottom: "50px",
             right: "20px",
@@ -1635,6 +1639,8 @@
         });
 
         document.body.appendChild(toast);
+        toast.appendChild(textSpan);
+    toast.appendChild(closeBtn);
 
 
         requestAnimationFrame(() => {
@@ -1996,7 +2002,8 @@
                     resolvedParams = {};
 
                     await initCommands(true);
-                    alert("Refreshed!");
+                    // alert("Refreshed!");
+                    showToast("Refreshed Successfully!", 5000, true);
                     input.focus();
 
                 } catch (error) {
@@ -2038,6 +2045,12 @@
         input.addEventListener("focus", () => {
             if (input.value.trim() === "") {
                 handleInput();
+            }
+        }); 
+
+        input.addEventListener("click", () => {
+            if (input.value.trim() === "" && list.style.display === "none") {
+                handleInput(); 
             }
         })
 
@@ -2227,6 +2240,11 @@
 
         dispatchCommand(context);
         hide(); // Close suggestions after running
+
+        setTimeout(() => {
+            input.focus(); 
+            input.select(); 
+        }, 200)
     }
 
     function buildCommandTokens(tokens) {
