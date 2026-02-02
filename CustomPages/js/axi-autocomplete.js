@@ -4081,6 +4081,7 @@
     function handleOpenAds({ tokens, commandConfig }) {
         let targetUrl;
         let paramName;
+        const iviewName = "csqlist"
         const transId = "b_sql";
         let fieldname = "sqlname";
 
@@ -4093,6 +4094,8 @@
 
         }
 
+        
+
         setEditSessionState(transId);
 
 
@@ -4100,7 +4103,9 @@
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
-            window.LoadIframe(targetUrl);
+            // window.LoadIframe(targetUrl);
+        redirectToIView(iviewName); 
+
 
         } else {
             targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
