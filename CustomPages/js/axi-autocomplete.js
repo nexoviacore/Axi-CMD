@@ -318,33 +318,70 @@
             const prevPrompt = sortedPrompts.find(p => p.wordPos === prevWordPos);
 
 
-            if (prevPrompt && prevPrompt.promptSource.toLowerCase() === 'axi_keyvalueswithfieldnameslist') {
+            // if (prevPrompt && prevPrompt.promptSource.toLowerCase() === 'axi_keyvalueswithfieldnameslist') {
 
-                const prevTokenRaw = cleanString(tokens[targetIndex - 1]);
-
-
-                const sourcePrefix = prevPrompt.promptSource.toLowerCase();
-                let foundItem = null;
+            //     const prevTokenRaw = cleanString(tokens[targetIndex - 1]);
 
 
-                for (const key in axDatasourceObj) {
-                    if (key.startsWith(sourcePrefix)) {
-                        const list = axDatasourceObj[key];
+            //     const sourcePrefix = prevPrompt.promptSource.toLowerCase();
+            //     let foundItem = null;
 
-                        foundItem = list.find(item =>
-                            (item.name && item.name.toLowerCase() === prevTokenRaw.toLowerCase()) ||
-                            (item.displaydata && item.displaydata.toLowerCase() === prevTokenRaw.toLowerCase())
-                        );
-                        if (foundItem) break;
-                    }
-                }
 
-                // If found, and isfield is 'f' , STOP THE PROMPT CHAIN.
-                if (foundItem && foundItem.isfield === 'f') {
-                    console.log("Short Circuit: Previous item is not a field. Stopping prompts.");
-                    return null;
-                }
+            //     for (const key in axDatasourceObj) {
+            //         if (key.startsWith(sourcePrefix)) {
+            //             const list = axDatasourceObj[key];
+
+            //             foundItem = list.find(item =>
+            //                 (item.name && item.name.toLowerCase() === prevTokenRaw.toLowerCase()) ||
+            //                 (item.displaydata && item.displaydata.toLowerCase() === prevTokenRaw.toLowerCase())
+            //             );
+            //             if (foundItem) break;
+            //         }
+            //     }
+
+            //     // If found, and isfield is 'f' , STOP THE PROMPT CHAIN.
+            //     if (foundItem && foundItem.isfield === 'f') {
+            //         console.log("Short Circuit: Previous item is not a field. Stopping prompts.");
+            //         return null;
+            //     }
+            // }
+
+            if (prevPrompt) {
+
+    const prevSources = prevPrompt.promptSource
+        .split(',')
+        .map(s => s.trim().toLowerCase())
+        .filter(Boolean);
+
+    const fieldSource = prevSources.find(src =>
+        src.includes('keyvalue') || src.includes('fieldname')
+    );
+
+    if (fieldSource) {
+
+        const prevTokenRaw = cleanString(tokens[targetIndex - 1]);
+        let foundItem = null;
+
+        for (const key in axDatasourceObj) {
+            if (key.startsWith(fieldSource)) {
+                const list = axDatasourceObj[key];
+
+                foundItem = list.find(item =>
+                    (item.name && item.name.toLowerCase() === prevTokenRaw.toLowerCase()) ||
+                    (item.displaydata && item.displaydata.toLowerCase() === prevTokenRaw.toLowerCase())
+                );
+
+                if (foundItem) break;
             }
+        }
+
+        if (foundItem && foundItem.isfield === 'f') {
+            console.log("Short Circuit: Previous item is not a field. Stopping prompts.");
+            return null;
+        }
+    }
+}
+
         }
 
         let activeSource = prompt.promptSource || "";
@@ -358,12 +395,25 @@
                 const prevTokenIndex = targetIndex - 1;
                 const prevValue = cleanString(tokens[prevTokenIndex]);
                 const allowedValues = prevPrompt.promptValues.split(',').map(v => v.trim().toLowerCase());
-                const valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
+                let valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
+
+                if (valueIndex === -1 && commandConfig.commandGroup?.toLowerCase() === 'view') {
+                    const detectedType = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), prevValue, prevPrompt.promptValues); 
+
+                    if (detectedType) {
+                        valueIndex = allowedValues.indexOf(detectedType.toLowerCase()); 
+                    }
+
+
+                }
 
                 if (valueIndex !== -1) {
                     const sources = activeSource.split(',');
                     activeSource = sources[valueIndex] ? sources[valueIndex].trim() : "";
                 }
+
+                console.log("Value Index: " + valueIndex); 
+                console.log("Active Source: " + activeSource); 
             }
         }
 
@@ -833,6 +883,7 @@
 
 
     function suggestLocal(inputText) {
+        let ignoreExtraParams = false; 
         const tokens = getTokens(inputText);
         const endsWithSpace = inputText.endsWith(" ");
 
@@ -840,7 +891,10 @@
         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
         if (endsWithSpace && !isUnclosedString) tokens.push("");
 
-        if (tokens.length === 0) { hintDiv.textContent = ""; return Object.keys(commands); }
+        if (tokens.length === 0) { 
+            hintDiv.textContent = ""; 
+            return Object.keys(commands); 
+        }
 
         const groupKey = cleanString(tokens[0]);
         if (tokens.length === 1 && !endsWithSpace) {
@@ -857,6 +911,18 @@
         if (!promptInfo) {
             updateDynamicHintFromPrompt(null);
             return [];
+        }
+
+        if (commandConfig.commandGroup?.toLowerCase() === "view") {
+            const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase(); 
+            const viewValues = commandConfig.prompts?.[0]?.promptValues; 
+            const firstToken = cleanString(tokens[1] || ""); 
+            const detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues); 
+
+            if (detectedType === "ads") {
+                ignoreExtraParams = true; 
+                console.log("ResolutionContext: ignoreExtraParams = true (ADS)")
+            }
         }
 
         const { config: activePrompt, realSource } = promptInfo;
@@ -890,9 +956,15 @@
                 paramValue = values.join(',');
             }
 
+           
 
-            if (activePrompt.extraParams) {
-                const extraSource = activePrompt.extraParams.toLowerCase();
+            
+            if (activePrompt.extraParams && !ignoreExtraParams) {
+                if (!paramValue || paramValue.trim() === "") {
+                     console.log("Skipping extraParams – dependency not resolved yet");
+
+                } else {
+                     const extraSource = activePrompt.extraParams.toLowerCase();
 
                 const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
 
@@ -918,6 +990,9 @@
                     // showToast("Error: Configuration not found (Empty List)"); 
                     return [];
                 }
+
+                }
+               
             }
 
 
@@ -1163,11 +1238,11 @@
         if (realSource) {
             let paramValue = "";
 
-            if (prompt.promptValues) {
-                tokenText = tryResolveToken(tokenIndex, tokenText, commandConfig, false); 
+            // if (prompt.promptValues) {
+            //     tokenText = tryResolveToken(tokenIndex, tokenText, commandConfig, false); 
 
-                return tokenText; 
-            }
+            //     return tokenText; 
+            // }
 
             // Resolve Dependencies
             if (prompt.promptParams) {
@@ -4106,7 +4181,7 @@
 
         const normalizedText = text.trim().toLowerCase();
 
-        const item = data.find(d => {
+        const item = data?.find(d => {
             if (typeof d.displaydata !== "string") return false;
 
             if (d.name && d.name.toLowerCase() === normalizedText) {
