@@ -94,6 +94,12 @@
         }
     };
 
+    let ADS_REPETITION_STATE  = {
+    active: false,
+    usedColumns: new Set(),
+    lastColumn: null
+};
+
     let input;
     //console.log("Input Element Found?", input);
     let hintDiv;
@@ -675,6 +681,7 @@
         if (!commands) return;
 
         if (!text.trim()) {
+              resetAdsContext();
             items = Object.keys(commands);
             hintDiv.textContent = "";
             render();
@@ -881,6 +888,76 @@
     //         return [];
     //     }
 
+    function processAdsRepetitiveTokens(tokens, commandConfig) {
+        const expectingColumn = ADS_REPETITION_STATE.lastColumn === null;
+    const partialTyped = cleanString(tokens[tokens.length - 1]);
+     const targetIndex = tokens.length - 1;
+        const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
+    //  const viewSource = commandConfig?.prompts?.[1]?.promptSource?.toLowerCase(); 
+    if (!promptInfo) {
+        console.error("No prompt info"); 
+        return null; 
+    }
+    const {config: activePrompt, realSource} = promptInfo; 
+
+    // === STEP 1: Suggest columns ===
+    if (expectingColumn) {
+        // const list = axDatasourceObj["axi_adscolumnlist"];
+        const list = axDatasourceObj[realSource];
+        if (!Array.isArray(list)) return ["Loading columns..."];
+
+        const filtered = list.filter(col =>
+            !ADS_REPETITION_STATE.usedColumns.has(col.name)
+        );
+
+        filteredObjects = filtered;
+
+        return filtered
+            .map(col => col.displaydata || col.name)
+            .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
+    }
+
+    // === STEP 2: Suggest values for selected column ===
+    const columnName = ADS_REPETITION_STATE.lastColumn;
+    // const columnMeta = axDatasourceObj["axi_adscolumnlist"]
+    const columnMeta = axDatasourceObj[viewSource]
+        ?.find(c => c.name === columnName);
+
+    if (!columnMeta) return [];
+
+    const { sourcetable, sourcefld } = columnMeta;
+
+
+    const isAccept = !sourcetable || !sourcefld;
+
+    if (isAccept) {
+        
+        return [];
+    }
+
+
+    const sourceKey = `axi_adsvalue_${sourcetable}_${sourcefld}`.toLowerCase();
+
+    if (!axDatasourceObj[sourceKey]) {
+        loadList("axi_adsvalue", `${sourcetable},${sourcefld}`);
+        return ["Loading values..."];
+    }
+
+    const list = axDatasourceObj[sourceKey];
+    filteredObjects = list;
+
+    return list
+        .map(v => v.displaydata || v.name)
+        .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
+
+    }
+
+    function resetAdsContext() {
+    ADS_REPETITION_STATE.active = false;
+    ADS_REPETITION_STATE.usedColumns.clear();
+    ADS_REPETITION_STATE.lastColumn = null;
+}
+
 
     function suggestLocal(inputText) {
         let ignoreExtraParams = false; 
@@ -921,8 +998,13 @@
 
             if (detectedType === "ads") {
                 ignoreExtraParams = true; 
+                ADS_REPETITION_STATE.active = true; 
                 console.log("ResolutionContext: ignoreExtraParams = true (ADS)")
             }
+        }
+
+        if (ADS_REPETITION_STATE.active) {
+            return processAdsRepetitiveTokens(tokens, commandConfig); 
         }
 
         const { config: activePrompt, realSource } = promptInfo;
@@ -1376,6 +1458,8 @@
         let displayName = suggestion;
         let realValue = ""; 
 
+       
+
         // Get Real Value logic
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
 
@@ -1416,6 +1500,16 @@
 
             displayName = text.replace(/\s*\[[^\]]*\]$/, "").trim();
         }
+
+         if (ADS_REPETITION_STATE.active) {
+            if (ADS_REPETITION_STATE.lastColumn === null) {
+                ADS_REPETITION_STATE.lastColumn = realValue; 
+            } else {
+                 ADS_REPETITION_STATE.usedColumns.add(ADS_REPETITION_STATE.lastColumn);
+        ADS_REPETITION_STATE.lastColumn = null;
+            }
+
+        } 
 
         const currentInput = input.value;
         const tokens = getTokens(currentInput);
@@ -2290,6 +2384,7 @@
     }
 
     function executeCommandsV2() {
+        resetAdsContext(); 
         const text = input.value.trim();
         if (!text || !commands) return;
 
