@@ -97,7 +97,9 @@
     let ADS_REPETITION_STATE  = {
     active: false,
     usedColumns: new Set(),
-    lastColumn: null
+    lastColumn: null,
+    columnSource: null,
+    paramValue: ""
 };
 
     let input;
@@ -441,7 +443,14 @@
             const data = await getList(sourceName, paramValue);
             axDatasourceObj[key] = data;
             console.log(JSON.stringify(axDatasourceObj));
+            if (!ADS_REPETITION_STATE.active) {
             handleInput();
+
+
+            }
+            if (ADS_REPETITION_STATE.active) {
+                return data; 
+            }
 
         } catch (error) {
             console.error("loadlist failed", error);
@@ -888,81 +897,203 @@
     //         return [];
     //     }
 
-    function processAdsRepetitiveTokens(tokens, commandConfig) {
-        const expectingColumn = ADS_REPETITION_STATE.lastColumn === null;
-    const partialTyped = cleanString(tokens[tokens.length - 1]);
-     const targetIndex = tokens.length - 1;
-        const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
-    //  const viewSource = commandConfig?.prompts?.[1]?.promptSource?.toLowerCase(); 
-    if (!promptInfo) {
-        console.error("No prompt info"); 
-        return null; 
-    }
-    const {config: activePrompt, realSource} = promptInfo; 
+//     function processAdsRepetitiveTokens(tokens, commandConfig) {
+//         const expectingColumn = ADS_REPETITION_STATE.lastColumn === null;
+//     const partialTyped = cleanString(tokens[tokens.length - 1]);
+//       let paramValue = ADS_REPETITION_STATE.paramValue; 
+//     let sourceKey = `${ADS_REPETITION_STATE.columnSource}_${paramValue}`.toLowerCase();
+    
 
-    // === STEP 1: Suggest columns ===
-    if (expectingColumn) {
-        // const list = axDatasourceObj["axi_adscolumnlist"];
-        const list = axDatasourceObj[realSource];
-        if (!Array.isArray(list)) return ["Loading columns..."];
+   
 
-        const filtered = list.filter(col =>
-            !ADS_REPETITION_STATE.usedColumns.has(col.name)
-        );
+//     // === STEP 1: Suggest columns ===
+//     if (expectingColumn) {
+//         if (!axDatasourceObj[sourceKey]) {
+    
+//    loadList(ADS_REPETITION_STATE.columnSource.toLowerCase(), paramValue || "");
+//     // return ["Loading columns..."];
+// } 
+//         const list = axDatasourceObj[sourceKey];
+//         // const cacheList = localStorage.getItem(`axi_${ADS_REPETITION_STATE.columnSource}_param1:${paramValue}_v1`)
+//         // const list = JSON.parse(cacheList);
 
-        filteredObjects = filtered;
-
-        return filtered
-            .map(col => col.displaydata || col.name)
-            .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
-    }
-
-    // === STEP 2: Suggest values for selected column ===
-    const columnName = ADS_REPETITION_STATE.lastColumn;
-    // const columnMeta = axDatasourceObj["axi_adscolumnlist"]
-    const columnMeta = axDatasourceObj[viewSource]
-        ?.find(c => c.name === columnName);
-
-    if (!columnMeta) return [];
-
-    const { sourcetable, sourcefld } = columnMeta;
-
-
-    const isAccept = !sourcetable || !sourcefld;
-
-    if (isAccept) {
         
-        return [];
-    }
+//         if (!Array.isArray(list)) return ["Loading columns..."];
+
+//         const filtered = list.filter(col =>
+//             !ADS_REPETITION_STATE.usedColumns.has(col.name)
+//         );
+
+//         filteredObjects = filtered;
+
+//         resetAdsContext(); 
+
+//         return filtered
+//             .map(col => col.displaydata || col.name)
+//             .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
+//     }
+
+//     // === STEP 2: Suggest values for selected column ===
+//     const columnName = ADS_REPETITION_STATE.lastColumn;
+//     // const columnMeta = axDatasourceObj["axi_adscolumnlist"]
+//     const columnMeta = axDatasourceObj[realSource]
+//         ?.find(c => c.name === columnName);
+
+//     if (!columnMeta) return [];
+
+//     const { sourcetable, sourcefld } = columnMeta;
 
 
-    const sourceKey = `axi_adsvalue_${sourcetable}_${sourcefld}`.toLowerCase();
+//     const isAccept = !sourcetable || !sourcefld;
 
-    if (!axDatasourceObj[sourceKey]) {
-        loadList("axi_adsvalue", `${sourcetable},${sourcefld}`);
-        return ["Loading values..."];
-    }
+//     if (isAccept) {
+        
+//         return [];
+//     }
 
-    const list = axDatasourceObj[sourceKey];
-    filteredObjects = list;
 
-    return list
-        .map(v => v.displaydata || v.name)
-        .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
+//     sourceKey = `axi_adsvalue_${sourcetable}_${sourcefld}`.toLowerCase();
 
+//     if (!axDatasourceObj[sourceKey]) {
+//         loadList("axi_adsvalue", `${sourcetable},${sourcefld}`);
+//         return ["Loading values..."];
+//     }
+
+//     list = axDatasourceObj[sourceKey];
+//     filteredObjects = list;
+
+//     return list
+//         .map(v => v.displaydata || v.name)
+//         .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
+
+//     }
+
+function processAdsRepetitiveTokens(tokens, commandConfig) {
+        const targetIndex = tokens.length - 1;
+        const partialTyped = cleanString(tokens[targetIndex]);
+        const adsName = cleanString(tokens[1]); 
+
+        
+        if (targetIndex < 2) return [];
+
+       
+        if (targetIndex % 2 === 0) {
+            const sourceName = "axi_adscolumnlist";
+            const sourceKey = `${sourceName}_${adsName}`.toLowerCase();
+
+        
+            if (!axDatasourceObj[sourceKey]) {
+                loadList(sourceName, adsName);
+                return ["Loading columns..."];
+            }
+
+            const list = axDatasourceObj[sourceKey];
+            if (!Array.isArray(list)) return [];
+
+        
+            const usedColumns = new Set();
+            for (let i = 2; i < targetIndex; i += 2) {
+                const usedToken = cleanString(tokens[i]).toLowerCase();
+                usedColumns.add(usedToken);
+            }
+
+    
+            // const filtered = list.filter(col => {
+            //     const colName = (col.displaydata || col.name).toLowerCase();
+                
+            //     return !usedColumns.has(colName) && colName.includes(partialTyped.toLowerCase());
+            // });
+
+            const filtered = list.filter(col => {
+               
+                const rawDisplay = (col.displaydata || col.name).toLowerCase();
+                
+               
+                const cleanDisplay = rawDisplay
+                    .replace(/\s*\(.*?\)/g, "")     
+                    .replace(/\s*\[[^\]]+\]\s*$/, "") 
+                    .trim();
+
+                const rawName = (col.name || "").toLowerCase();
+
+                
+                const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+                
+                
+                const matchesInput = cleanDisplay.includes(partialTyped.toLowerCase());
+
+                return !isUsed && matchesInput;
+            });
+
+            filteredObjects = filtered; 
+            return filtered.map(col => col.displaydata || col.name);
+        }
+
+       
+        else {
+        
+            const prevColumnName = cleanString(tokens[targetIndex - 1]);
+
+            
+            const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
+            const colList = axDatasourceObj[colSourceKey];
+            
+            if (!colList) return []; 
+
+            const columnMetadata = colList.find(c => 
+                (c.name && c.name.toLowerCase() === prevColumnName.toLowerCase()) || 
+                (c.displaydata && c.displaydata.toLowerCase().includes(prevColumnName.toLowerCase()))
+            );
+
+            if (!columnMetadata) return []; 
+
+            const isAccept = !columnMetadata.sourcetable || !columnMetadata.sourcefld; 
+
+            
+            if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
+                return []; 
+            }
+
+            
+
+            
+            // const valSourceName = "axi_adsvalue";
+        
+            // const valParams = `${columnMetadata.sourcetable},${columnMetadata.sourcefld}`; 
+            // const valKey = `${valSourceName}_${valParams}`.toLowerCase();
+
+            // if (!axDatasourceObj[valKey]) {
+            //     loadList(valSourceName, valParams);
+            //     return [`Loading values for ${prevColumnName}...`];
+            // }
+
+            // const valList = axDatasourceObj[valKey];
+            
+            // if (!Array.isArray(valList)) return [];
+
+            // filteredObjects = valList; 
+
+            // return valList
+            //     .map(v => v.displaydata || v.name)
+            //     .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
+        }
     }
 
     function resetAdsContext() {
     ADS_REPETITION_STATE.active = false;
     ADS_REPETITION_STATE.usedColumns.clear();
     ADS_REPETITION_STATE.lastColumn = null;
+    ADS_REPETITION_STATE.columnSource= ""; 
+    ADS_REPETITION_STATE.paramValue = ""; 
 }
 
 
     function suggestLocal(inputText) {
         let ignoreExtraParams = false; 
+        let detectedType = ""; 
         const tokens = getTokens(inputText);
         const endsWithSpace = inputText.endsWith(" ");
+
 
         const lastTokenRaw = tokens[tokens.length - 1];
         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
@@ -983,6 +1114,24 @@
         if (!commandConfig) { hintDiv.textContent = ""; return []; }
 
         const targetIndex = tokens.length - 1;
+
+         if (commandConfig.commandGroup?.toLowerCase() === "view") {
+            const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase(); 
+            const viewValues = commandConfig.prompts?.[0]?.promptValues; 
+            const firstToken = cleanString(tokens[1] || ""); 
+            detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues); 
+
+            if (detectedType === "ads") {
+                ignoreExtraParams = true; 
+                if (tokens.length > 2) {
+                    updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "column" : "value" });
+                     return processAdsRepetitiveTokens(tokens, commandConfig)
+
+                }
+               
+                console.log("ResolutionContext: ignoreExtraParams = true (ADS)")
+            }
+        }
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
 
         if (!promptInfo) {
@@ -990,22 +1139,31 @@
             return [];
         }
 
-        if (commandConfig.commandGroup?.toLowerCase() === "view") {
-            const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase(); 
-            const viewValues = commandConfig.prompts?.[0]?.promptValues; 
-            const firstToken = cleanString(tokens[1] || ""); 
-            const detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues); 
+       
 
-            if (detectedType === "ads") {
-                ignoreExtraParams = true; 
-                ADS_REPETITION_STATE.active = true; 
-                console.log("ResolutionContext: ignoreExtraParams = true (ADS)")
-            }
-        }
+//         if (
+//     detectedType === "ads" &&
+//     ADS_REPETITION_STATE.active &&
+//     ADS_REPETITION_STATE.paramValue === ""
+// ) {
+//     const adsPrompt = commandConfig.prompts.find(p => p.promptParams);
 
-        if (ADS_REPETITION_STATE.active) {
-            return processAdsRepetitiveTokens(tokens, commandConfig); 
-        }
+//     if (adsPrompt?.promptParams) {
+//         const indices = adsPrompt.promptParams.toString().split(',');
+//         const values = indices.map(idx => {
+//             const logicalWordPos = parseInt(idx.trim());
+//             const depTokenIndex = logicalWordPos - 1;
+//             const depToken = cleanString(tokens[depTokenIndex] || "");
+//             return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+//         });
+
+//         ADS_REPETITION_STATE.paramValue = values.join(',');
+//     }
+// }
+
+        // if (ADS_REPETITION_STATE.active) {
+        //     return processAdsRepetitiveTokens(tokens, commandConfig); 
+        // }
 
         const { config: activePrompt, realSource } = promptInfo;
         updateDynamicHintFromPrompt(activePrompt);
@@ -1042,6 +1200,8 @@
 
             
             if (activePrompt.extraParams && !ignoreExtraParams) {
+        
+                
                 if (!paramValue || paramValue.trim() === "") {
                      console.log("Skipping extraParams – dependency not resolved yet");
 
@@ -1546,7 +1706,7 @@
 
         lastTypedTokens = [...tokens]; 
         handleInput();
-        hide();
+        // hide();
         input.focus();
     }
 
