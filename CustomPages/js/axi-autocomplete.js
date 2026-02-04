@@ -482,7 +482,7 @@
         let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
         targetUrl += `?ads=${encodeURIComponent(adsName)}`;
         targetUrl += "&load=1769601086182";
-        targetUrl += `&q=${encodedFilterQuery}`;
+        targetUrl += `&filter=${encodedFilterQuery}`;
         /**
          * NOTE: This is Debug code remove it before deploying  to the  production environment 
          */
