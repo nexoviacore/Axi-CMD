@@ -95,21 +95,21 @@
     };
 
     const OPERATOR_MAP = {
-    "=": "eq",
-    "!=": "neq",
-    "<": "lt",
-    "<=": "lte",
-    ">": "gt",
-    ">=": "gte"
-};
+        "=": "eq",
+        "!=": "neq",
+        "<": "lt",
+        "<=": "lte",
+        ">": "gt",
+        ">=": "gte"
+    };
 
-    let ADS_REPETITION_STATE  = {
-    active: false,
-    usedColumns: new Set(),
-    lastColumn: null,
-    columnSource: null,
-    paramValue: ""
-};
+    let ADS_REPETITION_STATE = {
+        active: false,
+        usedColumns: new Set(),
+        lastColumn: null,
+        columnSource: null,
+        paramValue: ""
+    };
 
     let input;
     //console.log("Input Element Found?", input);
@@ -121,7 +121,7 @@
     let axiLogo;
     let searchWrapper;
     let isCommandTypingCompleted = false;
-    let example 
+    let example
 
 
 
@@ -140,7 +140,7 @@
     let axDatasourceObj = {};
     let activeFetches = new Set();
     let filteredObjects = [];
-       let adsfieldvalueanddt = {};
+    let adsfieldvalueanddt = {};
 
 
     function init() {
@@ -220,16 +220,16 @@
             return;
         }
 
-        example = document.getElementById("middle1").contentWindow.document.body.id; 
+        example = document.getElementById("middle1").contentWindow.document.body.id;
 
-        console.log("transId = " + example); 
+        console.log("transId = " + example);
 
         console.log("Axi Clear button found!", axiClearBtn);
 
 
 
         setupEventListeners();
-        
+
 
 
         initCommands(false);
@@ -366,39 +366,39 @@
 
             if (prevPrompt) {
 
-    const prevSources = prevPrompt.promptSource
-        .split(',')
-        .map(s => s.trim().toLowerCase())
-        .filter(Boolean);
+                const prevSources = prevPrompt.promptSource
+                    .split(',')
+                    .map(s => s.trim().toLowerCase())
+                    .filter(Boolean);
 
-    const fieldSource = prevSources.find(src =>
-        src.includes('keyvalue') || src.includes('fieldname')
-    );
-
-    if (fieldSource) {
-
-        const prevTokenRaw = cleanString(tokens[targetIndex - 1]);
-        let foundItem = null;
-
-        for (const key in axDatasourceObj) {
-            if (key.startsWith(fieldSource)) {
-                const list = axDatasourceObj[key];
-
-                foundItem = list.find(item =>
-                    (item.name && item.name.toLowerCase() === prevTokenRaw.toLowerCase()) ||
-                    (item.displaydata && item.displaydata.toLowerCase() === prevTokenRaw.toLowerCase())
+                const fieldSource = prevSources.find(src =>
+                    src.includes('keyvalue') || src.includes('fieldname')
                 );
 
-                if (foundItem) break;
-            }
-        }
+                if (fieldSource) {
 
-        if (foundItem && foundItem.isfield === 'f') {
-            console.log("Short Circuit: Previous item is not a field. Stopping prompts.");
-            return null;
-        }
-    }
-}
+                    const prevTokenRaw = cleanString(tokens[targetIndex - 1]);
+                    let foundItem = null;
+
+                    for (const key in axDatasourceObj) {
+                        if (key.startsWith(fieldSource)) {
+                            const list = axDatasourceObj[key];
+
+                            foundItem = list.find(item =>
+                                (item.name && item.name.toLowerCase() === prevTokenRaw.toLowerCase()) ||
+                                (item.displaydata && item.displaydata.toLowerCase() === prevTokenRaw.toLowerCase())
+                            );
+
+                            if (foundItem) break;
+                        }
+                    }
+
+                    if (foundItem && foundItem.isfield === 'f') {
+                        console.log("Short Circuit: Previous item is not a field. Stopping prompts.");
+                        return null;
+                    }
+                }
+            }
 
         }
 
@@ -416,10 +416,10 @@
                 let valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
 
                 if (valueIndex === -1 && commandConfig.commandGroup?.toLowerCase() === 'view') {
-                    const detectedType = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), prevValue, prevPrompt.promptValues); 
+                    const detectedType = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), prevValue, prevPrompt.promptValues);
 
                     if (detectedType) {
-                        valueIndex = allowedValues.indexOf(detectedType.toLowerCase()); 
+                        valueIndex = allowedValues.indexOf(detectedType.toLowerCase());
                     }
 
 
@@ -430,8 +430,8 @@
                     activeSource = sources[valueIndex] ? sources[valueIndex].trim() : "";
                 }
 
-                console.log("Value Index: " + valueIndex); 
-                console.log("Active Source: " + activeSource); 
+                console.log("Value Index: " + valueIndex);
+                console.log("Active Source: " + activeSource);
             }
         }
 
@@ -452,8 +452,8 @@
         try {
             const data = await getList(sourceName, paramValue);
             axDatasourceObj[key] = data;
-            console.log(JSON.stringify(axDatasourceObj));        
-            handleInput();            
+            console.log(JSON.stringify(axDatasourceObj));
+            handleInput();
 
         } catch (error) {
             console.error("loadlist failed", error);
@@ -466,36 +466,36 @@
     }
 
 
-    function redirectToSmartView({adsName, filters}) {
-      
+    function redirectToSmartView({ adsName, filters }) {
+
 
 
         // targetUrl += `?ads=${adsname}`;
         // targetUrl += "&load=1769601086182";
         const payload = {
-            
+
             filters: filters
         }
 
-        const encodedFilterQuery = btoa(JSON.stringify(payload)); 
+        const encodedFilterQuery = btoa(JSON.stringify(payload));
 
-          let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
-          targetUrl += `?ads=${encodeURIComponent(adsName)}`;
+        let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
+        targetUrl += `?ads=${encodeURIComponent(adsName)}`;
         targetUrl += "&load=1769601086182";
-        targetUrl += `&q=${encodedFilterQuery}`; 
+        targetUrl += `&q=${encodedFilterQuery}`;
         /**
          * NOTE: This is Debug code remove it before deploying  to the  production environment 
          */
-         try {
-        const decodedForDebug = JSON.parse(atob(encodedFilterQuery));
-        console.group("AXI SmartView Redirect Debug");
-        console.log("Final URL:", targetUrl);
-        console.log("Encoded q:", encodedFilterQuery);
-        console.log("Decoded payload:", JSON.stringify(decodedForDebug));
-        console.groupEnd();
-    } catch (e) {
-        console.error("AXI SmartView payload decode failed", e);
-    }
+        try {
+            const decodedForDebug = JSON.parse(atob(encodedFilterQuery));
+            console.group("AXI SmartView Redirect Debug");
+            console.log("Final URL:", targetUrl);
+            console.log("Encoded q:", encodedFilterQuery);
+            console.log("Decoded payload:", JSON.stringify(decodedForDebug));
+            console.groupEnd();
+        } catch (e) {
+            console.error("AXI SmartView payload decode failed", e);
+        }
 
 
 
@@ -719,7 +719,7 @@
         if (!commands) return;
 
         if (!text.trim()) {
-              resetAdsContext();
+            resetAdsContext();
             items = Object.keys(commands);
             hintDiv.textContent = "";
             render();
@@ -926,91 +926,91 @@
     //         return [];
     //     }
 
-//     function processAdsRepetitiveTokens(tokens, commandConfig) {
-//         const expectingColumn = ADS_REPETITION_STATE.lastColumn === null;
-//     const partialTyped = cleanString(tokens[tokens.length - 1]);
-//       let paramValue = ADS_REPETITION_STATE.paramValue; 
-//     let sourceKey = `${ADS_REPETITION_STATE.columnSource}_${paramValue}`.toLowerCase();
-    
-
-   
-
-//     // === STEP 1: Suggest columns ===
-//     if (expectingColumn) {
-//         if (!axDatasourceObj[sourceKey]) {
-    
-//    loadList(ADS_REPETITION_STATE.columnSource.toLowerCase(), paramValue || "");
-//     // return ["Loading columns..."];
-// } 
-//         const list = axDatasourceObj[sourceKey];
-//         // const cacheList = localStorage.getItem(`axi_${ADS_REPETITION_STATE.columnSource}_param1:${paramValue}_v1`)
-//         // const list = JSON.parse(cacheList);
-
-        
-//         if (!Array.isArray(list)) return ["Loading columns..."];
-
-//         const filtered = list.filter(col =>
-//             !ADS_REPETITION_STATE.usedColumns.has(col.name)
-//         );
-
-//         filteredObjects = filtered;
-
-//         resetAdsContext(); 
-
-//         return filtered
-//             .map(col => col.displaydata || col.name)
-//             .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
-//     }
-
-//     // === STEP 2: Suggest values for selected column ===
-//     const columnName = ADS_REPETITION_STATE.lastColumn;
-//     // const columnMeta = axDatasourceObj["axi_adscolumnlist"]
-//     const columnMeta = axDatasourceObj[realSource]
-//         ?.find(c => c.name === columnName);
-
-//     if (!columnMeta) return [];
-
-//     const { sourcetable, sourcefld } = columnMeta;
+    //     function processAdsRepetitiveTokens(tokens, commandConfig) {
+    //         const expectingColumn = ADS_REPETITION_STATE.lastColumn === null;
+    //     const partialTyped = cleanString(tokens[tokens.length - 1]);
+    //       let paramValue = ADS_REPETITION_STATE.paramValue; 
+    //     let sourceKey = `${ADS_REPETITION_STATE.columnSource}_${paramValue}`.toLowerCase();
 
 
-//     const isAccept = !sourcetable || !sourcefld;
-
-//     if (isAccept) {
-        
-//         return [];
-//     }
 
 
-//     sourceKey = `axi_adsvalue_${sourcetable}_${sourcefld}`.toLowerCase();
+    //     // === STEP 1: Suggest columns ===
+    //     if (expectingColumn) {
+    //         if (!axDatasourceObj[sourceKey]) {
 
-//     if (!axDatasourceObj[sourceKey]) {
-//         loadList("axi_adsvalue", `${sourcetable},${sourcefld}`);
-//         return ["Loading values..."];
-//     }
+    //    loadList(ADS_REPETITION_STATE.columnSource.toLowerCase(), paramValue || "");
+    //     // return ["Loading columns..."];
+    // } 
+    //         const list = axDatasourceObj[sourceKey];
+    //         // const cacheList = localStorage.getItem(`axi_${ADS_REPETITION_STATE.columnSource}_param1:${paramValue}_v1`)
+    //         // const list = JSON.parse(cacheList);
 
-//     list = axDatasourceObj[sourceKey];
-//     filteredObjects = list;
 
-//     return list
-//         .map(v => v.displaydata || v.name)
-//         .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
+    //         if (!Array.isArray(list)) return ["Loading columns..."];
 
-//     }
+    //         const filtered = list.filter(col =>
+    //             !ADS_REPETITION_STATE.usedColumns.has(col.name)
+    //         );
 
-function processAdsRepetitiveTokens(tokens, commandConfig) {
+    //         filteredObjects = filtered;
+
+    //         resetAdsContext(); 
+
+    //         return filtered
+    //             .map(col => col.displaydata || col.name)
+    //             .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
+    //     }
+
+    //     // === STEP 2: Suggest values for selected column ===
+    //     const columnName = ADS_REPETITION_STATE.lastColumn;
+    //     // const columnMeta = axDatasourceObj["axi_adscolumnlist"]
+    //     const columnMeta = axDatasourceObj[realSource]
+    //         ?.find(c => c.name === columnName);
+
+    //     if (!columnMeta) return [];
+
+    //     const { sourcetable, sourcefld } = columnMeta;
+
+
+    //     const isAccept = !sourcetable || !sourcefld;
+
+    //     if (isAccept) {
+
+    //         return [];
+    //     }
+
+
+    //     sourceKey = `axi_adsvalue_${sourcetable}_${sourcefld}`.toLowerCase();
+
+    //     if (!axDatasourceObj[sourceKey]) {
+    //         loadList("axi_adsvalue", `${sourcetable},${sourcefld}`);
+    //         return ["Loading values..."];
+    //     }
+
+    //     list = axDatasourceObj[sourceKey];
+    //     filteredObjects = list;
+
+    //     return list
+    //         .map(v => v.displaydata || v.name)
+    //         .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
+
+    //     }
+
+    function processAdsRepetitiveTokens(tokens, commandConfig) {
         const targetIndex = tokens.length - 1;
         const partialTyped = cleanString(tokens[targetIndex]);
-        const adsName = cleanString(tokens[1]); 
+        const adsName = cleanString(tokens[1]);
 
-        
+
         if (targetIndex < 2) return [];
 
-       
+
         if (targetIndex % 2 === 0) {
             const sourceName = "axi_adscolumnlist";
             const sourceKey = `${sourceName}_${adsName}`.toLowerCase();
 
-        
+
             if (!axDatasourceObj[sourceKey]) {
                 loadList(sourceName, adsName);
                 return ["Loading columns..."];
@@ -1019,178 +1019,178 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
             const list = axDatasourceObj[sourceKey];
             if (!Array.isArray(list)) return [];
 
-        
+
             const usedColumns = new Set();
             for (let i = 2; i < targetIndex; i += 2) {
                 const usedToken = cleanString(tokens[i]).toLowerCase();
                 usedColumns.add(usedToken);
             }
 
-    
+
             // const filtered = list.filter(col => {
             //     const colName = (col.displaydata || col.name).toLowerCase();
-                
+
             //     return !usedColumns.has(colName) && colName.includes(partialTyped.toLowerCase());
             // });
 
             const filtered = list.filter(col => {
-               
+
                 const rawDisplay = (col.displaydata || col.name).toLowerCase();
-                
-               
+
+
                 const cleanDisplay = rawDisplay
-                    .replace(/\s*\(.*?\)/g, "")     
-                    .replace(/\s*\[[^\]]+\]\s*$/, "") 
+                    .replace(/\s*\(.*?\)/g, "")
+                    .replace(/\s*\[[^\]]+\]\s*$/, "")
                     .trim();
 
                 const rawName = (col.name || "").toLowerCase();
 
-                
+
                 const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
-                
-                
+
+
                 const matchesInput = cleanDisplay.includes(partialTyped.toLowerCase());
 
                 return !isUsed && matchesInput;
             });
 
-            filteredObjects = filtered; 
+            filteredObjects = filtered;
             return filtered.map(col => col.displaydata || col.name);
         }
 
-       
+
         else {
-        
+
             const prevColumnName = cleanString(tokens[targetIndex - 1]);
 
-    
-    const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
-    const colList = axDatasourceObj[colSourceKey];
-    
-    if (!colList) return []; 
 
-    const columnMetadata = colList.find(
-        c =>
-            c.name?.toLowerCase() === prevColumnName.toLowerCase() ||
-            c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
-    ) || null;
+            const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
+            const colList = axDatasourceObj[colSourceKey];
 
-    if (!columnMetadata) return []; 
+            if (!colList) return [];
 
-    const isAccept = !columnMetadata.sourcetable || !columnMetadata.sourcefld; 
+            const columnMetadata = colList.find(
+                c =>
+                    c.name?.toLowerCase() === prevColumnName.toLowerCase() ||
+                    c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
+            ) || null;
 
-    
-    //if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
-    //    return []; 
-    //}
+            if (!columnMetadata) return [];
 
-    const datatype = columnMetadata.fdatatype;
+            const isAccept = !columnMetadata.sourcetable || !columnMetadata.sourcefld;
 
-    if (datatype === 'c') {
-        if (isAccept) {
-            const acceptedValue = cleanString(tokens[tokens.length - 1]);
-            const columnName = cleanString(tokens[tokens.length - 2]);
-            adsfieldvalueanddt[columnName] = {
-                datatype: datatype,
-                isAccept: isAccept,
-            };
-            console.log(`The accepted value for ${columnName} is ${acceptedValue}`)
-            return [];
-        }
-        else {
 
-            if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
-                console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
-                showToast("Error in processAdsRepetitiveTokens check");
-                return [];
-            }
+            //if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
+            //    return []; 
+            //}
 
-            const columnName = cleanString(tokens[tokens.length - 2]);
-            adsfieldvalueanddt[columnName] = {
-                datatype: datatype,
-                isAccept: isAccept
-            };
+            const datatype = columnMetadata.fdatatype;
 
-            const sourcetable = columnMetadata.sourcetable;
-            const sourcefld = columnMetadata.sourcefld;
+            // if (datatype === 'c') {
+                if (isAccept) {
+                    const acceptedValue = cleanString(tokens[tokens.length - 1]);
+                    const columnName = cleanString(tokens[tokens.length - 2]);
+                    adsfieldvalueanddt[columnName] = {
+                        datatype: datatype,
+                        isAccept: isAccept,
+                    };
+                    console.log(`The accepted value for ${columnName} is ${acceptedValue}`)
+                    return [];
+                }
+                else {
 
-            const sourceName = "axi_adsdropdowntokens";
-            const paramValue = `${sourcetable},${sourcefld}`;
-            const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
+                    if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
+                        console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
+                        showToast("Error in processAdsRepetitiveTokens check");
+                        return [];
+                    }
 
-            if (!axDatasourceObj[sourceKey]) {
-                loadList(sourceName, paramValue);
-                return ["Loading values..."];
-            }
+                    const columnName = cleanString(tokens[tokens.length - 2]);
+                    adsfieldvalueanddt[columnName] = {
+                        datatype: datatype,
+                        isAccept: isAccept
+                    };
 
-            const list = axDatasourceObj[sourceKey];
-            if (!Array.isArray(list)) return [];
+                    const sourcetable = columnMetadata.sourcetable;
+                    const sourcefld = columnMetadata.sourcefld;
 
-            return list.map(col => col.displaydata || col.name);
-        }
-    }
+                    const sourceName = "axi_adsdropdowntokens";
+                    const paramValue = `${sourcetable},${sourcefld}`;
+                    const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
 
-    else if (datatype === 'n') {
+                    if (!axDatasourceObj[sourceKey]) {
+                        loadList(sourceName, paramValue);
+                        return ["Loading values..."];
+                    }
 
-        const columnName = cleanString(tokens[tokens.length - 2]);
-        adsfieldvalueanddt[columnName] = {
-            datatype: datatype,
-            isAccept: isAccept
-        };
+                    const list = axDatasourceObj[sourceKey];
+                    if (!Array.isArray(list)) return [];
 
-        const sourceName = "axi_adsfilteroperators";
-        const sourceKey = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase()
+                    return list.map(col => col.displaydata || col.name);
+                }
+            // }
 
-        if (!axDatasourceObj[sourceKey]) {
-            loadList(sourceName);
-            return ["Loading operands..."];
-        }
+            // else if (datatype === 'n') {
 
-        const list = axDatasourceObj[sourceKey];
-        if (!Array.isArray(list)) return [];
+            //     const columnName = cleanString(tokens[tokens.length - 2]);
+            //     adsfieldvalueanddt[columnName] = {
+            //         datatype: datatype,
+            //         isAccept: isAccept
+            //     };
 
-        return list;
+            //     const sourceName = "axi_adsfilteroperators";
+            //     const sourceKey = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase()
 
-    }
-    else if (datatype === 'd') { 
+            //     if (!axDatasourceObj[sourceKey]) {
+            //         loadList(sourceName);
+            //         return ["Loading operands..."];
+            //     }
 
-        const columnName = cleanString(tokens[tokens.length - 2]);
-        adsfieldvalueanddt[columnName] = {
-            datatype: datatype,
-            isAccept: isAccept
-        };
+            //     const list = axDatasourceObj[sourceKey];
+            //     if (!Array.isArray(list)) return [];
 
-        const sourceName = "axi_adsdatefilterserators";
-        const sourceKey = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase()
+            //     return list;
 
-        if (!axDatasourceObj[sourceKey]) {
-            loadList(sourceName);
-            return ["Loading operands..."];
-        }
+            // }
+            // else if (datatype === 'd') {
 
-        const list = axDatasourceObj[sourceKey];
-        if (!Array.isArray(list)) return [];
+            //     const columnName = cleanString(tokens[tokens.length - 2]);
+            //     adsfieldvalueanddt[columnName] = {
+            //         datatype: datatype,
+            //         isAccept: isAccept
+            //     };
 
-        return list;
+            //     const sourceName = "axi_adsdatefilterserators";
+            //     const sourceKey = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase()
 
-    }
-  
-  
+            //     if (!axDatasourceObj[sourceKey]) {
+            //         loadList(sourceName);
+            //         return ["Loading operands..."];
+            //     }
+
+            //     const list = axDatasourceObj[sourceKey];
+            //     if (!Array.isArray(list)) return [];
+
+            //     return list;
+
+            // }
+
+
         }
     }
 
     function resetAdsContext() {
-    ADS_REPETITION_STATE.active = false;
-    ADS_REPETITION_STATE.usedColumns.clear();
-    ADS_REPETITION_STATE.lastColumn = null;
-    ADS_REPETITION_STATE.columnSource= ""; 
-    ADS_REPETITION_STATE.paramValue = ""; 
-}
+        ADS_REPETITION_STATE.active = false;
+        ADS_REPETITION_STATE.usedColumns.clear();
+        ADS_REPETITION_STATE.lastColumn = null;
+        ADS_REPETITION_STATE.columnSource = "";
+        ADS_REPETITION_STATE.paramValue = "";
+    }
 
 
     function suggestLocal(inputText) {
-        let ignoreExtraParams = false; 
-        let detectedType = ""; 
+        let ignoreExtraParams = false;
+        let detectedType = "";
         const tokens = getTokens(inputText);
         const endsWithSpace = inputText.endsWith(" ");
 
@@ -1199,9 +1199,9 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
         if (endsWithSpace && !isUnclosedString) tokens.push("");
 
-        if (tokens.length === 0) { 
-            hintDiv.textContent = ""; 
-            return Object.keys(commands); 
+        if (tokens.length === 0) {
+            hintDiv.textContent = "";
+            return Object.keys(commands);
         }
 
         const groupKey = cleanString(tokens[0]);
@@ -1215,20 +1215,20 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
 
         const targetIndex = tokens.length - 1;
 
-         if (commandConfig.commandGroup?.toLowerCase() === "view") {
-            const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase(); 
-            const viewValues = commandConfig.prompts?.[0]?.promptValues; 
-            const firstToken = cleanString(tokens[1] || ""); 
-            detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues); 
+        if (commandConfig.commandGroup?.toLowerCase() === "view") {
+            const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
+            const viewValues = commandConfig.prompts?.[0]?.promptValues;
+            const firstToken = cleanString(tokens[1] || "");
+            detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues);
 
             if (detectedType === "ads") {
-                ignoreExtraParams = true; 
+                ignoreExtraParams = true;
                 if (tokens.length > 2) {
                     updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "column" : "value" });
-                     return processAdsRepetitiveTokens(tokens, commandConfig)
+                    return processAdsRepetitiveTokens(tokens, commandConfig)
 
                 }
-               
+
                 console.log("ResolutionContext: ignoreExtraParams = true (ADS)")
             }
         }
@@ -1239,27 +1239,27 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
             return [];
         }
 
-       
 
-//         if (
-//     detectedType === "ads" &&
-//     ADS_REPETITION_STATE.active &&
-//     ADS_REPETITION_STATE.paramValue === ""
-// ) {
-//     const adsPrompt = commandConfig.prompts.find(p => p.promptParams);
 
-//     if (adsPrompt?.promptParams) {
-//         const indices = adsPrompt.promptParams.toString().split(',');
-//         const values = indices.map(idx => {
-//             const logicalWordPos = parseInt(idx.trim());
-//             const depTokenIndex = logicalWordPos - 1;
-//             const depToken = cleanString(tokens[depTokenIndex] || "");
-//             return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
-//         });
+        //         if (
+        //     detectedType === "ads" &&
+        //     ADS_REPETITION_STATE.active &&
+        //     ADS_REPETITION_STATE.paramValue === ""
+        // ) {
+        //     const adsPrompt = commandConfig.prompts.find(p => p.promptParams);
 
-//         ADS_REPETITION_STATE.paramValue = values.join(',');
-//     }
-// }
+        //     if (adsPrompt?.promptParams) {
+        //         const indices = adsPrompt.promptParams.toString().split(',');
+        //         const values = indices.map(idx => {
+        //             const logicalWordPos = parseInt(idx.trim());
+        //             const depTokenIndex = logicalWordPos - 1;
+        //             const depToken = cleanString(tokens[depTokenIndex] || "");
+        //             return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+        //         });
+
+        //         ADS_REPETITION_STATE.paramValue = values.join(',');
+        //     }
+        // }
 
         // if (ADS_REPETITION_STATE.active) {
         //     return processAdsRepetitiveTokens(tokens, commandConfig); 
@@ -1270,7 +1270,7 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
 
         const partialTyped = cleanString(tokens[targetIndex]);
 
-        
+
 
         // Scenario A: Static Values
         if (!realSource && activePrompt.promptValues) {
@@ -1296,45 +1296,45 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
                 paramValue = values.join(',');
             }
 
-           
 
-            
+
+
             if (activePrompt.extraParams) {
-        
-                
+
+
                 if (!paramValue || paramValue.trim() === "") {
-                     console.log("Skipping extraParams – dependency not resolved yet");
+                    console.log("Skipping extraParams – dependency not resolved yet");
 
                 } else {
-                     const extraSource = activePrompt.extraParams.toLowerCase();
+                    const extraSource = activePrompt.extraParams.toLowerCase();
 
-                const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
+                    const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
 
 
-                if (!axDatasourceObj[extraKey]) {
+                    if (!axDatasourceObj[extraKey]) {
 
-                    console.log(`Fetching Hidden Param Source: ${extraSource}`);
-                    loadList(extraSource, paramValue);
-                    return [];
+                        console.log(`Fetching Hidden Param Source: ${extraSource}`);
+                        loadList(extraSource, paramValue);
+                        return [];
+                    }
+
+                    // Extra List is cached, extract Index 0
+                    const extraList = axDatasourceObj[extraKey];
+                    if (extraList && extraList.length > 0) {
+                        const hiddenValue = extraList[0].name || extraList[0].displaydata || extraList[0].fname || extraList[0].keyfield;
+                        console.log(`Hidden Param Found (Index 0): ${hiddenValue}`);
+
+                        // Append hidden value to params for the MAIN list
+                        if (paramValue) paramValue += "," + hiddenValue;
+                        else paramValue = hiddenValue;
+                    } else {
+                        // console.error("Error: Configuration not found (Empty List)"); 
+                        // showToast("Error: Configuration not found (Empty List)"); 
+                        return [];
+                    }
+
                 }
 
-                // Extra List is cached, extract Index 0
-                const extraList = axDatasourceObj[extraKey];
-                if (extraList && extraList.length > 0) {
-                    const hiddenValue = extraList[0].name || extraList[0].displaydata || extraList[0].fname || extraList[0].keyfield;
-                    console.log(`Hidden Param Found (Index 0): ${hiddenValue}`);
-
-                    // Append hidden value to params for the MAIN list
-                    if (paramValue) paramValue += "," + hiddenValue;
-                    else paramValue = hiddenValue;
-                } else {
-                    // console.error("Error: Configuration not found (Empty List)"); 
-                    // showToast("Error: Configuration not found (Empty List)"); 
-                    return [];
-                }
-
-                }
-               
             }
 
 
@@ -1533,7 +1533,7 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
         if (resolvedParams[tokenIndex] && !forceResolve) return resolvedParams[tokenIndex];
         if (!tokenText && !forceResolve) return "";
         if (!commandConfig) return tokenText;
-        
+
 
         const currentTokens = getTokens(input.value);
 
@@ -1625,11 +1625,11 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
                     let real = found.name || found.sqlname || found.displaydata;
 
                     if (real.includes("(") && real.includes(")")) {
-                        const match = real.match(/\(([^)]+)\)/); 
+                        const match = real.match(/\(([^)]+)\)/);
 
-                        real = match ? match[1]: real; 
+                        real = match ? match[1] : real;
 
-                     } 
+                    }
 
                     resolvedParams[tokenIndex] = real;
                     return real;
@@ -1716,9 +1716,9 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
 
         let suggestion = items[index];
         let displayName = suggestion;
-        let realValue = ""; 
+        let realValue = "";
 
-       
+
 
         // Get Real Value logic
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
@@ -1732,7 +1732,7 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
         realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
 
 
-        
+
 
 
         if (suggestion.includes("(") && suggestion.includes(")")) {
@@ -1761,15 +1761,15 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
             displayName = text.replace(/\s*\[[^\]]*\]$/, "").trim();
         }
 
-         if (ADS_REPETITION_STATE.active) {
+        if (ADS_REPETITION_STATE.active) {
             if (ADS_REPETITION_STATE.lastColumn === null) {
-                ADS_REPETITION_STATE.lastColumn = realValue; 
+                ADS_REPETITION_STATE.lastColumn = realValue;
             } else {
-                 ADS_REPETITION_STATE.usedColumns.add(ADS_REPETITION_STATE.lastColumn);
-        ADS_REPETITION_STATE.lastColumn = null;
+                ADS_REPETITION_STATE.usedColumns.add(ADS_REPETITION_STATE.lastColumn);
+                ADS_REPETITION_STATE.lastColumn = null;
             }
 
-        } 
+        }
 
         const currentInput = input.value;
         const tokens = getTokens(currentInput);
@@ -1804,7 +1804,7 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
 
         input.value = tokens.join(" ") + " ";
 
-        lastTypedTokens = [...tokens]; 
+        lastTypedTokens = [...tokens];
         handleInput();
         // hide();
         input.focus();
@@ -2014,24 +2014,24 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
     /* ===============================
        TOAST HELPER
     =============================== */
-    function showToast(message, duration = 5000, isSuccess=false) {
+    function showToast(message, duration = 5000, isSuccess = false) {
 
         const toast = document.createElement("div");
 
-       const textSpan = document.createElement("span");
+        const textSpan = document.createElement("span");
         textSpan.textContent = message;
         textSpan.style.flexGrow = "1";
-        textSpan.style.marginRight = "15px"; 
+        textSpan.style.marginRight = "15px";
 
-        
+
         const closeBtn = document.createElement("span");
-        closeBtn.innerHTML = "&times;"; 
+        closeBtn.innerHTML = "&times;";
         closeBtn.style.cursor = "pointer";
         closeBtn.style.fontWeight = "bold";
         closeBtn.style.fontSize = "20px";
         closeBtn.style.lineHeight = "1";
-        
-        
+
+
         closeBtn.onclick = () => {
             toast.style.opacity = "0";
             setTimeout(() => {
@@ -2040,12 +2040,12 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
                 }
             }, 300);
         };
-         const bgColor = isSuccess ? "rgba(34, 197, 94, 0.9)" : "rgba(239, 68, 68, 0.9)";
-        
+        const bgColor = isSuccess ? "rgba(34, 197, 94, 0.9)" : "rgba(239, 68, 68, 0.9)";
+
 
 
         Object.assign(toast.style, {
-           display: "flex",
+            display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             padding: "10px",
@@ -2069,7 +2069,7 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
 
         document.body.appendChild(toast);
         toast.appendChild(textSpan);
-    toast.appendChild(closeBtn);
+        toast.appendChild(closeBtn);
 
 
         requestAnimationFrame(() => {
@@ -2475,11 +2475,11 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
             if (input.value.trim() === "") {
                 handleInput();
             }
-        }); 
+        });
 
         input.addEventListener("click", () => {
             if (input.value.trim() === "" && list.style.display === "none") {
-                handleInput(); 
+                handleInput();
             }
         })
 
@@ -2644,7 +2644,7 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
     }
 
     function executeCommandsV2() {
-        resetAdsContext(); 
+        resetAdsContext();
         const text = input.value.trim();
         if (!text || !commands) return;
 
@@ -2672,8 +2672,8 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
         hide(); // Close suggestions after running
 
         setTimeout(() => {
-            input.focus(); 
-            input.select(); 
+            input.focus();
+            input.select();
         }, 200)
     }
 
@@ -4278,8 +4278,8 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
         let fieldValue;
         let rawFieldName;
         let rawFieldValue;
-        let fieldUniqueId; 
-        let fieldValueIndex = 0; 
+        let fieldUniqueId;
+        let fieldValueIndex = 0;
 
 
         if (tokens.length < 2) {
@@ -4299,7 +4299,7 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
 
         const viewDataSourceKey = `${viewDataSource}`.toLowerCase();
         let rawStruct = cleanCommandToken(tokens[1]);
-         transId = tryResolveToken(1, rawStruct, commandConfig, false);
+        transId = tryResolveToken(1, rawStruct, commandConfig, false);
 
 
         type = getType(viewDataSourceKey, transId, promptValues);
@@ -4317,12 +4317,12 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
 
 
         if (type === "ads") {
-            
-           
-            const adsName = cleanCommandToken(tokens[1]); 
+
+
+            const adsName = cleanCommandToken(tokens[1]);
             const filters = extractAdsFilters(input.value);
-            
-            console.log("Ads Filters: ", filters); 
+
+            console.log("Ads Filters: ", filters);
 
 
             // handler({ transId, fieldName, fieldValue });
@@ -4353,7 +4353,7 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
 
         }
 
-       
+
         const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
 
         // if (transId === rawStruct) {
@@ -4378,41 +4378,41 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
         // }
 
         if (tokens.length > 3) {
-            fieldValueIndex = 3; 
-           
+            fieldValueIndex = 3;
+
 
         } else {
-            fieldValueIndex = 2; 
-           
+            fieldValueIndex = 2;
+
 
         }
 
-       
-        
-
-         const extraList = axDatasourceObj[extraSourceKey];
-
-            if (extraList && extraList.length > 0) {
-                fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
-                // if (extraList[0].fname) {
-                //     fieldName = extraList[0].fname; 
-                // } else {
-                // fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
 
 
-                // }
-            } else {
-                console.warn("Hidden field name not found in cache");
-            }
 
-            rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
-            fieldValue = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
-            fieldUniqueId = getUniqueId(fieldValue); 
+        const extraList = axDatasourceObj[extraSourceKey];
+
+        if (extraList && extraList.length > 0) {
+            fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
+            // if (extraList[0].fname) {
+            //     fieldName = extraList[0].fname; 
+            // } else {
+            // fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
 
 
-            console.log(
-                `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
-            );
+            // }
+        } else {
+            console.warn("Hidden field name not found in cache");
+        }
+
+        rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
+        fieldValue = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
+        fieldUniqueId = getUniqueId(fieldValue);
+
+
+        console.log(
+            `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
+        );
 
         handler({
             transId,
@@ -4474,60 +4474,60 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
 
     async function handleKeyfield({ tokens, commandConfig }) {
 
-    const tstructName = cleanString(tokens[2]);
-    const keyField = cleanString(tokens[3]);
-    const actualFieldName = tryResolveToken(3, keyField, commandConfig, false);
-    const transId = tryResolveToken(2, tstructName, commandConfig, false);
-    if (!tstructName || !keyField) {
-        showToast("TStruct and Key Field are required")
-        console.log("TStruct and Key Field are required");
-        return;
-    }
-
-    //const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
-    //const found = list?.find(
-    //    x => x.caption?.trim().toLowerCase() === tstructName.trim().toLowerCase()
-    //);
-
-    //if (!found || !found.name) {
-    //    console.error("TStruct not found:", rawStruct);
-    //    return;
-    //}
-    //    transId = found.name;
-
-    const requestBody = {
-        action: "view",   ///edit
-        adsNames: ["axi_tstructprops_insupd"],
-        sqlParams: {
-            param1: "axp_tstructprops",
-            param2: "name,keyfield,userconfigured",
-            param3: `'${transId}','${actualFieldName}','t'`,
-            param4: `name = '${transId}'`
+        const tstructName = cleanString(tokens[2]);
+        const keyField = cleanString(tokens[3]);
+        const actualFieldName = tryResolveToken(3, keyField, commandConfig, false);
+        const transId = tryResolveToken(2, tstructName, commandConfig, false);
+        if (!tstructName || !keyField) {
+            showToast("TStruct and Key Field are required")
+            console.log("TStruct and Key Field are required");
+            return;
         }
-    };
 
-    const res = await getAxListAsync(requestBody);
+        //const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+        //const found = list?.find(
+        //    x => x.caption?.trim().toLowerCase() === tstructName.trim().toLowerCase()
+        //);
 
-    const dataObj = typeof res === "string" ? JSON.parse(res) : res;
+        //if (!found || !found.name) {
+        //    console.error("TStruct not found:", rawStruct);
+        //    return;
+        //}
+        //    transId = found.name;
 
-    console.log("DATA obj is :", dataObj);
-    console.log("Type of DATA OBJ:", typeof dataObj);
+        const requestBody = {
+            action: "view",   ///edit
+            adsNames: ["axi_tstructprops_insupd"],
+            sqlParams: {
+                param1: "axp_tstructprops",
+                param2: "name,keyfield,userconfigured",
+                param3: `'${transId}','${actualFieldName}','t'`,
+                param4: `name = '${transId}'`
+            }
+        };
 
-    const resultBlock = dataObj?.result?.data?.[0];
+        const res = await getAxListAsync(requestBody);
 
-    if (dataObj?.result?.success && dataObj?.result?.message?.toLowerCase() === "success") {
-        showToast(`Key field-${keyField} has been set for the form ${tstructName}`,5000, true);
-        console.log(`Key field-${keyField} has been set for the form ${tstructName}`);
-        return;
+        const dataObj = typeof res === "string" ? JSON.parse(res) : res;
+
+        console.log("DATA obj is :", dataObj);
+        console.log("Type of DATA OBJ:", typeof dataObj);
+
+        const resultBlock = dataObj?.result?.data?.[0];
+
+        if (dataObj?.result?.success && dataObj?.result?.message?.toLowerCase() === "success") {
+            showToast(`Key field-${keyField} has been set for the form ${tstructName}`, 5000, true);
+            console.log(`Key field-${keyField} has been set for the form ${tstructName}`);
+            return;
+        }
+
+
+        if (resultBlock?.error) {
+            showToast(`Error: ${resultBlock.error}`);
+            console.log(`Error: ${resultBlock.error}`);
+            return;
+        }
     }
-
-
-    if (resultBlock?.error) {
-        showToast(`Error: ${resultBlock.error}`);
-        console.log(`Error: ${resultBlock.error}`);
-        return;
-    }
-}
 
     function getType(axDatasourceKey, text, paramValuesCsv) {
         const paramList = paramValuesCsv?.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
@@ -4546,8 +4546,8 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
             if (typeof d.displaydata !== "string") return false;
 
             if (d.name && d.name.toLowerCase() === normalizedText) {
-            return true;
-        }
+                return true;
+            }
 
 
             const pureCaption = d.displaydata
@@ -4680,7 +4680,7 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
 
         }
 
-        
+
 
         setEditSessionState(transId);
 
@@ -4690,7 +4690,7 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
 
         if (!paramName) {
             // window.LoadIframe(targetUrl);
-        redirectToIView(iviewName); 
+            redirectToIView(iviewName);
 
 
         } else {
@@ -4793,87 +4793,87 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
      */
 
     function normalizeDate(val) {
-    if (!val.includes("/")) return val;
-    const [d, m, y] = val.split("/");
-    return `${y}-${m}-${d}`; // ISO
-}
+        if (!val.includes("/")) return val;
+        const [d, m, y] = val.split("/");
+        return `${y}-${m}-${d}`; // ISO
+    }
 
 
 
-function extractAdsFilters(rawInput) {
-    const filters = [];
-    const consumedRanges = [];
+    function extractAdsFilters(rawInput) {
+        const filters = [];
+        const consumedRanges = [];
 
-    const input = rawInput.trim();
+        const input = rawInput.trim();
 
-    // Explicit operator regex
-    // field >= value | field=value | field <= value
-    const explicitRegex = /(\w+)\s*(<=|>=|!=|=|<|>)\s*([^\s]+)/g;
+        // Explicit operator regex
+        // field >= value | field=value | field <= value
+        const explicitRegex = /(\w+)\s*(<=|>=|!=|=|<|>)\s*([^\s]+)/g;
 
-    let match;
-    while ((match = explicitRegex.exec(input)) !== null) {
-        let [, field, operator, valueRaw] = match;
+        let match;
+        while ((match = explicitRegex.exec(input)) !== null) {
+            let [, field, operator, valueRaw] = match;
 
-        // const operator = OPERATOR_MAP[opRaw];
-        // const operator = valueRaw;
-        // if (!operator) continue;
+            // const operator = OPERATOR_MAP[opRaw];
+            // const operator = valueRaw;
+            // if (!operator) continue;
 
-        let value = valueRaw;
-        let dataTypeObj = adsfieldvalueanddt[field];
-        let dataType = dataTypeObj?.datatype;  
-        
-        if (field.toLowerCase().includes("date")) {
-            value = normalizeDate(valueRaw);
+            let value = valueRaw;
+            let dataTypeObj = adsfieldvalueanddt[field];
+            let dataType = dataTypeObj?.datatype;
+
+            if (field.toLowerCase().includes("date")) {
+                value = normalizeDate(valueRaw);
+            }
+
+            filters.push({
+                field,
+                operator,
+                value,
+                dataType,
+                isAccept: dataTypeObj?.isAccept
+            });
+
+            // mark this range as consumed
+            consumedRanges.push([match.index, explicitRegex.lastIndex]);
         }
 
-        filters.push({
-            field,
-            operator,
-            value,
-            dataType,
-            isAccept: dataTypeObj?.isAccept
-        });
-
-        // mark this range as consumed
-        consumedRanges.push([match.index, explicitRegex.lastIndex]);
-    }
-
-    // Remove explicit expressions from input
-    let remaining = input;
-    for (const [start, end] of consumedRanges.reverse()) {
-        remaining =
-            remaining.slice(0, start) +
-            " ".repeat(end - start) +
-            remaining.slice(end);
-    }
-
-    // Implicit equality: field value
-    const parts = remaining.split(/\s+/).filter(Boolean);
-
-    for (let i = 0; i < parts.length - 1; i += 2) {
-        const field = parts[i];
-        const valueRaw = parts[i + 1];
-        const dataTypeObj = adsfieldvalueanddt[field]; 
-
-        
-        if (field.toLowerCase() === "view") continue;
-
-        let value = valueRaw;
-        if (field.toLowerCase().includes("date")) {
-            value = normalizeDate(valueRaw);
+        // Remove explicit expressions from input
+        let remaining = input;
+        for (const [start, end] of consumedRanges.reverse()) {
+            remaining =
+                remaining.slice(0, start) +
+                " ".repeat(end - start) +
+                remaining.slice(end);
         }
 
-        filters.push({
-            field,
-            operator: "=",
-            value,
-            datatype: dataTypeObj?.datatype,
-            isAccept: dataTypeObj?.isAccept
-        });
-    }
+        // Implicit equality: field value
+        const parts = remaining.split(/\s+/).filter(Boolean);
 
-    return filters;
-}
+        for (let i = 0; i < parts.length - 1; i += 2) {
+            const field = parts[i];
+            const valueRaw = parts[i + 1];
+            const dataTypeObj = adsfieldvalueanddt[field];
+
+
+            if (field.toLowerCase() === "view") continue;
+
+            let value = valueRaw;
+            if (field.toLowerCase().includes("date")) {
+                value = normalizeDate(valueRaw);
+            }
+
+            filters.push({
+                field,
+                operator: "=",
+                value,
+                datatype: dataTypeObj?.datatype,
+                isAccept: dataTypeObj?.isAccept
+            });
+        }
+
+        return filters;
+    }
 
 
 
