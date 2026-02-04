@@ -140,6 +140,7 @@
     let axDatasourceObj = {};
     let activeFetches = new Set();
     let filteredObjects = [];
+       let adsfieldvalueanddt = {};
 
 
     function init() {
@@ -451,12 +452,8 @@
         try {
             const data = await getList(sourceName, paramValue);
             axDatasourceObj[key] = data;
-            console.log(JSON.stringify(axDatasourceObj));
-        
-            handleInput();
-
-
-            
+            console.log(JSON.stringify(axDatasourceObj));        
+            handleInput();            
 
         } catch (error) {
             console.error("loadlist failed", error);
@@ -1066,48 +1063,119 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
         
             const prevColumnName = cleanString(tokens[targetIndex - 1]);
 
-            
-            const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
-            const colList = axDatasourceObj[colSourceKey];
-            
-            if (!colList) return []; 
+    
+    const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
+    const colList = axDatasourceObj[colSourceKey];
+    
+    if (!colList) return []; 
 
-            const columnMetadata = colList.find(c => 
-                (c.name && c.name.toLowerCase() === prevColumnName.toLowerCase()) || 
-                (c.displaydata && c.displaydata.toLowerCase().includes(prevColumnName.toLowerCase()))
-            );
+    const columnMetadata = colList.find(
+        c =>
+            c.name?.toLowerCase() === prevColumnName.toLowerCase() ||
+            c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
+    ) || null;
 
-            if (!columnMetadata) return []; 
+    if (!columnMetadata) return []; 
 
-            const isAccept = !columnMetadata.sourcetable || !columnMetadata.sourcefld; 
+    const isAccept = !columnMetadata.sourcetable || !columnMetadata.sourcefld; 
 
-            
+    
+    //if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
+    //    return []; 
+    //}
+
+    const datatype = columnMetadata.fdatatype;
+
+    if (datatype === 'c') {
+        if (isAccept) {
+            const acceptedValue = cleanString(tokens[tokens.length - 1]);
+            const columnName = cleanString(tokens[tokens.length - 2]);
+            adsfieldvalueanddt[columnName] = {
+                datatype: datatype,
+                isAccept: isAccept,
+            };
+            console.log(`The accepted value for ${columnName} is ${acceptedValue}`)
+            return [];
+        }
+        else {
+
             if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
-                return []; 
+                console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
+                showToast("Error in processAdsRepetitiveTokens check");
+                return [];
             }
 
-            
+            const columnName = cleanString(tokens[tokens.length - 2]);
+            adsfieldvalueanddt[columnName] = {
+                datatype: datatype,
+                isAccept: isAccept
+            };
 
-            
-            // const valSourceName = "axi_adsvalue";
-        
-            // const valParams = `${columnMetadata.sourcetable},${columnMetadata.sourcefld}`; 
-            // const valKey = `${valSourceName}_${valParams}`.toLowerCase();
+            const sourcetable = columnMetadata.sourcetable;
+            const sourcefld = columnMetadata.sourcefld;
 
-            // if (!axDatasourceObj[valKey]) {
-            //     loadList(valSourceName, valParams);
-            //     return [`Loading values for ${prevColumnName}...`];
-            // }
+            const sourceName = "axi_adsdropdowntokens";
+            const paramValue = `${sourcetable},${sourcefld}`;
+            const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
 
-            // const valList = axDatasourceObj[valKey];
-            
-            // if (!Array.isArray(valList)) return [];
+            if (!axDatasourceObj[sourceKey]) {
+                loadList(sourceName, paramValue);
+                return ["Loading values..."];
+            }
 
-            // filteredObjects = valList; 
+            const list = axDatasourceObj[sourceKey];
+            if (!Array.isArray(list)) return [];
 
-            // return valList
-            //     .map(v => v.displaydata || v.name)
-            //     .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
+            return list.map(col => col.displaydata || col.name);
+        }
+    }
+
+    else if (datatype === 'n') {
+
+        const columnName = cleanString(tokens[tokens.length - 2]);
+        adsfieldvalueanddt[columnName] = {
+            datatype: datatype,
+            isAccept: isAccept
+        };
+
+        const sourceName = "axi_adsfilteroperators";
+        const sourceKey = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase()
+
+        if (!axDatasourceObj[sourceKey]) {
+            loadList(sourceName);
+            return ["Loading operands..."];
+        }
+
+        const list = axDatasourceObj[sourceKey];
+        if (!Array.isArray(list)) return [];
+
+        return list;
+
+    }
+    else if (datatype === 'd') { 
+
+        const columnName = cleanString(tokens[tokens.length - 2]);
+        adsfieldvalueanddt[columnName] = {
+            datatype: datatype,
+            isAccept: isAccept
+        };
+
+        const sourceName = "axi_adsdatefilterserators";
+        const sourceKey = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase()
+
+        if (!axDatasourceObj[sourceKey]) {
+            loadList(sourceName);
+            return ["Loading operands..."];
+        }
+
+        const list = axDatasourceObj[sourceKey];
+        if (!Array.isArray(list)) return [];
+
+        return list;
+
+    }
+  
+  
         }
     }
 
@@ -4730,71 +4798,7 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
     return `${y}-${m}-${d}`; // ISO
 }
 
-// function extractAdsFilters(tokens) {
-//     const filters = [];
 
-//     // tokens:
-//     // 0=view, 1=adsname, 2=username, 3=salman, 4=date, 5<=, 6=12/12/2000 ...
-
-//     for (let i = 2; i < tokens.length - 2; i += 3) {
-//         const field = cleanString(tokens[i]);
-//         const opRaw = cleanString(tokens[i + 1]);
-//         const valueRaw = cleanString(tokens[i + 2]);
-
-//         if (!field || !opRaw || !valueRaw) break;
-
-//         const operator = OPERATOR_MAP[opRaw];
-//         if (!operator) {
-//             console.warn("Unsupported operator:", opRaw);
-//             continue;
-//         }
-
-//         let value = valueRaw;
-//         if (field.toLowerCase().includes("date")) {
-//             value = normalizeDate(valueRaw);
-//         }
-
-//         filters.push({
-//             field,
-//             operator,
-//             value
-//         });
-//     }
-
-//     return filters;
-// }
-
-// function extractAdsFilters(rawInput) {
-//     const filters = [];
-
-//     // Normalize whitespace
-//     const input = rawInput.trim();
-
-//     // Regex: field operator value
-//     // Supports: = != < <= > >=
-//     const filterRegex = /(\w+)\s*(<=|>=|!=|=|<|>)\s*([^\s]+)/g;
-
-//     let match;
-//     while ((match = filterRegex.exec(input)) !== null) {
-//         let [, field, opRaw, valueRaw] = match;
-
-//         const operator = OPERATOR_MAP[opRaw];
-//         if (!operator) continue;
-
-//         let value = valueRaw;
-//         if (field.toLowerCase().includes("date")) {
-//             value = normalizeDate(valueRaw);
-//         }
-
-//         filters.push({
-//             field,
-//             operator,
-//             value
-//         });
-//     }
-
-//     return filters;
-// }
 
 function extractAdsFilters(rawInput) {
     const filters = [];
@@ -4815,6 +4819,9 @@ function extractAdsFilters(rawInput) {
         // if (!operator) continue;
 
         let value = valueRaw;
+        let dataTypeObj = adsfieldvalueanddt[field];
+        let dataType = dataTypeObj?.datatype;  
+        
         if (field.toLowerCase().includes("date")) {
             value = normalizeDate(valueRaw);
         }
@@ -4822,7 +4829,9 @@ function extractAdsFilters(rawInput) {
         filters.push({
             field,
             operator,
-            value
+            value,
+            dataType,
+            isAccept: dataTypeObj?.isAccept
         });
 
         // mark this range as consumed
@@ -4844,8 +4853,9 @@ function extractAdsFilters(rawInput) {
     for (let i = 0; i < parts.length - 1; i += 2) {
         const field = parts[i];
         const valueRaw = parts[i + 1];
+        const dataTypeObj = adsfieldvalueanddt[field]; 
 
-        // Skip keywords like "view"
+        
         if (field.toLowerCase() === "view") continue;
 
         let value = valueRaw;
@@ -4856,7 +4866,9 @@ function extractAdsFilters(rawInput) {
         filters.push({
             field,
             operator: "=",
-            value
+            value,
+            datatype: dataTypeObj?.datatype,
+            isAccept: dataTypeObj?.isAccept
         });
     }
 
