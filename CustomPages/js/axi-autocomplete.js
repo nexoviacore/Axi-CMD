@@ -452,14 +452,11 @@
             const data = await getList(sourceName, paramValue);
             axDatasourceObj[key] = data;
             console.log(JSON.stringify(axDatasourceObj));
-            if (!ADS_REPETITION_STATE.active) {
+        
             handleInput();
 
 
-            }
-            if (ADS_REPETITION_STATE.active) {
-                return data; 
-            }
+            
 
         } catch (error) {
             console.error("loadlist failed", error);
@@ -497,7 +494,7 @@
         console.group("AXI SmartView Redirect Debug");
         console.log("Final URL:", targetUrl);
         console.log("Encoded q:", encodedFilterQuery);
-        console.log("Decoded payload:", decodedForDebug);
+        console.log("Decoded payload:", JSON.stringify(decodedForDebug));
         console.groupEnd();
     } catch (e) {
         console.error("AXI SmartView payload decode failed", e);
@@ -4811,10 +4808,11 @@ function extractAdsFilters(rawInput) {
 
     let match;
     while ((match = explicitRegex.exec(input)) !== null) {
-        let [, field, opRaw, valueRaw] = match;
+        let [, field, operator, valueRaw] = match;
 
-        const operator = OPERATOR_MAP[opRaw];
-        if (!operator) continue;
+        // const operator = OPERATOR_MAP[opRaw];
+        // const operator = valueRaw;
+        // if (!operator) continue;
 
         let value = valueRaw;
         if (field.toLowerCase().includes("date")) {
@@ -4857,7 +4855,7 @@ function extractAdsFilters(rawInput) {
 
         filters.push({
             field,
-            operator: "eq",
+            operator: "=",
             value
         });
     }
