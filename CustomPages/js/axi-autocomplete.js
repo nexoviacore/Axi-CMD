@@ -94,6 +94,15 @@
         }
     };
 
+    const OPERATOR_MAP = {
+    "=": "eq",
+    "!=": "neq",
+    "<": "lt",
+    "<=": "lte",
+    ">": "gt",
+    ">=": "gte"
+};
+
     let ADS_REPETITION_STATE  = {
     active: false,
     usedColumns: new Set(),
@@ -219,7 +228,7 @@
 
 
         setupEventListeners();
-        showToast("Axi is Readyddddddddddddddddddddddddddddddddddddddddddddddddddd", 10000000, false); 
+        
 
 
         initCommands(false);
@@ -463,12 +472,38 @@
     }
 
 
-    function redirectToSmartView(adsname) {
-        let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
+    function redirectToSmartView({adsName, filters}) {
+      
 
 
-        targetUrl += `?ads=${adsname}`;
+        // targetUrl += `?ads=${adsname}`;
+        // targetUrl += "&load=1769601086182";
+        const payload = {
+            
+            filters: filters
+        }
+
+        const encodedFilterQuery = btoa(JSON.stringify(payload)); 
+
+          let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
+          targetUrl += `?ads=${encodeURIComponent(adsName)}`;
         targetUrl += "&load=1769601086182";
+        targetUrl += `&q=${encodedFilterQuery}`; 
+        /**
+         * NOTE: This is Debug code remove it before deploying  to the  production environment 
+         */
+         try {
+        const decodedForDebug = JSON.parse(atob(encodedFilterQuery));
+        console.group("AXI SmartView Redirect Debug");
+        console.log("Final URL:", targetUrl);
+        console.log("Encoded q:", encodedFilterQuery);
+        console.log("Decoded payload:", decodedForDebug);
+        console.groupEnd();
+    } catch (e) {
+        console.error("AXI SmartView payload decode failed", e);
+    }
+
+
 
         top.window.LoadIframe(targetUrl);
 
@@ -1199,7 +1234,7 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
            
 
             
-            if (activePrompt.extraParams && !ignoreExtraParams) {
+            if (activePrompt.extraParams) {
         
                 
                 if (!paramValue || paramValue.trim() === "") {
@@ -1623,16 +1658,16 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
         // Get Real Value logic
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
 
-        if (foundObj?.displaydata?.includes("(") && foundObj?.displaydata?.includes(")")) {
-            const match = foundObj.displaydata.match(/\(([^)]+)\)/); 
+        // if (foundObj?.displaydata?.includes("(") && foundObj?.displaydata?.includes(")")) {
+        //     const match = foundObj.displaydata.match(/\(([^)]+)\)/); 
 
-            realValue = match ? match[1]: null; 
+        //     realValue = match ? match[1]: null; 
 
-        } else {
+        // } else {
         realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
 
 
-        }
+        
 
 
         if (suggestion.includes("(") && suggestion.includes(")")) {
@@ -4217,13 +4252,19 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
 
 
         if (type === "ads") {
-            transId = "b_sql";
-            fieldName = "sqlname";
-            fieldValue = cleanCommandToken(tokens[1]);
+            
+           
+            const adsName = cleanCommandToken(tokens[1]); 
+            const filters = extractAdsFilters(input.value);
+            
+            console.log("Ads Filters: ", filters); 
 
 
             // handler({ transId, fieldName, fieldValue });
-            redirectToSmartView(fieldValue);
+            redirectToSmartView({
+                adsName: adsName,
+                filters: filters,
+            });
             return;
 
 
@@ -4685,6 +4726,145 @@ function processAdsRepetitiveTokens(tokens, commandConfig) {
     /**
      * ======================= End =============================
      */
+
+    function normalizeDate(val) {
+    if (!val.includes("/")) return val;
+    const [d, m, y] = val.split("/");
+    return `${y}-${m}-${d}`; // ISO
+}
+
+// function extractAdsFilters(tokens) {
+//     const filters = [];
+
+//     // tokens:
+//     // 0=view, 1=adsname, 2=username, 3=salman, 4=date, 5<=, 6=12/12/2000 ...
+
+//     for (let i = 2; i < tokens.length - 2; i += 3) {
+//         const field = cleanString(tokens[i]);
+//         const opRaw = cleanString(tokens[i + 1]);
+//         const valueRaw = cleanString(tokens[i + 2]);
+
+//         if (!field || !opRaw || !valueRaw) break;
+
+//         const operator = OPERATOR_MAP[opRaw];
+//         if (!operator) {
+//             console.warn("Unsupported operator:", opRaw);
+//             continue;
+//         }
+
+//         let value = valueRaw;
+//         if (field.toLowerCase().includes("date")) {
+//             value = normalizeDate(valueRaw);
+//         }
+
+//         filters.push({
+//             field,
+//             operator,
+//             value
+//         });
+//     }
+
+//     return filters;
+// }
+
+// function extractAdsFilters(rawInput) {
+//     const filters = [];
+
+//     // Normalize whitespace
+//     const input = rawInput.trim();
+
+//     // Regex: field operator value
+//     // Supports: = != < <= > >=
+//     const filterRegex = /(\w+)\s*(<=|>=|!=|=|<|>)\s*([^\s]+)/g;
+
+//     let match;
+//     while ((match = filterRegex.exec(input)) !== null) {
+//         let [, field, opRaw, valueRaw] = match;
+
+//         const operator = OPERATOR_MAP[opRaw];
+//         if (!operator) continue;
+
+//         let value = valueRaw;
+//         if (field.toLowerCase().includes("date")) {
+//             value = normalizeDate(valueRaw);
+//         }
+
+//         filters.push({
+//             field,
+//             operator,
+//             value
+//         });
+//     }
+
+//     return filters;
+// }
+
+function extractAdsFilters(rawInput) {
+    const filters = [];
+    const consumedRanges = [];
+
+    const input = rawInput.trim();
+
+    // Explicit operator regex
+    // field >= value | field=value | field <= value
+    const explicitRegex = /(\w+)\s*(<=|>=|!=|=|<|>)\s*([^\s]+)/g;
+
+    let match;
+    while ((match = explicitRegex.exec(input)) !== null) {
+        let [, field, opRaw, valueRaw] = match;
+
+        const operator = OPERATOR_MAP[opRaw];
+        if (!operator) continue;
+
+        let value = valueRaw;
+        if (field.toLowerCase().includes("date")) {
+            value = normalizeDate(valueRaw);
+        }
+
+        filters.push({
+            field,
+            operator,
+            value
+        });
+
+        // mark this range as consumed
+        consumedRanges.push([match.index, explicitRegex.lastIndex]);
+    }
+
+    // Remove explicit expressions from input
+    let remaining = input;
+    for (const [start, end] of consumedRanges.reverse()) {
+        remaining =
+            remaining.slice(0, start) +
+            " ".repeat(end - start) +
+            remaining.slice(end);
+    }
+
+    // Implicit equality: field value
+    const parts = remaining.split(/\s+/).filter(Boolean);
+
+    for (let i = 0; i < parts.length - 1; i += 2) {
+        const field = parts[i];
+        const valueRaw = parts[i + 1];
+
+        // Skip keywords like "view"
+        if (field.toLowerCase() === "view") continue;
+
+        let value = valueRaw;
+        if (field.toLowerCase().includes("date")) {
+            value = normalizeDate(valueRaw);
+        }
+
+        filters.push({
+            field,
+            operator: "eq",
+            value
+        });
+    }
+
+    return filters;
+}
+
 
 
 
