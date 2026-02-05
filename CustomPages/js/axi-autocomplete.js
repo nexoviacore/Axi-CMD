@@ -122,6 +122,7 @@
     let searchWrapper;
     let isCommandTypingCompleted = false;
     let example
+    let tstructBottomToolbarButtons = null; 
 
 
 
@@ -2646,8 +2647,48 @@
         }
     }
 
+    function executeScript() {
+        // javascript:CallAction('script8','','','n','n','','true');
+        top.window.CallAction('script8','','','n','n','','true');
+    }
+
+   function executeSubmit() {
+    const iframe = document.getElementById("middle1");
+
+    if (!iframe) {
+        console.error("[executeSubmit] middle1 iframe not found");
+        return;
+    }
+
+    const iframeDoc =
+        iframe.contentDocument || iframe.contentWindow?.document;
+
+    if (!iframeDoc) {
+        console.error("[executeSubmit] Unable to access iframe document");
+        return;
+    }
+
+    const saveBtn = iframeDoc.getElementById("ftbtn_iSave");
+
+    if (!saveBtn) {
+        console.error("[executeSubmit] Save button (ftbtn_iSave) not found in iframe");
+        return;
+    }
+
+
+    if (saveBtn.style.pointerEvents === "none") {
+        console.warn("[executeSubmit] Save button is currently disabled");
+        return;
+    }
+
+    saveBtn.click();
+}
+
+
+
+
     function executeCommandsV2() {
-        resetAdsContext();
+    
         const text = input.value.trim();
         if (!text || !commands) return;
 
@@ -2655,6 +2696,24 @@
         if (tokens.length === 0) return; // Need at least the command group
 
         const groupKey = cleanString(tokens[0]);
+
+        if (groupKey === "script") {
+            executeScript(); 
+            return; 
+        }
+
+        if (groupKey === "submit") {
+            executeSubmit(); 
+            return; 
+        }
+
+        if (groupKey === "get") {
+            tstructBottomToolbarButtons = getBottomToolbarButtons(); 
+            console.log(tstructBottomToolbarButtons); 
+
+            // buttons["ftbtn_iSave"].click();
+            
+        }
         const groupConfig = commands[groupKey];
 
         if (!groupConfig) {
@@ -4877,6 +4936,36 @@
 
         return filters;
     }
+
+    function getBottomToolbarButtons() {
+    const iframe = document.getElementById("middle1");
+    if (!iframe) return {};
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) return {};
+
+    const toolbar = doc.querySelector(".BottomToolbarBar");
+    if (!toolbar) return {};
+
+    const buttons = toolbar.querySelectorAll("a");
+
+    const result = {};
+
+    buttons.forEach((btn) => {
+        const id = btn.id || btn.getAttribute("data-id");
+        if (!id) return;
+
+        result[id] = {
+            id,
+            label: btn.innerText.trim(),
+            element: btn,
+            click: () => btn.click()
+        };
+    });
+
+    return result;
+}
+
 
 
 
