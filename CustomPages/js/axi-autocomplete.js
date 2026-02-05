@@ -483,8 +483,9 @@
         targetUrl += `?ads=${encodeURIComponent(adsName)}`;
         targetUrl += "&load=1769601086182";
         targetUrl += `&filter=${encodedFilterQuery}`;
-        /**
+        /**====================================================================================
          * NOTE: This is Debug code remove it before deploying  to the  production environment 
+         * ====================================================================================
          */
         try {
             const decodedForDebug = JSON.parse(atob(encodedFilterQuery));
@@ -498,7 +499,9 @@
         }
 
 
-
+        /**
+         * ===================== End ========================================
+         */
         top.window.LoadIframe(targetUrl);
 
         // LoadIframe('../pgbase114/HTMLPages/SmartView_1769601086182.html?ads=axi_userlist&load=1769601086182')
