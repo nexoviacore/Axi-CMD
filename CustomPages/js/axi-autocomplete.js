@@ -1,6 +1,5 @@
 ﻿(() => {
-    // 29/01/2026 - New Axi Command Pallete Behaviour Changes
-    // ENDPOINTS
+   
     const API_METADATA = "http://localhost:5000/api/v1/Axi/axi_get";
 
     const VIEW_HANDLERS = {
@@ -91,6 +90,12 @@
         },
         download: {
             default: handleDownload
+        }, 
+        set: {
+            default: () => console.log("set command!")
+        },
+        run: {
+            default: handleRunCommand,
         }
     };
 
@@ -122,7 +127,10 @@
     let searchWrapper;
     let isCommandTypingCompleted = false;
     let example
-    let tstructBottomToolbarButtons = null; 
+    
+    let topToolbarButtons = null; 
+    let bottomToolbarButtons = null; 
+    let buttonsList = null; 
 
 
 
@@ -1183,6 +1191,33 @@
         }
     }
 
+    function processRunCommands(tokens, targetIndex) {
+        if (targetIndex !== 1) return []; 
+
+        const partialTyped = cleanString(tokens[targetIndex]); 
+
+        bottomToolbarButtons = getBottomToolbarButtons(); 
+        topToolbarButtons = getTopToolbarButtons(); 
+
+        const allButtons = {...bottomToolbarButtons, ...topToolbarButtons}; 
+
+        buttonsList = Object.values(allButtons).map(btn => ({
+            name: btn.id,
+            displaydata: `${btn.label} (${btn.id})`
+        })); 
+
+        const filtered = buttonsList.filter(item => 
+            item.displaydata.toLowerCase().includes(partialTyped.toLowerCase())
+        ); 
+
+        filteredObjects = filtered; 
+
+        return filtered.map(item => item.displaydata); 
+
+
+
+    }
+
     function resetAdsContext() {
         ADS_REPETITION_STATE.active = false;
         ADS_REPETITION_STATE.usedColumns.clear();
@@ -1235,6 +1270,10 @@
 
                 console.log("ResolutionContext: ignoreExtraParams = true (ADS)")
             }
+        }
+
+        if (tokens[0] === "run") {
+            return processRunCommands(tokens, targetIndex); 
         }
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
 
@@ -2697,23 +2736,10 @@
 
         const groupKey = cleanString(tokens[0]);
 
-        if (groupKey === "script") {
-            executeScript(); 
-            return; 
-        }
+       
+      
 
-        if (groupKey === "submit") {
-            executeSubmit(); 
-            return; 
-        }
-
-        if (groupKey === "get") {
-            tstructBottomToolbarButtons = getBottomToolbarButtons(); 
-            console.log(tstructBottomToolbarButtons); 
-
-            // buttons["ftbtn_iSave"].click();
-            
-        }
+       
         const groupConfig = commands[groupKey];
 
         if (!groupConfig) {
@@ -2774,15 +2800,15 @@
 
 
 
-        const firstParamPrompt = config.prompts.find(p => p.wordPos === 2);
+        const firstParamPrompt = config?.prompts?.find(p => p.wordPos === 2);
         const firstParamValue = cleanString(tokens[1]);
 
         let handlerKey = 'default';
 
-        if (firstParamPrompt && firstParamPrompt.promptValues) {
+        if (firstParamPrompt && firstParamPrompt?.promptValues) {
 
             if (firstParamValue) {
-                handlerKey = firstParamValue.toLowerCase();
+                handlerKey = firstParamValue?.toLowerCase();
             }
         }
 
@@ -4854,6 +4880,66 @@
      * ======================= End =============================
      */
 
+    /**
+     * 
+     * Run commands 
+     */
+
+    /**
+     * Handles the run command execution
+     *  @param {object} {tokens, commandConfig}
+     * 
+     */
+    function handleRunCommand({tokens,commandConfig}) {
+        const structType = getStructType(); 
+        let buttonLabel = tokens[1]; 
+        buttonLabel = buttonLabel.replace(/['"]/g, "").trim(); 
+
+        if (!buttonLabel) return; 
+       
+ 
+
+        if (structType === "o")  {
+            console.error("Invalid Struct type"); 
+            return; 
+        }
+
+        if (!bottomToolbarButtons) {
+        bottomToolbarButtons = getBottomToolbarButtons(); 
+
+
+        }
+
+        if (!topToolbarButtons) {
+        topToolbarButtons = getTopToolbarButtons();
+
+
+        }
+
+         const bottomButtonKey = Object.keys(bottomToolbarButtons)
+        .find(k => k.toLowerCase().includes(buttonLabel));
+
+    const topButtonKey = Object.keys(topToolbarButtons)
+        .find(k => k.toLowerCase().includes(buttonLabel));
+
+    const button =
+        bottomToolbarButtons[buttonId] ||
+        topToolbarButtons[buttonId];
+
+    if (!button) {
+         console.error(`Button not found for label: ${buttonLabel}`);
+        return;
+    }
+
+    button.click();       
+
+
+        console.log(bottomToolbarButtons); 
+        console.log(topToolbarButtons); 
+
+
+    }
+
     function normalizeDate(val) {
         if (!val.includes("/")) return val;
         const [d, m, y] = val.split("/");
@@ -4910,7 +4996,12 @@
         }
 
         // Implicit equality: field value
-        const parts = remaining.split(/\s+/).filter(Boolean);
+        // const parts = remaining.split(/\s+/).filter(Boolean);
+        const parts = getTokens(remaining).map(t =>
+    t.startsWith('"') && t.endsWith('"')
+        ? t.slice(1, -1)
+        : t
+);
 
         for (let i = 0; i < parts.length - 1; i += 2) {
             const field = parts[i];
@@ -4954,16 +5045,113 @@
     buttons.forEach((btn) => {
         const id = btn.id || btn.getAttribute("data-id");
         if (!id) return;
+        const label = btn.innerText.trim(); 
+        if (!label) console.log("There is no label for Element: " + btn); 
 
-        result[id] = {
+       
+
+         result[id] = {
             id,
-            label: btn.innerText.trim(),
+            label,
             element: btn,
             click: () => btn.click()
         };
     });
 
     return result;
+}
+
+function getTopToolbarButtons() {
+    const iframe = document.getElementById("middle1");
+    if (!iframe) return {};
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) return {};
+
+    const toolbar = doc.querySelector(".toolbarRightMenu");
+    if (!toolbar) return {};
+
+    const buttons = toolbar.querySelectorAll("a");
+
+    const result = {};
+
+    buttons.forEach((btn) => {
+        const id = btn.id || btn.getAttribute("data-id");
+        if (!id) return;
+        const label = btn.innerText.trim(); 
+        if (!label) console.log("There is no label for Element: " + btn); 
+
+        
+
+         result[id] = {
+            id,
+            label,
+            element: btn,
+            click: () => btn.click()
+        };
+    });
+
+    return result;
+}
+
+function getTStructButtons(attributeName) {
+    const iframe = document.getElementById("middle1");
+    if (!iframe) return {};
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) return {};
+
+    const toolbar = doc.querySelector(`.${attributeName}`);  //|| doc.querySelector(`#${attributeName}`);
+    if (!toolbar) return {};
+
+    const buttons = toolbar.querySelectorAll("a");
+
+    const result = {};
+
+    buttons.forEach((btn) => {
+        const id = btn.id || btn.getAttribute("data-id");
+        if (!id) return;
+        const label = btn.innerText.trim(); 
+        if (!label) console.log("There is no label for Element: " + btn); 
+
+        
+
+         result[label] = {
+            id,
+            label,
+            element: btn,
+            click: () => btn.click()
+        };
+    });
+
+    return result;
+}
+
+function getStructType() {
+     const iframe = document.getElementById("middle1");
+    if (!iframe) return null;
+
+    const src = iframe.getAttribute("src"); 
+    if (!src) return null; 
+
+    const page = src.split("?")[0].toLowerCase(); 
+
+    if (!page) {
+        return null; 
+    }
+
+    if (page.endsWith("/tstruct.aspx") || page.includes("tstruct.aspx")) {
+        return "t" // tstruct
+    }
+
+    if (page.endsWith("/iview.aspx") || page.includes("iview.aspx")) {
+        return "i";  // IView
+    }
+
+    return "o"; // Others 
+
+
+
 }
 
 
