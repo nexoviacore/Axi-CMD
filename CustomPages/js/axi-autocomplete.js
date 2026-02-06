@@ -1,6 +1,8 @@
 ﻿(() => {
-   
+
     const API_METADATA = "http://localhost:5000/api/v1/Axi/axi_get";
+    // const API_METADATA = "https://alpha.agilecloud.biz/AxiDevARM/api/v1/Axi/axi_get";
+
 
     const VIEW_HANDLERS = {
         tstruct: ({ transId, fieldName, fieldValue }) =>
@@ -90,7 +92,7 @@
         },
         download: {
             default: handleDownload
-        }, 
+        },
         set: {
             default: () => console.log("set command!")
         },
@@ -127,10 +129,15 @@
     let searchWrapper;
     let isCommandTypingCompleted = false;
     let example
+
+    let topToolbarButtons = null;
+    let bottomToolbarButtons = null;
+    let buttonsList = null;
+    const OPERATORS_LIST = [">=", "<=", "!=", "=", ">", "<"];
+    const OPERATORS_SET = new Set(OPERATORS_LIST);
     
-    let topToolbarButtons = null; 
-    let bottomToolbarButtons = null; 
-    let buttonsList = null; 
+    
+    const OPERATOR_REGEX_PART = OPERATORS_LIST.join("|");
 
 
 
@@ -489,6 +496,8 @@
         const encodedFilterQuery = btoa(JSON.stringify(payload));
 
         let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
+        // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
+
         targetUrl += `?ads=${encodeURIComponent(adsName)}`;
         targetUrl += "&load=1769601086182";
         targetUrl += `&filter=${encodedFilterQuery}`;
@@ -784,7 +793,9 @@
     // }
 
     function getTokens(str) {
-        const regex = /"[^"]*"?|[^\s]+/g;
+        // const regex = /"[^"]*"?|[^\s]+/g;
+
+        const regex = new RegExp(`"[^"]*"?|${OPERATOR_REGEX_PART}|[^\\s=<>!]+`, "g");
         return str.match(regex) || [];
     }
 
@@ -1092,127 +1103,93 @@
             const isAccept = !columnMetadata.sourcetable || !columnMetadata.sourcefld;
 
 
-            //if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
-            //    return []; 
-            //}
-
             const datatype = columnMetadata.fdatatype;
 
             // if (datatype === 'c') {
-                if (isAccept) {
-                    const acceptedValue = cleanString(tokens[tokens.length - 1]);
-                    const columnName = cleanString(tokens[tokens.length - 2]);
-                    adsfieldvalueanddt[columnName] = {
-                        datatype: datatype,
-                        isAccept: isAccept,
-                    };
-                    console.log(`The accepted value for ${columnName} is ${acceptedValue}`)
+            if (isAccept) {
+                const acceptedValue = cleanString(tokens[tokens.length - 1]);
+                const columnName = prevColumnName
+                adsfieldvalueanddt[columnName] = {
+                    datatype: datatype,
+                    isAccept: isAccept,
+                };
+                return [];
+            }
+            else {
+
+                if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
+                    console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
                     return [];
                 }
-                else {
 
-                    if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
-                        console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
-                        showToast("Error in processAdsRepetitiveTokens check");
-                        return [];
-                    }
+                const acceptedValue = cleanString(tokens[tokens.length - 1]);
+                const columnName = prevColumnName
+                adsfieldvalueanddt[columnName] = {
+                    datatype: datatype,
+                    isAccept: isAccept,
+                };
 
-                    const columnName = cleanString(tokens[tokens.length - 2]);
-                    adsfieldvalueanddt[columnName] = {
-                        datatype: datatype,
-                        isAccept: isAccept
-                    };
+                const sourcetable = columnMetadata.sourcetable;
+                const sourcefld = columnMetadata.sourcefld;
 
-                    const sourcetable = columnMetadata.sourcetable;
-                    const sourcefld = columnMetadata.sourcefld;
+                const sourceName = "axi_adsdropdowntokens";
+                const paramValue = `${sourcetable},${sourcefld}`;
+                const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
 
-                    const sourceName = "axi_adsdropdowntokens";
-                    const paramValue = `${sourcetable},${sourcefld}`;
-                    const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
-
-                    if (!axDatasourceObj[sourceKey]) {
-                        loadList(sourceName, paramValue);
-                        return ["Loading values..."];
-                    }
-
-                    const list = axDatasourceObj[sourceKey];
-                    if (!Array.isArray(list)) return [];
-
-                    return list.map(col => col.displaydata || col.name);
+                if (!axDatasourceObj[sourceKey]) {
+                    loadList(sourceName, paramValue);
+                    return ["Loading values..."];
                 }
+
+                const list = axDatasourceObj[sourceKey];
+                if (!Array.isArray(list)) return [];
+
+
+                const filtered = list.filter(col => {
+                    const rawDisplay = String(col.displaydata || col.name)
+                        .toLowerCase();
+
+                    const normalizedTypedValue = (acceptedValue ?? "")
+                        .toLowerCase();
+
+                    return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
+                });
+
+
+                return filtered.map(col => col.displaydata || col.name);
+
+
+            }
             // }
 
-            // else if (datatype === 'n') {
 
-            //     const columnName = cleanString(tokens[tokens.length - 2]);
-            //     adsfieldvalueanddt[columnName] = {
-            //         datatype: datatype,
-            //         isAccept: isAccept
-            //     };
-
-            //     const sourceName = "axi_adsfilteroperators";
-            //     const sourceKey = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase()
-
-            //     if (!axDatasourceObj[sourceKey]) {
-            //         loadList(sourceName);
-            //         return ["Loading operands..."];
-            //     }
-
-            //     const list = axDatasourceObj[sourceKey];
-            //     if (!Array.isArray(list)) return [];
-
-            //     return list;
-
-            // }
-            // else if (datatype === 'd') {
-
-            //     const columnName = cleanString(tokens[tokens.length - 2]);
-            //     adsfieldvalueanddt[columnName] = {
-            //         datatype: datatype,
-            //         isAccept: isAccept
-            //     };
-
-            //     const sourceName = "axi_adsdatefilterserators";
-            //     const sourceKey = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase()
-
-            //     if (!axDatasourceObj[sourceKey]) {
-            //         loadList(sourceName);
-            //         return ["Loading operands..."];
-            //     }
-
-            //     const list = axDatasourceObj[sourceKey];
-            //     if (!Array.isArray(list)) return [];
-
-            //     return list;
-
-            // }
 
 
         }
     }
 
     function processRunCommands(tokens, targetIndex) {
-        if (targetIndex !== 1) return []; 
+        if (targetIndex !== 1) return [];
 
-        const partialTyped = cleanString(tokens[targetIndex]); 
+        const partialTyped = cleanString(tokens[targetIndex]);
 
-        bottomToolbarButtons = getBottomToolbarButtons(); 
-        topToolbarButtons = getTopToolbarButtons(); 
+        bottomToolbarButtons = getBottomToolbarButtons();
+        topToolbarButtons = getTopToolbarButtons();
 
-        const allButtons = {...bottomToolbarButtons, ...topToolbarButtons}; 
+        const allButtons = { ...bottomToolbarButtons, ...topToolbarButtons };
 
         buttonsList = Object.values(allButtons).map(btn => ({
             name: btn.id,
             displaydata: `${btn.label} (${btn.id})`
-        })); 
+        }));
 
-        const filtered = buttonsList.filter(item => 
+        const filtered = buttonsList.filter(item =>
             item.displaydata.toLowerCase().includes(partialTyped.toLowerCase())
-        ); 
+        );
 
-        filteredObjects = filtered; 
+        filteredObjects = filtered;
 
-        return filtered.map(item => item.displaydata); 
+        return filtered.map(item => item.displaydata);
 
 
 
@@ -1273,7 +1250,7 @@
         }
 
         if (tokens[0] === "run") {
-            return processRunCommands(tokens, targetIndex); 
+            return processRunCommands(tokens, targetIndex);
         }
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
 
@@ -1757,9 +1734,31 @@
     function apply(index) {
         if (!items[index] || items[index] === "Loading options...") return;
 
+        const currentInput = input.value;
+        const tokens = getTokens(currentInput);
+        const endsWithSpace = currentInput.endsWith(" ");
+        const lastTokenRaw = tokens[tokens.length - 1];
+
+        const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
+
+
+        if (endsWithSpace && !isUnclosedString) {
+            tokens.push("");
+        }
+
+        let targetIndex = tokens.length - 1;
+        if (targetIndex < 0) {
+            targetIndex = 0;
+            tokens.push("");
+        }
+
         let suggestion = items[index];
         let displayName = suggestion;
         let realValue = "";
+
+        const isViewCommand = tokens[0]?.toLowerCase() === "view";
+
+        const isAdsValue = isViewCommand && targetIndex >= 3 && targetIndex % 2 !== 0;
 
 
 
@@ -1778,7 +1777,7 @@
 
 
 
-        if (suggestion.includes("(") && suggestion.includes(")")) {
+        if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue) {
             const lastBracketIndex = suggestion.lastIndexOf("(");
 
             // if (lastBracketIndex > 0 && suggestion[lastBracketIndex - 1] === '-') {
@@ -1797,46 +1796,16 @@
 
         }
 
-        if (displayName.includes("[") && displayName.includes("]")) {
+        if (displayName.includes("[") && displayName.includes("]") && !isAdsValue) {
             const lastBracketIndex = suggestion.lastIndexOf("[");
             const text = suggestion.substring(0, lastBracketIndex).trim();
 
             displayName = text.replace(/\s*\[[^\]]*\]$/, "").trim();
         }
 
-        if (ADS_REPETITION_STATE.active) {
-            if (ADS_REPETITION_STATE.lastColumn === null) {
-                ADS_REPETITION_STATE.lastColumn = realValue;
-            } else {
-                ADS_REPETITION_STATE.usedColumns.add(ADS_REPETITION_STATE.lastColumn);
-                ADS_REPETITION_STATE.lastColumn = null;
-            }
-
-        }
-
-        const currentInput = input.value;
-        const tokens = getTokens(currentInput);
-
-
-        const endsWithSpace = currentInput.endsWith(" ");
-        const lastTokenRaw = tokens[tokens.length - 1];
-
-        // Check if we are inside an unclosed quote
-        const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
-
-
-        if (endsWithSpace && !isUnclosedString) {
-            tokens.push("");
-        }
-
-
-        let targetIndex = tokens.length - 1;
-        if (targetIndex < 0) {
-            targetIndex = 0;
-            tokens.push("");
-        }
-
         resolvedParams[targetIndex] = realValue;
+
+        displayName = displayName.replace(/[\r\n]+/g, " ").trim();
 
         // Auto-Quote if necessary
         if (displayName.includes(" ")) {
@@ -1849,7 +1818,7 @@
 
         lastTypedTokens = [...tokens];
         handleInput();
-        // hide();
+        hide();
         input.focus();
     }
 
@@ -2542,32 +2511,15 @@
 
 
             if (e.key === "Enter") {
-                e.preventDefault();
+                e.preventDefault();  
+                
+                if (e.ctrlKey) {
+                    hide(); 
+                    executeCommandsV2(); 
+                    return; 
+                }
 
-
-                // if (list.style.display === "block" && active >= 0) {
-                //     e.preventDefault(); 
-                //     apply(activeIndex); 
-                //     return; 
-                // }
-                //     if (list.style.display === "none") {
-                //         e.preventDefault(); 
-                //         handleInput(); 
-                //         return; 
-                //     }
-
-                // const isListOpen = list.style.display === "block"; 
-                // const hasActiveItem = isListOpen && activeIndex >= 0; 
-
-                // if (hasActiveItem) {
-                //     e.preventDefault(); 
-                //     apply(activeIndex); 
-                //     return; 
-                // }
-
-                // executeCommandsV2(); 
-                // hide(); 
-                // return; 
+              
 
                 if (isSuggestionVisible() && hasActiveSuggestion()) {
                     e.preventDefault();
@@ -2582,8 +2534,7 @@
                 return;
 
 
-                // e.preventDefault(); 
-                // handleInput();
+               
 
             }
             // // Auto Double quotes 
@@ -2632,13 +2583,13 @@
             if (e.key === "Escape") {
                 e.preventDefault();
 
-                if (input.value.trim() !== "") {
-                    input.value = "";
-                    handleInput();
-                    input.focus();
-                } else {
+                // if (input.value.trim() !== "") {
+                //     input.value = "";
+                //     handleInput();
+                //     input.focus();
+                // } else {
                     hide();
-                }
+                // }
             }
         });
 
@@ -2688,46 +2639,46 @@
 
     function executeScript() {
         // javascript:CallAction('script8','','','n','n','','true');
-        top.window.CallAction('script8','','','n','n','','true');
+        top.window.CallAction('script8', '', '', 'n', 'n', '', 'true');
     }
 
-   function executeSubmit() {
-    const iframe = document.getElementById("middle1");
+    function executeSubmit() {
+        const iframe = document.getElementById("middle1");
 
-    if (!iframe) {
-        console.error("[executeSubmit] middle1 iframe not found");
-        return;
+        if (!iframe) {
+            console.error("[executeSubmit] middle1 iframe not found");
+            return;
+        }
+
+        const iframeDoc =
+            iframe.contentDocument || iframe.contentWindow?.document;
+
+        if (!iframeDoc) {
+            console.error("[executeSubmit] Unable to access iframe document");
+            return;
+        }
+
+        const saveBtn = iframeDoc.getElementById("ftbtn_iSave");
+
+        if (!saveBtn) {
+            console.error("[executeSubmit] Save button (ftbtn_iSave) not found in iframe");
+            return;
+        }
+
+
+        if (saveBtn.style.pointerEvents === "none") {
+            console.warn("[executeSubmit] Save button is currently disabled");
+            return;
+        }
+
+        saveBtn.click();
     }
-
-    const iframeDoc =
-        iframe.contentDocument || iframe.contentWindow?.document;
-
-    if (!iframeDoc) {
-        console.error("[executeSubmit] Unable to access iframe document");
-        return;
-    }
-
-    const saveBtn = iframeDoc.getElementById("ftbtn_iSave");
-
-    if (!saveBtn) {
-        console.error("[executeSubmit] Save button (ftbtn_iSave) not found in iframe");
-        return;
-    }
-
-
-    if (saveBtn.style.pointerEvents === "none") {
-        console.warn("[executeSubmit] Save button is currently disabled");
-        return;
-    }
-
-    saveBtn.click();
-}
 
 
 
 
     function executeCommandsV2() {
-    
+
         const text = input.value.trim();
         if (!text || !commands) return;
 
@@ -2736,10 +2687,10 @@
 
         const groupKey = cleanString(tokens[0]);
 
-       
-      
 
-       
+
+
+
         const groupConfig = commands[groupKey];
 
         if (!groupConfig) {
@@ -4408,7 +4359,7 @@
 
 
             const adsName = cleanCommandToken(tokens[1]);
-            const filters = extractAdsFilters(input.value);
+            const filters = extractAdsFilters(tokens);
 
             console.log("Ads Filters: ", filters);
 
@@ -4890,52 +4841,82 @@
      *  @param {object} {tokens, commandConfig}
      * 
      */
-    function handleRunCommand({tokens,commandConfig}) {
-        const structType = getStructType(); 
-        let buttonLabel = tokens[1]; 
-        buttonLabel = buttonLabel.replace(/['"]/g, "").trim(); 
+    function handleRunCommand({ tokens, commandConfig }) {
+        const structType = getStructType();
+        let buttonLabel = cleanCommandToken(tokens[1]);
+        // buttonLabel = buttonLabel.replace(/['"]/g, "").trim();
 
-        if (!buttonLabel) return; 
-       
- 
+        if (!buttonLabel) return;
 
-        if (structType === "o")  {
-            console.error("Invalid Struct type"); 
-            return; 
+
+
+        if (structType === "o") {
+            console.error("Invalid Struct type");
+            return;
         }
 
         if (!bottomToolbarButtons) {
-        bottomToolbarButtons = getBottomToolbarButtons(); 
+            bottomToolbarButtons = getBottomToolbarButtons();
 
 
         }
 
         if (!topToolbarButtons) {
-        topToolbarButtons = getTopToolbarButtons();
+            topToolbarButtons = getTopToolbarButtons();
 
 
         }
 
-         const bottomButtonKey = Object.keys(bottomToolbarButtons)
-        .find(k => k.toLowerCase().includes(buttonLabel));
-
-    const topButtonKey = Object.keys(topToolbarButtons)
-        .find(k => k.toLowerCase().includes(buttonLabel));
-
-    const button =
-        bottomToolbarButtons[buttonId] ||
-        topToolbarButtons[buttonId];
-
-    if (!button) {
-         console.error(`Button not found for label: ${buttonLabel}`);
-        return;
-    }
-
-    button.click();       
 
 
-        console.log(bottomToolbarButtons); 
-        console.log(topToolbarButtons); 
+        const allButtons = [
+            ...Object.values(bottomToolbarButtons),
+            ...Object.values(topToolbarButtons)
+        ]
+
+        console.log("All Buttons: " + JSON.stringify(allButtons));
+
+        let resolvedBtnId = tryResolveToken(1, buttonLabel, commandConfig, false);
+
+        console.log(`Run Command Debug: Label="${buttonLabel}", ResolvedID="${resolvedBtnId}"`);
+
+        let targetBtn = null;
+
+        if (resolvedBtnId && resolvedBtnId !== buttonLabel) {
+            targetBtn = allButtons.find(btn => btn.id === resolvedBtnId);
+        }
+
+        if (!targetBtn && resolvedBtnId) {
+            targetBtn = allButtons.find(btn => btn.id === resolvedBtnId);
+        }
+
+
+        if (!targetBtn) {
+            targetBtn = allButtons.find(btn => {
+                const rawLabel = btn.label || "";
+
+                const normalizedBtnLabel = rawLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+
+                const normalizedInputLabel = buttonLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+
+                return normalizedBtnLabel === normalizedInputLabel;
+
+
+            });
+
+        }
+
+
+        if (!targetBtn) {
+            console.error(`Button not found for label: ${buttonLabel}`);
+            showToast(`Button '${buttonLabel}' not found`, 3000);
+            return;
+        }
+
+        console.log(`Clicking button: ${targetBtn.label} (${targetBtn.id})`);
+
+        targetBtn.click();
+
 
 
     }
@@ -4948,211 +4929,286 @@
 
 
 
-    function extractAdsFilters(rawInput) {
+    // function extractAdsFilters(rawInput) {
+    //     const filters = [];
+    //     const VALID_OPERATORS = new Set(["=", "!=", "<", "<=", ">", ">="]);
+    //     const consumedRanges = [];
+
+    //     const input = rawInput.trim();
+
+    //     // Explicit operator regex
+    //     // field >= value | field=value | field <= value
+    //     const explicitRegex = /(\w+)\s*(<=|>=|!=|=|<|>)\s*([^\s]+)/g;
+
+    //     let match;
+    //     while ((match = explicitRegex.exec(input)) !== null) {
+    //         let [, field, operator, valueRaw] = match;
+
+    //         // const operator = OPERATOR_MAP[opRaw];
+    //         // const operator = valueRaw;
+    //         // if (!operator) continue;
+
+    //         let value = valueRaw;
+    //         let dataTypeObj = adsfieldvalueanddt[field];
+    //         let dataType = dataTypeObj?.datatype;
+
+    //         if (field.toLowerCase().includes("date")) {
+    //             value = normalizeDate(valueRaw);
+    //         }
+
+    //         filters.push({
+    //             field,
+    //             operator,
+    //             value,
+    //             dataType,
+    //             isAccept: dataTypeObj?.isAccept
+    //         });
+
+    //         // mark this range as consumed
+    //         consumedRanges.push([match.index, explicitRegex.lastIndex]);
+    //     }
+
+    //     // Remove explicit expressions from input
+    //     let remaining = input;
+    //     for (const [start, end] of consumedRanges.reverse()) {
+    //         remaining =
+    //             remaining.slice(0, start) +
+    //             " ".repeat(end - start) +
+    //             remaining.slice(end);
+    //     }
+
+    //     // Implicit equality: field value
+    //     // const parts = remaining.split(/\s+/).filter(Boolean);
+    //     const parts = getTokens(remaining).map(t =>
+    //         t.startsWith('"') && t.endsWith('"')
+    //             ? t.slice(1, -1)
+    //             : t
+    //     );
+
+    //     for (let i = 0; i < parts.length - 1; i += 2) {
+    //         const field = parts[i];
+    //         const valueRaw = parts[i + 1];
+    //         const dataTypeObj = adsfieldvalueanddt[field];
+
+
+    //         if (field.toLowerCase() === "view") continue;
+
+    //         let value = valueRaw;
+    //         if (field.toLowerCase().includes("date")) {
+    //             value = normalizeDate(valueRaw);
+    //         }
+
+    //         filters.push({
+    //             field,
+    //             operator: "=",
+    //             value,
+    //             datatype: dataTypeObj?.datatype,
+    //             isAccept: dataTypeObj?.isAccept
+    //         });
+    //     }
+
+    //     return filters;
+    // }
+
+    function extractAdsFilters(tokens) {
         const filters = [];
-        const consumedRanges = [];
+        // const VALID_OPERATORS = new Set(["=", "!=", "<", "<=", ">", ">="]);
 
-        const input = rawInput.trim();
 
-        // Explicit operator regex
-        // field >= value | field=value | field <= value
-        const explicitRegex = /(\w+)\s*(<=|>=|!=|=|<|>)\s*([^\s]+)/g;
+        let i = 2;
 
-        let match;
-        while ((match = explicitRegex.exec(input)) !== null) {
-            let [, field, operator, valueRaw] = match;
+        while (i < tokens.length) {
 
-            // const operator = OPERATOR_MAP[opRaw];
-            // const operator = valueRaw;
-            // if (!operator) continue;
+            const rawColToken = cleanCommandToken(tokens[i]);
+            if (!rawColToken) { i++; continue; }
 
-            let value = valueRaw;
-            let dataTypeObj = adsfieldvalueanddt[field];
-            let dataType = dataTypeObj?.datatype;
 
-            if (field.toLowerCase().includes("date")) {
-                value = normalizeDate(valueRaw);
+            // let resolvedCol = resolvedParams[i] || rawColToken;
+
+
+            let nextTokenRaw = cleanCommandToken(tokens[i + 1] || "");
+
+            let operator = "=";
+            let valueTokenIndex = -1;
+            let rawValue = "";
+
+            if (OPERATORS_SET.has(nextTokenRaw)) {
+
+                operator = nextTokenRaw;
+                rawValue = cleanCommandToken(tokens[i + 2] || "");
+                valueTokenIndex = i + 2;
+
+
+                i += 3;
+            } else {
+
+                operator = "=";
+                rawValue = nextTokenRaw;
+                valueTokenIndex = i + 1;
+
+
+                i += 2;
+            }
+
+
+
+
+            // let resolvedValue = resolvedParams[valueTokenIndex];
+
+
+            // if (resolvedValue === undefined || resolvedValue === null) {
+            //     resolvedValue = rawValue;
+            // }
+
+
+
+
+
+            const colMetadata = adsfieldvalueanddt[rawColToken] || {};
+
+            if (colMetadata?.datatype === "d") {
+                rawValue = normalizeDate(rawValue);
             }
 
             filters.push({
-                field,
-                operator,
-                value,
-                dataType,
-                isAccept: dataTypeObj?.isAccept
-            });
-
-            // mark this range as consumed
-            consumedRanges.push([match.index, explicitRegex.lastIndex]);
-        }
-
-        // Remove explicit expressions from input
-        let remaining = input;
-        for (const [start, end] of consumedRanges.reverse()) {
-            remaining =
-                remaining.slice(0, start) +
-                " ".repeat(end - start) +
-                remaining.slice(end);
-        }
-
-        // Implicit equality: field value
-        // const parts = remaining.split(/\s+/).filter(Boolean);
-        const parts = getTokens(remaining).map(t =>
-    t.startsWith('"') && t.endsWith('"')
-        ? t.slice(1, -1)
-        : t
-);
-
-        for (let i = 0; i < parts.length - 1; i += 2) {
-            const field = parts[i];
-            const valueRaw = parts[i + 1];
-            const dataTypeObj = adsfieldvalueanddt[field];
-
-
-            if (field.toLowerCase() === "view") continue;
-
-            let value = valueRaw;
-            if (field.toLowerCase().includes("date")) {
-                value = normalizeDate(valueRaw);
-            }
-
-            filters.push({
-                field,
-                operator: "=",
-                value,
-                datatype: dataTypeObj?.datatype,
-                isAccept: dataTypeObj?.isAccept
+                field: rawColToken,
+                operator: operator,
+                value: rawValue,
+                datatype: colMetadata.datatype,
+                isAccept: colMetadata.isAccept
             });
         }
 
         return filters;
     }
 
+
+
     function getBottomToolbarButtons() {
-    const iframe = document.getElementById("middle1");
-    if (!iframe) return {};
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
 
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc) return {};
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
 
-    const toolbar = doc.querySelector(".BottomToolbarBar");
-    if (!toolbar) return {};
+        const toolbar = doc.querySelector(".BottomToolbarBar");
+        if (!toolbar) return {};
 
-    const buttons = toolbar.querySelectorAll("a");
+        const buttons = toolbar.querySelectorAll("a");
 
-    const result = {};
+        const result = {};
 
-    buttons.forEach((btn) => {
-        const id = btn.id || btn.getAttribute("data-id");
-        if (!id) return;
-        const label = btn.innerText.trim(); 
-        if (!label) console.log("There is no label for Element: " + btn); 
+        buttons.forEach((btn) => {
+            const id = btn.id || btn.getAttribute("data-id");
+            if (!id) return;
+            const label = btn.innerText.trim();
+            if (!label) console.log("There is no label for Element: " + btn);
 
-       
 
-         result[id] = {
-            id,
-            label,
-            element: btn,
-            click: () => btn.click()
-        };
-    });
 
-    return result;
-}
+            result[id] = {
+                id,
+                label,
+                element: btn,
+                click: () => btn.click()
+            };
+        });
 
-function getTopToolbarButtons() {
-    const iframe = document.getElementById("middle1");
-    if (!iframe) return {};
-
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc) return {};
-
-    const toolbar = doc.querySelector(".toolbarRightMenu");
-    if (!toolbar) return {};
-
-    const buttons = toolbar.querySelectorAll("a");
-
-    const result = {};
-
-    buttons.forEach((btn) => {
-        const id = btn.id || btn.getAttribute("data-id");
-        if (!id) return;
-        const label = btn.innerText.trim(); 
-        if (!label) console.log("There is no label for Element: " + btn); 
-
-        
-
-         result[id] = {
-            id,
-            label,
-            element: btn,
-            click: () => btn.click()
-        };
-    });
-
-    return result;
-}
-
-function getTStructButtons(attributeName) {
-    const iframe = document.getElementById("middle1");
-    if (!iframe) return {};
-
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc) return {};
-
-    const toolbar = doc.querySelector(`.${attributeName}`);  //|| doc.querySelector(`#${attributeName}`);
-    if (!toolbar) return {};
-
-    const buttons = toolbar.querySelectorAll("a");
-
-    const result = {};
-
-    buttons.forEach((btn) => {
-        const id = btn.id || btn.getAttribute("data-id");
-        if (!id) return;
-        const label = btn.innerText.trim(); 
-        if (!label) console.log("There is no label for Element: " + btn); 
-
-        
-
-         result[label] = {
-            id,
-            label,
-            element: btn,
-            click: () => btn.click()
-        };
-    });
-
-    return result;
-}
-
-function getStructType() {
-     const iframe = document.getElementById("middle1");
-    if (!iframe) return null;
-
-    const src = iframe.getAttribute("src"); 
-    if (!src) return null; 
-
-    const page = src.split("?")[0].toLowerCase(); 
-
-    if (!page) {
-        return null; 
+        return result;
     }
 
-    if (page.endsWith("/tstruct.aspx") || page.includes("tstruct.aspx")) {
-        return "t" // tstruct
+    function getTopToolbarButtons() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const toolbar = doc.querySelector(".toolbarRightMenu");
+        if (!toolbar) return {};
+
+        const buttons = toolbar.querySelectorAll("a");
+
+        const result = {};
+
+        buttons.forEach((btn) => {
+            const id = btn.id || btn.getAttribute("data-id");
+            if (!id) return;
+            const label = btn.innerText.trim();
+            if (!label) console.log("There is no label for Element: " + btn);
+
+
+
+            result[id] = {
+                id,
+                label,
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        return result;
     }
 
-    if (page.endsWith("/iview.aspx") || page.includes("iview.aspx")) {
-        return "i";  // IView
+    function getTStructButtons(attributeName) {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const toolbar = doc.querySelector(`.${attributeName}`);  //|| doc.querySelector(`#${attributeName}`);
+        if (!toolbar) return {};
+
+        const buttons = toolbar.querySelectorAll("a");
+
+        const result = {};
+
+        buttons.forEach((btn) => {
+            const id = btn.id || btn.getAttribute("data-id");
+            if (!id) return;
+            const label = btn.innerText.trim();
+            if (!label) console.log("There is no label for Element: " + btn);
+
+
+
+            result[label] = {
+                id,
+                label,
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        return result;
     }
 
-    return "o"; // Others 
+    function getStructType() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return null;
+
+        const src = iframe.getAttribute("src");
+        if (!src) return null;
+
+        const page = src.split("?")[0].toLowerCase();
+
+        if (!page) {
+            return null;
+        }
+
+        if (page.endsWith("/tstruct.aspx") || page.includes("tstruct.aspx")) {
+            return "t" // tstruct
+        }
+
+        if (page.endsWith("/iview.aspx") || page.includes("iview.aspx")) {
+            return "i";  // IView
+        }
+
+        return "o"; // Others 
 
 
 
-}
+    }
 
 
 
