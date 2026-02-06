@@ -2583,13 +2583,13 @@
             if (e.key === "Escape") {
                 e.preventDefault();
 
-                // if (input.value.trim() !== "") {
-                //     input.value = "";
-                //     handleInput();
-                //     input.focus();
-                // } else {
+                if (input.value.trim() !== "") {
+                    input.value = "";
+                    handleInput();
+                    input.focus();
+                } else {
                     hide();
-                // }
+                }
             }
         });
 
