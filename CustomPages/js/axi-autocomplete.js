@@ -1189,6 +1189,12 @@
 
         filteredObjects = filtered;
 
+        const structType = getStructType(); 
+
+        if (structType === "o") {
+            return [];
+        }
+
         return filtered.map(item => item.displaydata);
 
 
@@ -2583,19 +2589,42 @@
             if (e.key === "Escape") {
                 e.preventDefault();
 
-                if (input.value.trim() !== "") {
-                    input.value = "";
-                    handleInput();
-                    input.focus();
-                } else {
+                // if (input.value.trim() !== "") {
+                //     input.value = "";
+                //     handleInput();
+                //     input.focus();
+                // } else {
                     hide();
-                }
+                // }
             }
         });
 
         document.addEventListener("click", e => {
             if (input && list && e.target !== input && !list.contains(e.target)) hide();
         });
+
+
+        const iframe = document.getElementById("middle1");
+        if (iframe) {
+            const attachIframeClick = () => {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    iframeDoc.removeEventListener("click", hide); 
+                    iframeDoc.addEventListener("click", () => {
+                        hide();
+                    });
+                } catch (err) {
+                    console.warn("Could not attach click listener to iframe (likely CORS restriction):", err);
+                }
+            };
+
+            // Attach immediately if already loaded
+            attachIframeClick();
+
+            
+            iframe.addEventListener("load", attachIframeClick);
+        }
     }
 
     function clearAxiLocalStorage(prefix) {
@@ -5099,9 +5128,10 @@
         const result = {};
 
         buttons.forEach((btn) => {
+            if (!hasAction(btn)) return; 
             const id = btn.id || btn.getAttribute("data-id");
             if (!id) return;
-            const label = btn.innerText.trim();
+            const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
 
 
@@ -5132,9 +5162,11 @@
         const result = {};
 
         buttons.forEach((btn) => {
+            if (!hasAction(btn)) return; 
             const id = btn.id || btn.getAttribute("data-id");
             if (!id) return;
-            const label = btn.innerText.trim();
+            // const label = btn.innerText.trim();
+            const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
 
 
@@ -5209,6 +5241,39 @@
 
 
     }
+
+    function extractButtonLabel(btn) {
+    
+
+    const dataExtra = btn.getAttribute("data-extra");
+    if (dataExtra) return dataExtra.trim();
+
+    const title = btn.getAttribute("title");
+    if (title) return title.trim();
+
+    
+    const text = Array.from(btn.childNodes)
+        .filter(n => n.nodeType === Node.TEXT_NODE)
+        .map(n => n.textContent.trim())
+        .join(" ")
+        .trim();
+
+    if (text) return text;
+
+    
+    return btn.innerText.trim();
+}
+
+function hasAction(btn) {
+    if (btn.getAttribute("onclick")) return true; 
+
+    const href = btn.getAttribute("href"); 
+
+   if (href && href !== "#" && href !== "javascript:void(0)") return true; 
+
+    return false; 
+}
+
 
 
 
