@@ -3,6 +3,12 @@
     const API_METADATA = "http://localhost:5000/api/v1/Axi/axi_get";
     // const API_METADATA = "https://alpha.agilecloud.biz/AxiDevARM/api/v1/Axi/axi_get";
 
+     const goOption = {
+                    displaydata: "Go [Ctrl + Enter]",
+                    name: "GO_ACTION",
+                    isExecutable: true
+                }
+
 
     const VIEW_HANDLERS = {
         tstruct: ({ transId, fieldName, fieldValue }) =>
@@ -132,11 +138,13 @@
 
     let topToolbarButtons = null;
     let bottomToolbarButtons = null;
+    let entityToolbarButtons = null;
+    let designModeToolbarButtons = null;
     let buttonsList = null;
     const OPERATORS_LIST = [">=", "<=", "!=", "=", ">", "<"];
     const OPERATORS_SET = new Set(OPERATORS_LIST);
-    
-    
+
+
     const OPERATOR_REGEX_PART = OPERATORS_LIST.join("|");
 
 
@@ -1056,6 +1064,8 @@
             //     return !usedColumns.has(colName) && colName.includes(partialTyped.toLowerCase());
             // });
 
+            
+
             const filtered = list.filter(col => {
 
                 const rawDisplay = (col.displaydata || col.name).toLowerCase();
@@ -1077,8 +1087,14 @@
                 return !isUsed && matchesInput;
             });
 
-            filteredObjects = filtered;
-            return filtered.map(col => col.displaydata || col.name);
+
+
+            // filteredObjects = filtered;
+            filteredObjects = [goOption, ...filtered];
+            return [
+                goOption,
+                ...filtered.map(col => col.displaydata || col.name)
+            ];
         }
 
 
@@ -1155,8 +1171,15 @@
                     return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
                 });
 
+               
+
+                filteredObjects = filtered
+
+                
+
 
                 return filtered.map(col => col.displaydata || col.name);
+                
 
 
             }
@@ -1168,15 +1191,51 @@
         }
     }
 
-    function processRunCommands(tokens, targetIndex) {
+    function processRunCommands(tokens, targetIndex, structType) {
         if (targetIndex !== 1) return [];
+        let allButtons
+
 
         const partialTyped = cleanString(tokens[targetIndex]);
 
-        bottomToolbarButtons = getBottomToolbarButtons();
-        topToolbarButtons = getTopToolbarButtons();
+        switch (structType) {
+            case "t":
+            case "i":
 
-        const allButtons = { ...bottomToolbarButtons, ...topToolbarButtons };
+                const isDesign = isTstructDesignMode();
+                if (isDesign) {
+                    designModeToolbarButtons = getDesignModeToolbarButtons();
+
+                    allButtons = { ...designModeToolbarButtons }
+
+
+                } else {
+                    bottomToolbarButtons = getBottomToolbarButtons();
+                    topToolbarButtons = getTopToolbarButtons();
+                    allButtons = { ...bottomToolbarButtons, ...topToolbarButtons };
+
+
+                }
+
+
+                break;
+
+            case "e":
+            case "ef":
+            case "c":
+                entityToolbarButtons = getEntityToolbarButtons();
+                allButtons = { ...entityToolbarButtons };
+                break;
+
+            default:
+                console.error("Invalid StructType")
+                break;
+        }
+
+
+
+
+
 
         buttonsList = Object.values(allButtons).map(btn => ({
             name: btn.id,
@@ -1189,7 +1248,7 @@
 
         filteredObjects = filtered;
 
-        const structType = getStructType(); 
+
 
         if (structType === "o") {
             return [];
@@ -1255,8 +1314,17 @@
             }
         }
 
-        if (tokens[0] === "run") {
-            return processRunCommands(tokens, targetIndex);
+        if (groupKey === "run") {
+            const structType = getStructType();
+
+            if (!structType || structType === "o") {
+                showToast("Warning: CommandGroup Invalid: Please open Tstruct or Any other page");
+                return [];
+            }
+
+
+
+            return processRunCommands(tokens, targetIndex, structType);
         }
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
 
@@ -1385,7 +1453,16 @@
             });
 
             filteredObjects = filtered;
-            return filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+            let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield); 
+
+            if (groupKey === "view" && ["tstruct", "iview"].includes(detectedType)) {
+                resultList.unshift(goOption); 
+                filteredObjects.unshift(goOption); 
+            }
+            // return filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+            return resultList; 
         }
 
         return [];
@@ -1708,6 +1785,12 @@
             li.textContent = text;
             li.className = "axi-suggestion";
 
+            if (typeof item === 'object' && item.isExecutable) {
+                li.style.fontWeight = "bold"; 
+                li.style.color = "#22c55e"; 
+                li.style.borderBottom = "1px solid #eee"; 
+            }
+
             if (i === activeIndex) {
                 li.classList.add("active");
             }
@@ -1738,7 +1821,17 @@
     }
 
     function apply(index) {
+        
         if (!items[index] || items[index] === "Loading options...") return;
+
+        const selectedItem = items[index]; 
+
+        if (typeof selectedItem === 'object' && selectedItem.isExecutable) {
+            console.log("Action item selected. Executing command..."); 
+            hide(); 
+            executeCommandsV2(); 
+            return; 
+        }
 
         const currentInput = input.value;
         const tokens = getTokens(currentInput);
@@ -1824,7 +1917,7 @@
 
         lastTypedTokens = [...tokens];
         handleInput();
-        hide();
+        // hide();
         input.focus();
     }
 
@@ -2517,15 +2610,15 @@
 
 
             if (e.key === "Enter") {
-                e.preventDefault();  
-                
+                e.preventDefault();
+
                 if (e.ctrlKey) {
-                    hide(); 
-                    executeCommandsV2(); 
-                    return; 
+                    hide();
+                    executeCommandsV2();
+                    return;
                 }
 
-              
+
 
                 if (isSuggestionVisible() && hasActiveSuggestion()) {
                     e.preventDefault();
@@ -2540,7 +2633,7 @@
                 return;
 
 
-               
+
 
             }
             // // Auto Double quotes 
@@ -2594,7 +2687,7 @@
                 //     handleInput();
                 //     input.focus();
                 // } else {
-                    hide();
+                hide();
                 // }
             }
         });
@@ -2609,8 +2702,8 @@
             const attachIframeClick = () => {
                 try {
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    
-                    iframeDoc.removeEventListener("click", hide); 
+
+                    iframeDoc.removeEventListener("click", hide);
                     iframeDoc.addEventListener("click", () => {
                         hide();
                     });
@@ -2622,7 +2715,7 @@
             // Attach immediately if already loaded
             attachIframeClick();
 
-            
+
             iframe.addEventListener("load", attachIframeClick);
         }
     }
@@ -4881,6 +4974,7 @@
 
         if (structType === "o") {
             console.error("Invalid Struct type");
+            showToast("Invalid Struct type");
             return;
         }
 
@@ -4896,11 +4990,21 @@
 
         }
 
+        if (!entityToolbarButtons) {
+            entityToolbarButtons = getEntityToolbarButtons();
+        }
+
+        if (!designModeToolbarButtons) {
+            designModeToolbarButtons = getDesignModeToolbarButtons();
+        }
+
 
 
         const allButtons = [
             ...Object.values(bottomToolbarButtons),
-            ...Object.values(topToolbarButtons)
+            ...Object.values(topToolbarButtons),
+            ...Object.values(entityToolbarButtons),
+            ...Object.values(designModeToolbarButtons),
         ]
 
         console.log("All Buttons: " + JSON.stringify(allButtons));
@@ -5128,7 +5232,7 @@
         const result = {};
 
         buttons.forEach((btn) => {
-            if (!hasAction(btn)) return; 
+            if (!hasAction(btn)) return;
             const id = btn.id || btn.getAttribute("data-id");
             if (!id) return;
             const label = extractButtonLabel(btn);
@@ -5162,7 +5266,7 @@
         const result = {};
 
         buttons.forEach((btn) => {
-            if (!hasAction(btn)) return; 
+            if (!hasAction(btn)) return;
             const id = btn.id || btn.getAttribute("data-id");
             if (!id) return;
             // const label = btn.innerText.trim();
@@ -5229,12 +5333,27 @@
         }
 
         if (page.endsWith("/tstruct.aspx") || page.includes("tstruct.aspx")) {
-            return "t" // tstruct
+            return "t" // tstruct page
         }
 
         if (page.endsWith("/iview.aspx") || page.includes("iview.aspx")) {
-            return "i";  // IView
+            return "i";  // IView page
         }
+
+        if (page.endsWith("/entity.aspx") || page.includes("entity.aspx")) {
+            return "e";  // Entity page
+        }
+
+        if (page.endsWith("/entityform.aspx") || page.includes("entityform.aspx")) {
+            return "ef";  // Entity Data page
+        }
+
+        if (src.includes("/CustomPages") || src.includes("/axidev")) {
+            return "c"; // Custom page
+
+        }
+
+
 
         return "o"; // Others 
 
@@ -5243,36 +5362,158 @@
     }
 
     function extractButtonLabel(btn) {
-    
 
-    const dataExtra = btn.getAttribute("data-extra");
-    if (dataExtra) return dataExtra.trim();
 
-    const title = btn.getAttribute("title");
-    if (title) return title.trim();
+        const dataExtra = btn.getAttribute("data-extra");
+        if (dataExtra) return dataExtra.trim();
 
-    
-    const text = Array.from(btn.childNodes)
-        .filter(n => n.nodeType === Node.TEXT_NODE)
-        .map(n => n.textContent.trim())
-        .join(" ")
-        .trim();
+        const title = btn.getAttribute("title");
+        if (title) return title.trim();
 
-    if (text) return text;
+        const menuTitle = btn.querySelector(".menu-title");
 
-    
-    return btn.innerText.trim();
-}
+        if (menuTitle) return menuTitle.textContent.trim();
 
-function hasAction(btn) {
-    if (btn.getAttribute("onclick")) return true; 
 
-    const href = btn.getAttribute("href"); 
 
-   if (href && href !== "#" && href !== "javascript:void(0)") return true; 
 
-    return false; 
-}
+        const text = Array.from(btn.childNodes)
+            .filter(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
+            .map(n => n.textContent.trim())
+            .join(" ")
+            .trim();
+
+        if (text) {
+
+            return text;
+        }
+
+
+
+
+        return btn.innerText.trim();
+
+    }
+
+    function hasAction(btn) {
+        if (btn.getAttribute("onclick")) return true;
+
+        if (btn.tagName === "A") {
+            const href = btn.getAttribute("href");
+
+            if (href && href !== "#" && href !== "javascript:void(0)") return true;
+
+        }
+
+
+
+        return false;
+    }
+
+    function getEntityToolbarButtons() {
+        const iframe = document.getElementById("middle1");
+
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const toolbar = doc.querySelector(".card-toolbar");
+        if (!toolbar) return {};
+
+        const buttons = toolbar.querySelectorAll("a, button");
+        const result = {};
+
+        buttons.forEach((btn, index) => {
+            // if (!hasAction(btn)) return;
+
+            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
+            if (!id) return;
+
+            const label = extractButtonLabel(btn);
+            if (!label) return;
+
+            result[id] = {
+                id,
+                label: label.toLowerCase(),
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        return result;
+
+    }
+
+    function watchDesignModeChange(callback) {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return;
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return;
+
+        const target = doc.querySelector("#divDc1");
+        if (!target) return;
+
+        const observer = new MutationObserver(() => {
+            callback(target.classList.contains("tstructDesignMode"));
+        });
+
+        observer.observe(target, {
+            attributes: true,
+            attributeFilter: ["class"]
+        });
+    }
+
+
+    function getDesignModeToolbarButtons() {
+        const iframe = document.getElementById("middle1");
+
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const toolbar = doc.querySelector("#designModeToolbar");
+        if (!toolbar) return {};
+
+        const buttons = toolbar.querySelectorAll("a, button");
+        const result = {};
+
+        buttons.forEach((btn, index) => {
+            // if (!hasAction(btn)) return;
+
+            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
+            if (!id) return;
+
+            const label = extractButtonLabel(btn);
+            if (!label) return;
+
+            result[id] = {
+                id,
+                label: label.toLowerCase(),
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        return result;
+
+    }
+
+    function isTstructDesignMode() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return false;
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return false;
+
+        const root = doc.querySelector("#divDc1");
+        if (!root) return false;
+
+        return root.classList.contains("tstructDesignMode");
+    }
+
 
 
 

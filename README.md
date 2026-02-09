@@ -35,3 +35,18 @@ if (!q) {
     }
 }
 ```
+
+
+## Pending and Discussion Points
+
+- Enable Run command for Entity page, Entity Form Page and Design mode screen
+
+- Code Review and Code Optimization. 
+
+```js
+let value; 
+
+if (typeof value !== Number) {
+    return; 
+}
+```
