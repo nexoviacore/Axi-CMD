@@ -3,11 +3,11 @@
     const API_METADATA = "http://localhost:5000/api/v1/Axi/axi_get";
     // const API_METADATA = "https://alpha.agilecloud.biz/AxiDevARM/api/v1/Axi/axi_get";
 
-     const goOption = {
-                    displaydata: "Go [Ctrl + Enter]",
-                    name: "GO_ACTION",
-                    isExecutable: true
-                }
+    const goOption = {
+        displaydata: "Go [Ctrl + Enter]",
+        name: "GO_ACTION",
+        isExecutable: true
+    }
 
 
     const VIEW_HANDLERS = {
@@ -104,6 +104,9 @@
         },
         run: {
             default: handleRunCommand,
+        },
+        analyse: {
+            default: handleAnalyse
         }
     };
 
@@ -140,6 +143,7 @@
     let bottomToolbarButtons = null;
     let entityToolbarButtons = null;
     let designModeToolbarButtons = null;
+    let pfToolbarButtons = null;
     let buttonsList = null;
     const OPERATORS_LIST = [">=", "<=", "!=", "=", ">", "<"];
     const OPERATORS_SET = new Set(OPERATORS_LIST);
@@ -490,38 +494,96 @@
     }
 
 
+    // function redirectToSmartView({ adsName, filters }) {
+
+
+
+    //     // targetUrl += `?ads=${adsname}`;
+    //     // targetUrl += "&load=1769601086182";
+    //     const payload = {
+
+    //         filters: filters
+    //     }
+
+    //     const encodedFilterQuery = btoa(JSON.stringify(payload));
+
+    //     let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
+    //     // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
+
+    //     targetUrl += `?ads=${encodeURIComponent(adsName)}`;
+    //     targetUrl += "&load=1769601086182";
+    //     targetUrl += `&filter=${encodedFilterQuery}`;
+    //     /**====================================================================================
+    //      * NOTE: This is Debug code remove it before deploying  to the  production environment 
+    //      * ====================================================================================
+    //      */
+    //     try {
+    //         const decodedForDebug = JSON.parse(atob(encodedFilterQuery));
+    //         console.group("AXI SmartView Redirect Debug");
+    //         console.log("Final URL:", targetUrl);
+    //         console.log("Encoded q:", encodedFilterQuery);
+    //         console.log("Decoded payload:", JSON.stringify(decodedForDebug));
+    //         console.groupEnd();
+    //     } catch (e) {
+    //         console.error("AXI SmartView payload decode failed", e);
+    //     }
+
+
+    //     /**
+    //      * ===================== End ========================================
+    //      */
+    //     top.window.LoadIframe(targetUrl);
+
+    //     // LoadIframe('../pgbase114/HTMLPages/SmartView_1769601086182.html?ads=axi_userlist&load=1769601086182')
+    // }
+
     function redirectToSmartView({ adsName, filters }) {
 
 
 
         // targetUrl += `?ads=${adsname}`;
         // targetUrl += "&load=1769601086182";
-        const payload = {
 
-            filters: filters
-        }
-
-        const encodedFilterQuery = btoa(JSON.stringify(payload));
 
         let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
         // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
 
         targetUrl += `?ads=${encodeURIComponent(adsName)}`;
         targetUrl += "&load=1769601086182";
-        targetUrl += `&filter=${encodedFilterQuery}`;
+
+        let encodedFilterQuery;
+
+        if (filters && filters.length === 1 && (filters[0].datatype === "c" || filters[0].datatype === "d") && (!filters[0].value || filters[0].value === "")) {
+            const columnName = filters[0].field;
+            targetUrl += `&groupby=${encodeURIComponent(columnName)}`;
+        }
+        else {
+            const payload = {
+
+                filters: filters
+            }
+
+            encodedFilterQuery = btoa(JSON.stringify(payload));
+
+            targetUrl += `&filter=${encodedFilterQuery}`;
+        }
+
+        console.log("Target Url for SmartViewTable:  " + targetUrl); 
         /**====================================================================================
          * NOTE: This is Debug code remove it before deploying  to the  production environment 
          * ====================================================================================
          */
-        try {
-            const decodedForDebug = JSON.parse(atob(encodedFilterQuery));
-            console.group("AXI SmartView Redirect Debug");
-            console.log("Final URL:", targetUrl);
-            console.log("Encoded q:", encodedFilterQuery);
-            console.log("Decoded payload:", JSON.stringify(decodedForDebug));
-            console.groupEnd();
-        } catch (e) {
-            console.error("AXI SmartView payload decode failed", e);
+        if (typeof encodedFilterQuery !== "undefined") {
+            try {
+                const decodedForDebug = JSON.parse(atob(encodedFilterQuery));
+                console.group("AXI SmartView Redirect Debug");
+                console.log("Final URL:", targetUrl);
+                console.log("Encoded q:", encodedFilterQuery);
+                console.log("Decoded payload:", JSON.stringify(decodedForDebug));
+                console.groupEnd();
+            } catch (e) {
+                console.error("AXI SmartView payload decode failed", e);
+            }
         }
 
 
@@ -532,6 +594,7 @@
 
         // LoadIframe('../pgbase114/HTMLPages/SmartView_1769601086182.html?ads=axi_userlist&load=1769601086182')
     }
+
 
     function redirectToPermissionScreeen(username) {
         // aspx/tstruct.aspx?act=open&transid=a__up&axusername=aarav&fromsource=U&openerIV=axusers&isIV=true&isDupTab=true-1769600154391&dummyload=false
@@ -1064,7 +1127,7 @@
             //     return !usedColumns.has(colName) && colName.includes(partialTyped.toLowerCase());
             // });
 
-            
+
 
             const filtered = list.filter(col => {
 
@@ -1091,10 +1154,14 @@
 
             // filteredObjects = filtered;
             filteredObjects = [goOption, ...filtered];
-            return [
-                goOption,
-                ...filtered.map(col => col.displaydata || col.name)
-            ];
+            if (tokens.length > 2) {
+                return [
+                    goOption,
+                    ...filtered.map(col => col.displaydata || col.name)
+                ];
+
+            }
+
         }
 
 
@@ -1171,15 +1238,15 @@
                     return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
                 });
 
-               
+
 
                 filteredObjects = filtered
 
-                
+
 
 
                 return filtered.map(col => col.displaydata || col.name);
-                
+
 
 
             }
@@ -1226,6 +1293,12 @@
                 entityToolbarButtons = getEntityToolbarButtons();
                 allButtons = { ...entityToolbarButtons };
                 break;
+
+            case "pf":
+                pfToolbarButtons = getPFToolbarButtons();
+                allButtons = { ...pfToolbarButtons }
+                break;
+
 
             default:
                 console.error("Invalid StructType")
@@ -1433,6 +1506,9 @@
 
 
             let apiSourceName = realSource.toLowerCase();
+            if (apiSourceName.toLowerCase() === "axi_analyticslist") {
+                paramValue = "admin";
+            }
             const sourceKey = (paramValue ? `${apiSourceName}_${paramValue}` : apiSourceName).toLowerCase();
 
             if (!axDatasourceObj[sourceKey]) {
@@ -1454,15 +1530,15 @@
 
             filteredObjects = filtered;
 
-            let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield); 
+            let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
-            if (groupKey === "view" && ["tstruct", "iview"].includes(detectedType)) {
-                resultList.unshift(goOption); 
-                filteredObjects.unshift(goOption); 
+            if ((groupKey === "view" || groupKey === "configure" || groupKey === "edit") && tokens.length > 2 && tokens[1] !== "keyfield") {
+                resultList.unshift(goOption);
+                filteredObjects.unshift(goOption);
             }
             // return filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
-            return resultList; 
+            return resultList;
         }
 
         return [];
@@ -1633,8 +1709,10 @@
 
     function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
         tokenText = cleanString(tokenText);
+        if (!tokenText) return "";
+
         if (resolvedParams[tokenIndex] && !forceResolve) return resolvedParams[tokenIndex];
-        if (!tokenText && !forceResolve) return "";
+        // if (!tokenText && !forceResolve) return "";
         if (!commandConfig) return tokenText;
 
 
@@ -1715,6 +1793,9 @@
             }
 
             let apiName = realSource;
+            if (apiName.toLowerCase() === "axi_analyticslist") {
+                paramValue = "admin";
+            }
             let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
 
             const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
@@ -1750,8 +1831,13 @@
     function render() {
         console.log("Render called");
         list.innerHTML = "";
-        // activeIndex = -1;
-        if (activeIndex < 0) activeIndex = 0;
+
+        if (items.length > 0 && isSystemMessage(items[0])) {
+            activeIndex = -1;
+        } else {
+            activeIndex = 0;
+        }
+
 
         const validItems = items.filter(item => {
             if (!item) return false;
@@ -1786,9 +1872,9 @@
             li.className = "axi-suggestion";
 
             if (typeof item === 'object' && item.isExecutable) {
-                li.style.fontWeight = "bold"; 
-                li.style.color = "#22c55e"; 
-                li.style.borderBottom = "1px solid #eee"; 
+                li.style.fontWeight = "bold";
+                li.style.color = "#22c55e";
+                li.style.borderBottom = "1px solid #eee";
             }
 
             if (i === activeIndex) {
@@ -1821,16 +1907,16 @@
     }
 
     function apply(index) {
-        
-        if (!items[index] || items[index] === "Loading options...") return;
 
-        const selectedItem = items[index]; 
+        if (!items[index] || isSystemMessage(items[index])) return;
+
+        const selectedItem = items[index];
 
         if (typeof selectedItem === 'object' && selectedItem.isExecutable) {
-            console.log("Action item selected. Executing command..."); 
-            hide(); 
-            executeCommandsV2(); 
-            return; 
+            console.log("Action item selected. Executing command...");
+            hide();
+            executeCommandsV2();
+            return;
         }
 
         const currentInput = input.value;
@@ -2622,7 +2708,11 @@
 
                 if (isSuggestionVisible() && hasActiveSuggestion()) {
                     e.preventDefault();
-                    apply(activeIndex);
+                    if (!isSystemMessage(items[activeIndex])) {
+                        apply(activeIndex);
+
+
+                    }
                     return;
                 }
 
@@ -4966,7 +5056,8 @@
     function handleRunCommand({ tokens, commandConfig }) {
         const structType = getStructType();
         let buttonLabel = cleanCommandToken(tokens[1]);
-        // buttonLabel = buttonLabel.replace(/['"]/g, "").trim();
+        let allButtons = null;
+
 
         if (!buttonLabel) return;
 
@@ -4978,34 +5069,57 @@
             return;
         }
 
-        if (!bottomToolbarButtons) {
-            bottomToolbarButtons = getBottomToolbarButtons();
 
 
+
+        switch (structType) {
+            case "t":
+            case "i":
+
+                const isDesign = isTstructDesignMode();
+                if (isDesign) {
+                    if (!designModeToolbarButtons) {
+                        designModeToolbarButtons = getDesignModeToolbarButtons();
+
+
+                    }
+
+                    allButtons = [...Object.values(designModeToolbarButtons)]
+
+
+                } else {
+                    if (!bottomToolbarButtons) bottomToolbarButtons = getBottomToolbarButtons();
+                    if (!topToolbarButtons) topToolbarButtons = getTopToolbarButtons();
+                    allButtons = [...Object.values(bottomToolbarButtons),
+                    ...Object.values(topToolbarButtons)];
+
+
+                }
+
+
+                break;
+
+            case "e":
+            case "ef":
+            case "c":
+                if (!entityToolbarButtons) entityToolbarButtons = getEntityToolbarButtons();
+                allButtons = [...Object.values(entityToolbarButtons)];
+                break;
+
+            case "pf":
+                if (!pfToolbarButtons) pfToolbarButtons = getPFToolbarButtons();
+                allButtons = [...Object.values(pfToolbarButtons)]
+                break;
+
+
+            default:
+                console.error("Invalid StructType")
+                break;
         }
 
-        if (!topToolbarButtons) {
-            topToolbarButtons = getTopToolbarButtons();
-
-
-        }
-
-        if (!entityToolbarButtons) {
-            entityToolbarButtons = getEntityToolbarButtons();
-        }
-
-        if (!designModeToolbarButtons) {
-            designModeToolbarButtons = getDesignModeToolbarButtons();
-        }
 
 
 
-        const allButtons = [
-            ...Object.values(bottomToolbarButtons),
-            ...Object.values(topToolbarButtons),
-            ...Object.values(entityToolbarButtons),
-            ...Object.values(designModeToolbarButtons),
-        ]
 
         console.log("All Buttons: " + JSON.stringify(allButtons));
 
@@ -5323,6 +5437,9 @@
         const iframe = document.getElementById("middle1");
         if (!iframe) return null;
 
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!iframeDoc) return null;
+
         const src = iframe.getAttribute("src");
         if (!src) return null;
 
@@ -5332,19 +5449,25 @@
             return null;
         }
 
-        if (page.endsWith("/tstruct.aspx") || page.includes("tstruct.aspx")) {
+        const bodyId = iframeDoc.body?.id || "";
+
+        if ((page.endsWith("/tstruct.aspx") || page.includes("tstruct.aspx")) && bodyId !== "Entitymanagement_Body") {
             return "t" // tstruct page
         }
+
+
 
         if (page.endsWith("/iview.aspx") || page.includes("iview.aspx")) {
             return "i";  // IView page
         }
 
-        if (page.endsWith("/entity.aspx") || page.includes("entity.aspx")) {
+        if ((page.endsWith("/entity.aspx") || page.includes("entity.aspx")) && bodyId === "Entitymanagement_Body") {
             return "e";  // Entity page
         }
 
-        if (page.endsWith("/entityform.aspx") || page.includes("entityform.aspx")) {
+
+
+        if ((page.endsWith("/entityform.aspx") || page.includes("entityform.aspx")) || bodyId === "Entitymanagement_Body") {
             return "ef";  // Entity Data page
         }
 
@@ -5352,6 +5475,16 @@
             return "c"; // Custom page
 
         }
+
+        // ../aspx/processflow.aspx?activelist=t&hdnbElapsTime=0
+
+
+        if (page.endsWith("/processflow.aspx") || page.includes("processflow.aspx")) {
+            return "pf"; // Custom page
+
+        }
+
+
 
 
 
@@ -5426,6 +5559,10 @@
 
         buttons.forEach((btn, index) => {
             // if (!hasAction(btn)) return;
+
+            if (btn.classList.contains("d-none") || btn.classList.contains("menu-dropdown")) return;
+
+            if (btn.getAttribute("data-kt-menu-attach") === "parent") return;
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
             if (!id) return;
@@ -5514,10 +5651,117 @@
         return root.classList.contains("tstructDesignMode");
     }
 
+    function getPFToolbarButtons() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const result = {};
+
+        // Process Flow toolbar zones
+        const containers = [
+            ".Page-Title-Bar",
+            ".Tkts-toolbar-Left",
+            ".Tkts-toolbar-Right"
+        ];
+
+        containers.forEach(selector => {
+            const root = doc.querySelector(selector);
+            if (!root) return;
+
+            const elements = root.querySelectorAll(
+                "button, a, div.btn"
+            );
+
+            elements.forEach((el, index) => {
+                // skip hidden
+                if (el.classList.contains("d-none")) return;
+
+                // must be actionable
+                // if (!hasAction(el)) return;
+
+                const isActionable =
+                    hasAction?.(el) ||
+                    el.hasAttribute("data-kt-menu-trigger") ||
+                    el.classList.contains("tb-btn") ||
+                    el.classList.contains("btn-icon");
+
+                if (!isActionable) return;
+
+                const label = extractButtonLabel(el);
+                if (!label) return;
+
+                const id =
+                    el.id ||
+                    el.getAttribute("data-id") ||
+                    el.getAttribute("data-bs-title") ||
+                    el.getAttribute("data-bs-original-title") ||
+                    el.getAttribute("title") ||
+                    `process-btn-${label.toLowerCase().replace(/\s+/g, "_")}-${index}`;
+
+                result[id] = {
+                    id,
+                    label: label.toLowerCase(),
+                    element: el,
+                    click: () => el.click()
+                };
+            });
+        });
+
+        return result;
+    }
+
+    function isSystemMessage(item) {
+        if (!item) return false;
+
+        const text = typeof item === 'string' ? item : (item.displaydata || "");
+
+        return text.startsWith("Loading") ||
+            text.startsWith("Waiting") ||
+            text.startsWith("Error") ||
+            text === "No Data";
+
+    }
 
 
+    function handleAnalyse({ tokens, commandConfig }) {
+
+        let targetUrl = "../aspx/Analytics.aspx";
+
+        if (tokens.length === 1) {
+            targetUrl += "?calendar=t";
+            targetUrl += "&isDupTab=true-1770626614111";
+            targetUrl += "&hdnbElapsTime=0";
+        }
 
 
+        else {
+
+            const captionSelected = cleanString(tokens[1]);
+            const transIdAnalyse = tryResolveToken(1, captionSelected, commandConfig);
+
+            targetUrl += `?entity=${encodeURIComponent(transIdAnalyse)}`;
+
+            if (tokens.length == 3) {
+                let groupByFieldCaption = cleanString(tokens[2]);
+                const groupByFiedlname = tryResolveToken(2, groupByFieldCaption, commandConfig);
+                targetUrl += `&groupby=${encodeURIComponent(groupByFiedlname)}`;
+            }
+            else if (tokens.length > 3) {
+                showToast("Analyse commands requires only 3 tokens");
+                return;
+            }
+
+            targetUrl += "&calendar=t";
+            targetUrl += "&isDupTab=true-1770626614111";
+            targetUrl += "&hdnbElapsTime=0";
+        }
+
+        console.log(targetUrl);
+        window.LoadIframe(targetUrl);
+    }
 
 
 

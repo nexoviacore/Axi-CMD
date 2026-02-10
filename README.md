@@ -50,3 +50,16 @@ if (typeof value !== Number) {
     return; 
 }
 ```
+
+
+## Run Button / Script from Command Line
+View inbox buttons need to be handled. -> completed 
+Apply filter added to run the command from the listing page should be ignored (check and ignore it).
+Add GO [Ctrl + Enter] option in AutoComplete
+For the first token, GO (Ctrl + Enter) should not be listed in view mode.
+Edit TStruct → if only the edit form is provided, open the form in new mode.
+Add [Ctrl + Enter] support.
+Similar to View, Config also needs to be handled.
+Backlog
+Axi command – run search (TStruct / iView) needs enhancements.
+If the caption contains parentheses, consider only the last occurrence of the opening and closing parentheses.
