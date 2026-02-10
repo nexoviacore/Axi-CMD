@@ -1,7 +1,14 @@
 ﻿(() => {
-    // 29/01/2026 - New Axi Command Pallete Behaviour Changes
-    // ENDPOINTS
+
     const API_METADATA = "http://localhost:5000/api/v1/Axi/axi_get";
+    // const API_METADATA = "https://alpha.agilecloud.biz/AxiDevARM/api/v1/Axi/axi_get";
+
+    const goOption = {
+        displaydata: "Go [Ctrl + Enter]",
+        name: "GO_ACTION",
+        isExecutable: true
+    }
+
 
     const VIEW_HANDLERS = {
         tstruct: ({ transId, fieldName, fieldValue }) =>
@@ -25,6 +32,10 @@
 
 
     const COMMAND_HANDLERS = {
+        show: {
+            toast: () => showToast(input.value)
+
+        },
         edit: {
             default: handleEditData,
             data: handleEditData,
@@ -87,7 +98,33 @@
         },
         download: {
             default: handleDownload
+        },
+        set: {
+            default: () => console.log("set command!")
+        },
+        run: {
+            default: handleRunCommand,
+        },
+        analyse: {
+            default: handleAnalyse
         }
+    };
+
+    const OPERATOR_MAP = {
+        "=": "eq",
+        "!=": "neq",
+        "<": "lt",
+        "<=": "lte",
+        ">": "gt",
+        ">=": "gte"
+    };
+
+    let ADS_REPETITION_STATE = {
+        active: false,
+        usedColumns: new Set(),
+        lastColumn: null,
+        columnSource: null,
+        paramValue: ""
     };
 
     let input;
@@ -100,6 +137,19 @@
     let axiLogo;
     let searchWrapper;
     let isCommandTypingCompleted = false;
+    let example
+
+    let topToolbarButtons = null;
+    let bottomToolbarButtons = null;
+    let entityToolbarButtons = null;
+    let designModeToolbarButtons = null;
+    let pfToolbarButtons = null;
+    let buttonsList = null;
+    const OPERATORS_LIST = [">=", "<=", "!=", "=", ">", "<"];
+    const OPERATORS_SET = new Set(OPERATORS_LIST);
+
+
+    const OPERATOR_REGEX_PART = OPERATORS_LIST.join("|");
 
 
 
@@ -118,6 +168,7 @@
     let axDatasourceObj = {};
     let activeFetches = new Set();
     let filteredObjects = [];
+    let adsfieldvalueanddt = {};
 
 
     function init() {
@@ -134,6 +185,8 @@
         console.log("Axi Input Found!", input);
 
         axiLogo = document.getElementById("axiLogo");
+
+
 
         if (!axiLogo) {
             console.log("Axi Logo not ready yet... waiting.");
@@ -195,11 +248,16 @@
             return;
         }
 
+        example = document.getElementById("middle1").contentWindow.document.body.id;
+
+        console.log("transId = " + example);
+
         console.log("Axi Clear button found!", axiClearBtn);
 
 
 
         setupEventListeners();
+
 
 
         initCommands(false);
@@ -306,33 +364,70 @@
             const prevPrompt = sortedPrompts.find(p => p.wordPos === prevWordPos);
 
 
-            if (prevPrompt && prevPrompt.promptSource.toLowerCase() === 'axi_keyvalueswithfieldnameslist') {
+            // if (prevPrompt && prevPrompt.promptSource.toLowerCase() === 'axi_keyvalueswithfieldnameslist') {
 
-                const prevTokenRaw = cleanString(tokens[targetIndex - 1]);
-
-
-                const sourcePrefix = prevPrompt.promptSource.toLowerCase();
-                let foundItem = null;
+            //     const prevTokenRaw = cleanString(tokens[targetIndex - 1]);
 
 
-                for (const key in axDatasourceObj) {
-                    if (key.startsWith(sourcePrefix)) {
-                        const list = axDatasourceObj[key];
+            //     const sourcePrefix = prevPrompt.promptSource.toLowerCase();
+            //     let foundItem = null;
 
-                        foundItem = list.find(item =>
-                            (item.name && item.name.toLowerCase() === prevTokenRaw.toLowerCase()) ||
-                            (item.displaydata && item.displaydata.toLowerCase() === prevTokenRaw.toLowerCase())
-                        );
-                        if (foundItem) break;
+
+            //     for (const key in axDatasourceObj) {
+            //         if (key.startsWith(sourcePrefix)) {
+            //             const list = axDatasourceObj[key];
+
+            //             foundItem = list.find(item =>
+            //                 (item.name && item.name.toLowerCase() === prevTokenRaw.toLowerCase()) ||
+            //                 (item.displaydata && item.displaydata.toLowerCase() === prevTokenRaw.toLowerCase())
+            //             );
+            //             if (foundItem) break;
+            //         }
+            //     }
+
+            //     // If found, and isfield is 'f' , STOP THE PROMPT CHAIN.
+            //     if (foundItem && foundItem.isfield === 'f') {
+            //         console.log("Short Circuit: Previous item is not a field. Stopping prompts.");
+            //         return null;
+            //     }
+            // }
+
+            if (prevPrompt) {
+
+                const prevSources = prevPrompt.promptSource
+                    .split(',')
+                    .map(s => s.trim().toLowerCase())
+                    .filter(Boolean);
+
+                const fieldSource = prevSources.find(src =>
+                    src.includes('keyvalue') || src.includes('fieldname')
+                );
+
+                if (fieldSource) {
+
+                    const prevTokenRaw = cleanString(tokens[targetIndex - 1]);
+                    let foundItem = null;
+
+                    for (const key in axDatasourceObj) {
+                        if (key.startsWith(fieldSource)) {
+                            const list = axDatasourceObj[key];
+
+                            foundItem = list.find(item =>
+                                (item.name && item.name.toLowerCase() === prevTokenRaw.toLowerCase()) ||
+                                (item.displaydata && item.displaydata.toLowerCase() === prevTokenRaw.toLowerCase())
+                            );
+
+                            if (foundItem) break;
+                        }
+                    }
+
+                    if (foundItem && foundItem.isfield === 'f') {
+                        console.log("Short Circuit: Previous item is not a field. Stopping prompts.");
+                        return null;
                     }
                 }
-
-                // If found, and isfield is 'f' , STOP THE PROMPT CHAIN.
-                if (foundItem && foundItem.isfield === 'f') {
-                    console.log("Short Circuit: Previous item is not a field. Stopping prompts.");
-                    return null;
-                }
             }
+
         }
 
         let activeSource = prompt.promptSource || "";
@@ -346,12 +441,25 @@
                 const prevTokenIndex = targetIndex - 1;
                 const prevValue = cleanString(tokens[prevTokenIndex]);
                 const allowedValues = prevPrompt.promptValues.split(',').map(v => v.trim().toLowerCase());
-                const valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
+                let valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
+
+                if (valueIndex === -1 && commandConfig.commandGroup?.toLowerCase() === 'view') {
+                    const detectedType = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), prevValue, prevPrompt.promptValues);
+
+                    if (detectedType) {
+                        valueIndex = allowedValues.indexOf(detectedType.toLowerCase());
+                    }
+
+
+                }
 
                 if (valueIndex !== -1) {
                     const sources = activeSource.split(',');
                     activeSource = sources[valueIndex] ? sources[valueIndex].trim() : "";
                 }
+
+                console.log("Value Index: " + valueIndex);
+                console.log("Active Source: " + activeSource);
             }
         }
 
@@ -386,17 +494,107 @@
     }
 
 
-    function redirectToSmartView(adsname) {
+    // function redirectToSmartView({ adsName, filters }) {
+
+
+
+    //     // targetUrl += `?ads=${adsname}`;
+    //     // targetUrl += "&load=1769601086182";
+    //     const payload = {
+
+    //         filters: filters
+    //     }
+
+    //     const encodedFilterQuery = btoa(JSON.stringify(payload));
+
+    //     let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
+    //     // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
+
+    //     targetUrl += `?ads=${encodeURIComponent(adsName)}`;
+    //     targetUrl += "&load=1769601086182";
+    //     targetUrl += `&filter=${encodedFilterQuery}`;
+    //     /**====================================================================================
+    //      * NOTE: This is Debug code remove it before deploying  to the  production environment 
+    //      * ====================================================================================
+    //      */
+    //     try {
+    //         const decodedForDebug = JSON.parse(atob(encodedFilterQuery));
+    //         console.group("AXI SmartView Redirect Debug");
+    //         console.log("Final URL:", targetUrl);
+    //         console.log("Encoded q:", encodedFilterQuery);
+    //         console.log("Decoded payload:", JSON.stringify(decodedForDebug));
+    //         console.groupEnd();
+    //     } catch (e) {
+    //         console.error("AXI SmartView payload decode failed", e);
+    //     }
+
+
+    //     /**
+    //      * ===================== End ========================================
+    //      */
+    //     top.window.LoadIframe(targetUrl);
+
+    //     // LoadIframe('../pgbase114/HTMLPages/SmartView_1769601086182.html?ads=axi_userlist&load=1769601086182')
+    // }
+
+    function redirectToSmartView({ adsName, filters }) {
+
+
+
+        // targetUrl += `?ads=${adsname}`;
+        // targetUrl += "&load=1769601086182";
+
+
         let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
+        // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
 
-
-        targetUrl += `?ads=${adsname}`;
+        targetUrl += `?ads=${encodeURIComponent(adsName)}`;
         targetUrl += "&load=1769601086182";
 
+        let encodedFilterQuery;
+
+        if (filters && filters.length === 1 && (filters[0].datatype === "c" || filters[0].datatype === "d") && (!filters[0].value || filters[0].value === "")) {
+            const columnName = filters[0].field;
+            targetUrl += `&groupby=${encodeURIComponent(columnName)}`;
+        }
+        else {
+            const payload = {
+
+                filters: filters
+            }
+
+            encodedFilterQuery = btoa(JSON.stringify(payload));
+
+            targetUrl += `&filter=${encodedFilterQuery}`;
+        }
+
+        console.log("Target Url for SmartViewTable:  " + targetUrl); 
+        /**====================================================================================
+         * NOTE: This is Debug code remove it before deploying  to the  production environment 
+         * ====================================================================================
+         */
+        if (typeof encodedFilterQuery !== "undefined") {
+            try {
+                const decodedForDebug = JSON.parse(atob(encodedFilterQuery));
+                console.group("AXI SmartView Redirect Debug");
+                console.log("Final URL:", targetUrl);
+                console.log("Encoded q:", encodedFilterQuery);
+                console.log("Decoded payload:", JSON.stringify(decodedForDebug));
+                console.groupEnd();
+            } catch (e) {
+                console.error("AXI SmartView payload decode failed", e);
+            }
+        }
+
+
+        /**
+         * ===================== End ========================================
+         */
         top.window.LoadIframe(targetUrl);
 
         // LoadIframe('../pgbase114/HTMLPages/SmartView_1769601086182.html?ads=axi_userlist&load=1769601086182')
     }
+
 
     function redirectToPermissionScreeen(username) {
         // aspx/tstruct.aspx?act=open&transid=a__up&axusername=aarav&fromsource=U&openerIV=axusers&isIV=true&isDupTab=true-1769600154391&dummyload=false
@@ -613,13 +811,14 @@
         if (!commands) return;
 
         if (!text.trim()) {
+            resetAdsContext();
             items = Object.keys(commands);
             hintDiv.textContent = "";
             render();
             return;
         }
 
-        render();
+        // render();
 
         // Clear stale resolutions when input changes
         const currentTokens = getTokens(text);
@@ -665,7 +864,9 @@
     // }
 
     function getTokens(str) {
-        const regex = /"[^"]*"?|[^\s]+/g;
+        // const regex = /"[^"]*"?|[^\s]+/g;
+
+        const regex = new RegExp(`"[^"]*"?|${OPERATOR_REGEX_PART}|[^\\s=<>!]+`, "g");
         return str.match(regex) || [];
     }
 
@@ -819,16 +1020,343 @@
     //         return [];
     //     }
 
+    //     function processAdsRepetitiveTokens(tokens, commandConfig) {
+    //         const expectingColumn = ADS_REPETITION_STATE.lastColumn === null;
+    //     const partialTyped = cleanString(tokens[tokens.length - 1]);
+    //       let paramValue = ADS_REPETITION_STATE.paramValue; 
+    //     let sourceKey = `${ADS_REPETITION_STATE.columnSource}_${paramValue}`.toLowerCase();
+
+
+
+
+    //     // === STEP 1: Suggest columns ===
+    //     if (expectingColumn) {
+    //         if (!axDatasourceObj[sourceKey]) {
+
+    //    loadList(ADS_REPETITION_STATE.columnSource.toLowerCase(), paramValue || "");
+    //     // return ["Loading columns..."];
+    // } 
+    //         const list = axDatasourceObj[sourceKey];
+    //         // const cacheList = localStorage.getItem(`axi_${ADS_REPETITION_STATE.columnSource}_param1:${paramValue}_v1`)
+    //         // const list = JSON.parse(cacheList);
+
+
+    //         if (!Array.isArray(list)) return ["Loading columns..."];
+
+    //         const filtered = list.filter(col =>
+    //             !ADS_REPETITION_STATE.usedColumns.has(col.name)
+    //         );
+
+    //         filteredObjects = filtered;
+
+    //         resetAdsContext(); 
+
+    //         return filtered
+    //             .map(col => col.displaydata || col.name)
+    //             .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
+    //     }
+
+    //     // === STEP 2: Suggest values for selected column ===
+    //     const columnName = ADS_REPETITION_STATE.lastColumn;
+    //     // const columnMeta = axDatasourceObj["axi_adscolumnlist"]
+    //     const columnMeta = axDatasourceObj[realSource]
+    //         ?.find(c => c.name === columnName);
+
+    //     if (!columnMeta) return [];
+
+    //     const { sourcetable, sourcefld } = columnMeta;
+
+
+    //     const isAccept = !sourcetable || !sourcefld;
+
+    //     if (isAccept) {
+
+    //         return [];
+    //     }
+
+
+    //     sourceKey = `axi_adsvalue_${sourcetable}_${sourcefld}`.toLowerCase();
+
+    //     if (!axDatasourceObj[sourceKey]) {
+    //         loadList("axi_adsvalue", `${sourcetable},${sourcefld}`);
+    //         return ["Loading values..."];
+    //     }
+
+    //     list = axDatasourceObj[sourceKey];
+    //     filteredObjects = list;
+
+    //     return list
+    //         .map(v => v.displaydata || v.name)
+    //         .filter(v => v.toLowerCase().includes(partialTyped.toLowerCase()));
+
+    //     }
+
+    function processAdsRepetitiveTokens(tokens, commandConfig) {
+        const targetIndex = tokens.length - 1;
+        const partialTyped = cleanString(tokens[targetIndex]);
+        const adsName = cleanString(tokens[1]);
+
+
+        if (targetIndex < 2) return [];
+
+
+        if (targetIndex % 2 === 0) {
+            const sourceName = "axi_adscolumnlist";
+            const sourceKey = `${sourceName}_${adsName}`.toLowerCase();
+
+
+            if (!axDatasourceObj[sourceKey]) {
+                loadList(sourceName, adsName);
+                return ["Loading columns..."];
+            }
+
+            const list = axDatasourceObj[sourceKey];
+            if (!Array.isArray(list)) return [];
+
+
+            const usedColumns = new Set();
+            for (let i = 2; i < targetIndex; i += 2) {
+                const usedToken = cleanString(tokens[i]).toLowerCase();
+                usedColumns.add(usedToken);
+            }
+
+
+            // const filtered = list.filter(col => {
+            //     const colName = (col.displaydata || col.name).toLowerCase();
+
+            //     return !usedColumns.has(colName) && colName.includes(partialTyped.toLowerCase());
+            // });
+
+
+
+            const filtered = list.filter(col => {
+
+                const rawDisplay = (col.displaydata || col.name).toLowerCase();
+
+
+                const cleanDisplay = rawDisplay
+                    .replace(/\s*\(.*?\)/g, "")
+                    .replace(/\s*\[[^\]]+\]\s*$/, "")
+                    .trim();
+
+                const rawName = (col.name || "").toLowerCase();
+
+
+                const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+
+
+                const matchesInput = cleanDisplay.includes(partialTyped.toLowerCase());
+
+                return !isUsed && matchesInput;
+            });
+
+
+
+            // filteredObjects = filtered;
+            filteredObjects = [goOption, ...filtered];
+            if (tokens.length > 2) {
+                return [
+                    goOption,
+                    ...filtered.map(col => col.displaydata || col.name)
+                ];
+
+            }
+
+        }
+
+
+        else {
+
+            const prevColumnName = cleanString(tokens[targetIndex - 1]);
+
+
+            const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
+            const colList = axDatasourceObj[colSourceKey];
+
+            if (!colList) return [];
+
+            const columnMetadata = colList.find(
+                c =>
+                    c.name?.toLowerCase() === prevColumnName.toLowerCase() ||
+                    c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
+            ) || null;
+
+            if (!columnMetadata) return [];
+
+            const isAccept = !columnMetadata.sourcetable || !columnMetadata.sourcefld;
+
+
+            const datatype = columnMetadata.fdatatype;
+
+            // if (datatype === 'c') {
+            if (isAccept) {
+                const acceptedValue = cleanString(tokens[tokens.length - 1]);
+                const columnName = prevColumnName
+                adsfieldvalueanddt[columnName] = {
+                    datatype: datatype,
+                    isAccept: isAccept,
+                };
+                return [];
+            }
+            else {
+
+                if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
+                    console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
+                    return [];
+                }
+
+                const acceptedValue = cleanString(tokens[tokens.length - 1]);
+                const columnName = prevColumnName
+                adsfieldvalueanddt[columnName] = {
+                    datatype: datatype,
+                    isAccept: isAccept,
+                };
+
+                const sourcetable = columnMetadata.sourcetable;
+                const sourcefld = columnMetadata.sourcefld;
+
+                const sourceName = "axi_adsdropdowntokens";
+                const paramValue = `${sourcetable},${sourcefld}`;
+                const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
+
+                if (!axDatasourceObj[sourceKey]) {
+                    loadList(sourceName, paramValue);
+                    return ["Loading values..."];
+                }
+
+                const list = axDatasourceObj[sourceKey];
+                if (!Array.isArray(list)) return [];
+
+
+                const filtered = list.filter(col => {
+                    const rawDisplay = String(col.displaydata || col.name)
+                        .toLowerCase();
+
+                    const normalizedTypedValue = (acceptedValue ?? "")
+                        .toLowerCase();
+
+                    return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
+                });
+
+
+
+                filteredObjects = filtered
+
+
+
+
+                return filtered.map(col => col.displaydata || col.name);
+
+
+
+            }
+            // }
+
+
+
+
+        }
+    }
+
+    function processRunCommands(tokens, targetIndex, structType) {
+        if (targetIndex !== 1) return [];
+        let allButtons
+
+
+        const partialTyped = cleanString(tokens[targetIndex]);
+
+        switch (structType) {
+            case "t":
+            case "i":
+
+                const isDesign = isTstructDesignMode();
+                if (isDesign) {
+                    designModeToolbarButtons = getDesignModeToolbarButtons();
+
+                    allButtons = { ...designModeToolbarButtons }
+
+
+                } else {
+                    bottomToolbarButtons = getBottomToolbarButtons();
+                    topToolbarButtons = getTopToolbarButtons();
+                    allButtons = { ...bottomToolbarButtons, ...topToolbarButtons };
+
+
+                }
+
+
+                break;
+
+            case "e":
+            case "ef":
+            case "c":
+                entityToolbarButtons = getEntityToolbarButtons();
+                allButtons = { ...entityToolbarButtons };
+                break;
+
+            case "pf":
+                pfToolbarButtons = getPFToolbarButtons();
+                allButtons = { ...pfToolbarButtons }
+                break;
+
+
+            default:
+                console.error("Invalid StructType")
+                break;
+        }
+
+
+
+
+
+
+        buttonsList = Object.values(allButtons).map(btn => ({
+            name: btn.id,
+            displaydata: `${btn.label} (${btn.id})`
+        }));
+
+        const filtered = buttonsList.filter(item =>
+            item.displaydata.toLowerCase().includes(partialTyped.toLowerCase())
+        );
+
+        filteredObjects = filtered;
+
+
+
+        if (structType === "o") {
+            return [];
+        }
+
+        return filtered.map(item => item.displaydata);
+
+
+
+    }
+
+    function resetAdsContext() {
+        ADS_REPETITION_STATE.active = false;
+        ADS_REPETITION_STATE.usedColumns.clear();
+        ADS_REPETITION_STATE.lastColumn = null;
+        ADS_REPETITION_STATE.columnSource = "";
+        ADS_REPETITION_STATE.paramValue = "";
+    }
+
 
     function suggestLocal(inputText) {
+        let ignoreExtraParams = false;
+        let detectedType = "";
         const tokens = getTokens(inputText);
         const endsWithSpace = inputText.endsWith(" ");
+
 
         const lastTokenRaw = tokens[tokens.length - 1];
         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
         if (endsWithSpace && !isUnclosedString) tokens.push("");
 
-        if (tokens.length === 0) { hintDiv.textContent = ""; return Object.keys(commands); }
+        if (tokens.length === 0) {
+            hintDiv.textContent = "";
+            return Object.keys(commands);
+        }
 
         const groupKey = cleanString(tokens[0]);
         if (tokens.length === 1 && !endsWithSpace) {
@@ -840,6 +1368,37 @@
         if (!commandConfig) { hintDiv.textContent = ""; return []; }
 
         const targetIndex = tokens.length - 1;
+
+        if (commandConfig.commandGroup?.toLowerCase() === "view") {
+            const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
+            const viewValues = commandConfig.prompts?.[0]?.promptValues;
+            const firstToken = cleanString(tokens[1] || "");
+            detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues);
+
+            if (detectedType === "ads") {
+                ignoreExtraParams = true;
+                if (tokens.length > 2) {
+                    updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "column" : "value" });
+                    return processAdsRepetitiveTokens(tokens, commandConfig)
+
+                }
+
+                console.log("ResolutionContext: ignoreExtraParams = true (ADS)")
+            }
+        }
+
+        if (groupKey === "run") {
+            const structType = getStructType();
+
+            if (!structType || structType === "o") {
+                showToast("Warning: CommandGroup Invalid: Please open Tstruct or Any other page");
+                return [];
+            }
+
+
+
+            return processRunCommands(tokens, targetIndex, structType);
+        }
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
 
         if (!promptInfo) {
@@ -847,10 +1406,38 @@
             return [];
         }
 
+
+
+        //         if (
+        //     detectedType === "ads" &&
+        //     ADS_REPETITION_STATE.active &&
+        //     ADS_REPETITION_STATE.paramValue === ""
+        // ) {
+        //     const adsPrompt = commandConfig.prompts.find(p => p.promptParams);
+
+        //     if (adsPrompt?.promptParams) {
+        //         const indices = adsPrompt.promptParams.toString().split(',');
+        //         const values = indices.map(idx => {
+        //             const logicalWordPos = parseInt(idx.trim());
+        //             const depTokenIndex = logicalWordPos - 1;
+        //             const depToken = cleanString(tokens[depTokenIndex] || "");
+        //             return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+        //         });
+
+        //         ADS_REPETITION_STATE.paramValue = values.join(',');
+        //     }
+        // }
+
+        // if (ADS_REPETITION_STATE.active) {
+        //     return processAdsRepetitiveTokens(tokens, commandConfig); 
+        // }
+
         const { config: activePrompt, realSource } = promptInfo;
         updateDynamicHintFromPrompt(activePrompt);
 
         const partialTyped = cleanString(tokens[targetIndex]);
+
+
 
         // Scenario A: Static Values
         if (!realSource && activePrompt.promptValues) {
@@ -877,37 +1464,51 @@
             }
 
 
+
+
             if (activePrompt.extraParams) {
-                const extraSource = activePrompt.extraParams.toLowerCase();
-
-                const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
 
 
-                if (!axDatasourceObj[extraKey]) {
+                if (!paramValue || paramValue.trim() === "") {
+                    console.log("Skipping extraParams – dependency not resolved yet");
 
-                    console.log(`Fetching Hidden Param Source: ${extraSource}`);
-                    loadList(extraSource, paramValue);
-                    return [];
-                }
-
-                // Extra List is cached, extract Index 0
-                const extraList = axDatasourceObj[extraKey];
-                if (extraList && extraList.length > 0) {
-                    const hiddenValue = extraList[0].name || extraList[0].displaydata || extraList[0].fname || extraList[0].keyfield;
-                    console.log(`Hidden Param Found (Index 0): ${hiddenValue}`);
-
-                    // Append hidden value to params for the MAIN list
-                    if (paramValue) paramValue += "," + hiddenValue;
-                    else paramValue = hiddenValue;
                 } else {
-                    // console.error("Error: Configuration not found (Empty List)"); 
-                    // showToast("Error: Configuration not found (Empty List)"); 
-                    return [];
+                    const extraSource = activePrompt.extraParams.toLowerCase();
+
+                    const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
+
+
+                    if (!axDatasourceObj[extraKey]) {
+
+                        console.log(`Fetching Hidden Param Source: ${extraSource}`);
+                        loadList(extraSource, paramValue);
+                        return [];
+                    }
+
+                    // Extra List is cached, extract Index 0
+                    const extraList = axDatasourceObj[extraKey];
+                    if (extraList && extraList.length > 0) {
+                        const hiddenValue = extraList[0].name || extraList[0].displaydata || extraList[0].fname || extraList[0].keyfield;
+                        console.log(`Hidden Param Found (Index 0): ${hiddenValue}`);
+
+                        // Append hidden value to params for the MAIN list
+                        if (paramValue) paramValue += "," + hiddenValue;
+                        else paramValue = hiddenValue;
+                    } else {
+                        // console.error("Error: Configuration not found (Empty List)"); 
+                        // showToast("Error: Configuration not found (Empty List)"); 
+                        return [];
+                    }
+
                 }
+
             }
 
 
             let apiSourceName = realSource.toLowerCase();
+            if (apiSourceName.toLowerCase() === "axi_analyticslist") {
+                paramValue = "admin";
+            }
             const sourceKey = (paramValue ? `${apiSourceName}_${paramValue}` : apiSourceName).toLowerCase();
 
             if (!axDatasourceObj[sourceKey]) {
@@ -928,7 +1529,16 @@
             });
 
             filteredObjects = filtered;
-            return filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+            let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+            if ((groupKey === "view" || groupKey === "configure" || groupKey === "edit") && tokens.length > 2 && tokens[1] !== "keyfield") {
+                resultList.unshift(goOption);
+                filteredObjects.unshift(goOption);
+            }
+            // return filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+            return resultList;
         }
 
         return [];
@@ -1099,9 +1709,12 @@
 
     function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
         tokenText = cleanString(tokenText);
+        if (!tokenText) return "";
+
         if (resolvedParams[tokenIndex] && !forceResolve) return resolvedParams[tokenIndex];
-        if (!tokenText && !forceResolve) return "";
+        // if (!tokenText && !forceResolve) return "";
         if (!commandConfig) return tokenText;
+
 
         const currentTokens = getTokens(input.value);
 
@@ -1148,6 +1761,12 @@
         if (realSource) {
             let paramValue = "";
 
+            // if (prompt.promptValues) {
+            //     tokenText = tryResolveToken(tokenIndex, tokenText, commandConfig, false); 
+
+            //     return tokenText; 
+            // }
+
             // Resolve Dependencies
             if (prompt.promptParams) {
                 const indices = prompt.promptParams.toString().split(',');
@@ -1174,6 +1793,9 @@
             }
 
             let apiName = realSource;
+            if (apiName.toLowerCase() === "axi_analyticslist") {
+                paramValue = "admin";
+            }
             let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
 
             const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
@@ -1187,11 +1809,11 @@
                     let real = found.name || found.sqlname || found.displaydata;
 
                     if (real.includes("(") && real.includes(")")) {
-                        const match = real.match(/\(([^)]+)\)/); 
+                        const match = real.match(/\(([^)]+)\)/);
 
-                        real = match ? match[1]: real; 
+                        real = match ? match[1] : real;
 
-                     } 
+                    }
 
                     resolvedParams[tokenIndex] = real;
                     return real;
@@ -1209,8 +1831,13 @@
     function render() {
         console.log("Render called");
         list.innerHTML = "";
-        // activeIndex = -1;
-        if (activeIndex < 0) activeIndex = 0;
+
+        if (items.length > 0 && isSystemMessage(items[0])) {
+            activeIndex = -1;
+        } else {
+            activeIndex = 0;
+        }
+
 
         const validItems = items.filter(item => {
             if (!item) return false;
@@ -1244,6 +1871,12 @@
             li.textContent = text;
             li.className = "axi-suggestion";
 
+            if (typeof item === 'object' && item.isExecutable) {
+                li.style.fontWeight = "bold";
+                li.style.color = "#22c55e";
+                li.style.borderBottom = "1px solid #eee";
+            }
+
             if (i === activeIndex) {
                 li.classList.add("active");
             }
@@ -1274,28 +1907,62 @@
     }
 
     function apply(index) {
-        if (!items[index] || items[index] === "Loading options...") return;
+
+        if (!items[index] || isSystemMessage(items[index])) return;
+
+        const selectedItem = items[index];
+
+        if (typeof selectedItem === 'object' && selectedItem.isExecutable) {
+            console.log("Action item selected. Executing command...");
+            hide();
+            executeCommandsV2();
+            return;
+        }
+
+        const currentInput = input.value;
+        const tokens = getTokens(currentInput);
+        const endsWithSpace = currentInput.endsWith(" ");
+        const lastTokenRaw = tokens[tokens.length - 1];
+
+        const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
+
+
+        if (endsWithSpace && !isUnclosedString) {
+            tokens.push("");
+        }
+
+        let targetIndex = tokens.length - 1;
+        if (targetIndex < 0) {
+            targetIndex = 0;
+            tokens.push("");
+        }
 
         let suggestion = items[index];
         let displayName = suggestion;
-        let realValue = ""; 
+        let realValue = "";
+
+        const isViewCommand = tokens[0]?.toLowerCase() === "view";
+
+        const isAdsValue = isViewCommand && targetIndex >= 3 && targetIndex % 2 !== 0;
+
+
 
         // Get Real Value logic
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
 
-        if (foundObj?.displaydata?.includes("(") && foundObj?.displaydata?.includes(")")) {
-            const match = foundObj.displaydata.match(/\(([^)]+)\)/); 
+        // if (foundObj?.displaydata?.includes("(") && foundObj?.displaydata?.includes(")")) {
+        //     const match = foundObj.displaydata.match(/\(([^)]+)\)/); 
 
-            realValue = match ? match[1]: null; 
+        //     realValue = match ? match[1]: null; 
 
-        } else {
+        // } else {
         realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
 
 
-        }
 
 
-        if (suggestion.includes("(") && suggestion.includes(")")) {
+
+        if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue) {
             const lastBracketIndex = suggestion.lastIndexOf("(");
 
             // if (lastBracketIndex > 0 && suggestion[lastBracketIndex - 1] === '-') {
@@ -1314,36 +1981,16 @@
 
         }
 
-        if (displayName.includes("[") && displayName.includes("]")) {
+        if (displayName.includes("[") && displayName.includes("]") && !isAdsValue) {
             const lastBracketIndex = suggestion.lastIndexOf("[");
             const text = suggestion.substring(0, lastBracketIndex).trim();
 
             displayName = text.replace(/\s*\[[^\]]*\]$/, "").trim();
         }
 
-        const currentInput = input.value;
-        const tokens = getTokens(currentInput);
-
-
-        const endsWithSpace = currentInput.endsWith(" ");
-        const lastTokenRaw = tokens[tokens.length - 1];
-
-        // Check if we are inside an unclosed quote
-        const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
-
-
-        if (endsWithSpace && !isUnclosedString) {
-            tokens.push("");
-        }
-
-
-        let targetIndex = tokens.length - 1;
-        if (targetIndex < 0) {
-            targetIndex = 0;
-            tokens.push("");
-        }
-
         resolvedParams[targetIndex] = realValue;
+
+        displayName = displayName.replace(/[\r\n]+/g, " ").trim();
 
         // Auto-Quote if necessary
         if (displayName.includes(" ")) {
@@ -1353,8 +2000,10 @@
         tokens[targetIndex] = displayName;
 
         input.value = tokens.join(" ") + " ";
+
+        lastTypedTokens = [...tokens];
         handleInput();
-        hide();
+        // hide();
         input.focus();
     }
 
@@ -1562,20 +2211,47 @@
     /* ===============================
        TOAST HELPER
     =============================== */
-    function showToast(message, duration = 5000, isSuccess=false) {
+    function showToast(message, duration = 5000, isSuccess = false) {
 
         const toast = document.createElement("div");
 
-        toast.textContent = message;
-         const color = isSuccess ? "green" : "red";
-        
+        const textSpan = document.createElement("span");
+        textSpan.textContent = message;
+        textSpan.style.flexGrow = "1";
+        textSpan.style.marginRight = "15px";
+
+
+        const closeBtn = document.createElement("span");
+        closeBtn.innerHTML = "&times;";
+        closeBtn.style.cursor = "pointer";
+        closeBtn.style.fontWeight = "bold";
+        closeBtn.style.fontSize = "20px";
+        closeBtn.style.lineHeight = "1";
+
+
+        closeBtn.onclick = () => {
+            toast.style.opacity = "0";
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    document.body.removeChild(toast);
+                }
+            }, 300);
+        };
+        const bgColor = isSuccess ? "rgba(34, 197, 94, 0.9)" : "rgba(239, 68, 68, 0.9)";
+
 
 
         Object.assign(toast.style, {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "10px",
             position: "fixed",
-            bottom: "20px",
+            bottom: "50px",
             right: "20px",
-            backgroundColor: color,
+            minWidth: "300px",
+            width: "fit-content",
+            backgroundColor: bgColor,
             color: "white",
             padding: "12px 24px",
             borderRadius: "8px",
@@ -1584,10 +2260,13 @@
             fontFamily: "sans-serif",
             fontSize: "14px",
             opacity: "0",
-            transition: "opacity 0.3s ease-in-out"
+            transition: "opacity 0.3s ease-in-out",
+            backdropFilter: "blur(4px)"
         });
 
         document.body.appendChild(toast);
+        toast.appendChild(textSpan);
+        toast.appendChild(closeBtn);
 
 
         requestAnimationFrame(() => {
@@ -1949,7 +2628,8 @@
                     resolvedParams = {};
 
                     await initCommands(true);
-                    alert("Refreshed!");
+                    // alert("Refreshed!");
+                    showToast("Refreshed Successfully!", 5000, true);
                     input.focus();
 
                 } catch (error) {
@@ -1992,6 +2672,12 @@
             if (input.value.trim() === "") {
                 handleInput();
             }
+        });
+
+        input.addEventListener("click", () => {
+            if (input.value.trim() === "" && list.style.display === "none") {
+                handleInput();
+            }
         })
 
         input.addEventListener("input", handleInput);
@@ -2012,34 +2698,21 @@
             if (e.key === "Enter") {
                 e.preventDefault();
 
+                if (e.ctrlKey) {
+                    hide();
+                    executeCommandsV2();
+                    return;
+                }
 
-                // if (list.style.display === "block" && active >= 0) {
-                //     e.preventDefault(); 
-                //     apply(activeIndex); 
-                //     return; 
-                // }
-                //     if (list.style.display === "none") {
-                //         e.preventDefault(); 
-                //         handleInput(); 
-                //         return; 
-                //     }
 
-                // const isListOpen = list.style.display === "block"; 
-                // const hasActiveItem = isListOpen && activeIndex >= 0; 
-
-                // if (hasActiveItem) {
-                //     e.preventDefault(); 
-                //     apply(activeIndex); 
-                //     return; 
-                // }
-
-                // executeCommandsV2(); 
-                // hide(); 
-                // return; 
 
                 if (isSuggestionVisible() && hasActiveSuggestion()) {
                     e.preventDefault();
-                    apply(activeIndex);
+                    if (!isSystemMessage(items[activeIndex])) {
+                        apply(activeIndex);
+
+
+                    }
                     return;
                 }
 
@@ -2050,8 +2723,7 @@
                 return;
 
 
-                // e.preventDefault(); 
-                // handleInput();
+
 
             }
             // // Auto Double quotes 
@@ -2100,19 +2772,42 @@
             if (e.key === "Escape") {
                 e.preventDefault();
 
-                if (input.value.trim() !== "") {
-                    input.value = "";
-                    handleInput();
-                    input.focus();
-                } else {
-                    hide();
-                }
+                // if (input.value.trim() !== "") {
+                //     input.value = "";
+                //     handleInput();
+                //     input.focus();
+                // } else {
+                hide();
+                // }
             }
         });
 
         document.addEventListener("click", e => {
             if (input && list && e.target !== input && !list.contains(e.target)) hide();
         });
+
+
+        const iframe = document.getElementById("middle1");
+        if (iframe) {
+            const attachIframeClick = () => {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+                    iframeDoc.removeEventListener("click", hide);
+                    iframeDoc.addEventListener("click", () => {
+                        hide();
+                    });
+                } catch (err) {
+                    console.warn("Could not attach click listener to iframe (likely CORS restriction):", err);
+                }
+            };
+
+            // Attach immediately if already loaded
+            attachIframeClick();
+
+
+            iframe.addEventListener("load", attachIframeClick);
+        }
     }
 
     function clearAxiLocalStorage(prefix) {
@@ -2154,7 +2849,48 @@
         }
     }
 
+    function executeScript() {
+        // javascript:CallAction('script8','','','n','n','','true');
+        top.window.CallAction('script8', '', '', 'n', 'n', '', 'true');
+    }
+
+    function executeSubmit() {
+        const iframe = document.getElementById("middle1");
+
+        if (!iframe) {
+            console.error("[executeSubmit] middle1 iframe not found");
+            return;
+        }
+
+        const iframeDoc =
+            iframe.contentDocument || iframe.contentWindow?.document;
+
+        if (!iframeDoc) {
+            console.error("[executeSubmit] Unable to access iframe document");
+            return;
+        }
+
+        const saveBtn = iframeDoc.getElementById("ftbtn_iSave");
+
+        if (!saveBtn) {
+            console.error("[executeSubmit] Save button (ftbtn_iSave) not found in iframe");
+            return;
+        }
+
+
+        if (saveBtn.style.pointerEvents === "none") {
+            console.warn("[executeSubmit] Save button is currently disabled");
+            return;
+        }
+
+        saveBtn.click();
+    }
+
+
+
+
     function executeCommandsV2() {
+
         const text = input.value.trim();
         if (!text || !commands) return;
 
@@ -2162,11 +2898,16 @@
         if (tokens.length === 0) return; // Need at least the command group
 
         const groupKey = cleanString(tokens[0]);
+
+
+
+
+
         const groupConfig = commands[groupKey];
 
         if (!groupConfig) {
             console.warn(`Unknown command group: ${groupKey}`);
-            return;
+            // return;
         }
 
         // Build the context object to pass to the dispatcher
@@ -2180,6 +2921,11 @@
 
         dispatchCommand(context);
         hide(); // Close suggestions after running
+
+        setTimeout(() => {
+            input.focus();
+            input.select();
+        }, 200)
     }
 
     function buildCommandTokens(tokens) {
@@ -2217,15 +2963,15 @@
 
 
 
-        const firstParamPrompt = config.prompts.find(p => p.wordPos === 2);
+        const firstParamPrompt = config?.prompts?.find(p => p.wordPos === 2);
         const firstParamValue = cleanString(tokens[1]);
 
         let handlerKey = 'default';
 
-        if (firstParamPrompt && firstParamPrompt.promptValues) {
+        if (firstParamPrompt && firstParamPrompt?.promptValues) {
 
             if (firstParamValue) {
-                handlerKey = firstParamValue.toLowerCase();
+                handlerKey = firstParamValue?.toLowerCase();
             }
         }
 
@@ -3783,8 +4529,8 @@
         let fieldValue;
         let rawFieldName;
         let rawFieldValue;
-        let fieldUniqueId; 
-        let fieldValueIndex = 0; 
+        let fieldUniqueId;
+        let fieldValueIndex = 0;
 
 
         if (tokens.length < 2) {
@@ -3804,7 +4550,7 @@
 
         const viewDataSourceKey = `${viewDataSource}`.toLowerCase();
         let rawStruct = cleanCommandToken(tokens[1]);
-         transId = tryResolveToken(1, rawStruct, commandConfig, false);
+        transId = tryResolveToken(1, rawStruct, commandConfig, false);
 
 
         type = getType(viewDataSourceKey, transId, promptValues);
@@ -3822,13 +4568,19 @@
 
 
         if (type === "ads") {
-            transId = "b_sql";
-            fieldName = "sqlname";
-            fieldValue = cleanCommandToken(tokens[1]);
+
+
+            const adsName = cleanCommandToken(tokens[1]);
+            const filters = extractAdsFilters(tokens);
+
+            console.log("Ads Filters: ", filters);
 
 
             // handler({ transId, fieldName, fieldValue });
-            redirectToSmartView(fieldValue);
+            redirectToSmartView({
+                adsName: adsName,
+                filters: filters,
+            });
             return;
 
 
@@ -3852,7 +4604,7 @@
 
         }
 
-       
+
         const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
 
         // if (transId === rawStruct) {
@@ -3877,41 +4629,41 @@
         // }
 
         if (tokens.length > 3) {
-            fieldValueIndex = 3; 
-           
+            fieldValueIndex = 3;
+
 
         } else {
-            fieldValueIndex = 2; 
-           
+            fieldValueIndex = 2;
+
 
         }
 
-       
-        
-
-         const extraList = axDatasourceObj[extraSourceKey];
-
-            if (extraList && extraList.length > 0) {
-                fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
-                // if (extraList[0].fname) {
-                //     fieldName = extraList[0].fname; 
-                // } else {
-                // fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
 
 
-                // }
-            } else {
-                console.warn("Hidden field name not found in cache");
-            }
 
-            rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
-            fieldValue = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
-            fieldUniqueId = getUniqueId(fieldValue); 
+        const extraList = axDatasourceObj[extraSourceKey];
+
+        if (extraList && extraList.length > 0) {
+            fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
+            // if (extraList[0].fname) {
+            //     fieldName = extraList[0].fname; 
+            // } else {
+            // fieldName = extraList[0].displaydata || extraList[0].name || extraList[0].fname;
 
 
-            console.log(
-                `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
-            );
+            // }
+        } else {
+            console.warn("Hidden field name not found in cache");
+        }
+
+        rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
+        fieldValue = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
+        fieldUniqueId = getUniqueId(fieldValue);
+
+
+        console.log(
+            `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
+        );
 
         handler({
             transId,
@@ -3973,60 +4725,60 @@
 
     async function handleKeyfield({ tokens, commandConfig }) {
 
-    const tstructName = cleanString(tokens[2]);
-    const keyField = cleanString(tokens[3]);
-    const actualFieldName = tryResolveToken(3, keyField, commandConfig, false);
-    const transId = tryResolveToken(2, tstructName, commandConfig, false);
-    if (!tstructName || !keyField) {
-        showToast("TStruct and Key Field are required")
-        console.log("TStruct and Key Field are required");
-        return;
-    }
-
-    //const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
-    //const found = list?.find(
-    //    x => x.caption?.trim().toLowerCase() === tstructName.trim().toLowerCase()
-    //);
-
-    //if (!found || !found.name) {
-    //    console.error("TStruct not found:", rawStruct);
-    //    return;
-    //}
-    //    transId = found.name;
-
-    const requestBody = {
-        action: "view",   ///edit
-        adsNames: ["axi_tstructprops_insupd"],
-        sqlParams: {
-            param1: "axp_tstructprops",
-            param2: "name,keyfield,userconfigured",
-            param3: `'${transId}','${actualFieldName}','t'`,
-            param4: `name = '${transId}'`
+        const tstructName = cleanString(tokens[2]);
+        const keyField = cleanString(tokens[3]);
+        const actualFieldName = tryResolveToken(3, keyField, commandConfig, false);
+        const transId = tryResolveToken(2, tstructName, commandConfig, false);
+        if (!tstructName || !keyField) {
+            showToast("TStruct and Key Field are required")
+            console.log("TStruct and Key Field are required");
+            return;
         }
-    };
 
-    const res = await getAxListAsync(requestBody);
+        //const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+        //const found = list?.find(
+        //    x => x.caption?.trim().toLowerCase() === tstructName.trim().toLowerCase()
+        //);
 
-    const dataObj = typeof res === "string" ? JSON.parse(res) : res;
+        //if (!found || !found.name) {
+        //    console.error("TStruct not found:", rawStruct);
+        //    return;
+        //}
+        //    transId = found.name;
 
-    console.log("DATA obj is :", dataObj);
-    console.log("Type of DATA OBJ:", typeof dataObj);
+        const requestBody = {
+            action: "view",   ///edit
+            adsNames: ["axi_tstructprops_insupd"],
+            sqlParams: {
+                param1: "axp_tstructprops",
+                param2: "name,keyfield,userconfigured",
+                param3: `'${transId}','${actualFieldName}','t'`,
+                param4: `name = '${transId}'`
+            }
+        };
 
-    const resultBlock = dataObj?.result?.data?.[0];
+        const res = await getAxListAsync(requestBody);
 
-    if (dataObj?.result?.success && dataObj?.result?.message?.toLowerCase() === "success") {
-        showToast(`Key field-${keyField} has been set for the form ${tstructName}`,5000, true);
-        console.log(`Key field-${keyField} has been set for the form ${tstructName}`);
-        return;
+        const dataObj = typeof res === "string" ? JSON.parse(res) : res;
+
+        console.log("DATA obj is :", dataObj);
+        console.log("Type of DATA OBJ:", typeof dataObj);
+
+        const resultBlock = dataObj?.result?.data?.[0];
+
+        if (dataObj?.result?.success && dataObj?.result?.message?.toLowerCase() === "success") {
+            showToast(`Key field-${keyField} has been set for the form ${tstructName}`, 5000, true);
+            console.log(`Key field-${keyField} has been set for the form ${tstructName}`);
+            return;
+        }
+
+
+        if (resultBlock?.error) {
+            showToast(`Error: ${resultBlock.error}`);
+            console.log(`Error: ${resultBlock.error}`);
+            return;
+        }
     }
-
-
-    if (resultBlock?.error) {
-        showToast(`Error: ${resultBlock.error}`);
-        console.log(`Error: ${resultBlock.error}`);
-        return;
-    }
-}
 
     function getType(axDatasourceKey, text, paramValuesCsv) {
         const paramList = paramValuesCsv?.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
@@ -4041,12 +4793,12 @@
 
         const normalizedText = text.trim().toLowerCase();
 
-        const item = data.find(d => {
+        const item = data?.find(d => {
             if (typeof d.displaydata !== "string") return false;
 
             if (d.name && d.name.toLowerCase() === normalizedText) {
-            return true;
-        }
+                return true;
+            }
 
 
             const pureCaption = d.displaydata
@@ -4179,7 +4931,7 @@
 
         }
 
-        
+
 
         setEditSessionState(transId);
 
@@ -4189,7 +4941,7 @@
 
         if (!paramName) {
             // window.LoadIframe(targetUrl);
-        redirectToIView(iviewName); 
+            redirectToIView(iviewName);
 
 
         } else {
@@ -4291,6 +5043,725 @@
      * ======================= End =============================
      */
 
+    /**
+     * 
+     * Run commands 
+     */
+
+    /**
+     * Handles the run command execution
+     *  @param {object} {tokens, commandConfig}
+     * 
+     */
+    function handleRunCommand({ tokens, commandConfig }) {
+        const structType = getStructType();
+        let buttonLabel = cleanCommandToken(tokens[1]);
+        let allButtons = null;
+
+
+        if (!buttonLabel) return;
+
+
+
+        if (structType === "o") {
+            console.error("Invalid Struct type");
+            showToast("Invalid Struct type");
+            return;
+        }
+
+
+
+
+        switch (structType) {
+            case "t":
+            case "i":
+
+                const isDesign = isTstructDesignMode();
+                if (isDesign) {
+                    if (!designModeToolbarButtons) {
+                        designModeToolbarButtons = getDesignModeToolbarButtons();
+
+
+                    }
+
+                    allButtons = [...Object.values(designModeToolbarButtons)]
+
+
+                } else {
+                    if (!bottomToolbarButtons) bottomToolbarButtons = getBottomToolbarButtons();
+                    if (!topToolbarButtons) topToolbarButtons = getTopToolbarButtons();
+                    allButtons = [...Object.values(bottomToolbarButtons),
+                    ...Object.values(topToolbarButtons)];
+
+
+                }
+
+
+                break;
+
+            case "e":
+            case "ef":
+            case "c":
+                if (!entityToolbarButtons) entityToolbarButtons = getEntityToolbarButtons();
+                allButtons = [...Object.values(entityToolbarButtons)];
+                break;
+
+            case "pf":
+                if (!pfToolbarButtons) pfToolbarButtons = getPFToolbarButtons();
+                allButtons = [...Object.values(pfToolbarButtons)]
+                break;
+
+
+            default:
+                console.error("Invalid StructType")
+                break;
+        }
+
+
+
+
+
+        console.log("All Buttons: " + JSON.stringify(allButtons));
+
+        let resolvedBtnId = tryResolveToken(1, buttonLabel, commandConfig, false);
+
+        console.log(`Run Command Debug: Label="${buttonLabel}", ResolvedID="${resolvedBtnId}"`);
+
+        let targetBtn = null;
+
+        if (resolvedBtnId && resolvedBtnId !== buttonLabel) {
+            targetBtn = allButtons.find(btn => btn.id === resolvedBtnId);
+        }
+
+        if (!targetBtn && resolvedBtnId) {
+            targetBtn = allButtons.find(btn => btn.id === resolvedBtnId);
+        }
+
+
+        if (!targetBtn) {
+            targetBtn = allButtons.find(btn => {
+                const rawLabel = btn.label || "";
+
+                const normalizedBtnLabel = rawLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+
+                const normalizedInputLabel = buttonLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+
+                return normalizedBtnLabel === normalizedInputLabel;
+
+
+            });
+
+        }
+
+
+        if (!targetBtn) {
+            console.error(`Button not found for label: ${buttonLabel}`);
+            showToast(`Button '${buttonLabel}' not found`, 3000);
+            return;
+        }
+
+        console.log(`Clicking button: ${targetBtn.label} (${targetBtn.id})`);
+
+        targetBtn.click();
+
+
+
+    }
+
+    function normalizeDate(val) {
+        if (!val.includes("/")) return val;
+        const [d, m, y] = val.split("/");
+        return `${y}-${m}-${d}`; // ISO
+    }
+
+
+
+    // function extractAdsFilters(rawInput) {
+    //     const filters = [];
+    //     const VALID_OPERATORS = new Set(["=", "!=", "<", "<=", ">", ">="]);
+    //     const consumedRanges = [];
+
+    //     const input = rawInput.trim();
+
+    //     // Explicit operator regex
+    //     // field >= value | field=value | field <= value
+    //     const explicitRegex = /(\w+)\s*(<=|>=|!=|=|<|>)\s*([^\s]+)/g;
+
+    //     let match;
+    //     while ((match = explicitRegex.exec(input)) !== null) {
+    //         let [, field, operator, valueRaw] = match;
+
+    //         // const operator = OPERATOR_MAP[opRaw];
+    //         // const operator = valueRaw;
+    //         // if (!operator) continue;
+
+    //         let value = valueRaw;
+    //         let dataTypeObj = adsfieldvalueanddt[field];
+    //         let dataType = dataTypeObj?.datatype;
+
+    //         if (field.toLowerCase().includes("date")) {
+    //             value = normalizeDate(valueRaw);
+    //         }
+
+    //         filters.push({
+    //             field,
+    //             operator,
+    //             value,
+    //             dataType,
+    //             isAccept: dataTypeObj?.isAccept
+    //         });
+
+    //         // mark this range as consumed
+    //         consumedRanges.push([match.index, explicitRegex.lastIndex]);
+    //     }
+
+    //     // Remove explicit expressions from input
+    //     let remaining = input;
+    //     for (const [start, end] of consumedRanges.reverse()) {
+    //         remaining =
+    //             remaining.slice(0, start) +
+    //             " ".repeat(end - start) +
+    //             remaining.slice(end);
+    //     }
+
+    //     // Implicit equality: field value
+    //     // const parts = remaining.split(/\s+/).filter(Boolean);
+    //     const parts = getTokens(remaining).map(t =>
+    //         t.startsWith('"') && t.endsWith('"')
+    //             ? t.slice(1, -1)
+    //             : t
+    //     );
+
+    //     for (let i = 0; i < parts.length - 1; i += 2) {
+    //         const field = parts[i];
+    //         const valueRaw = parts[i + 1];
+    //         const dataTypeObj = adsfieldvalueanddt[field];
+
+
+    //         if (field.toLowerCase() === "view") continue;
+
+    //         let value = valueRaw;
+    //         if (field.toLowerCase().includes("date")) {
+    //             value = normalizeDate(valueRaw);
+    //         }
+
+    //         filters.push({
+    //             field,
+    //             operator: "=",
+    //             value,
+    //             datatype: dataTypeObj?.datatype,
+    //             isAccept: dataTypeObj?.isAccept
+    //         });
+    //     }
+
+    //     return filters;
+    // }
+
+    function extractAdsFilters(tokens) {
+        const filters = [];
+        // const VALID_OPERATORS = new Set(["=", "!=", "<", "<=", ">", ">="]);
+
+
+        let i = 2;
+
+        while (i < tokens.length) {
+
+            const rawColToken = cleanCommandToken(tokens[i]);
+            if (!rawColToken) { i++; continue; }
+
+
+            // let resolvedCol = resolvedParams[i] || rawColToken;
+
+
+            let nextTokenRaw = cleanCommandToken(tokens[i + 1] || "");
+
+            let operator = "=";
+            let valueTokenIndex = -1;
+            let rawValue = "";
+
+            if (OPERATORS_SET.has(nextTokenRaw)) {
+
+                operator = nextTokenRaw;
+                rawValue = cleanCommandToken(tokens[i + 2] || "");
+                valueTokenIndex = i + 2;
+
+
+                i += 3;
+            } else {
+
+                operator = "=";
+                rawValue = nextTokenRaw;
+                valueTokenIndex = i + 1;
+
+
+                i += 2;
+            }
+
+
+
+
+            // let resolvedValue = resolvedParams[valueTokenIndex];
+
+
+            // if (resolvedValue === undefined || resolvedValue === null) {
+            //     resolvedValue = rawValue;
+            // }
+
+
+
+
+
+            const colMetadata = adsfieldvalueanddt[rawColToken] || {};
+
+            if (colMetadata?.datatype === "d") {
+                rawValue = normalizeDate(rawValue);
+            }
+
+            filters.push({
+                field: rawColToken,
+                operator: operator,
+                value: rawValue,
+                datatype: colMetadata.datatype,
+                isAccept: colMetadata.isAccept
+            });
+        }
+
+        return filters;
+    }
+
+
+
+    function getBottomToolbarButtons() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const toolbar = doc.querySelector(".BottomToolbarBar");
+        if (!toolbar) return {};
+
+        const buttons = toolbar.querySelectorAll("a");
+
+        const result = {};
+
+        buttons.forEach((btn) => {
+            if (!hasAction(btn)) return;
+            const id = btn.id || btn.getAttribute("data-id");
+            if (!id) return;
+            const label = extractButtonLabel(btn);
+            if (!label) console.log("There is no label for Element: " + btn);
+
+
+
+            result[id] = {
+                id,
+                label,
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        return result;
+    }
+
+    function getTopToolbarButtons() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const toolbar = doc.querySelector(".toolbarRightMenu");
+        if (!toolbar) return {};
+
+        const buttons = toolbar.querySelectorAll("a");
+
+        const result = {};
+
+        buttons.forEach((btn) => {
+            if (!hasAction(btn)) return;
+            const id = btn.id || btn.getAttribute("data-id");
+            if (!id) return;
+            // const label = btn.innerText.trim();
+            const label = extractButtonLabel(btn);
+            if (!label) console.log("There is no label for Element: " + btn);
+
+
+
+            result[id] = {
+                id,
+                label,
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        return result;
+    }
+
+    function getTStructButtons(attributeName) {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const toolbar = doc.querySelector(`.${attributeName}`);  //|| doc.querySelector(`#${attributeName}`);
+        if (!toolbar) return {};
+
+        const buttons = toolbar.querySelectorAll("a");
+
+        const result = {};
+
+        buttons.forEach((btn) => {
+            const id = btn.id || btn.getAttribute("data-id");
+            if (!id) return;
+            const label = btn.innerText.trim();
+            if (!label) console.log("There is no label for Element: " + btn);
+
+
+
+            result[label] = {
+                id,
+                label,
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        return result;
+    }
+
+    function getStructType() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return null;
+
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!iframeDoc) return null;
+
+        const src = iframe.getAttribute("src");
+        if (!src) return null;
+
+        const page = src.split("?")[0].toLowerCase();
+
+        if (!page) {
+            return null;
+        }
+
+        const bodyId = iframeDoc.body?.id || "";
+
+        if ((page.endsWith("/tstruct.aspx") || page.includes("tstruct.aspx")) && bodyId !== "Entitymanagement_Body") {
+            return "t" // tstruct page
+        }
+
+
+
+        if (page.endsWith("/iview.aspx") || page.includes("iview.aspx")) {
+            return "i";  // IView page
+        }
+
+        if ((page.endsWith("/entity.aspx") || page.includes("entity.aspx")) && bodyId === "Entitymanagement_Body") {
+            return "e";  // Entity page
+        }
+
+
+
+        if ((page.endsWith("/entityform.aspx") || page.includes("entityform.aspx")) || bodyId === "Entitymanagement_Body") {
+            return "ef";  // Entity Data page
+        }
+
+        if (src.includes("/CustomPages") || src.includes("/axidev")) {
+            return "c"; // Custom page
+
+        }
+
+        // ../aspx/processflow.aspx?activelist=t&hdnbElapsTime=0
+
+
+        if (page.endsWith("/processflow.aspx") || page.includes("processflow.aspx")) {
+            return "pf"; // Custom page
+
+        }
+
+
+
+
+
+        return "o"; // Others 
+
+
+
+    }
+
+    function extractButtonLabel(btn) {
+
+
+        const dataExtra = btn.getAttribute("data-extra");
+        if (dataExtra) return dataExtra.trim();
+
+        const title = btn.getAttribute("title");
+        if (title) return title.trim();
+
+        const menuTitle = btn.querySelector(".menu-title");
+
+        if (menuTitle) return menuTitle.textContent.trim();
+
+
+
+
+        const text = Array.from(btn.childNodes)
+            .filter(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
+            .map(n => n.textContent.trim())
+            .join(" ")
+            .trim();
+
+        if (text) {
+
+            return text;
+        }
+
+
+
+
+        return btn.innerText.trim();
+
+    }
+
+    function hasAction(btn) {
+        if (btn.getAttribute("onclick")) return true;
+
+        if (btn.tagName === "A") {
+            const href = btn.getAttribute("href");
+
+            if (href && href !== "#" && href !== "javascript:void(0)") return true;
+
+        }
+
+
+
+        return false;
+    }
+
+    function getEntityToolbarButtons() {
+        const iframe = document.getElementById("middle1");
+
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const toolbar = doc.querySelector(".card-toolbar");
+        if (!toolbar) return {};
+
+        const buttons = toolbar.querySelectorAll("a, button");
+        const result = {};
+
+        buttons.forEach((btn, index) => {
+            // if (!hasAction(btn)) return;
+
+            if (btn.classList.contains("d-none") || btn.classList.contains("menu-dropdown")) return;
+
+            if (btn.getAttribute("data-kt-menu-attach") === "parent") return;
+
+            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
+            if (!id) return;
+
+            const label = extractButtonLabel(btn);
+            if (!label) return;
+
+            result[id] = {
+                id,
+                label: label.toLowerCase(),
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        return result;
+
+    }
+
+    function watchDesignModeChange(callback) {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return;
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return;
+
+        const target = doc.querySelector("#divDc1");
+        if (!target) return;
+
+        const observer = new MutationObserver(() => {
+            callback(target.classList.contains("tstructDesignMode"));
+        });
+
+        observer.observe(target, {
+            attributes: true,
+            attributeFilter: ["class"]
+        });
+    }
+
+
+    function getDesignModeToolbarButtons() {
+        const iframe = document.getElementById("middle1");
+
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const toolbar = doc.querySelector("#designModeToolbar");
+        if (!toolbar) return {};
+
+        const buttons = toolbar.querySelectorAll("a, button");
+        const result = {};
+
+        buttons.forEach((btn, index) => {
+            // if (!hasAction(btn)) return;
+
+            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
+            if (!id) return;
+
+            const label = extractButtonLabel(btn);
+            if (!label) return;
+
+            result[id] = {
+                id,
+                label: label.toLowerCase(),
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        return result;
+
+    }
+
+    function isTstructDesignMode() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return false;
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return false;
+
+        const root = doc.querySelector("#divDc1");
+        if (!root) return false;
+
+        return root.classList.contains("tstructDesignMode");
+    }
+
+    function getPFToolbarButtons() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const result = {};
+
+        // Process Flow toolbar zones
+        const containers = [
+            ".Page-Title-Bar",
+            ".Tkts-toolbar-Left",
+            ".Tkts-toolbar-Right"
+        ];
+
+        containers.forEach(selector => {
+            const root = doc.querySelector(selector);
+            if (!root) return;
+
+            const elements = root.querySelectorAll(
+                "button, a, div.btn"
+            );
+
+            elements.forEach((el, index) => {
+                // skip hidden
+                if (el.classList.contains("d-none")) return;
+
+                // must be actionable
+                // if (!hasAction(el)) return;
+
+                const isActionable =
+                    hasAction?.(el) ||
+                    el.hasAttribute("data-kt-menu-trigger") ||
+                    el.classList.contains("tb-btn") ||
+                    el.classList.contains("btn-icon");
+
+                if (!isActionable) return;
+
+                const label = extractButtonLabel(el);
+                if (!label) return;
+
+                const id =
+                    el.id ||
+                    el.getAttribute("data-id") ||
+                    el.getAttribute("data-bs-title") ||
+                    el.getAttribute("data-bs-original-title") ||
+                    el.getAttribute("title") ||
+                    `process-btn-${label.toLowerCase().replace(/\s+/g, "_")}-${index}`;
+
+                result[id] = {
+                    id,
+                    label: label.toLowerCase(),
+                    element: el,
+                    click: () => el.click()
+                };
+            });
+        });
+
+        return result;
+    }
+
+    function isSystemMessage(item) {
+        if (!item) return false;
+
+        const text = typeof item === 'string' ? item : (item.displaydata || "");
+
+        return text.startsWith("Loading") ||
+            text.startsWith("Waiting") ||
+            text.startsWith("Error") ||
+            text === "No Data";
+
+    }
+
+
+    function handleAnalyse({ tokens, commandConfig }) {
+
+        let targetUrl = "../aspx/Analytics.aspx";
+
+        if (tokens.length === 1) {
+            targetUrl += "?calendar=t";
+            targetUrl += "&isDupTab=true-1770626614111";
+            targetUrl += "&hdnbElapsTime=0";
+        }
+
+
+        else {
+
+            const captionSelected = cleanString(tokens[1]);
+            const transIdAnalyse = tryResolveToken(1, captionSelected, commandConfig);
+
+            targetUrl += `?entity=${encodeURIComponent(transIdAnalyse)}`;
+
+            if (tokens.length == 3) {
+                let groupByFieldCaption = cleanString(tokens[2]);
+                const groupByFiedlname = tryResolveToken(2, groupByFieldCaption, commandConfig);
+                targetUrl += `&groupby=${encodeURIComponent(groupByFiedlname)}`;
+            }
+            else if (tokens.length > 3) {
+                showToast("Analyse commands requires only 3 tokens");
+                return;
+            }
+
+            targetUrl += "&calendar=t";
+            targetUrl += "&isDupTab=true-1770626614111";
+            targetUrl += "&hdnbElapsTime=0";
+        }
+
+        console.log(targetUrl);
+        window.LoadIframe(targetUrl);
+    }
 
 
 
