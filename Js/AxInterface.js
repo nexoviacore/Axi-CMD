@@ -573,7 +573,7 @@ function AxAsyncGetApiData(apiNames = "", apiType = "axpert", cacheInfo = [], su
  * @references
  *      Following files are required to be referred in custom html along with AxInterface.js:
             <script src="../../Js/Jquery-2.2.2.min.js" type="text/javascript"></script>
-            <script src="../../Js/common.min.js?v=158" type="text/javascript"></script>
+            <script src="../../Js/common.min.js?v=160" type="text/javascript"></script>
             <script src="../../Js/AxInterface.min.js?v=15" type="text/javascript"></script>
             <script src="../../ThirdParty/Highcharts/highcharts.js"></script>
             <script src="../../ThirdParty/Highcharts/highcharts-3d.js"></script>
@@ -738,7 +738,7 @@ function customizeData(plotName) {
  * @Files
  *  Following files are required to be referred in custom html along with AxInterface.js:
  *      <script src="../../Js/Jquery-2.2.2.min.js" type="text/javascript"></script>
- *      <script src="../../Js/common.min.js?v=158" type="text/javascript"></script>
+ *      <script src="../../Js/common.min.js?v=160" type="text/javascript"></script>
  * 
  */
 function AxLoadUrl(url) {
@@ -763,7 +763,7 @@ function AxLoadUrl(url) {
  *  Following files are required to be referred in custom html along with AxInterface.js:
  *      <script src="../../ThirdParty/lodash.min.js" type="text/javascript"></script>
  *      <script src="../../ThirdParty/deepdash.min.js" type="text/javascript"></script>
- *      <script src="../../Js/common.min.js?v=158" type="text/javascript"></script>
+ *      <script src="../../Js/common.min.js?v=160" type="text/javascript"></script>
  * 
  */
  function AxGetMenus(pages) {
@@ -1057,11 +1057,15 @@ function AxCallSubmitDataAPI(apiPublicKey, recordId) {
     "props" : {
         "ADS" : true,
         "CachePermissions": true,
-        "getallrecordscount": true,
+        "getallrecordscount": false, //Optional flag to get total record count without pagination. Will be helpful in scenarios where total record count of ADS is needed.        
         "pageno": 1,
-        "pagesize": 0,
+        "pagesize": 0, //Pass 0 to fetch all records. Pass pagesize value to fetch records as per pagination.
         "keyfield": "",
         "keyvalue": "",
+        "AxClient_dateformat" : "", //Optional flag to pass client date format to convert date fields. Date fields in filters should be in same format as passed in this parameter
+        "select_columns" : ["username","sqlsrc"], //optional.add your select cols here
+        "aggregations" : {"total_sqlname": "count(*)"}, //optional. add your aggregation columns here with alias as key and aggregation sql as value
+        "groupby_columns" : ["username","sqlsrc"], //optional. add your group by cols here 
         "sorting": [
             {
                 "fldname": "employee_code",
@@ -1110,6 +1114,10 @@ function GetDataFromAxList(data, successCB = () => { }, errorCB = () => { }) {
     if (typeof data.keyValue === "undefined") data.keyValue = "";
     if (typeof data.sqlParams === "undefined") data.sqlParams = {};
     if (typeof data.props === "undefined") data.props = {};
+    if (typeof data.axClient_dateformat === "undefined") data.axClient_dateformat = "";
+    if (typeof data.select_columns === "undefined") data.select_columns = [];
+    if (typeof data.aggregations === "undefined") data.aggregations = {};
+    if (typeof data.groupby_columns === "undefined") data.groupby_columns = [];
 
     $.ajax({
         url: top.window.location.href.toLowerCase().substring(0, top.window.location.href.toLowerCase().indexOf("/aspx/")) + '/aspx/AxPEG.aspx/GetDataFromAxList',

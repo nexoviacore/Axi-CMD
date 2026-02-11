@@ -568,7 +568,7 @@
             targetUrl += `&filter=${encodedFilterQuery}`;
         }
 
-        console.log("Target Url for SmartViewTable:  " + targetUrl);
+        console.log("Target Url for SmartViewTable:  " + targetUrl); 
         /**====================================================================================
          * NOTE: This is Debug code remove it before deploying  to the  production environment 
          * ====================================================================================
@@ -1196,15 +1196,6 @@
                     datatype: datatype,
                     isAccept: isAccept,
                 };
-                if (tokens?.length <= 4) {
-
-                    return [
-                        goOption,
-
-                    ];
-
-
-                }
                 return [];
             }
             else {
@@ -1249,21 +1240,7 @@
 
 
 
-
-
-                if (tokens.length <= 4) {
-                    filteredObjects = [goOption, ...filtered];
-                    return [
-                        goOption,
-                        ...filtered.map(col => col.displaydata || col.name)
-                    ];
-
-                }
-
                 filteredObjects = filtered
-
-
-
 
 
 
@@ -1530,7 +1507,7 @@
 
             let apiSourceName = realSource.toLowerCase();
             if (apiSourceName.toLowerCase() === "axi_analyticslist") {
-                 paramValue = window.mainUserName;
+                paramValue = "admin";
             }
             const sourceKey = (paramValue ? `${apiSourceName}_${paramValue}` : apiSourceName).toLowerCase();
 
@@ -1556,11 +1533,6 @@
             let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
             if ((groupKey === "view" || groupKey === "configure" || groupKey === "edit") && tokens.length > 2 && tokens[1] !== "keyfield") {
-                resultList.unshift(goOption);
-                filteredObjects.unshift(goOption);
-            }
-
-             else if (groupKey === "analyse" && tokens.length <=3) {
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
@@ -1822,7 +1794,7 @@
 
             let apiName = realSource;
             if (apiName.toLowerCase() === "axi_analyticslist") {
-                 paramValue = window.mainUserName;
+                paramValue = "admin";
             }
             let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
 
@@ -1971,29 +1943,7 @@
 
         const isViewCommand = tokens[0]?.toLowerCase() === "view";
 
-
-
-
-        let isAdsValue = false;
-        /**
-         * ==== Robust Type checking for View command ===
-         */
-        if (isViewCommand && commands) {
-            const groupKey = cleanString(tokens[0]);
-            const commandConfig = commands[groupKey];
-
-            if (commandConfig && commandConfig.prompts && commandConfig.prompts[0]) {
-                const viewSource = commandConfig.prompts[0].promptSource;
-                const viewValues = commandConfig.prompts[0].promptValues;
-                const firstToken = cleanString(tokens[1] || "");
-
-                const detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues);
-
-                if (detectedType === "ads" && targetIndex >= 3 && targetIndex % 2 !== 0) {
-                    isAdsValue = true;
-                }
-            }
-        }
+        const isAdsValue = isViewCommand && targetIndex >= 3 && targetIndex % 2 !== 0;
 
 
 
@@ -5809,7 +5759,7 @@
             targetUrl += "&hdnbElapsTime=0";
         }
 
-        console.log("Target URL from analyse command : "+targetUrl);
+        console.log(targetUrl);
         window.LoadIframe(targetUrl);
     }
 
