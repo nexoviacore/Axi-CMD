@@ -1127,13 +1127,16 @@ public partial class aspx_AxPEG : System.Web.UI.Page
         }
         AnalyticsUtils _aUtils = new AnalyticsUtils();
         string ARMSessionId = _aUtils.ARMSessionId;
+        if (ARMSessionId.StartsWith("Error"))
+            return ARMSessionId;
+
         string sessionId = HttpContext.Current.Session.SessionID;
         var token = HttpContext.Current.Session["ARM_Token"].ToString();
         string ARM_Notification_URL = string.Empty;
         if (HttpContext.Current.Session["ARM_Notification_URL"] != null)
             ARM_Notification_URL = HttpContext.Current.Session["ARM_Notification_URL"].ToString();
         else
-            return "Error in ARM Notification connection.";
+            return "Error in ARM Notification Hub connection.";
         string url = ARM_Notification_URL;
         var result = new
         {
@@ -1654,8 +1657,10 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             PageSize = (props.ContainsKey("PageSize") && !string.IsNullOrWhiteSpace(props["PageSize"].ToString()) ? Convert.ToInt32(props["PageSize"].ToString()) : 100),
             Sorting = (props.ContainsKey("Sorting") ? props["Sorting"] : null),
             Filters = (props.ContainsKey("Filters") ? props["Filters"] : null),
-            Columns = (props.ContainsKey("Columns") ? props["Columns"] : null),
-            GroupColumns = (props.ContainsKey("GroupColumns") ? props["GroupColumns"] : null)
+            AxClient_dateformat = (props.ContainsKey("axClient_dateformat") ? props["axClient_dateformat"] : null),
+            Select_Columns = (props.ContainsKey("select_columns") ? props["select_columns"] : null),
+            Aggregations = (props.ContainsKey("aggregations") ? props["aggregations"] : null),
+            GroupBy_Columns = (props.ContainsKey("groupby_columns") ? props["groupby_columns"] : null)
         };
 
         var tasks = _aUtils.CallWebAPI(tasksUrl, "POST", "application/json", JsonConvert.SerializeObject(connectionDetails));
