@@ -46,18 +46,18 @@
         },
         create: {
             default: handleCreateNew,
-
-
-
+            
+            
+            
 
         },
         view: {
             default: handleViewCommand,
-
-
-
+            
+            
+            
             inbox: handleViewInbox,
-
+            
 
 
         },
@@ -105,9 +105,9 @@
         }
     };
 
+   
 
-
-
+   
 
     let input;
 
@@ -119,7 +119,7 @@
     let axiLogo;
     let searchWrapper;
 
-
+    
 
     let topToolbarButtons = null;
     let bottomToolbarButtons = null;
@@ -131,7 +131,7 @@
     const OPERATORS_SET = new Set(OPERATORS_LIST);
 
 
-    const OPERATOR_REGEX_PART = OPERATORS_LIST.join("|");
+    const OPERATOR_REGEX_PART = OPERATORS_LIST.join("|");    
 
     // STATE
     let commands = null;
@@ -224,9 +224,9 @@
             return;
         }
 
+        
 
-
-
+        
 
         console.log("Axi Clear button found!", axiClearBtn);
 
@@ -273,7 +273,7 @@
                 console.error("Critical: Could not load commands", err);
             }
         }
-    }
+    }   
 
     function getActivePromptInfo(commandConfig, tokens, targetIndex) {
         // targetIndex is 0-based. WordPos is 1-based.
@@ -290,7 +290,7 @@
             const prevPrompt = sortedPrompts.find(p => p.wordPos === prevWordPos);
 
 
-
+     
             if (prevPrompt) {
 
                 const prevSources = prevPrompt.promptSource
@@ -392,9 +392,9 @@
 
     }
 
-
+   
     function redirectToSmartView({ adsName, filters }) {
-
+    
 
         let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
         // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
@@ -474,11 +474,11 @@
 
 
         targetUrl += "&isIV=true";
-
+ 
         targetUrl += `&isDupTab=true`;
 
 
-
+         
         targetUrl += "&dummyload=false";
 
         setEditSessionState(transId);
@@ -489,7 +489,7 @@
 
     }
 
-
+    
 
     function redirectToTstruct(transId, isEdit = false, fieldName = "", fieldValue = "") {
         console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
@@ -529,7 +529,7 @@
     }
 
 
-    function redirectToResponsibilitiesPage(fieldValue = "") {
+    function redirectToResponsibilitiesPage(fieldValue = "") {    
 
 
         let targetUrl = "../aspx/AddEditResponsibility.aspx";
@@ -556,7 +556,7 @@
 
     }
 
-
+    
     function redirectToProcessFlow(caption) {
         console.log(`Redirecting to Process flox for caption:  ${caption}`);
 
@@ -597,14 +597,14 @@
         if (!commands) return;
 
         if (!text.trim()) {
-
+            
             items = Object.keys(commands);
             hintDiv.textContent = "";
             render();
             return;
         }
 
-
+    
 
         // Clear stale resolutions when input changes
         const currentTokens = getTokens(text);
@@ -643,10 +643,10 @@
     /* ===============================
        3. TOKENIZER
     =============================== */
-
+    
 
     function getTokens(str) {
-
+    
 
         const regex = new RegExp(`"[^"]*"?|${OPERATOR_REGEX_PART}|[^\\s=<>!]+`, "g");
         return str.match(regex) || [];
@@ -660,7 +660,7 @@
 
 
 
-
+        
 
     function processAdsRepetitiveTokens(tokens, commandConfig) {
         const targetIndex = tokens.length - 1;
@@ -692,7 +692,7 @@
             }
 
 
-
+          
 
 
 
@@ -719,7 +719,7 @@
 
 
 
-
+            
             filteredObjects = [goOption, ...filtered];
             if (tokens.length > 2) {
                 return [
@@ -755,7 +755,7 @@
 
             const datatype = columnMetadata.fdatatype;
 
-
+            
             if (isAccept) {
                 const acceptedValue = cleanString(tokens[tokens.length - 1]);
                 const columnName = prevColumnName
@@ -830,9 +830,20 @@
                 filteredObjects = filtered
 
 
+
+
+
+
+
                 return filtered.map(col => col.displaydata || col.name);
 
+
+
             }
+            
+
+
+
 
         }
     }
@@ -860,6 +871,7 @@
                     topToolbarButtons = getTopToolbarButtons();
                     allButtons = { ...bottomToolbarButtons, ...topToolbarButtons };
 
+
                 }
 
 
@@ -883,6 +895,11 @@
                 break;
         }
 
+
+
+
+
+
         buttonsList = Object.values(allButtons).map(btn => ({
             name: btn.id,
             displaydata: `${btn.label} (${btn.id})`
@@ -895,14 +912,17 @@
         filteredObjects = filtered;
 
 
+
         if (structType === "o") {
             return [];
         }
 
         return filtered.map(item => item.displaydata);
 
-    }
 
+
+    }  
+    
     /* ===============================
         Suggestion Logic
     =============================== */
@@ -973,8 +993,8 @@
 
 
 
-
-
+        
+        
 
         const { config: activePrompt, realSource } = promptInfo;
         updateDynamicHintFromPrompt(activePrompt);
@@ -1083,7 +1103,7 @@
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
-
+        
 
             return resultList;
         }
@@ -1092,7 +1112,7 @@
     }
 
 
-
+   
 
 
     function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
@@ -1112,11 +1132,11 @@
 
         const { config: prompt, realSource } = promptInfo;
 
-
+        
         if (realSource) {
             let paramValue = "";
 
-
+        
             // Resolve Dependencies
             if (prompt.promptParams) {
                 const indices = prompt.promptParams.toString().split(',');
@@ -1322,7 +1342,7 @@
         // Get Real Value logic
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
 
-
+        
         realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
 
 
@@ -1332,16 +1352,16 @@
         if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue) {
             const lastBracketIndex = suggestion.lastIndexOf("(");
 
-
+        
             const text = suggestion.substring(0, lastBracketIndex)
-
+                
                 .trim();
 
 
             displayName = text.replace(/-$/, "");
 
 
-
+        
 
 
         }
@@ -1368,7 +1388,7 @@
 
         lastTypedTokens = [...tokens];
         handleInput();
-
+        
         input.focus();
     }
 
@@ -1408,7 +1428,7 @@
 
 
 
-
+    
 
     document.addEventListener("click", e => {
         if (input && list && e.target !== input && !list.contains(e.target)) {
@@ -1440,7 +1460,7 @@
                 throw new Error("axDatasourceName is required");
             }
 
-
+    
             // ---- Build sqlparams dynamically ----
             const sqlParams = {};
             const normalizedParams = [];
@@ -1477,14 +1497,14 @@
                 sqlParams: sqlParams
             };
 
-
+    
 
             const res = await getAxListAsync(requestBody);
 
             console.log("Get List data: " + JSON.stringify(res));
 
-
-
+    
+    
 
             const dataObj = typeof res === "string" ? JSON.parse(res) : res;
 
@@ -1499,7 +1519,7 @@
 
             }
 
-
+    
             if (list.length > 0) {
                 localStorage.setItem(cacheKey, JSON.stringify(list));
 
@@ -1509,11 +1529,11 @@
             return list;
 
         } catch (err) {
-            return [];
+         return [];
         }
     }
 
-
+    
     /* ===============================
        TOAST HELPER
     =============================== */
@@ -1589,9 +1609,9 @@
             }, 300);
         }, duration);
     }
+    
 
-
-
+    
 
     function isSuggestionVisible() {
         return list && list.style.display === "block" && items.length > 0;
@@ -1599,7 +1619,7 @@
 
     function hasActiveSuggestion() {
         return activeIndex >= 0 && activeIndex < items.length;
-    }
+    }    
 
 
     /* ===============================
@@ -1619,7 +1639,7 @@
                     resolvedParams = {};
 
                     await initCommands(true);
-
+                    
                     showToast("Refreshed Successfully!", 5000, true);
                     input.focus();
 
@@ -1717,7 +1737,7 @@
 
 
             }
-
+            
             // AUTO DOUBLE-QUOTE FOR MULTI-WORD SUGGESTIONS
             if (e.key === " " && items.length > 0) {
                 const val = input.value;
@@ -1762,7 +1782,7 @@
                 e.preventDefault();
 
                 hide();
-
+            
             }
         });
 
@@ -1833,19 +1853,19 @@
         }
     }
 
+   
 
-
-    /**
-     * Execute the Commands 
-     * @returns 
-     */
+   /**
+    * Execute the Commands 
+    * @returns 
+    */
     function executeCommandsV2() {
 
         const text = input.value.trim();
         if (!text || !commands) return;
 
         const tokens = getTokens(text);
-        if (tokens.length === 0) return;
+        if (tokens.length === 0) return; 
 
         const groupKey = cleanString(tokens[0]);
 
@@ -1857,7 +1877,7 @@
 
         if (!groupConfig) {
             console.warn(`Unknown command group: ${groupKey}`);
-
+            
         }
 
         // Build the context object to pass to the dispatcher
@@ -1878,7 +1898,7 @@
         }, 200)
     }
 
-
+    
     function cleanCommandToken(val = "") {
         return val.replace(/['"]/g, "").trim();
     }
@@ -1954,7 +1974,7 @@
         redirectToTstruct(transId);
     }
 
-
+    
     /**
      * ======================== END ==================================
      * 
@@ -1964,7 +1984,7 @@
        ----------------- Start ------------------------------------------
     */
 
-
+    
 
     function handleViewDbConsole() {
         window.openDeveloperStudio("AxDBScript.aspx");
@@ -1978,15 +1998,15 @@
 
     }
 
+    
 
 
-
-
+    
 
 
 
     /* ============= End =================== */
-
+    
 
 
     /***************************************************
@@ -1994,7 +2014,7 @@
      * **************************************************
     */
 
-
+    
     /**
      * Helper functions 
      * @param {*} param0 
@@ -2176,7 +2196,7 @@
 
     function handleConfigurePermissions({ tokens, commandConfig }) {
 
-
+        
 
         let rawUserName = cleanCommandToken(tokens[2]);
 
@@ -2186,7 +2206,7 @@
 
 
 
-
+        
         redirectToPermissionScreeen(rawUserName);
 
 
@@ -2211,11 +2231,11 @@
 
     }
 
+   
 
+    
 
-
-
-
+    
 
     /***************************************************
     * End
@@ -2227,22 +2247,22 @@
      * *************************************************
      */
 
-
+    
 
     function handleConfigureApi({ tokens, commandConfig }) {
         console.log("commandConfig: " + JSON.stringify(commandConfig));
         let fieldname = "ExecAPIDefName";
         let transId = "apidg";
         let param1Position = commandConfig.prompts[1].wordPos - 1;
-
+        
         let rawApiName = cleanCommandToken(tokens[param1Position]);
 
-
+        
 
         setEditSessionState(transId);
         redirectToTstruct(transId, true, fieldname, rawApiName);
 
-
+        
 
 
 
@@ -2389,6 +2409,9 @@
         targetUrl += "?action=export"
         window.LoadIframe(targetUrl);
 
+
+
+
     }
 
 
@@ -2461,6 +2484,7 @@
 
         if (tokens.length < 2) {
             console.warn("View Command required atleast two tokens");
+            // alert("edit data requires <tstruct> <field> <value>");
             showToast("view command requires atleast two tokens");
             return;
         }
@@ -2616,7 +2640,7 @@
         const VALID_TYPES = new Set(paramList);
 
         const data = axDatasourceObj?.[axDatasourceKey];
-
+ 
         console.log(JSON.stringify(data));
 
 
@@ -2743,7 +2767,7 @@
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
-
+            
             redirectToIView(iviewName);
 
 
@@ -2754,18 +2778,19 @@
             window.LoadIframe(targetUrl);
 
         }
-
+    
     }
 
     function handleOpenCard({ tokens, commandConfig }) {
-
+        // LoadIframeac(&quot;ivtoivload.aspx?ivname=axusers
+        // window.LoadIframe("ivtoivload.aspx?ivname=axpcards");
         let targetUrl;
         let paramName;
         let transId = "a__cd";
         let fieldname = "cardname";
         let rawName = cleanCommandToken(tokens[2]);
 
-
+        //   if (!rawName) return;
         if (rawName) {
             paramName = tryResolveToken(2, rawName, commandConfig, false);
 
@@ -2779,7 +2804,7 @@
             window.LoadIframe(targetUrl);
 
         } else {
-
+            // targetUrl += `&cardname=${paramName}`;
             targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
             targetUrl += "&act=load";
             targetUrl += "&dummyload=false♠"
@@ -2796,7 +2821,7 @@
         let fieldname = "caption";
         let rawName = cleanCommandToken(tokens[2]);
 
-
+        //   if (!rawName) return;
         if (rawName) {
             paramName = tryResolveToken(2, rawName, commandConfig, false);
 
@@ -2817,7 +2842,8 @@
 
         }
 
-
+        // window.openDeveloperStudio("ihplist");
+        //  window.LoadIframe("../aspx/tstruct.aspx?transid=sect"); 
 
     }
 
@@ -2867,6 +2893,8 @@
         }
 
 
+
+
         switch (structType) {
             case "t":
             case "i":
@@ -2911,6 +2939,10 @@
                 console.error("Invalid StructType")
                 break;
         }
+
+
+
+
 
         console.log("All Buttons: " + JSON.stringify(allButtons));
 
@@ -2965,8 +2997,92 @@
         return `${y}-${m}-${d}`; // ISO
     }
 
+
+
+    // function extractAdsFilters(rawInput) {
+    //     const filters = [];
+    //     const VALID_OPERATORS = new Set(["=", "!=", "<", "<=", ">", ">="]);
+    //     const consumedRanges = [];
+
+    //     const input = rawInput.trim();
+
+    //     // Explicit operator regex
+    //     // field >= value | field=value | field <= value
+    //     const explicitRegex = /(\w+)\s*(<=|>=|!=|=|<|>)\s*([^\s]+)/g;
+
+    //     let match;
+    //     while ((match = explicitRegex.exec(input)) !== null) {
+    //         let [, field, operator, valueRaw] = match;
+
+    //         // const operator = OPERATOR_MAP[opRaw];
+    //         // const operator = valueRaw;
+    //         // if (!operator) continue;
+
+    //         let value = valueRaw;
+    //         let dataTypeObj = adsfieldvalueanddt[field];
+    //         let dataType = dataTypeObj?.datatype;
+
+    //         if (field.toLowerCase().includes("date")) {
+    //             value = normalizeDate(valueRaw);
+    //         }
+
+    //         filters.push({
+    //             field,
+    //             operator,
+    //             value,
+    //             dataType,
+    //             isAccept: dataTypeObj?.isAccept
+    //         });
+
+    //         // mark this range as consumed
+    //         consumedRanges.push([match.index, explicitRegex.lastIndex]);
+    //     }
+
+    //     // Remove explicit expressions from input
+    //     let remaining = input;
+    //     for (const [start, end] of consumedRanges.reverse()) {
+    //         remaining =
+    //             remaining.slice(0, start) +
+    //             " ".repeat(end - start) +
+    //             remaining.slice(end);
+    //     }
+
+    //     // Implicit equality: field value
+    //     // const parts = remaining.split(/\s+/).filter(Boolean);
+    //     const parts = getTokens(remaining).map(t =>
+    //         t.startsWith('"') && t.endsWith('"')
+    //             ? t.slice(1, -1)
+    //             : t
+    //     );
+
+    //     for (let i = 0; i < parts.length - 1; i += 2) {
+    //         const field = parts[i];
+    //         const valueRaw = parts[i + 1];
+    //         const dataTypeObj = adsfieldvalueanddt[field];
+
+
+    //         if (field.toLowerCase() === "view") continue;
+
+    //         let value = valueRaw;
+    //         if (field.toLowerCase().includes("date")) {
+    //             value = normalizeDate(valueRaw);
+    //         }
+
+    //         filters.push({
+    //             field,
+    //             operator: "=",
+    //             value,
+    //             datatype: dataTypeObj?.datatype,
+    //             isAccept: dataTypeObj?.isAccept
+    //         });
+    //     }
+
+    //     return filters;
+    // }
+
     function extractAdsFilters(tokens) {
         const filters = [];
+        // const VALID_OPERATORS = new Set(["=", "!=", "<", "<=", ">", ">="]);
 
 
         let i = 2;
@@ -2975,6 +3091,9 @@
 
             const rawColToken = cleanCommandToken(tokens[i]);
             if (!rawColToken) { i++; continue; }
+
+
+            // let resolvedCol = resolvedParams[i] || rawColToken;
 
 
             let nextTokenRaw = cleanCommandToken(tokens[i + 1] || "");
@@ -3000,6 +3119,20 @@
 
                 i += 2;
             }
+
+
+
+
+            // let resolvedValue = resolvedParams[valueTokenIndex];
+
+
+            // if (resolvedValue === undefined || resolvedValue === null) {
+            //     resolvedValue = rawValue;
+            // }
+
+
+
+
 
             const colMetadata = adsfieldvalueanddt[rawColToken] || {};
 
@@ -3170,12 +3303,17 @@
 
 
         if (page.endsWith("/processflow.aspx") || page.includes("processflow.aspx")) {
-            return "pf"; // Process flow page
+            return "pf"; // Custom page
 
         }
 
 
+
+
+
         return "o"; // Others 
+
+
 
     }
 
@@ -3245,12 +3383,9 @@
         buttons.forEach((btn, index) => {
             // if (!hasAction(btn)) return;
 
-            if (btn.classList.contains("d-none")) return;
+            if (btn.classList.contains("d-none") || btn.classList.contains("menu-dropdown")) return;
 
             if (btn.getAttribute("data-kt-menu-attach") === "parent") return;
-
-            if (btn.querySelector(".menu-title") && btn.hasAttribute("data-kt-menu-trigger")) return;
-
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
             if (!id) return;
