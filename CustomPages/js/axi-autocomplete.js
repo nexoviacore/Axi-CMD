@@ -537,7 +537,7 @@
         if (fieldValue) {
             targetUrl += "?status=true";
             targetUrl += "&action=edit";
-            targetUrl += `&name=${encodeURIComponent(fieldValue)}`
+            targetUrl += `&name=${encodeURIComponent(fieldValue)}`; 
         } else {
             targetUrl += "?status=true";
             targetUrl += "&action=add";
@@ -558,7 +558,7 @@
 
 
     function redirectToProcessFlow(caption) {
-        console.log(`Redirecting to Process flox for caption:  ${caption}`);
+        console.log(`Redirecting to Process flow for caption:  ${caption}`);
 
 
 
