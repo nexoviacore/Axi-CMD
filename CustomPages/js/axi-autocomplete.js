@@ -102,6 +102,15 @@
         },
         analyse: {
             default: handleAnalyse
+        },
+        ai: {
+            start: handleAiStart,
+            connect: () => handleAiButtons("openConnect"),
+            ask: handleAiAsk,
+            end: handleAiEnd,
+            editprompt: () => handleAiButtons("openSystemPrompt"),
+            analyze: () => handleAiButtons("axiLoad"),
+            upload: () => handleAiButtons("openUpload")
         }
     };
 
@@ -145,6 +154,10 @@
     let activeFetches = new Set();
     let filteredObjects = [];
     let adsfieldvalueanddt = {};
+    let mode = "";
+    const aiModeCommands = {
+        "ai":{"cmdToken":11,"command":"","commandGroup":"ai","prompts":[{"cmdToken":11,"wordPos":2,"prompt":"name","promptSource":"","promptParams":"","promptValues":"connect,ask,end,upload,editprompt,analyze,upload","extraParams":""}]}
+    }
 
 
     function init() {
@@ -267,6 +280,7 @@
                 if (!res.ok) throw new Error("Metadata fetch failed");
                 const data = await res.json();
                 commands = data.commands;
+
                 console.log(JSON.stringify(commands));
                 localStorage.setItem("axi_commands_v1", JSON.stringify(commands));
             } catch (err) {
@@ -537,7 +551,7 @@
         if (fieldValue) {
             targetUrl += "?status=true";
             targetUrl += "&action=edit";
-            targetUrl += `&name=${encodeURIComponent(fieldValue)}`; 
+            targetUrl += `&name=${encodeURIComponent(fieldValue)}`;
         } else {
             targetUrl += "?status=true";
             targetUrl += "&action=add";
@@ -1179,6 +1193,7 @@
        RENDER & APPLY
     =============================== */
     function render() {
+       
         console.log("Render called");
         list.innerHTML = "";
 
@@ -1375,6 +1390,7 @@
 
 
     function updateDynamicHintFromPrompt(prompt) {
+       
         if (prompt) {
             let label = prompt.prompt || "value";
             if (prompt.promptValues && !prompt.prompt) {
@@ -1841,10 +1857,21 @@
      */
     function executeCommandsV2() {
 
+
+
         const text = input.value.trim();
+
+       
+
         if (!text || !commands) return;
 
+        
+
         const tokens = getTokens(text);
+        if (mode === "ai" && tokens[0] !== "ai") {
+            handleSendAxiMessageToAxiBot(text); 
+            return; 
+        }
         if (tokens.length === 0) return;
 
         const groupKey = cleanString(tokens[0]);
@@ -3450,6 +3477,148 @@
         console.log("Target URL from analyse command : " + targetUrl);
         window.LoadIframe(targetUrl);
     }
+
+
+    function redirectToAxibot() {
+
+
+        let targetUrl = "../CustomPages/axibot.html";
+
+
+
+
+        console.log("Target Url for AxiBot:  " + targetUrl);
+
+
+
+        top.window.LoadIframe(targetUrl);
+
+
+    }
+
+    function handleAiStart() {
+        mode = "ai"; 
+        commands = aiModeCommands;
+
+        redirectToAxibot();
+
+    }
+
+    function getAxiBotActionButtons() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const buttons = doc.querySelectorAll(".actionGroup button");
+        const result = {};
+
+        buttons.forEach((btn, index) => {
+            if (btn.classList.contains("d-none")) return;
+
+            const id =
+                btn.id ||
+                btn.getAttribute("title") ||
+                `axibot-btn-${index}`;
+
+            const label = btn.innerText?.trim();
+            if (!label) return;
+
+            result[id] = {
+                id,
+                label: label.toLowerCase(),
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        const uploadBtn = doc.getElementById("openUpload"); 
+
+        if (uploadBtn) {
+            result["openUpload"] = {
+                id: "openUpload",
+                label: "upload files",
+                element: uploadBtn,
+                click: () =>uploadBtn.click()
+            }
+        }
+
+        return result;
+    }
+
+
+    function handleAiButtons(btnId) {
+        const axiButtons = getAxiBotActionButtons();
+        console.log(axiButtons); 
+
+
+        if (axiButtons) {
+            axiButtons[btnId].click();
+
+
+        } else {
+            console.error("Cannot get Axi bot action buttons");
+            showToast("Error: Cannot get Axi bot action buttons")
+        }
+
+    }
+
+    function handleSendAxiMessageToAxiBot(text) {
+
+        const iframe = document.getElementById("middle1");
+
+        if (!iframe) {
+            console.error("Axi bot: Iframe middle1 not found.");
+            return;
+        }
+
+        const iframeWindow = iframe.contentWindow;
+
+        if (!iframeWindow) {
+            console.error("Axi Bot: Cannot access iframe window.");
+            return;
+        }
+
+        if (typeof iframeWindow.sendAxiMessageToAxibot === "function") {
+            console.log(`Sending to AxiBot: "${text}"`);
+            iframeWindow.sendAxiMessageToAxibot(text);
+        } else {
+            console.warn("Axi Bot: Script not fully loaded in iframe yet.");
+            if (typeof showToast === 'function') showToast("Chatbot is loading...");
+        }
+
+    }
+
+    function getAskText(tokens) {
+        const askIndex = tokens.findIndex(t => t.toLowerCase() === "ask");
+
+        return askIndex !== -1
+            ? tokens.slice(askIndex + 1).join(" ")
+            : "";
+    }
+
+    function handleAiAsk({ tokens, commandConfig }) {
+        const text = getAskText(tokens); 
+
+        handleSendAxiMessageToAxiBot(text); 
+
+
+    }
+
+    function handleAiEnd() {
+        if (mode === "") {
+            return; 
+        }
+        mode = ""; 
+        cachedCommands = localStorage.getItem("axi_commands_v1");
+        commands = JSON.parse(cachedCommands);  
+        window.LoadIframe("loadhomepage"); 
+        console.log(JSON.stringify(commands)); 
+    }
+
+    
+
 
 
 
