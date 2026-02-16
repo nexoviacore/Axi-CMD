@@ -105,13 +105,14 @@
         },
         ai: {
             start: handleAiStart,
-            connect: () => handleAiButtons("openConnect"),
-            ask: handleAiAsk,
-            end: handleAiEnd,
-            editprompt: () => handleAiButtons("openSystemPrompt"),
-            analyze: () => handleAiButtons("axiLoad"),
-            upload: () => handleAiButtons("openUpload")
-        }
+
+        },
+        connect: { default: () => handleAiButtons("openConnect"), },
+        ask: { default: handleAiAsk, },
+        end: { default: handleAiEnd, },
+        editprompt: { default: () => handleAiButtons("openSystemPrompt") },
+        analyze: { default: () => handleAiButtons("axiLoad"), },
+        upload: { default: () => handleAiButtons("openUpload") }
     };
 
 
@@ -156,7 +157,12 @@
     let adsfieldvalueanddt = {};
     let mode = "";
     const aiModeCommands = {
-        "ai":{"cmdToken":11,"command":"","commandGroup":"ai","prompts":[{"cmdToken":11,"wordPos":2,"prompt":"name","promptSource":"","promptParams":"","promptValues":"connect,ask,end,editprompt,analyze,upload","extraParams":""}]}
+        "connect": { "cmdToken": 11, "command": "", "commandGroup": "connect", "prompts": [] },
+        "ask": { "cmdToken": 11, "command": "", "commandGroup": "ask", "prompts": [{"cmdToken":11,"wordPos":2,"prompt":"Chat","promptSource":"","promptParams":"","promptValues":"","extraParams":""}] },
+        "end": { "cmdToken": 11, "command": "", "commandGroup": "end", "prompts": [] },
+        "editprompt": { "cmdToken": 11, "command": "", "commandGroup": "editprompt", "prompts": [] },
+        "analyze": { "cmdToken": 11, "command": "", "commandGroup": "analyze", "prompts": [] },
+        "upload": { "cmdToken": 11, "command": "", "commandGroup": "upload", "prompts": [] }
     }
 
 
@@ -1193,7 +1199,7 @@
        RENDER & APPLY
     =============================== */
     function render() {
-       
+
         console.log("Render called");
         list.innerHTML = "";
 
@@ -1283,6 +1289,8 @@
             executeCommandsV2();
             return;
         }
+
+        
 
         const currentInput = input.value;
         const tokens = getTokens(currentInput);
@@ -1390,7 +1398,7 @@
 
 
     function updateDynamicHintFromPrompt(prompt) {
-       
+
         if (prompt) {
             let label = prompt.prompt || "value";
             if (prompt.promptValues && !prompt.prompt) {
@@ -1861,17 +1869,14 @@
 
         const text = input.value.trim();
 
-       
+
 
         if (!text || !commands) return;
 
-        
+
 
         const tokens = getTokens(text);
-        if (mode === "ai" && tokens[0] !== "ai") {
-            handleSendAxiMessageToAxiBot(text); 
-            return; 
-        }
+        
         if (tokens.length === 0) return;
 
         const groupKey = cleanString(tokens[0]);
@@ -3497,7 +3502,7 @@
     }
 
     function handleAiStart() {
-        mode = "ai"; 
+        mode = "ai";
         commands = aiModeCommands;
 
         redirectToAxibot();
@@ -3533,14 +3538,14 @@
             };
         });
 
-        const uploadBtn = doc.getElementById("openUpload"); 
+        const uploadBtn = doc.getElementById("openUpload");
 
         if (uploadBtn) {
             result["openUpload"] = {
                 id: "openUpload",
                 label: "upload files",
                 element: uploadBtn,
-                click: () =>uploadBtn.click()
+                click: () => uploadBtn.click()
             }
         }
 
@@ -3550,7 +3555,7 @@
 
     function handleAiButtons(btnId) {
         const axiButtons = getAxiBotActionButtons();
-        console.log(axiButtons); 
+        console.log(axiButtons);
 
 
         if (axiButtons) {
@@ -3599,25 +3604,25 @@
     }
 
     function handleAiAsk({ tokens, commandConfig }) {
-        const text = getAskText(tokens); 
+        const text = getAskText(tokens);
 
-        handleSendAxiMessageToAxiBot(text); 
+        handleSendAxiMessageToAxiBot(text);
 
 
     }
 
     function handleAiEnd() {
         if (mode === "") {
-            return; 
+            return;
         }
-        mode = ""; 
+        mode = "";
         cachedCommands = localStorage.getItem("axi_commands_v1");
-        commands = JSON.parse(cachedCommands);  
-        window.LoadIframe("loadhomepage"); 
-        console.log(JSON.stringify(commands)); 
+        commands = JSON.parse(cachedCommands);
+        window.LoadIframe("loadhomepage");
+        console.log(JSON.stringify(commands));
     }
 
-    
+
 
 
 

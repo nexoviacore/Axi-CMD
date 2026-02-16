@@ -399,7 +399,7 @@
         .message__avatar img {
             width: 22px;
             height: 22px;
-            border-radius: 8px;
+            border-radius: 50%;
             object-fit: cover;
         }
 
@@ -1468,9 +1468,11 @@
         }
 
         .globalBrand img {
-            height: 32px;
-            width: auto;
-            object-fit: contain;
+            height: 60px;
+            width: 60px;
+            border-radius: 50%; 
+            
+            display: block; 
         }
 
         .globalTabs {
@@ -2263,13 +2265,13 @@
         }
 
         /* Left: Brand */
-        .globalBrand img {
+        /* .globalBrand img {
             height: 32px;
             width: auto;
             object-fit: contain;
             display: block;
             /* Remove line-height gap */
-        }
+        /* } */ */
 
         /* Right: File Bar (Dropdown + Buttons) */
         .fileBar {
@@ -2748,7 +2750,7 @@
                 <div class="globalBar__inner">
                     <!-- 1. Logo -->
                     <div class="globalBrand" role="banner">
-                        <img src="../CustomPages/images/MicrosoftTeams-image-16.webp" alt="Axpert logo" />
+                        <img src="../CustomPages/images/axibot.png" alt="Axpert logo" />
                     </div>
 
                     <!-- 2. Controls -->

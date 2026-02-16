@@ -1,5 +1,5 @@
 const LS_KEY = "axpert_chats_v2";
-const AI_LOGO_SRC = "./axpert-logo.jpg";
+const AI_LOGO_SRC = "../CustomPages/images/axibot.png";
 // OpenRouter API key (DEV ONLY — do not ship keys in frontend)
 const OPENROUTERAPIKEY = "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";
 const logoUrl = "og/axper-logo.jpg";
@@ -1125,7 +1125,7 @@ function createMessageNode(role, content, isMarkdown, ts) {
         // Assistant Avatar (Left side)
         avatarHTML = `
             <div class="message__avatar">
-                <img src="axpert-logo.jpg">
+                <img src="../CustomPages/images/axibot.png">
             </div>`;
     }
 
