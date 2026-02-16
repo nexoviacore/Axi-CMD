@@ -156,7 +156,7 @@
     let adsfieldvalueanddt = {};
     let mode = "";
     const aiModeCommands = {
-        "ai":{"cmdToken":11,"command":"","commandGroup":"ai","prompts":[{"cmdToken":11,"wordPos":2,"prompt":"name","promptSource":"","promptParams":"","promptValues":"connect,ask,end,upload,editprompt,analyze,upload","extraParams":""}]}
+        "ai":{"cmdToken":11,"command":"","commandGroup":"ai","prompts":[{"cmdToken":11,"wordPos":2,"prompt":"name","promptSource":"","promptParams":"","promptValues":"connect,ask,end,editprompt,analyze,upload","extraParams":""}]}
     }
 
 
