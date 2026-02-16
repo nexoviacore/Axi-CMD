@@ -3488,7 +3488,6 @@
 
 
         let targetUrl = "../CustomPages/axibot.html";
-        // let targetUrl = "../axidev/HTMLPages/axibot.html";
 
 
 
