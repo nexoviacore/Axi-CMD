@@ -1,13 +1,22 @@
 ﻿(() => {
 
-    const API_METADATA = "http://localhost:5000/api/v1/Axi/axi_get";
-    // const API_METADATA = "https://alpha.agilecloud.biz/AxiDevARM/api/v1/Axi/axi_get";
+    
+    let apiMetadataUrl = "";
+    let apiMetadataConfigPromise = null;
+    let apiMetadataConfigError = "";
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
         name: "GO_ACTION",
         isExecutable: true
-    }
+    };
+
+    const saveOption = {
+        displaydata: "Save [Ctrl +Shit + S]",
+        name: "Save_ACTION",
+        isExecutable: true
+    };
+
 
 
     const VIEW_HANDLERS = {
@@ -45,7 +54,7 @@
 
         },
         create: {
-            default: handleCreateNew,
+            default: handleCreate,
 
 
 
@@ -117,7 +126,15 @@
 
 
 
-
+    let SET_COMMAND_STATE = {
+        isNextField: false,  
+        currentField: null,
+        currentFieldType : null,
+        isFirst:true,
+        transid: null,
+        currentFieldValue: null,
+        isDropDown : false
+    };
 
     let input;
 
@@ -128,7 +145,7 @@
     let axiClearBtn;
     let axiLogo;
     let searchWrapper;
-
+    let setCommandTransid = null;
 
 
     let topToolbarButtons = null;
@@ -155,6 +172,7 @@
     let activeFetches = new Set();
     let filteredObjects = [];
     let adsfieldvalueanddt = {};
+    let fieldnamevaluesList = [];
     let mode = "";
     const aiModeCommands = {
         "connect": { "cmdToken": 11, "command": "", "commandGroup": "connect", "prompts": [] },
@@ -272,6 +290,12 @@
         const appname = localStorage.getItem(projInfoKey);
         console.log(appname);
 
+        await ensureApiMetadataConfigLoaded();
+        if (!apiMetadataUrl) {
+            console.error("Metadata API URL is not configured.", apiMetadataConfigError);
+            showToast("Metadata API URL is not configured.");
+            return;
+        }
 
 
         const cached = localStorage.getItem("axi_commands_v1");
@@ -281,8 +305,7 @@
 
         } else {
             try {
-
-                const res = await fetch(`${API_METADATA}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
+                const res = await fetch(`${apiMetadataUrl}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
                 if (!res.ok) throw new Error("Metadata fetch failed");
                 const data = await res.json();
                 commands = data.commands;
@@ -293,6 +316,51 @@
                 console.error("Critical: Could not load commands", err);
             }
         }
+    }
+
+    function getAppBaseUrl() {
+        const href = top.window.location.href;
+        const aspxIndex = href.toLowerCase().indexOf("/aspx/");
+
+        if (aspxIndex === -1) {
+            throw new Error(`Cannot resolve app base URL. '/aspx/' not found in: ${href}`);
+        }
+
+        return href.substring(0, aspxIndex);
+    }
+
+    async function loadApiMetadataConfig() {
+        let configUrl = "";
+        try {
+            configUrl = `${getAppBaseUrl()}/CustomPages/axiConfig.json`;
+            const res = await fetch(configUrl, { cache: "no-store" });
+            if (!res.ok) {
+                throw new Error(`Failed to load ${configUrl}. Status: ${res.status}`);
+            }
+
+            const settings = await res.json();
+            const configuredApiMetadata = typeof settings?.API_METADATA === "string" ? settings.API_METADATA.trim() : "";
+
+            if (!configuredApiMetadata) {
+                throw new Error(`API_METADATA is missing or empty in ${configUrl}`);
+            }
+
+            apiMetadataUrl = configuredApiMetadata;
+            apiMetadataConfigError = "";
+        } catch (error) {
+            apiMetadataUrl = "";
+            apiMetadataConfigError = (error && error.message) ? error.message : String(error);
+            showToast("Failed to load API metadata configuration.");
+            console.error(`Failed to resolve API_METADATA from ${configUrl || "app base URL"}`, error);
+        }
+    }
+
+    function ensureApiMetadataConfigLoaded() {
+        if (!apiMetadataConfigPromise) {
+            apiMetadataConfigPromise = loadApiMetadataConfig();
+        }
+
+        return apiMetadataConfigPromise;
     }
 
     function getActivePromptInfo(commandConfig, tokens, targetIndex) {
@@ -623,7 +691,26 @@
             render();
             return;
         }
+        
+        ///set command - numeric handling.
+        if (SET_COMMAND_STATE.currentFieldType === 'n') {
 
+            let tokens = getTokens(text);
+            let lastIndex = tokens.length - 1;
+            let lastToken = tokens[lastIndex];
+
+            const numericRegex = /^-?\d*$/;
+
+            if (!numericRegex.test(lastToken)) {
+                console.error("Type only numeric value");
+                showToast("Type only numeric value");
+
+                tokens[lastIndex] = "";
+
+                input.value = tokens.join(" ");
+                return;
+            }
+        }
 
 
         // Clear stale resolutions when input changes
@@ -972,6 +1059,14 @@
             }
         }
 
+        ///Need to make a common function for processAdsRepetitivetokens
+        if (groupKey === "create" && tokens.length > 2) {
+            // let viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
+            let viewSource = "Axi_FieldList".toLowerCase();
+            updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "fieldname": "fieldValue"})
+            return createCommandHandling(tokens, commandConfig, viewSource);
+        }
+            
         if (groupKey === "run") {
             const structType = getStructType();
 
@@ -1283,14 +1378,18 @@
 
         const selectedItem = items[index];
 
-        if (typeof selectedItem === 'object' && selectedItem.isExecutable) {
+        if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "GO_ACTION") {
             console.log("Action item selected. Executing command...");
             hide();
             executeCommandsV2();
             return;
         }
-
-        
+        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION") {
+            console.log("Save Option Selected...Submitting Data...");
+            buildPayload(fieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", true);
+            resetSetCommandState();
+            return;
+        }
 
         const currentInput = input.value;
         const tokens = getTokens(currentInput);
@@ -1700,7 +1799,27 @@
         input.addEventListener("keydown", e => {
             console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
 
+            const tokens = getTokens(input.value.trim());
 
+            const grpKey = tokens[0];
+
+            if (e.key === 'Backspace' && grpKey === "create") {
+                if (input.selectionStart !== input.selectionEnd) {
+                    resetSetCommandState(); 
+                    return; 
+                }
+                e.preventDefault();
+
+                if (grpKey === "create") {
+                    hide(); 
+                    tokens.pop();
+
+                    input.value = tokens.join(" ");
+
+                    resetSetCommandState();
+                }
+
+            }
 
             if (e.ctrlKey && e.code === "Space") {
                 e.preventDefault();
@@ -1786,7 +1905,14 @@
                 e.preventDefault();
 
                 hide();
+            }
 
+            if (e.ctrlKey && e.key.toLowerCase() === "s") {
+                e.preventDefault();
+                console.log("Save Option Selected...Submitting Data...");
+                buildPayload(fieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", true);
+                resetSetCommandState();
+                return;
             }
         });
 
@@ -3481,6 +3607,842 @@
 
         console.log("Target URL from analyse command : " + targetUrl);
         window.LoadIframe(targetUrl);
+    }
+    
+    
+    function resetSetCommandState() {
+        SET_COMMAND_STATE.isNextField = false;
+        SET_COMMAND_STATE.currentField = null;
+        SET_COMMAND_STATE.currentFieldType = null;
+        SET_COMMAND_STATE.isFirst = true;
+        SET_COMMAND_STATE.transid = null;
+        SET_COMMAND_STATE.currentFieldValue = null;
+        SET_COMMAND_STATE.isDropDown = false;
+        fieldnamevaluesList = [];
+    }
+
+    function createCommandHandling(tokens, commandConfig,createsourceObj) {
+        //const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
+        const viewSource = createsourceObj;
+
+        if (SET_COMMAND_STATE.isDropDown) {
+            let acceptedValue = cleanString(tokens[tokens.length - 1]);
+            if (acceptedValue)
+                SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+
+            SET_COMMAND_STATE.isDropDown = false;
+        }
+        
+
+        if (SET_COMMAND_STATE.currentFieldType == 'n') {
+
+            return processCreateCommand(tokens, commandConfig, viewSource);
+        }
+        else if (SET_COMMAND_STATE.currentFieldType == 'd') {
+            const prevValueInSet = tokens[tokens.length - 2];
+            if (prevValueInSet === "Today" || prevValueInSet === "Yesterday" ||
+         prevValueInSet === "Tomorrow" || prevValueInSet === "LastWeek" ||
+         prevValueInSet === "NextWeek" || prevValueInSet === "LastYear") {
+                const dateResult = getDateByFilter(prevValueInSet);
+                let date = dateResult.date;
+
+
+                if (date !== null || date !== undefined) {
+                    let settokens = tokens
+                    let lastIndex = tokens.length - 2;
+                    let lastToken = tokens[lastIndex];
+
+                    settokens[lastIndex] = date;
+
+                    input.value = settokens.join(" ");
+
+                    SET_COMMAND_STATE.currentFieldValue = date;
+
+                    //// set in resolve params.
+                    //resolvedParamsCopy.fields.push({
+                    //    fieldname: SET_COMMAND_STATE.currentField,
+                    //    fieldtype: SET_COMMAND_STATE.currentFieldType,
+                    //    fieldvalue: date
+                    //});
+
+                }
+            }
+            else {
+
+                if (prevValueInSet == "Custom") {
+                    let settokens = tokens
+                    let lastIndex = tokens.length - 2;
+                    let lastToken = tokens[lastIndex];
+
+                    settokens[lastIndex] = "";
+
+                    input.value = settokens.join(" ");
+
+                    ///// set as empty.
+                    //resolvedParamsCopy.fields.push({
+                    //    fieldname: SET_COMMAND_STATE.currentField,
+                    //    fieldtype: SET_COMMAND_STATE.currentFieldType,
+                    //    fieldvalue: null
+                    //});
+                    showToast("Please Type the date");
+                    return [];
+                }
+                else {
+                    const partialDate = tokens[tokens.length - 1]
+                    let isSetValidDate = isValidDate(partialDate)
+
+                    if (isSetValidDate) {
+                        const formattedDate = formatDate(partialDate, "DD/MM/YYYY");
+                        date = formattedDate;
+                        console.log("Final date:", date);
+                        SET_COMMAND_STATE.currentFieldValue = date;
+                        SET_COMMAND_STATE.currentFieldType = null;
+                        SET_COMMAND_STATE.isNextField = true;
+
+                    }
+                    else
+                        return [];
+                }
+            }
+
+            return processCreateCommand(tokens, commandConfig, viewSource);
+
+        }
+        else
+            return processCreateCommand(tokens, commandConfig, viewSource);
+    }
+
+    function processCreateCommand(tokens, commandConfig,createCommandSourceObj) {
+        const targetIndex = tokens.length - 1;
+        const partialTyped = cleanString(tokens[targetIndex]);
+
+        const createTransId = cleanCommandToken(tokens[1]);
+        setCommandTransid = tryResolveToken(1, createTransId, commandConfig, false);
+
+        if (SET_COMMAND_STATE.transid === null || setCommandTransid !== SET_COMMAND_STATE.transid) {
+            SET_COMMAND_STATE = {
+                    isNextField: false,
+                    currentField: null,
+                    currentFieldType:null,
+                    isFirst: true,
+                    transid: setCommandTransid,
+                    currentFieldValue: null,
+                    isDropDown: false
+
+            };
+        }
+
+
+        if (targetIndex % 2 == 0) {
+            const sourceName = createCommandSourceObj.toLowerCase();
+            const sourceKey = `${sourceName}_${setCommandTransid}`.toLowerCase();
+
+            if (SET_COMMAND_STATE.currentField) {
+                let previousColumnName = SET_COMMAND_STATE.currentField;
+                previousColumnName = tryResolveToken(targetIndex-2, previousColumnName, commandConfig, false);
+                let previousColumnValue = SET_COMMAND_STATE.currentFieldValue;
+                AddFieldstoList(previousColumnName, 1, previousColumnValue);
+            }
+
+
+            if (!axDatasourceObj[sourceKey]) {
+                loadList(sourceName, setCommandTransid);
+                return ["Loading Field list..."];
+            }
+
+            const list = axDatasourceObj[sourceKey];
+            if (!Array.isArray(list)) return [];
+
+
+            const usedColumns = new Set();
+            for (let i = 2; i < targetIndex; i += 2) {
+                const usedToken = cleanString(tokens[i]).toLowerCase();
+                usedColumns.add(usedToken);
+            }
+
+            const filtered = list.filter(col => {
+                const rawDisplay = (col.displaydata || col.name).toLowerCase();
+                const cleanDisplay = rawDisplay
+                    .replace(/\s*\(.*?\)/g, "")
+                    .replace(/\s*\[[^\]]+\]\s*$/, "")
+                    .trim();
+                const rawName = (col.name || "").toLowerCase();
+                const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+                const matchesInput = cleanDisplay.includes(partialTyped.toLowerCase());
+                return !isUsed && matchesInput;
+            });
+
+            filteredObjects = filtered;
+
+            let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+            if (SET_COMMAND_STATE.currentField) {
+                resultList.unshift(goOption);
+                resultList.unshift(saveOption);
+                filteredObjects.unshift(goOption);
+                filteredObjects.unshift(saveOption);
+            }
+            else if (tokens.length >= 3) {
+                resultList.unshift(goOption);
+                filteredObjects.unshift(goOption);
+            }
+
+        
+            SET_COMMAND_STATE.currentField = null;
+            SET_COMMAND_STATE.currentFieldType = null
+            SET_COMMAND_STATE.currentFieldValue = null;
+            SET_COMMAND_STATE.isNextField = false;
+            SET_COMMAND_STATE.isDropDown = false;
+
+
+
+
+            return resultList;
+        }
+
+
+        else {
+
+            if (!SET_COMMAND_STATE.isNextField) {
+                let prevColumnName
+                if (!SET_COMMAND_STATE.currentField) {
+                    prevColumnName = cleanString(tokens[targetIndex - 1]);
+                    SET_COMMAND_STATE.currentField = prevColumnName;
+                }
+                else
+                    prevColumnName = SET_COMMAND_STATE.currentField;
+
+
+                const colSourceKey = createCommandSourceObj + `_${setCommandTransid}`.toLowerCase();
+                const colList = axDatasourceObj[colSourceKey];
+
+                if (!colList) return [];
+
+                const columnMetadata = colList.find(
+                    c =>
+                        c.name?.toLowerCase() === prevColumnName.toLowerCase() ||
+                        c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
+                ) || null;
+
+                if (!columnMetadata) return [];
+
+                let isAccept;
+
+                if (columnMetadata.moe === "a") {
+                    isAccept = true;
+                } else {
+                    isAccept = false;
+                }
+
+
+
+                let datatype;
+
+                if (SET_COMMAND_STATE.currentFieldType === null) {
+                    datatype = columnMetadata.datatype;
+                    SET_COMMAND_STATE.currentFieldType = datatype;
+                }
+                else datatype = SET_COMMAND_STATE.currentFieldType;
+
+
+                if (datatype === 'c' || datatype === 'n') {
+                    if (isAccept) {
+                        let acceptedValue = cleanString(tokens[tokens.length - 1]);
+                        if (acceptedValue)
+                            SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+                       
+                        return [];
+
+                    }
+                    else {
+
+                        SET_COMMAND_STATE.isDropDown = true;
+                        const acceptedValue = cleanString(tokens[tokens.length - 1]);
+                        const sourceName = "axi_firesql";
+
+
+                        var params1 = columnMetadata.fldsql; 
+                        var params2 = $("#middle1")[0].contentWindow.Parameters; 
+
+                        params2 += ";" + getFieldNameandItsValue(tokens, commandConfig);
+
+
+
+                        const paramValue = `${params1},${params2}`;
+                        const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
+
+                        if (!axDatasourceObj[sourceKey]) {
+                            loadList(sourceName, paramValue);
+                            return ["Loading values..."];
+                        }
+
+                        const list = axDatasourceObj[sourceKey];
+                        if (!Array.isArray(list)) return [];
+
+                        const filtered = list.filter(col => {
+                            const rawDisplay = String(col.displaydata || col.name)
+                                .toLowerCase();
+
+                            const normalizedTypedValue = (acceptedValue ?? "")
+                                .toLowerCase();
+
+                            return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
+                        });
+
+
+                        return filtered.map(col => col.displaydata || col.name);
+                    }
+                }
+                else if (datatype === 'd') {
+
+
+                    const acceptedValue = cleanString(tokens[tokens.length - 1]);
+
+                    const list = [
+                        "Today",
+                        "Yesterday",
+                        "Tomorrow",
+                        "LastWeek",
+                        "NextWeek",
+                        "LastYear",
+                        "Custom"
+                    ];
+
+                    const filtered = list.filter(col => {
+
+                        const rawDisplay = col.toLowerCase();
+
+                        const normalizedTypedValue = (acceptedValue ?? "")
+                            .toLowerCase();
+
+                        return rawDisplay.includes(normalizedTypedValue);
+                    });
+
+
+                    return filtered;
+
+
+                }
+
+                //else if (datatype === 'd') {
+
+                //}
+            }
+            else return [];
+        }
+    }
+
+
+    function AddFieldstoList(fieldName, rowNo, value) {
+
+        if (fieldName !== null ||fieldName !== undefined || fieldName !== "" || value !== null ||value !== undefined ||value !== "") {
+            const formatted = `${fieldName}~${rowNo}=${value}`;
+
+            fieldnamevaluesList.push(formatted);
+        }
+    }
+
+
+    function getTransID() {
+
+       // const iframes = document.querySelectorAll("iframe");
+
+       // console.log(iframes);
+
+        const currentIframe = document.getElementById("middle1");
+
+        let transID;
+
+        if (currentIframe) {
+            //  const src = currentIframe.src;
+            //  const fetchTransidfromUrl = src.match(/[?&](transid|tstid)=([^&]+)/i);
+
+            //const key = fetchTransidfromUrl ? fetchTransidfromUrl[1] : null;
+            //const value = fetchTransidfromUrl ? fetchTransidfromUrl[2] : null;
+            //console.log(key, value);
+            //transID = value;
+            transID = currentIframe.contentWindow.transid;
+
+            if (transID) {
+                //console.log("iFrame Found");
+                return transID;
+            }
+            else
+                return null;
+        }
+        else {
+            return null;
+        }
+
+
+
+    }
+
+
+    function AxisetFieldValue(actualFieldName,value,rowNo) {
+        const fldid = actualFieldName +"000F"+ rowNo;
+
+        const iframe = document.getElementById("middle1");
+
+        if (iframe) {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const iframeDocElement = iframeDoc.getElementById(fldid);
+            //const iframeDoc = iframe.contentWindow;
+
+            //$("#middle1")[0].contentWindow.CallSetFieldValue(fldid, FldVal);
+            //$("#middle1")[0].contentWindow.MainBlur($(fldid))
+
+            //$("#middle1")[0].contentWindow.MainBlur($(fldid))
+            //$("#middle1")[0].contentWindow.UpdateFieldArray(fldid, fldDbRowNo, fldValue, "parent", "");
+            //$("#middle1")[0].contentWindow.CallSetFieldValue(fldid, fldValue);
+
+            if (iframeDocElement) {
+
+                ///
+                /// For dependency we need to verify this logic.
+                ////
+                iframeDocElement.value = value;
+                iframeDocElement.dispatchEvent(new Event("input", { bubbles: true }));
+                iframeDocElement.dispatchEvent(new Event("change", { bubbles: true }));
+                iframeDocElement.dispatchEvent(new Event("blur", { bubbles: true }));
+                //iframeDoc.UpdateFieldArray(fldid, rowNo, fldValue, "parent", "");
+                //iframeDoc.CallSetFieldValue(fldid, fldValue);
+                //iframeDoc.MainBlur($(fldid));
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else return false;
+    }
+
+    function handleCreate({ tokens, commandConfig }) {
+
+        if (tokens.length <2) {
+            console.warn("create command requires <tstructname> <fieldname> <fieldvalue>");
+            showToast("create command requires <tstructname> <fieldname> <fieldvalue>");
+            return;
+        }
+
+        resetSetCommandState();
+
+        if (tokens.length <= 3) {
+            let rawName = cleanCommandToken(tokens[1]);
+            let transId = tryResolveToken(1, rawName, commandConfig, false);
+
+            if (transId === rawName) {
+                const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+                const found = list?.find(
+                    x => x.caption.toLowerCase() === rawName.toLowerCase()
+                );
+                if (found) transId = found.name
+                else {
+                    console.error("Invalid Tstruct name");
+                    return;
+                }
+            }
+
+            redirectToTstruct(transId);
+            return;
+
+        }
+
+        let rawName = cleanCommandToken(tokens[1]);
+        let transId = tryResolveToken(1, rawName, commandConfig, false);
+
+
+        let CurrentOpentstructName = getTransID();
+
+        if (CurrentOpentstructName === transId.toLowerCase()) {
+
+            for (let i = 2; i < tokens.length; i += 2) {
+
+                const fieldname = cleanCommandToken(tokens[i]);
+                const actualFieldName = tryResolveToken(i, fieldname, commandConfig, false);
+                const value = cleanCommandToken(tokens[i + 1]);
+                const rowNo = "1";
+
+                if (!fieldname || value == null || value === "") {
+                    console.log(`SET FAILED → ${fieldname} = ${value}`);
+                    continue;
+                }
+
+
+                let resultOfSetFieldValue = AxisetFieldValue(actualFieldName, value, rowNo);
+
+                if (resultOfSetFieldValue) {
+                    console.log(`SET SUCCESS → ${fieldname} = ${value}`);
+                    continue;
+
+                }
+                else {
+                    console.log(`SET FAILED → ${fieldname} = ${value}`);
+                }
+            }
+        }
+        else { 
+            console.log("Form not loaded. Attaching onload and redirecting...");
+
+            let iframe = null;
+
+            try {
+
+                iframe = document.getElementById("middle1");
+
+                if (!iframe) {
+                    console.log("Iframe not found");
+                    return;
+                }
+
+                iframe.onload = function () {
+
+                    console.log("Iframe loaded. Setting all fields now...");
+
+                    try {
+
+                        for (let j = 2; j < tokens.length; j += 2) {
+
+                            const fname = cleanCommandToken(tokens[j]);
+                            const actualFName = tryResolveToken(j, fname, commandConfig, false);
+                            const val = cleanCommandToken(tokens[j + 1]);
+                            let rowNo = "1";
+
+                            if (!fname || val == null || val === "") {
+                                console.log(`SET FAILED → ${fname} = ${val}`);
+                                continue;
+                            }
+
+                            let resultOfSetFieldValue = AxisetFieldValue(actualFName, val, rowNo);
+
+                            if (resultOfSetFieldValue) {
+                                console.log(`SET SUCCESS → ${fname} = ${val}`);
+                            }
+                            else {
+                                console.log(`SET FAILED → ${fname} = ${val}`);
+                            }
+                        }
+
+                    }
+                    catch (ex) {
+                        console.error("Error while setting fields after iframe load:", ex);
+                    }
+                    finally {
+                        iframe.onload = null;
+                    }
+                };
+
+                redirectToTstruct(transId);
+
+            }
+            catch (ex) {
+                console.log("Error in handleCreate: " + ex);
+            }
+            //finally {
+            //    if (iframe) {
+            //        iframe.onload = iframe.onload;
+            //    }
+            //}
+
+
+        }
+    }
+
+    function getFieldNameandItsValue(tokens,commandConfig) {
+
+        let valueReturn = "";
+
+        if (!tokens || tokens.length <= 2) {
+            return valueReturn;
+        }
+
+        for (let i = 2; i < tokens.length; i += 2) {
+            const fieldname = cleanCommandToken(tokens[i]);
+            if (!fieldname) continue;
+            const actualFieldName = tryResolveToken(i, fieldname, commandConfig, false);
+            if (i + 1 < tokens.length) {
+                const value = cleanCommandToken(tokens[i + 1]);
+                if (value !== undefined && value !== null) {
+                    valueReturn += actualFieldName + "~" + value + ";";
+                }
+                else {
+                    valueReturn += actualFieldName + ";";
+                }
+            } else {
+                valueReturn += actualFieldName + ";";
+            }
+        }
+        return valueReturn;
+    }
+
+
+    function isValidDate(value) {
+        if (!value || typeof value !== "string") return false;
+
+        value = value.trim();
+
+        if (value.length === 0) {
+            return false;
+        }
+
+        let day, month, year;
+
+        // Format: DD/MM/YYYY or D/M/YYYY or DD-MM-YYYY or D-M-YYYY
+        let dmyRegex = /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/;
+
+        // Format: YYYY-MM-DD
+        let ymdRegex = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+
+        if (dmyRegex.test(value)) {
+            const match = value.match(dmyRegex);
+            day = parseInt(match[1], 10);
+            month = parseInt(match[2], 10);
+            year = parseInt(match[3], 10);
+        }
+        else if (ymdRegex.test(value)) {
+            const match = value.match(ymdRegex);
+            year = parseInt(match[1], 10);
+            month = parseInt(match[2], 10);
+            day = parseInt(match[3], 10);
+        }
+        else {
+            return false; // format mismatch
+        }
+
+        // Month range
+        if (month < 1 || month > 12) return false;
+
+        // Day range
+        const daysInMonth = new Date(year, month, 0).getDate();
+        if (day < 1 || day > daysInMonth) return false;
+
+        return true;
+    }
+
+
+
+    function formatDate(date, format) {
+        if (!date) return null;
+
+        if (typeof date === "string") {
+            let m;
+            if ((m = date.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/)) || (m = date.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)))
+            {
+                date = new Date(
+                    m[1].length === 4 ? m[1] : m[3],
+                    (m[1].length === 4 ? m[2] : m[2]) - 1,
+                    m[1].length === 4 ? m[3] : m[1]
+                );
+
+            } else {
+                return null; 
+            }          
+        }
+
+        if (!(date instanceof Date) || isNaN(date.getTime())) {
+            return null;
+        }
+
+        const dd = String(date.getDate()).padStart(2, "0");
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const yyyy = date.getFullYear();
+
+        switch (format) {
+            case "YYYYMMDD":
+                return `${yyyy}${mm}${dd}`;
+
+            case "DDMMYYYY":
+                return `${dd}${mm}${yyyy}`;
+
+            case "YYYY-MM-DD":
+                return `${yyyy}-${mm}-${dd}`;
+
+            case "DD-MM-YYYY":
+                return `${dd}-${mm}-${yyyy}`;
+
+            case "YYYY/MM/DD":
+                return `${yyyy}/${mm}/${dd}`;
+
+            case "DD/MM/YYYY":
+                return `${dd}/${mm}/${yyyy}`;
+
+            case "YYYY.MM.DD":
+                return `${yyyy}.${mm}.${dd}`;
+
+            case "DD.MM.YYYY":
+                return `${dd}.${mm}.${yyyy}`;
+
+            default:
+                return date; // fallback
+        }
+    }
+
+
+function getDateByFilter(type) {
+    const baseDate = new Date();
+    baseDate.setHours(0, 0, 0, 0);
+
+    let date = null;
+    type = type.toLowerCase();
+
+    switch (type) {
+        case "today":
+            date = formatDate(baseDate, "DD/MM/YYYY");
+            break;
+
+        case "yesterday": {
+            const d = new Date(baseDate);
+            d.setDate(d.getDate() - 1);
+            date = formatDate(d, "DD/MM/YYYY");
+            break;
+        }
+
+        case "tomorrow": {
+            const d = new Date(baseDate);
+            d.setDate(d.getDate() + 1);
+            date = formatDate(d, "DD/MM/YYYY");
+            break;
+        }
+
+        case "lastweek": {
+            const d = new Date(baseDate);
+            d.setDate(d.getDate() - 7);
+            date = formatDate(d, "DD/MM/YYYY");
+            break;
+        }
+
+        case "nextweek": {
+            const d = new Date(baseDate);
+            d.setDate(d.getDate() + 7);
+            date = formatDate(d, "DD/MM/YYYY");
+            break;
+        }
+
+        case "lastyear": {
+            const d = new Date(baseDate);
+            d.setFullYear(d.getFullYear() - 1);
+            date = formatDate(d, "DD/MM/YYYY");
+            break;
+        }
+
+        case "custom":
+        default:
+            return {
+                date: "",
+                openDatePicker: true
+            };
+    }
+
+    return {
+        date,
+        openDatePicker: false
+    };
+    }
+
+
+    function buildPayload(fieldnamevaluesList, transid, sourceName, isCreate) {
+
+
+        //const sessionResponse = fetch("GetSession", {
+        //    method: "POST"
+        //});
+        let sessionId;
+        getSession("ARM_SessionId").then(getSession_resp => {
+            sessionId = getSession_resp.d;
+            console.log(sessionId);
+        });
+
+        if (!sessionId) return ["Session expired"]
+ 
+        //const sessionId = getSession("ARM_SessionId");
+        //if (!sessionId) return ["Session expired"];
+
+        const colSourceKey = (sourceName + "_" + transid).toLowerCase();
+        const colList = axDatasourceObj[colSourceKey];
+
+        const submitdata = {};
+
+        for (let i = 0; i < fieldnamevaluesList.length; i++) {
+
+            const item = fieldnamevaluesList[i];
+
+            const parts = item.split("=");
+            const left = parts[0];
+            const value = parts[1];
+
+            const leftParts = left.split("~");
+            const fieldName = leftParts[0];
+            const rowNo = leftParts[1];
+
+            const columnMetadata = colList.find(c =>
+                c.name?.toLowerCase() === fieldName.toLowerCase()
+            );
+
+            if (!columnMetadata) continue;
+
+            const dcName = columnMetadata.dcname;
+            const isGrid = columnMetadata.asgrid;
+
+            if (!submitdata[dcName]) {
+                submitdata[dcName] = {};
+            }
+
+            const rowKey = isGrid ? "row" + rowNo : "row1";
+
+            if (!submitdata[dcName][rowKey]) {
+                submitdata[dcName][rowKey] = {};
+            }
+
+            // If EDIT → add edit-specific fields
+            if (!isCreate) {
+                submitdata[dcName][rowKey]["axrow_action"] = "edit";
+            }
+
+            submitdata[dcName][rowKey][fieldName] = value;
+        }
+
+        //const sessionResult = sessionResponse.json();
+        //const sessionId = sessionResult.d;
+        //if (!sessionId) return ["Session expired"];
+
+        const payload = {
+            ARMSessionId: sessionId,
+            trace: true,
+            data: [
+                {
+                    transid: transid,
+                    action: isCreate ? "create" : "edit",
+                    submitdata: submitdata
+                }
+            ]
+        };
+
+        console.log("AxPut Payload created : " + payload);
+        //If EDIT → attach keyfield & keyvalue at root level
+        if (!isCreate) {
+            payload.data[0]["keyfield"] = "recordid";    
+            payload.data[0]["keyvalue"] = "";
+        }
+
+        var apiUrl = armUrl + "/api/v1/AxPut";
+
+        try {
+
+            const response = fetch(apiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            //const result = await response.json();
+            
+        } catch (error) {
+            console.log("Error from Axput : "+ error);
+        }
+
+
     }
 
 
