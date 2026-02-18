@@ -332,7 +332,7 @@
     async function loadApiMetadataConfig() {
         let configUrl = "";
         try {
-            configUrl = `${getAppBaseUrl()}/plugins/Axi/axiConfig.json`;
+            configUrl = `${getAppBaseUrl()}/CustomPages/axiConfig.json`;
             const res = await fetch(configUrl, { cache: "no-store" });
             if (!res.ok) {
                 throw new Error(`Failed to load ${configUrl}. Status: ${res.status}`);
