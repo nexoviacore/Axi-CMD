@@ -1,4 +1,5 @@
 ﻿(() => {
+    // plugins/Axi/HTMLPages/js/axi-autocomplete.js
 
     
     let apiMetadataUrl = "";
@@ -332,7 +333,7 @@
     async function loadApiMetadataConfig() {
         let configUrl = "";
         try {
-            configUrl = `${getAppBaseUrl()}/CustomPages/axiConfig.json`;
+            configUrl = `${getAppBaseUrl()}/plugins/Axi/axiConfig.json`;
             const res = await fetch(configUrl, { cache: "no-store" });
             if (!res.ok) {
                 throw new Error(`Failed to load ${configUrl}. Status: ${res.status}`);
@@ -484,7 +485,9 @@
     function redirectToSmartView({ adsName, filters }) {
 
 
-        let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
+        // let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
+        // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table_1769088257557.html`;
+        let targetUrl = `${getAppBaseUrl()}/plugins/Axi/HTMLPages/Smartview_table.html`;
         // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
 
         targetUrl += `?ads=${encodeURIComponent(adsName)}`;
@@ -4449,7 +4452,8 @@ function getDateByFilter(type) {
     function redirectToAxibot() {
 
 
-        let targetUrl = "../CustomPages/axibot.html";
+        // let targetUrl = "../CustomPages/axibot.html";
+        let targetUrl = `${getAppBaseUrl()}/plugins/Axi/HTMLPages/axibot.html`;
         // let targetUrl = "../axidev/HTMLPages/axibot.html";
 
 

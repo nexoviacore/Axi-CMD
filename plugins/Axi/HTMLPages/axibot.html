@@ -1,38 +1,48 @@
-<!doctype html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Axpert Insights (AXI) — Connect • Upload • Ask</title>
 
 
-    <!-- <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"> -->
-
-        <link rel="stylesheet"
-        href="./css/atom-one-dark.min.css">
+    <link rel="stylesheet" href="../../../plugins/Axi/HTMLPages/css/atom-one-dark.min.css">
 
 
+    <!-- <link rel="stylesheet" href="../UI/axpertUI/style.bundle.css"> -->
+    <link rel="stylesheet" href="../../../UI/axpertUI/style.bundle.css">
+    <!-- <link rel="stylesheet" href="../UI/axpertUI/plugins.bundle.css"> -->
+    <link rel="stylesheet" href="../../../UI/axpertUI/plugins.bundle.css">
     <!-- Core libs (from AXI Ask) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script> -->
+    <script src="../../../plugins/Axi/HTMLPages/js/highlight.js"></script>
+    <!-- <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script> -->
+    <script src="../../../plugins/Axi/HTMLPages/js/index.umd.js"></script>
+    <script src="../../../plugins/Axi/HTMLPages/js/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="../../../plugins/Axi/HTMLPages/js/chart.umd.min.js"></script>
 
     <!-- Highcharts & Modules -->
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/heatmap.js"></script>
     <script src="https://code.highcharts.com/modules/treemap.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+    <script src="../../../plugins/Axi/HTMLPages/js/marked.min.js"></script>
+    <script src="../../../plugins/Axi/HTMLPages/js/purify.min.js"></script>
 
-    <!-- Phosphor Icons -->
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <!-- Axpert core styles -->
+    <link rel="stylesheet" href="../../../UI/axpertUI/style.bundle.css">
+    <link rel="stylesheet" href="../../../UI/axpertUI/plugins.bundle.css">
 
+    <!-- Axpert core scripts -->
+    <script src="../../../UI/axpertUI/plugins.bundle.js"></script>
+    <script src="../../../UI/axpertUI/scripts.bundle.js"></script>
+
+    <script type="text/javascript" src="../../../Js/noConflict.min.js"></script>
+    <!-- <script type="text/javascript" src="../Js/noConflict.min.js"></script> -->
+    <!-- <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script> -->
+    <script type="text/javascript" src="../../../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../../../Js/alerts.min.js"></script>
+    <script type="text/javascript" src="../../../common.min.js"></script>
+    <script type="text/javascript" src="../../../AxInterface.js"></script>
     <style>
         /* Base Icon Style */
         .material-symbols-rounded {
@@ -399,7 +409,7 @@
         .message__avatar img {
             width: 22px;
             height: 22px;
-            border-radius: 50%;
+            border-radius: 8px;
             object-fit: cover;
         }
 
@@ -516,7 +526,6 @@
 
         /* --- COMPOSER --- */
         .composerWrap {
-            
             border-top: 1px solid var(--border-light);
             background: var(--bg-secondary);
             padding: 12px 24px 16px;
@@ -1468,11 +1477,9 @@
         }
 
         .globalBrand img {
-            height: 60px;
-            width: 60px;
-            border-radius: 50%; 
-            
-            display: block; 
+            height: 45px;
+            width: 45px;
+            object-fit: contain;
         }
 
         .globalTabs {
@@ -1655,12 +1662,10 @@
         }
 
         .composer__inputWrap {
-        
             flex: 1;
         }
 
         textarea#prompt.composer__input {
-            display: none; 
             width: 100%;
             min-height: 24px;
             max-height: 120px;
@@ -2265,13 +2270,13 @@
         }
 
         /* Left: Brand */
-        /* .globalBrand img {
-            height: 32px;
-            width: auto;
+        .globalBrand img {
+            height: 45px;
+            width: 45px;
             object-fit: contain;
             display: block;
             /* Remove line-height gap */
-        /* } */ */
+        }
 
         /* Right: File Bar (Dropdown + Buttons) */
         .fileBar {
@@ -2671,24 +2676,28 @@
         /* DB Active */
     </style>
 
+    <script>
+        window.axpertURL = window.location.origin + '/axpert/';  // adjust if your Axpert is in a subfolder
+    </script>
     <!-- Your app scripts -->
     <script>
 
-        /* axi-library.js (Corrected for Async) */
         const AxiLibrary = {
             KEY: 'axi_file_library_v1',
 
             // Save a File object to LocalStorage (Base64 encoded)
-            // NOW RETURNS A PROMISE
             save: function (file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
+                var _this = this; // Capture 'this' for standard function scope
+                return new Promise(function (resolve, reject) {
+                    var reader = new FileReader();
 
-                    reader.onload = (e) => {
+                    reader.onload = function (e) {
                         try {
-                            const lib = this.getAll();
+                            var lib = _this.getAll();
                             // Remove duplicate if exists
-                            const newLib = lib.filter(f => f.name !== file.name);
+                            var newLib = lib.filter(function (f) {
+                                return f.name !== file.name;
+                            });
 
                             newLib.push({
                                 name: file.name,
@@ -2697,22 +2706,21 @@
                                 date: Date.now()
                             });
 
-                            localStorage.setItem(this.KEY, JSON.stringify(newLib));
-                            console.log(`Saved ${file.name} to library.`);
-                            resolve(true); // Signal success
+                            localStorage.setItem(_this.KEY, JSON.stringify(newLib));
+                            console.log('Saved ' + file.name + ' to library.');
+                            resolve(true);
                         } catch (err) {
                             alert("File is too large to save in browser history (Max ~5MB).");
                             console.error("Storage Limit Exceeded", err);
-                            resolve(false); // Resolve false on error (don't break app flow)
+                            resolve(false);
                         }
                     };
 
-                    reader.onerror = (err) => {
+                    reader.onerror = function (err) {
                         console.error("File Read Error", err);
                         resolve(false);
                     };
 
-                    // Read as Data URL to support both CSV (Text) and Excel (Binary)
                     reader.readAsDataURL(file);
                 });
             },
@@ -2722,24 +2730,45 @@
                 return JSON.parse(localStorage.getItem(this.KEY) || '[]');
             },
 
-            // Reconstruct a File object from storage
-            getFileObj: async function (fileName) {
-                const lib = this.getAll();
-                const item = lib.find(f => f.name === fileName);
-                if (!item) return null;
+            // Reconstruct a File object from storage - NO FETCH (CSP SAFE)
+            getFileObj: function (fileName) {
+                var lib = this.getAll();
+                var item = lib.find(function (f) {
+                    return f.name === fileName;
+                });
 
-                // Convert Base64 back to Blob/File
-                const res = await fetch(item.data);
-                const blob = await res.blob();
-                return new File([blob], item.name, { type: item.type });
+                if (!item) return Promise.resolve(null);
+
+                // Manual Base64 to Blob conversion (Bypasses CSP "fetch data:" block)
+                try {
+                    var parts = item.data.split(',');
+                    var byteString = atob(parts[1]);
+                    var mimeString = parts[0].split(':')[1].split(';')[0];
+
+                    var ab = new ArrayBuffer(byteString.length);
+                    var ia = new Uint8Array(ab);
+
+                    for (var i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+
+                    var blob = new Blob([ab], { type: mimeString });
+                    var file = new File([blob], item.name, { type: item.type });
+
+                    return Promise.resolve(file);
+                } catch (e) {
+                    console.error("Error converting file:", e);
+                    return Promise.resolve(null);
+                }
             }
         };
 
         // Expose globally
         window.AxiLibrary = AxiLibrary;
 
+
     </script>
-    <script defer src="./js/app 1.js"></script>
+
 </head>
 
 <body>
@@ -2750,7 +2779,7 @@
                 <div class="globalBar__inner">
                     <!-- 1. Logo -->
                     <div class="globalBrand" role="banner">
-                        <img src="../HTMLPages/images/axibot.png" alt="Axpert logo" />
+                        <img src="../../../plugins/Axi/HTMLPages/images/axibot.png" alt="Axpert logo">
                     </div>
 
                     <!-- 2. Controls -->
@@ -2760,8 +2789,8 @@
                         <div class="sourceToggleWrap" title="Toggle Data Source">
                             <input type="checkbox" id="sourceToggle" class="sourceToggleInput">
                             <label for="sourceToggle" class="sourceToggleLabel">
-                                <span class="material-symbols-rounded toggleIcon on" title="Files">description</span>
-                                <span class="material-symbols-rounded toggleIcon off" title="Databases">database</span>
+                                <span class="material-icons toggleIcon on" title="Files">description</span>
+                                <span class="material-icons toggleIcon off" title="Databases">database</span>
                             </label>
                         </div>
 
@@ -2769,18 +2798,16 @@
                         <div class="select-wrapper custom-select-wrapper" id="customSelectWrapper">
                             <!-- Visual Display (Mimics the old Select) -->
                             <div class="custom-select-trigger" tabindex="0">
-                                <span class="material-symbols-rounded"
-                                    style="color:#64748B; font-size:20px;">search</span>
+                                <span class="material-icons" style="color:#64748B; font-size:20px;">search</span>
                                 <span class="custom-select-value" id="selectedValue">Select a file...</span>
-                                <span class="material-symbols-rounded"
-                                    style="color:#64748B; font-size:20px;">expand_more</span>
+                                <span class="material-icons" style="color:#64748B; font-size:20px;">expand_more</span>
                             </div>
 
                             <!-- Dropdown Menu (Hidden by default) -->
                             <div class="custom-options-container">
                                 <!-- Search Input -->
                                 <div class="custom-search-box">
-                                    <span class="material-symbols-rounded search-icon">search</span>
+                                    <span class="material-icons search-icon">search</span>
                                     <input type="text" id="optionSearch" placeholder="Search..." autocomplete="off">
                                 </div>
 
@@ -2800,17 +2827,16 @@
                         <!-- Buttons -->
                         <div class="actionGroup">
                             <button id="axiLoad" class="miniBtn" type="button" title="Analyze">
-                                <span class="material-symbols-rounded">analytics</span>
+                                <span class="material-icons">analytics</span>
                                 <span>Analyze</span>
                             </button>
                             <!-- Add this button next to your Connect button -->
-                            <button id="openSystemPrompt" class="miniBtn miniBtn--secondary" type="button"
-                                title="Edit System Prompt">
-                                <span class="material-symbols-rounded">edit_note</span>
+                            <button id="openSystemPrompt" class="miniBtn miniBtn--secondary" type="button" title="Edit System Prompt">
+                                <span class="material-icons">edit_note</span>
                                 <span>Edit Prompt</span>
                             </button>
                             <button id="openConnect" class="miniBtn miniBtn--secondary" type="button" title="Connect">
-                                <span class="material-symbols-rounded">cable</span>
+                                <span class="material-icons">cable</span>
                                 <span>Connect</span>
                             </button>
                         </div>
@@ -2838,19 +2864,17 @@
                     <form id="composer" class="composer" autocomplete="off">
                         <div class="composer__inputWrap composer__inputWrap--withLeftAction">
                             <!-- Upload Icon Button (Left of prompt) -->
-                            <button id="openUpload" class="composer__leftBtn" type="button" aria-label="Upload files"
-                                title="Upload files">
-                                <span class="material-symbols-rounded" style="font-size:22px;">cloud_upload</span>
+                            <button id="openUpload" class="composer__leftBtn" type="button" aria-label="Upload files" title="Upload files">
+                                <span class="material-icons" style="font-size:22px;">cloud_upload</span>
                             </button>
 
                             <div id="attachmentTray" class="attachmentTray attachmentTray--hidden"></div>
 
-                            <textarea id="prompt" class="composer__input" rows="1"
-                                placeholder="Ask a question about your data..."></textarea>
+                            <textarea id="prompt" class="composer__input" rows="1" placeholder="Ask a question about your data..."></textarea>
                         </div>
 
                         <button id="send" class="composer__submit" type="submit" aria-label="Send" title="Send">
-                            <span class="material-symbols-rounded" style="font-size:20px;">send</span>
+                            <span class="material-icons" style="font-size:20px;">send</span>
                         </button>
                     </form>
                 </div>
@@ -2876,7 +2900,7 @@
     <dialog id="systemPromptModal" class="axiModal" aria-labelledby="systemPromptTitle">
         <div class="axiModal__inner">
             <button class="axiModal__close" type="button" data-close="systemPromptModal" aria-label="Close">
-                <span class="material-symbols-rounded">close</span>
+                <span class="material-icons">close</span>
             </button>
 
             <h2 id="systemPromptTitle" class="axiModal__title" style="margin-bottom:14px;">Edit System Prompt</h2>
@@ -2887,26 +2911,22 @@
                 </p>
 
                 <div style="margin-bottom: 16px;">
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; color: #334155; font-weight: 600; font-size: 13px; margin-bottom: 8px;">
-                        <span class="material-symbols-rounded" style="font-size: 18px;">smart_toy</span>
+                    <label style="display: flex; align-items: center; gap: 8px; color: #334155; font-weight: 600; font-size: 13px; margin-bottom: 8px;">
+                        <span class="material-icons" style="font-size: 18px;">smart_toy</span>
                         System Prompt
                     </label>
-                    <textarea id="systemPromptEditor"
-                        style="width: 100%; min-height: 400px; padding: 16px; border-radius: 12px; border: 1px solid #E2E8F0; background: #F8FAFC; font-family: monospace; font-size: 13px; line-height: 1.6; resize: vertical;"
-                        placeholder="Enter your custom system prompt..."></textarea>
+                    <textarea id="systemPromptEditor" style="width: 100%; min-height: 400px; padding: 16px; border-radius: 12px; border: 1px solid #E2E8F0; background: #F8FAFC; font-family: monospace; font-size: 13px; line-height: 1.6; resize: vertical;" placeholder="Enter your custom system prompt..."></textarea>
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
                     <div id="promptStatus" class="status" style="display: none; margin-top: 0; width: auto;"></div>
                     <div style="display: flex; gap: 12px; margin-left: auto;">
-                        <button id="resetSystemPrompt" class="miniBtn miniBtn--secondary" type="button"
-                            style="background: #F1F5F9; color: #334155;">
-                            <span class="material-symbols-rounded" style="font-size: 18px;">restart_alt</span>
+                        <button id="resetSystemPrompt" class="miniBtn miniBtn--secondary" type="button" style="background: #F1F5F9; color: #334155;">
+                            <span class="material-icons" style="font-size: 18px;">restart_alt</span>
                             Reset to Default
                         </button>
                         <button id="saveSystemPrompt" class="miniBtn" type="button" style="background: #3B82F6;">
-                            <span class="material-symbols-rounded" style="font-size: 18px;">save</span>
+                            <span class="material-icons" style="font-size: 18px;">save</span>
                             Save Prompt
                         </button>
                     </div>
@@ -2918,13 +2938,13 @@
     <dialog id="connectModal" class="axiModal" aria-labelledby="connectTitle">
         <div class="axiModal__inner">
             <button class="axiModal__close" type="button" data-close="connectModal" aria-label="Close">
-                <span class="material-symbols-rounded">close</span>
+                <span class="material-icons">close</span>
             </button>
 
             <div class="connectCard" style="max-width:560px; margin:0 auto; box-shadow:none; padding:0;">
                 <div class="cardHeader">
                     <h1 class="cardTitle" id="connectTitle">
-                        <span class="material-symbols-rounded" style="color:#3B82F6; font-size:28px;">cable</span>
+                        <span class="material-icons" style="color:#3B82F6; font-size:28px;">cable</span>
                         Connect Intelligence
                     </h1>
                     <p class="cardSubtitle">
@@ -2933,32 +2953,30 @@
                 </div>
 
                 <div class="inputGroup">
-                    <label class="label"><span class="material-symbols-rounded"
-                            style="font-size:16px; vertical-align:middle; margin-right:4px;">smart_toy</span> AI Model
+                    <label class="label"><span class="material-icons" style="font-size:16px; vertical-align:middle; margin-right:4px;">smart_toy</span> AI Model
                         Provider</label>
                     <div class="selectWrap">
-                        <span class="material-symbols-rounded selectIcon" style="font-size:20px;">smart_toy</span>
+                        <span class="material-icons selectIcon" style="font-size:20px;">smart_toy</span>
                         <select id="provider" class="select">
                             <option value="openai">OpenAI (GPT-4)</option>
                             <option value="gemini">Google Gemini</option>
                             <option value="anthropic">Anthropic Claude</option>
                         </select>
-                        <span class="material-symbols-rounded selectCaret" style="font-size:20px;">expand_more</span>
+                        <span class="material-icons selectCaret" style="font-size:20px;">expand_more</span>
                     </div>
                 </div>
 
                 <div class="inputGroup">
-                    <label class="label"><span class="material-symbols-rounded"
-                            style="font-size:16px; vertical-align:middle; margin-right:4px;">key</span> API Key</label>
+                    <label class="label"><span class="material-icons" style="font-size:16px; vertical-align:middle; margin-right:4px;">key</span> API Key</label>
                     <div class="inputWrap">
-                        <span class="material-symbols-rounded inputIcon" style="font-size:20px;">key</span>
+                        <span class="material-icons inputIcon" style="font-size:20px;">key</span>
                         <input type="password" id="apiKey" class="input" placeholder="sk-..." autocomplete="off">
                     </div>
                 </div>
 
                 <button id="connectBtn" class="btn" type="button">
                     <span>Verify & Connect</span>
-                    <span class="material-symbols-rounded" style="font-weight:bold;">arrow_forward</span>
+                    <span class="material-icons" style="font-weight:bold;">arrow_forward</span>
                 </button>
 
                 <div id="status" class="status"></div>
@@ -2970,25 +2988,23 @@
     <dialog id="uploadModal" class="axiModal" aria-labelledby="uploadTitle">
         <div class="axiModal__inner">
             <button class="axiModal__close" type="button" data-close="uploadModal" aria-label="Close">
-                <span class="material-symbols-rounded">close</span>
+                <span class="material-icons">close</span>
             </button>
 
             <h2 id="uploadTitle" class="axiModal__title" style="margin-bottom:14px;">Upload files</h2>
 
             <div class="uploadStage" style="min-height:auto; padding:0; display:block;">
-                <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload files"
-                    style="width:100%; height:320px; background:#F8FAFC; border:2px dashed #E2E8F0; box-shadow:none;">
+                <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload files" style="width:100%; height:320px; background:#F8FAFC; border:2px dashed #E2E8F0; box-shadow:none;">
                     <span class="srOnly">Click or drag and drop files to upload</span>
 
-                    <span class="material-symbols-rounded uploadIcon" aria-hidden="true"
-                        style="font-size:64px;">cloud_upload</span>
+                    <span class="material-icons uploadIcon" aria-hidden="true" style="font-size:64px;">cloud_upload</span>
 
                     <div>
                         <div class="uploadText">Click or Drag files to upload</div>
                         <div class="uploadSubText">Supports CSV, XLSX, JSON</div>
                     </div>
 
-                    <input id="picker" type="file" multiple accept=".csv,.xlsx,.xls,.json,.txt" hidden />
+                    <input id="picker" type="file" multiple="" accept=".csv,.xlsx,.xls,.json,.txt" hidden="">
                 </div>
             </div>
         </div>
@@ -3031,81 +3047,187 @@
             // =========================================================================
             // <<<<< CUSTOM SEARCHABLE DROPDOWN LOGIC >>>>>
             // =========================================================================
-
-            // 4. DATA SOURCE HANDLING & REFRESH LOGIC
-
-            // Raw API Response (Subset provided)
-            const RAW_DS_RESPONSE = {
-
-                "d": "{\"result\":{\"message\":\"success\",\"ADSNames\":\"axi_viewlist\",\"data\":[{\"adsname\":\"axi_viewlist\",\"data\":[{\"displaydata\":\" Selling Price (sepri) [tstruct]\",\"caption\":\" Selling Price\",\"name\":\"sepri\"},{\"displaydata\":\"Account and SBU Allocation (acbra) [tstruct]\",\"caption\":\"Account and SBU Allocation\",\"name\":\"acbra\"},{\"displaydata\":\"Account Payables (acpayi) [iview]\",\"caption\":\"Account Payables\",\"name\":\"acpayi\"},{\"displaydata\":\"Accounts Payable (accpaya) [iview]\",\"caption\":\"Accounts Payable\",\"name\":\"accpaya\"},{\"displaydata\":\"Accounts Payable Summary (apsmryv2) [iview]\",\"caption\":\"Accounts Payable Summary\",\"name\":\"apsmryv2\"},{\"displaydata\":\"Accounts Receivable (accrecv) [iview]\",\"caption\":\"Accounts Receivable\",\"name\":\"accrecv\"},{\"displaydata\":\"Accounts Receivable Summary (arsmryv2) [iview]\",\"caption\":\"Accounts Receivable Summary\",\"name\":\"arsmryv2\"},{\"displaydata\":\"Active tasks (ad__pgal) [iview]\",\"caption\":\"Active tasks\",\"name\":\"ad__pgal\"},{\"displaydata\":\"Actor master (ad_am) [tstruct]\",\"caption\":\"Actor master\",\"name\":\"ad_am\"},{\"displaydata\":\"Advance dwb settings (ax_ac) [tstruct]\",\"caption\":\"Advance dwb settings\",\"name\":\"ax_ac\"},{\"displaydata\":\"ADX Configuration (adxconfv) [iview]\",\"caption\":\"ADX Configuration\",\"name\":\"adxconfv\"},{\"displaydata\":\"ADX Configuration (axadx) [tstruct]\",\"caption\":\"ADX Configuration\",\"name\":\"axadx\"},{\"displaydata\":\"ADX Inbound Log (adxinlog) [iview]\",\"caption\":\"ADX Inbound Log\",\"name\":\"adxinlog\"},{\"displaydata\":\"ADX Outbound Log (adxoutlo) [iview]\",\"caption\":\"ADX Outbound Log\",\"name\":\"adxoutlo\"},{\"displaydata\":\"Alternative Items (altit) [tstruct]\",\"caption\":\"Alternative Items\",\"name\":\"altit\"},{\"displaydata\":\"Alternative Product Master (aprod) [tstruct]\",\"caption\":\"Alternative Product Master\",\"name\":\"aprod\"},{\"displaydata\":\"AMC Renewal (amcre) [tstruct]\",\"caption\":\"AMC Renewal\",\"name\":\"amcre\"},{\"displaydata\":\"Analytics [page]\",\"caption\":\"Analytics\",\"name\":\"htmlPages.aspx?load=1719820677900\"},{\"displaydata\":\"Announcement Configuration (canno) [tstruct]\",\"caption\":\"Announcement Configuration\",\"name\":\"canno\"},{\"displaydata\":\"Annual Maintenance Contract (mnctr) [tstruct]\",\"caption\":\"Annual Maintenance Contract\",\"name\":\"mnctr\"},{\"displaydata\":\"API in forms (apism) [tstruct]\",\"caption\":\"API in forms\",\"name\":\"apism\"},{\"displaydata\":\"API Plugin (apidg) [tstruct]\",\"caption\":\"API Plugin\",\"name\":\"apidg\"},{\"displaydata\":\"API Plugins (exapidef) [iview]\",\"caption\":\"API Plugins\",\"name\":\"exapidef\"},{\"displaydata\":\"App Global Search (appsr) [tstruct]\",\"caption\":\"App Global Search\",\"name\":\"appsr\"},{\"displaydata\":\"App Global Search Data/Periodically (agspr) [tstruct]\",\"caption\":\"App Global Search Data/Periodically\",\"name\":\"agspr\"},{\"displaydata\":\"Application Constants and Variables (axvar) [tstruct]\",\"caption\":\"Application Constants and Variables\",\"name\":\"axvar\"},{\"displaydata\":\"Application DB Variables (ad_db) [tstruct]\",\"caption\":\"Application DB Variables\",\"name\":\"ad_db\"},{\"displaydata\":\"Application Exceptions (iaxex) [iview]\",\"caption\":\"Application Exceptions\",\"name\":\"iaxex\"},{\"displaydata\":\"Application Usage Statistics (applogsm) [iview]\",\"caption\":\"Application Usage Statistics\",\"name\":\"applogsm\"},{\"displaydata\":\"Application Variables (axvars) [iview]\",\"caption\":\"Application Variables\",\"name\":\"axvars\"},{\"displaydata\":\"Application variables/params (appvars) [iview]\",\"caption\":\"Application variables/params\",\"name\":\"appvars\"},{\"displaydata\":\"AR/AP Bills Opening Balance (rpopn) [tstruct]\",\"caption\":\"AR/AP Bills Opening Balance\",\"name\":\"rpopn\"},{\"displaydata\":\"AR/AP Opening Bills Import (bilop) [tstruct]\",\"caption\":\"AR/AP Opening Bills Import\",\"name\":\"bilop\"},{\"displaydata\":\"ARAP Adjustments (rpadj) [tstruct]\",\"caption\":\"ARAP Adjustments\",\"name\":\"rpadj\"},{\"displaydata\":\"ARAP Details (rpdet) [tstruct]\",\"caption\":\"ARAP Details\",\"name\":\"rpdet\"},{\"displaydata\":\"area (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"area\"},{\"displaydata\":\"Asset Assembly (astas) [tstruct]\",\"caption\":\"Asset Assembly\",\"name\":\"astas\"},{\"displaydata\":\"Asset Category (asitc) [tstruct]\",\"caption\":\"Asset Category\",\"name\":\"asitc\"},{\"displaydata\":\"Asset GRN (grnas) [tstruct]\",\"caption\":\"Asset GRN\",\"name\":\"grnas\"},{\"displaydata\":\"Asset Items (proda) [tstruct]\",\"caption\":\"Asset Items\",\"name\":\"proda\"},{\"displaydata\":\"Asset Listing (aslst) [iview]\",\"caption\":\"Asset Listing\",\"name\":\"aslst\"},{\"displaydata\":\"Asset Purchase Bill (astpb) [tstruct]\",\"caption\":\"Asset Purchase Bill\",\"name\":\"astpb\"},{\"displaydata\":\"Asset Subcategory (pacat) [tstruct]\",\"caption\":\"Asset Subcategory\",\"name\":\"pacat\"},{\"displaydata\":\"Asset Upgrade (assup) [tstruct]\",\"caption\":\"Asset Upgrade\",\"name\":\"assup\"},{\"displaydata\":\"Assets Summary (dpsum) [iview]\",\"caption\":\"Assets Summary\",\"name\":\"dpsum\"},{\"displaydata\":\"Assign users to actor (ad_at) [tstruct]\",\"caption\":\"Assign users to actor\",\"name\":\"ad_at\"},{\"displaydata\":\"Assign users to actors (ad__act) [iview]\",\"caption\":\"Assign users to actors\",\"name\":\"ad__act\"},{\"displaydata\":\"Audit log (ad__alog) [iview]\",\"caption\":\"Audit log\",\"name\":\"ad__alog\"},{\"displaydata\":\"Audit Log (auditlog) [iview]\",\"caption\":\"Audit Log\",\"name\":\"auditlog\"},{\"displaydata\":\"Auto print (a__ap) [tstruct]\",\"caption\":\"Auto print\",\"name\":\"a__ap\"},{\"displaydata\":\"Auto prints (ad___apt) [iview]\",\"caption\":\"Auto prints\",\"name\":\"ad___apt\"},{\"displaydata\":\"AxAPI Jobs (axapilog) [iview]\",\"caption\":\"AxAPI Jobs\",\"name\":\"axapilog\"},{\"displaydata\":\"AxCalendar (axcal) [tstruct]\",\"caption\":\"AxCalendar\",\"name\":\"axcal\"},{\"displaydata\":\"AxCalendar event master (ad__e) [tstruct]\",\"caption\":\"AxCalendar event master\",\"name\":\"ad__e\"},{\"displaydata\":\"Axcalendar recurring (axclr) [tstruct]\",\"caption\":\"Axcalendar recurring\",\"name\":\"axclr\"},{\"displaydata\":\"axcalendarsource (General) [ads]\",\"caption\":\"General\",\"name\":\"axcalendarsource\"},{\"displaydata\":\"AxCard type (axcdm) [tstruct]\",\"caption\":\"AxCard type\",\"name\":\"axcdm\"},{\"displaydata\":\"axi_actorlist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_actorlist\"},{\"displaydata\":\"axi_adscolumnlist (System) [ads]\",\"caption\":\"System\",\"name\":\"axi_adscolumnlist\"},{\"displaydata\":\"axi_adsdropdowntokens (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_adsdropdowntokens\"},{\"displaydata\":\"axi_adsfilteroperators (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_adsfilteroperators\"},{\"displaydata\":\"axi_adslist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_adslist\"},{\"displaydata\":\"axi_analyticslist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_analyticslist\"},{\"displaydata\":\"axi_apinameslist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_apinameslist\"},{\"displaydata\":\"axi_cardlist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_cardlist\"},{\"displaydata\":\"axi_dimensionlist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_dimensionlist\"},{\"displaydata\":\"axi_fieldlist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_fieldlist\"},{\"displaydata\":\"axi_fieldvaluelist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_fieldvaluelist\"},{\"displaydata\":\"axi_fieldvalueswithkeysuffixlist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_fieldvalueswithkeysuffixlist\"},{\"displaydata\":\"axi_formnotifylist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_formnotifylist\"},{\"displaydata\":\"axi_iviewlist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_iviewlist\"},{\"displaydata\":\"axi_jobnameslist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_jobnameslist\"},{\"displaydata\":\"axi_keyfieldlist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_keyfieldlist\"},{\"displaydata\":\"axi_keyvalueswithfieldnameslist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_keyvalueswithfieldnameslist\"},{\"displaydata\":\"axi_pagelist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_pagelist\"},{\"displaydata\":\"axi_peglist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_peglist\"},{\"displaydata\":\"axi_pegnotifylist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_pegnotifylist\"},{\"displaydata\":\"axi_printformlist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_printformlist\"},{\"displaydata\":\"axi_rolelist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_rolelist\"},{\"displaydata\":\"axi_rulenameslist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_rulenameslist\"},{\"displaydata\":\"axi_schedulenotifylist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_schedulenotifylist\"},{\"displaydata\":\"axi_servernamelist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_servernamelist\"},{\"displaydata\":\"axi_setfieldlist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_setfieldlist\"},{\"displaydata\":\"axi_smartlist_ads_metadata (System) [ads]\",\"caption\":\"System\",\"name\":\"axi_smartlist_ads_metadata\"},{\"displaydata\":\"axi_tstructlist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_tstructlist\"},{\"displaydata\":\"axi_tstructprops_insupd (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_tstructprops_insupd\"},{\"displaydata\":\"axi_usergrouplist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_usergrouplist\"},{\"displaydata\":\"axi_userlist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_userlist\"},{\"displaydata\":\"axi_viewlist (General) [ads]\",\"caption\":\"General\",\"name\":\"axi_viewlist\"},{\"displaydata\":\"AxImport failed records (aximpfrc) [iview]\",\"caption\":\"AxImport failed records\",\"name\":\"aximpfrc\"},{\"displaydata\":\"AxImport jobs (aximplog) [iview]\",\"caption\":\"AxImport jobs\",\"name\":\"aximplog\"},{\"displaydata\":\"Axlanguage Data (ad_li) [tstruct]\",\"caption\":\"Axlanguage Data\",\"name\":\"ad_li\"},{\"displaydata\":\"axm_ess_announcement (General) [ads]\",\"caption\":\"General\",\"name\":\"axm_ess_announcement\"},{\"displaydata\":\"axm_ess_banners (General) [ads]\",\"caption\":\"General\",\"name\":\"axm_ess_banners\"},{\"displaydata\":\"axm_ess_recentactivity (General) [ads]\",\"caption\":\"General\",\"name\":\"axm_ess_recentactivity\"},{\"displaydata\":\"axmp_alternateitems (General) [ads]\",\"caption\":\"General\",\"name\":\"axmp_alternateitems\"},{\"displaydata\":\"axmp_items (General) [ads]\",\"caption\":\"General\",\"name\":\"axmp_items\"},{\"displaydata\":\"axmp_locstock (General) [ads]\",\"caption\":\"General\",\"name\":\"axmp_locstock\"},{\"displaydata\":\"axmp_openiview (General) [ads]\",\"caption\":\"General\",\"name\":\"axmp_openiview\"},{\"displaydata\":\"axmp_openprod (General) [ads]\",\"caption\":\"General\",\"name\":\"axmp_openprod\"},{\"displaydata\":\"axmp_openpurreq (General) [ads]\",\"caption\":\"General\",\"name\":\"axmp_openpurreq\"},{\"displaydata\":\"axmp_openrsdinv (General) [ads]\",\"caption\":\"General\",\"name\":\"axmp_openrsdinv\"},{\"displaydata\":\"axmp_openstock (General) [ads]\",\"caption\":\"General\",\"name\":\"axmp_openstock\"},{\"displaydata\":\"axmp_orders (General) [ads]\",\"caption\":\"General\",\"name\":\"axmp_orders\"},{\"displaydata\":\"axmp_po (Application) [ads]\",\"caption\":\"Application\",\"name\":\"axmp_po\"},{\"displaydata\":\"Axpert-Tasmeem (menuhier) [iview]\",\"caption\":\"Axpert-Tasmeem\",\"name\":\"menuhier\"},{\"displaydata\":\"Axpert API - CallSQLData [page]\",\"caption\":\"Axpert API - CallSQLData\",\"name\":\"htmlPages.aspx?load=1709621111883\"},{\"displaydata\":\"Axpert BLOB Configuration (a__bs) [tstruct]\",\"caption\":\"Axpert BLOB Configuration\",\"name\":\"a__bs\"},{\"displaydata\":\"Axpert BLOB File Storage (a__fs) [tstruct]\",\"caption\":\"Axpert BLOB File Storage\",\"name\":\"a__fs\"},{\"displaydata\":\"Axpert Context (axctx) [tstruct]\",\"caption\":\"Axpert Context\",\"name\":\"axctx\"},{\"displaydata\":\"Axpert Data Source (b_sql) [tstruct]\",\"caption\":\"Axpert Data Source\",\"name\":\"b_sql\"},{\"displaydata\":\"Axpert Data sources (csqlist) [iview]\",\"caption\":\"Axpert Data sources\",\"name\":\"csqlist\"},{\"displaydata\":\"Axpert Job define (job_s) [tstruct]\",\"caption\":\"Axpert Job define\",\"name\":\"job_s\"},{\"displaydata\":\"Axpert Jobs (jobtsk) [iview]\",\"caption\":\"Axpert Jobs\",\"name\":\"jobtsk\"},{\"displaydata\":\"Axpert language setup (ad_lg) [tstruct]\",\"caption\":\"Axpert language setup\",\"name\":\"ad_lg\"},{\"displaydata\":\"Axpert languages (axlangs) [iview]\",\"caption\":\"Axpert languages\",\"name\":\"axlangs\"},{\"displaydata\":\"Axpert languages upload status (ad_lngst) [iview]\",\"caption\":\"Axpert languages upload status\",\"name\":\"ad_lngst\"},{\"displaydata\":\"Axpert Properties (ad_pr) [tstruct]\",\"caption\":\"Axpert Properties\",\"name\":\"ad_pr\"},{\"displaydata\":\"Axpert rule definition (axrlr) [tstruct]\",\"caption\":\"Axpert rule definition\",\"name\":\"axrlr\"},{\"displaydata\":\"Axpert rule definition core (ruldf) [tstruct]\",\"caption\":\"Axpert rule definition core\",\"name\":\"ruldf\"},{\"displaydata\":\"AxPrint errors (prnfail) [iview]\",\"caption\":\"AxPrint errors\",\"name\":\"prnfail\"},{\"displaydata\":\"AxPrint log (printlog) [iview]\",\"caption\":\"AxPrint log\",\"name\":\"printlog\"},{\"displaydata\":\"Axpstruct Configuration (iaxpscon) [iview]\",\"caption\":\"Axpstruct Configuration\",\"name\":\"iaxpscon\"},{\"displaydata\":\"AxScripts log (axscrlog) [iview]\",\"caption\":\"AxScripts log\",\"name\":\"axscrlog\"},{\"displaydata\":\"AxTaskManager [page]\",\"caption\":\"AxTaskManager\",\"name\":\"htmlPages.aspx?load=1709621206416\"},{\"displaydata\":\"Axvar data library (ad_vc) [tstruct]\",\"caption\":\"Axvar data library\",\"name\":\"ad_vc\"},{\"displaydata\":\"Azure File Storage [page]\",\"caption\":\"Azure File Storage\",\"name\":\"htmlPages.aspx?load=1721190447458\"},{\"displaydata\":\"Balance Sheet (bsheform) [iview]\",\"caption\":\"Balance Sheet\",\"name\":\"bsheform\"},{\"displaydata\":\"Balance Sheet Schedules (bsschedu) [iview]\",\"caption\":\"Balance Sheet Schedules\",\"name\":\"bsschedu\"},{\"displaydata\":\"Balance Sheet Setup (blcat) [tstruct]\",\"caption\":\"Balance Sheet Setup\",\"name\":\"blcat\"},{\"displaydata\":\"Bank / Cash Balance (bcbalnc) [iview]\",\"caption\":\"Bank / Cash Balance\",\"name\":\"bcbalnc\"},{\"displaydata\":\"Bank Book (bankreco) [iview]\",\"caption\":\"Bank Book\",\"name\":\"bankreco\"},{\"displaydata\":\"Bank Master (bank) [tstruct]\",\"caption\":\"Bank Master\",\"name\":\"bank\"},{\"displaydata\":\"Bank Master (bankma) [iview]\",\"caption\":\"Bank Master\",\"name\":\"bankma\"},{\"displaydata\":\"Bank Reconciliation Detailed (bankrepo) [iview]\",\"caption\":\"Bank Reconciliation Detailed\",\"name\":\"bankrepo\"},{\"displaydata\":\"Bank Statement Import (bkstm) [tstruct]\",\"caption\":\"Bank Statement Import\",\"name\":\"bkstm\"},{\"displaydata\":\"Bank Transaction (bankr) [tstruct]\",\"caption\":\"Bank Transaction\",\"name\":\"bankr\"},{\"displaydata\":\"barchart (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"barchart\"},{\"displaydata\":\"Barcode Print (barpt) [tstruct]\",\"caption\":\"Barcode Print\",\"name\":\"barpt\"},{\"displaydata\":\"Batch and Cost by Branch (bcanc) [tstruct]\",\"caption\":\"Batch and Cost by Branch\",\"name\":\"bcanc\"},{\"displaydata\":\"Batch Master (batms) [tstruct]\",\"caption\":\"Batch Master\",\"name\":\"batms\"},{\"displaydata\":\"Bill Listing (billlist) [iview]\",\"caption\":\"Bill Listing\",\"name\":\"billlist\"},{\"displaydata\":\"Bill of Material (tsbom) [tstruct]\",\"caption\":\"Bill of Material\",\"name\":\"tsbom\"},{\"displaydata\":\"Bill of Materials (bomreprt) [iview]\",\"caption\":\"Bill of Materials\",\"name\":\"bomreprt\"},{\"displaydata\":\"Bill of Materials (bomta) [tstruct]\",\"caption\":\"Bill of Materials\",\"name\":\"bomta\"},{\"displaydata\":\"BIN Master (binm) [tstruct]\",\"caption\":\"BIN Master\",\"name\":\"binm\"},{\"displaydata\":\"Branch wise Purchase Summary (brprsum) [iview]\",\"caption\":\"Branch wise Purchase Summary\",\"name\":\"brprsum\"},{\"displaydata\":\"Branch Wise Purchases (brchpurs) [iview]\",\"caption\":\"Branch Wise Purchases\",\"name\":\"brchpurs\"},{\"displaydata\":\"Branch Wise Sales (brchsals) [iview]\",\"caption\":\"Branch Wise Sales\",\"name\":\"brchsals\"},{\"displaydata\":\"Branch wise Sales Summary (brslsum) [iview]\",\"caption\":\"Branch wise Sales Summary\",\"name\":\"brslsum\"},{\"displaydata\":\"Branches (bran) [tstruct]\",\"caption\":\"Branches\",\"name\":\"bran\"},{\"displaydata\":\"Branchwise Sales (branchwi) [iview]\",\"caption\":\"Branchwise Sales\",\"name\":\"branchwi\"},{\"displaydata\":\"Brand Master (brand) [tstruct]\",\"caption\":\"Brand Master\",\"name\":\"brand\"},{\"displaydata\":\"Brand Wise Purchase Summary (brdprsum) [iview]\",\"caption\":\"Brand Wise Purchase Summary\",\"name\":\"brdprsum\"},{\"displaydata\":\"Brand Wise Purchases (brndpur) [iview]\",\"caption\":\"Brand Wise Purchases\",\"name\":\"brndpur\"},{\"displaydata\":\"Brand Wise Sales (brndsal) [iview]\",\"caption\":\"Brand Wise Sales\",\"name\":\"brndsal\"},{\"displaydata\":\"Brand Wise Sales Summary (brdslsum) [iview]\",\"caption\":\"Brand Wise Sales Summary\",\"name\":\"brdslsum\"},{\"displaydata\":\"BRS (ivbrsrp) [iview]\",\"caption\":\"BRS\",\"name\":\"ivbrsrp\"},{\"displaydata\":\"BRS Opening (brsop) [tstruct]\",\"caption\":\"BRS Opening\",\"name\":\"brsop\"},{\"displaydata\":\"Buildings (bdgms) [tstruct]\",\"caption\":\"Buildings\",\"name\":\"bdgms\"},{\"displaydata\":\"Cards (a__cd) [tstruct]\",\"caption\":\"Cards\",\"name\":\"a__cd\"},{\"displaydata\":\"Cards (axpcards) [iview]\",\"caption\":\"Cards\",\"name\":\"axpcards\"},{\"displaydata\":\"Category wise Purchase Summary (catprsum) [iview]\",\"caption\":\"Category wise Purchase Summary\",\"name\":\"catprsum\"},{\"displaydata\":\"Category wise Sales Summary (catslsum) [iview]\",\"caption\":\"Category wise Sales Summary\",\"name\":\"catslsum\"},{\"displaydata\":\"Channel (chanl) [tstruct]\",\"caption\":\"Channel\",\"name\":\"chanl\"},{\"displaydata\":\"Channel Wise Sales (channels) [iview]\",\"caption\":\"Channel Wise Sales\",\"name\":\"channels\"},{\"displaydata\":\"Chart of Accounts (fiacc) [tstruct]\",\"caption\":\"Chart of Accounts\",\"name\":\"fiacc\"},{\"displaydata\":\"Chart of Accounts (FiCoaLst) [iview]\",\"caption\":\"Chart of Accounts\",\"name\":\"FiCoaLst\"},{\"displaydata\":\"Chart of Accounts Old (coane) [tstruct]\",\"caption\":\"Chart of Accounts Old\",\"name\":\"coane\"},{\"displaydata\":\"Cheque Printing (chqprint) [iview]\",\"caption\":\"Cheque Printing\",\"name\":\"chqprint\"},{\"displaydata\":\"City (city) [tstruct]\",\"caption\":\"City\",\"name\":\"city\"},{\"displaydata\":\"Close Financial Year (finyrcl) [iview]\",\"caption\":\"Close Financial Year\",\"name\":\"finyrcl\"},{\"displaydata\":\"Column (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"Column\"},{\"displaydata\":\"Common PDF Documents (cpdfd) [tstruct]\",\"caption\":\"Common PDF Documents\",\"name\":\"cpdfd\"},{\"displaydata\":\"Company - Terms \u0026 Conditions (ctrds) [tstruct]\",\"caption\":\"Company - Terms \u0026 Conditions\",\"name\":\"ctrds\"},{\"displaydata\":\"Company (comp) [tstruct]\",\"caption\":\"Company\",\"name\":\"comp\"},{\"displaydata\":\"Company Details (a__co) [tstruct]\",\"caption\":\"Company Details\",\"name\":\"a__co\"},{\"displaydata\":\"Company Details (ad___cmp) [iview]\",\"caption\":\"Company Details\",\"name\":\"ad___cmp\"},{\"displaydata\":\"Comparative Balance Sheet (balsheet) [iview]\",\"caption\":\"Comparative Balance Sheet\",\"name\":\"balsheet\"},{\"displaydata\":\"Comparative P\u0026L (pandsimp) [iview]\",\"caption\":\"Comparative P\u0026L\",\"name\":\"pandsimp\"},{\"displaydata\":\"Configuration Property (astcp) [tstruct]\",\"caption\":\"Configuration Property\",\"name\":\"astcp\"},{\"displaydata\":\"Configuration Property List (ivconfdt) [iview]\",\"caption\":\"Configuration Property List\",\"name\":\"ivconfdt\"},{\"displaydata\":\"Connected data (a__er) [tstruct]\",\"caption\":\"Connected data\",\"name\":\"a__er\"},{\"displaydata\":\"Connected data (ad___erc) [iview]\",\"caption\":\"Connected data\",\"name\":\"ad___erc\"},{\"displaydata\":\"Cost Analysis (costlist) [iview]\",\"caption\":\"Cost Analysis\",\"name\":\"costlist\"},{\"displaydata\":\"Cost Analysis Detailed (costldtl) [iview]\",\"caption\":\"Cost Analysis Detailed\",\"name\":\"costldtl\"},{\"displaydata\":\"Cost Centre Core Data (ccore) [tstruct]\",\"caption\":\"Cost Centre Core Data\",\"name\":\"ccore\"},{\"displaydata\":\"Cost Centre Setup (costc) [tstruct]\",\"caption\":\"Cost Centre Setup\",\"name\":\"costc\"},{\"displaydata\":\"Cost Centre Value (ivcostcd) [iview]\",\"caption\":\"Cost Centre Value\",\"name\":\"ivcostcd\"},{\"displaydata\":\"Cost Centres (ivcosttr) [iview]\",\"caption\":\"Cost Centres\",\"name\":\"ivcosttr\"},{\"displaydata\":\"Costing (costt) [tstruct]\",\"caption\":\"Costing\",\"name\":\"costt\"},{\"displaydata\":\"Costing Form (costg) [tstruct]\",\"caption\":\"Costing Form\",\"name\":\"costg\"},{\"displaydata\":\"Country (cntry) [tstruct]\",\"caption\":\"Country\",\"name\":\"cntry\"},{\"displaydata\":\"Currency (curr) [tstruct]\",\"caption\":\"Currency\",\"name\":\"curr\"},{\"displaydata\":\"Currency wise Purchase (curpurs) [iview]\",\"caption\":\"Currency wise Purchase\",\"name\":\"curpurs\"},{\"displaydata\":\"Currency wise Purchase Summary (curprsum) [iview]\",\"caption\":\"Currency wise Purchase Summary\",\"name\":\"curprsum\"},{\"displaydata\":\"Current Profile [Global Parameters] (axglo) [tstruct]\",\"caption\":\"Current Profile [Global Parameters]\",\"name\":\"axglo\"},{\"displaydata\":\"Custom Dashboard [page]\",\"caption\":\"Custom Dashboard\",\"name\":\"htmlPages.aspx?load=1721970296954\"},{\"displaydata\":\"Custom Data Type (ctype) [tstruct]\",\"caption\":\"Custom Data Type\",\"name\":\"ctype\"},{\"displaydata\":\"Custom data type list (cdlist) [iview]\",\"caption\":\"Custom data type list\",\"name\":\"cdlist\"},{\"displaydata\":\"Custom Error Messages (axerr) [tstruct]\",\"caption\":\"Custom Error Messages\",\"name\":\"axerr\"},{\"displaydata\":\"Custom Error Messages (cerrm) [iview]\",\"caption\":\"Custom Error Messages\",\"name\":\"cerrm\"},{\"displaydata\":\"Custom Fields (ad___cfd) [iview]\",\"caption\":\"Custom Fields\",\"name\":\"ad___cfd\"},{\"displaydata\":\"Custom Forms (ad___acs) [iview]\",\"caption\":\"Custom Forms\",\"name\":\"ad___acs\"},{\"displaydata\":\"Custom Types (custo) [tstruct]\",\"caption\":\"Custom Types\",\"name\":\"custo\"},{\"displaydata\":\"Custom UI (temps) [tstruct]\",\"caption\":\"Custom UI\",\"name\":\"temps\"},{\"displaydata\":\"Customer (gcust) [tstruct]\",\"caption\":\"Customer\",\"name\":\"gcust\"},{\"displaydata\":\"Customer Items Return Summary  (icusjobs) [iview]\",\"caption\":\"Customer Items Return Summary \",\"name\":\"icusjobs\"},{\"displaydata\":\"Customer Receipts (crrec) [tstruct]\",\"caption\":\"Customer Receipts\",\"name\":\"crrec\"},{\"displaydata\":\"Customer Warranty Claim (warcl) [tstruct]\",\"caption\":\"Customer Warranty Claim\",\"name\":\"warcl\"},{\"displaydata\":\"Customer Wise Sales (custsals) [iview]\",\"caption\":\"Customer Wise Sales\",\"name\":\"custsals\"},{\"displaydata\":\"Customer wise Sales Summary (cusslsum) [iview]\",\"caption\":\"Customer wise Sales Summary\",\"name\":\"cusslsum\"},{\"displaydata\":\"Customize Iview (iconf) [tstruct]\",\"caption\":\"Customize Iview\",\"name\":\"iconf\"},{\"displaydata\":\"Customize Tstruct (tconf) [tstruct]\",\"caption\":\"Customize Tstruct\",\"name\":\"tconf\"},{\"displaydata\":\"DAC configuration (a__dm) [tstruct]\",\"caption\":\"DAC configuration\",\"name\":\"a__dm\"},{\"displaydata\":\"DAC configurations (ad_daccf) [iview]\",\"caption\":\"DAC configurations\",\"name\":\"ad_daccf\"},{\"displaydata\":\"DAC Master configuration (a_dcm) [tstruct]\",\"caption\":\"DAC Master configuration\",\"name\":\"a_dcm\"},{\"displaydata\":\"DAC Master configurations (ad_dacmc) [iview]\",\"caption\":\"DAC Master configurations\",\"name\":\"ad_dacmc\"},{\"displaydata\":\"DAC_Master_Data (API) [ads]\",\"caption\":\"API\",\"name\":\"DAC_Master_Data\"},{\"displaydata\":\"Daily Transaction Summary (dailysum) [iview]\",\"caption\":\"Daily Transaction Summary\",\"name\":\"dailysum\"},{\"displaydata\":\"Dashboard Chart Configuration (axcht) [tstruct]\",\"caption\":\"Dashboard Chart Configuration\",\"name\":\"axcht\"},{\"displaydata\":\"Dashboard Configuration (axchtdtl) [iview]\",\"caption\":\"Dashboard Configuration\",\"name\":\"axchtdtl\"},{\"displaydata\":\"Dashboard Configuration (chcon) [tstruct]\",\"caption\":\"Dashboard Configuration\",\"name\":\"chcon\"},{\"displaydata\":\"Data group (ad__g) [tstruct]\",\"caption\":\"Data group\",\"name\":\"ad__g\"},{\"displaydata\":\"Data import templates (ad_it) [tstruct]\",\"caption\":\"Data import templates\",\"name\":\"ad_it\"},{\"displaydata\":\"DC Properties (ad__d) [tstruct]\",\"caption\":\"DC Properties\",\"name\":\"ad__d\"},{\"displaydata\":\"Default Global Parameters (axglc) [tstruct]\",\"caption\":\"Default Global Parameters\",\"name\":\"axglc\"},{\"displaydata\":\"Delegation (ad_td) [tstruct]\",\"caption\":\"Delegation\",\"name\":\"ad_td\"},{\"displaydata\":\"Delivery Note (dlchl) [tstruct]\",\"caption\":\"Delivery Note\",\"name\":\"dlchl\"},{\"displaydata\":\"Delivery Notes (pendinvc) [iview]\",\"caption\":\"Delivery Notes\",\"name\":\"pendinvc\"},{\"displaydata\":\"Department (MGDEP) [tstruct]\",\"caption\":\"Department\",\"name\":\"MGDEP\"},{\"displaydata\":\"Department wise Consumption Detailed Report (prcmdtrp) [iview]\",\"caption\":\"Department wise Consumption Detailed Report\",\"name\":\"prcmdtrp\"},{\"displaydata\":\"Departmentwise Consumption Report (prcmrpt) [iview]\",\"caption\":\"Departmentwise Consumption Report\",\"name\":\"prcmrpt\"},{\"displaydata\":\"Deployment of Asset (dplas) [tstruct]\",\"caption\":\"Deployment of Asset\",\"name\":\"dplas\"},{\"displaydata\":\"Depreciation (depci) [tstruct]\",\"caption\":\"Depreciation\",\"name\":\"depci\"},{\"displaydata\":\"Depreciation Detail (dprdt) [tstruct]\",\"caption\":\"Depreciation Detail\",\"name\":\"dprdt\"},{\"displaydata\":\"Depreciation Schedule (depsch) [iview]\",\"caption\":\"Depreciation Schedule\",\"name\":\"depsch\"},{\"displaydata\":\"Depreciation schedule (depsd) [iview]\",\"caption\":\"Depreciation schedule\",\"name\":\"depsd\"},{\"displaydata\":\"Describe Objects (strt1) [tstruct]\",\"caption\":\"Describe Objects\",\"name\":\"strt1\"},{\"displaydata\":\"Designation Master (desig) [tstruct]\",\"caption\":\"Designation Master\",\"name\":\"desig\"},{\"displaydata\":\"Developer Options (axstc) [tstruct]\",\"caption\":\"Developer Options\",\"name\":\"axstc\"},{\"displaydata\":\"Developer Options List (dop_list) [iview]\",\"caption\":\"Developer Options List\",\"name\":\"dop_list\"},{\"displaydata\":\"Dimension (a_pgm) [tstruct]\",\"caption\":\"Dimension\",\"name\":\"a_pgm\"},{\"displaydata\":\"Dimension and value (a__ag) [tstruct]\",\"caption\":\"Dimension and value\",\"name\":\"a__ag\"},{\"displaydata\":\"Dimensions (ad___upg) [iview]\",\"caption\":\"Dimensions\",\"name\":\"ad___upg\"},{\"displaydata\":\"Dimensions and Cost Centre Values (dimsi) [tstruct]\",\"caption\":\"Dimensions and Cost Centre Values\",\"name\":\"dimsi\"},{\"displaydata\":\"Dimensions Setup (dimas) [tstruct]\",\"caption\":\"Dimensions Setup\",\"name\":\"dimas\"},{\"displaydata\":\"directsalesdatasource (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"directsalesdatasource\"},{\"displaydata\":\"Discount Setup (flat) [tstruct]\",\"caption\":\"Discount Setup\",\"name\":\"flat\"},{\"displaydata\":\"donut (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"donut\"},{\"displaydata\":\"ds (General) [ads]\",\"caption\":\"General\",\"name\":\"ds\"},{\"displaydata\":\"ds_ (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_\"},{\"displaydata\":\"ds_activityfooter (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_activityfooter\"},{\"displaydata\":\"ds_alternativeitems (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_alternativeitems\"},{\"displaydata\":\"ds_announcement_with_image (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_announcement_with_image\"},{\"displaydata\":\"ds_axblobconfig (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_axblobconfig\"},{\"displaydata\":\"ds_axblobdata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_axblobdata\"},{\"displaydata\":\"ds_batch_itemidlocidbarcode (API) [ads]\",\"caption\":\"API\",\"name\":\"ds_batch_itemidlocidbarcode\"},{\"displaydata\":\"ds_cust_crdetails (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_cust_crdetails\"},{\"displaydata\":\"ds_cust_crlinedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_cust_crlinedata\"},{\"displaydata\":\"ds_cust_crsummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_cust_crsummary\"},{\"displaydata\":\"ds_cust_invsummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_cust_invsummary\"},{\"displaydata\":\"ds_cust_sodetails (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_cust_sodetails\"},{\"displaydata\":\"ds_cust_solinedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_cust_solinedata\"},{\"displaydata\":\"ds_cust_sosummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_cust_sosummary\"},{\"displaydata\":\"ds_cust_srdetails (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_cust_srdetails\"},{\"displaydata\":\"ds_cust_srlinedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_cust_srlinedata\"},{\"displaydata\":\"ds_cust_srsummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_cust_srsummary\"},{\"displaydata\":\"ds_customerreceipt_body_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_customerreceipt_body_document\"},{\"displaydata\":\"ds_customersalestimelinesdata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_customersalestimelinesdata\"},{\"displaydata\":\"ds_customersummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_customersummary\"},{\"displaydata\":\"ds_cutsomerreceipt_header_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_cutsomerreceipt_header_document\"},{\"displaydata\":\"ds_fixed_assetcards (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_fixed_assetcards\"},{\"displaydata\":\"ds_generelfinance_details_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_generelfinance_details_document\"},{\"displaydata\":\"ds_generelfinance_header_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_generelfinance_header_document\"},{\"displaydata\":\"ds_getlogservicesnames (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_getlogservicesnames\"},{\"displaydata\":\"ds_getlogusers (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_getlogusers\"},{\"displaydata\":\"ds_grn_details (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_grn_details\"},{\"displaydata\":\"ds_grn_header_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_grn_header_document\"},{\"displaydata\":\"ds_grn_items_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_grn_items_document\"},{\"displaydata\":\"ds_grn_linedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_grn_linedata\"},{\"displaydata\":\"ds_homelink_menuicons (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_homelink_menuicons\"},{\"displaydata\":\"ds_homepage_activelist (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_homepage_activelist\"},{\"displaydata\":\"ds_homepage_banner (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_homepage_banner\"},{\"displaydata\":\"ds_homepage_custom_quicklinks (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_homepage_custom_quicklinks\"},{\"displaydata\":\"ds_homepage_events (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_homepage_events\"},{\"displaydata\":\"ds_homepage_events_custom (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_homepage_events_custom\"},{\"displaydata\":\"ds_homepage_financekpicards (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_homepage_financekpicards\"},{\"displaydata\":\"ds_homepage_inventorykpicards (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_homepage_inventorykpicards\"},{\"displaydata\":\"ds_homepage_kpicards (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_homepage_kpicards\"},{\"displaydata\":\"ds_homepage_purchasekpicards (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_homepage_purchasekpicards\"},{\"displaydata\":\"ds_homepage_quicklinks (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_homepage_quicklinks\"},{\"displaydata\":\"ds_homepage_recentactivities (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_homepage_recentactivities\"},{\"displaydata\":\"ds_homepage_saleskpicards (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_homepage_saleskpicards\"},{\"displaydata\":\"ds_inventory_header_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_inventory_header_document\"},{\"displaydata\":\"ds_inventory_transitems_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_inventory_transitems_document\"},{\"displaydata\":\"ds_invoice (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_invoice\"},{\"displaydata\":\"ds_invoice_details (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_invoice_details\"},{\"displaydata\":\"ds_invoice_linedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_invoice_linedata\"},{\"displaydata\":\"ds_issue_linedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_issue_linedata\"},{\"displaydata\":\"ds_item_billsummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_item_billsummary\"},{\"displaydata\":\"ds_item_grnsummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_item_grnsummary\"},{\"displaydata\":\"ds_item_insummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_item_insummary\"},{\"displaydata\":\"ds_item_invoicesummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_item_invoicesummary\"},{\"displaydata\":\"ds_item_issuesummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_item_issuesummary\"},{\"displaydata\":\"ds_item_outsummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_item_outsummary\"},{\"displaydata\":\"ds_item_posummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_item_posummary\"},{\"displaydata\":\"ds_item_prsummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_item_prsummary\"},{\"displaydata\":\"ds_item_receiptsummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_item_receiptsummary\"},{\"displaydata\":\"ds_item_sosummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_item_sosummary\"},{\"displaydata\":\"ds_item_srsummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_item_srsummary\"},{\"displaydata\":\"ds_material_issue (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_material_issue\"},{\"displaydata\":\"ds_material_receipt (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_material_receipt\"},{\"displaydata\":\"ds_materialplanning (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_materialplanning\"},{\"displaydata\":\"ds_mi_purpose (API) [ads]\",\"caption\":\"API\",\"name\":\"ds_mi_purpose\"},{\"displaydata\":\"ds_monthlywisepurchase (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_monthlywisepurchase\"},{\"displaydata\":\"ds_monthwise_sales (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_monthwise_sales\"},{\"displaydata\":\"ds_mostpurchaseditem (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_mostpurchaseditem\"},{\"displaydata\":\"ds_mostsellingproduct_sample (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_mostsellingproduct_sample\"},{\"displaydata\":\"ds_mr_purpose (API) [ads]\",\"caption\":\"API\",\"name\":\"ds_mr_purpose\"},{\"displaydata\":\"ds_mrp_pendingorder (API) [ads]\",\"caption\":\"API\",\"name\":\"ds_mrp_pendingorder\"},{\"displaydata\":\"ds_mrplocations (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_mrplocations\"},{\"displaydata\":\"ds_mrpstocksummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_mrpstocksummary\"},{\"displaydata\":\"ds_password_expiry (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_password_expiry\"},{\"displaydata\":\"ds_payment_details_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_payment_details_document\"},{\"displaydata\":\"ds_payment_header_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_payment_header_document\"},{\"displaydata\":\"ds_pbill_header_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_pbill_header_document\"},{\"displaydata\":\"ds_pbill_items_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_pbill_items_document\"},{\"displaydata\":\"ds_po_details (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_po_details\"},{\"displaydata\":\"ds_po_linedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_po_linedata\"},{\"displaydata\":\"ds_pr_details (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_pr_details\"},{\"displaydata\":\"ds_pr_linedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_pr_linedata\"},{\"displaydata\":\"ds_purchasebill (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_purchasebill\"},{\"displaydata\":\"ds_purchasebill_linedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_purchasebill_linedata\"},{\"displaydata\":\"ds_purchasekpi (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_purchasekpi\"},{\"displaydata\":\"ds_purchaseorder_header_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_purchaseorder_header_document\"},{\"displaydata\":\"ds_purchaseorder_items_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_purchaseorder_items_document\"},{\"displaydata\":\"ds_purchaserequest_header_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_purchaserequest_header_document\"},{\"displaydata\":\"ds_purchaserequest_items_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_purchaserequest_items_document\"},{\"displaydata\":\"ds_purchasereturn_header_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_purchasereturn_header_document\"},{\"displaydata\":\"ds_purchasereturn_items_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_purchasereturn_items_document\"},{\"displaydata\":\"ds_receipt_body_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_receipt_body_document\"},{\"displaydata\":\"ds_receipt_header_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_receipt_header_document\"},{\"displaydata\":\"ds_receipt_linedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_receipt_linedata\"},{\"displaydata\":\"ds_sales_header_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_sales_header_document\"},{\"displaydata\":\"ds_sales_items_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_sales_items_document\"},{\"displaydata\":\"ds_sales_return (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_sales_return\"},{\"displaydata\":\"ds_salesdetails (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_salesdetails\"},{\"displaydata\":\"ds_salesorder_header_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_salesorder_header_document\"},{\"displaydata\":\"ds_salesorder_items_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_salesorder_items_document\"},{\"displaydata\":\"ds_salesreturn_items_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_salesreturn_items_document\"},{\"displaydata\":\"ds_smartlist_ads_metadata (Internal) [ads]\",\"caption\":\"Internal\",\"name\":\"ds_smartlist_ads_metadata\"},{\"displaydata\":\"ds_smartlist_filters (System) [ads]\",\"caption\":\"System\",\"name\":\"ds_smartlist_filters\"},{\"displaydata\":\"ds_smartlist_users (Smart list) [ads]\",\"caption\":\"Smart list\",\"name\":\"ds_smartlist_users\"},{\"displaydata\":\"ds_so_details (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_so_details\"},{\"displaydata\":\"ds_so_linedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_so_linedata\"},{\"displaydata\":\"ds_sr_details (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_sr_details\"},{\"displaydata\":\"ds_sr_linedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_sr_linedata\"},{\"displaydata\":\"ds_state_jurisdiction (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_state_jurisdiction\"},{\"displaydata\":\"ds_statewise_supplies (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_statewise_supplies\"},{\"displaydata\":\"ds_stock_availability (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_stock_availability\"},{\"displaydata\":\"ds_stock_linedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_stock_linedata\"},{\"displaydata\":\"ds_stock_transferin (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_stock_transferin\"},{\"displaydata\":\"ds_stock_transferout (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_stock_transferout\"},{\"displaydata\":\"ds_supp_billdetails (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_billdetails\"},{\"displaydata\":\"ds_supp_billlinedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_billlinedata\"},{\"displaydata\":\"ds_supp_billsummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_billsummary\"},{\"displaydata\":\"ds_supp_grndetails (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_grndetails\"},{\"displaydata\":\"ds_supp_grnlinedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_grnlinedata\"},{\"displaydata\":\"ds_supp_grnsummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_grnsummary\"},{\"displaydata\":\"ds_supp_podetails (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_podetails\"},{\"displaydata\":\"ds_supp_polinedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_polinedata\"},{\"displaydata\":\"ds_supp_posummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_posummary\"},{\"displaydata\":\"ds_supp_prdetails (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_prdetails\"},{\"displaydata\":\"ds_supp_prlinedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_prlinedata\"},{\"displaydata\":\"ds_supp_prsummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_prsummary\"},{\"displaydata\":\"ds_supp_spdetails (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_spdetails\"},{\"displaydata\":\"ds_supp_splinedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_splinedata\"},{\"displaydata\":\"ds_supp_spsummary (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_supp_spsummary\"},{\"displaydata\":\"ds_supplierpayment_body_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_supplierpayment_body_document\"},{\"displaydata\":\"ds_supplierpayment_duplicate (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_supplierpayment_duplicate\"},{\"displaydata\":\"ds_supplierpayment_header_document (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"ds_supplierpayment_header_document\"},{\"displaydata\":\"ds_taskheader (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_taskheader\"},{\"displaydata\":\"ds_test_qa (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_test_qa\"},{\"displaydata\":\"ds_top5_most_selling_products (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_top5_most_selling_products\"},{\"displaydata\":\"ds_top5_supplies (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_top5_supplies\"},{\"displaydata\":\"ds_top5customerssales (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_top5customerssales\"},{\"displaydata\":\"ds_totalbillvalue (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_totalbillvalue\"},{\"displaydata\":\"ds_totalgrnvalue (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_totalgrnvalue\"},{\"displaydata\":\"ds_totalpaymentvalue (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_totalpaymentvalue\"},{\"displaydata\":\"ds_totalpovalue (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"ds_totalpovalue\"},{\"displaydata\":\"ds_transferin_linedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_transferin_linedata\"},{\"displaydata\":\"ds_transferout_linedata (General) [ads]\",\"caption\":\"General\",\"name\":\"ds_transferout_linedata\"},{\"displaydata\":\"DSign Configuration (Core) (dsgcn) [tstruct]\",\"caption\":\"DSign Configuration (Core)\",\"name\":\"dsgcn\"},{\"displaydata\":\"DSign Configuration (dsigc) [tstruct]\",\"caption\":\"DSign Configuration\",\"name\":\"dsigc\"},{\"displaydata\":\"DSign Configuration (idsco) [iview]\",\"caption\":\"DSign Configuration\",\"name\":\"idsco\"},{\"displaydata\":\"DSign Mail Configuration (dgmal) [tstruct]\",\"caption\":\"DSign Mail Configuration\",\"name\":\"dgmal\"},{\"displaydata\":\"Email / SMS configuration (sendm) [tstruct]\",\"caption\":\"Email / SMS configuration\",\"name\":\"sendm\"},{\"displaydata\":\"Email definitions (emaildef) [iview]\",\"caption\":\"Email definitions\",\"name\":\"emaildef\"},{\"displaydata\":\"Email exceptions (emlexcp) [iview]\",\"caption\":\"Email exceptions\",\"name\":\"emlexcp\"},{\"displaydata\":\"Email Log (axemllog) [iview]\",\"caption\":\"Email Log\",\"name\":\"axemllog\"},{\"displaydata\":\"Email Logs (emaillog) [iview]\",\"caption\":\"Email Logs\",\"name\":\"emaillog\"},{\"displaydata\":\"Email/SMS Configuration (esmsco) [iview]\",\"caption\":\"Email/SMS Configuration\",\"name\":\"esmsco\"},{\"displaydata\":\"Employee Allocation Against Job Card (empaljob) [iview]\",\"caption\":\"Employee Allocation Against Job Card\",\"name\":\"empaljob\"},{\"displaydata\":\"Employee Master (empma) [tstruct]\",\"caption\":\"Employee Master\",\"name\":\"empma\"},{\"displaydata\":\"Employee Master (empmt) [tstruct]\",\"caption\":\"Employee Master\",\"name\":\"empmt\"},{\"displaydata\":\"Enable permission (a_pgt) [tstruct]\",\"caption\":\"Enable permission\",\"name\":\"a_pgt\"},{\"displaydata\":\"Error code (errcd) [tstruct]\",\"caption\":\"Error code\",\"name\":\"errcd\"},{\"displaydata\":\"Exchange Rates (Exrat) [tstruct]\",\"caption\":\"Exchange Rates\",\"name\":\"Exrat\"},{\"displaydata\":\"Exchange Rates History (vwexrate) [iview]\",\"caption\":\"Exchange Rates History\",\"name\":\"vwexrate\"},{\"displaydata\":\"FA Serialization (fasri) [tstruct]\",\"caption\":\"FA Serialization\",\"name\":\"fasri\"},{\"displaydata\":\"Fast print (ad_fp) [tstruct]\",\"caption\":\"Fast print\",\"name\":\"ad_fp\"},{\"displaydata\":\"Fast Print Templates (axftp) [tstruct]\",\"caption\":\"Fast Print Templates\",\"name\":\"axftp\"},{\"displaydata\":\"Fast prints (ad__fstp) [iview]\",\"caption\":\"Fast prints\",\"name\":\"ad__fstp\"},{\"displaydata\":\"Fast prints configuration (axfsc) [tstruct]\",\"caption\":\"Fast prints configuration\",\"name\":\"axfsc\"},{\"displaydata\":\"Fast_Print_Detail (API) [ads]\",\"caption\":\"API\",\"name\":\"Fast_Print_Detail\"},{\"displaydata\":\"Fast_Print_Master (API) [ads]\",\"caption\":\"API\",\"name\":\"Fast_Print_Master\"},{\"displaydata\":\"Fill Grid (ad_fg) [tstruct]\",\"caption\":\"Fill Grid\",\"name\":\"ad_fg\"},{\"displaydata\":\"Finance CoA Master Template (tepma) [tstruct]\",\"caption\":\"Finance CoA Master Template\",\"name\":\"tepma\"},{\"displaydata\":\"Finance CoA Template Definition (finctmpl) [iview]\",\"caption\":\"Finance CoA Template Definition\",\"name\":\"finctmpl\"},{\"displaydata\":\"Finance CoA Templates (fitem) [tstruct]\",\"caption\":\"Finance CoA Templates\",\"name\":\"fitem\"},{\"displaydata\":\"Finance Transaction Summary (fintxsum) [iview]\",\"caption\":\"Finance Transaction Summary\",\"name\":\"fintxsum\"},{\"displaydata\":\"Finance Transactions (vchtr) [tstruct]\",\"caption\":\"Finance Transactions\",\"name\":\"vchtr\"},{\"displaydata\":\"Financial Year (tFnYr) [tstruct]\",\"caption\":\"Financial Year\",\"name\":\"tFnYr\"},{\"displaydata\":\"Fixed Asset Audit (fxaud) [iview]\",\"caption\":\"Fixed Asset Audit\",\"name\":\"fxaud\"},{\"displaydata\":\"Fixed Asset Master (fixas) [tstruct]\",\"caption\":\"Fixed Asset Master\",\"name\":\"fixas\"},{\"displaydata\":\"Fixed Asset Register (fixasss) [iview]\",\"caption\":\"Fixed Asset Register\",\"name\":\"fixasss\"},{\"displaydata\":\"Fixed Asset Register V1 (fixassv2) [iview]\",\"caption\":\"Fixed Asset Register V1\",\"name\":\"fixassv2\"},{\"displaydata\":\"flko (flko) [iview]\",\"caption\":\"flko\",\"name\":\"flko\"},{\"displaydata\":\"fnlist (fnlist) [iview]\",\"caption\":\"fnlist\",\"name\":\"fnlist\"},{\"displaydata\":\"foclist (foclist) [iview]\",\"caption\":\"foclist\",\"name\":\"foclist\"},{\"displaydata\":\"Form components (ad___fpr) [iview]\",\"caption\":\"Form components\",\"name\":\"ad___fpr\"},{\"displaydata\":\"Form Elements (mainrepo) [iview]\",\"caption\":\"Form Elements\",\"name\":\"mainrepo\"},{\"displaydata\":\"Form notification (a__fn) [tstruct]\",\"caption\":\"Form notification\",\"name\":\"a__fn\"},{\"displaydata\":\"Form Properties (ad__t) [tstruct]\",\"caption\":\"Form Properties\",\"name\":\"ad__t\"},{\"displaydata\":\"form5_dc1 (General) [ads]\",\"caption\":\"General\",\"name\":\"form5_dc1\"},{\"displaydata\":\"form5_dc2 (General) [ads]\",\"caption\":\"General\",\"name\":\"form5_dc2\"},{\"displaydata\":\"form5_dc3 (General) [ads]\",\"caption\":\"General\",\"name\":\"form5_dc3\"},{\"displaydata\":\"form5_dc4 (General) [ads]\",\"caption\":\"General\",\"name\":\"form5_dc4\"},{\"displaydata\":\"Forms (ad___rel) [iview]\",\"caption\":\"Forms\",\"name\":\"ad___rel\"},{\"displaydata\":\"Forms (Forms) [iview]\",\"caption\":\"Forms\",\"name\":\"Forms\"},{\"displaydata\":\"formtest_list (General) [ads]\",\"caption\":\"General\",\"name\":\"formtest_list\"},{\"displaydata\":\"Fulfillment By Product (iitoff) [iview]\",\"caption\":\"Fulfillment By Product\",\"name\":\"iitoff\"},{\"displaydata\":\"Fulfilment With Combo (ordful3) [iview]\",\"caption\":\"Fulfilment With Combo\",\"name\":\"ordful3\"},{\"displaydata\":\"Fund Transfer (vchft) [tstruct]\",\"caption\":\"Fund Transfer\",\"name\":\"vchft\"},{\"displaydata\":\"funnel chart (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"funnel chart\"},{\"displaydata\":\"Gen Maps (ad_ge) [tstruct]\",\"caption\":\"Gen Maps\",\"name\":\"ad_ge\"},{\"displaydata\":\"General Journal - Duplicate (vchgp) [tstruct]\",\"caption\":\"General Journal - Duplicate\",\"name\":\"vchgp\"},{\"displaydata\":\"General Journal (vchge) [tstruct]\",\"caption\":\"General Journal\",\"name\":\"vchge\"},{\"displaydata\":\"General Ledger (glsubrep) [iview]\",\"caption\":\"General Ledger\",\"name\":\"glsubrep\"},{\"displaydata\":\"Get Axpert API (axapi) [tstruct]\",\"caption\":\"Get Axpert API\",\"name\":\"axapi\"},{\"displaydata\":\"get_account_name (API) [ads]\",\"caption\":\"API\",\"name\":\"get_account_name\"},{\"displaydata\":\"GL Opening Balance (vchgl) [tstruct]\",\"caption\":\"GL Opening Balance\",\"name\":\"vchgl\"},{\"displaydata\":\"GL Opening Balance Import (opbac) [tstruct]\",\"caption\":\"GL Opening Balance Import\",\"name\":\"opbac\"},{\"displaydata\":\"Global Parameters (axglp) [tstruct]\",\"caption\":\"Global Parameters\",\"name\":\"axglp\"},{\"displaydata\":\"Goods In Transit (gitrn) [tstruct]\",\"caption\":\"Goods In Transit\",\"name\":\"gitrn\"},{\"displaydata\":\"Goods in Transit (godsi) [tstruct]\",\"caption\":\"Goods in Transit\",\"name\":\"godsi\"},{\"displaydata\":\"Goods Receipt Note (tsgrn) [tstruct]\",\"caption\":\"Goods Receipt Note\",\"name\":\"tsgrn\"},{\"displaydata\":\"GRN Batch/Serial Breakup (grnbr) [tstruct]\",\"caption\":\"GRN Batch/Serial Breakup\",\"name\":\"grnbr\"},{\"displaydata\":\"GRN listing (igrnlist) [iview]\",\"caption\":\"GRN listing\",\"name\":\"igrnlist\"},{\"displaydata\":\"GST Output Tax Report (gsttax) [iview]\",\"caption\":\"GST Output Tax Report\",\"name\":\"gsttax\"},{\"displaydata\":\"GST Percentagewise Report (gstperce) [iview]\",\"caption\":\"GST Percentagewise Report\",\"name\":\"gstperce\"},{\"displaydata\":\"GST pivot Report (trialrep) [iview]\",\"caption\":\"GST pivot Report\",\"name\":\"trialrep\"},{\"displaydata\":\"GST Sales Report (gstrsale) [iview]\",\"caption\":\"GST Sales Report\",\"name\":\"gstrsale\"},{\"displaydata\":\"GST Sales Return Report (salesret) [iview]\",\"caption\":\"GST Sales Return Report\",\"name\":\"salesret\"},{\"displaydata\":\"GST State Ws Percentage Ws (gststper) [iview]\",\"caption\":\"GST State Ws Percentage Ws\",\"name\":\"gststper\"},{\"displaydata\":\"GSTR1 B2B Report (gstr1b2b) [iview]\",\"caption\":\"GSTR1 B2B Report\",\"name\":\"gstr1b2b\"},{\"displaydata\":\"GSTR1 B2CL Report (gstr1b2c) [iview]\",\"caption\":\"GSTR1 B2CL Report\",\"name\":\"gstr1b2c\"},{\"displaydata\":\"GSTR1 B2CS Report (gstr1bcs) [iview]\",\"caption\":\"GSTR1 B2CS Report\",\"name\":\"gstr1bcs\"},{\"displaydata\":\"GSTR1 CDNR Report (gstcdnr) [iview]\",\"caption\":\"GSTR1 CDNR Report\",\"name\":\"gstcdnr\"},{\"displaydata\":\"GSTR1 CDNUR Report (gstcdnur) [iview]\",\"caption\":\"GSTR1 CDNUR Report\",\"name\":\"gstcdnur\"},{\"displaydata\":\"GSTR1 HSN Summary (gstr1hsn) [iview]\",\"caption\":\"GSTR1 HSN Summary\",\"name\":\"gstr1hsn\"},{\"displaydata\":\"GSTR2 Details  (detgstrb) [iview]\",\"caption\":\"GSTR2 Details \",\"name\":\"detgstrb\"},{\"displaydata\":\"GSTR2A Report (gstr2a) [iview]\",\"caption\":\"GSTR2A Report\",\"name\":\"gstr2a\"},{\"displaydata\":\"GSTR2B Report (gstr2b) [iview]\",\"caption\":\"GSTR2B Report\",\"name\":\"gstr2b\"},{\"displaydata\":\"GSTR3B Report (gstr3b) [iview]\",\"caption\":\"GSTR3B Report\",\"name\":\"gstr3b\"},{\"displaydata\":\"Help Document (thelp) [tstruct]\",\"caption\":\"Help Document\",\"name\":\"thelp\"},{\"displaydata\":\"Help Documents (ivhelpto) [iview]\",\"caption\":\"Help Documents\",\"name\":\"ivhelpto\"},{\"displaydata\":\"Home configuration (a__hc) [tstruct]\",\"caption\":\"Home configuration\",\"name\":\"a__hc\"},{\"displaydata\":\"Home configurations (ad___hcg) [iview]\",\"caption\":\"Home configurations\",\"name\":\"ad___hcg\"},{\"displaydata\":\"home_config_finance (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"home_config_finance\"},{\"displaydata\":\"home_config_payroll (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"home_config_payroll\"},{\"displaydata\":\"home_config_pord (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"home_config_pord\"},{\"displaydata\":\"home_config_purchases (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"home_config_purchases\"},{\"displaydata\":\"home_config_sales (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"home_config_sales\"},{\"displaydata\":\"home_config_salesord (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"home_config_salesord\"},{\"displaydata\":\"home_config_stock (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"home_config_stock\"},{\"displaydata\":\"homepage_company (General) [ads]\",\"caption\":\"General\",\"name\":\"homepage_company\"},{\"displaydata\":\"homepage_company (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"homepage_company\"},{\"displaydata\":\"HSN Codes and TAX Breakup (hsndetai) [iview]\",\"caption\":\"HSN Codes and TAX Breakup\",\"name\":\"hsndetai\"},{\"displaydata\":\"HSN Codewise Summary (hsncodew) [iview]\",\"caption\":\"HSN Codewise Summary\",\"name\":\"hsncodew\"},{\"displaydata\":\"HSN GST Sales Report (hsngst) [iview]\",\"caption\":\"HSN GST Sales Report\",\"name\":\"hsngst\"},{\"displaydata\":\"HSN Wise Sales Summary (hsnsales) [iview]\",\"caption\":\"HSN Wise Sales Summary\",\"name\":\"hsnsales\"},{\"displaydata\":\"HSN/SAC Code (hssc) [tstruct]\",\"caption\":\"HSN/SAC Code\",\"name\":\"hssc\"},{\"displaydata\":\"HTML Pages (hplist) [iview]\",\"caption\":\"HTML Pages\",\"name\":\"hplist\"},{\"displaydata\":\"HTML Pages (sect) [tstruct]\",\"caption\":\"HTML Pages\",\"name\":\"sect\"},{\"displaydata\":\"Import data log (ad_implg) [iview]\",\"caption\":\"Import data log\",\"name\":\"ad_implg\"},{\"displaydata\":\"Import Data Wizard (Lstinfos) [iview]\",\"caption\":\"Import Data Wizard\",\"name\":\"Lstinfos\"},{\"displaydata\":\"Import definitions (aximpdef) [iview]\",\"caption\":\"Import definitions\",\"name\":\"aximpdef\"},{\"displaydata\":\"Import History (axpfinhs) [iview]\",\"caption\":\"Import History\",\"name\":\"axpfinhs\"},{\"displaydata\":\"In-memory DB (inmemdb) [iview]\",\"caption\":\"In-memory DB\",\"name\":\"inmemdb\"},{\"displaydata\":\"Inbound queue (a__iq) [tstruct]\",\"caption\":\"Inbound queue\",\"name\":\"a__iq\"},{\"displaydata\":\"Inbox\",\"caption\":\"Inbox\",\"name\":\"Inbox\"},{\"displaydata\":\"Intelliview Configuration (axnxt) [tstruct]\",\"caption\":\"Intelliview Configuration\",\"name\":\"axnxt\"},{\"displaydata\":\"Intelliview Configuration (axnxtlst) [iview]\",\"caption\":\"Intelliview Configuration\",\"name\":\"axnxtlst\"},{\"displaydata\":\"Interbranch Transfer - Out Backup (inbro) [tstruct]\",\"caption\":\"Interbranch Transfer - Out Backup\",\"name\":\"inbro\"},{\"displaydata\":\"Inventory Types (invtp) [tstruct]\",\"caption\":\"Inventory Types\",\"name\":\"invtp\"},{\"displaydata\":\"Invoice (invce) [tstruct]\",\"caption\":\"Invoice\",\"name\":\"invce\"},{\"displaydata\":\"invoicecumdelivery (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"invoicecumdelivery\"},{\"displaydata\":\"Item Damage/Loss (isdam) [tstruct]\",\"caption\":\"Item Damage/Loss\",\"name\":\"isdam\"},{\"displaydata\":\"Item Stock (itstk) [tstruct]\",\"caption\":\"Item Stock\",\"name\":\"itstk\"},{\"displaydata\":\"Item wise Purchase (chanldas) [iview]\",\"caption\":\"Item wise Purchase\",\"name\":\"chanldas\"},{\"displaydata\":\"Item Wise Sales (itmsals) [iview]\",\"caption\":\"Item Wise Sales\",\"name\":\"itmsals\"},{\"displaydata\":\"Job Card (jobca) [tstruct]\",\"caption\":\"Job Card\",\"name\":\"jobca\"},{\"displaydata\":\"Job Card Employee Details (jobem) [tstruct]\",\"caption\":\"Job Card Employee Details\",\"name\":\"jobem\"},{\"displaydata\":\"Job Card Summary (jobcards) [iview]\",\"caption\":\"Job Card Summary\",\"name\":\"jobcards\"},{\"displaydata\":\"Job console detail (jobcdtl) [iview]\",\"caption\":\"Job console detail\",\"name\":\"jobcdtl\"},{\"displaydata\":\"Job History (reaccomp) [iview]\",\"caption\":\"Job History\",\"name\":\"reaccomp\"},{\"displaydata\":\"Jobs console (axjobs) [iview]\",\"caption\":\"Jobs console\",\"name\":\"axjobs\"},{\"displaydata\":\"Keyword Template (ikywd) [iview]\",\"caption\":\"Keyword Template\",\"name\":\"ikywd\"},{\"displaydata\":\"Keyword Template (kword) [tstruct]\",\"caption\":\"Keyword Template\",\"name\":\"kword\"},{\"displaydata\":\"Labour Rate Master (glabr) [tstruct]\",\"caption\":\"Labour Rate Master\",\"name\":\"glabr\"},{\"displaydata\":\"linechart (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"linechart\"},{\"displaydata\":\"Link Company and Branch to Accounts (lnkbr) [tstruct]\",\"caption\":\"Link Company and Branch to Accounts\",\"name\":\"lnkbr\"},{\"displaydata\":\"List of Values (axlov) [tstruct]\",\"caption\":\"List of Values\",\"name\":\"axlov\"},{\"displaydata\":\"List of Values (for Implementors only) (lov) [tstruct]\",\"caption\":\"List of Values (for Implementors only)\",\"name\":\"lov\"},{\"displaydata\":\"List Type (Istyp) [tstruct]\",\"caption\":\"List Type\",\"name\":\"Istyp\"},{\"displaydata\":\"Location (inloc) [tstruct]\",\"caption\":\"Location\",\"name\":\"inloc\"},{\"displaydata\":\"Loss/Damage of Assets (losdm) [tstruct]\",\"caption\":\"Loss/Damage of Assets\",\"name\":\"losdm\"},{\"displaydata\":\"Maintenance Accomplishment (mnacc) [tstruct]\",\"caption\":\"Maintenance Accomplishment\",\"name\":\"mnacc\"},{\"displaydata\":\"Maintenance Core (mncor) [tstruct]\",\"caption\":\"Maintenance Core\",\"name\":\"mncor\"},{\"displaydata\":\"Maintenance Inspection Schedule (mnsdl) [tstruct]\",\"caption\":\"Maintenance Inspection Schedule\",\"name\":\"mnsdl\"},{\"displaydata\":\"Maintenance Jobs (mnins) [tstruct]\",\"caption\":\"Maintenance Jobs\",\"name\":\"mnins\"},{\"displaydata\":\"Maintenance Tracker (mntrack) [iview]\",\"caption\":\"Maintenance Tracker\",\"name\":\"mntrack\"},{\"displaydata\":\"Manufacture (manuf) [tstruct]\",\"caption\":\"Manufacture\",\"name\":\"manuf\"},{\"displaydata\":\"Manufacturing Details (manufact) [iview]\",\"caption\":\"Manufacturing Details\",\"name\":\"manufact\"},{\"displaydata\":\"Map Details (ssdgen) [iview]\",\"caption\":\"Map Details\",\"name\":\"ssdgen\"},{\"displaydata\":\"Master Of Charts (maslistr) [iview]\",\"caption\":\"Master Of Charts\",\"name\":\"maslistr\"},{\"displaydata\":\"Master Tstruct Details (tstco) [tstruct]\",\"caption\":\"Master Tstruct Details\",\"name\":\"tstco\"},{\"displaydata\":\"Material Issues (marei) [tstruct]\",\"caption\":\"Material Issues\",\"name\":\"marei\"},{\"displaydata\":\"Material Plan Process (mrppl) [tstruct]\",\"caption\":\"Material Plan Process\",\"name\":\"mrppl\"},{\"displaydata\":\"Material Receipt Backup (matrc) [tstruct]\",\"caption\":\"Material Receipt Backup\",\"name\":\"matrc\"},{\"displaydata\":\"Material Receipts (instr) [tstruct]\",\"caption\":\"Material Receipts\",\"name\":\"instr\"},{\"displaydata\":\"Material Requirement Plan (exmrp) [tstruct]\",\"caption\":\"Material Requirement Plan\",\"name\":\"exmrp\"},{\"displaydata\":\"Material Requirement Planning [page]\",\"caption\":\"Material Requirement Planning\",\"name\":\"htmlPages.aspx?load=1765866810336\"},{\"displaydata\":\"Material Service Slip (maservis) [iview]\",\"caption\":\"Material Service Slip\",\"name\":\"maservis\"},{\"displaydata\":\"Material Transfer (metra) [tstruct]\",\"caption\":\"Material Transfer\",\"name\":\"metra\"},{\"displaydata\":\"MD Maps (ad_md) [tstruct]\",\"caption\":\"MD Maps\",\"name\":\"ad_md\"},{\"displaydata\":\"Miscellaneous Finance Transactions (rndof) [tstruct]\",\"caption\":\"Miscellaneous Finance Transactions\",\"name\":\"rndof\"},{\"displaydata\":\"Mismatch - TB Vs Dimension (ivdiffdm) [iview]\",\"caption\":\"Mismatch - TB Vs Dimension\",\"name\":\"ivdiffdm\"},{\"displaydata\":\"Mobile Configuration (axmme) [tstruct]\",\"caption\":\"Mobile Configuration\",\"name\":\"axmme\"},{\"displaydata\":\"Mobile Configuration (imobc) [iview]\",\"caption\":\"Mobile Configuration\",\"name\":\"imobc\"},{\"displaydata\":\"Monthly P \u0026 L Summary (monpandl) [iview]\",\"caption\":\"Monthly P \u0026 L Summary\",\"name\":\"monpandl\"},{\"displaydata\":\"Monthly Payment Summary (mnpay) [iview]\",\"caption\":\"Monthly Payment Summary\",\"name\":\"mnpay\"},{\"displaydata\":\"Monthly Receipt Summary (mnrps) [iview]\",\"caption\":\"Monthly Receipt Summary\",\"name\":\"mnrps\"},{\"displaydata\":\"Monthly Summary of Accounts (monthlys) [iview]\",\"caption\":\"Monthly Summary of Accounts\",\"name\":\"monthlys\"},{\"displaydata\":\"MRP Changes (mprch) [tstruct]\",\"caption\":\"MRP Changes\",\"name\":\"mprch\"},{\"displaydata\":\"MRP Last Run Update (mrpup) [tstruct]\",\"caption\":\"MRP Last Run Update\",\"name\":\"mrpup\"},{\"displaydata\":\"MRP Locations (mrplo) [tstruct]\",\"caption\":\"MRP Locations\",\"name\":\"mrplo\"},{\"displaydata\":\"mstrep (mstrep) [iview]\",\"caption\":\"mstrep\",\"name\":\"mstrep\"},{\"displaydata\":\"MultiFormtstruct [page]\",\"caption\":\"MultiFormtstruct\",\"name\":\"htmlPages.aspx?load=1754994898397\"},{\"displaydata\":\"My Calendar [page]\",\"caption\":\"My Calendar\",\"name\":\"htmlPages.aspx?load=1711967117624\"},{\"displaydata\":\"New Email definition (axeml) [tstruct]\",\"caption\":\"New Email definition\",\"name\":\"axeml\"},{\"displaydata\":\"New Field (mntst) [tstruct]\",\"caption\":\"New Field\",\"name\":\"mntst\"},{\"displaydata\":\"New Field Accept (NF_AG) [tstruct]\",\"caption\":\"New Field Accept\",\"name\":\"NF_AG\"},{\"displaydata\":\"New import definition (axipd) [tstruct]\",\"caption\":\"New import definition\",\"name\":\"axipd\"},{\"displaydata\":\"News and announcements (a__na) [tstruct]\",\"caption\":\"News and announcements\",\"name\":\"a__na\"},{\"displaydata\":\"News and announcements (ad___nwa) [iview]\",\"caption\":\"News and announcements\",\"name\":\"ad___nwa\"},{\"displaydata\":\"Notifications (ad___ntn) [iview]\",\"caption\":\"Notifications\",\"name\":\"ad___ntn\"},{\"displaydata\":\"Offline Table Configuration (ofcon) [tstruct]\",\"caption\":\"Offline Table Configuration\",\"name\":\"ofcon\"},{\"displaydata\":\"Operation (opera) [tstruct]\",\"caption\":\"Operation\",\"name\":\"opera\"},{\"displaydata\":\"Organisation Category (ccate) [tstruct]\",\"caption\":\"Organisation Category\",\"name\":\"ccate\"},{\"displaydata\":\"Organisation Sub Category (scate) [tstruct]\",\"caption\":\"Organisation Sub Category\",\"name\":\"scate\"},{\"displaydata\":\"Other Charges Master (tsads) [tstruct]\",\"caption\":\"Other Charges Master\",\"name\":\"tsads\"},{\"displaydata\":\"Outbound queue (a__qm) [tstruct]\",\"caption\":\"Outbound queue\",\"name\":\"a__qm\"},{\"displaydata\":\"Outbound queue mapping (ad___oqm) [iview]\",\"caption\":\"Outbound queue mapping\",\"name\":\"ad___oqm\"},{\"displaydata\":\"Outbound queue mapping (ad__q) [tstruct]\",\"caption\":\"Outbound queue mapping\",\"name\":\"ad__q\"},{\"displaydata\":\"Outstanding Customer Invoices (ardetlv2) [iview]\",\"caption\":\"Outstanding Customer Invoices\",\"name\":\"ardetlv2\"},{\"displaydata\":\"Outstanding Invoices (outcusin) [iview]\",\"caption\":\"Outstanding Invoices\",\"name\":\"outcusin\"},{\"displaydata\":\"Outstanding Supplier Bills (apdetlv2) [iview]\",\"caption\":\"Outstanding Supplier Bills\",\"name\":\"apdetlv2\"},{\"displaydata\":\"Outstanding Supplier Bills (outstabl) [iview]\",\"caption\":\"Outstanding Supplier Bills\",\"name\":\"outstabl\"},{\"displaydata\":\"Payee (Payee) [iview]\",\"caption\":\"Payee\",\"name\":\"Payee\"},{\"displaydata\":\"Payment (vchwt) [tstruct]\",\"caption\":\"Payment\",\"name\":\"vchwt\"},{\"displaydata\":\"Payment Detail (payrec) [iview]\",\"caption\":\"Payment Detail\",\"name\":\"payrec\"},{\"displaydata\":\"Payment Listing (viewpay) [iview]\",\"caption\":\"Payment Listing\",\"name\":\"viewpay\"},{\"displaydata\":\"Payment Modes and Account Mapping (pmmod) [tstruct]\",\"caption\":\"Payment Modes and Account Mapping\",\"name\":\"pmmod\"},{\"displaydata\":\"PEG Notification (ad_pn) [tstruct]\",\"caption\":\"PEG Notification\",\"name\":\"ad_pn\"},{\"displaydata\":\"PEG Notifications (ad__pgnt) [iview]\",\"caption\":\"PEG Notifications\",\"name\":\"ad__pgnt\"},{\"displaydata\":\"PEG Task Histroy (ad___pth) [iview]\",\"caption\":\"PEG Task Histroy\",\"name\":\"ad___pth\"},{\"displaydata\":\"Pending Allocate Voucher (ivpendal) [iview]\",\"caption\":\"Pending Allocate Voucher\",\"name\":\"ivpendal\"},{\"displaydata\":\"Pending BOM To Create Work Order (pendiwor) [iview]\",\"caption\":\"Pending BOM To Create Work Order\",\"name\":\"pendiwor\"},{\"displaydata\":\"Pending For Fixed Asset Creation (pdfixcre) [iview]\",\"caption\":\"Pending For Fixed Asset Creation\",\"name\":\"pdfixcre\"},{\"displaydata\":\"Pending Order (pnord) [tstruct]\",\"caption\":\"Pending Order\",\"name\":\"pnord\"},{\"displaydata\":\"Pending Purchase Order (ivpor) [iview]\",\"caption\":\"Pending Purchase Order\",\"name\":\"ivpor\"},{\"displaydata\":\"Pending Purchase Request (pendrfqs) [iview]\",\"caption\":\"Pending Purchase Request\",\"name\":\"pendrfqs\"},{\"displaydata\":\"Pending Sales Order (ivsor) [iview]\",\"caption\":\"Pending Sales Order\",\"name\":\"ivsor\"},{\"displaydata\":\"Pending Serialized Fixed Assets (pfxdas) [iview]\",\"caption\":\"Pending Serialized Fixed Assets\",\"name\":\"pfxdas\"},{\"displaydata\":\"Pending Supplier Status Update (pendista) [iview]\",\"caption\":\"Pending Supplier Status Update\",\"name\":\"pendista\"},{\"displaydata\":\"Pending Warranty Claim Receipts (pendclai) [iview]\",\"caption\":\"Pending Warranty Claim Receipts\",\"name\":\"pendclai\"},{\"displaydata\":\"Pending Warranty Claim Receipts V2 (claimpen) [iview]\",\"caption\":\"Pending Warranty Claim Receipts V2\",\"name\":\"claimpen\"},{\"displaydata\":\"Periodic notification (a__pn) [tstruct]\",\"caption\":\"Periodic notification\",\"name\":\"a__pn\"},{\"displaydata\":\"Permission setup (a__up) [tstruct]\",\"caption\":\"Permission setup\",\"name\":\"a__up\"},{\"displaydata\":\"permission_ads_test (General) [ads]\",\"caption\":\"General\",\"name\":\"permission_ads_test\"},{\"displaydata\":\"Physical Stock Reconciliation (physr) [tstruct]\",\"caption\":\"Physical Stock Reconciliation\",\"name\":\"physr\"},{\"displaydata\":\"PieChart (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"PieChart\"},{\"displaydata\":\"Portal Configuration (porco) [tstruct]\",\"caption\":\"Portal Configuration\",\"name\":\"porco\"},{\"displaydata\":\"Portal Configuration (prtlcong) [iview]\",\"caption\":\"Portal Configuration\",\"name\":\"prtlcong\"},{\"displaydata\":\"Process card (ad_cp) [tstruct]\",\"caption\":\"Process card\",\"name\":\"ad_cp\"},{\"displaydata\":\"Process cards (ad__prcd) [iview]\",\"caption\":\"Process cards\",\"name\":\"ad__prcd\"},{\"displaydata\":\"Process definition-Approval/Check (pgv2a) [tstruct]\",\"caption\":\"Process definition-Approval/Check\",\"name\":\"pgv2a\"},{\"displaydata\":\"Process definition-Conditions (pgv2c) [tstruct]\",\"caption\":\"Process definition-Conditions\",\"name\":\"pgv2c\"},{\"displaydata\":\"Process definition-Make (pgv2m) [tstruct]\",\"caption\":\"Process definition-Make\",\"name\":\"pgv2m\"},{\"displaydata\":\"Process listing (ad_pgv2) [iview]\",\"caption\":\"Process listing\",\"name\":\"ad_pgv2\"},{\"displaydata\":\"Process master (ad_pm) [tstruct]\",\"caption\":\"Process master\",\"name\":\"ad_pm\"},{\"displaydata\":\"Product - Customer wise Part Numbers (procu) [tstruct]\",\"caption\":\"Product - Customer wise Part Numbers\",\"name\":\"procu\"},{\"displaydata\":\"Product - Supplier wise Part Numbers (propa) [tstruct]\",\"caption\":\"Product - Supplier wise Part Numbers\",\"name\":\"propa\"},{\"displaydata\":\"Product Category (itcat) [tstruct]\",\"caption\":\"Product Category\",\"name\":\"itcat\"},{\"displaydata\":\"Product Category Wise Purchases (catwspur) [iview]\",\"caption\":\"Product Category Wise Purchases\",\"name\":\"catwspur\"},{\"displaydata\":\"Product Category Wise Sales (catwssal) [iview]\",\"caption\":\"Product Category Wise Sales\",\"name\":\"catwssal\"},{\"displaydata\":\"Product Master (prodm) [tstruct]\",\"caption\":\"Product Master\",\"name\":\"prodm\"},{\"displaydata\":\"Product Price Listing (items) [iview]\",\"caption\":\"Product Price Listing\",\"name\":\"items\"},{\"displaydata\":\"Product Subcategory (prcat) [tstruct]\",\"caption\":\"Product Subcategory\",\"name\":\"prcat\"},{\"displaydata\":\"Product Subcategory wise Purchase (sbcatpur) [iview]\",\"caption\":\"Product Subcategory wise Purchase\",\"name\":\"sbcatpur\"},{\"displaydata\":\"Product Subcategory wise Sales (sbcatsal) [iview]\",\"caption\":\"Product Subcategory wise Sales\",\"name\":\"sbcatsal\"},{\"displaydata\":\"Production Order (prodr) [tstruct]\",\"caption\":\"Production Order\",\"name\":\"prodr\"},{\"displaydata\":\"Production Order Reservation (pdres) [tstruct]\",\"caption\":\"Production Order Reservation\",\"name\":\"pdres\"},{\"displaydata\":\"Production Orders (pndprdor) [iview]\",\"caption\":\"Production Orders\",\"name\":\"pndprdor\"},{\"displaydata\":\"Production Process (prodproc) [iview]\",\"caption\":\"Production Process\",\"name\":\"prodproc\"},{\"displaydata\":\"Production Receipt (prdrc) [tstruct]\",\"caption\":\"Production Receipt\",\"name\":\"prdrc\"},{\"displaydata\":\"Production Tracker (protrack) [iview]\",\"caption\":\"Production Tracker\",\"name\":\"protrack\"},{\"displaydata\":\"Production Transaction Summary (protrans) [iview]\",\"caption\":\"Production Transaction Summary\",\"name\":\"protrans\"},{\"displaydata\":\"Production Voucher Listing (provlist) [iview]\",\"caption\":\"Production Voucher Listing\",\"name\":\"provlist\"},{\"displaydata\":\"Productwise Sales Summary (General) [ads]\",\"caption\":\"General\",\"name\":\"Productwise Sales Summary\"},{\"displaydata\":\"Profit \u0026 Loss Statement (pandlstm) [iview]\",\"caption\":\"Profit \u0026 Loss Statement\",\"name\":\"pandlstm\"},{\"displaydata\":\"Profit / Loss Setup (plcat) [tstruct]\",\"caption\":\"Profit / Loss Setup\",\"name\":\"plcat\"},{\"displaydata\":\"Profit and Loss - Structure (ivplshch) [iview]\",\"caption\":\"Profit and Loss - Structure\",\"name\":\"ivplshch\"},{\"displaydata\":\"Profit and Loss Schedules (pandlsch) [iview]\",\"caption\":\"Profit and Loss Schedules\",\"name\":\"pandlsch\"},{\"displaydata\":\"Promotion Tracker (promotra) [iview]\",\"caption\":\"Promotion Tracker\",\"name\":\"promotra\"},{\"displaydata\":\"Publish Axpert API (ad__papi) [iview]\",\"caption\":\"Publish Axpert API\",\"name\":\"ad__papi\"},{\"displaydata\":\"Publish Axpert API (ad_pa) [tstruct]\",\"caption\":\"Publish Axpert API\",\"name\":\"ad_pa\"},{\"displaydata\":\"Publish Config studio (ad_pbcs) [iview]\",\"caption\":\"Publish Config studio\",\"name\":\"ad_pbcs\"},{\"displaydata\":\"Publish listing (publist) [iview]\",\"caption\":\"Publish listing\",\"name\":\"publist\"},{\"displaydata\":\"Publish listing details (publsdtl) [iview]\",\"caption\":\"Publish listing details\",\"name\":\"publsdtl\"},{\"displaydata\":\"Purchase Bill (pbill) [tstruct]\",\"caption\":\"Purchase Bill\",\"name\":\"pbill\"},{\"displaydata\":\"Purchase Detailed (purdtlrp) [iview]\",\"caption\":\"Purchase Detailed\",\"name\":\"purdtlrp\"},{\"displaydata\":\"Purchase Order (tslpo) [tstruct]\",\"caption\":\"Purchase Order\",\"name\":\"tslpo\"},{\"displaydata\":\"Purchase Order for Asset (poast) [tstruct]\",\"caption\":\"Purchase Order for Asset\",\"name\":\"poast\"},{\"displaydata\":\"Purchase Order Short Close (tspsc) [tstruct]\",\"caption\":\"Purchase Order Short Close\",\"name\":\"tspsc\"},{\"displaydata\":\"Purchase Register (purrgdas) [iview]\",\"caption\":\"Purchase Register\",\"name\":\"purrgdas\"},{\"displaydata\":\"Purchase Req Reservation (pqres) [tstruct]\",\"caption\":\"Purchase Req Reservation\",\"name\":\"pqres\"},{\"displaydata\":\"Purchase Request (tsreq) [tstruct]\",\"caption\":\"Purchase Request\",\"name\":\"tsreq\"},{\"displaydata\":\"Purchase Request Backup (tsprq) [tstruct]\",\"caption\":\"Purchase Request Backup\",\"name\":\"tsprq\"},{\"displaydata\":\"Purchase Requests (pndpurrq) [iview]\",\"caption\":\"Purchase Requests\",\"name\":\"pndpurrq\"},{\"displaydata\":\"Purchase Return (purre) [tstruct]\",\"caption\":\"Purchase Return\",\"name\":\"purre\"},{\"displaydata\":\"Purchase Return (purrtrp) [iview]\",\"caption\":\"Purchase Return\",\"name\":\"purrtrp\"},{\"displaydata\":\"Purchase Return Batch Breakup (retbr) [tstruct]\",\"caption\":\"Purchase Return Batch Breakup\",\"name\":\"retbr\"},{\"displaydata\":\"Purchase Summary (pursumda) [iview]\",\"caption\":\"Purchase Summary\",\"name\":\"pursumda\"},{\"displaydata\":\"QC on Asset GRN (qcast) [tstruct]\",\"caption\":\"QC on Asset GRN\",\"name\":\"qcast\"},{\"displaydata\":\"QC on Goods Received (stkqc) [tstruct]\",\"caption\":\"QC on Goods Received\",\"name\":\"stkqc\"},{\"displaydata\":\"Quality Inspection (quins) [tstruct]\",\"caption\":\"Quality Inspection\",\"name\":\"quins\"},{\"displaydata\":\"Quality Inspection Parameter (qinsp) [tstruct]\",\"caption\":\"Quality Inspection Parameter\",\"name\":\"qinsp\"},{\"displaydata\":\"Quality Inspection Summary (qainspec) [iview]\",\"caption\":\"Quality Inspection Summary\",\"name\":\"qainspec\"},{\"displaydata\":\"Quality Inspection Template (inste) [tstruct]\",\"caption\":\"Quality Inspection Template\",\"name\":\"inste\"},{\"displaydata\":\"Queue data log (ad__qlog) [iview]\",\"caption\":\"Queue data log\",\"name\":\"ad__qlog\"},{\"displaydata\":\"Queue listing (ad__qls) [iview]\",\"caption\":\"Queue listing\",\"name\":\"ad__qls\"},{\"displaydata\":\"Quotation Rate Update (qtrup) [tstruct]\",\"caption\":\"Quotation Rate Update\",\"name\":\"qtrup\"},{\"displaydata\":\"Quotation Update (qutup) [tstruct]\",\"caption\":\"Quotation Update\",\"name\":\"qutup\"},{\"displaydata\":\"Quotation Update Rate Listing (rfqratlt) [iview]\",\"caption\":\"Quotation Update Rate Listing\",\"name\":\"rfqratlt\"},{\"displaydata\":\"Raised Invoices (raisdinv) [iview]\",\"caption\":\"Raised Invoices\",\"name\":\"raisdinv\"},{\"displaydata\":\"Raised Purchase Order (raisdpo) [iview]\",\"caption\":\"Raised Purchase Order\",\"name\":\"raisdpo\"},{\"displaydata\":\"Raised Stock Transfers (rstoctrf) [iview]\",\"caption\":\"Raised Stock Transfers\",\"name\":\"rstoctrf\"},{\"displaydata\":\"Receipt (vchdp) [tstruct]\",\"caption\":\"Receipt\",\"name\":\"vchdp\"},{\"displaydata\":\"Receipt Detail (rcpdtl) [iview]\",\"caption\":\"Receipt Detail\",\"name\":\"rcpdtl\"},{\"displaydata\":\"Region (tregn) [tstruct]\",\"caption\":\"Region\",\"name\":\"tregn\"},{\"displaydata\":\"Released Production Order (relesprd) [iview]\",\"caption\":\"Released Production Order\",\"name\":\"relesprd\"},{\"displaydata\":\"Repair and Service Accomplishment (reacc) [tstruct]\",\"caption\":\"Repair and Service Accomplishment\",\"name\":\"reacc\"},{\"displaydata\":\"Repair and Service Entries (pendacco) [iview]\",\"caption\":\"Repair and Service Entries\",\"name\":\"pendacco\"},{\"displaydata\":\"Repair and Service Jobs (repse) [tstruct]\",\"caption\":\"Repair and Service Jobs\",\"name\":\"repse\"},{\"displaydata\":\"Request For Quotation(RFQ) (reqqt) [tstruct]\",\"caption\":\"Request For Quotation(RFQ)\",\"name\":\"reqqt\"},{\"displaydata\":\"Responsibilities (response) [iview]\",\"caption\":\"Responsibilities\",\"name\":\"response\"},{\"displaydata\":\"Retail Customers (rtcus) [tstruct]\",\"caption\":\"Retail Customers\",\"name\":\"rtcus\"},{\"displaydata\":\"Role permissions (ad___ups) [iview]\",\"caption\":\"Role permissions\",\"name\":\"ad___ups\"},{\"displaydata\":\"Roles and Responsibilities Sub Report (objroles) [iview]\",\"caption\":\"Roles and Responsibilities Sub Report\",\"name\":\"objroles\"},{\"displaydata\":\"Routing \u0026 Operations Summary (rouopsum) [iview]\",\"caption\":\"Routing \u0026 Operations Summary\",\"name\":\"rouopsum\"},{\"displaydata\":\"Routing (routi) [tstruct]\",\"caption\":\"Routing\",\"name\":\"routi\"},{\"displaydata\":\"Rule engine (ad_re) [tstruct]\",\"caption\":\"Rule engine\",\"name\":\"ad_re\"},{\"displaydata\":\"Rule Engine Definition (ad___red) [iview]\",\"caption\":\"Rule Engine Definition\",\"name\":\"ad___red\"},{\"displaydata\":\"Rule engine V3 (a__re) [tstruct]\",\"caption\":\"Rule engine V3\",\"name\":\"a__re\"},{\"displaydata\":\"Rule group master (ad_rm) [tstruct]\",\"caption\":\"Rule group master\",\"name\":\"ad_rm\"},{\"displaydata\":\"Rules (ad___acr) [iview]\",\"caption\":\"Rules\",\"name\":\"ad___acr\"},{\"displaydata\":\"Runtime New Field (ad_af) [tstruct]\",\"caption\":\"Runtime New Field\",\"name\":\"ad_af\"},{\"displaydata\":\"Sale of Asset (salas) [tstruct]\",\"caption\":\"Sale of Asset\",\"name\":\"salas\"},{\"displaydata\":\"Sale Type (salty) [tstruct]\",\"caption\":\"Sale Type\",\"name\":\"salty\"},{\"displaydata\":\"Sales Detailed (saldtrp) [iview]\",\"caption\":\"Sales Detailed\",\"name\":\"saldtrp\"},{\"displaydata\":\"Sales Invoice New (dcinv) [tstruct]\",\"caption\":\"Sales Invoice New\",\"name\":\"dcinv\"},{\"displaydata\":\"Sales Order (slord) [tstruct]\",\"caption\":\"Sales Order\",\"name\":\"slord\"},{\"displaydata\":\"Sales Order Listing (slorlst) [iview]\",\"caption\":\"Sales Order Listing\",\"name\":\"slorlst\"},{\"displaydata\":\"Sales Order Report  (Salesord) [iview]\",\"caption\":\"Sales Order Report \",\"name\":\"Salesord\"},{\"displaydata\":\"Sales Order Reservation (sores) [tstruct]\",\"caption\":\"Sales Order Reservation\",\"name\":\"sores\"},{\"displaydata\":\"Sales Orders (pendngso) [iview]\",\"caption\":\"Sales Orders\",\"name\":\"pendngso\"},{\"displaydata\":\"Sales Register (salsdats) [iview]\",\"caption\":\"Sales Register\",\"name\":\"salsdats\"},{\"displaydata\":\"Sales Register Detail (salrgdas) [iview]\",\"caption\":\"Sales Register Detail\",\"name\":\"salrgdas\"},{\"displaydata\":\"Sales Return (salrtrp) [iview]\",\"caption\":\"Sales Return\",\"name\":\"salrtrp\"},{\"displaydata\":\"Sales Return (salry) [tstruct]\",\"caption\":\"Sales Return\",\"name\":\"salry\"},{\"displaydata\":\"Sales Summary (itmsumm) [iview]\",\"caption\":\"Sales Summary\",\"name\":\"itmsumm\"},{\"displaydata\":\"Salesman Details (tsale) [tstruct]\",\"caption\":\"Salesman Details\",\"name\":\"tsale\"},{\"displaydata\":\"Salesman wise Receivables Summary (slwsot) [iview]\",\"caption\":\"Salesman wise Receivables Summary\",\"name\":\"slwsot\"},{\"displaydata\":\"Salesman Wise Sales (salmnws) [iview]\",\"caption\":\"Salesman Wise Sales\",\"name\":\"salmnws\"},{\"displaydata\":\"Salesman wise Sales Summary (smnslsum) [iview]\",\"caption\":\"Salesman wise Sales Summary\",\"name\":\"smnslsum\"},{\"displaydata\":\"Salesmen wise Sales Summary (General) [ads]\",\"caption\":\"General\",\"name\":\"Salesmen wise Sales Summary\"},{\"displaydata\":\"SBU Setup (Location) [iview]\",\"caption\":\"SBU Setup\",\"name\":\"Location\"},{\"displaydata\":\"scatter-plot-3D (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"scatter-plot-3D\"},{\"displaydata\":\"scatter-plot (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"scatter-plot\"},{\"displaydata\":\"Schedule (plschedu) [iview]\",\"caption\":\"Schedule\",\"name\":\"plschedu\"},{\"displaydata\":\"Script Runner (axsrr) [tstruct]\",\"caption\":\"Script Runner\",\"name\":\"axsrr\"},{\"displaydata\":\"Script Runner (dmlscrpt) [iview]\",\"caption\":\"Script Runner\",\"name\":\"dmlscrpt\"},{\"displaydata\":\"Selling Price Master (spricena) [iview]\",\"caption\":\"Selling Price Master\",\"name\":\"spricena\"},{\"displaydata\":\"sellingpricedatasource (Fast print) [ads]\",\"caption\":\"Fast print\",\"name\":\"sellingpricedatasource\"},{\"displaydata\":\"semi-donut chart (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"semi-donut chart\"},{\"displaydata\":\"Send message (a__sm) [tstruct]\",\"caption\":\"Send message\",\"name\":\"a__sm\"},{\"displaydata\":\"Server Details (axpub) [tstruct]\",\"caption\":\"Server Details\",\"name\":\"axpub\"},{\"displaydata\":\"Servers configuration (pservers) [iview]\",\"caption\":\"Servers configuration\",\"name\":\"pservers\"},{\"displaydata\":\"Service Stock Issue (sesti) [tstruct]\",\"caption\":\"Service Stock Issue\",\"name\":\"sesti\"},{\"displaydata\":\"Session Wise Audit Report (sesdt) [iview]\",\"caption\":\"Session Wise Audit Report\",\"name\":\"sesdt\"},{\"displaydata\":\"Set off Customer Receipts to Invoices (rpoff) [tstruct]\",\"caption\":\"Set off Customer Receipts to Invoices\",\"name\":\"rpoff\"},{\"displaydata\":\"Set off Supplier Payments to Bills (payad) [tstruct]\",\"caption\":\"Set off Supplier Payments to Bills\",\"name\":\"payad\"},{\"displaydata\":\"Set Off Unadjusted Bills (ofset) [tstruct]\",\"caption\":\"Set Off Unadjusted Bills\",\"name\":\"ofset\"},{\"displaydata\":\"Setup Linked Accounts (ivlnkset) [iview]\",\"caption\":\"Setup Linked Accounts\",\"name\":\"ivlnkset\"},{\"displaydata\":\"Smart View [page]\",\"caption\":\"Smart View\",\"name\":\"htmlPages.aspx?load=1769512168695\"},{\"displaydata\":\"SMS Log (smslog) [iview]\",\"caption\":\"SMS Log\",\"name\":\"smslog\"},{\"displaydata\":\"stacked-bar (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"stacked-bar\"},{\"displaydata\":\"stacked-column (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"stacked-column\"},{\"displaydata\":\"stacked-group-column chart (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"stacked-group-column chart\"},{\"displaydata\":\"stacked-percentage-column (Home configuration) [ads]\",\"caption\":\"Home configuration\",\"name\":\"stacked-percentage-column\"},{\"displaydata\":\"State wise Receivables Summary (stwsot) [iview]\",\"caption\":\"State wise Receivables Summary\",\"name\":\"stwsot\"},{\"displaydata\":\"State/Province (state) [tstruct]\",\"caption\":\"State/Province\",\"name\":\"state\"},{\"displaydata\":\"Status  (stmst) [tstruct]\",\"caption\":\"Status \",\"name\":\"stmst\"},{\"displaydata\":\"Status of Assets (assta) [iview]\",\"caption\":\"Status of Assets\",\"name\":\"assta\"},{\"displaydata\":\"Statutory Payments Dashboard (statupay) [iview]\",\"caption\":\"Statutory Payments Dashboard\",\"name\":\"statupay\"},{\"displaydata\":\"Stock Availability (stkstmtp) [iview]\",\"caption\":\"Stock Availability\",\"name\":\"stkstmtp\"},{\"displaydata\":\"Stock Checklist (stkcheck) [iview]\",\"caption\":\"Stock Checklist\",\"name\":\"stkcheck\"},{\"displaydata\":\"Stock Closing Posting (vchcl) [tstruct]\",\"caption\":\"Stock Closing Posting\",\"name\":\"vchcl\"},{\"displaydata\":\"Stock Issue against Orders (sksub) [tstruct]\",\"caption\":\"Stock Issue against Orders\",\"name\":\"sksub\"},{\"displaydata\":\"Stock Issue For Repair (isurp) [tstruct]\",\"caption\":\"Stock Issue For Repair\",\"name\":\"isurp\"},{\"displaydata\":\"Stock Issue to Sub Contractor (isubc) [tstruct]\",\"caption\":\"Stock Issue to Sub Contractor\",\"name\":\"isubc\"},{\"displaydata\":\"Stock Ledger Detailed (stkledge) [iview]\",\"caption\":\"Stock Ledger Detailed\",\"name\":\"stkledge\"},{\"displaydata\":\"Stock Ledger Lite (stkledli) [iview]\",\"caption\":\"Stock Ledger Lite\",\"name\":\"stkledli\"},{\"displaydata\":\"Stock Memory (stkme) [tstruct]\",\"caption\":\"Stock Memory\",\"name\":\"stkme\"},{\"displaydata\":\"Stock Opening (itopn) [tstruct]\",\"caption\":\"Stock Opening\",\"name\":\"itopn\"},{\"displaydata\":\"Stock Revaluation (clpos) [tstruct]\",\"caption\":\"Stock Revaluation\",\"name\":\"clpos\"},{\"displaydata\":\"Stock Statement by Warehouse (stkstmt) [iview]\",\"caption\":\"Stock Statement by Warehouse\",\"name\":\"stkstmt\"},{\"displaydata\":\"Stock Statement Detailed (stkdetai) [iview]\",\"caption\":\"Stock Statement Detailed\",\"name\":\"stkdetai\"},{\"displaydata\":\"Stock Statement Snapshot (stockrpt) [iview]\",\"caption\":\"Stock Statement Snapshot\",\"name\":\"stockrpt\"},{\"displaydata\":\"Stock Statement Summary (stkstsum) [iview]\",\"caption\":\"Stock Statement Summary\",\"name\":\"stkstsum\"},{\"displaydata\":\"Stock Transfer (sttro) [tstruct]\",\"caption\":\"Stock Transfer\",\"name\":\"sttro\"},{\"displaydata\":\"Stock Transfer Request (trnrq) [tstruct]\",\"caption\":\"Stock Transfer Request\",\"name\":\"trnrq\"},{\"displaydata\":\"Stock Transfer Requests (pndtrnsf) [iview]\",\"caption\":\"Stock Transfer Requests\",\"name\":\"pndtrnsf\"},{\"displaydata\":\"Stock Value (stock) [tstruct]\",\"caption\":\"Stock Value\",\"name\":\"stock\"},{\"displaydata\":\"Stock Value Summary (stksm) [tstruct]\",\"caption\":\"Stock Value Summary\",\"name\":\"stksm\"},{\"displaydata\":\"Stock Value Updated (stval) [tstruct]\",\"caption\":\"Stock Value Updated\",\"name\":\"stval\"},{\"displaydata\":\"Structure listing for Publish (axpubls) [iview]\",\"caption\":\"Structure listing for Publish\",\"name\":\"axpubls\"},{\"displaydata\":\"Sub Contractor Receipt (subcr) [tstruct]\",\"caption\":\"Sub Contractor Receipt\",\"name\":\"subcr\"},{\"displaydata\":\"Subcategory wise Purchase Summary (sctprsum) [iview]\",\"caption\":\"Subcategory wise Purchase Summary\",\"name\":\"sctprsum\"},{\"displaydata\":\"Subcategory wise Sales Summary (sctslsum) [iview]\",\"caption\":\"Subcategory wise Sales Summary\",\"name\":\"sctslsum\"},{\"displaydata\":\"Subledger Accounts (FiSub) [tstruct]\",\"caption\":\"Subledger Accounts\",\"name\":\"FiSub\"},{\"displaydata\":\"Subledger Report (subledge) [iview]\",\"caption\":\"Subledger Report\",\"name\":\"subledge\"},{\"displaydata\":\"Supplier (gsupp) [tstruct]\",\"caption\":\"Supplier\",\"name\":\"gsupp\"},{\"displaydata\":\"Supplier Claim Issue Form (sclai) [tstruct]\",\"caption\":\"Supplier Claim Issue Form\",\"name\":\"sclai\"},{\"displaydata\":\"Supplier Interaction / Confirmation (sinte) [tstruct]\",\"caption\":\"Supplier Interaction / Confirmation\",\"name\":\"sinte\"},{\"displaydata\":\"Supplier Item Rate (surma) [tstruct]\",\"caption\":\"Supplier Item Rate\",\"name\":\"surma\"},{\"displaydata\":\"Supplier Payments (rppay) [tstruct]\",\"caption\":\"Supplier Payments\",\"name\":\"rppay\"},{\"displaydata\":\"Supplier Wise Purchase (suppurs) [iview]\",\"caption\":\"Supplier Wise Purchase\",\"name\":\"suppurs\"},{\"displaydata\":\"Supplier wise Purchase Summary (supprsum) [iview]\",\"caption\":\"Supplier wise Purchase Summary\",\"name\":\"supprsum\"},{\"displaydata\":\"System Design Document (ssddocum) [iview]\",\"caption\":\"System Design Document\",\"name\":\"ssddocum\"},{\"displaydata\":\"Table field Descriptor (a__td) [tstruct]\",\"caption\":\"Table field Descriptor\",\"name\":\"a__td\"},{\"displaydata\":\"Table field Descriptors (ad___tbd) [iview]\",\"caption\":\"Table field Descriptors\",\"name\":\"ad___tbd\"},{\"displaydata\":\"Tax Master (gtaxm) [tstruct]\",\"caption\":\"Tax Master\",\"name\":\"gtaxm\"},{\"displaydata\":\"Tax Setup (taxmt) [tstruct]\",\"caption\":\"Tax Setup\",\"name\":\"taxmt\"},{\"displaydata\":\"Tax Types (gtaxt) [tstruct]\",\"caption\":\"Tax Types\",\"name\":\"gtaxt\"},{\"displaydata\":\"TCS Master (tcsmt) [tstruct]\",\"caption\":\"TCS Master\",\"name\":\"tcsmt\"},{\"displaydata\":\"TDS Master (fitds) [tstruct]\",\"caption\":\"TDS Master\",\"name\":\"fitds\"},{\"displaydata\":\"Template Data (fllist) [iview]\",\"caption\":\"Template Data\",\"name\":\"fllist\"},{\"displaydata\":\"Terms and Conditions (TandC) [tstruct]\",\"caption\":\"Terms and Conditions\",\"name\":\"TandC\"},{\"displaydata\":\"testashish (teste) [iview]\",\"caption\":\"testashish\",\"name\":\"teste\"},{\"displaydata\":\"Text_Field_Intelligence (Data intellisense) [ads]\",\"caption\":\"Data intellisense\",\"name\":\"Text_Field_Intelligence\"},{\"displaydata\":\"Time Taken Analysis (itimtk) [iview]\",\"caption\":\"Time Taken Analysis\",\"name\":\"itimtk\"},{\"displaydata\":\"Transaction audit log (ad_txalg) [iview]\",\"caption\":\"Transaction audit log\",\"name\":\"ad_txalg\"},{\"displaydata\":\"Transaction Hint (hptst) [tstruct]\",\"caption\":\"Transaction Hint\",\"name\":\"hptst\"},{\"displaydata\":\"Transaction Hint (thint) [iview]\",\"caption\":\"Transaction Hint\",\"name\":\"thint\"},{\"displaydata\":\"Trial Balance (trialbal) [iview]\",\"caption\":\"Trial Balance\",\"name\":\"trialbal\"},{\"displaydata\":\"Trial Balance Subledgers (tbsubled) [iview]\",\"caption\":\"Trial Balance Subledgers\",\"name\":\"tbsubled\"},{\"displaydata\":\"Trial Balance with COA (trailtre) [iview]\",\"caption\":\"Trial Balance with COA\",\"name\":\"trailtre\"},{\"displaydata\":\"ts_availablebatch (API) [ads]\",\"caption\":\"API\",\"name\":\"ts_availablebatch\"},{\"displaydata\":\"ts_batchqty (API) [ads]\",\"caption\":\"API\",\"name\":\"ts_batchqty\"},{\"displaydata\":\"ts_invoiceprice (API) [ads]\",\"caption\":\"API\",\"name\":\"ts_invoiceprice\"},{\"displaydata\":\"ts_pending_invoiceitems (API) [ads]\",\"caption\":\"API\",\"name\":\"ts_pending_invoiceitems\"},{\"displaydata\":\"ts_pendinginvoices (API) [ads]\",\"caption\":\"API\",\"name\":\"ts_pendinginvoices\"},{\"displaydata\":\"ts_salesorder (API) [ads]\",\"caption\":\"API\",\"name\":\"ts_salesorder\"},{\"displaydata\":\"UOM (PrUom) [tstruct]\",\"caption\":\"UOM\",\"name\":\"PrUom\"},{\"displaydata\":\"User access (ad___rla) [iview]\",\"caption\":\"User access\",\"name\":\"ad___rla\"},{\"displaydata\":\"User Access Report (axusracc) [iview]\",\"caption\":\"User Access Report\",\"name\":\"axusracc\"},{\"displaydata\":\"User Activation (axurg) [tstruct]\",\"caption\":\"User Activation\",\"name\":\"axurg\"},{\"displaydata\":\"User configuration (a__ua) [tstruct]\",\"caption\":\"User configuration\",\"name\":\"a__ua\"},{\"displaydata\":\"User configurations (ad___ual) [iview]\",\"caption\":\"User configurations\",\"name\":\"ad___ual\"},{\"displaydata\":\"User control (a_guc) [tstruct]\",\"caption\":\"User control\",\"name\":\"a_guc\"},{\"displaydata\":\"User Controls (a__uc) [tstruct]\",\"caption\":\"User Controls\",\"name\":\"a__uc\"},{\"displaydata\":\"User Controls (ad___ucl) [iview]\",\"caption\":\"User Controls\",\"name\":\"ad___ucl\"},{\"displaydata\":\"User Controls V2 (axxuc) [tstruct]\",\"caption\":\"User Controls V2\",\"name\":\"axxuc\"},{\"displaydata\":\"User direct permissions (a_dup) [tstruct]\",\"caption\":\"User direct permissions\",\"name\":\"a_dup\"},{\"displaydata\":\"User groups  (ad___ugp) [iview]\",\"caption\":\"User groups \",\"name\":\"ad___ugp\"},{\"displaydata\":\"User Groups (a__ug) [tstruct]\",\"caption\":\"User Groups\",\"name\":\"a__ug\"},{\"displaydata\":\"User Groups (ad__ugp) [iview]\",\"caption\":\"User Groups\",\"name\":\"ad__ugp\"},{\"displaydata\":\"User Login (axusr) [tstruct]\",\"caption\":\"User Login\",\"name\":\"axusr\"},{\"displaydata\":\"User Logins (a__ul) [tstruct]\",\"caption\":\"User Logins\",\"name\":\"a__ul\"},{\"displaydata\":\"User Logins (ad___ulg) [iview]\",\"caption\":\"User Logins\",\"name\":\"ad___ulg\"},{\"displaydata\":\"User Logins (axusers) [iview]\",\"caption\":\"User Logins\",\"name\":\"axusers\"},{\"displaydata\":\"User Logins with IP Details (ipwiseus) [iview]\",\"caption\":\"User Logins with IP Details\",\"name\":\"ipwiseus\"},{\"displaydata\":\"User logins with Session ID (adses) [iview]\",\"caption\":\"User logins with Session ID\",\"name\":\"adses\"},{\"displaydata\":\"User permissions (a__pu) [tstruct]\",\"caption\":\"User permissions\",\"name\":\"a__pu\"},{\"displaydata\":\"User permissions (ad___upm) [iview]\",\"caption\":\"User permissions\",\"name\":\"ad___upm\"},{\"displaydata\":\"User role (ad_ur) [tstruct]\",\"caption\":\"User role\",\"name\":\"ad_ur\"},{\"displaydata\":\"User Role (axrol) [tstruct]\",\"caption\":\"User Role\",\"name\":\"axrol\"},{\"displaydata\":\"User Roles (a__ur) [tstruct]\",\"caption\":\"User Roles\",\"name\":\"a__ur\"},{\"displaydata\":\"User roles (ad___url) [iview]\",\"caption\":\"User roles\",\"name\":\"ad___url\"},{\"displaydata\":\"User Roles (axroles) [iview]\",\"caption\":\"User Roles\",\"name\":\"axroles\"},{\"displaydata\":\"Users belong to an user group (ad___ugu) [iview]\",\"caption\":\"Users belong to an user group\",\"name\":\"ad___ugu\"},{\"displaydata\":\"Users belong to an user role (ad___ubr) [iview]\",\"caption\":\"Users belong to an user role\",\"name\":\"ad___ubr\"},{\"displaydata\":\"Vendor PO Listing (isupdetl) [iview]\",\"caption\":\"Vendor PO Listing\",\"name\":\"isupdetl\"},{\"displaydata\":\"Village (vilma) [tstruct]\",\"caption\":\"Village\",\"name\":\"vilma\"},{\"displaydata\":\"Voucher Listing (fintrans) [iview]\",\"caption\":\"Voucher Listing\",\"name\":\"fintrans\"},{\"displaydata\":\"Voucher Types (voutp) [tstruct]\",\"caption\":\"Voucher Types\",\"name\":\"voutp\"},{\"displaydata\":\"Warehouses (warehous) [iview]\",\"caption\":\"Warehouses\",\"name\":\"warehous\"},{\"displaydata\":\"Warranty Claim From Supplier (warclaim) [iview]\",\"caption\":\"Warranty Claim From Supplier\",\"name\":\"warclaim\"},{\"displaydata\":\"Warranty Claim From Supplier V2 (warrarep) [iview]\",\"caption\":\"Warranty Claim From Supplier V2\",\"name\":\"warrarep\"},{\"displaydata\":\"Warranty Claim History (warracla) [iview]\",\"caption\":\"Warranty Claim History\",\"name\":\"warracla\"},{\"displaydata\":\"Warranty Claim Status Update (wacla) [tstruct]\",\"caption\":\"Warranty Claim Status Update\",\"name\":\"wacla\"},{\"displaydata\":\"Warranty Fulfillment (waful) [tstruct]\",\"caption\":\"Warranty Fulfillment\",\"name\":\"waful\"},{\"displaydata\":\"Warranty Receipt (wrece) [tstruct]\",\"caption\":\"Warranty Receipt\",\"name\":\"wrece\"},{\"displaydata\":\"Warranty Register (wareg) [tstruct]\",\"caption\":\"Warranty Register\",\"name\":\"wareg\"},{\"displaydata\":\"Warranty Return Request  (wareq) [tstruct]\",\"caption\":\"Warranty Return Request \",\"name\":\"wareq\"},{\"displaydata\":\"Warranty/AMC/INS Renewals (vfast) [iview]\",\"caption\":\"Warranty/AMC/INS Renewals\",\"name\":\"vfast\"},{\"displaydata\":\"Work In Progress (woinp) [tstruct]\",\"caption\":\"Work In Progress\",\"name\":\"woinp\"},{\"displaydata\":\"Work location (a__bl) [tstruct]\",\"caption\":\"Work location\",\"name\":\"a__bl\"},{\"displaydata\":\"Work locations (ad___brn) [iview]\",\"caption\":\"Work locations\",\"name\":\"ad___brn\"},{\"displaydata\":\"Work Order Summary (workorde) [iview]\",\"caption\":\"Work Order Summary\",\"name\":\"workorde\"},{\"displaydata\":\"Work Order. (worko) [tstruct]\",\"caption\":\"Work Order.\",\"name\":\"worko\"},{\"displaydata\":\"Workflow - Lite (mwork) [tstruct]\",\"caption\":\"Workflow - Lite\",\"name\":\"mwork\"},{\"displaydata\":\"Workflow pre comments (axpwf) [tstruct]\",\"caption\":\"Workflow pre comments\",\"name\":\"axpwf\"},{\"displaydata\":\"Workstation (works) [tstruct]\",\"caption\":\"Workstation\",\"name\":\"works\"},{\"displaydata\":\"Workstation Type (wosty) [tstruct]\",\"caption\":\"Workstation Type\",\"name\":\"wosty\"},{\"displaydata\":\"Write Off (wriof) [tstruct]\",\"caption\":\"Write Off\",\"name\":\"wriof\"},{\"displaydata\":\"Year (axfin) [tstruct]\",\"caption\":\"Year\",\"name\":\"axfin\"},{\"displaydata\":\"Year End Closing (fintr) [tstruct]\",\"caption\":\"Year End Closing\",\"name\":\"fintr\"},{\"displaydata\":\"Year End Closing (finyrtb) [iview]\",\"caption\":\"Year End Closing\",\"name\":\"finyrtb\"},{\"displaydata\":\"Year End Closing Journal (vchye) [tstruct]\",\"caption\":\"Year End Closing Journal\",\"name\":\"vchye\"},{\"displaydata\":\"Years (axfinyrs) [iview]\",\"caption\":\"Years\",\"name\":\"axfinyrs\"},{\"displaydata\":\"ZIP/Pin Codes (pcode) [tstruct]\",\"caption\":\"ZIP/Pin Codes\",\"name\":\"pcode\"}]}],\"success\":true}}"
-
-            };
-
-            // Raw API Response for "axmp_po" (Purchase Orders Data)
-            const RAW_PO_DATA = {
-                "d": "{\"result\":{\"message\":\"success\",\"ADSNames\":\"axmp_po\",\"data\":[{\"adsname\":\"axmp_po\",\"data\":[{\"salesorder_number\":\"21MU/2025/SO/000052\",\"prnum\":\"21MU/2025/PR/000105\",\"ponum\":\"21MU/2025/PO/000082\",\"podate\":\"2025-11-17T00:00:00\",\"suppname\":\"ABB INDIA PVT LTD\",\"itemdesc\":\"IOS MAIN BOARD (MAINBRD)\",\"uom\":\"NOS\",\"ordqty\":\"5.0000\",\"resqty\":\"1.0000\",\"avlqty\":\"1.0000\",\"duedate\":\"2025-11-17T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000052\",\"prnum\":\"21MU/2025/PR/000104\",\"ponum\":\"21MU/2025/PO/000083\",\"podate\":\"2025-11-17T00:00:00\",\"suppname\":\"PADGET ELECTRONICS\",\"itemdesc\":\"IOS CPU AND GPU (CPUGPU)\",\"uom\":\"NOS\",\"ordqty\":\"10.0000\",\"resqty\":\"1.0000\",\"avlqty\":\"1.0000\",\"duedate\":\"2025-11-17T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000052\",\"prnum\":\"21MU/2025/PR/000103\",\"ponum\":\"21MU/2025/PO/000084\",\"podate\":\"2025-11-17T00:00:00\",\"suppname\":\"FOXCON INDIA PVT LTD\",\"itemdesc\":\"FRAME AND CASING (FRMANDCAS)\",\"uom\":\"NOS\",\"ordqty\":\"5.0000\",\"resqty\":\"1.0000\",\"avlqty\":\"1.0000\",\"duedate\":\"2025-11-17T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000052\",\"prnum\":\"21MU/2025/PR/000102\",\"ponum\":\"21MU/2025/PO/000085\",\"podate\":\"2025-11-17T00:00:00\",\"suppname\":\"FOXCON INDIA PVT LTD\",\"itemdesc\":\"DISPLAY AND TOUCHSCREEN (DISP001)\",\"uom\":\"NOS\",\"ordqty\":\"5.0000\",\"resqty\":\"1.0000\",\"avlqty\":\"1.0000\",\"duedate\":\"2025-11-17T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000052\",\"prnum\":\"21MU/2025/PR/000101\",\"ponum\":\"21MU/2025/PO/000086\",\"podate\":\"2025-11-17T00:00:00\",\"suppname\":\"ABB INDIA PVT LTD\",\"itemdesc\":\"CAMERAS AND AUDIO SYS AND CIRCUITS AND (CAMAUDCIRSEN)\",\"uom\":\"NOS\",\"ordqty\":\"20.0000\",\"resqty\":\"1.0000\",\"avlqty\":\"1.0000\",\"duedate\":\"2025-11-17T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000052\",\"prnum\":\"21MU/2025/PR/000100\",\"ponum\":\"21MU/2025/PO/000087\",\"podate\":\"2025-11-17T00:00:00\",\"suppname\":\"ABB INDIA PVT LTD\",\"itemdesc\":\"BUTTONS AND SIM TRAYS AND GLASS AND PORTS (BSGP)\",\"uom\":\"NOS\",\"ordqty\":\"10.0000\",\"resqty\":\"1.0000\",\"avlqty\":\"1.0000\",\"duedate\":\"2025-11-17T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000052\",\"prnum\":\"21MU/2025/PR/000099\",\"ponum\":\"21MU/2025/PO/000088\",\"podate\":\"2025-11-17T00:00:00\",\"suppname\":\"FOXCON INDIA PVT LTD\",\"itemdesc\":\"HP 15S INTEL CORE I3 11TH GEN 1115G4 LAPTOP (HP115CG4)\",\"uom\":\"NOS\",\"ordqty\":\"5.0000\",\"resqty\":\"1.0000\",\"avlqty\":\"1.0000\",\"duedate\":\"2025-11-17T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000053\",\"prnum\":\"21MU/2025/PR/000106\",\"ponum\":\"21MU/2025/PO/000089\",\"podate\":\"2025-11-17T00:00:00\",\"suppname\":\"FOXCON INDIA PVT LTD\",\"itemdesc\":\"CANON EOS R6 MARK 2 (CAN-EOSR6)\",\"uom\":\"NOS\",\"ordqty\":\"20.0000\",\"resqty\":\"2.0000\",\"avlqty\":\"2.0000\",\"duedate\":\"2025-11-17T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000057\",\"prnum\":\"21MU/2025/PR/000117\",\"ponum\":\"21MU/2025/PO/000095\",\"podate\":\"2025-11-22T00:00:00\",\"suppname\":\"PADGET ELECTRONICS\",\"itemdesc\":\"IOS CPU AND GPU (CPUGPU)\",\"uom\":\"NOS\",\"ordqty\":\"4.0000\",\"resqty\":\"4.0000\",\"avlqty\":\"4.0000\",\"duedate\":\"2025-11-22T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000057\",\"prnum\":\"21MU/2025/PR/000116\",\"ponum\":\"21MU/2025/PO/000096\",\"podate\":\"2025-11-22T00:00:00\",\"suppname\":\"FOXCON INDIA PVT LTD\",\"itemdesc\":\"FRAME AND CASING (FRMANDCAS)\",\"uom\":\"NOS\",\"ordqty\":\"2.0000\",\"resqty\":\"2.0000\",\"avlqty\":\"2.0000\",\"duedate\":\"2025-11-22T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000057\",\"prnum\":\"21MU/2025/PR/000115\",\"ponum\":\"21MU/2025/PO/000097\",\"podate\":\"2025-11-22T00:00:00\",\"suppname\":\"FOXCON INDIA PVT LTD\",\"itemdesc\":\"DISPLAY AND TOUCHSCREEN (DISP001)\",\"uom\":\"NOS\",\"ordqty\":\"2.0000\",\"resqty\":\"2.0000\",\"avlqty\":\"2.0000\",\"duedate\":\"2025-11-22T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000058\",\"prnum\":\"21MU/2025/PR/000114\",\"ponum\":\"21MU/2025/PO/000098\",\"podate\":\"2025-11-22T00:00:00\",\"suppname\":\"ABB INDIA PVT LTD\",\"itemdesc\":\"SAMSUNG S25 ULTRA 512GB (SAMS25ULTA)\",\"uom\":\"NOS\",\"ordqty\":\"2.0000\",\"resqty\":\"2.0000\",\"avlqty\":\"2.0000\",\"duedate\":\"2025-11-22T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000058\",\"prnum\":\"21MU/2025/PR/000112\",\"ponum\":\"21MU/2025/PO/000100\",\"podate\":\"2025-11-22T00:00:00\",\"suppname\":\"ABB INDIA PVT LTD\",\"itemdesc\":\"SAMSUNG S23 ULTRA 512GB (SAMS23ULTRA)\",\"uom\":\"NOS\",\"ordqty\":\"2.0000\",\"resqty\":\"2.0000\",\"avlqty\":\"2.0000\",\"duedate\":\"2025-11-22T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000064\",\"prnum\":\"21MU/2025/PR/000135\",\"ponum\":\"21MU/2025/PO/000101\",\"podate\":\"2025-12-08T00:00:00\",\"suppname\":\"ABB INDIA PVT LTD\",\"itemdesc\":\"CAMERAS AND AUDIO SYS AND CIRCUITS AND (CAMAUDCIRSEN)\",\"uom\":\"NOS\",\"ordqty\":\"1.0000\",\"resqty\":\"1.0000\",\"avlqty\":\"1.0000\",\"duedate\":\"2025-12-08T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000064\",\"prnum\":\"21MU/2025/PR/000134\",\"ponum\":\"21MU/2025/PO/000102\",\"podate\":\"2025-12-08T00:00:00\",\"suppname\":\"ABB INDIA PVT LTD\",\"itemdesc\":\"BUTTONS AND SIM TRAYS AND GLASS AND PORTS (BSGP)\",\"uom\":\"NOS\",\"ordqty\":\"1.0000\",\"resqty\":\"1.0000\",\"avlqty\":\"1.0000\",\"duedate\":\"2025-12-08T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000066\",\"prnum\":\"21MU/2025/PR/000133\",\"ponum\":\"21MU/2025/PO/000103\",\"podate\":\"2025-12-08T00:00:00\",\"suppname\":\"ABB INDIA PVT LTD\",\"itemdesc\":\"SAMSUNG S25 ULTRA 512GB (SAMS25ULTA)\",\"uom\":\"NOS\",\"ordqty\":\"4.0000\",\"resqty\":\"4.0000\",\"avlqty\":\"4.0000\",\"duedate\":\"2025-12-08T00:00:00\"},{\"salesorder_number\":\"21MU/2025/SO/000061\",\"prnum\":\"21MU/2025/PR/000132\",\"ponum\":\"21MU/2025/PO/000104\",\"podate\":\"2025-12-08T00:00:00\",\"suppname\":\"ABB INDIA PVT LTD\",\"itemdesc\":\"SAMSUNG S25 ULTRA 512GB (SAMS25ULTA)\",\"uom\":\"NOS\",\"ordqty\":\"4.0000\",\"resqty\":\"4.0000\",\"avlqty\":\"4.0000\",\"duedate\":\"2025-12-08T00:00:00\"}]}],\"success\":true}}"
-            };
+            /* --- 4. DATA SOURCE HANDLING (DYNAMIC FETCH) --- */
 
 
-            // PARSER HELPER FOR PO DATA - DIFFERENT STRUCTURE
-            function safeParsePOData(jsonResponse) {
-                try {
-                    // 1. Parse outer string
-                    const outer = typeof jsonResponse === 'string' ? JSON.parse(jsonResponse) : jsonResponse;
-                    const dString = outer.d || "";
-
-                    // 2. Parse inner "d" string
-                    const inner = JSON.parse(dString);
-
-                    // 3. Extract data array - path is different for PO data!
-                    // Path: result -> data[0] -> data (same root but different content structure)
-                    return inner.result.data[0].data || [];
-                } catch (e) {
-                    console.error("PO Data Parse Error:", e);
-                    return [];
-                }
-            }
-
-
-            // PARSER HELPER
+            /**
+ * Robust JSON parser for Axpert responses
+ * Handles double-encoding, truncated strings, and extra characters
+ */
             function safeParseData(jsonResponse) {
                 try {
-                    // 1. Parse outer string
-                    const outer = typeof jsonResponse === 'string' ? JSON.parse(jsonResponse) : jsonResponse;
-                    const dString = outer.d || "";
+                    // 1. Handle if jsonResponse is null/undefined
+                    if (!jsonResponse) return [];
 
-                    // 2. Parse inner "d" string
-                    const inner = JSON.parse(dString);
+                    // 2. Get the 'd' property (Axpert wrapper)
+                    // If passed as string, try to parse it first
+                    var outer = (typeof jsonResponse === 'string') ? JSON.parse(jsonResponse) : jsonResponse;
+                    var dString = outer.d || outer; // Fallback to outer if 'd' doesn't exist
 
-                    // 3. Extract data array
-                    // Path: result -> data[0] -> data
-                    return inner.result.data[0].data || [];
+                    // 3. If dString is already an object/array, return it (it's already parsed)
+                    if (typeof dString !== 'string') return dString;
+
+                    // 4. CLEANUP - The Critical Step for Axpert strings
+                    dString = dString.trim();
+
+                    // Remove ANY trailing characters after the last "}" or "]"
+                    var lastBrace = dString.lastIndexOf('}');
+                    var lastBracket = dString.lastIndexOf(']');
+                    var lastValid = Math.max(lastBrace, lastBracket);
+
+                    if (lastValid !== -1) {
+                        dString = dString.substring(0, lastValid + 1);
+                    }
+
+                    // 5. Parse inner JSON
+                    var inner = JSON.parse(dString);
+
+                    // 6. Navigate to data array (handle various Axpert formats)
+                    // Format A: { result: { data: [ { data: [...] } ] } }
+                    if (inner && inner.result && inner.result.data && inner.result.data[0] && inner.result.data[0].data) {
+                        return inner.result.data[0].data;
+                    }
+                    // Format B: { result: { data: [...] } }
+                    if (inner && inner.result && inner.result.data) {
+                        return inner.result.data;
+                    }
+                    // Format C: Direct array
+                    if (Array.isArray(inner)) {
+                        return inner;
+                    }
+
+                    return [];
                 } catch (e) {
                     console.error("Data Parse Error:", e);
                     return [];
                 }
             }
 
+            /* --- 4. DATA SOURCE HANDLING (DYNAMIC FETCH) --- */
 
-            // Initialize Data Stores
-            const DB_LIST = safeParseData(RAW_DS_RESPONSE).map(item => ({
-                name: item.name,
-                caption: item.caption,
-                date: new Date().toISOString()
-            }));
+            // Initialize empty DB list (will be populated by API)
+            let DB_LIST = [];
 
-            // Add axmp_po to list manually (since it wasn't in RAW_DS_RESPONSE)
-            DB_LIST.push({
-                name: "axmp_po",
-                caption: "Purchase Orders (axmp_po)",
-                date: new Date().toISOString()
-            });
+            /**
+             * Fetch datasources from Axpert using parent.GetDataFromAxList
+             */
+            function loadDataSources() {
+                console.log("Fetching data sources from 'ds_list'...");
 
-            // Store Real Data for Analysis
+                // Check if parent function exists
+                if (typeof parent.GetDataFromAxList === "function") {
+
+                    // Call the Axpert method with callback
+                    // params can be empty object {} or specific params if ds_list needs them
+                    var params = {};
+
+                    parent.GetDataFromAxList(params, function success(response) {
+                        try {
+                            // --- PARSING LOGIC START (Matching your example) ---
+                            var rawObj = (typeof response === 'string') ? JSON.parse(response) : response;
+                            var innerJson = (rawObj && rawObj.d) ? rawObj.d : rawObj;
+
+                            // Use safeParseData here to handle the inner string robustly
+                            // (or use the simple JSON.parse if you trust the source completely, 
+                            // but safeParseData is safer for "Unexpected non-whitespace" errors)
+                            var parsedData = safeParseData(innerJson);
+
+                            if (!parsedData || !Array.isArray(parsedData)) {
+                                console.warn("No data sources found in response.");
+                                return;
+                            }
+
+                            // Map to our app's format
+                            DB_LIST = parsedData.map(function (item) {
+                                return {
+                                    name: item.name,
+                                    caption: item.caption || item.name,
+                                    date: new Date().toISOString()
+                                };
+                            });
+
+                            // Add hardcoded extras if needed
+                            DB_LIST.push({
+                                name: "axmp_po",
+                                caption: "Purchase Orders (axmp_po)",
+                                date: new Date().toISOString()
+                            });
+
+                            console.log("Loaded " + DB_LIST.length + " data sources.");
+
+                            // Refresh the dropdown UI
+                            var toggle = document.getElementById('sourceToggle');
+                            if (toggle && toggle.checked && window.AXI && window.AXI.refreshFileSelect) {
+                                window.AXI.refreshFileSelect();
+                            }
+
+                        } catch (e) {
+                            console.error("[DS List] Parsing Error:", e);
+                        }
+
+                    }, function error(err) {
+                        console.error("[DS List] API Error:", err);
+                    });
+
+                } else {
+                    console.warn("parent.GetDataFromAxList is not available.");
+                }
+            }
+
+            /**
+             * Process the raw response from ds_list and update UI
+             */
+            function processDataSourceList(rawResponse) {
+                try {
+                    // 1. Parse the response using our robust parser
+                    // Note: The structure from GetDataFromAxList might be the direct 'result' object 
+                    // or the 'd' string depending on implementation. safeParseData handles both.
+                    var parsedData = safeParseData(rawResponse);
+
+                    if (!parsedData || !Array.isArray(parsedData)) {
+                        console.warn("No data sources found in response.");
+                        return;
+                    }
+
+                    // 2. Map to our app's format
+                    DB_LIST = parsedData.map(function (item) {
+                        return {
+                            name: item.name,               // e.g. "sepri"
+                            caption: item.caption || item.name, // e.g. "Selling Price"
+                            date: new Date().toISOString() // Placeholder date
+                        };
+                    });
+
+                    // 3. Add any hardcoded extras if needed (like the PO list)
+                    DB_LIST.push({
+                        name: "axmp_po",
+                        caption: "Purchase Orders (axmp_po)",
+                        date: new Date().toISOString()
+                    });
+
+                    console.log("Loaded " + DB_LIST.length + " data sources.");
+
+                    // 4. Refresh the dropdown if it's currently showing databases
+                    var toggle = document.getElementById('sourceToggle');
+                    if (toggle && toggle.checked && window.AXI && window.AXI.refreshFileSelect) {
+                        window.AXI.refreshFileSelect();
+                    }
+
+                } catch (e) {
+                    console.error("Error processing data sources:", e);
+                }
+            }
+
+            // Store Real Data for Analysis (PO Data remains static for now)
             const MOCK_DATA_RESPONSES = {
-                "axmp_po": safeParsePOData(RAW_PO_DATA) // Use specific parser for PO data
+                "axmp_po": safeParseData(typeof RAW_PO_DATA !== 'undefined' ? RAW_PO_DATA : "") // Use safeParseData on RAW_PO_DATA if it exists
             };
 
+            // --- Add this to your DOMContentLoaded initialization block ---
+            // document.addEventListener('DOMContentLoaded', () => {
+            //    ... existing init code ...
+            //    loadDataSources(); // <--- Add this line
+            // });
 
             // =========================================================================
             // <<<<< CUSTOM SYSTEM PROMPT EDITOR >>>>>
@@ -3123,6 +3245,8 @@ IMPORTANT RULE:
 - (most important) Don't assume.
 
 CHART PROTOCOL:
+
+
 Use diverse chart types to best represent the data. Do NOT rely only on Bar/Line charts.
 Output in this JSON format:
 {
@@ -3274,7 +3398,7 @@ Summary and next steps
                         statusDiv.id = 'promptStatus';
                         statusDiv.className = 'status status--success';
                         statusDiv.style.cssText = 'position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; padding: 12px 20px; background: #10B981; color: white; border-radius: 12px; font-size: 14px; font-weight: 500; align-items: center; gap: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); animation: slideIn 0.3s ease;';
-                        statusDiv.innerHTML = `<span class="material-symbols-rounded" style="font-size: 18px;">check_circle</span> System prompt ${isCustom ? 'saved' : 'reset to default'} successfully!`;
+                        statusDiv.innerHTML = `<span class="material-icons" style="font-size: 18px;">check_circle</span> System prompt ${isCustom ? 'saved' : 'reset to default'} successfully!`;
                         document.body.appendChild(statusDiv);
 
                         setTimeout(() => statusDiv.remove(), 3000);
@@ -3348,45 +3472,70 @@ Summary and next steps
                 };
             }
 
-            // Store the database data to be sent to AI (invisible to user)
-            let pendingDatabaseData = null;
-            window.pendingDatabaseData = pendingDatabaseData; // Make it globally accessible
 
+            // Store the database data to be sent to AI (invisible to user)
+            window.pendingDatabaseData = null; // Directly set on window object// This sets the LOCAL variable, not window.pendingDatabaseData
             const originalAnalyzeHandler = analyzeBtn.onclick;
+
+
+            // --- 3. ANALYZE BUTTON LOGIC (The Fix) ---
             analyzeBtn.onclick = async function (e) {
-                const fileName = hiddenInput.value;
-                if (!fileName) return;
+                const fileName = hiddenInput.value; // The file selected in dropdown
+                if (!fileName) {
+                    alert("Please select a file first.");
+                    return;
+                }
 
                 const isDbMode = toggle ? toggle.checked : false;
 
+                // 1. CLEAR previous attachments to avoid confusion
+                if (typeof state !== 'undefined') {
+                    state.pendingAttachments = [];
+                }
+
                 if (isDbMode) {
+                    // ... (Database mode logic remains same) ...
                     const dbInfo = await getSelectedDatabaseData();
                     if (dbInfo) {
-                        // Store the data
-                        pendingDatabaseData = dbInfo;
-                        // Set clean user message - NO JSON visible
+                        window.pendingDatabaseData = dbInfo;
                         promptInput.value = `Analyze this purchase order data.`;
                     } else {
                         promptInput.value = `Analyze database: ${fileName}`;
                     }
                 } else {
-                    // Original file logic
-                    const fileObj = await AxiLibrary.getFileObj(fileName);
-                    if (fileObj) {
-                        if (typeof state !== 'undefined') {
-                            state.pendingAttachments = [fileObj];
+                    // --- FIX STARTS HERE ---
+                    // 2. Retrieve the ACTUAL file object from your library
+                    // We need the File object to read its content in handleSend
+                    if (window.AxiLibrary) {
+                        const fileObj = await AxiLibrary.getFileObj(fileName);
+
+                        if (fileObj) {
+                            // 3. Push to pendingAttachments so handleSend() sees it
+                            if (typeof state !== 'undefined') {
+                                state.pendingAttachments = [fileObj];
+                            }
+
+                            // 4. Set a generic prompt
+                            promptInput.value = `Analyze this file: ${fileName}`;
+                        } else {
+                            console.error("File object not found in AxiLibrary for:", fileName);
+                            alert("Could not load file data. Please re-upload.");
+                            return;
                         }
-                        promptInput.value = `Analyze the file: ${fileName}`;
                     }
+                    // --- FIX ENDS HERE ---
                 }
 
-                // Trigger send
+                // 5. Trigger the main chat function
                 if (typeof handleSend === 'function') {
-                    handleSend();
+                    await handleSend(); // This will now read state.pendingAttachments[0]
                 } else {
+                    // Fallback
                     composerForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
                 }
             };
+
+
             function getDatabases() {
                 try {
                     // 1. Parse the inner stringified JSON
@@ -3555,7 +3704,6 @@ Summary and next steps
             /* --- 3. MODAL CONTROLS --- */
             // Open buttons
             if (openConnectBtn) openConnectBtn.addEventListener("click", () => connectModal.showModal());
-            
             if (openUploadBtn) openUploadBtn.addEventListener("click", () => uploadModal.showModal());
 
             // Close buttons (using data-close attribute)
@@ -3622,8 +3770,8 @@ Summary and next steps
 
             function showStatus(msg, type) {
                 const icon = type === 'error'
-                    ? '<i class="ph ph-warning-circle" style="font-size:18px"></i>'
-                    : '<i class="ph ph-check-circle" style="font-size:18px"></i>';
+                    ? '<span class="material-icons" style="font-size:18px;">warning</span>'
+                    : '<span class="material-icons" style="font-size:18px;">check_circle</span>';
 
                 connectStatus.innerHTML = `${icon} <span>${escapeHtml(msg)}</span>`;
                 connectStatus.className = `status status--${type}`;
@@ -3633,10 +3781,9 @@ Summary and next steps
             function setConnectLoading(loading) {
                 connectBtn.disabled = loading;
                 connectBtn.innerHTML = loading
-                    ? '<i class="ph ph-spinner" style="animation: spin 1s linear infinite; font-size: 18px;"></i> Verifying...'
-                    : '<span>Verify & Connect</span><i class="ph ph-arrow-right"></i>';
+                    ? '<span class="material-icons" style="animation: spin 1s linear infinite;">sync</span> Verifying...'
+                    : '<span>Verify & Connect</span><span class="material-icons" style="font-weight:bold;">arrow_forward</span>';
             }
-
             /* --- 5. UPLOAD LOGIC --- */
             const setDrag = (on) => dropzone.classList.toggle('isDrag', !!on);
 
@@ -3689,10 +3836,16 @@ Summary and next steps
 
 
             function escapeHtml(str) {
-                return String(str).replace(/[&<>"']/g, s => ({
-                    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-                }[s]));
+                return String(str)
+                    .replace(/&/g, String.fromCharCode(38) + 'amp;')
+                    .replace(/</g, String.fromCharCode(38) + 'lt;')
+                    .replace(/>/g, String.fromCharCode(38) + 'gt;')
+                    .replace(/"/g, String.fromCharCode(38) + 'quot;')
+                    .replace(/'/g, String.fromCharCode(38) + '#39;');
             }
+
+
+            initSystemPromptEditor();
         });
     </script>
 
@@ -3702,6 +3855,7 @@ Summary and next steps
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-</body>
 
-</html>
+
+	<script type="text/javascript" src="../../../plugins/Axi/HTMLPages/js/app.js"></script>
+</body></html>

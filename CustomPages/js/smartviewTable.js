@@ -758,6 +758,23 @@ function smartviewGuessDataKeyFromCaption(caption) {
   return mapped.join('');
 }
 
+function buildSmartviewHeaderCell(caption, fieldName) {
+  const title = escapeHtml(caption || '');
+  const fld = (fieldName || '').toString().trim();
+  if (!fld) return `<th>${title}</th>`;
+  const safeFld = escapeHtml(fld);
+  return `
+    <th class="sv-data-header" data-field="${safeFld}">
+      <div class="sv-header-cell">
+        <span class="sv-header-title">${title}</span>
+        <button type="button" class="sv-header-menu-btn" data-field="${safeFld}" title="Column menu" aria-label="Column menu">
+          <span class="sv-header-menu-icon">...</span>
+        </button>
+      </div>
+    </th>
+  `;
+}
+
 function getKeyField() {
   if (!_entity.metaData || !_entity.metaData.length) return null;
   const preferred = ["recordid", "id", "username"];
@@ -873,14 +890,33 @@ function initializeDataTable() {
     let html = '';
     let excludedFields = new Set(['transid', 'ftransid']);
   
-    let hideTransid = !listJson.some(rowData => rowData[keyCol]);
+   let hideTransid = !listJson.some(rowData => rowData[keyCol]);
   
     // Check if any row has axrowoptions to decide whether to show the column
     const hasRowOptions = listJson.some(rowData => {
       return rowData.axrowoptions || rowData.axRowOptions || rowData.axRowoptions;
     });
   
-    const isEmptyDataset = !listJson || listJson.length === 0;
+   const isEmptyDataset = !listJson || listJson.length === 0;
+
+    // If server-side groupby/select_columns is active, render only those fields.
+    const ctrl = window.smartTableController || window._smartviewController || window._smartviewTableController || null;
+    const isGroupedView = !!(ctrl && Array.isArray(ctrl.groupby_columns) && ctrl.groupby_columns.length > 0);
+    let allowedFields = null;
+    if (ctrl && Array.isArray(ctrl.select_columns) && ctrl.select_columns.length) {
+      allowedFields = new Set();
+      ctrl.select_columns.forEach(sc => {
+        const fn = smartviewSelectExprToFieldName(sc);
+        if (fn) allowedFields.add(fn.toLowerCase());
+      });
+    }
+    if (ctrl && Array.isArray(ctrl.groupby_columns) && ctrl.groupby_columns.length) {
+      if (!allowedFields) allowedFields = new Set();
+      ctrl.groupby_columns.forEach(gc => {
+        const fn = smartviewSelectExprToFieldName(gc);
+        if (fn) allowedFields.add(fn.toLowerCase());
+      });
+    }
 
     // Build set of fields that actually contain data across rows
     const fieldsWithData = new Set();
@@ -890,6 +926,7 @@ function initializeDataTable() {
       for (let field in rowData) {
         if (rowData.hasOwnProperty(field)) {
           const fieldLower = field.toLowerCase();
+          if (allowedFields && !allowedFields.has(fieldLower)) continue;
           if (!excludedFields.has(fieldLower)) fieldsPresent.add(fieldLower);
           if (rowData[field] !== null && rowData[field] !== undefined && String(rowData[field]).trim() !== '' && !excludedFields.has(fieldLower)) {
             fieldsWithData.add(fieldLower);
@@ -914,7 +951,8 @@ function initializeDataTable() {
   
     // Determine whether the key column should actually be rendered
     const keyFieldPresentInMeta = (_entity.metaData || []).some(f => (f.fldname || '').toString().toLowerCase() === keyColLower);
-    const keyFieldHasData = fieldsWithData.has(keyColLower) || keyFieldPresentInMeta; // MOVE THIS LINE UP
+    let keyFieldHasData = fieldsWithData.has(keyColLower) || keyFieldPresentInMeta; // MOVE THIS LINE UP
+    if (allowedFields && keyColLower && !allowedFields.has(keyColLower)) keyFieldHasData = false;
     console.log('keyFieldPresentInMeta:', keyFieldPresentInMeta, 'keyFieldHasData:', keyFieldHasData);
   
     /*
@@ -945,6 +983,16 @@ function initializeDataTable() {
         cloned._svOriginalFldname = metaKey;
       }
 
+      // If this is a sum column already present in metadata, derive a friendly caption.
+      if (effectiveKey.toLowerCase().startsWith('sum_')) {
+        const base = effectiveKey.substring(4);
+        const baseMeta = originalMeta.find(m => ((m.fldname || '').toString().toLowerCase() === base.toLowerCase())) || null;
+        const baseCap = baseMeta ? (baseMeta.fldcap || formatFieldName(baseMeta.fldname || base)) : formatFieldName(base);
+        cloned.fldcap = `Sum ${baseCap}`;
+        cloned.fdatatype = cloned.fdatatype || 'n';
+        cloned.cdatatype = cloned.cdatatype || 'Numeric';
+      }
+
       // Avoid overwriting an already-mapped effectiveKey (keep the first metadata entry).
       if (!metaMap[effectiveKey]) metaMap[effectiveKey] = cloned;
     });
@@ -952,7 +1000,27 @@ function initializeDataTable() {
     // Add any data fields not present in metaMap
     Array.from(fieldsWithData).forEach(f => {
       if (!metaMap[f] && !excludedFields.has(f)) {
-        metaMap[f] = { fldname: f, fldcap: formatFieldName(f), fdatatype: 't', cdatatype: 'Text', listingfld: 'T' };
+        let cap = formatFieldName(f);
+        let fdt = 't';
+        let cdt = 'Text';
+
+        // If this is a groupby sum field (e.g., sum_ordqty), derive caption from base field.
+        if (f.toLowerCase().startsWith('sum_')) {
+          const base = f.substring(4);
+          const baseMeta =
+            originalMeta.find(m => ((m.fldname || '').toString().toLowerCase() === base.toLowerCase())) ||
+            metaMap[base];
+          if (baseMeta) {
+            const baseCap = baseMeta.fldcap || formatFieldName(baseMeta.fldname || base);
+            cap = `Sum ${baseCap}`;
+          } else {
+            cap = `Sum ${formatFieldName(base)}`;
+          }
+          fdt = 'n';
+          cdt = 'Numeric';
+        }
+
+        metaMap[f] = { fldname: f, fldcap: cap, fdatatype: fdt, cdatatype: cdt, listingfld: 'T' };
       }
     });
   
@@ -1016,6 +1084,7 @@ function initializeDataTable() {
         const fieldName = (field.fldname || '').toString().toLowerCase();
         if (fieldName === keyColLower) return;
         if (excludedFields.has(fieldName)) return;
+        if (allowedFields && !allowedFields.has(fieldName)) return;
         // If field isn't present in the response payload at all, don't render it (avoids blank columns).
         // For empty datasets, we still render headers from metadata so the user can see the schema.
         if (!isEmptyDataset && !fieldsPresent.has(fieldName)) return;
@@ -1053,28 +1122,12 @@ function initializeDataTable() {
       
       // Render key header only if it is present (avoid rendering "--" placeholder header)
       if (keyFieldHasData) {
-        if (fieldsWithData.has(keyColLower)) {
-          const keyField = (_entity.metaData || []).find(field => {
-            const fieldName = (field.fldname || '').toString().toLowerCase();
-            return fieldName === keyColLower;
-          });
-          if (keyField) {
-            html += `<th>${keyField.fldcap || formatFieldName(keyField.fldname)}</th>`;
-          } else {
-            html += `<th>${formatFieldName(keyCol)}</th>`;
-          }
-        } else {
-          // if metadata indicates key present but fieldsWithData doesn't, still show header from metadata
-          const keyField = (_entity.metaData || []).find(field => {
-            const fieldName = (field.fldname || '').toString().toLowerCase();
-            return fieldName === keyColLower;
-          });
-          if (keyField) {
-            html += `<th>${keyField.fldcap || formatFieldName(keyField.fldname)}</th>`;
-          } else {
-            html += `<th>${formatFieldName(keyCol)}</th>`;
-          }
-        }
+        const keyField = (_entity.metaData || []).find(field => {
+          const fieldName = (field.fldname || '').toString().toLowerCase();
+          return fieldName === keyColLower;
+        });
+        const keyCaption = keyField ? (keyField.fldcap || formatFieldName(keyField.fldname)) : formatFieldName(keyCol);
+        html += buildSmartviewHeaderCell(keyCaption, keyColLower);
       } // else: intentionally skip rendering the key column header
   
       // Render headers using the merged metadata but only for fields that actually have data and are not the key
@@ -1084,6 +1137,7 @@ function initializeDataTable() {
         if (fieldName === keyColLower) return;
         // skip excluded fields
         if (excludedFields.has(fieldName)) return;
+        if (allowedFields && !allowedFields.has(fieldName)) return;
         // If field isn't present in the response payload at all, don't render it (avoids blank columns).
         // For empty datasets, we still render headers from metadata so the user can see the schema.
         if (!isEmptyDataset && !fieldsPresent.has(fieldName)) return;
@@ -1092,7 +1146,7 @@ function initializeDataTable() {
         const allowShow = hasData || (field.listingfld && (field.listingfld === 'T' || field.listingfld === 't'));
         if (allowShow) {
           if (!addedFields.has(fieldName)) {
-            html += `<th>${field.fldcap || formatFieldName(field.fldname)}</th>`;
+            html += buildSmartviewHeaderCell(field.fldcap || formatFieldName(field.fldname), fieldName);
             addedFields.add(fieldName);
             console.log('Added header for:', fieldName);
           }
@@ -1107,7 +1161,11 @@ function initializeDataTable() {
   
     listJson.forEach((rowData, index) => {
       html += `<tr>`;
-      html += `<td><input type="checkbox" class="rowCheckbox" data-index="${index}" data-recordid="${rowData.recordid || ''}"></td>`;
+      if (isGroupedView) {
+        html += `<td><button type="button" class="sv-expand-btn" data-rowindex="${index}" data-expanded="false">+</button><input type="checkbox" class="rowCheckbox" data-index="${index}" data-recordid="${rowData.recordid || ''}"></td>`;
+      } else {
+        html += `<td><input type="checkbox" class="rowCheckbox" data-index="${index}" data-recordid="${rowData.recordid || ''}"></td>`;
+      }
       
       // ADD ACTION CELL
       if (hasRowOptions) {
@@ -1253,6 +1311,7 @@ function initializeDataTable() {
     setTimeout(() => {
       attachRowOptionsHandlers();
       attachSmartviewHyperlinkHandlers();
+      attachSmartviewGroupExpandHandlers();
     }, 100);
 
     // Ensure infinite-scroll sentinel exists after every render
@@ -1292,6 +1351,61 @@ function attachRowOptionsHandlers() {
       console.log('No actions found for this row');
     }
   });
+}
+
+function attachSmartviewGroupExpandHandlers() {
+  try {
+    if (!window.jQuery) return;
+    $(document).off('click.smartviewExpand', '.sv-expand-btn').on('click.smartviewExpand', '.sv-expand-btn', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const ctrl = window.smartTableController || window._smartviewController || window._smartviewTableController || null;
+      if (!ctrl) return false;
+
+      const idx = parseInt(this.getAttribute('data-rowindex') || '-1', 10);
+      if (idx < 0) return false;
+      const rowData = (window._entity && Array.isArray(window._entity.listJson)) ? window._entity.listJson[idx] : null;
+      if (!rowData) return false;
+
+      const $btn = $(this);
+      const $tr = $btn.closest('tr');
+
+      // Toggle off if already expanded
+      const $next = $tr.next('.sv-group-detail-row');
+      if ($next && $next.length) {
+        $next.remove();
+        $btn.text('+');
+        return false;
+      }
+
+      const meta = (Array.isArray(ctrl.lastAdsMeta) && ctrl.lastAdsMeta.length)
+        ? ctrl.lastAdsMeta
+        : (window._entity && Array.isArray(window._entity.metaData) ? window._entity.metaData : []);
+
+      const groupFields = smartviewNormalizeGroupbyFields(ctrl.groupby_columns);
+      const groupFilters = smartviewBuildGroupFiltersForRow(meta, groupFields, rowData);
+
+      const colCount = ($tr.children('td').length || 1);
+      const detailRow = `<tr class="sv-group-detail-row"><td colspan="${colCount}"><div class="sv-group-detail">Loading...</div></td></tr>`;
+      $tr.after(detailRow);
+      $btn.text('-');
+
+      smartviewFetchGroupDetailRows(ctrl, groupFilters, function (err, rows) {
+        const $detail = $tr.next('.sv-group-detail-row').find('.sv-group-detail');
+        if (!$detail.length) return;
+        if (err) {
+          $detail.html('<div>Failed to load details</div>');
+          return;
+        }
+        $detail.html(smartviewRenderGroupDetailTable(rows, meta));
+      });
+
+      return false;
+    });
+  } catch (e) {
+    // no-op
+  }
 }
 
 /* ---------- SmartView Hyperlink Handlers ---------- */
@@ -1370,6 +1484,203 @@ function addRowOptionsStyles() {
     `;
     document.head.appendChild(style);
   }
+}
+
+function addHeaderMenuStyles() {
+  if (document.getElementById('sv-header-menu-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'sv-header-menu-styles';
+  style.textContent = `
+    /* SmartView table typography to match product table */
+    #table-body_Container .table > thead th,
+    #table-body_Container .table > thead th span {
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    #table-body_Container .table > tbody td {
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .sv-data-header .sv-header-cell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+    }
+    .sv-data-header .sv-header-title {
+      display: inline-block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+    .sv-data-header .sv-header-menu-btn {
+      border: none;
+      background: transparent;
+      color: #666;
+      cursor: pointer;
+      border-radius: 4px;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      text-align: center;
+      padding: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease, background 0.15s ease;
+      flex-shrink: 0;
+    }
+    .sv-data-header:hover .sv-header-menu-btn,
+    .sv-data-header .sv-header-menu-btn:focus {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .sv-data-header .sv-header-menu-btn:hover {
+      background: #f0f0f0;
+      color: #333;
+    }
+    .sv-header-menu {
+      position: absolute;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      min-width: 180px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
+      padding: 4px 0;
+      z-index: 12000;
+    }
+    .sv-header-menu-item {
+      display: block;
+      width: 100%;
+      border: none;
+      background: transparent;
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #333;
+    }
+    .sv-header-menu-item:hover {
+      background: #f5f5f5;
+    }
+    .sv-expand-btn {
+      border: 1px solid #d0d0d0;
+      background: #fff;
+      color: #333;
+      width: 18px;
+      height: 18px;
+      line-height: 16px;
+      text-align: center;
+      border-radius: 3px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-right: 6px;
+      padding: 0;
+    }
+    .sv-expand-btn:hover {
+      background: #f5f5f5;
+    }
+    .sv-group-detail {
+      padding: 8px 6px;
+      background: #fafafa;
+      border: 1px solid #eee;
+      border-radius: 6px;
+    }
+    .sv-group-detail table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .sv-group-detail th,
+    .sv-group-detail td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #eee;
+      font-size: 12px;
+    }
+    .sv-group-detail thead th {
+      background: #f6f6f6;
+      font-weight: 600;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function closeSmartviewHeaderMenu() {
+  const m = document.getElementById('svHeaderMenu');
+  if (m && m.parentElement) m.parentElement.removeChild(m);
+}
+
+function showSmartviewHeaderMenu(anchorBtn, fieldName) {
+  if (!anchorBtn || !fieldName) return;
+  closeSmartviewHeaderMenu();
+
+  const ctrl = window.smartTableController || null;
+  const grouped = !!(ctrl && Array.isArray(ctrl.groupby_columns) && ctrl.groupby_columns.some(f => String(f).toLowerCase() === String(fieldName).toLowerCase()));
+
+  const menu = document.createElement('div');
+  menu.id = 'svHeaderMenu';
+  menu.className = 'sv-header-menu';
+  menu.innerHTML = `
+    <button type="button" class="sv-header-menu-item" data-action="sort_asc" data-field="${escapeHtml(fieldName)}">Sort Ascending</button>
+    <button type="button" class="sv-header-menu-item" data-action="sort_desc" data-field="${escapeHtml(fieldName)}">Sort Descending</button>
+    <button type="button" class="sv-header-menu-item" data-action="group_toggle" data-field="${escapeHtml(fieldName)}">${grouped ? 'Remove Group By' : 'Group By'}</button>
+    <button type="button" class="sv-header-menu-item" data-action="group_clear" data-field="${escapeHtml(fieldName)}">Clear Grouping</button>
+  `;
+  document.body.appendChild(menu);
+
+  const r = anchorBtn.getBoundingClientRect();
+  const left = Math.max(8, Math.min(window.innerWidth - menu.offsetWidth - 8, r.left));
+  const top = Math.max(8, Math.min(window.innerHeight - menu.offsetHeight - 8, r.bottom + 4));
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+
+  setTimeout(() => {
+    document.addEventListener('click', function _close(ev) {
+      if (!menu.contains(ev.target) && ev.target !== anchorBtn) {
+        closeSmartviewHeaderMenu();
+        document.removeEventListener('click', _close);
+      }
+    });
+  }, 0);
+}
+
+function attachSmartviewHeaderMenuHandlers() {
+  if (!window.jQuery || window._smartviewHeaderMenuHandlersAttached) return;
+
+  $(document).off('click.smartviewHeaderMenuOpen', '.sv-header-menu-btn').on('click.smartviewHeaderMenuOpen', '.sv-header-menu-btn', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const field = this.getAttribute('data-field') || '';
+    if (!field) return false;
+    showSmartviewHeaderMenu(this, field);
+    return false;
+  });
+
+  $(document).off('click.smartviewHeaderMenuAction', '.sv-header-menu-item').on('click.smartviewHeaderMenuAction', '.sv-header-menu-item', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const ctrl = window.smartTableController || null;
+    if (!ctrl) {
+      closeSmartviewHeaderMenu();
+      return false;
+    }
+
+    const action = (this.getAttribute('data-action') || '').toLowerCase();
+    const field = this.getAttribute('data-field') || '';
+
+    if (action === 'sort_asc') ctrl.applyHeaderSort(field, 'asc');
+    else if (action === 'sort_desc') ctrl.applyHeaderSort(field, 'desc');
+    else if (action === 'group_toggle') ctrl.toggleGroupByField(field);
+    else if (action === 'group_clear') ctrl.clearGroupByColumns();
+
+    closeSmartviewHeaderMenu();
+    return false;
+  });
+
+  window._smartviewHeaderMenuHandlersAttached = true;
 }
 /* --------------------------
    Normalizer + render function
@@ -1680,6 +1991,129 @@ function ensureSmartviewScrollSentinel() {
     return s;
   } catch (e) {
     return null;
+  }
+}
+
+function smartviewBuildGroupFiltersForRow(meta, groupFields, rowData) {
+  const filters = [];
+  if (!Array.isArray(groupFields) || !rowData) return filters;
+  groupFields.forEach(f => {
+    const fld = (f || '').toString().trim();
+    if (!fld) return;
+    const valRaw = getRowValueCaseInsensitive(rowData, fld);
+    const val = smartviewCleanIncomingValue(valRaw);
+    if (val === '') return;
+
+    const resolved = smartviewResolveFilterField(fld, meta || []);
+    const dt = smartviewInferFilterDatatype({ datatype: (resolved.meta && resolved.meta.fdatatype) || '' }, resolved.meta);
+
+    if (dt === 'DROPDOWN') {
+      filters.push({ fldname: fld, datatype: 'DROPDOWN', value: [val] });
+    } else if (dt === 'NUMERIC') {
+      filters.push({ fldname: fld, datatype: 'NUMERIC', from: val, to: val });
+    } else if (dt === 'DATE') {
+      filters.push({ fldname: fld, datatype: 'DATE', from: val, to: val, condition: 'customOption' });
+    } else {
+      filters.push({ fldname: fld, datatype: 'TEXT', value: val, condition: 'EQUALS' });
+    }
+  });
+  return filters;
+}
+
+function smartviewRenderGroupDetailTable(rows, meta) {
+  const data = Array.isArray(rows) ? rows : [];
+  if (!data.length) return '<div>No details found</div>';
+
+  const excluded = new Set(['transid', 'ftransid']);
+  const fieldsPresent = new Set();
+  data.forEach(r => {
+    Object.keys(r || {}).forEach(k => {
+      const kl = k.toLowerCase();
+      if (!excluded.has(kl)) fieldsPresent.add(kl);
+    });
+  });
+
+  const ordered = [];
+  const metaArr = Array.isArray(meta) ? meta : [];
+  metaArr.forEach(m => {
+    const fn = (m.fldname || '').toString().toLowerCase();
+    if (fn && fieldsPresent.has(fn)) ordered.push(m);
+  });
+  if (!ordered.length) {
+    Object.keys(data[0] || {}).forEach(k => {
+      const kl = k.toLowerCase();
+      if (!excluded.has(kl)) ordered.push({ fldname: k, fldcap: formatFieldName(k), fdatatype: 't', cdatatype: 'Text' });
+    });
+  }
+
+  let html = '<table class="table table-sm">';
+  html += '<thead><tr>';
+  ordered.forEach(m => {
+    html += `<th>${escapeHtml(m.fldcap || formatFieldName(m.fldname))}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  data.forEach(r => {
+    html += '<tr>';
+    ordered.forEach(m => {
+      const fname = (m.fldname || '').toString();
+      let v = getRowValueCaseInsensitive(r, fname);
+      if ((m.fdatatype === 'd' || m.cdatatype === 'Date') && v) v = formatDateString(v);
+      html += `<td>${escapeHtml(v == null ? '' : String(v))}</td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  return html;
+}
+
+function smartviewFetchGroupDetailRows(ctrl, groupFilters, cb) {
+  try {
+    const baseFilters = stripSmartviewFilterTransId(ctrl.filters || []);
+    const filters = baseFilters.concat(groupFilters || []);
+    const params = {
+      adsNames: [ctrl.adsName],
+      refreshCache: false,
+      sqlParams: Object.assign({}, ctrl._entitySqlParams || {}),
+      props: {
+        ADS: false,
+        CachePermissions: true,
+        getallrecordscount: false,
+        pageno: 1,
+        pagesize: 0,
+        keyfield: "",
+        keyvalue: "",
+        sorting: ctrl.sorting || [],
+        filters: filters
+      }
+    };
+    if (ctrl.axClient_dateformat) params.props.axClient_dateformat = ctrl.axClient_dateformat;
+
+    const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+      : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+      : null;
+    if (!caller || typeof caller.GetDataFromAxList !== 'function') {
+      cb && cb(new Error('GetDataFromAxList not available'), []);
+      return;
+    }
+
+    caller.GetDataFromAxList(params, function (response) {
+      try {
+        const parsed = (typeof safeParseAxResponse === 'function')
+          ? safeParseAxResponse(response)
+          : ((typeof response === 'string') ? JSON.parse(response) : response);
+        const dsBlock = parsed?.result?.data?.[0] || parsed?.data?.[0] || parsed?.result || parsed;
+        const rows = Array.isArray(dsBlock?.data) ? dsBlock.data : (Array.isArray(parsed?.data) ? parsed.data : []);
+        cb && cb(null, rows);
+      } catch (e) {
+        cb && cb(e, []);
+      }
+    }, function (err) {
+      cb && cb(err, []);
+    });
+  } catch (e) {
+    cb && cb(e, []);
   }
 }
 
@@ -2114,6 +2548,78 @@ function smartviewResolveFilterField(rawField, metaData) {
   // - if metadata is missing, best-effort normalize
   if (arr.length) return { fldname: '', meta: null };
   return { fldname: rf.replace(/\s+/g, '').toLowerCase(), meta: null };
+}
+
+function smartviewIsNumericMetaField(meta) {
+  if (!meta) return false;
+  const ft = (meta.fdatatype || '').toString().trim().toLowerCase();
+  const ct = (meta.cdatatype || '').toString().trim().toLowerCase();
+  if (ft === 'n') return true;
+  if (ct === 'numeric' || ct === 'number' || ct === 'currency' || ct === 'decimal' || ct === 'float' || ct === 'double' || ct === 'int' || ct === 'integer') return true;
+  return false;
+}
+
+function smartviewIsAggregationExpr(val) {
+  const s = (val === null || val === undefined) ? '' : String(val).trim();
+  if (!s) return false;
+  return /^(sum|count|avg|min|max)\s*\(/i.test(s);
+}
+
+function smartviewSelectExprToFieldName(expr) {
+  const s = (expr === null || expr === undefined) ? '' : String(expr).trim();
+  if (!s) return '';
+  // If expression includes alias (e.g., "sum(ordqty) sum_ordqty"), use last token as field name.
+  const parts = s.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return parts[parts.length - 1];
+  return s;
+}
+
+function smartviewNormalizeGroupbyFields(list) {
+  const arr = Array.isArray(list) ? list : [];
+  return Array.from(new Set(arr
+    .map(x => String(x || '').trim())
+    .filter(Boolean)
+    .filter(x => !smartviewIsAggregationExpr(x))
+  ));
+}
+
+function smartviewBuildAggregationsForGroupby(metaData, groupbyCols) {
+  const meta = Array.isArray(metaData) ? metaData : [];
+  const groupSet = new Set(smartviewNormalizeGroupbyFields(groupbyCols).map(x => x.toLowerCase()));
+  const aggs = {};
+
+  meta.forEach(m => {
+    const fld = (m && m.fldname !== undefined && m.fldname !== null) ? String(m.fldname).trim() : '';
+    if (!fld) return;
+    if (groupSet.has(fld.toLowerCase())) return;
+    if (!smartviewIsNumericMetaField(m)) return;
+    const alias = (`sum_${fld}`).replace(/[^a-zA-Z0-9_]/g, '_');
+    if (!aggs[alias]) aggs[alias] = `sum(${fld})`;
+  });
+
+  return aggs;
+}
+
+function smartviewBuildGroupbyWithSums(metaData, groupbyCols) {
+  const base = smartviewNormalizeGroupbyFields(groupbyCols);
+
+  const meta = Array.isArray(metaData) ? metaData : [];
+  const groupSet = new Set(base.map(x => x.toLowerCase()));
+  const sumExprs = [];
+
+  meta.forEach(m => {
+    const fld = (m && m.fldname !== undefined && m.fldname !== null) ? String(m.fldname).trim() : '';
+    if (!fld) return;
+    if (groupSet.has(fld.toLowerCase())) return;
+    if (!smartviewIsNumericMetaField(m)) return;
+    const alias = (`sum_${fld}`).replace(/[^a-zA-Z0-9_]/g, '_');
+    sumExprs.push(`sum(${fld}) ${alias}`);
+  });
+
+  return {
+    groupby_columns: base.slice(),
+    select_columns: base.concat(sumExprs)
+  };
 }
 
 function smartviewInferFilterDatatype(rawItem, meta) {
@@ -3572,6 +4078,10 @@ class SmartViewTableController {
     this.pageno = opts.currentPage ?? 1;
     this.sorting = opts.sorting || [];
     this.filters = opts.filters || [];
+    this.axClient_dateformat = opts.axClient_dateformat || (typeof window.axClient_dateformat !== 'undefined' ? window.axClient_dateformat : "");
+    this.select_columns = Array.isArray(opts.select_columns) ? opts.select_columns.slice() : [];
+    this.groupby_columns = Array.isArray(opts.groupby_columns) ? opts.groupby_columns.slice() : [];
+    this.aggregations = (opts.aggregations && typeof opts.aggregations === 'object') ? Object.assign({}, opts.aggregations) : {};
     this.deferInitialLoad = !!opts.deferInitialLoad;
     this.refreshCache = false;
 
@@ -3604,6 +4114,8 @@ class SmartViewTableController {
     // Ensure hyperlink click handlers are attached (event delegation).
     try { attachSmartviewHyperlinkHandlers(); } catch (e) {}
     addRowOptionsStyles();
+    addHeaderMenuStyles();
+    attachSmartviewHeaderMenuHandlers();
     this.wireDom();
     this.setupSortingHeaders();
 
@@ -3821,22 +4333,29 @@ wireDom() {
   buildParams(pageNo = 1) {
     const sqlParams = Object.assign({}, (this._entitySqlParams || {}), (this.props && this.props.sqlParams) ? this.props.sqlParams : {});
     const safeFilters = stripSmartviewFilterTransId(this.filters || []);
+    const props = {
+      ADS: false,
+      CachePermissions: true,
+      // SmartView paging works without requesting total count; keep this false to avoid extra overhead.
+      getallrecordscount: false,
+      pageno: pageNo,
+      pagesize: this.pageSize,
+      keyfield: "",
+      keyvalue: "",
+      sorting: this.sorting,
+      filters: safeFilters
+    };
+
+    if (this.axClient_dateformat) props.axClient_dateformat = this.axClient_dateformat;
+    if (Array.isArray(this.select_columns) && this.select_columns.length) props.select_columns = this.select_columns.slice();
+    if (Array.isArray(this.groupby_columns) && this.groupby_columns.length) props.groupby_columns = this.groupby_columns.slice();
+    // Do not pass aggregations; use groupby_columns with sum(...) expressions instead.
+
     return {
       adsNames: [this.adsName],
       refreshCache: this.refreshCache,
       sqlParams: sqlParams,
-      props: {
-        ADS: true,
-        CachePermissions: true,
-        // SmartView paging works without requesting total count; keep this false to avoid extra overhead.
-        getallrecordscount: false,
-        pageno: pageNo,
-        pagesize: this.pageSize,
-        keyfield: "",
-        keyvalue: "",
-        sorting: this.sorting,
-        filters: safeFilters
-      }
+      props: props
     };
   }
 
@@ -3895,7 +4414,7 @@ wireDom() {
         adsNames: ['ds_smartlist_ads_metadata'],
         refreshCache: false,
         sqlParams: { adsname: this.adsName || window._entity?.adsName },
-        props: { ADS: true, CachePermissions: true, getallrecordscount: false, pageno: 1, pagesize: 500, sorting: [], filters: [] }
+        props: { ADS: false, CachePermissions: true, getallrecordscount: false, pageno: 1, pagesize: 500, sorting: [], filters: [] }
       };
   
       const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
@@ -4637,6 +5156,61 @@ attachScrollListener() {
 }
 
 
+  applyHeaderSort(fieldName, sortOrder) {
+    const field = (fieldName || '').toString().trim();
+    if (!field) return;
+    const order = (String(sortOrder || '').toLowerCase() === 'desc') ? 'desc' : 'asc';
+    this.sorting = [{ fldname: field, sort_order: order }];
+    this.resetPaging();
+    this.loadNextPage();
+  }
+
+  toggleGroupByField(fieldName) {
+    const field = (fieldName || '').toString().trim();
+    if (!field) return;
+
+    const applyGroup = (meta) => {
+      const base = smartviewNormalizeGroupbyFields(this.groupby_columns);
+      const idx = base.findIndex(f => String(f).toLowerCase() === field.toLowerCase());
+      if (idx >= 0) base.splice(idx, 1);
+      else base.push(field);
+
+      if (base.length > 0) {
+        const gb = smartviewBuildGroupbyWithSums(meta || [], base);
+        this.groupby_columns = gb.groupby_columns;
+        this.select_columns = gb.select_columns;
+        this.aggregations = {};
+      } else {
+        this.groupby_columns = [];
+        this.select_columns = [];
+        this.aggregations = {};
+      }
+
+      this.resetPaging();
+      this.loadNextPage();
+    };
+
+    const meta = (Array.isArray(this.lastAdsMeta) && this.lastAdsMeta.length)
+      ? this.lastAdsMeta
+      : (window._entity && Array.isArray(window._entity.metaData) ? window._entity.metaData : []);
+
+    if (meta && meta.length) {
+      applyGroup(meta);
+    } else if (typeof this.ensureAdsMetadata === 'function') {
+      this.ensureAdsMetadata((err, m) => applyGroup(m || []));
+    } else {
+      applyGroup([]);
+    }
+  }
+
+  clearGroupByColumns() {
+    this.groupby_columns = [];
+    this.select_columns = [];
+    this.aggregations = {};
+    this.resetPaging();
+    this.loadNextPage();
+  }
+
 
   setupSortingHeaders() {
     document.querySelectorAll("#employeeTable thead th.sortable").forEach(th => {
@@ -4662,6 +5236,7 @@ attachScrollListener() {
 
 document.addEventListener('DOMContentLoaded', function () {
   const adsFromQuery = getQueryParam('ads') || getQueryParam('adsName') || getQueryParam('adsname');
+  const groupByRaw = getQueryParam('groupby') || getQueryParam('groupBy') || getQueryParam('groupby_columns');
   const initialPayload = (typeof smartviewGetInitialFilterPayloadFromQuery === 'function')
     ? smartviewGetInitialFilterPayloadFromQuery()
     : null;
@@ -4677,6 +5252,35 @@ document.addEventListener('DOMContentLoaded', function () {
       if (titleEl) titleEl.textContent = name;
       document.title = name || document.title;
     } catch (e) {}
+  }
+
+  function parseGroupByList(raw) {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw.map(x => String(x || '').trim()).filter(Boolean);
+    return String(raw)
+      .split(',')
+      .map(s => String(s || '').trim())
+      .filter(Boolean);
+  }
+
+  function applyGroupByFromQuery(ctrl, meta) {
+    if (!groupByRaw || !ctrl) return;
+    const rawList = parseGroupByList(groupByRaw);
+    if (!rawList.length) return;
+    const resolved = [];
+    rawList.forEach(rf => {
+      const res = (typeof smartviewResolveFilterField === 'function')
+        ? smartviewResolveFilterField(rf, meta || [])
+        : { fldname: String(rf || '').trim(), meta: null };
+      const fld = (res.fldname || '').toString().trim();
+      if (fld) resolved.push(fld);
+    });
+    if (!resolved.length) return;
+
+    const gb = smartviewBuildGroupbyWithSums(meta || [], Array.from(new Set(resolved)));
+    ctrl.groupby_columns = gb.groupby_columns;
+    ctrl.select_columns = gb.select_columns;
+    ctrl.aggregations = {};
   }
 
   function startWithInitialFilters(name, rawFilters) {
@@ -4715,6 +5319,7 @@ document.addEventListener('DOMContentLoaded', function () {
             : [];
 
           ctrl.filters = mapped;
+          applyGroupByFromQuery(ctrl, meta || []);
           ctrl.deferInitialLoad = false;
           ctrl.forceClientFiltering = false;
           ctrl._filteredCache = null;
@@ -4746,9 +5351,68 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  function startWithInitialGroupBy(name) {
+    try {
+      if (!name) return false;
+      setHeaderTitle(name);
+
+      if (!window.smartTableController) {
+        window.smartTableController = new SmartViewTableController({
+          adsName: name,
+          pageSize: 100,
+          currentPage: 1,
+          sorting: [],
+          filters: [],
+          deferInitialLoad: true
+        });
+      } else {
+        const ctrl = window.smartTableController;
+        const prevAds = (ctrl.adsName || '').toString();
+        ctrl.adsName = name;
+        ctrl.deferInitialLoad = true;
+        if (!prevAds || prevAds.toLowerCase() !== name.toLowerCase()) {
+          ctrl.lastAdsMeta = null;
+          ctrl._adsMetaFor = null;
+        }
+        try { ctrl.resetPaging(); } catch (e) {}
+      }
+
+      const ctrl = window.smartTableController;
+      const applyAndLoad = function (meta) {
+        try {
+          applyGroupByFromQuery(ctrl, meta || []);
+          ctrl.deferInitialLoad = false;
+          ctrl.forceClientFiltering = false;
+          ctrl._filteredCache = null;
+          window._smartviewFullData = null;
+          try { if (typeof ctrl.resetPaging === 'function') ctrl.resetPaging(); } catch (e) {}
+          try { if (typeof ctrl.loadNextPage === 'function') ctrl.loadNextPage(); } catch (e) {}
+        } catch (e) {
+          console.warn('startWithInitialGroupBy apply failed', e);
+          try { ctrl.deferInitialLoad = false; ctrl.resetPaging(); ctrl.loadNextPage(); } catch (ex) {}
+        }
+      };
+
+      if (ctrl && typeof ctrl.ensureAdsMetadata === 'function') {
+        ctrl.ensureAdsMetadata(function (err, meta) { applyAndLoad(meta || (window._entity && window._entity.metaData) || []); });
+      } else {
+        applyAndLoad((window._entity && window._entity.metaData) || []);
+      }
+      return true;
+    } catch (e) {
+      console.warn('startWithInitialGroupBy failed', e);
+      return false;
+    }
+  }
+
   if (adsName) {
     if (initialFiltersRaw && initialFiltersRaw.length) {
       const started = startWithInitialFilters(adsName, initialFiltersRaw);
+      if (!started) {
+        setTimeout(() => { try { showAdsPickerModal(); } catch (e) {} }, 250);
+      }
+    } else if (groupByRaw) {
+      const started = startWithInitialGroupBy(adsName);
       if (!started) {
         setTimeout(() => { try { showAdsPickerModal(); } catch (e) {} }, 250);
       }

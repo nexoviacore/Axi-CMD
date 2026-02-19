@@ -484,7 +484,9 @@
     function redirectToSmartView({ adsName, filters }) {
 
 
-        let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
+        // let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
+        // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table_1769088257557.html`;
+        let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table.html`;
         // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
 
         targetUrl += `?ads=${encodeURIComponent(adsName)}`;
@@ -4449,7 +4451,8 @@ function getDateByFilter(type) {
     function redirectToAxibot() {
 
 
-        let targetUrl = "../CustomPages/axibot.html";
+        // let targetUrl = "../CustomPages/axibot.html";
+        let targetUrl = `${getAppBaseUrl()}/CustomPages/axibot.html`;
         // let targetUrl = "../axidev/HTMLPages/axibot.html";
 
 
