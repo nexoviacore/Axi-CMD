@@ -86,7 +86,9 @@
             permission: handleConfigurePermissions,
             access: handleConfigureAccess,
             schdulednotification: handleConfigureSchduledNotification,
-            keyfield: handleKeyfield
+            keyfield: handleKeyfield,
+            newsandannouncement: handleConfigureNewsAndAnnouncement,
+            settings: handleConfigureSettings,
         },
         open: {
             default: handleOpenSource,
@@ -123,7 +125,7 @@
         end: { default: handleAiEnd, },
         editprompt: { default: () => handleAiButtons("openSystemPrompt") },
         analyze: { default: () => handleAiButtons("axiLoad"), },
-        upload: { default: () => handleAiButtons("openUpload") }
+        // upload: { default: () => handleAiButtons("openUpload") }
     };
 
 
@@ -618,7 +620,7 @@
                 targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
             }
             targetUrl += `&hltype=open`;
-            targetUrl += `&dummyload=false`;
+            targetUrl += `&dummyload=false♠`;
         }
 
         top.window.LoadIframe(targetUrl);
@@ -1361,11 +1363,7 @@
         console.log("Render called");
         list.innerHTML = "";
 
-        if (items.length > 0 && isSystemMessage(items[0])) {
-            activeIndex = -1;
-        } else {
-            activeIndex = 0;
-        }
+      
 
 
         const validItems = items.filter(item => {
@@ -1380,6 +1378,21 @@
         });
 
         console.log(`Valid Items: ${validItems.length}`);
+
+          if (items.length > 0 && isSystemMessage(items[0])) {
+            activeIndex = -1;
+        } else {
+            const hasGoOption = validItems.some(item => typeof item === 'object' && item.name === "GO_ACTION");
+            const hasSaveOption = validItems.some(item => typeof item === 'object' && item.name === "Save_ACTION");
+
+            if (hasGoOption && hasSaveOption) {
+                activeIndex = 2; 
+            } else if (hasGoOption || hasSaveOption) {
+                activeIndex = 1; 
+            } else {
+                activeIndex = 0; 
+            }
+        }
 
         if (validItems.length === 0) {
             const li = document.createElement("li");
@@ -2606,6 +2619,20 @@
 
     }
 
+    function handleConfigureNewsAndAnnouncement({tokens, commandConfig}) {
+        let transId = "a__na"; 
+        const fieldname = "title";
+        
+        let rawTitle = cleanCommandToken(tokens[2]); 
+
+        setEditSessionState(transId); 
+        redirectToTstruct(transId, false, fieldname, rawTitle); 
+    }
+
+    function handleConfigureSettings({tokens, commandConfig}) {
+        window.LoadIframe("../aspx/Configuration.aspx/LoadUserAppSettings"); 
+    }
+
 
 
     function handleConfigureProperties({ tokens, commandConfig }) {
@@ -2637,7 +2664,15 @@
       */
 
     function handleUpload({ tokens, commandConfig }) {
+
+        if (mode === "ai") {
+            handleAiButtons("openUpload"); 
+
+        } else {
         window.LoadIframe("../aspx/ImportAll.aspx");
+
+
+        }
 
 
 
@@ -3674,42 +3709,135 @@
     }
 
 
-    function handleAnalyse({ tokens, commandConfig }) {
+    // function handleAnalyse({ tokens, commandConfig }) {
 
-        let targetUrl = "../aspx/Analytics.aspx";
+    //     let targetUrl = "../aspx/Analytics.aspx";
 
-        if (tokens.length === 1) {
-            targetUrl += "?calendar=t";
-            targetUrl += "&isDupTab=true-1770626614111";
-            targetUrl += "&hdnbElapsTime=0";
-        }
+    //     if (tokens.length === 1) {
+    //         targetUrl += "?calendar=t";
+    //         targetUrl += "&isDupTab=true-1770626614111";
+    //         targetUrl += "&hdnbElapsTime=0";
+    //     }
 
 
-        else {
+    //     else {
 
-            const captionSelected = cleanString(tokens[1]);
-            const transIdAnalyse = tryResolveToken(1, captionSelected, commandConfig);
+    //         const captionSelected = cleanString(tokens[1]);
+    //         const transIdAnalyse = tryResolveToken(1, captionSelected, commandConfig);
 
-            targetUrl += `?entity=${encodeURIComponent(transIdAnalyse)}`;
+    //         targetUrl += `?entity=${encodeURIComponent(transIdAnalyse)}`;
 
-            if (tokens.length == 3) {
-                let groupByFieldCaption = cleanString(tokens[2]);
-                const groupByFiedlname = tryResolveToken(2, groupByFieldCaption, commandConfig);
-                targetUrl += `&groupby=${encodeURIComponent(groupByFiedlname)}`;
-            }
-            else if (tokens.length > 3) {
-                showToast("Analyse commands requires only 3 tokens");
-                return;
-            }
+    //         if (tokens.length == 3) {
+    //             let groupByFieldCaption = cleanString(tokens[2]);
+    //             const groupByFiedlname = tryResolveToken(2, groupByFieldCaption, commandConfig);
+    //             targetUrl += `&groupby=${encodeURIComponent(groupByFiedlname)}`;
+    //         }
+    //         else if (tokens.length > 3) {
+    //             showToast("Analyse commands requires only 3 tokens");
+    //             return;
+    //         }
 
-            targetUrl += "&calendar=t";
-            targetUrl += "&isDupTab=true-1770626614111";
-            targetUrl += "&hdnbElapsTime=0";
-        }
+    //         targetUrl += "&calendar=t";
+    //         targetUrl += "&isDupTab=true-1770626614111";
+    //         targetUrl += "&hdnbElapsTime=0";
+    //     }
 
-        console.log("Target URL from analyse command : " + targetUrl);
-        window.LoadIframe(targetUrl);
-    }
+    //     console.log("Target URL from analyse command : " + targetUrl);
+    //     window.LoadIframe(targetUrl);
+    // }
+
+
+     function handleAnalyse({ tokens, commandConfig }) {
+
+     let targetUrl = "../aspx/Analytics.aspx";
+
+     let transIdAnalyse = null;
+     let groupByFiedlname = null;
+
+
+     if (tokens.length === 1) {
+             targetUrl += "?calendar=t";
+             targetUrl += "&isDupTab=true-1770626614111";
+             targetUrl += "&hdnbElapsTime=0#";
+
+             window.LoadIframe(targetUrl);
+             return;
+         }
+
+     if (tokens.length > 1) {
+         const captionSelected = cleanString(tokens[1]);
+         transIdAnalyse = tryResolveToken(1, captionSelected, commandConfig);
+
+         targetUrl += `?entity=${encodeURIComponent(transIdAnalyse)}`;
+
+         if (tokens.length >= 3) {
+             let groupByFieldCaption = cleanString(tokens[2]);
+             groupByFiedlname = tryResolveToken(2, groupByFieldCaption, commandConfig);
+         }
+     }
+
+     targetUrl += "&calendar=t";
+     targetUrl += "&isDupTab=true-1770626614111";
+     targetUrl += "&hdnbElapsTime=0";
+
+     let iframe = document.getElementById("middle1");
+
+     if (!iframe) {
+         console.log("Iframe not found");
+         return;
+     }
+
+   
+     if (tokens.length>2) {
+         iframe.onload = function () {
+
+             console.log("Analytics iframe loaded.");
+
+             setTimeout(function () {
+
+                 try {
+
+                     let iframeWindow = iframe.contentWindow;
+
+                     if (!iframeWindow || !iframeWindow._analyticsCharts) {
+                         console.log("Analytics object not ready.");
+                         return;
+                     }
+
+                     if (!transIdAnalyse) return;
+
+                     iframeWindow._analyticsCharts.getAnalyticsChartsDataWS({
+                         page: "Analytics",
+                         transId: transIdAnalyse,
+                         aggField: "count",
+                         aggTransId: transIdAnalyse,
+                         groupField: groupByFiedlname || "all",
+                         groupTransId: transIdAnalyse,
+                         aggFunc: "count"
+                     });
+
+                 }
+                 catch (ex) {
+                     console.error("Error while loading analytics:", ex);
+                 }
+                 finally {
+                     iframe.onload = null;   
+                 }
+
+             }, 100);
+
+         };
+     }
+
+
+     setEditSessionState(transIdAnalyse);
+
+     console.log("Target URL from analyse command : " + targetUrl);
+
+     if (groupByFiedlname) console.log("Group By FieldName is true,the given field is : " + groupByFiedlname);
+
+     window.LoadIframe(targetUrl);
+ }
 
 
     function resetSetCommandState() {
@@ -4571,7 +4699,34 @@
                 if (found) transId = found.name
                 else {
                     console.error("Invalid Tstruct name");
+                    showToast("Invalid Tstruct name please select the valid tstruct"); 
                     return;
+                }
+            }
+
+            const sourceName = commandConfig?.prompts?.[2]?.promptSource?.toLowerCase(); 
+            const sourceKey = `${sourceName}_${transId}`.toLowerCase(); 
+            const fieldsList = axDatasourceObj[sourceKey]; 
+
+            if (fieldsList) {
+                let startIndex = cleanCommandToken(tokens[2]).toLowerCase() === "with" ? 3: 2; 
+
+                for (let i = startIndex; i < tokens.length; i += 2) {
+                    let rawField =  cleanCommandToken(tokens[i]); 
+
+                    if (!rawField) continue; 
+
+                  const isValidField = colList.some(c => 
+                    (c.name && c.name.toLowerCase() === rawField.toLowerCase()) || 
+                    (c.caption && c.caption.toLowerCase() === rawField.toLowerCase()) || 
+                    (c.displaydata && c.displaydata.replace(/\s*\(.*?\)/g, '').trim().toLowerCase() === rawField.toLowerCase())
+                );
+
+                if (!isValidField) {
+                    console.error("Execution blocked: Invalid field name - "  + rawField);
+                    showToast(`'${rawField}' is not a valid field. Please select from the list.`, 5000, false);
+                    return;  
+                }
                 }
             }
 
