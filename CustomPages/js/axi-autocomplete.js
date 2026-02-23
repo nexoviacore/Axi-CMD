@@ -1,5 +1,5 @@
 ﻿(() => {
-
+    // 20-02-2026: Pre release version
     
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
@@ -12,7 +12,7 @@
     };
 
     const saveOption = {
-        displaydata: "Save [Ctrl +Shit + S]",
+        displaydata: "Save [Ctrl + S]",
         name: "Save_ACTION",
         isExecutable: true
     };
@@ -147,6 +147,8 @@
     let searchWrapper;
     let setCommandTransid = null;
 
+    //let cachedSessionId;
+
 
     let topToolbarButtons = null;
     let bottomToolbarButtons = null;
@@ -172,7 +174,7 @@
     let activeFetches = new Set();
     let filteredObjects = [];
     let adsfieldvalueanddt = {};
-    let fieldnamevaluesList = [];
+    let createfieldnamevaluesList = [];
     let mode = "";
     const aiModeCommands = {
         "connect": { "cmdToken": 11, "command": "", "commandGroup": "connect", "prompts": [] },
@@ -486,8 +488,8 @@
 
         // let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table_1769088257557.html`;
-        let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table.html`;
-        // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
+        // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table.html`;
+        let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
 
         targetUrl += `?ads=${encodeURIComponent(adsName)}`;
         targetUrl += "&load=1769601086182";
@@ -901,7 +903,7 @@
                 const sourcefld = columnMetadata.sourcefld;
 
                 const sourceName = "axi_adsdropdowntokens";
-                const paramValue = `${sourcetable},${sourcefld}`;
+                const paramValue = `${sourcetable}$#$${sourcefld}`;
                 const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
 
                 if (!axDatasourceObj[sourceKey]) {
@@ -1062,11 +1064,17 @@
         }
 
         ///Need to make a common function for processAdsRepetitivetokens
-        if (groupKey === "create" && tokens.length > 2) {
-            // let viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
-            let viewSource = "Axi_FieldList".toLowerCase();
-            updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "fieldname": "fieldValue"})
-            return createCommandHandling(tokens, commandConfig, viewSource);
+        if (groupKey === "create" && tokens.length > 3) {
+            let viewSource = commandConfig?.prompts?.[2]?.promptSource?.toLowerCase();
+            //let viewSource = "Axi_FieldList".toLowerCase();
+            let tokenCopy = [...tokens];
+            //let dummyValue = commandConfig?.prompts?.[1]?.promptValues.toLowerCase();
+            //let orgTokens = [...tokens];
+            //if (dummyValue) {
+            //    tokenCopy = tokenCopy.filter(t => t?.toLowerCase() !== dummyValue.toLowerCase());
+            //}
+            updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 !== 0) ? "fieldname": "fieldValue"})
+            return createCommandHandling(tokenCopy, commandConfig, viewSource);
         }
             
         if (groupKey === "run") {
@@ -1082,6 +1090,38 @@
             return processRunCommands(tokens, targetIndex, structType);
         }
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
+
+
+        ///KeyValue based edit handling.
+
+        if ((!promptInfo || tokens[3] === "with" )&& groupKey === "edit" && tokens.length >= 4) {
+
+            let viewSource;
+            if (tokens.length == 4) {
+                viewSource = commandConfig?.prompts?.[3]?.promptValues?.toLowerCase().split(',').map(v => v.trim());
+                //const partialTyped = cleanString(tokens[targetIndex]);
+                const result = viewSource.filter(val => val.toLowerCase());
+                filteredObjects = result.map(val => ({ name: val, displaydata: val }));
+
+                result.unshift(goOption);
+                filteredObjects.unshift(goOption);
+                updateDynamicHintFromPrompt({ prompt: commandConfig?.prompts?.[3]?.prompt })
+                return result;
+
+
+            }
+            else if (tokens.length >= 5) {
+                viewSource = commandConfig?.prompts?.[4]?.promptSource?.toLowerCase()
+
+                let tokenCopy = [...tokens];
+
+                updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "fieldname" : "fieldValue" })
+                return editCommandHandling(tokenCopy, commandConfig, viewSource);
+
+
+            }
+
+        }
 
         if (!promptInfo) {
             updateDynamicHintFromPrompt(null);
@@ -1101,10 +1141,17 @@
 
 
         // Scenario A: Static Values
-        if (!realSource && activePrompt.promptValues) {
+
+        ///Skipping PromptValue "With" token for edit
+        if (!realSource && activePrompt.promptValues && groupKey!== "edit") {
             const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
+
+            if (groupKey === "create" && tokens.length === 3) {
+                result.unshift(goOption);
+                filteredObjects.unshift(goOption);
+            }
             return result;
         }
 
@@ -1121,7 +1168,7 @@
                     const depToken = cleanString(tokens[depTokenIndex] || "");
                     return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
                 });
-                paramValue = values.join(',');
+                paramValue = values.join('$#$');
             }
 
 
@@ -1153,7 +1200,7 @@
                         console.log(`Hidden Param Found (Index 0): ${hiddenValue}`);
 
                         // Append hidden value to params for the MAIN list
-                        if (paramValue) paramValue += "," + hiddenValue;
+                        if (paramValue) paramValue += "$#$" + hiddenValue;
                         else paramValue = hiddenValue;
                     } else {
                         return [];
@@ -1191,7 +1238,7 @@
 
             let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
-            if ((groupKey === "view" || groupKey === "configure" || groupKey === "edit") && tokens.length > 2 && tokens[1] !== "keyfield") {
+            if ((groupKey === "view" || groupKey === "configure") && tokens.length > 2 && tokens[1] !== "keyfield") {
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
@@ -1201,6 +1248,15 @@
                 filteredObjects.unshift(goOption);
             }
 
+            //else if (groupKey === "create" && tokens.length == 3) {
+            //    resultList.unshift(goOption);
+            //    filteredObjects.unshift(goOption);
+            //}
+
+            else if (groupKey === "edit" &&  tokens.length > 4) {
+                resultList.unshift(goOption);
+                filteredObjects.unshift(goOption);
+            }
 
             return resultList;
         }
@@ -1243,7 +1299,7 @@
                     const depToken = cleanString(getTokens(input.value)[depTokenIndex] || "");
                     return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
                 });
-                paramValue = values.join(',');
+                paramValue = values.join('$#$');
             }
 
             // Append Hidden Param for Resolution Context
@@ -1254,7 +1310,8 @@
 
                 if (extraList && extraList.length > 0) {
                     const hiddenValue = extraList[0].name || extraList[0].keyfield || extraList[0].fname || extraList[0].displaydata;
-                    if (paramValue) paramValue += "," + hiddenValue;
+                    
+                    if (paramValue) paramValue += "$#$" + hiddenValue;
                     else paramValue = hiddenValue;
                 }
             }
@@ -1273,7 +1330,7 @@
                     (item.name || "").toLowerCase() === tokenText.toLowerCase()
                 );
                 if (found) {
-                    let real = found.name || found.sqlname || found.displaydata;
+                    let real = found.name  || found.sqlname || found.displaydata;
 
                     if (real.includes("(") && real.includes(")")) {
                         const match = real.match(/\(([^)]+)\)/);
@@ -1380,21 +1437,34 @@
 
         const selectedItem = items[index];
 
+
+        const currentInput = input.value;
+        const tokens = getTokens(currentInput);
+
+        const saveGroupKeyCheck = cleanString(tokens[0]).toLowerCase();
+        const saveCommandConfig = commands[saveGroupKeyCheck];
+
         if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "GO_ACTION") {
             console.log("Action item selected. Executing command...");
             hide();
             executeCommandsV2();
             return;
         }
-        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION") {
+        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck === "create") {
             console.log("Save Option Selected...Submitting Data...");
-            buildPayload(fieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", true);
+            hide();
+            AxisaveDataFn(createfieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", true, tokens, saveCommandConfig);
+            resetSetCommandState();
+            return;
+        }
+        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck === "edit") {
+            console.log("Save Option Selected...Submitting Data...");
+            hide();
+            AxisaveDataFn(createfieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", false, tokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
 
-        const currentInput = input.value;
-        const tokens = getTokens(currentInput);
         const endsWithSpace = currentInput.endsWith(" ");
         const lastTokenRaw = tokens[tokens.length - 1];
 
@@ -1447,7 +1517,7 @@
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
 
 
-        realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
+        realValue = foundObj ? (foundObj.name  || foundObj.sqlname || foundObj.displaydata) : suggestion;
 
 
 
@@ -1573,8 +1643,12 @@
 
 
             if (paramValuesCsv && typeof paramValuesCsv === "string") {
+                //const values = paramValuesCsv
+                //    .split(",")
+                //    .map(v => v.trim())
+                //    .filter(Boolean);
                 const values = paramValuesCsv
-                    .split(",")
+                    .split("$#$")
                     .map(v => v.trim())
                     .filter(Boolean);
 
@@ -1742,6 +1816,8 @@
                     adsList = null;
                     axDatasourceObj = {};
                     resolvedParams = {};
+                    createfieldnamevaluesList = [];
+                    resetSetCommandState();
 
                     await initCommands(true);
 
@@ -1805,21 +1881,35 @@
 
             const grpKey = tokens[0];
 
-            if (e.key === 'Backspace' && grpKey === "create") {
+            let saveCommandConfig;
+            if(grpKey)
+              saveCommandConfig = commands[grpKey];
+
+            if (e.key === 'Backspace' && (grpKey === "create" || grpKey === "edit") ){
                 if (input.selectionStart !== input.selectionEnd) {
                     resetSetCommandState(); 
+                    createfieldnamevaluesList = [];
                     return; 
                 }
                 e.preventDefault();
+                hide();
 
-                if (grpKey === "create") {
-                    hide(); 
-                    tokens.pop();
+                const cursorPos = input.selectionStart;
 
-                    input.value = tokens.join(" ");
+                tokens.pop();
 
-                    resetSetCommandState();
+                if (input.value[cursorPos - 1] === " ") { 
+
+                    console.log("Deleted a space using Backspace");
                 }
+                else {
+                    createfieldnamevaluesList.pop();
+                 
+                }
+                input.value = tokens.join(" ");
+
+                resetSetCommandState();
+                
 
             }
 
@@ -1912,7 +2002,11 @@
             if (e.ctrlKey && e.key.toLowerCase() === "s") {
                 e.preventDefault();
                 console.log("Save Option Selected...Submitting Data...");
-                buildPayload(fieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", true);
+                hide();
+                if (grpKey === "create")
+                    AxisaveDataFn(createfieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", true, tokens, saveCommandConfig);
+                else
+                    AxisaveDataFn(createfieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", false, tokens, saveCommandConfig);
                 resetSetCommandState();
                 return;
             }
@@ -2192,6 +2286,8 @@
 
         const extraList = axDatasourceObj[extraSourceKey];
 
+        const extraInlineValue = commandConfig?.prompts?.[3]?.promptValues;
+
 
         if (transId === rawStruct) {
             const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
@@ -2205,7 +2301,7 @@
             transId = found.name;
         }
 
-        if (tokens.length > 3) {
+        if (tokens.length > 3 && tokens.some(t => t.toLowerCase() !== extraInlineValue.toLowerCase())) {
             fieldValuePromptSource = commandConfig.prompts[2].promptSource.toLowerCase();
             rawFieldName = cleanCommandToken(tokens[2]);
             actualFieldName = tryResolveToken(2, rawFieldName, commandConfig, true);
@@ -2239,7 +2335,7 @@
             fieldValue = tryResolveToken(3, rawValue, commandConfig, false);
             fieldUniqueId = getUniqueId(fieldValue);
 
-            const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId},${actualFieldName}`.toLowerCase()];
+            const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${actualFieldName}`.toLowerCase()];
             console.log(`Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
 
             setEditSessionState(transId);
@@ -2303,7 +2399,7 @@
 
             }
 
-            const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId},${fieldName}`.toLowerCase()];
+            const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${fieldName}`.toLowerCase()];
             console.log(`Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
 
             setEditSessionState(transId);
@@ -3610,8 +3706,8 @@
         console.log("Target URL from analyse command : " + targetUrl);
         window.LoadIframe(targetUrl);
     }
-    
-    
+
+
     function resetSetCommandState() {
         SET_COMMAND_STATE.isNextField = false;
         SET_COMMAND_STATE.currentField = null;
@@ -3620,15 +3716,15 @@
         SET_COMMAND_STATE.transid = null;
         SET_COMMAND_STATE.currentFieldValue = null;
         SET_COMMAND_STATE.isDropDown = false;
-        fieldnamevaluesList = [];
+        //createfieldnamevaluesList = [];
     }
 
-    function createCommandHandling(tokens, commandConfig,createsourceObj) {
+    function createCommandHandling(tokens, commandConfig, createsourceObj) {
         //const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
         const viewSource = createsourceObj;
 
         if (SET_COMMAND_STATE.isDropDown) {
-            let acceptedValue = cleanString(tokens[tokens.length - 1]);
+            let acceptedValue = cleanString(tokens[tokens.length - 2]);
             if (acceptedValue)
                 SET_COMMAND_STATE.currentFieldValue = acceptedValue;
 
@@ -3643,16 +3739,22 @@
         else if (SET_COMMAND_STATE.currentFieldType == 'd') {
             const prevValueInSet = tokens[tokens.length - 2];
             if (prevValueInSet === "Today" || prevValueInSet === "Yesterday" ||
-         prevValueInSet === "Tomorrow" || prevValueInSet === "LastWeek" ||
-         prevValueInSet === "NextWeek" || prevValueInSet === "LastYear") {
+                prevValueInSet === "Tomorrow" || prevValueInSet === "LastWeek" ||
+                prevValueInSet === "NextWeek" || prevValueInSet === "LastYear") {
                 const dateResult = getDateByFilter(prevValueInSet);
                 let date = dateResult.date;
 
 
                 if (date !== null || date !== undefined) {
-                    let settokens = tokens
-                    let lastIndex = tokens.length - 2;
-                    let lastToken = tokens[lastIndex];
+                    let settokens = [...tokens]
+                    let lastIndex = settokens.length - 2;
+                    let lastToken = settokens[lastIndex];
+
+
+                    ///We need to use System Date Format
+                    date = formatDate(date, dateString);
+
+                    console.log("Final date:", date);
 
                     settokens[lastIndex] = date;
 
@@ -3672,9 +3774,12 @@
             else {
 
                 if (prevValueInSet == "Custom") {
-                    let settokens = tokens
-                    let lastIndex = tokens.length - 2;
-                    let lastToken = tokens[lastIndex];
+                    //let settokens = tokens
+                    //let lastIndex = tokens.length - 2;
+                    //let lastToken = tokens[lastIndex];
+                    let settokens = [...tokens]
+                    let lastIndex = settokens.length - 2;
+                    let lastToken = settokens[lastIndex];
 
                     settokens[lastIndex] = "";
 
@@ -3686,15 +3791,19 @@
                     //    fieldtype: SET_COMMAND_STATE.currentFieldType,
                     //    fieldvalue: null
                     //});
-                    showToast("Please Type the date");
-                    return [];
+                    updateDynamicHintFromPrompt({ prompt: "fieldValue" })
+                    showToast("Please Type the date", 5000, true);
+                    return ["Please Type the date"];
                 }
                 else {
+                    //const partialDate = tokens[tokens.length - 1]
                     const partialDate = tokens[tokens.length - 1]
                     let isSetValidDate = isValidDate(partialDate)
 
                     if (isSetValidDate) {
-                        const formattedDate = formatDate(partialDate, "DD/MM/YYYY");
+
+                        ///We need to use System Date Format
+                        const formattedDate = formatDate(partialDate, dateString);
                         date = formattedDate;
                         console.log("Final date:", date);
                         SET_COMMAND_STATE.currentFieldValue = date;
@@ -3702,8 +3811,8 @@
                         SET_COMMAND_STATE.isNextField = true;
 
                     }
-                    else
-                        return [];
+                    else 
+                        return ["Please type Valid date using / (ex:DD/MM/YYYY)"];
                 }
             }
 
@@ -3714,7 +3823,7 @@
             return processCreateCommand(tokens, commandConfig, viewSource);
     }
 
-    function processCreateCommand(tokens, commandConfig,createCommandSourceObj) {
+    function processCreateCommand(tokens, commandConfig, createCommandSourceObj) {
         const targetIndex = tokens.length - 1;
         const partialTyped = cleanString(tokens[targetIndex]);
 
@@ -3723,25 +3832,25 @@
 
         if (SET_COMMAND_STATE.transid === null || setCommandTransid !== SET_COMMAND_STATE.transid) {
             SET_COMMAND_STATE = {
-                    isNextField: false,
-                    currentField: null,
-                    currentFieldType:null,
-                    isFirst: true,
-                    transid: setCommandTransid,
-                    currentFieldValue: null,
-                    isDropDown: false
+                isNextField: false,
+                currentField: null,
+                currentFieldType: null,
+                isFirst: true,
+                transid: setCommandTransid,
+                currentFieldValue: null,
+                isDropDown: false
 
             };
         }
 
 
-        if (targetIndex % 2 == 0) {
+        if (targetIndex % 2 !== 0) {
             const sourceName = createCommandSourceObj.toLowerCase();
             const sourceKey = `${sourceName}_${setCommandTransid}`.toLowerCase();
 
             if (SET_COMMAND_STATE.currentField) {
                 let previousColumnName = SET_COMMAND_STATE.currentField;
-                previousColumnName = tryResolveToken(targetIndex-2, previousColumnName, commandConfig, false);
+                previousColumnName = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
                 let previousColumnValue = SET_COMMAND_STATE.currentFieldValue;
                 AddFieldstoList(previousColumnName, 1, previousColumnValue);
             }
@@ -3757,7 +3866,7 @@
 
 
             const usedColumns = new Set();
-            for (let i = 2; i < targetIndex; i += 2) {
+            for (let i = 3; i < targetIndex; i += 2) {
                 const usedToken = cleanString(tokens[i]).toLowerCase();
                 usedColumns.add(usedToken);
             }
@@ -3778,7 +3887,7 @@
 
             let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
-            if (SET_COMMAND_STATE.currentField) {
+            if (SET_COMMAND_STATE.currentField || (targetIndex % 2 !== 0 && targetIndex >= 4)) {
                 resultList.unshift(goOption);
                 resultList.unshift(saveOption);
                 filteredObjects.unshift(goOption);
@@ -3818,7 +3927,11 @@
                 const colSourceKey = createCommandSourceObj + `_${setCommandTransid}`.toLowerCase();
                 const colList = axDatasourceObj[colSourceKey];
 
-                if (!colList) return [];
+                if (!colList) {
+                    console.log("In processCreateCommond " + createCommandSourceObj + " is empty");
+                    showToast("Please Try Again Later.");
+                    return [];
+                }
 
                 const columnMetadata = colList.find(
                     c =>
@@ -3826,7 +3939,20 @@
                         c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
                 ) || null;
 
-                if (!columnMetadata) return [];
+                if (!columnMetadata) {
+                    console.log("Selected Field Name is Not in the List " + prevColumnName);
+                    showToast("Please Select Fields from the list");
+
+                    let settokens = [...tokens]
+                    let lastIndex = settokens.length - 2;
+                    let lastToken = settokens[lastIndex];
+
+                    settokens[lastIndex] = "";
+
+                    input.value = settokens.join(" ");
+                    updateDynamicHintFromPrompt({ prompt: "fieldName" })
+                    return [];
+                }
 
                 let isAccept;
 
@@ -3852,7 +3978,9 @@
                         let acceptedValue = cleanString(tokens[tokens.length - 1]);
                         if (acceptedValue)
                             SET_COMMAND_STATE.currentFieldValue = acceptedValue;
-                       
+                        else {
+                            return ["Please type the value..."];
+                        }
                         return [];
 
                     }
@@ -3863,14 +3991,19 @@
                         const sourceName = "axi_firesql";
 
 
-                        var params1 = columnMetadata.fldsql; 
-                        var params2 = $("#middle1")[0].contentWindow.Parameters; 
+                        var params1 = columnMetadata.fldsql;
+                        var params2 = prepareKeyValueString(allGloblVars);
+                        console.log(params2);
+                        var params3 = columnMetadata.normalized;
+                        var params4 = columnMetadata.fromlist;
 
-                        params2 += ";" + getFieldNameandItsValue(tokens, commandConfig);
+                        params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList, commandConfig);
+
+                        console.log(params2);
 
 
 
-                        const paramValue = `${params1},${params2}`;
+                        const paramValue = `${params1}$#$${params2}$#$${params3}$#$${params4}`;
                         const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
 
                         if (!axDatasourceObj[sourceKey]) {
@@ -3934,22 +4067,410 @@
         }
     }
 
+    function editCommandHandling(tokens, commandConfig, createsourceObj) {
+        //const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
+        const viewSource = createsourceObj;
 
+        if (SET_COMMAND_STATE.isDropDown) {
+            let acceptedValue = cleanString(tokens[tokens.length - 2]);
+            if (acceptedValue)
+                SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+
+            SET_COMMAND_STATE.isDropDown = false;
+        }
+
+
+        if (SET_COMMAND_STATE.currentFieldType == 'n') {
+
+            return processEditCommand(tokens, commandConfig, viewSource);
+        }
+        else if (SET_COMMAND_STATE.currentFieldType == 'd') {
+            const prevValueInSet = tokens[tokens.length - 2];
+            if (prevValueInSet === "Today" || prevValueInSet === "Yesterday" ||
+                prevValueInSet === "Tomorrow" || prevValueInSet === "LastWeek" ||
+                prevValueInSet === "NextWeek" || prevValueInSet === "LastYear") {
+                const dateResult = getDateByFilter(prevValueInSet);
+                let date = dateResult.date;
+
+
+                if (date !== null || date !== undefined) {
+                    let settokens = [...tokens]
+                    let lastIndex = settokens.length - 2;
+                    let lastToken = settokens[lastIndex];
+
+
+                    ///We need to use System Date Format
+                    date = formatDate(date, dateString);
+
+                    console.log("Final date:", date);
+
+                    settokens[lastIndex] = date;
+
+                    input.value = settokens.join(" ");
+
+                    SET_COMMAND_STATE.currentFieldValue = date;
+
+                    //// set in resolve params.
+                    //resolvedParamsCopy.fields.push({
+                    //    fieldname: SET_COMMAND_STATE.currentField,
+                    //    fieldtype: SET_COMMAND_STATE.currentFieldType,
+                    //    fieldvalue: date
+                    //});
+
+                }
+            }
+            else {
+
+                if (prevValueInSet == "Custom") {
+                    //let settokens = tokens
+                    //let lastIndex = tokens.length - 2;
+                    //let lastToken = tokens[lastIndex];
+                    let settokens = [...tokens]
+                    let lastIndex = settokens.length - 2;
+                    let lastToken = settokens[lastIndex];
+
+                    settokens[lastIndex] = "";
+
+                    input.value = settokens.join(" ");
+
+                    ///// set as empty.
+                    //resolvedParamsCopy.fields.push({
+                    //    fieldname: SET_COMMAND_STATE.currentField,
+                    //    fieldtype: SET_COMMAND_STATE.currentFieldType,
+                    //    fieldvalue: null
+                    //});
+                    showToast("Please Type the date", 5000, true);
+                    updateDynamicHintFromPrompt({ prompt: "fieldValue" })
+                    return ["Please Type the date"];
+                }
+                else {
+                    //const partialDate = tokens[tokens.length - 1]
+                    const partialDate = tokens[tokens.length - 1]
+
+                    let isSetValidDate = isValidDate(partialDate)
+
+                    if (isSetValidDate) {
+
+                        ///We need to use System Date Format
+                        const formattedDate = formatDate(partialDate, dateString);
+                        date = formattedDate;
+                        console.log("Final date:", date);
+                        SET_COMMAND_STATE.currentFieldValue = date;
+                        SET_COMMAND_STATE.currentFieldType = null;
+                        SET_COMMAND_STATE.isNextField = true;
+
+                    }
+                    else
+                        return ["Please type Valid Date"];
+                }
+            }
+
+            return processEditCommand(tokens, commandConfig, viewSource);
+
+        }
+        else
+            return processEditCommand(tokens, commandConfig, viewSource);
+    }
+
+    function processEditCommand(tokens, commandConfig, createCommandSourceObj) {
+        const targetIndex = tokens.length - 1;
+        const partialTyped = cleanString(tokens[targetIndex]);
+
+        const createTransId = cleanCommandToken(tokens[1]);
+        setCommandTransid = tryResolveToken(1, createTransId, commandConfig, false);
+
+        if (SET_COMMAND_STATE.transid === null || setCommandTransid !== SET_COMMAND_STATE.transid) {
+            SET_COMMAND_STATE = {
+                isNextField: false,
+                currentField: null,
+                currentFieldType: null,
+                isFirst: true,
+                transid: setCommandTransid,
+                currentFieldValue: null,
+                isDropDown: false
+
+            };
+        }
+
+
+        if (targetIndex % 2 == 0) {
+            const sourceName = createCommandSourceObj.toLowerCase();
+            const sourceKey = `${sourceName}_${setCommandTransid}`.toLowerCase();
+
+            if (SET_COMMAND_STATE.currentField) {
+                let previousColumnName = SET_COMMAND_STATE.currentField;
+                previousColumnName = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
+                let previousColumnValue = SET_COMMAND_STATE.currentFieldValue;
+                AddFieldstoList(previousColumnName, 1, previousColumnValue);
+            }
+
+
+            if (!axDatasourceObj[sourceKey]) {
+                loadList(sourceName, setCommandTransid);
+                return ["Loading Field list..."];
+            }
+
+            const list = axDatasourceObj[sourceKey];
+            if (!Array.isArray(list)) return [];
+
+
+            const usedColumns = new Set();
+            for (let i = 4; i < targetIndex; i += 2) {
+                const usedToken = cleanString(tokens[i]).toLowerCase();
+                usedColumns.add(usedToken);
+            }
+
+            const filtered = list.filter(col => {
+                const rawDisplay = (col.displaydata || col.name).toLowerCase();
+                const cleanDisplay = rawDisplay
+                    .replace(/\s*\(.*?\)/g, "")
+                    .replace(/\s*\[[^\]]+\]\s*$/, "")
+                    .trim();
+                const rawName = (col.name || "").toLowerCase();
+                const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+                const matchesInput = cleanDisplay.includes(partialTyped.toLowerCase());
+                return !isUsed && matchesInput;
+            });
+
+            filteredObjects = filtered;
+
+            let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+            if (SET_COMMAND_STATE.currentField || (targetIndex % 2 !== 0 && targetIndex >= 4)) {
+                //resultList.unshift(goOption);
+                resultList.unshift(saveOption);
+                //filteredObjects.unshift(goOption);
+                filteredObjects.unshift(saveOption);
+            }
+            //else if (tokens.length >= 3) {
+            //    //resultList.unshift(goOption);
+            //    //filteredObjects.unshift(goOption);
+            //}
+
+
+            SET_COMMAND_STATE.currentField = null;
+            SET_COMMAND_STATE.currentFieldType = null
+            SET_COMMAND_STATE.currentFieldValue = null;
+            SET_COMMAND_STATE.isNextField = false;
+            SET_COMMAND_STATE.isDropDown = false;
+
+
+
+
+            return resultList;
+        }
+
+        //else if (targetIndex <=3) {
+        //    const sourceName = createCommandSourceObj.toLowerCase();
+        //    const sourceKey = `${sourceName}_${setCommandTransid}`.toLowerCase();
+
+        //    if (!axDatasourceObj[sourceKey]) {
+        //        loadList(sourceName, setCommandTransid);
+        //        return ["Loading Field list..."];
+        //    }
+
+        //    const list = axDatasourceObj[sourceKey];
+        //    if (!Array.isArray(list)) return [];
+
+
+        //    const filtered = list.filter(col => {
+        //        const rawDisplay = (col.displaydata || col.name).toLowerCase();
+        //        const cleanDisplay = rawDisplay
+        //            .replace(/\s*\(.*?\)/g, "")
+        //            .replace(/\s*\[[^\]]+\]\s*$/, "")
+        //            .trim();
+        //        const rawName = (col.name || "").toLowerCase();
+        //        const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+        //        const matchesInput = cleanDisplay.includes(partialTyped.toLowerCase());
+        //        return !isUsed && matchesInput;
+        //    });
+
+        //    filteredObjects = filtered;
+
+        //    let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+        //    return resultList;
+        //}
+        else {
+
+            if (!SET_COMMAND_STATE.isNextField) {
+                let prevColumnName
+                if (!SET_COMMAND_STATE.currentField) {
+                    prevColumnName = cleanString(tokens[targetIndex - 1]);
+                    SET_COMMAND_STATE.currentField = prevColumnName;
+                }
+                else
+                    prevColumnName = SET_COMMAND_STATE.currentField;
+
+
+                const colSourceKey = createCommandSourceObj + `_${setCommandTransid}`.toLowerCase();
+                const colList = axDatasourceObj[colSourceKey];
+
+                if (!colList) {
+                    console.log("In processCreateCommond " + createCommandSourceObj + " is empty");
+                    showToast("Please Try Again Later.");
+                    return [];
+                }                     
+
+                const columnMetadata = colList.find(
+                    c =>
+                        c.name?.toLowerCase() === prevColumnName.toLowerCase() ||
+                        c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
+                ) || null;
+
+                if (!columnMetadata) {
+                    console.log("Selected Field Name is Not in the List " + prevColumnName);
+                    showToast("Please Select Fields from the list");
+
+                    let settokens = [...tokens]
+                    let lastIndex = settokens.length - 2;
+                    let lastToken = settokens[lastIndex];
+
+                    settokens[lastIndex] = "";
+
+                    input.value = settokens.join(" ");
+                    updateDynamicHintFromPrompt({ prompt: "fieldName" })
+                    return [];
+                }
+
+                let isAccept;
+
+                if (columnMetadata.moe === "a") {
+                    isAccept = true;
+                } else {
+                    isAccept = false;
+                }
+
+
+
+                let datatype;
+
+                if (SET_COMMAND_STATE.currentFieldType === null) {
+                    datatype = columnMetadata.datatype;
+                    SET_COMMAND_STATE.currentFieldType = datatype;
+                }
+                else datatype = SET_COMMAND_STATE.currentFieldType;
+
+
+                if (datatype === 'c' || datatype === 'n') {
+                    if (isAccept) {
+                        let acceptedValue = cleanString(tokens[tokens.length - 1]);
+                        if (acceptedValue)
+                            SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+                        else {
+                            return ["Please type the value..."];;
+                        }
+
+                    }
+                    else {
+
+                        SET_COMMAND_STATE.isDropDown = true;
+                        const acceptedValue = cleanString(tokens[tokens.length - 1]);
+                        const sourceName = "axi_firesql";
+
+
+                        var params1 = columnMetadata.fldsql;
+                        var params2 = prepareKeyValueString(allGloblVars);
+                        console.log(params2);
+                        var params3 = columnMetadata.normalized;
+                        var params4 = columnMetadata.fromlist;
+
+
+                        params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList, commandConfig);
+
+                        console.log(params2);
+
+
+
+                        const paramValue = `${params1}$#$${params2}$#$${params3}$#$${params4}`;
+                        const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
+
+                        if (!axDatasourceObj[sourceKey]) {
+                            loadList(sourceName, paramValue);
+                            return ["Loading values..."];
+                        }
+
+                        const list = axDatasourceObj[sourceKey];
+                        if (!Array.isArray(list)) return [];
+
+                        const filtered = list.filter(col => {
+                            const rawDisplay = String(col.displaydata || col.name)
+                                .toLowerCase();
+
+                            const normalizedTypedValue = (acceptedValue ?? "")
+                                .toLowerCase();
+
+                            return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
+                        });
+
+
+                        return filtered.map(col => col.displaydata || col.name);
+                    }
+                }
+                else if (datatype === 'd') {
+
+
+                    const acceptedValue = cleanString(tokens[tokens.length - 1]);
+
+                    const list = [
+                        "Today",
+                        "Yesterday",
+                        "Tomorrow",
+                        "LastWeek",
+                        "NextWeek",
+                        "LastYear",
+                        "Custom"
+                    ];
+
+                    const filtered = list.filter(col => {
+
+                        const rawDisplay = col.toLowerCase();
+
+                        const normalizedTypedValue = (acceptedValue ?? "")
+                            .toLowerCase();
+
+                        return rawDisplay.includes(normalizedTypedValue);
+                    });
+
+
+                    return filtered;
+
+
+                }
+
+                //else if (datatype === 'd') {
+
+                //}
+            }
+            else return [];
+        }
+    }
     function AddFieldstoList(fieldName, rowNo, value) {
 
-        if (fieldName !== null ||fieldName !== undefined || fieldName !== "" || value !== null ||value !== undefined ||value !== "") {
-            const formatted = `${fieldName}~${rowNo}=${value}`;
+        if (!fieldName || !value) return;
 
-            fieldnamevaluesList.push(formatted);
+        const keyPrefix = `${fieldName}~${rowNo}=`;
+        const existingIndex = createfieldnamevaluesList.findIndex(item =>
+            item.startsWith(keyPrefix)
+        );
+
+        const formatted = `${fieldName}~${rowNo}=${value}`;
+
+        if (existingIndex !== -1) {
+            if (createfieldnamevaluesList[existingIndex] !== formatted) {
+                createfieldnamevaluesList[existingIndex] = formatted;
+            }
+        } else {
+            createfieldnamevaluesList.push(formatted);
         }
     }
 
 
     function getTransID() {
 
-       // const iframes = document.querySelectorAll("iframe");
+        // const iframes = document.querySelectorAll("iframe");
 
-       // console.log(iframes);
+        // console.log(iframes);
 
         const currentIframe = document.getElementById("middle1");
 
@@ -3981,8 +4502,8 @@
     }
 
 
-    function AxisetFieldValue(actualFieldName,value,rowNo) {
-        const fldid = actualFieldName +"000F"+ rowNo;
+    function AxisetFieldValue(actualFieldName, value, rowNo) {
+        const fldid = actualFieldName + "000F" + rowNo;
 
         const iframe = document.getElementById("middle1");
 
@@ -4003,12 +4524,17 @@
                 ///
                 /// For dependency we need to verify this logic.
                 ////
+                
                 iframeDocElement.value = value;
+
                 iframeDocElement.dispatchEvent(new Event("input", { bubbles: true }));
                 iframeDocElement.dispatchEvent(new Event("change", { bubbles: true }));
                 iframeDocElement.dispatchEvent(new Event("blur", { bubbles: true }));
-                //iframeDoc.UpdateFieldArray(fldid, rowNo, fldValue, "parent", "");
-                //iframeDoc.CallSetFieldValue(fldid, fldValue);
+
+
+                ///Product Field Set Logic
+                //iframeDoc.UpdateFieldArray(fldid, rowNo, value, "parent", "");
+                //iframeDoc.CallSetFieldValue(fldid, value);
                 //iframeDoc.MainBlur($(fldid));
                 return true;
             }
@@ -4021,7 +4547,7 @@
 
     function handleCreate({ tokens, commandConfig }) {
 
-        if (tokens.length <2) {
+        if (tokens.length < 2) {
             console.warn("create command requires <tstructname> <fieldname> <fieldvalue>");
             showToast("create command requires <tstructname> <fieldname> <fieldvalue>");
             return;
@@ -4053,37 +4579,60 @@
         let rawName = cleanCommandToken(tokens[1]);
         let transId = tryResolveToken(1, rawName, commandConfig, false);
 
-
-        let CurrentOpentstructName = getTransID();
-
-        if (CurrentOpentstructName === transId.toLowerCase()) {
-
-            for (let i = 2; i < tokens.length; i += 2) {
-
-                const fieldname = cleanCommandToken(tokens[i]);
-                const actualFieldName = tryResolveToken(i, fieldname, commandConfig, false);
-                const value = cleanCommandToken(tokens[i + 1]);
-                const rowNo = "1";
-
-                if (!fieldname || value == null || value === "") {
-                    console.log(`SET FAILED → ${fieldname} = ${value}`);
-                    continue;
-                }
-
-
-                let resultOfSetFieldValue = AxisetFieldValue(actualFieldName, value, rowNo);
-
-                if (resultOfSetFieldValue) {
-                    console.log(`SET SUCCESS → ${fieldname} = ${value}`);
-                    continue;
-
-                }
-                else {
-                    console.log(`SET FAILED → ${fieldname} = ${value}`);
-                }
-            }
+        if (!transId || createfieldnamevaluesList.length == 0) {
+            console.log("Missing transaction ID or field values.");
+            showToast("Some required information is missing. Please re-enter the command and try again.");
+            return;
         }
-        else { 
+
+        //let CurrentOpentstructName = getTransID();
+
+        //if (CurrentOpentstructName === transId.toLowerCase()) {
+
+        //    //for (let i = 2; i < tokens.length; i += 2) {
+
+        //    for (let i = 0; i < createfieldnamevaluesList.length; i++) {
+
+        //        const item = createfieldnamevaluesList[i];
+        //        if (!item) continue;
+
+        //        const parts = item.split("=");
+        //        if (parts.length !== 2) continue;
+
+        //        const left = parts[0];
+        //        const value = parts[1];
+        //        const leftParts = left.split("~");
+        //        if (leftParts.length !== 2) continue;
+        //        const fieldname = leftParts[0];
+        //        const rowNo = leftParts[1];
+
+        //        //const fieldname = cleanCommandToken(tokens[i]);
+        //        //const actualFieldName = tryResolveToken(i+3, fieldname, commandConfig, false);
+        //        const actualFieldName = fieldname;
+        //        //const value = cleanCommandToken(tokens[i + 1]);
+        //        //const rowNo = "1";
+
+        //        if (!fieldname || value == null || value === "") {
+        //            console.log(`SET FAILED → ${fieldname} = ${value}`);
+        //            continue;
+        //        }
+
+
+        //        let resultOfSetFieldValue = AxisetFieldValue(actualFieldName, value, rowNo);
+
+        //        if (resultOfSetFieldValue) {
+        //            console.log(`SET SUCCESS → ${fieldname} = ${value}`);
+        //            continue;
+
+        //        }
+        //        else {
+        //            console.log(`SET FAILED → ${fieldname} = ${value}`);
+        //        }
+        //    }
+        //    createfieldnamevaluesList = []
+        //}
+        //else 
+        //{
             console.log("Form not loaded. Attaching onload and redirecting...");
 
             let iframe = null;
@@ -4097,20 +4646,37 @@
                     return;
                 }
 
+              
                 iframe.onload = function () {
-
+                    //we can also try: 0 (minimum delay),50,100,200 (if needed)
                     console.log("Iframe loaded. Setting all fields now...");
-
+                    setTimeout(function () {
                     try {
 
-                        for (let j = 2; j < tokens.length; j += 2) {
+                        console.log(createfieldnamevaluesList);
+                        //for (let j = 2; j < tokens.length; j += 2) {
+                        for (let j = 0; j < createfieldnamevaluesList.length; j++) {
 
-                            const fname = cleanCommandToken(tokens[j]);
-                            const actualFName = tryResolveToken(j, fname, commandConfig, false);
-                            const val = cleanCommandToken(tokens[j + 1]);
-                            let rowNo = "1";
+                            const item = createfieldnamevaluesList[j];
+                            if (!item) continue;
 
-                            if (!fname || val == null || val === "") {
+                            const parts = item.split("=");
+                            if (parts.length !== 2) continue;
+
+                            const left = parts[0];
+                            const val = parts[1];
+                            const leftParts = left.split("~");
+                            if (leftParts.length !== 2) continue;
+                            const fieldname = leftParts[0];
+                            const rowNo = leftParts[1];
+
+                            //const fname = cleanCommandToken(tokens[j]);
+                            //const actualFName = tryResolveToken(j + 3, fieldname, commandConfig, false);
+                            const actualFName = fieldname;
+                            //const value = cleanCommandToken(tokens[i + 1]);
+                            //let rowNo = "1";
+
+                            if (!actualFName || val == null || val === "") {
                                 console.log(`SET FAILED → ${fname} = ${val}`);
                                 continue;
                             }
@@ -4118,10 +4684,10 @@
                             let resultOfSetFieldValue = AxisetFieldValue(actualFName, val, rowNo);
 
                             if (resultOfSetFieldValue) {
-                                console.log(`SET SUCCESS → ${fname} = ${val}`);
+                                console.log(`SET SUCCESS → ${actualFName} = ${val}`);
                             }
                             else {
-                                console.log(`SET FAILED → ${fname} = ${val}`);
+                                console.log(`SET FAILED → ${actualFName} = ${val}`);
                             }
                         }
 
@@ -4131,14 +4697,19 @@
                     }
                     finally {
                         iframe.onload = null;
-                    }
+                        createfieldnamevaluesList = [];
+                        }
+                    }, 100);
                 };
+
+                setEditSessionState(transId);
 
                 redirectToTstruct(transId);
 
             }
             catch (ex) {
                 console.log("Error in handleCreate: " + ex);
+                createfieldnamevaluesList = [];
             }
             //finally {
             //    if (iframe) {
@@ -4147,35 +4718,51 @@
             //}
 
 
-        }
+        //}
     }
 
-    function getFieldNameandItsValue(tokens,commandConfig) {
+    function prepareKeyValueString(data) {
+        if (!data || !Array.isArray(data.globalVars)) return "";
 
-        let valueReturn = "";
-
-        if (!tokens || tokens.length <= 2) {
-            return valueReturn;
-        }
-
-        for (let i = 2; i < tokens.length; i += 2) {
-            const fieldname = cleanCommandToken(tokens[i]);
-            if (!fieldname) continue;
-            const actualFieldName = tryResolveToken(i, fieldname, commandConfig, false);
-            if (i + 1 < tokens.length) {
-                const value = cleanCommandToken(tokens[i + 1]);
-                if (value !== undefined && value !== null) {
-                    valueReturn += actualFieldName + "~" + value + ";";
-                }
-                else {
-                    valueReturn += actualFieldName + ";";
-                }
-            } else {
-                valueReturn += actualFieldName + ";";
-            }
-        }
-        return valueReturn;
+        return data.globalVars
+            .map(obj => {
+                const key = Object.keys(obj)[0];
+                const value = obj[key];
+                return key + "~" + value;
+            })
+            .join(";");
     }
+    function getFieldNameandItsValue(fieldValueList, commandConfig) {
+
+        let fieldValue = "";
+
+        if (!fieldValueList || fieldValueList.length === 0) {
+            return fieldValue;
+        }
+
+        for (let i = 0; i < fieldValueList.length; i++) {
+
+            let item = fieldValueList[i];
+
+            if (!item) continue;
+
+            let parts = item.split("=");
+
+            if (parts.length !== 2) continue;
+
+            let leftPart = parts[0];  
+            let valuePart = parts[1];  
+
+            let fieldParts = leftPart.split("~");
+
+            let fieldName = fieldParts[0];  
+
+            fieldValue += fieldName + "~" + valuePart + ";";
+        }
+
+        return fieldValue;
+    }
+
 
 
     function isValidDate(value) {
@@ -4228,8 +4815,7 @@
 
         if (typeof date === "string") {
             let m;
-            if ((m = date.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/)) || (m = date.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)))
-            {
+            if ((m = date.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/)) || (m = date.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) {
                 date = new Date(
                     m[1].length === 4 ? m[1] : m[3],
                     (m[1].length === 4 ? m[2] : m[2]) - 1,
@@ -4237,8 +4823,8 @@
                 );
 
             } else {
-                return null; 
-            }          
+                return null;
+            }
         }
 
         if (!(date instanceof Date) || isNaN(date.getTime())) {
@@ -4249,29 +4835,29 @@
         const mm = String(date.getMonth() + 1).padStart(2, "0");
         const yyyy = date.getFullYear();
 
-        switch (format) {
-            case "YYYYMMDD":
+        switch (format.toLowerCase()) {
+            case "YYYYMMDD".toLowerCase() :
                 return `${yyyy}${mm}${dd}`;
 
-            case "DDMMYYYY":
+            case "DDMMYYYY".toLowerCase() :
                 return `${dd}${mm}${yyyy}`;
 
-            case "YYYY-MM-DD":
+            case "YYYY-MM-DD".toLowerCase() :
                 return `${yyyy}-${mm}-${dd}`;
 
-            case "DD-MM-YYYY":
+            case "DD-MM-YYYY".toLowerCase() :
                 return `${dd}-${mm}-${yyyy}`;
 
-            case "YYYY/MM/DD":
+            case "YYYY/MM/DD".toLowerCase() :
                 return `${yyyy}/${mm}/${dd}`;
 
-            case "DD/MM/YYYY":
+            case "DD/MM/YYYY".toLowerCase() :
                 return `${dd}/${mm}/${yyyy}`;
 
-            case "YYYY.MM.DD":
+            case "YYYY.MM.DD".toLowerCase() :
                 return `${yyyy}.${mm}.${dd}`;
 
-            case "DD.MM.YYYY":
+            case "DD.MM.YYYY".toLowerCase() :
                 return `${dd}.${mm}.${yyyy}`;
 
             default:
@@ -4280,180 +4866,539 @@
     }
 
 
-function getDateByFilter(type) {
-    const baseDate = new Date();
-    baseDate.setHours(0, 0, 0, 0);
+    function getDateByFilter(type) {
+        const baseDate = new Date();
+        baseDate.setHours(0, 0, 0, 0);
 
-    let date = null;
-    type = type.toLowerCase();
+        let date = null;
+        type = type.toLowerCase();
 
-    switch (type) {
-        case "today":
-            date = formatDate(baseDate, "DD/MM/YYYY");
-            break;
+        switch (type) {
+            case "today":
+                date = formatDate(baseDate, "DD/MM/YYYY");
+                break;
 
-        case "yesterday": {
-            const d = new Date(baseDate);
-            d.setDate(d.getDate() - 1);
-            date = formatDate(d, "DD/MM/YYYY");
-            break;
+            case "yesterday": {
+                const d = new Date(baseDate);
+                d.setDate(d.getDate() - 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "tomorrow": {
+                const d = new Date(baseDate);
+                d.setDate(d.getDate() + 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "lastweek": {
+                const d = new Date(baseDate);
+                d.setDate(d.getDate() - 7);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "nextweek": {
+                const d = new Date(baseDate);
+                d.setDate(d.getDate() + 7);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "lastyear": {
+                const d = new Date(baseDate);
+                d.setFullYear(d.getFullYear() - 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "custom":
+            default:
+                return {
+                    date: "",
+                    openDatePicker: true
+                };
         }
 
-        case "tomorrow": {
-            const d = new Date(baseDate);
-            d.setDate(d.getDate() + 1);
-            date = formatDate(d, "DD/MM/YYYY");
-            break;
-        }
-
-        case "lastweek": {
-            const d = new Date(baseDate);
-            d.setDate(d.getDate() - 7);
-            date = formatDate(d, "DD/MM/YYYY");
-            break;
-        }
-
-        case "nextweek": {
-            const d = new Date(baseDate);
-            d.setDate(d.getDate() + 7);
-            date = formatDate(d, "DD/MM/YYYY");
-            break;
-        }
-
-        case "lastyear": {
-            const d = new Date(baseDate);
-            d.setFullYear(d.getFullYear() - 1);
-            date = formatDate(d, "DD/MM/YYYY");
-            break;
-        }
-
-        case "custom":
-        default:
-            return {
-                date: "",
-                openDatePicker: true
-            };
+        return {
+            date,
+            openDatePicker: false
+        };
     }
 
-    return {
-        date,
-        openDatePicker: false
-    };
-    }
 
+    async function getARMSessionId() {
+        if (cachedSessionId) return cachedSessionId;
 
-    function buildPayload(fieldnamevaluesList, transid, sourceName, isCreate) {
-
-
-        //const sessionResponse = fetch("GetSession", {
-        //    method: "POST"
-        //});
-        let sessionId;
-        getSession("ARM_SessionId").then(getSession_resp => {
-            sessionId = getSession_resp.d;
-            console.log(sessionId);
+        const res = await fetch(webUrl + "/WebService.asmx/GetSession", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: "ARM_SessionId" })
         });
 
-        if (!sessionId) return ["Session expired"]
- 
-        //const sessionId = getSession("ARM_SessionId");
-        //if (!sessionId) return ["Session expired"];
+        const data = await res.json();
+        cachedSessionId = data.d;
 
-        const colSourceKey = (sourceName + "_" + transid).toLowerCase();
-        const colList = axDatasourceObj[colSourceKey];
+        return cachedSessionId;
+    }
 
-        const submitdata = {};
 
-        for (let i = 0; i < fieldnamevaluesList.length; i++) {
 
-            const item = fieldnamevaluesList[i];
+    //function AxisaveDataFn(createfieldnamevaluesList, transid, sourceName, isCreate) {
 
-            const parts = item.split("=");
-            const left = parts[0];
-            const value = parts[1];
 
-            const leftParts = left.split("~");
-            const fieldName = leftParts[0];
-            const rowNo = leftParts[1];
+    //    //const sessionResponse = fetch("GetSession", {
+    //    //    method: "POST"
+    //    //});
+    //    let sessionId;
+    //    getARMSessionId().then(sessionIdFetch => {
+    //        sessionId = sessionIdFetch;
+    //        console.log(sessionIdFetch);
+    //    });
 
-            const columnMetadata = colList.find(c =>
-                c.name?.toLowerCase() === fieldName.toLowerCase()
-            );
+    //    if (!sessionId) return ["Session expired"]
 
-            if (!columnMetadata) continue;
+    //    //const sessionId = getSession("ARM_SessionId");
+    //    //if (!sessionId) return ["Session expired"];
 
-            const dcName = columnMetadata.dcname;
-            const isGrid = columnMetadata.asgrid;
+    //    const colSourceKey = (sourceName + "_" + transid).toLowerCase();
+    //    const colList = axDatasourceObj[colSourceKey];
 
-            if (!submitdata[dcName]) {
-                submitdata[dcName] = {};
-            }
+    //    const submitdata = {};
 
-            const rowKey = isGrid ? "row" + rowNo : "row1";
+    //    for (let i = 0; i < createfieldnamevaluesList.length; i++) {
 
-            if (!submitdata[dcName][rowKey]) {
-                submitdata[dcName][rowKey] = {};
-            }
+    //        const item = createfieldnamevaluesList[i];
 
-            // If EDIT → add edit-specific fields
-            if (!isCreate) {
-                submitdata[dcName][rowKey]["axrow_action"] = "edit";
-            }
+    //        const parts = item.split("=");
+    //        const left = parts[0];
+    //        const value = parts[1];
 
-            submitdata[dcName][rowKey][fieldName] = value;
+    //        const leftParts = left.split("~");
+    //        const fieldName = leftParts[0];
+    //        const rowNo = leftParts[1];
+
+    //        const columnMetadata = colList.find(c =>
+    //            c.name?.toLowerCase() === fieldName.toLowerCase()
+    //        );
+
+    //        if (!columnMetadata) continue;
+
+    //        const dcName = columnMetadata.dcname;
+    //        const isGrid = columnMetadata.asgrid;
+
+    //        if (!submitdata[dcName]) {
+    //            submitdata[dcName] = {};
+    //        }
+
+    //        const rowKey = isGrid ? "row" + rowNo : "row1";
+
+    //        if (!submitdata[dcName][rowKey]) {
+    //            submitdata[dcName][rowKey] = {};
+    //        }
+
+    //        // If EDIT → add edit-specific fields
+    //        if (!isCreate) {
+    //            submitdata[dcName][rowKey]["axrow_action"] = "edit";
+    //        }
+
+    //        submitdata[dcName][rowKey][fieldName] = value;
+    //    }
+
+    //    //const sessionResult = sessionResponse.json();
+    //    //const sessionId = sessionResult.d;
+    //    //if (!sessionId) return ["Session expired"];
+
+    //    const payload = {
+    //        ARMSessionId: sessionId,
+    //        trace: true,
+    //        data: [
+    //            {
+    //                transid: transid,
+    //                action: isCreate ? "create" : "edit",
+    //                submitdata: submitdata
+    //            }
+    //        ]
+    //    };
+
+    //    console.log("AxPut Payload created : " + payload);
+    //    //If EDIT → attach keyfield & keyvalue at root level
+    //    if (!isCreate) {
+    //        payload.data[0]["keyfield"] = "recordid";
+    //        payload.data[0]["keyvalue"] = "";
+    //    }
+
+    //    var apiUrl = armUrl + "/api/v1/AxPut";
+
+    //    try {
+
+    //        const response = fetch(apiUrl, {
+    //            method: "POST",
+    //            headers: {
+    //                "Content-Type": "application/json"
+    //            },
+    //            body: JSON.stringify(payload)
+    //        });
+
+    //        //const result = await response.json();
+
+    //    } catch (error) {
+    //        console.log("Error from Axput : "+ error);
+    //    }
+
+
+    //}
+
+    //function AxisaveDataFn(createfieldnamevaluesList, transid, sourcename, iscreate = true) {
+
+    //    let isSuccessCheck = true;
+    //    var result = preparePayload(createfieldnamevaluesList, transid, sourcename, iscreate = true);
+
+    //    if (result.isSuccess) {
+    //        console.log("Payload Ready");
+    //        console.log(result.payload);
+    //        payload = result.payload;
+    //    } else {
+    //        console.log("Payload is empty");
+    //        payload = {};
+    //    }
+
+    //    var apiUrl = armUrl + "/api/v1/AxPut";
+
+    //        try {
+
+    //            const response = fetch(apiUrl, {
+    //                method: "POST",
+    //                headers: {
+    //                    "Content-Type": "application/json"
+    //                },
+    //                body: JSON.stringify(payload)
+    //            });
+
+    //            //const result = await response.json();
+    //            if (response.isSuccess) {
+    //                showToast("Your Data is submitted Successfully!!");
+    //                console.log("Data is submitted Successfully!!");
+    //            }
+
+    //        } catch (error) {
+    //            showToast("Your Data is not Submitted..Please Submit it Manually!!");
+    //            console.log("Error from Axput : "+ error);
+    //        }
+
+
+    //}
+
+    function AxisaveDataFn(saveListWithFieldNamendValues, transid, sourcename, isCreate, inputTokens, inputCommandConfig) {
+
+        //getARMSessionId()
+        //    .then(sessionId => {
+
+        //        if (!sessionId) {
+        //            showToast("Session not found. Please login again....");
+        //            return;
+        //        }
+
+        //        console.log("Fetched Session ID: " + sessionId);
+
+        // 👉 Call preparePayload AFTER session is ready
+        if (!transid || saveListWithFieldNamendValues.length == 0) {
+            console.log("Missing transaction ID or field values.");
+            showToast("Some required information is missing. Please re-enter the command and try again.");
+
+            return [];
         }
 
-        //const sessionResult = sessionResponse.json();
-        //const sessionId = sessionResult.d;
-        //if (!sessionId) return ["Session expired"];
-
-        const payload = {
-            ARMSessionId: sessionId,
-            trace: true,
-            data: [
-                {
-                    transid: transid,
-                    action: isCreate ? "create" : "edit",
-                    submitdata: submitdata
-                }
-            ]
-        };
-
-        console.log("AxPut Payload created : " + payload);
-        //If EDIT → attach keyfield & keyvalue at root level
+        let keyFieldValue = cleanCommandToken(inputTokens[2]);
+        let keyfieldName;
         if (!isCreate) {
-            payload.data[0]["keyfield"] = "recordid";    
-            payload.data[0]["keyvalue"] = "";
+            const extraPromptSource = inputCommandConfig.prompts[1].extraParams.toLowerCase();
+
+            const extraSourceKey = `${extraPromptSource}_${transid}`.toLowerCase();
+
+            const extraList = axDatasourceObj[extraSourceKey];
+
+            if (extraList.length == 0) {
+                throw new Error("Key Field List is missing");
+            }
+            const field = extraList[0];
+
+            keyfieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
         }
+        preparePayload(saveListWithFieldNamendValues, transid, sourcename, isCreate, keyFieldValue, keyfieldName).then(result => {
 
-        var apiUrl = armUrl + "/api/v1/AxPut";
+            if (!result || !result.isSuccess) {
+                throw new Error("Payload is empty or invalid");
+            }
 
-        try {
+            console.log("Payload is Created successfully " + "\n");
+            console.log(result.payload);
 
-            const response = fetch(apiUrl, {
+            var payload = result.payload;
+
+
+            var SaveDataapiUrl = mainArmRestDllPath + "ASBTStructrest.dll/datasnap/rest/TASBTstruct/savedata";
+
+            console.log("SaveDataapi URL : " + SaveDataapiUrl);
+
+            showToast("Saving Data is in progress....", 5000, true);
+
+            return fetch(SaveDataapiUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(payload)
-            });
+            })
 
-            //const result = await response.json();
-            
-        } catch (error) {
-            console.log("Error from Axput : "+ error);
+                //})
+                .then(response => {
+
+                    if (!response) throw new Error("API SaveData return Empty response");;
+
+                    if (!response.ok) {
+                        throw new Error("API SaveData Error");
+                    }
+
+                    return response.json();
+                })
+                .then(data => {
+
+                    if (!data) {
+                        throw new Error("Invalid API response");
+                    }
+
+                    const firstResult = data.result?.[0];
+
+                    if (!firstResult) {
+                        throw new Error("Invalid API response");
+                    }
+
+                    if (firstResult.error) {
+                        showToast(`Save Failed : ${firstResult.error.msg}`);
+                        console.log(`Save Failed : ${firstResult.error.msg}`);
+                        console.log(data);
+                        return [];
+                    }
+
+                    if (firstResult.message?.[0]) {
+                        const msgObj = firstResult.message[0];
+                        const msg = msgObj.msg || "Saved Successfully";
+                        //const msg = "Set Success"
+                        const recordId = msgObj.recordid || "";
+                        const sid = msgObj.SID || "";
+                        showToast(`${msg}`, 5000, true);
+                        console.log("Data submitted successfully,Record-ID : " + recordId);
+                        console.log(data);
+
+                        saveListWithFieldNamendValues = [];
+                        createfieldnamevaluesList = [];
+                        return [];
+                    }
+
+                    console.log(data);
+                    throw new Error("Unexpected API response structure");
+
+                })
+                .catch(error => {
+
+                    //showToast("Your Data is not Submitted,Please Submit it Manually using(Ctrl + Enter)!");
+                    showToast("Save failed.Please retry with Ctrl + Enter.");
+                    console.log("Error from AxiSaveDataFn :" + error);
+                    return [];
+
+                });
+
+        });
+        //var result = preparePayload(saveListWithFieldNamendValues, transid, sourcename, isCreate, keyFieldValue, keyfieldName);
+
+        //if (!result || !result.isSuccess) {
+        //    throw new Error("Payload is empty or invalid");
+        //}
+
+        
+    }
+
+
+    function getUserPassword(username) {
+
+        const sourceName = "axi_userpwd";
+        const paramValue = username;
+        const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
+
+        if (axDatasourceObj[sourceKey]) {
+            return Promise.resolve(
+                axDatasourceObj[sourceKey]?.[0]?.password || null
+            );
         }
 
+        return loadList(sourceName, paramValue)
+            .then(() =>
+                axDatasourceObj[sourceKey]?.[0]?.password || null
+            );
+    }
+    function preparePayload(saveListWithFieldNamendValues,transid, sourcename, iscreate,inputKeyFieldValue,inputKeyFieldName) {
+
+        let isSuccess = true;
+        let payloadUsername = mainUserName;
+
+        if (!payloadUsername || payloadUsername.trim() === "") {
+            console.log("Username not found or invalid.");
+            return Promise.resolve({
+                isSuccess: false,
+                payload: {}
+            });
+        }
+
+        return getUserPassword(payloadUsername).then(password => {
+
+            let payload;
+            const formatRowNo = (n) => String(n).padStart(3, "0");
+            const dcMap = {};
+
+            const colSourceKey = (sourcename + "_" + transid).toLowerCase();
+            const colList = axDatasourceObj[colSourceKey];
+
+            if (!colList) {
+                console.warn("Column metadata not found for:", colSourceKey);
+                return {
+                    isSuccess: false,
+                    payload: {}
+                };
+            }
+
+
+            // 🔥 Record level variables
+            var recordid = iscreate ? "0" : "";
+            var keyfield = iscreate ? "" : "";
+            var keyvalue = iscreate ? "" : "";
+
+            //👉 In edit mode you will later assign:
+            if (!iscreate) {
+                recordid = "0";
+                keyfield = inputKeyFieldName;
+                keyvalue = inputKeyFieldValue;
+            }
+            try {
+                for (let i = 0; i < saveListWithFieldNamendValues.length; i++) {
+
+                    const item = saveListWithFieldNamendValues[i];
+                    if (!item) continue;
+
+                    const parts = item.split("=");
+                    if (parts.length !== 2) continue;
+
+                    const left = parts[0];
+                    const value = parts[1];
+
+                    const leftParts = left.split("~");
+                    if (leftParts.length !== 2) continue;
+
+                    const fieldName = leftParts[0];
+                    const rowNo = leftParts[1];
+
+                    const columnMetadata = colList.find(c =>
+                        c.name?.toLowerCase() === fieldName.toLowerCase()
+                    );
+
+                    if (!columnMetadata || !columnMetadata.dcname) continue;
+
+                    const dcName = columnMetadata.dcname;
+                    const recKey = `axp_recid${dcName.replace("dc", "")}`;
+
+                    if (!dcMap[recKey]) {
+                        dcMap[recKey] = [];
+                    }
+
+                    let rowObj = dcMap[recKey].find(
+                        r => r.rowno === formatRowNo(rowNo)
+                    );
+
+                    if (!rowObj) {
+                        rowObj = {
+                            rowno: formatRowNo(rowNo),
+                            text: recordid,
+                            columns: {}
+                        };
+                        dcMap[recKey].push(rowObj);
+                    }
+
+                    rowObj.columns[fieldName] = value;
+                }
+
+                const recdata = Object.keys(dcMap).map(recKey => ({
+                    [recKey]: dcMap[recKey]
+                }));
+
+
+                if (!password || password.trim() === "") {
+                    throw new Error("Password not found or invalid.");
+                }
+                if (!mainProject || mainProject.trim() === "") {
+                    throw new Error("ProjectName not found or invalid.");
+                }
+                if (!mainSessionId || mainSessionId.trim() === "") {
+                    throw new Error("SessionId not found or invalid.");
+                }
+
+
+                payload = {
+                    savedata: {
+                        cachedsave: "true",
+                        axpapp: mainProject,
+                        //appsessionkey: "010198670011016401680166017301540168015301640101009800994939364141171051310018",
+                        transid: transid,
+                        s: mainSessionId,
+                        username: payloadUsername,
+                        password: password,
+                        changedrows: {},
+                        trace: "true",
+                        recordid: recordid,
+                        keyfield: keyfield,
+                        keyvalue: keyvalue,
+                        recdata: recdata,
+                        globalvars: {},
+                        uservars: {},
+                        axapps: {}
+                    }
+                };
+
+                console.log("PreparedPayload : Payload is created successfully with isCreate :", iscreate);
+                console.log(payload);
+
+            }
+            catch (ex) {
+                isSuccess = false;
+                console.log("Error in preparePayload Payload creation :" + ex);
+            }
+
+            if (payload && Object.keys(payload).length > 0 && isSuccess) {
+                return {
+                    isSuccess: isSuccess,
+                    payload: payload
+                };
+            }
+            else {
+                return {
+                    isSuccess: false,
+                    payload: {}
+                };
+            }
+        })
 
     }
+
+
+
 
 
     function redirectToAxibot() {
 
 
         // let targetUrl = "../CustomPages/axibot.html";
-        let targetUrl = `${getAppBaseUrl()}/CustomPages/axibot.html`;
-        // let targetUrl = "../axidev/HTMLPages/axibot.html";
+        // let targetUrl = `${getAppBaseUrl()}/CustomPages/axibot.html`;
+        let targetUrl = "../axidev/HTMLPages/axibot_1770979038509.html";
 
 
 
