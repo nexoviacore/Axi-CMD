@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+        <link rel="stylesheet" href="../../../UI/axpertUI/style.bundle.css" />
+    <link rel="stylesheet" href="../../../UI/axpertUI/plugins.bundle.css" />
+    <link rel="stylesheet" href="../../../ThirdParty/jquery-confirm-master/jquery-confirm.min.css" />
+    <link href="../../../Css/datatables.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../../../Css/Entity.css" />
+</head>
+<body>
+
+                          <div style=" width: 100%;   justify-content: space-between;
+    display: flex;" class="card-header Page-title">
+                                    <!--begin::Title-->
+                                    <h3 class="card-title align-items-start flex-column" style="margin-bottom: 0px !important;">
+                                        <span class="card-label fw-bold text-gray-900" id="EntityTitle"></span>
+                                    </h3>
+                                    
+                                    <!--end::Title-->
+                                    <!--begin::Toolbar-->
+                                    <div class="card-toolbar">
+                                        <div class="Tkts-toolbar-Right d-flex flex-row align-items-center gap-2">
+                                            <!-- Searchbar button -->
+                                            <fieldset class="searchFieldset d-flex gap-2">
+                                                <input type="search" id="searchBox" title="searchbar" autocomplete="false" />
+                                                <button type="button" class="btn btn-sm btn-icon btn-white btn-active-primary btn-custom-border-radius"
+                                                    id="searchBoxButton" onclick="searchInput.classList.toggle('show');" data-bs-toggle="tooltip"
+                                                    title="Search">
+                                                    <span class="material-icons material-icons-style material-icons-2">search</span>
+                                                </button>
+                                            </fieldset>
+
+                                            <!-- <button type="button" class="btn btn-sm btn-icon btn-primary btn-active-primary btn-custom-border-radius"
+                                                onclick="_entity.openNewTstruct(); return false;" data-toggle="tooltip" id="add-entity" title="New">
+                                                <span class="material-icons material-icons-style material-icons-2">add</span>
+                                            </button> -->
+                                            <button type="button"
+                                                class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm d-none"
+                                                onclick="return false;" data-toggle="tooltip" title="Delete">
+                                                <span class="material-icons material-icons-style material-icons-2">remove</span>
+                                            </button>
+
+                                            <!-- Apply Filter button -->
+                                            <button type="button"
+                                                class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                                data-toggle="tooltip" title="Apply Filter(s)" onclick="openFilters(); return false;">
+                                                <span class="material-icons material-icons-style material-icons-2">tune</span>
+                                            </button>
+
+                                     
+
+                                            <!-- New Delete Button -->
+                                            <button type="button"
+                                                class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                                id="deleteSelectedButton"
+                                                onclick="deleteSelectedRecordsFromToolbar(); return false;"
+                                                data-toggle="tooltip" title="Delete">
+                                                <span class="material-icons material-icons-style material-icons-2">delete</span>
+                                            </button>
+
+
+                                            <!-- Utilities Button -->
+                                            <!-- Utilities Button -->
+                                            <div style="float: right; padding-left: 3px;">
+                                                <button type="button" data-toggle="tooltip" title="Utilities"
+                                                    class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                                    data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-attach="parent"
+                                                    data-kt-menu-placement="bottom-end">
+                                                    <span class="material-icons material-icons-style material-icons-2">miscellaneous_services</span>
+                                                </button>
+
+                                                <!-- Utilities Dropdown Menu -->
+                                                <div id="selectUtilities" class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-title-gray-700 menu-icon-gray-500 menu-active-bg menu-state-color fw-semibold py-4 fs-base w-200px" data-kt-menu="true">
+                                                    <!-- Main Menu -->
+                                                    <div id="mainMenu">
+                                                        <!-- View Menu Item -->
+                                       
+
+
+                                                        <!-- Field Captions Menu Item -->
+                                  
+
+                                                    </div>
+
+                                                    <!-- Select Fields Menu Item -->
+                                                    <div class="menu-item px-3 my-0">
+                                                        <a href="#" class="menu-link px-3 py-2" onclick="openFieldSelection(); return false;">
+                                                            <span class="material-icons material-icons-style material-icons-2">settings</span>
+                                                            <span class="menu-title">Select Fields</span>
+                                                        </a>
+                                                    </div>
+
+                                                    <!-- Select Fields Menu Item -->
+                                          
+
+
+                                                    <div class="menu-item px-3 my-0" id="exportMenuItem" data-kt-menu-trigger="hover" data-kt-menu-placement="right-end">
+                                                        <a href="#" class="menu-link px-3 py-2">
+                                                            <span class="material-icons material-icons-style material-icons-2">file_download</span>
+                                                            <span class="menu-title">Export</span>
+                                                            <span class="arrow">›</span>
+                                                            <!-- Arrow for View -->
+                                                        </a>
+
+                                                        <!-- View Submenu -->
+                                                        <div class="menu-sub menu-sub-dropdown w-175px py-4">
+                                                            <div class="menu-item px-3">
+                                                                <a href="#" class="menu-link px-3" id="pdfExport" data-target="print">
+                                                                    <span class="material-icons material-icons-style">print</span> Print
+                                                                </a>
+                                                            </div>
+                                                            <div class="menu-item px-3">
+                                                                <a href="#" class="menu-link px-3" id="pdfExport" data-target="pdf">
+                                                                    <span class="material-icons material-icons-style">picture_as_pdf</span> PDF
+                                                                </a>
+                                                            </div>
+                                                            <div class="menu-item px-3">
+                                                                <a href="#" class="menu-link px-3" id="excelExport" data-target="excel">
+                                                                    <span class="material-icons material-icons-style">view_module</span> Excel
+                                                                </a>
+                                                            </div>
+                                                            <div class="menu-item px-3">
+                                                                <a href="#" class="menu-link px-3" id="wordExport" data-target="word">
+                                                                    <span class="material-icons material-icons-style">article</span> Word
+                                                                </a>
+                                                            </div>
+                                                        </div>
+
+                                                        
+
+
+
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                      
+
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+
+                                <div class="filterPills flex-row py-2 px-2 gap-3" style="display: none;">
+                                    <button
+                                        class="filterGroupBadge badge rounded-pill bg-primary d-flex align-items-center gap-2 py-2 px-6 border-0"
+                                        style="max-width: fit-content;" data-toggle="tooltip" data-placement="top"
+                                        data-html="true">
+                                        All
+                                    </button>
+                                </div>
+                                
+    <div class="table-body" id="table-body_Container">
+        <!-- Table view content will be populated dynamically -->
+    </div>
+    <div id="noMoreRecordsMessage" class="no-more-records-message"
+        style="display: none">
+        No more records
+    </div> 
+</body>
+  <script type="text/javascript" src="../../../UI/axpertUI/plugins.bundle.js"></script>
+    <script type="text/javascript" src="../../../UI/axpertUI/scripts.bundle.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../../../Js/common.min.js?v=158"></script>
+    <script type="text/javascript" src="../../../Js/alerts.min.js"></script>
+    <script type="text/javascript" src="../../../Js/xmlToJson.js"></script>
+    <script type="text/javascript" src="../../../Js/handlebars.min.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/DataTables-1.10.13/extensions/Extras/moment.min.js"></script>
+
+    <script src="../../../js/datatables.js"></script>
+    <script src="../../../js/Entity-Filter.js"></script>
+    <script src="../../../Js/Entity-Common.js"></script>
+<script type="text/javascript" src="../../../plugins/Axi/HTMLPages/js/smartviewTable.js"></script>
+</html>

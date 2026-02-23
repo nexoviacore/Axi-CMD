@@ -1,0 +1,3861 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Axpert Insights (AXI) — Connect • Upload • Ask</title>
+
+
+    <link rel="stylesheet" href="../../../plugins/Axi/HTMLPages/css/atom-one-dark.min.css">
+
+
+    <!-- <link rel="stylesheet" href="../UI/axpertUI/style.bundle.css"> -->
+    <link rel="stylesheet" href="../../../UI/axpertUI/style.bundle.css">
+    <!-- <link rel="stylesheet" href="../UI/axpertUI/plugins.bundle.css"> -->
+    <link rel="stylesheet" href="../../../UI/axpertUI/plugins.bundle.css">
+    <!-- Core libs (from AXI Ask) -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script> -->
+    <script src="../../../plugins/Axi/HTMLPages/js/highlight.js"></script>
+    <!-- <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script> -->
+    <script src="../../../plugins/Axi/HTMLPages/js/index.umd.js"></script>
+    <script src="../../../plugins/Axi/HTMLPages/js/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
+    <script src="../../../plugins/Axi/HTMLPages/js/chart.umd.min.js"></script>
+
+    <!-- Highcharts & Modules -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/heatmap.js"></script>
+    <script src="https://code.highcharts.com/modules/treemap.js"></script>
+
+    <script src="../../../plugins/Axi/HTMLPages/js/marked.min.js"></script>
+    <script src="../../../plugins/Axi/HTMLPages/js/purify.min.js"></script>
+
+    <!-- Axpert core styles -->
+    <link rel="stylesheet" href="../../../UI/axpertUI/style.bundle.css">
+    <link rel="stylesheet" href="../../../UI/axpertUI/plugins.bundle.css">
+
+    <!-- Axpert core scripts -->
+    <script src="../../../UI/axpertUI/plugins.bundle.js"></script>
+    <script src="../../../UI/axpertUI/scripts.bundle.js"></script>
+
+    <script type="text/javascript" src="../../../Js/noConflict.min.js"></script>
+    <!-- <script type="text/javascript" src="../Js/noConflict.min.js"></script> -->
+    <!-- <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script> -->
+    <script type="text/javascript" src="../../../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../../../Js/alerts.min.js"></script>
+    <script type="text/javascript" src="../../../common.min.js"></script>
+    <script type="text/javascript" src="../../../AxInterface.js"></script>
+    <style>
+        /* Base Icon Style */
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px;
+            /* Default size */
+            vertical-align: middle;
+            user-select: none;
+        }
+
+        /* Polished filled state for specific active UI if needed */
+        .material-symbols-rounded.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+    <style>
+        :root {
+            --bg-primary: #fbfbf8;
+            --bg-secondary: #ffffff;
+            --bg-elevated: #f6f6f1;
+            --border-light: #ecece6;
+            --border-medium: #ddddd5;
+            --text-primary: #222222;
+            --text-secondary: #666666;
+            --text-tertiary: #9a9a9a;
+            --text-placeholder: #b1b1b1;
+
+            --accent: #3b82f6;
+            --accent-hover: #2f6fe0;
+            --accent-soft: #eef5ff;
+
+            --radius-sm: 10px;
+            --radius-md: 14px;
+            --radius-lg: 18px;
+
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 10px 35px rgba(0, 0, 0, 0.12);
+
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 15px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- LAYOUT STRUCTURE --- */
+        .app {
+            display: grid;
+            grid-template-columns: 80px minmax(0, 1fr);
+            /* Sidebar | Content */
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Force Main Content to be Full Width */
+        .main {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-primary);
+            position: relative;
+            width: 100% !important;
+            max-width: none !important;
+        }
+
+        /* --- SIDEBAR (RAIL) --- */
+        .rail {
+            height: 100%;
+            width: 100%;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 8px;
+            overflow-y: auto;
+        }
+
+        .rail__brand {
+            margin-bottom: 8px;
+        }
+
+        .rail__logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
+
+        .railBtn {
+            width: 48px;
+            height: 44px;
+            border-radius: 14px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition: all 0.15s;
+        }
+
+        .railBtn:hover {
+            background: var(--bg-elevated);
+            border-color: var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .railBtn--new {
+            border-radius: 50%;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .railBtn--new:hover {
+            background: var(--bg-primary);
+            transform: scale(1.05);
+        }
+
+        .rail__nav {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .railNavItem {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            width: 100%;
+            padding: 8px 0;
+            border-radius: 8px;
+            transition: all 0.15s;
+        }
+
+        .railNavItem:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        .railNavItem .i {
+            width: 24px;
+            height: 24px;
+            stroke-width: 1.5;
+        }
+
+        .railNavItem span {
+            font-size: 10px;
+            font-weight: 500;
+            color: inherit;
+        }
+
+        .rail__bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            padding-bottom: 8px;
+        }
+
+        .userProfile {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+        }
+
+        .userProfile__img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--border-light);
+        }
+
+        .userProfile__badge {
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+            font-size: 8px;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* --- HEADER --- */
+        .chatHeader {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid transparent;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .modelToggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 8px;
+            transition: background 0.15s;
+        }
+
+        .modelToggle:hover {
+            background: var(--bg-elevated);
+        }
+
+        .modelToggle__name {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .modelToggle__name::before {
+            content: "✨";
+            font-size: 14px;
+        }
+
+        .chatHeader__right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .headerBtn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .headerBtn:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        .headerDivider {
+            width: 1px;
+            height: 16px;
+            background: var(--border-medium);
+            margin: 0 4px;
+        }
+
+        .shareBtn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .shareBtn:hover {
+            background: var(--accent-hover);
+        }
+
+        /* --- CRITICAL: MESSAGE LAYOUT --- */
+        #messages.messages {
+            display: flex !important;
+            flex-direction: column !important;
+            padding: 24px 20px 120px 20px !important;
+            /* Bottom pad for composer */
+            overflow-y: auto !important;
+            width: 100% !important;
+            align-items: stretch !important;
+            /* Allow children to be full width */
+        }
+
+        /* Message Row Container */
+        .message {
+            display: flex !important;
+            width: 100% !important;
+            max-width: 1200px !important;
+            /* Readable max width */
+            margin: 0 auto 24px auto !important;
+            /* Center the row block */
+            gap: 16px !important;
+            align-items: flex-start !important;
+        }
+
+        /* Assistant: Standard Left Align */
+        .message--assistant {
+            flex-direction: row !important;
+            justify-content: flex-start !important;
+        }
+
+        /* User: Standard Right Align */
+        .message--user {
+            flex-direction: row-reverse !important;
+            justify-content: flex-start !important;
+        }
+
+        /* Avatar */
+        .message__avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .message__avatar img {
+            width: 22px;
+            height: 22px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .message--user .message__avatar {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            font-weight: 650;
+            font-size: 12px;
+        }
+
+        /* Content Wrapper */
+        .message__content {
+            display: flex !important;
+            flex-direction: column !important;
+            max-width: 85% !important;
+            /* Don't touch edges */
+            min-width: 0 !important;
+            flex: 1;
+            /* Allow stretching */
+        }
+
+        /* User Content Alignment */
+        .message--user .message__content {
+            align-items: flex-end !important;
+        }
+
+        /* Assistant Content Alignment */
+        .message--assistant .message__content {
+            align-items: flex-start !important;
+        }
+
+        /* --- THE BUBBLE --- */
+        .message__bubble {
+            width: auto !important;
+            /* Fit content naturally */
+            max-width: 100% !important;
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 18px;
+            padding: 14px 18px;
+            font-size: 15px;
+            line-height: 1.6;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            text-align: left !important;
+        }
+
+        /* User Bubble Style */
+        .message--user .message__bubble {
+            background: #3B82F6 !important;
+            color: #FFFFFF !important;
+            border-color: #3B82F6 !important;
+            border-top-right-radius: 4px !important;
+            border-bottom-right-radius: 18px !important;
+        }
+
+        /* Assistant Bubble Style */
+        .message--assistant .message__bubble {
+            background: #FFFFFF !important;
+            border-top-left-radius: 4px !important;
+            border-bottom-left-radius: 18px !important;
+            width: 100% !important;
+            /* Stretch Assistant bubbles for reports */
+        }
+
+        /* Markdown Content */
+        .message__bubble p {
+            margin: 0 0 10px;
+        }
+
+        .message__bubble p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message__bubble code {
+            font-family: var(--font-mono);
+            font-size: 12.5px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: inherit;
+        }
+
+        /* FIX: Remove grey box from Answer Cards inside chat */
+        .message__bubble .answerCard {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+        }
+
+        .message__bubble .answerCard__header {
+            display: none !important;
+        }
+
+        /* Force tables/charts to be full width */
+        .message__bubble table,
+        .message__bubble .highcharts-container,
+        .message__bubble canvas {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        /* Meta info (Time/Name) */
+        .message__meta {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 6px;
+            padding: 0 2px;
+        }
+
+        /* --- COMPOSER --- */
+        .composerWrap {
+            border-top: 1px solid var(--border-light);
+            background: var(--bg-secondary);
+            padding: 12px 24px 16px;
+            display: none;
+            justify-content: center;
+            /* Center composer */
+        }
+
+        .composer {
+            width: 100%;
+            max-width: 1200px;
+            /* Match message max-width */
+            margin: 0 auto;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 8px;
+            background: #ffffff;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.15s, border-color 0.15s;
+        }
+
+        .composer:focus-within {
+            border-color: rgba(59, 130, 246, 0.35);
+            box-shadow: 0 0 0 4px var(--accent-soft);
+        }
+
+        .composer__upload {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            color: var(--text-secondary);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .composer__upload:hover {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .composer__upload input {
+            display: none;
+        }
+
+        .composer__inputWrap {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .composer__input {
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            font: inherit;
+            font-size: 14px;
+            resize: none;
+            max-height: 120px;
+            padding: 8px 10px 6px;
+            color: var(--text-primary);
+        }
+
+        .composer__input::placeholder {
+            color: var(--text-placeholder);
+        }
+
+        .composer__submit {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 14px;
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+
+        .composer__submit:hover {
+            background: var(--accent-hover);
+        }
+
+        .composer__submit:disabled {
+            background: var(--bg-elevated);
+            color: var(--text-tertiary);
+            cursor: not-allowed;
+        }
+
+        /* Attachment Tray */
+        .attachmentTray {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 6px 8px 0;
+        }
+
+        .attachmentTray--hidden {
+            display: none;
+        }
+
+        .attachmentChip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-primary);
+            border-radius: 999px;
+            padding: 6px 10px;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .attachmentChip__thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+
+        .attachmentChip__thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .attachmentChip__name {
+            font-size: 12px;
+            color: var(--text-secondary);
+            max-width: 280px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .attachmentChip__remove {
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            border: none;
+            background: transparent;
+            color: var(--text-tertiary);
+            cursor: pointer;
+        }
+
+        .attachmentChip__remove:hover {
+            background: rgba(0, 0, 0, 0.04);
+            color: var(--text-primary);
+        }
+
+        /* --- TYPING INDICATOR --- */
+        .typing {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px;
+            max-width: 780px;
+            margin: 0 auto;
+        }
+
+        .typing--hidden {
+            display: none;
+        }
+
+        .typing__dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-tertiary);
+            animation: t 1s infinite ease-in-out;
+        }
+
+        .typing__dot:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .typing__dot:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes t {
+
+            0%,
+            70%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.35;
+            }
+
+            35% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .rail {
+                display: none;
+            }
+
+            .message__content {
+                max-width: 95% !important;
+            }
+        }
+
+        /* --- OTHER CARD STYLES --- */
+        /* (Kept for compatibility, but overridden inside chat bubbles) */
+        .answerCard,
+        .insightsCard,
+        .tableCard,
+        .tableNotesCard,
+        .messageChart,
+        .codeCard {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            transform: translateZ(0);
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 750;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: rgba(17, 24, 39, 0.03);
+            color: var(--ink2);
+        }
+
+        .pill--ok {
+            background: var(--ok-soft);
+            color: #065f46;
+            border-color: rgba(22, 163, 74, 0.22);
+        }
+
+        .pill--warn {
+            background: var(--warn-soft);
+            color: #7c2d12;
+            border-color: rgba(217, 119, 6, 0.25);
+        }
+
+        .pill--bad {
+            background: var(--bad-soft);
+            color: #7f1d1d;
+            border-color: rgba(220, 38, 38, 0.25);
+        }
+
+        .pillDot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: currentColor;
+            opacity: .9;
+        }
+
+        /* --- REPORT TYPOGRAPHY POLISH (UPDATED) --- */
+        .message__bubble {
+            position: relative !important;
+            padding-right: 48px !important;
+        }
+
+        /* Headers - Increased Spacing */
+        .message__bubble h1,
+        .message__bubble h2,
+        .message__bubble h3 {
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.3;
+        }
+
+        .message__bubble h1 {
+            font-size: 22px;
+            margin-top: 32px;
+            /* More space above */
+            margin-bottom: 16px;
+            border-bottom: 1px solid #E5E7EB;
+            padding-bottom: 10px;
+        }
+
+        .message__bubble h2 {
+            font-size: 18px;
+            margin-top: 28px;
+            /* More space above */
+            margin-bottom: 12px;
+        }
+
+        .message__bubble h3 {
+            font-size: 15px;
+            text-transform: uppercase;
+            color: #6B7280;
+            letter-spacing: 0.05em;
+            margin-top: 24px;
+            /* More space above */
+            margin-bottom: 8px;
+        }
+
+        /* Remove top margin for the very first header to avoid gaps at top of bubble */
+        .message__bubble>h1:first-child,
+        .message__bubble>h2:first-child,
+        .message__bubble>h3:first-child {
+            margin-top: 0;
+        }
+
+        /* Paragraphs */
+        .message__bubble p {
+            margin-bottom: 16px;
+            /* Breathing room between paragraphs */
+            color: #374151;
+            line-height: 1.75;
+            font-size: 15px;
+        }
+
+        /* --- REPLACING BULLET POINTS --- */
+        /* Remove default bullets */
+        .message__bubble ul {
+            list-style: none !important;
+            padding-left: 0 !important;
+            margin: 16px 0;
+        }
+
+        /* Create a "Card" or "Block" look for list items instead of bullets */
+        .message__bubble li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        /* Custom Marker (Stylish Dash or Accent Bar) */
+        .message__bubble li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 12px;
+            color: #374151;
+            line-height: 1.6;
+            min-height: 24px;
+            /* Ensures minimum height for bullet */
+        }
+
+        .message__bubble li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0.65em;
+            /* Relative to font-size, not fixed pixels */
+            width: 12px;
+            height: 2px;
+            background-color: #CBD5E1;
+            border-radius: 2px;
+            transform: translateY(-50%);
+            /* Center vertically */
+        }
+
+        /* Better spacing for nested content */
+        .message__bubble ul {
+            list-style: none !important;
+            padding-left: 0 !important;
+            margin: 16px 0 20px 0;
+        }
+
+        .message__bubble li p,
+        .message__bubble li div {
+            margin-bottom: 4px;
+        }
+
+        /* Alternative: If you prefer a subtle checkmark, use this instead of the code above:
+.message__bubble li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #3B82F6; 
+  font-weight: bold;
+  font-size: 14px;
+}
+*/
+
+        /* Strong Text inside lists (Key: Value style) */
+        .message__bubble li strong {
+            color: #111827;
+            font-weight: 600;
+            margin-right: 4px;
+        }
+
+        /* Tables - Polished */
+        .message__bubble table {
+            width: 100%;
+            border-collapse: separate;
+            /* Allows border radius */
+            border-spacing: 0;
+            margin: 20px 0;
+            font-size: 14px;
+            border-radius: 12px;
+            border: 1px solid #E5E7EB;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+
+        .message__bubble th {
+            background: #F8FAFC;
+            font-weight: 600;
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #E5E7EB;
+            color: #475569;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .message__bubble td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #F1F5F9;
+            color: #334155;
+        }
+
+        .message__bubble tr:last-child td {
+            border-bottom: none;
+        }
+
+        .message__bubble tr:hover td {
+            background: #F8FAFC;
+        }
+
+        /* --- VS CODE STYLE CODE BLOCKS --- */
+        .codeCard {
+            margin: 20px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #282c34;
+            /* Dark editor background */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid #3e4451;
+            font-family: 'Fira Code', 'Consolas', monospace;
+        }
+
+        .codeCard__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px;
+            background: #21252b;
+            /* Darker header */
+            border-bottom: 1px solid #3e4451;
+            color: #abb2bf;
+            font-size: 12px;
+            font-weight: 600;
+            user-select: none;
+        }
+
+        .codeCard__lang {
+            text-transform: uppercase;
+            color: #61afef;
+            /* Blue accent for language name */
+        }
+
+        .codeCard__copy {
+            background: transparent;
+            border: none;
+            color: #abb2bf;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .codeCard__copy:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* The actual code area */
+        .codeCard pre {
+            margin: 0;
+            padding: 16px;
+            overflow-x: auto;
+            background: #282c34 !important;
+            /* Force match card bg */
+        }
+
+        .codeCard code {
+            font-family: 'Fira Code', 'Consolas', monospace;
+            /* Monospace font */
+            font-size: 14px;
+            line-height: 1.6;
+            color: #abb2bf;
+            /* Default text color */
+        }
+
+        /* Scrollbar styling for code blocks */
+        .codeCard pre::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .codeCard pre::-webkit-scrollbar-thumb {
+            background: #4b5362;
+            border-radius: 4px;
+        }
+
+        .codeCard pre::-webkit-scrollbar-track {
+            background: #282c34;
+        }
+
+        /* --- INDUSTRIAL / PROFESSIONAL BUBBLE STYLE --- */
+        .message__bubble {
+            /* Structure */
+            position: relative !important;
+            padding: 20px 24px !important;
+            /* Spacious padding */
+            border-radius: 4px;
+            /* Slightly squared corners for industrial look */
+
+            /* Colors & Borders */
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            /* Subtle structural border */
+            border-left: 3px solid #CBD5E1;
+            /* Technical accent on left */
+
+            /* Depth */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+            /* Typography */
+            color: #334155;
+            /* Slate grey text */
+            line-height: 1.6;
+            font-size: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        /* User Bubble Variant (Distinct but cohesive) */
+        .message--user .message__bubble {
+            background: #F8FAFC;
+            /* Very light grey */
+            border-color: #E2E8F0;
+            border-left-color: #3B82F6;
+            /* Blue accent for user */
+            border-radius: 4px;
+        }
+
+        /* Hover Effect for Interactivity */
+        .message__bubble:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border-color: #CBD5E1;
+            transition: all 0.2s ease;
+        }
+
+        /* Remove default "chat bubble" tails if present */
+        .message__bubble::before,
+        .message__bubble::after {
+            display: none !important;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            margin-left: 2px;
+            font-weight: bold;
+        }
+
+        /* --- FIX 1: Remove White Background behind Input/Upload --- */
+        /* This targets the container holding the input and buttons */
+        .chat-footer,
+        .input-container,
+        .upload-wrapper {
+            background: transparent !important;
+            /* Forces transparency */
+            box-shadow: none !important;
+            /* Removes shadow if any */
+            border: none !important;
+            /* Removes border if any */
+        }
+
+        /* If you are using a specific ID for that bar */
+        #chat-input-area {
+            background: transparent !important;
+        }
+
+        /* --- FIX 2: Fix Huge Send Button --- */
+        /* This ensures the button only takes up necessary space */
+        #send-btn {
+            width: auto !important;
+            /* Stop full width */
+            height: 42px !important;
+            /* Fixed height matching input */
+            padding: 0 20px !important;
+            /* Comfortable padding */
+            flex-grow: 0 !important;
+            /* Prevent flexbox stretching */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            /* Spacing from input */
+            border-radius: 8px;
+            /* Nice rounded corners */
+        }
+
+        /* Ensure the input takes the remaining space */
+        #user-input {
+            flex-grow: 1;
+        }
+
+        /* --- POLISHED UI ELEMENTS --- */
+
+        /* Dropdown Wrapper */
+        .select-wrapper select {
+            font-size: 14px;
+            color: #374151;
+            transition: all 0.2s ease;
+        }
+
+        .select-wrapper select:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Button Hover Effects */
+        .icon-btn {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background-color: #F3F4F6 !important;
+            border-color: #D1D5DB !important;
+            color: #111827;
+        }
+
+        /* Send Button Hover */
+        #send-btn {
+            transition: background-color 0.2s;
+        }
+
+        #send-btn:hover {
+            background-color: #1D4ED8 !important;
+        }
+
+        /* Icon Alignment fix */
+        .ph {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* === OPTION 1: Gradient Pulse Wave (Modern AI Style) === */
+        .typing--pulse {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px;
+            opacity: 1;
+            animation: fadeInTyping 0.3s ease;
+        }
+
+        .typing--pulse .pulse-bar {
+            width: 6px;
+            height: 32px;
+            background: linear-gradient(180deg, #3B82F6, #8B5CF6, #EC4899);
+            background-size: 100% 200%;
+            border-radius: 10px;
+            animation: pulseWave 1.2s ease-in-out infinite;
+        }
+
+        .typing--pulse .pulse-bar:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .typing--pulse .pulse-bar:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .typing--pulse .pulse-bar:nth-child(4) {
+            animation-delay: 0.45s;
+        }
+
+        @keyframes pulseWave {
+
+            0%,
+            100% {
+                height: 16px;
+                background-position: 0% 0%;
+                opacity: 0.5;
+            }
+
+            50% {
+                height: 40px;
+                background-position: 0% 100%;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInTyping {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* === OPTION 2: Rotating Sparkle Icon === */
+        .typing--icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeInTyping 0.3s ease;
+        }
+
+        .typing--icon .sparkle-icon {
+            width: 32px;
+            height: 32px;
+            animation: rotateSparkle 2s linear infinite;
+        }
+
+        @keyframes rotateSparkle {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            50% {
+                transform: rotate(180deg) scale(1.1);
+            }
+
+            100% {
+                transform: rotate(360deg) scale(1);
+            }
+        }
+
+        /* Hide old typing animation */
+        .typing--hidden {
+            display: none !important;
+        }
+
+        /* --- Floating Composer --- */
+        .composerWrap {
+            flex: 0 0 auto;
+            padding: 20px;
+            background: linear-gradient(to top, #F8FAFC 80%, rgba(248, 250, 252, 0));
+
+            /* NEW: Flex layout to put Typing and Form side-by-side */
+            display: none;
+            align-items: flex-end;
+            /* Align bottom */
+            gap: 12px;
+        }
+
+        /* Typing Indicator (Static Position, Left of Form) */
+        .typing {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0 8px;
+            height: 40px;
+            /* Match button height approx */
+            margin-bottom: 12px;
+            /* Align visual baseline with textarea */
+
+            /* Ensure it doesn't push layout wildly */
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .typing--hidden {
+            /* Instead of display:none, use visibility/width to prevent jump if you want smooth, 
+     but display:none is fine if it's side-by-side */
+            display: none !important;
+        }
+
+        .typing__dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #94A3B8;
+            animation: typingAnimation 1.4s infinite ease-in-out both;
+        }
+
+        .typing__dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing__dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typingAnimation {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+                opacity: 0.5;
+            }
+
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Ensure Form takes remaining space */
+        form#composer.composer {
+            flex: 1;
+            /* Take all available space */
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            background: #FFFFFF;
+            padding: 10px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #E2E8F0;
+            transition: box-shadow 0.2s ease;
+        }
+
+        /* --- FIX: List Overlap Issue --- */
+
+        .message__bubble ul,
+        .message__bubble ol {
+            margin: 12px 0;
+            padding-left: 24px;
+            /* Ensure space for bullets */
+            list-style-position: outside;
+            /* Puts bullet OUTSIDE the text block */
+        }
+
+        .message__bubble li {
+            margin-bottom: 8px;
+            padding-left: 4px;
+            /* Small gap between bullet and text */
+            line-height: 1.6;
+            color: #374151;
+        }
+
+        /* Ensure nested lists look good too */
+        .message__bubble li ul,
+        .message__bubble li ol {
+            margin: 6px 0;
+        }
+
+        /* Fix for Blockquotes if you use them */
+        .message__bubble blockquote {
+            border-left: 4px solid #3B82F6;
+            margin: 16px 0;
+            padding: 8px 16px;
+            background: #F8FAFC;
+            color: #475569;
+            font-style: italic;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* ===== Global base (from AXI Ask) ===== */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #F8FAFC;
+            color: #0F172A;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* ===== Global header (new) ===== */
+        .globalBar {
+            flex: 0 0 auto;
+            z-index: 30;
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            position: sticky;
+            top: 0;
+        }
+
+        .globalBar__row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: space-between;
+        }
+
+        .globalBrand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+        }
+
+        .globalBrand img {
+            height: 45px;
+            width: 45px;
+            object-fit: contain;
+        }
+
+        .globalTabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .tabBtn {
+            height: 36px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid #E2E8F0;
+            background: #FFFFFF;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease;
+        }
+
+        .tabBtn:hover {
+            border-color: #CBD5E1;
+            transform: translateY(-1px);
+        }
+
+        .tabBtn.isActive {
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+            color: #0F172A;
+        }
+
+        /* ===== View switching ===== */
+        .views {
+            flex: 1 1 auto;
+            min-height: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .view {
+            height: 100%;
+            overflow: auto;
+            display: none;
+        }
+
+        .view.isActive {
+            display: block;
+        }
+
+        /* ===== AXI Ask UI (from File 1) ===== */
+
+        /* Polished File Bar (Ask-only) */
+        .fileBarWrap {
+            flex: 0 0 auto;
+            z-index: 20;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            position: sticky;
+            top: 0;
+        }
+
+        /* When inside Ask view, the file bar sticks below the global bar */
+        #view-ask .fileBarWrap {
+            top: 64px;
+            /* approximate globalBar height */
+        }
+
+        .fileBar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .select-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .fileSelect {
+            width: 100%;
+            height: 44px;
+            padding: 0 16px 0 44px;
+            padding-right: 40px;
+            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+            background: #FFFFFF;
+            color: #334155;
+            font-size: 14px;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .fileSelect:hover {
+            border-color: #CBD5E1;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+        }
+
+        .fileSelect:focus {
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .miniBtn {
+            height: 44px;
+            padding: 0 20px;
+            border-radius: 12px;
+            border: none;
+            background: #0F172A;
+            color: #FFFFFF;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(15, 23, 42, 0.1);
+            white-space: nowrap;
+        }
+
+        .miniBtn:hover {
+            background: #1E293B;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(15, 23, 42, 0.15);
+        }
+
+        .miniBtn:active {
+            transform: translateY(0);
+        }
+
+        /* Main Chat Track */
+        #messages.messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 24px 100px 24px;
+            scroll-behavior: smooth;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            align-items: center;
+        }
+
+        /* Floating Composer */
+        .composerWrap {
+            flex: 0 0 auto;
+            padding: 20px;
+            background: linear-gradient(to top, #F8FAFC 80%, rgba(248, 250, 252, 0));
+        }
+
+        form#composer.composer {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            background: #FFFFFF;
+            padding: 10px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #E2E8F0;
+            transition: box-shadow 0.2s ease;
+        }
+
+        form#composer.composer:focus-within {
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.12);
+            border-color: #BFDBFE;
+        }
+
+        .composer__inputWrap {
+            flex: 1;
+        }
+
+        textarea#prompt.composer__input {
+            width: 100%;
+            min-height: 24px;
+            max-height: 120px;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            resize: none;
+            outline: none;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #0F172A;
+            font-family: inherit;
+        }
+
+        textarea#prompt.composer__input::placeholder {
+            color: #94A3B8;
+        }
+
+        #send.composer__submit {
+            flex: 0 0 40px;
+            height: 40px;
+            width: 40px;
+            border-radius: 10px;
+            border: none;
+            background: #3B82F6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #send.composer__submit:hover {
+            background: #2563EB;
+        }
+
+        .ph {
+            vertical-align: middle;
+        }
+
+        @media (max-width: 600px) {
+            .fileBar {
+                flex-wrap: wrap;
+            }
+
+            .miniBtn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            #view-ask .fileBarWrap {
+                top: 72px;
+            }
+        }
+
+        /* Report typography polish */
+        .message__bubble {
+            position: relative !important;
+            padding-right: 48px !important;
+        }
+
+        .message__bubble h1,
+        .message__bubble h2,
+        .message__bubble h3 {
+            margin-top: 24px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.3;
+        }
+
+        .message__bubble h1 {
+            font-size: 20px;
+            border-bottom: 1px solid #E5E7EB;
+            padding-bottom: 8px;
+        }
+
+        .message__bubble h2 {
+            font-size: 17px;
+            margin-top: 20px;
+        }
+
+        .message__bubble h3 {
+            font-size: 15px;
+            text-transform: uppercase;
+            color: #4B5563;
+            letter-spacing: 0.05em;
+            margin-top: 16px;
+        }
+
+        .message__bubble>h1:first-child,
+        .message__bubble>h2:first-child,
+        .message__bubble>h3:first-child {
+            margin-top: 0;
+        }
+
+        .message__bubble p {
+            margin-bottom: 12px;
+            color: #374151;
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .message__bubble ul,
+        .message__bubble ol {
+            margin: 8px 0 16px 0;
+            padding-left: 24px;
+        }
+
+        .message__bubble li {
+            margin-bottom: 6px;
+            color: #374151;
+            padding-left: 4px;
+        }
+
+        .message__bubble li strong {
+            color: #111827;
+            font-weight: 600;
+        }
+
+        .message__bubble table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 14px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #E5E7EB;
+        }
+
+        .message__bubble th {
+            background: #F9FAFB;
+            font-weight: 600;
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid #E5E7EB;
+            color: #374151;
+        }
+
+        .message__bubble td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #F3F4F6;
+            color: #4B5563;
+        }
+
+        .message__bubble tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ===== Upload view (scoped from File 2; no duplicate composer IDs) ===== */
+        #view-upload {
+            background: #F8FAFC;
+        }
+
+        .uploadStage {
+            min-height: calc(100vh - 64px);
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .dropzone {
+            width: min(560px, calc(100vw - 48px));
+            height: min(380px, calc(100vh - 160px));
+            border-radius: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            cursor: pointer;
+            user-select: none;
+            background: rgba(255, 255, 255, 0.58);
+            border: 1px solid rgba(0, 0, 0, 0.10);
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+        }
+
+        .dropzone:focus {
+            outline: 2px solid rgba(38, 132, 255, 0.65);
+            outline-offset: 5px;
+        }
+
+        .dropzone.isDrag {
+            border-color: rgba(38, 132, 255, 0.55);
+            box-shadow: 0 22px 48px rgba(38, 132, 255, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+            transform: translateY(-2px) scale(1.01);
+        }
+
+        .uploadIcon {
+            font-size: 84px;
+            color: #64748B;
+            transition: all 0.3s ease;
+        }
+
+        .dropzone:hover .uploadIcon {
+            transform: translateY(-8px) scale(1.05);
+            color: #2563EB;
+        }
+
+        .uploadText {
+            font-size: 18px;
+            font-weight: 500;
+            color: #475569;
+            text-align: center;
+        }
+
+        .uploadSubText {
+            font-size: 14px;
+            color: #94A3B8;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        .srOnly {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* ===== Connect view (scoped from File 3) ===== */
+        #view-connect {
+            background: #F8FAFC;
+        }
+
+        .connectWrapper {
+            min-height: calc(100vh - 64px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .connectCard {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 440px;
+            background: #FFFFFF;
+            border-radius: 24px;
+            box-shadow:
+                0 4px 6px -1px rgba(0, 0, 0, 0.05),
+                0 20px 25px -5px rgba(0, 0, 0, 0.05),
+                0 0 0 1px rgba(0, 0, 0, 0.03);
+            padding: 40px 32px;
+            transition: transform 0.3s ease;
+        }
+
+        .cardHeader {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .cardTitle {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1E293B;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .cardSubtitle {
+            font-size: 15px;
+            color: #64748B;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .inputGroup {
+            margin-bottom: 24px;
+        }
+
+        .label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .selectWrap,
+        .inputWrap {
+            position: relative;
+        }
+
+        .selectIcon,
+        .selectCaret,
+        .inputIcon {
+            position: absolute;
+            color: #64748B;
+            pointer-events: none;
+        }
+
+        .selectIcon {
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+        }
+
+        .selectCaret {
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+        }
+
+        .inputIcon {
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+        }
+
+        .input,
+        .select {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 15px;
+            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+            background: #F8FAFC;
+            color: #1E293B;
+            outline: none;
+            transition: all 0.2s ease;
+            appearance: none;
+        }
+
+        .select {
+            padding-left: 44px;
+            padding-right: 40px;
+        }
+
+        .input {
+            padding-left: 44px;
+        }
+
+        .input:focus,
+        .select:focus {
+            border-color: #3B82F6;
+            background: #FFFFFF;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .input::placeholder {
+            color: #94A3B8;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #0F172A;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: #1E293B;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #CBD5E1;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .status--error {
+            background: #FEF2F2;
+            color: #B91C1C;
+            border: 1px solid #FECACA;
+        }
+
+        .status--success {
+            background: #F0FDF4;
+            color: #15803D;
+            border: 1px solid #BBF7D0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .composer__inputWrap--withLeftAction {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .composer__leftBtn {
+            flex: 0 0 auto;
+            height: 40px;
+            width: 40px;
+            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+            background: #FFFFFF;
+            color: #0F172A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .15s ease;
+        }
+
+        .composer__leftBtn:hover {
+            transform: translateY(-1px);
+            border-color: #CBD5E1;
+        }
+
+        dialog.axiModal {
+            /* Critical for centering */
+            margin: auto;
+            inset: 0;
+            position: fixed;
+
+            /* Your existing styling */
+            border: none;
+            padding: 0;
+            border-radius: 18px;
+            width: min(760px, calc(100vw - 32px));
+            max-height: calc(100vh - 40px);
+            /* Prevent it getting cut off on small screens */
+            overflow: hidden;
+            /* Clean corners */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+
+        dialog.axiModal::backdrop {
+            background: rgba(15, 23, 42, 0.35);
+            backdrop-filter: blur(3px);
+        }
+
+        .axiModal__inner {
+            position: relative;
+            background: #fff;
+            padding: 22px;
+            border-radius: 18px;
+        }
+
+        .axiModal__close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            height: 36px;
+            width: 36px;
+            border: 1px solid #E2E8F0;
+            background: #fff;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .axiModal__title {
+            margin: 0 44px 14px 0;
+            font-size: 14px;
+            font-weight: 800;
+            color: #0F172A;
+        }
+
+        /* Ensure Global Bar is top-most sticky */
+        .globalBar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 60px;
+            /* Fixed height to calculate offset */
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        /* Ensure File Bar sticks immediately below Global Bar */
+        .fileBarWrap {
+            position: sticky;
+            top: 60px;
+            /* Matches globalBar height */
+            z-index: 90;
+            background: rgba(248, 250, 252, 0.95);
+            /* Slight contrast */
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #E2E8F0;
+            padding: 12px 20px;
+        }
+
+        /* Secondary Button Style (for Connect inside filebar) */
+        .miniBtn--secondary {
+            background: #FFFFFF;
+            color: #334155;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .miniBtn--secondary:hover {
+            background: #F1F5F9;
+            border-color: #CBD5E1;
+        }
+
+        /* --- 1. GLOBAL HEADER (Single Fixed Bar) --- */
+        .globalBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 72px;
+            /* Slightly taller for better breathing room */
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Center the inner content constraint */
+            padding: 0 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            /* Subtle depth */
+        }
+
+        /* Inner Layout Constraint (Max-width for large screens) */
+        .globalBar__inner {
+            width: 100%;
+            max-width: 1400px;
+            /* Optional constraint */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            /* Logo left, Controls right */
+            gap: 24px;
+        }
+
+        /* Left: Brand */
+        .globalBrand img {
+            height: 45px;
+            width: 45px;
+            object-fit: contain;
+            display: block;
+            /* Remove line-height gap */
+        }
+
+        /* Right: File Bar (Dropdown + Buttons) */
+        .fileBar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            justify-content: flex-end;
+            /* Push to right */
+        }
+
+        /* Dropdown Wrapper */
+        .select-wrapper {
+            position: relative;
+            width: 320px;
+            /* Fixed width for stability */
+            transition: width 0.2s ease;
+        }
+
+        /* Dropdown Polish */
+        .fileSelect {
+            width: 100%;
+            height: 40px;
+            padding: 0 36px 0 40px;
+            /* Space for icons */
+            border-radius: 10px;
+            border: 1px solid #E2E8F0;
+            background: #F8FAFC;
+            color: #334155;
+            font-size: 14px;
+            font-weight: 500;
+            appearance: none;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .fileSelect:hover {
+            border-color: #CBD5E1;
+            background: #fff;
+        }
+
+        .fileSelect:focus {
+            border-color: #3B82F6;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Action Buttons Group */
+        .actionGroup {
+            display: flex;
+            gap: 10px;
+        }
+
+        .miniBtn {
+            height: 40px;
+            padding: 0 18px;
+            border-radius: 10px;
+            border: none;
+            background: #0F172A;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .miniBtn:hover {
+            background: #1E293B;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(15, 23, 42, 0.1);
+        }
+
+        .miniBtn--secondary {
+            background: #fff;
+            color: #475569;
+            border: 1px solid #E2E8F0;
+        }
+
+        .miniBtn--secondary:hover {
+            background: #F8FAFC;
+            border-color: #CBD5E1;
+            color: #1E293B;
+        }
+
+        /* Responsive: On mobile, hide dropdown or stack? */
+        @media (max-width: 768px) {
+            .globalBar {
+                height: auto;
+                padding: 12px 16px;
+            }
+
+            .globalBar__inner {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .fileBar {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .select-wrapper {
+                width: 100%;
+                flex: 1;
+            }
+
+            .actionGroup {
+                gap: 8px;
+            }
+
+            .miniBtn span {
+                display: none;
+            }
+
+            /* Icon only on mobile */
+            .miniBtn {
+                padding: 0 12px;
+            }
+        }
+
+        /* Fix main content top margin since header height changed */
+        #messages {
+            margin-top: 72px;
+            /* Matches new header height */
+            padding-bottom: 140px;
+        }
+
+        /* Prompt bar always pinned to bottom of viewport */
+        .composerWrap {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1000;
+
+            padding: 16px 20px;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom));
+            /* iOS safe area */
+            background: linear-gradient(to top, #F8FAFC 85%, rgba(248, 250, 252, 0));
+        }
+
+        /* Give the scroll area enough space so last messages aren't hidden */
+        #messages.messages {
+            padding-bottom: 140px;
+            /* tune: >= composer height */
+        }
+
+        /* Source Toggle Switch */
+        .sourceToggleWrap {
+            display: flex;
+            align-items: center;
+            margin-right: 8px;
+        }
+
+        .sourceToggleInput {
+            display: none;
+            /* Hide real checkbox */
+        }
+
+        .sourceToggleLabel {
+            width: 64px;
+            height: 36px;
+            background: #E2E8F0;
+            border-radius: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        /* The sliding knob */
+        .sourceToggleLabel::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 30px;
+            height: 30px;
+            background: #FFFFFF;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            z-index: 2;
+        }
+
+        /* Icons inside the track */
+        .toggleIcon {
+            font-size: 18px;
+            color: #64748B;
+            z-index: 1;
+            user-select: none;
+            transition: color 0.3s;
+        }
+
+        /* Checked State (Database Mode) */
+        .sourceToggleInput:checked+.sourceToggleLabel {
+            background: #DBEAFE;
+            /* Light Blue tint */
+        }
+
+        .sourceToggleInput:checked+.sourceToggleLabel::after {
+            transform: translateX(28px);
+            /* Move knob right */
+            background: #3B82F6;
+            /* Active knob color */
+        }
+
+        /* Icon colors when active */
+        .sourceToggleInput:not(:checked)+.sourceToggleLabel .toggleIcon.on {
+            color: #0F172A;
+        }
+
+        /* File Active */
+        .sourceToggleInput:checked+.sourceToggleLabel .toggleIcon.off {
+            color: #fff;
+            z-index: 3;
+        }
+
+        /* --- Custom Searchable Select --- */
+        .custom-select-wrapper {
+            position: relative;
+            width: 320px;
+            /* Fixed width */
+            user-select: none;
+            font-family: -apple-system, system-ui, sans-serif;
+        }
+
+        .custom-select-trigger {
+            width: 100%;
+            height: 40px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid #E2E8F0;
+            background: #F8FAFC;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .custom-select-trigger:hover {
+            background: #fff;
+            border-color: #CBD5E1;
+        }
+
+        .custom-select-value {
+            flex: 1;
+            margin: 0 10px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #334155;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Dropdown Menu */
+        .custom-options-container {
+            position: absolute;
+            top: 48px;
+            /* Below trigger */
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            pointer-events: none;
+            padding-top: 8px;
+            /* Space for search box */
+        }
+
+        /* Open State */
+        .custom-select-wrapper.open .custom-options-container {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* Search Box inside Dropdown */
+        .custom-search-box {
+            padding: 0 12px 8px 12px;
+            border-bottom: 1px solid #F1F5F9;
+            position: relative;
+        }
+
+        .custom-search-box input {
+            width: 100%;
+            padding: 8px 8px 8px 32px;
+            /* Space for icon */
+            border-radius: 8px;
+            border: 1px solid #E2E8F0;
+            font-size: 13px;
+            outline: none;
+            box-sizing: border-box;
+            /* Fix width issues */
+        }
+
+        .custom-search-box input:focus {
+            border-color: #3B82F6;
+        }
+
+        .custom-search-box .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            /* Center vertically */
+            transform: translateY(calc(-50% - 4px));
+            /* Adjust for padding */
+            font-size: 16px;
+            color: #94A3B8;
+        }
+
+        /* Options List */
+        .custom-options-list {
+            max-height: 240px;
+            overflow-y: auto;
+            list-style: none;
+            padding: 4px 0;
+            margin: 0;
+        }
+
+        .custom-option {
+            padding: 10px 16px;
+            font-size: 14px;
+            color: #334155;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .custom-option:hover {
+            background: #F1F5F9;
+            color: #0F172A;
+        }
+
+        .custom-option.selected {
+            background: #EFF6FF;
+            color: #2563EB;
+            font-weight: 500;
+        }
+
+        .custom-option.disabled {
+            color: #94A3B8;
+            cursor: default;
+        }
+
+        .custom-option.disabled:hover {
+            background: none;
+        }
+
+        /* System Prompt Status */
+        #promptStatus {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            padding: 12px 20px;
+            background: #10B981;
+            color: white;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* DB Active */
+    </style>
+
+    <script>
+        window.axpertURL = window.location.origin + '/axpert/';  // adjust if your Axpert is in a subfolder
+    </script>
+    <!-- Your app scripts -->
+    <script>
+
+        const AxiLibrary = {
+            KEY: 'axi_file_library_v1',
+
+            // Save a File object to LocalStorage (Base64 encoded)
+            save: function (file) {
+                var _this = this; // Capture 'this' for standard function scope
+                return new Promise(function (resolve, reject) {
+                    var reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        try {
+                            var lib = _this.getAll();
+                            // Remove duplicate if exists
+                            var newLib = lib.filter(function (f) {
+                                return f.name !== file.name;
+                            });
+
+                            newLib.push({
+                                name: file.name,
+                                type: file.type,
+                                data: e.target.result, // Base64 string
+                                date: Date.now()
+                            });
+
+                            localStorage.setItem(_this.KEY, JSON.stringify(newLib));
+                            console.log('Saved ' + file.name + ' to library.');
+                            resolve(true);
+                        } catch (err) {
+                            alert("File is too large to save in browser history (Max ~5MB).");
+                            console.error("Storage Limit Exceeded", err);
+                            resolve(false);
+                        }
+                    };
+
+                    reader.onerror = function (err) {
+                        console.error("File Read Error", err);
+                        resolve(false);
+                    };
+
+                    reader.readAsDataURL(file);
+                });
+            },
+
+            // Get all file metadata
+            getAll: function () {
+                return JSON.parse(localStorage.getItem(this.KEY) || '[]');
+            },
+
+            // Reconstruct a File object from storage - NO FETCH (CSP SAFE)
+            getFileObj: function (fileName) {
+                var lib = this.getAll();
+                var item = lib.find(function (f) {
+                    return f.name === fileName;
+                });
+
+                if (!item) return Promise.resolve(null);
+
+                // Manual Base64 to Blob conversion (Bypasses CSP "fetch data:" block)
+                try {
+                    var parts = item.data.split(',');
+                    var byteString = atob(parts[1]);
+                    var mimeString = parts[0].split(':')[1].split(';')[0];
+
+                    var ab = new ArrayBuffer(byteString.length);
+                    var ia = new Uint8Array(ab);
+
+                    for (var i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+
+                    var blob = new Blob([ab], { type: mimeString });
+                    var file = new File([blob], item.name, { type: item.type });
+
+                    return Promise.resolve(file);
+                } catch (e) {
+                    console.error("Error converting file:", e);
+                    return Promise.resolve(null);
+                }
+            }
+        };
+
+        // Expose globally
+        window.AxiLibrary = AxiLibrary;
+
+
+    </script>
+
+</head>
+
+<body>
+    <div class="app">
+        <main class="main">
+            <!-- 1. Global Logo Header (Slim, sticky top) -->
+            <header class="globalBar">
+                <div class="globalBar__inner">
+                    <!-- 1. Logo -->
+                    <div class="globalBrand" role="banner">
+                        <img src="../../../plugins/Axi/HTMLPages/images/axibot.png" alt="Axpert logo">
+                    </div>
+
+                    <!-- 2. Controls -->
+                    <div class="fileBar">
+
+                        <!-- Source Toggle (New Feature) -->
+                        <div class="sourceToggleWrap" title="Toggle Data Source">
+                            <input type="checkbox" id="sourceToggle" class="sourceToggleInput">
+                            <label for="sourceToggle" class="sourceToggleLabel">
+                                <span class="material-icons toggleIcon on" title="Files">description</span>
+                                <span class="material-icons toggleIcon off" title="Databases">database</span>
+                            </label>
+                        </div>
+
+                        <!-- File Dropdown (Searchable) -->
+                        <div class="select-wrapper custom-select-wrapper" id="customSelectWrapper">
+                            <!-- Visual Display (Mimics the old Select) -->
+                            <div class="custom-select-trigger" tabindex="0">
+                                <span class="material-icons" style="color:#64748B; font-size:20px;">search</span>
+                                <span class="custom-select-value" id="selectedValue">Select a file...</span>
+                                <span class="material-icons" style="color:#64748B; font-size:20px;">expand_more</span>
+                            </div>
+
+                            <!-- Dropdown Menu (Hidden by default) -->
+                            <div class="custom-options-container">
+                                <!-- Search Input -->
+                                <div class="custom-search-box">
+                                    <span class="material-icons search-icon">search</span>
+                                    <input type="text" id="optionSearch" placeholder="Search..." autocomplete="off">
+                                </div>
+
+                                <!-- Options List -->
+                                <ul id="customOptionsList" class="custom-options-list">
+                                    <!-- JS will populate this -->
+                                    <li class="custom-option disabled">No files loaded</li>
+                                </ul>
+                            </div>
+
+                            <!-- Hidden Select to keep compatibility with existing logic if needed, 
+         though we'll mostly use the custom value -->
+                            <input type="hidden" id="axiFileSelect" value="">
+                        </div>
+
+
+                        <!-- Buttons -->
+                        <div class="actionGroup">
+                            <button id="axiLoad" class="miniBtn" type="button" title="Analyze">
+                                <span class="material-icons">analytics</span>
+                                <span>Analyze</span>
+                            </button>
+                            <!-- Add this button next to your Connect button -->
+                            <button id="openSystemPrompt" class="miniBtn miniBtn--secondary" type="button" title="Edit System Prompt">
+                                <span class="material-icons">edit_note</span>
+                                <span>Edit Prompt</span>
+                            </button>
+                            <button id="openConnect" class="miniBtn miniBtn--secondary" type="button" title="Connect">
+                                <span class="material-icons">cable</span>
+                                <span>Connect</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+
+
+
+            <!-- 2. Ask View (Main Page) -->
+            <section id="view-ask" class="view isActive" style="display:block;">
+
+                <!-- Messages Area -->
+                <div id="messages" class="messages"></div>
+
+                <!-- Floating Composer (Bottom) -->
+                <div class="composerWrap">
+                    <div id="typing" class="typing typing--hidden" aria-hidden="true">
+                        <div class="typing__dot"></div>
+                        <div class="typing__dot"></div>
+                        <div class="typing__dot"></div>
+                    </div>
+
+                    <form id="composer" class="composer" autocomplete="off">
+                        <div class="composer__inputWrap composer__inputWrap--withLeftAction">
+                            <!-- Upload Icon Button (Left of prompt) -->
+                            <button id="openUpload" class="composer__leftBtn" type="button" aria-label="Upload files" title="Upload files">
+                                <span class="material-icons" style="font-size:22px;">cloud_upload</span>
+                            </button>
+
+                            <div id="attachmentTray" class="attachmentTray attachmentTray--hidden"></div>
+
+                            <textarea id="prompt" class="composer__input" rows="1" placeholder="Ask a question about your data..."></textarea>
+                        </div>
+
+                        <button id="send" class="composer__submit" type="submit" aria-label="Send" title="Send">
+                            <span class="material-icons" style="font-size:20px;">send</span>
+                        </button>
+                    </form>
+                </div>
+
+
+                <!-- Hidden Ghost Elements (Required for app.js) -->
+                <div style="display:none !important;" aria-hidden="true">
+                    <button id="historyBtn"></button>
+                    <div id="historyPopover">
+                        <button id="closeHistory"></button>
+                        <div id="chatList"></div>
+                        <button id="newChatFromHistory"></button>
+                    </div>
+                    <button id="newChat"></button>
+                    <button id="reset"></button>
+                    <input type="file" id="fileInput">
+                </div>
+            </section>
+        </main>
+    </div>
+
+
+    <dialog id="systemPromptModal" class="axiModal" aria-labelledby="systemPromptTitle">
+        <div class="axiModal__inner">
+            <button class="axiModal__close" type="button" data-close="systemPromptModal" aria-label="Close">
+                <span class="material-icons">close</span>
+            </button>
+
+            <h2 id="systemPromptTitle" class="axiModal__title" style="margin-bottom:14px;">Edit System Prompt</h2>
+
+            <div style="padding: 8px 0 20px 0;">
+                <p style="color: #64748B; font-size: 14px; margin-bottom: 16px;">
+                    Customize how AXI analyzes your data. This prompt will be sent to the AI with every request.
+                </p>
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: flex; align-items: center; gap: 8px; color: #334155; font-weight: 600; font-size: 13px; margin-bottom: 8px;">
+                        <span class="material-icons" style="font-size: 18px;">smart_toy</span>
+                        System Prompt
+                    </label>
+                    <textarea id="systemPromptEditor" style="width: 100%; min-height: 400px; padding: 16px; border-radius: 12px; border: 1px solid #E2E8F0; background: #F8FAFC; font-family: monospace; font-size: 13px; line-height: 1.6; resize: vertical;" placeholder="Enter your custom system prompt..."></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+                    <div id="promptStatus" class="status" style="display: none; margin-top: 0; width: auto;"></div>
+                    <div style="display: flex; gap: 12px; margin-left: auto;">
+                        <button id="resetSystemPrompt" class="miniBtn miniBtn--secondary" type="button" style="background: #F1F5F9; color: #334155;">
+                            <span class="material-icons" style="font-size: 18px;">restart_alt</span>
+                            Reset to Default
+                        </button>
+                        <button id="saveSystemPrompt" class="miniBtn" type="button" style="background: #3B82F6;">
+                            <span class="material-icons" style="font-size: 18px;">save</span>
+                            Save Prompt
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="connectModal" class="axiModal" aria-labelledby="connectTitle">
+        <div class="axiModal__inner">
+            <button class="axiModal__close" type="button" data-close="connectModal" aria-label="Close">
+                <span class="material-icons">close</span>
+            </button>
+
+            <div class="connectCard" style="max-width:560px; margin:0 auto; box-shadow:none; padding:0;">
+                <div class="cardHeader">
+                    <h1 class="cardTitle" id="connectTitle">
+                        <span class="material-icons" style="color:#3B82F6; font-size:28px;">cable</span>
+                        Connect Intelligence
+                    </h1>
+                    <p class="cardSubtitle">
+                        Select your AI provider and enter your API key to enable advanced analytics.
+                    </p>
+                </div>
+
+                <div class="inputGroup">
+                    <label class="label"><span class="material-icons" style="font-size:16px; vertical-align:middle; margin-right:4px;">smart_toy</span> AI Model
+                        Provider</label>
+                    <div class="selectWrap">
+                        <span class="material-icons selectIcon" style="font-size:20px;">smart_toy</span>
+                        <select id="provider" class="select">
+                            <option value="openai">OpenAI (GPT-4)</option>
+                            <option value="gemini">Google Gemini</option>
+                            <option value="anthropic">Anthropic Claude</option>
+                        </select>
+                        <span class="material-icons selectCaret" style="font-size:20px;">expand_more</span>
+                    </div>
+                </div>
+
+                <div class="inputGroup">
+                    <label class="label"><span class="material-icons" style="font-size:16px; vertical-align:middle; margin-right:4px;">key</span> API Key</label>
+                    <div class="inputWrap">
+                        <span class="material-icons inputIcon" style="font-size:20px;">key</span>
+                        <input type="password" id="apiKey" class="input" placeholder="sk-..." autocomplete="off">
+                    </div>
+                </div>
+
+                <button id="connectBtn" class="btn" type="button">
+                    <span>Verify & Connect</span>
+                    <span class="material-icons" style="font-weight:bold;">arrow_forward</span>
+                </button>
+
+                <div id="status" class="status"></div>
+            </div>
+        </div>
+    </dialog>
+
+
+    <dialog id="uploadModal" class="axiModal" aria-labelledby="uploadTitle">
+        <div class="axiModal__inner">
+            <button class="axiModal__close" type="button" data-close="uploadModal" aria-label="Close">
+                <span class="material-icons">close</span>
+            </button>
+
+            <h2 id="uploadTitle" class="axiModal__title" style="margin-bottom:14px;">Upload files</h2>
+
+            <div class="uploadStage" style="min-height:auto; padding:0; display:block;">
+                <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload files" style="width:100%; height:320px; background:#F8FAFC; border:2px dashed #E2E8F0; box-shadow:none;">
+                    <span class="srOnly">Click or drag and drop files to upload</span>
+
+                    <span class="material-icons uploadIcon" aria-hidden="true" style="font-size:64px;">cloud_upload</span>
+
+                    <div>
+                        <div class="uploadText">Click or Drag files to upload</div>
+                        <div class="uploadSubText">Supports CSV, XLSX, JSON</div>
+                    </div>
+
+                    <input id="picker" type="file" multiple="" accept=".csv,.xlsx,.xls,.json,.txt" hidden="">
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            /* --- 1. GLOBAL UI REFERENCES --- */
+            const connectModal = document.getElementById("connectModal");
+            const uploadModal = document.getElementById("uploadModal");
+            const openConnectBtn = document.getElementById("openConnect");
+            const openUploadBtn = document.getElementById("openUpload");
+            const fileSelect = document.getElementById('axiFileSelect');
+            const analyzeBtn = document.getElementById('axiLoad');
+            const promptInput = document.getElementById('prompt');
+            const composerForm = document.getElementById('composer');
+
+            // -- Connect Modal Elements --
+            const providerSelect = document.getElementById('provider');
+            const keyInput = document.getElementById('apiKey');
+            const connectBtn = document.getElementById('connectBtn');
+            const connectStatus = document.getElementById('status');
+
+            // -- Upload Modal Elements --
+            const dropzone = document.getElementById('dropzone');
+            const picker = document.getElementById('picker');
+
+            /* --- 2. INITIALIZATION --- */
+            // Load saved settings
+            providerSelect.value = localStorage.getItem('axi_provider') || 'openai';
+            keyInput.value = localStorage.getItem('axi_api_key') || '';
+
+            // Default flow: If no key, open Connect modal
+            if (!keyInput.value.trim()) {
+                connectModal.showModal();
+            }
+
+            // =========================================================================
+            // <<<<< CUSTOM SEARCHABLE DROPDOWN LOGIC >>>>>
+            // =========================================================================
+            /* --- 4. DATA SOURCE HANDLING (DYNAMIC FETCH) --- */
+
+
+            /**
+ * Robust JSON parser for Axpert responses
+ * Handles double-encoding, truncated strings, and extra characters
+ */
+            function safeParseData(jsonResponse) {
+                try {
+                    // 1. Handle if jsonResponse is null/undefined
+                    if (!jsonResponse) return [];
+
+                    // 2. Get the 'd' property (Axpert wrapper)
+                    // If passed as string, try to parse it first
+                    var outer = (typeof jsonResponse === 'string') ? JSON.parse(jsonResponse) : jsonResponse;
+                    var dString = outer.d || outer; // Fallback to outer if 'd' doesn't exist
+
+                    // 3. If dString is already an object/array, return it (it's already parsed)
+                    if (typeof dString !== 'string') return dString;
+
+                    // 4. CLEANUP - The Critical Step for Axpert strings
+                    dString = dString.trim();
+
+                    // Remove ANY trailing characters after the last "}" or "]"
+                    var lastBrace = dString.lastIndexOf('}');
+                    var lastBracket = dString.lastIndexOf(']');
+                    var lastValid = Math.max(lastBrace, lastBracket);
+
+                    if (lastValid !== -1) {
+                        dString = dString.substring(0, lastValid + 1);
+                    }
+
+                    // 5. Parse inner JSON
+                    var inner = JSON.parse(dString);
+
+                    // 6. Navigate to data array (handle various Axpert formats)
+                    // Format A: { result: { data: [ { data: [...] } ] } }
+                    if (inner && inner.result && inner.result.data && inner.result.data[0] && inner.result.data[0].data) {
+                        return inner.result.data[0].data;
+                    }
+                    // Format B: { result: { data: [...] } }
+                    if (inner && inner.result && inner.result.data) {
+                        return inner.result.data;
+                    }
+                    // Format C: Direct array
+                    if (Array.isArray(inner)) {
+                        return inner;
+                    }
+
+                    return [];
+                } catch (e) {
+                    console.error("Data Parse Error:", e);
+                    return [];
+                }
+            }
+
+            /* --- 4. DATA SOURCE HANDLING (DYNAMIC FETCH) --- */
+
+            // Initialize empty DB list (will be populated by API)
+            let DB_LIST = [];
+
+            /**
+             * Fetch datasources from Axpert using parent.GetDataFromAxList
+             */
+            function loadDataSources() {
+                console.log("Fetching data sources from 'ds_list'...");
+
+                // Check if parent function exists
+                if (typeof parent.GetDataFromAxList === "function") {
+
+                    // Call the Axpert method with callback
+                    // params can be empty object {} or specific params if ds_list needs them
+                    var params = {};
+
+                    parent.GetDataFromAxList(params, function success(response) {
+                        try {
+                            // --- PARSING LOGIC START (Matching your example) ---
+                            var rawObj = (typeof response === 'string') ? JSON.parse(response) : response;
+                            var innerJson = (rawObj && rawObj.d) ? rawObj.d : rawObj;
+
+                            // Use safeParseData here to handle the inner string robustly
+                            // (or use the simple JSON.parse if you trust the source completely, 
+                            // but safeParseData is safer for "Unexpected non-whitespace" errors)
+                            var parsedData = safeParseData(innerJson);
+
+                            if (!parsedData || !Array.isArray(parsedData)) {
+                                console.warn("No data sources found in response.");
+                                return;
+                            }
+
+                            // Map to our app's format
+                            DB_LIST = parsedData.map(function (item) {
+                                return {
+                                    name: item.name,
+                                    caption: item.caption || item.name,
+                                    date: new Date().toISOString()
+                                };
+                            });
+
+                            // Add hardcoded extras if needed
+                            DB_LIST.push({
+                                name: "axmp_po",
+                                caption: "Purchase Orders (axmp_po)",
+                                date: new Date().toISOString()
+                            });
+
+                            console.log("Loaded " + DB_LIST.length + " data sources.");
+
+                            // Refresh the dropdown UI
+                            var toggle = document.getElementById('sourceToggle');
+                            if (toggle && toggle.checked && window.AXI && window.AXI.refreshFileSelect) {
+                                window.AXI.refreshFileSelect();
+                            }
+
+                        } catch (e) {
+                            console.error("[DS List] Parsing Error:", e);
+                        }
+
+                    }, function error(err) {
+                        console.error("[DS List] API Error:", err);
+                    });
+
+                } else {
+                    console.warn("parent.GetDataFromAxList is not available.");
+                }
+            }
+
+            /**
+             * Process the raw response from ds_list and update UI
+             */
+            function processDataSourceList(rawResponse) {
+                try {
+                    // 1. Parse the response using our robust parser
+                    // Note: The structure from GetDataFromAxList might be the direct 'result' object 
+                    // or the 'd' string depending on implementation. safeParseData handles both.
+                    var parsedData = safeParseData(rawResponse);
+
+                    if (!parsedData || !Array.isArray(parsedData)) {
+                        console.warn("No data sources found in response.");
+                        return;
+                    }
+
+                    // 2. Map to our app's format
+                    DB_LIST = parsedData.map(function (item) {
+                        return {
+                            name: item.name,               // e.g. "sepri"
+                            caption: item.caption || item.name, // e.g. "Selling Price"
+                            date: new Date().toISOString() // Placeholder date
+                        };
+                    });
+
+                    // 3. Add any hardcoded extras if needed (like the PO list)
+                    DB_LIST.push({
+                        name: "axmp_po",
+                        caption: "Purchase Orders (axmp_po)",
+                        date: new Date().toISOString()
+                    });
+
+                    console.log("Loaded " + DB_LIST.length + " data sources.");
+
+                    // 4. Refresh the dropdown if it's currently showing databases
+                    var toggle = document.getElementById('sourceToggle');
+                    if (toggle && toggle.checked && window.AXI && window.AXI.refreshFileSelect) {
+                        window.AXI.refreshFileSelect();
+                    }
+
+                } catch (e) {
+                    console.error("Error processing data sources:", e);
+                }
+            }
+
+            // Store Real Data for Analysis (PO Data remains static for now)
+            const MOCK_DATA_RESPONSES = {
+                "axmp_po": safeParseData(typeof RAW_PO_DATA !== 'undefined' ? RAW_PO_DATA : "") // Use safeParseData on RAW_PO_DATA if it exists
+            };
+
+            // --- Add this to your DOMContentLoaded initialization block ---
+            // document.addEventListener('DOMContentLoaded', () => {
+            //    ... existing init code ...
+            //    loadDataSources(); // <--- Add this line
+            // });
+
+            // =========================================================================
+            // <<<<< CUSTOM SYSTEM PROMPT EDITOR >>>>>
+            // =========================================================================
+
+            // Default system prompt (your original)
+            const DEFAULT_SYSTEM_PROMPT = `You are AXI, an expert Data Analyst and Report Generator.
+
+CAPABILITIES:
+1. Analyze attached data deeply and thoroughly.
+2. Visualize trends using Highcharts JSON format.
+3. Report findings in professional, detailed format.
+
+IMPORTANT RULE: 
+- (most important) Don't assume.
+
+CHART PROTOCOL:
+
+
+Use diverse chart types to best represent the data. Do NOT rely only on Bar/Line charts.
+Output in this JSON format:
+{
+  "charts": [
+    { "chart": { "type": "column", "title": "...", "xAxis": {...}, "series": [...] } }
+  ]
+}
+
+AVAILABLE CHART TYPES (Select the most insight-rich option):
+- **column** / **bar**: For comparing categories or counts.
+- **line** / **spline**: For trends over time (smooth curves).
+- **area** / **areaspline**: For cumulative trends or volume over time.
+- **pie** / **donut**: For part-to-whole composition (limit to 5-7 slices).
+- **scatter**: For correlation between two variables (x, y).
+- **bubble**: For 3D analysis (x, y, size).
+- **heatmap**: For density or cross-tabulation intensity.
+- **treemap**: For hierarchical data or showing size proportions.
+
+**CHART GENERATION FOR GROUPED DATA:**
+When asked to "group by" a field (like supplier, category, etc.):
+
+1. For column/bar charts: Each unique value in the grouped field should be a SEPARATE SERIES
+2. The series "name" MUST be the actual value (e.g., "ABB INDIA PVT LTD", "FOXCON INDIA PVT LTD")
+3. Example format:
+{
+  "charts": [
+    {
+      "chart": { "type": "column" },
+      "title": { "text": "Orders by Supplier" },
+      "xAxis": { "categories": ["Product A", "Product B", ...] },
+      "series": [
+        { "name": "ABB INDIA PVT LTD", "data": [5, 10, 15] },
+        { "name": "FOXCON INDIA PVT LTD", "data": [3, 7, 12] },
+        { "name": "PADGET ELECTRONICS", "data": [2, 4, 8] }
+      ]
+    }
+  ]
+}
+
+4. DO NOT use generic names like "Series 1", "Supplier 1", etc.
+5. The legend MUST display the actual supplier/category names
+
+REPORT PROTOCOL (CRITICAL):
+When generating analysis or reports, structure them as:
+
+## Executive Summary
+Brief overview of key findings (2-3 paragraphs)
+
+## Data Overview
+- Total records analyzed
+- Date range covered
+- Key metrics summary
+
+## Detailed Analysis
+### [Category 1]
+Findings, trends, patterns with specific data points
+
+### [Category 2]
+Findings, trends, patterns with specific data points
+
+### [Category 3]
+Findings, trends, patterns with specific data points
+
+## Key Insights
+- Bullet point insights
+- Action items
+- Recommendations
+
+## Statistical Summary
+Tables showing aggregated data
+
+## Conclusion
+Summary and next steps
+
+**FORMATTING RULES:**
+- Analyze all the rows uploaded
+- Use Markdown headers (##, ###)
+- Use **bold** for emphasis
+- Use tables for structured data
+- Use bullet points for lists
+- Make reports detailed (aim for 1000+ words for comprehensive analysis)
+- Include specific numbers, percentages, and data points`;
+
+            // LocalStorage key for custom prompt
+            const CUSTOM_PROMPT_KEY = 'axi_custom_system_prompt';
+
+            // EXPOSE GLOBALLY - Add to window object
+            window.DEFAULT_SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT;
+            window.CUSTOM_PROMPT_KEY = CUSTOM_PROMPT_KEY;
+
+            // Get the current active system prompt - MAKE IT GLOBAL
+            window.getActiveSystemPrompt = function () {
+                const customPrompt = localStorage.getItem(CUSTOM_PROMPT_KEY);
+                return customPrompt || DEFAULT_SYSTEM_PROMPT;
+            };
+
+            // Save custom prompt - MAKE IT GLOBAL
+            window.saveCustomPrompt = function (prompt) {
+                if (prompt === DEFAULT_SYSTEM_PROMPT) {
+                    localStorage.removeItem(CUSTOM_PROMPT_KEY);
+                    return false;
+                } else {
+                    localStorage.setItem(CUSTOM_PROMPT_KEY, prompt);
+                    return true;
+                }
+            };
+
+            // Initialize the system prompt editor
+            function initSystemPromptEditor() {
+                const modal = document.getElementById('systemPromptModal');
+                const openBtn = document.getElementById('openSystemPrompt');
+                const saveBtn = document.getElementById('saveSystemPrompt');
+                const resetBtn = document.getElementById('resetSystemPrompt');
+                const editor = document.getElementById('systemPromptEditor');
+                const closeBtn = modal?.querySelector('[data-close="systemPromptModal"]');
+
+                if (!modal) {
+                    console.warn('System prompt modal not found');
+                    return;
+                }
+
+                if (!openBtn) {
+                    console.warn('Open system prompt button not found');
+                    return;
+                }
+
+                // Open modal - load current prompt
+                openBtn.addEventListener('click', () => {
+                    if (editor) {
+                        editor.value = window.getActiveSystemPrompt();
+                    }
+                    modal.showModal();
+                });
+
+                // Save custom prompt
+                if (saveBtn && editor) {
+                    saveBtn.addEventListener('click', () => {
+                        const newPrompt = editor.value.trim();
+                        if (!newPrompt) {
+                            alert('System prompt cannot be empty');
+                            return;
+                        }
+
+                        const isCustom = window.saveCustomPrompt(newPrompt);
+                        modal.close();
+
+                        // Show success message
+                        const statusDiv = document.createElement('div');
+                        statusDiv.id = 'promptStatus';
+                        statusDiv.className = 'status status--success';
+                        statusDiv.style.cssText = 'position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; padding: 12px 20px; background: #10B981; color: white; border-radius: 12px; font-size: 14px; font-weight: 500; align-items: center; gap: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); animation: slideIn 0.3s ease;';
+                        statusDiv.innerHTML = `<span class="material-icons" style="font-size: 18px;">check_circle</span> System prompt ${isCustom ? 'saved' : 'reset to default'} successfully!`;
+                        document.body.appendChild(statusDiv);
+
+                        setTimeout(() => statusDiv.remove(), 3000);
+                    });
+                }
+
+                // Reset to default
+                if (resetBtn && editor) {
+                    resetBtn.addEventListener('click', () => {
+                        if (confirm('Reset to default system prompt?')) {
+                            editor.value = DEFAULT_SYSTEM_PROMPT;
+                        }
+                    });
+                }
+
+                // Close modal handlers
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', () => modal.close());
+                }
+
+                modal.addEventListener('mousedown', (e) => {
+                    if (e.target === modal) modal.close();
+                });
+            }
+
+            // Add animation keyframes if they don't exist
+            if (!document.querySelector('#prompt-animation-style')) {
+                const style = document.createElement('style');
+                style.id = 'prompt-animation-style';
+                style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    `;
+                document.head.appendChild(style);
+            }
+
+            // Initialize when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initSystemPromptEditor);
+            } else {
+                initSystemPromptEditor();
+            }
+            // =========================================================================
+            // <<<<< OPENAI DATA FETCHER FOR DATABASES >>>>>
+            // =========================================================================
+
+            // =========================================================================
+            // <<<<< OPENAI DATA FETCHER FOR DATABASES >>>>>
+            // =========================================================================
+
+            // Function to get the actual data for the selected database
+            async function getSelectedDatabaseData() {
+                const selectedDbName = hiddenInput.value;
+                if (!selectedDbName) return null;
+
+                const isDbMode = toggle ? toggle.checked : false;
+                if (!isDbMode) return null; // Not in DB mode
+
+                // Look up the data in MOCK_DATA_RESPONSES
+                const dbData = MOCK_DATA_RESPONSES[selectedDbName];
+                if (!dbData) {
+                    console.error(`No data found for database: ${selectedDbName}`);
+                    return null;
+                }
+
+                return {
+                    name: selectedDbName,
+                    data: dbData
+                };
+            }
+
+
+            // Store the database data to be sent to AI (invisible to user)
+            window.pendingDatabaseData = null; // Directly set on window object// This sets the LOCAL variable, not window.pendingDatabaseData
+            const originalAnalyzeHandler = analyzeBtn.onclick;
+
+
+            // --- 3. ANALYZE BUTTON LOGIC (The Fix) ---
+            analyzeBtn.onclick = async function (e) {
+                const fileName = hiddenInput.value; // The file selected in dropdown
+                if (!fileName) {
+                    alert("Please select a file first.");
+                    return;
+                }
+
+                const isDbMode = toggle ? toggle.checked : false;
+
+                // 1. CLEAR previous attachments to avoid confusion
+                if (typeof state !== 'undefined') {
+                    state.pendingAttachments = [];
+                }
+
+                if (isDbMode) {
+                    // ... (Database mode logic remains same) ...
+                    const dbInfo = await getSelectedDatabaseData();
+                    if (dbInfo) {
+                        window.pendingDatabaseData = dbInfo;
+                        promptInput.value = `Analyze this purchase order data.`;
+                    } else {
+                        promptInput.value = `Analyze database: ${fileName}`;
+                    }
+                } else {
+                    // --- FIX STARTS HERE ---
+                    // 2. Retrieve the ACTUAL file object from your library
+                    // We need the File object to read its content in handleSend
+                    if (window.AxiLibrary) {
+                        const fileObj = await AxiLibrary.getFileObj(fileName);
+
+                        if (fileObj) {
+                            // 3. Push to pendingAttachments so handleSend() sees it
+                            if (typeof state !== 'undefined') {
+                                state.pendingAttachments = [fileObj];
+                            }
+
+                            // 4. Set a generic prompt
+                            promptInput.value = `Analyze this file: ${fileName}`;
+                        } else {
+                            console.error("File object not found in AxiLibrary for:", fileName);
+                            alert("Could not load file data. Please re-upload.");
+                            return;
+                        }
+                    }
+                    // --- FIX ENDS HERE ---
+                }
+
+                // 5. Trigger the main chat function
+                if (typeof handleSend === 'function') {
+                    await handleSend(); // This will now read state.pendingAttachments[0]
+                } else {
+                    // Fallback
+                    composerForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                }
+            };
+
+
+            function getDatabases() {
+                try {
+                    // 1. Parse the inner stringified JSON
+                    const inner = JSON.parse(RAW_DS_RESPONSE.d);
+
+                    // 2. Extract the data array
+                    // Path: result -> data[0] -> data
+                    const rawList = inner.result.data[0].data || [];
+
+                    // 3. Map to our app's format
+                    const formattedList = rawList.map(item => ({
+                        name: item.name,          // e.g. "sepri" - used as ID
+                        caption: item.caption,    // e.g. "Selling Price" - pretty name
+                        date: new Date().toISOString() // Placeholder for now
+                    }));
+
+                    // 4. Manually add "axmp_po" as requested
+                    formattedList.push({
+                        name: "axmp_po",
+                        caption: "Purchase Orders (axmp_po)",
+                        date: new Date().toISOString()
+                    });
+
+                    return formattedList;
+                } catch (e) {
+                    console.error("Failed to parse datasources:", e);
+                    return [];
+                }
+            }
+
+            // Use this dynamic list instead of static MOCK_DBS
+
+
+            const toggle = document.getElementById('sourceToggle');
+            const customWrapper = document.getElementById('customSelectWrapper');
+            const customTrigger = customWrapper.querySelector('.custom-select-trigger');
+            const customList = document.getElementById('customOptionsList');
+            const searchInput = document.getElementById('optionSearch');
+            const hiddenInput = document.getElementById('axiFileSelect'); // The hidden value holder
+            const displayValue = document.getElementById('selectedValue');
+
+            let currentItems = []; // Store current list for filtering
+
+            // Toggle Source Mode
+            if (toggle) {
+                toggle.addEventListener('change', () => {
+                    refreshFileSelect({ selectLatest: false });
+                });
+            }
+
+            // Toggle Dropdown Visibility
+            customTrigger.addEventListener('click', () => {
+                customWrapper.classList.toggle('open');
+                if (customWrapper.classList.contains('open')) {
+                    searchInput.value = ''; // Clear search on open
+                    filterOptions(''); // Reset list
+                    searchInput.focus();
+                }
+            });
+
+            // Close when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!customWrapper.contains(e.target)) {
+                    customWrapper.classList.remove('open');
+                }
+            });
+
+            // Search Filtering Logic
+            searchInput.addEventListener('input', (e) => {
+                filterOptions(e.target.value.toLowerCase());
+            });
+
+            function filterOptions(query) {
+                customList.innerHTML = ''; // Clear list
+
+                const filtered = currentItems.filter(item =>
+                    item.name.toLowerCase().includes(query)
+                );
+
+                if (filtered.length === 0) {
+                    customList.innerHTML = `<li class="custom-option disabled">No matches found</li>`;
+                } else {
+                    // ... inside filterOptions loop ...
+                    filtered.forEach(item => {
+                        const li = document.createElement('li');
+                        li.className = 'custom-option';
+                        if (item.name === hiddenInput.value) li.classList.add('selected');
+
+                        // Logic to show Caption if available, else Name
+                        const label = item.caption || item.name;
+                        // Sub-label shows the technical name (ID)
+                        const sub = item.caption ? item.name : '';
+
+                        li.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:500">${label}</span>
+                            <span style="color:#94A3B8; font-size:12px; font-family:monospace;">${sub}</span>
+                        </div>
+                    `;
+
+                        // Click Handler (Selection)
+                        li.addEventListener('click', () => {
+                            selectItem(item);
+                        });
+
+                        customList.appendChild(li);
+                    });
+
+                }
+            }
+
+            function selectItem(item) {
+                hiddenInput.value = item.name; // Update logic value
+                displayValue.textContent = item.caption || item.name; // Update UI text
+                customWrapper.classList.remove('open'); // Close menu
+
+                // Remove 'selected' class from others
+                document.querySelectorAll('.custom-option').forEach(el => el.classList.remove('selected'));
+            }
+
+            // Main Refresh Function (Populates Data)
+            function refreshFileSelect(opts = {}) {
+                const { selectLatest = false } = opts;
+                const isDbMode = toggle ? toggle.checked : false;
+
+                // Load Data
+                if (isDbMode) {
+                    currentItems = DB_LIST;
+                    displayValue.textContent = "Select a database...";
+                } else {
+                    if (!window.AxiLibrary) return;
+                    currentItems = AxiLibrary.getAll();
+                    displayValue.textContent = "Select a file to analyze...";
+                }
+
+                // Populate Initial List
+                filterOptions('');
+
+                // Handle Empty State
+                if (currentItems.length === 0) {
+                    customList.innerHTML = `<li class="custom-option disabled">${isDbMode ? "No databases found" : "No uploaded files"}</li>`;
+                    hiddenInput.value = "";
+                }
+                // Select Latest if requested
+                else if (selectLatest) {
+                    // Assuming items are sorted (newest first? depends on AxiLibrary logic)
+                    // If AxiLibrary.save unshifts (adds to top), then index 0 is newest.
+                    // If it pushes (adds to bottom), then last index is newest.
+                    // Let's assume index 0 based on standard recent-first UI patterns.
+                    selectItem(currentItems[0]);
+                }
+            }
+
+            // Expose globally
+            window.AXI = window.AXI || {};
+            window.AXI.refreshFileSelect = refreshFileSelect;
+
+            // Init
+            refreshFileSelect();
+
+            // =========================================================================
+
+
+
+
+            /* --- 3. MODAL CONTROLS --- */
+            // Open buttons
+            if (openConnectBtn) openConnectBtn.addEventListener("click", () => connectModal.showModal());
+            if (openUploadBtn) openUploadBtn.addEventListener("click", () => uploadModal.showModal());
+
+            // Close buttons (using data-close attribute)
+            document.querySelectorAll("[data-close]").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const id = btn.getAttribute("data-close");
+                    const dlg = document.getElementById(id);
+                    if (dlg && dlg.open) dlg.close();
+                });
+            });
+
+            // Close on backdrop click
+            [connectModal, uploadModal].forEach(dlg => {
+                dlg.addEventListener("mousedown", (e) => {
+                    if (e.target === e.currentTarget) dlg.close();
+                });
+            });
+
+            /* --- 4. CONNECT LOGIC --- */
+            connectBtn.onclick = async () => {
+                const provider = providerSelect.value;
+                const key = keyInput.value.trim();
+
+                if (!key) { showStatus('Please enter an API Key', 'error'); return; }
+
+                setConnectLoading(true);
+
+                try {
+                    await validateKey(provider, key);
+
+                    localStorage.setItem('axi_provider', provider);
+                    localStorage.setItem('axi_api_key', key);
+
+                    showStatus('Connected! Moving to upload...', 'success');
+
+                    setTimeout(() => {
+                        connectModal.close();
+                        uploadModal.showModal();
+                        setConnectLoading(false);
+                        connectStatus.style.display = 'none';
+                    }, 800);
+
+                } catch (e) {
+                    showStatus(e.message || 'Connection failed', 'error');
+                    setConnectLoading(false);
+                }
+            };
+
+
+
+            async function validateKey(provider, key) {
+                if (provider === 'openai') {
+                    const res = await fetch('https://api.openai.com/v1/models', {
+                        headers: { Authorization: `Bearer ${key}` }
+                    });
+                    if (!res.ok) throw new Error('Invalid OpenAI Key');
+                } else if (provider === 'gemini') {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`);
+                    if (!res.ok) throw new Error('Invalid Gemini Key');
+                } else if (provider === 'anthropic' && !key.startsWith('sk-ant')) {
+                    throw new Error('Invalid Anthropic Key format');
+                }
+            }
+
+            function showStatus(msg, type) {
+                const icon = type === 'error'
+                    ? '<span class="material-icons" style="font-size:18px;">warning</span>'
+                    : '<span class="material-icons" style="font-size:18px;">check_circle</span>';
+
+                connectStatus.innerHTML = `${icon} <span>${escapeHtml(msg)}</span>`;
+                connectStatus.className = `status status--${type}`;
+                connectStatus.style.display = 'flex';
+            }
+
+            function setConnectLoading(loading) {
+                connectBtn.disabled = loading;
+                connectBtn.innerHTML = loading
+                    ? '<span class="material-icons" style="animation: spin 1s linear infinite;">sync</span> Verifying...'
+                    : '<span>Verify & Connect</span><span class="material-icons" style="font-weight:bold;">arrow_forward</span>';
+            }
+            /* --- 5. UPLOAD LOGIC --- */
+            const setDrag = (on) => dropzone.classList.toggle('isDrag', !!on);
+
+            ['dragenter', 'dragover'].forEach(evt => {
+                dropzone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); setDrag(true); });
+            });
+            ['dragleave', 'dragend', 'drop'].forEach(evt => {
+                dropzone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); setDrag(false); });
+            });
+
+            dropzone.addEventListener('click', () => picker.click());
+
+            picker.addEventListener('change', () => {
+                if (picker.files.length) handleFiles(picker.files);
+                picker.value = '';
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                if (dt && dt.files.length) handleFiles(dt.files);
+            });
+
+            async function handleFiles(fileList) {
+                const files = Array.from(fileList || []);
+                if (!files.length) return;
+
+                for (const f of files) {
+                    await AxiLibrary.save(f);
+                }
+
+                if (document.getElementById('uploadModal')) {
+                    document.getElementById('uploadModal').close();
+                }
+
+                // CRITICAL: Refresh the dropdown immediately
+                if (typeof window.AXI !== 'undefined' && typeof window.AXI.refreshFileSelect === 'function') {
+                    window.AXI.refreshFileSelect({ selectLatest: true });
+                } else {
+                    refreshFileSelect({ selectLatest: true });
+                }
+
+                if (document.getElementById('prompt')) {
+                    document.getElementById('prompt').focus();
+                }
+            }
+
+            /* --- 6. ASK / ANALYZE LOGIC --- */
+            // (Note: The `refreshFileSelect` logic was moved UP into the "TOGGLE LOGIC" block above. 
+            // You should remove the DUPLICATE `refreshFileSelect` function that was down here.)
+
+
+            function escapeHtml(str) {
+                return String(str)
+                    .replace(/&/g, String.fromCharCode(38) + 'amp;')
+                    .replace(/</g, String.fromCharCode(38) + 'lt;')
+                    .replace(/>/g, String.fromCharCode(38) + 'gt;')
+                    .replace(/"/g, String.fromCharCode(38) + 'quot;')
+                    .replace(/'/g, String.fromCharCode(38) + '#39;');
+            }
+
+
+            initSystemPromptEditor();
+        });
+    </script>
+
+
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+
+	<script type="text/javascript" src="../../../plugins/Axi/HTMLPages/js/app.js"></script>
+</body></html>
