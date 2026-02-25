@@ -3147,7 +3147,9 @@
     }
 
     function handleOpenDbConsole() {
-        window.openDeveloperStudio("AxDBScript.aspx");
+        // Task Axi-0034 completed
+        // window.openDeveloperStudio("AxDBScript.aspx");
+        window.LoadIframe("../aspx/AxDBScript.aspx"); 
 
     }
 
