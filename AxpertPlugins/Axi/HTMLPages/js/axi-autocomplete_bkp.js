@@ -1,5 +1,5 @@
 ﻿(() => {
-    // 20-02-2026: Pre release version
+    
 
     // /AxPlugins/Axi/HTMLPages/js/axi-autocomplete.js
     
@@ -180,7 +180,7 @@
     let activeFetches = new Set();
     let filteredObjects = [];
     let adsfieldvalueanddt = {};
-    let createfieldnamevaluesList = [];
+    let createfieldnamevaluesList = {};
     let mode = "";
     const aiModeCommands = {
         "connect": { "cmdToken": 11, "command": "", "commandGroup": "connect", "prompts": [] },
@@ -1490,14 +1490,14 @@
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck === "create") {
             console.log("Save Option Selected...Submitting Data...");
             hide();
-            AxisaveDataFn(createfieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", true, tokens, saveCommandConfig);
+            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_fieldlist", true, tokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck === "edit") {
             console.log("Save Option Selected...Submitting Data...");
             hide();
-            AxisaveDataFn(createfieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", false, tokens, saveCommandConfig);
+            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_fieldlist", false, tokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
@@ -1853,7 +1853,7 @@
                     adsList = null;
                     axDatasourceObj = {};
                     resolvedParams = {};
-                    createfieldnamevaluesList = [];
+                    createfieldnamevaluesList = {};
                     resetSetCommandState();
 
                     await initCommands(true);
@@ -1922,11 +1922,13 @@
             if(grpKey)
               saveCommandConfig = commands[grpKey];
 
-            if (e.key === 'Backspace' && (grpKey === "create" || grpKey === "edit") ){
+            if (e.key === 'Backspace' && (grpKey === "create" || grpKey === "edit")) {
+                let transIDcheck = setCommandTransid;
                 if (input.selectionStart !== input.selectionEnd) {
-                    resetSetCommandState(); 
-                    createfieldnamevaluesList = [];
-                    return; 
+                    createfieldnamevaluesList[transIDcheck] = [];
+                    setCommandTransid == null;
+                    resetSetCommandState();
+                    return;
                 }
                 e.preventDefault();
                 hide();
@@ -1940,8 +1942,10 @@
                     console.log("Deleted a space using Backspace");
                 }
                 else {
-                    createfieldnamevaluesList.pop();
-                 
+                    if (createfieldnamevaluesList?.[transIDcheck]?.length > 0) {
+                        createfieldnamevaluesList[transIDcheck].pop();
+                    }
+
                 }
                 input.value = tokens.join(" ");
 
@@ -2041,9 +2045,9 @@
                 console.log("Save Option Selected...Submitting Data...");
                 hide();
                 if (grpKey === "create")
-                    AxisaveDataFn(createfieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", true, tokens, saveCommandConfig);
+                    AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_fieldlist", true, tokens, saveCommandConfig);
                 else
-                    AxisaveDataFn(createfieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", false, tokens, saveCommandConfig);
+                    AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_fieldlist", false, tokens, saveCommandConfig);
                 resetSetCommandState();
                 return;
             }
@@ -3604,7 +3608,7 @@
             if (!id) return;
 
             const label = extractButtonLabel(btn);
-            if (label.toLowerCase() === "export" || label.toLowerCase() === "theme" || label.toLowerCase() === "field captions" || label.toLowerCase() === "view" || label.toLowerCase() === "pattern") return; 
+            if (label.toLowerCase() === "export" || label.toLowerCase() === "theme" || label.toLowerCase() === "field captions" || label.toLowerCase() === "view" ) return; 
             if (!label) return;
 
             result[id] = {
@@ -3996,7 +4000,8 @@
                 let previousColumnName = SET_COMMAND_STATE.currentField;
                 previousColumnName = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
                 let previousColumnValue = SET_COMMAND_STATE.currentFieldValue;
-                AddFieldstoList(previousColumnName, 1, previousColumnValue);
+                //AddFieldstoList(previousColumnName, 1, previousColumnValue);
+                AddFieldstoList(previousColumnName, 1, previousColumnValue, setCommandTransid);
             }
 
 
@@ -4141,7 +4146,7 @@
                         var params3 = columnMetadata.normalized;
                         var params4 = columnMetadata.fromlist;
 
-                        params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList, commandConfig);
+                        params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList[setCommandTransid], commandConfig);
 
                         console.log(params2);
 
@@ -4345,7 +4350,7 @@
                 let previousColumnName = SET_COMMAND_STATE.currentField;
                 previousColumnName = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
                 let previousColumnValue = SET_COMMAND_STATE.currentFieldValue;
-                AddFieldstoList(previousColumnName, 1, previousColumnValue);
+                AddFieldstoList(previousColumnName, 1, previousColumnValue, setCommandTransid);
             }
 
 
@@ -4380,7 +4385,7 @@
 
             let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
-            if (SET_COMMAND_STATE.currentField || (targetIndex % 2 !== 0 && targetIndex >= 4)) {
+            if (SET_COMMAND_STATE.currentField || (targetIndex % 2 == 0 && targetIndex >= 4)) {
                 //resultList.unshift(goOption);
                 resultList.unshift(saveOption);
                 //filteredObjects.unshift(goOption);
@@ -4520,7 +4525,7 @@
                         var params4 = columnMetadata.fromlist;
 
 
-                        params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList, commandConfig);
+                        params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList[setCommandTransid], commandConfig);
 
                         console.log(params2);
 
@@ -4589,23 +4594,29 @@
             else return [];
         }
     }
-    function AddFieldstoList(fieldName, rowNo, value) {
+   function AddFieldstoList(fieldName, rowNo, value, transid) {
 
-        if (!fieldName || !value) return;
+        if (!fieldName || !value || !transid) return;
+
+        if (!createfieldnamevaluesList[transid]) {
+            createfieldnamevaluesList[transid] = [];
+        }
+
+        const currentList = createfieldnamevaluesList[transid];
 
         const keyPrefix = `${fieldName}~${rowNo}=`;
-        const existingIndex = createfieldnamevaluesList.findIndex(item =>
+        const existingIndex = currentList.findIndex(item =>
             item.startsWith(keyPrefix)
         );
 
         const formatted = `${fieldName}~${rowNo}=${value}`;
 
         if (existingIndex !== -1) {
-            if (createfieldnamevaluesList[existingIndex] !== formatted) {
-                createfieldnamevaluesList[existingIndex] = formatted;
+            if (currentList[existingIndex] !== formatted) {
+                currentList[existingIndex] = formatted;
             }
         } else {
-            createfieldnamevaluesList.push(formatted);
+            currentList.push(formatted);
         }
     }
 
@@ -4750,11 +4761,14 @@
         let rawName = cleanCommandToken(tokens[1]);
         let transId = tryResolveToken(1, rawName, commandConfig, false);
 
-        if (!transId || createfieldnamevaluesList.length == 0) {
+        if (!transId ) {
             console.log("Missing transaction ID or field values.");
             showToast("Some required information is missing. Please re-enter the command and try again.");
             return;
         }
+
+
+        //commenetd bcz of set issue for a dependency field
 
         //let CurrentOpentstructName = getTransID();
 
@@ -4824,11 +4838,12 @@
                     setTimeout(function () {
                     try {
 
-                        console.log(createfieldnamevaluesList);
-                        //for (let j = 2; j < tokens.length; j += 2) {
-                        for (let j = 0; j < createfieldnamevaluesList.length; j++) {
+                        
+                        console.log(createfieldnamevaluesList[transId]);
+                       // for (let j = 2; j < tokens.length; j += 2) {
+                        for (let j = 0; j < createfieldnamevaluesList[transId].length; j++) {
 
-                            const item = createfieldnamevaluesList[j];
+                            const item = createfieldnamevaluesList[transId][j];
                             if (!item) continue;
 
                             const parts = item.split("=");
@@ -4868,7 +4883,9 @@
                     }
                     finally {
                         iframe.onload = null;
-                        createfieldnamevaluesList = [];
+                        ///comment bcz go option should work based on command not based on list so when we remove it but 
+                        //actual command / tokens exits these creates confusion and so many bugs(25-02 - 2026)
+                        //createfieldnamevaluesList = [];
                         }
                     }, 100);
                 };
@@ -4877,16 +4894,17 @@
 
                 redirectToTstruct(transId);
 
-            }
-            catch (ex) {
-                console.log("Error in handleCreate: " + ex);
-                createfieldnamevaluesList = [];
-            }
-            //finally {
-            //    if (iframe) {
-            //        iframe.onload = iframe.onload;
-            //    }
-            //}
+        }
+        catch (ex) {
+            console.log("Error in handleCreate: " + ex);
+            showToast("Incomplete command detected. Please clear the entire command and try again.");
+            //createfieldnamevaluesList = [];
+        }
+        //finally {
+        //    if (iframe) {
+        //        iframe.onload = iframe.onload;
+        //    }
+        //}
 
 
         //}
@@ -5274,9 +5292,11 @@
         //        console.log("Fetched Session ID: " + sessionId);
 
         // 👉 Call preparePayload AFTER session is ready
-        if (!transid || saveListWithFieldNamendValues.length == 0) {
+
+        //if (!transid || saveListWithFieldNamendValues.length == 0) {
+        if (!transid || !saveListWithFieldNamendValues ||  !saveListWithFieldNamendValues[transid] || saveListWithFieldNamendValues[transid].length === 0) {
             console.log("Missing transaction ID or field values.");
-            showToast("Some required information is missing. Please re-enter the command and try again.");
+            showToast("Incomplete command detected. Please clear the entire command and try again.");
 
             return [];
         }
@@ -5297,7 +5317,7 @@
 
             keyfieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
         }
-        preparePayload(saveListWithFieldNamendValues, transid, sourcename, isCreate, keyFieldValue, keyfieldName).then(result => {
+        preparePayload(saveListWithFieldNamendValues[transid] || [], transid, sourcename, isCreate, keyFieldValue, keyfieldName).then(result => {
 
             if (!result || !result.isSuccess) {
                 throw new Error("Payload is empty or invalid");
@@ -5363,8 +5383,8 @@
                         console.log("Data submitted successfully,Record-ID : " + recordId);
                         console.log(data);
 
-                        saveListWithFieldNamendValues = [];
-                        createfieldnamevaluesList = [];
+                        //saveListWithFieldNamendValues = [];
+                        //createfieldnamevaluesList = [];
                         return [];
                     }
 
@@ -5409,7 +5429,7 @@
                 axDatasourceObj[sourceKey]?.[0]?.password || null
             );
     }
-    function preparePayload(saveListWithFieldNamendValues,transid, sourcename, iscreate,inputKeyFieldValue,inputKeyFieldName) {
+    function preparePayload(saveListWithFieldNamendValueswithTransId , transid, sourcename, iscreate, inputKeyFieldValue, inputKeyFieldName) {
 
         let isSuccess = true;
         let payloadUsername = mainUserName;
@@ -5452,9 +5472,9 @@
                 keyvalue = inputKeyFieldValue;
             }
             try {
-                for (let i = 0; i < saveListWithFieldNamendValues.length; i++) {
+                for (let i = 0; i < saveListWithFieldNamendValueswithTransId.length; i++) {
 
-                    const item = saveListWithFieldNamendValues[i];
+                    const item = saveListWithFieldNamendValueswithTransId[i];
                     if (!item) continue;
 
                     const parts = item.split("=");
