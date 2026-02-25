@@ -1,7 +1,7 @@
 ﻿(() => {
     // 20-02-2026: Pre release version
 
-    // /plugins/Axi/HTMLPages/js/axi-autocomplete.js
+    // /AxPlugins/Axi/HTMLPages/js/axi-autocomplete.js
     
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
@@ -344,7 +344,7 @@
     async function loadApiMetadataConfig() {
         let configUrl = "";
         try {
-            configUrl = `${getAppBaseUrl()}/plugins/Axi/axiConfig.json`;
+            configUrl = `${getAppBaseUrl()}/AxPlugins/Axi/axiConfig.json`;
             const res = await fetch(configUrl, { cache: "no-store" });
             if (!res.ok) {
                 throw new Error(`Failed to load ${configUrl}. Status: ${res.status}`);
@@ -500,7 +500,7 @@
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table_1769088257557.html`;
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table.html`;
         // let targetUrl = `${getAppBaseUrl()}/plugins/Axi/HTMLPages/Smartview_table.html`;
-        let targetUrl = `../plugins/Axi/HTMLPages/Smartview_table.html`;
+        let targetUrl = `../AxPlugins/Axi/HTMLPages/Smartview_table.html`;
 
         // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
 
@@ -1350,9 +1350,10 @@
             const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
             if (cachedList) {
                 const found = cachedList.find(item =>
-                    (item.displaydata || "").toLowerCase() === tokenText.toLowerCase() ||
-                    (item.caption || "").toLowerCase() === tokenText.toLowerCase() ||
-                    (item.name || "").toLowerCase() === tokenText.toLowerCase()
+                    // 25/02/2026 - Updated to handle the comparison with displaydata, caption, name for robustness. Axi task no: Axi-0051
+                    (cleanString(item.displaydata) || "").toLowerCase() === tokenText.toLowerCase() ||
+                    (cleanString(item.caption) || "").toLowerCase() === tokenText.toLowerCase() ||
+                    (cleanString(item.name) || "").toLowerCase() === tokenText.toLowerCase()
                 );
                 if (found) {
                     let real = found.name  || found.sqlname || found.displaydata;
@@ -5566,7 +5567,7 @@
 
         // let targetUrl = "../CustomPages/axibot.html";
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/axibot.html`;
-        let targetUrl = `${getAppBaseUrl()}/plugins/Axi/HTMLPages/axibot.html`;
+        let targetUrl = `${getAppBaseUrl()}/AxPlugins/Axi/HTMLPages/axibot.html`;
         // let targetUrl = "../axidev/HTMLPages/axibot_1770979038509.html";
 
 
