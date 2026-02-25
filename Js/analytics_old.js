@@ -32,8 +32,6 @@ class AnalyticsCharts {
         this.globalOrder = [];
         this.selectedChartType = "pie"
         this.globalYOrder = [];
-        this.urlParams = {};
-        this.pendingGroupBy = "";
 
 
     }
@@ -41,8 +39,6 @@ class AnalyticsCharts {
         parent.ShowDimmer(false);
 
         const pageLoadData = JSON.parse(document.querySelector("#hdnAnalyticsPageLoadData").value);
-        this.urlParams = this.getUrlParams();
-        this.pendingGroupBy = this.urlParams.groupby || "";
 
         if (_entityCommon.inValid(pageLoadData.result.data.SelectedEntities)) {
             this.allEntitiesList = pageLoadData.result.data.AllEntitiesList;
@@ -66,7 +62,6 @@ class AnalyticsCharts {
             this.constructSelectedEntityHeader();
         }
         this.updateChartButton(this.selectedChartType);
-        this.applyUrlParams();
 
         // this.checkAppmanagerAccess();
     }
@@ -546,6 +541,16 @@ class AnalyticsCharts {
             const ftransidItem = metaData.find(item => item.ftransid);
             let ftransid = ftransidItem ? ftransidItem.ftransid : "default";
 
+            _analyticsCharts.getAnalyticsChartsDataWS({
+                page: "Analytics",
+                transId: ftransid,
+                aggField: "count",
+                aggTransId: ftransid,
+                groupField: "all",
+                groupTransId: ftransid,
+                aggFunc: "count"
+            });
+
             const firstAnchorGroup = $('#Data-Group-container .Data-Group_Items:first a');
             const parentElement = $(firstAnchorGroup).parent();
             $(".Data-Group_Items").removeClass("selected");
@@ -554,22 +559,6 @@ class AnalyticsCharts {
             const firstAnchorAgg = $('.Aggregation-item:first');
             $(".Aggregation-item").removeClass("selected");
             $(firstAnchorAgg).addClass("selected");
-
-            const deferDefaultLoad = this.shouldDeferDefaultLoad();
-            if (!deferDefaultLoad) {
-                const groupByApplied = this.applyPendingGroupBy();
-                if (!groupByApplied) {
-                    _analyticsCharts.getAnalyticsChartsDataWS({
-                        page: "Analytics",
-                        transId: ftransid,
-                        aggField: "count",
-                        aggTransId: ftransid,
-                        groupField: "all",
-                        groupTransId: ftransid,
-                        aggFunc: "count"
-                    });
-                }
-            }
         }
 
         if (calledFrom === "Entity Selection") {
@@ -617,157 +606,10 @@ class AnalyticsCharts {
         </div>`;
     }
 
-    normalizeUrlParam(value) {
-        if (typeof value !== "string") {
-            return "";
-        }
-        return value.trim().toLowerCase();
-    }
-
     getUrlParams() {
-        const queryString = window.location.search || "";
+        const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
-        return {
-            entity: this.normalizeUrlParam(urlParams.get('entity')),
-            groupby: this.normalizeUrlParam(urlParams.get('groupby'))
-        };
-    }
-
-    shouldDeferDefaultLoad() {
-        const entityParam = this.urlParams ? this.urlParams.entity : "";
-        if (!entityParam || !Array.isArray(this.selectedEntitiesList) || this.selectedEntitiesList.length === 0) {
-            return false;
-        }
-
-        const entityExists = this.selectedEntitiesList.some(item => (item.name || "").toLowerCase() === entityParam);
-        if (!entityExists) {
-            return false;
-        }
-
-        const currentEntity = this.normalizeUrlParam(this.entityTransId);
-        return currentEntity !== entityParam;
-    }
-
-    applyUrlParams() {
-        const entityParam = this.urlParams ? this.urlParams.entity : "";
-        if (!entityParam) {
-            return;
-        }
-        this.applyEntityParam(entityParam);
-    }
-
-    applyEntityParam(entityParam) {
-        if (!Array.isArray(this.selectedEntitiesList) || this.selectedEntitiesList.length === 0) {
-            return;
-        }
-
-        const selected = this.selectedEntitiesList.find(item => (item.name || "").toLowerCase() === entityParam);
-        if (!selected) {
-            console.warn(`Analytics URL parameter entity not found: ${entityParam}`);
-            return;
-        }
-
-        this.limitEntityTabs(selected.name);
-
-        const currentEntity = this.normalizeUrlParam(this.entityTransId);
-        if (currentEntity === entityParam) {
-            const groupByApplied = this.applyPendingGroupBy();
-            if (!groupByApplied && this.urlParams && this.urlParams.groupby) {
-                this.applyGroupByParam(this.urlParams.groupby);
-            }
-            return;
-        }
-
-        const navItem = document.querySelector(`#dv_EntityContainer .nav-item[dt_transid="${selected.name}"]`);
-        if (navItem) {
-            selectEntity(navItem, selected.name);
-        } else {
-            this.entityTransId = selected.name;
-            this.entityName = this.getEntityCaption(selected.name);
-            fetchEntityData(selected.name);
-        }
-    }
-
-    limitEntityTabs(transId) {
-        const targetId = (transId || "").toLowerCase();
-        document.querySelectorAll("#dv_EntityContainer .nav-item").forEach(item => {
-            const itemId = (item.getAttribute("dt_transid") || "").toLowerCase();
-            if (itemId && itemId !== targetId) {
-                item.classList.add("d-none");
-            } else {
-                item.classList.remove("d-none");
-            }
-        });
-    }
-
-    canApplyPendingGroupBy() {
-        if (!this.pendingGroupBy) {
-            return false;
-        }
-
-        const entityParam = this.urlParams ? this.urlParams.entity : "";
-        if (!entityParam) {
-            return true;
-        }
-
-        if (!Array.isArray(this.selectedEntitiesList) || this.selectedEntitiesList.length === 0) {
-            return true;
-        }
-
-        const entityExists = this.selectedEntitiesList.some(item => (item.name || "").toLowerCase() === entityParam);
-        if (!entityExists) {
-            return true;
-        }
-
-        const currentEntity = this.normalizeUrlParam(this.entityTransId);
-        return currentEntity === entityParam;
-    }
-
-    applyPendingGroupBy() {
-        if (!this.pendingGroupBy) {
-            return false;
-        }
-
-        if (!this.canApplyPendingGroupBy()) {
-            return false;
-        }
-
-        const applied = this.applyGroupByParam(this.pendingGroupBy);
-        this.pendingGroupBy = "";
-        return applied;
-    }
-
-    applyGroupByParam(groupByParam) {
-        const groupBy = this.normalizeUrlParam(groupByParam);
-        if (!groupBy) {
-            return false;
-        }
-
-        const groupItems = document.querySelectorAll("#Data-Group-container .Data-Group_Items");
-        let targetItem = null;
-
-        groupItems.forEach(item => {
-            if (targetItem) {
-                return;
-            }
-            const fldName = (item.getAttribute("data-fldname") || "").toLowerCase();
-            if (fldName === groupBy) {
-                targetItem = item;
-            }
-        });
-
-        if (!targetItem) {
-            console.warn(`Analytics URL parameter groupby not found: ${groupBy}`);
-            return false;
-        }
-
-        const anchor = targetItem.querySelector("a");
-        if (anchor) {
-            selectGroupField(anchor);
-            return true;
-        }
-
-        return false;
+        this.entityName = urlParams.get('ename');
     }
 
 

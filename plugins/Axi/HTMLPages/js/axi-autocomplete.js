@@ -6,6 +6,8 @@
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
     let apiMetadataConfigError = "";
+    let settingsPageButtons = null; 
+    let importExportButtons = null; 
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
@@ -85,7 +87,7 @@
             pegformnotification: handleCofigurePegFormNotification,
             permission: handleConfigurePermissions,
             access: handleConfigureAccess,
-            schdulednotification: handleConfigureSchduledNotification,
+            schedulednotification: handleConfigureScheduledNotification,
             keyfield: handleKeyfield,
             newsandannouncement: handleConfigureNewsAndAnnouncement,
             settings: handleConfigureSettings,
@@ -288,6 +290,10 @@
         INITIALIZATION
     =============================== */
     async function initCommands(isForced = false) {
+        if (mode === "ai") {
+            commands = aiModeCommands; 
+            return; 
+        }
 
         let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
         console.log("Origin: " + appSessUrl);
@@ -493,7 +499,8 @@
         // let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table_1769088257557.html`;
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table.html`;
-        let targetUrl = `${getAppBaseUrl()}/plugins/Axi/HTMLPages/Smartview_table.html`;
+        // let targetUrl = `${getAppBaseUrl()}/plugins/Axi/HTMLPages/Smartview_table.html`;
+        let targetUrl = `../plugins/Axi/HTMLPages/Smartview_table.html`;
 
         // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
 
@@ -993,6 +1000,18 @@
                 pfToolbarButtons = getPFToolbarButtons();
                 allButtons = { ...pfToolbarButtons }
                 break;
+
+            case "s":
+                settingsPageButtons = getButtons(".Config-cont"); 
+                allButtons = { ...settingsPageButtons}; 
+                break; 
+
+            case "im":
+            case "ex": 
+                importExportButtons = getButtons(".card-footer "); 
+                allButtons = { ...importExportButtons}; 
+                break; 
+
 
 
             default:
@@ -2539,7 +2558,7 @@
 
     }
 
-    function handleConfigureSchduledNotification({ tokens, commandConfig }) {
+    function handleConfigureScheduledNotification({ tokens, commandConfig }) {
 
         let transId = "a__pn";
         let fieldname = "name";
@@ -3201,6 +3220,17 @@
                 allButtons = [...Object.values(pfToolbarButtons)]
                 break;
 
+            case "s":
+                if (!settingsPageButtons) settingsPageButtons = getButtons(".Config-cont"); 
+                allButtons = [...Object.values(settingsPageButtons)]
+                break; 
+
+            case "im":
+            case "ex":
+                if (!importExportButtons) importExportButtons = getButtons(".card-footer"); 
+                allButtons = [...Object.values(importExportButtons)]; 
+                break; 
+
 
             default:
                 console.error("Invalid StructType")
@@ -3446,6 +3476,8 @@
             return "i";  // IView page
         }
 
+
+
         if ((page.endsWith("/entity.aspx") || page.includes("entity.aspx")) && bodyId === "Entitymanagement_Body") {
             return "e";  // Entity page
         }
@@ -3456,10 +3488,22 @@
             return "ef";  // Entity Data page
         }
 
-        if (src.includes("/CustomPages") || src.includes("/axidev")) {
+        if (src.includes("/CustomPages") || src.includes("/axidev") || src.includes("/HTMLPages")) {
             return "c"; // Custom page
 
         }
+
+         if (src.includes("../aspx/ImportAll.aspx")) {
+            return "im"; // Import page
+
+        }
+
+         if (src.includes("../aspx/ExportNew.aspx")) {
+            return "ex"; // Export page
+
+        }
+
+
 
         // ../aspx/processflow.aspx?activelist=t&hdnbElapsTime=0
 
@@ -3467,6 +3511,10 @@
         if (page.endsWith("/processflow.aspx") || page.includes("processflow.aspx")) {
             return "pf"; // Process flow page
 
+        }
+
+        if (src.includes("/aspx/Configuration.aspx/LoadUserAppSettings")) {
+            return "s"; // Settings page
         }
 
 
@@ -3518,6 +3566,8 @@
 
         }
 
+        
+
 
 
         return false;
@@ -3551,6 +3601,7 @@
             if (!id) return;
 
             const label = extractButtonLabel(btn);
+            if (label.toLowerCase() === "export" || label.toLowerCase() === "theme" || label.toLowerCase() === "field captions" || label.toLowerCase() === "view" ) return; 
             if (!label) return;
 
             result[id] = {
@@ -3564,6 +3615,54 @@
         return result;
 
     }
+
+    function getButtons(querySelector) {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const container = doc.querySelector(`${querySelector}`);
+        if (!container) return {};
+
+        const buttons = getAllActionButtons(container);
+
+        const result = {};
+
+        buttons.forEach((btn) => {
+            // if (!hasAction(btn)) return;
+            if (btn.type === "hidden") return; 
+            if (btn.style.display === "none") return; 
+            if (btn.offsetParent === null) return; 
+
+            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || btn.name || btn.getAttribute("data-kt-stepper-action");
+            if (!id) return;
+            // const label = btn.innerText.trim();
+            const label = extractButtonLabel(btn);
+            if (!label) console.log("There is no label for Element: " + btn);
+
+
+
+            result[id] = {
+                id,
+                label,
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        return result;
+    }
+
+    function getAllActionButtons(doc) {
+    return doc.querySelectorAll(`
+        a,
+        button,
+        input[type="button"],
+        input[type="submit"]
+    `);
+}
 
     function watchDesignModeChange(callback) {
         const iframe = document.getElementById("middle1");
@@ -3709,135 +3808,45 @@
     }
 
 
-    // function handleAnalyse({ tokens, commandConfig }) {
+    function handleAnalyse({ tokens, commandConfig }) {
 
-    //     let targetUrl = "../aspx/Analytics.aspx";
+        let targetUrl = "../aspx/Analytics.aspx";
 
-    //     if (tokens.length === 1) {
-    //         targetUrl += "?calendar=t";
-    //         targetUrl += "&isDupTab=true-1770626614111";
-    //         targetUrl += "&hdnbElapsTime=0";
-    //     }
-
-
-    //     else {
-
-    //         const captionSelected = cleanString(tokens[1]);
-    //         const transIdAnalyse = tryResolveToken(1, captionSelected, commandConfig);
-
-    //         targetUrl += `?entity=${encodeURIComponent(transIdAnalyse)}`;
-
-    //         if (tokens.length == 3) {
-    //             let groupByFieldCaption = cleanString(tokens[2]);
-    //             const groupByFiedlname = tryResolveToken(2, groupByFieldCaption, commandConfig);
-    //             targetUrl += `&groupby=${encodeURIComponent(groupByFiedlname)}`;
-    //         }
-    //         else if (tokens.length > 3) {
-    //             showToast("Analyse commands requires only 3 tokens");
-    //             return;
-    //         }
-
-    //         targetUrl += "&calendar=t";
-    //         targetUrl += "&isDupTab=true-1770626614111";
-    //         targetUrl += "&hdnbElapsTime=0";
-    //     }
-
-    //     console.log("Target URL from analyse command : " + targetUrl);
-    //     window.LoadIframe(targetUrl);
-    // }
+        if (tokens.length === 1) {
+            targetUrl += "?calendar=t";
+            targetUrl += "&isDupTab=true-1770626614111";
+            targetUrl += "&hdnbElapsTime=0";
+        }
 
 
-     function handleAnalyse({ tokens, commandConfig }) {
+        else {
 
-     let targetUrl = "../aspx/Analytics.aspx";
+            const captionSelected = cleanString(tokens[1]);
+            const transIdAnalyse = tryResolveToken(1, captionSelected, commandConfig);
 
-     let transIdAnalyse = null;
-     let groupByFiedlname = null;
+            targetUrl += `?entity=${encodeURIComponent(transIdAnalyse)}`;
 
+            if (tokens.length == 3) {
+                let groupByFieldCaption = cleanString(tokens[2]);
+                const groupByFiedlname = tryResolveToken(2, groupByFieldCaption, commandConfig);
+                targetUrl += `&groupby=${encodeURIComponent(groupByFiedlname)}`;
+            }
+            else if (tokens.length > 3) {
+                showToast("Analyse commands requires only 3 tokens");
+                return;
+            }
 
-     if (tokens.length === 1) {
-             targetUrl += "?calendar=t";
-             targetUrl += "&isDupTab=true-1770626614111";
-             targetUrl += "&hdnbElapsTime=0#";
+            targetUrl += "&calendar=t";
+            targetUrl += "&isDupTab=true-1770626614111";
+            targetUrl += "&hdnbElapsTime=0";
+        }
 
-             window.LoadIframe(targetUrl);
-             return;
-         }
-
-     if (tokens.length > 1) {
-         const captionSelected = cleanString(tokens[1]);
-         transIdAnalyse = tryResolveToken(1, captionSelected, commandConfig);
-
-         targetUrl += `?entity=${encodeURIComponent(transIdAnalyse)}`;
-
-         if (tokens.length >= 3) {
-             let groupByFieldCaption = cleanString(tokens[2]);
-             groupByFiedlname = tryResolveToken(2, groupByFieldCaption, commandConfig);
-         }
-     }
-
-     targetUrl += "&calendar=t";
-     targetUrl += "&isDupTab=true-1770626614111";
-     targetUrl += "&hdnbElapsTime=0";
-
-     let iframe = document.getElementById("middle1");
-
-     if (!iframe) {
-         console.log("Iframe not found");
-         return;
-     }
-
-   
-     if (tokens.length>2) {
-         iframe.onload = function () {
-
-             console.log("Analytics iframe loaded.");
-
-             setTimeout(function () {
-
-                 try {
-
-                     let iframeWindow = iframe.contentWindow;
-
-                     if (!iframeWindow || !iframeWindow._analyticsCharts) {
-                         console.log("Analytics object not ready.");
-                         return;
-                     }
-
-                     if (!transIdAnalyse) return;
-
-                     iframeWindow._analyticsCharts.getAnalyticsChartsDataWS({
-                         page: "Analytics",
-                         transId: transIdAnalyse,
-                         aggField: "count",
-                         aggTransId: transIdAnalyse,
-                         groupField: groupByFiedlname || "all",
-                         groupTransId: transIdAnalyse,
-                         aggFunc: "count"
-                     });
-
-                 }
-                 catch (ex) {
-                     console.error("Error while loading analytics:", ex);
-                 }
-                 finally {
-                     iframe.onload = null;   
-                 }
-
-             }, 100);
-
-         };
-     }
+        console.log("Target URL from analyse command : " + targetUrl);
+        window.LoadIframe(targetUrl);
+    }
 
 
-     setEditSessionState(transIdAnalyse);
-
-     console.log("Target URL from analyse command : " + targetUrl);
-
-     if (groupByFiedlname) console.log("Group By FieldName is true,the given field is : " + groupByFiedlname);
-
-     window.LoadIframe(targetUrl);
- }
+     
 
 
     function resetSetCommandState() {
@@ -4105,7 +4114,7 @@
                 else datatype = SET_COMMAND_STATE.currentFieldType;
 
 
-                if (datatype === 'c' || datatype === 'n') {
+                if (datatype === 'c' || datatype === 'n' || datatype === "t") {
                     if (isAccept) {
                         let acceptedValue = cleanString(tokens[tokens.length - 1]);
                         if (acceptedValue)
@@ -4484,7 +4493,7 @@
                 else datatype = SET_COMMAND_STATE.currentFieldType;
 
 
-                if (datatype === 'c' || datatype === 'n') {
+                if (datatype === 'c' || datatype === 'n' || datatype === "t") {
                     if (isAccept) {
                         let acceptedValue = cleanString(tokens[tokens.length - 1]);
                         if (acceptedValue)
@@ -5688,7 +5697,7 @@
         }
         mode = "";
         cachedCommands = localStorage.getItem("axi_commands_v1");
-        commands = JSON.parse(cachedCommands);
+        initCommands(); 
         window.LoadIframe("loadhomepage");
         console.log(JSON.stringify(commands));
     }
