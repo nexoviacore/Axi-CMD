@@ -1,11 +1,13 @@
 ﻿(() => {
-    // 20-02-2026: Pre release version
+    
 
-    // /plugins/Axi/HTMLPages/js/axi-autocomplete.js
+    // /AxPlugins/Axi/HTMLPages/js/axi-autocomplete.js
     
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
     let apiMetadataConfigError = "";
+    let settingsPageButtons = null; 
+    let importExportButtons = null; 
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
@@ -85,8 +87,10 @@
             pegformnotification: handleCofigurePegFormNotification,
             permission: handleConfigurePermissions,
             access: handleConfigureAccess,
-            schdulednotification: handleConfigureSchduledNotification,
-            keyfield: handleKeyfield
+            schedulednotification: handleConfigureScheduledNotification,
+            keyfield: handleKeyfield,
+            newsandannouncement: handleConfigureNewsAndAnnouncement,
+            settings: handleConfigureSettings,
         },
         open: {
             default: handleOpenSource,
@@ -123,7 +127,7 @@
         end: { default: handleAiEnd, },
         editprompt: { default: () => handleAiButtons("openSystemPrompt") },
         analyze: { default: () => handleAiButtons("axiLoad"), },
-        upload: { default: () => handleAiButtons("openUpload") }
+        // upload: { default: () => handleAiButtons("openUpload") }
     };
 
 
@@ -176,7 +180,7 @@
     let activeFetches = new Set();
     let filteredObjects = [];
     let adsfieldvalueanddt = {};
-    let createfieldnamevaluesList = [];
+    let createfieldnamevaluesList = {};
     let mode = "";
     const aiModeCommands = {
         "connect": { "cmdToken": 11, "command": "", "commandGroup": "connect", "prompts": [] },
@@ -286,6 +290,10 @@
         INITIALIZATION
     =============================== */
     async function initCommands(isForced = false) {
+        if (mode === "ai") {
+            commands = aiModeCommands; 
+            return; 
+        }
 
         let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
         console.log("Origin: " + appSessUrl);
@@ -336,7 +344,7 @@
     async function loadApiMetadataConfig() {
         let configUrl = "";
         try {
-            configUrl = `${getAppBaseUrl()}/plugins/Axi/axiConfig.json`;
+            configUrl = `${getAppBaseUrl()}/AxpertPlugins/Axi/axiConfig.json`;
             const res = await fetch(configUrl, { cache: "no-store" });
             if (!res.ok) {
                 throw new Error(`Failed to load ${configUrl}. Status: ${res.status}`);
@@ -491,7 +499,8 @@
         // let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table_1769088257557.html`;
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table.html`;
-        let targetUrl = `${getAppBaseUrl()}/plugins/Axi/HTMLPages/Smartview_table.html`;
+        // let targetUrl = `${getAppBaseUrl()}/plugins/Axi/HTMLPages/Smartview_table.html`;
+        let targetUrl = `../AxpertPlugins/Axi/HTMLPages/Smartview_table.html`;
 
         // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
 
@@ -618,7 +627,7 @@
                 targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
             }
             targetUrl += `&hltype=open`;
-            targetUrl += `&dummyload=false`;
+            targetUrl += `&dummyload=false♠`;
         }
 
         top.window.LoadIframe(targetUrl);
@@ -992,6 +1001,18 @@
                 allButtons = { ...pfToolbarButtons }
                 break;
 
+            case "s":
+                settingsPageButtons = getButtons(".Config-cont"); 
+                allButtons = { ...settingsPageButtons}; 
+                break; 
+
+            case "im":
+            case "ex": 
+                importExportButtons = getButtons(".card-footer "); 
+                allButtons = { ...importExportButtons}; 
+                break; 
+
+
 
             default:
                 console.error("Invalid StructType")
@@ -1329,9 +1350,10 @@
             const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
             if (cachedList) {
                 const found = cachedList.find(item =>
-                    (item.displaydata || "").toLowerCase() === tokenText.toLowerCase() ||
-                    (item.caption || "").toLowerCase() === tokenText.toLowerCase() ||
-                    (item.name || "").toLowerCase() === tokenText.toLowerCase()
+                    // 25/02/2026 - Updated to handle the comparison with displaydata, caption, name for robustness. Axi task no: Axi-0051
+                    (cleanString(item.displaydata) || "").toLowerCase() === tokenText.toLowerCase() ||
+                    (cleanString(item.caption) || "").toLowerCase() === tokenText.toLowerCase() ||
+                    (cleanString(item.name) || "").toLowerCase() === tokenText.toLowerCase()
                 );
                 if (found) {
                     let real = found.name  || found.sqlname || found.displaydata;
@@ -1361,11 +1383,7 @@
         console.log("Render called");
         list.innerHTML = "";
 
-        if (items.length > 0 && isSystemMessage(items[0])) {
-            activeIndex = -1;
-        } else {
-            activeIndex = 0;
-        }
+      
 
 
         const validItems = items.filter(item => {
@@ -1380,6 +1398,21 @@
         });
 
         console.log(`Valid Items: ${validItems.length}`);
+
+          if (items.length > 0 && isSystemMessage(items[0])) {
+            activeIndex = -1;
+        } else {
+            const hasGoOption = validItems.some(item => typeof item === 'object' && item.name === "GO_ACTION");
+            const hasSaveOption = validItems.some(item => typeof item === 'object' && item.name === "Save_ACTION");
+
+            if (hasGoOption && hasSaveOption) {
+                activeIndex = 2; 
+            } else if (hasGoOption || hasSaveOption) {
+                activeIndex = 1; 
+            } else {
+                activeIndex = 0; 
+            }
+        }
 
         if (validItems.length === 0) {
             const li = document.createElement("li");
@@ -1457,14 +1490,14 @@
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck === "create") {
             console.log("Save Option Selected...Submitting Data...");
             hide();
-            AxisaveDataFn(createfieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", true, tokens, saveCommandConfig);
+            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_fieldlist", true, tokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck === "edit") {
             console.log("Save Option Selected...Submitting Data...");
             hide();
-            AxisaveDataFn(createfieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", false, tokens, saveCommandConfig);
+            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_fieldlist", false, tokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
@@ -1820,7 +1853,7 @@
                     adsList = null;
                     axDatasourceObj = {};
                     resolvedParams = {};
-                    createfieldnamevaluesList = [];
+                    createfieldnamevaluesList = {};
                     resetSetCommandState();
 
                     await initCommands(true);
@@ -1889,11 +1922,13 @@
             if(grpKey)
               saveCommandConfig = commands[grpKey];
 
-            if (e.key === 'Backspace' && (grpKey === "create" || grpKey === "edit") ){
+            if (e.key === 'Backspace' && (grpKey === "create" || grpKey === "edit")) {
+                let transIDcheck = setCommandTransid;
                 if (input.selectionStart !== input.selectionEnd) {
-                    resetSetCommandState(); 
-                    createfieldnamevaluesList = [];
-                    return; 
+                    createfieldnamevaluesList[transIDcheck] = [];
+                    setCommandTransid == null;
+                    resetSetCommandState();
+                    return;
                 }
                 e.preventDefault();
                 hide();
@@ -1907,8 +1942,10 @@
                     console.log("Deleted a space using Backspace");
                 }
                 else {
-                    createfieldnamevaluesList.pop();
-                 
+                    if (createfieldnamevaluesList?.[transIDcheck]?.length > 0) {
+                        createfieldnamevaluesList[transIDcheck].pop();
+                    }
+
                 }
                 input.value = tokens.join(" ");
 
@@ -2008,9 +2045,9 @@
                 console.log("Save Option Selected...Submitting Data...");
                 hide();
                 if (grpKey === "create")
-                    AxisaveDataFn(createfieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", true, tokens, saveCommandConfig);
+                    AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_fieldlist", true, tokens, saveCommandConfig);
                 else
-                    AxisaveDataFn(createfieldnamevaluesList, SET_COMMAND_STATE.transid, "axi_fieldlist", false, tokens, saveCommandConfig);
+                    AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_fieldlist", false, tokens, saveCommandConfig);
                 resetSetCommandState();
                 return;
             }
@@ -2526,7 +2563,7 @@
 
     }
 
-    function handleConfigureSchduledNotification({ tokens, commandConfig }) {
+    function handleConfigureScheduledNotification({ tokens, commandConfig }) {
 
         let transId = "a__pn";
         let fieldname = "name";
@@ -2606,6 +2643,20 @@
 
     }
 
+    function handleConfigureNewsAndAnnouncement({tokens, commandConfig}) {
+        let transId = "a__na"; 
+        const fieldname = "title";
+        
+        let rawTitle = cleanCommandToken(tokens[2]); 
+
+        setEditSessionState(transId); 
+        redirectToTstruct(transId, false, fieldname, rawTitle); 
+    }
+
+    function handleConfigureSettings({tokens, commandConfig}) {
+        window.LoadIframe("../aspx/Configuration.aspx/LoadUserAppSettings"); 
+    }
+
 
 
     function handleConfigureProperties({ tokens, commandConfig }) {
@@ -2637,7 +2688,15 @@
       */
 
     function handleUpload({ tokens, commandConfig }) {
+
+        if (mode === "ai") {
+            handleAiButtons("openUpload"); 
+
+        } else {
         window.LoadIframe("../aspx/ImportAll.aspx");
+
+
+        }
 
 
 
@@ -3092,7 +3151,9 @@
     }
 
     function handleOpenDbConsole() {
-        window.openDeveloperStudio("AxDBScript.aspx");
+        // Task Axi-0034 completed
+        // window.openDeveloperStudio("AxDBScript.aspx");
+        window.LoadIframe("../aspx/AxDBScript.aspx"); 
 
     }
 
@@ -3165,6 +3226,17 @@
                 if (!pfToolbarButtons) pfToolbarButtons = getPFToolbarButtons();
                 allButtons = [...Object.values(pfToolbarButtons)]
                 break;
+
+            case "s":
+                if (!settingsPageButtons) settingsPageButtons = getButtons(".Config-cont"); 
+                allButtons = [...Object.values(settingsPageButtons)]
+                break; 
+
+            case "im":
+            case "ex":
+                if (!importExportButtons) importExportButtons = getButtons(".card-footer"); 
+                allButtons = [...Object.values(importExportButtons)]; 
+                break; 
 
 
             default:
@@ -3411,6 +3483,8 @@
             return "i";  // IView page
         }
 
+
+
         if ((page.endsWith("/entity.aspx") || page.includes("entity.aspx")) && bodyId === "Entitymanagement_Body") {
             return "e";  // Entity page
         }
@@ -3421,10 +3495,22 @@
             return "ef";  // Entity Data page
         }
 
-        if (src.includes("/CustomPages") || src.includes("/axidev")) {
+        if (src.includes("/CustomPages") || src.includes("/axidev") || src.includes("/HTMLPages")) {
             return "c"; // Custom page
 
         }
+
+         if (src.includes("../aspx/ImportAll.aspx")) {
+            return "im"; // Import page
+
+        }
+
+         if (src.includes("../aspx/ExportNew.aspx")) {
+            return "ex"; // Export page
+
+        }
+
+
 
         // ../aspx/processflow.aspx?activelist=t&hdnbElapsTime=0
 
@@ -3432,6 +3518,10 @@
         if (page.endsWith("/processflow.aspx") || page.includes("processflow.aspx")) {
             return "pf"; // Process flow page
 
+        }
+
+        if (src.includes("/aspx/Configuration.aspx/LoadUserAppSettings")) {
+            return "s"; // Settings page
         }
 
 
@@ -3483,6 +3573,8 @@
 
         }
 
+        
+
 
 
         return false;
@@ -3516,6 +3608,7 @@
             if (!id) return;
 
             const label = extractButtonLabel(btn);
+            if (label.toLowerCase() === "export" || label.toLowerCase() === "theme" || label.toLowerCase() === "field captions" || label.toLowerCase() === "view" ) return; 
             if (!label) return;
 
             result[id] = {
@@ -3529,6 +3622,54 @@
         return result;
 
     }
+
+    function getButtons(querySelector) {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const container = doc.querySelector(`${querySelector}`);
+        if (!container) return {};
+
+        const buttons = getAllActionButtons(container);
+
+        const result = {};
+
+        buttons.forEach((btn) => {
+            // if (!hasAction(btn)) return;
+            if (btn.type === "hidden") return; 
+            if (btn.style.display === "none") return; 
+            if (btn.offsetParent === null) return; 
+
+            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || btn.name || btn.getAttribute("data-kt-stepper-action");
+            if (!id) return;
+            // const label = btn.innerText.trim();
+            const label = extractButtonLabel(btn);
+            if (!label) console.log("There is no label for Element: " + btn);
+
+
+
+            result[id] = {
+                id,
+                label,
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        return result;
+    }
+
+    function getAllActionButtons(doc) {
+    return doc.querySelectorAll(`
+        a,
+        button,
+        input[type="button"],
+        input[type="submit"]
+    `);
+}
 
     function watchDesignModeChange(callback) {
         const iframe = document.getElementById("middle1");
@@ -3712,6 +3853,9 @@
     }
 
 
+     
+
+
     function resetSetCommandState() {
         SET_COMMAND_STATE.isNextField = false;
         SET_COMMAND_STATE.currentField = null;
@@ -3856,7 +4000,8 @@
                 let previousColumnName = SET_COMMAND_STATE.currentField;
                 previousColumnName = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
                 let previousColumnValue = SET_COMMAND_STATE.currentFieldValue;
-                AddFieldstoList(previousColumnName, 1, previousColumnValue);
+                //AddFieldstoList(previousColumnName, 1, previousColumnValue);
+                AddFieldstoList(previousColumnName, 1, previousColumnValue, setCommandTransid);
             }
 
 
@@ -3977,7 +4122,7 @@
                 else datatype = SET_COMMAND_STATE.currentFieldType;
 
 
-                if (datatype === 'c' || datatype === 'n') {
+                if (datatype === 'c' || datatype === 'n' || datatype === "t") {
                     if (isAccept) {
                         let acceptedValue = cleanString(tokens[tokens.length - 1]);
                         if (acceptedValue)
@@ -4001,7 +4146,7 @@
                         var params3 = columnMetadata.normalized;
                         var params4 = columnMetadata.fromlist;
 
-                        params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList, commandConfig);
+                        params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList[setCommandTransid], commandConfig);
 
                         console.log(params2);
 
@@ -4205,7 +4350,7 @@
                 let previousColumnName = SET_COMMAND_STATE.currentField;
                 previousColumnName = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
                 let previousColumnValue = SET_COMMAND_STATE.currentFieldValue;
-                AddFieldstoList(previousColumnName, 1, previousColumnValue);
+                AddFieldstoList(previousColumnName, 1, previousColumnValue, setCommandTransid);
             }
 
 
@@ -4240,7 +4385,7 @@
 
             let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
-            if (SET_COMMAND_STATE.currentField || (targetIndex % 2 !== 0 && targetIndex >= 4)) {
+            if (SET_COMMAND_STATE.currentField || (targetIndex % 2 == 0 && targetIndex >= 4)) {
                 //resultList.unshift(goOption);
                 resultList.unshift(saveOption);
                 //filteredObjects.unshift(goOption);
@@ -4356,7 +4501,7 @@
                 else datatype = SET_COMMAND_STATE.currentFieldType;
 
 
-                if (datatype === 'c' || datatype === 'n') {
+                if (datatype === 'c' || datatype === 'n' || datatype === "t") {
                     if (isAccept) {
                         let acceptedValue = cleanString(tokens[tokens.length - 1]);
                         if (acceptedValue)
@@ -4380,7 +4525,7 @@
                         var params4 = columnMetadata.fromlist;
 
 
-                        params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList, commandConfig);
+                        params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList[setCommandTransid], commandConfig);
 
                         console.log(params2);
 
@@ -4449,23 +4594,29 @@
             else return [];
         }
     }
-    function AddFieldstoList(fieldName, rowNo, value) {
+   function AddFieldstoList(fieldName, rowNo, value, transid) {
 
-        if (!fieldName || !value) return;
+        if (!fieldName || !value || !transid) return;
+
+        if (!createfieldnamevaluesList[transid]) {
+            createfieldnamevaluesList[transid] = [];
+        }
+
+        const currentList = createfieldnamevaluesList[transid];
 
         const keyPrefix = `${fieldName}~${rowNo}=`;
-        const existingIndex = createfieldnamevaluesList.findIndex(item =>
+        const existingIndex = currentList.findIndex(item =>
             item.startsWith(keyPrefix)
         );
 
         const formatted = `${fieldName}~${rowNo}=${value}`;
 
         if (existingIndex !== -1) {
-            if (createfieldnamevaluesList[existingIndex] !== formatted) {
-                createfieldnamevaluesList[existingIndex] = formatted;
+            if (currentList[existingIndex] !== formatted) {
+                currentList[existingIndex] = formatted;
             }
         } else {
-            createfieldnamevaluesList.push(formatted);
+            currentList.push(formatted);
         }
     }
 
@@ -4571,7 +4722,34 @@
                 if (found) transId = found.name
                 else {
                     console.error("Invalid Tstruct name");
+                    showToast("Invalid Tstruct name please select the valid tstruct"); 
                     return;
+                }
+            }
+
+            const sourceName = commandConfig?.prompts?.[2]?.promptSource?.toLowerCase(); 
+            const sourceKey = `${sourceName}_${transId}`.toLowerCase(); 
+            const fieldsList = axDatasourceObj[sourceKey]; 
+
+            if (fieldsList) {
+                let startIndex = cleanCommandToken(tokens[2]).toLowerCase() === "with" ? 3: 2; 
+
+                for (let i = startIndex; i < tokens.length; i += 2) {
+                    let rawField =  cleanCommandToken(tokens[i]); 
+
+                    if (!rawField) continue; 
+
+                  const isValidField = colList.some(c => 
+                    (c.name && c.name.toLowerCase() === rawField.toLowerCase()) || 
+                    (c.caption && c.caption.toLowerCase() === rawField.toLowerCase()) || 
+                    (c.displaydata && c.displaydata.replace(/\s*\(.*?\)/g, '').trim().toLowerCase() === rawField.toLowerCase())
+                );
+
+                if (!isValidField) {
+                    console.error("Execution blocked: Invalid field name - "  + rawField);
+                    showToast(`'${rawField}' is not a valid field. Please select from the list.`, 5000, false);
+                    return;  
+                }
                 }
             }
 
@@ -4583,11 +4761,14 @@
         let rawName = cleanCommandToken(tokens[1]);
         let transId = tryResolveToken(1, rawName, commandConfig, false);
 
-        if (!transId || createfieldnamevaluesList.length == 0) {
+        if (!transId ) {
             console.log("Missing transaction ID or field values.");
             showToast("Some required information is missing. Please re-enter the command and try again.");
             return;
         }
+
+
+        //commenetd bcz of set issue for a dependency field
 
         //let CurrentOpentstructName = getTransID();
 
@@ -4657,11 +4838,12 @@
                     setTimeout(function () {
                     try {
 
-                        console.log(createfieldnamevaluesList);
-                        //for (let j = 2; j < tokens.length; j += 2) {
-                        for (let j = 0; j < createfieldnamevaluesList.length; j++) {
+                        
+                        console.log(createfieldnamevaluesList[transId]);
+                       // for (let j = 2; j < tokens.length; j += 2) {
+                        for (let j = 0; j < createfieldnamevaluesList[transId].length; j++) {
 
-                            const item = createfieldnamevaluesList[j];
+                            const item = createfieldnamevaluesList[transId][j];
                             if (!item) continue;
 
                             const parts = item.split("=");
@@ -4701,7 +4883,9 @@
                     }
                     finally {
                         iframe.onload = null;
-                        createfieldnamevaluesList = [];
+                        ///comment bcz go option should work based on command not based on list so when we remove it but 
+                        //actual command / tokens exits these creates confusion and so many bugs(25-02 - 2026)
+                        //createfieldnamevaluesList = [];
                         }
                     }, 100);
                 };
@@ -4710,16 +4894,17 @@
 
                 redirectToTstruct(transId);
 
-            }
-            catch (ex) {
-                console.log("Error in handleCreate: " + ex);
-                createfieldnamevaluesList = [];
-            }
-            //finally {
-            //    if (iframe) {
-            //        iframe.onload = iframe.onload;
-            //    }
-            //}
+        }
+        catch (ex) {
+            console.log("Error in handleCreate: " + ex);
+            showToast("Incomplete command detected. Please clear the entire command and try again.");
+            //createfieldnamevaluesList = [];
+        }
+        //finally {
+        //    if (iframe) {
+        //        iframe.onload = iframe.onload;
+        //    }
+        //}
 
 
         //}
@@ -5107,9 +5292,11 @@
         //        console.log("Fetched Session ID: " + sessionId);
 
         // 👉 Call preparePayload AFTER session is ready
-        if (!transid || saveListWithFieldNamendValues.length == 0) {
+
+        //if (!transid || saveListWithFieldNamendValues.length == 0) {
+        if (!transid || !saveListWithFieldNamendValues ||  !saveListWithFieldNamendValues[transid] || saveListWithFieldNamendValues[transid].length === 0) {
             console.log("Missing transaction ID or field values.");
-            showToast("Some required information is missing. Please re-enter the command and try again.");
+            showToast("Incomplete command detected. Please clear the entire command and try again.");
 
             return [];
         }
@@ -5130,7 +5317,7 @@
 
             keyfieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
         }
-        preparePayload(saveListWithFieldNamendValues, transid, sourcename, isCreate, keyFieldValue, keyfieldName).then(result => {
+        preparePayload(saveListWithFieldNamendValues[transid] || [], transid, sourcename, isCreate, keyFieldValue, keyfieldName).then(result => {
 
             if (!result || !result.isSuccess) {
                 throw new Error("Payload is empty or invalid");
@@ -5196,8 +5383,8 @@
                         console.log("Data submitted successfully,Record-ID : " + recordId);
                         console.log(data);
 
-                        saveListWithFieldNamendValues = [];
-                        createfieldnamevaluesList = [];
+                        //saveListWithFieldNamendValues = [];
+                        //createfieldnamevaluesList = [];
                         return [];
                     }
 
@@ -5242,7 +5429,7 @@
                 axDatasourceObj[sourceKey]?.[0]?.password || null
             );
     }
-    function preparePayload(saveListWithFieldNamendValues,transid, sourcename, iscreate,inputKeyFieldValue,inputKeyFieldName) {
+    function preparePayload(saveListWithFieldNamendValueswithTransId , transid, sourcename, iscreate, inputKeyFieldValue, inputKeyFieldName) {
 
         let isSuccess = true;
         let payloadUsername = mainUserName;
@@ -5285,9 +5472,9 @@
                 keyvalue = inputKeyFieldValue;
             }
             try {
-                for (let i = 0; i < saveListWithFieldNamendValues.length; i++) {
+                for (let i = 0; i < saveListWithFieldNamendValueswithTransId.length; i++) {
 
-                    const item = saveListWithFieldNamendValues[i];
+                    const item = saveListWithFieldNamendValueswithTransId[i];
                     if (!item) continue;
 
                     const parts = item.split("=");
@@ -5402,7 +5589,7 @@
 
         // let targetUrl = "../CustomPages/axibot.html";
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/axibot.html`;
-        let targetUrl = `${getAppBaseUrl()}/plugins/Axi/HTMLPages/axibot.html`;
+        let targetUrl = `${getAppBaseUrl()}/AxpertPlugins/Axi/HTMLPages/axibot.html`;
         // let targetUrl = "../axidev/HTMLPages/axibot_1770979038509.html";
 
 
@@ -5533,7 +5720,7 @@
         }
         mode = "";
         cachedCommands = localStorage.getItem("axi_commands_v1");
-        commands = JSON.parse(cachedCommands);
+        initCommands(); 
         window.LoadIframe("loadhomepage");
         console.log(JSON.stringify(commands));
     }
