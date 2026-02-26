@@ -470,6 +470,10 @@
 
 
     async function loadList(sourceName, paramValue = "") {
+        if (sourceName === "axi_dummy") {
+            console.error("Axi Dummy source should not trigger loadList"); 
+            return; 
+        }
         const key = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
         if (activeFetches.has(key)) return;
         activeFetches.add(key);
@@ -1248,6 +1252,7 @@
                 if (hasValidParams) {
                     loadList(apiSourceName, paramValue);
                     console.log(axDatasourceObj);
+                    if (realSource.toLowerCase() === "axi_dummy") return []; 
                     return [`Loading ${realSource}...`];
                 }
                 return ["Waiting for input..."];
@@ -2690,8 +2695,9 @@
 
 
     function handleConfigureProperties({ tokens, commandConfig }) {
+        const targetUrl = "../aspx/tstruct.aspx?act=load&transid=ad_pr&axpdef_axpertpropsid=1"; 
 
-        window.LoadIframe("../aspx/tstruct.aspx?transid=ad_pr");
+        top.window.LoadIframeac(targetUrl);
 
     }
 
@@ -3955,7 +3961,7 @@
             }
             else {
 
-                if (prevValueInSet == "Custom") {
+                if (prevValueInSet.toLowerCase() == "custom") {
                     //let settokens = tokens
                     //let lastIndex = tokens.length - 2;
                     //let lastToken = tokens[lastIndex];
@@ -4006,7 +4012,7 @@
     }
 
     function processCreateCommand(tokens, commandConfig, createCommandSourceObj) {
-        const targetIndex = tokens.length - 1;
+        let targetIndex = tokens.length - 1;
         const partialTyped = cleanString(tokens[targetIndex]);
 
         const createTransId = cleanCommandToken(tokens[1]);
@@ -4070,17 +4076,16 @@
 
             let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
-            if (SET_COMMAND_STATE.currentField || (targetIndex % 2 !== 0 && targetIndex >= 4)) {
+            if ((SET_COMMAND_STATE.currentField || (targetIndex % 2 !== 0 && targetIndex >= 4)) && filteredObjects.length > 0) {
                 resultList.unshift(goOption);
                 resultList.unshift(saveOption);
                 filteredObjects.unshift(goOption);
                 filteredObjects.unshift(saveOption);
             }
-            else if (tokens.length >= 3) {
+            else if (tokens.length >= 3 && filteredObjects.length > 0) {
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
-
         
             SET_COMMAND_STATE.currentField = null;
             SET_COMMAND_STATE.currentFieldType = null
@@ -4123,8 +4128,12 @@
                 ) || null;
 
                 if (!columnMetadata) {
+
+                    //console.log("In processEditCommond " + createCommandSourceObj + " is empty");
+                    //showToast("Please Try Again Later.");
+
                     console.log("Selected Field Name is Not in the List " + prevColumnName);
-                    showToast("Please Select Fields from the list");
+                    showToast("Please Select Field from the list",5000,true);
 
                     let settokens = [...tokens]
                     let lastIndex = settokens.length - 2;
@@ -4132,9 +4141,58 @@
 
                     settokens[lastIndex] = "";
 
+                    targetIndex = targetIndex - 1;
+
                     input.value = settokens.join(" ");
                     updateDynamicHintFromPrompt({ prompt: "fieldName" })
-                    return [];
+                    //return [];
+
+
+                    const usedColumns = new Set();
+                    for (let i = 3; i < targetIndex; i += 2) {
+                        const usedToken = cleanString(tokens[i]).toLowerCase();
+                        usedColumns.add(usedToken);
+                    }
+
+                    const filtered = colList.filter(col => {
+                        const rawDisplay = (col.displaydata || col.name).toLowerCase();
+                        const cleanDisplay = rawDisplay
+                            .replace(/\s*\(.*?\)/g, "")
+                            .replace(/\s*\[[^\]]+\]\s*$/, "")
+                            .trim();
+                        const rawName = (col.name || "").toLowerCase();
+                        const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+                        return !isUsed;
+                    });
+
+                    filteredObjects = filtered;
+
+                    let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+                    SET_COMMAND_STATE.currentField = null;
+
+                    if (SET_COMMAND_STATE.currentField || (targetIndex % 2 !== 0 && targetIndex >= 4)) {
+                        resultList.unshift(goOption);
+                        resultList.unshift(saveOption);
+                        filteredObjects.unshift(goOption);
+                        filteredObjects.unshift(saveOption);
+                    }
+                    else if (tokens.length >= 3) {
+                        resultList.unshift(goOption);
+                        filteredObjects.unshift(goOption);
+                    }
+
+
+                    SET_COMMAND_STATE.currentField = null;
+                    SET_COMMAND_STATE.currentFieldType = null
+                    SET_COMMAND_STATE.currentFieldValue = null;
+                    SET_COMMAND_STATE.isNextField = false;
+                    SET_COMMAND_STATE.isDropDown = false;
+
+
+
+
+                    return resultList;
                 }
 
                 let isAccept;
@@ -4197,7 +4255,7 @@
                         const list = axDatasourceObj[sourceKey];
                         if (!Array.isArray(list)) return [];
 
-                        const filtered = list.filter(col => {
+                        let filtered = list.filter(col => {
                             const rawDisplay = String(col.displaydata || col.name)
                                 .toLowerCase();
 
@@ -4206,6 +4264,19 @@
 
                             return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
                         });
+
+                        if (acceptedValue && filtered.length === 0) {
+                            console.log("User given value which is not in the dropdown");
+                            showToast("Please select a valid value from the dropdown",5000,true);
+   
+                            let lastIndex = tokens.length - 1;
+                            let lastToken = tokens[lastIndex];
+                            tokens[lastIndex] = "";
+
+                            input.value = tokens.join(" ");
+
+                            filtered = list;
+                        } 
 
 
                         return filtered.map(col => col.displaydata || col.name);
@@ -4304,7 +4375,7 @@
             }
             else {
 
-                if (prevValueInSet == "Custom") {
+                if (prevValueInSet.toLowerCase() == "custom") {
                     //let settokens = tokens
                     //let lastIndex = tokens.length - 2;
                     //let lastToken = tokens[lastIndex];
@@ -4356,7 +4427,7 @@
     }
 
     function processEditCommand(tokens, commandConfig, createCommandSourceObj) {
-        const targetIndex = tokens.length - 1;
+        let targetIndex = tokens.length - 1;
         const partialTyped = cleanString(tokens[targetIndex]);
 
         const createTransId = cleanCommandToken(tokens[1]);
@@ -4419,7 +4490,7 @@
 
             let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
-            if (SET_COMMAND_STATE.currentField || (targetIndex % 2 == 0 && targetIndex >= 4)) {
+            if ((SET_COMMAND_STATE.currentField || (targetIndex % 2 == 0 && targetIndex >= 4)) && filteredObjects.length > 0) {
                 //resultList.unshift(goOption);
                 resultList.unshift(saveOption);
                 //filteredObjects.unshift(goOption);
@@ -4490,7 +4561,7 @@
                 const colList = axDatasourceObj[colSourceKey];
 
                 if (!colList) {
-                    console.log("In processCreateCommond " + createCommandSourceObj + " is empty");
+                    console.log("In processEditCommond " + createCommandSourceObj + " is empty");
                     showToast("Please Try Again Later.");
                     return [];
                 }                     
@@ -4502,8 +4573,11 @@
                 ) || null;
 
                 if (!columnMetadata) {
+                    //console.log("In processEditCommond " + createCommandSourceObj + " is empty");
+                    //showToast("Please Try Again Later.");
+
                     console.log("Selected Field Name is Not in the List " + prevColumnName);
-                    showToast("Please Select Fields from the list");
+                    showToast("Please Select Field only from the list",5000,true);
 
                     let settokens = [...tokens]
                     let lastIndex = settokens.length - 2;
@@ -4511,9 +4585,60 @@
 
                     settokens[lastIndex] = "";
 
+                    targetIndex = targetIndex - 1;
+
                     input.value = settokens.join(" ");
                     updateDynamicHintFromPrompt({ prompt: "fieldName" })
-                    return [];
+
+                    //return [];
+
+                  
+                    const usedColumns = new Set();
+                    for (let i = 4; i < targetIndex; i += 2) {
+                        const usedToken = cleanString(tokens[i]).toLowerCase();
+                        usedColumns.add(usedToken);
+                    }
+
+                    const filtered = colList.filter(col => {
+                        const rawDisplay = (col.displaydata || col.name).toLowerCase();
+                        const cleanDisplay = rawDisplay
+                            .replace(/\s*\(.*?\)/g, "")
+                            .replace(/\s*\[[^\]]+\]\s*$/, "")
+                            .trim();
+                        const rawName = (col.name || "").toLowerCase();
+                        const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+                        return !isUsed;
+                    });
+
+                    filteredObjects = filtered;
+
+                    let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+                    SET_COMMAND_STATE.currentField = null;
+
+                    if (SET_COMMAND_STATE.currentField || (targetIndex % 2 == 0 && targetIndex >= 4)) {
+                        //resultList.unshift(goOption);
+                        resultList.unshift(saveOption);
+                        //filteredObjects.unshift(goOption);
+                        filteredObjects.unshift(saveOption);
+                    }
+                    //else if (tokens.length >= 3) {
+                    //    //resultList.unshift(goOption);
+                    //    //filteredObjects.unshift(goOption);
+                    //}
+
+
+                    SET_COMMAND_STATE.currentField = null;
+                    SET_COMMAND_STATE.currentFieldType = null
+                    SET_COMMAND_STATE.currentFieldValue = null;
+                    SET_COMMAND_STATE.isNextField = false;
+                    SET_COMMAND_STATE.isDropDown = false;
+
+
+
+
+                    return resultList;
+
                 }
 
                 let isAccept;
@@ -4552,6 +4677,7 @@
                         const sourceName = "axi_firesql";
 
 
+
                         var params1 = columnMetadata.fldsql;
                         var params2 = prepareKeyValueString(allGloblVars);
                         console.log(params2);
@@ -4576,7 +4702,7 @@
                         const list = axDatasourceObj[sourceKey];
                         if (!Array.isArray(list)) return [];
 
-                        const filtered = list.filter(col => {
+                        let filtered = list.filter(col => {
                             const rawDisplay = String(col.displaydata || col.name)
                                 .toLowerCase();
 
@@ -4585,6 +4711,20 @@
 
                             return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
                         });
+
+                        if (acceptedValue && filtered.length === 0) {
+                            console.log("User given value which is not in the dropdown");
+                            showToast("Please select a valid value from the dropdown",5000,true);
+
+                            let lastIndex = tokens.length - 1;
+                            let lastToken = tokens[lastIndex];
+                            tokens[lastIndex] = "";
+
+                            input.value = tokens.join(" ");
+
+                            filtered = list;
+                        } 
+
 
 
                         return filtered.map(col => col.displaydata || col.name);
