@@ -4920,6 +4920,32 @@
             return true;
         }
 
+           /* ---------------- SINGLE SELECT (SELECT2) ---------------- */
+
+   const singleSelectEl = iframeDoc.getElementById(fldid);
+
+   if (singleSelectEl && !singleSelectEl.multiple && singleSelectEl.classList.contains("select2-hidden-accessible")) {
+
+       if (iframeWin.$) {
+
+           const $el = iframeWin.$(singleSelectEl);
+
+           // If option doesn't exist, create it
+           if ($el.find("option[value='" + value + "']").length === 0) {
+               const newOption = new iframeWin.Option(value, value, true, true);
+               $el.append(newOption);
+           }
+
+           $el.val(value).trigger("change");
+       }
+
+       if (typeof iframeWin.UpdateFieldArray === "function") {
+           iframeWin.UpdateFieldArray(fldid, rowNo, value, "parent", "");
+       }
+
+       return true;
+   }
+
 
         /* ---------------- CHECKBOX ---------------- */
 
