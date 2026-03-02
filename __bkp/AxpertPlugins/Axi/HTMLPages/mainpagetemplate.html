@@ -1,0 +1,2495 @@
+<!--
+Home Cunfiguration Page Templete
+@Description
+    This Templete is an default templete for Axpert Web Application from version 10.7. This templete can be cloned to change UI and UX of Axpert Web Application by an UI developer as per requirements
+    *   @Steps and information for developer:
+    **      Warning: Do not modify this or any dependent files like axpertUI,axpertUI_homecards.js, etc.
+    **      Clone this entire .html file along with the referred CSS & JS files and give some unique name or create your own file
+    **      "ApplicationTemplate" Developer Options property must be set as cloned .html file name of application mainHomeConfigTemplete located in /aspx folder
+    **      @IMPORTANT@: This Section of code is very much important for overall application logic and should be used as it is in any of the cloned templetes
+    **      Modify/Rewrite the code as per requirement to give unique UI and UX
+    **      This file is divided mostly in 3 Sections a. Style(top) section, b. Template(middle) and Script(bottom) sections
+    ***         Templete Section will contain the html to be rendered
+    ***         Script section will initialise the page
+    **IMP   loadAndCall is an generic function to load CSS/JS files dynamically and execute the callback to initialize on successfull files load. This section's instructions to be strictly followed in case of both new/cloned templete since this section covers application level setting and objects for logged in user.
+    ***         renderTemplete should be used called from loadAndCall callback to render the templete(Important)
+    ***         Templete initailization should be done after renderTemplete
+    ****            As part of templete initialization user info and settings will be available as part of appGlobalVarsObject._CONSTANTS.axpertUserSettings
+    ****            As part of templete initialization menu configuration will be available as part of appGlobalVarsObject._CONSTANTS.menuConfiguration
+    ****            As part of templete initialization search configuration will be available as part of appGlobalVarsObject._CONSTANTS.search
+    ****            As part of templete initialization history configuration will be available as part of appGlobalVarsObject._CONSTANTS.history
+    ***         Home Page redirection should be done after templete initialization with LoadIframe(appGlobalVarsObject._CONSTANTS.menuConfiguration.homePage.url);
+-->
+<!--<link rel="stylesheet" href="../CustomPages/axi-dashboard.css" />-->
+<!-- <style type="text/css">
+      #Homepage_CardsList_Wrapper .row:last-child .widgetWrapper {
+	margin-bottom: 55px !important;
+}
+    .AXI-Sec {
+	background: white;
+	position: fixed;
+	bottom: 0;
+	width: calc(100vw - 90px);
+	padding: 5px 45px;
+	border-top: 1px solid #aaaaaa6e;
+	display: flex;
+	align-items: center;
+	transition: all ease 0.3s;
+	background: #fff;
+	z-index: 9;
+}
+
+.content:has(#New-Landing-layout) {
+	background: #f1f4f9 !important;
+	height: 50vh !important;
+	max-height: calc(100vh - 120px) !important;
+}
+.AXI-Sec .AXI-Logo {
+	margin-right: 15px;
+	font-weight: 900;
+	font-size: 24px;
+	color: red;
+	display: flex;
+	/*! color: orangered; */
+	border-right: 1px solid;
+	padding-right: 15px;
+	margin-block: 0;
+}
+.AXI-Sec #Axi-Searchinp {
+	border-radius: 2px !important;
+	border-color: #ccc !important;
+	margin-right: 15px;
+	border: 0;
+	box-shadow: none !important;
+	padding-left: 0 !important;
+	border-right: 1px solid orangered !important;
+	color: #000 !important;
+	font-weight: normal !important;
+	opacity: 1 !important;
+}
+#mainNewPageBody.active .AXI-Sec {
+	width: calc(100vw - 300px);
+}
+.AXI-Sec img {
+	width: 20px;
+	height: 20px;
+}
+    .searchwrap-AXI {
+	width: 100%;
+	display: flex;
+} -->
+
+</style>
+<template class="templateContent">
+    <div class="fullTempleteWrapper">
+        <div class="d-none">
+            <!-- #Page Loader -->
+            <div class="page-loader-wrapper d-none">
+                <div class="loader">
+                    <div class="preloader">
+                        <div class="spinner-layer pl-blue-grey">
+                            <div class="circle-clipper left">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="circle-clipper right">
+                                <div class="circle"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- <p>Please wait...</p> -->
+                </div>
+            </div>
+            <!-- /Page Loader -->
+            <!-- #Overlay For Sidebars -->
+            <div class="overlay"></div>
+            <!-- /Overlay For Sidebars -->
+            <!-- #Top Bar -->
+            <nav class="navbar">
+                <div class="navbar-right-panel">
+                    <div class="collapse navbar-collapse" id="navbar-collapse">
+                        <ul class="nav navbar-nav navbar-right">
+                            <li class="pull-right" id="optionsPanel">
+                                <a href="javascript:void(0);" class="js-right-sidebar" data-close="true">
+                                    <i class="material-icons" title="Options">more_vert</i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="navbar-left-panel">
+                    <div class="navbar-header">
+                        <a href="javascript:void(0);" class="bars"></a>
+                        <a class="navbar-brand" href="javascript:void(0)">
+                        </a>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </nav>
+            <!-- /Top Bar -->
+
+            <section>
+                <!-- #Left Sidebar -->
+                <aside id="leftsidebar" class="sidebar">
+                    <!-- #Menu -->
+                    <div class="menu">
+                        <ul class="list"></ul>
+                    </div>
+                    <!-- /Menu -->
+                </aside>
+                <!-- /Left Sidebar -->
+                <!-- #Right Sidebar -->
+
+                <aside id="rightsidebar" class="right-sidebar">
+
+                    <div class="tab-content">
+                        <!-- #Settings Panel -->
+                        <div role="tabpanel" class="setting-panel tab-pane fade in active in active" id="settings">
+                            <div class="demo-settings">
+                                <!--<p id="settingsGeneral">General</p>-->
+                                <ul class="setting-list">
+
+                                    <li id="History" class="clickAutoClose">
+                                        <a href="javascript:void(0);">
+                                            <i class="material-icons setting-icon">history</i>
+                                            <span class="setting-caption">History</span>
+                                            <div class="clearfix"></div>
+                                        </a>
+                                    </li>
+
+
+                                    <li id="uiMobileNotification">
+                                        <a class="clickAutoClose">
+                                            <i class="setting-icon material-icons">system_update</i>
+                                            <span class="setting-caption">Mobile Notification</span>
+                                            <div class="clearfix"></div>
+                                        </a>
+                                        <div class="switch">
+                                            <span id="enableMobileNotifi">
+                                                <label>
+                                                    <input type="checkbox" checked="checked"
+                                                        onclick="ToggleMobileNotification(true)"><span
+                                                        id="spanMobileNotifi" class="lever"
+                                                        title="Mobile Notification off"></span>
+                                                </label>
+                                            </span>
+                                        </div>
+                                    </li>
+
+                                    <li id="Dashboard" class="clickAutoClose">
+                                        <a>
+                                            <i class="setting-icon material-icons">dashboard</i>
+                                            <span class="setting-caption">Dashboard</span>
+                                            <div class="clearfix"></div>
+                                        </a>
+                                    </li>
+                                </ul>
+                                <ul class="setting-list"></ul>
+                            </div>
+                        </div>
+                        <!-- /Settings Panel -->
+                    </div>
+                </aside>
+                <!-- /Right Sidebar -->
+            </section>
+        </div>
+    </div>
+
+    <div class="d-flex flex-column flex-root page-loading stay-page-loading">
+        <!--begin::Page-->
+        <div class="page d-flex flex-row flex-column-fluid">
+            <!--begin::Aside-->
+            <div class="aside aside-default aside-hoverable" data-kt-drawer="true" data-kt-drawer-name="aside"
+                data-kt-drawer-activate="{default: true, lg: false}" data-kt-drawer-overlay="true"
+                data-kt-drawer-width="{default:'200px', '300px': '250px'}" data-kt-drawer-direction="start"
+                data-kt-drawer-toggle="#kt_aside_toggle">
+                <!--begin::Brand-->
+                <div class="aside-logo flex-column-auto pt-9 pb-5 d-none" id="webAxAppLogo" title="AxpertWeb">
+                    <!--begin::Logo-->
+                    <a href="javascript:void(0);">
+                        <div class="logo-default mh-50px">
+                            <div class="d-flex">
+                                <img alt="Logo" src="../images/loginlogo.png" class="mh-50px ">
+                                <h3 class="d-flex mh-50px m-2 text-dark fw-bold fs-1 align-items-center divTitle">
+                                    AxpertWeb
+                                </h3>
+                            </div>
+                        </div>
+                        <img alt="Logo" src="../images/loginlogo.png" class="mh-50px logo-minimize">
+                    </a>
+                    <!--end::Logo-->
+                </div>
+                <!--end::Brand-->
+                <!--begin::Aside menu-->
+                <div class="aside-menu flex-column-fluid">
+                    <!--begin::Aside Menu-->
+                    <div class="Axpert_logo">
+                        <img alt="Logo" class="mh-40px " src="../images/axAppLogo-full.png">
+                    </div>
+                    <!--begin::Menu-->
+                    <div class="menu menu-column menu-fit menu-rounded menu-title-gray-400 menu-icon-gray-300 menu-state-white menu-state-icon-warning menu-state-bullet-warning menu-hover-bg-dark menu-arrow-gray-400 fw-light fs-6 my-5 mt-lg-2 mb-lg-0"
+                        data-kt-menu="true">
+                        <div class="menu-fit menu-link-no-padding hover-scroll-y hover-scroll-x ms-lg-n5--- me-lg-n10--- ps-lg-2 pe-lg-3 dark-scroll"
+                            data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}"
+                            data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt_aside_menu"
+                            data-kt-scroll-offset="20px" data-kt-scroll-dependencies="#webAxAppLogo, #kt_aside_footer">
+
+                        </div>
+                    </div>
+                    <!--end::Menu-->
+                </div>
+                <!--end::Aside menu-->
+                <!--begin::Footer-->
+                <div class="aside-footer flex-column-auto pb-5 px-6" id="kt_aside_footer">
+                    <div class="menu-fit">
+                        <div class="menu-item">
+                            <span class="menu-link">
+                                <span class="menu-icon">
+
+                                    <img alt="Logo" src="../images/loginlogo.png" class="mw-25px mh-25px" />
+
+                                </span>
+                                <span class="menu-title fw-bolder text-gray-600">© 2024 Powered by Axpert.</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <!--end::Footer-->
+            </div>
+            <!--end::Aside-->
+            <!--begin::Wrapper-->
+            <div class="wrapper d-flex flex-column flex-row-fluid position-relative bg-light">
+                <!--begin::Header-->
+                <div class="header" data-kt-sticky="true" data-kt-sticky-name="header"
+                    data-kt-sticky-offset="{default: '0px', lg: '0px'}" data-kt-sticky-animation="false">
+
+                    <div id="Header_Top">
+
+                        <div class="Product-info-section">
+                            <a href="javascript:void(0);" id="Product_logo" class="d-lg-none---" onclick=""
+                                title="Axpert">
+
+                                <img alt="Logo" src="../images/loginlogo.png" class="mh-25px ">
+                                <h3 class=" Product-Title">Agile ERP</h3>
+
+                            </a>
+                        </div>
+
+
+
+                        <div class="d-flex">
+
+                            <!--<div class="Application_Parameter-Section">
+                    <a href="#" class="Application_Parameter-Items">
+                        Agile Labs
+                    </a>
+                    <a href="#" class="Application_Parameter-Items">
+                        Bangalore
+                    </a>
+                    <a href="#" class="Application_Parameter-Items">
+                        2024
+                    </a>
+                </div>-->
+                            <!--begin::User-->
+                            <!--end::User -->
+
+
+                        </div>
+                    </div>
+
+                    <!--begin::Container-->
+                    <div class="container-fluid d-flex align-items-stretch justify-content-between">
+                        <!--begin::Logo bar-->
+                        <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
+                            <!--begin::Aside Toggle-->
+                            <div class="d-flex align-items-center d-lg-none">
+                                <div class="btn btn-icon btn-active-color-primary ms-n2 me-1" id="kt_aside_toggle">
+                                    <!--begin::Svg Icon | path: icons/duotune/abstract/abs015.svg-->
+                                    <span class="material-icons material-icons-style material-icons-1">
+                                        menu
+                                    </span>
+                                    <!--end::Svg Icon-->
+                                </div>
+                            </div>
+                            <!--end::Aside Toggle-->
+                            <!--begin::Aside toggler-->
+                            <div id="impopen"
+                                class="btn btn-icon w-auto ps-0 btn-active-color-primary d-none d-lg-inline-flex me-2 me-lg-5 active---"
+                                data-kt-toggle="true" data-kt-toggle-state="active" data-kt-toggle-target="body"
+                                data-kt-toggle-name="aside-minimize">
+                                <span class="material-icons material-icons-style material-icons-2 rotate-180">
+                                    menu
+                                </span>
+                            </div>
+                            <!--end::Aside toggler-->
+                            <!--begin::Logo-->
+                            <a href="javascript:void(0);" id="mobileAxAppLogo" class="d-lg-none---">
+                                <div class="d-flex align-items-center">
+                                    <img alt="Logo" src="../images/loginlogo.png" class="mh-40px ">
+
+                                    <h3
+                                        class="d-flex mh-40px m-2 text-dark fw-boldest fs-1 align-items-center text-break overflow-hidden divTitle">
+                                        AxpertWeb
+                                    </h3>
+                                </div>
+                            </a>
+                            <!--end::Logo-->
+                            <!--begin::Aside toggler-->
+                            <!-- <div class="btn btn-icon w-auto ps-0 btn-active-color-primary d-none d-lg-inline-flex me-2 me-lg-5 active---" data-kt-toggle="true" data-kt-toggle-state="active" data-kt-toggle-target="body" data-kt-toggle-name="aside-minimize">
+                    <span class="material-icons material-icons-style material-icons-2 rotate-180">
+                        menu
+                    </span>
+                </div> -->
+                            <!--end::Aside toggler-->
+                        </div>
+                        <!--end::Logo bar-->
+                        <!--begin::Topbar-->
+                        <div class="d-flex align-items-stretch justify-content-between flex-lg-grow-1">
+                            <!--begin::Search-->
+                            <div class="search-bar d-flex align-items-stretch me-1">
+                                <!--begin::Search-->
+                                <div id="kt_header_search" class="d-flex align-items-center w-100 w-lg-300px w-xl-500px"
+                                    data-kt-search-keypress="true" data-kt-search-min-length="2"
+                                    data-kt-search-enter="enter" data-kt-search-layout="menu"
+                                    data-kt-search-responsive="sm" data-kt-menu-trigger="auto"
+                                    data-kt-menu-permanent="true" data-kt-menu-placement="bottom-start"
+                                    data-kt-search="true" data-kt-menu-backdrop="true">
+                                    <!--begin::Tablet and mobile search toggle-->
+                                    <div data-kt-search-element="toggle" class="d-flex d-md-none align-items-center">
+                                        <div class="">
+                                            <span
+                                                class="material-icons material-icons-style material-icons-1 cursor-default mt-2">
+                                                search
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <!--end::Tablet and mobile search toggle-->
+                                    <!--begin::Form(use d-none d-lg-block classes for responsive search)-->
+                                    <form data-kt-search-element="form" class="d-none-- d-block w-100 mb-5 mb-lg-0"
+                                        autocomplete="off">
+                                        <div class="position-relative d-flex align-items-center">
+                                            <div class="vr mx-3 d-none d-lg-block"></div>
+                                            <!--begin::Hidden input(Added to disable form autocomplete)-->
+                                            <input type="hidden">
+                                            <!--end::Hidden input-->
+                                            <!--begin::Icon-->
+                                            <span
+                                                class="material-icons material-icons-style material-icons-2 material-icons-lg-3 cursor-default position-absolute top-50 translate-middle-y ms-0 ms-lg-6 text-gray-500">
+                                                search
+                                            </span>
+                                            <!--end::Icon-->
+                                            <!--begin::Input-->
+                                            <input id="globalSearchinp" type="text"
+                                                class="search-input form-control form-control-transparent ps-8"
+                                                name="search" value="" placeholder="Search..."
+                                                data-kt-search-element="input">
+                                            <!--end::Input-->
+                                            <!--begin::Spinner-->
+                                            <span
+                                                class="position-absolute top-50 end-0 translate-middle-y lh-0 d-none me-1"
+                                                data-kt-search-element="spinner">
+                                                <span
+                                                    class="spinner-border h-15px w-15px align-middle text-gray-400"></span>
+                                            </span>
+                                            <!--end::Spinner-->
+                                            <!--begin::Reset-->
+                                            <span
+                                                class="btn btn-flush btn-color-gray-500 btn-active-color-primary position-absolute top-50 end-0 lh-0 d-none me-0 mt-n3"
+                                                data-kt-search-element="clear">
+                                                <span
+                                                    class="material-icons material-icons-style material-icons-2 material-icons-lg-3 me-0 lh-1">
+                                                    close
+                                                </span>
+                                            </span>
+                                            <!--end::Reset-->
+                                        </div>
+                                        <!--begin::Separator-->
+                                        <div class="separator mt-1 d-block d-lg-none"></div>
+                                        <!--end::Separator-->
+                                    </form>
+                                    <!--end::Form-->
+                                    <!--begin::Menu-->
+                                    <div data-kt-search-element="content"
+                                        class="menu menu-sub menu-sub-dropdown w-400px w-md-400px py-7 px-7 overflow-hidden"
+                                        data-kt-menu="true">
+                                        <!--begin::Wrapper-->
+                                        <!--begin::Heading-->
+                                        <div class="d-flex flex-stack fw-bold mb-4">
+                                            <!--begin::Label-->
+                                            <span class="text-muted fs-6 me-2"></span>
+                                            <!--end::Label-->
+                                            <!--begin::Toolbar-->
+                                            <div class="d-flex" data-kt-search-element="toolbar">
+                                                <!--begin::Preferences toggle-->
+                                                <div data-kt-search-element="preferences-show"
+                                                    class="btn btn-icon w-20px btn-sm btn-active-color-primary me-2"
+                                                    data-bs-toggle="" title="Show search preferences">
+                                                    <span class="material-icons material-icons-style material-icons-1">
+                                                        settings
+                                                    </span>
+                                                </div>
+                                                <!--end::Preferences toggle-->
+                                            </div>
+                                            <!--end::Toolbar-->
+                                        </div>
+                                        <!--end::Heading-->
+                                        <div data-kt-search-element="wrapper">
+
+                                            <!--begin::Recently viewed-->
+                                            <div data-kt-search-element="results" class="d-none">
+                                                <!--begin::Items-->
+                                                <div class="scroll-y mh-200px mh-lg-350px">
+
+                                                </div>
+                                                <!--end::Items-->
+                                            </div>
+                                            <!--end::Recently viewed-->
+                                            <!--begin::Recently viewed-->
+                                            <div data-kt-search-element="main" class="text-center">
+
+                                                <!--begin::Items-->
+                                                <div class="scroll-y mh-200px mh-lg-325px">
+                                                    <!--begin::Item-->
+                                                    <!-- No Result Found -->
+                                                    <div class="pt-10 pb-10">
+                                                        <span
+                                                            class="material-icons material-icons-style material-icons-4x opacity-50">
+                                                            find_in_page
+                                                        </span>
+                                                    </div>
+                                                    <!--end::Icon-->
+                                                    <!--begin::Message-->
+                                                    <div class="pb-15 fw-bold">
+                                                        <h3 class="text-gray-600 fs-5 mb-2">Search results will show
+                                                            here</h3>
+                                                        <div class="text-muted fs-7">Please try again with a new search
+                                                            query</div>
+                                                    </div>
+                                                    <!--end::Item-->
+                                                </div>
+                                                <!--end::Items-->
+                                            </div>
+                                            <!--end::Recently viewed-->
+                                            <!--begin::Empty-->
+                                            <div data-kt-search-element="empty" class="d-none text-center">
+                                                <!--begin::Icon-->
+                                                <div class="pt-10 pb-10">
+                                                    <span
+                                                        class="material-icons material-icons-style material-icons-4x opacity-50">
+                                                        find_in_page
+                                                    </span>
+                                                </div>
+                                                <!--end::Icon-->
+                                                <!--begin::Message-->
+                                                <div class="pb-15 fw-bold">
+                                                    <h3 class="text-gray-600 fs-5 mb-2">No result found</h3>
+                                                    <div class="text-muted fs-7">Please try again with a different query
+                                                    </div>
+                                                </div>
+                                                <!--end::Message-->
+                                            </div>
+                                            <!--end::Empty-->
+                                        </div>
+                                        <!--end::Wrapper-->
+                                        <!--begin::Preferences-->
+                                        <div data-kt-search-element="preferences" class="pt-1 d-none">
+                                            <!--begin::Heading-->
+                                            <h3 class="fw-bold text-dark mb-7">Search Preferences</h3>
+                                            <!--end::Heading-->
+                                            <!--begin::Input group-->
+                                            <div class="pb-4 border-bottom">
+                                                <label
+                                                    class="form-check form-switch form-switch-sm form-check-custom form-check-solid flex-stack">
+                                                    <span class="divStartsWith"
+                                                        class="form-check-label text-gray-700 fs-6 fw-bold ms-0 me-2">Starts
+                                                        with...</span>
+                                                    <input class="form-check-input" type="checkbox" value="1"
+                                                        onchange="$.axpertUI.search.searchModeContains(!$(this).prop('checked'))">
+                                                </label>
+                                            </div>
+                                            <!--end::Input group-->
+                                            <!--begin::Actions-->
+                                            <div class="d-flex justify-content-end pt-7">
+                                                <span type="submit" class="btn btn-sm fw-bolder btn-primary"
+                                                    data-kt-search-element="preferences-dismiss">Back</span>
+                                            </div>
+                                            <!--end::Actions-->
+                                        </div>
+                                        <!--end::Preferences-->
+                                    </div>
+                                    <!--end::Menu-->
+                                </div>
+                                <!--end::Search-->
+                            </div>
+                            <!--end::Search-->
+                            <!--begin::Toolbar wrapper-->
+                            <div class="d-flex align-items-stretch flex-shrink-0">
+                                <!--begin::License Info-->
+                                <div id="LicInfo" class="d-flex align-items-center ms-1 ms-lg-2">
+                                    <!--begin::Menu wrapper-->
+                                    <div
+                                        class="btn btn-icon btn-active-light-primary w-30px h-30px w-md-40px h-md-40px position-relative">
+                                        <span class="material-icons material-icons-style material-icons-1">
+                                            info
+                                        </span>
+                                        <span
+                                            class="bullet bullet-dot bg-success h-6px w-6px position-absolute translate-middle top-0 start-50 animation-blink"></span>
+                                    </div>
+                                    <!--end::Menu wrapper-->
+                                </div>
+                                <!--begin::Notifications-->
+                                <!--<div id="notificationPanel" class="d-flex align-items-center ms-1 ms-lg-2">-->
+                                <!--begin::Menu wrapper-->
+                                <!--<div class="btn btn-icon btn-active-light-primary position-relative w-30px h-30px w-md-40px h-md-40px" data-kt-menu-trigger="click" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end" data-kt-menu-flip="bottom" data-kt-menu-backdrop="true">
+                        <span class="material-icons material-icons-style material-icons-1" title="Notifications">
+                            notifications
+                        </span>
+                        <span class="blinker d-none bullet bullet-dot bg-success h-6px w-6px position-absolute translate-middle top-0 start-50 animation-blink"></span>
+                    </div>-->
+                                <!--begin::Menu-->
+                                <!--<div class="menu menu-sub menu-sub-dropdown menu-column w-300px" data-kt-menu="true">-->
+                                <!--begin::Card-->
+                                <!--<div id="notificationbar" class="right-notificationbar card">-->
+                                <!--begin::Card header-->
+                                <!--<div class="card-header d-flex align-items-center">
+                        <h3 class="card-title">Notifications</h3>
+                        <div id="Clearnotify" class="btn btn-icon text-hover-primary w-10px h-10px">
+                            <div class="material-icons material-icons-style material-icons-4">
+                                clear_all
+                            </div>
+                        </div>
+                    </div>-->
+                                <!--end::Card header-->
+                                <!--begin::Card body-->
+                                <!--<div class="card-body p-0">-->
+                                <!--begin::Notifications-->
+                                <!--<div id="notifycount" class="demo-settings mh-350px min-h-200px scroll-y py-3">
+                    </div>-->
+                                <!--end::Notifications-->
+                                <!--</div>-->
+                                <!--end::Card header-->
+                                <!--</div>-->
+                                <!--end::Card-->
+                                <!--</div>-->
+                                <!--end::Menu-->
+                                <!--end::Menu wrapper-->
+                                <!--</div>-->
+                                <!--begin::Menu wrapper-->
+                                <div id="signalRnotificationsPanel"
+                                    class="d-flex align-items-center ms-1 ms-lg-2 col-xs-2z col-md-z2">
+                                    <div class="btn btn-icon btn-active-light-primary w-30px h-30px w-md-40px h-md-40px notificationtrigger"
+                                        id="notificationtrigger" data-kt-menu-trigger="click"
+                                        data-kt-menu-overflow="true" data-kt-menu-placement="bottom-end"
+                                        data-kt-menu-backdrop="true" title="Notifications"
+                                        onclick="signalrServiceinit.init()">
+                                        <img src="../images/icons/notification.png" class="notif-new" />
+                                        <div id="notifyCountForBlink" class="justify-content-center d-none">
+                                        </div>
+                                    </div>
+                                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-title-gray-700 menu-icon-muted menu-active-bg menu-state-primary fw-bold py-4s fs-6 w-400px h-75 notificationWindowMain"
+                                        id="notificationWindowMain" data-kt-menu="true">
+                                        <div class="d-flex justify-content-between MessageTItleStyle px-6 py-4">
+                                            <span class="h3 my-auto">Notifications</span>
+                                            <button type="button" class="btn btn-white btn-icon btn-sm closeAll"
+                                                id="closeAll" data-toggle="tooltip" data-placement="bottom"
+                                                title="Clear all" onclick="clearAll()">
+                                                <span
+                                                    class="material-icons material-icons-style material-icons-1">close</span>
+                                            </button>
+                                        </div>
+                                        <div class="separator my-2"></div>
+                                        <div class="notificationWindow py-0 justify-content-center overflow-auto"
+                                            id="notificationWindow">
+                                            <span class="d-flex justify-content-center align-items-center nodataText">
+                                                No notification available
+                                            </span>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <!--end::Notifications-->
+                                <!--begin::Quick links-->
+                                <div class="d-flex align-items-center ms-1 ms-lg-2">
+                                    <!--begin::Menu wrapper-->
+                                    <div class="btn btn-icon btn-active-light-primary w-30px h-30px w-md-40px h-md-40px"
+                                        id="AllUserOptions" data-kt-menu-trigger="click" data-kt-menu-attach="parent"
+                                        data-kt-menu-placement="bottom-end" data-kt-menu-backdrop="true">
+                                        <img src="../images/icons/useroptions.png" class="notif-new" />
+                                    </div>
+                                    <!--begin::Menu-->
+                                    <div class="UserOptions menu menu-sub menu-sub-dropdown menu-column w-sm-250px w-md-450px w-lg-450px overflow-sm-auto "
+                                        data-kt-menu="true">
+                                        <!-- min-h-150px h-sm-150px h-md-500px -->
+                                        <div class="card-body py-5 ">
+                                            <!--begin::Scroll-->
+                                            <div class="mh-450px scroll-y me-n5 pe-5">
+                                                <!--begin:Nav-->
+                                                <div class="row g-0">
+                                                    <!--begin:Item-->
+                                                    <!--<div id="Adminconsole" class="col-md-4 col-sm-6 col-6">
+                                            <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-end border-bottom border-0">
+                                                <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
+                                                    admin_panel_settings
+                                                </span>
+                                                <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Administration</span>
+                                                <span class="divSubTitle fs-7 text-gray-400">Console</span>
+                                            </a>
+                                        </div>-->
+
+                                                    <div id="developerworkbench" class="col-md-4 col-sm-6 col-6">
+                                                        <a href="javascript:void(0);"
+                                                            class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                            <span
+                                                                class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
+                                                                developer_mode
+                                                            </span>
+                                                            <img src="../images/icons/axpertStudio.png" loading="lazy"
+                                                                alt="Code " title="Code " width="64" height="64">
+                                                            <span
+                                                                class="divTitle fs-5 fw-bold text-gray-800 mb-0">Axpert
+                                                                Studio</span>
+                                                            <span
+                                                                class="divSubTitle fs-7 text-gray-400">Developer</span>
+                                                        </a>
+                                                    </div>
+
+                                                    <div id="configurationStudio" class="col-md-4 col-sm-6 col-6">
+                                                        <a href="javascript:void(0);"
+                                                            class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                            <img src="../images/icons/configuration.png">
+                                                            <span
+                                                                class="divTitle fs-5 fw-bold text-gray-800 mb-0">Configuration</span>
+                                                            <span class="divSubTitle fs-7 text-gray-400">Studio</span>
+
+                                                        </a>
+                                                    </div>
+
+                                                    <!--<div id="pluginCustomCode" class="col-md-4 col-sm-6 col-6">
+                                            <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                <img src="../images/icons/plugin.png">                                                           <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Plugin</span>
+                                                <span class="divSubTitle fs-7 text-gray-400">Custom Code</span>
+                                            </a>
+                                        </div>-->
+                                                    <!--end:Item-->
+                                                    <!--begin:Item-->
+                                                    <div id="ImportData" class="col-md-4 col-sm-6 col-6">
+                                                        <a href="javascript:void(0);"
+                                                            class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-end border-0">
+                                                            <img src="../images/icons/import.png">
+                                                            <span
+                                                                class="divTitle fs-5 fw-bold text-gray-800 mb-0">Import</span>
+                                                            <span class="divSubTitle fs-7 text-gray-400">Data</span>
+                                                        </a>
+                                                    </div>
+                                                    <!--end:Item-->
+                                                    <!--begin:Item-->
+                                                    <div id="ExportData" class="col-md-4 col-sm-6 col-6">
+                                                        <a href="javascript:void(0);"
+                                                            class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                                            <img src="../images/icons/export.png">
+                                                            <span
+                                                                class="divTitle fs-5 fw-bold text-gray-800 mb-0">Export</span>
+                                                            <span class="divSubTitle fs-7 text-gray-400">Data</span>
+                                                        </a>
+                                                    </div>
+                                                    <!--end:Item-->
+                                                    <!--begin:Item-->
+                                                    <!--$.axpertUI.cardsPage.editSaveCardDesignToggle();-->
+                                                    <div id="arrangeCards" class="col-md-4 col-sm-6 col-6"
+                                                        onclick="LoadIframe('processflow.aspx?dashboard=t&edit=t');"
+                                                        data-kt-menu-dismiss="true">
+                                                        <a href="javascript:void(0);"
+                                                            class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                                            <img src="../images/icons/dashboard.png"> <span
+                                                                class="divTitle fs-5 fw-bold text-gray-800 mb-0">Dashboard</span>
+                                                            <span class="divSubTitle fs-7 text-gray-400">Cards
+                                                                Setting</span>
+                                                        </a>
+                                                    </div>
+                                                    <!--end:Item-->
+                                                    <!--begin:Item-->
+                                                    <div id="refreshMenu" class="col-md-4 col-sm-6 col-6"
+                                                        data-kt-menu-dismiss="true">
+                                                        <a href="javascript:void(0);"
+                                                            class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                                            <img src="../images/icons/refreshMenu.png">
+                                                            <span
+                                                                class="divTitle fs-5 fw-bold text-gray-800 mb-0">Refresh
+                                                                Menu</span>
+                                                            <span class="divSubTitle fs-7 text-gray-400">Menu</span>
+                                                        </a>
+                                                    </div>
+                                                    <!--end:Item-->
+                                                    <!--begin:Item-->
+                                                    <div id="refreshVarParam" class="col-md-4 col-sm-6 col-6"
+                                                        data-kt-menu-dismiss="true">
+                                                        <a href="javascript:void(0);"
+                                                            class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                                            <img src="../images/icons/refreshApp.png">
+                                                            <span
+                                                                class="divTitle fs-5 fw-bold text-gray-800 mb-0">Refresh
+                                                                Application</span>
+                                                            <span
+                                                                class="divSubTitle fs-7 text-gray-400">Variables</span>
+                                                        </a>
+                                                    </div>
+                                                    <!--end:Item-->
+                                                    <!--begin:Item-->
+                                                    <div id="qrCodeBtnWrapper" class="col-md-4 col-sm-6 col-6"
+                                                        data-kt-menu-dismiss="true" data-kt-menu-trigger="hover"
+                                                        data-kt-menu-placement="left-start">
+                                                        <a href="javascript:void(0);"
+                                                            class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                                            <img src="../images/icons/QRCode.png">
+                                                            <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">QR
+                                                                Code</span>
+                                                            <span class="divSubTitle fs-7 text-gray-400">QR Code</span>
+                                                        </a>
+                                                        <!--begin::Menu sub-->
+                                                        <div class="menu-sub menu-sub-dropdown w-auto mw-300px py-4">
+                                                            <!--begin::Menu item-->
+                                                            <div class="menu-item px-3 text-center">
+                                                            </div>
+                                                            <!--end::Menu item-->
+                                                        </div>
+                                                        <!--end::Menu sub-->
+                                                    </div>
+                                                    <!--end:Item-->
+                                                    <!--begin:Item-->
+                                                    <div id="executionLog" class="col-md-4 col-sm-6 col-6"
+                                                        data-kt-menu-dismiss="true">
+                                                        <div class="bg-hover-light">
+                                                            <a href="javascript:void(0);"
+                                                                class="d-flex flex-column flex-center h-10 0p-0 pt-6 border-0">
+                                                                <img src="../images/icons/showExecution.png">
+                                                                <span
+                                                                    class="divTitle fs-5 fw-bold text-gray-800 mb-0 d-none">Show
+                                                                    Execution</span>
+                                                                <span
+                                                                    class="divSubTitle fs-7 text-gray-400 d-none">Trace</span>
+                                                            </a>
+                                                            <div id="chkexecshowlog"
+                                                                class="d-flex menu-content px-3 pb-6-- flex-center flex-column">
+                                                                <label
+                                                                    class="form-check form-switch form-check-custom form-check-solid">
+                                                                    <input class="form-check-input w-30px h-20px"
+                                                                        type="checkbox" value="" name="trace">
+                                                                    <span id="imgExecLogTrace"
+                                                                        class="divTitle form-check-label fs-5 fw-bold text-gray-800 mb-0"
+                                                                        title="Show Execution Trace On">Show
+                                                                        Execution</span>
+                                                                </label>
+                                                                <span
+                                                                    class="divSubTitle fs-7 text-gray-400">Trace</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!--end:Item-->
+                                                    <!--begin:Item-->
+                                                    <div id="showLog" class="col-md-4 col-sm-6 col-6"
+                                                        data-kt-menu-dismiss="true">
+                                                        <div class="bg-hover-light">
+                                                            <a href="javascript:void(0);"
+                                                                class="d-flex flex-column flex-center h-10 0p-0 pt-6 border-0">
+                                                                <img src="../images/icons/showLogs.png">
+                                                                <span
+                                                                    class="divTitle fs-5 fw-bold text-gray-800 mb-0 d-none">Show
+                                                                    Logs</span>
+                                                                <span
+                                                                    class="divSubTitle fs-7 text-gray-400 d-none">Log</span>
+                                                            </a>
+                                                            <div id="chkshowlog"
+                                                                class="d-flex menu-content px-3 pb-6 flex-center flex-column">
+                                                                <label
+                                                                    class="form-check form-switch form-check-custom form-check-solid">
+                                                                    <input class="form-check-input w-30px h-20px"
+                                                                        type="checkbox" value="" name="trace">
+                                                                    <span id="imgTogTrace"
+                                                                        class="divTitle form-check-label fs-5 fw-bold text-gray-800 mb-0"
+                                                                        title="Trace On">Show Logs</span>
+                                                                </label>
+                                                                <span
+                                                                    class="divSubTitle fs-7 text-gray-400">Trace</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!--end:Item-->
+                                                </div>
+                                                <!--end:Nav-->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--end::Menu-->
+                                    <!--end::Menu wrapper-->
+                                </div>
+                                <!--end::Quick links-->
+                                <!--begin::Dev Studio options-->
+                                <div class="d-flex align-items-center ms-1 ms-lg-2" id="axpertstudio">
+                                    <!--begin::Menu wrapper-->
+                                    <div class="btn btn-icon btn-active-light-primary w-30px h-30px w-md-40px h-md-40px"
+                                        id="AllDevOptions" data-kt-menu-trigger="click" data-kt-menu-attach="parent"
+                                        data-kt-menu-placement="bottom-end" data-kt-menu-backdrop="true"
+                                        style="background: #483d8b1a;">
+                                        <img class="notif-new"
+                                            src="https://cdn-icons-png.flaticon.com/128/3573/3573187.png">
+                                    </div>
+                                    <!--begin::Menu-->
+                                    <div class="DevOptions menu menu-sub menu-sub-dropdown menu-column w-sm-250px w-md-600px w-lg-600px overflow-sm-auto "
+                                        data-kt-menu="true" style="">
+                                        <!-- min-h-150px h-sm-150px h-md-500px -->
+                                        <div class="card-body py-5 scroll-y me-n5 pe-5">
+                                            <!--begin::Scroll-->
+                                            <!--begin:Nav-->
+                                            <div class="row g-0">
+                                                <!--begin:Item-->
+
+                                                <div id="Tstruct" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("tstreact");' title="Tstruct"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img loading="lazy" width="64" height="64"
+                                                            src="../images/devops/tstruct.png">
+                                                        <span
+                                                            class="divTitle fs-5 fw-bold text-gray-800 mb-0">Tstruct</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Forms</span>
+                                                    </a>
+                                                </div>
+
+                                                <div id="Iview" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("ivreact");' title="Iview"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/iview.png">
+                                                        <span
+                                                            class="divTitle fs-5 fw-bold text-gray-800 mb-0">Iview</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Reports</span>
+                                                    </a>
+                                                </div>
+
+                                                <!--<div id="Cards" class="col-md-3 col-sm-6 col-6">
+                                        <a href="javascript:void(0);" onclick='openDeveloperStudio("iaxpcards");' class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                            <img src="../images/devops/cards.png">
+                                            <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Cards</span>
+                                            <span class="divSubTitle fs-7 text-gray-400">Cards</span>
+                                        </a>
+                                    </div>-->
+
+                                                <div id="pluginCustomCode" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);" onclick="openPluginEditor();"
+                                                        title="Custom Plugins"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/icons/plugin.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Custom
+                                                            Plugins</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Plugin</span>
+                                                    </a>
+                                                </div>
+
+                                                <div id="CustomPages" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("ihplist");' title="Custom Pages"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/custom-pages.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Custom
+                                                            Pages</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">HTML</span>
+                                                    </a>
+                                                </div>
+
+                                                <div id="ADS" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("icsqlist");'
+                                                        title="Axpert Data Sources"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/custom-data-sourse.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Axpert
+                                                            Data Sources</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">ADS</span>
+                                                    </a>
+                                                </div>
+
+                                                <div id="APIPlugins" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("iexapidef");' title="API Plugins"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/Api-plugin.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">API
+                                                            Plugins</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">External
+                                                            APIs</span>
+                                                    </a>
+                                                </div>
+
+                                                <div id="DevOptions" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("idop_list");'
+                                                        title="Developer Options"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/dev-options.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Dev
+                                                            Options</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Dev Options</span>
+                                                    </a>
+                                                </div>
+
+                                                <div id="AxpertJobs" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("ijobtsk");' title="Axpert Jobs"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/axpert-jobs.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Axpert
+                                                            Jobs</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Axpert Jobs</span>
+                                                    </a>
+                                                </div>
+
+                                                <div id="DevLanguages" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("iaxlangs");'
+                                                        title="Axpert Languages"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/languages.png">
+                                                        <span
+                                                            class="divTitle fs-5 fw-bold text-gray-800 mb-0">Languages</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Languages</span>
+
+                                                    </a>
+                                                </div>
+
+                                                <div id="DevPublish" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("ipublist");' title="Publish"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/publish.png">
+                                                        <span
+                                                            class="divTitle fs-5 fw-bold text-gray-800 mb-0">Publish</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Publish</span>
+
+                                                    </a>
+                                                </div>
+
+                                                <div id="CustomDataType" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("icdlist");'
+                                                        title="Custom Data Type"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/custom-data-type.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Custom
+                                                            Data Type</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Data Type</span>
+                                                    </a>
+                                                </div>
+
+                                                <div id="Appvariables" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("iaxvars");'
+                                                        title="Application Variables"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/app-variables.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">App
+                                                            Variables</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">App
+                                                            Variables</span>
+                                                    </a>
+                                                </div>
+
+                                                <div id="DevExplorer" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("AxDBScript.aspx");'
+                                                        title="Data Base Explorer"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/DB-Explorer.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">DB
+                                                            Explorer</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">DB Explorer</span>
+                                                    </a>
+                                                </div>
+
+                                                <div id="ArrangeMenu" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("ArrangeMenu.aspx");'
+                                                        title="Arrange Menu"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/ArrangeMenu.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Arrange
+                                                            Menu</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Arrange Menu</span>
+                                                    </a>
+                                                </div>
+
+                                                <div id="EmailDefinitions" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("iemaildef");'
+                                                        title="Email Definitions"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/email-definition.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Email
+                                                            Definitions</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Definitions</span>
+                                                    </a>
+                                                </div>
+                                                <div id="TableDescriptor" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("iad___tbd");'
+                                                        title="Table Type Field Descriptor"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/table-filed-descriptor.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Table
+                                                            Field Descriptor</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Descriptor</span>
+                                                    </a>
+                                                </div>
+
+                                                <div id="QueueListing" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("iad__qls");' title="Queue Listing"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/queue-Listing.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Queue
+                                                            Listing</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Queue</span>
+                                                    </a>
+                                                </div>
+                                                <div id="MemDBConsole" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);"
+                                                        onclick='openDeveloperStudio("iinmemdb");'
+                                                        title="Mem DB Console"
+                                                        class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/Mem-DB-Console.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Mem DB
+                                                            Console</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Mem DB</span>
+                                                    </a>
+                                                </div>
+                                                <!--end:Item-->
+                                            </div>
+                                            <!--end:Nav-->
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Menu-->
+                                <!--end::Menu wrapper-->
+                                <!--end::Dev Studio options-->
+                                <!--begin::User-->
+                                <div class="d-flex align-items-center ms-2 ms-lg-3">
+                                    <!--begin::Menu wrapper-->
+                                    <div id="mainProfileIcon"
+                                        class="btn btn-icon profile-menu btn-dark w-30px h-30px w-md-40px h-md-40px position-relative"
+                                        data-kt-menu-trigger="click" data-kt-menu-attach="parent"
+                                        data-kt-menu-placement="bottom-end" data-kt-menu-backdrop="true">
+
+                                        <svg id="userNameIconMain" role="presentation" stroke-width="2"
+                                            focusable="false" class="icon icon-account" viewBox="0 0 22 22" height="24"
+                                            width="24">
+                                            <circle cx="11" cy="7" r="4" fill="none" stroke="currentColor"></circle>
+                                            <path d="M3.5 19c1.421-2.974 4.247-5 7.5-5s6.079 2.026 7.5 5" fill="none"
+                                                stroke="currentColor" stroke-linecap="round"></path>
+                                        </svg>
+                                        <img id="userProfilePicMain" class="mw-30px mh-30px" />
+                                    </div>
+
+                                    <div id="userProfile" class="menu-item px-3">
+                                        <div class="menu-content d-flex align-items-center px-3">
+                                            <!--begin::Avatar-->
+                                            <div class="symbol symbol-50px symbol-circle me-5">
+                                                <span id="userNameIcon"
+                                                    class="symbol-label bg-primary text-white fw-boldest fs-3">P</span>
+                                                <img id="userProfilePic"
+                                                    class="symbol-label text-white fw-boldest fs-3" />
+                                            </div>
+                                            <!--end::Avatar-->
+                                            <!--begin::Username-->
+                                            <div id="userName" class="ppn d-flex flex-column">
+                                                <div id="AxNickName"
+                                                    class="fw-bolder d-flex align-items-center fs-5 text-break">
+                                                </div>
+                                                <a id="AxUserEmail" href="javascript:void(0);"
+                                                    class="fw-bold text-muted text-hover-primary fs-7 text-break"></a>
+                                            </div>
+                                            <!--end::Username-->
+                                        </div>
+                                    </div>
+                                    <!--begin::User account menu-->
+                                    <div id="ProfileDropdown"
+                                        class="menu menu-sub user-profile-dropmen menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-primary fw-bold py-4 fs-6 w-275px"
+                                        data-kt-menu="true">
+
+
+
+
+                                        <a onclick="empProfile()" id="Profile-Menu">
+                                            <div class="menu-item ps-3" id="My_Profile">
+                                                <div class="menu-content d-flex align-items-center px-3">
+
+                                                    <div class="symbol symbol-50px symbol-circle ms-5 "
+                                                        id="Avatar_Icon_Drop">
+
+                                                        <img class="symbol-label text-white fw-boldest fs-3"
+                                                            id="userProfilePic_drop" src="../images/icons/profile.png">
+                                                    </div>
+
+                                                    <div class="fw-bolder d-flex align-items-center fs-5 text-break"
+                                                        id="">My Profile</div>
+
+
+                                                </div>
+                                            </div>
+                                        </a>
+                                        <!--begin::Menu item-->
+                                        <div id="userProfile" class="menu-item px-3">
+                                            <div class="menu-content d-flex align-items-center px-3">
+                                                <!--begin::Avatar-->
+                                                <div class="symbol symbol-50px symbol-circle me-5">
+                                                    <span id="userNameIcon"
+                                                        class="symbol-label bg-primary text-white fw-boldest fs-3">P</span>
+                                                    <img id="userProfilePic"
+                                                        class="symbol-label text-white fw-boldest fs-3" />
+                                                </div>
+                                                <!--end::Avatar-->
+                                                <!--begin::Username-->
+                                                <div id="userName" class="ppn d-flex flex-column">
+                                                    <div id="AxNickName"
+                                                        class="fw-bolder d-flex align-items-center fs-5 text-break">
+                                                    </div>
+                                                    <a id="AxUserEmail" href="javascript:void(0);"
+                                                        class="fw-bold text-muted text-hover-primary fs-7 text-break"></a>
+                                                </div>
+                                                <!--end::Username-->
+                                            </div>
+                                        </div>
+                                        <!--end::Menu item-->
+                                        <!--begin::Menu separator-->
+                                        <div class="separator my-2"></div>
+                                        <!--end::Menu separator-->
+                                        <!--begin::Menu item-->
+                                        <div id="userLastLoggedIn" class="menu-item px-3">
+                                            <div class="menu-content d-flex align-items-center px-3">
+                                                <!--begin::Username-->
+                                                <span class="setting-caption">
+                                                    Last Login:
+                                                </span>
+                                                <div id="AxLastLoggIn"
+                                                    class="fw-bolder--- d-flex align-items-center fs-5--- text-break">
+                                                </div>
+                                                <!--end::Username-->
+                                            </div>
+                                        </div>
+                                        <!--end::Menu item-->
+                                        <!--begin::Menu separator-->
+                                        <div class="separator my-2"></div>
+                                        <!--end::Menu separator-->
+                                        <!--begin::Menu item-->
+                                        <div id="GlobalParams" class="menu-item px-5 d-none"
+                                            data-kt-menu-trigger="hover" data-kt-menu-placement="left-start">
+                                            <a href="javascript:void(0);" class="menu-link d-flex flex-stack p-5">
+                                                Application Parameters
+                                            </a>
+                                            <div class="menu-sub menu-sub-dropdown w-auto mw-300px py-4">
+                                                <div class="win-w-100px cursor-pointer menu-item px-3">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--end::Menu item-->
+                                        <!--begin::Menu item-->
+                                        <!--<div class="menu-item px-5" data-kt-menu-trigger="hover" data-kt-menu-placement="left-start">
+                            <a href="javascript:void(0);" class="menu-link p-5">
+                                <span class="menu-title">Application Options</span>
+                                <span class="menu-arrow"></span>
+                            </a>-->
+                                        <!--begin::Menu sub-->
+                                        <!--<div class="menu-sub menu-sub-dropdown w-200px py-4">-->
+                                        <!--begin::Menu item-->
+                                        <!--<div id="refreshMenu" class="menu-item px-3">
+                                <a href="javascript:void(0);" class="menu-link p-5">Refresh Menu</a>
+                            </div>-->
+                                        <!--end::Menu item-->
+                                        <!--begin::Menu item-->
+                                        <!--<div id="refreshVarParam" class="menu-item px-3">
+                                <a href="javascript:void(0);" class="menu-link p-5">Refresh App Variables</a>
+                            </div>-->
+                                        <!--end::Menu item-->
+                                        <!--begin::Menu item-->
+                                        <!--<div id="executionLog" class="menu-item px-3">
+                                <a href="javascript:void(0);" class="menu-link p-5">Show Execution Trace</a>
+                            </div>-->
+                                        <!--end::Menu item-->
+                                        <!--begin::Menu separator-->
+                                        <!--<div class="separator my-2"></div>-->
+                                        <!--end::Menu separator-->
+                                        <!--begin::Menu item-->
+                                        <!--<div id="showLog" class="menu-item px-3 position-relative">
+                                <div id="chkshowlog" class="menu-content px-3">
+                                    <label class="form-check form-switch form-check-custom form-check-solid">
+                                        <input class="form-check-input w-30px h-20px" type="checkbox" value="" name="trace">
+                                        <span id="imgTogTrace" class="form-check-label text-muted fs-7" title="Trace On">Show Logs</span>
+                                    </label>
+                                </div>
+                                <a href="javascript:void(0);" class="menu-link fs-3 px-3 py-2 me-5 position-absolute translate-middle-y top-50 end-0 cursor-pointer text-gray-700 material-icons material-icons-style">
+                                    launch
+                                </a>
+                            </div>-->
+                                        <!--end::Menu item-->
+                                        <!--</div>-->
+                                        <!--end::Menu sub-->
+                                        <!--</div>-->
+                                        <!--end::Menu item-->
+                                        <!--begin::Menu item-->
+                                        <!--<div id="qrCodeBtnWrapper" class="menu-item px-5" data-kt-menu-trigger="hover" data-kt-menu-placement="left-start">
+                            <a href="javascript:void(0);" class="menu-link p-5">
+                                <span class="menu-title">QR Code</span>
+                            </a>-->
+                                        <!--begin::Menu sub-->
+                                        <!--<div class="menu-sub menu-sub-dropdown w-auto mw-300px py-4">-->
+                                        <!--begin::Menu item-->
+                                        <!--<div class="menu-item px-3 text-center">
+                            </div>-->
+                                        <!--end::Menu item-->
+                                        <!--</div>-->
+                                        <!--end::Menu sub-->
+                                        <!--</div>-->
+                                        <!--end::Menu item-->
+                                        <div id="About" class="ppn menu-item px-5 my-1">
+                                            <a href="javascript:void(0);" class="menu-link p-5">About</a>
+                                        </div>
+                                        <!--end::Menu item-->
+                                        <!--begin::Menu separator-->
+                                        <div class="separator my-2"></div>
+                                        <!--end::Menu separator-->
+                                        <!--begin::Menu item-->
+                                        <div id="Language" class="menu-item px-5" data-kt-menu-trigger="hover"
+                                            data-kt-menu-placement="left-start">
+                                            <a href="javascript:void(0);" class="menu-link p-5">
+                                                <span class="menu-title position-relative">
+                                                    <span class="setting-caption">
+                                                        Language
+                                                    </span>
+                                                    <span
+                                                        class="selected-badge fs-8 rounded bg-light px-3 py-2 position-absolute translate-middle-y top-50 end-0">
+                                                        English
+                                                    </span>
+                                                </span>
+                                            </a>
+                                            <!--begin::Menu sub-->
+                                            <div class="menu-sub menu-sub-dropdown w-175px py-4">
+                                            </div>
+                                            <!--end::Menu sub-->
+                                        </div>
+                                        <!--end::Menu item-->
+                                        <!--begin::Menu item-->
+                                        <div id="ChangePassword" class="menu-item px-5 my-1">
+                                            <a href="javascript:void(0);" class="menu-link p-5">Reset Password</a>
+                                        </div>
+                                        <!--end::Menu item-->
+                                        <!--begin::Menu item-->
+                                        <div id="Logout" class="menu-item px-5">
+                                            <a href="javascript:void(0);" class="menu-link p-5">Sign Out</a>
+                                        </div>
+                                        <!--end::Menu item-->
+                                        <!--begin::Menu separator-->
+                                        <div class="d-none separator my-2"></div>
+                                        <!--end::Menu separator-->
+                                        <!--begin::Menu item-->
+                                        <div id="uiSelector" class="d-none menu-item px-5">
+                                            <div id="enableModernUI" class="menu-content px-5">
+                                                <label
+                                                    class="form-check form-switch form-check-custom form-check-solid">
+                                                    <input id="spanModernUI" class="form-check-input w-30px h-20px"
+                                                        type="checkbox" value="1" checked="checked" name="mode">
+                                                    <span
+                                                        class="setting-caption form-check-label text-gray-600 fs-7">Modern
+                                                        UI</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <!--end::Menu item-->
+                                    </div>
+                                    <!--end::User account menu-->
+                                    <!--end::Menu wrapper-->
+                                </div>
+                                <!--end::User -->
+                            </div>
+                            <!--end::Toolbar wrapper-->
+                        </div>
+                        <!--end::Topbar-->
+                    </div>
+                    <!--end::Container-->
+                    <div class="Application_Parameter-Section">
+                        <div class="Application_Parameter_Wrapper">
+                        </div>
+                        <button type="button"
+                            class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary tb-btn btn-sm" title=""
+                            onclick="" data-kt-menu-trigger="{default:'click', lg: 'hover'}"
+                            data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+                            <span class="material-icons material-icons-style material-icons-2">more_horiz</span>
+                        </button>
+                        <!--begin::Menu-->
+                        <div id="AppGlobalParams"
+                            class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-title-gray-700 menu-icon-gray-500 menu-active-bg menu-state-color fw-semibold py-4 fs-base w-150px"
+                            data-kt-menu="true" data-kt-element="theme-mode-menu">
+
+                        </div>
+                        <!--end::Menu-->
+                    </div>
+
+                </div>
+                <!--end::Header-->
+                <!--begin: Axi Command Pallete-->
+                <div class="AXI-Sec">
+                    <div class="searchwrap-AXI">
+                        <label id="axiLogo" class="AXI-Logo">
+                            axi
+                            <img src="https://cdn-icons-png.flaticon.com/128/2913/2913130.png" alt="axi logo">
+                        </label>
+                        <input type="text" class="search-input form-control form-control-transparent ps-8" name="search"
+                            value="" data-kt-search-element="input" placeholder="Axpert AI"
+                            id="Axi-Searchinp" autocomplete="off">
+                        <div id="axiHint" class="axi-input-hint"></div>
+                        <div id="axiClearBtn"
+                            class="clearbtn"
+                            style="display: none; cursor: pointer;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+
+                        </div>
+
+
+                        <ul id="axiSuggestions" class="axi-suggestions"></ul>
+                    </div>
+                    <div class="Tkts-toolbar-Left">
+                        <div class="d-flex gap-1">
+                            <div class="d-flex-- align-items-stretch flex-shrink-0 gap-8">
+                                <!--Run/Send Button-->
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                    id="runBtn" data-kt-menu-placement="bottom" data-kt-menu-flip="top"
+                                    data-kt-menu-attach="parent" data-kt-menu-trigger="click">
+                                    <span class="material-icons material-icons-style material-icons-2 initialized"
+                                        data-bs-toggle="tooltip" data-bs-original-title="Run" title="Run (ctrl + ENTER)">send</span>
+                                </div>
+
+                                <!--Enhance Button-->
+                                <div
+                                    class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn">
+                                    <span data-bs-toggle="tooltip" data-bs-placement="bottom" title="Enhance">✨</span>
+                                </div>
+
+                                <!--Refresh Button-->
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                    id="btnRefresh" data-kt-menu-placement="bottom" data-kt-menu-flip="top"
+                                    data-kt-menu-attach="parent">
+                                    <span class="material-icons material-icons-style material-icons-2 initialized"
+                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                        title="Refresh">refresh</span>
+                                </div>
+
+                                <!--Notification Button-->
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm selectbtn"
+                                    data-kt-menu-placement="bottom" data-kt-menu-flip="top"
+                                    data-kt-menu-attach="parent">
+                                    <span class="material-icons material-icons-style material-icons-2 initialized"
+                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                        data-bs-original-title="Notify" title="Notify">notifications_active</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--end: Axi Command Pallete-->
+                <!--begin::Content-->
+                <div class="content fs-6 d-flex flex-column flex-column-fluid px-3 pt-5 pb-2">
+                    <!-- <div class="btn btn-icon btn-sm position-absolute ms-n20 mt-2 fw-bolder z-index-2 transform-270 appBackBtn" onclick="prevbtn_click($(this))">
+            <span class="btn btn-flex btn-white btn-active-light-primary h-30px shadow-sm fs-6 mt-7 pt-4 pb-3 px-4 rounded-top-0" title="" data-bs-toggle="tooltip-disable" data-bs-placement="left" data-bs-dismiss="click" data-bs-trigger="hover" data-bs-html="true" data-bs-sanitize="false" data-bs-original-title='<button type="button" class="btn btn-icon btn-sm btn-outline btn-outline-dashed btn-outline-primary btn-bg-white btn-active-primary"><i class="material-icons material-icons-style material-icons-2">arrow_back</i></button>'>
+                <span>back</span>
+            </span>
+        </div> -->
+                    <div class="btn btn-icon btn-sm position-absolute fw-bolder ms-4--- ms-n3 mt-n7 z-index-2 appBackBtn"
+                        onclick="prevbtn_click($(this))">
+                        <button type="button" class="btn btn-icon btn-sm ">
+                            <span class="material-icons material-icons-style material-icons-2">arrow_back</span>
+                        </button>
+                    </div>
+                    <!-- #IFrames Panel @IMPORTANT@ -->
+                    <div class="splitter-wrapper flex-column-fluid h-100">
+                        <div class="panel-container main-panel-container flex-column-fluid row m-0 h-100">
+                            <div class="panel-left panel-fisrt-part flex-column-fluid--- p-0 h-100">
+                                <div class="panel-left-inner flex-column-fluid h-100">
+                                    <iframe id="middle1" name="middle1"
+                                        class="col-xs-12 col-sm-12 col-md-12 col-lg-12 searchOpened flex-column-fluid h-100"
+                                        src="" style="padding: 0px;" frameborder="0" allowtransparency="True"
+                                        width="100%"></iframe>
+                                </div>
+                            </div>
+                            <div class="splitter panel-splitter flex-column-fluid flex-row-auto cursor-col-resize w-unset h-100"
+                                id="drag-point" style="display: none;">
+                            </div>
+                            <div class="panel-right panel-second-part flex-column-fluid--- flex-root p-0 h-100"
+                                id="divaxpiframe" style="display: none !important">
+                                <div class="panel-right-inner flex-column-fluid h-100">
+                                    <iframe id="axpiframe" name="axpiframe"
+                                        class="col-xs-12 col-sm-12 col-md-12 col-lg-12 searchOpened flex-column-fluid h-100"
+                                        src="" style="padding: 0px;" frameborder="0" allowtransparency="True"
+                                        width="100%" style="display: none;"></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /IFrames Panel -->
+                    <div class="cardsPageWrapper d-none">
+                        <div class="designer toolbar ms-5 pb-0 d-none">
+                            <div class="d-flex flex-stack flex-wrap flex-sm-nowrap">
+                                <!--begin::Info-->
+                                <div class="d-flex flex-column align-items-start justify-content-center flex-wrap me-2">
+                                    <!--begin::Title-->
+                                    <h1 class="text-dark fw-boldest my-1 fs-2">
+                                        Dashboard Cards Setting
+                                        <small class="text-muted fs-6 fw-normal ms-1"></small>
+                                    </h1>
+                                    <!--end::Title-->
+                                </div>
+                                <!--end::Info-->
+                                <!--begin::Actions-->
+                                <div class="d-flex align-items-center flex-nowrap text-nowrap py-1">
+                                    <a href="javascript:void(0);"
+                                        class="editSaveCardDesign btn btn-icon btn-white btn-active-primary me-4"
+                                        onclick="$.axpertUI.cardsPage.editSaveCardDesignToggle();">
+                                        <span class="material-icons material-icons-style">
+                                            edit
+                                        </span>
+                                    </a>
+                                </div>
+                                <!--end::Actions-->
+                            </div>
+                        </div>
+
+                        <ul class="cardsDesigner card list-group d-none mt-6"></ul>
+                        <div class="cardsPlot mb-1">
+                            <!-- Customized for  Homepage -->
+                            <div id="New-Landing-layout" class="row">
+                                <!-- Top KPI Section starts -->
+                                <div class="cardsPlot mb-8 col-md-12 d-none" id="Homepage_CardsList">
+                                    <!-- card style change option Begin-->
+                                    <div class="cards-style d-none">
+                                        <button type="button"
+                                            class="btn btn-sm btn-icon btn-primary btn-active-primary btn-custom-border-radius"
+                                            onclick="" title="" name="smallcards">
+                                            <span
+                                                class="material-icons material-icons-style material-icons-2">apps</span>
+                                        </button>
+                                        <button type="button"
+                                            class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                            title="" onclick="" name="largecards">
+                                            <span
+                                                class="material-icons material-icons-style material-icons-2">grid_view</span>
+                                        </button>
+                                        <button type="button"
+                                            class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                            title="" onclick="" name="colouredcards">
+                                            <span
+                                                class="material-icons material-icons-style material-icons-2">format_color_fill</span>
+                                        </button>
+                                    </div>
+                                    <!-- card style change option ends -->
+                                    <div class="row--" id="Homepage_CardsList_Wrapper">
+                                    </div>
+                                </div>
+                                <!-- Top KPI Section ends -->
+                                <!-- Left cardslists Starts  -->
+                                <div class="HomePageMenuOptionCards mb-8 col-md-12"></div>
+                                <div class="HtmlPanelCards mb-8 col-md-12">
+                                    <div class="row"></div>
+                                </div>
+                                <div class="HomePageCards mb-8 col-md-12"></div>
+                                <!-- Left cardslists ends -->
+
+                            </div>
+                        </div>
+                        <!-- </div> -->
+
+                        <div class="d-none toolbar ms-5 pb-0">
+                            <div class="container-fluid d-flex flex-stack flex-wrap flex-sm-nowrap">
+                                <!--begin::Info-->
+                                <div class="d-flex flex-column align-items-start justify-content-center flex-wrap me-2">
+                                    <!--begin::Title-->
+                                    <h1 class="text-dark fw-boldest my-1 fs-2">
+                                        Cards
+                                        <small class="text-muted fs-6 fw-normal ms-1"></small>
+                                    </h1>
+                                    <!--end::Title-->
+                                    <!--begin::Breadcrumb-->
+                                    <ul class="breadcrumb fw-bold fs-base my-1 d-none">
+                                        <li class="breadcrumb-item text-muted">
+                                            <a href="/craft/index.html" class="text-muted text-hover-primary">Home</a>
+                                        </li>
+                                        <li class="breadcrumb-item text-muted">Dashboards</li>
+                                        <li class="breadcrumb-item text-dark">Default</li>
+                                    </ul>
+                                    <!--end::Breadcrumb-->
+                                </div>
+                                <!--end::Info-->
+                                <!--begin::Actions-->
+                                <div class="d-flex align-items-center flex-nowrap text-nowrap py-1">
+                                    <a href="javascript:void(0);"
+                                        class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary me-4"
+                                        data-bs-toggle="modal" data-bs-target="#kt_modal_invite_friends">
+                                        <span class="material-icons material-icons-style">
+                                            edit
+                                        </span>
+                                    </a>
+                                </div>
+                                <!--end::Actions-->
+                            </div>
+                        </div>
+
+                        <!--begin::Container-->
+                        <div class="d-none container">
+                            <!--begin::Row-->
+                            <div class="row">
+                            </div>
+                        </div>
+                        <!--end::Container-->
+
+                    </div>
+                    <!--end::Content-->
+                </div>
+                <!--end::Wrapper-->
+            </div>
+            <!--end::Page-->
+            <div id="waitDiv" class="page-loader rounded-2">
+                <div class="loader-box-wrapper d-flex">
+                    <span class="loader"></span>
+                    <span class="page-loader-text ps-3 boldest fs-5 py-5">Welcome</span>
+                </div>
+            </div>
+            <div class="popper-backdrop"></div>
+        </div>
+
+        <!-- Custom Js -->
+        <!--<script type="module" src="../Js/axi-autocomplete.js?v=1"></script>-->
+</template>
+<script type="text/javascript">
+    /**
+     * Show Templete in Header on pageload
+     * @author Prashik
+     * @Date   2019-08-04T13:21:51+0530
+     */
+    // $(function () {
+    var files = {
+        css: [],
+        js: []
+    };
+
+    var enableMasonry = false;
+
+    /* if (homePageType == "cards") {*/
+
+    files.js.push("/ThirdParty/lodash.min.js?v=1");
+    files.js.push("/ThirdParty/deepdash.min.js");
+
+    files.js.push("/Js/handlebars.min.js?v=2");
+    files.js.push("/Js/handleBarsHelpers.min.js");
+    if (homePageType == "cards") {
+        files.js.push("/Js/AxInterface.min.js?v=16");//min
+        files.js.push("/ThirdParty/Highcharts/highcharts.js");
+        files.js.push("/ThirdParty/Highcharts/highcharts-3d.js");
+        files.js.push("/ThirdParty/Highcharts/highcharts-more.js");
+        files.js.push("/ThirdParty/Highcharts/highcharts-exporting.js");
+        files.js.push("/Js/high-charts-functions.min.js?v=23");//min
+
+        files.js.push("/ThirdParty/DataTables-1.10.13/media/js/jquery.dataTables.js");
+        files.js.push("/ThirdParty/DataTables-1.10.13/media/js/dataTables.bootstrap.js");
+
+        files.js.push("/ThirdParty/DataTables-1.10.13/extensions/Extras/moment.min.js");
+        // files.js.push("/ThirdParty/fullcalendar-6.1.8/index.global.min.js");
+        files.css.push("/ThirdParty/fullcalendar/lib/main.min.css");
+        files.js.push("/ThirdParty/fullcalendar/lib/main.min.js");
+
+        if (isMobile) {
+            files.js.push("/ThirdParty/jquery-ui-touch-punch-master/jquery.ui.touch-punch.min.js");
+        }
+
+        if (enableMasonry) {
+            files.js.push("/ThirdParty/masonry/masonry.pkgd.min.js");
+        }
+    }
+
+    let customStyleApplied = false;
+
+    if (!customStyleApplied) {
+        // files.css.push("/Css/axpertUI.min.css?v=50");
+    }
+
+    files.css.push("/Css/LayoutTheme.min.css?v=10");
+    files.css.push("/Css/AxNotifications.min.css?v=2");
+    files.css.push("/Css/HomeConfigPageCards.min.css?v=12");
+    files.js.push("/Js/signalr.min.js");
+    files.js.push("/Js/axpertUI_homecards.min.js?v=29");
+    files.js.push("/Js/AxNotifications.min.js?v=12");
+    files.js.push("/Js/HomeConfigPageCards.min.js?v=15");
+    files.js.push("/Js/Entity-common.min.js?v=14");
+    // files.js.push("/CustomPages/js/axi-autocomplete.js");
+    files.js.push("/plugins/Axi/HTMLPages/js/axi-autocomplete.js");
+    // files.css.push("/CustomPages/css/axi-dashboard.css");
+    files.css.push("/plugins/Axi/HTMLPages/css/axi-dashboard.css");
+
+    var dirLeft = true;
+
+    if ($("body").hasClass("btextDir-rtl")) {
+        dirLeft = false;
+    }
+
+    loadAndCall({
+        files: files,
+        callBack: function () {
+            $("body").addClass("mixed-theme");
+            renderTemplete('template.templateContent');
+
+            $(function () {
+                KTDrawer.init();
+                KTMenu.init();
+                KTScroll.init();
+                KTScrolltop.init();
+                KTSticky.init();
+                KTSwapper.init();
+                KTToggle.init();
+                KTApp.init();
+                KTLayoutHeader.init();
+                KTLayoutSearch.init();
+                document.querySelector("#Homepage_CardsList")?.classList.remove('col-md-4');
+                if (homePageType == "cards") {
+                    deepdash(_);
+                }
+
+                //start AxpertUI Init
+                appGlobalVarsObject._CONSTANTS.menuConfiguration = $.extend(true, {},
+                    appGlobalVarsObject._CONSTANTS.menuConfiguration, {
+                    menuJson: menuJson,
+                    staging: {
+                        div: ".aside .aside-menu .menu .menu-fit",
+                        divParent: "#leftsidebar"
+                    },
+                    homePage: {
+                        url: "loadhomepage"
+                    }
+                });
+                try {
+                    if ($("#hdHomeUrl").val() == "") {
+                        $.ajax({
+                            url: 'mainnew.aspx/GetCardsWithDataOnLoginWS',
+                            type: 'POST',
+                            cache: false,
+                            async: false,
+                            dataType: 'json',
+                            contentType: "application/json",
+                            success: function (data) {
+                                if (data && data.d) {
+                                    if (typeof data.d != "undefined" && data.d != "" && (data.d == 'Error occurred. Please check with administrator.' || data.d.toLowerCase().startsWith('error ')))
+                                        ShowDimmer(false);
+                                    else
+                                        $("#cardsData").val(data.d);
+                                } else {
+                                    ShowDimmer(false);
+                                }
+                            },
+                            error: function (er) {
+                                ShowDimmer(false);
+                            }
+                        });
+                    }
+
+                    appGlobalVarsObject._CONSTANTS.cardsPage = $.extend(true, {},
+                        appGlobalVarsObject._CONSTANTS.cardsPage, {
+                        setCards: $("#hdHomeUrl").val() == "" && homePageType == "cards",
+                        cards: (JSON.parse(cardsData.value !== "" ? ReverseCheckSpecialChars(cardsData.value) : "[]",
+                            function (k, v) {
+                                try {
+                                    return (typeof v === "object" || isNaN(v) || v.toString().trim() === "") ? v : (typeof v == "string" && (v.startsWith("0") || v.startsWith("-")) ? parseFloat(v, 10) : JSON.parse(v));
+                                } catch (ex) {
+                                    return v;
+                                }
+                            }
+                        ) || []).map(arr => _.mapKeys(arr, (value, key) => key.toString().toLowerCase())),
+                        design: (JSON.parse(cardsDesign.value !== "" ? cardsDesign.value : "[]",
+                            function (k, v) {
+                                try {
+                                    return (typeof v === "object" || isNaN(v) || v.toString().trim() === "") ? v : (typeof v == "string" && (v.startsWith("0") || v.startsWith("-")) ? parseFloat(v, 10) : JSON.parse(v));
+                                } catch (ex) {
+                                    return v;
+                                }
+                            }
+                        ) || []).map(arr => _.mapKeys(arr, (value, key) => key.toString().toLowerCase())),
+                        enableMasonry: enableMasonry,
+                        staging: {
+                            iframes: ".splitter-wrapper",
+                            cardsFrame: {
+                                div: ".cardsPageWrapper",
+                                cardsDiv: "#Homepage_CardsList_Wrapper",
+                                cardsDesigner: ".cardsDesigner",
+                                cardsDesignerToolbar: ".designer",
+                                editSaveButton: ".editSaveCardDesign",
+                                icon: "span.material-icons",
+                                divControl: "#arrangeCards"
+                            },
+                        }
+                    });
+                } catch (ex) { }
+
+                try {
+                    var lcm = appGlobalVarsObject.lcm;
+                    var tempaxpertUIObj = $.axpertUI
+                        .init({
+                            isHybrid: appGlobalVarsObject._CONSTANTS.isHybrid,
+                            isMobile: isMobile,
+                            showMenu: appGlobalVarsObject._CONSTANTS.showMenu,
+                            compressedMode: appGlobalVarsObject._CONSTANTS.compressedMode,
+                            leftSideBar: {
+                                menuConfiguration: appGlobalVarsObject._CONSTANTS
+                                    .menuConfiguration
+                            },
+                            dirLeft: dirLeft,
+                            axpertUserSettings: {
+                                staging: {
+                                    optionsPanel: {
+                                        div: "#optionsPanel",
+                                        title: lcm[301]
+                                    },
+                                    signalRnotificationsPanel: {
+                                        div: "#signalRnotificationsPanel",
+                                        title: lcm[301]
+                                    },
+                                    mainProfileIcon: {
+                                        div: "#mainProfileIcon",
+                                        span: "#userNameIconMain",
+                                        img: "#userProfilePicMain"
+                                    },
+                                    userProfile: {
+                                        div: "#userProfile",
+                                        icon: "#userProfileIcon",
+                                        options: {
+                                            userName: {
+                                                div: "#userName",
+                                                icon: "#userNameIcon",
+                                                uppic: "#userProfilePic"
+                                            }
+                                        }
+                                    },
+                                    LicInfo: {
+                                        div: "#LicInfo",
+                                        divClick: ".btn.btn-icon",
+                                        divTitle: ".btn.btn-icon"
+                                    },
+                                    AxAppLogo: {
+                                        web: {
+                                            divParent: "#webAxAppLogo",
+                                            div: "img",
+                                            divTitle: ".divTitle",
+                                            showTitle: true
+                                        },
+                                        mobile: {
+                                            divParent: "#mobileAxAppLogo",
+                                            div: "img",
+                                            divTitle: ".divTitle",
+                                            showTitle: true
+                                        }
+                                    },
+                                    AxNickName: {
+                                        div: "#AxNickName"
+                                    },
+                                    AxUserEmail: {
+                                        div: "#AxUserEmail"
+                                    },
+                                    AxLastLoggIn: {
+                                        div: "#AxLastLoggIn"
+                                    },
+                                    GlobalParams: {
+                                        div: "#GlobalParams",
+                                        divClick: "a",
+                                        divTitle: ".menu-item",
+                                        divData: '#myPopover',
+                                        title: lcm[468]
+                                    },
+                                    Logout: {
+                                        div: "#Logout",
+                                        divTitle: "a",
+                                        title: lcm[457]
+                                    },
+                                    About: {
+                                        div: "#About",
+                                        title: lcm[463]
+                                    },
+                                    Language: {
+                                        div: "#Language",
+                                        divTitle: "span.setting-caption",
+                                        title: lcm[508],
+                                        badge: ".selected-badge",
+                                        divOptions: ".menu-sub.menu-sub-dropdown"
+                                    },
+                                    InMemoryDB: {
+                                        div: "#InMemoryDB",
+                                        title: lcm[464]
+                                    },
+                                    showLog: {
+                                        div: "#showLog",
+                                        divClick: "a",
+                                        //title: lcm[460]
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[546].split(" ")[0] + " " + lcm[546].split(" ")[1]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[546].split(" ")[2]
+                                        }
+                                    },
+                                    traceValue: {
+                                        div: "#chkshowlog",
+                                        divClick: "label",
+                                        divControl: "input",
+                                        divspan: "span",
+                                        title: {
+                                            on: lcm[465],
+                                            off: lcm[466],
+                                        }
+
+                                    },
+                                    executionLog: {
+                                        div: "#executionLog",
+                                        divClick: "a",
+                                        //title: lcm[503]
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[547].split(" ")[0] + " " + lcm[547].split(" ")[1]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[547].split(" ")[2]
+                                        }
+                                    },
+                                    exectraceValue: {
+                                        div: "#chkexecshowlog",
+                                        divClick: "label",
+                                        divControl: "input",
+                                        divspan: "span",
+                                        title: {
+                                            on: lcm[535],
+                                            off: lcm[536],
+                                        }
+                                    },
+                                    uiMobileNotification: {
+                                        div: "#uiMobileNotification",
+                                        divClick: "a",
+                                        title: lcm[504]
+                                    },
+                                    auditReport: {
+                                        div: "#auditReport",
+                                        divClick: "a",
+                                        title: lcm[459]
+                                    },
+                                    userManual: {
+                                        div: "#userManual",
+                                        divClick: "a",
+                                        title: lcm[492]
+                                    },
+                                    uiSelector: {
+                                        div: "#uiSelector",
+                                        divClick: "a",
+                                        title: lcm[479]
+                                    },
+                                    modernUiValue: {
+                                        div: "#enableModernUI",
+                                        divClick: "label",
+                                        divControl: "input",
+                                        divSpan: "span",
+                                        title: {
+                                            on: lcm[481],
+                                            off: lcm[480],
+                                        }
+                                    },
+                                    globalsettings: {
+                                        div: "#globalsettings",
+                                        title: lcm[258]
+                                    },
+                                    developerworkbench: {
+                                        div: "#developerworkbench",
+                                        title: {
+                                            div: ".divTitle",
+                                            title: "Axpert Studio"
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: "Developer"
+                                        }
+                                    },
+                                    axpertstudio: {
+                                        div: "#axpertstudio",
+                                        title: {
+                                            title: "Axpert Developer Studio"
+                                        }
+                                    },
+                                    configurationStudio: {
+                                        div: "#configurationStudio",
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[542].split(" ")[0]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[542].split(" ")[1]
+                                        }
+                                    },
+                                    ArrangeCards: {
+                                        div: "#arrangeCards",
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[545].split(" ")[0]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[545].split(" ")[1] + " " + lcm[545].split(" ")[2]
+                                        }
+                                    },
+                                    refreshMenu: {
+                                        div: "#refreshMenu",
+                                        /*title: lcm[456]*/
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[544]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[544].split(" ")[1]
+                                        }
+                                    },
+                                    refreshVarParam: {
+                                        div: "#refreshVarParam",
+                                        /*title: lcm[507]*/
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[543].split(" ")[0] + " " + lcm[543].split(" ")[1]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[543].split(" ")[2]
+                                        }
+                                    },
+                                    AppConfig: {
+                                        div: "#AppConfig",
+                                        title: lcm[467],
+                                    },
+                                    splitIcon: {
+                                        div: "#splitIcon",
+                                        title: lcm[474],
+                                        heading: ".spiltHeading",
+                                        options: {
+                                            verticalSplit: {
+                                                div: "#verticalSplit",
+                                                title: lcm[453]
+
+                                            },
+                                            horizontalSplit: {
+                                                div: "#horizontalSplit",
+                                                title: lcm[454]
+                                            },
+                                            clearSplit: {
+                                                div: "#clearSplit",
+                                                title: lcm[455]
+                                            }
+                                        }
+                                    },
+                                    ChangePassword: {
+                                        div: "#ChangePassword",
+                                        divTitle: "a",
+                                        title: lcm[252],
+                                    },
+                                    qrCodeBtnWrapper: {
+                                        div: "#qrCodeBtnWrapper",
+                                        divTitle: "span",
+                                        divPlaceholder: ".menu-item",
+                                        //title: lcm[461],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[548]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[548]
+                                        }
+                                    },
+                                    WidgetBuilder: {
+                                        div: "#WidgetBuilder",
+                                        title: lcm[257],
+                                    },
+                                    pageBuilderBtn: {
+                                        div: "#pageBuilderBtn",
+                                        title: lcm[462],
+                                    },
+
+                                    Dashboard: {
+                                        div: "#Dashboard",
+                                        title: lcm[458],
+                                    },
+                                    Responsibilities: {
+                                        div: "#Responsibilities",
+                                        title: lcm[313],
+                                    },
+                                    ExportData: {
+                                        div: "#ExportData",
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[250].split(" ")[0]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[250].split(" ")[1]
+                                        },
+                                    },
+                                    ImportData: {
+                                        div: "#ImportData",
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[251].split(" ")[0]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[251].split(" ")[1]
+                                        },
+                                    },
+                                    ImportHistory: {
+                                        div: "#ImportHistory",
+                                        title: lcm[255],
+                                    },
+                                    WorkFlow: {
+                                        div: "#WorkFlow",
+                                        title: lcm[398],
+                                    },
+
+                                    CustomPages: {
+                                        div: "#CustomPages",
+                                        atitle: lcm[549].split(" ")[0] + " " + lcm[549].split(" ")[1],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[549].split(" ")[0] + " " + lcm[549].split(" ")[1]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[549].split(" ")[2]
+                                        }
+                                    },
+
+                                    pluginCustomCode: {
+                                        div: "#pluginCustomCode",
+                                        atitle: lcm[550].split(" ")[0] + " " + lcm[550].split(" ")[1],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[550].split(" ")[0] + " " + lcm[550].split(" ")[1]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[550].split(" ")[2]
+                                        }
+                                    },
+                                    Iview: {
+                                        div: "#Iview",
+                                        atitle: lcm[551].split(" ")[0],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[551].split(" ")[0]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[551].split(" ")[1]
+                                        }
+                                    },
+
+                                    Tstruct: {
+                                        div: "#Tstruct",
+                                        atitle: lcm[552].split(" ")[0],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[552].split(" ")[0]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[552].split(" ")[1]
+                                        }
+                                    },
+
+                                    AxpertJobs: {
+                                        div: "#AxpertJobs",
+                                        atitle: lcm[553],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[553]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[553]
+                                        }
+                                    },
+
+                                    DevOptions: {
+                                        div: "#DevOptions",
+                                        atitle: lcm[567],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[554]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[554]
+                                        }
+                                    },
+
+                                    APIPlugins: {
+                                        div: "#APIPlugins",
+                                        atitle: lcm[555].split(" ")[0] + " " + lcm[555].split(" ")[1],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[555].split(" ")[0] + " " + lcm[555].split(" ")[1]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[555].split(" ")[2] + " " + lcm[555].split(" ")[3]
+                                        }
+                                    },
+                                    ADS: {
+                                        div: "#ADS",
+                                        atitle: lcm[556].split(" ")[0] + " " + lcm[556].split(" ")[1] + " " + lcm[556].split(" ")[2],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[556].split(" ")[0] + " " + lcm[556].split(" ")[1] + " " + lcm[556].split(" ")[2]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[556].split(" ")[3]
+                                        }
+                                    },
+                                    Appvariables: {
+                                        div: "#Appvariables",
+                                        atitle: lcm[568],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[557]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[557]
+                                        }
+                                    },
+                                    CustomDataType: {
+                                        div: "#CustomDataType",
+                                        atitle: lcm[558].split(" ")[0] + " " + lcm[558].split(" ")[1] + " " + lcm[558].split(" ")[2],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[558].split(" ")[0] + " " + lcm[558].split(" ")[1] + " " + lcm[558].split(" ")[2]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[558].split(" ")[1] + " " + lcm[558].split(" ")[2]
+                                        }
+                                    },
+
+                                    DevPublish: {
+                                        div: "#DevPublish",
+                                        atitle: lcm[559],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[559]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[559]
+                                        }
+                                    },
+
+                                    DevLanguages: {
+                                        div: "#DevLanguages",
+                                        atitle: lcm[569],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[560]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[560]
+                                        }
+                                    },
+
+                                    TableDescriptor: {
+                                        div: "#TableDescriptor",
+                                        atitle: lcm[570],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[561]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[561].split(" ")[2]
+                                        }
+                                    },
+
+                                    EmailDefinitions: {
+                                        div: "#EmailDefinitions",
+                                        atitle: lcm[562],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[562]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[562].split(" ")[2]
+                                        }
+                                    },
+
+                                    ArrangeMenu: {
+                                        div: "#ArrangeMenu",
+                                        atitle: lcm[563],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[563]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[563]
+                                        }
+                                    },
+                                    DevExplorer: {
+                                        div: "#DevExplorer",
+                                        atitle: lcm[571],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[564]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[564]
+                                        }
+                                    },
+                                    MemDBConsole: {
+                                        div: "#MemDBConsole",
+                                        atitle: lcm[565],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[565]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[565].split(" ")[0] + " " + lcm[565].split(" ")[1]
+                                        }
+                                    },
+                                    QueueListing: {
+                                        div: "#QueueListing",
+                                        atitle: lcm[566],
+                                        title: {
+                                            div: ".divTitle",
+                                            title: lcm[566]
+                                        },
+                                        subTitle: {
+                                            div: ".divSubTitle",
+                                            title: lcm[566].split(" ")[0]
+                                        }
+                                    },
+                                },
+                                settings: appGlobalVarsObject._CONSTANTS.axpertUserSettings
+                            },
+                            search: {
+                                staging: {
+                                    div: '#globalSearchinp',
+                                    divParent: '.search-bar',
+                                    title: lcm[350],
+                                    placeholder: lcm[415],
+                                    options: {
+                                        startsWith: {
+                                            div: ".divStartsWith",
+                                            title: lcm[452]
+                                        }
+                                    }
+                                }
+
+                            }, signalRnotificationsbar: {
+                                divParent: "#notificationWindowMain",
+                                signalRnotificationsbar: signalRNotifications || "",
+                                staging: {
+                                    options: {
+                                        notification: {
+                                            div: ".card-title",
+                                            title: lcm[488]
+                                        }
+                                    }
+                                }
+                            },
+                            rightSideBar: {
+                                divParent: "#rightsidebar",
+                                staging: {
+                                    options: {
+                                        settings: {
+                                            div: "a:eq(2)",
+                                            title: lcm[471],
+                                            options: {
+                                                general: {
+                                                    div: "#settingsGeneral",
+                                                    title: lcm[205]
+                                                },
+                                                split: {
+                                                    div: ".spiltHeading",
+                                                    title: lcm[474]
+                                                },
+                                                settingPanel: {
+                                                    div: "#settingsPanel",
+                                                    title: lcm[473]
+                                                }
+                                            }
+                                        },
+                                    }
+                                }
+                            },
+                            cardsPage: appGlobalVarsObject._CONSTANTS
+                                .cardsPage
+                        });
+
+                    appGlobalVarsObject._CONSTANTS.cardsPage = tempaxpertUIObj.cardsPage;
+
+                    appGlobalVarsObject._CONSTANTS.menuConfiguration = tempaxpertUIObj.leftSideBar
+                        .menuConfiguration;
+
+                    appGlobalVarsObject._CONSTANTS.history = tempaxpertUIObj.history;
+
+                    appGlobalVarsObject.methods.toggleCompressModeUI($("body"));
+
+                } catch (ex) { }
+                //end AxpertUI Init
+
+                if (isMobile)
+                    ToggleMobileNotification(true);
+                if (!appGlobalVarsObject._CONSTANTS.cardsPage.setCards && $("#hdHomeUrl").val() != "") {
+                    LoadIframe("loadhomepage", true);
+                } else if (typeof isHomeConfigPage != "undefined" && isHomeConfigPage == "true" && $("#hdHomeUrl").val() == "") {
+                    setTimeout(function () {
+                        document.querySelector(".cardsPageWrapper")?.classList.remove('d-none');
+                        document.querySelector(".splitter-wrapper")?.classList.add('d-none');
+                    }, 0);
+                    if (appGlobalVarsObject._CONSTANTS.cardsPage.setCards && (cardsData.value != "[]" && cardsData.value != "")) {
+                        document.querySelector(".HomePageCards")?.classList.remove('col-md-12');
+                        document.querySelector(".HomePageCards")?.classList.add('col-md-12');
+                        document.querySelector("#Homepage_CardsList")?.classList.add('col-md-3');
+                        document.querySelector("#Homepage_CardsList")?.classList.remove('d-none');
+
+                        //$(".htmlDomWrapper").removeClass('col-lg-3 col-md-3 col-sm-12 col-xs-3');
+                        //$(".htmlDomWrapper").addClass('col-lg-4 col-md-4 col-sm-12 col-xs-4');
+                    }
+                    resetMainPageUI();
+                    GetProcessTime();
+                    GetTotalElapsTime();
+                }
+                else if ($("#hdKeepMeDefaultUrl").val() != "")
+                    LoadIframe("loadhomepage", true);
+                else {
+                    GetProcessTime();
+                    GetTotalElapsTime();
+                }
+
+            });
+
+            if (document.querySelector("#AxGloVarHTML")) {
+                let axGloVarsHtml = document.querySelector("#AxGloVarHTML").innerHTML;
+                document.querySelector(".Application_Parameter_Wrapper").insertAdjacentHTML("afterbegin", axGloVarsHtml);
+
+
+                if (document.querySelector("#AxGloVarPopOverHTML")) {
+                    let axGloVarsPopOverHtml = document.querySelector("#AxGloVarPopOverHTML").innerHTML;
+                    document.querySelector("#AppGlobalParams").insertAdjacentHTML("afterbegin", axGloVarsPopOverHtml);
+                }
+
+
+                setTimeout(function () {
+                    $('.Application_Parameter-Items [data-toggle="tooltip"]').tooltip();
+
+                    BootstrapDialogAppParamsShow = function (url) {
+                        let myModal = new BSModal("ApplicationParams", "Application Params", "<iframe style=\"height: 500px!important;\" src=\"" + url + "\" class='d-flex w-100 h-100'></iframe>", () => {
+                            //shown callback
+                            $(".btn-close").focus();
+                            // $("#btnClose").hide()
+                        }, () => {
+                            //hide callback
+                        });
+
+                        myModal.changeSize("lg");
+                        myModal.hideFooter();
+                        myModal.modalBody.classList.add("p-0", "overflow-hidden");
+                        myModal.close();
+                    }
+
+                    $(document.querySelector(".Application_Parameter-Section")).attr("onclick", $.axpertUI.options.axpertUserSettings.settings.axUserOptions.GlobalParamsonclick.onclick);
+                }, 1)
+            }
+
+            document.querySelectorAll(".cards-style button").forEach(btn => {
+                $(btn).on("click", function () {
+                    document.querySelectorAll(".cards-style button.active").forEach(activeBtn => {
+                        activeBtn.classList.remove("active");
+                    });
+                    if (btn.getAttribute("name") == "smallcards") {
+                        // document.querySelector(".HomePageCards").id = "";
+                        document.querySelector(".HomePageMenuOptionCards").id = "";
+                    }
+                    else if (btn.getAttribute("name") == "largecards") {
+                        // document.querySelector(".HomePageCards").id = "msc";
+                        document.querySelector(".HomePageMenuOptionCards").id = "msc";
+
+                    }
+                    else if (btn.getAttribute("name") == "colouredcards") {
+                        //document.querySelector(".HomePageCards").id = "msc-c";
+                        document.querySelector(".HomePageMenuOptionCards").id = "msc-c";
+                    }
+
+                    btn.classList.add("active");
+                });
+            })
+
+            setTimeout(function () {
+                $("[onclick=LoadIframe\\(\\'loadhomepage\\'\\)]").parents(".menu-item").addClass("hover");
+                $('.aside .aside-menu .menu-item:not(.menu-accordion)').on("click", function () {
+                    $(".menu-item.hover").removeClass("hover");
+                    $(this).addClass("hover")
+                });
+            }, 0);
+
+
+            // Customized for Allsec Left menu and cards
+            setTimeout(function () {
+                $('#LeftMenu .aside-menu .menu-item:not(.menu-accordion)').on("click", function () {
+                    var elems = document.getElementsByClassName("menu-active");
+                    [].forEach.call(elems, function (el) {
+                        el.classList.remove("menu-active");
+                    });
+
+                    this.classList.add("menu-active")
+                });
+
+                $("#LeftMenu .toggle-btn").addClass("active")
+                $(".aside.aside-default.aside-hoverable.initialized").hover(function () {
+                    $(".header").addClass("menu-toggled");
+                }, function () {
+                    if ($("#LeftMenu .toggle-btn.active").length > 0) {
+                        $(".header").removeClass("menu-toggled");
+                    }
+                })
+
+            }, 100);
+
+            setTimeout(function () {
+                let appUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+                if (typeof localStorage["middleIframeUrL-" + appUrl] != "undefined" && localStorage["middleIframeUrL-" + appUrl] != "" && localStorage["middleIframeUrL-" + appUrl].toString().indexOf("err.aspx") == -1) {
+                    LoadIframe(localStorage["middleIframeUrL-" + appUrl]);
+                    localStorage["middleIframeUrL-" + appUrl] = "";
+                }
+
+            }, 100);
+
+
+        }
+    });
+
+    //End HomePage Code
+</script>

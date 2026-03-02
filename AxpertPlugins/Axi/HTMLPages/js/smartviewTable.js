@@ -195,7 +195,7 @@ window._entityCommon.getDatesBasedonSelection = window._entityCommon.getDatesBas
 };
 window._entityCommon.getDatesBasedonSelectionForBetweenFilter = window._entityCommon.getDatesBasedonSelectionForBetweenFilter || function (selectionvalue) {
   const fromToObj = { from: "", to: "" };
-  const fmt = "DD-MMM-YYYY";
+  const fmt = "DD/MM/YYYY";
   const dateObj = new Date();
 
   switch (selectionvalue) {
@@ -981,6 +981,20 @@ function initializeDataTable() {
       const cloned = Object.assign({}, item, { fldname: effectiveKey });
       if (effectiveKey !== metaKey) {
         cloned._svOriginalFldname = metaKey;
+      }
+
+      // If hyperlink mappings refer to the original field name, rewrite them to the effective key.
+      if (cloned.tbl_hyperlink && effectiveKey !== metaKey) {
+        try {
+          const pairs = smartviewParseTblHyperlink(cloned.tbl_hyperlink);
+          if (pairs && pairs.length) {
+            const rebuilt = pairs.map(([p, k]) => {
+              const kk = (k || '').toString().trim().toLowerCase() === metaKey ? effectiveKey : k;
+              return `${p}|${kk}`;
+            });
+            cloned.tbl_hyperlink = rebuilt.join('^');
+          }
+        } catch (e) {}
       }
 
       // If this is a sum column already present in metadata, derive a friendly caption.
@@ -2005,14 +2019,33 @@ function smartviewBuildGroupFiltersForRow(meta, groupFields, rowData) {
     if (val === '') return;
 
     const resolved = smartviewResolveFilterField(fld, meta || []);
-    const dt = smartviewInferFilterDatatype({ datatype: (resolved.meta && resolved.meta.fdatatype) || '' }, resolved.meta);
+    const metaItem = resolved.meta || {};
+    let dt = smartviewInferFilterDatatype({ datatype: (metaItem && metaItem.fdatatype) || '' }, metaItem);
+    const cd = (metaItem && metaItem.cdatatype) ? String(metaItem.cdatatype).toLowerCase() : '';
+    if (cd.includes('timestamp') || cd.includes('time stamp')) dt = 'TIMESTAMP';
 
     if (dt === 'DROPDOWN') {
       filters.push({ fldname: fld, datatype: 'DROPDOWN', value: [val] });
     } else if (dt === 'NUMERIC') {
       filters.push({ fldname: fld, datatype: 'NUMERIC', from: val, to: val });
-    } else if (dt === 'DATE') {
-      filters.push({ fldname: fld, datatype: 'DATE', from: val, to: val, condition: 'customOption' });
+    } else if (dt === 'DATE' || dt === 'TIMESTAMP') {
+      // Normalize date/timestamp to DD/MM/YYYY (and add time for TIMESTAMP) to match backend expectations.
+      let fromVal = val;
+      let toVal = val;
+      try {
+        let m = moment(val, ['DD/MM/YYYY', 'YYYY-MM-DD', 'YYYY-MM-DDTHH:mm:ss', 'MM/DD/YYYY', 'DD-MMM-YYYY'], true);
+        if (!m.isValid()) m = moment(val);
+        if (m.isValid()) {
+          if (dt === 'TIMESTAMP') {
+            fromVal = m.format('DD/MM/YYYY 00:00:00');
+            toVal = m.format('DD/MM/YYYY 23:59:59');
+          } else {
+            fromVal = m.format('DD/MM/YYYY');
+            toVal = m.format('DD/MM/YYYY');
+          }
+        }
+      } catch (e) {}
+      filters.push({ fldname: fld, datatype: dt, from: fromVal, to: toVal, condition: 'customOption' });
     } else {
       filters.push({ fldname: fld, datatype: 'TEXT', value: val, condition: 'EQUALS' });
     }
@@ -2059,7 +2092,14 @@ function smartviewRenderGroupDetailTable(rows, meta) {
       const fname = (m.fldname || '').toString();
       let v = getRowValueCaseInsensitive(r, fname);
       if ((m.fdatatype === 'd' || m.cdatatype === 'Date') && v) v = formatDateString(v);
-      html += `<td>${escapeHtml(v == null ? '' : String(v))}</td>`;
+      let cell = escapeHtml(v == null ? '' : String(v));
+      try {
+        const linkDesc = smartviewBuildHyperlinkDescriptor(m, r);
+        if (linkDesc && cell) {
+          cell = `<a href="#" class="sv-hyperlink" data-link="${escapeHtml(linkDesc)}">${cell}</a>`;
+        }
+      } catch (e) {}
+      html += `<td>${cell}</td>`;
     });
     html += '</tr>';
   });
@@ -2070,8 +2110,8 @@ function smartviewRenderGroupDetailTable(rows, meta) {
 
 function smartviewFetchGroupDetailRows(ctrl, groupFilters, cb) {
   try {
-    const baseFilters = stripSmartviewFilterTransId(ctrl.filters || []);
-    const filters = baseFilters.concat(groupFilters || []);
+    const baseFilters = smartviewNormalizeFilterDates(stripSmartviewFilterTransId(ctrl.filters || []));
+    const filters = smartviewNormalizeFilterDates(baseFilters.concat(groupFilters || []));
     const params = {
       adsNames: [ctrl.adsName],
       refreshCache: false,
@@ -2088,7 +2128,7 @@ function smartviewFetchGroupDetailRows(ctrl, groupFilters, cb) {
         filters: filters
       }
     };
-    if (ctrl.axClient_dateformat) params.props.axClient_dateformat = ctrl.axClient_dateformat;
+    params.props.axClient_dateformat = ctrl.axClient_dateformat || 'dd/mm/yyyy';
 
     const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
       : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
@@ -2174,6 +2214,60 @@ function stripSmartviewFilterTransId(filters) {
     // Normalize fldname (avoid "filter_" prefix leaks).
     if (o.fldname !== undefined && o.fldname !== null) {
       o.fldname = String(o.fldname).replace(/^filter_/, '').trim();
+    }
+
+    return o;
+  });
+}
+
+function smartviewToDdMmYyyy(value, includeTime) {
+  if (value === null || value === undefined) return '';
+  const raw = (typeof smartviewCleanIncomingValue === 'function')
+    ? smartviewCleanIncomingValue(value)
+    : String(value).trim();
+  if (!raw) return '';
+
+  try {
+    const formats = [
+      'DD/MM/YYYY',
+      'DD/MM/YYYY HH:mm:ss',
+      'DD/MM/YYYY HH:mm',
+      'YYYY-MM-DD',
+      'YYYY-MM-DD HH:mm:ss',
+      'YYYY-MM-DDTHH:mm:ss',
+      'YYYY-MM-DDTHH:mm:ss.SSS',
+      'MM/DD/YYYY',
+      'DD-MMM-YYYY'
+    ];
+    if (typeof advFilterDtCulture !== 'undefined' && advFilterDtCulture) formats.push(advFilterDtCulture);
+    let m = moment(raw, formats, true);
+    if (!m.isValid()) m = moment(raw);
+    if (!m.isValid()) return raw;
+    const hasTimePart = /(?:\s|T)\d{1,2}:\d{2}/.test(raw);
+    if (includeTime && hasTimePart) return m.format('DD/MM/YYYY HH:mm:ss');
+    return m.format('DD/MM/YYYY');
+  } catch (e) {
+    return raw;
+  }
+}
+
+function smartviewNormalizeFilterDates(filters) {
+  if (!Array.isArray(filters)) return [];
+  return filters.map(f => {
+    if (!f || typeof f !== 'object') return f;
+    const o = Object.assign({}, f);
+    const dt = (o.datatype || o.fdatatype || '').toString().toUpperCase();
+    if (dt !== 'DATE' && dt !== 'TIMESTAMP') return o;
+
+    const keepTime = (dt === 'TIMESTAMP');
+    if (o.from !== undefined) o.from = smartviewToDdMmYyyy(o.from, keepTime);
+    if (o.to !== undefined) o.to = smartviewToDdMmYyyy(o.to, keepTime);
+
+    // Single-value date filters: map value -> from/to for backend consistency.
+    if ((!o.from || !o.to) && o.value !== undefined && o.value !== null && String(o.value).trim() !== '') {
+      const normalized = smartviewToDdMmYyyy(o.value, keepTime);
+      if (!o.from) o.from = normalized;
+      if (!o.to) o.to = normalized;
     }
 
     return o;
@@ -2653,11 +2747,43 @@ function smartviewInferFilterDatatype(rawItem, meta) {
 function smartviewOperatorToTextCondition(op) {
   const o = (op === null || op === undefined) ? '' : String(op).trim().toUpperCase();
   if (!o) return 'CONTAINS';
-  if (o === '=' || o === '==' || o === 'EQUALS') return 'EQUALS';
-  if (o === 'STARTSWITH' || o === 'STARTS WITH' || o === '^') return 'STARTSWITH';
-  if (o === 'ENDSWITH' || o === 'ENDS WITH' || o === '$') return 'ENDSWITH';
+  if (o === '=' || o === '==' || o === 'EQUAL' || o === 'EQUALS' || o === 'EQ') return 'EQUALS';
+  if (o === 'STARTSWITH' || o === 'STARTS WITH' || o === 'STARTS_WITH' || o === '^') return 'STARTSWITH';
+  if (o === 'ENDSWITH' || o === 'ENDS WITH' || o === 'ENDS_WITH' || o === '$') return 'ENDSWITH';
   if (o === 'CONTAINS' || o === 'LIKE' || o === '*' || o === 'INCLUDES') return 'CONTAINS';
   return 'CONTAINS';
+}
+
+function smartviewResolveTextOperatorAndValue(rawOp, rawVal) {
+  let value = smartviewCleanIncomingValue(rawVal);
+  if (!value) return { condition: '', value: '' };
+
+  // New ADS filter shorthand:
+  //   Value%  -> STARTSWITH
+  //   %Value  -> ENDSWITH
+  //   %Value% -> CONTAINS
+  let conditionFromValue = '';
+  const startsWithPercent = value.startsWith('%');
+  const endsWithPercent = value.endsWith('%');
+  if (value.length > 1 && (startsWithPercent || endsWithPercent)) {
+    if (startsWithPercent && endsWithPercent && value.length > 2) {
+      value = value.slice(1, -1).trim();
+      conditionFromValue = 'CONTAINS';
+    } else if (startsWithPercent) {
+      value = value.slice(1).trim();
+      conditionFromValue = 'ENDSWITH';
+    } else if (endsWithPercent) {
+      value = value.slice(0, -1).trim();
+      conditionFromValue = 'STARTSWITH';
+    }
+  }
+
+  if (!value) return { condition: '', value: '' };
+  const conditionFromOp = smartviewOperatorToTextCondition(rawOp);
+  return {
+    condition: conditionFromValue || conditionFromOp || 'CONTAINS',
+    value: value
+  };
 }
 
 function smartviewMapExternalFiltersToEntityFilters(rawFilters, metaData) {
@@ -2688,8 +2814,8 @@ function smartviewMapExternalFiltersToEntityFilters(rawFilters, metaData) {
     if (dt === 'DATE') {
       const fromRaw = (item.from !== undefined) ? item.from : '';
       const toRaw = (item.to !== undefined) ? item.to : '';
-      const from = smartviewCleanIncomingValue(fromRaw || rawVal);
-      const to = smartviewCleanIncomingValue(toRaw || rawVal);
+      const from = smartviewToDdMmYyyy(fromRaw || rawVal);
+      const to = smartviewToDdMmYyyy(toRaw || rawVal);
       if (!from && !to) return null;
       return { fldname: fldname, datatype: 'DATE', from: from || '', to: to || '', condition: item.condition || 'customOption' };
     }
@@ -2705,16 +2831,15 @@ function smartviewMapExternalFiltersToEntityFilters(rawFilters, metaData) {
       if (!v) return null;
       if (op === '<' || op === '<=') return { fldname: fldname, datatype: 'NUMERIC', from: '0', to: v };
       if (op === '>' || op === '>=') return { fldname: fldname, datatype: 'NUMERIC', from: v, to: '999999999' };
-      if (op === '=' || op === '==') return { fldname: fldname, datatype: 'NUMERIC', from: v, to: v };
+      if (op === '=' || op === '==' || /^equal(s)?$/i.test(op)) return { fldname: fldname, datatype: 'NUMERIC', from: v, to: v };
       // default: treat as "from"
       return { fldname: fldname, datatype: 'NUMERIC', from: v, to: '999999999' };
     }
 
     // TEXT
-    const value = smartviewCleanIncomingValue(rawVal);
-    if (!value) return null;
-    const condition = smartviewOperatorToTextCondition(rawOp);
-    return { fldname: fldname, datatype: 'TEXT', value: value, condition: condition };
+    const textFilter = smartviewResolveTextOperatorAndValue(rawOp, rawVal);
+    if (!textFilter.value) return null;
+    return { fldname: fldname, datatype: 'TEXT', value: textFilter.value, condition: textFilter.condition };
   }).filter(Boolean);
 }
 
@@ -2744,7 +2869,7 @@ function ensureSmartviewEntityFilterPatched() {
     // Minimal patch: ensure pills apply filters to SmartView controller (without requiring openFilters() first).
     window._entityFilter.applyFilters = function () {
       try {
-        const filters = stripSmartviewFilterTransId(this.activeFilterArray || []);
+        const filters = smartviewNormalizeFilterDates(stripSmartviewFilterTransId(this.activeFilterArray || []));
         const ctrl = window.smartTableController || window._smartviewController || window._smartviewTableController || null;
         if (!ctrl) return;
         ctrl.filters = filters;
@@ -3249,19 +3374,19 @@ function openFilters() {
 
                   tempObj = { fldname: fldId, datatype: fldType, from: "", to: "" };
 
-                  const toDdMmm = function (v) {
+                  const toDdMmYyyy = function (v) {
                     if (!v) return "";
                     const m = moment(v, ['YYYY-MM-DD', advFilterDtCulture, 'MM/DD/YYYY', 'DD/MM/YYYY', 'DD-MMM-YYYY'], true);
                     if (!m.isValid()) return "";
-                    return m.format("DD-MMM-YYYY");
+                    return m.format("DD/MM/YYYY");
                   };
 
                   if (fromDate && fromDate.value !== "") {
-                    const dd = toDdMmm(fromDate.value);
+                    const dd = toDdMmYyyy(fromDate.value);
                     if (dd) tempObj["from"] = dd;
                   }
                   if (toDate && toDate.value !== "") {
-                    const dd = toDdMmm(toDate.value);
+                    const dd = toDdMmYyyy(toDate.value);
                     if (dd) tempObj["to"] = dd;
                   }
 
@@ -3356,7 +3481,7 @@ function openFilters() {
                     const setDateVal = function (el, raw) {
                       if (!el) return;
                       if (!raw) { el.value = ""; return; }
-                      const m = moment(raw, ['DD-MMM-YYYY', 'YYYY-MM-DD', advFilterDtCulture, 'MM/DD/YYYY', 'DD/MM/YYYY'], true);
+                      const m = moment(raw, ['DD/MM/YYYY', 'DD-MMM-YYYY', 'YYYY-MM-DD', advFilterDtCulture, 'MM/DD/YYYY'], true);
                       if (!m.isValid()) { el.value = ""; return; }
                       if ((el.type || '').toLowerCase() === 'date') el.value = m.format('YYYY-MM-DD');
                       else el.value = m.format(advFilterDtCulture);
@@ -3533,7 +3658,7 @@ if (window._entityFilter && typeof window._entityFilter.handleApply === 'functio
     // MAIN OVERRIDE: set applyFilters on the EntityFilter instance
     window._entityFilter.applyFilters = function () {
       try {
-        const filters = stripSmartviewFilterTransId(Array.isArray(this.activeFilterArray) ? this.activeFilterArray : []);
+        const filters = smartviewNormalizeFilterDates(stripSmartviewFilterTransId(Array.isArray(this.activeFilterArray) ? this.activeFilterArray : []));
         console.debug('EntityFilter.applyFilters ->', filters);
 
         // find controller (support several possible names)
@@ -3591,7 +3716,7 @@ if (window._entityFilter && typeof window._entityFilter.handleApply === 'functio
           try {
             const params = (typeof buildParams === 'function') ? buildParams(1) : { adsNames: [window._entity && window._entity.adsName], props: { ADS: true }, sqlParams: {} };
             params.props = params.props || {};
-            params.props.filters = filters;
+            params.props.filters = smartviewNormalizeFilterDates(filters);
             // do not send FILTERS / flattened sqlParams; backend expects props.filters JSON
             params.sqlParams = Object.assign({}, params.sqlParams || {});
 
@@ -4078,7 +4203,7 @@ class SmartViewTableController {
     this.pageno = opts.currentPage ?? 1;
     this.sorting = opts.sorting || [];
     this.filters = opts.filters || [];
-    this.axClient_dateformat = opts.axClient_dateformat || (typeof window.axClient_dateformat !== 'undefined' ? window.axClient_dateformat : "");
+    this.axClient_dateformat = opts.axClient_dateformat || ((typeof window.axClient_dateformat !== 'undefined' && window.axClient_dateformat) ? window.axClient_dateformat : "dd/mm/yyyy");
     this.select_columns = Array.isArray(opts.select_columns) ? opts.select_columns.slice() : [];
     this.groupby_columns = Array.isArray(opts.groupby_columns) ? opts.groupby_columns.slice() : [];
     this.aggregations = (opts.aggregations && typeof opts.aggregations === 'object') ? Object.assign({}, opts.aggregations) : {};
@@ -4299,7 +4424,7 @@ wireDom() {
 
     const dojFrom = document.getElementById("dojFrom")?.value || "";
     const dojTo = document.getElementById("dojTo")?.value || "";
-    if (dojFrom || dojTo) this.filters.push({ fldname: "doj", datatype: "DATE", from: formatDateString(dojFrom) || "01/01/1900", to: formatDateString(dojTo) || "31/12/2999" });
+    if (dojFrom || dojTo) this.filters.push({ fldname: "doj", datatype: "DATE", from: smartviewToDdMmYyyy(dojFrom) || "01/01/1900", to: smartviewToDdMmYyyy(dojTo) || "31/12/2999" });
 
     const deptSelect = document.getElementById("deptFilter");
     const selectedDepts = deptSelect ? Array.from(deptSelect.selectedOptions).map(o => o.value) : [];
@@ -4332,7 +4457,7 @@ wireDom() {
 
   buildParams(pageNo = 1) {
     const sqlParams = Object.assign({}, (this._entitySqlParams || {}), (this.props && this.props.sqlParams) ? this.props.sqlParams : {});
-    const safeFilters = stripSmartviewFilterTransId(this.filters || []);
+    const safeFilters = smartviewNormalizeFilterDates(stripSmartviewFilterTransId(this.filters || []));
     const props = {
       ADS: false,
       CachePermissions: true,
@@ -4346,7 +4471,7 @@ wireDom() {
       filters: safeFilters
     };
 
-    if (this.axClient_dateformat) props.axClient_dateformat = this.axClient_dateformat;
+    props.axClient_dateformat = this.axClient_dateformat || 'dd/mm/yyyy';
     if (Array.isArray(this.select_columns) && this.select_columns.length) props.select_columns = this.select_columns.slice();
     if (Array.isArray(this.groupby_columns) && this.groupby_columns.length) props.groupby_columns = this.groupby_columns.slice();
     // Do not pass aggregations; use groupby_columns with sum(...) expressions instead.

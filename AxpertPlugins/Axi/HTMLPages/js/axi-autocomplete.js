@@ -290,6 +290,7 @@
         INITIALIZATION
     =============================== */
     async function initCommands(isForced = false) {
+        const structType = getStructType(); 
         if (mode === "ai") {
             commands = aiModeCommands; 
             return; 
@@ -777,7 +778,8 @@
     function getTokens(str) {
 
 
-        const regex = new RegExp(`"[^"]*"?|${OPERATOR_REGEX_PART}|[^\\s=<>!]+`, "g");
+        //const regex = new RegExp(`"[^"]*"?|${OPERATOR_REGEX_PART}|[^\\s=<>!]+`, "g");
+        const regex = new RegExp(`"[^"]*"|[^\\s]+`, "g");
         return str.match(regex) || [];
     }
 
@@ -1269,7 +1271,7 @@
 
             let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
-            if ((groupKey === "view" || groupKey === "configure") && tokens.length > 2 && tokens[1] !== "keyfield") {
+            if ((groupKey === "view" || groupKey === "configure") && tokens.length === 3 && tokens[1] !== "keyfield") {
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
@@ -1408,16 +1410,17 @@
           if (items.length > 0 && isSystemMessage(items[0])) {
             activeIndex = -1;
         } else {
-            const hasGoOption = validItems.some(item => typeof item === 'object' && item.name === "GO_ACTION");
-            const hasSaveOption = validItems.some(item => typeof item === 'object' && item.name === "Save_ACTION");
+            // const hasGoOption = validItems.some(item => typeof item === 'object' && item.name === "GO_ACTION");
+            // const hasSaveOption = validItems.some(item => typeof item === 'object' && item.name === "Save_ACTION");
 
-            if (hasGoOption && hasSaveOption) {
-                activeIndex = 2; 
-            } else if (hasGoOption || hasSaveOption) {
-                activeIndex = 1; 
-            } else {
-                activeIndex = 0; 
-            }
+            // if (hasGoOption && hasSaveOption) {
+            //     activeIndex = 2; 
+            // } else if (hasGoOption || hasSaveOption) {
+            //     activeIndex = 1; 
+            // } else {
+            //     activeIndex = 0; 
+            // }
+            activeIndex = 0; 
         }
 
         if (validItems.length === 0) {
@@ -1496,14 +1499,14 @@
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck === "create") {
             console.log("Save Option Selected...Submitting Data...");
             hide();
-            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_fieldlist", true, tokens, saveCommandConfig);
+            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck === "edit") {
             console.log("Save Option Selected...Submitting Data...");
             hide();
-            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_fieldlist", false, tokens, saveCommandConfig);
+            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, tokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
@@ -1932,7 +1935,7 @@
                 let transIDcheck = setCommandTransid;
                 if (input.selectionStart !== input.selectionEnd) {
                     createfieldnamevaluesList[transIDcheck] = [];
-                    setCommandTransid == null;
+                    setCommandTransid = null;
                     resetSetCommandState();
                     return;
                 }
@@ -1985,6 +1988,7 @@
                 console.log(createfieldnamevaluesList[transIDcheck]);
 
                 resetSetCommandState();
+                handleInput(); 
                 
 
             }
@@ -2080,9 +2084,9 @@
                 console.log("Save Option Selected...Submitting Data...");
                 hide();
                 if (grpKey === "create")
-                    AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_fieldlist", true, tokens, saveCommandConfig);
+                    AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
                 else
-                    AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_fieldlist", false, tokens, saveCommandConfig);
+                    AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, tokens, saveCommandConfig);
                 resetSetCommandState();
                 return;
             }
@@ -2204,7 +2208,20 @@
 
         setTimeout(() => {
             input.focus();
-            input.select();
+
+            if (tokens.length > 0) {
+                const firstToken = tokens[0]; 
+
+                let startIndex = input.value.indexOf(firstToken) + firstToken.length; 
+
+                while(input.value[startIndex] === ' ') {
+                    startIndex++; 
+                }
+
+                input.setSelectionRange(startIndex,input.value.length); 
+
+            }
+        
         }, 200)
     }
 
@@ -2697,7 +2714,7 @@
     function handleConfigureProperties({ tokens, commandConfig }) {
         const targetUrl = "../aspx/tstruct.aspx?act=load&transid=ad_pr&axpdef_axpertpropsid=1"; 
 
-        top.window.LoadIframeac(targetUrl);
+        top.window.LoadIframe(targetUrl);
 
     }
 
@@ -3333,43 +3350,106 @@
         return `${y}-${m}-${d}`; // ISO
     }
 
+    //function resolveLikeOperator(rawValue) {
+
+    //    if (!rawValue.includes("%")) {
+    //        return { operator: "equal", value: rawValue };
+    //    }
+
+    //    const startsWithPercent = rawValue.startsWith("%");
+    //    const endsWithPercent = rawValue.endsWith("%");
+
+    //    if (startsWithPercent && endsWithPercent) {
+    //        return {
+    //            operator: "contains",
+    //            value: rawValue.slice(1, -1)
+    //        };
+    //    }
+
+    //    if (startsWithPercent) {
+    //        return {
+    //            operator: "endswith",
+    //            value: rawValue.slice(1)
+    //        };
+    //    }
+
+    //    if (endsWithPercent) {
+    //        return {
+    //            operator: "startswith",
+    //            value: rawValue.slice(0, -1)
+    //        };
+    //    }
+
+    //    return { operator: "equal", value: rawValue };
+    //}
+
     function extractAdsFilters(tokens) {
+
         const filters = [];
-
-
-        let i = 2;
+        let i = 2; 
 
         while (i < tokens.length) {
 
             const rawColToken = cleanCommandToken(tokens[i]);
-            if (!rawColToken) { i++; continue; }
-
+            if (!rawColToken) {
+                i++;
+                continue;
+            }
 
             let nextTokenRaw = cleanCommandToken(tokens[i + 1] || "");
 
-            let operator = "=";
-            let valueTokenIndex = -1;
+            let operator = "";
             let rawValue = "";
 
-            if (OPERATORS_SET.has(nextTokenRaw)) {
 
-                operator = nextTokenRaw;
-                rawValue = cleanCommandToken(tokens[i + 2] || "");
-                valueTokenIndex = i + 2;
+            let matchedOperator = null;
+
+            for (let op of OPERATORS_LIST) {
+                if (nextTokenRaw.startsWith(op)) {
+                    matchedOperator = op;
+                    break;
+                }
+            }
 
 
-                i += 3;
-            } else {
+            let colMetadata = adsfieldvalueanddt[rawColToken] || {};
 
-                operator = "=";
+            if (matchedOperator) {
+
+                operator = matchedOperator;
+                rawValue = nextTokenRaw.slice(matchedOperator.length);
+                i += 2;
+
+            }
+            else {
+
                 rawValue = nextTokenRaw;
-                valueTokenIndex = i + 1;
 
+                if (colMetadata?.datatype === "c" || colMetadata.datatype === 't') {
+                    if (rawValue.startsWith("%") && rawValue.endsWith("%")) {
+                        operator = "contains";
+                        rawValue = rawValue.slice(1, -1);
+                    }
+                    else if (rawValue.endsWith("%")) {
+                        operator = "startswith";
+                        rawValue = rawValue.slice(0, -1);
+                    }
+                    else if (rawValue.startsWith("%")) {
+                        operator = "endswith";
+                        rawValue = rawValue.slice(1);
+                    }
+                    else {
+                    operator = "equal";
+                    }
+                }
+                else {
+                    operator = "equal";
+                }
 
                 i += 2;
             }
 
-            const colMetadata = adsfieldvalueanddt[rawColToken] || {};
+            colMetadata = adsfieldvalueanddt[rawColToken] || {};
 
             if (colMetadata?.datatype === "d") {
                 rawValue = normalizeDate(rawValue);
@@ -3386,6 +3466,59 @@
 
         return filters;
     }
+    //function extractAdsFilters(tokens) {
+    //    const filters = [];
+
+
+    //    let i = 2;
+
+    //    while (i < tokens.length) {
+
+    //        const rawColToken = cleanCommandToken(tokens[i]);
+    //        if (!rawColToken) { i++; continue; }
+
+
+    //        let nextTokenRaw = cleanCommandToken(tokens[i + 1] || "");
+
+    //        let operator = "=";
+    //        let valueTokenIndex = -1;
+    //        let rawValue = "";
+
+    //        if (OPERATORS_SET.has(nextTokenRaw)) {
+
+    //            operator = nextTokenRaw;
+    //            rawValue = cleanCommandToken(tokens[i + 2] || "");
+    //            valueTokenIndex = i + 2;
+
+
+    //            i += 3;
+    //        } else {
+
+    //            operator = "=";
+    //            rawValue = nextTokenRaw;
+    //            valueTokenIndex = i + 1;
+
+
+    //            i += 2;
+    //        }
+
+    //        const colMetadata = adsfieldvalueanddt[rawColToken] || {};
+
+    //        if (colMetadata?.datatype === "d") {
+    //            rawValue = normalizeDate(rawValue);
+    //        }
+
+    //        filters.push({
+    //            field: rawColToken,
+    //            operator: operator,
+    //            value: rawValue,
+    //            datatype: colMetadata.datatype,
+    //            isAccept: colMetadata.isAccept
+    //        });
+    //    }
+
+    //    return filters;
+    //}
 
 
 
@@ -3562,6 +3695,10 @@
 
         if (src.includes("/aspx/Configuration.aspx/LoadUserAppSettings") && isCardContainerHidden) {
             return "s"; // Settings page
+        }
+
+        if (page.endsWith("/axibot.html") || page.includes("/axibot.html")) {
+            return "b"; // Axibot page
         }
 
 

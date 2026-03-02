@@ -1,0 +1,25 @@
+2026-02-19 06:42:24.461 +05:30 [INF] Executed DbCommand (19ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+2026-02-19 06:42:24.534 +05:30 [INF] Database initialized
+2026-02-19 06:42:24.729 +05:30 [INF] AxiAI Chat API starting...
+2026-02-19 06:42:24.827 +05:30 [INF] Now listening on: http://localhost:5000
+2026-02-19 06:42:24.833 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2026-02-19 06:42:24.835 +05:30 [INF] Hosting environment: Production
+2026-02-19 06:42:24.837 +05:30 [INF] Content root path: E:\WorkSpace\2025\___Docs\___Axi - Command palette\__Axi AI\Release\AxiAI Chat API v3\AxiAi
+2026-02-19 06:54:04.810 +05:30 [INF] Executed DbCommand (12ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+2026-02-19 06:54:04.874 +05:30 [INF] Database initialized
+2026-02-19 06:54:04.958 +05:30 [INF] AxiAI Chat API starting...
+2026-02-19 06:54:04.999 +05:30 [INF] Now listening on: http://localhost:5000
+2026-02-19 06:54:05.004 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2026-02-19 06:54:05.007 +05:30 [INF] Hosting environment: Production
+2026-02-19 06:54:05.010 +05:30 [INF] Content root path: E:\WorkSpace\2025\___Docs\___Axi - Command palette\__Axi AI\Release\AxiAI Chat API v3\AxiAi
+2026-02-19 06:54:42.373 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5000/AxiAI/v2/providers - null null
+2026-02-19 06:54:42.433 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-02-19 06:54:42.441 +05:30 [INF] Executing endpoint 'AxiAI.ChatAPI.Controllers.UnifiedChatController.GetProviders (AxiAI.ChatAPI)'
+2026-02-19 06:54:42.493 +05:30 [INF] Route matched with {action = "GetProviders", controller = "UnifiedChat"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult GetProviders() on controller AxiAI.ChatAPI.Controllers.UnifiedChatController (AxiAI.ChatAPI).
+2026-02-19 06:54:42.518 +05:30 [INF] InMemoryConversationStateStore initialized
+2026-02-19 06:54:42.528 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType5`2[[System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-02-19 06:54:42.570 +05:30 [INF] Executed action AxiAI.ChatAPI.Controllers.UnifiedChatController.GetProviders (AxiAI.ChatAPI) in 68.9336ms
+2026-02-19 06:54:42.578 +05:30 [INF] Executed endpoint 'AxiAI.ChatAPI.Controllers.UnifiedChatController.GetProviders (AxiAI.ChatAPI)'
+2026-02-19 06:54:42.583 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5000/AxiAI/v2/providers - 200 null application/json; charset=utf-8 211.124ms

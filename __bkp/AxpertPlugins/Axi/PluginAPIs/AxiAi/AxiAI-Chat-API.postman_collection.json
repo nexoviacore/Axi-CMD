@@ -1,0 +1,187 @@
+{
+  "info": {
+    "name": "AxiAI Chat API",
+    "description": "Complete collection for testing AxiAI Chat API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Providers",
+      "item": [
+        {
+          "name": "Get All Providers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/AxiAI/Providers",
+              "host": ["{{baseUrl}}"],
+              "path": ["AxiAI", "Providers"]
+            }
+          }
+        },
+        {
+          "name": "Get Provider Endpoints",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/AxiAI/Providers/OpenAI/endpoints",
+              "host": ["{{baseUrl}}"],
+              "path": ["AxiAI", "Providers", "OpenAI", "endpoints"]
+            }
+          }
+        },
+        {
+          "name": "Check Provider Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/AxiAI/Providers/OpenAI/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["AxiAI", "Providers", "OpenAI", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chat V1",
+      "item": [
+        {
+          "name": "Simple Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversationId\": \"postman-test-1\",\n  \"message\": \"Hello! Tell me a joke.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/AxiAI/v1/Chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["AxiAI", "v1", "Chat"]
+            }
+          }
+        },
+        {
+          "name": "Chat with System Prompt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversationId\": \"code-assistant-1\",\n  \"message\": \"Write a Python function to reverse a string\",\n  \"systemPrompt\": \"You are an expert Python programmer. Provide clean, documented code.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/AxiAI/v1/Chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["AxiAI", "v1", "Chat"]
+            }
+          }
+        },
+        {
+          "name": "Chat with Custom Model",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversationId\": \"advanced-1\",\n  \"message\": \"Explain quantum computing\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/AxiAI/v1/Chat?model=gpt-4o",
+              "host": ["{{baseUrl}}"],
+              "path": ["AxiAI", "v1", "Chat"],
+              "query": [
+                {
+                  "key": "model",
+                  "value": "gpt-4o"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Conversation History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/AxiAI/v1/Chat/history/postman-test-1?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["AxiAI", "v1", "Chat", "history", "postman-test-1"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Clear Conversation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/AxiAI/v1/Chat/history/postman-test-1",
+              "host": ["{{baseUrl}}"],
+              "path": ["AxiAI", "v1", "Chat", "history", "postman-test-1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chat V2",
+      "item": [
+        {
+          "name": "Simple Chat V2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversationId\": \"v2-test-1\",\n  \"message\": \"What are microservices?\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/AxiAI/v2/Chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["AxiAI", "v2", "Chat"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5001",
+      "type": "string"
+    }
+  ]
+}
