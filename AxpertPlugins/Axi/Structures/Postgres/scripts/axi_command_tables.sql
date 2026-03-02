@@ -111,7 +111,7 @@ INSERT INTO axi_command_prompts (id, cmdtoken, wordpos, prompt, promptsource, pr
 >>
 
 <<
-INSERT INTO axi_command_prompts (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl) VALUES('b878f939-6f7f-4d72-8a78-f912d5dc9669'::uuid, 2, 6, 'field name', 'Axi_FieldList', '2', NULL, NULL, NULL, NULL)
+INSERT INTO axi_command_prompts (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl) VALUES('b878f939-6f7f-4d72-8a78-f912d5dc9669'::uuid, 2, 6, 'field name', 'axi_nongridfieldlist', '2', NULL, NULL, NULL, NULL)
 >>
 
 <<

@@ -67,20 +67,26 @@ BEGIN
             p_fieldname
         );
     ELSE
-        v_sql := format(
-            'SELECT (%I || ''['' || %I || '']'')::text AS displaydata,
-                    %I::text AS id,
-                    %I::text AS caption
-             FROM %I
-             WHERE %I IS NOT NULL
-             ORDER BY displaydata ASC',
-            v_srcfld,
-            v_keyfield,
-            v_keyfield,
-            lower(v_srctf) || 'id',
-            lower(v_srctf),
-            p_fieldname
-        );
+           v_sql := format(
+			'SELECT (s.%I || ''['' || t.%I || '']'')::text AS displaydata,
+					s.%I::text AS id,
+					t.%I::text AS caption
+			 FROM %I s
+			 JOIN %I t ON s.%I = t.%I
+			 WHERE s.%I IS NOT NULL
+			 ORDER BY displaydata ASC',
+			v_srcfld,                -- s.source field
+			v_keyfield,              -- t.key field
+			lower(v_srctf) || 'id',  -- caption field 
+			v_keyfield,              -- id from key table -- caption field
+			lower(v_srctf),          -- main table
+			v_tablename,             -- key table
+			--lower(v_srctf) || 'id',  -- join column in main table
+			lower(v_srctf) || 'id',  -- join column in key table (adjust if different)
+			p_fieldname,
+			--p_fieldname              -- not null field from main table
+			v_srcfld
+		);
     END IF;
     RETURN QUERY EXECUTE v_sql; 
 END; 
@@ -170,6 +176,7 @@ IF v_sourcekey = 'F' THEN
     WHERE tstruct = %L
       AND lower(hidden) = 'f'
       AND lower(savevalue) = 't'
+	  AND lower(asgrid) = 'f'
     ORDER BY isfield ASC, displaydata ASC
     $sql$,
     p_fieldname,
@@ -196,6 +203,7 @@ ELSE
     WHERE tstruct = %L
       AND lower(hidden) = 'f'
       AND lower(savevalue) = 't'
+	  AND lower(asgrid) = 'f'
     ORDER BY isfield ASC, displaydata ASC
     $sql$,
     v_srcfld,
