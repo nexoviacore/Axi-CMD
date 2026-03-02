@@ -50,7 +50,7 @@
 
 
 /* =========================================
-   AXI SECTION STYLING 
+   4. AXI SECTION STYLING 
    ========================================= */
 
 #Homepage_CardsList_Wrapper {
@@ -96,16 +96,17 @@
     max-height: calc(100vh - 120px) !important;
 }
 
-.AXI-Logo {
-    cursor: pointer !important;
-}
+/* .Axi-Logo {
+    color: red; 
+    padding-left: 20px;
+} */
 
 .searchwrap-AXI .AXI-Logo {
     display: flex;
     align-items: center;
     gap: 8px;
     font-weight: 900;
-    font-size: 24px;
+    font-size: 17px;
     color: var(--danger);
     margin-right: 15px;
     padding-right: 15px;
@@ -371,3 +372,105 @@
 
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
 } */
+
+
+/*    My favourite bookmark*/
+.My-Fav-Items {
+	display: flex;
+	align-items: center;
+	padding: 7px 25px;
+	cursor: pointer;
+	border-bottom: 1px dashed #cccccc !important;
+}
+
+.My-Fav-Items-Content {
+	margin-bottom: 5px !important;
+	padding-right: 5px;
+	flex-grow: 1 !important;
+}
+
+.My-Fav-Name {
+	color: #333 !important;
+	font-weight: 600 !important;
+}
+
+.My-Fav-Name-Type {
+	color: #838383 !important;
+}
+    
+    
+    #My_Fav_Bookmarks .card > .card-header {
+  min-height: 50px !important;
+  align-items: center;
+}
+#My_Fav_Bookmarks .card > .card-header .card-title {
+  font-size: 15px !important;
+  font-weight: bolder;
+  justify-content: center;
+  align-items: center;
+}
+    
+    .Delete-Fav .material-icons.material-icons-2.material-icons-style {
+	font-size: 13px !important;
+	color: red;
+	font-weight: bold;
+}
+    
+    .My-Fav-Items-Wrapper {
+	max-height: 350px !important;
+	overflow-y: scroll;
+	position: relative;
+	padding-block: 0 !important;
+	margin-bottom: 10px;
+}
+    .My-Fav-Items-Wrapper .My-Fav-Items:last-child {
+	border-bottom: 0 !important;
+}
+    
+   
+    
+ .My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+1) .symbol-label {
+  background: red !important;
+}
+.My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+1) .symbol-label {
+  background: #ff000014 !important;
+}
+.My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+2) .symbol-label {
+  background: #0000ff14 !important;
+}
+.My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+3) .symbol-label {
+  background: #ffa50014 !important;
+}
+.My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+4) .symbol-label {
+  background: #ee82ee1a !important;
+}
+.My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+5) .symbol-label {
+  background: #ffc0cb29 !important;
+}
+.My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+6) .symbol-label {
+  background: #00800014 !important;
+}
+
+  
+.My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+1) .symbol-label .material-icons.material-icons-2.material-icons-style {
+  color: red !important;
+}
+.My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+1) .symbol-label .material-icons.material-icons-2.material-icons-style {
+  color: red !important;
+}
+.My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+2) .symbol-label .material-icons.material-icons-2.material-icons-style {
+  color: blue !important;
+}
+.My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+3) .symbol-label .material-icons.material-icons-2.material-icons-style {
+  color: orange !important;
+}
+.My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+4) .symbol-label .material-icons.material-icons-2.material-icons-style {
+  color: violet !important;
+}
+.My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+5) .symbol-label .material-icons.material-icons-2.material-icons-style {
+  color: pink !important;
+}
+.My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+6) .symbol-label .material-icons.material-icons-2.material-icons-style {
+  color: green !important;
+}
+/*    My favourite bookmark*/

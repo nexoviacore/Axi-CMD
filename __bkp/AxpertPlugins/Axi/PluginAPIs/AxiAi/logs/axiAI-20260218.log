@@ -1,0 +1,98 @@
+2026-02-18 17:10:32.546 +05:30 [INF] Executed DbCommand (39ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+PRAGMA journal_mode = 'wal';
+2026-02-18 17:10:32.833 +05:30 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE "ChatMessages" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_ChatMessages" PRIMARY KEY AUTOINCREMENT,
+    "UserId" TEXT NOT NULL,
+    "ConversationId" TEXT NOT NULL,
+    "Role" TEXT NOT NULL,
+    "Content" TEXT NOT NULL,
+    "Model" TEXT NULL,
+    "Provider" TEXT NULL,
+    "ResponseId" TEXT NULL,
+    "TokensUsed" INTEGER NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "Metadata" TEXT NULL
+);
+2026-02-18 17:10:32.838 +05:30 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_ChatMessages_ConversationId" ON "ChatMessages" ("ConversationId");
+2026-02-18 17:10:32.840 +05:30 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_ChatMessages_CreatedAt" ON "ChatMessages" ("CreatedAt");
+2026-02-18 17:10:32.842 +05:30 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_ChatMessages_UserId" ON "ChatMessages" ("UserId");
+2026-02-18 17:10:32.847 +05:30 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX "IX_ChatMessages_UserId_ConversationId" ON "ChatMessages" ("UserId", "ConversationId");
+2026-02-18 17:10:32.860 +05:30 [INF] Database initialized
+2026-02-18 17:10:33.116 +05:30 [INF] AxiAI Chat API starting...
+2026-02-18 17:10:33.287 +05:30 [INF] Now listening on: http://localhost:5000
+2026-02-18 17:10:33.291 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2026-02-18 17:10:33.293 +05:30 [INF] Hosting environment: Production
+2026-02-18 17:10:33.294 +05:30 [INF] Content root path: E:\GitHub\AxiAI.ChatAPI_v3.1\bin\Release\net8.0
+2026-02-18 17:11:24.790 +05:30 [INF] Request starting HTTP/1.1 POST http://localhost:5000/AxiAI/v2/Chat - application/json 52
+2026-02-18 17:11:24.840 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-02-18 17:11:24.849 +05:30 [INF] Executing endpoint 'AxiAI.ChatAPI.Controllers.UnifiedChatController.Chat (AxiAI.ChatAPI)'
+2026-02-18 17:11:24.923 +05:30 [INF] Route matched with {action = "Chat", controller = "UnifiedChat"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Chat(AxiAI.ChatAPI.Models.Requests.UnifiedChatRequest) on controller AxiAI.ChatAPI.Controllers.UnifiedChatController (AxiAI.ChatAPI).
+2026-02-18 17:11:25.080 +05:30 [INF] Unified chat request: user=ssr, provider=default, model=default
+2026-02-18 17:11:25.083 +05:30 [INF] Using default provider: OpenAI
+2026-02-18 17:11:25.119 +05:30 [INF] InMemoryConversationStateStore initialized
+2026-02-18 17:11:25.123 +05:30 [INF] Using provider: openai
+2026-02-18 17:11:25.134 +05:30 [INF] OpenAI: Processing chat for user ssr
+2026-02-18 17:11:25.786 +05:30 [INF] Executed DbCommand (10ms) [Parameters=[@__userId_0='?' (Size = 3), @__conversationId_1='?' (Size = 3), @__p_2='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT "t"."Id", "t"."Content", "t"."ConversationId", "t"."CreatedAt", "t"."Metadata", "t"."Model", "t"."Provider", "t"."ResponseId", "t"."Role", "t"."TokensUsed", "t"."UserId"
+FROM (
+    SELECT "c"."Id", "c"."Content", "c"."ConversationId", "c"."CreatedAt", "c"."Metadata", "c"."Model", "c"."Provider", "c"."ResponseId", "c"."Role", "c"."TokensUsed", "c"."UserId"
+    FROM "ChatMessages" AS "c"
+    WHERE "c"."UserId" = @__userId_0 AND "c"."ConversationId" = @__conversationId_1
+    ORDER BY "c"."CreatedAt" DESC
+    LIMIT @__p_2
+) AS "t"
+ORDER BY "t"."CreatedAt"
+2026-02-18 17:11:25.947 +05:30 [INF] Start processing HTTP request POST https://api.openai.com/v1/chat/completions
+2026-02-18 17:11:25.955 +05:30 [INF] Sending HTTP request POST https://api.openai.com/v1/chat/completions
+2026-02-18 17:11:27.864 +05:30 [INF] Received HTTP response headers after 1897.2508ms - 200
+2026-02-18 17:11:27.868 +05:30 [INF] End processing HTTP request after 1928.7788ms - 200
+2026-02-18 17:11:28.209 +05:30 [INF] Executed DbCommand (23ms) [Parameters=[@p0='?' (Size = 15), @p1='?' (Size = 3), @p2='?' (DbType = DateTime), @p3='?', @p4='?' (Size = 6), @p5='?' (Size = 6), @p6='?', @p7='?' (Size = 4), @p8='?' (DbType = Int32), @p9='?' (Size = 3)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "ChatMessages" ("Content", "ConversationId", "CreatedAt", "Metadata", "Model", "Provider", "ResponseId", "Role", "TokensUsed", "UserId")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9)
+RETURNING "Id";
+2026-02-18 17:11:28.259 +05:30 [INF] Saved message to conversation ssr for user ssr
+2026-02-18 17:11:28.267 +05:30 [INF] Executed DbCommand (0ms) [Parameters=[@p0='?' (Size = 84), @p1='?' (Size = 3), @p2='?' (DbType = DateTime), @p3='?', @p4='?' (Size = 6), @p5='?' (Size = 6), @p6='?', @p7='?' (Size = 9), @p8='?' (DbType = Int32), @p9='?' (Size = 3)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "ChatMessages" ("Content", "ConversationId", "CreatedAt", "Metadata", "Model", "Provider", "ResponseId", "Role", "TokensUsed", "UserId")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9)
+RETURNING "Id";
+2026-02-18 17:11:28.286 +05:30 [INF] Saved message to conversation ssr for user ssr
+2026-02-18 17:11:28.299 +05:30 [INF] Executing OkObjectResult, writing value of type 'AxiAI.ChatAPI.Models.Responses.ChatResponse'.
+2026-02-18 17:11:28.330 +05:30 [INF] Executed action AxiAI.ChatAPI.Controllers.UnifiedChatController.Chat (AxiAI.ChatAPI) in 3385.4961ms
+2026-02-18 17:11:28.333 +05:30 [INF] Executed endpoint 'AxiAI.ChatAPI.Controllers.UnifiedChatController.Chat (AxiAI.ChatAPI)'
+2026-02-18 17:11:28.345 +05:30 [INF] Request finished HTTP/1.1 POST http://localhost:5000/AxiAI/v2/Chat - 200 null application/json; charset=utf-8 3556.5253ms
+2026-02-18 17:11:34.604 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5000/AxiAI/config/defaults - application/json 235
+2026-02-18 17:11:34.613 +05:30 [INF] Executing endpoint 'AxiAI.ChatAPI.Controllers.ConfigController.GetDefaults (AxiAI.ChatAPI)'
+2026-02-18 17:11:34.623 +05:30 [INF] Route matched with {action = "GetDefaults", controller = "Config"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult GetDefaults() on controller AxiAI.ChatAPI.Controllers.ConfigController (AxiAI.ChatAPI).
+2026-02-18 17:11:34.638 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType2`2[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-02-18 17:11:34.648 +05:30 [INF] Executed action AxiAI.ChatAPI.Controllers.ConfigController.GetDefaults (AxiAI.ChatAPI) in 13.1193ms
+2026-02-18 17:11:34.651 +05:30 [INF] Executed endpoint 'AxiAI.ChatAPI.Controllers.ConfigController.GetDefaults (AxiAI.ChatAPI)'
+2026-02-18 17:11:34.654 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5000/AxiAI/config/defaults - 200 null application/json; charset=utf-8 49.8536ms
+2026-02-18 17:11:41.965 +05:30 [INF] Request starting HTTP/1.1 POST http://localhost:5000/AxiAI/getapiconfig - application/json 28
+2026-02-18 17:11:41.973 +05:30 [INF] Executing endpoint 'AxiAI.ChatAPI.Controllers.ConfigController.GetApiConfig (AxiAI.ChatAPI)'
+2026-02-18 17:11:41.977 +05:30 [INF] Route matched with {action = "GetApiConfig", controller = "Config"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult GetApiConfig(AxiAI.ChatAPI.Models.Requests.GetApiConfigRequest) on controller AxiAI.ChatAPI.Controllers.ConfigController (AxiAI.ChatAPI).
+2026-02-18 17:11:41.991 +05:30 [INF] Getting API config for provider: OpenAI
+2026-02-18 17:11:41.995 +05:30 [INF] Retrieved API key for provider: OpenAI
+2026-02-18 17:11:41.996 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType4`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-02-18 17:11:42.003 +05:30 [INF] Executed action AxiAI.ChatAPI.Controllers.ConfigController.GetApiConfig (AxiAI.ChatAPI) in 19.8316ms
+2026-02-18 17:11:42.004 +05:30 [INF] Executed endpoint 'AxiAI.ChatAPI.Controllers.ConfigController.GetApiConfig (AxiAI.ChatAPI)'
+2026-02-18 17:11:42.007 +05:30 [INF] Request finished HTTP/1.1 POST http://localhost:5000/AxiAI/getapiconfig - 200 null application/json; charset=utf-8 41.668ms
+2026-02-18 17:11:46.852 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5000/AxiAI/Providers - null null
+2026-02-18 17:11:46.857 +05:30 [INF] Executing endpoint 'AxiAI.ChatAPI.Controllers.ProvidersController.GetProviders (AxiAI.ChatAPI)'
+2026-02-18 17:11:46.861 +05:30 [INF] Route matched with {action = "GetProviders", controller = "Providers"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult GetProviders() on controller AxiAI.ChatAPI.Controllers.ProvidersController (AxiAI.ChatAPI).
+2026-02-18 17:11:46.874 +05:30 [INF] Loaded 3 AI providers
+2026-02-18 17:11:46.876 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType5`2[[System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-02-18 17:11:46.884 +05:30 [INF] Executed action AxiAI.ChatAPI.Controllers.ProvidersController.GetProviders (AxiAI.ChatAPI) in 18.4457ms
+2026-02-18 17:11:46.885 +05:30 [INF] Executed endpoint 'AxiAI.ChatAPI.Controllers.ProvidersController.GetProviders (AxiAI.ChatAPI)'
+2026-02-18 17:11:46.891 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5000/AxiAI/Providers - 200 null application/json; charset=utf-8 38.483ms
+2026-02-18 17:11:51.700 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5000/AxiAI/Providers/OpenAI/endpoints - null null
+2026-02-18 17:11:51.706 +05:30 [INF] Executing endpoint 'AxiAI.ChatAPI.Controllers.ProvidersController.GetProviderEndpoints (AxiAI.ChatAPI)'
+2026-02-18 17:11:51.734 +05:30 [INF] Route matched with {action = "GetProviderEndpoints", controller = "Providers"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult GetProviderEndpoints(System.String) on controller AxiAI.ChatAPI.Controllers.ProvidersController (AxiAI.ChatAPI).
+2026-02-18 17:11:51.744 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType6`3[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-02-18 17:11:51.751 +05:30 [INF] Executed action AxiAI.ChatAPI.Controllers.ProvidersController.GetProviderEndpoints (AxiAI.ChatAPI) in 11.9575ms
+2026-02-18 17:11:51.755 +05:30 [INF] Executed endpoint 'AxiAI.ChatAPI.Controllers.ProvidersController.GetProviderEndpoints (AxiAI.ChatAPI)'
+2026-02-18 17:11:51.757 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5000/AxiAI/Providers/OpenAI/endpoints - 200 null application/json; charset=utf-8 56.6999ms

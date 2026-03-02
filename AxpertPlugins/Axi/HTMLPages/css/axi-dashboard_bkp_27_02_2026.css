@@ -1,0 +1,373 @@
+/* =========================================
+   1. RESET & VARIABLES
+   ========================================= */
+:root {
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --border: #e6e9ef;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --accent: #f59e0b;
+    --sidebar-bg: #f8fafc;
+    --danger: #ef4444;
+}
+
+/* #Homepage_CardsList_Wrapper .row:last-child .widgetWrapper {
+    margin-bottom: 55px !important;
+} */
+
+/* body:not(.sidebar-collapse) {
+    padding-bottom: 100px !important;
+
+
+} */
+
+/* .axi-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    border-radius: 12px;
+    background: #fff7ed;
+    border: 1px solid #fde68a;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.axi-logo .logo-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f59e0b, #fb923c);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+} */
+
+
+/* =========================================
+   AXI SECTION STYLING 
+   ========================================= */
+
+#Homepage_CardsList_Wrapper {
+	margin-bottom: 40px !important;
+}
+
+.AXI-Sec {
+	background: white;
+	position: fixed;
+	bottom: 0;
+	width: calc(100vw - 90px);
+	padding: 5px 25px;
+	border-top: 1px solid #aaaaaa6e;
+	display: flex;
+	align-items: center;
+	transition: all ease 0.3s;
+	background: #fff;
+	z-index: 9;
+}
+
+.AXI-Sec .Tkts-toolbar-Left .gap-8 {
+	gap: 5px !important;
+}
+
+/* Wrapper for Logo + Input */
+.searchwrap-AXI {
+    display: flex;
+    align-items: center;
+    flex: 1;
+
+    position: relative;
+    max-width: 800px;
+
+}
+
+#mainNewPageBody.active .AXI-Sec {
+    width: calc(100vw - 300px);
+}
+
+.content:has(#New-Landing-layout) {
+    background: #f1f4f9 !important;
+    height: 50vh !important;
+    max-height: calc(100vh - 120px) !important;
+}
+
+.AXI-Logo {
+    cursor: pointer !important;
+}
+
+.searchwrap-AXI .AXI-Logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 900;
+    font-size: 24px;
+    color: var(--danger);
+    margin-right: 15px;
+    padding-right: 15px;
+    border-right: 1px solid #e5e7eb;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.searchwrap-AXI .AXI-Logo img {
+    width: 20px;
+    height: 20px;
+}
+
+/* Input Field */
+.searchwrap-AXI #Axi-Searchinp {
+	width: 100%;
+	border: none;
+	outline: none;
+	font-size: 14px;
+	color: #000 !important;
+	background: transparent;
+	/* height: 40px; */
+	padding-right: 140px;
+	box-shadow: none !important;
+	margin-right: 15px;
+	border-right: 1px solid #ccc !important;
+	padding-left: 10px !important;
+}
+
+.searchwrap-AXI #Axi-Searchinp::placeholder {
+    color: #9ca3af;
+}
+
+/* Hints & Suggestions */
+.axi-input-hint {
+    position: absolute;
+    right: 46px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    font-size: 12px;
+    font-style: italic;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 4px;
+    z-index: 10; 
+}
+
+.axi-suggestions {
+	position: absolute;
+	bottom: 100%;
+	left: 77px;
+	width: 100%;
+	max-height: 300px;
+	overflow-y: auto;
+	background: white;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px 8px 0 0;
+	box-shadow: 0px -11px 21px 0px #00000042;
+	list-style: none;
+	padding: 0;
+	margin: 0 0 5px 0;
+	z-index: 1001;
+	display: none;
+	width: 88%;
+}
+
+.axi-suggestions li {
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.axi-suggestions li:hover,
+.axi-suggestions li.active {
+    background-color: #f5f5f5;
+}
+
+.clearbtn {
+	position: absolute;
+	right: 25px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 24px;
+	height: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	z-index: 20;
+	color: var(--muted);
+	/* padding-right: 15px; */
+}
+
+.clearbtn:hover {
+    color: var(--danger);
+}
+
+.clearbtn svg {
+    width: 18px;
+    height: 18px; 
+}
+
+/* Button Toolbar */
+.Tkts-toolbar-Left {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.Tkts-toolbar-Left .d-flex,
+.Tkts-toolbar-Left .d-flex-- {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.AXI-Sec .btn,
+.AXI-Sec .enhance-btn {
+    height: 40px;
+    width: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #4b5563;
+    cursor: pointer;
+    transition: all 0.2s;
+    /* Bootstrap override */
+    padding: 0 !important;
+/*    min-width: 40px;*/
+}
+
+.AXI-Sec .btn:hover,
+.AXI-Sec .enhance-btn:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+    color: #111827;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* =========================================
+   5. RESPONSIVE DESIGN
+   ========================================= */
+
+/* LAPTOP/DESKTOP (1024px - 1439px) */
+@media (max-width: 1439px) {
+    .grid-top {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .grid-top .card:first-child {
+        grid-column: 1 / -1;
+    }
+}
+
+/* TABLET LANDSCAPE (768px - 1023px) */
+@media (max-width: 1023px) {
+
+    .AXI-Sec {
+        left: 60px;
+        padding: 0 16px;
+    }
+
+
+
+    .axi-logo span {
+        display: none;
+    }
+
+
+
+}
+
+/* TABLET PORTRAIT & MOBILE (max 767px) */
+@media (max-width: 767px) {
+
+    /* AXI Bar takes full width */
+    .AXI-Sec {
+        left: 0;
+        padding: 0 12px;
+        gap: 8px;
+    }
+
+    /* Hide Logo Text in AXI bar on mobile */
+    .searchwrap-AXI .AXI-Logo {
+        font-size: 0;
+        margin-right: 8px;
+        padding-right: 8px;
+    }
+
+    .searchwrap-AXI .AXI-Logo img {
+        width: 24px;
+        /* Slightly larger icon since text is gone */
+        height: 24px;
+        display: block;
+    }
+
+    .searchwrap-AXI #Axi-Searchinp {
+        width: 100%;
+        border: none;
+        outline: none;
+        font-size: 14px;
+        color: var(--text);
+        background: transparent;
+        height: 40px;
+        /* Keep this large enough for (Hint Width + Button Width + Spacing) */
+        padding-right: 140px;
+    }
+
+    .axi-input-hint {
+        display: none;
+        /* Hide hint on mobile */
+    }
+
+    /* Standard Header Adjustments */
+
+
+}
+
+/* SMALL MOBILE (max 480px) */
+@media (max-width: 480px) {
+
+    .tstructMainBottomFooter {
+        bottom: 55px !important;
+    }
+
+    body {
+        padding-bottom: 95px !important;
+    }
+
+    .AXI-Sec {
+        height: 55px;
+        padding: 0 10px;
+    }
+
+
+    .AXI-Sec .btn,
+    .AXI-Sec .enhance-btn {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+    }
+
+    /* .stat-card span {
+        font-size: 18px;
+    } */
+}
+
+
+/* .tstructMainBottomFooter {
+
+    bottom: 45px !important;
+
+
+    z-index: 100 !important;
+
+
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+} */
