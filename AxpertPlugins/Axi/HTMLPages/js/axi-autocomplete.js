@@ -8,6 +8,9 @@
     let apiMetadataConfigError = "";
     let settingsPageButtons = null; 
     let importExportButtons = null; 
+    let commandHistory = []; 
+    const MAX_HISTORY = 10; 
+    let historyIndex  = -1; 
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
@@ -779,7 +782,8 @@
 
 
         //const regex = new RegExp(`"[^"]*"?|${OPERATOR_REGEX_PART}|[^\\s=<>!]+`, "g");
-        const regex = new RegExp(`"[^"]*"|[^\\s]+`, "g");
+        // const regex = new RegExp(`"[^"]*"|[^\\s]+`, "g");
+        const regex = new RegExp(`"[^"]*"?|[^\\s]+`, "g");
         return str.match(regex) || [];
     }
 
@@ -1391,6 +1395,30 @@
         console.log("Render called");
         list.innerHTML = "";
 
+        const currentInput = input.value; 
+        const currentInputTokens = getTokens(currentInput.trim()); 
+
+        const isInitialCommandStage = currentInputTokens.length === 0 || (currentInputTokens.length === 1 && !currentInput.endsWith(" ")); 
+
+        const commandIcons = {
+            "create": "add_circle_outline",
+            "edit": "edit_note",
+            "view": "visibility",
+            "configure": "settings_suggest",
+            "open": "open_in_new",
+            "upload": "upload_file",
+            "download": "download",
+            "run": "play_arrow",
+            "analyse": "bar_chart",
+            "ai": "smart_toy",
+            "connect": "link",
+            "ask": "question_answer",
+            "end": "stop",
+            "editprompt": "edit",
+            "analyze": "analytics"
+            
+        };
+
       
 
 
@@ -1436,16 +1464,40 @@
             return;
         }
 
+        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0]))  {
+            list.classList.add("axi-grid-layout"); 
+
+        } else {
+            list.classList.remove("axi-grid-layout"); 
+        }
+
         validItems.forEach((item, i) => {
             const li = document.createElement("li");
             const text = typeof item === "string" ? item : item.displaydata;
-            li.textContent = text;
             li.className = "axi-suggestion";
 
             if (typeof item === 'object' && item.isExecutable) {
                 li.style.fontWeight = "bold";
                 li.style.color = "#22c55e";
                 li.style.borderBottom = "1px solid #eee";
+            li.textContent = text;
+
+            } else if (isInitialCommandStage && commands[text.toLowerCase()]) {
+                const iconName = commandIcons[text.toLowerCase()] || "chevron_right"; 
+
+                li.innerHTML = `<div class="d-flex  align-items-center">
+                        <div class="symbol symbol-35px me-2 mainIcon">
+                            <div class="symbol-label cardbg-inverse-1">
+                                <div class="items-icon">
+                                    <span class="material-icons material-icons-style material-icons-2">${iconName}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="command-text">${text}</span>
+                    </div>`; 
+            } else {
+            li.textContent = text;
+
             }
 
             if (i === activeIndex) {
@@ -1460,11 +1512,19 @@
             list.appendChild(li);
         });
 
+        if (list.classList.contains("axi-grid-layout")) {
+            list.style.display = "grid"; 
+        } else {
         list.style.display = "block";
+
+
+        }
+
     }
 
     function hide() {
         list.style.display = "none";
+        list.classList.remove("axi-grid-layout"); 
         items = [];
         activeIndex = -1;
     }
@@ -1651,14 +1711,7 @@
 
 
 
-    document.addEventListener("click", e => {
-        if (input && list && e.target !== input && !list.contains(e.target)) {
-            hide();
-        }
-        if (list.style.display === "block" && searchWrapper && !searchWrapper.contains(e.target)) {
-            hide();
-        }
-    });
+   
 
 
 
@@ -1839,7 +1892,7 @@
 
 
     function isSuggestionVisible() {
-        return list && list.style.display === "block" && items.length > 0;
+        return list && list.style.display !== "none" && items.length > 0;
     }
 
     function hasActiveSuggestion() {
@@ -1851,6 +1904,20 @@
        SETUP LISTENERS
     =============================== */
     function setupEventListeners() {
+        const historyBtn = document.getElementById("History_pages");
+        if (historyBtn) {
+            historyBtn.addEventListener("click", () => navigateHistory('open'));
+        }
+
+        const prevBtn = document.getElementById("btnHistoryPrev");
+        if (prevBtn) {
+            prevBtn.addEventListener("click", () => window.prevbtn_click($(this)));
+        }
+
+        const nextBtn = document.getElementById("btnHistoryNext");
+        if (nextBtn) {
+            nextBtn.addEventListener("click", () => window.nextbtn_click($(this)));
+        }
         if (btnRefresh) {
             btnRefresh.addEventListener("click", async () => {
                 console.log("Refresh Logic......");
@@ -2061,18 +2128,30 @@
             }
 
             // ---------------------------------------------------
-            if (list.style.display !== "block" || items.length === 0) return;
+            if (list.style.display === "none" || items.length === 0) return;
             if (e.key === "ArrowDown") { e.preventDefault(); activeIndex = (activeIndex + 1) % items.length; highlight(); }
             if (e.key === "ArrowUp") { e.preventDefault(); activeIndex = (activeIndex - 1 + items.length) % items.length; highlight(); }
-            if (e.key === "Tab") { e.preventDefault(); if (activeIndex === -1) activeIndex = 0; apply(activeIndex); }
-            if (e.key === "Enter" && activeIndex >= 0) {
-                e.preventDefault();
-
-                apply(activeIndex);
-
-
-
+            if (list.classList.contains("axi-grid-layout")) {
+                if (e.key === "ArrowRight") { 
+                    e.preventDefault(); 
+                    activeIndex = (activeIndex + 1) % items.length; 
+                    highlight(); 
+                }
+                if (e.key === "ArrowLeft") { 
+                    e.preventDefault(); 
+                    activeIndex = (activeIndex - 1 + items.length) % items.length; 
+                    highlight(); 
+                }
             }
+            if (e.key === "Tab") { e.preventDefault(); if (activeIndex === -1) activeIndex = 0; apply(activeIndex); }
+            // if (e.key === "Enter" && activeIndex >= 0) {
+            //     e.preventDefault();
+
+            //     apply(activeIndex);
+
+
+
+            // }
             if (e.key === "Escape") {
                 e.preventDefault();
 
@@ -2092,9 +2171,15 @@
             }
         });
 
-        document.addEventListener("click", e => {
-            if (input && list && e.target !== input && !list.contains(e.target)) hide();
-        });
+        document.addEventListener("mousedown", e => {
+            if (list && list.style.display !== "none") {
+                if (searchWrapper && !searchWrapper.contains(e.target) && e.target !== input) {
+                   hide();  
+                }
+            }
+        })
+
+       
 
 
         const iframe = document.getElementById("middle1");
@@ -2103,8 +2188,8 @@
                 try {
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
-                    iframeDoc.removeEventListener("click", hide);
-                    iframeDoc.addEventListener("click", () => {
+                    iframeDoc.removeEventListener("mousedown", () => hide());
+                    iframeDoc.addEventListener("mousedown", () => {
                         hide();
                     });
                 } catch (err) {
@@ -2112,7 +2197,7 @@
                 }
             };
 
-            // Attach immediately if already loaded
+            
             attachIframeClick();
 
 
@@ -2165,7 +2250,7 @@
      * Execute the Commands 
      * @returns 
      */
-    function executeCommandsV2() {
+    function executeCommandsV2(isNavigating = false) {
 
 
 
@@ -2205,6 +2290,13 @@
 
         dispatchCommand(context);
         hide();
+        if (!isNavigating) {
+        saveToHistory(text); 
+
+
+
+        }
+
 
         setTimeout(() => {
             input.focus();
@@ -6182,6 +6274,71 @@
         window.LoadIframe("loadhomepage");
         console.log(JSON.stringify(commands));
     }
+
+    function saveToHistory(text) {
+        if (!text || text.trim() === "") return; 
+
+        commandHistory = commandHistory.filter(item => item.toLowerCase() !== text.toLowerCase()); 
+
+        commandHistory.unshift(text); 
+
+        if (commandHistory.length > MAX_HISTORY) {
+            commandHistory.pop(); 
+        }; 
+
+        localStorage.setItem(`axi_command_history_${getAppBaseUrl()}_${window.mainUserName}`, JSON.stringify(commandHistory)); 
+
+        historyIndex = -1; 
+    }
+
+    function loadCommandHistory() {
+        try {
+            commandHistory = JSON.parse(localStorage.getItem(`axi_command_history_${getAppBaseUrl()}_${window.mainUserName}`)); 
+        } catch(ex) {
+            commandHistory = []; 
+        }
+    }
+
+    function navigateHistory(direction) {
+        if (commandHistory.length === 0) {
+            showToast("No command History available"); 
+            return; 
+        }
+
+        if (direction === "open") {
+            historyIndex = 0; 
+        } else if (direction === "prev") {
+            if (historyIndex < commandHistory.length - 1) {
+                historyIndex++; 
+            }
+        } else if (direction === "next") {
+            if (historyIndex > 0) {
+                historyIndex--; 
+            } else {
+                historyIndex = -1; 
+                input.value = ""; 
+                handleInput();
+                return;  
+            }
+        }
+
+        if (historyIndex >= 0 && historyIndex < commandHistory.length) {
+            input.value = commandHistory[historyIndex] + " "; 
+            executeCommandsV2(true); 
+            
+
+            // setTimeout(() => {
+                input.focus(); 
+                input.setSelectionRange(input.value.length, input.value.length); 
+                handleInput(); 
+                hide(); 
+            // }, 10); 
+        }
+    }
+
+    // function getAppBackButton() {
+    //     window.prev
+    // }
 
 
 

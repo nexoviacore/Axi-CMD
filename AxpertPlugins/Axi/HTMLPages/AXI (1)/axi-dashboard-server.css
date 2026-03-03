@@ -106,7 +106,7 @@
     align-items: center;
     gap: 8px;
     font-weight: 900;
-    font-size: 17px;
+    font-size: 24px;
     color: var(--danger);
     margin-right: 15px;
     padding-right: 15px;
@@ -476,60 +476,61 @@
 /*    My favourite bookmark*/
 
 
-/* Initial Command Grid Styling */
+/*Layout header and menu changes*/
 
-.axi-suggestions.axi-grid-layout {
-    display: grid !important; 
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
-    gap: 10px; 
-    padding: 12px; 
+.d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.Application_Parameter-Section) {
+  justify-content: end !important;
 }
 
-.axi-suggestions.axi-grid-layout .axi-suggestion {
-    
-    border: 1px solid #e4e6ef; 
-    border-radius: 8px; 
-    padding: 10px; 
-    margin: 0; 
-    background: #ffffff; 
-    transition: all 0.2s ease; 
-    border-bottom: 1px solid #e4e6ef !important; 
+.search-bar {
+	display: none !important;
+}
+.header.initialized.h-60px {
+	height: 40px !important;
+}
+#mobileAxAppLogo img.mh-40px {
+	max-height: 30px !important;
 }
 
-.axi-suggestions.axi-grid-layout .axi-suggestion:hover,
-.axi-suggestions.axi-grid-layout .axi-suggestion.active {
-    background-color: #f1f1f4; 
-    
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+@media (min-width: 992px) {
+
+}
+@media (min-width: 992px) {
+  [data-kt-aside-minimize="on"] .aside {
+    width: 50px ;
+  }
+  .aside-fixed[data-kt-aside-minimize="on"] .wrapper {
+    padding-left: 50px;
+  }
+ .aside-fixed[data-kt-sticky-header="on"][data-kt-aside-minimize="on"] .header {
+    left: 50px;
+  }
 }
 
-
-.axi-suggestions.axi-grid-layout .symbol-label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    background-color: #f5f8fa; 
+.menu-fit > .menu-item > .menu-content, .menu-fit > .menu-item > .menu-link {
+	padding-left: 6px !important;
+}
+.Axpert_logo {
+	margin: 10px 3px !important;
+}
+#kt_aside_footer {
+	padding-left: 0 !important;
+}
+.aside .menu .menu-fit {
+	padding: 0 0px !important;
 }
 
-.axi-suggestions.axi-grid-layout .items-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.Application_Parameter-Section {
+	position: inherit !important;
+	align-items: center;
 }
-
-.axi-suggestions.axi-grid-layout .material-icons {
-    font-size: 1.2rem;
-    color: #5e6278; 
-    margin: 0;
-    padding: 0;
-    line-height: 1;
+.content {
+	padding: 12px !important;
 }
-
-.axi-suggestions.axi-grid-layout .d-flex.align-items-center {
-    display: flex;
-    align-items: center;
-    width: 100%;
+.aside.aside-default {
+	border-left: 0 !important;
+}
+.menu-hover-bg-dark .menu-item .menu-link:hover:not(.disabled):not(.active), .menu-hover-bg-dark .menu-item.hover > .menu-link:not(.disabled):not(.active) {
+border-radius: 0 !important;
+background:#303a69 !important;
 }

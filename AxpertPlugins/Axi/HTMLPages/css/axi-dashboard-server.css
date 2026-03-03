@@ -106,7 +106,7 @@
     align-items: center;
     gap: 8px;
     font-weight: 900;
-    font-size: 17px;
+    font-size: 24px;
     color: var(--danger);
     margin-right: 15px;
     padding-right: 15px;
@@ -474,6 +474,66 @@
   color: green !important;
 }
 /*    My favourite bookmark*/
+
+
+/*Layout header and menu changes*/
+
+.d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.Application_Parameter-Section) {
+  justify-content: end !important;
+}
+
+.search-bar {
+	display: none !important;
+}
+.header.initialized.h-60px {
+	height: 40px !important;
+}
+#mobileAxAppLogo img.mh-40px {
+	max-height: 30px !important;
+}
+
+@media (min-width: 992px) {
+
+}
+@media (min-width: 992px) {
+  [data-kt-aside-minimize="on"] .aside {
+    width: 50px ;
+  }
+  .aside-fixed[data-kt-aside-minimize="on"] .wrapper {
+    padding-left: 50px;
+  }
+ .aside-fixed[data-kt-sticky-header="on"][data-kt-aside-minimize="on"] .header {
+    left: 50px;
+  }
+}
+
+.menu-fit > .menu-item > .menu-content, .menu-fit > .menu-item > .menu-link {
+	padding-left: 6px !important;
+}
+.Axpert_logo {
+	margin: 10px 3px !important;
+}
+#kt_aside_footer {
+	padding-left: 0 !important;
+}
+.aside .menu .menu-fit {
+	padding: 0 0px !important;
+}
+
+.Application_Parameter-Section {
+	position: inherit !important;
+	align-items: center;
+}
+.content {
+	padding: 12px !important;
+}
+.aside.aside-default {
+	border-left: 0 !important;
+}
+.menu-hover-bg-dark .menu-item .menu-link:hover:not(.disabled):not(.active), .menu-hover-bg-dark .menu-item.hover > .menu-link:not(.disabled):not(.active) {
+border-radius: 0 !important;
+background:#303a69 !important;
+}
 
 
 /* Initial Command Grid Styling */
