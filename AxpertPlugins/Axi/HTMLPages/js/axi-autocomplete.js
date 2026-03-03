@@ -24,6 +24,12 @@
         isExecutable: true
     };
 
+    const popOption = {
+        displaydata: "Pop [Ctrl + Shift + Enter]",
+        name: "Pop_ACTION",
+        isExecutable: true
+    };
+
 
 
     const VIEW_HANDLERS = {
@@ -155,6 +161,8 @@
     let axiLogo;
     let searchWrapper;
     let setCommandTransid = null;
+    let dateControlBoolean = false;
+    let popUpOption = false;
 
     //let cachedSessionId;
 
@@ -614,31 +622,55 @@
             return;
         }
 
+        let targetUrl;
 
-        let targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+        //POPUP IMPLEMENTATION
+        if (popUpOption) {
+            console.log("PopOption is clicked");
+            targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
-        if (isEdit) {
-            if (fieldName && fieldValue) {
-                targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+            if (isEdit) {
+                if (fieldName && fieldValue) {
+                    targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+                }
+                targetUrl += `&openerIV=${transId}`;
             }
-            targetUrl += `&hltype=load`;
-            targetUrl += `&torecid=false`;
-            targetUrl += `&openerIV=${transId}`;
-            targetUrl += `&isIV=false`;
-            targetUrl += `&isDupTab=false`;
 
-            targetUrl += `&dummyload=false♠`;
+            targetUrl += `&hltype=open`;
 
+            popUpOption = false;
+
+            console.log(popUpOption);
+            //We need to load it to popup(This is added for testing purpose)
+            top.window.LoadIframe(targetUrl);
+            
         }
         else {
-            if (fieldName && fieldValue) {
-                targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
-            }
-            targetUrl += `&hltype=open`;
-            targetUrl += `&dummyload=false♠`;
-        }
+            targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
-        top.window.LoadIframe(targetUrl);
+            if (isEdit) {
+                if (fieldName && fieldValue) {
+                    targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+                }
+                targetUrl += `&hltype=load`;
+                targetUrl += `&torecid=false`;
+                targetUrl += `&openerIV=${transId}`;
+                targetUrl += `&isIV=false`;
+                targetUrl += `&isDupTab=false`;
+
+                targetUrl += `&dummyload=false♠`;
+
+            }
+            else {
+                if (fieldName && fieldValue) {
+                    targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+                }
+                targetUrl += `&hltype=open`;
+                targetUrl += `&dummyload=false♠`;
+            }
+
+            top.window.LoadIframe(targetUrl);
+        }
     }
 
 
@@ -721,15 +753,47 @@
         if (SET_COMMAND_STATE.currentFieldType === 'n') {
 
             let tokens = getTokens(text);
+
+            const grpKey = tokens[0];
+            
             let lastIndex = tokens.length - 1;
             let lastToken = tokens[lastIndex];
 
             //const numericRegex = /^-?\d*$/;
-            const numericRegex = /^-?(?!.*\.\.)(?!.*'')(?!.*,,)[\d.,']*$/;
+            let numericRegex;
+            if (grpKey === "view") { 
+                numericRegex = /^-?(?!.*\.\.)(?!.*'')(?!.*,,)[\d.,'-<>!=]*$/;
+                //numericRegex = /^(>=|<=|!=|>|<|=)?-?(?:\d+(?:,\d+)*(?:\.\d+)?|\.\d+)$/;
+            }
+            else
+                numericRegex = /^-?(?!.*\.\.)(?!.*'')(?!.*,,)[\d.,']*$/;
+
+
+            //const cursorPos = input.selectionStart
+            //if (input.value[cursorPos - 1] === " ") {
+            //    return;
+            //}
+
+
+            // If user pressed space → don't validate previous token again
+            //let endsWithSpace = text.endsWith(" ");
+
+            //if (endsWithSpace) {
+            //    return; // just wait for next input
+            //}
+
+
 
             if (!numericRegex.test(lastToken)) {
+
                 console.error("Type only numeric value");
-                showToast("Type only numeric value");
+
+                if (grpKey === "view")
+                    showToast("Please enter a valid number. You may use comparison operators (>, <, >=, <=, !=, =).");
+                else
+                    showToast("Please enter a valid numeric value.");
+
+                
 
                 tokens[lastIndex] = "";
 
@@ -794,16 +858,184 @@
 
 
 
+    function viewAdsCommandHandling(tokens, commandConfig) {
+        //const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
+        //const viewSource = createsourceObj;
 
+        if (SET_COMMAND_STATE.isDropDown) {
+            let acceptedValue = cleanString(tokens[tokens.length - 2]);
+            if (acceptedValue)
+                SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+
+            SET_COMMAND_STATE.isDropDown = false;
+        }
+
+
+        if (SET_COMMAND_STATE.currentFieldType == 'n') {
+
+            return processAdsRepetitiveTokens(tokens, commandConfig);
+        }
+        else if (SET_COMMAND_STATE.currentFieldType == 'd') {
+            let prevValueInSet = tokens[tokens.length - 2].toLowerCase();
+
+            if (prevValueInSet === "today" || prevValueInSet === "yesterday" || prevValueInSet === "tomorrow" ||
+                prevValueInSet === "lastweek" || prevValueInSet === "nextweek" || prevValueInSet === "thisweek" ||
+                prevValueInSet === "lastmonth" || prevValueInSet === "thismonth" || prevValueInSet === "nextmonth" ||
+                prevValueInSet === "thisquarter" || prevValueInSet === "lastquarter" || prevValueInSet === "nextquarter" ||
+                prevValueInSet === "thisyear" || prevValueInSet === "lastyear" || prevValueInSet === "nextyear" || prevValueInSet === "custom") {
+                dateControlBoolean = true;
+            }
+
+            if (dateControlBoolean) {
+
+                if (prevValueInSet === "today" || prevValueInSet === "yesterday" || prevValueInSet === "tomorrow" ||
+                    prevValueInSet === "lastweek" || prevValueInSet === "nextweek" || prevValueInSet === "thisweek" ||
+                    prevValueInSet === "lastmonth" || prevValueInSet === "thismonth" || prevValueInSet === "nextmonth" ||
+                    prevValueInSet === "thisquarter" || prevValueInSet === "lastquarter" || prevValueInSet === "nextquarter" ||
+                    prevValueInSet === "thisyear" || prevValueInSet === "lastyear" || prevValueInSet === "nextyear") {
+
+                    const dateResult = getDateByFilter(prevValueInSet);
+                    let date = dateResult.date;
+
+                    if (date !== null || date !== undefined) {
+                        let settokens = [...tokens]
+                        let lastIndex = settokens.length - 2;
+                        let lastToken = settokens[lastIndex];
+
+
+                        ///We need to use System Date Format
+                        date = formatDate(date, dateString);
+
+                        console.log("Final date:", date);
+
+                        settokens[lastIndex] = date;
+
+                        input.value = settokens.join(" ");
+
+                        SET_COMMAND_STATE.currentFieldValue = date;
+                        dateControlBoolean = false;
+
+                    }
+                }
+                else {
+                    if (prevValueInSet.toLowerCase() == "custom") {
+                        //let settokens = tokens
+                        //let lastIndex = tokens.length - 2;
+                        //let lastToken = tokens[lastIndex];
+                        let settokens = [...tokens]
+                        let lastIndex = settokens.length - 2;
+                        let lastToken = settokens[lastIndex];
+
+                        settokens[lastIndex] = "";
+
+                        input.value = settokens.join(" ");
+
+                        showToast("Please Type the date", 5000, true);
+                        updateDynamicHintFromPrompt({ prompt: "fieldValue" })
+                        return ["Please Type the date"];
+                    }
+                    else {
+                        //const partialDate = tokens[tokens.length - 1]
+                        const partialDate = tokens[tokens.length - 1]
+
+                        let isSetValidDate = isValidDate(partialDate)
+
+                        if (isSetValidDate) {
+
+                            ///We need to use System Date Format
+                            const formattedDate = formatDate(partialDate, dateString);
+                            date = formattedDate;
+                            console.log("Final date:", date);
+                            SET_COMMAND_STATE.currentFieldValue = date;
+                            SET_COMMAND_STATE.currentFieldType = null;
+                            SET_COMMAND_STATE.isNextField = true;
+                            dateControlBoolean = false;
+
+                        }
+                        else
+                            return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                    }
+                }
+            }
+            else {
+                let acceptedValue = cleanString(tokens[tokens.length - 1]).toLowerCase();
+
+                const list = [
+                    "Custom",
+                    "Today",
+                    "Yesterday",
+                    "Tomorrow",
+                    "LastWeek",
+                    "NextWeek",
+                    "ThisWeek",
+                    "LastMonth",
+                    "ThisMonth",
+                    "NextMonth",
+                    "ThisQuarter",
+                    "LastQuarter",
+                    "NextQuarter",
+                    "ThisYear",
+                    "LastYear",
+                    "NextYear"
+                ];
+
+                let filtered = list.filter(col => {
+
+                    const rawDisplay = col.toLowerCase();
+
+                    const normalizedTypedValue = (acceptedValue ?? "")
+                        .toLowerCase();
+
+                    return rawDisplay.includes(normalizedTypedValue);
+                });
+
+
+                if (acceptedValue && filtered.length === 0) {
+                    console.log("User given value which is not in the date list");
+                    showToast("Please select a valid Option from the list", 5000, true);
+
+                    let lastIndex = tokens.length - 1;
+                    let lastToken = tokens[lastIndex];
+                    tokens[lastIndex] = "";
+
+                    input.value = tokens.join(" ");
+
+                    filtered = list;
+                }
+
+
+                return filtered;
+            }
+
+            return processAdsRepetitiveTokens(tokens, commandConfig);
+
+        }
+        else
+            return processAdsRepetitiveTokens(tokens, commandConfig);
+    }
 
 
     function processAdsRepetitiveTokens(tokens, commandConfig) {
-        const targetIndex = tokens.length - 1;
+        let targetIndex = tokens.length - 1;
         const partialTyped = cleanString(tokens[targetIndex]);
-        const adsName = cleanString(tokens[1]);
 
+        const adsName = cleanString(tokens[1]);
+        setCommandTransid = adsName;
 
         if (targetIndex < 2) return [];
+
+        if (SET_COMMAND_STATE.transid === null || setCommandTransid !== SET_COMMAND_STATE.transid) {
+            SET_COMMAND_STATE = {
+                isNextField: false,
+                currentField: null,
+                currentFieldType: null,
+                isFirst: true,
+                transid: adsName,
+                currentFieldValue: null,
+                isDropDown: false
+
+            };
+        }
 
 
         if (targetIndex % 2 === 0) {
@@ -825,8 +1057,6 @@
                 const usedToken = cleanString(tokens[i]).toLowerCase();
                 usedColumns.add(usedToken);
             }
-
-
 
 
 
@@ -853,124 +1083,445 @@
             });
 
 
+            SET_COMMAND_STATE.currentField = null;
+            SET_COMMAND_STATE.currentFieldType = null
+            SET_COMMAND_STATE.currentFieldValue = null;
+            SET_COMMAND_STATE.isNextField = false;
+            SET_COMMAND_STATE.isDropDown = false;
 
 
-            filteredObjects = [goOption, ...filtered];
+            filteredObjects = [goOption, popOption, ...filtered];
             if (tokens.length > 2) {
                 return [
                     goOption,
+                    popOption,
                     ...filtered.map(col => col.displaydata || col.name)
                 ];
 
             }
 
-        }
 
 
-        else {
+        } else {
+            if (!SET_COMMAND_STATE.isNextField) {
+                let prevColumnName
+                if (!SET_COMMAND_STATE.currentField) {
+                    prevColumnName = cleanString(tokens[targetIndex - 1]);
+                    SET_COMMAND_STATE.currentField = prevColumnName;
+                } else
+                    prevColumnName = SET_COMMAND_STATE.currentField;
 
-            const prevColumnName = cleanString(tokens[targetIndex - 1]);
-
-
-            const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
-            const colList = axDatasourceObj[colSourceKey];
-
-            if (!colList) return [];
-
-            const columnMetadata = colList.find(
-                c =>
-                    c.name?.toLowerCase() === prevColumnName.toLowerCase() ||
-                    c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
-            ) || null;
-
-            if (!columnMetadata) return [];
-
-            const isAccept = !columnMetadata.sourcetable || !columnMetadata.sourcefld;
+                //const prevColumnName = cleanString(tokens[targetIndex - 1]);
 
 
-            const datatype = columnMetadata.fdatatype;
+                const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
+                const colList = axDatasourceObj[colSourceKey];
 
-
-            if (isAccept) {
-                const acceptedValue = cleanString(tokens[tokens.length - 1]);
-                const columnName = prevColumnName
-                adsfieldvalueanddt[columnName] = {
-                    datatype: datatype,
-                    isAccept: isAccept,
-                };
-                if (tokens?.length <= 4) {
-
-                    return [
-                        goOption,
-
-                    ];
-
-
-                }
-                return [];
-            }
-            else {
-
-                if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
-                    console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
+                if (!colList) {
+                    console.log("In processAds " + "axi_adscolumnlist" + " is empty");
+                    showToast("Please Try Again Later.");
                     return [];
                 }
 
-                const acceptedValue = cleanString(tokens[tokens.length - 1]);
-                const columnName = prevColumnName
-                adsfieldvalueanddt[columnName] = {
-                    datatype: datatype,
-                    isAccept: isAccept,
-                };
+                const columnMetadata = colList.find(
+                    c =>
+                        c.name?.toLowerCase() === prevColumnName.toLowerCase() ||
+                        c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
+                ) || null;
 
-                const sourcetable = columnMetadata.sourcetable;
-                const sourcefld = columnMetadata.sourcefld;
+                if (!columnMetadata) {
+                    //console.log("Selected Field Name is Not in the List " + prevColumnName);
+                    //showToast("Please Select Field from the list", 5000, true);
+                    //return [];
 
-                const sourceName = "axi_adsdropdowntokens";
-                const paramValue = `${sourcetable}$#$${sourcefld}`;
-                const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
+                    console.log("Selected Field Name is Not in the List " + prevColumnName);
+                    showToast("Please Select Field from the list", 5000, true);
 
-                if (!axDatasourceObj[sourceKey]) {
-                    loadList(sourceName, paramValue);
-                    return ["Loading values..."];
+                    let settokens = [...tokens]
+                    let lastIndex = settokens.length - 2;
+                    let lastToken = settokens[lastIndex];
+
+                    settokens[lastIndex] = "";
+
+                    targetIndex = targetIndex - 1;
+
+                    input.value = settokens.join(" ");
+                    updateDynamicHintFromPrompt({ prompt: "fieldname" })
+
+
+                    const usedColumns = new Set();
+                    for (let i = 2; i < targetIndex; i += 2) {
+                        const usedToken = cleanString(tokens[i]).toLowerCase();
+                        usedColumns.add(usedToken);
+                    }
+
+
+
+
+                    const filtered = colList.filter(col => {
+
+                        const rawDisplay = (col.displaydata || col.name).toLowerCase();
+
+                        const cleanDisplay = rawDisplay
+                            .replace(/\s*\(.*?\)/g, "")
+                            .replace(/\s*\[[^\]]+\]\s*$/, "")
+                            .trim();
+
+                        const rawName = (col.name || "").toLowerCase();
+
+                        const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+
+                        return !isUsed;
+                    });
+
+
+                    SET_COMMAND_STATE.currentField = null;
+                    SET_COMMAND_STATE.currentFieldType = null
+                    SET_COMMAND_STATE.currentFieldValue = null;
+                    SET_COMMAND_STATE.isNextField = false;
+                    SET_COMMAND_STATE.isDropDown = false;
+
+
+                    filteredObjects = [goOption, popOption, ...filtered];
+                    if (tokens.length > 2) {
+                        return [
+                            goOption,
+                            popOption,
+                            ...filtered.map(col => col.displaydata || col.name)
+                        ];
+
+                    }
                 }
 
-                const list = axDatasourceObj[sourceKey];
-                if (!Array.isArray(list)) return [];
+                let isAccept = !columnMetadata.sourcetable || !columnMetadata.sourcefld;
 
 
-                const filtered = list.filter(col => {
-                    const rawDisplay = String(col.displaydata || col.name)
-                        .toLowerCase();
+                let datatype;
 
-                    const normalizedTypedValue = (acceptedValue ?? "")
-                        .toLowerCase();
-
-                    return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
-                });
+                if (SET_COMMAND_STATE.currentFieldType === null) {
+                    datatype = columnMetadata.fdatatype;
+                    SET_COMMAND_STATE.currentFieldType = datatype;
+                } else datatype = SET_COMMAND_STATE.currentFieldType;
 
 
+                if (datatype === 'c' || datatype === 'n' || datatype === "t") {
+                    if (isAccept) {
+                        let acceptedValue = cleanString(tokens[tokens.length - 1]);
+                        if (acceptedValue)
+                            SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+                        else {
+                            return ["Please type the value..."];
+                        }
+                        //return [];
+                        const columnName = prevColumnName
+                        adsfieldvalueanddt[columnName] = {
+                            datatype: datatype,
+                            isAccept: isAccept,
+                        };
+                        //if (tokens?.length <= 4) {
+                        //    return [goOption,];
+                        //}
+                        return [];
+                    } else {
+                        SET_COMMAND_STATE.isDropDown = true;
+                        if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
+                            console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
+                            showToast("Please Try Again Later.");
+                            return [];
+                        }
+
+                        const acceptedValue = cleanString(tokens[tokens.length - 1]);
+                        const columnName = prevColumnName
+                        adsfieldvalueanddt[columnName] = {
+                            datatype: datatype,
+                            isAccept: isAccept,
+                        };
+
+                        const sourcetable = columnMetadata.sourcetable;
+                        const sourcefld = columnMetadata.sourcefld;
+
+                        const sourceName = "axi_adsdropdowntokens";
+                        const paramValue = `${sourcetable}$#$${sourcefld}`;
+                        const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
+
+                        if (!axDatasourceObj[sourceKey]) {
+                            loadList(sourceName, paramValue);
+                            return ["Loading values..."];
+                        }
+
+                        const list = axDatasourceObj[sourceKey];
+                        if (!Array.isArray(list)) return [];
+
+
+                        const filtered = list.filter(col => {
+                            const rawDisplay = String(col.displaydata || col.name)
+                                .toLowerCase();
+
+                            const normalizedTypedValue = (acceptedValue ?? "")
+                                .toLowerCase();
+
+                            return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
+                        });
+
+                        if (acceptedValue && filtered.length === 0) {
+                            console.log("User given value is not in the dropdown");
+                            showToast("Please select a valid value from the dropdown", 5000, true);
+
+                            let lastIndex = tokens.length - 1;
+                            let lastToken = tokens[lastIndex];
+                            tokens[lastIndex] = "";
+
+                            input.value = tokens.join(" ");
+
+                            filtered = list;
+                        } 
 
 
 
-                if (tokens.length <= 4) {
-                    filteredObjects = [goOption, ...filtered];
-                    return [
-                        goOption,
-                        ...filtered.map(col => col.displaydata || col.name)
+
+                        //if (tokens.length <= 4) {
+                        //    filteredObjects = [goOption, ...filtered];
+                        //    return [
+                        //        goOption,
+                        //        ...filtered.map(col => col.displaydata || col.name)
+                        //    ];
+
+                        //}
+
+                        filteredObjects = filtered
+
+
+                        return filtered.map(col => col.displaydata || col.name);
+
+                    }
+                } else if (datatype === 'd') {
+
+
+                    const acceptedValue = cleanString(tokens[tokens.length - 1]);
+
+                    const columnName = prevColumnName
+                    adsfieldvalueanddt[columnName] = {
+                        datatype: datatype,
+                        isAccept: isAccept,
+                    };
+
+                    const list = [
+                        "Custom",
+                        "Today",
+                        "Yesterday",
+                        "Tomorrow",
+                        "LastWeek",
+                        "NextWeek",
+                        "ThisWeek",
+                        "LastMonth",
+                        "ThisMonth",
+                        "NextMonth",
+                        "ThisQuarter",
+                        "LastQuarter",
+                        "NextQuarter",
+                        "ThisYear",
+                        "LastYear",
+                        "NextYear"
                     ];
 
+                    const filtered = list.filter(col => {
+
+                        const rawDisplay = col.toLowerCase();
+
+                        const normalizedTypedValue = (acceptedValue ?? "")
+                            .toLowerCase();
+
+                        return rawDisplay.includes(normalizedTypedValue);
+                    });
+
+
+                    return filtered;
+
+
                 }
 
-                filteredObjects = filtered
+                //else if (datatype === 'd') {
 
-
-                return filtered.map(col => col.displaydata || col.name);
-
-            }
+                //}
+            } else return [];
 
         }
     }
+
+    //function processAdsRepetitiveTokens(tokens, commandConfig) {
+    //    const targetIndex = tokens.length - 1;
+    //    const partialTyped = cleanString(tokens[targetIndex]);
+    //    const adsName = cleanString(tokens[1]);
+
+
+    //    if (targetIndex < 2) return [];
+
+
+    //    if (targetIndex % 2 === 0) {
+    //        const sourceName = "axi_adscolumnlist";
+    //        const sourceKey = `${sourceName}_${adsName}`.toLowerCase();
+
+
+    //        if (!axDatasourceObj[sourceKey]) {
+    //            loadList(sourceName, adsName);
+    //            return ["Loading columns..."];
+    //        }
+
+    //        const list = axDatasourceObj[sourceKey];
+    //        if (!Array.isArray(list)) return [];
+
+
+    //        const usedColumns = new Set();
+    //        for (let i = 2; i < targetIndex; i += 2) {
+    //            const usedToken = cleanString(tokens[i]).toLowerCase();
+    //            usedColumns.add(usedToken);
+    //        }
+
+
+
+
+
+
+    //        const filtered = list.filter(col => {
+
+    //            const rawDisplay = (col.displaydata || col.name).toLowerCase();
+
+
+    //            const cleanDisplay = rawDisplay
+    //                .replace(/\s*\(.*?\)/g, "")
+    //                .replace(/\s*\[[^\]]+\]\s*$/, "")
+    //                .trim();
+
+    //            const rawName = (col.name || "").toLowerCase();
+
+
+    //            const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+
+
+    //            const matchesInput = cleanDisplay.includes(partialTyped.toLowerCase());
+
+    //            return !isUsed && matchesInput;
+    //        });
+
+
+
+
+    //        filteredObjects = [goOption, ...filtered];
+    //        if (tokens.length > 2) {
+    //            return [
+    //                goOption,
+    //                ...filtered.map(col => col.displaydata || col.name)
+    //            ];
+
+    //        }
+
+    //    }
+
+
+    //    else {
+
+    //        const prevColumnName = cleanString(tokens[targetIndex - 1]);
+
+
+    //        const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
+    //        const colList = axDatasourceObj[colSourceKey];
+
+    //        if (!colList) return [];
+
+    //        const columnMetadata = colList.find(
+    //            c =>
+    //                c.name?.toLowerCase() === prevColumnName.toLowerCase() ||
+    //                c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
+    //        ) || null;
+
+    //        if (!columnMetadata) return [];
+
+    //        const isAccept = !columnMetadata.sourcetable || !columnMetadata.sourcefld;
+
+
+    //        const datatype = columnMetadata.fdatatype;
+
+
+    //        if (isAccept) {
+    //            const acceptedValue = cleanString(tokens[tokens.length - 1]);
+    //            const columnName = prevColumnName
+    //            adsfieldvalueanddt[columnName] = {
+    //                datatype: datatype,
+    //                isAccept: isAccept,
+    //            };
+    //            if (tokens?.length <= 4) {
+
+    //                return [
+    //                    goOption,
+
+    //                ];
+
+
+    //            }
+    //            return [];
+    //        }
+    //        else {
+
+    //            if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
+    //                console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
+    //                return [];
+    //            }
+
+    //            const acceptedValue = cleanString(tokens[tokens.length - 1]);
+    //            const columnName = prevColumnName
+    //            adsfieldvalueanddt[columnName] = {
+    //                datatype: datatype,
+    //                isAccept: isAccept,
+    //            };
+
+    //            const sourcetable = columnMetadata.sourcetable;
+    //            const sourcefld = columnMetadata.sourcefld;
+
+    //            const sourceName = "axi_adsdropdowntokens";
+    //            const paramValue = `${sourcetable}$#$${sourcefld}`;
+    //            const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
+
+    //            if (!axDatasourceObj[sourceKey]) {
+    //                loadList(sourceName, paramValue);
+    //                return ["Loading values..."];
+    //            }
+
+    //            const list = axDatasourceObj[sourceKey];
+    //            if (!Array.isArray(list)) return [];
+
+
+    //            const filtered = list.filter(col => {
+    //                const rawDisplay = String(col.displaydata || col.name)
+    //                    .toLowerCase();
+
+    //                const normalizedTypedValue = (acceptedValue ?? "")
+    //                    .toLowerCase();
+
+    //                return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
+    //            });
+
+
+
+
+
+    //            if (tokens.length <= 4) {
+    //                filteredObjects = [goOption, ...filtered];
+    //                return [
+    //                    goOption,
+    //                    ...filtered.map(col => col.displaydata || col.name)
+    //                ];
+
+    //            }
+
+    //            filteredObjects = filtered
+
+
+    //            return filtered.map(col => col.displaydata || col.name);
+
+    //        }
+
+    //    }
+    //}
 
     function processRunCommands(tokens, targetIndex, structType) {
         if (targetIndex !== 1) return [];
@@ -1091,7 +1642,7 @@
                 ignoreExtraParams = true;
                 if (tokens.length > 2) {
                     updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "column" : "value" });
-                    return processAdsRepetitiveTokens(tokens, commandConfig)
+                    return viewAdsCommandHandling(tokens, commandConfig)
 
                 }
 
@@ -1140,7 +1691,9 @@
                 filteredObjects = result.map(val => ({ name: val, displaydata: val }));
 
                 result.unshift(goOption);
+                result.unshift(popOption);
                 filteredObjects.unshift(goOption);
+                filteredObjects.unshift(popOption);
                 updateDynamicHintFromPrompt({ prompt: commandConfig?.prompts?.[3]?.prompt })
                 return result;
 
@@ -1161,6 +1714,13 @@
 
         if (!promptInfo) {
             updateDynamicHintFromPrompt(null);
+
+            ///added as we now dont have option for go and popup in create(When create old logic works we can remove this)(T)
+            if (groupKey === "create" && tokens.length === 3) {
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
+
             return [];
         }
 
@@ -1186,7 +1746,9 @@
 
             if (groupKey === "create" && tokens.length === 3) {
                 result.unshift(goOption);
+                result.unshift(popOption);
                 filteredObjects.unshift(goOption);
+                filteredObjects.unshift(popOption);
             }
             return result;
         }
@@ -1275,7 +1837,13 @@
 
             let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
-            if ((groupKey === "view" || groupKey === "configure") && tokens.length === 3 && tokens[1] !== "keyfield") {
+            if ((groupKey === "view") && tokens.length === 3) {
+                resultList.unshift(goOption);
+                resultList.unshift(popOption);
+                filteredObjects.unshift(goOption);
+                filteredObjects.unshift(popOption);
+            }
+            else if ((groupKey === "configure") && tokens.length === 3 && tokens[1] !== "keyfield") {
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
@@ -1292,12 +1860,23 @@
 
             else if (groupKey === "edit" &&  tokens.length > 4) {
                 resultList.unshift(goOption);
+                resultList.unshift(popOption);
                 filteredObjects.unshift(goOption);
+                filteredObjects.unshift(popOption);
             }
 
             return resultList;
         }
 
+        ///added this for sinlge fiedlname and fieldvalue(T)
+        if (groupKey === "edit" && tokens.length > 4) {
+            //resultList.unshift(goOption);
+            //resultList.unshift(popOption);
+            //filteredObjects.unshift(goOption);
+            //filteredObjects.unshift(popOption);
+            filteredObjects = [goOption, popOption]
+            return [goOption, popOption];
+        }
         return [];
     }
 
@@ -1568,6 +2147,13 @@
             hide();
             AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, tokens, saveCommandConfig);
             resetSetCommandState();
+            return;
+        }
+        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Pop_ACTION") {
+            console.log("Pop Option Selected......");
+            popUpOption = true;
+            hide();
+            executeCommandsV2();
             return;
         }
 
@@ -2003,6 +2589,7 @@
                 if (input.selectionStart !== input.selectionEnd) {
                     createfieldnamevaluesList[transIDcheck] = [];
                     setCommandTransid = null;
+                    dateControlBoolean = false;
                     resetSetCommandState();
                     return;
                 }
@@ -2015,7 +2602,9 @@
 
                 if (input.value[cursorPos - 1] === " " && !SET_COMMAND_STATE.currentField?.trim()) {
 
+                    
                     console.log("Deleted a space using Backspace");
+                    console.log(SET_COMMAND_STATE);
                 }
                 else {
                     //if (createfieldnamevaluesList?.[transIDcheck]?.length > 0 && !SET_COMMAND_STATE.currentField) {
@@ -2027,7 +2616,7 @@
                         const lastListItem = list[list.length - 1];
 
                         const lastTokenValue = cleanCommandToken(tokens[tokens.length - 1]);
-                        const actualLastTokenValue = tryResolveToken(tokens.length - 1, lastTokenValue, saveCommandConfig,false);
+                        const actualLastTokenValue = tryResolveToken(tokens.length - 1, lastTokenValue, saveCommandConfig, false);
 
                         if (lastListItem) {
 
@@ -2047,22 +2636,66 @@
                     }
 
                 }
-                tokens.pop();
+                //tokens.pop();
+
+
+                let lastIndex = tokens.length - 1;
+                tokens[lastIndex] = "";
 
                 input.value = tokens.join(" ");
 
                 console.log("After backspace our list : ");
                 console.log(createfieldnamevaluesList[transIDcheck]);
 
+                dateControlBoolean = false;
                 resetSetCommandState();
-                handleInput(); 
-                
+                handleInput();
 
+
+            }
+            else if (e.key === 'Backspace' && grpKey === "view") {
+                if (input.selectionStart !== input.selectionEnd) {
+                    setCommandTransid = null;
+                    dateControlBoolean = false;
+                    resetSetCommandState();
+                    return;
+                }
+                e.preventDefault();
+                hide();
+
+                const cursorPos = input.selectionStart;
+
+
+                if (input.value[cursorPos - 1] === " " && !SET_COMMAND_STATE.currentField?.trim()) {
+
+                    console.log("Deleted a space using Backspace");
+                    console.log(SET_COMMAND_STATE);
+                }
+
+                //tokens.pop();
+
+                let lastIndex = tokens.length - 1;
+                tokens[lastIndex] = "";
+
+                input.value = tokens.join(" ");
+
+                dateControlBoolean = false;
+                resetSetCommandState();
+                handleInput();
             }
 
             if (e.ctrlKey && e.code === "Space") {
                 e.preventDefault();
                 handleInput();
+                return;
+            }
+
+
+            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "enter") {
+                popUpOption = true;
+                e.preventDefault();
+                hide();
+                executeCommandsV2();
                 return;
             }
 
@@ -3506,7 +4139,7 @@
 
             let colMetadata = adsfieldvalueanddt[rawColToken] || {};
 
-            if (matchedOperator) {
+            if (matchedOperator && colMetadata.datatype != "c" && colMetadata.datatype != 't' && colMetadata?.datatype != "d") {
 
                 operator = matchedOperator;
                 rawValue = nextTokenRaw.slice(matchedOperator.length);
@@ -3517,7 +4150,7 @@
 
                 rawValue = nextTokenRaw;
 
-                if (colMetadata?.datatype === "c" || colMetadata.datatype === 't') {
+                if (colMetadata?.datatype === "c" || colMetadata.datatype === 't' || colMetadata.datatype === "d") {
                     if (rawValue.startsWith("%") && rawValue.endsWith("%")) {
                         operator = "contains";
                         rawValue = rawValue.slice(1, -1);
@@ -3531,7 +4164,9 @@
                         rawValue = rawValue.slice(1);
                     }
                     else {
-                    operator = "equal";
+                        operator = "equal";
+                        if (matchedOperator)
+                          rawValue = nextTokenRaw.slice(matchedOperator.length);
                     }
                 }
                 else {
@@ -4154,83 +4789,135 @@
             return processCreateCommand(tokens, commandConfig, viewSource);
         }
         else if (SET_COMMAND_STATE.currentFieldType == 'd') {
-            const prevValueInSet = tokens[tokens.length - 2];
-            if (prevValueInSet === "Today" || prevValueInSet === "Yesterday" ||
-                prevValueInSet === "Tomorrow" || prevValueInSet === "LastWeek" ||
-                prevValueInSet === "NextWeek" || prevValueInSet === "LastYear") {
-                const dateResult = getDateByFilter(prevValueInSet);
-                let date = dateResult.date;
+            let prevValueInSet = tokens[tokens.length - 2].toLowerCase();
+
+            if (prevValueInSet === "today" || prevValueInSet === "yesterday" || prevValueInSet === "tomorrow" ||
+                prevValueInSet === "lastweek" || prevValueInSet === "nextweek" || prevValueInSet === "thisweek" ||
+                prevValueInSet === "lastmonth" || prevValueInSet === "thismonth" || prevValueInSet === "nextmonth" ||
+                prevValueInSet === "thisquarter" || prevValueInSet === "lastquarter" || prevValueInSet === "nextquarter" ||
+                prevValueInSet === "thisyear" || prevValueInSet === "lastyear" || prevValueInSet === "nextyear" || prevValueInSet === "custom") {
+                dateControlBoolean = true;
+            }
+
+            if (dateControlBoolean) {
+
+                if (prevValueInSet === "today" || prevValueInSet === "yesterday" || prevValueInSet === "tomorrow" ||
+                    prevValueInSet === "lastweek" || prevValueInSet === "nextweek" || prevValueInSet === "thisweek" ||
+                    prevValueInSet === "lastmonth" || prevValueInSet === "thismonth" || prevValueInSet === "nextmonth" ||
+                    prevValueInSet === "thisquarter" || prevValueInSet === "lastquarter" || prevValueInSet === "nextquarter" ||
+                    prevValueInSet === "thisyear" || prevValueInSet === "lastyear" || prevValueInSet === "nextyear") {
+
+                    const dateResult = getDateByFilter(prevValueInSet);
+                    let date = dateResult.date;
+
+                    if (date !== null || date !== undefined) {
+                        let settokens = [...tokens]
+                        let lastIndex = settokens.length - 2;
+                        let lastToken = settokens[lastIndex];
 
 
-                if (date !== null || date !== undefined) {
-                    let settokens = [...tokens]
-                    let lastIndex = settokens.length - 2;
-                    let lastToken = settokens[lastIndex];
+                        ///We need to use System Date Format
+                        date = formatDate(date, dateString);
 
+                        console.log("Final date:", date);
 
-                    ///We need to use System Date Format
-                    date = formatDate(date, dateString);
+                        settokens[lastIndex] = date;
 
-                    console.log("Final date:", date);
+                        input.value = settokens.join(" ");
 
-                    settokens[lastIndex] = date;
+                        SET_COMMAND_STATE.currentFieldValue = date;
+                        dateControlBoolean = false;
 
-                    input.value = settokens.join(" ");
+                    }
+                }
+                else {
+                    if (prevValueInSet.toLowerCase() == "custom") {
+                        //let settokens = tokens
+                        //let lastIndex = tokens.length - 2;
+                        //let lastToken = tokens[lastIndex];
+                        let settokens = [...tokens]
+                        let lastIndex = settokens.length - 2;
+                        let lastToken = settokens[lastIndex];
 
-                    SET_COMMAND_STATE.currentFieldValue = date;
+                        settokens[lastIndex] = "";
 
-                    //// set in resolve params.
-                    //resolvedParamsCopy.fields.push({
-                    //    fieldname: SET_COMMAND_STATE.currentField,
-                    //    fieldtype: SET_COMMAND_STATE.currentFieldType,
-                    //    fieldvalue: date
-                    //});
+                        input.value = settokens.join(" ");
 
+                        showToast("Please Type the date", 5000, true);
+                        updateDynamicHintFromPrompt({ prompt: "fieldValue" })
+                        return ["Please Type the date"];
+                    }
+                    else {
+                        //const partialDate = tokens[tokens.length - 1]
+                        const partialDate = tokens[tokens.length - 1]
+
+                        let isSetValidDate = isValidDate(partialDate)
+
+                        if (isSetValidDate) {
+
+                            ///We need to use System Date Format
+                            const formattedDate = formatDate(partialDate, dateString);
+                            date = formattedDate;
+                            console.log("Final date:", date);
+                            SET_COMMAND_STATE.currentFieldValue = date;
+                            SET_COMMAND_STATE.currentFieldType = null;
+                            SET_COMMAND_STATE.isNextField = true;
+                            dateControlBoolean = false;
+
+                        }
+                        else
+                            return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                    }
                 }
             }
             else {
+                let acceptedValue = cleanString(tokens[tokens.length - 1]).toLowerCase();
 
-                if (prevValueInSet.toLowerCase() == "custom") {
-                    //let settokens = tokens
-                    //let lastIndex = tokens.length - 2;
-                    //let lastToken = tokens[lastIndex];
-                    let settokens = [...tokens]
-                    let lastIndex = settokens.length - 2;
-                    let lastToken = settokens[lastIndex];
+                const list = [
+                    "Custom",
+                    "Today",
+                    "Yesterday",
+                    "Tomorrow",
+                    "LastWeek",
+                    "NextWeek",
+                    "ThisWeek",
+                    "LastMonth",
+                    "ThisMonth",
+                    "NextMonth",
+                    "ThisQuarter",
+                    "LastQuarter",
+                    "NextQuarter",
+                    "ThisYear",
+                    "LastYear",
+                    "NextYear"
+                ];
 
-                    settokens[lastIndex] = "";
+                let filtered = list.filter(col => {
 
-                    input.value = settokens.join(" ");
+                    const rawDisplay = col.toLowerCase();
 
-                    ///// set as empty.
-                    //resolvedParamsCopy.fields.push({
-                    //    fieldname: SET_COMMAND_STATE.currentField,
-                    //    fieldtype: SET_COMMAND_STATE.currentFieldType,
-                    //    fieldvalue: null
-                    //});
-                    updateDynamicHintFromPrompt({ prompt: "fieldValue" })
-                    showToast("Please Type the date", 5000, true);
-                    return ["Please Type the date"];
+                    const normalizedTypedValue = (acceptedValue ?? "")
+                        .toLowerCase();
+
+                    return rawDisplay.includes(normalizedTypedValue);
+                });
+
+
+                if (acceptedValue && filtered.length === 0) {
+                    console.log("User given value which is not in the date list");
+                    showToast("Please select a valid Option from the list", 5000, true);
+
+                    let lastIndex = tokens.length - 1;
+                    let lastToken = tokens[lastIndex];
+                    tokens[lastIndex] = "";
+
+                    input.value = tokens.join(" ");
+
+                    filtered = list;
                 }
-                else {
-                    //const partialDate = tokens[tokens.length - 1]
-                    const partialDate = tokens[tokens.length - 1]
-                    let isSetValidDate = isValidDate(partialDate)
 
-                    if (isSetValidDate) {
 
-                        ///We need to use System Date Format
-                        const formattedDate = formatDate(partialDate, dateString);
-                        date = formattedDate;
-                        console.log("Final date:", date);
-                        SET_COMMAND_STATE.currentFieldValue = date;
-                        SET_COMMAND_STATE.currentFieldType = null;
-                        SET_COMMAND_STATE.isNextField = true;
-
-                    }
-                    else 
-                        return ["Please type Valid date using / (ex:DD/MM/YYYY)"];
-                }
+                return filtered;
             }
 
             return processCreateCommand(tokens, commandConfig, viewSource);
@@ -4308,12 +4995,18 @@
             if ((SET_COMMAND_STATE.currentField || (targetIndex % 2 !== 0 && targetIndex >= 4)) && filteredObjects.length > 0) {
                 resultList.unshift(goOption);
                 resultList.unshift(saveOption);
+                resultList.unshift(popOption);
                 filteredObjects.unshift(goOption);
                 filteredObjects.unshift(saveOption);
+                filteredObjects.unshift(popOption);
             }
             else if (tokens.length >= 3 && filteredObjects.length > 0) {
                 resultList.unshift(goOption);
+                resultList.unshift(popOption);
+                
                 filteredObjects.unshift(goOption);
+                filteredObjects.unshift(popOption);
+
             }
         
             SET_COMMAND_STATE.currentField = null;
@@ -4345,7 +5038,7 @@
                 const colList = axDatasourceObj[colSourceKey];
 
                 if (!colList) {
-                    console.log("In processCreateCommond " + createCommandSourceObj + " is empty");
+                    console.log("In processCreateCommand " + createCommandSourceObj + " is empty");
                     showToast("Please Try Again Later.");
                     return [];
                 }
@@ -4403,12 +5096,16 @@
                     if (SET_COMMAND_STATE.currentField || (targetIndex % 2 !== 0 && targetIndex >= 4)) {
                         resultList.unshift(goOption);
                         resultList.unshift(saveOption);
+                        resultList.unshift(popOption);
                         filteredObjects.unshift(goOption);
                         filteredObjects.unshift(saveOption);
+                        filteredObjects.unshift(popOption);
                     }
                     else if (tokens.length >= 3) {
                         resultList.unshift(goOption);
+                        resultList.unshift(popOption);
                         filteredObjects.unshift(goOption);
+                        filteredObjects.unshift(popOption);
                     }
 
 
@@ -4446,8 +5143,10 @@
                 if (datatype === 'c' || datatype === 'n' || datatype === "t") {
                     if (isAccept) {
                         let acceptedValue = cleanString(tokens[tokens.length - 1]);
-                        if (acceptedValue)
+                        if (acceptedValue) {
                             SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+                            return [];
+                        }
                         else {
                             return ["Please type the value..."];
                         }
@@ -4495,7 +5194,7 @@
                         });
 
                         if (acceptedValue && filtered.length === 0) {
-                            console.log("User given value which is not in the dropdown");
+                            console.log("User given value is not in the dropdown");
                             showToast("Please select a valid value from the dropdown",5000,true);
    
                             let lastIndex = tokens.length - 1;
@@ -4517,13 +5216,22 @@
                     const acceptedValue = cleanString(tokens[tokens.length - 1]);
 
                     const list = [
+                        "Custom",
                         "Today",
                         "Yesterday",
                         "Tomorrow",
                         "LastWeek",
                         "NextWeek",
+                        "ThisWeek",
+                        "LastMonth",
+                        "ThisMonth",
+                        "NextMonth",
+                        "ThisQuarter",
+                        "LastQuarter",
+                        "NextQuarter",
+                        "ThisYear",
                         "LastYear",
-                        "Custom"
+                        "NextYear"
                     ];
 
                     const filtered = list.filter(col => {
@@ -4568,84 +5276,135 @@
             return processEditCommand(tokens, commandConfig, viewSource);
         }
         else if (SET_COMMAND_STATE.currentFieldType == 'd') {
-            const prevValueInSet = tokens[tokens.length - 2];
-            if (prevValueInSet === "Today" || prevValueInSet === "Yesterday" ||
-                prevValueInSet === "Tomorrow" || prevValueInSet === "LastWeek" ||
-                prevValueInSet === "NextWeek" || prevValueInSet === "LastYear") {
-                const dateResult = getDateByFilter(prevValueInSet);
-                let date = dateResult.date;
+            let prevValueInSet = tokens[tokens.length - 2].toLowerCase();
+
+            if (prevValueInSet === "today" || prevValueInSet === "yesterday" || prevValueInSet === "tomorrow" ||
+                prevValueInSet === "lastweek" || prevValueInSet === "nextweek" || prevValueInSet === "thisweek" ||
+                prevValueInSet === "lastmonth" || prevValueInSet === "thismonth" || prevValueInSet === "nextmonth" ||
+                prevValueInSet === "thisquarter" || prevValueInSet === "lastquarter" || prevValueInSet === "nextquarter" ||
+                prevValueInSet === "thisyear" || prevValueInSet === "lastyear" || prevValueInSet === "nextyear" || prevValueInSet === "custom") {
+                dateControlBoolean = true;
+            }
+
+            if (dateControlBoolean) {
+
+                if (prevValueInSet === "today" || prevValueInSet === "yesterday" || prevValueInSet === "tomorrow" ||
+                    prevValueInSet === "lastweek" || prevValueInSet === "nextweek" || prevValueInSet === "thisweek" ||
+                    prevValueInSet === "lastmonth" || prevValueInSet === "thismonth" || prevValueInSet === "nextmonth" ||
+                    prevValueInSet === "thisquarter" || prevValueInSet === "lastquarter" || prevValueInSet === "nextquarter" ||
+                    prevValueInSet === "thisyear" || prevValueInSet === "lastyear" || prevValueInSet === "nextyear") {
+
+                    const dateResult = getDateByFilter(prevValueInSet);
+                    let date = dateResult.date;
+
+                    if (date !== null || date !== undefined) {
+                        let settokens = [...tokens]
+                        let lastIndex = settokens.length - 2;
+                        let lastToken = settokens[lastIndex];
 
 
-                if (date !== null || date !== undefined) {
-                    let settokens = [...tokens]
-                    let lastIndex = settokens.length - 2;
-                    let lastToken = settokens[lastIndex];
+                        ///We need to use System Date Format
+                        date = formatDate(date, dateString);
 
+                        console.log("Final date:", date);
 
-                    ///We need to use System Date Format
-                    date = formatDate(date, dateString);
+                        settokens[lastIndex] = date;
 
-                    console.log("Final date:", date);
+                        input.value = settokens.join(" ");
 
-                    settokens[lastIndex] = date;
+                        SET_COMMAND_STATE.currentFieldValue = date;
+                        dateControlBoolean = false;
 
-                    input.value = settokens.join(" ");
+                    }
+                }
+                else {
+                    if (prevValueInSet.toLowerCase() == "custom") {
+                        //let settokens = tokens
+                        //let lastIndex = tokens.length - 2;
+                        //let lastToken = tokens[lastIndex];
+                        let settokens = [...tokens]
+                        let lastIndex = settokens.length - 2;
+                        let lastToken = settokens[lastIndex];
 
-                    SET_COMMAND_STATE.currentFieldValue = date;
+                        settokens[lastIndex] = "";
 
-                    //// set in resolve params.
-                    //resolvedParamsCopy.fields.push({
-                    //    fieldname: SET_COMMAND_STATE.currentField,
-                    //    fieldtype: SET_COMMAND_STATE.currentFieldType,
-                    //    fieldvalue: date
-                    //});
+                        input.value = settokens.join(" ");
 
+                        showToast("Please Type the date", 5000, true);
+                        updateDynamicHintFromPrompt({ prompt: "fieldValue" })
+                        return ["Please Type the date"];
+                    }
+                    else {
+                        //const partialDate = tokens[tokens.length - 1]
+                        const partialDate = tokens[tokens.length - 1]
+
+                        let isSetValidDate = isValidDate(partialDate)
+
+                        if (isSetValidDate) {
+
+                            ///We need to use System Date Format
+                            const formattedDate = formatDate(partialDate, dateString);
+                            date = formattedDate;
+                            console.log("Final date:", date);
+                            SET_COMMAND_STATE.currentFieldValue = date;
+                            SET_COMMAND_STATE.currentFieldType = null;
+                            SET_COMMAND_STATE.isNextField = true;
+                            dateControlBoolean = false;
+
+                        }
+                        else
+                            return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                    }
                 }
             }
             else {
+                let acceptedValue = cleanString(tokens[tokens.length - 1]).toLowerCase();
 
-                if (prevValueInSet.toLowerCase() == "custom") {
-                    //let settokens = tokens
-                    //let lastIndex = tokens.length - 2;
-                    //let lastToken = tokens[lastIndex];
-                    let settokens = [...tokens]
-                    let lastIndex = settokens.length - 2;
-                    let lastToken = settokens[lastIndex];
+                const list = [
+                    "Custom",
+                    "Today",
+                    "Yesterday",
+                    "Tomorrow",
+                    "LastWeek",
+                    "NextWeek",
+                    "ThisWeek",
+                    "LastMonth",
+                    "ThisMonth",
+                    "NextMonth",
+                    "ThisQuarter",
+                    "LastQuarter",
+                    "NextQuarter",
+                    "ThisYear",
+                    "LastYear",
+                    "NextYear"
+                ];
 
-                    settokens[lastIndex] = "";
+                let filtered = list.filter(col => {
 
-                    input.value = settokens.join(" ");
+                    const rawDisplay = col.toLowerCase();
 
-                    ///// set as empty.
-                    //resolvedParamsCopy.fields.push({
-                    //    fieldname: SET_COMMAND_STATE.currentField,
-                    //    fieldtype: SET_COMMAND_STATE.currentFieldType,
-                    //    fieldvalue: null
-                    //});
-                    showToast("Please Type the date", 5000, true);
-                    updateDynamicHintFromPrompt({ prompt: "fieldValue" })
-                    return ["Please Type the date"];
-                }
-                else {
-                    //const partialDate = tokens[tokens.length - 1]
-                    const partialDate = tokens[tokens.length - 1]
+                    const normalizedTypedValue = (acceptedValue ?? "")
+                        .toLowerCase();
 
-                    let isSetValidDate = isValidDate(partialDate)
+                    return rawDisplay.includes(normalizedTypedValue);
+                });
 
-                    if (isSetValidDate) {
 
-                        ///We need to use System Date Format
-                        const formattedDate = formatDate(partialDate, dateString);
-                        date = formattedDate;
-                        console.log("Final date:", date);
-                        SET_COMMAND_STATE.currentFieldValue = date;
-                        SET_COMMAND_STATE.currentFieldType = null;
-                        SET_COMMAND_STATE.isNextField = true;
+                if (acceptedValue && filtered.length === 0) {
+                    console.log("User given value which is not in the date list");
+                    showToast("Please select a valid Option from the list", 5000, true);
 
-                    }
-                    else
-                        return ["Please type Valid Date"];
-                }
+                    let lastIndex = tokens.length - 1;
+                    let lastToken = tokens[lastIndex];
+                    tokens[lastIndex] = "";
+
+                    input.value = tokens.join(" ");
+
+                    filtered = list;
+                } 
+
+
+                return filtered;
             }
 
             return processEditCommand(tokens, commandConfig, viewSource);
@@ -4719,7 +5478,8 @@
 
             let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
-            if ((SET_COMMAND_STATE.currentField || (targetIndex % 2 == 0 && targetIndex >= 4)) && filteredObjects.length > 0) {
+            //if ((SET_COMMAND_STATE.currentField || (targetIndex % 2 == 0 && targetIndex >= 4)) && filteredObjects.length > 0) {
+            if ((SET_COMMAND_STATE.currentField || (targetIndex % 2 == 0 && targetIndex >= 4))) {
                 //resultList.unshift(goOption);
                 resultList.unshift(saveOption);
                 //filteredObjects.unshift(goOption);
@@ -4892,10 +5652,12 @@
                 if (datatype === 'c' || datatype === 'n' || datatype === "t") {
                     if (isAccept) {
                         let acceptedValue = cleanString(tokens[tokens.length - 1]);
-                        if (acceptedValue)
+                        if (acceptedValue) {
                             SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+                            return [];
+                        }
                         else {
-                            return ["Please type the value..."];;
+                            return ["Please type the value..."];
                         }
 
                     }
@@ -4962,17 +5724,33 @@
                 else if (datatype === 'd') {
 
 
-                    const acceptedValue = cleanString(tokens[tokens.length - 1]);
+                    const acceptedValue = cleanString(tokens[tokens.length - 1]).toLowerCase();
 
                     const list = [
+                        "Custom",
                         "Today",
                         "Yesterday",
                         "Tomorrow",
                         "LastWeek",
                         "NextWeek",
+                        "ThisWeek",
+                        "LastMonth",
+                        "ThisMonth",
+                        "NextMonth",
+                        "ThisQuarter",
+                        "LastQuarter",
+                        "NextQuarter",
+                        "ThisYear",
                         "LastYear",
-                        "Custom"
+                        "NextYear"
                     ];
+
+                    //if (list.some(item => item.toLowerCase() === acceptedValue.toLowerCase())) {
+                    //    SET_COMMAND_STATE.currentFieldType = datatype;
+                    //    return editCommandHandling(tokens, commandConfig, createCommandSourceObj);
+
+                    //}
+                    //else SET_COMMAND_STATE.currentFieldType = null;
 
                     const filtered = list.filter(col => {
 
@@ -5604,15 +6382,15 @@
         }
     }
 
-
     function getDateByFilter(type) {
         const baseDate = new Date();
         baseDate.setHours(0, 0, 0, 0);
 
         let date = null;
-        type = type.toLowerCase();
+        type = type.toLowerCase().replace(/\s/g, "");
 
         switch (type) {
+
             case "today":
                 date = formatDate(baseDate, "DD/MM/YYYY");
                 break;
@@ -5645,9 +6423,67 @@
                 break;
             }
 
-            case "lastyear": {
+            case "thisweek": {
                 const d = new Date(baseDate);
-                d.setFullYear(d.getFullYear() - 1);
+                const day = d.getDay();
+                d.setDate(d.getDate() - day);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "thismonth": {
+                const d = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "lastmonth": {
+                const d = new Date(baseDate.getFullYear(), baseDate.getMonth() - 1, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "nextmonth": {
+                const d = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "thisquarter": {
+                const quarter = Math.floor(baseDate.getMonth() / 3);
+                const d = new Date(baseDate.getFullYear(), quarter * 3, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "lastquarter": {
+                const quarter = Math.floor(baseDate.getMonth() / 3) - 1;
+                const d = new Date(baseDate.getFullYear(), quarter * 3, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "nextquarter": {
+                const quarter = Math.floor(baseDate.getMonth() / 3) + 1;
+                const d = new Date(baseDate.getFullYear(), quarter * 3, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "thisyear": {
+                const d = new Date(baseDate.getFullYear(), 0, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "lastyear": {
+                const d = new Date(baseDate.getFullYear() - 1, 0, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "nextyear": {
+                const d = new Date(baseDate.getFullYear() + 1, 0, 1);
                 date = formatDate(d, "DD/MM/YYYY");
                 break;
             }
@@ -5665,6 +6501,66 @@
             openDatePicker: false
         };
     }
+    //function getDateByFilter(type) {
+    //    const baseDate = new Date();
+    //    baseDate.setHours(0, 0, 0, 0);
+
+    //    let date = null;
+    //    type = type.toLowerCase();
+
+    //    switch (type) {
+    //        case "today":
+    //            date = formatDate(baseDate, "DD/MM/YYYY");
+    //            break;
+
+    //        case "yesterday": {
+    //            const d = new Date(baseDate);
+    //            d.setDate(d.getDate() - 1);
+    //            date = formatDate(d, "DD/MM/YYYY");
+    //            break;
+    //        }
+
+    //        case "tomorrow": {
+    //            const d = new Date(baseDate);
+    //            d.setDate(d.getDate() + 1);
+    //            date = formatDate(d, "DD/MM/YYYY");
+    //            break;
+    //        }
+
+    //        case "lastweek": {
+    //            const d = new Date(baseDate);
+    //            d.setDate(d.getDate() - 7);
+    //            date = formatDate(d, "DD/MM/YYYY");
+    //            break;
+    //        }
+
+    //        case "nextweek": {
+    //            const d = new Date(baseDate);
+    //            d.setDate(d.getDate() + 7);
+    //            date = formatDate(d, "DD/MM/YYYY");
+    //            break;
+    //        }
+
+    //        case "lastyear": {
+    //            const d = new Date(baseDate);
+    //            d.setFullYear(d.getFullYear() - 1);
+    //            date = formatDate(d, "DD/MM/YYYY");
+    //            break;
+    //        }
+
+    //        case "custom":
+    //        default:
+    //            return {
+    //                date: "",
+    //                openDatePicker: true
+    //            };
+    //    }
+
+    //    return {
+    //        date,
+    //        openDatePicker: false
+    //    };
+    //}
 
 
     async function getARMSessionId() {
