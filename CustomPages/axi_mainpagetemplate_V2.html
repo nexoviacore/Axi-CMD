@@ -20,7 +20,7 @@ Home Cunfiguration Page Templete
     ****            As part of templete initialization history configuration will be available as part of appGlobalVarsObject._CONSTANTS.history
     ***         Home Page redirection should be done after templete initialization with LoadIframe(appGlobalVarsObject._CONSTANTS.menuConfiguration.homePage.url);
 -->
-<!--<link rel="stylesheet" href="../CustomPages/axi-dashboard.css" />-->
+<!-- <link rel="stylesheet" href="../CustomPages/css/axi-dashboard-server-window.css" /> -->
 
 
 <template class="templateContent">
@@ -464,26 +464,26 @@ Home Cunfiguration Page Templete
                                 <!--end::Search-->
                             </div>
                             <!--end::Search-->
+                            
+                            
+                             <div class="Application_Parameter-Section">
+                        <div class="Application_Parameter_Wrapper">
+                        </div>
+                        <button type="button"
+                            class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary tb-btn btn-sm" title=""
+                            onclick="" data-kt-menu-trigger="{default:'click', lg: 'hover'}"
+                            data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+                            <span class="material-icons material-icons-style material-icons-2">more_horiz</span>
+                        </button>
+                        <!--begin::Menu-->
+                        <div id="AppGlobalParams"
+                            class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-title-gray-700 menu-icon-gray-500 menu-active-bg menu-state-color fw-semibold py-4 fs-base w-150px"
+                            data-kt-menu="true" data-kt-element="theme-mode-menu">
 
-
-                            <div class="Application_Parameter-Section">
-                                <div class="Application_Parameter_Wrapper">
-                                </div>
-                                <button type="button"
-                                    class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary tb-btn btn-sm"
-                                    title="" onclick="" data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                    data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
-                                    <span class="material-icons material-icons-style material-icons-2">more_horiz</span>
-                                </button>
-                                <!--begin::Menu-->
-                                <div id="AppGlobalParams"
-                                    class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-title-gray-700 menu-icon-gray-500 menu-active-bg menu-state-color fw-semibold py-4 fs-base w-150px"
-                                    data-kt-menu="true" data-kt-element="theme-mode-menu">
-
-                                </div>
-                                <!--end::Menu-->
-                            </div>
-
+                        </div>
+                        <!--end::Menu-->
+                    </div>
+                            
                             <!--begin::Toolbar wrapper-->
                             <div class="d-flex align-items-stretch flex-shrink-0">
                                 <!--begin::License Info-->
@@ -1271,30 +1271,34 @@ Home Cunfiguration Page Templete
                                 <!--end::User -->
                             </div>
                             <!--end::Toolbar wrapper-->
-
-
-
+                            
+                            
+                            
                         </div>
                         <!--end::Topbar-->
                     </div>
                     <!--end::Container-->
-
+                   
 
                 </div>
                 <!--end::Header-->
+            
+
                 <!--begin: Axi Command Pallete-->
                 <div class="AXI-Sec">
                     <div class="searchwrap-AXI">
                         <label id="axiLogo" class="AXI-Logo">
-                            <img src="https://cdn-icons-png.flaticon.com/128/12822/12822485.png" alt="axi logo">
+                                <img src="https://cdn-icons-png.flaticon.com/128/12822/12822485.png" alt="axi logo">
                             cmd
-
+                        
                         </label>
                         <input type="text" class="search-input form-control form-control-transparent ps-8" name="search"
-                            value="" data-kt-search-element="input" placeholder="Axpert AI" id="Axi-Searchinp"
-                            autocomplete="off">
+                            value="" data-kt-search-element="input" placeholder="Axpert AI"
+                            id="Axi-Searchinp" autocomplete="off">
                         <div id="axiHint" class="axi-input-hint"></div>
-                        <div id="axiClearBtn" class="clearbtn" style="display: none; cursor: pointer;">
+                        <div id="axiClearBtn"
+                            class="clearbtn"
+                            style="display: none; cursor: pointer;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                 stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1304,7 +1308,7 @@ Home Cunfiguration Page Templete
                         </div>
 
 
-                        <ul id="axiSuggestions" class="axi-suggestions"></ul>
+                        <!-- <ul id="axiSuggestions" class="axi-suggestions"></ul> -->
                     </div>
                     <div class="Tkts-toolbar-Left">
                         <div class="d-flex gap-1">
@@ -1314,329 +1318,293 @@ Home Cunfiguration Page Templete
                                     id="runBtn" data-kt-menu-placement="bottom" data-kt-menu-flip="top"
                                     data-kt-menu-attach="parent" data-kt-menu-trigger="click">
                                     <span class="material-icons material-icons-style material-icons-2 initialized"
-                                        data-bs-toggle="tooltip" data-bs-original-title="Run"
-                                        title="Run (ctrl + ENTER)">send</span>
+                                        data-bs-toggle="tooltip" data-bs-original-title="Run" title="Run (ctrl + ENTER)">send</span>
                                 </div>
-
-
-                                <!--                                Previous Page Btn-->
-                                <div id="btnHistoryPrev"
-                                    class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn">
-                                    <span data-bs-toggle="tooltip" data-bs-placement="bottom" title=""
-                                        class="material-icons material-icons-style material-icons-2 "
-                                        data-bs-original-title="Previous">keyboard_arrow_left</span>
+                                
+                                
+<!--                                Previous Page Btn-->
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn">
+                                    <span data-bs-toggle="tooltip" data-bs-placement="bottom" title="" class="material-icons material-icons-style material-icons-2 " data-bs-original-title="Previous Page">keyboard_arrow_left</span>
                                 </div>
                                 <!--  Previous Page Btn-->
-
+                                
                                 <!--  Next Page Btn-->
-                                <div id="btnHistoryNext"
-                                    class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn">
-                                    <span data-bs-toggle="tooltip" data-bs-placement="bottom" title=""
-                                        class="material-icons material-icons-style material-icons-2 "
-                                        data-bs-original-title="Next">keyboard_arrow_right</span>
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn">
+                                    <span data-bs-toggle="tooltip" data-bs-placement="bottom" title="" class="material-icons material-icons-style material-icons-2 " data-bs-original-title="Next Page">keyboard_arrow_right</span>
                                 </div>
                                 <!--  Next Page Btn-->
-
+                                
                                 <!--  History Pages Btn-->
-                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
-                                    id="History_pages" data-kt-menu-placement="bottom" data-kt-menu-flip="top"
-                                    data-kt-menu-attach="parent">
-                                    <span class="material-icons material-icons-style material-icons-2 "
-                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                        title="History">restore</span>
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm" id="History_pages" data-kt-menu-placement="bottom" data-kt-menu-flip="top" data-kt-menu-attach="parent">
+                                    <span class="material-icons material-icons-style material-icons-2 " data-bs-toggle="tooltip" data-bs-placement="bottom" title="History">restore</span>
                                 </div>
                                 <!--  History Pages Btn-->
-
+                                
                                 <!--begin::My Favourites-->
-                                <div class="d-flex align-items-center " id="My_Fav_Bookmarks">
-                                    <!--begin::Menu wrapper-->
-                                    <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
-                                        data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                        data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
-
-                                        <span class="material-icons material-icons-style material-icons-2 "
-                                            data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                            data-bs-original-title="My Favourites" title="My Favourites">bookmark_star
-                                        </span>
-
-                                    </div>
-
-                                    <!--begin::Menu-->
-                                    <div class="menu menu-sub menu-sub-dropdown menu-column w-350px"
-                                        data-kt-menu="true">
-                                        <!--begin::Card-->
-                                        <div class="card">
-                                            <!--begin::Card header-->
-                                            <div class="card-header">
-                                                <h3 class="card-title">
-                                                    My Favourites
-                                                    <span class="badge badge-light-success fs-7 fw-500 ms-3">24</span>
-                                                </h3>
-                                                <a href="#">View All</a>
-                                            </div>
-                                            <!--end::Card header-->
-
-                                            <!--begin::Card body-->
-                                            <div class="card-body p-0">
-                                                <!--begin::Notifications-->
-                                                <div class="mh-350px scroll-y py-3 My-Fav-Items-Wrapper">
+    <div class="d-flex align-items-center " id="My_Fav_Bookmarks">
+        <!--begin::Menu wrapper-->
+        <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+            
+         <span class="material-icons material-icons-style material-icons-2 " data-bs-toggle="tooltip" data-bs-placement="bottom"
+               data-bs-original-title="My Favourites" title="My Favourites">bookmark_star </span>
+        
+        </div>
+        
+<!--begin::My Favourite popout-->
+        
+ <div id="axiMegaDropdown" data-kt-menu="true" class="menu menu-sub menu-sub-dropdown menu-column w-700px z-3" style="display: none; position: absolute; bottom: 100%;left: 100px;">
+    <!--begin::Card-->
+    
 
 
+    <div id="axiFavouritesCard" class="card">
+        <!--begin::Card header-->
+        <div class="card-header">
+            <h3 class="card-title">
+               My Favourites
+                <span class="badge badge-light-success fs-7 fw-500 ms-3">24</span>
+            </h3>
+            <a href="#">View All</a>
+        </div>
+        <!--end::Card header-->
 
+        <!--begin::Card body-->
+        <div class="card-body p-0">
+            <!--begin::Notifications-->
+            <div class="scroll-y My-Fav-Items-Wrapper"> 
+                
+                
+                
+                
+                
+                            <!--begin::Item-->
+                <div class="My-Fav-Items">
+                    <!--begin::Symbol-->
+                    <div class="symbol symbol-40px symbol-circle me-5">
+                        <span class="symbol-label bg-light-warning">
+                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
+                        </span>
+                    </div>
+                    <!--end::Symbol-->
+                    <!--begin::Title-->
+                    <div class="My-Fav-Items-Content">
+                        <a href="#" class="My-Fav-Name">Create Task</a>
+                        <div class="My-Fav-Name-Type">Form page</div>
+                    </div>
+                    <div class="Delete-Fav">                        
+                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
+                     
+                   </div>
+                    <!--end::Title-->
+                </div>
+                <!--end::Item-->
+                
+                  <!--begin::Item-->
+                <div class="My-Fav-Items">
+                    <!--begin::Symbol-->
+                    <div class="symbol symbol-40px symbol-circle me-5">
+                        <span class="symbol-label bg-light-warning">
+                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
+                        </span>
+                    </div>
+                    <!--end::Symbol-->
+                    <!--begin::Title-->
+                    <div class="My-Fav-Items-Content">
+                        <a href="#" class="My-Fav-Name">Create Iview</a>
+                        <div class="My-Fav-Name-Type">Report page</div>
+                    </div>
+                    <div class="Delete-Fav">                        
+                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
+                     
+                   </div>
+                    <!--end::Title-->
+                </div>
+                <!--end::Item-->
+                
+                  <!--begin::Item-->
+                <div class="My-Fav-Items">
+                    <!--begin::Symbol-->
+                    <div class="symbol symbol-40px symbol-circle me-5">
+                        <span class="symbol-label bg-light-warning">
+                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
+                        </span>
+                    </div>
+                    <!--end::Symbol-->
+                    <!--begin::Title-->
+                    <div class="My-Fav-Items-Content">
+                        <a href="#" class="My-Fav-Name">View Sales Order</a>
+                        <div class="My-Fav-Name-Type">Report page</div>
+                    </div>
+                    <div class="Delete-Fav">                        
+                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
+                     
+                   </div>
+                    <!--end::Title-->
+                </div>
+                <!--end::Item-->
+                
+                <!--begin::Item-->
+                <div class="My-Fav-Items">
+                    <!--begin::Symbol-->
+                    <div class="symbol symbol-40px symbol-circle me-5">
+                        <span class="symbol-label bg-light-warning">
+                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
+                        </span>
+                    </div>
+                    <!--end::Symbol-->
+                    <!--begin::Title-->
+                    <div class="My-Fav-Items-Content">
+                        <a href="#" class="My-Fav-Name">View Purchase Order</a>
+                        <div class="My-Fav-Name-Type">Report page</div>
+                    </div>
+                    <div class="Delete-Fav">                        
+                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
+                     
+                   </div>
+                    <!--end::Title-->
+                </div>
+                <!--end::Item-->
+                
+                  <!--begin::Item-->
+                <div class="My-Fav-Items">
+                    <!--begin::Symbol-->
+                    <div class="symbol symbol-40px symbol-circle me-5">
+                        <span class="symbol-label bg-light-warning">
+                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
+                        </span>
+                    </div>
+                    <!--end::Symbol-->
+                    <!--begin::Title-->
+                    <div class="My-Fav-Items-Content">
+                        <a href="#" class="My-Fav-Name">Sales Report</a>
+                        <div class="My-Fav-Name-Type">Report page</div>
+                    </div>
+                    <div class="Delete-Fav">                        
+                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
+                     
+                   </div>
+                    <!--end::Title-->
+                </div>
+                <!--end::Item-->
+                
+                  <!--begin::Item-->
+                <div class="My-Fav-Items">
+                    <!--begin::Symbol-->
+                    <div class="symbol symbol-40px symbol-circle me-5">
+                        <span class="symbol-label bg-light-warning">
+                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
+                        </span>
+                    </div>
+                    <!--end::Symbol-->
+                    <!--begin::Title-->
+                    <div class="My-Fav-Items-Content">
+                        <a href="#" class="My-Fav-Name">View Sales Dashboard</a>
+                        <div class="My-Fav-Name-Type">Dashboard page</div>
+                    </div>
+                    <div class="Delete-Fav">                        
+                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
+                     
+                   </div>
+                    <!--end::Title-->
+                </div>
+                <!--end::Item-->
+                
+                <!--begin::Item-->
+                <div class="My-Fav-Items">
+                    <!--begin::Symbol-->
+                    <div class="symbol symbol-40px symbol-circle me-5">
+                        <span class="symbol-label bg-light-warning">
+                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
+                        </span>
+                    </div>
+                    <!--end::Symbol-->
+                    <!--begin::Title-->
+                    <div class="My-Fav-Items-Content">
+                        <a href="#" class="My-Fav-Name">Create Task</a>
+                        <div class="My-Fav-Name-Type">Form page</div>
+                    </div>
+                    <div class="Delete-Fav">                        
+                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
+                     
+                   </div>
+                    <!--end::Title-->
+                </div>
+                <!--end::Item-->
+                
+                  <!--begin::Item-->
+                <div class="My-Fav-Items">
+                    <!--begin::Symbol-->
+                    <div class="symbol symbol-40px symbol-circle me-5">
+                        <span class="symbol-label bg-light-warning">
+                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
+                        </span>
+                    </div>
+                    <!--end::Symbol-->
+                    <!--begin::Title-->
+                    <div class="My-Fav-Items-Content">
+                        <a href="#" class="My-Fav-Name">Create Iview</a>
+                        <div class="My-Fav-Name-Type">Report page</div>
+                    </div>
+                    <div class="Delete-Fav">                        
+                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
+                     
+                   </div>
+                    <!--end::Title-->
+                </div>
+                <!--end::Item-->
+                
+                  <!--begin::Item-->
+                <div class="My-Fav-Items">
+                    <!--begin::Symbol-->
+                    <div class="symbol symbol-40px symbol-circle me-5">
+                        <span class="symbol-label bg-light-warning">
+                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
+                        </span>
+                    </div>
+                    <!--end::Symbol-->
+                    <!--begin::Title-->
+                    <div class="My-Fav-Items-Content">
+                        <a href="#" class="My-Fav-Name">View Sales Order</a>
+                        <div class="My-Fav-Name-Type">Report page</div>
+                    </div>
+                    <div class="Delete-Fav">                        
+                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
+                     
+                   </div>
+                    <!--end::Title-->
+                </div>
+                <!--end::Item-->
+                
+                
+                
+                            
+                        </div>
+            <!--end::Notifications-->
+        </div>
+        <!--end::Card header-->
 
+       
+    </div>
+   <div class="card">
+        <div class="card-header" id="axiCommandsHeader">
+            <h3 class="card-title">Commands</h3>
+        </div>
+        <div class="card-body p-0">
+            <div class="My-Command-Wrapper"> 
+                <ul id="axiSuggestions" class="axi-suggestions"></ul>
+            </div>
+        </div>
+    </div>
+</div>       
+        
+        
 
-                                                    <!--begin::Item-->
-                                                    <div class="My-Fav-Items">
-                                                        <!--begin::Symbol-->
-                                                        <div class="symbol symbol-40px symbol-circle me-5">
-                                                            <span class="symbol-label bg-light-warning">
-                                                                <span
-                                                                    class="material-icons material-icons-style material-icons-2 ">grade
-                                                                </span>
-                                                            </span>
-                                                        </div>
-                                                        <!--end::Symbol-->
-                                                        <!--begin::Title-->
-                                                        <div class="My-Fav-Items-Content">
-                                                            <a href="#" class="My-Fav-Name">Create Task</a>
-                                                            <div class="My-Fav-Name-Type">Form page</div>
-                                                        </div>
-                                                        <div class="Delete-Fav">
-                                                            <span
-                                                                class="material-icons material-icons-style material-icons-2 ">clear
-                                                            </span>
-
-                                                        </div>
-                                                        <!--end::Title-->
-                                                    </div>
-                                                    <!--end::Item-->
-
-                                                    <!--begin::Item-->
-                                                    <div class="My-Fav-Items">
-                                                        <!--begin::Symbol-->
-                                                        <div class="symbol symbol-40px symbol-circle me-5">
-                                                            <span class="symbol-label bg-light-warning">
-                                                                <span
-                                                                    class="material-icons material-icons-style material-icons-2 ">grade
-                                                                </span>
-                                                            </span>
-                                                        </div>
-                                                        <!--end::Symbol-->
-                                                        <!--begin::Title-->
-                                                        <div class="My-Fav-Items-Content">
-                                                            <a href="#" class="My-Fav-Name">Create Iview</a>
-                                                            <div class="My-Fav-Name-Type">Report page</div>
-                                                        </div>
-                                                        <div class="Delete-Fav">
-                                                            <span
-                                                                class="material-icons material-icons-style material-icons-2 ">clear
-                                                            </span>
-
-                                                        </div>
-                                                        <!--end::Title-->
-                                                    </div>
-                                                    <!--end::Item-->
-
-                                                    <!--begin::Item-->
-                                                    <div class="My-Fav-Items">
-                                                        <!--begin::Symbol-->
-                                                        <div class="symbol symbol-40px symbol-circle me-5">
-                                                            <span class="symbol-label bg-light-warning">
-                                                                <span
-                                                                    class="material-icons material-icons-style material-icons-2 ">grade
-                                                                </span>
-                                                            </span>
-                                                        </div>
-                                                        <!--end::Symbol-->
-                                                        <!--begin::Title-->
-                                                        <div class="My-Fav-Items-Content">
-                                                            <a href="#" class="My-Fav-Name">View Sales Order</a>
-                                                            <div class="My-Fav-Name-Type">Report page</div>
-                                                        </div>
-                                                        <div class="Delete-Fav">
-                                                            <span
-                                                                class="material-icons material-icons-style material-icons-2 ">clear
-                                                            </span>
-
-                                                        </div>
-                                                        <!--end::Title-->
-                                                    </div>
-                                                    <!--end::Item-->
-
-                                                    <!--begin::Item-->
-                                                    <div class="My-Fav-Items">
-                                                        <!--begin::Symbol-->
-                                                        <div class="symbol symbol-40px symbol-circle me-5">
-                                                            <span class="symbol-label bg-light-warning">
-                                                                <span
-                                                                    class="material-icons material-icons-style material-icons-2 ">grade
-                                                                </span>
-                                                            </span>
-                                                        </div>
-                                                        <!--end::Symbol-->
-                                                        <!--begin::Title-->
-                                                        <div class="My-Fav-Items-Content">
-                                                            <a href="#" class="My-Fav-Name">View Purchase Order</a>
-                                                            <div class="My-Fav-Name-Type">Report page</div>
-                                                        </div>
-                                                        <div class="Delete-Fav">
-                                                            <span
-                                                                class="material-icons material-icons-style material-icons-2 ">clear
-                                                            </span>
-
-                                                        </div>
-                                                        <!--end::Title-->
-                                                    </div>
-                                                    <!--end::Item-->
-
-                                                    <!--begin::Item-->
-                                                    <div class="My-Fav-Items">
-                                                        <!--begin::Symbol-->
-                                                        <div class="symbol symbol-40px symbol-circle me-5">
-                                                            <span class="symbol-label bg-light-warning">
-                                                                <span
-                                                                    class="material-icons material-icons-style material-icons-2 ">grade
-                                                                </span>
-                                                            </span>
-                                                        </div>
-                                                        <!--end::Symbol-->
-                                                        <!--begin::Title-->
-                                                        <div class="My-Fav-Items-Content">
-                                                            <a href="#" class="My-Fav-Name">Sales Report</a>
-                                                            <div class="My-Fav-Name-Type">Report page</div>
-                                                        </div>
-                                                        <div class="Delete-Fav">
-                                                            <span
-                                                                class="material-icons material-icons-style material-icons-2 ">clear
-                                                            </span>
-
-                                                        </div>
-                                                        <!--end::Title-->
-                                                    </div>
-                                                    <!--end::Item-->
-
-                                                    <!--begin::Item-->
-                                                    <div class="My-Fav-Items">
-                                                        <!--begin::Symbol-->
-                                                        <div class="symbol symbol-40px symbol-circle me-5">
-                                                            <span class="symbol-label bg-light-warning">
-                                                                <span
-                                                                    class="material-icons material-icons-style material-icons-2 ">grade
-                                                                </span>
-                                                            </span>
-                                                        </div>
-                                                        <!--end::Symbol-->
-                                                        <!--begin::Title-->
-                                                        <div class="My-Fav-Items-Content">
-                                                            <a href="#" class="My-Fav-Name">View Sales Dashboard</a>
-                                                            <div class="My-Fav-Name-Type">Dashboard page</div>
-                                                        </div>
-                                                        <div class="Delete-Fav">
-                                                            <span
-                                                                class="material-icons material-icons-style material-icons-2 ">clear
-                                                            </span>
-
-                                                        </div>
-                                                        <!--end::Title-->
-                                                    </div>
-                                                    <!--end::Item-->
-
-                                                    <!--begin::Item-->
-                                                    <div class="My-Fav-Items">
-                                                        <!--begin::Symbol-->
-                                                        <div class="symbol symbol-40px symbol-circle me-5">
-                                                            <span class="symbol-label bg-light-warning">
-                                                                <span
-                                                                    class="material-icons material-icons-style material-icons-2 ">grade
-                                                                </span>
-                                                            </span>
-                                                        </div>
-                                                        <!--end::Symbol-->
-                                                        <!--begin::Title-->
-                                                        <div class="My-Fav-Items-Content">
-                                                            <a href="#" class="My-Fav-Name">Create Task</a>
-                                                            <div class="My-Fav-Name-Type">Form page</div>
-                                                        </div>
-                                                        <div class="Delete-Fav">
-                                                            <span
-                                                                class="material-icons material-icons-style material-icons-2 ">clear
-                                                            </span>
-
-                                                        </div>
-                                                        <!--end::Title-->
-                                                    </div>
-                                                    <!--end::Item-->
-
-                                                    <!--begin::Item-->
-                                                    <div class="My-Fav-Items">
-                                                        <!--begin::Symbol-->
-                                                        <div class="symbol symbol-40px symbol-circle me-5">
-                                                            <span class="symbol-label bg-light-warning">
-                                                                <span
-                                                                    class="material-icons material-icons-style material-icons-2 ">grade
-                                                                </span>
-                                                            </span>
-                                                        </div>
-                                                        <!--end::Symbol-->
-                                                        <!--begin::Title-->
-                                                        <div class="My-Fav-Items-Content">
-                                                            <a href="#" class="My-Fav-Name">Create Iview</a>
-                                                            <div class="My-Fav-Name-Type">Report page</div>
-                                                        </div>
-                                                        <div class="Delete-Fav">
-                                                            <span
-                                                                class="material-icons material-icons-style material-icons-2 ">clear
-                                                            </span>
-
-                                                        </div>
-                                                        <!--end::Title-->
-                                                    </div>
-                                                    <!--end::Item-->
-
-                                                    <!--begin::Item-->
-                                                    <div class="My-Fav-Items">
-                                                        <!--begin::Symbol-->
-                                                        <div class="symbol symbol-40px symbol-circle me-5">
-                                                            <span class="symbol-label bg-light-warning">
-                                                                <span
-                                                                    class="material-icons material-icons-style material-icons-2 ">grade
-                                                                </span>
-                                                            </span>
-                                                        </div>
-                                                        <!--end::Symbol-->
-                                                        <!--begin::Title-->
-                                                        <div class="My-Fav-Items-Content">
-                                                            <a href="#" class="My-Fav-Name">View Sales Order</a>
-                                                            <div class="My-Fav-Name-Type">Report page</div>
-                                                        </div>
-                                                        <div class="Delete-Fav">
-                                                            <span
-                                                                class="material-icons material-icons-style material-icons-2 ">clear
-                                                            </span>
-
-                                                        </div>
-                                                        <!--end::Title-->
-                                                    </div>
-                                                    <!--end::Item-->
-
-
-
-
-                                                </div>
-                                                <!--end::Notifications-->
-                                            </div>
-                                            <!--end::Card header-->
-
-
-                                        </div>
-                                        <!--end::Card-->
-                                    </div>
-                                    <!--end::Menu--> <!--end::Menu wrapper-->
-                                </div>
-                                <!--end::Favourites-->
-
-
-
+<!--end::My Favourite popout-->        <!--end::Menu wrapper-->
+    </div>
+    <!--end::Favourites-->
+                                
+                                
+                                
 
                                 <!--Enhance Button-->
 
@@ -1656,9 +1624,9 @@ Home Cunfiguration Page Templete
                                         title="Refresh">refresh</span>
                                 </div>
 
-
-
-
+                              
+                                
+                                
 
                                 <!--Notification Button-->
 
@@ -1906,8 +1874,8 @@ Home Cunfiguration Page Templete
     files.js.push("/Js/AxNotifications.min.js?v=12");
     files.js.push("/Js/HomeConfigPageCards.min.js?v=15");
     files.js.push("/Js/Entity-common.min.js?v=14");
-    files.js.push("/AxpertPlugins/Axi/HTMLPages/js/axi-autocomplete.js?v=16");
-    files.css.push("/AxpertPlugins/Axi/HTMLPages/css/axi-dashboard-server.css");
+    files.js.push("/AxpertPlugins/Axi/HTMLPages/js/axi-autocomplete.js?v=19");
+   files.css.push("/AxpertPlugins/Axi/HTMLPages/css/axi-dashboard-server-window.css?v=2");
 
     var dirLeft = true;
 

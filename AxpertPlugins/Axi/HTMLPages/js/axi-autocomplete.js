@@ -11,6 +11,10 @@
     let commandHistory = []; 
     const MAX_HISTORY = 10; 
     let historyIndex  = -1; 
+    let megaDropdown; 
+    let favouritesCard; 
+    let commandHeader; 
+    let hiddenLoader; 
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
@@ -285,6 +289,27 @@
 
 
         console.log("Axi Clear button found!", axiClearBtn);
+
+        megaDropdown = document.getElementById("axiMegaDropdown");
+
+       
+
+
+
+
+
+        console.log("Axi Clear button found!", megaDropdown);
+
+        favouritesCard = document.getElementById("axiFavouritesCard");
+        console.log("Axi Clear favouritesCard Found!", favouritesCard);
+
+        commandHeader = document.getElementById("axiCommandsHeader");
+        console.log("Axi Command Header found!", commandHeader);
+
+        hiddenLoader = document.getElementById("hiddenLoader"); 
+        console.log("Axi hidden Loader found!", hiddenLoader);    
+
+        
 
 
 
@@ -2044,10 +2069,14 @@
         }
 
         if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0]))  {
-            list.classList.add("axi-grid-layout"); 
+            list.classList.add("axi-grid-layout", "My-Command-Wrapper"); 
+            if (favouritesCard) favouritesCard.style.display = "flex"; 
+            if (commandHeader) commandHeader.style.display = "flex"; 
 
         } else {
-            list.classList.remove("axi-grid-layout"); 
+            list.classList.remove("axi-grid-layout", "My-Command-Wrapper"); 
+            if (favouritesCard) favouritesCard.style.display = "none";
+            if (commandHeader) commandHeader.style.display = "none";
         }
 
         validItems.forEach((item, i) => {
@@ -2064,7 +2093,9 @@
             } else if (isInitialCommandStage && commands[text.toLowerCase()]) {
                 const iconName = commandIcons[text.toLowerCase()] || "chevron_right"; 
 
-                li.innerHTML = `<div class="d-flex  align-items-center">
+                li.innerHTML = `
+               
+                <div class="d-flex align-items-center">
                         <div class="symbol symbol-35px me-2 mainIcon">
                             <div class="symbol-label cardbg-inverse-1">
                                 <div class="items-icon">
@@ -2092,18 +2123,27 @@
         });
 
         if (list.classList.contains("axi-grid-layout")) {
-            list.style.display = "grid"; 
+            list.style.display = "flex"; 
         } else {
         list.style.display = "block";
 
 
         }
 
+        if (megaDropdown) {
+            megaDropdown.style.display = "flex"; 
+        } else {
+            list.style.display = "block"; 
+        }
+
     }
 
     function hide() {
+        if (megaDropdown) {
+            megaDropdown.style.display = "none"; 
+        }
         list.style.display = "none";
-        list.classList.remove("axi-grid-layout"); 
+        list.classList.remove("axi-grid-layout", "My-Command-Wrapper"); 
         items = [];
         activeIndex = -1;
     }
@@ -2478,6 +2518,9 @@
 
 
     function isSuggestionVisible() {
+        if (megaDropdown) {
+            return megaDropdown.style.display !== "none" && items.length > 0;
+        }
         return list && list.style.display !== "none" && items.length > 0;
     }
 
@@ -2804,7 +2847,7 @@
             }
         });
 
-        document.addEventListener("mousedown", e => {
+        document.addEventListener("click", e => {
             if (list && list.style.display !== "none") {
                 if (searchWrapper && !searchWrapper.contains(e.target) && e.target !== input) {
                    hide();  
@@ -2821,8 +2864,8 @@
                 try {
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
-                    iframeDoc.removeEventListener("mousedown", () => hide());
-                    iframeDoc.addEventListener("mousedown", () => {
+                    iframeDoc.removeEventListener("click", () => hide());
+                    iframeDoc.addEventListener("click", () => {
                         hide();
                     });
                 } catch (err) {
