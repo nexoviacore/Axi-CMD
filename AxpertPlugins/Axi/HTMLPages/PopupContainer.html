@@ -1,0 +1,321 @@
+<html><head>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    
+    <style>
+    
+    .workspace{
+    height:90vh;
+    background:#eef2f5;
+    /* position:relative; */
+    overflow:hidden;
+    }
+    
+    .popup-window{
+    position:fixed;
+    width:700px;
+    min-width:150px;
+    height:400px;
+    background:white;
+    border:1px solid #ccc;
+    box-shadow:0 4px 10px rgba(0,0,0,0.2);
+    z-index:9999; /* very important */
+}
+
+.popup-header{
+    background:#2f3e46;
+    color:white;
+    padding:6px 10px;
+    cursor:move;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    position:relative;
+    z-index:10000; /* must be higher than iframe */
+}
+
+.popup-body{
+    position:relative;
+    z-index:1;
+}
+
+.popup-body iframe{
+    width:100%;
+    height:100%;
+    border:none;
+    position:relative;
+    z-index:0;
+}
+    
+    .popup-header .title{
+    font-size:13px;
+    }
+    
+    .popup-actions button{
+    border:none;
+    background:none;
+    color:white;
+    margin-left:5px;
+    }
+    
+    
+    </style>
+    
+    </head>
+    
+    <body>
+    
+    <div class="p-3">
+    
+    <input id="urlInput" class="form-control d-inline-block" style="width:400px" placeholder="EntityForm.aspx?tstid=sepri">
+    
+    <button class="btn btn-primary" onclick="popupManager.openWindow()">Open</button>
+    
+    </div>
+    
+    <div id="workspace" class="workspace"></div>
+    
+    <script>
+
+
+ function getAppBaseUrl() {
+     const href = top.window.location.href;
+     const aspxIndex = href.toLowerCase().indexOf("/aspx/");
+
+     if (aspxIndex === -1) {
+         return href.substring(0, href.lastIndexOf("/"));
+     }
+
+     return href.substring(0, aspxIndex);
+ }
+
+
+        class PopupManager {
+        
+            constructor(workspaceId){
+                this.workspace = document.getElementById(workspaceId);
+                this.zIndex = 10;
+            }
+     /*
+            openWindow(){
+        
+                let url = document.getElementById("urlInput").value.trim();
+                if(!url) return;
+        
+                if(!url.startsWith("http")){
+                    url = window.location.origin + "/axpert/aspx/" + url;
+                }
+        
+                const nameMatch = url.match(/tstid=([^&]+)/);
+                const title = nameMatch ? nameMatch[1] : "Form";
+        
+                this.createWindow(title,url);
+            }
+        */
+        
+            openFromParam(){
+                // Read 'url' query param from current page URL
+                const params = new URLSearchParams(window.location.search);
+                let url = params.get("contenturl");
+
+                if(!url) {
+                    console.warn("No 'url' query param found.");
+                    return;
+                }
+
+                if(!url.startsWith("http")){
+                    //url = window.location.origin + "/axpert/aspx/" + url;
+                    url = getAppBaseUrl() + "/" + url;
+
+                 }
+
+          
+        
+                const nameMatch = url.match(/tstid=([^&]+)/);
+                const title = nameMatch ? nameMatch[1] : "Form";
+        
+                this.createWindow(title,url);
+            }
+        
+            createWindow(title,url){
+        
+                const win = document.createElement("div");
+                win.className = "popup-window";
+                win.style.left = "100px";
+                win.style.top = "100px";
+                win.style.zIndex = ++this.zIndex;
+        
+                win.dataset.maximized = "false";
+        
+                win.innerHTML = `
+        
+                <div class="popup-header">
+        
+                    <div class="title">${title}</div>
+        
+                    <div class="popup-actions">
+                        <button class="min">_</button>
+                        <button class="max">⬜</button>
+                        <button class="close">✖</button>
+                    </div>
+        
+                </div>
+        
+                <div class="popup-body">
+                    <iframe src="${url}"></iframe>
+                </div>
+                `;
+        
+                this.workspace.appendChild(win);
+        
+                this.makeDraggable(win);
+                this.attachEvents(win);
+            }
+        
+            makeDraggable(win){
+        
+                $(win).draggable({
+    handle: ".popup-header",
+    containment: "window",   // allows moving anywhere on screen
+    start: function () {
+        $(this).find("iframe").css("pointer-events", "none");
+    },
+    stop: function () {
+        $(this).find("iframe").css("pointer-events", "auto");
+    }
+}).resizable({
+    containment: "window"
+});
+            }
+        
+            attachEvents(win){
+        
+                win.querySelector(".close").onclick = () => this.closeWindow(win);
+                win.querySelector(".min").onclick = () => this.minimizeWindow(win);
+                win.querySelector(".max").onclick = () => this.toggleMaximize(win);
+        
+                win.addEventListener("mousedown", () => {
+                    win.style.zIndex = ++this.zIndex;
+                });
+            }
+        
+            closeWindow(win){
+                win.remove();
+            }
+        
+            minimizeWindow(win){
+
+const body = win.querySelector(".popup-body");
+const pinnedArea = parent.document.getElementById("pinnedArea");
+
+if(body.style.display === "none"){
+
+    // RESTORE WINDOW
+    body.style.display = "block";
+
+    this.workspace.appendChild(win);
+
+    win.style.position = "fixed";
+    win.style.width = win.dataset.prevWidth || "700px";
+    win.style.height = win.dataset.prevHeight || "400px";
+    win.style.top = win.dataset.prevTop || "100px";
+    win.style.left = win.dataset.prevLeft || "100px";
+    win.style.bottom = "auto";
+
+}else{
+
+    // SAVE STATE
+    win.dataset.prevWidth = win.style.width;
+    win.dataset.prevHeight = win.style.height;
+    win.dataset.prevTop = win.style.top;
+    win.dataset.prevLeft = win.style.left;
+
+    body.style.display = "none";
+
+    // MINIMIZED STYLE
+    win.style.position = "static";
+    win.style.width = "auto";
+    win.style.height = "40px";
+    win.style.top = "";
+    win.style.left = "";
+    win.style.bottom = "";
+
+    // MOVE TO PINNED AREA
+    pinnedArea.appendChild(win);
+}
+}
+toggleMaximize(win){
+
+if(win.dataset.maximized === "false"){
+
+    win.dataset.prevWidth = win.style.width;
+    win.dataset.prevHeight = win.style.height;
+    win.dataset.prevTop = win.style.top;
+    win.dataset.prevLeft = win.style.left;
+
+    win.style.top = "0";
+    win.style.left = "0";
+    win.style.width = "100vw";
+    win.style.height = "100vh";
+
+    win.dataset.maximized = "true";
+
+}else{
+
+    win.style.width = "auto";
+    win.style.height = win.dataset.prevHeight || "400px";
+    win.style.top = win.dataset.prevTop || "100px";
+    win.style.left = win.dataset.prevLeft || "100px";
+
+    win.dataset.maximized = "false";
+}
+}
+        
+        }
+        function createPinnedArea(){
+
+// check if already exists
+if(document.getElementById("pinnedArea")) return;
+
+const pinned = document.createElement("div");
+pinned.id = "pinnedArea";
+
+// styles
+pinned.style.position = "fixed";
+pinned.style.bottom = "46px";
+pinned.style.left = "60px";
+pinned.style.right = "0";
+pinned.style.height = "40px";
+pinned.style.display = "flex";
+pinned.style.gap = "6px";
+pinned.style.alignItems = "center";
+pinned.style.padding = "0 10px";
+pinned.style.overflowX = "auto";
+pinned.style.overflowY = "hidden";
+pinned.style.whiteSpace = "nowrap";
+pinned.style.zIndex = "999999";
+
+// find AXI bar
+const axiSec = document.querySelector(".AXI-Sec");
+
+if(axiSec){
+    axiSec.parentNode.insertBefore(pinned, axiSec);
+}
+}
+
+document.addEventListener("DOMContentLoaded", createPinnedArea);
+        
+        const popupManager = new PopupManager("workspace");
+
+        // Auto-open popup from query param on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            popupManager.openFromParam();
+        });
+        
+    </script>
+    
+    </body></html>
+    

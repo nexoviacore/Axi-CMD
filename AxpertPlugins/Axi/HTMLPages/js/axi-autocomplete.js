@@ -33,7 +33,7 @@
     };
 
     const popOption = {
-        displaydata: "Pop [Ctrl + Shift + Enter]",
+        displaydata: "Pop-Up [Ctrl + Shift + Enter]",
         name: "Pop_ACTION",
         isExecutable: true
     };
@@ -550,6 +550,44 @@
 
     }
 
+    function openPopOption(targetURL) {
+        console.log("PopOption is clicked");
+
+        let popUpContainerUrl = `../AxpertPlugins/Axi/HTMLPages/PopUpContainer.html`;
+
+        //if (targetURL && targetURL.toLowerCase().includes("/aspx")) {
+        //    console.log("Before removing : " + targetURL);
+        //    targetURL = targetURL.replace("/aspx", "");
+        //    console.log("After removing : " + targetURL);
+        //}
+
+        //if (targetURL && targetURL.toLowerCase().includes("/aspx/")) {
+        //    console.log("Before removing : " + targetURL)
+        //    targetURL = targetURL.split("/aspx/")[1];
+        //    console.log("After removing : " + targetURL);
+        //}
+        if (targetURL && targetURL.toLowerCase().includes("../")) {
+            console.log("Before removing : " + targetURL)
+            targetURL = targetURL.replace("../","");
+            //targetURL = targetURL.split("/")[1];
+            console.log("After removing : " + targetURL);
+        }
+
+
+        //let finalUrl = `${popUpContainerUrl}?contenturl=${encodeURIComponent(btoa(targetURL))}`;
+        let finalUrl = `${popUpContainerUrl}?contenturl=${targetURL}`;
+
+        popUpOption = false;
+
+        let hiddenVar = document.getElementById("hiddenLoader");
+        console.log(hiddenVar);
+        hiddenVar.src = finalUrl;
+        //hiddenVar.style.display = "block";
+        hiddenVar.style.display = "flex";
+        //let popup = document.getElementById("popupContainer");
+        //popup.style.display = "block";
+        // window.open(finalUrl);
+    }
 
     function redirectToSmartView({ adsName, filters }) {
 
@@ -604,7 +642,13 @@
         /**
          * ===================== End ========================================
          */
-        top.window.LoadIframe(targetUrl);
+
+        if (popUpOption) {
+            openPopOption(targetUrl)
+        }
+        else {
+            top.window.LoadIframe(targetUrl);
+        }
 
 
     }
@@ -666,51 +710,34 @@
 
         let targetUrl;
 
-        //POPUP IMPLEMENTATION
-        if (popUpOption) {
-            console.log("PopOption is clicked");
-            targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
-
-            if (isEdit) {
-                if (fieldName && fieldValue) {
-                    targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
-                }
-                targetUrl += `&openerIV=${transId}`;
+        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+        
+        if (isEdit) {
+            if (fieldName && fieldValue) {
+                targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
             }
-
-            targetUrl += `&hltype=open`;
-
-            popUpOption = false;
-
-            console.log(popUpOption);
-            //We need to load it to popup(This is added for testing purpose)
-            top.window.LoadIframe(targetUrl);
-            
-        }
-        else {
-            targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
-
-            if (isEdit) {
-                if (fieldName && fieldValue) {
-                    targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
-                }
                 targetUrl += `&hltype=load`;
                 targetUrl += `&torecid=false`;
                 targetUrl += `&openerIV=${transId}`;
                 targetUrl += `&isIV=false`;
                 targetUrl += `&isDupTab=false`;
 
-                targetUrl += `&dummyload=false♠`;
+            targetUrl += `&dummyload=false♠`;
 
-            }
-            else {
+        }
+        else {
                 if (fieldName && fieldValue) {
                     targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
                 }
                 targetUrl += `&hltype=open`;
-                targetUrl += `&dummyload=false♠`;
-            }
+            targetUrl += `&dummyload=false♠`;
+        }
 
+
+        if (popUpOption) {
+            openPopOption(targetUrl)
+        }
+        else {
             top.window.LoadIframe(targetUrl);
         }
     }
@@ -738,7 +765,13 @@
         console.log("Redirecting to Iview: " + iViewName + "..............");
         let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
 
-        window.LoadIframe(targetUrl);
+
+        if (popUpOption) {
+            openPopOption(targetUrl)
+        }
+        else {
+            window.LoadIframe(targetUrl);
+        }
 
 
     }
@@ -800,6 +833,11 @@
             
             let lastIndex = tokens.length - 1;
             let lastToken = tokens[lastIndex];
+
+
+            if (lastToken.toLowerCase() == SET_COMMAND_STATE.currentField) {
+                return;
+            }
 
             //const numericRegex = /^-?\d*$/;
             let numericRegex;
@@ -1763,6 +1801,12 @@
                 return [goOption, popOption];
             }
 
+            ///added as we now dont have option for go and popup in create(When create old logic works we can remove this)(T)
+            if (groupKey === "view" && tokens.length >= 3) {
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
+
             return [];
         }
 
@@ -1843,6 +1887,12 @@
                         if (paramValue) paramValue += "$#$" + hiddenValue;
                         else paramValue = hiddenValue;
                     } else {
+
+                        ///addedby(t)
+                        if (groupKey === "view" && tokens.length >= 3) {
+                            filteredObjects = [goOption, popOption];
+                            return [goOption, popOption];
+                        }
                         return [];
                     }
 
@@ -3607,7 +3657,13 @@
 
         }
 
-        window.LoadIframe(targetUrl);
+
+        if (popUpOption) {
+            openPopOption(targetUrl)
+        }
+        else {
+            window.LoadIframe(targetUrl);
+        }
 
     }
 
@@ -3827,7 +3883,12 @@
         const requestUrl = item.name;
         console.log(requestUrl);
 
-        window.LoadIframe(requestUrl);
+        if (popUpOption) {
+            openPopOption(requestUrl)
+        }
+        else {
+            window.LoadIframe(requestUrl);
+        }
 
 
     }
