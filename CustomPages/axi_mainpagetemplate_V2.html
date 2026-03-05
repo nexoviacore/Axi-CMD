@@ -1343,7 +1343,7 @@ Home Cunfiguration Page Templete
                                 <!--begin::My Favourites-->
     <div class="d-flex align-items-center " id="My_Fav_Bookmarks">
         <!--begin::Menu wrapper-->
-        <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+        <div id="axiFavouriteBtn" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm">
             
          <span class="material-icons material-icons-style material-icons-2 " data-bs-toggle="tooltip" data-bs-placement="bottom"
                data-bs-original-title="My Favourites" title="My Favourites">bookmark_star </span>
@@ -1362,7 +1362,7 @@ Home Cunfiguration Page Templete
         <div class="card-header">
             <h3 class="card-title">
                My Favourites
-                <span class="badge badge-light-success fs-7 fw-500 ms-3">24</span>
+                <span id="axiFavoriteCount" class="badge badge-light-success fs-7 fw-500 ms-3"></span>
             </h3>
             <a href="#">View All</a>
         </div>
@@ -1377,203 +1377,7 @@ Home Cunfiguration Page Templete
                 
                 
                 
-                            <!--begin::Item-->
-                <div class="My-Fav-Items">
-                    <!--begin::Symbol-->
-                    <div class="symbol symbol-40px symbol-circle me-5">
-                        <span class="symbol-label bg-light-warning">
-                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
-                        </span>
-                    </div>
-                    <!--end::Symbol-->
-                    <!--begin::Title-->
-                    <div class="My-Fav-Items-Content">
-                        <a href="#" class="My-Fav-Name">Create Task</a>
-                        <div class="My-Fav-Name-Type">Form page</div>
-                    </div>
-                    <div class="Delete-Fav">                        
-                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
-                     
-                   </div>
-                    <!--end::Title-->
-                </div>
-                <!--end::Item-->
-                
-                  <!--begin::Item-->
-                <div class="My-Fav-Items">
-                    <!--begin::Symbol-->
-                    <div class="symbol symbol-40px symbol-circle me-5">
-                        <span class="symbol-label bg-light-warning">
-                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
-                        </span>
-                    </div>
-                    <!--end::Symbol-->
-                    <!--begin::Title-->
-                    <div class="My-Fav-Items-Content">
-                        <a href="#" class="My-Fav-Name">Create Iview</a>
-                        <div class="My-Fav-Name-Type">Report page</div>
-                    </div>
-                    <div class="Delete-Fav">                        
-                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
-                     
-                   </div>
-                    <!--end::Title-->
-                </div>
-                <!--end::Item-->
-                
-                  <!--begin::Item-->
-                <div class="My-Fav-Items">
-                    <!--begin::Symbol-->
-                    <div class="symbol symbol-40px symbol-circle me-5">
-                        <span class="symbol-label bg-light-warning">
-                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
-                        </span>
-                    </div>
-                    <!--end::Symbol-->
-                    <!--begin::Title-->
-                    <div class="My-Fav-Items-Content">
-                        <a href="#" class="My-Fav-Name">View Sales Order</a>
-                        <div class="My-Fav-Name-Type">Report page</div>
-                    </div>
-                    <div class="Delete-Fav">                        
-                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
-                     
-                   </div>
-                    <!--end::Title-->
-                </div>
-                <!--end::Item-->
-                
-                <!--begin::Item-->
-                <div class="My-Fav-Items">
-                    <!--begin::Symbol-->
-                    <div class="symbol symbol-40px symbol-circle me-5">
-                        <span class="symbol-label bg-light-warning">
-                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
-                        </span>
-                    </div>
-                    <!--end::Symbol-->
-                    <!--begin::Title-->
-                    <div class="My-Fav-Items-Content">
-                        <a href="#" class="My-Fav-Name">View Purchase Order</a>
-                        <div class="My-Fav-Name-Type">Report page</div>
-                    </div>
-                    <div class="Delete-Fav">                        
-                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
-                     
-                   </div>
-                    <!--end::Title-->
-                </div>
-                <!--end::Item-->
-                
-                  <!--begin::Item-->
-                <div class="My-Fav-Items">
-                    <!--begin::Symbol-->
-                    <div class="symbol symbol-40px symbol-circle me-5">
-                        <span class="symbol-label bg-light-warning">
-                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
-                        </span>
-                    </div>
-                    <!--end::Symbol-->
-                    <!--begin::Title-->
-                    <div class="My-Fav-Items-Content">
-                        <a href="#" class="My-Fav-Name">Sales Report</a>
-                        <div class="My-Fav-Name-Type">Report page</div>
-                    </div>
-                    <div class="Delete-Fav">                        
-                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
-                     
-                   </div>
-                    <!--end::Title-->
-                </div>
-                <!--end::Item-->
-                
-                  <!--begin::Item-->
-                <div class="My-Fav-Items">
-                    <!--begin::Symbol-->
-                    <div class="symbol symbol-40px symbol-circle me-5">
-                        <span class="symbol-label bg-light-warning">
-                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
-                        </span>
-                    </div>
-                    <!--end::Symbol-->
-                    <!--begin::Title-->
-                    <div class="My-Fav-Items-Content">
-                        <a href="#" class="My-Fav-Name">View Sales Dashboard</a>
-                        <div class="My-Fav-Name-Type">Dashboard page</div>
-                    </div>
-                    <div class="Delete-Fav">                        
-                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
-                     
-                   </div>
-                    <!--end::Title-->
-                </div>
-                <!--end::Item-->
-                
-                <!--begin::Item-->
-                <div class="My-Fav-Items">
-                    <!--begin::Symbol-->
-                    <div class="symbol symbol-40px symbol-circle me-5">
-                        <span class="symbol-label bg-light-warning">
-                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
-                        </span>
-                    </div>
-                    <!--end::Symbol-->
-                    <!--begin::Title-->
-                    <div class="My-Fav-Items-Content">
-                        <a href="#" class="My-Fav-Name">Create Task</a>
-                        <div class="My-Fav-Name-Type">Form page</div>
-                    </div>
-                    <div class="Delete-Fav">                        
-                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
-                     
-                   </div>
-                    <!--end::Title-->
-                </div>
-                <!--end::Item-->
-                
-                  <!--begin::Item-->
-                <div class="My-Fav-Items">
-                    <!--begin::Symbol-->
-                    <div class="symbol symbol-40px symbol-circle me-5">
-                        <span class="symbol-label bg-light-warning">
-                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
-                        </span>
-                    </div>
-                    <!--end::Symbol-->
-                    <!--begin::Title-->
-                    <div class="My-Fav-Items-Content">
-                        <a href="#" class="My-Fav-Name">Create Iview</a>
-                        <div class="My-Fav-Name-Type">Report page</div>
-                    </div>
-                    <div class="Delete-Fav">                        
-                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
-                     
-                   </div>
-                    <!--end::Title-->
-                </div>
-                <!--end::Item-->
-                
-                  <!--begin::Item-->
-                <div class="My-Fav-Items">
-                    <!--begin::Symbol-->
-                    <div class="symbol symbol-40px symbol-circle me-5">
-                        <span class="symbol-label bg-light-warning">
-                            <span class="material-icons material-icons-style material-icons-2 ">grade </span>                            
-                        </span>
-                    </div>
-                    <!--end::Symbol-->
-                    <!--begin::Title-->
-                    <div class="My-Fav-Items-Content">
-                        <a href="#" class="My-Fav-Name">View Sales Order</a>
-                        <div class="My-Fav-Name-Type">Report page</div>
-                    </div>
-                    <div class="Delete-Fav">                        
-                            <span class="material-icons material-icons-style material-icons-2 ">clear </span>                          
-                     
-                   </div>
-                    <!--end::Title-->
-                </div>
-                <!--end::Item-->
+                        
                 
                 
                 
@@ -1874,8 +1678,8 @@ Home Cunfiguration Page Templete
     files.js.push("/Js/AxNotifications.min.js?v=12");
     files.js.push("/Js/HomeConfigPageCards.min.js?v=15");
     files.js.push("/Js/Entity-common.min.js?v=14");
-    files.js.push("/AxpertPlugins/Axi/HTMLPages/js/axi-autocomplete.js?v=19");
-   files.css.push("/AxpertPlugins/Axi/HTMLPages/css/axi-dashboard-server-window.css?v=2");
+    files.js.push("/AxpertPlugins/Axi/HTMLPages/js/axi-autocomplete.js?v=25");
+   files.css.push("/AxpertPlugins/Axi/HTMLPages/css/axi-dashboard-server-window.css?v=3");
 
     var dirLeft = true;
 

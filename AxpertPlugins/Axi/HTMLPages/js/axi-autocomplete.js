@@ -15,6 +15,10 @@
     let favouritesCard; 
     let commandHeader; 
     let hiddenLoader; 
+    let favouriteBtn; 
+    let commandFavorites = []; 
+    let axiFavoritesUrl = ""; 
+    const MAX_FAVORITES = 20;
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
@@ -309,6 +313,12 @@
         hiddenLoader = document.getElementById("hiddenLoader"); 
         console.log("Axi hidden Loader found!", hiddenLoader);    
 
+
+        favouriteBtn = document.getElementById("axiFavouriteBtn");
+
+        console.log("Axi Favourite Button found!", favouriteBtn);    
+
+
         
 
 
@@ -318,6 +328,7 @@
 
 
         initCommands(false);
+        loadFavorites(); 
     }
 
     init();
@@ -389,12 +400,18 @@
 
             const settings = await res.json();
             const configuredApiMetadata = typeof settings?.API_METADATA === "string" ? settings.API_METADATA.trim() : "";
+            const configuredAxiFavoritesUrl = typeof settings?.AXI_FAVORITES_URL === "string" ? settings.AXI_FAVORITES_URL.trim() : "";
 
             if (!configuredApiMetadata) {
                 throw new Error(`API_METADATA is missing or empty in ${configUrl}`);
             }
 
+             if (!configuredAxiFavoritesUrl) {
+                throw new Error(`API_METADATA is missing or empty in ${configUrl}`);
+            }
+
             apiMetadataUrl = configuredApiMetadata;
+            axiFavoritesUrl = configuredAxiFavoritesUrl; 
             apiMetadataConfigError = "";
         } catch (error) {
             apiMetadataUrl = "";
@@ -2533,6 +2550,13 @@
        SETUP LISTENERS
     =============================== */
     function setupEventListeners() {
+
+        favouriteBtn.addEventListener("click", (e) => {
+            e.preventDefault(); 
+            e.stopPropagation(); 
+            toggleFavorite(input.value.trim()); 
+
+        })
         const historyBtn = document.getElementById("History_pages");
         if (historyBtn) {
             historyBtn.addEventListener("click", () => navigateHistory('open'));
@@ -7275,9 +7299,152 @@
         }
     }
 
-    // function getAppBackButton() {
-    //     window.prev
-    // }
+    function loadFavorites() {
+        const appUrl = getAppBaseUrl(); 
+        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`; 
+        try {
+            commandFavorites = JSON.parse(localStorage.getItem(favKey)) || []; 
+
+        }catch(ex) {
+            commandFavorites  = []; 
+        }
+
+        renderFavoritesUI(); 
+
+        if (axiFavoritesUrl) {
+            fetch(`${axiFavoritesUrl}?username=${window.mainUserName}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && Array.isArray(data.favorites)) {
+                        commandFavorites = data.favorites;
+                        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                        renderFavoritesUI(); 
+                    }
+                })
+                .catch(err =>{ 
+                    console.error("Axi: Failed to sync favorites from backend", err); 
+                    showToast("Axi: Axi: Failed to sync favorites from backend"); 
+
+                });
+
+        }
+
+
+    }
+
+    function toggleFavorite(cmdText) {
+        const appUrl = getAppBaseUrl(); 
+        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
+
+        const cmdIndex = commandFavorites.findIndex(fav => fav.toLowerCase() === cmdText.toLowerCase()); 
+        let isAdding = false; 
+
+        if (cmdIndex !== -1) {
+            commandFavorites.splice(cmdIndex, 1); 
+            showToast(`Removed ${cmdText} from Favorites`); 
+        } else {
+            if (commandFavorites.length>= MAX_FAVORITES) {
+                showToast(`Maximum of ${MAX_FAVORITES} favorites allowed. Please remove some favorites before adding new ones.`); 
+                return; 
+            }
+            commandFavorites.unshift(cmdText); 
+            isAdding = true; 
+            showToast(`Added ${cmdText} to favorites`, 3000, true); 
+        }
+
+        localStorage.setItem(favKey, JSON.stringify(commandFavorites)); 
+
+        renderFavoritesUI(); 
+        render(); 
+
+        if (axiFavoritesUrl) {
+            fetch(axiFavoritesUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: window.mainUserName,
+                    command: cmdText,
+                    action: isAdding ? "add" : "remove"
+                
+                })
+            }).catch(err => console.error("Axi: Failed to update favorite on backend", err));
+        }
+
+    }
+
+    function renderFavoritesUI() {
+        if (!favouritesCard) return; 
+
+        const wrapper = favouritesCard.querySelector(".My-Fav-Items-Wrapper"); 
+
+        if (!wrapper) return; 
+
+        wrapper.innerHTML = ""; 
+         const axiFavoritesCount = document.getElementById("axiFavoriteCount"); 
+
+         if (axiFavoritesCount) {
+            axiFavoritesCount.textContent = commandFavorites.length;
+
+
+         }
+
+        if (commandFavorites.length === 0) {
+            wrapper.innerHTML = `<div style="padding: 15px; color: #999; text-align: center; width: 100%;">No favourites yet. Pin commands to see them here.</div>`;
+            return; 
+
+        }
+
+       
+
+       
+
+        commandFavorites.forEach(cmd => {
+            const favHtml = `
+                <div class="My-Fav-Items">
+                    <div class="symbol symbol-40px symbol-circle me-5">
+                        <span class="symbol-label bg-light-warning">
+                            <span class="material-icons material-icons-style material-icons-2">grade</span>                            
+                        </span>
+                    </div>
+                    <div class="My-Fav-Items-Content" onclick="executeFavorite('${cmd}')">
+                        <a href="javascript:void(0);" class="My-Fav-Name">${cmd}</a>
+                        <div class="My-Fav-Name-Type">Command</div>
+                    </div>
+                    <div class="Delete-Fav" style="cursor: pointer;">                        
+                        <span class="material-icons material-icons-style material-icons-2">clear</span>                          
+                    </div>
+                </div>
+            `;
+
+            const div = document.createElement('div'); 
+            div.innerHTML = favHtml.trim(); 
+            const element = div.firstChild; 
+
+            element.querySelector('.Delete-Fav').addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleFavorite(cmd);
+            });
+
+            element.querySelector('.My-Fav-Items-Content').addEventListener("click", (e) => {
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                executeFavorite(cmd); 
+            })
+
+            wrapper.appendChild(element); 
+
+
+        }); 
+    }
+
+    function executeFavorite(cmdText) {
+        input.value = cmdText + " "; 
+        executeCommandsV2(); 
+        hide(); 
+        handleInput(); 
+        input.focus(); 
+    }
 
 
 
