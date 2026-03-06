@@ -328,10 +328,21 @@
 
 
         initCommands(false);
-        loadFavorites(); 
     }
 
     init();
+
+    function getProjectName() {
+          let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        console.log("Origin: " + appSessUrl);
+        const projInfoKey = `projInfo-${appSessUrl}`;
+
+        const appname = localStorage.getItem(projInfoKey);
+        console.log(appname);
+        return appname; 
+
+
+    }
 
     /* ===============================
         INITIALIZATION
@@ -343,14 +354,17 @@
             return; 
         }
 
-        let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-        console.log("Origin: " + appSessUrl);
-        const projInfoKey = `projInfo-${appSessUrl}`;
+        // let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        // console.log("Origin: " + appSessUrl);
+        // const projInfoKey = `projInfo-${appSessUrl}`;
 
-        const appname = localStorage.getItem(projInfoKey);
+        // const appname = localStorage.getItem(projInfoKey);
+        const appname = getProjectName();
         console.log(appname);
 
         await ensureApiMetadataConfigLoaded();
+        loadFavorites(); 
+
         if (!apiMetadataUrl) {
             console.error("Metadata API URL is not configured.", apiMetadataConfigError);
             showToast("Metadata API URL is not configured.");
@@ -2604,7 +2618,7 @@
         favouriteBtn.addEventListener("click", (e) => {
             e.preventDefault(); 
             e.stopPropagation(); 
-            toggleFavorite(input.value.trim()); 
+            toggleFavorite(input.value.trim(), true); 
 
         })
         const historyBtn = document.getElementById("History_pages");
@@ -7362,6 +7376,7 @@
 
     function loadFavorites() {
         const appUrl = getAppBaseUrl(); 
+        const appname = getProjectName(); 
         const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`; 
         try {
             commandFavorites = JSON.parse(localStorage.getItem(favKey)) || []; 
@@ -7373,11 +7388,13 @@
         renderFavoritesUI(); 
 
         if (axiFavoritesUrl) {
-            fetch(`${axiFavoritesUrl}?username=${window.mainUserName}`)
+            fetch(`${axiFavoritesUrl}?username=${window.mainUserName}&appname=${appname}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data && Array.isArray(data.favorites)) {
-                        commandFavorites = data.favorites;
+                    console.log("Fetched favorites from backend: ", data); 
+                    console.log("type : ", typeof data); 
+                    if (data && Array.isArray(data)) {
+                        commandFavorites = data.map(item => item.commandText);
                         localStorage.setItem(favKey, JSON.stringify(commandFavorites));
                         renderFavoritesUI(); 
                     }
@@ -7393,14 +7410,19 @@
 
     }
 
-    function toggleFavorite(cmdText) {
+    function toggleFavorite(cmdText, isAdding = false) {
         const appUrl = getAppBaseUrl(); 
+        const appname = getProjectName(); 
         const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
 
         const cmdIndex = commandFavorites.findIndex(fav => fav.toLowerCase() === cmdText.toLowerCase()); 
-        let isAdding = false; 
+        
 
         if (cmdIndex !== -1) {
+            if (isAdding) {
+                showToast(`${cmdText} is already in Favorites`);
+                return; 
+            }
             commandFavorites.splice(cmdIndex, 1); 
             showToast(`Removed ${cmdText} from Favorites`); 
         } else {
@@ -7409,7 +7431,7 @@
                 return; 
             }
             commandFavorites.unshift(cmdText); 
-            isAdding = true; 
+        
             showToast(`Added ${cmdText} to favorites`, 3000, true); 
         }
 
@@ -7419,13 +7441,14 @@
         render(); 
 
         if (axiFavoritesUrl) {
-            fetch(axiFavoritesUrl, {
+            fetch(`${axiFavoritesUrl}?appname=${appname}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     username: window.mainUserName,
-                    command: cmdText,
-                    action: isAdding ? "add" : "remove"
+                    commandText: cmdText,
+                    action: isAdding ? "add" : "remove",
+                    favOrder: 0
                 
                 })
             }).catch(err => console.error("Axi: Failed to update favorite on backend", err));
@@ -7467,7 +7490,7 @@
                             <span class="material-icons material-icons-style material-icons-2">grade</span>                            
                         </span>
                     </div>
-                    <div class="My-Fav-Items-Content" onclick="executeFavorite('${cmd}')">
+                    <div class="My-Fav-Items-Content">
                         <a href="javascript:void(0);" class="My-Fav-Name">${cmd}</a>
                         <div class="My-Fav-Name-Type">Command</div>
                     </div>
@@ -7499,12 +7522,46 @@
         }); 
     }
 
+    // async function executeFavorite(cmdText) {
+    //     hide(); 
+    //     input.value = ""; 
+    //     input.focus(); 
+
+    //     const minTypingSpeed = 30;
+    //     const maxTypingSpeed = 80;
+
+    //     const tokens = getTokens(cmdText); 
+    //     let simulatedText = ""; 
+
+    //     for (let i=0; i < cmdText.length; i++) {
+    //         input.value += cmdText[i]; 
+    //         handleInput(); 
+    //         while (activeFetches.size > 0) {
+    //             await new Promise(resolve => setTimeout(resolve, 50));
+    //         }
+
+    //         const delay = Math.floor(Math.random() * (maxTypingSpeed - minTypingSpeed + 1)) + minTypingSpeed;
+    //         await new Promise(resolve => setTimeout(resolve, delay));
+    //     }
+
+    //     input.value = cmdText + ""; 
+
+    //     while (activeFetches.size > 0) {
+    //        await new Promise(resolve => setTimeout(resolve, 50));
+    //     }
+       
+    //     executeCommandsV2(); 
+        
+    //     hide(); 
+    // }
+
+
     function executeFavorite(cmdText) {
-        input.value = cmdText + " "; 
+        hide(); 
+        input.value = cmdText + ""; 
+
         executeCommandsV2(); 
         hide(); 
-        handleInput(); 
-        input.focus(); 
     }
 
 
