@@ -686,12 +686,13 @@ background:#303a69 !important;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 900px;
-    height: 600px;
+    width: 100vw; /* Full screen width */
+    height: 100vh; /* Full screen height*/
+    pointer-events: none; /* Everything passes through by default */
     border: none;
-    background: white;
+    /* background: white; */
     z-index: 9999;
     display: none;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    /* box-shadow: 0 10px 25px rgba(0,0,0,0.2); */
     border-radius: 8px;
 }

@@ -1,321 +1,588 @@
-<html><head>
+<html>
 
+<head>
+    <link rel="stylesheet" href="../../../UI/axpertUI/style.bundle.css">
+    <link rel="stylesheet" href="../../../UI/axpertUI/plugins.bundle.css">
+    <link rel="stylesheet" href="../../../ThirdParty/jquery-confirm-master/jquery-confirm.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        /* Hide the workspace since this page acts as a background controller */
+        .workspace {
+            display: none;
+        }
+
+        .btn-close {
+            padding: 0px !important;
+            opacity: 1 !important;
+        }
+
+        /* Prevent scrollbars on the container page itself */
+        body {
+            overflow: hidden;
+            background: transparent !important;
+        }
+        /* Container for the tabs */
+        .tab-scroller {
+    display: flex !important;
+    gap: 4px !important;
+    align-items: flex-end !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* Ensure scroller doesn't interfere with pinned height */
+    height: 100% !important; 
+    max-height: 38px !important;
+}
+
+/* Optional: Custom scrollbar styling for a cleaner look */
+.tab-scroller::-webkit-scrollbar {
+    height: 4px;
+}
+.tab-scroller::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+/* Inactive Tab - Readable Grey (No more bg-secondary) */
+.custom-tab {
+    flex: 0 0 auto !important; /* Critical: prevents tabs from squeezing */
+    cursor: pointer;
+    min-width: 140px;
+    height: 32px;
+    padding: 0 12px;
+    background: #e9ecef !important; 
+    color: #495057 !important; 
+    border: 1px solid #dee2e6 !important;
+    border-bottom: none !important;
+    border-radius: 6px 6px 0 0 !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.2;
+}
+
+.custom-tab:hover {
+    background: #dee2e6 !important;
+}
+
+/* Active Highlight - Merged White */
+.custom-tab.active {
+    background: #ffffff !important; 
+    color: #0d6efd !important; 
+    height: 36px !important; 
+    font-weight: 600;
+    z-index: 10;
+    border-bottom: 2px solid #ffffff !important; 
+    margin-bottom: -1px; 
+}
+.tab-subtext {
+    font-size: 9px;
+    color: #6c757d;
+}
+    </style>
+</head>
+
+<body>
+    <div id="workspace" class="workspace"></div>
+
+    <script src="../../../UI/axpertUI/plugins.bundle.js"></script>
+    <script src="../../../UI/axpertUI/scripts.bundle.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-    
-    <style>
-    
-    .workspace{
-    height:90vh;
-    background:#eef2f5;
-    /* position:relative; */
-    overflow:hidden;
-    }
-    
-    .popup-window{
-    position:fixed;
-    width:700px;
-    min-width:150px;
-    height:400px;
-    background:white;
-    border:1px solid #ccc;
-    box-shadow:0 4px 10px rgba(0,0,0,0.2);
-    z-index:9999; /* very important */
-}
 
-.popup-header{
-    background:#2f3e46;
-    color:white;
-    padding:6px 10px;
-    cursor:move;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    position:relative;
-    z-index:10000; /* must be higher than iframe */
-}
-
-.popup-body{
-    position:relative;
-    z-index:1;
-}
-
-.popup-body iframe{
-    width:100%;
-    height:100%;
-    border:none;
-    position:relative;
-    z-index:0;
-}
-    
-    .popup-header .title{
-    font-size:13px;
-    }
-    
-    .popup-actions button{
-    border:none;
-    background:none;
-    color:white;
-    margin-left:5px;
-    }
-    
-    
-    </style>
-    
-    </head>
-    
-    <body>
-    
-    <div class="p-3">
-    
-    <input id="urlInput" class="form-control d-inline-block" style="width:400px" placeholder="EntityForm.aspx?tstid=sepri">
-    
-    <button class="btn btn-primary" onclick="popupManager.openWindow()">Open</button>
-    
-    </div>
-    
-    <div id="workspace" class="workspace"></div>
-    
     <script>
-
-
- function getAppBaseUrl() {
-     const href = top.window.location.href;
-     const aspxIndex = href.toLowerCase().indexOf("/aspx/");
-
-     if (aspxIndex === -1) {
-         return href.substring(0, href.lastIndexOf("/"));
-     }
-
-     return href.substring(0, aspxIndex);
- }
-
-
-        class PopupManager {
-        
-            constructor(workspaceId){
-                this.workspace = document.getElementById(workspaceId);
-                this.zIndex = 10;
+        function getAppBaseUrl() {
+            const href = top.window.location.href;
+            const aspxIndex = href.toLowerCase().indexOf("/aspx/");
+            if (aspxIndex === -1) {
+                return href.substring(0, href.lastIndexOf("/"));
             }
-     /*
-            openWindow(){
-        
-                let url = document.getElementById("urlInput").value.trim();
-                if(!url) return;
-        
-                if(!url.startsWith("http")){
-                    url = window.location.origin + "/axpert/aspx/" + url;
-                }
-        
-                const nameMatch = url.match(/tstid=([^&]+)/);
-                const title = nameMatch ? nameMatch[1] : "Form";
-        
-                this.createWindow(title,url);
+            return href.substring(0, aspxIndex);
+        }
+
+        function createPinnedArea() {
+            const parentDoc = parent.document;
+            if (parentDoc.getElementById("pinnedArea")) return;
+
+            const pinned = parentDoc.createElement("div");
+            pinned.id = "pinnedArea";
+
+            Object.assign(pinned.style, {
+                position: "fixed",
+                bottom: "45px",
+                // left: "69%",
+                right: "0",
+                height: "42px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "4px 10px",
+                overflowX: "auto",
+                overflowY: "hidden",
+                whiteSpace: "nowrap",
+                zIndex:"9",
+               
+            });
+
+            const axiSec = parentDoc.querySelector(".AXI-Sec");
+            if (axiSec) {
+                axiSec.parentNode.insertBefore(pinned, axiSec);
+            } else {
+                parentDoc.body.appendChild(pinned);
             }
-        */
+        }
+
+        class TabPopupManager {
+            constructor() {
+                this.mainPopup = null;
+                this.tabs = {};
+                this.activeTab = null;
+            }
+
+            // Add this inside your TabPopupManager class in PopUpContainer.html
+            syncParentDimensions() {
+    const parentIframe = window.parent.document.getElementById("hiddenLoader");
+    if (!parentIframe) return;
+
+    if (this.mainPopup && this.mainPopup.dataset.minimized !== "true") {
+        // FULL SCREEN IFRAME (to catch the 'click outside' event)
+        Object.assign(parentIframe.style, {
+            width: "100vw",
+            height: "100vh",
+            pointerEvents: "auto",
+            background: "rgba(0,0,0,0.15)" // Visual cue that background is temporarily locked
+        });
+    } else {
+        // HIDE IFRAME (release the dashboard)
+        Object.assign(parentIframe.style, {
+            width: "0",
+            height: "0",
+            pointerEvents: "none",
+            background: "transparent"
+        });
+    }
+}
+// Add these methods inside your TabPopupManager class
+renderThumbnails() {
+    const grid = this.mainPopup.querySelector("#thumb-grid");
+    const overlay = this.mainPopup.querySelector("#thumb-overlay");
+    grid.innerHTML = ""; // Clear previous
+
+    Object.keys(this.tabs).forEach(title => {
+        const col = document.createElement("div");
+        col.className = "col-4";
         
-            openFromParam(){
-                // Read 'url' query param from current page URL
+        // Create a card representing the tab
+        col.innerHTML = `
+            <div class="card h-100 border hover-shadow shadow-sm cursor-pointer" style="cursor:pointer; transition: 0.3s;">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center bg-light p-3">
+                    <i class="material-icons fs-1 text-secondary mb-2">web_asset</i>
+                    <h6 class="text-center text-truncate w-100" style="font-size:12px;">${title}</h6>
+                </div>
+            </div>
+        `;
+
+        col.onclick = () => {
+            this.activateTab(title); // Switch to this tab
+            overlay.classList.add("d-none"); // Hide thumbnails
+        };
+
+        grid.appendChild(col);
+    });
+
+    overlay.classList.remove("d-none");
+}
+
+toggleThumbnails() {
+    const overlay = this.mainPopup.querySelector("#thumb-overlay");
+    if (overlay.classList.contains("d-none")) {
+        this.renderThumbnails();
+    } else {
+        overlay.classList.add("d-none");
+    }
+}
+
+openForm(rawTitle, rawUrl) {
+
+    if (typeof window.SaveMultiFrameDataJSON === "function") {
+        window.SaveMultiFrameDataJSON();
+    }
+    let url = rawUrl.trim();
+    if (!url) return;
+
+    url = url.replace(/♠/g, "");
+    if (!url.startsWith("http")) {
+        url = getAppBaseUrl() + "/" + url;
+    }
+
+    // Improved Title Logic: Extract 'tstid' or 'transid' for a cleaner tab label
+    const urlParams = new URLSearchParams(url.split('?')[1]);
+    const title = urlParams.get("tstid") || urlParams.get("transid") || rawTitle;
+
+    this.createPopupIfNeeded();
+    
+    // Check if tab exists by title
+    if (this.tabs[title]) {
+        this.activateTab(title);
+    } else {
+        this.createNewTab(title, url);
+    }
+    
+    // Ensure the iframe dimensions match the single popup
+    this.syncParentDimensions();
+}
+
+            openFromParam() {
                 const params = new URLSearchParams(window.location.search);
-                let url = params.get("contenturl");
+                const url = params.get("contenturl");
+                if (url) {
+                    this.openForm("Loading...", url);
+                }
+            }
 
-                if(!url) {
-                    console.warn("No 'url' query param found.");
+            createPopupIfNeeded() {
+                if (this.mainPopup) {
+                    if (this.mainPopup.dataset.minimized === "true") this.restore();
                     return;
                 }
 
-                if(!url.startsWith("http")){
-                    //url = window.location.origin + "/axpert/aspx/" + url;
-                    url = getAppBaseUrl() + "/" + url;
+                const target = document.body;
+                const win = document.createElement("div");
+                win.id = "main-tab-popup";
+                win.className = "card shadow-lg border-secondary";
 
-                 }
+                Object.assign(win.style, {
+                    position: "fixed",
+                    left: "15%",
+                    top: "50px",
+                    width: "70%",
+                    height: "450px",
+                    zIndex: "1040",
+                    display: "flex",
+                    flexDirection: "column",
+                    background: "white",
+                    pointerEvents: "auto"
+                });
+
+                win.innerHTML = `
+                    <div class="card-header d-flex align-items-center bg-dark text-white px-3" id="pop-header" style="height:38px; min-height:0px!important; flex-shrink:0; cursor:move;">
+                        <div class="tab-scroller d-flex align-items-end gap-1 h-100 pt-2" style="flex:1; overflow:hidden;"></div>
+                        <div class="action-btns d-flex gap-2 ms-2">
+                            <i class="material-icons fs-5 btn-thumb" style="cursor:pointer; color:white !important;">grid_view</i>
+                            <i class="material-icons fs-5 btn-min" style="cursor:pointer; color:white !important;">remove</i>
+                            <i class="material-icons fs-5 btn-max" style="cursor:pointer; color:white !important;">crop_square</i>
+                            <i class="material-icons fs-5 btn-close" style="cursor:pointer; color:white !important;">close</i>
+                        </div>
+                    </div>
+                    <div class="card-body p-0 position-relative bg-white" id="pop-content" style="flex:1;">
+                        <div id="drag-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:10;"></div>
+                        <div id="thumb-overlay" class="d-none p-4 w-100 h-100" style="position:absolute; z-index:20; background:white; overflow-y:auto;">
+                            <div class="row g-3" id="thumb-grid"></div>
+                        </div>
+                    </div>
+                `;
+
+                target.appendChild(win);
+                this.mainPopup = win;
+
+                $(win).draggable({
+        handle: "#pop-header",
+        containment: "window",
+        start: () => { document.getElementById("drag-overlay").style.display = "block"; },
+        drag: () => { this.syncParentDimensions(); }, // Update iframe position while dragging
+        stop: () => { 
+            document.getElementById("drag-overlay").style.display = "none";
+            this.syncParentDimensions(); 
+        }
+    });
+
+                this.attachEvents();
+                this.syncParentDimensions()
+            }
+
+            createNewTab(title, url) {
+    const scroller = this.mainPopup.querySelector(".tab-scroller");
+    const body = this.mainPopup.querySelector("#pop-content");
+
+    // Extract sub-params for the second line of the tab
+    const subParams = url.split('?')[1]?.split('&')[0]?.replace("=", ": ") || "";
+
+    const tab = document.createElement("div");
+    tab.className = "custom-tab"; // Uses the new CSS class
+
+    tab.innerHTML = `
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <b class="text-truncate">${title}</b>
+            <i class="material-icons close-tab" style="font-size:14px!important; margin-left:5px;">close</i>
+        </div>
+        <small class="tab-subtext text-truncate">${subParams}</small>
+    `;
+
+    const ifr = document.createElement("iframe");
+    const index = Object.keys(this.tabs).length;
+    ifr.id = `axMultiiframe_${index}`;
+    ifr.src = url;
+    ifr.style.cssText = "width:100%; height:100%; border:none; display:none;";
+
+    scroller.appendChild(tab);
+    body.appendChild(ifr);
+
+    this.tabs[title] = { tab, ifr };
+
+    tab.onclick = (e) => {
+        if (e.target.classList.contains("close-tab")) {
+            e.stopPropagation();
+            this.closeTab(title);
+        } else {
+            this.activateTab(title);
+        }
+    };
+    this.updateGlobalTransidList();
+    this.activateTab(title);
+}
+
+async activateTab(title) {
+    // 1. SAVE the currently active tab before switching
+    if (this.activeTab && this.activeTab !== title) {
+        await this.saveTabState(this.activeTab); 
+    }
+
+    this.mainPopup.querySelector("#thumb-overlay").classList.add("d-none");
+    
+    Object.keys(this.tabs).forEach(k => {
+        this.tabs[k].tab.classList.remove("active");
+        this.tabs[k].ifr.style.display = "none";
+    });
+
+    const active = this.tabs[title];
+    active.tab.classList.add("active");
+    active.ifr.style.display = "block";
+    this.activeTab = title;
+
+    // 2. ACTIVATE the new tab on the server
+    try {
+        const childWin = active.ifr.contentWindow;
+        if (childWin.transid) {
+            this.activateTstructOnServer(childWin.transid, childWin.tstDataId);
+        }
+    } catch(e) {}
+
+    active.tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+}
+minimize() {
+    const pinned = parent.document.getElementById("pinnedArea");
+    if (!pinned) return;
+
+    // 1. Save style and hide content
+    this.mainPopup.dataset.prevStyle = this.mainPopup.getAttribute("style");
+    this.mainPopup.querySelector("#pop-content").style.display = "none";
+
+    // 2. Hide all inactive tabs and the scroller's extra space
+    const tabs = this.mainPopup.querySelectorAll(".custom-tab");
+    tabs.forEach(t => {
+        if (!t.classList.contains("active")) {
+            t.style.display = "none";
+        } else {
+            // Adjust active tab for the small pinned bar
+            t.style.minWidth = "180px";
+            t.style.height = "32px";
+        }
+    });
+
+    // 3. Compact the popup for the pinned bar
+    Object.assign(this.mainPopup.style, {
+        position: "relative", 
+        left: "auto", 
+        top: "0", 
+        width: "250px", 
+        height: "36px", 
+        marginRight: "6px"
+    });
+
+    this.mainPopup.dataset.minimized = "true";
+    pinned.appendChild(this.mainPopup);
+    this.syncParentDimensions(); // Release the dashboard blockade
+}
+
+restore() {
+    document.body.appendChild(this.mainPopup);
+    this.mainPopup.setAttribute("style", this.mainPopup.dataset.prevStyle);
+    this.mainPopup.querySelector("#pop-content").style.display = "block";
+    
+    // 4. Show all tabs again and reset their width
+    const tabs = this.mainPopup.querySelectorAll(".custom-tab");
+    tabs.forEach(t => {
+        t.style.display = "flex";
+        t.style.minWidth = "140px";
+    });
+
+    this.mainPopup.dataset.minimized = "false";
+    this.syncParentDimensions(); // Re-lock dashboard focus
+}
+
+            attachEvents() {
+                const p = this.mainPopup;
+                document.addEventListener("mousedown", (e) => {
+        if (this.mainPopup && 
+            this.mainPopup.dataset.minimized !== "true" && 
+            !this.mainPopup.contains(e.target)) {
+            
+            this.minimize(); // Move to Pinned Area
+        }
+    });
+    p.querySelector(".btn-close").onclick = (e) => {
+        e.stopPropagation(); // Prevent triggering 'restore' or 'minimize' by accident
+        this.mainPopup.remove();
+        this.mainPopup = null;
+        this.tabs = {};
+        this.syncParentDimensions(); // This will hide the parent iframe blockade
+    };
+                p.querySelector(".btn-min").onclick = () => {
+                    if (p.dataset.minimized === "true") this.restore();
+                    else this.minimize();
+                };
+                p.querySelector(".btn-max").onclick = (e) => {
+        e.stopPropagation();
+        
+        // If it's pinned/minimized, restore it to normal size first
+        if (p.dataset.minimized === "true") {
+            this.restore();
+        }
+
+        if (p.dataset.maxed !== "true") {
+            p.dataset.preMax = p.getAttribute("style");
+            Object.assign(p.style, { 
+                top: "0", 
+                left: "0", 
+                width: '100vw', 
+                height: '100vh', 
+                position: "fixed" 
+            });
+            p.dataset.maxed = "true";
+        } else {
+            p.setAttribute("style", p.dataset.preMax);
+            p.dataset.maxed = "false";
+        }
+        this.syncParentDimensions();
+    };
+                p.querySelector(".btn-thumb").onclick = () => {
+        this.toggleThumbnails();
+    };
+
+            }
+
+            closeTab(title) {
+                this.tabs[title].tab.remove();
+                this.tabs[title].ifr.remove();
+                delete this.tabs[title];
+                const keys = Object.keys(this.tabs);
+                if (keys.length > 0) this.activateTab(keys[0]);
+                else this.mainPopup.querySelector(".btn-close").click();
+            }
+
+
+            //  savelogic 
 
           
-        
-                const nameMatch = url.match(/tstid=([^&]+)/);
-                const title = nameMatch ? nameMatch[1] : "Form";
-        
-                this.createWindow(title,url);
+
+async saveTabState(title) {
+    if (!this.tabs[title]) return;
+    
+    const iframe = this.tabs[title].ifr;
+    try {
+        const childWin = iframe.contentWindow;
+        // Check if the form in the iframe has the save function
+        if (childWin && typeof childWin.SaveMultiFrameDataJSON === "function") {
+            const result = childWin.SaveMultiFrameDataJSON();
+            if (result) {
+                const tstDataId = childWin.tstDataId;
+                const transid = childWin.transid;
+                // Sync data to the server-side session/Redis
+                await this.syncTstruct(transid, tstDataId); 
             }
-        
-            createWindow(title,url){
-        
-                const win = document.createElement("div");
-                win.className = "popup-window";
-                win.style.left = "100px";
-                win.style.top = "100px";
-                win.style.zIndex = ++this.zIndex;
-        
-                win.dataset.maximized = "false";
-        
-                win.innerHTML = `
-        
-                <div class="popup-header">
-        
-                    <div class="title">${title}</div>
-        
-                    <div class="popup-actions">
-                        <button class="min">_</button>
-                        <button class="max">⬜</button>
-                        <button class="close">✖</button>
-                    </div>
-        
-                </div>
-        
-                <div class="popup-body">
-                    <iframe src="${url}"></iframe>
-                </div>
-                `;
-        
-                this.workspace.appendChild(win);
-        
-                this.makeDraggable(win);
-                this.attachEvents(win);
-            }
-        
-            makeDraggable(win){
-        
-                $(win).draggable({
-    handle: ".popup-header",
-    containment: "window",   // allows moving anywhere on screen
-    start: function () {
-        $(this).find("iframe").css("pointer-events", "none");
-    },
-    stop: function () {
-        $(this).find("iframe").css("pointer-events", "auto");
-    }
-}).resizable({
-    containment: "window"
-});
-            }
-        
-            attachEvents(win){
-        
-                win.querySelector(".close").onclick = () => this.closeWindow(win);
-                win.querySelector(".min").onclick = () => this.minimizeWindow(win);
-                win.querySelector(".max").onclick = () => this.toggleMaximize(win);
-        
-                win.addEventListener("mousedown", () => {
-                    win.style.zIndex = ++this.zIndex;
-                });
-            }
-        
-            closeWindow(win){
-                win.remove();
-            }
-        
-            minimizeWindow(win){
-
-const body = win.querySelector(".popup-body");
-const pinnedArea = parent.document.getElementById("pinnedArea");
-
-if(body.style.display === "none"){
-
-    // RESTORE WINDOW
-    body.style.display = "block";
-
-    this.workspace.appendChild(win);
-
-    win.style.position = "fixed";
-    win.style.width = win.dataset.prevWidth || "700px";
-    win.style.height = win.dataset.prevHeight || "400px";
-    win.style.top = win.dataset.prevTop || "100px";
-    win.style.left = win.dataset.prevLeft || "100px";
-    win.style.bottom = "auto";
-
-}else{
-
-    // SAVE STATE
-    win.dataset.prevWidth = win.style.width;
-    win.dataset.prevHeight = win.style.height;
-    win.dataset.prevTop = win.style.top;
-    win.dataset.prevLeft = win.style.left;
-
-    body.style.display = "none";
-
-    // MINIMIZED STYLE
-    win.style.position = "static";
-    win.style.width = "auto";
-    win.style.height = "40px";
-    win.style.top = "";
-    win.style.left = "";
-    win.style.bottom = "";
-
-    // MOVE TO PINNED AREA
-    pinnedArea.appendChild(win);
-}
-}
-toggleMaximize(win){
-
-if(win.dataset.maximized === "false"){
-
-    win.dataset.prevWidth = win.style.width;
-    win.dataset.prevHeight = win.style.height;
-    win.dataset.prevTop = win.style.top;
-    win.dataset.prevLeft = win.style.left;
-
-    win.style.top = "0";
-    win.style.left = "0";
-    win.style.width = "100vw";
-    win.style.height = "100vh";
-
-    win.dataset.maximized = "true";
-
-}else{
-
-    win.style.width = "auto";
-    win.style.height = win.dataset.prevHeight || "400px";
-    win.style.top = win.dataset.prevTop || "100px";
-    win.style.left = win.dataset.prevLeft || "100px";
-
-    win.dataset.maximized = "false";
-}
-}
-        
         }
-        function createPinnedArea(){
-
-// check if already exists
-if(document.getElementById("pinnedArea")) return;
-
-const pinned = document.createElement("div");
-pinned.id = "pinnedArea";
-
-// styles
-pinned.style.position = "fixed";
-pinned.style.bottom = "46px";
-pinned.style.left = "60px";
-pinned.style.right = "0";
-pinned.style.height = "40px";
-pinned.style.display = "flex";
-pinned.style.gap = "6px";
-pinned.style.alignItems = "center";
-pinned.style.padding = "0 10px";
-pinned.style.overflowX = "auto";
-pinned.style.overflowY = "hidden";
-pinned.style.whiteSpace = "nowrap";
-pinned.style.zIndex = "999999";
-
-// find AXI bar
-const axiSec = document.querySelector(".AXI-Sec");
-
-if(axiSec){
-    axiSec.parentNode.insertBefore(pinned, axiSec);
-}
+    } catch (e) {
+        console.warn("Could not save tab state for: " + title, e);
+    }
 }
 
-document.addEventListener("DOMContentLoaded", createPinnedArea);
-        
-        const popupManager = new PopupManager("workspace");
+syncTstruct(formId, dataId) {
+    let appUrl = getAppBaseUrl();
+    return $.ajax({
+        type: "POST",
+        url: `${appUrl}/WebService.asmx/LoadAndkeepTstructAPI`,
+        contentType: "application/json;charset=utf-8",
+        data: JSON.stringify({ tformId: formId, mtstDataId: dataId }),
+        dataType: "json"
+    });
+}
 
-        // Auto-open popup from query param on page load
-        document.addEventListener("DOMContentLoaded", () => {
-            popupManager.openFromParam();
-        });
-        
+activateTstructOnServer(formId, dataId) {
+    let appUrl = getAppBaseUrl();
+    return $.ajax({
+        type: "POST",
+        url: `${appUrl}/WebService.asmx/ActivateTstructAPI`,
+        contentType: "application/json;charset=utf-8",
+        data: JSON.stringify({ tformId: formId, mtstDataId: dataId }),
+        dataType: "json"
+    });
+}
+async closeTab(title) {
+    // Save data before removing the iframe from DOM
+    await this.saveTabState(title);
+    
+    this.tabs[title].tab.remove();
+    this.tabs[title].ifr.remove();
+    delete this.tabs[title];
+    this.updateGlobalTransidList();
+    const keys = Object.keys(this.tabs);
+    if (keys.length > 0) {
+        this.activateTab(keys[0]);
+    } else {
+        this.mainPopup.querySelector(".btn-close").click();
+    }
+}
+
+
+updateGlobalTransidList() {
+    // 1. Collect all transids from current tabs
+    const transids = Object.values(this.tabs).map(tabObj => {
+        try {
+            const childWin = tabObj.ifr.contentWindow;
+            // Try to get it from the window object first, fallback to URL params
+            if (childWin && childWin.transid) return childWin.transid;
+            
+            const urlParams = new URLSearchParams(tabObj.ifr.src.split('?')[1]);
+            return urlParams.get("transid") || urlParams.get("tstid");
+        } catch (e) {
+            // Fallback for cross-origin or pre-load state
+            const urlParams = new URLSearchParams(tabObj.ifr.src.split('?')[1]);
+            return urlParams.get("transid") || urlParams.get("tstid");
+        }
+    }).filter(id => id !== null && id !== ""); 
+
+    // 2. Update the global variable
+    window.transidlist = [...new Set(transids)].join(',');
+    
+    // 3. Sync with parent if this is inside the hiddenLoader iframe
+    if (window.parent && window.parent !== window) {
+        window.parent.transidlist = window.transidlist;
+    }
+    
+    console.log("Current transidlist:", window.transidlist);
+}
+
+        }
+
+        window.PopupManager = new TabPopupManager();
+
+        window.onload = function () {
+            createPinnedArea();
+            PopupManager.openFromParam();
+        }
     </script>
-    
-    </body></html>
-    
+</body>
+
+</html>

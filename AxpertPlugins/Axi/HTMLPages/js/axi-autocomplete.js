@@ -565,24 +565,63 @@
 
     }
 
+    //function openPopOption(targetURL) {
+    //    console.log("PopOption is clicked");
+
+
+    //    if (targetURL) {
+    //        let popUpContainerUrl = `../AxpertPlugins/Axi/HTMLPages/PopUpContainer.html`;
+
+    //        //if (targetURL && targetURL.toLowerCase().includes("/aspx")) {
+    //        //    console.log("Before removing : " + targetURL);
+    //        //    targetURL = targetURL.replace("/aspx", "");
+    //        //    console.log("After removing : " + targetURL);
+    //        //}
+
+    //        //if (targetURL && targetURL.toLowerCase().includes("/aspx/")) {
+    //        //    console.log("Before removing : " + targetURL)
+    //        //    targetURL = targetURL.split("/aspx/")[1];
+    //        //    console.log("After removing : " + targetURL);
+    //        //}
+    //        if (targetURL && targetURL.toLowerCase().includes("../")) {
+    //            console.log("Before removing : " + targetURL)
+    //            targetURL = targetURL.replace("../", "");
+    //            //targetURL = targetURL.split("/")[1];
+    //            console.log("After removing : " + targetURL);
+    //        }
+
+
+    //        //let finalUrl = `${popUpContainerUrl}?contenturl=${encodeURIComponent(btoa(targetURL))}`;
+    //        let finalUrl = `${popUpContainerUrl}?contenturl=${targetURL}`;
+
+
+    //        popUpOption = false;
+    //        console.log("PopUp Option is set to :" + popUpOption);
+
+
+    //        let hiddenVar = document.getElementById("hiddenLoader");
+    //        console.log(hiddenVar);
+    //        hiddenVar.src = finalUrl;
+    //        //hiddenVar.style.display = "block";
+    //        hiddenVar.style.display = "flex";
+    //        //let popup = document.getElementById("popupContainer");
+    //        //popup.style.display = "block";
+    //        // window.open(finalUrl);
+    //    }
+    //    else {
+    //        popUpOption = false;
+    //        console.log("Error in Popup: TargetURL is empty");
+    //        showToast("Something went wrong. Please try again later");
+    //    }
+    //}
+
     function openPopOption(targetURL) {
         console.log("PopOption is clicked");
-
-
+        
         if (targetURL) {
-            let popUpContainerUrl = `../AxpertPlugins/Axi/HTMLPages/PopUpContainer.html`;
+            let popUpContainerUrl = `../AxpertPlugins/Axi/HTMLPages/PopupContainer.html`
+            //let popUpContainerUrl = `../CustomPages/Axi/HTMLPages/PopUpContainer.html`;
 
-            //if (targetURL && targetURL.toLowerCase().includes("/aspx")) {
-            //    console.log("Before removing : " + targetURL);
-            //    targetURL = targetURL.replace("/aspx", "");
-            //    console.log("After removing : " + targetURL);
-            //}
-
-            //if (targetURL && targetURL.toLowerCase().includes("/aspx/")) {
-            //    console.log("Before removing : " + targetURL)
-            //    targetURL = targetURL.split("/aspx/")[1];
-            //    console.log("After removing : " + targetURL);
-            //}
             if (targetURL && targetURL.toLowerCase().includes("../")) {
                 console.log("Before removing : " + targetURL)
                 targetURL = targetURL.replace("../", "");
@@ -590,25 +629,23 @@
                 console.log("After removing : " + targetURL);
             }
 
-
-            //let finalUrl = `${popUpContainerUrl}?contenturl=${encodeURIComponent(btoa(targetURL))}`;
-            let finalUrl = `${popUpContainerUrl}?contenturl=${targetURL}`;
-
-
-            popUpOption = false;
-            console.log("PopUp Option is set to :" + popUpOption);
-            
-
             let hiddenVar = document.getElementById("hiddenLoader");
-            console.log(hiddenVar);
-            hiddenVar.src = finalUrl;
-            //hiddenVar.style.display = "block";
-            hiddenVar.style.display = "flex";
-            //let popup = document.getElementById("popupContainer");
-            //popup.style.display = "block";
-            // window.open(finalUrl);
-        }
-        else {
+
+            // Check if the PopupManager already exists in the iframe
+            if (hiddenVar.contentWindow && hiddenVar.contentWindow.PopupManager) {
+                // ADD AS NEW TAB: Call the internal manager
+                hiddenVar.contentWindow.PopupManager.openForm("Loading...", targetURL);
+            } else {
+                // INITIAL LOAD: Set src for the first time
+                let finalUrl = `${popUpContainerUrl}?contenturl=${targetURL}`;
+                hiddenVar.src = finalUrl;
+                hiddenVar.style.display = "flex";
+            }
+            popUpOption = false;
+            console.log("Final Url: " + targetURL); 
+            console.log("PopUp Option is set to :" + popUpOption);
+
+        } else {
             popUpOption = false;
             console.log("Error in Popup: TargetURL is empty");
             showToast("Something went wrong. Please try again later");
@@ -1802,10 +1839,11 @@
                 const result = viewSource.filter(val => val.toLowerCase());
                 filteredObjects = result.map(val => ({ name: val, displaydata: val }));
 
-                result.unshift(goOption);
                 result.unshift(popOption);
-                filteredObjects.unshift(goOption);
+                result.unshift(goOption);
                 filteredObjects.unshift(popOption);
+                filteredObjects.unshift(goOption);
+
                 updateDynamicHintFromPrompt({ prompt: commandConfig?.prompts?.[3]?.prompt })
                 return result;
 
@@ -1863,10 +1901,10 @@
             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
 
             if (groupKey.toLowerCase() === "create" && tokens.length === 3) {
-                result.unshift(goOption);
                 result.unshift(popOption);
-                filteredObjects.unshift(goOption);
+                result.unshift(goOption);
                 filteredObjects.unshift(popOption);
+                filteredObjects.unshift(goOption);
             }
             return result;
         }
@@ -1972,10 +2010,10 @@
             let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
             if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
-                resultList.unshift(goOption);
                 resultList.unshift(popOption);
-                filteredObjects.unshift(goOption);
+                resultList.unshift(goOption);
                 filteredObjects.unshift(popOption);
+                filteredObjects.unshift(goOption);
             }
             else if ((groupKey.toLowerCase() === "configure") && tokens.length === 3 && tokens[1] !== "keyfield") {
                 resultList.unshift(goOption);
@@ -1993,10 +2031,10 @@
             //}
 
             else if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
-                resultList.unshift(goOption);
                 resultList.unshift(popOption);
-                filteredObjects.unshift(goOption);
+                resultList.unshift(goOption);
                 filteredObjects.unshift(popOption);
+                filteredObjects.unshift(goOption);
             }
 
             return resultList;
@@ -2370,10 +2408,26 @@
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Pop_ACTION") {
             console.log("Pop Option Selected......");
-            popUpOption = true;
-            hide();
-            executeCommandsV2();
-            return;
+             try {
+                    if (tokens.length >= 2) {
+                        hide();
+                        popUpOption = true;
+                        executeCommandsV2();
+                        return;
+                    }
+                    //else return;
+                }
+                catch (err) {
+                    popUpOption = false;
+
+                    console.log("Error in Popup:", err);
+
+                    showToast("Something went wrong. Please try again later");
+
+                    return;
+                }
+            
+            
         }
 
         const endsWithSpace = currentInput.endsWith(" ");
@@ -5275,19 +5329,20 @@
             let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
             if ((SET_COMMAND_STATE.currentField || (targetIndex % 2 !== 0 && targetIndex >= 4)) && filteredObjects.length > 0) {
-                resultList.unshift(goOption);
+
                 resultList.unshift(saveOption);
                 resultList.unshift(popOption);
-                filteredObjects.unshift(goOption);
+                resultList.unshift(goOption);
                 filteredObjects.unshift(saveOption);
                 filteredObjects.unshift(popOption);
+                filteredObjects.unshift(goOption);
             }
             else if (tokens.length >= 3 && filteredObjects.length > 0) {
-                resultList.unshift(goOption);
+
                 resultList.unshift(popOption);
-                
-                filteredObjects.unshift(goOption);
+                resultList.unshift(goOption);
                 filteredObjects.unshift(popOption);
+                filteredObjects.unshift(goOption);
 
             }
         
@@ -5376,18 +5431,20 @@
                     SET_COMMAND_STATE.currentField = null;
 
                     if (SET_COMMAND_STATE.currentField || (targetIndex % 2 !== 0 && targetIndex >= 4)) {
-                        resultList.unshift(goOption);
+
                         resultList.unshift(saveOption);
                         resultList.unshift(popOption);
-                        filteredObjects.unshift(goOption);
+                        resultList.unshift(goOption);
                         filteredObjects.unshift(saveOption);
                         filteredObjects.unshift(popOption);
+                        filteredObjects.unshift(goOption);
+
                     }
                     else if (tokens.length >= 3) {
-                        resultList.unshift(goOption);
                         resultList.unshift(popOption);
-                        filteredObjects.unshift(goOption);
+                        resultList.unshift(goOption);
                         filteredObjects.unshift(popOption);
+                        filteredObjects.unshift(goOption);
                     }
 
 

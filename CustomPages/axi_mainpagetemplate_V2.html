@@ -2538,6 +2538,28 @@ Home Cunfiguration Page Templete
 
             }, 100);
 
+            setTimeout(function () {
+                const closeBtn = p.querySelector(".btn-close");
+
+                if (closeBtn) {
+                    closeBtn.onclick = (e) => {
+                        debugger
+                        // 1. Prevent the popup from restoring/maximizing when clicking close
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        // 2. Safely remove the popup from the DOM (works in workspace or pinnedArea)
+                        if (this.mainPopup) {
+                            this.mainPopup.remove();
+
+                            // 3. Reset the manager's internal state
+                            this.mainPopup = null;
+                            this.tabs = {};
+                            this.activeTab = null;
+                        }
+                    };
+                }
+            }, 100);
 
         }
     });
