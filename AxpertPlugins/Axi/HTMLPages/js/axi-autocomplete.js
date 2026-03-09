@@ -1773,7 +1773,10 @@
         const groupKey = cleanString(tokens[0]);
         if (tokens.length === 1 && !endsWithSpace) {
             hintDiv.textContent = "";
-            return Object.keys(commands).filter(k => k.startsWith(groupKey));
+            return Object.keys(commands).filter(k => {
+                const key = k.toLowerCase(); 
+                return key.startsWith(groupKey)
+            });
         }
 
         const commandConfig = commands[groupKey];
@@ -5088,6 +5091,7 @@
             targetUrl += "&hdnbElapsTime=0";
         }
 
+        setCommandRoutes(input.value.trim(), targetUrl); 
         console.log("Target URL from analyse command : " + targetUrl);
         window.LoadIframe(targetUrl);
     }
@@ -7771,14 +7775,13 @@
 
 
     function executeFavorite(favObj) {
-        hide(); 
-
-        input.value = favObj.commandText;
-        input.value += " ";  
-
+        
+        input.value = favObj.commandText + " ";
+        
+        axiClearBtn.style.display = "flex"; 
 
         if (favObj.targetUrl && favObj.targetUrl.trim() !== "") {
-            console.log("Executing Favorite directly via Target URL:", favObj.targetURL);
+            console.log("Executing Favorite directly via Target URL:", favObj.targetUrl);
 
             top.window.LoadIframe(favObj.targetUrl); 
         } else {
@@ -7787,6 +7790,11 @@
 
 
         }
+
+        hide(); 
+
+
+        
 
     
     }
