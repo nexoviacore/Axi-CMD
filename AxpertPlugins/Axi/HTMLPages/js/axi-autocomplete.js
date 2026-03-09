@@ -19,6 +19,7 @@
     let commandFavorites = []; 
     let axiFavoritesUrl = ""; 
     const MAX_FAVORITES = 20;
+    let commandRoutes = []; 
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
@@ -66,7 +67,7 @@
             toast: () => showToast(input.value)
 
         },
-        edit: {
+        Edit: {
             default: handleEditData,
             data: handleEditData,
             // user: handleEditUser
@@ -74,14 +75,14 @@
 
 
         },
-        create: {
+        Create: {
             default: handleCreate,
 
 
 
 
         },
-        view: {
+        View: {
             default: handleViewCommand,
 
 
@@ -91,7 +92,7 @@
 
 
         },
-        configure: {
+        Configure: {
             peg: handleConfigurePeg,
 
             api: handleConfigureApi,
@@ -109,7 +110,7 @@
             newsandannouncement: handleConfigureNewsAndAnnouncement,
             settings: handleConfigureSettings,
         },
-        open: {
+        Open: {
             default: handleOpenSource,
             ads: handleOpenAds,
             card: handleOpenCard,
@@ -120,22 +121,22 @@
 
 
         },
-        upload: {
+        Upload: {
             default: handleUpload
         },
-        download: {
+        Download: {
             default: handleDownload
         },
-        set: {
+        Set: {
             default: () => console.log("set command!")
         },
-        run: {
+        Run: {
             default: handleRunCommand,
         },
-        analyse: {
+        Analyse: {
             default: handleAnalyse
         },
-        ai: {
+        Ai: {
             start: handleAiStart,
 
         },
@@ -511,7 +512,7 @@
                 let valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
 
                 if (valueIndex === -1 && commandConfig.commandGroup?.toLowerCase() === 'view') {
-                    const detectedType = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), prevValue, prevPrompt.promptValues);
+                    const detectedType = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), prevValue, prevPrompt.promptValues, tokens, commandConfig);
 
                     if (detectedType) {
                         valueIndex = allowedValues.indexOf(detectedType.toLowerCase());
@@ -567,40 +568,51 @@
     function openPopOption(targetURL) {
         console.log("PopOption is clicked");
 
-        let popUpContainerUrl = `../AxpertPlugins/Axi/HTMLPages/PopUpContainer.html`;
 
-        //if (targetURL && targetURL.toLowerCase().includes("/aspx")) {
-        //    console.log("Before removing : " + targetURL);
-        //    targetURL = targetURL.replace("/aspx", "");
-        //    console.log("After removing : " + targetURL);
-        //}
+        if (targetURL) {
+            let popUpContainerUrl = `../AxpertPlugins/Axi/HTMLPages/PopUpContainer.html`;
 
-        //if (targetURL && targetURL.toLowerCase().includes("/aspx/")) {
-        //    console.log("Before removing : " + targetURL)
-        //    targetURL = targetURL.split("/aspx/")[1];
-        //    console.log("After removing : " + targetURL);
-        //}
-        if (targetURL && targetURL.toLowerCase().includes("../")) {
-            console.log("Before removing : " + targetURL)
-            targetURL = targetURL.replace("../","");
-            //targetURL = targetURL.split("/")[1];
-            console.log("After removing : " + targetURL);
+            //if (targetURL && targetURL.toLowerCase().includes("/aspx")) {
+            //    console.log("Before removing : " + targetURL);
+            //    targetURL = targetURL.replace("/aspx", "");
+            //    console.log("After removing : " + targetURL);
+            //}
+
+            //if (targetURL && targetURL.toLowerCase().includes("/aspx/")) {
+            //    console.log("Before removing : " + targetURL)
+            //    targetURL = targetURL.split("/aspx/")[1];
+            //    console.log("After removing : " + targetURL);
+            //}
+            if (targetURL && targetURL.toLowerCase().includes("../")) {
+                console.log("Before removing : " + targetURL)
+                targetURL = targetURL.replace("../", "");
+                //targetURL = targetURL.split("/")[1];
+                console.log("After removing : " + targetURL);
+            }
+
+
+            //let finalUrl = `${popUpContainerUrl}?contenturl=${encodeURIComponent(btoa(targetURL))}`;
+            let finalUrl = `${popUpContainerUrl}?contenturl=${targetURL}`;
+
+
+            popUpOption = false;
+            console.log("PopUp Option is set to :" + popUpOption);
+            
+
+            let hiddenVar = document.getElementById("hiddenLoader");
+            console.log(hiddenVar);
+            hiddenVar.src = finalUrl;
+            //hiddenVar.style.display = "block";
+            hiddenVar.style.display = "flex";
+            //let popup = document.getElementById("popupContainer");
+            //popup.style.display = "block";
+            // window.open(finalUrl);
         }
-
-
-        //let finalUrl = `${popUpContainerUrl}?contenturl=${encodeURIComponent(btoa(targetURL))}`;
-        let finalUrl = `${popUpContainerUrl}?contenturl=${targetURL}`;
-
-        popUpOption = false;
-
-        let hiddenVar = document.getElementById("hiddenLoader");
-        console.log(hiddenVar);
-        hiddenVar.src = finalUrl;
-        //hiddenVar.style.display = "block";
-        hiddenVar.style.display = "flex";
-        //let popup = document.getElementById("popupContainer");
-        //popup.style.display = "block";
-        // window.open(finalUrl);
+        else {
+            popUpOption = false;
+            console.log("Error in Popup: TargetURL is empty");
+            showToast("Something went wrong. Please try again later");
+        }
     }
 
     function redirectToSmartView({ adsName, filters }) {
@@ -635,6 +647,7 @@
         }
 
         console.log("Target Url for SmartViewTable:  " + targetUrl);
+        setCommandRoutes(input.value.trim(), targetUrl); 
         /**====================================================================================
          * NOTE: This is Debug code remove it before deploying  to the  production environment 
          * ====================================================================================
@@ -704,6 +717,7 @@
 
         setEditSessionState(transId);
         console.log(`LoadIframe called with Url: ${targetUrl}`);
+        setCommandRoutes(input.value.trim(), targetUrl); 
 
 
         top.window.LoadIframe(targetUrl);
@@ -747,6 +761,7 @@
             targetUrl += `&dummyload=false♠`;
         }
 
+        setCommandRoutes(input.value.trim(), targetUrl); 
 
         if (popUpOption) {
             openPopOption(targetUrl)
@@ -772,6 +787,7 @@
         }
 
 
+          setCommandRoutes(input.value.trim(), targetUrl); 
         top.window.LoadIframe(targetUrl);
     }
 
@@ -779,6 +795,7 @@
         console.log("Redirecting to Iview: " + iViewName + "..............");
         let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
 
+          setCommandRoutes(input.value.trim(), targetUrl); 
 
         if (popUpOption) {
             openPopOption(targetUrl)
@@ -808,6 +825,7 @@
             targetUrl = `../aspx/tstruct.aspx?transid=ad_pm`;
         }
 
+          setCommandRoutes(input.value.trim(), targetUrl); 
 
         top.window.LoadIframe(targetUrl);
     }
@@ -855,7 +873,7 @@
 
             //const numericRegex = /^-?\d*$/;
             let numericRegex;
-            if (grpKey === "view") { 
+            if (grpKey.toLowerCase() === "view") { 
                 numericRegex = /^-?(?!.*\.\.)(?!.*'')(?!.*,,)[\d.,'-<>!=]*$/;
                 //numericRegex = /^(>=|<=|!=|>|<|=)?-?(?:\d+(?:,\d+)*(?:\.\d+)?|\.\d+)$/;
             }
@@ -882,7 +900,7 @@
 
                 console.error("Type only numeric value");
 
-                if (grpKey === "view")
+                if (grpKey.toLowerCase() === "view")
                     showToast("Please enter a valid number. You may use comparison operators (>, <, >=, <=, !=, =).");
                 else
                     showToast("Please enter a valid numeric value.");
@@ -1730,12 +1748,12 @@
             const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
             const viewValues = commandConfig.prompts?.[0]?.promptValues;
             const firstToken = cleanString(tokens[1] || "");
-            detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues);
+            detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues, tokens, commandConfig);
 
             if (detectedType === "ads") {
                 ignoreExtraParams = true;
                 if (tokens.length > 2) {
-                    updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "column" : "value" });
+                    updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "fieldname" : "fieldvalue" });
                     return viewAdsCommandHandling(tokens, commandConfig)
 
                 }
@@ -1745,7 +1763,7 @@
         }
 
         ///Need to make a common function for processAdsRepetitivetokens
-        if (groupKey === "create" && tokens.length > 3) {
+        if (groupKey.toLowerCase() === "create" && tokens.length > 3) {
             let viewSource = commandConfig?.prompts?.[2]?.promptSource?.toLowerCase();
             //let viewSource = "Axi_FieldList".toLowerCase();
             let tokenCopy = [...tokens];
@@ -1757,8 +1775,8 @@
             updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 !== 0) ? "fieldname": "fieldValue"})
             return createCommandHandling(tokenCopy, commandConfig, viewSource);
         }
-            
-        if (groupKey === "run") {
+
+        if (groupKey.toLowerCase() === "run") {
             const structType = getStructType();
 
             if (!structType || structType === "o") {
@@ -1775,7 +1793,7 @@
 
         ///KeyValue based edit handling.
 
-        if ((!promptInfo || tokens[3] === "with" )&& groupKey === "edit" && tokens.length >= 4) {
+        if ((!promptInfo || tokens[3] === "with") && groupKey.toLowerCase() === "edit" && tokens.length >= 4) {
 
             let viewSource;
             if (tokens.length == 4) {
@@ -1810,13 +1828,13 @@
             updateDynamicHintFromPrompt(null);
 
             ///added as we now dont have option for go and popup in create(When create old logic works we can remove this)(T)
-            if (groupKey === "create" && tokens.length === 3) {
+            if (groupKey.toLowerCase() === "create" && tokens.length === 3) {
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
             }
 
             ///added as we now dont have option for go and popup in create(When create old logic works we can remove this)(T)
-            if (groupKey === "view" && tokens.length >= 3) {
+            if (groupKey.toLowerCase() === "view" && tokens.length >= 3) {
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
             }
@@ -1839,12 +1857,12 @@
         // Scenario A: Static Values
 
         ///Skipping PromptValue "With" token for edit
-        if (!realSource && activePrompt.promptValues && groupKey!== "edit") {
+        if (!realSource && activePrompt.promptValues && groupKey.toLowerCase() !== "edit") {
             const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
 
-            if (groupKey === "create" && tokens.length === 3) {
+            if (groupKey.toLowerCase() === "create" && tokens.length === 3) {
                 result.unshift(goOption);
                 result.unshift(popOption);
                 filteredObjects.unshift(goOption);
@@ -1903,7 +1921,7 @@
                     } else {
 
                         ///addedby(t)
-                        if (groupKey === "view" && tokens.length >= 3) {
+                        if (groupKey.toLowerCase() === "view" && tokens.length >= 3) {
                             filteredObjects = [goOption, popOption];
                             return [goOption, popOption];
                         }
@@ -1919,6 +1937,16 @@
             if (apiSourceName.toLowerCase() === "axi_analyticslist") {
                 paramValue = window.mainUserName;
             }
+
+            if (realSource.toLowerCase() === "axi_structlist") {
+                paramValue = processExtraParams(tokens,commandConfig);
+            }
+
+            if (realSource.toLowerCase() === "axi_viewlist") {
+                paramValue = processExtraParams(tokens,commandConfig);
+            }
+
+
             const sourceKey = (paramValue ? `${apiSourceName}_${paramValue}` : apiSourceName).toLowerCase();
 
             if (!axDatasourceObj[sourceKey]) {
@@ -1943,28 +1971,28 @@
 
             let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
 
-            if ((groupKey === "view") && tokens.length === 3) {
+            if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
                 resultList.unshift(goOption);
                 resultList.unshift(popOption);
                 filteredObjects.unshift(goOption);
                 filteredObjects.unshift(popOption);
             }
-            else if ((groupKey === "configure") && tokens.length === 3 && tokens[1] !== "keyfield") {
+            else if ((groupKey.toLowerCase() === "configure") && tokens.length === 3 && tokens[1] !== "keyfield") {
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
 
-            else if (groupKey === "analyse" && tokens.length <= 3) {
+            else if (groupKey.toLowerCase() === "analyse" && tokens.length <= 3) {
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
 
-            //else if (groupKey === "create" && tokens.length == 3) {
+            //else if (groupKey.toLowerCase() === "create" && tokens.length == 3) {
             //    resultList.unshift(goOption);
             //    filteredObjects.unshift(goOption);
             //}
 
-            else if (groupKey === "edit" &&  tokens.length > 4) {
+            else if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
                 resultList.unshift(goOption);
                 resultList.unshift(popOption);
                 filteredObjects.unshift(goOption);
@@ -1975,7 +2003,7 @@
         }
 
         ///added this for sinlge fiedlname and fieldvalue(T)
-        if (groupKey === "edit" && tokens.length > 4) {
+        if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
             //resultList.unshift(goOption);
             //resultList.unshift(popOption);
             //filteredObjects.unshift(goOption);
@@ -1987,7 +2015,68 @@
     }
 
 
+    function processExtraParams(tokens,commandConfig) {
 
+        let paramValue = "";
+
+        let iviewBoolCheck = false;
+
+        if (tokens.length >= 2) {
+            if (tokens[1].toLowerCase() == "iview" && commandConfig.commandGroup.toLowerCase() == "open") {
+                iviewBoolCheck = true;
+            }
+        }
+        try {
+
+            let extraParams;
+            if (commandConfig.commandGroup.toLowerCase() == "configure") {
+                extraParams = commandConfig?.prompts?.[1]?.extraParams;
+            }
+            else if (commandConfig.commandGroup.toLowerCase() == "open") {
+                extraParams = commandConfig?.prompts?.[1]?.extraParams;
+            }
+            else {
+                extraParams = commandConfig?.prompts?.[0]?.extraParams;
+            }
+
+            if (!extraParams) return paramValue;
+
+            let paramsArray = extraParams.split(",");
+
+            paramsArray.forEach(param => {
+
+                param = param.trim().toLowerCase();
+                let value = "";
+
+                if (param === ":username") {
+                    value = mainUserName;
+                }
+                else if (param === ":userroles") {
+                    value = userResp;
+                }
+                else if (param === ":mode") {
+                    value = (commandConfig.commandGroup.toLowerCase() === "open") ? "dev" : "run";
+                }
+                else if (param === ":structtype") {
+                    value = iviewBoolCheck ? "i" : "t";
+                }
+
+                if (value) {
+                    if (paramValue === "") {
+                        paramValue = value;
+                    } else {
+                        paramValue += "$#$" + value;
+                    }
+                }
+
+            });
+
+        } catch (err) {
+            console.log("Error in processExtraParams:", err);
+        }
+
+        return paramValue;
+    }
 
 
     function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
@@ -2042,6 +2131,15 @@
             if (apiName.toLowerCase() === "axi_analyticslist") {
                 paramValue = window.mainUserName;
             }
+
+            if (realSource.toLowerCase() === "axi_structlist") {
+                paramValue = processExtraParams(currentTokens,commandConfig);
+            }
+
+            if (realSource.toLowerCase() === "axi_viewlist") {
+                paramValue = processExtraParams(currentTokens, commandConfig);
+            }
+
             let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
 
             const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
@@ -2171,7 +2269,7 @@
                 li.style.borderBottom = "1px solid #eee";
             li.textContent = text;
 
-            } else if (isInitialCommandStage && commands[text.toLowerCase()]) {
+            } else if (isInitialCommandStage && commands[text]) {
                 const iconName = commandIcons[text.toLowerCase()] || "chevron_right"; 
 
                 li.innerHTML = `
@@ -2256,14 +2354,14 @@
             executeCommandsV2();
             return;
         }
-        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck === "create") {
+        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "create") {
             console.log("Save Option Selected...Submitting Data...");
             hide();
             AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
-        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck === "edit") {
+        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "edit") {
             console.log("Save Option Selected...Submitting Data...");
             hide();
             AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, tokens, saveCommandConfig);
@@ -2316,7 +2414,7 @@
                 const viewValues = commandConfig.prompts[0].promptValues;
                 const firstToken = cleanString(tokens[1] || "");
 
-                const detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues);
+                const detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues, tokens, commandConfig);
 
                 if (detectedType === "ads" && targetIndex >= 3 && targetIndex % 2 !== 0) {
                     isAdsValue = true;
@@ -2715,7 +2813,7 @@
             if (grpKey)
                 saveCommandConfig = commands[grpKey];
 
-            if (e.key === 'Backspace' && (grpKey === "create" || grpKey === "edit")) {
+            if (e.key === 'Backspace' && (grpKey.toLowerCase() === "create" || grpKey.toLowerCase() === "edit")) {
                 let transIDcheck = setCommandTransid;
                 if (input.selectionStart !== input.selectionEnd) {
                     createfieldnamevaluesList[transIDcheck] = [];
@@ -2784,7 +2882,7 @@
 
 
             }
-            else if (e.key === 'Backspace' && grpKey === "view") {
+            else if (e.key === 'Backspace' && grpKey.toLowerCase() === "view") {
                 if (input.selectionStart !== input.selectionEnd) {
                     setCommandTransid = null;
                     dateControlBoolean = false;
@@ -2822,14 +2920,38 @@
             }
 
 
-            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "enter") {
-                popUpOption = true;
-                e.preventDefault();
-                hide();
-                executeCommandsV2();
-                return;
-            }
+            //if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "enter") {
+            //    popUpOption = true;
+            //    e.preventDefault();
+            //    hide();
+            //    executeCommandsV2();
+            //    return;
+            //}
 
+            if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "enter") && (grpKey.toLowerCase() === "create" || grpKey.toLowerCase() === "edit" || grpKey.toLowerCase() === "view")) {
+
+                e.preventDefault();
+                
+
+                try {
+                    if (tokens.length >= 2) {
+                        hide();
+                        popUpOption = true;
+                        executeCommandsV2();
+                        return;
+                    }
+                    //else return;
+                }
+                catch (err) {
+                    popUpOption = false;
+
+                    console.log("Error in Popup:", err);
+
+                    showToast("Something went wrong. Please try again later");
+
+                    return;
+                }
+            }
 
 
             if (e.key === "Enter") {
@@ -2926,9 +3048,9 @@
                 e.preventDefault();
                 console.log("Save Option Selected...Submitting Data...");
                 hide();
-                if (grpKey === "create")
+                if (grpKey.toLowerCase() === "create")
                     AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
-                else
+                else if (grpKey.toLowerCase() === "edit")
                     AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, tokens, saveCommandConfig);
                 resetSetCommandState();
                 return;
@@ -3602,7 +3724,9 @@
             handleAiButtons("openUpload"); 
 
         } else {
-        window.LoadIframe("../aspx/ImportAll.aspx");
+            const targetUrl = "../aspx/ImportAll.aspx"; 
+            setCommandRoutes(input.value.trim(), targetUrl); 
+        window.LoadIframe(targetUrl);
 
 
         }
@@ -3614,7 +3738,8 @@
 
     function handleDownload({ tokens, commandConfig }) {
         let targetUrl = "../aspx/ExportNew.aspx";
-        targetUrl += "?action=export"
+        targetUrl += "?action=export"; 
+         setCommandRoutes(input.value.trim(), targetUrl); 
         window.LoadIframe(targetUrl);
 
     }
@@ -3671,7 +3796,7 @@
 
         }
 
-
+        setCommandRoutes(input.value.trim(), targetUrl); 
         if (popUpOption) {
             openPopOption(targetUrl)
         }
@@ -3712,7 +3837,7 @@
         transId = tryResolveToken(1, rawStruct, commandConfig, false);
 
 
-        type = getType(viewDataSourceKey, transId, promptValues);
+        type = getType(viewDataSourceKey, transId, promptValues, tokens, commandConfig);
 
         const handler = VIEW_HANDLERS[type];
 
@@ -3750,7 +3875,7 @@
 
 
             let rawFieldValue = cleanCommandToken(tokens[1]);
-            redirectToHtmlPages(rawFieldValue);
+            redirectToHtmlPages(rawFieldValue, tokens, commandConfig);
             return;
 
         }
@@ -3845,9 +3970,17 @@
         }
     }
 
-    function getType(axDatasourceKey, text, paramValuesCsv) {
+    function getType(axDatasourceKey, text, paramValuesCsv, tokens, commandConfig) {
         const paramList = paramValuesCsv?.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
         const VALID_TYPES = new Set(paramList);
+
+        let paramValue;
+        if (axDatasourceKey.toLowerCase() === "axi_viewlist") {
+            paramValue = processExtraParams(tokens, commandConfig);
+            axDatasourceKey += "_" + paramValue;
+        }
+
+
 
         const data = axDatasourceObj?.[axDatasourceKey];
 
@@ -3889,13 +4022,20 @@
     }
 
 
-    function redirectToHtmlPages(text) {
-        const viewList = axDatasourceObj["axi_viewlist".toLowerCase()];
+    function redirectToHtmlPages(text, tokens, commandConfig) {
+
+        let paramValue = processExtraParams(tokens, commandConfig);
+
+        const viewList = axDatasourceObj["axi_viewlist".toLowerCase() + "_" + paramValue];
+
+       
 
         const item = viewList.find(v => v.displaydata.includes(text));
 
         const requestUrl = item.name;
         console.log(requestUrl);
+
+          setCommandRoutes(input.value.trim(), requestUrl); 
 
         if (popUpOption) {
             openPopOption(requestUrl)
@@ -7186,7 +7326,7 @@
         console.log("Target Url for AxiBot:  " + targetUrl);
 
 
-
+         setCommandRoutes(input.value.trim(), targetUrl); 
         top.window.LoadIframe(targetUrl);
 
 
@@ -7379,7 +7519,10 @@
         const appname = getProjectName(); 
         const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`; 
         try {
-            commandFavorites = JSON.parse(localStorage.getItem(favKey)) || []; 
+            const localData = JSON.parse(localStorage.getItem(favKey)) || []; 
+           commandFavorites = localData.map(fav => 
+                typeof fav === 'string' ? { commandText: fav, targetURL: "" } : fav
+            );
 
         }catch(ex) {
             commandFavorites  = []; 
@@ -7394,14 +7537,17 @@
                     console.log("Fetched favorites from backend: ", data); 
                     console.log("type : ", typeof data); 
                     if (data && Array.isArray(data)) {
-                        commandFavorites = data.map(item => item.commandText);
+                        commandFavorites = data.map(item => ({
+                            commandText: item.commandText || item.commandtext,
+                            targetUrl: item.targetUrl || item.targetURL || item.targeturl,
+                        }));
                         localStorage.setItem(favKey, JSON.stringify(commandFavorites));
                         renderFavoritesUI(); 
                     }
                 })
                 .catch(err =>{ 
                     console.error("Axi: Failed to sync favorites from backend", err); 
-                    showToast("Axi: Axi: Failed to sync favorites from backend"); 
+                    // showToast("Axi: Axi: Failed to sync favorites from backend"); 
 
                 });
 
@@ -7415,7 +7561,12 @@
         const appname = getProjectName(); 
         const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
 
-        const cmdIndex = commandFavorites.findIndex(fav => fav.toLowerCase() === cmdText.toLowerCase()); 
+        const cmdIndex = commandFavorites.findIndex(fav => fav.commandText.toLowerCase() === cmdText.toLowerCase()); 
+
+        const commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase()); 
+
+
+      
         
 
         if (cmdIndex !== -1) {
@@ -7426,11 +7577,15 @@
             commandFavorites.splice(cmdIndex, 1); 
             showToast(`Removed ${cmdText} from Favorites`); 
         } else {
+              if (!commandRoute) {
+            showToast("Please Execute the command at least once before adding to favorites"); 
+            return; 
+        }
             if (commandFavorites.length>= MAX_FAVORITES) {
                 showToast(`Maximum of ${MAX_FAVORITES} favorites allowed. Please remove some favorites before adding new ones.`); 
                 return; 
             }
-            commandFavorites.unshift(cmdText); 
+            commandFavorites.unshift({commandText: cmdText, targetUrl: commandRoute.targetUrl}); 
         
             showToast(`Added ${cmdText} to favorites`, 3000, true); 
         }
@@ -7448,7 +7603,8 @@
                     username: window.mainUserName,
                     commandText: cmdText,
                     action: isAdding ? "add" : "remove",
-                    favOrder: 0
+                    favOrder: 0,
+                    targetURL: commandRoute?.targetUrl
                 
                 })
             }).catch(err => console.error("Axi: Failed to update favorite on backend", err));
@@ -7482,7 +7638,8 @@
 
        
 
-        commandFavorites.forEach(cmd => {
+        commandFavorites.forEach(fav => {
+            const cmdText  = fav.commandText; 
             const favHtml = `
                 <div class="My-Fav-Items">
                     <div class="symbol symbol-40px symbol-circle me-5">
@@ -7491,7 +7648,7 @@
                         </span>
                     </div>
                     <div class="My-Fav-Items-Content">
-                        <a href="javascript:void(0);" class="My-Fav-Name">${cmd}</a>
+                        <a href="javascript:void(0);" class="My-Fav-Name">${cmdText}</a>
                         <div class="My-Fav-Name-Type">Command</div>
                     </div>
                     <div class="Delete-Fav" style="cursor: pointer;">                        
@@ -7507,13 +7664,13 @@
             element.querySelector('.Delete-Fav').addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                toggleFavorite(cmd);
+                toggleFavorite(cmdText);
             });
 
             element.querySelector('.My-Fav-Items-Content').addEventListener("click", (e) => {
                 e.preventDefault(); 
                 e.stopPropagation(); 
-                executeFavorite(cmd); 
+                executeFavorite(fav); 
             })
 
             wrapper.appendChild(element); 
@@ -7556,12 +7713,41 @@
     // }
 
 
-    function executeFavorite(cmdText) {
+    function executeFavorite(favObj) {
         hide(); 
-        input.value = cmdText + ""; 
+
+        input.value = favObj.commandText;
+        input.value += " ";  
+
+
+        if (favObj.targetUrl && favObj.targetUrl.trim() !== "") {
+            console.log("Executing Favorite directly via Target URL:", favObj.targetURL);
+
+            top.window.LoadIframe(favObj.targetUrl); 
+        } else {
 
         executeCommandsV2(); 
-        hide(); 
+
+
+        }
+
+    
+    }
+
+    function setCommandRoutes(cmdText, targetUrl) {
+        const existingCommandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase()); 
+
+        if (existingCommandRoute) {
+            console.log("Command route for ", cmdText, " already exists"); 
+            return; 
+        }
+
+        commandRoutes.push({
+            commandText: cmdText,
+            targetUrl: targetUrl
+        })
+
+        console.log(JSON.stringify(commandRoutes)); 
     }
 
 
