@@ -1775,7 +1775,7 @@
             hintDiv.textContent = "";
             return Object.keys(commands).filter(k => {
                 const key = k.toLowerCase(); 
-                return key.startsWith(groupKey)
+                return key.startsWith(groupKey.toLowerCase())
             });
         }
 
