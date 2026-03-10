@@ -2130,14 +2130,24 @@ function smartviewFetchGroupDetailRows(ctrl, groupFilters, cb) {
     };
     params.props.axClient_dateformat = ctrl.axClient_dateformat || 'dd/mm/yyyy';
 
-    const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-      : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-      : null;
-    if (!caller || typeof caller.GetDataFromAxList !== 'function') {
-      cb && cb(new Error('GetDataFromAxList not available'), []);
-      return;
-    }
+    // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+    //   : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+    //   : null;
+    // if (!caller || typeof caller.GetDataFromAxList !== 'function') {
+    //   cb && cb(new Error('GetDataFromAxList not available'), []);
+    //   return;
+    // }
+    const scopes = [parent, window, window.top];
 
+    const caller = scopes.find(
+        w => w && typeof w.GetDataFromAxList === 'function'
+    );
+    
+    if (!caller) {
+        cb && cb(new Error('GetDataFromAxList not available'), []);
+        return;
+    }
+    
     caller.GetDataFromAxList(params, function (response) {
       try {
         const parsed = (typeof safeParseAxResponse === 'function')

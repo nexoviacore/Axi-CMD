@@ -45,8 +45,8 @@
         tstruct: ({ transId, fieldName, fieldValue }) =>
             redirectToEntity(transId, fieldName, fieldValue),
 
-        iview: ({ transId }) =>
-            redirectToIView(transId),
+        iview: ({ transId, rawStruct }) =>
+            redirectToIView(transId, rawStruct),
 
         page: ({ transId, fieldName, fieldValue }) =>
             redirectToEntity(transId, fieldName, fieldValue),
@@ -619,11 +619,17 @@
         console.log("PopOption is clicked");
         
         if (targetURL) {
+
+            // ✅ FIX: Ensure htmlPages.aspx loads from /aspx/
+            if (targetURL.toLowerCase().includes("htmlpages.aspx") && !targetURL.includes("../")) {
+                targetURL = "../aspx/" + targetURL;
+            }
+
             let popUpContainerUrl = `../AxpertPlugins/Axi/HTMLPages/PopupContainer.html`
             //let popUpContainerUrl = `../CustomPages/Axi/HTMLPages/PopUpContainer.html`;
 
             if (targetURL && targetURL.toLowerCase().includes("../")) {
-                console.log("Before removing : " + targetURL)
+                console.log("Before removing : " + targetURL);
                 targetURL = targetURL.replace("../", "");
                 //targetURL = targetURL.split("/")[1];
                 console.log("After removing : " + targetURL);
@@ -652,7 +658,7 @@
         }
     }
 
-    function redirectToSmartView({ adsName, filters }) {
+    function redirectToSmartView({ adsName, filters}) {
 
 
         // let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
@@ -708,6 +714,7 @@
          */
 
         if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(adsName)}`;
             openPopOption(targetUrl)
         }
         else {
@@ -763,7 +770,7 @@
 
 
 
-    function redirectToTstruct(transId, isEdit = false, fieldName = "", fieldValue = "") {
+    function redirectToTstruct(transId,tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "") {
         console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
 
 
@@ -794,13 +801,15 @@
                 if (fieldName && fieldValue) {
                     targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
                 }
-                targetUrl += `&hltype=open`;
+            targetUrl += `&hltype=open`;
+            targetUrl += `&createaxiflag=true`;
             targetUrl += `&dummyload=false♠`;
         }
 
         setCommandRoutes(input.value.trim(), targetUrl); 
 
         if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
             openPopOption(targetUrl)
         }
         else {
@@ -828,13 +837,14 @@
         top.window.LoadIframe(targetUrl);
     }
 
-    function redirectToIView(iViewName) {
+    function redirectToIView(iViewName,iViewCaption="") {
         console.log("Redirecting to Iview: " + iViewName + "..............");
         let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
 
           setCommandRoutes(input.value.trim(), targetUrl); 
 
         if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
             openPopOption(targetUrl)
         }
         else {
@@ -1979,11 +1989,15 @@
                 paramValue = window.mainUserName;
             }
 
-            if (realSource.toLowerCase() === "axi_structlist") {
+            else if (realSource.toLowerCase() === "axi_structlist") {
                 paramValue = processExtraParams(tokens,commandConfig);
             }
 
-            if (realSource.toLowerCase() === "axi_viewlist") {
+            else if (realSource.toLowerCase() === "axi_structmetalist") {
+                paramValue = processExtraParams(tokens,commandConfig);
+            }
+
+            else if (realSource.toLowerCase() === "axi_viewlist") {
                 paramValue = processExtraParams(tokens,commandConfig);
             }
 
@@ -2010,7 +2024,10 @@
 
             filteredObjects = filtered;
 
-            let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+            let resultList = filtered.map(item => {
+                if (item.createallowed === 'F') return;
+                return item.displaydata || item.caption || item.name || item.fname || item.keyfield
+            });
 
             if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
                 resultList.unshift(popOption);
@@ -2093,13 +2110,25 @@
                     value = mainUserName;
                 }
                 else if (param === ":userroles") {
+                    value = AxUserRoles;
+                }
+                else if (param === ":userresp") {
                     value = userResp;
                 }
                 else if (param === ":mode") {
-                    value = (commandConfig.commandGroup.toLowerCase() === "open") ? "dev" : "run";
+                    if (commandConfig.commandGroup.toLowerCase() === "open") {
+                        value = "dev";
+                    }
+                    else if (commandConfig.commandGroup.toLowerCase() === "view") {
+                        value = "all"
+                    }
+                    else value = "run";
                 }
                 else if (param === ":structtype") {
-                    value = iviewBoolCheck ? "i" : "t";
+                    if (commandConfig.commandGroup.toLowerCase() === "view") {
+                        value = "all"
+                    }
+                    else value = iviewBoolCheck ? "i" : "t";
                 }
 
                 if (value) {
@@ -2173,11 +2202,15 @@
                 paramValue = window.mainUserName;
             }
 
-            if (realSource.toLowerCase() === "axi_structlist") {
+            else if (realSource.toLowerCase() === "axi_structlist") {
                 paramValue = processExtraParams(currentTokens,commandConfig);
             }
 
-            if (realSource.toLowerCase() === "axi_viewlist") {
+            else if (realSource.toLowerCase() === "axi_structmetalist") {
+                paramValue = processExtraParams(currentTokens,commandConfig);
+            }
+
+            else if (realSource.toLowerCase() === "axi_viewlist") {
                 paramValue = processExtraParams(currentTokens, commandConfig);
             }
 
@@ -3480,13 +3513,13 @@
                 );
 
                 if (valuePresentInList)
-                    redirectToTstruct(transId, true, fieldName, fieldUniqueId);
+                    redirectToTstruct(transId, rawStruct, true, fieldName, fieldUniqueId);
                 else
-                    redirectToTstruct(transId, false, fieldName, fieldUniqueId);
+                    redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
             }
             else {
 
-                redirectToTstruct(transId, false, fieldName, fieldUniqueId);
+                redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
             }
 
 
@@ -3544,13 +3577,13 @@
                 );
 
                 if (valuePresentInList)
-                    redirectToTstruct(transId, true, fieldName, fieldUniqueId);
+                    redirectToTstruct(transId,"", true, fieldName, fieldUniqueId);
                 else
-                    redirectToTstruct(transId, false, fieldName, fieldUniqueId);
+                    redirectToTstruct(transId,"", false, fieldName, fieldUniqueId);
             }
             else {
 
-                redirectToTstruct(transId, false, fieldName, fieldUniqueId);
+                redirectToTstruct(transId,"", false, fieldName, fieldUniqueId);
             }
 
         }
@@ -3624,7 +3657,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId, true, fieldname, rawApiName);
+        redirectToTstruct(transId,"", true, fieldname, rawApiName);
 
 
 
@@ -3642,7 +3675,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId, true, fieldname, rawParamName);
+        redirectToTstruct(transId,"", true, fieldname, rawParamName);
 
 
 
@@ -3660,7 +3693,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId, true, fieldname, rawParamName);
+        redirectToTstruct(transId,"", true, fieldname, rawParamName);
 
 
 
@@ -3677,7 +3710,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId, true, fieldname, rawParamName);
+        redirectToTstruct(transId,"", true, fieldname, rawParamName);
 
 
 
@@ -3694,7 +3727,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId, true, fieldname, rawParamName);
+        redirectToTstruct(transId,"", true, fieldname, rawParamName);
 
 
 
@@ -3724,7 +3757,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId, true, fieldname, fieldValue);
+        redirectToTstruct(transId,"", true, fieldname, fieldValue);
 
 
 
@@ -3737,7 +3770,7 @@
         let rawTitle = cleanCommandToken(tokens[2]); 
 
         setEditSessionState(transId); 
-        redirectToTstruct(transId, false, fieldname, rawTitle); 
+        redirectToTstruct(transId,"", false, fieldname, rawTitle); 
     }
 
     function handleConfigureSettings({tokens, commandConfig}) {
@@ -3762,7 +3795,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId, true, fieldname, rawParamName);
+        redirectToTstruct(transId,"", true, fieldname, rawParamName);
 
 
 
@@ -3920,7 +3953,7 @@
 
             redirectToSmartView({
                 adsName: adsName,
-                filters: filters,
+                filters: filters
             });
             return;
 
@@ -3974,7 +4007,8 @@
         handler({
             transId,
             fieldName,
-            fieldValue: fieldUniqueId
+            fieldValue: fieldUniqueId,
+            rawStruct
         })
 
     }
@@ -4095,7 +4129,8 @@
           setCommandRoutes(input.value.trim(), requestUrl); 
 
         if (popUpOption) {
-            openPopOption(requestUrl)
+
+            openPopOption(requestUrl + `&caption=${encodeURIComponent(item.caption)}`)
         }
         else {
             window.LoadIframe(requestUrl);
@@ -6418,7 +6453,7 @@
                 }
             }
 
-            redirectToTstruct(transId);
+            redirectToTstruct(transId, rawName);
             return;
 
         }
@@ -6563,7 +6598,7 @@
 
                 setEditSessionState(transId);
 
-                redirectToTstruct(transId);
+                redirectToTstruct(transId, rawName);
 
         }
         catch (ex) {
@@ -7636,7 +7671,7 @@
                 return; 
             }
             commandFavorites.splice(cmdIndex, 1); 
-            showToast(`Removed ${cmdText} from Favorites`); 
+            showToast(`Removed '${cmdText}' from Favorites`); 
         } else {
               if (!commandRoute) {
             showToast("Please Execute the command at least once before adding to favorites"); 
@@ -7648,7 +7683,7 @@
             }
             commandFavorites.unshift({commandText: cmdText, targetUrl: commandRoute.targetUrl}); 
         
-            showToast(`Added ${cmdText} to favorites`, 3000, true); 
+            showToast(`Added '${cmdText}' to favorites`, 3000, true); 
         }
 
         localStorage.setItem(favKey, JSON.stringify(commandFavorites)); 
@@ -7701,6 +7736,7 @@
 
         commandFavorites.forEach(fav => {
             const cmdText  = fav.commandText; 
+             const titleText = cmdText.replace(/"/g, '&quot;');
             const favHtml = `
                 <div class="My-Fav-Items">
                     <div class="symbol symbol-40px symbol-circle me-5">
@@ -7709,7 +7745,8 @@
                         </span>
                     </div>
                     <div class="My-Fav-Items-Content">
-                        <a href="javascript:void(0);" class="My-Fav-Name">${cmdText}</a>
+                        <a href="javascript:void(0);" class="My-Fav-Name" data-bs-toggle="tooltip" data-bs-placement="bottom"
+               data-bs-original-title="${titleText}" title="${titleText}">${cmdText}</a>
                         <div class="My-Fav-Name-Type">Command</div>
                     </div>
                     <div class="Delete-Fav" style="cursor: pointer;">                        
@@ -7777,11 +7814,18 @@
     function executeFavorite(favObj) {
         
         input.value = favObj.commandText + " ";
+        const tokens = getTokens(favObj.commandText); 
         
         axiClearBtn.style.display = "flex"; 
 
         if (favObj.targetUrl && favObj.targetUrl.trim() !== "") {
             console.log("Executing Favorite directly via Target URL:", favObj.targetUrl);
+            const params = new URLSearchParams(favObj.targetUrl.split("?")[1]);
+            const transId = params.get("transid");
+            if (tokens[0].toLowerCase() === "edit") {
+            setEditSessionState(transId);
+
+            }
 
             top.window.LoadIframe(favObj.targetUrl); 
         } else {
