@@ -1,6 +1,8 @@
 {
     
     "API_METADATA": "http://localhost/AxiApi/api/v1/Axi/axi_get",
+    "API_METADATA1": "http://localhost:5000/api/v1/Axi/axi_get",
+    "AXI_FAVORITES_URL1": "http://localhost:5000/api/v1/Axi/user-favourites",
     "AXI_FAVORITES_URL": "http://localhost/AxiApi/api/v1/Axi/user-favourites"
     
 }

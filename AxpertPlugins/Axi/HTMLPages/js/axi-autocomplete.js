@@ -118,6 +118,7 @@
             appvar: handleOpenAppVar,
             devoption: handleOpenDevOptions,
             dbconsole: handleOpenDbConsole,
+            menu: handleOpenArrangeMenu
 
 
         },
@@ -4307,6 +4308,11 @@
         // window.openDeveloperStudio("AxDBScript.aspx");
         window.LoadIframe("../aspx/AxDBScript.aspx"); 
 
+    }
+
+    function handleOpenArrangeMenu() {
+        // ArrangeMenu.aspx
+        window.LoadIframe("../aspx/ArrangeMenu.aspx"); 
     }
 
     /**
