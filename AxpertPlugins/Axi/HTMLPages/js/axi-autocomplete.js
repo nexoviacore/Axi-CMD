@@ -807,13 +807,14 @@
             targetUrl += `&dummyload=false♠`;
         }
 
-        setCommandRoutes(input.value.trim(), targetUrl); 
+       
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
             openPopOption(targetUrl)
         }
         else {
+             setCommandRoutes(input.value.trim(), targetUrl); 
             top.window.LoadIframe(targetUrl);
         }
     }
@@ -4215,14 +4216,17 @@
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
-
+            setCommandRoutes(input.value.trim(), targetUrl); 
+            
             redirectToIView(iviewName);
 
 
         } else {
             targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
             targetUrl += "&act=load";
-            targetUrl += "&dummyload=false♠"
+            targetUrl += "&dummyload=false♠"; 
+            setCommandRoutes(input.value.trim(), targetUrl); 
+
             window.LoadIframe(targetUrl);
 
         }
@@ -4248,13 +4252,17 @@
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
+            setCommandRoutes(input.value.trim(), targetUrl); 
+
             window.LoadIframe(targetUrl);
 
         } else {
 
             targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
             targetUrl += "&act=load";
-            targetUrl += "&dummyload=false♠"
+            targetUrl += "&dummyload=false♠"; 
+            setCommandRoutes(input.value.trim(), targetUrl); 
+
             window.LoadIframe(targetUrl);
 
         }
@@ -4279,12 +4287,15 @@
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
+            setCommandRoutes(input.value.trim(), targetUrl); 
             window.LoadIframe(targetUrl);
 
         } else {
             targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
             targetUrl += "&act=load";
-            targetUrl += "&dummyload=false♠"
+            targetUrl += "&dummyload=false♠"; 
+            setCommandRoutes(input.value.trim(), targetUrl); 
+
             window.LoadIframe(targetUrl);
 
         }
@@ -4294,25 +4305,34 @@
     }
 
     function handleOpenAppVar({ tokens, commandConfig }) {
-        window.LoadIframe("../aspx/tstruct.aspx?transid=axvar");
+        const targetUrl = "../aspx/tstruct.aspx?transid=axvar"; 
+        setCommandRoutes(input.value.trim(), targetUrl); 
+        window.LoadIframe(targetUrl);
 
     }
 
     function handleOpenDevOptions({ tokens, commandConfig }) {
-        window.LoadIframe("../aspx/tstruct.aspx?transid=axstc");
+        const targetUrl= "../aspx/tstruct.aspx?transid=axstc"; 
+        setCommandRoutes(input.value.trim(), targetUrl); 
+
+        window.LoadIframe(targetUrl);
 
     }
 
     function handleOpenDbConsole() {
         // Task Axi-0034 completed
         // window.openDeveloperStudio("AxDBScript.aspx");
-        window.LoadIframe("../aspx/AxDBScript.aspx"); 
+        const targetUrl = "../aspx/AxDBScript.aspx"; 
+        setCommandRoutes(input.value.trim(), targetUrl); 
+        window.LoadIframe(targetUrl); 
 
     }
 
     function handleOpenArrangeMenu() {
         // ArrangeMenu.aspx
-        window.LoadIframe("../aspx/ArrangeMenu.aspx"); 
+        const targetUrl  = "../aspx/ArrangeMenu.aspx"; 
+        setCommandRoutes(input.value.trim(), targetUrl); 
+        window.LoadIframe(targetUrl); 
     }
 
     /**
