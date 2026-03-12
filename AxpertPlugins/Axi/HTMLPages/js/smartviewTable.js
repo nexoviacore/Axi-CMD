@@ -359,7 +359,17 @@ function getAdsList() {
     };
     
     // Use parent.GetDataFromAxList if available, otherwise window
-    const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : window;
+   // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : window;
+   const scopes = [parent, window, window.top];
+
+   const caller = scopes.find(
+       w => w && typeof w.GetDataFromAxList === 'function'
+   );
+   
+   if (!caller) {
+       cb && cb(new Error('GetDataFromAxList not available'), []);
+       return;
+   }
     
     caller.GetDataFromAxList(
       params,
@@ -2143,10 +2153,7 @@ function smartviewFetchGroupDetailRows(ctrl, groupFilters, cb) {
         w => w && typeof w.GetDataFromAxList === 'function'
     );
     
-    if (!caller) {
-        cb && cb(new Error('GetDataFromAxList not available'), []);
-        return;
-    }
+   
     
     caller.GetDataFromAxList(params, function (response) {
       try {
@@ -3222,10 +3229,16 @@ function openFilters() {
                             props: { ADS: true, CachePermissions: true, getallrecordscount: false, pageno: 1, pagesize: 0 }
                           };
 
-                          const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-                            : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-                            : null;
+                          // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+                          //   : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+                          //   : null;
+                          const scopes = [parent, window, window.top];
 
+                          const caller = scopes.find(
+                              w => w && typeof w.GetDataFromAxList === 'function'
+                          );
+                          
+                         
                           if (!caller || typeof caller.GetDataFromAxList !== 'function') {
                             failure && failure(new Error('GetDataFromAxList not available for ds_smartlist_filters'));
                             return;
@@ -3730,7 +3743,12 @@ if (window._entityFilter && typeof window._entityFilter.handleApply === 'functio
             // do not send FILTERS / flattened sqlParams; backend expects props.filters JSON
             params.sqlParams = Object.assign({}, params.sqlParams || {});
 
-            const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window : null;
+            const scopes = [parent, window, window.top];
+
+            const caller = scopes.find(
+                w => w && typeof w.GetDataFromAxList === 'function'
+            );
+                    
             if (caller && typeof caller.GetDataFromAxList === 'function') {
               console.debug('EntityFilter fallback calling GetDataFromAxList with params ->', params);
               caller.GetDataFromAxList(params, function (resp) {
@@ -4552,10 +4570,16 @@ wireDom() {
         props: { ADS: false, CachePermissions: true, getallrecordscount: false, pageno: 1, pagesize: 500, sorting: [], filters: [] }
       };
   
-      const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-                   : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-                   : null;
-  
+      // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+      //              : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+      //              : null;
+      const scopes = [parent, window, window.top];
+
+      const caller = scopes.find(
+          w => w && typeof w.GetDataFromAxList === 'function'
+      );
+      
+    
       if (!caller || typeof caller.GetDataFromAxList !== 'function') {
         const err = new Error('GetDataFromAxList not available for fetchAdsMetadata');
         console.error(err);
@@ -4882,9 +4906,16 @@ wireDom() {
     console.log('loadNextPage: client-filter mode -> fetching full dataset', params);
 
     this.isFetching = true;
-    const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-                 : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-                 : null;
+    // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+    //              : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+    //              : null;
+    const scopes = [parent, window, window.top];
+
+    const caller = scopes.find(
+        w => w && typeof w.GetDataFromAxList === 'function'
+    );
+    
+    
     if (!caller || typeof caller.GetDataFromAxList !== 'function') {
       console.error('GetDataFromAxList not available');
       this.isFetching = false;
@@ -4939,9 +4970,16 @@ wireDom() {
   this.isFetching = true;
 
   // pick caller safely
-  const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-               : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-               : null;
+  // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+  //              : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+  //              : null;
+  const scopes = [parent, window, window.top];
+
+  const caller = scopes.find(
+      w => w && typeof w.GetDataFromAxList === 'function'
+  );
+  
+ 
 
   if (!caller || typeof caller.GetDataFromAxList !== 'function') {
     console.error('GetDataFromAxList not available');
@@ -5076,10 +5114,16 @@ wireDom() {
       console.warn('loadNextPage: paging fallback -> fetching all rows once', params);
 
       // pick caller safely
-      const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-                   : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-                   : null;
+      // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+      //              : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+      //              : null;
+      const scopes = [parent, window, window.top];
 
+      const caller = scopes.find(
+          w => w && typeof w.GetDataFromAxList === 'function'
+      );
+      
+     
       if (!caller || typeof caller.GetDataFromAxList !== 'function') {
         console.error('GetDataFromAxList not available (paging fallback)');
         return;
@@ -5145,7 +5189,17 @@ wireDom() {
     params.props.pagesize = 0;
     this.isFetching = true;
     try {
-      const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : window;
+    //  const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : window;
+      const scopes = [parent, window, window.top];
+
+    const caller = scopes.find(
+        w => w && typeof w.GetDataFromAxList === 'function'
+    );
+    
+    if (!caller) {
+        cb && cb(new Error('GetDataFromAxList not available'), []);
+        return;
+    }
       caller.GetDataFromAxList(
         params,
 (response) => {
@@ -5565,3 +5619,4 @@ document.addEventListener('DOMContentLoaded', function () {
 
   console.log('SmartViewTableController boot logic executed (ads=', adsName, ', initialFilters=', initialFiltersRaw.length, ')');
 });
+

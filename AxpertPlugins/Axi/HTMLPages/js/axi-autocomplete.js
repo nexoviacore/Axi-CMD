@@ -676,6 +676,7 @@
         // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
 
         targetUrl += `?ads=${encodeURIComponent(adsName)}`;
+        targetUrl += "&AxIsPop=true";
         targetUrl += "&load=1769601086182";
 
         let encodedFilterQuery;
@@ -720,7 +721,7 @@
          */
 
         if (popUpOption) {
-            //targetUrl += `&tname=${encodeURIComponent(adsName)}`;
+            targetUrl += `&tname=${encodeURIComponent(adsName)}`;
             openPopOption(targetUrl)
         }
         else {
@@ -794,20 +795,22 @@
             if (fieldName && fieldValue) {
                 targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
             }
-            targetUrl += `&hltype=load`;
-            targetUrl += `&torecid=false`;
-            targetUrl += `&openerIV=${transId}`;
-            targetUrl += `&isIV=false`;
-            targetUrl += `&isDupTab=false`;
+                targetUrl += `&hltype=load`;
+                targetUrl += `&torecid=false`;
+                targetUrl += `&openerIV=${transId}`;
+                targetUrl += `&isIV=false`;
+                targetUrl += `&isDupTab=false`;
+                targetUrl += "&AxIsPop=true";
 
             targetUrl += `&dummyload=false♠`;
 
         }
         else {
-            if (fieldName && fieldValue) {
-                targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
-            }
+                if (fieldName && fieldValue) {
+                    targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+                }
             targetUrl += `&hltype=open`;
+            targetUrl += "&AxIsPop=true";
             targetUrl += `&createaxiflag=true`;
             targetUrl += `&dummyload=false♠`;
         }
@@ -815,7 +818,7 @@
 
 
         if (popUpOption) {
-            //targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+            targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
             openPopOption(targetUrl)
         }
         else {
@@ -833,10 +836,12 @@
         if (fieldValue) {
             targetUrl += "?status=true";
             targetUrl += "&action=edit";
+            targetUrl += "&AxIsPop=true";
             targetUrl += `&name=${encodeURIComponent(fieldValue)}`;
         } else {
             targetUrl += "?status=true";
             targetUrl += "&action=add";
+            targetUrl += "&AxIsPop=true";
         }
 
 
@@ -851,7 +856,7 @@
         setCommandRoutes(input.value.trim(), targetUrl);
 
         if (popUpOption) {
-            //targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
+            targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
             openPopOption(targetUrl)
         }
         else {
@@ -2273,6 +2278,13 @@
     function processExtraParams(tokens, commandConfig) {
         let paramValue = "";
 
+        let iviewBoolCheck = false;
+
+        if (tokens.length >= 2) {
+            if (tokens[1].toLowerCase() == "iview" && commandConfig.commandGroup.toLowerCase() == "open") {
+                iviewBoolCheck = true;
+            }
+        }
         try {
             let extraParams;
             if (commandConfig.commandGroup.toLowerCase() == "configure") {
@@ -2328,7 +2340,7 @@
                             default:
                                 value = "t"; //all
                         }
-                    } else value = "t";
+                    } else value = iviewBoolCheck ? "i" : "t";
                 }
                 if (value) {
                     if (paramValue === "") {
