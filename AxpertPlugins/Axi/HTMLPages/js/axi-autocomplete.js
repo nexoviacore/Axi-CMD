@@ -20,6 +20,7 @@
     let axiFavoritesUrl = ""; 
     const MAX_FAVORITES = 20;
     let commandRoutes = []; 
+    let isDeleting = false; 
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
@@ -381,10 +382,14 @@
 
         } else {
             try {
+                const accessPermissions = getAccessPermissions(); 
+                 
                 const res = await fetch(`${apiMetadataUrl}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
                 if (!res.ok) throw new Error("Metadata fetch failed");
                 const data = await res.json();
-                commands = data.commands;
+                let commandsFromDb = data.commands;
+
+                commands = buildCommandsByAccessPermissions(commandsFromDb, accessPermissions); 
 
                 console.log(JSON.stringify(commands));
                 localStorage.setItem("axi_commands_v1", JSON.stringify(commands));
@@ -996,6 +1001,37 @@
 
 
         render();
+
+        /**
+         * Auto-Apply Logic
+         */
+        if (!isDeleting && items.length > 0) {
+            const currentTokens = getTokens(text); 
+            const lastTokenRaw = currentTokens[currentTokens.length - 1] || "";
+            const lastTokenClean = cleanString(lastTokenRaw); 
+            
+            if (!text.endsWith(" ") && lastTokenClean.length > 0) {
+                const validItems = items.filter(i => !isSystemMessage(i) && !i.isExecutable);
+                
+                let indexToApply = -1; 
+
+                if (validItems.length === 1 && lastTokenClean.length >= 2) {
+                    indexToApply = items.findIndex(item => {
+                        if (isSystemMessage(item) || item.isExecutable) return false; 
+
+                        const itemStr = typeof item === "string" ? item : (item.displaydata || item.name); 
+
+                        return itemStr.toLowerCase()=== lastTokenClean.toLowerCase(); 
+                    }); 
+                }
+
+                if (indexToApply !== -1) {
+                    setTimeout(() => {
+                        apply(indexToApply); 
+                    }, 50); 
+                }
+            }
+        }
     }
 
     /* ===============================
@@ -1685,7 +1721,7 @@
     //}
 
     function processRunCommands(tokens, targetIndex, structType) {
-        if (targetIndex !== 1) return [];
+        if (targetIndex !== 1) return [goOption];
         let allButtons
 
 
@@ -1890,6 +1926,13 @@
             if (groupKey.toLowerCase() === "view" && tokens.length >= 3) {
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
+            }
+
+           
+
+            if (["upload", "download"].includes(groupKey.toLowerCase()) && tokens.length >= 2) {
+                filteredObjects = [goOption]; 
+                return [goOption]; 
             }
 
             return [];
@@ -2310,6 +2353,17 @@
             activeIndex = 0; 
         }
 
+         if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0]))  {
+            list.classList.add("axi-grid-layout", "My-Command-Wrapper"); 
+            if (favouritesCard) favouritesCard.style.display = "flex"; 
+            if (commandHeader) commandHeader.style.display = "flex"; 
+
+        } else {
+            list.classList.remove("axi-grid-layout", "My-Command-Wrapper"); 
+            if (favouritesCard) favouritesCard.style.display = "none";
+            if (commandHeader) commandHeader.style.display = "none";
+        }
+
         if (validItems.length === 0) {
             const li = document.createElement("li");
             li.textContent = "No Data";
@@ -2323,16 +2377,7 @@
             return;
         }
 
-        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0]))  {
-            list.classList.add("axi-grid-layout", "My-Command-Wrapper"); 
-            if (favouritesCard) favouritesCard.style.display = "flex"; 
-            if (commandHeader) commandHeader.style.display = "flex"; 
-
-        } else {
-            list.classList.remove("axi-grid-layout", "My-Command-Wrapper"); 
-            if (favouritesCard) favouritesCard.style.display = "none";
-            if (commandHeader) commandHeader.style.display = "none";
-        }
+       
 
         validItems.forEach((item, i) => {
             const li = document.createElement("li");
@@ -2805,6 +2850,8 @@
     =============================== */
     function setupEventListeners() {
 
+
+
         favouriteBtn.addEventListener("click", (e) => {
             e.preventDefault(); 
             e.stopPropagation(); 
@@ -2895,6 +2942,7 @@
         input.addEventListener("input", handleInput);
         input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
         input.addEventListener("keydown", e => {
+            isDeleting = (e.key === "Backspace" || e.key === "Delete"); 
             console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
 
             const tokens = getTokens(input.value.trim());
@@ -7729,7 +7777,10 @@
                     targetURL: commandRoute?.targetUrl
                 
                 })
-            }).catch(err => console.error("Axi: Failed to update favorite on backend", err));
+            }).catch(err => {
+                showToast("Axi: Failed to update favorite on backend, Please check AxiApi Configuration"); 
+                console.error("Axi: Failed to update favorite on backend", err)
+            });
         }
 
     }
@@ -7882,7 +7933,101 @@
             targetUrl: targetUrl
         })
 
-        console.log(JSON.stringify(commandRoutes)); 
+        console.log("Command Routes: " + JSON.stringify(commandRoutes)); 
+    }
+
+    function generateLocalStorageKey(name, params) {
+        const prefixKey = "axi";
+       
+            return `${prefixKey}_${name}_${params}`; 
+        
+
+    }
+
+    function getAccessPermissions() {
+        // AppMgrAccess(Config)
+        // ImportAccess(Upload)
+        // ExportAccess(Download)
+        // Build(Open)
+        let appMgrAccess; 
+        let importAccess; 
+        let exportAccess; 
+        let buildAccess;
+        
+        
+        const appMgrAccessKey = generateLocalStorageKey("appMgrAccess", window.mainUserName); 
+        const importAccessKey = generateLocalStorageKey("importAccess", window.mainUserName); 
+        const exportAccessKey = generateLocalStorageKey("exportAccess", window.mainUserName); 
+        const buildAccessKey = generateLocalStorageKey("buildAccess", window.mainUserName); 
+        appMgrAccess = localStorage.getItem(appMgrAccessKey); 
+        if (!appMgrAccess) {
+            appMgrAccess = window.getSessionValue("AppMgrAccess");
+            localStorage.setItem(appMgrAccessKey, appMgrAccess); 
+        }
+
+         importAccess = localStorage.getItem(importAccessKey); 
+        if (!importAccess) {
+            importAccess = window.getSessionValue("ImportAccess");
+            localStorage.setItem(importAccessKey, importAccess); 
+        }
+
+         exportAccess = localStorage.getItem(exportAccessKey); 
+        if (!exportAccess) {
+            exportAccess = window.getSessionValue("ExportAccess");
+            localStorage.setItem(exportAccessKey, exportAccess); 
+        }
+
+         buildAccess = localStorage.getItem(buildAccessKey); 
+        if (!buildAccess) {
+            buildAccess = window.getSessionValue("Build");
+            localStorage.setItem(buildAccessKey, buildAccess); 
+        }
+
+        
+        return {
+            appMgrAccess: strToBool(appMgrAccess),
+            importAccess: strToBool(importAccess),
+            exportAccess: strToBool(exportAccess),
+            buildAccess: strToBool(buildAccess),
+
+        }
+    }
+
+    function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions) {
+        for (const [permissionKey, hasAccess] of Object.entries(accessPermissions)) {
+            if (!hasAccess || hasAccess === false) {
+                switch (permissionKey) {
+                    case "appMgrAccess":
+                        delete commandsFromDb["Configure"]; 
+                        break; 
+                    
+                    case 'importAccess':
+                        delete commandsFromDb['Upload']; 
+                        break; 
+                    case 'exportAccess':
+                        delete commandsFromDb['Download']
+                        break; 
+
+                    case 'buildAccess':
+                        delete commandsFromDb['Open']; 
+                        break; 
+
+                    default: 
+                        break; 
+                }
+            }
+        }
+
+        return commandsFromDb; 
+
+    }
+
+    function strToBool(str) {
+        if (str.toLowerCase() === "t" || str.toLowerCase() === "true") {
+            return true; 
+        } else {
+            return false; 
+        }
     }
 
 
