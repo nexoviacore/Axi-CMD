@@ -8114,6 +8114,51 @@
         input.value = favObj.commandText + " ";
         const tokens = getTokens(favObj.commandText);
 
+        const accessPermissions = getAccessPermissions(); 
+        // AppMgrAccess(Config)
+        // ImportAccess(Upload)
+        // ExportAccess(Download)
+        // Build(Open)
+
+         for (const [permissionKey, hasAccess] of Object.entries(accessPermissions)) {
+            if (!hasAccess || hasAccess === false) {
+                switch (permissionKey) {
+                    case "appMgrAccess":
+                        if (tokens[0].toLowerCase() === "configure") {
+                            showToast(`User:${window.mainUserName} has no access for command:${favObj.commandText}`); 
+                            
+                            return;} 
+                        break;
+
+                    case 'importAccess':
+                        if (tokens[0].toLowerCase() === "upload") {
+                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`); 
+                            
+                            return; }
+                        
+                        break;
+                    case 'exportAccess':
+                        if (tokens[0].toLowerCase() === "download") {
+                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`); 
+
+                            return;  
+                        }                       
+                        break;
+
+                    case 'buildAccess':
+                        if (tokens[0].toLowerCase() === "open") {
+                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`); 
+                            return; 
+
+                        }                        
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+
         axiClearBtn.style.display = "flex";
 
         if (favObj.targetUrl && favObj.targetUrl.trim() !== "") {
