@@ -417,10 +417,10 @@
 	padding-block: 0 !important;
 	margin-bottom: 10px;
 }
-    .My-Fav-Items-Wrapper .My-Fav-Items:last-child {
+    /* .My-Fav-Items-Wrapper .My-Fav-Items:last-child {
 	border-bottom: 0 !important;
 }
-    
+     */
    
     
  .My-Fav-Items-Wrapper .My-Fav-Items:nth-child(6n+1) .symbol-label {
@@ -486,7 +486,7 @@
 }
 .axi-suggestions.axi-grid-layout li.axi-suggestion {
   display: flex !important;
-  width: 139px;
+  width: 136px;
   align-items: center;
   justify-content: center;
   position: relative;

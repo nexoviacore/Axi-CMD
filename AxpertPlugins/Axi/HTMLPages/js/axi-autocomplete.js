@@ -800,7 +800,6 @@
                 targetUrl += `&openerIV=${transId}`;
                 targetUrl += `&isIV=false`;
                 targetUrl += `&isDupTab=false`;
-                targetUrl += "&AxIsPop=true";
 
             targetUrl += `&dummyload=false♠`;
 
@@ -810,7 +809,7 @@
                     targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
                 }
             targetUrl += `&hltype=open`;
-            targetUrl += "&AxIsPop=true";
+            
             targetUrl += `&createaxiflag=true`;
             targetUrl += `&dummyload=false♠`;
         }
@@ -819,6 +818,8 @@
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+                targetUrl += "&AxIsPop=true";
+
             openPopOption(targetUrl)
         }
         else {
@@ -1985,6 +1986,11 @@
                 return [goOption]
             }
 
+            else if (groupKey.toLowerCase() === "analyse" && tokens.length > 2) {
+                filteredObjects = [goOption];
+                return [goOption]
+            }
+
             if (["upload", "download"].includes(groupKey.toLowerCase()) && tokens.length >= 2) {
                 filteredObjects = [goOption];
                 return [goOption];
@@ -2639,7 +2645,7 @@
         const currentInput = input.value;
         const tokens = getTokens(currentInput);
 
-        const saveGroupKeyCheck = cleanString(tokens[0]).toLowerCase();
+        const saveGroupKeyCheck = cleanString(tokens[0]);
         const saveCommandConfig = commands[saveGroupKeyCheck];
 
         if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "GO_ACTION") {
@@ -4109,7 +4115,7 @@
 
         setCommandRoutes(input.value.trim(), targetUrl);
         if (popUpOption) {
-            //targetUrl += `&tname=${encodeURIComponent(formCaption)}`;
+            targetUrl += `&tname=${encodeURIComponent(formCaption)}`;
             openPopOption(targetUrl)
         }
         else {
