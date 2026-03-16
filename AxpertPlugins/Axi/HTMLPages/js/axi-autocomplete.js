@@ -4016,14 +4016,19 @@
     }
 
     function handleConfigureSettings({ tokens, commandConfig }) {
-        window.LoadIframe("../aspx/Configuration.aspx/LoadUserAppSettings");
+        // const targetUrl = "../aspx/Configuration.aspx/LoadUserAppSettings"; 
+        const targetUrl = "../aspx/Configuration.aspx"; 
+        setCommandRoutes(input.value.trim(), targetUrl); 
+        window.LoadIframe(targetUrl);
     }
 
 
 
     function handleConfigureProperties({ tokens, commandConfig }) {
         const targetUrl = "../aspx/tstruct.aspx?act=load&transid=ad_pr&axpdef_axpertpropsid=1";
-
+        //   const targetUrl = "../aspx/tstruct.aspx?act=load&transid=ad_pr&axpdef_axpertpropsid=1";
+        setCommandRoutes(input.value.trim(), targetUrl); 
+        
         top.window.LoadIframe(targetUrl);
 
     }
