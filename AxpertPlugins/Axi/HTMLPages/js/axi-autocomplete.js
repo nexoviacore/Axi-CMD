@@ -2098,6 +2098,7 @@
             let apiSourceName = realSource.toLowerCase();
             if (apiSourceName.toLowerCase() === "axi_analyticslist") {
                 paramValue = window.mainUserName;
+                apiSourceName = "axi_analyticslistnew"; 
             }
 
             else if (realSource.toLowerCase() === "axi_structlist") {
@@ -2117,16 +2118,29 @@
 
             if (!axDatasourceObj[sourceKey]) {
                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
-                if (hasValidParams) {
-                    loadList(apiSourceName, paramValue);
-                    console.log(axDatasourceObj);
-                    if (realSource.toLowerCase() === "axi_dummy") {
+
+                  if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
                         if (groupKey.toLowerCase() === "open" && tokens.length > 2) {
                             filteredObjects = [goOption];
                             return [goOption]
                         }
+
+                        if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
+                            filteredObjects = [goOption]; 
+                            return [goOption]; 
+                        }
                         return [];
                     }
+                if (hasValidParams) {
+                    loadList(apiSourceName, paramValue);
+                    console.log(axDatasourceObj);
+                    // if (realSource.toLowerCase() === "axi_dummy") {
+                    //     if (groupKey.toLowerCase() === "open" && tokens.length > 2) {
+                    //         filteredObjects = [goOption];
+                    //         return [goOption]
+                    //     }
+                    //     return [];
+                    // }
                     return [`Loading ${realSource}...`];
                 }
                 return ["Waiting for input..."];
@@ -2414,6 +2428,7 @@
 
             let apiName = realSource;
             if (apiName.toLowerCase() === "axi_analyticslist") {
+                apiName = "axi_analyticslistnew"; 
                 paramValue = window.mainUserName;
             }
 
@@ -8171,10 +8186,14 @@
             console.log("Executing Favorite directly via Target URL:", favObj.targetUrl);
             const params = new URLSearchParams(favObj.targetUrl.split("?")[1]);
             const transId = params.get("transid");
-            if (tokens[0].toLowerCase() === "edit") {
+            // if (tokens[0].toLowerCase() === "edit") {
+            if (transId) {
                 setEditSessionState(transId);
 
+
             }
+
+            // }
 
             top.window.LoadIframe(favObj.targetUrl);
         } else {
