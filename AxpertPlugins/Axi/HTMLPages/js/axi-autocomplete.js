@@ -837,12 +837,12 @@
         if (fieldValue) {
             targetUrl += "?status=true";
             targetUrl += "&action=edit";
-            targetUrl += "&AxIsPop=true";
+        
             targetUrl += `&name=${encodeURIComponent(fieldValue)}`;
         } else {
             targetUrl += "?status=true";
             targetUrl += "&action=add";
-            targetUrl += "&AxIsPop=true";
+        
         }
 
 
