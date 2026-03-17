@@ -4604,6 +4604,10 @@
      * 
      */
     function handleRunCommand({ tokens, commandConfig }) {
+        if (tokens.length < 2) {
+            showToast("Invalid Command! Run commands requires atleast 2 tokens!"); 
+            return; 
+        }
         const structType = getStructType();
         let buttonLabel = cleanCommandToken(tokens[1]);
         let allButtons = null;
@@ -5122,9 +5126,12 @@
     }
 
     function hasAction(btn) {
-        if (btn.getAttribute("onclick")) return true;
+        const isDisabled = btn.classList.contains("disabled"); 
+        if (btn.getAttribute("onclick") && !isDisabled) return true;
 
-        if (btn.tagName === "A") {
+        
+
+        if (btn.tagName === "A" && !isDisabled) {
             const href = btn.getAttribute("href");
 
             if (href && href !== "#" && href !== "javascript:void(0)") return true;
@@ -5155,7 +5162,8 @@
         buttons.forEach((btn, index) => {
             // if (!hasAction(btn)) return;
 
-            if (btn.classList.contains("d-none")) return;
+            if (btn.classList.contains("d-none") || btn.classList.contains("disabled")) return;
+        
 
             if (btn.getAttribute("data-kt-menu-attach") === "parent") return;
 
@@ -5200,6 +5208,7 @@
             if (btn.type === "hidden") return;
             if (btn.style.display === "none") return;
             if (btn.offsetParent === null) return;
+            if (btn.classList.contains("disabled")) return; 
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || btn.name || btn.getAttribute("data-kt-stepper-action");
             if (!id) return;
