@@ -676,7 +676,6 @@
         // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
 
         targetUrl += `?ads=${encodeURIComponent(adsName)}`;
-        targetUrl += "&AxIsPop=true";
         targetUrl += "&load=1769601086182";
 
         let encodedFilterQuery;
@@ -721,6 +720,8 @@
          */
 
         if (popUpOption) {
+        targetUrl += "&AxIsPop=true";
+
             targetUrl += `&tname=${encodeURIComponent(adsName)}`;
             openPopOption(targetUrl)
         }
@@ -1430,6 +1431,11 @@
                 if (datatype === 'c' || datatype === 'n' || datatype === "t") {
                     if (isAccept) {
                         let acceptedValue = cleanString(tokens[tokens.length - 1]);
+                          const columnName = prevColumnName
+                        adsfieldvalueanddt[columnName] = {
+                            datatype: datatype,
+                            isAccept: isAccept,
+                        };
                         if (acceptedValue)
                             SET_COMMAND_STATE.currentFieldValue = acceptedValue;
                         else {
@@ -1442,11 +1448,11 @@
                             //return ["Please type the value..."];
                         }
                         //return [];
-                        const columnName = prevColumnName
-                        adsfieldvalueanddt[columnName] = {
-                            datatype: datatype,
-                            isAccept: isAccept,
-                        };
+                        // const columnName = prevColumnName
+                        // adsfieldvalueanddt[columnName] = {
+                        //     datatype: datatype,
+                        //     isAccept: isAccept,
+                        // };
                         //if (tokens?.length <= 4) {
                         //    return [goOption,];
                         //}
