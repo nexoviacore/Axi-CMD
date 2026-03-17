@@ -4025,8 +4025,10 @@
 
 
     function handleConfigureProperties({ tokens, commandConfig }) {
-        const targetUrl = "../aspx/tstruct.aspx?act=load&transid=ad_pr&axpdef_axpertpropsid=1";
+        const transId = "ad_pr";
+        const targetUrl = `../aspx/tstruct.aspx?act=load&transid=${transId}&axpdef_axpertpropsid=1`;
         //   const targetUrl = "../aspx/tstruct.aspx?act=load&transid=ad_pr&axpdef_axpertpropsid=1";
+        setEditSessionState(transId); 
         setCommandRoutes(input.value.trim(), targetUrl); 
         
         top.window.LoadIframe(targetUrl);
