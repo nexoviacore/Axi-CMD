@@ -23,100 +23,146 @@
             overflow: hidden;
             background: transparent !important;
         }
+
         /* Container for the tabs */
         .tab-scroller {
-    display: flex !important;
-    gap: 4px !important;
-    align-items: flex-end !important;
-    overflow-x: auto;
-    overflow-y: hidden;
-    /* Ensure scroller doesn't interfere with pinned height */
-    height: 100% !important; 
-    max-height: 38px !important;
-}
+            display: flex !important;
+            gap: 4px !important;
+            align-items: flex-end !important;
+            overflow-x: auto;
+            overflow-y: hidden;
+            /* Ensure scroller doesn't interfere with pinned height */
+            height: 100% !important;
+            max-height: 38px !important;
+        }
 
-/* Optional: Custom scrollbar styling for a cleaner look */
-.tab-scroller::-webkit-scrollbar {
-    height: 4px;
-}
-.tab-scroller::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-}
+        /* Optional: Custom scrollbar styling for a cleaner look */
+        .tab-scroller::-webkit-scrollbar {
+            height: 4px;
+        }
 
-/* Inactive Tab - Readable Grey (No more bg-secondary) */
-.custom-tab {
-    flex: 0 0 auto !important; /* Critical: prevents tabs from squeezing */
-    cursor: pointer;
-    min-width: 140px;
-    height: 32px;
-    padding: 0 12px;
-    background: #e9ecef !important; 
-    color: #495057 !important; 
-    border: 1px solid #dee2e6 !important;
-    border-bottom: none !important;
-    border-radius: 6px 6px 0 0 !important;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    line-height: 1.2;
-}
+        .tab-scroller::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
 
-.custom-tab:hover {
-    background: #dee2e6 !important;
-}
+        /* Inactive Tab - Readable Grey (No more bg-secondary) */
+        .custom-tab {
+            flex: 0 0 auto !important;
+            /* Critical: prevents tabs from squeezing */
+            cursor: pointer;
+            min-width: 140px;
+            height: 32px;
+            padding: 0 12px;
+            background: #e9ecef !important;
+            color: #495057 !important;
+            border: 1px solid #dee2e6 !important;
+            border-bottom: none !important;
+            border-radius: 6px 6px 0 0 !important;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
 
-/* Active Highlight - Merged White */
-.custom-tab.active {
-    background: #ffffff !important; 
-    color: #0d6efd !important; 
-    height: 36px !important; 
-    font-weight: 600;
-    z-index: 10;
-    border-bottom: 2px solid #ffffff !important; 
-    margin-bottom: -1px; 
-}
-.tab-subtext {
-    font-size: 9px;
-    color: #6c757d;
-}
-#thumb-grid{
-    display:grid;
-    grid-template-columns: repeat(auto-fill,minmax(260px,1fr));
-    gap:20px;
-}
+        .custom-tab:hover {
+            background: #dee2e6 !important;
+        }
 
-.thumb-card{
-    background:white;
-    border-radius:8px;
-    overflow:hidden;
-    box-shadow:0 3px 10px rgba(0,0,0,0.15);
-    cursor:pointer;
-    transition:0.25s;
-}
+        /* Active Highlight - Merged White */
+        .custom-tab.active {
+            background: #ffffff !important;
+            color: #0d6efd !important;
+            height: 36px !important;
+            font-weight: 600;
+            z-index: 10;
+            border-bottom: 2px solid #ffffff !important;
+            margin-bottom: -1px;
+        }
 
-.thumb-card:hover{
-    transform:scale(1.05);
-    box-shadow:0 8px 20px rgba(0,0,0,0.25);
-}
+        .tab-subtext {
+            font-size: 9px;
+            color: #6c757d;
+        }
 
-.thumb-preview{
-    height:150px;
-    overflow:hidden;
-    background:#eee;
-}
+        /* Responsive Grid for Thumbnails */
+        /* Add this to your <style> section */
+        #thumb-grid {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(202px, 1fr)) !important;
+            gap: 15px;
+            padding: 10px;
+        }
 
-.thumb-preview img{
-    width:100%;
-}
+        .thumb-card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #fff;
+            cursor: pointer;
+            transition: transform 0.2s;
+            padding: 0px;
+            border-color: black;
+        }
 
-.thumb-title{
-    padding:8px;
-    font-size:13px;
-    font-weight:600;
-    text-align:center;
-    background:#f8f9fa;
-}
+        .thumb-header {
+            padding: 5px;
+            background-color: black;
+            color: white;
+            /* border-radius: 9px; */
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .thumb-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .thumb-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+            aspect-ratio: 16 / 9;
+            /* Keeps standard proportions */
+            object-fit: cover;
+            object-position: top;
+        }
+
+        .thumb-footer {
+            padding: 8px 12px;
+            background: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Ensure the tab itself doesn't grow infinitely */
+        .custom-tab {
+            min-width: 100px;
+            max-width: 180px;
+            /* Adjust based on your preference */
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        /* Force the bold tag to behave as a block for truncation */
+        .text-truncate {
+            display: inline-block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        /* Add this to your CSS */
+        .custom-tab.active .ghost-controls i:hover {
+            opacity: 1 !important;
+            transform: scale(1.2);
+        }
     </style>
 </head>
 
@@ -149,7 +195,6 @@
             Object.assign(pinned.style, {
                 position: "fixed",
                 bottom: "45px",
-                // left: "69%",
                 right: "0",
                 height: "42px",
                 display: "flex",
@@ -159,8 +204,7 @@
                 overflowX: "auto",
                 overflowY: "hidden",
                 whiteSpace: "nowrap",
-                zIndex:"9",
-               
+                zIndex: "9"
             });
 
             const axiSec = parentDoc.querySelector(".AXI-Sec");
@@ -176,246 +220,273 @@
                 this.mainPopup = null;
                 this.tabs = {};
                 this.activeTab = null;
+                this.lastOpenedTitle = "";
             }
+
             waitForTstructReady(ifr) {
 
-let tries = 0;
+                let tries = 0;
 
-const timer = setInterval(() => {
+                const timer = setInterval(() => {
 
-    tries++;
+                    tries++;
 
-    try {
+                    try {
 
-        const childWin = ifr.contentWindow;
+                        const childWin = ifr.contentWindow;
 
-        if (childWin && childWin.transid) {
+                        if (childWin && childWin.transid) {
 
-            clearInterval(timer);
+                            clearInterval(timer);
 
-            const formId = childWin.transid;
-            const dataId = childWin.tstDataId;
+                            const formId = childWin.transid;
+                            const dataId = childWin.tstDataId;
 
-            // 1️⃣ Load and keep popup form
-            this.syncTstruct(formId, dataId).then(() => {
+                            // 1️⃣ Load and keep popup form
+                            this.syncTstruct(formId, dataId).then(() => {
 
-                // 2️⃣ Re‑activate parent form
-                try {
+                                // 2️⃣ Re‑activate parent form
+                                try {
 
-                    const parentFrame =
-                        window.parent.document.querySelector("iframe[src*='tstruct']");
+                                    const parentFrame =
+                                        window.parent.document.querySelector(
+                                            "iframe[src*='tstruct']");
 
-                    if (!parentFrame) return;
+                                    if (!parentFrame) return;
 
-                    const parentWin = parentFrame.contentWindow;
+                                    const parentWin = parentFrame.contentWindow;
 
-                    if (parentWin && parentWin.transid) {
+                                    if (parentWin && parentWin.transid) {
 
-                        this.activateTstructOnServer(
-                            parentWin.transid,
-                            parentWin.tstDataId
-                        );
+                                        this.activateTstructOnServer(
+                                            parentWin.transid,
+                                            parentWin.tstDataId
+                                        );
 
-                    }
+                                    }
 
-                } catch (e) {}
+                                } catch (e) {}
 
-            });
+                            });
 
-        }
+                        }
 
-    } catch (e) {}
+                    } catch (e) {}
 
-    // safety stop
-    if (tries > 50) clearInterval(timer);
+                    // safety stop
+                    if (tries > 50) clearInterval(timer);
 
-}, 200);
+                }, 200);
 
-}
-            // Add this inside your TabPopupManager class in PopUpContainer.html
-            syncParentDimensions() {
-    const parentIframe = window.parent.document.getElementById("hiddenLoader");
-    if (!parentIframe) return;
-
-    if (this.mainPopup && this.mainPopup.dataset.minimized !== "true") {
-        // FULL SCREEN IFRAME (to catch the 'click outside' event)
-        Object.assign(parentIframe.style, {
-            width: "100vw",
-            height: "100vh",
-            pointerEvents: "auto",
-            background: "rgba(0,0,0,0.15)" // Visual cue that background is temporarily locked
-        });
-    } else {
-        // HIDE IFRAME (release the dashboard)
-        Object.assign(parentIframe.style, {
-            width: "0",
-            height: "0",
-            pointerEvents: "none",
-            background: "transparent"
-        });
-    }
-}
-async renderThumbnails() {
-
-const grid = this.mainPopup.querySelector("#thumb-grid");
-const overlay = this.mainPopup.querySelector("#thumb-overlay");
-
-grid.innerHTML = "";
-
-for (const title of Object.keys(this.tabs)) {
-
-    const iframe = this.tabs[title].ifr;
-    let preview = "";
-
-    try {
-
-        const iframeDoc = iframe.contentWindow.document;
-
-        const canvas = await html2canvas(iframeDoc.body, {
-            scale: 0.25,
-            useCORS: true
-        });
-
-        preview = canvas.toDataURL();
-
-    } catch (e) {
-        console.warn("Thumbnail capture failed", e);
-    }
-
-    const col = document.createElement("div");
-    col.className = "col-lg-3 col-md-4 col-sm-6";
-
-    col.innerHTML = `
-    <div class="thumb-card">
-    
-        <div class="thumb-preview">
-            ${
-                preview
-                ? `<img src="${preview}" />`
-                : `<div class="thumb-placeholder">
-                    <i class="material-icons">web_asset</i>
-                   </div>`
             }
-        </div>
+            createThumbnail(title, iframeSrc) {
+                const item = document.createElement('div');
+                item.className = 'thumbnail-item';
 
-        <div class="thumb-title">
-            ${title}
-        </div>
+                // Header for the thumbnail (like a browser tab)
+                const header = document.createElement('div');
+                header.className = 'thumbnail-header';
+                header.innerHTML = `<span class="title">${title}</span>`;
 
-    </div>
+                // The "Snapshot" Area
+                const preview = document.createElement('div');
+                preview.className = 'thumbnail-preview';
+
+                // Option A: Live Preview (Heavier on performance)
+                const previewIfr = document.createElement('iframe');
+                previewIfr.src = iframeSrc;
+                previewIfr.style.cssText = `
+        width: 1000px; /* Large virtual width */
+        height: 800px;
+        transform: scale(0.2); /* Scale down to fit thumbnail */
+        transform-origin: 0 0;
+        pointer-events: none;
     `;
 
-    col.onclick = () => {
-        this.activateTab(title);
-        overlay.classList.add("d-none");
-    };
+                preview.appendChild(previewIfr);
+                item.append(header, preview);
 
-    grid.appendChild(col);
-}
+                item.onclick = () => this.activateTab(title);
+                return item;
+            }
+            // Add this inside your TabPopupManager class in PopUpContainer.html
+            syncParentDimensions() {
+                const parentIframe = window.parent.document.getElementById("hiddenLoader");
+                if (!parentIframe) return;
 
-overlay.classList.remove("d-none");
-}
-// Add these methods inside your TabPopupManager class
-// renderThumbnails() {
-//     const grid = this.mainPopup.querySelector("#thumb-grid");
-//     const overlay = this.mainPopup.querySelector("#thumb-overlay");
-//     grid.innerHTML = ""; // Clear previous
+                if (this.mainPopup && this.mainPopup.dataset.minimized !== "true") {
+                    // FULL SCREEN IFRAME (to catch the 'click outside' event)
+                    Object.assign(parentIframe.style, {
+                        width: "100vw",
+                        height: "100vh",
+                        pointerEvents: "auto",
+                    });
+                } else {
+                    // HIDE IFRAME (release the dashboard)
+                    Object.assign(parentIframe.style, {
+                        width: "0",
+                        height: "0",
+                        pointerEvents: "none",
+                    });
+                }
+            }
+            async renderThumbnails() {
+                const grid = this.mainPopup.querySelector("#thumb-grid");
+                const overlay = this.mainPopup.querySelector("#thumb-overlay");
 
-//     Object.keys(this.tabs).forEach(title => {
-//         const col = document.createElement("div");
-//         col.className = "col-4";
-        
-//         // Create a card representing the tab
-//         col.innerHTML = `
-//             <div class="card h-100 border hover-shadow shadow-sm cursor-pointer" style="cursor:pointer; transition: 0.3s;">
-//                 <div class="card-body d-flex flex-column align-items-center justify-content-center bg-light p-3">
-//                     <i class="material-icons fs-1 text-secondary mb-2">web_asset</i>
-//                     <h6 class="text-center text-truncate w-100" style="font-size:12px;">${title}</h6>
-//                 </div>
-//             </div>
-//         `;
+                grid.innerHTML = ""; // Clear old thumbnails
 
-//         col.onclick = () => {
-//             this.activateTab(title); // Switch to this tab
-//             overlay.classList.add("d-none"); // Hide thumbnails
-//         };
+                for (const title of Object.keys(this.tabs)) {
+                    const tabData = this.tabs[title];
+                    const iframe = tabData.ifr;
+                    let previewImg = "";
 
-//         grid.appendChild(col);
-//     });
+                    try {
+                        // Use html2canvas to capture the iframe content
+                        const iframeDoc = iframe.contentWindow.document;
+                        const canvas = await html2canvas(iframeDoc.body, {
+                            scale: 0.25, // Higher quality but still fast
+                            useCORS: true,
+                            logging: false,
+                            width: iframe.clientWidth,
+                            height: iframe.clientHeight
+                        });
+                        previewImg = canvas.toDataURL('image/webp', 0.6);
+                    } catch (e) {
+                        console.warn("Capture failed for:", title);
+                    }
 
-//     overlay.classList.remove("d-none");
-// }
+                    const card = document.createElement("div");
+                    card.className = "thumb-card shadow-sm";
 
-toggleThumbnails() {
-    const overlay = this.mainPopup.querySelector("#thumb-overlay");
-    if (overlay.classList.contains("d-none")) {
-        this.renderThumbnails();
-    } else {
-        overlay.classList.add("d-none");
-    }
-}
+                    card.innerHTML = `
+            <div class="thumb-preview">
+                <div class="thumb-header">
+                ${title}
+            </div>
+                ${previewImg 
+                    ? `<img src="${previewImg}" />` 
+                    : `<i class="material-icons text-muted" style="font-size:48px; margin-top:30px;">visibility_off</i>`
+                }
+            </div>
+           
+        `;
 
-openForm(rawTitle, rawUrl) {
+                    card.onclick = () => {
+                        this.activateTab(title);
+                        overlay.classList.add("d-none");
+                    };
 
-    if (typeof window.SaveMultiFrameDataJSON === "function") {
-        window.SaveMultiFrameDataJSON();
-    }
-    let url = rawUrl.trim();
-    if (!url) return;
+                    grid.appendChild(card);
+                }
 
-    url = url.replace(/♠/g, "");
-    if (!url.startsWith("http")) {
+                overlay.classList.remove("d-none");
+            }
 
-// remove leading ../
-url = url.replace(/^\.\.\//, "");
+            toggleThumbnails() {
+                const overlay = this.mainPopup.querySelector("#thumb-overlay");
+                if (overlay.classList.contains("d-none")) {
+                    this.renderThumbnails();
+                } else {
+                    overlay.classList.add("d-none");
+                }
+            }
 
-// ensure correct base path
-url = getAppBaseUrl().replace(/\/$/, "") + "/" + url;
-}
+            openForm(rawTitle, rawUrl) {
+                if (typeof window.SaveMultiFrameDataJSON === "function") {
+                    window.SaveMultiFrameDataJSON();
+                }
 
-    // Improved Title Logic: Extract 'tstid' or 'transid' for a cleaner tab label
-    const urlParams = new URLSearchParams(url.split('?')[1]);
-    let title =
-    urlParams.get("caption") ||
-    urlParams.get("tstid") ||
-    urlParams.get("transid") ||
-    urlParams.get("caption") ||
-    urlParams.get("ivname") ||
-    urlParams.get("ads") ||
-    rawTitle;
+                let urlString = rawUrl.trim();
+                if (!urlString) return;
 
-    this.createPopupIfNeeded();
-    
-    // Check if tab exists by title
-    if (this.tabs[title]) {
+                // 1. Resolve Path
+                if (!urlString.startsWith("http")) {
+                    urlString = urlString.replace(/^\.\.\//, "");
+                    urlString = getAppBaseUrl().replace(/\/$/, "") + "/" + urlString;
+                }
 
-const existingUrl = this.tabs[title].ifr.src;
+                // 2. Extract Data & CLEAN URL
+                const urlParts = urlString.split('?');
+                const baseUrl = urlParts[0];
+                let params = new URLSearchParams(urlParts[1]);
 
-// reload iframe if parameters changed
-if (existingUrl !== url) {
-    this.tabs[title].ifr.src = url;
-}
+                // Capture values for title logic before we strip tname
+                const tname = params.get("tname");
+                const transid = params.get("transid");
+                const caption = params.get("caption");
+                const tstid = params.get("tstid");
 
-this.activateTab(title);
+                // REMOVE tname from the parameter list to fix edit form loading
+                params.delete("tname");
 
-} else {
+                // Reconstruct the URL without tname
+                const cleanUrl = baseUrl + "?" + params.toString();
 
-this.createNewTab(title, url);
+                // 3. Title Logic (UI only - unaffected by URL cleaning)
+                let displayTitle = transid || tstid || caption
+                displayTitle = decodeURIComponent(displayTitle);
 
-}
-    
-    // Ensure the iframe dimensions match the single popup
-    this.syncParentDimensions();
-}
+                // Use the tname we captured earlier for the Tab Title
+                var title1 = tname || caption || transid || tstid || rawTitle || "Form";
+                title1 = decodeURIComponent(title1);
 
-openFromParam() {
-    const params = new URLSearchParams(window.location.search);
-    const url = decodeURIComponent(params.get("contenturl"));
-    if (url) {
-        this.openForm("Loading...", url);
-    }
-}
+                // Initial Load Logic
+                if (!tname && !this.mainPopup) {
+                    const parentParams = new URLSearchParams(window.location.search);
+                    let pTname = parentParams.get("tname");
+                    if (pTname) {
+                        title1 = decodeURIComponent(pTname);
 
+                    }
+                }
+
+                this.createPopupIfNeeded();
+
+                if (this.mainPopup.dataset.minimized === "true") {
+                    this.restore();
+                }
+
+                // 4. SMART MATCH
+                let existingTabKey = Object.keys(this.tabs).find(key => {
+                    const tabTransId = this.tabs[key].tab.querySelector('.text-truncate').dataset[
+                        'transid'];
+                    return (
+                        tabTransId &&
+                        displayTitle &&
+                        tabTransId.toLowerCase() === displayTitle.toLowerCase()
+                    );
+                });
+
+                if (existingTabKey) {
+                    // Update with clean URL
+                    this.tabs[existingTabKey].ifr.src = cleanUrl;
+                    this.activateTab(existingTabKey);
+                } else {
+                    // Create new tab with stored title and clean URL
+                    this.createNewTab(title1, cleanUrl);
+                }
+
+                this.lastOpenedTitle = existingTabKey || displayTitle;
+                this.syncParentDimensions();
+            }
+            openFromParam() {
+                const params = new URLSearchParams(window.location.search);
+                // const rawUrl = params.get("contenturl");
+                const rawUrl = window.location.search.split("contenturl=")[1];
+                if (rawUrl) {
+                    const decodedUrl = decodeURIComponent(rawUrl);
+
+                    // Extract a preliminary title to pass to openForm
+                    const innerParams = new URLSearchParams(decodedUrl.split('?')[1]);
+                    let initialTitle = innerParams.get("tname") || innerParams.get("transid") || "Loading...";
+                    initialTitle = decodeURIComponent(initialTitle);
+
+                    // This will now correctly trigger createNewTab because openForm 
+                    // will see this title is new to the this.tabs object
+                    this.openForm(initialTitle, decodedUrl);
+                }
+            }
             createPopupIfNeeded() {
                 if (this.mainPopup) {
                     if (this.mainPopup.dataset.minimized === "true") this.restore();
@@ -426,30 +497,35 @@ openFromParam() {
                 const win = document.createElement("div");
                 win.id = "main-tab-popup";
                 win.className = "card shadow-lg border-secondary";
-
                 Object.assign(win.style, {
                     position: "fixed",
-                    left: "15%",
-                    top: "50px",
-                    width: "70%",
-                    height: "450px",
                     zIndex: "1040",
                     display: "flex",
                     flexDirection: "column",
                     background: "white",
-                    pointerEvents: "auto"
+                    pointerEvents: "auto",
+                    transform: "scale(1)",
+                    // Note: Changed to 'center' to feel more natural with a centered popup
+                    transformOrigin: "center center",
+                    opacity: "1",
+                    transition: "transform 0.2s, opacity 0.2s",
+                    // Top: 15%, Right: 10%, Bottom: 14%, Left: 13%
+                    inset: "15% 10% 14% 13%",
+                    width: "80%",
+                    height: "70%",
+                    margin: "0px"
                 });
 
                 win.innerHTML = `
-                    <div class="card-header d-flex align-items-center bg-dark text-white px-3" id="pop-header" style="height:38px; min-height:0px!important; flex-shrink:0; cursor:move;">
-                        <div class="tab-scroller d-flex align-items-end gap-1 h-100 pt-2" style="flex:1; overflow:hidden;"></div>
-                        <div class="action-btns d-flex gap-2 ms-2">
-                            <i class="material-icons fs-5 btn-thumb" style="cursor:pointer; color:white !important;">grid_view</i>
-                            <i class="material-icons fs-5 btn-min" style="cursor:pointer; color:white !important;">remove</i>
-                            <i class="material-icons fs-5 btn-max" style="cursor:pointer; color:white !important;">crop_square</i>
-                            <i class="material-icons fs-5 btn-close" style="cursor:pointer; color:white !important;">close</i>
-                        </div>
-                    </div>
+                <div class="card-header d-flex align-items-center bg-dark text-white px-3" id="pop-header" style="height:38px; min-height:0px!important; flex-shrink:0; cursor:move;">
+        <div class="tab-scroller d-flex align-items-end gap-1 h-100 pt-2" style="flex:1; overflow:hidden;"></div>
+        <div class="action-btns d-flex gap-2 ms-2">
+            <i class="material-icons fs-5 btn-thumb" title="Switch to Grid View" style="cursor:pointer; color:white !important;">grid_view</i>
+            <i class="material-icons fs-5 btn-min" title="Minimize to Tray" style="cursor:pointer; color:white !important;">remove</i>
+            <i class="material-icons fs-5 btn-max" title="Maximize Window" style="cursor:pointer; color:white !important;">crop_square</i>
+            <i class="material-icons fs-5 btn-close" title="Close All Tabs" style="cursor:pointer; color:white !important;">close</i>
+        </div>
+    </div>
                     <div class="card-body p-0 position-relative bg-white" id="pop-content" style="flex:1;">
                         <div id="drag-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:10;"></div>
                         <div id="thumb-overlay" class="d-none p-4 w-100 h-100" style="position:absolute; z-index:20; background:white; overflow-y:auto;">
@@ -462,292 +538,422 @@ openFromParam() {
                 this.mainPopup = win;
 
                 $(win).draggable({
-        handle: "#pop-header",
-        containment: "window",
-        start: () => { document.getElementById("drag-overlay").style.display = "block"; },
-        drag: () => { this.syncParentDimensions(); }, // Update iframe position while dragging
-        stop: () => { 
-            document.getElementById("drag-overlay").style.display = "none";
-            this.syncParentDimensions(); 
-        }
-    });
+                    handle: "#pop-header",
+                    containment: "window",
+                    start: () => {
+                        document.getElementById("drag-overlay").style.display = "block";
+                    },
+                    drag: () => {
+                        this.syncParentDimensions();
+                    }, // Update iframe position while dragging
+                    stop: () => {
+                        document.getElementById("drag-overlay").style.display = "none";
+                        this.syncParentDimensions();
+                    }
+                });
 
                 this.attachEvents();
                 this.syncParentDimensions()
             }
 
             createNewTab(title, url) {
-    const scroller = this.mainPopup.querySelector(".tab-scroller");
-    const body = this.mainPopup.querySelector("#pop-content");
+                const scroller = this.mainPopup.querySelector(".tab-scroller");
+                const body = this.mainPopup.querySelector("#pop-content");
 
-    // Extract sub-params for the second line of the tab
-    const subParams = url.split('?')[1]?.split('&')[0]?.replace("=", ": ") || "";
+                // Extract technical ID for the subtext
+                const urlParams = new URLSearchParams(url.split('?')[1]);
+                const subText = urlParams.get("tstid") || urlParams.get("transid") || "";
 
-    const tab = document.createElement("div");
-    tab.className = "custom-tab"; // Uses the new CSS class
-
-    tab.innerHTML = `
-        <div class="d-flex align-items-center justify-content-between w-100">
-            <b class="text-truncate">${title}</b>
-            <i class="material-icons close-tab" style="font-size:14px!important; margin-left:5px;">close</i>
+                const tab = document.createElement("div");
+                tab.className = "custom-tab active";
+                // Inline style for the "Heading at top" look
+                tab.innerHTML = `
+        <div class="d-flex flex-column w-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <b class="text-truncate" style="font-size:12px;max-width: 130px;" title="${title}" data-transid="${subText}">${title}</b>
+                <i class="material-icons close-tab" style="font-size:14px!important;">close</i>
+            </div>
+          
         </div>
-        <small class="tab-subtext text-truncate">${subParams}</small>
     `;
 
-    const ifr = document.createElement("iframe");
-    const index = Object.keys(this.tabs).length;
-    ifr.id = `axMultiiframe_${index}`;
-    ifr.src = url;
-    ifr.style.cssText = "width:100%; height:100%; border:none; display:none;";
+                const ifr = document.createElement("iframe");
+                ifr.id = `axMultiiframe_${Date.now()}`;
+                ifr.src = url;
+                ifr.style.cssText = "width:100%; height:100%; border:none; display:none;";
 
-    scroller.appendChild(tab);
-    body.appendChild(ifr);
+                scroller.appendChild(tab);
+                body.appendChild(ifr);
 
-    this.tabs[title] = { tab, ifr };
-   // wait until tstruct fully initializes
-   this.waitForTstructReady(ifr);
-    tab.onclick = (e) => {
-        if (e.target.classList.contains("close-tab")) {
-            e.stopPropagation();
-            this.closeTab(title);
-        } else {
-            this.activateTab(title);
-        }
-    };
-    this.updateGlobalTransidList();
-    this.activateTab(title);
-}
+                this.tabs[title] = {
+                    tab,
+                    ifr
+                };
+                this.waitForTstructReady(ifr);
 
-async activateTab(title) {
-    // 1. SAVE the currently active tab before switching
-    if (this.activeTab && this.activeTab !== title) {
-        await this.saveTabState(this.activeTab); 
-    }
+                tab.onclick = (e) => {
+                    if (e.target.classList.contains("close-tab")) {
+                        e.stopPropagation();
+                        this.closeTab(title);
+                    } else {
+                        this.activateTab(title);
+                    }
+                };
 
-    this.mainPopup.querySelector("#thumb-overlay").classList.add("d-none");
-    
-    Object.keys(this.tabs).forEach(k => {
-        this.tabs[k].tab.classList.remove("active");
-        this.tabs[k].ifr.style.display = "none";
-    });
+                this.updateGlobalTransidList();
+                this.activateTab(title);
+            }
 
-    const active = this.tabs[title];
-    active.tab.classList.add("active");
-    active.ifr.style.display = "block";
-    this.activeTab = title;
+            async activateTab(title) {
+                // 1. SAVE the currently active tab before switching
+                if (this.activeTab && this.activeTab !== title) {
+                    await this.saveTabState(this.activeTab);
+                }
 
-    // 2. ACTIVATE the new tab on the server
-    try {
-        const childWin = active.ifr.contentWindow;
-        if (childWin.transid) {
-            this.activateTstructOnServer(childWin.transid, childWin.tstDataId);
-        }
-    } catch(e) {}
+                this.mainPopup.querySelector("#thumb-overlay").classList.add("d-none");
 
-    active.tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
-}
-minimize() {
-    const pinned = parent.document.getElementById("pinnedArea");
-    if (!pinned) return;
+                Object.keys(this.tabs).forEach(k => {
+                    this.tabs[k].tab.classList.remove("active");
+                    this.tabs[k].ifr.style.display = "none";
+                });
 
-    // 1. Save style and hide content
-    this.mainPopup.dataset.prevStyle = this.mainPopup.getAttribute("style");
-    this.mainPopup.querySelector("#pop-content").style.display = "none";
+                const active = this.tabs[title];
+                active.tab.classList.add("active");
+                active.ifr.style.display = "block";
+                this.activeTab = title;
 
-    // 2. Hide all inactive tabs and the scroller's extra space
-    const tabs = this.mainPopup.querySelectorAll(".custom-tab");
-    tabs.forEach(t => {
-        if (!t.classList.contains("active")) {
-            t.style.display = "none";
-        } else {
-            // Adjust active tab for the small pinned bar
-            t.style.minWidth = "180px";
-            t.style.height = "32px";
-        }
-    });
+                // 2. ACTIVATE the new tab on the server
+                try {
+                    const childWin = active.ifr.contentWindow;
+                    if (childWin.transid) {
+                        this.activateTstructOnServer(childWin.transid, childWin.tstDataId);
+                    }
+                } catch (e) {}
 
-    // 3. Compact the popup for the pinned bar
-    Object.assign(this.mainPopup.style, {
-        position: "relative", 
-        left: "auto", 
-        top: "0", 
-        width: "250px", 
-        height: "36px", 
-        marginRight: "6px"
-    });
+                active.tab.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'start'
+                });
+            }
+            async minimize() {
+                if (!this.mainPopup || this.mainPopup.dataset.minimized === "true") return;
 
-    this.mainPopup.dataset.minimized = "true";
-    pinned.appendChild(this.mainPopup);
-    this.syncParentDimensions(); // Release the dashboard blockade
-}
+                if (this.activeTab) {
+                    await this.saveTabState(this.activeTab);
+                }
 
-restore() {
-    document.body.appendChild(this.mainPopup);
-    this.mainPopup.setAttribute("style", this.mainPopup.dataset.prevStyle);
-    this.mainPopup.querySelector("#pop-content").style.display = "block";
-    
-    // 4. Show all tabs again and reset their width
-    const tabs = this.mainPopup.querySelectorAll(".custom-tab");
-    tabs.forEach(t => {
-        t.style.display = "flex";
-        t.style.minWidth = "140px";
-    });
+                const pinned = parent.document.getElementById("pinnedArea");
+                if (pinned) {
+                    let ghost = parent.document.getElementById("ghost_" + this.mainPopup.id);
+                    if (!ghost) {
+                        ghost = parent.document.createElement("div");
+                        ghost.id = "ghost_" + this.mainPopup.id;
+                        ghost.className = "custom-tab active";
 
-    this.mainPopup.dataset.minimized = "false";
-    this.syncParentDimensions(); // Re-lock dashboard focus
-}
+                        // Updated styles for a sleek tray look
+                        ghost.style.cssText = `
+                width: 220px; 
+                height: 32px; 
+                cursor: pointer; 
+                display: flex; 
+                align-items: center; 
+                padding: 0 8px; 
+                background: #343a40; 
+                color: white; 
+                border-radius: 4px;
+                margin-left: 5px;
+            `;
 
+                        // HTML with the 3 requested icons
+                        ghost.innerHTML = `
+                <span style="flex:1; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;">
+                    ${this.activeTab || 'Restoring...'}
+                </span>
+                <div class="ghost-controls" style="display: flex; gap: 10px; align-items: center;">
+                    <i class="material-icons ghost-btn-restore" title="Restore" style="font-size:16px; opacity:0.7;">open_in_full</i>
+                    <i class="material-icons ghost-btn-max" title="Maximize" style="font-size:16px; opacity:0.7;">aspect_ratio</i>
+                    <i class="material-icons ghost-btn-close" title="Close" style="font-size:16px; opacity:0.7; color:#ff6b6b;">close</i>
+                </div>
+            `;
+
+                        // --- Event Listeners ---
+
+                        // 1. Restore Icon
+                        ghost.querySelector(".ghost-btn-restore").onclick = (e) => {
+                            e.stopPropagation();
+                            this.restore();
+                        };
+
+                        // 2. Maximize Icon
+                        ghost.querySelector(".ghost-btn-max").onclick = (e) => {
+                            e.stopPropagation();
+                            this.restore();
+                            if (typeof this.toggleMaximize === "function") this.toggleMaximize();
+                        };
+
+                        // 3. Close Icon
+                        ghost.querySelector(".ghost-btn-close").onclick = (e) => {
+                            e.stopPropagation();
+                            ghost.remove();
+                            this.forceDestroy(); // Or your close logic
+                        };
+
+                        // 4. Clicking the bar itself also restores
+                        ghost.onclick = () => this.restore();
+
+                        pinned.appendChild(ghost);
+                    }
+                }
+
+                // Hide the real popup using the Ghost Proxy method
+                Object.assign(this.mainPopup.style, {
+                    transform: "scale(0)",
+                    transformOrigin: "bottom right",
+                    opacity: "0",
+                    pointerEvents: "none",
+                    transition: "transform 0.2s ease, opacity 0.2s ease"
+                });
+
+                this.mainPopup.dataset.minimized = "true";
+                this.syncParentDimensions();
+            }
+            restore() {
+                if (!this.mainPopup) return;
+
+                // 1. Remove the Ghost button
+                const ghost = parent.document.getElementById("ghost_" + this.mainPopup.id);
+                if (ghost) ghost.remove();
+
+                // 2. Bring the real popup back
+                Object.assign(this.mainPopup.style, {
+                    transform: "scale(1)",
+                    opacity: "1",
+                    pointerEvents: "auto"
+                });
+
+                this.mainPopup.dataset.minimized = "false";
+
+                // 3. Sync server session
+                if (this.activeTab && this.tabs[this.activeTab]) {
+                    const childWin = this.tabs[this.activeTab].ifr.contentWindow;
+                    if (childWin && childWin.transid) {
+                        this.activateTstructOnServer(childWin.transid, childWin.tstDataId);
+                    }
+                }
+
+                this.syncParentDimensions();
+            }
             attachEvents() {
                 const p = this.mainPopup;
-                document.addEventListener("mousedown", (e) => {
-        if (this.mainPopup && 
-            this.mainPopup.dataset.minimized !== "true" && 
-            !this.mainPopup.contains(e.target)) {
-            
-            this.minimize(); // Move to Pinned Area
-        }
-    });
-    p.querySelector(".btn-close").onclick = (e) => {
-        e.stopPropagation(); // Prevent triggering 'restore' or 'minimize' by accident
-        this.mainPopup.remove();
-        this.mainPopup = null;
-        this.tabs = {};
-        this.syncParentDimensions(); // This will hide the parent iframe blockade
-    };
-                p.querySelector(".btn-min").onclick = () => {
-                    if (p.dataset.minimized === "true") this.restore();
-                    else this.minimize();
+                document.addEventListener("mousedown", async (e) => {
+                    if (this.mainPopup &&
+                        this.mainPopup.dataset.minimized !== "true" &&
+                        !this.mainPopup.contains(e.target)) {
+
+                        await this.minimize(); // Now waits for the save to finish
+                    }
+                });
+                p.querySelector(".btn-close").onclick = (e) => {
+                    e.stopPropagation();
+
+                    // 1. Remove the HTML
+                    this.mainPopup.remove();
+
+                    // 2. RESET ALL STATE
+                    this.mainPopup = null;
+                    this.tabs = {}; // Wipes the tab memory
+                    this.activeTab = null;
+                    this.lastOpenedTitle = "";
+
+                    // 3. Release the parent background blockade
+                    this.syncParentDimensions();
+                };
+                p.querySelector(".btn-min").onclick = async () => {
+                    if (p.dataset.minimized === "true") {
+                        this.restore();
+                    } else {
+                        await this.minimize();
+                    }
                 };
                 p.querySelector(".btn-max").onclick = (e) => {
-        e.stopPropagation();
-        
-        // If it's pinned/minimized, restore it to normal size first
-        if (p.dataset.minimized === "true") {
-            this.restore();
-        }
+                    e.stopPropagation();
 
-        if (p.dataset.maxed !== "true") {
-            p.dataset.preMax = p.getAttribute("style");
-            Object.assign(p.style, { 
-                top: "0", 
-                left: "0", 
-                width: '100vw', 
-                height: '100vh', 
-                position: "fixed" 
-            });
-            p.dataset.maxed = "true";
-        } else {
-            p.setAttribute("style", p.dataset.preMax);
-            p.dataset.maxed = "false";
-        }
-        this.syncParentDimensions();
-    };
+                    // 1. If currently pinned (minimized), restore to normal first
+                    if (p.dataset.minimized === "true") {
+                        this.restore();
+                        p.dataset.maxed = "false";
+                        p.dataset.minimized = "false";
+                        return;
+                    }
+
+                    // 2. Toggle Maximize State
+                    if (p.dataset.maxed !== "true") {
+                        // Save current dimensions for later restoration
+                        p.dataset.preMaxInset = p.style.inset || "15% 10% 14% 13%";
+
+                        Object.assign(p.style, {
+                            inset: "0",
+                            width: "100vw",
+                            height: "100vh",
+                            position: "fixed",
+                            margin: "0"
+                        });
+                        p.dataset.maxed = "true";
+
+                        try {
+                            $(p).draggable("disable");
+                        } catch (err) {}
+                    } else {
+                        // 3. Restore to your specific asymmetric center
+                        Object.assign(p.style, {
+                            inset: (p.dataset.preMaxInset && p.dataset.preMaxInset !== "0px") ?
+                                p.dataset.preMaxInset : "15% 10% 14% 13%",
+                            // Reset width/height to auto so inset controls the size
+                            width: "80%",
+                            height: "70%",
+                            position: "fixed"
+                        });
+
+                        p.dataset.maxed = "false";
+
+                        try {
+                            $(p).draggable("enable");
+                        } catch (err) {}
+                    }
+
+                    this.syncParentDimensions();
+                };
                 p.querySelector(".btn-thumb").onclick = () => {
-        this.toggleThumbnails();
-    };
+                    this.toggleThumbnails();
+                };
+                // Add this inside your attachEvents logic
+                window.addEventListener('resize', () => {
+                    if (this.isThumbnailViewActive) {
+                        this.renderThumbnailView(); // Re-render to calculate new widths
+                    }
+                });
 
             }
 
-            closeTab(title) {
-                this.tabs[title].tab.remove();
-                this.tabs[title].ifr.remove();
-                delete this.tabs[title];
-                const keys = Object.keys(this.tabs);
-                if (keys.length > 0) this.activateTab(keys[0]);
-                else this.mainPopup.querySelector(".btn-close").click();
-            }
+
 
 
             //  savelogic 
 
-          
-
-async saveTabState(title) {
-    if (!this.tabs[title]) return;
-    
-    const iframe = this.tabs[title].ifr;
-    try {
-        const childWin = iframe.contentWindow;
-        // Check if the form in the iframe has the save function
-        if (childWin && typeof childWin.SaveMultiFrameDataJSON === "function") {
-            const result = childWin.SaveMultiFrameDataJSON();
-            if (result) {
-                const tstDataId = childWin.tstDataId;
-                const transid = childWin.transid;
-                // Sync data to the server-side session/Redis
-                await this.syncTstruct(transid, tstDataId); 
+            forceDestroy() {
+                if (this.mainPopup) this.mainPopup.remove();
+                this.mainPopup = null;
+                this.tabs = {};
+                this.activeTab = null;
+                this.syncParentDimensions();
             }
-        }
-    } catch (e) {
-        console.warn("Could not save tab state for: " + title, e);
-    }
-}
 
-syncTstruct(formId, dataId) {
-    let appUrl = getAppBaseUrl();
-    return $.ajax({
-        type: "POST",
-        url: `${appUrl}/WebService.asmx/LoadAndkeepTstructAPI`,
-        contentType: "application/json;charset=utf-8",
-        data: JSON.stringify({ tformId: formId, mtstDataId: dataId }),
-        dataType: "json"
-    });
-}
+            async saveTabState(title) {
+                if (!this.tabs[title]) return;
 
-activateTstructOnServer(formId, dataId) {
-    let appUrl = getAppBaseUrl();
-    return $.ajax({
-        type: "POST",
-        url: `${appUrl}/WebService.asmx/ActivateTstructAPI`,
-        contentType: "application/json;charset=utf-8",
-        data: JSON.stringify({ tformId: formId, mtstDataId: dataId }),
-        dataType: "json"
-    });
-}
-async closeTab(title) {
-    // Save data before removing the iframe from DOM
-    await this.saveTabState(title);
-    
-    this.tabs[title].tab.remove();
-    this.tabs[title].ifr.remove();
-    delete this.tabs[title];
-    this.updateGlobalTransidList();
-    const keys = Object.keys(this.tabs);
-    if (keys.length > 0) {
-        this.activateTab(keys[0]);
-    } else {
-        this.mainPopup.querySelector(".btn-close").click();
-    }
-}
+                const iframe = this.tabs[title].ifr;
+                try {
+                    const childWin = iframe.contentWindow;
+                    // Check if the form in the iframe has the save function
+                    if (childWin && typeof childWin.SaveMultiFrameDataJSON === "function") {
+                        const result = childWin.SaveMultiFrameDataJSON();
+                        if (result) {
+                            const tstDataId = childWin.tstDataId;
+                            const transid = childWin.transid;
+                            // Sync data to the server-side session/Redis
+                            await this.syncTstruct(transid, tstDataId);
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Could not save tab state for: " + title, e);
+                }
+            }
+
+            syncTstruct(formId, dataId) {
+                let appUrl = getAppBaseUrl();
+                return $.ajax({
+                    type: "POST",
+                    url: `${appUrl}/WebService.asmx/LoadAndkeepTstructAPI`,
+                    contentType: "application/json;charset=utf-8",
+                    data: JSON.stringify({
+                        tformId: formId,
+                        mtstDataId: dataId
+                    }),
+                    dataType: "json"
+                });
+            }
+
+            activateTstructOnServer(formId, dataId) {
+                let appUrl = getAppBaseUrl();
+                return $.ajax({
+                    type: "POST",
+                    url: `${appUrl}/WebService.asmx/ActivateTstructAPI`,
+                    contentType: "application/json;charset=utf-8",
+                    data: JSON.stringify({
+                        tformId: formId,
+                        mtstDataId: dataId
+                    }),
+                    dataType: "json"
+                });
+            }
+            async closeTab(title) {
+                if (!this.tabs[title]) return;
+
+                // 1. Save data before removing from DOM
+                await this.saveTabState(title);
+
+                // 2. Remove elements from DOM
+                this.tabs[title].tab.remove();
+                this.tabs[title].ifr.remove();
+
+                // 3. CRITICAL: Clear memory reference so openForm can re-open it
+                delete this.tabs[title];
+
+                // 4. Update the global list for the server
+                this.updateGlobalTransidList();
+
+                const keys = Object.keys(this.tabs);
+                if (keys.length > 0) {
+                    // Activate the next available tab
+                    this.activateTab(keys[0]);
+                } else {
+                    // If no tabs left, trigger the close button logic to fully reset
+                    if (this.mainPopup) {
+                        const closeBtn = this.mainPopup.querySelector(".btn-close");
+                        closeBtn ? closeBtn.click() : this.forceDestroy();
+                    }
+                }
+            }
 
 
-updateGlobalTransidList() {
-    // 1. Collect all transids from current tabs
-    const transids = Object.values(this.tabs).map(tabObj => {
-        try {
-            const childWin = tabObj.ifr.contentWindow;
-            // Try to get it from the window object first, fallback to URL params
-            if (childWin && childWin.transid) return childWin.transid;
-            
-            const urlParams = new URLSearchParams(tabObj.ifr.src.split('?')[1]);
-            return urlParams.get("transid") || urlParams.get("tstid");
-        } catch (e) {
-            // Fallback for cross-origin or pre-load state
-            const urlParams = new URLSearchParams(tabObj.ifr.src.split('?')[1]);
-            return urlParams.get("transid") || urlParams.get("tstid");
-        }
-    }).filter(id => id !== null && id !== ""); 
+            updateGlobalTransidList() {
+                // 1. Collect all transids from current tabs
+                const transids = Object.values(this.tabs).map(tabObj => {
+                    try {
+                        const childWin = tabObj.ifr.contentWindow;
+                        // Try to get it from the window object first, fallback to URL params
+                        if (childWin && childWin.transid) return childWin.transid;
 
-    // 2. Update the global variable
-    window.transidlist = [...new Set(transids)].join(',');
-    
-    // 3. Sync with parent if this is inside the hiddenLoader iframe
-    if (window.parent && window.parent !== window) {
-        window.parent.transidlist = window.transidlist;
-    }
-    
-    console.log("Current transidlist:", window.transidlist);
-}
+                        const urlParams = new URLSearchParams(tabObj.ifr.src.split('?')[1]);
+                        return urlParams.get("transid") || urlParams.get("tstid");
+                    } catch (e) {
+                        // Fallback for cross-origin or pre-load state
+                        const urlParams = new URLSearchParams(tabObj.ifr.src.split('?')[1]);
+                        return urlParams.get("transid") || urlParams.get("tstid");
+                    }
+                }).filter(id => id !== null && id !== "");
+
+                // 2. Update the global variable
+                window.transidlist = [...new Set(transids)].join(',');
+
+                // 3. Sync with parent if this is inside the hiddenLoader iframe
+                if (window.parent && window.parent !== window) {
+                    window.parent.transidlist = window.transidlist;
+                }
+
+                console.log("Current transidlist:", window.transidlist);
+            }
 
         }
 

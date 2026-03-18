@@ -2,24 +2,25 @@
     // 26-02-2026: Pre release version
 
     // /AxPlugins/Axi/HTMLPages/js/axi-autocomplete.js
-    
+
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
     let apiMetadataConfigError = "";
-    let settingsPageButtons = null; 
-    let importExportButtons = null; 
-    let commandHistory = []; 
-    const MAX_HISTORY = 10; 
-    let historyIndex  = -1; 
-    let megaDropdown; 
-    let favouritesCard; 
-    let commandHeader; 
-    let hiddenLoader; 
-    let favouriteBtn; 
-    let commandFavorites = []; 
-    let axiFavoritesUrl = ""; 
+    let settingsPageButtons = null;
+    let importExportButtons = null;
+    let commandHistory = [];
+    const MAX_HISTORY = 10;
+    let historyIndex = -1;
+    let megaDropdown;
+    let favouritesCard;
+    let commandHeader;
+    let hiddenLoader;
+    let favouriteBtn;
+    let commandFavorites = [];
+    let axiFavoritesUrl = "";
     const MAX_FAVORITES = 20;
-    let commandRoutes = []; 
+    let commandRoutes = [];
+    let isDeleting = false;
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
@@ -42,8 +43,8 @@
 
 
     const VIEW_HANDLERS = {
-        tstruct: ({ transId, fieldName, fieldValue }) =>
-            redirectToEntity(transId, fieldName, fieldValue),
+        tstruct: ({ transId, rawStruct, fieldName, fieldValue }) =>
+            redirectToEntity(transId, rawStruct, fieldName, fieldValue),
 
         iview: ({ transId, rawStruct }) =>
             redirectToIView(transId, rawStruct),
@@ -51,7 +52,7 @@
         page: ({ transId, fieldName, fieldValue }) =>
             redirectToEntity(transId, fieldName, fieldValue),
 
-        ads: ({ transId, fieldName, fieldValue }) => redirectToEntity(transId, fieldName, fieldValue)
+        ads: ({ transId, fieldName, fieldValue }) => redirectToEntity(transId, "", fieldName, fieldValue)
 
 
 
@@ -118,6 +119,7 @@
             appvar: handleOpenAppVar,
             devoption: handleOpenDevOptions,
             dbconsole: handleOpenDbConsole,
+            menu: handleOpenArrangeMenu
 
 
         },
@@ -151,13 +153,13 @@
 
 
     let SET_COMMAND_STATE = {
-        isNextField: false,  
+        isNextField: false,
         currentField: null,
-        currentFieldType : null,
-        isFirst:true,
+        currentFieldType: null,
+        isFirst: true,
         transid: null,
         currentFieldValue: null,
-        isDropDown : false
+        isDropDown: false
     };
 
     let input;
@@ -204,7 +206,7 @@
     let mode = "";
     const aiModeCommands = {
         "connect": { "cmdToken": 11, "command": "", "commandGroup": "connect", "prompts": [] },
-        "ask": { "cmdToken": 11, "command": "", "commandGroup": "ask", "prompts": [{"cmdToken":11,"wordPos":2,"prompt":"Chat","promptSource":"","promptParams":"","promptValues":"","extraParams":""}] },
+        "ask": { "cmdToken": 11, "command": "", "commandGroup": "ask", "prompts": [{ "cmdToken": 11, "wordPos": 2, "prompt": "Chat", "promptSource": "", "promptParams": "", "promptValues": "", "extraParams": "" }] },
         "end": { "cmdToken": 11, "command": "", "commandGroup": "end", "prompts": [] },
         "editprompt": { "cmdToken": 11, "command": "", "commandGroup": "editprompt", "prompts": [] },
         "analyze": { "cmdToken": 11, "command": "", "commandGroup": "analyze", "prompts": [] },
@@ -297,7 +299,7 @@
 
         megaDropdown = document.getElementById("axiMegaDropdown");
 
-       
+
 
 
 
@@ -311,16 +313,16 @@
         commandHeader = document.getElementById("axiCommandsHeader");
         console.log("Axi Command Header found!", commandHeader);
 
-        hiddenLoader = document.getElementById("hiddenLoader"); 
-        console.log("Axi hidden Loader found!", hiddenLoader);    
+        hiddenLoader = document.getElementById("hiddenLoader");
+        console.log("Axi hidden Loader found!", hiddenLoader);
 
 
         favouriteBtn = document.getElementById("axiFavouriteBtn");
 
-        console.log("Axi Favourite Button found!", favouriteBtn);    
+        console.log("Axi Favourite Button found!", favouriteBtn);
 
 
-        
+
 
 
 
@@ -334,13 +336,13 @@
     init();
 
     function getProjectName() {
-          let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
         console.log("Origin: " + appSessUrl);
         const projInfoKey = `projInfo-${appSessUrl}`;
 
         const appname = localStorage.getItem(projInfoKey);
         console.log(appname);
-        return appname; 
+        return appname;
 
 
     }
@@ -349,10 +351,10 @@
         INITIALIZATION
     =============================== */
     async function initCommands(isForced = false) {
-        const structType = getStructType(); 
+        const structType = getStructType();
         if (mode === "ai") {
-            commands = aiModeCommands; 
-            return; 
+            commands = aiModeCommands;
+            return;
         }
 
         // let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
@@ -364,7 +366,7 @@
         console.log(appname);
 
         await ensureApiMetadataConfigLoaded();
-        loadFavorites(); 
+        loadFavorites();
 
         if (!apiMetadataUrl) {
             console.error("Metadata API URL is not configured.", apiMetadataConfigError);
@@ -380,10 +382,14 @@
 
         } else {
             try {
+                const accessPermissions = getAccessPermissions();
+
                 const res = await fetch(`${apiMetadataUrl}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
                 if (!res.ok) throw new Error("Metadata fetch failed");
                 const data = await res.json();
-                commands = data.commands;
+                let commandsFromDb = data.commands;
+
+                commands = buildCommandsByAccessPermissions(commandsFromDb, accessPermissions);
 
                 console.log(JSON.stringify(commands));
                 localStorage.setItem("axi_commands_v1", JSON.stringify(commands));
@@ -421,12 +427,12 @@
                 throw new Error(`API_METADATA is missing or empty in ${configUrl}`);
             }
 
-             if (!configuredAxiFavoritesUrl) {
+            if (!configuredAxiFavoritesUrl) {
                 throw new Error(`API_METADATA is missing or empty in ${configUrl}`);
             }
 
             apiMetadataUrl = configuredApiMetadata;
-            axiFavoritesUrl = configuredAxiFavoritesUrl; 
+            axiFavoritesUrl = configuredAxiFavoritesUrl;
             apiMetadataConfigError = "";
         } catch (error) {
             apiMetadataUrl = "";
@@ -449,6 +455,7 @@
         // Since the user DOES NOT type the extraParam, the mapping is direct.
         const currentWordPos = targetIndex + 1;
 
+
         const sortedPrompts = commandConfig.prompts.sort((a, b) => a.wordPos - b.wordPos);
         const prompt = sortedPrompts.find(p => p.wordPos === currentWordPos);
 
@@ -467,9 +474,19 @@
                     .map(s => s.trim().toLowerCase())
                     .filter(Boolean);
 
-                const fieldSource = prevSources.find(src =>
-                    src.includes('keyvalue') || src.includes('fieldname')
+
+                //We need to optimise this logic as it works only for axi_getstructsdata now.
+                let fieldSource = prevSources.find(src =>
+                    src.toLowerCase().includes('axi_getstructsdata') || src.includes('keyvalue') || src.includes('fieldname')
                 );
+
+                //const fieldSource = prevSources.find(src =>
+                //    src.includes('keyvalue') || src.includes('fieldname')
+                //);
+                if (fieldSource?.toLowerCase() === "axi_getstructsdata" && tokens.length === 5 && commandConfig?.commandGroup?.toLowerCase() === "edit") {
+                    fieldSource = "";
+                }
+
 
                 if (fieldSource) {
 
@@ -521,6 +538,11 @@
 
                 }
 
+                if (valueIndex === -1 && (commandConfig.commandGroup?.toLowerCase() === "open" || commandConfig.commandGroup?.toLowerCase() === "configure")) {
+
+                    return { config: prompt, realSource: null, error: "Not a Valid command" };
+                }
+
                 if (valueIndex !== -1) {
                     const sources = activeSource.split(',');
                     activeSource = sources[valueIndex] ? sources[valueIndex].trim() : "";
@@ -531,7 +553,7 @@
             }
         }
 
-        return { config: prompt, realSource: activeSource };
+        return { config: prompt, realSource: activeSource, error: "" };
     }
 
 
@@ -540,8 +562,8 @@
 
     async function loadList(sourceName, paramValue = "") {
         if (sourceName === "axi_dummy") {
-            console.error("Axi Dummy source should not trigger loadList"); 
-            return; 
+            console.error("Axi Dummy source should not trigger loadList");
+            return;
         }
         const key = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
         if (activeFetches.has(key)) return;
@@ -617,7 +639,7 @@
 
     function openPopOption(targetURL) {
         console.log("PopOption is clicked");
-        
+
         if (targetURL) {
 
             // ✅ FIX: Ensure htmlPages.aspx loads from /aspx/
@@ -648,7 +670,7 @@
                 hiddenVar.style.display = "flex";
             }
             popUpOption = false;
-            console.log("Final Url: " + targetURL); 
+            console.log("Final Url: " + targetURL);
             console.log("PopUp Option is set to :" + popUpOption);
 
         } else {
@@ -658,7 +680,7 @@
         }
     }
 
-    function redirectToSmartView({ adsName, filters}) {
+    function redirectToSmartView({ adsName, filters }) {
 
 
         // let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
@@ -690,7 +712,7 @@
         }
 
         console.log("Target Url for SmartViewTable:  " + targetUrl);
-        setCommandRoutes(input.value.trim(), targetUrl); 
+        setCommandRoutes(input.value.trim(), targetUrl);
         /**====================================================================================
          * NOTE: This is Debug code remove it before deploying  to the  production environment 
          * ====================================================================================
@@ -714,6 +736,8 @@
          */
 
         if (popUpOption) {
+            targetUrl += "&AxIsPop=true";
+
             targetUrl += `&tname=${encodeURIComponent(adsName)}`;
             openPopOption(targetUrl)
         }
@@ -761,7 +785,7 @@
 
         setEditSessionState(transId);
         console.log(`LoadIframe called with Url: ${targetUrl}`);
-        setCommandRoutes(input.value.trim(), targetUrl); 
+        setCommandRoutes(input.value.trim(), targetUrl);
 
 
         top.window.LoadIframe(targetUrl);
@@ -770,7 +794,7 @@
 
 
 
-    function redirectToTstruct(transId,tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "") {
+    function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "") {
         console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
 
 
@@ -783,36 +807,40 @@
         let targetUrl;
 
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
-        
+
         if (isEdit) {
             if (fieldName && fieldValue) {
                 targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
             }
-                targetUrl += `&hltype=load`;
-                targetUrl += `&torecid=false`;
-                targetUrl += `&openerIV=${transId}`;
-                targetUrl += `&isIV=false`;
-                targetUrl += `&isDupTab=false`;
+            targetUrl += `&hltype=load`;
+            targetUrl += `&torecid=false`;
+            targetUrl += `&openerIV=${transId}`;
+            targetUrl += `&isIV=false`;
+            targetUrl += `&isDupTab=false`;
 
             targetUrl += `&dummyload=false♠`;
 
         }
         else {
-                if (fieldName && fieldValue) {
-                    targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
-                }
+            if (fieldName && fieldValue) {
+                targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+            }
             targetUrl += `&hltype=open`;
+
             targetUrl += `&createaxiflag=true`;
             targetUrl += `&dummyload=false♠`;
         }
 
-        setCommandRoutes(input.value.trim(), targetUrl); 
+
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+            targetUrl += "&AxIsPop=true";
+
             openPopOption(targetUrl)
         }
         else {
+            setCommandRoutes(input.value.trim(), targetUrl);
             top.window.LoadIframe(targetUrl);
         }
     }
@@ -826,22 +854,24 @@
         if (fieldValue) {
             targetUrl += "?status=true";
             targetUrl += "&action=edit";
+
             targetUrl += `&name=${encodeURIComponent(fieldValue)}`;
         } else {
             targetUrl += "?status=true";
             targetUrl += "&action=add";
+
         }
 
 
-          setCommandRoutes(input.value.trim(), targetUrl); 
+        setCommandRoutes(input.value.trim(), targetUrl);
         top.window.LoadIframe(targetUrl);
     }
 
-    function redirectToIView(iViewName,iViewCaption="") {
+    function redirectToIView(iViewName, iViewCaption = "") {
         console.log("Redirecting to Iview: " + iViewName + "..............");
         let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
 
-          setCommandRoutes(input.value.trim(), targetUrl); 
+        setCommandRoutes(input.value.trim(), targetUrl);
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
@@ -872,7 +902,7 @@
             targetUrl = `../aspx/tstruct.aspx?transid=ad_pm`;
         }
 
-          setCommandRoutes(input.value.trim(), targetUrl); 
+        setCommandRoutes(input.value.trim(), targetUrl);
 
         top.window.LoadIframe(targetUrl);
     }
@@ -902,14 +932,14 @@
             render();
             return;
         }
-        
+
         ///set command - numeric handling.
         if (SET_COMMAND_STATE.currentFieldType === 'n') {
 
             let tokens = getTokens(text);
 
             const grpKey = tokens[0];
-            
+
             let lastIndex = tokens.length - 1;
             let lastToken = tokens[lastIndex];
 
@@ -920,7 +950,7 @@
 
             //const numericRegex = /^-?\d*$/;
             let numericRegex;
-            if (grpKey.toLowerCase() === "view") { 
+            if (grpKey.toLowerCase() === "view") {
                 numericRegex = /^-?(?!.*\.\.)(?!.*'')(?!.*,,)[\d.,'-<>!=]*$/;
                 //numericRegex = /^(>=|<=|!=|>|<|=)?-?(?:\d+(?:,\d+)*(?:\.\d+)?|\.\d+)$/;
             }
@@ -952,7 +982,7 @@
                 else
                     showToast("Please enter a valid numeric value.");
 
-                
+
 
                 tokens[lastIndex] = "";
 
@@ -994,6 +1024,37 @@
 
 
         render();
+
+        /**
+         * Auto-Apply Logic
+         */
+        if (!isDeleting && items.length > 0) {
+            const currentTokens = getTokens(text);
+            const lastTokenRaw = currentTokens[currentTokens.length - 1] || "";
+            const lastTokenClean = cleanString(lastTokenRaw);
+
+            if (!text.endsWith(" ") && lastTokenClean.length > 0) {
+                const validItems = items.filter(i => !isSystemMessage(i) && !i.isExecutable);
+
+                let indexToApply = -1;
+
+                if (validItems.length === 1 && lastTokenClean.length >= 2) {
+                    indexToApply = items.findIndex(item => {
+                        if (isSystemMessage(item) || item.isExecutable) return false;
+
+                        const itemStr = typeof item === "string" ? item : (item.displaydata || item.name);
+
+                        return itemStr.toLowerCase() === lastTokenClean.toLowerCase();
+                    });
+                }
+
+                if (indexToApply !== -1) {
+                    setTimeout(() => {
+                        apply(indexToApply);
+                    }, 50);
+                }
+            }
+        }
     }
 
     /* ===============================
@@ -1091,7 +1152,14 @@
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
-                        return ["Please Type the date"];
+
+                        filteredObjects = [goOption, popOption];
+                        return [
+                            goOption,
+                            popOption,
+                            "Please Type the date"
+                        ];
+                        //return ["Please Type the date"];
                     }
                     else {
                         //const partialDate = tokens[tokens.length - 1]
@@ -1111,8 +1179,15 @@
                             dateControlBoolean = false;
 
                         }
-                        else
-                            return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                        else {
+                            filteredObjects = [goOption, popOption];
+                            return [
+                                goOption,
+                                popOption,
+                                "Please type Valid date using / (ex: DD / MM / YYYY)"
+                            ];
+                            //return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                        }
                     }
                 }
             }
@@ -1162,8 +1237,14 @@
                     filtered = list;
                 }
 
+                filteredObjects = [goOption, popOption, ...filtered];
+                return [
+                    goOption,
+                    popOption,
+                    ...filtered
+                ];
 
-                return filtered;
+                //return filtered;
             }
 
             return processAdsRepetitiveTokens(tokens, commandConfig);
@@ -1366,17 +1447,28 @@
                 if (datatype === 'c' || datatype === 'n' || datatype === "t") {
                     if (isAccept) {
                         let acceptedValue = cleanString(tokens[tokens.length - 1]);
-                        if (acceptedValue)
-                            SET_COMMAND_STATE.currentFieldValue = acceptedValue;
-                        else {
-                            return ["Please type the value..."];
-                        }
-                        //return [];
                         const columnName = prevColumnName
                         adsfieldvalueanddt[columnName] = {
                             datatype: datatype,
                             isAccept: isAccept,
                         };
+                        if (acceptedValue)
+                            SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+                        else {
+                            filteredObjects = [goOption, popOption];
+                            return [
+                                goOption,
+                                popOption,
+                                "Please type the value..."
+                            ];
+                            //return ["Please type the value..."];
+                        }
+                        //return [];
+                        // const columnName = prevColumnName
+                        // adsfieldvalueanddt[columnName] = {
+                        //     datatype: datatype,
+                        //     isAccept: isAccept,
+                        // };
                         //if (tokens?.length <= 4) {
                         //    return [goOption,];
                         //}
@@ -1433,7 +1525,7 @@
                             input.value = tokens.join(" ");
 
                             filtered = list;
-                        } 
+                        }
 
 
 
@@ -1447,10 +1539,19 @@
 
                         //}
 
-                        filteredObjects = filtered
+
+                        //filteredObjects = filtered
+
+                        //return filtered.map(col => col.displaydata || col.name);
+
+                        filteredObjects = [goOption, popOption, ...filtered];
+                        return [
+                            goOption,
+                            popOption,
+                            ...filtered.map(col => col.displaydata || col.name)
+                        ];
 
 
-                        return filtered.map(col => col.displaydata || col.name);
 
                     }
                 } else if (datatype === 'd') {
@@ -1494,7 +1595,14 @@
                     });
 
 
-                    return filtered;
+                    //return filtered;
+
+                    filteredObjects = [goOption, popOption, ...filtered];
+                    return [
+                        goOption,
+                        popOption,
+                        ...filtered
+                    ];
 
 
                 }
@@ -1683,7 +1791,7 @@
     //}
 
     function processRunCommands(tokens, targetIndex, structType) {
-        if (targetIndex !== 1) return [];
+        if (targetIndex !== 1) return [goOption];
         let allButtons
 
 
@@ -1723,15 +1831,15 @@
                 break;
 
             case "s":
-                settingsPageButtons = getButtons(".Config-cont"); 
-                allButtons = { ...settingsPageButtons}; 
-                break; 
+                settingsPageButtons = getButtons(".Config-cont");
+                allButtons = { ...settingsPageButtons };
+                break;
 
             case "im":
-            case "ex": 
-                importExportButtons = getButtons(".card-footer "); 
-                allButtons = { ...importExportButtons}; 
-                break; 
+            case "ex":
+                importExportButtons = getButtons(".card-footer ");
+                allButtons = { ...importExportButtons };
+                break;
 
 
 
@@ -1784,12 +1892,17 @@
         if (tokens.length === 1 && !endsWithSpace) {
             hintDiv.textContent = "";
             return Object.keys(commands).filter(k => {
-                const key = k.toLowerCase(); 
+                const key = k.toLowerCase();
                 return key.startsWith(groupKey.toLowerCase())
             });
         }
 
-        const commandConfig = commands[groupKey];
+        //const commandConfig = commands[groupKey];
+
+
+        let commandConfig = commands[groupKey];
+
+
         if (!commandConfig) { hintDiv.textContent = ""; return []; }
 
         const targetIndex = tokens.length - 1;
@@ -1822,7 +1935,7 @@
             //if (dummyValue) {
             //    tokenCopy = tokenCopy.filter(t => t?.toLowerCase() !== dummyValue.toLowerCase());
             //}
-            updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 !== 0) ? "fieldname": "fieldValue"})
+            updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 !== 0) ? "fieldname" : "fieldValue" })
             return createCommandHandling(tokenCopy, commandConfig, viewSource);
         }
 
@@ -1875,6 +1988,11 @@
 
         }
 
+        if (promptInfo?.error) {
+            showToast(promptInfo.error);
+            return [];
+        }
+
         if (!promptInfo) {
             updateDynamicHintFromPrompt(null);
 
@@ -1885,9 +2003,29 @@
             }
 
             ///added as we now dont have option for go and popup in create(When create old logic works we can remove this)(T)
-            if (groupKey.toLowerCase() === "view" && tokens.length >= 3) {
+            else if (groupKey.toLowerCase() === "view" && tokens.length >= 3) {
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
+            }
+
+            else if (groupKey.toLowerCase() === "open" && tokens.length > 2) {
+                filteredObjects = [goOption];
+                return [goOption]
+            }
+
+            else if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
+                filteredObjects = [goOption];
+                return [goOption]
+            }
+
+            else if (groupKey.toLowerCase() === "analyse" && tokens.length > 2) {
+                filteredObjects = [goOption];
+                return [goOption]
+            }
+
+            if (["upload", "download"].includes(groupKey.toLowerCase()) && tokens.length >= 2) {
+                filteredObjects = [goOption];
+                return [goOption];
             }
 
             return [];
@@ -1904,11 +2042,17 @@
         const partialTyped = cleanString(tokens[targetIndex]);
 
 
+        if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && tokens[1].toLowerCase() != "keyfield") {
+            filteredObjects = [goOption];
+            return [goOption]
+        }
+
 
         // Scenario A: Static Values
 
         ///Skipping PromptValue "With" token for edit
         if (!realSource && activePrompt.promptValues && groupKey.toLowerCase() !== "edit") {
+
             const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
@@ -1921,6 +2065,8 @@
             }
             return result;
         }
+
+
 
         // Scenario B: Data Source
         if (realSource) {
@@ -1987,18 +2133,75 @@
             let apiSourceName = realSource.toLowerCase();
             if (apiSourceName.toLowerCase() === "axi_analyticslist") {
                 paramValue = window.mainUserName;
+                // apiSourceName = "axi_analyticslistnew"; 
             }
 
             else if (realSource.toLowerCase() === "axi_structlist") {
-                paramValue = processExtraParams(tokens,commandConfig);
+                paramValue = processExtraParams(tokens, commandConfig);
             }
 
             else if (realSource.toLowerCase() === "axi_structmetalist") {
-                paramValue = processExtraParams(tokens,commandConfig);
+                paramValue = processExtraParams(tokens, commandConfig);
             }
 
             else if (realSource.toLowerCase() === "axi_viewlist") {
-                paramValue = processExtraParams(tokens,commandConfig);
+                paramValue = processExtraParams(tokens, commandConfig);
+            }
+            else if (realSource.toLowerCase() === "axi_getstructsdata") {
+
+                if (detectedType?.toLowerCase() === "iview" || detectedType?.toLowerCase() === "page") {
+                    filteredObjects = [goOption, popOption];
+                    return [goOption, popOption];
+                }
+                let staticParams = "";
+                if (tokens.length == 3) {
+                    staticParams = "2";
+                }
+                else {
+                    staticParams = "2,3";
+                }
+
+                const indices = staticParams.toString().split(',');
+                const values = indices.map(idx => {
+                    const logicalWordPos = parseInt(idx.trim());
+                    const depTokenIndex = logicalWordPos - 1;
+                    const depToken = cleanString(tokens[depTokenIndex] || "");
+                    return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+                });
+
+                paramValue = values.join('$#$');
+
+                //if (tokens.length == 3) {
+                //    const depToken = cleanString(tokens[1] || "");
+                //    paramValue = tryResolveToken(1, depToken, commandConfig, false);
+                //}
+                //else {
+                //    const depToken = cleanString(tokens[1] || "");
+                //    paramValue = tryResolveToken(1, depToken, commandConfig, false);
+
+                //    const fieldName = cleanString(tokens[2] || "");
+                //    paramValue += "$#$"+ tryResolveToken(2, fieldName, commandConfig, false);
+                //}
+
+
+
+                let struct_name = paramValue;
+
+                if (paramValue && paramValue.includes("$#$")) {
+                    const struct_split = paramValue.split("$#$");
+                    struct_name = struct_split[0];
+                }
+                //const extraPromptSource = "axi_keyfieldList".toLowerCase();
+                //const extraSourceKey = `${extraPromptSource}_${struct_name}`.toLowerCase();
+
+
+                //const extraList = axDatasourceObj[extraSourceKey];
+
+                //if (!extraList) {
+                //    loadList(extraPromptSource, struct_name);
+                //}
+
+                paramValue = processParamforEditndView(tokens, commandConfig, paramValue, tokens.length);
             }
 
 
@@ -2006,10 +2209,29 @@
 
             if (!axDatasourceObj[sourceKey]) {
                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
+
+                if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
+                    if (groupKey.toLowerCase() === "open" && tokens.length > 2) {
+                        filteredObjects = [goOption];
+                        return [goOption]
+                    }
+
+                    if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
+                        filteredObjects = [goOption];
+                        return [goOption];
+                    }
+                    return [];
+                }
                 if (hasValidParams) {
                     loadList(apiSourceName, paramValue);
                     console.log(axDatasourceObj);
-                    if (realSource.toLowerCase() === "axi_dummy") return []; 
+                    // if (realSource.toLowerCase() === "axi_dummy") {
+                    //     if (groupKey.toLowerCase() === "open" && tokens.length > 2) {
+                    //         filteredObjects = [goOption];
+                    //         return [goOption]
+                    //     }
+                    //     return [];
+                    // }
                     return [`Loading ${realSource}...`];
                 }
                 return ["Waiting for input..."];
@@ -2017,17 +2239,38 @@
 
             // Filter Cache
             const dataList = axDatasourceObj[sourceKey];
-            const filtered = dataList.filter(item => {
+            let filtered = dataList.filter(item => {
                 const display = item.displaydata || item.caption || item.name || "";
                 return display.toLowerCase().includes(partialTyped.toLowerCase());
             });
 
-            filteredObjects = filtered;
+            //filteredObjects = filtered;
+
+
+            ///added to restrict user by typing only the listed values from the list(if they type other than that we prompt them again with the default list added - 18-3-2026(t))
+            if (dataList.length > 0 && filtered.length === 0) {
+
+                console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
+                showToast("Please select a valid option from the list.", 3000, true);
+
+                let dummyTokens = [...tokens];
+                let lastIndex = dummyTokens.length - 1;
+                let lastTokenValue = dummyTokens[lastIndex];
+
+                dummyTokens[lastIndex] = "";
+
+                input.value = dummyTokens.join(" ");
+
+                filtered = [...dataList];
+            }
+
 
             let resultList = filtered.map(item => {
                 if (item.createallowed === 'F') return;
                 return item.displaydata || item.caption || item.name || item.fname || item.keyfield
             });
+
+            filteredObjects = filtered;
 
             if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
                 resultList.unshift(popOption);
@@ -2050,31 +2293,287 @@
             //    filteredObjects.unshift(goOption);
             //}
 
-            else if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
-                resultList.unshift(popOption);
-                resultList.unshift(goOption);
-                filteredObjects.unshift(popOption);
-                filteredObjects.unshift(goOption);
+            //else if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
+            //    resultList.unshift(popOption);
+            //    resultList.unshift(goOption);
+            //    filteredObjects.unshift(popOption);
+            //    filteredObjects.unshift(goOption);
+            //}
+
+
+            ///added this for sinlge fieldname and fieldvalue(T)
+            if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
+                //resultList.unshift(goOption);
+                //resultList.unshift(popOption);
+                //filteredObjects.unshift(goOption);
+                //filteredObjects.unshift(popOption);
+                filteredObjects = [goOption, popOption]
+                return [goOption, popOption];
             }
 
             return resultList;
         }
 
-        ///added this for sinlge fiedlname and fieldvalue(T)
+        ///added this for sinlge fieldname and fieldvalue(T)
         if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
             //resultList.unshift(goOption);
             //resultList.unshift(popOption);
             //filteredObjects.unshift(goOption);
             //filteredObjects.unshift(popOption);
+            updateDynamicHintFromPrompt({ prompt: "Ready to Run" })
             filteredObjects = [goOption, popOption]
             return [goOption, popOption];
         }
+
+
         return [];
     }
 
+    function processParamforEditndView(tokens, commandConfig, paramValue, position) {
 
-    function processExtraParams(tokens,commandConfig) {
+        const struct_prompt = commandConfig.prompts[0];
+        const struct_source = struct_prompt.promptSource;
 
+        // extra params
+        const struct_paramValue = processExtraParams(tokens, commandConfig);
+
+        const struct_sourceKey = (struct_paramValue ? `${struct_source}_${struct_paramValue}` : struct_source).toLowerCase();
+
+        // load datasource if not exists
+        if (!axDatasourceObj[struct_sourceKey]) {
+
+            const struct_hasParams = !struct_prompt.promptParams ||
+                (struct_paramValue && struct_paramValue.replace(/,/g, '').trim().length > 0);
+
+            if (struct_hasParams) {
+                loadList(struct_source, struct_paramValue);
+                return [`Loading ${struct_source}...`];
+            }
+        }
+
+        const struct_dataList = axDatasourceObj[struct_sourceKey];
+        //if (!struct_dataList) return null;
+
+        // find struct row
+
+        let struct_name = paramValue;
+
+        if (paramValue && paramValue.includes("$#$")) {
+            const struct_split = paramValue.split("$#$");
+            struct_name = struct_split[0];
+        }
+
+        const struct_row = struct_dataList.find(r => r.name === struct_name);
+        if (!struct_row) {
+            console.log("The give Form is not in the ads " + struct_source + " list");
+            showToast("The Given Transid is not in the list");
+            return [];
+        }
+
+        // values from structmetalist
+        //const struct_dimension = struct_row.dimension;
+        //const struct_permission = struct_row.permission;
+        //const struct_keyfield = struct_row.keyfield;
+        //const struct_primarytable = struct_row.primarytable;
+        //const struct_transid = struct_row.name;
+
+        // selected field logic
+        let struct_selectedfield = "";
+        if (position === 3) {
+            struct_selectedfield = "0";
+        } else {
+            const struct_split = paramValue ? paramValue.split("$#$") : [];
+            struct_selectedfield = struct_split.length > 1 ? struct_split[1] : "";
+        }
+
+        //// already available globals
+        //const struct_username = mainUserName;
+        //const struct_userrole = AxUserRoles;
+
+        const struct_globalvars = getGlobalVar(allGloblVars, "axg_applicable_dimensions") || "NA";
+        //const struct_globalvars = prepareKeyValueString(allGloblVars);
+        //const struct_globalvars = allGloblVars
+
+        const promptIndex = position === 3 ? 1 : 2;
+        const extraParamsStr = commandConfig.prompts[promptIndex]?.extraParams || "";
+
+        const paramsArray = extraParamsStr.split(",");
+
+        let finalParamsArray = [];
+
+        //default first param
+        //finalParamsArray.push(commandConfig.commandGroup)
+
+        for (let i = 0; i < paramsArray.length; i++) {
+
+            let param = paramsArray[i].trim().toLowerCase();
+            let value = "";
+
+
+            if (param === ":username") {
+                value = mainUserName;
+            }
+            else if (param === ":userrole") {
+                value = AxUserRoles;
+            }
+            else if (param === ":cmd") {
+                value = commandConfig.commandGroup;
+            }
+            else if (param === ":transid") {
+                value = struct_row.name;;
+            }
+            else if (param === ":selectedfield") {
+                value = struct_selectedfield;
+            }
+            else if (param === ":dimension") {
+                value = struct_row.dimension;
+            }
+            else if (param === ":permission") {
+                value = struct_row.permission;
+            }
+            else if (param === ":keyfield") {
+                value = struct_row.keyfield;
+            }
+            else if (param === ":primarytable") {
+                value = struct_row.primarytable;
+            }
+            else if (param === ":globalvars") {
+                value = "NA";
+            }
+
+
+            // fallback NA
+            if (value === null || value === undefined || value === "") {
+                value = "NA";
+            }
+
+            finalParamsArray.push(value);
+        }
+
+        const struct_finalParams = finalParamsArray.join("$#$");
+        //const struct_finalParams = [
+        //    commandConfig.commandGroup,
+        //    struct_username,
+        //    struct_userrole,
+        //    struct_transid,
+        //    struct_selectedfield,
+        //    struct_dimension,
+        //    struct_permission,
+        //    struct_keyfield,
+        //    struct_primarytable,
+        //    struct_globalvars
+        //]
+        //    .map(v => (v === null || v === undefined || v === "") ? "NA" : v)
+        //    .join("$#$");
+
+        return struct_finalParams;
+    }
+
+    function getGlobalVar(struct_allGlobalVars, struct_keyName) {
+
+        if (!struct_allGlobalVars || !Array.isArray(struct_allGlobalVars.globalVars)) {
+            return null;
+        }
+
+        for (let struct_var of struct_allGlobalVars.globalVars) {
+            if (struct_var.hasOwnProperty(struct_keyName)) {
+                return struct_var[struct_keyName];
+            }
+        }
+
+        return null;
+    }
+
+    // function processExtraParams(tokens,commandConfig) {
+
+    //     let paramValue = "";
+
+    //     let iviewBoolCheck = false;
+
+    //     let adsBoolCheck = false;
+
+    //     let pageBoolCheck = false;
+
+    //     if (tokens.length >= 2) {
+    //         if (tokens[1].toLowerCase() == "iview" && commandConfig.commandGroup.toLowerCase() == "open") {
+    //             iviewBoolCheck = true;
+    //         }
+    //         else if (tokens[1].toLowerCase() == "ads" && commandConfig.commandGroup.toLowerCase() == "open") {
+    //             adsBoolCheck = true;
+    //         }
+    //         else if (tokens[1].toLowerCase() == "page" && commandConfig.commandGroup.toLowerCase() == "open") {
+    //             pageBoolCheck = true;
+    //         }
+    //     }
+    //     try {
+
+    //         let extraParams;
+    //         if (commandConfig.commandGroup.toLowerCase() == "configure") {
+    //             extraParams = commandConfig?.prompts?.[1]?.extraParams;
+    //         }
+    //         else if (commandConfig.commandGroup.toLowerCase() == "open") {
+    //             extraParams = commandConfig?.prompts?.[1]?.extraParams;
+    //         }
+    //         else {
+    //             extraParams = commandConfig?.prompts?.[0]?.extraParams;
+    //         }
+
+    //         if (!extraParams) return paramValue;
+
+    //         let paramsArray = extraParams.split(",");
+
+    //         paramsArray.forEach(param => {
+
+    //             param = param.trim().toLowerCase();
+    //             let value = "";
+
+    //             if (param === ":username") {
+    //                 value = mainUserName;
+    //             }
+    //             else if (param === ":userroles") {
+    //                 value = AxUserRoles;
+    //             }
+    //             else if (param === ":userresp") {
+    //                 value = userResp;
+    //             }
+    //             else if (param === ":mode") {
+    //                 if (commandConfig.commandGroup.toLowerCase() === "open") {
+    //                     value = "dev";
+    //                 }
+    //                 else if (commandConfig.commandGroup.toLowerCase() === "view") {
+    //                     value = "all"
+    //                 }
+    //                 else value = "run";
+    //             }
+    //             else if (param === ":structtype") {
+    //                 if (commandConfig.commandGroup.toLowerCase() === "view") {
+    //                     value = "all"
+    //                 }
+    //                 else {
+
+    //                     value = iviewBoolCheck ? "i" : adsBoolCheck ? "ads" : pageBoolCheck ? "p" : "t";
+    //                 }
+    //             }
+
+    //             if (value) {
+    //                 if (paramValue === "") {
+    //                     paramValue = value;
+    //                 } else {
+    //                     paramValue += "$#$" + value;
+    //                 }
+    //             }
+
+    //         });
+
+    //     } catch (err) {
+    //         console.log("Error in processExtraParams:", err);
+    //     }
+
+    //     return paramValue;
+    // }
+
+
+    function processExtraParams(tokens, commandConfig) {
         let paramValue = "";
 
         let iviewBoolCheck = false;
@@ -2085,15 +2584,12 @@
             }
         }
         try {
-
             let extraParams;
             if (commandConfig.commandGroup.toLowerCase() == "configure") {
                 extraParams = commandConfig?.prompts?.[1]?.extraParams;
-            }
-            else if (commandConfig.commandGroup.toLowerCase() == "open") {
+            } else if (commandConfig.commandGroup.toLowerCase() == "open") {
                 extraParams = commandConfig?.prompts?.[1]?.extraParams;
-            }
-            else {
+            } else {
                 extraParams = commandConfig?.prompts?.[0]?.extraParams;
             }
 
@@ -2101,36 +2597,49 @@
 
             let paramsArray = extraParams.split(",");
 
-            paramsArray.forEach(param => {
-
+            paramsArray.forEach((param) => {
                 param = param.trim().toLowerCase();
                 let value = "";
 
                 if (param === ":username") {
                     value = mainUserName;
-                }
-                else if (param === ":userroles") {
+                } else if (param === ":userroles") {
                     value = AxUserRoles;
-                }
-                else if (param === ":userresp") {
+                } else if (param === ":userresp") {
                     value = userResp;
-                }
-                else if (param === ":mode") {
+                } else if (param === ":mode") {
                     if (commandConfig.commandGroup.toLowerCase() === "open") {
                         value = "dev";
-                    }
-                    else if (commandConfig.commandGroup.toLowerCase() === "view") {
-                        value = "all"
-                    }
-                    else value = "run";
-                }
-                else if (param === ":structtype") {
+                    } else if (commandConfig.commandGroup.toLowerCase() === "view") {
+                        value = "all";
+                    } else value = "run";
+                } else if (param === ":structtype") {
                     if (commandConfig.commandGroup.toLowerCase() === "view") {
-                        value = "all"
-                    }
-                    else value = iviewBoolCheck ? "i" : "t";
-                }
+                        value = "all";
+                    } else if (
+                        commandConfig.commandGroup.toLowerCase() == "open" &&
+                        tokens.length >= 2
+                    ) {
+                        let token = tokens[1].toLowerCase();
 
+                        switch (token) {
+                            case "iview":
+                                value = "i";
+                                break;
+                            case "tstruct":
+                                value = "t";
+                                break;
+                            case "page":
+                                value = "p";
+                                break;
+                            case "ads":
+                                value = "ads";
+                                break;
+                            default:
+                                value = "t"; //all
+                        }
+                    } else value = iviewBoolCheck ? "i" : "t";
+                }
                 if (value) {
                     if (paramValue === "") {
                         paramValue = value;
@@ -2138,9 +2647,7 @@
                         paramValue += "$#$" + value;
                     }
                 }
-
             });
-
         } catch (err) {
             console.log("Error in processExtraParams:", err);
         }
@@ -2150,6 +2657,7 @@
 
 
     function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
+
         tokenText = cleanString(tokenText);
         if (!tokenText) return "";
 
@@ -2191,7 +2699,7 @@
 
                 if (extraList && extraList.length > 0) {
                     const hiddenValue = extraList[0].name || extraList[0].keyfield || extraList[0].fname || extraList[0].displaydata;
-                    
+
                     if (paramValue) paramValue += "$#$" + hiddenValue;
                     else paramValue = hiddenValue;
                 }
@@ -2199,19 +2707,55 @@
 
             let apiName = realSource;
             if (apiName.toLowerCase() === "axi_analyticslist") {
+                // apiName = "axi_analyticslistnew"; 
                 paramValue = window.mainUserName;
             }
 
             else if (realSource.toLowerCase() === "axi_structlist") {
-                paramValue = processExtraParams(currentTokens,commandConfig);
+                paramValue = processExtraParams(currentTokens, commandConfig);
             }
 
             else if (realSource.toLowerCase() === "axi_structmetalist") {
-                paramValue = processExtraParams(currentTokens,commandConfig);
+                paramValue = processExtraParams(currentTokens, commandConfig);
             }
 
             else if (realSource.toLowerCase() === "axi_viewlist") {
                 paramValue = processExtraParams(currentTokens, commandConfig);
+            }
+            else if (realSource.toLowerCase() === "axi_getstructsdata") {
+
+                let staticParams = "2";
+                //if (currentTokens.length < 3) {
+                //    staticParams = "2";
+                //}
+                //else {
+                //    staticParams = "2,3";
+                //}
+
+                const indices = staticParams.toString().split(',');
+                const values = indices.map(idx => {
+                    const logicalWordPos = parseInt(idx.trim());
+                    const depTokenIndex = logicalWordPos - 1;
+                    const depToken = cleanString(currentTokens[depTokenIndex] || "");
+                    return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+                });
+                paramValue = values.join('$#$');
+
+                //if (currentTokens.length == 2) {
+                //    const depToken = cleanString(currentTokens[1] || "");
+                //    paramValue = tryResolveToken(1, depToken, commandConfig, false);
+                //}
+                //else {
+                //    const depToken = cleanString(currentTokens[1] || "");
+                //    paramValue = tryResolveToken(1, depToken, commandConfig, false);
+
+                //    const fieldName = cleanString(currentTokens[2] || "");
+                //    paramValue += "$#$"+tryResolveToken(2, fieldName, commandConfig, false);
+                //}
+
+
+
+                paramValue = processParamforEditndView(currentTokens, commandConfig, paramValue, 3)
             }
 
             let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
@@ -2225,7 +2769,7 @@
                     (cleanString(item.name) || "").toLowerCase() === tokenText.toLowerCase()
                 );
                 if (found) {
-                    let real = found.name  || found.sqlname || found.displaydata;
+                    let real = found.name || found.sqlname || found.displaydata;
 
                     if (real.includes("(") && real.includes(")")) {
                         const match = real.match(/\(([^)]+)\)/);
@@ -2252,10 +2796,10 @@
         console.log("Render called");
         list.innerHTML = "";
 
-        const currentInput = input.value; 
-        const currentInputTokens = getTokens(currentInput.trim()); 
+        const currentInput = input.value;
+        const currentInputTokens = getTokens(currentInput.trim());
 
-        const isInitialCommandStage = currentInputTokens.length === 0 || (currentInputTokens.length === 1 && !currentInput.endsWith(" ")); 
+        const isInitialCommandStage = currentInputTokens.length === 0 || (currentInputTokens.length === 1 && !currentInput.endsWith(" "));
 
         const commandIcons = {
             "create": "add_circle_outline",
@@ -2273,10 +2817,10 @@
             "end": "stop",
             "editprompt": "edit",
             "analyze": "analytics"
-            
+
         };
 
-      
+
 
 
         const validItems = items.filter(item => {
@@ -2292,7 +2836,7 @@
 
         console.log(`Valid Items: ${validItems.length}`);
 
-          if (items.length > 0 && isSystemMessage(items[0])) {
+        if (items.length > 0 && isSystemMessage(items[0])) {
             activeIndex = -1;
         } else {
             // const hasGoOption = validItems.some(item => typeof item === 'object' && item.name === "GO_ACTION");
@@ -2305,7 +2849,18 @@
             // } else {
             //     activeIndex = 0; 
             // }
-            activeIndex = 0; 
+            activeIndex = 0;
+        }
+
+        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
+            list.classList.add("axi-grid-layout", "My-Command-Wrapper");
+            if (favouritesCard) favouritesCard.style.display = "flex";
+            if (commandHeader) commandHeader.style.display = "flex";
+
+        } else {
+            list.classList.remove("axi-grid-layout", "My-Command-Wrapper");
+            if (favouritesCard) favouritesCard.style.display = "none";
+            if (commandHeader) commandHeader.style.display = "none";
         }
 
         if (validItems.length === 0) {
@@ -2321,13 +2876,13 @@
             return;
         }
 
-        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0]))  {
-            list.classList.add("axi-grid-layout", "My-Command-Wrapper"); 
-            if (favouritesCard) favouritesCard.style.display = "flex"; 
-            if (commandHeader) commandHeader.style.display = "flex"; 
+        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
+            list.classList.add("axi-grid-layout", "My-Command-Wrapper");
+            if (favouritesCard) favouritesCard.style.display = "flex";
+            if (commandHeader) commandHeader.style.display = "flex";
 
         } else {
-            list.classList.remove("axi-grid-layout", "My-Command-Wrapper"); 
+            list.classList.remove("axi-grid-layout", "My-Command-Wrapper");
             if (favouritesCard) favouritesCard.style.display = "none";
             if (commandHeader) commandHeader.style.display = "none";
         }
@@ -2341,10 +2896,10 @@
                 li.style.fontWeight = "bold";
                 li.style.color = "#22c55e";
                 li.style.borderBottom = "1px solid #eee";
-            li.textContent = text;
+                li.textContent = text;
 
             } else if (isInitialCommandStage && commands[text]) {
-                const iconName = commandIcons[text.toLowerCase()] || "chevron_right"; 
+                const iconName = commandIcons[text.toLowerCase()] || "chevron_right";
 
                 li.innerHTML = `
                
@@ -2357,9 +2912,9 @@
                             </div>
                         </div>
                         <span class="command-text">${text}</span>
-                    </div>`; 
+                    </div>`;
             } else {
-            li.textContent = text;
+                li.textContent = text;
 
             }
 
@@ -2376,27 +2931,27 @@
         });
 
         if (list.classList.contains("axi-grid-layout")) {
-            list.style.display = "flex"; 
+            list.style.display = "flex";
         } else {
-        list.style.display = "block";
+            list.style.display = "block";
 
 
         }
 
         if (megaDropdown) {
-            megaDropdown.style.display = "flex"; 
+            megaDropdown.style.display = "flex";
         } else {
-            list.style.display = "block"; 
+            list.style.display = "block";
         }
 
     }
 
     function hide() {
         if (megaDropdown) {
-            megaDropdown.style.display = "none"; 
+            megaDropdown.style.display = "none";
         }
         list.style.display = "none";
-        list.classList.remove("axi-grid-layout", "My-Command-Wrapper"); 
+        list.classList.remove("axi-grid-layout", "My-Command-Wrapper");
         items = [];
         activeIndex = -1;
     }
@@ -2419,7 +2974,7 @@
         const currentInput = input.value;
         const tokens = getTokens(currentInput);
 
-        const saveGroupKeyCheck = cleanString(tokens[0]).toLowerCase();
+        const saveGroupKeyCheck = cleanString(tokens[0]);
         const saveCommandConfig = commands[saveGroupKeyCheck];
 
         if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "GO_ACTION") {
@@ -2444,26 +2999,26 @@
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Pop_ACTION") {
             console.log("Pop Option Selected......");
-             try {
-                    if (tokens.length >= 2) {
-                        hide();
-                        popUpOption = true;
-                        executeCommandsV2();
-                        return;
-                    }
-                    //else return;
-                }
-                catch (err) {
-                    popUpOption = false;
-
-                    console.log("Error in Popup:", err);
-
-                    showToast("Something went wrong. Please try again later");
-
+            try {
+                if (tokens.length >= 2) {
+                    hide();
+                    popUpOption = true;
+                    executeCommandsV2();
                     return;
                 }
-            
-            
+                //else return;
+            }
+            catch (err) {
+                popUpOption = false;
+
+                console.log("Error in Popup:", err);
+
+                showToast("Something went wrong. Please try again later");
+
+                return;
+            }
+
+
         }
 
         const endsWithSpace = currentInput.endsWith(" ");
@@ -2518,7 +3073,7 @@
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
 
 
-        realValue = foundObj ? (foundObj.name  || foundObj.sqlname || foundObj.displaydata) : suggestion;
+        realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
 
 
 
@@ -2606,7 +3161,7 @@
 
 
 
-   
+
 
 
 
@@ -2804,14 +3359,17 @@
     function setupEventListeners() {
 
         favouriteBtn.addEventListener("click", (e) => {
-            e.preventDefault(); 
-            e.stopPropagation(); 
-            toggleFavorite(input.value.trim(), true); 
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFavorite(input.value.trim(), true);
 
         })
         const historyBtn = document.getElementById("History_pages");
         if (historyBtn) {
-            historyBtn.addEventListener("click", () => navigateHistory('open'));
+            historyBtn.addEventListener("click", () => {
+                showToast("Not Yet Implemented...");
+                return;
+            });
         }
 
         const prevBtn = document.getElementById("btnHistoryPrev");
@@ -2821,7 +3379,10 @@
 
         const nextBtn = document.getElementById("btnHistoryNext");
         if (nextBtn) {
-            nextBtn.addEventListener("click", () => window.nextbtn_click($(this)));
+            nextBtn.addEventListener("click", () => {
+                showToast("Not Yet Implemented...");
+                return;
+            });
         }
         if (btnRefresh) {
             btnRefresh.addEventListener("click", async () => {
@@ -2893,6 +3454,7 @@
         input.addEventListener("input", handleInput);
         input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
         input.addEventListener("keydown", e => {
+            isDeleting = (e.key === "Backspace" || e.key === "Delete");
             console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
 
             const tokens = getTokens(input.value.trim());
@@ -2921,7 +3483,7 @@
 
                 if (input.value[cursorPos - 1] === " " && !SET_COMMAND_STATE.currentField?.trim()) {
 
-                    
+
                     console.log("Deleted a space using Backspace");
                     console.log(SET_COMMAND_STATE);
                 }
@@ -3021,7 +3583,7 @@
             if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "enter") && (grpKey.toLowerCase() === "create" || grpKey.toLowerCase() === "edit" || grpKey.toLowerCase() === "view")) {
 
                 e.preventDefault();
-                
+
 
                 try {
                     if (tokens.length >= 2) {
@@ -3108,15 +3670,15 @@
             if (e.key === "ArrowDown") { e.preventDefault(); activeIndex = (activeIndex + 1) % items.length; highlight(); }
             if (e.key === "ArrowUp") { e.preventDefault(); activeIndex = (activeIndex - 1 + items.length) % items.length; highlight(); }
             if (list.classList.contains("axi-grid-layout")) {
-                if (e.key === "ArrowRight") { 
-                    e.preventDefault(); 
-                    activeIndex = (activeIndex + 1) % items.length; 
-                    highlight(); 
+                if (e.key === "ArrowRight") {
+                    e.preventDefault();
+                    activeIndex = (activeIndex + 1) % items.length;
+                    highlight();
                 }
-                if (e.key === "ArrowLeft") { 
-                    e.preventDefault(); 
-                    activeIndex = (activeIndex - 1 + items.length) % items.length; 
-                    highlight(); 
+                if (e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    activeIndex = (activeIndex - 1 + items.length) % items.length;
+                    highlight();
                 }
             }
             if (e.key === "Tab") { e.preventDefault(); if (activeIndex === -1) activeIndex = 0; apply(activeIndex); }
@@ -3150,12 +3712,12 @@
         document.addEventListener("click", e => {
             if (list && list.style.display !== "none") {
                 if (searchWrapper && !searchWrapper.contains(e.target) && e.target !== input) {
-                   hide();  
+                    hide();
                 }
             }
         })
 
-       
+
 
 
         const iframe = document.getElementById("middle1");
@@ -3173,7 +3735,7 @@
                 }
             };
 
-            
+
             attachIframeClick();
 
 
@@ -3239,7 +3801,7 @@
 
 
         const tokens = getTokens(text);
-        
+
         if (tokens.length === 0) return;
 
         const groupKey = cleanString(tokens[0]);
@@ -3267,7 +3829,7 @@
         dispatchCommand(context);
         hide();
         if (!isNavigating) {
-        saveToHistory(text); 
+            saveToHistory(text);
 
 
 
@@ -3278,18 +3840,18 @@
             input.focus();
 
             if (tokens.length > 0) {
-                const firstToken = tokens[0]; 
+                const firstToken = tokens[0];
 
-                let startIndex = input.value.indexOf(firstToken) + firstToken.length; 
+                let startIndex = input.value.indexOf(firstToken) + firstToken.length;
 
-                while(input.value[startIndex] === ' ') {
-                    startIndex++; 
+                while (input.value[startIndex] === ' ') {
+                    startIndex++;
                 }
 
-                input.setSelectionRange(startIndex,input.value.length); 
+                input.setSelectionRange(startIndex, input.value.length);
 
             }
-        
+
         }, 200)
     }
 
@@ -3428,167 +3990,255 @@
 
     function handleEditData({ tokens, commandConfig, resolvedParams }) {
 
-
-
-
         let rawStruct = cleanCommandToken(tokens[1]);
         let transId = tryResolveToken(1, rawStruct, commandConfig, false);
-        let rawFieldName = "";
+
         let fieldName = "";
-        let actualFieldName = "";
-        let rawValue = "";
         let fieldValue = "";
         let fieldUniqueId = "";
-        const extraPromptSource = commandConfig.prompts[1].extraParams.toLowerCase();
-        let fieldValuePromptSource;
-        let valuePresentInList = false;
-
-        const extraSourceKey = `${extraPromptSource}_${transId}`.toLowerCase();
-
-        const extraList = axDatasourceObj[extraSourceKey];
-
-        const extraInlineValue = commandConfig?.prompts?.[3]?.promptValues;
 
 
-        if (transId === rawStruct) {
-            const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
-            const found = list?.find(
-                x => x.caption?.toLowerCase() === rawStruct
-            );
-            if (!found || !found.name) {
-                console.error("TStruct not found:", rawStruct);
-                return;
+        const struct_prompt = commandConfig.prompts[0];
+        const struct_source = struct_prompt.promptSource;
+
+        // extra params
+        const struct_paramValue = processExtraParams(tokens, commandConfig);
+
+        const struct_sourceKey = (struct_paramValue ? `${struct_source}_${struct_paramValue}` : struct_source).toLowerCase();
+
+        // load datasource if not exists
+        if (!axDatasourceObj[struct_sourceKey]) {
+
+            const struct_hasParams = !struct_prompt.promptParams ||
+                (struct_paramValue && struct_paramValue.replace(/,/g, '').trim().length > 0);
+
+            if (struct_hasParams) {
+                loadList(struct_source, struct_paramValue);
+                return [`Loading ${struct_source}...`];
             }
-            transId = found.name;
         }
 
-        if (tokens.length > 3 && tokens.some(t => t.toLowerCase() !== extraInlineValue.toLowerCase())) {
-            fieldValuePromptSource = commandConfig.prompts[2].promptSource.toLowerCase();
-            rawFieldName = cleanCommandToken(tokens[2]);
-            actualFieldName = tryResolveToken(2, rawFieldName, commandConfig, true);
+        const struct_dataList = axDatasourceObj[struct_sourceKey];
 
+        const struct_row = struct_dataList.find(r => r.name === transId);
 
-            if (!Array.isArray(extraList)) {
-                console.warn("Hidden field list is missing or invalid", extraList);
-                actualFieldName = null;
-                return;
+        const primaryField = struct_row?.keyfield;
 
-            } else if (extraList.length === 0) {
-                console.log("hidden field List is Empty!");
-                actualFieldName = null;
-                return;
-
-            } else {
-                const field = extraList[0];
-
-                fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
-
-                if (actualFieldName === null) {
-                    console.error("Field name resolution failed: ", fieldName)
-                }
-            }
-            if (!fieldName) {
-                console.error("Field resolution failed:", rawFieldName);
-                return;
-            }
-
-            rawValue = cleanCommandToken(tokens[3]);
-            fieldValue = tryResolveToken(3, rawValue, commandConfig, false);
-            fieldUniqueId = getUniqueId(fieldValue);
-
-            const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${actualFieldName}`.toLowerCase()];
-            console.log(`Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
-
-            setEditSessionState(transId);
-
-            if (Array.isArray(extraFieldValueList) && extraFieldValueList.length > 0) {
-
-                valuePresentInList = extraFieldValueList.some(item =>
-                    // item.displaydata?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    // item.name?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    // item.fname?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    // item.keyfield?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    item.caption?.toLowerCase() === fieldUniqueId.toLowerCase()
-
-                );
-
-                if (valuePresentInList)
-                    redirectToTstruct(transId, rawStruct, true, fieldName, fieldUniqueId);
-                else
-                    redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
-            }
-            else {
-
-                redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
-            }
-
-
-
-
-        } else {
-            fieldValuePromptSource = commandConfig.prompts[1].promptSource.toLowerCase()
-
-            if (!Array.isArray(extraList)) {
-                console.warn("Hidden field list is missing or invalid", extraList);
-                fieldName = null;
-                return;
-
-            } else if (extraList.length === 0) {
-                console.log("hidden field List is Empty!");
-                fieldName = null;
-                return;
-
-            } else {
-                const field = extraList[0];
-
-                fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
-
-                if (fieldName === null) {
-                    console.error("Field name resolution failed: ", fieldName)
-                }
-
-                rawValue = cleanCommandToken(tokens[2]);
-                fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
-                fieldUniqueId = getUniqueId(fieldValue);
-
-                if (fieldValue === null) {
-                    console.error("Field value resolution failed:", rawValue);
-                    return;
-                }
-
-
-
-            }
-
-            const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${fieldName}`.toLowerCase()];
-            console.log(`Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
-
-            setEditSessionState(transId);
-
-            if (Array.isArray(extraFieldValueList) && extraFieldValueList.length > 0) {
-
-                valuePresentInList = extraFieldValueList.some(item =>
-                    // item.displaydata?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    // item.name?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    // item.fname?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    // item.keyfield?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    item.caption?.toLowerCase() === fieldUniqueId.toLowerCase()
-
-                );
-
-                if (valuePresentInList)
-                    redirectToTstruct(transId,"", true, fieldName, fieldUniqueId);
-                else
-                    redirectToTstruct(transId,"", false, fieldName, fieldUniqueId);
-            }
-            else {
-
-                redirectToTstruct(transId,"", false, fieldName, fieldUniqueId);
-            }
-
+        if (!primaryField) {
+            console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
+            showToast("Please try again later...");
+            return [];
         }
 
+        setEditSessionState(transId)
+
+
+
+        ///We need to optimize this(token index)(optimized one is below 17-03-26-T)
+        let tokenIndex;
+        let tokenBasedBooleanCheck;
+        if (tokens.length > 3) {
+            tokenIndex = 3;
+            tokenBasedBooleanCheck = false;
+        }
+        else {
+            tokenIndex = 2;
+            tokenBasedBooleanCheck = true;
+        }
+        //if (tokens.length > 3) {
+
+        //    let rawFieldName = cleanCommandToken(tokens[2]);
+        //    fieldName = tryResolveToken(2, rawFieldName, commandConfig, false);
+
+        //    let rawValue = cleanCommandToken(tokens[3]);
+        //    fieldValue = tryResolveToken(3, rawValue, commandConfig, false);
+
+        //    fieldUniqueId = getUniqueId(fieldValue);
+
+        //    redirectToTstruct(transId, rawStruct, true, struct_row.keyfield, fieldUniqueId);
+        //}
+        //else {
+
+
+        //    let rawValue = cleanCommandToken(tokens[2]);
+        //    fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
+
+        //    fieldUniqueId = getUniqueId(fieldValue);
+
+        //    redirectToTstruct(transId, rawStruct, true, struct_row.keyfield, fieldUniqueId);
+        //}
+        let rawValue = cleanCommandToken(tokens[tokenIndex]);
+        fieldValue = tryResolveToken(tokenIndex, rawValue, commandConfig, tokenBasedBooleanCheck);
+
+        fieldUniqueId = getUniqueId(fieldValue);
+
+        redirectToTstruct(transId, rawStruct, true, struct_row.keyfield, fieldUniqueId);
     }
+
+
+    // function handleEditData({ tokens, commandConfig, resolvedParams }) {
+
+
+
+
+    //     let rawStruct = cleanCommandToken(tokens[1]);
+    //     let transId = tryResolveToken(1, rawStruct, commandConfig, false);
+    //     let rawFieldName = "";
+    //     let fieldName = "";
+    //     let actualFieldName = "";
+    //     let rawValue = "";
+    //     let fieldValue = "";
+    //     let fieldUniqueId = "";
+    //     const extraPromptSource = commandConfig.prompts[1].extraParams.toLowerCase();
+    //     let fieldValuePromptSource;
+    //     let valuePresentInList = false;
+
+    //     const extraSourceKey = `${extraPromptSource}_${transId}`.toLowerCase();
+
+    //     const extraList = axDatasourceObj[extraSourceKey];
+
+    //     const extraInlineValue = commandConfig?.prompts?.[3]?.promptValues;
+
+
+    //     if (transId === rawStruct) {
+    //         const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+    //         const found = list?.find(
+    //             x => x.caption?.toLowerCase() === rawStruct
+    //         );
+    //         if (!found || !found.name) {
+    //             console.error("TStruct not found:", rawStruct);
+    //             return;
+    //         }
+    //         transId = found.name;
+    //     }
+
+    //     if (tokens.length > 3 && tokens.some(t => t.toLowerCase() !== extraInlineValue.toLowerCase())) {
+    //         fieldValuePromptSource = commandConfig.prompts[2].promptSource.toLowerCase();
+    //         rawFieldName = cleanCommandToken(tokens[2]);
+    //         actualFieldName = tryResolveToken(2, rawFieldName, commandConfig, true);
+
+
+    //         if (!Array.isArray(extraList)) {
+    //             console.warn("Hidden field list is missing or invalid", extraList);
+    //             actualFieldName = null;
+    //             return;
+
+    //         } else if (extraList.length === 0) {
+    //             console.log("hidden field List is Empty!");
+    //             actualFieldName = null;
+    //             return;
+
+    //         } else {
+    //             const field = extraList[0];
+
+    //             fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
+
+    //             if (actualFieldName === null) {
+    //                 console.error("Field name resolution failed: ", fieldName)
+    //             }
+    //         }
+    //         if (!fieldName) {
+    //             console.error("Field resolution failed:", rawFieldName);
+    //             return;
+    //         }
+
+    //         rawValue = cleanCommandToken(tokens[3]);
+    //         fieldValue = tryResolveToken(3, rawValue, commandConfig, false);
+    //         fieldUniqueId = getUniqueId(fieldValue);
+
+    //         const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${actualFieldName}`.toLowerCase()];
+    //         console.log(`Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
+
+    //         setEditSessionState(transId);
+
+    //         if (Array.isArray(extraFieldValueList) && extraFieldValueList.length > 0) {
+
+    //             valuePresentInList = extraFieldValueList.some(item =>
+    //                 // item.displaydata?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.name?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.fname?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.keyfield?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 item.caption?.toLowerCase() === fieldUniqueId.toLowerCase()
+
+    //             );
+
+    //             if (valuePresentInList)
+    //                 redirectToTstruct(transId, rawStruct, true, fieldName, fieldUniqueId);
+    //             else
+    //                 redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
+    //         }
+    //         else {
+
+    //             redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
+    //         }
+
+
+
+
+    //     } else {
+    //         fieldValuePromptSource = commandConfig.prompts[1].promptSource.toLowerCase()
+
+    //         if (!Array.isArray(extraList)) {
+    //             console.warn("Hidden field list is missing or invalid", extraList);
+    //             fieldName = null;
+    //             return;
+
+    //         } else if (extraList.length === 0) {
+    //             console.log("hidden field List is Empty!");
+    //             fieldName = null;
+    //             return;
+
+    //         } else {
+    //             const field = extraList[0];
+
+    //             fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
+
+    //             if (fieldName === null) {
+    //                 console.error("Field name resolution failed: ", fieldName)
+    //             }
+
+    //             rawValue = cleanCommandToken(tokens[2]);
+    //             fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
+    //             fieldUniqueId = getUniqueId(fieldValue);
+
+    //             if (fieldValue === null) {
+    //                 console.error("Field value resolution failed:", rawValue);
+    //                 return;
+    //             }
+
+
+
+    //         }
+
+    //         const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${fieldName}`.toLowerCase()];
+    //         console.log(`Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
+
+    //         setEditSessionState(transId);
+
+    //         if (Array.isArray(extraFieldValueList) && extraFieldValueList.length > 0) {
+
+    //             valuePresentInList = extraFieldValueList.some(item =>
+    //                 // item.displaydata?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.name?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.fname?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.keyfield?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 item.caption?.toLowerCase() === fieldUniqueId.toLowerCase()
+
+    //             );
+
+    //             if (valuePresentInList)
+    //                 redirectToTstruct(transId, rawStruct, true, fieldName, fieldUniqueId);
+    //             else
+    //                 redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
+    //         }
+    //         else {
+
+    //             redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
+    //         }
+
+    //     }
+
+    // }
 
 
     function handleConfigurePermissions({ tokens, commandConfig }) {
@@ -3657,7 +4307,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId,"", true, fieldname, rawApiName);
+        redirectToTstruct(transId, "", true, fieldname, rawApiName);
 
 
 
@@ -3675,7 +4325,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId,"", true, fieldname, rawParamName);
+        redirectToTstruct(transId, "", true, fieldname, rawParamName);
 
 
 
@@ -3693,7 +4343,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId,"", true, fieldname, rawParamName);
+        redirectToTstruct(transId, "", true, fieldname, rawParamName);
 
 
 
@@ -3710,7 +4360,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId,"", true, fieldname, rawParamName);
+        redirectToTstruct(transId, "", true, fieldname, rawParamName);
 
 
 
@@ -3727,7 +4377,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId,"", true, fieldname, rawParamName);
+        redirectToTstruct(transId, "", true, fieldname, rawParamName);
 
 
 
@@ -3757,30 +4407,37 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId,"", true, fieldname, fieldValue);
+        redirectToTstruct(transId, "", true, fieldname, fieldValue);
 
 
 
     }
 
-    function handleConfigureNewsAndAnnouncement({tokens, commandConfig}) {
-        let transId = "a__na"; 
+    function handleConfigureNewsAndAnnouncement({ tokens, commandConfig }) {
+        let transId = "a__na";
         const fieldname = "title";
-        
-        let rawTitle = cleanCommandToken(tokens[2]); 
 
-        setEditSessionState(transId); 
-        redirectToTstruct(transId,"", false, fieldname, rawTitle); 
+        let rawTitle = cleanCommandToken(tokens[2]);
+
+        setEditSessionState(transId);
+        redirectToTstruct(transId, "", false, fieldname, rawTitle);
     }
 
-    function handleConfigureSettings({tokens, commandConfig}) {
-        window.LoadIframe("../aspx/Configuration.aspx/LoadUserAppSettings"); 
+    function handleConfigureSettings({ tokens, commandConfig }) {
+        // const targetUrl = "../aspx/Configuration.aspx/LoadUserAppSettings"; 
+        const targetUrl = "../aspx/Configuration.aspx";
+        setCommandRoutes(input.value.trim(), targetUrl);
+        window.LoadIframe(targetUrl);
     }
 
 
 
     function handleConfigureProperties({ tokens, commandConfig }) {
-        const targetUrl = "../aspx/tstruct.aspx?act=load&transid=ad_pr&axpdef_axpertpropsid=1"; 
+        const transId = "ad_pr";
+        const targetUrl = `../aspx/tstruct.aspx?act=load&transid=${transId}&axpdef_axpertpropsid=1`;
+        //   const targetUrl = "../aspx/tstruct.aspx?act=load&transid=ad_pr&axpdef_axpertpropsid=1";
+        setEditSessionState(transId);
+        setCommandRoutes(input.value.trim(), targetUrl);
 
         top.window.LoadIframe(targetUrl);
 
@@ -3795,7 +4452,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId,"", true, fieldname, rawParamName);
+        redirectToTstruct(transId, "", true, fieldname, rawParamName);
 
 
 
@@ -3811,12 +4468,12 @@
     function handleUpload({ tokens, commandConfig }) {
 
         if (mode === "ai") {
-            handleAiButtons("openUpload"); 
+            handleAiButtons("openUpload");
 
         } else {
-            const targetUrl = "../aspx/ImportAll.aspx"; 
-            setCommandRoutes(input.value.trim(), targetUrl); 
-        window.LoadIframe(targetUrl);
+            const targetUrl = "../aspx/ImportAll.aspx";
+            setCommandRoutes(input.value.trim(), targetUrl);
+            window.LoadIframe(targetUrl);
 
 
         }
@@ -3828,8 +4485,8 @@
 
     function handleDownload({ tokens, commandConfig }) {
         let targetUrl = "../aspx/ExportNew.aspx";
-        targetUrl += "?action=export"; 
-         setCommandRoutes(input.value.trim(), targetUrl); 
+        targetUrl += "?action=export";
+        setCommandRoutes(input.value.trim(), targetUrl);
         window.LoadIframe(targetUrl);
 
     }
@@ -3871,7 +4528,7 @@
     }
 
 
-    function redirectToEntity(transId, fieldName, fieldValue) {
+    function redirectToEntity(transId, formCaption = "", fieldName, fieldValue) {
         let targetUrl;
         if (!fieldValue) {
 
@@ -3886,8 +4543,9 @@
 
         }
 
-        setCommandRoutes(input.value.trim(), targetUrl); 
+        setCommandRoutes(input.value.trim(), targetUrl);
         if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(formCaption)}`;
             openPopOption(targetUrl)
         }
         else {
@@ -3906,6 +4564,7 @@
         let rawFieldValue;
         let fieldUniqueId;
         let fieldValueIndex = 0;
+        let paramValue;
 
 
         if (tokens.length < 2) {
@@ -3919,10 +4578,14 @@
 
         const promptValues = commandConfig?.prompts?.[0].promptValues;
         const viewDataSource = commandConfig?.prompts?.[0].promptSource;
-        const extraDataSource = commandConfig?.prompts?.[1].extraParams;
+        if (viewDataSource.toLowerCase() === "axi_structmetalist") {
+            paramValue = processExtraParams(tokens, commandConfig);
+        }
+        // const extraDataSource = commandConfig?.prompts?.[1].extraParams;
+        //const extraDataSource = "axi_keyfieldList";
 
 
-        const viewDataSourceKey = `${viewDataSource}`.toLowerCase();
+        const viewDataSourceKey = `${viewDataSource}_${paramValue}`.toLowerCase();
         let rawStruct = cleanCommandToken(tokens[1]);
         transId = tryResolveToken(1, rawStruct, commandConfig, false);
 
@@ -3968,10 +4631,14 @@
             redirectToHtmlPages(rawFieldValue, tokens, commandConfig);
             return;
 
+        } else if (type === "iview") {
+            redirectToIView(transId, rawStruct);
+            return;
+
         }
 
 
-        const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
+        //const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
 
 
         if (tokens.length > 3) {
@@ -3985,15 +4652,27 @@
         }
 
 
+        const struct_rowList = axDatasourceObj[viewDataSourceKey];
+        const struct_row = struct_rowList.find(r => r.name === transId);
 
+        const primaryField = struct_row?.keyfield;
 
-        const extraList = axDatasourceObj[extraSourceKey];
-
-        if (extraList && extraList.length > 0) {
-            fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
-        } else {
-            console.warn("Hidden field name not found in cache");
+        if (!primaryField) {
+            console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
+            showToast("Please try again later...");
+            return [];
         }
+
+        setEditSessionState(transId)
+
+
+        //const extraList = axDatasourceObj[extraSourceKey];
+
+        //if (extraList && extraList.length > 0) {
+        //    fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
+        //} else {
+        //    console.warn("Hidden field name not found in cache");
+        //}
 
         rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
         fieldValue = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
@@ -4001,17 +4680,136 @@
 
 
         console.log(
-            `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
+            `view Data → TStruct=${transId}, Field=${primaryField}, Value=${fieldValue}`
         );
 
         handler({
             transId,
-            fieldName,
+            fieldName: primaryField,
             fieldValue: fieldUniqueId,
             rawStruct
         })
 
     }
+
+
+
+    // function handleViewCommand({ tokens, commandConfig }) {
+
+    //     let transId = "";
+    //     let type = "";
+    //     let fieldName;
+    //     let fieldValue;
+    //     let rawFieldName;
+    //     let rawFieldValue;
+    //     let fieldUniqueId;
+    //     let fieldValueIndex = 0;
+
+
+    //     if (tokens.length < 2) {
+    //         console.warn("View Command required atleast two tokens");
+    //         showToast("view command requires atleast two tokens");
+    //         return;
+    //     }
+
+    //     console.log(JSON.stringify(commandConfig));
+
+
+    //     const promptValues = commandConfig?.prompts?.[0].promptValues;
+    //     const viewDataSource = commandConfig?.prompts?.[0].promptSource;
+    //     const extraDataSource = commandConfig?.prompts?.[1].extraParams;
+
+
+    //     const viewDataSourceKey = `${viewDataSource}`.toLowerCase();
+    //     let rawStruct = cleanCommandToken(tokens[1]);
+    //     transId = tryResolveToken(1, rawStruct, commandConfig, false);
+
+
+    //     type = getType(viewDataSourceKey, transId, promptValues, tokens, commandConfig);
+
+    //     const handler = VIEW_HANDLERS[type];
+
+
+
+
+    //     if (!handler) {
+    //         console.log("Error: Unsupported View Type");
+    //         showToast("Error: Unsupported View Type");
+    //         return;
+    //     }
+
+
+    //     if (type === "ads") {
+
+
+    //         const adsName = cleanCommandToken(tokens[1]);
+    //         const filters = extractAdsFilters(tokens);
+
+    //         console.log("Ads Filters: ", filters);
+
+
+
+    //         redirectToSmartView({
+    //             adsName: adsName,
+    //             filters: filters
+    //         });
+    //         return;
+
+
+    //     } else if (type === "page") {
+
+
+
+
+
+    //         let rawFieldValue = cleanCommandToken(tokens[1]);
+    //         redirectToHtmlPages(rawFieldValue, tokens, commandConfig);
+    //         return;
+
+    //     }
+
+
+    //     const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
+
+
+    //     if (tokens.length > 3) {
+    //         fieldValueIndex = 3;
+
+
+    //     } else {
+    //         fieldValueIndex = 2;
+
+
+    //     }
+
+
+
+
+    //     const extraList = axDatasourceObj[extraSourceKey];
+
+    //     if (extraList && extraList.length > 0) {
+    //         fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
+    //     } else {
+    //         console.warn("Hidden field name not found in cache");
+    //     }
+
+    //     rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
+    //     fieldValue = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
+    //     fieldUniqueId = getUniqueId(fieldValue);
+
+
+    //     console.log(
+    //         `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
+    //     );
+
+    //     handler({
+    //         transId,
+    //         fieldName,
+    //         fieldValue: fieldUniqueId,
+    //         rawStruct
+    //     })
+
+    // }
 
 
     async function handleKeyfield({ tokens, commandConfig }) {
@@ -4066,7 +4864,9 @@
         const VALID_TYPES = new Set(paramList);
 
         let paramValue;
-        if (axDatasourceKey.toLowerCase() === "axi_viewlist") {
+       // if (axDatasourceKey.toLowerCase() === "axi_viewlist") {
+
+ if (axDatasourceKey.toLowerCase() === "axi_structmetalist") {
             paramValue = processExtraParams(tokens, commandConfig);
             axDatasourceKey += "_" + paramValue;
         }
@@ -4117,16 +4917,17 @@
 
         let paramValue = processExtraParams(tokens, commandConfig);
 
-        const viewList = axDatasourceObj["axi_viewlist".toLowerCase() + "_" + paramValue];
+        //const viewList = axDatasourceObj["axi_viewlist".toLowerCase() + "_" + paramValue];
+        const viewList = axDatasourceObj["axi_structmetalist".toLowerCase() + "_" + paramValue];
 
-       
+
 
         const item = viewList.find(v => v.displaydata.includes(text));
 
         const requestUrl = item.name;
         console.log(requestUrl);
 
-          setCommandRoutes(input.value.trim(), requestUrl); 
+        setCommandRoutes(input.value.trim(), requestUrl);
 
         if (popUpOption) {
 
@@ -4155,9 +4956,9 @@
 
         if (resolvedName === rawName) {
             const listKey =
-                type === "tstruct"
+                type.toLowerCase() === "tstruct"
                     ? "Axi_TStructList".toLowerCase()
-                    : type === "iview"
+                    : type.toLowerCase() === "iview"
                         ? "Axi_IViewList".toLowerCase()
                         : null;
 
@@ -4180,9 +4981,9 @@
         }
 
 
-        if (type === "tstruct") {
+        if (type.toLowerCase() === "tstruct") {
             window.openDeveloperStudio("tstreact", resolvedName, true);
-        } else if (type === "iview") {
+        } else if (type.toLowerCase() === "iview") {
             window.openDeveloperStudio("ivreact", resolvedName, true);
         } else {
             alert("Unknown source type: " + type);
@@ -4214,6 +5015,7 @@
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
+            setCommandRoutes(input.value.trim(), targetUrl);
 
             redirectToIView(iviewName);
 
@@ -4221,7 +5023,9 @@
         } else {
             targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
             targetUrl += "&act=load";
-            targetUrl += "&dummyload=false♠"
+            targetUrl += "&dummyload=false♠";
+            setCommandRoutes(input.value.trim(), targetUrl);
+
             window.LoadIframe(targetUrl);
 
         }
@@ -4247,13 +5051,17 @@
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
+            setCommandRoutes(input.value.trim(), targetUrl);
+
             window.LoadIframe(targetUrl);
 
         } else {
 
             targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
             targetUrl += "&act=load";
-            targetUrl += "&dummyload=false♠"
+            targetUrl += "&dummyload=false♠";
+            setCommandRoutes(input.value.trim(), targetUrl);
+
             window.LoadIframe(targetUrl);
 
         }
@@ -4278,12 +5086,15 @@
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (!paramName) {
+            setCommandRoutes(input.value.trim(), targetUrl);
             window.LoadIframe(targetUrl);
 
         } else {
             targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
             targetUrl += "&act=load";
-            targetUrl += "&dummyload=false♠"
+            targetUrl += "&dummyload=false♠";
+            setCommandRoutes(input.value.trim(), targetUrl);
+
             window.LoadIframe(targetUrl);
 
         }
@@ -4293,20 +5104,34 @@
     }
 
     function handleOpenAppVar({ tokens, commandConfig }) {
-        window.LoadIframe("../aspx/tstruct.aspx?transid=axvar");
+        const targetUrl = "../aspx/tstruct.aspx?transid=axvar";
+        setCommandRoutes(input.value.trim(), targetUrl);
+        window.LoadIframe(targetUrl);
 
     }
 
     function handleOpenDevOptions({ tokens, commandConfig }) {
-        window.LoadIframe("../aspx/tstruct.aspx?transid=axstc");
+        const targetUrl = "../aspx/tstruct.aspx?transid=axstc";
+        setCommandRoutes(input.value.trim(), targetUrl);
+
+        window.LoadIframe(targetUrl);
 
     }
 
     function handleOpenDbConsole() {
         // Task Axi-0034 completed
         // window.openDeveloperStudio("AxDBScript.aspx");
-        window.LoadIframe("../aspx/AxDBScript.aspx"); 
+        const targetUrl = "../aspx/AxDBScript.aspx";
+        setCommandRoutes(input.value.trim(), targetUrl);
+        window.LoadIframe(targetUrl);
 
+    }
+
+    function handleOpenArrangeMenu() {
+        // ArrangeMenu.aspx
+        const targetUrl = "../aspx/ArrangeMenu.aspx";
+        setCommandRoutes(input.value.trim(), targetUrl);
+        window.LoadIframe(targetUrl);
     }
 
     /**
@@ -4324,6 +5149,10 @@
      * 
      */
     function handleRunCommand({ tokens, commandConfig }) {
+        if (tokens.length < 2) {
+            showToast("Invalid Command! Run commands requires atleast 2 tokens!");
+            return;
+        }
         const structType = getStructType();
         let buttonLabel = cleanCommandToken(tokens[1]);
         let allButtons = null;
@@ -4380,15 +5209,15 @@
                 break;
 
             case "s":
-                if (!settingsPageButtons) settingsPageButtons = getButtons(".Config-cont"); 
+                if (!settingsPageButtons) settingsPageButtons = getButtons(".Config-cont");
                 allButtons = [...Object.values(settingsPageButtons)]
-                break; 
+                break;
 
             case "im":
             case "ex":
-                if (!importExportButtons) importExportButtons = getButtons(".card-footer"); 
-                allButtons = [...Object.values(importExportButtons)]; 
-                break; 
+                if (!importExportButtons) importExportButtons = getButtons(".card-footer");
+                allButtons = [...Object.values(importExportButtons)];
+                break;
 
 
             default:
@@ -4485,7 +5314,7 @@
     function extractAdsFilters(tokens) {
 
         const filters = [];
-        let i = 2; 
+        let i = 2;
 
         while (i < tokens.length) {
 
@@ -4540,7 +5369,7 @@
                     else {
                         operator = "equal";
                         if (matchedOperator)
-                          rawValue = nextTokenRaw.slice(matchedOperator.length);
+                            rawValue = nextTokenRaw.slice(matchedOperator.length);
                     }
                 }
                 else {
@@ -4743,9 +5572,9 @@
 
         const bodyId = iframeDoc.body?.id || "";
 
-        const cardContainer = document.querySelector(".cardsPageWrapper"); 
+        const cardContainer = document.querySelector(".cardsPageWrapper");
 
-        const isCardContainerHidden = cardContainer.classList.contains("d-none"); 
+        const isCardContainerHidden = cardContainer.classList.contains("d-none");
 
         if ((page.endsWith("/tstruct.aspx") || page.includes("tstruct.aspx")) && bodyId !== "Entitymanagement_Body" && isCardContainerHidden) {
             return "t" // tstruct page
@@ -4774,12 +5603,12 @@
 
         }
 
-         if (src.includes("../aspx/ImportAll.aspx") && isCardContainerHidden) {
+        if (src.includes("../aspx/ImportAll.aspx") && isCardContainerHidden) {
             return "im"; // Import page
 
         }
 
-         if (src.includes("../aspx/ExportNew.aspx") && isCardContainerHidden) {
+        if (src.includes("../aspx/ExportNew.aspx") && isCardContainerHidden) {
             return "ex"; // Export page
 
         }
@@ -4842,16 +5671,19 @@
     }
 
     function hasAction(btn) {
-        if (btn.getAttribute("onclick")) return true;
+        const isDisabled = btn.classList.contains("disabled");
+        if (btn.getAttribute("onclick") && !isDisabled) return true;
 
-        if (btn.tagName === "A") {
+
+
+        if (btn.tagName === "A" && !isDisabled) {
             const href = btn.getAttribute("href");
 
             if (href && href !== "#" && href !== "javascript:void(0)") return true;
 
         }
 
-        
+
 
 
 
@@ -4875,7 +5707,8 @@
         buttons.forEach((btn, index) => {
             // if (!hasAction(btn)) return;
 
-            if (btn.classList.contains("d-none")) return;
+            if (btn.classList.contains("d-none") || btn.classList.contains("disabled")) return;
+
 
             if (btn.getAttribute("data-kt-menu-attach") === "parent") return;
 
@@ -4886,7 +5719,7 @@
             if (!id) return;
 
             const label = extractButtonLabel(btn);
-            if (label.toLowerCase() === "export" || label.toLowerCase() === "theme" || label.toLowerCase() === "field captions" || label.toLowerCase() === "view" || label.toLowerCase() === "pattern") return; 
+            if (label.toLowerCase() === "export" || label.toLowerCase() === "theme" || label.toLowerCase() === "field captions" || label.toLowerCase() === "view" || label.toLowerCase() === "pattern") return;
             if (!label) return;
 
             result[id] = {
@@ -4917,9 +5750,10 @@
 
         buttons.forEach((btn) => {
             // if (!hasAction(btn)) return;
-            if (btn.type === "hidden") return; 
-            if (btn.style.display === "none") return; 
-            if (btn.offsetParent === null) return; 
+            if (btn.type === "hidden") return;
+            if (btn.style.display === "none") return;
+            if (btn.offsetParent === null) return;
+            if (btn.classList.contains("disabled")) return;
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || btn.name || btn.getAttribute("data-kt-stepper-action");
             if (!id) return;
@@ -4941,13 +5775,13 @@
     }
 
     function getAllActionButtons(doc) {
-    return doc.querySelectorAll(`
+        return doc.querySelectorAll(`
         a,
         button,
         input[type="button"],
         input[type="submit"]
     `);
-}
+    }
 
     function watchDesignModeChange(callback) {
         const iframe = document.getElementById("middle1");
@@ -5088,14 +5922,17 @@
         return text.startsWith("Loading") ||
             text.startsWith("Waiting") ||
             text.startsWith("Error") ||
-            text === "No Data";
+            text === "No Data" ||
+            text === "Please type the value..." ||
+            text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
+            text === "Please Type the date";
 
     }
 
 
     function handleAnalyse({ tokens, commandConfig }) {
 
-        let targetUrl = "../aspx/Analytics.aspx";
+        let targetUrl = "../AxpertPlugins/Axi/HTMLPages/Analytics.html";
 
         if (tokens.length === 1) {
             targetUrl += "?calendar=t";
@@ -5126,13 +5963,13 @@
             targetUrl += "&hdnbElapsTime=0";
         }
 
-        setCommandRoutes(input.value.trim(), targetUrl); 
+        setCommandRoutes(input.value.trim(), targetUrl);
         console.log("Target URL from analyse command : " + targetUrl);
         window.LoadIframe(targetUrl);
     }
 
 
-     
+
 
 
     function resetSetCommandState() {
@@ -5157,7 +5994,7 @@
 
             SET_COMMAND_STATE.isDropDown = false;
         }
-        
+
 
         if (SET_COMMAND_STATE.currentFieldType == 'n') {
 
@@ -5384,7 +6221,7 @@
                 filteredObjects.unshift(goOption);
 
             }
-        
+
             SET_COMMAND_STATE.currentField = null;
             SET_COMMAND_STATE.currentFieldType = null
             SET_COMMAND_STATE.currentFieldValue = null;
@@ -5431,7 +6268,7 @@
                     //showToast("Please Try Again Later.");
 
                     console.log("Selected Field Name is Not in the List " + prevColumnName);
-                    showToast("Please Select Field from the list",5000,true);
+                    showToast("Please Select Field from the list", 5000, true);
 
                     let settokens = [...tokens]
                     let lastIndex = settokens.length - 2;
@@ -5573,8 +6410,8 @@
 
                         if (acceptedValue && filtered.length === 0) {
                             console.log("User given value is not in the dropdown");
-                            showToast("Please select a valid value from the dropdown",5000,true);
-   
+                            showToast("Please select a valid value from the dropdown", 5000, true);
+
                             let lastIndex = tokens.length - 1;
                             let lastToken = tokens[lastIndex];
                             tokens[lastIndex] = "";
@@ -5582,7 +6419,7 @@
                             input.value = tokens.join(" ");
 
                             filtered = list;
-                        } 
+                        }
 
 
                         return filtered.map(col => col.displaydata || col.name);
@@ -5779,7 +6616,7 @@
                     input.value = tokens.join(" ");
 
                     filtered = list;
-                } 
+                }
 
 
                 return filtered;
@@ -5931,7 +6768,7 @@
                     console.log("In processEditCommond " + createCommandSourceObj + " is empty");
                     showToast("Please Try Again Later.");
                     return [];
-                }                     
+                }
 
                 const columnMetadata = colList.find(
                     c =>
@@ -5944,7 +6781,7 @@
                     //showToast("Please Try Again Later.");
 
                     console.log("Selected Field Name is Not in the List " + prevColumnName);
-                    showToast("Please Select Field only from the list",5000,true);
+                    showToast("Please Select Field only from the list", 5000, true);
 
                     let settokens = [...tokens]
                     let lastIndex = settokens.length - 2;
@@ -5959,7 +6796,7 @@
 
                     //return [];
 
-                  
+
                     const usedColumns = new Set();
                     for (let i = 4; i < targetIndex; i += 2) {
                         const usedToken = cleanString(tokens[i]).toLowerCase();
@@ -6083,7 +6920,7 @@
 
                         if (acceptedValue && filtered.length === 0) {
                             console.log("User given value which is not in the dropdown");
-                            showToast("Please select a valid value from the dropdown",5000,true);
+                            showToast("Please select a valid value from the dropdown", 5000, true);
 
                             let lastIndex = tokens.length - 1;
                             let lastToken = tokens[lastIndex];
@@ -6092,7 +6929,7 @@
                             input.value = tokens.join(" ");
 
                             filtered = list;
-                        } 
+                        }
 
 
 
@@ -6153,7 +6990,7 @@
             else return [];
         }
     }
-   function AddFieldstoList(fieldName, rowNo, value, transid) {
+    function AddFieldstoList(fieldName, rowNo, value, transid) {
 
         if (!fieldName || !value || !transid) return;
 
@@ -6238,7 +7075,7 @@
     //             ///
     //             /// For dependency we need to verify this logic.
     //             ////
-                
+
     //             iframeDocElement.value = value;
 
     //             iframeDocElement.dispatchEvent(new Event("input", { bubbles: true }));
@@ -6261,144 +7098,144 @@
 
     function AxisetFieldValue(actualFieldName, value, rowNo) {
 
-    const fldid = actualFieldName + "000F" + rowNo;
-    const iframe = document.getElementById("middle1");
-    if (!iframe) return false;
+        const fldid = actualFieldName + "000F" + rowNo;
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return false;
 
-    const iframeWin = iframe.contentWindow;
-    const iframeDoc = iframe.contentDocument || iframeWin.document;
+        const iframeWin = iframe.contentWindow;
+        const iframeDoc = iframe.contentDocument || iframeWin.document;
 
-    try {
+        try {
 
-        /* ---------------- MULTI SELECT (SELECT2) ---------------- */
+            /* ---------------- MULTI SELECT (SELECT2) ---------------- */
 
-        const multiSelectEl = iframeDoc.getElementById(fldid);
+            const multiSelectEl = iframeDoc.getElementById(fldid);
 
-        if (multiSelectEl && multiSelectEl.multiple) {
+            if (multiSelectEl && multiSelectEl.multiple) {
 
-            const valuesArray = (value || "")
-                .split(",")
-                .map(v => v.trim())
-                .filter(Boolean);
+                const valuesArray = (value || "")
+                    .split(",")
+                    .map(v => v.trim())
+                    .filter(Boolean);
 
-            if (iframeWin.$) {
+                if (iframeWin.$) {
 
-                const $el = iframeWin.$(multiSelectEl);
+                    const $el = iframeWin.$(multiSelectEl);
 
-                // Ensure options exist
-                valuesArray.forEach(val => {
-                    if ($el.find("option[value='" + val + "']").length === 0) {
-                        const newOption = new iframeWin.Option(val, val, true, true);
+                    // Ensure options exist
+                    valuesArray.forEach(val => {
+                        if ($el.find("option[value='" + val + "']").length === 0) {
+                            const newOption = new iframeWin.Option(val, val, true, true);
+                            $el.append(newOption);
+                        }
+                    });
+
+                    // Set UI
+                    $el.val(valuesArray).trigger("change");
+                }
+
+                // 🔥 VERY IMPORTANT — update Axpert internal array
+                if (typeof iframeWin.UpdateFieldArray === "function") {
+                    iframeWin.UpdateFieldArray(fldid, rowNo, value, "parent", "");
+                }
+
+                return true;
+            }
+
+            /* ---------------- SINGLE SELECT (SELECT2) ---------------- */
+
+            const singleSelectEl = iframeDoc.getElementById(fldid);
+
+            if (singleSelectEl && !singleSelectEl.multiple && singleSelectEl.classList.contains("select2-hidden-accessible")) {
+
+                if (iframeWin.$) {
+
+                    const $el = iframeWin.$(singleSelectEl);
+
+                    // If option doesn't exist, create it
+                    if ($el.find("option[value='" + value + "']").length === 0) {
+                        const newOption = new iframeWin.Option(value, value, true, true);
                         $el.append(newOption);
                     }
-                });
 
-                // Set UI
-                $el.val(valuesArray).trigger("change");
+                    $el.val(value).trigger("change");
+                }
+
+                if (typeof iframeWin.UpdateFieldArray === "function") {
+                    iframeWin.UpdateFieldArray(fldid, rowNo, value, "parent", "");
+                }
+
+                return true;
             }
 
-            // 🔥 VERY IMPORTANT — update Axpert internal array
-            if (typeof iframeWin.UpdateFieldArray === "function") {
-                iframeWin.UpdateFieldArray(fldid, rowNo, value, "parent", "");
-            }
 
-            return true;
-        }
+            /* ---------------- CHECKBOX ---------------- */
 
-           /* ---------------- SINGLE SELECT (SELECT2) ---------------- */
-
-   const singleSelectEl = iframeDoc.getElementById(fldid);
-
-   if (singleSelectEl && !singleSelectEl.multiple && singleSelectEl.classList.contains("select2-hidden-accessible")) {
-
-       if (iframeWin.$) {
-
-           const $el = iframeWin.$(singleSelectEl);
-
-           // If option doesn't exist, create it
-           if ($el.find("option[value='" + value + "']").length === 0) {
-               const newOption = new iframeWin.Option(value, value, true, true);
-               $el.append(newOption);
-           }
-
-           $el.val(value).trigger("change");
-       }
-
-       if (typeof iframeWin.UpdateFieldArray === "function") {
-           iframeWin.UpdateFieldArray(fldid, rowNo, value, "parent", "");
-       }
-
-       return true;
-   }
-
-
-        /* ---------------- CHECKBOX ---------------- */
-
-        const checkboxEl = iframeDoc.querySelector(
-            `input[type="checkbox"]#${fldid}`
-        );
-
-        if (checkboxEl) {
-
-            const normalized = (value || "").toString().toLowerCase();
-
-            checkboxEl.checked =
-                normalized === "true" ||
-                normalized === "1" ||
-                normalized === "yes" ||
-                normalized === "t" ||
-                normalized === "y"; 
-
-
-            checkboxEl.dispatchEvent(new Event("change", { bubbles: true }));
-            checkboxEl.dispatchEvent(new Event("blur", { bubbles: true }));
-
-            return true;
-        }
-
-
-        /* ---------------- RADIO GROUP ---------------- */
-
-        const radioGroup = iframeDoc.querySelectorAll(
-            `input[type="radio"][name="${fldid}"]`
-        );
-
-        if (radioGroup.length > 0) {
-
-            radioGroup.forEach(r => {
-                r.checked = (r.value === value);
-            });
-
-            radioGroup[0].dispatchEvent(
-                new Event("change", { bubbles: true })
+            const checkboxEl = iframeDoc.querySelector(
+                `input[type="checkbox"]#${fldid}`
             );
 
-            return true;
+            if (checkboxEl) {
+
+                const normalized = (value || "").toString().toLowerCase();
+
+                checkboxEl.checked =
+                    normalized === "true" ||
+                    normalized === "1" ||
+                    normalized === "yes" ||
+                    normalized === "t" ||
+                    normalized === "y";
+
+
+                checkboxEl.dispatchEvent(new Event("change", { bubbles: true }));
+                checkboxEl.dispatchEvent(new Event("blur", { bubbles: true }));
+
+                return true;
+            }
+
+
+            /* ---------------- RADIO GROUP ---------------- */
+
+            const radioGroup = iframeDoc.querySelectorAll(
+                `input[type="radio"][name="${fldid}"]`
+            );
+
+            if (radioGroup.length > 0) {
+
+                radioGroup.forEach(r => {
+                    r.checked = (r.value === value);
+                });
+
+                radioGroup[0].dispatchEvent(
+                    new Event("change", { bubbles: true })
+                );
+
+                return true;
+            }
+
+
+            /* ---------------- NORMAL INPUT ---------------- */
+
+            const normalInput = iframeDoc.getElementById(fldid);
+
+            if (normalInput) {
+
+                normalInput.value = value;
+
+                normalInput.dispatchEvent(new Event("input", { bubbles: true }));
+                normalInput.dispatchEvent(new Event("change", { bubbles: true }));
+                normalInput.dispatchEvent(new Event("blur", { bubbles: true }));
+
+                return true;
+            }
+
+            return false;
+
+        } catch (ex) {
+            console.error("AxisetFieldValue error:", ex);
+            return false;
         }
-
-
-        /* ---------------- NORMAL INPUT ---------------- */
-
-        const normalInput = iframeDoc.getElementById(fldid);
-
-        if (normalInput) {
-
-            normalInput.value = value;
-
-            normalInput.dispatchEvent(new Event("input", { bubbles: true }));
-            normalInput.dispatchEvent(new Event("change", { bubbles: true }));
-            normalInput.dispatchEvent(new Event("blur", { bubbles: true }));
-
-            return true;
-        }
-
-        return false;
-
-    } catch (ex) {
-        console.error("AxisetFieldValue error:", ex);
-        return false;
     }
-}
 
     function handleCreate({ tokens, commandConfig }) {
 
@@ -6422,34 +7259,34 @@
                 if (found) transId = found.name
                 else {
                     console.error("Invalid Tstruct name");
-                    showToast("Invalid Tstruct name please select the valid tstruct"); 
+                    showToast("Invalid Tstruct name please select the valid tstruct");
                     return;
                 }
             }
 
-            const sourceName = commandConfig?.prompts?.[2]?.promptSource?.toLowerCase(); 
-            const sourceKey = `${sourceName}_${transId}`.toLowerCase(); 
-            const fieldsList = axDatasourceObj[sourceKey]; 
+            const sourceName = commandConfig?.prompts?.[2]?.promptSource?.toLowerCase();
+            const sourceKey = `${sourceName}_${transId}`.toLowerCase();
+            const fieldsList = axDatasourceObj[sourceKey];
 
             if (fieldsList) {
-                let startIndex = cleanCommandToken(tokens[2]).toLowerCase() === "with" ? 3: 2; 
+                let startIndex = cleanCommandToken(tokens[2]).toLowerCase() === "with" ? 3 : 2;
 
                 for (let i = startIndex; i < tokens.length; i += 2) {
-                    let rawField =  cleanCommandToken(tokens[i]); 
+                    let rawField = cleanCommandToken(tokens[i]);
 
-                    if (!rawField) continue; 
+                    if (!rawField) continue;
 
-                  const isValidField = colList.some(c => 
-                    (c.name && c.name.toLowerCase() === rawField.toLowerCase()) || 
-                    (c.caption && c.caption.toLowerCase() === rawField.toLowerCase()) || 
-                    (c.displaydata && c.displaydata.replace(/\s*\(.*?\)/g, '').trim().toLowerCase() === rawField.toLowerCase())
-                );
+                    const isValidField = colList.some(c =>
+                        (c.name && c.name.toLowerCase() === rawField.toLowerCase()) ||
+                        (c.caption && c.caption.toLowerCase() === rawField.toLowerCase()) ||
+                        (c.displaydata && c.displaydata.replace(/\s*\(.*?\)/g, '').trim().toLowerCase() === rawField.toLowerCase())
+                    );
 
-                if (!isValidField) {
-                    console.error("Execution blocked: Invalid field name - "  + rawField);
-                    showToast(`'${rawField}' is not a valid field. Please select from the list.`, 5000, false);
-                    return;  
-                }
+                    if (!isValidField) {
+                        console.error("Execution blocked: Invalid field name - " + rawField);
+                        showToast(`'${rawField}' is not a valid field. Please select from the list.`, 5000, false);
+                        return;
+                    }
                 }
             }
 
@@ -6524,29 +7361,29 @@
         //}
         //else 
         //{
-            console.log("Form not loaded. Attaching onload and redirecting...");
+        console.log("Form not loaded. Attaching onload and redirecting...");
 
-            let iframe = null;
+        let iframe = null;
 
-            try {
+        try {
 
-                iframe = document.getElementById("middle1");
+            iframe = document.getElementById("middle1");
 
-                if (!iframe) {
-                    console.log("Iframe not found");
-                    return;
-                }
+            if (!iframe) {
+                console.log("Iframe not found");
+                return;
+            }
 
-              
-                iframe.onload = function () {
-                    //we can also try: 0 (minimum delay),50,100,200 (if needed)
-                    console.log("Iframe loaded. Setting all fields now...");
-                    setTimeout(function () {
+
+            iframe.onload = function () {
+                //we can also try: 0 (minimum delay),50,100,200 (if needed)
+                console.log("Iframe loaded. Setting all fields now...");
+                setTimeout(function () {
                     try {
 
-                        
+
                         console.log(createfieldnamevaluesList[transId]);
-                       // for (let j = 2; j < tokens.length; j += 2) {
+                        // for (let j = 2; j < tokens.length; j += 2) {
                         for (let j = 0; j < createfieldnamevaluesList[transId].length; j++) {
 
                             const item = createfieldnamevaluesList[transId][j];
@@ -6592,13 +7429,13 @@
                         ///comment bcz go option should work based on command not based on list so when we remove it but 
                         //actual command / tokens exits these creates confusion and so many bugs(25-02 - 2026)
                         //createfieldnamevaluesList = [];
-                        }
-                    }, 1000);
-                };
+                    }
+                }, 1000);
+            };
 
-                setEditSessionState(transId);
+            setEditSessionState(transId);
 
-                redirectToTstruct(transId, rawName);
+            redirectToTstruct(transId, rawName);
 
         }
         catch (ex) {
@@ -6645,12 +7482,12 @@
 
             if (parts.length !== 2) continue;
 
-            let leftPart = parts[0];  
-            let valuePart = parts[1];  
+            let leftPart = parts[0];
+            let valuePart = parts[1];
 
             let fieldParts = leftPart.split("~");
 
-            let fieldName = fieldParts[0];  
+            let fieldName = fieldParts[0];
 
             fieldValue += fieldName + "~" + valuePart + ";";
         }
@@ -6730,33 +7567,79 @@
         const mm = String(date.getMonth() + 1).padStart(2, "0");
         const yyyy = date.getFullYear();
 
+
+
+        const now = new Date();
+        const HH = String(now.getHours()).padStart(2, "0");
+        const MI = String(now.getMinutes()).padStart(2, "0");
+        const SS = String(now.getSeconds()).padStart(2, "0");
+        const time = `${HH}:${MI}:${SS}`;
+
+
         switch (format.toLowerCase()) {
-            case "YYYYMMDD".toLowerCase() :
+            case "YYYYMMDD".toLowerCase():
                 return `${yyyy}${mm}${dd}`;
 
-            case "DDMMYYYY".toLowerCase() :
+            case "DDMMYYYY".toLowerCase():
                 return `${dd}${mm}${yyyy}`;
 
-            case "YYYY-MM-DD".toLowerCase() :
+            case "YYYY-MM-DD".toLowerCase():
                 return `${yyyy}-${mm}-${dd}`;
 
-            case "DD-MM-YYYY".toLowerCase() :
+            case "DD-MM-YYYY".toLowerCase():
                 return `${dd}-${mm}-${yyyy}`;
 
-            case "YYYY/MM/DD".toLowerCase() :
+            case "YYYY/MM/DD".toLowerCase():
                 return `${yyyy}/${mm}/${dd}`;
 
-            case "DD/MM/YYYY".toLowerCase() :
+            case "DD/MM/YYYY".toLowerCase():
                 return `${dd}/${mm}/${yyyy}`;
 
-            case "YYYY.MM.DD".toLowerCase() :
+            case "YYYY.MM.DD".toLowerCase():
                 return `${yyyy}.${mm}.${dd}`;
 
-            case "DD.MM.YYYY".toLowerCase() :
+            case "DD.MM.YYYY".toLowerCase():
                 return `${dd}.${mm}.${yyyy}`;
 
+            case "MMDDYYYY".toLowerCase():
+                return `${mm}${dd}${yyyy}`;
+
+            case "MM-DD-YYYY".toLowerCase():
+                return `${mm}-${dd}-${yyyy}`;
+
+            case "MM/DD/YYYY".toLowerCase():
+                return `${mm}/${dd}/${yyyy}`;
+
+            case "MM.DD.YYYY".toLowerCase():
+                return `${mm}.${dd}.${yyyy}`;
+
+            case "YYYY-MM-DD HH:MM:SS".toLowerCase():
+                return `${yyyy}-${mm}-${dd} ${time}`;
+
+            case "DD-MM-YYYY HH:MM:SS".toLowerCase():
+                return `${dd}-${mm}-${yyyy} ${time}`;
+
+            case "YYYY/MM/DD HH:MM:SS".toLowerCase():
+                return `${yyyy}/${mm}/${dd} ${time}`;
+
+            case "DD/MM/YYYY HH:MM:SS".toLowerCase():
+                return `${dd}/${mm}/${yyyy} ${time}`;
+
+            case "YYYY-MM-DDTHH:MM:SS".toLowerCase():
+                return `${yyyy}-${mm}-${dd}T${time}`;
+
+            case "YYYYMMDDHHMMSS".toLowerCase():
+                return `${yyyy}${mm}${dd}${HH}${MI}${SS}`;
+
+            case "YYYY-MM-DDTHH:MM:SSZ".toLowerCase():
+                return `${yyyy}-${mm}-${dd}T${time}Z`;
+
+            case "DD MMM YYYY".toLowerCase():
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                return `${dd}-${months[date.getMonth()]}-${yyyy}`;
+
             default:
-                return date; // fallback
+                return `${dd}/${mm}/${yyyy}`;
         }
     }
 
@@ -7118,7 +8001,7 @@
         // 👉 Call preparePayload AFTER session is ready
 
         //if (!transid || saveListWithFieldNamendValues.length == 0) {
-        if (!transid || !saveListWithFieldNamendValues ||  !saveListWithFieldNamendValues[transid] || saveListWithFieldNamendValues[transid].length === 0) {
+        if (!transid || !saveListWithFieldNamendValues || !saveListWithFieldNamendValues[transid] || saveListWithFieldNamendValues[transid].length === 0) {
             console.log("Missing transaction ID or field values.");
             showToast("Incomplete command detected. Please clear the entire command and try again.");
 
@@ -7128,18 +8011,51 @@
         let keyFieldValue = cleanCommandToken(inputTokens[2]);
         let keyfieldName;
         if (!isCreate) {
-            const extraPromptSource = inputCommandConfig.prompts[1].extraParams.toLowerCase();
+            //const extraPromptSource = "axi_keyfieldList";
+            const struct_source = inputCommandConfig.prompts[0].promptSource;
 
-            const extraSourceKey = `${extraPromptSource}_${transid}`.toLowerCase();
+            // extra params
+            let struct_paramValue
+            if (struct_source.toLowerCase() === "axi_structmetalist")
+              struct_paramValue = processExtraParams(inputTokens, inputCommandConfig);
 
-            const extraList = axDatasourceObj[extraSourceKey];
+            const struct_sourceKey = (struct_paramValue ? `${struct_source}_${struct_paramValue}` : struct_source).toLowerCase();
 
-            if (extraList.length == 0) {
-                throw new Error("Key Field List is missing");
+            // load datasource if not exists
+            if (!axDatasourceObj[struct_sourceKey]) {
+
+                const struct_hasParams = !struct_prompt.promptParams ||
+                    (struct_paramValue && struct_paramValue.replace(/,/g, '').trim().length > 0);
+
+                if (struct_hasParams) {
+                    loadList(struct_source, struct_paramValue);
+                    return [`Loading ${struct_source}...`];
+                }
             }
-            const field = extraList[0];
 
-            keyfieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
+            const struct_dataList = axDatasourceObj[struct_sourceKey];
+
+            const struct_row = struct_dataList.find(r => r.name === transid);
+
+            const primaryField = struct_row?.keyfield
+
+            //if (!primaryField) {
+            //    throw new Error("Key Field List is missing");;
+            //}
+
+            //const extraSourceKey = `${extraPromptSource}_${transid}`.toLowerCase();
+
+            //const extraList = axDatasourceObj[extraSourceKey];
+
+            //if (extraList.length == 0) {
+                
+            //}
+            //const field = extraList[0];
+
+            //keyfieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
+
+            keyfieldName = primaryField;
+
         }
         preparePayload(saveListWithFieldNamendValues[transid] || [], transid, sourcename, isCreate, keyFieldValue, keyfieldName).then(result => {
 
@@ -7232,7 +8148,7 @@
         //    throw new Error("Payload is empty or invalid");
         //}
 
-        
+
     }
 
 
@@ -7253,7 +8169,7 @@
                 axDatasourceObj[sourceKey]?.[0]?.password || null
             );
     }
-    function preparePayload(saveListWithFieldNamendValueswithTransId , transid, sourcename, iscreate, inputKeyFieldValue, inputKeyFieldName) {
+    function preparePayload(saveListWithFieldNamendValueswithTransId, transid, sourcename, iscreate, inputKeyFieldValue, inputKeyFieldName) {
 
         let isSuccess = true;
         let payloadUsername = mainUserName;
@@ -7284,12 +8200,12 @@
             }
 
 
-            // 🔥 Record level variables
+            // Record level variables
             var recordid = iscreate ? "0" : "";
             var keyfield = iscreate ? "" : "";
             var keyvalue = iscreate ? "" : "";
 
-            //👉 In edit mode you will later assign:
+            // In edit mode you will later assign:
             if (!iscreate) {
                 recordid = "0";
                 keyfield = inputKeyFieldName;
@@ -7422,7 +8338,7 @@
         console.log("Target Url for AxiBot:  " + targetUrl);
 
 
-         setCommandRoutes(input.value.trim(), targetUrl); 
+        setCommandRoutes(input.value.trim(), targetUrl);
         top.window.LoadIframe(targetUrl);
 
 
@@ -7544,105 +8460,105 @@
         }
         mode = "";
         cachedCommands = localStorage.getItem("axi_commands_v1");
-        initCommands(); 
+        initCommands();
         window.LoadIframe("loadhomepage");
         console.log(JSON.stringify(commands));
     }
 
     function saveToHistory(text) {
-        if (!text || text.trim() === "") return; 
+        if (!text || text.trim() === "") return;
 
-        commandHistory = commandHistory.filter(item => item.toLowerCase() !== text.toLowerCase()); 
+        commandHistory = commandHistory.filter(item => item.toLowerCase() !== text.toLowerCase());
 
-        commandHistory.unshift(text); 
+        commandHistory.unshift(text);
 
         if (commandHistory.length > MAX_HISTORY) {
-            commandHistory.pop(); 
-        }; 
+            commandHistory.pop();
+        };
 
-        localStorage.setItem(`axi_command_history_${getAppBaseUrl()}_${window.mainUserName}`, JSON.stringify(commandHistory)); 
+        localStorage.setItem(`axi_command_history_${getAppBaseUrl()}_${window.mainUserName}`, JSON.stringify(commandHistory));
 
-        historyIndex = -1; 
+        historyIndex = -1;
     }
 
     function loadCommandHistory() {
         try {
-            commandHistory = JSON.parse(localStorage.getItem(`axi_command_history_${getAppBaseUrl()}_${window.mainUserName}`)); 
-        } catch(ex) {
-            commandHistory = []; 
+            commandHistory = JSON.parse(localStorage.getItem(`axi_command_history_${getAppBaseUrl()}_${window.mainUserName}`));
+        } catch (ex) {
+            commandHistory = [];
         }
     }
 
     function navigateHistory(direction) {
         if (commandHistory.length === 0) {
-            showToast("No command History available"); 
-            return; 
+            showToast("No command History available");
+            return;
         }
 
         if (direction === "open") {
-            historyIndex = 0; 
+            historyIndex = 0;
         } else if (direction === "prev") {
             if (historyIndex < commandHistory.length - 1) {
-                historyIndex++; 
+                historyIndex++;
             }
         } else if (direction === "next") {
             if (historyIndex > 0) {
-                historyIndex--; 
+                historyIndex--;
             } else {
-                historyIndex = -1; 
-                input.value = ""; 
+                historyIndex = -1;
+                input.value = "";
                 handleInput();
-                return;  
+                return;
             }
         }
 
         if (historyIndex >= 0 && historyIndex < commandHistory.length) {
-            input.value = commandHistory[historyIndex] + " "; 
-            executeCommandsV2(true); 
-            
+            input.value = commandHistory[historyIndex] + " ";
+            executeCommandsV2(true);
+
 
             // setTimeout(() => {
-                input.focus(); 
-                input.setSelectionRange(input.value.length, input.value.length); 
-                handleInput(); 
-                hide(); 
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+            handleInput();
+            hide();
             // }, 10); 
         }
     }
 
     function loadFavorites() {
-        const appUrl = getAppBaseUrl(); 
-        const appname = getProjectName(); 
-        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`; 
+        const appUrl = getAppBaseUrl();
+        const appname = getProjectName();
+        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
         try {
-            const localData = JSON.parse(localStorage.getItem(favKey)) || []; 
-           commandFavorites = localData.map(fav => 
+            const localData = JSON.parse(localStorage.getItem(favKey)) || [];
+            commandFavorites = localData.map(fav =>
                 typeof fav === 'string' ? { commandText: fav, targetURL: "" } : fav
             );
 
-        }catch(ex) {
-            commandFavorites  = []; 
+        } catch (ex) {
+            commandFavorites = [];
         }
 
-        renderFavoritesUI(); 
+        renderFavoritesUI();
 
         if (axiFavoritesUrl) {
             fetch(`${axiFavoritesUrl}?username=${window.mainUserName}&appname=${appname}`)
                 .then(res => res.json())
                 .then(data => {
-                    console.log("Fetched favorites from backend: ", data); 
-                    console.log("type : ", typeof data); 
+                    console.log("Fetched favorites from backend: ", data);
+                    console.log("type : ", typeof data);
                     if (data && Array.isArray(data)) {
                         commandFavorites = data.map(item => ({
                             commandText: item.commandText || item.commandtext,
                             targetUrl: item.targetUrl || item.targetURL || item.targeturl,
                         }));
                         localStorage.setItem(favKey, JSON.stringify(commandFavorites));
-                        renderFavoritesUI(); 
+                        renderFavoritesUI();
                     }
                 })
-                .catch(err =>{ 
-                    console.error("Axi: Failed to sync favorites from backend", err); 
+                .catch(err => {
+                    console.error("Axi: Failed to sync favorites from backend", err);
                     // showToast("Axi: Axi: Failed to sync favorites from backend"); 
 
                 });
@@ -7653,43 +8569,43 @@
     }
 
     function toggleFavorite(cmdText, isAdding = false) {
-        const appUrl = getAppBaseUrl(); 
-        const appname = getProjectName(); 
+        const appUrl = getAppBaseUrl();
+        const appname = getProjectName();
         const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
 
-        const cmdIndex = commandFavorites.findIndex(fav => fav.commandText.toLowerCase() === cmdText.toLowerCase()); 
+        const cmdIndex = commandFavorites.findIndex(fav => fav.commandText.toLowerCase() === cmdText.toLowerCase());
 
-        const commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase()); 
+        const commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
 
 
-      
-        
+
+
 
         if (cmdIndex !== -1) {
             if (isAdding) {
                 showToast(`${cmdText} is already in Favorites`);
-                return; 
+                return;
             }
-            commandFavorites.splice(cmdIndex, 1); 
-            showToast(`Removed '${cmdText}' from Favorites`); 
+            commandFavorites.splice(cmdIndex, 1);
+            showToast(`Removed '${cmdText}' from Favorites`);
         } else {
-              if (!commandRoute) {
-            showToast("Please Execute the command at least once before adding to favorites"); 
-            return; 
-        }
-            if (commandFavorites.length>= MAX_FAVORITES) {
-                showToast(`Maximum of ${MAX_FAVORITES} favorites allowed. Please remove some favorites before adding new ones.`); 
-                return; 
+            if (!commandRoute) {
+                showToast("Please Execute the command at least once before adding to favorites");
+                return;
             }
-            commandFavorites.unshift({commandText: cmdText, targetUrl: commandRoute.targetUrl}); 
-        
-            showToast(`Added '${cmdText}' to favorites`, 3000, true); 
+            if (commandFavorites.length >= MAX_FAVORITES) {
+                showToast(`Maximum of ${MAX_FAVORITES} favorites allowed. Please remove some favorites before adding new ones.`);
+                return;
+            }
+            commandFavorites.unshift({ commandText: cmdText, targetUrl: commandRoute.targetUrl });
+
+            showToast(`Added '${cmdText}' to favorites`, 3000, true);
         }
 
-        localStorage.setItem(favKey, JSON.stringify(commandFavorites)); 
+        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
 
-        renderFavoritesUI(); 
-        render(); 
+        renderFavoritesUI();
+        render();
 
         if (axiFavoritesUrl) {
             fetch(`${axiFavoritesUrl}?appname=${appname}`, {
@@ -7701,42 +8617,45 @@
                     action: isAdding ? "add" : "remove",
                     favOrder: 0,
                     targetURL: commandRoute?.targetUrl
-                
+
                 })
-            }).catch(err => console.error("Axi: Failed to update favorite on backend", err));
+            }).catch(err => {
+                showToast("Axi: Failed to update favorite on backend, Please check AxiApi Configuration");
+                console.error("Axi: Failed to update favorite on backend", err)
+            });
         }
 
     }
 
     function renderFavoritesUI() {
-        if (!favouritesCard) return; 
+        if (!favouritesCard) return;
 
-        const wrapper = favouritesCard.querySelector(".My-Fav-Items-Wrapper"); 
+        const wrapper = favouritesCard.querySelector(".My-Fav-Items-Wrapper");
 
-        if (!wrapper) return; 
+        if (!wrapper) return;
 
-        wrapper.innerHTML = ""; 
-         const axiFavoritesCount = document.getElementById("axiFavoriteCount"); 
+        wrapper.innerHTML = "";
+        const axiFavoritesCount = document.getElementById("axiFavoriteCount");
 
-         if (axiFavoritesCount) {
+        if (axiFavoritesCount) {
             axiFavoritesCount.textContent = commandFavorites.length;
 
 
-         }
+        }
 
         if (commandFavorites.length === 0) {
             wrapper.innerHTML = `<div style="padding: 15px; color: #999; text-align: center; width: 100%;">No favourites yet. Pin commands to see them here.</div>`;
-            return; 
+            return;
 
         }
 
-       
 
-       
+
+
 
         commandFavorites.forEach(fav => {
-            const cmdText  = fav.commandText; 
-             const titleText = cmdText.replace(/"/g, '&quot;');
+            const cmdText = fav.commandText;
+            const titleText = cmdText.replace(/"/g, '&quot;');
             const favHtml = `
                 <div class="My-Fav-Items">
                     <div class="symbol symbol-40px symbol-circle me-5">
@@ -7755,9 +8674,9 @@
                 </div>
             `;
 
-            const div = document.createElement('div'); 
-            div.innerHTML = favHtml.trim(); 
-            const element = div.firstChild; 
+            const div = document.createElement('div');
+            div.innerHTML = favHtml.trim();
+            const element = div.firstChild;
 
             element.querySelector('.Delete-Fav').addEventListener('mousedown', (e) => {
                 e.preventDefault();
@@ -7766,15 +8685,15 @@
             });
 
             element.querySelector('.My-Fav-Items-Content').addEventListener("click", (e) => {
-                e.preventDefault(); 
-                e.stopPropagation(); 
-                executeFavorite(fav); 
+                e.preventDefault();
+                e.stopPropagation();
+                executeFavorite(fav);
             })
 
-            wrapper.appendChild(element); 
+            wrapper.appendChild(element);
 
 
-        }); 
+        });
     }
 
     // async function executeFavorite(cmdText) {
@@ -7804,51 +8723,102 @@
     //     while (activeFetches.size > 0) {
     //        await new Promise(resolve => setTimeout(resolve, 50));
     //     }
-       
+
     //     executeCommandsV2(); 
-        
+
     //     hide(); 
     // }
 
 
     function executeFavorite(favObj) {
-        
+
         input.value = favObj.commandText + " ";
-        const tokens = getTokens(favObj.commandText); 
-        
-        axiClearBtn.style.display = "flex"; 
+        const tokens = getTokens(favObj.commandText);
+
+        const accessPermissions = getAccessPermissions();
+        // AppMgrAccess(Config)
+        // ImportAccess(Upload)
+        // ExportAccess(Download)
+        // Build(Open)
+
+        for (const [permissionKey, hasAccess] of Object.entries(accessPermissions)) {
+            if (!hasAccess || hasAccess === false) {
+                switch (permissionKey) {
+                    case "appMgrAccess":
+                        if (tokens[0].toLowerCase() === "configure") {
+                            showToast(`User:${window.mainUserName} has no access for command:${favObj.commandText}`);
+
+                            return;
+                        }
+                        break;
+
+                    case 'importAccess':
+                        if (tokens[0].toLowerCase() === "upload") {
+                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
+
+                            return;
+                        }
+
+                        break;
+                    case 'exportAccess':
+                        if (tokens[0].toLowerCase() === "download") {
+                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
+
+                            return;
+                        }
+                        break;
+
+                    case 'buildAccess':
+                        if (tokens[0].toLowerCase() === "open") {
+                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
+                            return;
+
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+
+        axiClearBtn.style.display = "flex";
 
         if (favObj.targetUrl && favObj.targetUrl.trim() !== "") {
             console.log("Executing Favorite directly via Target URL:", favObj.targetUrl);
             const params = new URLSearchParams(favObj.targetUrl.split("?")[1]);
             const transId = params.get("transid");
-            if (tokens[0].toLowerCase() === "edit") {
-            setEditSessionState(transId);
+            // if (tokens[0].toLowerCase() === "edit") {
+            if (transId) {
+                setEditSessionState(transId);
+
 
             }
 
-            top.window.LoadIframe(favObj.targetUrl); 
+            // }
+
+            top.window.LoadIframe(favObj.targetUrl);
         } else {
 
-        executeCommandsV2(); 
+            executeCommandsV2();
 
 
         }
 
-        hide(); 
+        hide();
 
 
-        
 
-    
+
+
     }
 
     function setCommandRoutes(cmdText, targetUrl) {
-        const existingCommandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase()); 
+        const existingCommandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
 
         if (existingCommandRoute) {
-            console.log("Command route for ", cmdText, " already exists"); 
-            return; 
+            console.log("Command route for ", cmdText, " already exists");
+            return;
         }
 
         commandRoutes.push({
@@ -7856,7 +8826,101 @@
             targetUrl: targetUrl
         })
 
-        console.log(JSON.stringify(commandRoutes)); 
+        console.log("Command Routes: " + JSON.stringify(commandRoutes));
+    }
+
+    function generateLocalStorageKey(name, params) {
+        const prefixKey = "axi";
+
+        return `${prefixKey}_${name}_${params}`;
+
+
+    }
+
+    function getAccessPermissions() {
+        // AppMgrAccess(Config)
+        // ImportAccess(Upload)
+        // ExportAccess(Download)
+        // Build(Open)
+        let appMgrAccess;
+        let importAccess;
+        let exportAccess;
+        let buildAccess;
+
+
+        const appMgrAccessKey = generateLocalStorageKey("appMgrAccess", window.mainUserName);
+        const importAccessKey = generateLocalStorageKey("importAccess", window.mainUserName);
+        const exportAccessKey = generateLocalStorageKey("exportAccess", window.mainUserName);
+        const buildAccessKey = generateLocalStorageKey("buildAccess", window.mainUserName);
+        appMgrAccess = localStorage.getItem(appMgrAccessKey);
+        if (!appMgrAccess) {
+            appMgrAccess = window.getSessionValue("AppMgrAccess");
+            localStorage.setItem(appMgrAccessKey, appMgrAccess);
+        }
+
+        importAccess = localStorage.getItem(importAccessKey);
+        if (!importAccess) {
+            importAccess = window.getSessionValue("ImportAccess");
+            localStorage.setItem(importAccessKey, importAccess);
+        }
+
+        exportAccess = localStorage.getItem(exportAccessKey);
+        if (!exportAccess) {
+            exportAccess = window.getSessionValue("ExportAccess");
+            localStorage.setItem(exportAccessKey, exportAccess);
+        }
+
+        buildAccess = localStorage.getItem(buildAccessKey);
+        if (!buildAccess) {
+            buildAccess = window.getSessionValue("Build");
+            localStorage.setItem(buildAccessKey, buildAccess);
+        }
+
+
+        return {
+            appMgrAccess: strToBool(appMgrAccess),
+            importAccess: strToBool(importAccess),
+            exportAccess: strToBool(exportAccess),
+            buildAccess: strToBool(buildAccess),
+
+        }
+    }
+
+    function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions) {
+        for (const [permissionKey, hasAccess] of Object.entries(accessPermissions)) {
+            if (!hasAccess || hasAccess === false) {
+                switch (permissionKey) {
+                    case "appMgrAccess":
+                        delete commandsFromDb["Configure"];
+                        break;
+
+                    case 'importAccess':
+                        delete commandsFromDb['Upload'];
+                        break;
+                    case 'exportAccess':
+                        delete commandsFromDb['Download']
+                        break;
+
+                    case 'buildAccess':
+                        delete commandsFromDb['Open'];
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+
+        return commandsFromDb;
+
+    }
+
+    function strToBool(str) {
+        if (str.toLowerCase() === "t" || str.toLowerCase() === "true") {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 
