@@ -454,6 +454,7 @@
         // targetIndex is 0-based. WordPos is 1-based.
         // Since the user DOES NOT type the extraParam, the mapping is direct.
         const currentWordPos = targetIndex + 1;
+        
 
         const sortedPrompts = commandConfig.prompts.sort((a, b) => a.wordPos - b.wordPos);
         const prompt = sortedPrompts.find(p => p.wordPos === currentWordPos);
@@ -527,6 +528,11 @@
 
                 }
 
+                if (valueIndex === -1 && (commandConfig.commandGroup?.toLowerCase() === "open" ||commandConfig.commandGroup?.toLowerCase() === "configure" )) {
+                    
+                    return {config: prompt, realSource: null, error: "Not a Valid command"}; 
+                }
+
                 if (valueIndex !== -1) {
                     const sources = activeSource.split(',');
                     activeSource = sources[valueIndex] ? sources[valueIndex].trim() : "";
@@ -537,7 +543,7 @@
             }
         }
 
-        return { config: prompt, realSource: activeSource };
+        return { config: prompt, realSource: activeSource, error: "" };
     }
 
 
@@ -1967,6 +1973,11 @@
 
         }
 
+        if (promptInfo?.error) {
+            showToast(promptInfo.error); 
+            return []; 
+        }
+
         if (!promptInfo) {
             updateDynamicHintFromPrompt(null);
 
@@ -2026,6 +2037,7 @@
 
         ///Skipping PromptValue "With" token for edit
         if (!realSource && activePrompt.promptValues && groupKey.toLowerCase() !== "edit") {
+            
             const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
@@ -2038,6 +2050,8 @@
             }
             return result;
         }
+
+        
 
         // Scenario B: Data Source
         if (realSource) {
@@ -2104,7 +2118,7 @@
             let apiSourceName = realSource.toLowerCase();
             if (apiSourceName.toLowerCase() === "axi_analyticslist") {
                 paramValue = window.mainUserName;
-                apiSourceName = "axi_analyticslistnew"; 
+                // apiSourceName = "axi_analyticslistnew"; 
             }
 
             else if (realSource.toLowerCase() === "axi_structlist") {
@@ -2434,7 +2448,7 @@
 
             let apiName = realSource;
             if (apiName.toLowerCase() === "axi_analyticslist") {
-                apiName = "axi_analyticslistnew"; 
+                // apiName = "axi_analyticslistnew"; 
                 paramValue = window.mainUserName;
             }
 
@@ -3058,7 +3072,10 @@
         })
         const historyBtn = document.getElementById("History_pages");
         if (historyBtn) {
-            historyBtn.addEventListener("click", () => navigateHistory('open'));
+            historyBtn.addEventListener("click", () => {
+                showToast("Not Yet Implemented..."); 
+                return; 
+            });
         }
 
         const prevBtn = document.getElementById("btnHistoryPrev");
@@ -3068,7 +3085,10 @@
 
         const nextBtn = document.getElementById("btnHistoryNext");
         if (nextBtn) {
-            nextBtn.addEventListener("click", () => window.nextbtn_click($(this)));
+            nextBtn.addEventListener("click", () => {
+                showToast("Not Yet Implemented..."); 
+                return; 
+            });
         }
         if (btnRefresh) {
             btnRefresh.addEventListener("click", async () => {
