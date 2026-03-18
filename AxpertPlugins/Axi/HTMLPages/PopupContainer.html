@@ -195,7 +195,6 @@
             Object.assign(pinned.style, {
                 position: "fixed",
                 bottom: "45px",
-                // left: "69%",
                 right: "0",
                 height: "42px",
                 display: "flex",
@@ -205,8 +204,7 @@
                 overflowX: "auto",
                 overflowY: "hidden",
                 whiteSpace: "nowrap",
-                zIndex: "9",
-
+                zIndex: "9"
             });
 
             const axiSec = parentDoc.querySelector(".AXI-Sec");
@@ -474,8 +472,8 @@
             }
             openFromParam() {
                 const params = new URLSearchParams(window.location.search);
-                const rawUrl = params.get("contenturl");
-
+                // const rawUrl = params.get("contenturl");
+                const rawUrl = window.location.search.split("contenturl=")[1];
                 if (rawUrl) {
                     const decodedUrl = decodeURIComponent(rawUrl);
 
@@ -499,18 +497,23 @@
                 const win = document.createElement("div");
                 win.id = "main-tab-popup";
                 win.className = "card shadow-lg border-secondary";
-
                 Object.assign(win.style, {
                     position: "fixed",
-                    left: "15%",
-                    top: "50px",
-                    width: "70%",
-                    height: "450px",
                     zIndex: "1040",
                     display: "flex",
                     flexDirection: "column",
                     background: "white",
-                    pointerEvents: "auto"
+                    pointerEvents: "auto",
+                    transform: "scale(1)",
+                    // Note: Changed to 'center' to feel more natural with a centered popup
+                    transformOrigin: "center center",
+                    opacity: "1",
+                    transition: "transform 0.2s, opacity 0.2s",
+                    // Top: 15%, Right: 10%, Bottom: 14%, Left: 13%
+                    inset: "15% 10% 14% 13%",
+                    width: "80%",
+                    height: "70%",
+                    margin: "0px"
                 });
 
                 win.innerHTML = `
@@ -779,7 +782,6 @@
                     // 1. If currently pinned (minimized), restore to normal first
                     if (p.dataset.minimized === "true") {
                         this.restore();
-                        // Reset flags so it doesn't think it's still maxed or minimized
                         p.dataset.maxed = "false";
                         p.dataset.minimized = "false";
                         return;
@@ -788,15 +790,10 @@
                     // 2. Toggle Maximize State
                     if (p.dataset.maxed !== "true") {
                         // Save current dimensions for later restoration
-                        // FIX: Ensure we only save if the values are NOT 0 or 100%
-                        p.dataset.preMaxLeft = p.style.left || "15%";
-                        p.dataset.preMaxTop = p.style.top || "50px";
-                        p.dataset.preMaxWidth = p.style.width || "70%";
-                        p.dataset.preMaxHeight = p.style.height || "450px";
+                        p.dataset.preMaxInset = p.style.inset || "15% 10% 14% 13%";
 
                         Object.assign(p.style, {
-                            top: "0",
-                            left: "0",
+                            inset: "0",
                             width: "100vw",
                             height: "100vh",
                             position: "fixed",
@@ -806,20 +803,15 @@
 
                         try {
                             $(p).draggable("disable");
-                        } catch (e) {}
+                        } catch (err) {}
                     } else {
-                        // 3. Restore to default (Normal mode)
-                        // FIX: Provide hardcoded fallbacks if the dataset is empty 
-                        // (common when loading a new form directly into max mode)
+                        // 3. Restore to your specific asymmetric center
                         Object.assign(p.style, {
-                            top: (p.dataset.preMaxTop && p.dataset.preMaxTop !== "0px") ? p.dataset
-                                .preMaxTop : "50px",
-                            left: (p.dataset.preMaxLeft && p.dataset.preMaxLeft !== "0px") ? p.dataset
-                                .preMaxLeft : "15%",
-                            width: (p.dataset.preMaxWidth && p.dataset.preMaxWidth !== "100vw") ? p
-                                .dataset.preMaxWidth : "70%",
-                            height: (p.dataset.preMaxHeight && p.dataset.preMaxHeight !== "100vh") ? p
-                                .dataset.preMaxHeight : "450px",
+                            inset: (p.dataset.preMaxInset && p.dataset.preMaxInset !== "0px") ?
+                                p.dataset.preMaxInset : "15% 10% 14% 13%",
+                            // Reset width/height to auto so inset controls the size
+                            width: "80%",
+                            height: "70%",
                             position: "fixed"
                         });
 
@@ -827,7 +819,7 @@
 
                         try {
                             $(p).draggable("enable");
-                        } catch (e) {}
+                        } catch (err) {}
                     }
 
                     this.syncParentDimensions();

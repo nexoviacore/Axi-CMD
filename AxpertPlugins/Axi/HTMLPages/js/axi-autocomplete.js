@@ -454,7 +454,7 @@
         // targetIndex is 0-based. WordPos is 1-based.
         // Since the user DOES NOT type the extraParam, the mapping is direct.
         const currentWordPos = targetIndex + 1;
-        
+
 
         const sortedPrompts = commandConfig.prompts.sort((a, b) => a.wordPos - b.wordPos);
         const prompt = sortedPrompts.find(p => p.wordPos === currentWordPos);
@@ -474,9 +474,19 @@
                     .map(s => s.trim().toLowerCase())
                     .filter(Boolean);
 
-                const fieldSource = prevSources.find(src =>
-                    src.includes('keyvalue') || src.includes('fieldname')
+
+                //We need to optimise this logic as it works only for axi_getstructsdata now.
+                let fieldSource = prevSources.find(src =>
+                    src.toLowerCase().includes('axi_getstructsdata') || src.includes('keyvalue') || src.includes('fieldname')
                 );
+
+                //const fieldSource = prevSources.find(src =>
+                //    src.includes('keyvalue') || src.includes('fieldname')
+                //);
+                if (fieldSource?.toLowerCase() === "axi_getstructsdata" && tokens.length === 5 && commandConfig?.commandGroup?.toLowerCase() === "edit") {
+                    fieldSource = "";
+                }
+
 
                 if (fieldSource) {
 
@@ -528,9 +538,9 @@
 
                 }
 
-                if (valueIndex === -1 && (commandConfig.commandGroup?.toLowerCase() === "open" ||commandConfig.commandGroup?.toLowerCase() === "configure" )) {
-                    
-                    return {config: prompt, realSource: null, error: "Not a Valid command"}; 
+                if (valueIndex === -1 && (commandConfig.commandGroup?.toLowerCase() === "open" || commandConfig.commandGroup?.toLowerCase() === "configure")) {
+
+                    return { config: prompt, realSource: null, error: "Not a Valid command" };
                 }
 
                 if (valueIndex !== -1) {
@@ -726,7 +736,7 @@
          */
 
         if (popUpOption) {
-        targetUrl += "&AxIsPop=true";
+            targetUrl += "&AxIsPop=true";
 
             targetUrl += `&tname=${encodeURIComponent(adsName)}`;
             openPopOption(targetUrl)
@@ -802,21 +812,21 @@
             if (fieldName && fieldValue) {
                 targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
             }
-                targetUrl += `&hltype=load`;
-                targetUrl += `&torecid=false`;
-                targetUrl += `&openerIV=${transId}`;
-                targetUrl += `&isIV=false`;
-                targetUrl += `&isDupTab=false`;
+            targetUrl += `&hltype=load`;
+            targetUrl += `&torecid=false`;
+            targetUrl += `&openerIV=${transId}`;
+            targetUrl += `&isIV=false`;
+            targetUrl += `&isDupTab=false`;
 
             targetUrl += `&dummyload=false♠`;
 
         }
         else {
-                if (fieldName && fieldValue) {
-                    targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
-                }
+            if (fieldName && fieldValue) {
+                targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+            }
             targetUrl += `&hltype=open`;
-            
+
             targetUrl += `&createaxiflag=true`;
             targetUrl += `&dummyload=false♠`;
         }
@@ -825,7 +835,7 @@
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
-                targetUrl += "&AxIsPop=true";
+            targetUrl += "&AxIsPop=true";
 
             openPopOption(targetUrl)
         }
@@ -844,12 +854,12 @@
         if (fieldValue) {
             targetUrl += "?status=true";
             targetUrl += "&action=edit";
-        
+
             targetUrl += `&name=${encodeURIComponent(fieldValue)}`;
         } else {
             targetUrl += "?status=true";
             targetUrl += "&action=add";
-        
+
         }
 
 
@@ -1437,7 +1447,7 @@
                 if (datatype === 'c' || datatype === 'n' || datatype === "t") {
                     if (isAccept) {
                         let acceptedValue = cleanString(tokens[tokens.length - 1]);
-                          const columnName = prevColumnName
+                        const columnName = prevColumnName
                         adsfieldvalueanddt[columnName] = {
                             datatype: datatype,
                             isAccept: isAccept,
@@ -1887,7 +1897,12 @@
             });
         }
 
-        const commandConfig = commands[groupKey];
+        //const commandConfig = commands[groupKey];
+
+
+        let commandConfig = commands[groupKey];
+
+
         if (!commandConfig) { hintDiv.textContent = ""; return []; }
 
         const targetIndex = tokens.length - 1;
@@ -1974,8 +1989,8 @@
         }
 
         if (promptInfo?.error) {
-            showToast(promptInfo.error); 
-            return []; 
+            showToast(promptInfo.error);
+            return [];
         }
 
         if (!promptInfo) {
@@ -2037,7 +2052,7 @@
 
         ///Skipping PromptValue "With" token for edit
         if (!realSource && activePrompt.promptValues && groupKey.toLowerCase() !== "edit") {
-            
+
             const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
@@ -2051,7 +2066,7 @@
             return result;
         }
 
-        
+
 
         // Scenario B: Data Source
         if (realSource) {
@@ -2132,6 +2147,62 @@
             else if (realSource.toLowerCase() === "axi_viewlist") {
                 paramValue = processExtraParams(tokens, commandConfig);
             }
+            else if (realSource.toLowerCase() === "axi_getstructsdata") {
+
+                if (detectedType?.toLowerCase() === "iview" || detectedType?.toLowerCase() === "page") {
+                    filteredObjects = [goOption, popOption];
+                    return [goOption, popOption];
+                }
+                let staticParams = "";
+                if (tokens.length == 3) {
+                    staticParams = "2";
+                }
+                else {
+                    staticParams = "2,3";
+                }
+
+                const indices = staticParams.toString().split(',');
+                const values = indices.map(idx => {
+                    const logicalWordPos = parseInt(idx.trim());
+                    const depTokenIndex = logicalWordPos - 1;
+                    const depToken = cleanString(tokens[depTokenIndex] || "");
+                    return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+                });
+
+                paramValue = values.join('$#$');
+
+                //if (tokens.length == 3) {
+                //    const depToken = cleanString(tokens[1] || "");
+                //    paramValue = tryResolveToken(1, depToken, commandConfig, false);
+                //}
+                //else {
+                //    const depToken = cleanString(tokens[1] || "");
+                //    paramValue = tryResolveToken(1, depToken, commandConfig, false);
+
+                //    const fieldName = cleanString(tokens[2] || "");
+                //    paramValue += "$#$"+ tryResolveToken(2, fieldName, commandConfig, false);
+                //}
+
+
+
+                let struct_name = paramValue;
+
+                if (paramValue && paramValue.includes("$#$")) {
+                    const struct_split = paramValue.split("$#$");
+                    struct_name = struct_split[0];
+                }
+                //const extraPromptSource = "axi_keyfieldList".toLowerCase();
+                //const extraSourceKey = `${extraPromptSource}_${struct_name}`.toLowerCase();
+
+
+                //const extraList = axDatasourceObj[extraSourceKey];
+
+                //if (!extraList) {
+                //    loadList(extraPromptSource, struct_name);
+                //}
+
+                paramValue = processParamforEditndView(tokens, commandConfig, paramValue, tokens.length);
+            }
 
 
             const sourceKey = (paramValue ? `${apiSourceName}_${paramValue}` : apiSourceName).toLowerCase();
@@ -2139,18 +2210,18 @@
             if (!axDatasourceObj[sourceKey]) {
                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
 
-                  if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
-                        if (groupKey.toLowerCase() === "open" && tokens.length > 2) {
-                            filteredObjects = [goOption];
-                            return [goOption]
-                        }
-
-                        if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
-                            filteredObjects = [goOption]; 
-                            return [goOption]; 
-                        }
-                        return [];
+                if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
+                    if (groupKey.toLowerCase() === "open" && tokens.length > 2) {
+                        filteredObjects = [goOption];
+                        return [goOption]
                     }
+
+                    if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
+                        filteredObjects = [goOption];
+                        return [goOption];
+                    }
+                    return [];
+                }
                 if (hasValidParams) {
                     loadList(apiSourceName, paramValue);
                     console.log(axDatasourceObj);
@@ -2168,17 +2239,38 @@
 
             // Filter Cache
             const dataList = axDatasourceObj[sourceKey];
-            const filtered = dataList.filter(item => {
+            let filtered = dataList.filter(item => {
                 const display = item.displaydata || item.caption || item.name || "";
                 return display.toLowerCase().includes(partialTyped.toLowerCase());
             });
 
-            filteredObjects = filtered;
+            //filteredObjects = filtered;
+
+
+            ///added to restrict user by typing only the listed values from the list(if they type other than that we prompt them again with the default list added - 18-3-2026(t))
+            if (dataList.length > 0 && filtered.length === 0) {
+
+                console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
+                showToast("Please select a valid option from the list.", 3000, true);
+
+                let dummyTokens = [...tokens];
+                let lastIndex = dummyTokens.length - 1;
+                let lastTokenValue = dummyTokens[lastIndex];
+
+                dummyTokens[lastIndex] = "";
+
+                input.value = dummyTokens.join(" ");
+
+                filtered = [...dataList];
+            }
+
 
             let resultList = filtered.map(item => {
                 if (item.createallowed === 'F') return;
                 return item.displaydata || item.caption || item.name || item.fname || item.keyfield
             });
+
+            filteredObjects = filtered;
 
             if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
                 resultList.unshift(popOption);
@@ -2201,22 +2293,34 @@
             //    filteredObjects.unshift(goOption);
             //}
 
-            else if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
-                resultList.unshift(popOption);
-                resultList.unshift(goOption);
-                filteredObjects.unshift(popOption);
-                filteredObjects.unshift(goOption);
+            //else if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
+            //    resultList.unshift(popOption);
+            //    resultList.unshift(goOption);
+            //    filteredObjects.unshift(popOption);
+            //    filteredObjects.unshift(goOption);
+            //}
+
+
+            ///added this for sinlge fieldname and fieldvalue(T)
+            if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
+                //resultList.unshift(goOption);
+                //resultList.unshift(popOption);
+                //filteredObjects.unshift(goOption);
+                //filteredObjects.unshift(popOption);
+                filteredObjects = [goOption, popOption]
+                return [goOption, popOption];
             }
 
             return resultList;
         }
 
-        ///added this for sinlge fiedlname and fieldvalue(T)
+        ///added this for sinlge fieldname and fieldvalue(T)
         if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
             //resultList.unshift(goOption);
             //resultList.unshift(popOption);
             //filteredObjects.unshift(goOption);
             //filteredObjects.unshift(popOption);
+            updateDynamicHintFromPrompt({ prompt: "Ready to Run" })
             filteredObjects = [goOption, popOption]
             return [goOption, popOption];
         }
@@ -2225,6 +2329,160 @@
         return [];
     }
 
+    function processParamforEditndView(tokens, commandConfig, paramValue, position) {
+
+        const struct_prompt = commandConfig.prompts[0];
+        const struct_source = struct_prompt.promptSource;
+
+        // extra params
+        const struct_paramValue = processExtraParams(tokens, commandConfig);
+
+        const struct_sourceKey = (struct_paramValue ? `${struct_source}_${struct_paramValue}` : struct_source).toLowerCase();
+
+        // load datasource if not exists
+        if (!axDatasourceObj[struct_sourceKey]) {
+
+            const struct_hasParams = !struct_prompt.promptParams ||
+                (struct_paramValue && struct_paramValue.replace(/,/g, '').trim().length > 0);
+
+            if (struct_hasParams) {
+                loadList(struct_source, struct_paramValue);
+                return [`Loading ${struct_source}...`];
+            }
+        }
+
+        const struct_dataList = axDatasourceObj[struct_sourceKey];
+        //if (!struct_dataList) return null;
+
+        // find struct row
+
+        let struct_name = paramValue;
+
+        if (paramValue && paramValue.includes("$#$")) {
+            const struct_split = paramValue.split("$#$");
+            struct_name = struct_split[0];
+        }
+
+        const struct_row = struct_dataList.find(r => r.name === struct_name);
+        if (!struct_row) {
+            console.log("The give Form is not in the ads " + struct_source + " list");
+            showToast("The Given Transid is not in the list");
+            return [];
+        }
+
+        // values from structmetalist
+        //const struct_dimension = struct_row.dimension;
+        //const struct_permission = struct_row.permission;
+        //const struct_keyfield = struct_row.keyfield;
+        //const struct_primarytable = struct_row.primarytable;
+        //const struct_transid = struct_row.name;
+
+        // selected field logic
+        let struct_selectedfield = "";
+        if (position === 3) {
+            struct_selectedfield = "0";
+        } else {
+            const struct_split = paramValue ? paramValue.split("$#$") : [];
+            struct_selectedfield = struct_split.length > 1 ? struct_split[1] : "";
+        }
+
+        //// already available globals
+        //const struct_username = mainUserName;
+        //const struct_userrole = AxUserRoles;
+
+        const struct_globalvars = getGlobalVar(allGloblVars, "axg_applicable_dimensions") || "NA";
+        //const struct_globalvars = prepareKeyValueString(allGloblVars);
+        //const struct_globalvars = allGloblVars
+
+        const promptIndex = position === 3 ? 1 : 2;
+        const extraParamsStr = commandConfig.prompts[promptIndex]?.extraParams || "";
+
+        const paramsArray = extraParamsStr.split(",");
+
+        let finalParamsArray = [];
+
+        //default first param
+        //finalParamsArray.push(commandConfig.commandGroup)
+
+        for (let i = 0; i < paramsArray.length; i++) {
+
+            let param = paramsArray[i].trim().toLowerCase();
+            let value = "";
+
+
+            if (param === ":username") {
+                value = mainUserName;
+            }
+            else if (param === ":userrole") {
+                value = AxUserRoles;
+            }
+            else if (param === ":cmd") {
+                value = commandConfig.commandGroup;
+            }
+            else if (param === ":transid") {
+                value = struct_row.name;;
+            }
+            else if (param === ":selectedfield") {
+                value = struct_selectedfield;
+            }
+            else if (param === ":dimension") {
+                value = struct_row.dimension;
+            }
+            else if (param === ":permission") {
+                value = struct_row.permission;
+            }
+            else if (param === ":keyfield") {
+                value = struct_row.keyfield;
+            }
+            else if (param === ":primarytable") {
+                value = struct_row.primarytable;
+            }
+            else if (param === ":globalvars") {
+                value = "NA";
+            }
+
+
+            // fallback NA
+            if (value === null || value === undefined || value === "") {
+                value = "NA";
+            }
+
+            finalParamsArray.push(value);
+        }
+
+        const struct_finalParams = finalParamsArray.join("$#$");
+        //const struct_finalParams = [
+        //    commandConfig.commandGroup,
+        //    struct_username,
+        //    struct_userrole,
+        //    struct_transid,
+        //    struct_selectedfield,
+        //    struct_dimension,
+        //    struct_permission,
+        //    struct_keyfield,
+        //    struct_primarytable,
+        //    struct_globalvars
+        //]
+        //    .map(v => (v === null || v === undefined || v === "") ? "NA" : v)
+        //    .join("$#$");
+
+        return struct_finalParams;
+    }
+
+    function getGlobalVar(struct_allGlobalVars, struct_keyName) {
+
+        if (!struct_allGlobalVars || !Array.isArray(struct_allGlobalVars.globalVars)) {
+            return null;
+        }
+
+        for (let struct_var of struct_allGlobalVars.globalVars) {
+            if (struct_var.hasOwnProperty(struct_keyName)) {
+                return struct_var[struct_keyName];
+            }
+        }
+
+        return null;
+    }
 
     // function processExtraParams(tokens,commandConfig) {
 
@@ -2399,6 +2657,7 @@
 
 
     function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
+
         tokenText = cleanString(tokenText);
         if (!tokenText) return "";
 
@@ -2462,6 +2721,41 @@
 
             else if (realSource.toLowerCase() === "axi_viewlist") {
                 paramValue = processExtraParams(currentTokens, commandConfig);
+            }
+            else if (realSource.toLowerCase() === "axi_getstructsdata") {
+
+                let staticParams = "2";
+                //if (currentTokens.length < 3) {
+                //    staticParams = "2";
+                //}
+                //else {
+                //    staticParams = "2,3";
+                //}
+
+                const indices = staticParams.toString().split(',');
+                const values = indices.map(idx => {
+                    const logicalWordPos = parseInt(idx.trim());
+                    const depTokenIndex = logicalWordPos - 1;
+                    const depToken = cleanString(currentTokens[depTokenIndex] || "");
+                    return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+                });
+                paramValue = values.join('$#$');
+
+                //if (currentTokens.length == 2) {
+                //    const depToken = cleanString(currentTokens[1] || "");
+                //    paramValue = tryResolveToken(1, depToken, commandConfig, false);
+                //}
+                //else {
+                //    const depToken = cleanString(currentTokens[1] || "");
+                //    paramValue = tryResolveToken(1, depToken, commandConfig, false);
+
+                //    const fieldName = cleanString(currentTokens[2] || "");
+                //    paramValue += "$#$"+tryResolveToken(2, fieldName, commandConfig, false);
+                //}
+
+
+
+                paramValue = processParamforEditndView(currentTokens, commandConfig, paramValue, 3)
             }
 
             let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
@@ -3073,8 +3367,8 @@
         const historyBtn = document.getElementById("History_pages");
         if (historyBtn) {
             historyBtn.addEventListener("click", () => {
-                showToast("Not Yet Implemented..."); 
-                return; 
+                showToast("Not Yet Implemented...");
+                return;
             });
         }
 
@@ -3086,8 +3380,8 @@
         const nextBtn = document.getElementById("btnHistoryNext");
         if (nextBtn) {
             nextBtn.addEventListener("click", () => {
-                showToast("Not Yet Implemented..."); 
-                return; 
+                showToast("Not Yet Implemented...");
+                return;
             });
         }
         if (btnRefresh) {
@@ -3696,167 +3990,255 @@
 
     function handleEditData({ tokens, commandConfig, resolvedParams }) {
 
-
-
-
         let rawStruct = cleanCommandToken(tokens[1]);
         let transId = tryResolveToken(1, rawStruct, commandConfig, false);
-        let rawFieldName = "";
+
         let fieldName = "";
-        let actualFieldName = "";
-        let rawValue = "";
         let fieldValue = "";
         let fieldUniqueId = "";
-        const extraPromptSource = commandConfig.prompts[1].extraParams.toLowerCase();
-        let fieldValuePromptSource;
-        let valuePresentInList = false;
-
-        const extraSourceKey = `${extraPromptSource}_${transId}`.toLowerCase();
-
-        const extraList = axDatasourceObj[extraSourceKey];
-
-        const extraInlineValue = commandConfig?.prompts?.[3]?.promptValues;
 
 
-        if (transId === rawStruct) {
-            const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
-            const found = list?.find(
-                x => x.caption?.toLowerCase() === rawStruct
-            );
-            if (!found || !found.name) {
-                console.error("TStruct not found:", rawStruct);
-                return;
+        const struct_prompt = commandConfig.prompts[0];
+        const struct_source = struct_prompt.promptSource;
+
+        // extra params
+        const struct_paramValue = processExtraParams(tokens, commandConfig);
+
+        const struct_sourceKey = (struct_paramValue ? `${struct_source}_${struct_paramValue}` : struct_source).toLowerCase();
+
+        // load datasource if not exists
+        if (!axDatasourceObj[struct_sourceKey]) {
+
+            const struct_hasParams = !struct_prompt.promptParams ||
+                (struct_paramValue && struct_paramValue.replace(/,/g, '').trim().length > 0);
+
+            if (struct_hasParams) {
+                loadList(struct_source, struct_paramValue);
+                return [`Loading ${struct_source}...`];
             }
-            transId = found.name;
         }
 
-        if (tokens.length > 3 && tokens.some(t => t.toLowerCase() !== extraInlineValue.toLowerCase())) {
-            fieldValuePromptSource = commandConfig.prompts[2].promptSource.toLowerCase();
-            rawFieldName = cleanCommandToken(tokens[2]);
-            actualFieldName = tryResolveToken(2, rawFieldName, commandConfig, true);
+        const struct_dataList = axDatasourceObj[struct_sourceKey];
 
+        const struct_row = struct_dataList.find(r => r.name === transId);
 
-            if (!Array.isArray(extraList)) {
-                console.warn("Hidden field list is missing or invalid", extraList);
-                actualFieldName = null;
-                return;
+        const primaryField = struct_row?.keyfield;
 
-            } else if (extraList.length === 0) {
-                console.log("hidden field List is Empty!");
-                actualFieldName = null;
-                return;
-
-            } else {
-                const field = extraList[0];
-
-                fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
-
-                if (actualFieldName === null) {
-                    console.error("Field name resolution failed: ", fieldName)
-                }
-            }
-            if (!fieldName) {
-                console.error("Field resolution failed:", rawFieldName);
-                return;
-            }
-
-            rawValue = cleanCommandToken(tokens[3]);
-            fieldValue = tryResolveToken(3, rawValue, commandConfig, false);
-            fieldUniqueId = getUniqueId(fieldValue);
-
-            const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${actualFieldName}`.toLowerCase()];
-            console.log(`Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
-
-            setEditSessionState(transId);
-
-            if (Array.isArray(extraFieldValueList) && extraFieldValueList.length > 0) {
-
-                valuePresentInList = extraFieldValueList.some(item =>
-                    // item.displaydata?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    // item.name?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    // item.fname?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    // item.keyfield?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    item.caption?.toLowerCase() === fieldUniqueId.toLowerCase()
-
-                );
-
-                if (valuePresentInList)
-                    redirectToTstruct(transId, rawStruct, true, fieldName, fieldUniqueId);
-                else
-                    redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
-            }
-            else {
-
-                redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
-            }
-
-
-
-
-        } else {
-            fieldValuePromptSource = commandConfig.prompts[1].promptSource.toLowerCase()
-
-            if (!Array.isArray(extraList)) {
-                console.warn("Hidden field list is missing or invalid", extraList);
-                fieldName = null;
-                return;
-
-            } else if (extraList.length === 0) {
-                console.log("hidden field List is Empty!");
-                fieldName = null;
-                return;
-
-            } else {
-                const field = extraList[0];
-
-                fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
-
-                if (fieldName === null) {
-                    console.error("Field name resolution failed: ", fieldName)
-                }
-
-                rawValue = cleanCommandToken(tokens[2]);
-                fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
-                fieldUniqueId = getUniqueId(fieldValue);
-
-                if (fieldValue === null) {
-                    console.error("Field value resolution failed:", rawValue);
-                    return;
-                }
-
-
-
-            }
-
-            const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${fieldName}`.toLowerCase()];
-            console.log(`Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
-
-            setEditSessionState(transId);
-
-            if (Array.isArray(extraFieldValueList) && extraFieldValueList.length > 0) {
-
-                valuePresentInList = extraFieldValueList.some(item =>
-                    // item.displaydata?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    // item.name?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    // item.fname?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    // item.keyfield?.toLowerCase() === fieldUniqueId.toLowerCase() ||
-                    item.caption?.toLowerCase() === fieldUniqueId.toLowerCase()
-
-                );
-
-                if (valuePresentInList)
-                    redirectToTstruct(transId, rawStruct, true, fieldName, fieldUniqueId);
-                else
-                    redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
-            }
-            else {
-
-                redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
-            }
-
+        if (!primaryField) {
+            console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
+            showToast("Please try again later...");
+            return [];
         }
 
+        setEditSessionState(transId)
+
+
+
+        ///We need to optimize this(token index)(optimized one is below 17-03-26-T)
+        let tokenIndex;
+        let tokenBasedBooleanCheck;
+        if (tokens.length > 3) {
+            tokenIndex = 3;
+            tokenBasedBooleanCheck = false;
+        }
+        else {
+            tokenIndex = 2;
+            tokenBasedBooleanCheck = true;
+        }
+        //if (tokens.length > 3) {
+
+        //    let rawFieldName = cleanCommandToken(tokens[2]);
+        //    fieldName = tryResolveToken(2, rawFieldName, commandConfig, false);
+
+        //    let rawValue = cleanCommandToken(tokens[3]);
+        //    fieldValue = tryResolveToken(3, rawValue, commandConfig, false);
+
+        //    fieldUniqueId = getUniqueId(fieldValue);
+
+        //    redirectToTstruct(transId, rawStruct, true, struct_row.keyfield, fieldUniqueId);
+        //}
+        //else {
+
+
+        //    let rawValue = cleanCommandToken(tokens[2]);
+        //    fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
+
+        //    fieldUniqueId = getUniqueId(fieldValue);
+
+        //    redirectToTstruct(transId, rawStruct, true, struct_row.keyfield, fieldUniqueId);
+        //}
+        let rawValue = cleanCommandToken(tokens[tokenIndex]);
+        fieldValue = tryResolveToken(tokenIndex, rawValue, commandConfig, tokenBasedBooleanCheck);
+
+        fieldUniqueId = getUniqueId(fieldValue);
+
+        redirectToTstruct(transId, rawStruct, true, struct_row.keyfield, fieldUniqueId);
     }
+
+
+    // function handleEditData({ tokens, commandConfig, resolvedParams }) {
+
+
+
+
+    //     let rawStruct = cleanCommandToken(tokens[1]);
+    //     let transId = tryResolveToken(1, rawStruct, commandConfig, false);
+    //     let rawFieldName = "";
+    //     let fieldName = "";
+    //     let actualFieldName = "";
+    //     let rawValue = "";
+    //     let fieldValue = "";
+    //     let fieldUniqueId = "";
+    //     const extraPromptSource = commandConfig.prompts[1].extraParams.toLowerCase();
+    //     let fieldValuePromptSource;
+    //     let valuePresentInList = false;
+
+    //     const extraSourceKey = `${extraPromptSource}_${transId}`.toLowerCase();
+
+    //     const extraList = axDatasourceObj[extraSourceKey];
+
+    //     const extraInlineValue = commandConfig?.prompts?.[3]?.promptValues;
+
+
+    //     if (transId === rawStruct) {
+    //         const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+    //         const found = list?.find(
+    //             x => x.caption?.toLowerCase() === rawStruct
+    //         );
+    //         if (!found || !found.name) {
+    //             console.error("TStruct not found:", rawStruct);
+    //             return;
+    //         }
+    //         transId = found.name;
+    //     }
+
+    //     if (tokens.length > 3 && tokens.some(t => t.toLowerCase() !== extraInlineValue.toLowerCase())) {
+    //         fieldValuePromptSource = commandConfig.prompts[2].promptSource.toLowerCase();
+    //         rawFieldName = cleanCommandToken(tokens[2]);
+    //         actualFieldName = tryResolveToken(2, rawFieldName, commandConfig, true);
+
+
+    //         if (!Array.isArray(extraList)) {
+    //             console.warn("Hidden field list is missing or invalid", extraList);
+    //             actualFieldName = null;
+    //             return;
+
+    //         } else if (extraList.length === 0) {
+    //             console.log("hidden field List is Empty!");
+    //             actualFieldName = null;
+    //             return;
+
+    //         } else {
+    //             const field = extraList[0];
+
+    //             fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
+
+    //             if (actualFieldName === null) {
+    //                 console.error("Field name resolution failed: ", fieldName)
+    //             }
+    //         }
+    //         if (!fieldName) {
+    //             console.error("Field resolution failed:", rawFieldName);
+    //             return;
+    //         }
+
+    //         rawValue = cleanCommandToken(tokens[3]);
+    //         fieldValue = tryResolveToken(3, rawValue, commandConfig, false);
+    //         fieldUniqueId = getUniqueId(fieldValue);
+
+    //         const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${actualFieldName}`.toLowerCase()];
+    //         console.log(`Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
+
+    //         setEditSessionState(transId);
+
+    //         if (Array.isArray(extraFieldValueList) && extraFieldValueList.length > 0) {
+
+    //             valuePresentInList = extraFieldValueList.some(item =>
+    //                 // item.displaydata?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.name?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.fname?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.keyfield?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 item.caption?.toLowerCase() === fieldUniqueId.toLowerCase()
+
+    //             );
+
+    //             if (valuePresentInList)
+    //                 redirectToTstruct(transId, rawStruct, true, fieldName, fieldUniqueId);
+    //             else
+    //                 redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
+    //         }
+    //         else {
+
+    //             redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
+    //         }
+
+
+
+
+    //     } else {
+    //         fieldValuePromptSource = commandConfig.prompts[1].promptSource.toLowerCase()
+
+    //         if (!Array.isArray(extraList)) {
+    //             console.warn("Hidden field list is missing or invalid", extraList);
+    //             fieldName = null;
+    //             return;
+
+    //         } else if (extraList.length === 0) {
+    //             console.log("hidden field List is Empty!");
+    //             fieldName = null;
+    //             return;
+
+    //         } else {
+    //             const field = extraList[0];
+
+    //             fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
+
+    //             if (fieldName === null) {
+    //                 console.error("Field name resolution failed: ", fieldName)
+    //             }
+
+    //             rawValue = cleanCommandToken(tokens[2]);
+    //             fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
+    //             fieldUniqueId = getUniqueId(fieldValue);
+
+    //             if (fieldValue === null) {
+    //                 console.error("Field value resolution failed:", rawValue);
+    //                 return;
+    //             }
+
+
+
+    //         }
+
+    //         const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${fieldName}`.toLowerCase()];
+    //         console.log(`Edit Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
+
+    //         setEditSessionState(transId);
+
+    //         if (Array.isArray(extraFieldValueList) && extraFieldValueList.length > 0) {
+
+    //             valuePresentInList = extraFieldValueList.some(item =>
+    //                 // item.displaydata?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.name?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.fname?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.keyfield?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 item.caption?.toLowerCase() === fieldUniqueId.toLowerCase()
+
+    //             );
+
+    //             if (valuePresentInList)
+    //                 redirectToTstruct(transId, rawStruct, true, fieldName, fieldUniqueId);
+    //             else
+    //                 redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
+    //         }
+    //         else {
+
+    //             redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
+    //         }
+
+    //     }
+
+    // }
 
 
     function handleConfigurePermissions({ tokens, commandConfig }) {
@@ -4043,8 +4425,8 @@
 
     function handleConfigureSettings({ tokens, commandConfig }) {
         // const targetUrl = "../aspx/Configuration.aspx/LoadUserAppSettings"; 
-        const targetUrl = "../aspx/Configuration.aspx"; 
-        setCommandRoutes(input.value.trim(), targetUrl); 
+        const targetUrl = "../aspx/Configuration.aspx";
+        setCommandRoutes(input.value.trim(), targetUrl);
         window.LoadIframe(targetUrl);
     }
 
@@ -4054,9 +4436,9 @@
         const transId = "ad_pr";
         const targetUrl = `../aspx/tstruct.aspx?act=load&transid=${transId}&axpdef_axpertpropsid=1`;
         //   const targetUrl = "../aspx/tstruct.aspx?act=load&transid=ad_pr&axpdef_axpertpropsid=1";
-        setEditSessionState(transId); 
-        setCommandRoutes(input.value.trim(), targetUrl); 
-        
+        setEditSessionState(transId);
+        setCommandRoutes(input.value.trim(), targetUrl);
+
         top.window.LoadIframe(targetUrl);
 
     }
@@ -4182,6 +4564,7 @@
         let rawFieldValue;
         let fieldUniqueId;
         let fieldValueIndex = 0;
+        let paramValue;
 
 
         if (tokens.length < 2) {
@@ -4195,10 +4578,14 @@
 
         const promptValues = commandConfig?.prompts?.[0].promptValues;
         const viewDataSource = commandConfig?.prompts?.[0].promptSource;
-        const extraDataSource = commandConfig?.prompts?.[1].extraParams;
+        if (viewDataSource.toLowerCase() === "axi_structmetalist") {
+            paramValue = processExtraParams(tokens, commandConfig);
+        }
+        // const extraDataSource = commandConfig?.prompts?.[1].extraParams;
+        //const extraDataSource = "axi_keyfieldList";
 
 
-        const viewDataSourceKey = `${viewDataSource}`.toLowerCase();
+        const viewDataSourceKey = `${viewDataSource}_${paramValue}`.toLowerCase();
         let rawStruct = cleanCommandToken(tokens[1]);
         transId = tryResolveToken(1, rawStruct, commandConfig, false);
 
@@ -4244,10 +4631,14 @@
             redirectToHtmlPages(rawFieldValue, tokens, commandConfig);
             return;
 
+        } else if (type === "iview") {
+            redirectToIView(transId, rawStruct);
+            return;
+
         }
 
 
-        const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
+        //const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
 
 
         if (tokens.length > 3) {
@@ -4261,15 +4652,27 @@
         }
 
 
+        const struct_rowList = axDatasourceObj[viewDataSourceKey];
+        const struct_row = struct_rowList.find(r => r.name === transId);
 
+        const primaryField = struct_row?.keyfield;
 
-        const extraList = axDatasourceObj[extraSourceKey];
-
-        if (extraList && extraList.length > 0) {
-            fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
-        } else {
-            console.warn("Hidden field name not found in cache");
+        if (!primaryField) {
+            console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
+            showToast("Please try again later...");
+            return [];
         }
+
+        setEditSessionState(transId)
+
+
+        //const extraList = axDatasourceObj[extraSourceKey];
+
+        //if (extraList && extraList.length > 0) {
+        //    fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
+        //} else {
+        //    console.warn("Hidden field name not found in cache");
+        //}
 
         rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
         fieldValue = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
@@ -4277,17 +4680,136 @@
 
 
         console.log(
-            `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
+            `view Data → TStruct=${transId}, Field=${primaryField}, Value=${fieldValue}`
         );
 
         handler({
             transId,
-            fieldName,
+            fieldName: primaryField,
             fieldValue: fieldUniqueId,
             rawStruct
         })
 
     }
+
+
+
+    // function handleViewCommand({ tokens, commandConfig }) {
+
+    //     let transId = "";
+    //     let type = "";
+    //     let fieldName;
+    //     let fieldValue;
+    //     let rawFieldName;
+    //     let rawFieldValue;
+    //     let fieldUniqueId;
+    //     let fieldValueIndex = 0;
+
+
+    //     if (tokens.length < 2) {
+    //         console.warn("View Command required atleast two tokens");
+    //         showToast("view command requires atleast two tokens");
+    //         return;
+    //     }
+
+    //     console.log(JSON.stringify(commandConfig));
+
+
+    //     const promptValues = commandConfig?.prompts?.[0].promptValues;
+    //     const viewDataSource = commandConfig?.prompts?.[0].promptSource;
+    //     const extraDataSource = commandConfig?.prompts?.[1].extraParams;
+
+
+    //     const viewDataSourceKey = `${viewDataSource}`.toLowerCase();
+    //     let rawStruct = cleanCommandToken(tokens[1]);
+    //     transId = tryResolveToken(1, rawStruct, commandConfig, false);
+
+
+    //     type = getType(viewDataSourceKey, transId, promptValues, tokens, commandConfig);
+
+    //     const handler = VIEW_HANDLERS[type];
+
+
+
+
+    //     if (!handler) {
+    //         console.log("Error: Unsupported View Type");
+    //         showToast("Error: Unsupported View Type");
+    //         return;
+    //     }
+
+
+    //     if (type === "ads") {
+
+
+    //         const adsName = cleanCommandToken(tokens[1]);
+    //         const filters = extractAdsFilters(tokens);
+
+    //         console.log("Ads Filters: ", filters);
+
+
+
+    //         redirectToSmartView({
+    //             adsName: adsName,
+    //             filters: filters
+    //         });
+    //         return;
+
+
+    //     } else if (type === "page") {
+
+
+
+
+
+    //         let rawFieldValue = cleanCommandToken(tokens[1]);
+    //         redirectToHtmlPages(rawFieldValue, tokens, commandConfig);
+    //         return;
+
+    //     }
+
+
+    //     const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
+
+
+    //     if (tokens.length > 3) {
+    //         fieldValueIndex = 3;
+
+
+    //     } else {
+    //         fieldValueIndex = 2;
+
+
+    //     }
+
+
+
+
+    //     const extraList = axDatasourceObj[extraSourceKey];
+
+    //     if (extraList && extraList.length > 0) {
+    //         fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
+    //     } else {
+    //         console.warn("Hidden field name not found in cache");
+    //     }
+
+    //     rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
+    //     fieldValue = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
+    //     fieldUniqueId = getUniqueId(fieldValue);
+
+
+    //     console.log(
+    //         `view Data → TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
+    //     );
+
+    //     handler({
+    //         transId,
+    //         fieldName,
+    //         fieldValue: fieldUniqueId,
+    //         rawStruct
+    //     })
+
+    // }
 
 
     async function handleKeyfield({ tokens, commandConfig }) {
@@ -4342,7 +4864,9 @@
         const VALID_TYPES = new Set(paramList);
 
         let paramValue;
-        if (axDatasourceKey.toLowerCase() === "axi_viewlist") {
+       // if (axDatasourceKey.toLowerCase() === "axi_viewlist") {
+
+ if (axDatasourceKey.toLowerCase() === "axi_structmetalist") {
             paramValue = processExtraParams(tokens, commandConfig);
             axDatasourceKey += "_" + paramValue;
         }
@@ -4393,7 +4917,8 @@
 
         let paramValue = processExtraParams(tokens, commandConfig);
 
-        const viewList = axDatasourceObj["axi_viewlist".toLowerCase() + "_" + paramValue];
+        //const viewList = axDatasourceObj["axi_viewlist".toLowerCase() + "_" + paramValue];
+        const viewList = axDatasourceObj["axi_structmetalist".toLowerCase() + "_" + paramValue];
 
 
 
@@ -4625,8 +5150,8 @@
      */
     function handleRunCommand({ tokens, commandConfig }) {
         if (tokens.length < 2) {
-            showToast("Invalid Command! Run commands requires atleast 2 tokens!"); 
-            return; 
+            showToast("Invalid Command! Run commands requires atleast 2 tokens!");
+            return;
         }
         const structType = getStructType();
         let buttonLabel = cleanCommandToken(tokens[1]);
@@ -5146,10 +5671,10 @@
     }
 
     function hasAction(btn) {
-        const isDisabled = btn.classList.contains("disabled"); 
+        const isDisabled = btn.classList.contains("disabled");
         if (btn.getAttribute("onclick") && !isDisabled) return true;
 
-        
+
 
         if (btn.tagName === "A" && !isDisabled) {
             const href = btn.getAttribute("href");
@@ -5183,7 +5708,7 @@
             // if (!hasAction(btn)) return;
 
             if (btn.classList.contains("d-none") || btn.classList.contains("disabled")) return;
-        
+
 
             if (btn.getAttribute("data-kt-menu-attach") === "parent") return;
 
@@ -5228,7 +5753,7 @@
             if (btn.type === "hidden") return;
             if (btn.style.display === "none") return;
             if (btn.offsetParent === null) return;
-            if (btn.classList.contains("disabled")) return; 
+            if (btn.classList.contains("disabled")) return;
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || btn.name || btn.getAttribute("data-kt-stepper-action");
             if (!id) return;
@@ -5407,7 +5932,7 @@
 
     function handleAnalyse({ tokens, commandConfig }) {
 
-        let targetUrl = "../aspx/Analytics.aspx";
+        let targetUrl = "../AxpertPlugins/Axi/HTMLPages/Analytics.html";
 
         if (tokens.length === 1) {
             targetUrl += "?calendar=t";
@@ -7486,18 +8011,51 @@
         let keyFieldValue = cleanCommandToken(inputTokens[2]);
         let keyfieldName;
         if (!isCreate) {
-            const extraPromptSource = inputCommandConfig.prompts[1].extraParams.toLowerCase();
+            //const extraPromptSource = "axi_keyfieldList";
+            const struct_source = inputCommandConfig.prompts[0].promptSource;
 
-            const extraSourceKey = `${extraPromptSource}_${transid}`.toLowerCase();
+            // extra params
+            let struct_paramValue
+            if (struct_source.toLowerCase() === "axi_structmetalist")
+              struct_paramValue = processExtraParams(inputTokens, inputCommandConfig);
 
-            const extraList = axDatasourceObj[extraSourceKey];
+            const struct_sourceKey = (struct_paramValue ? `${struct_source}_${struct_paramValue}` : struct_source).toLowerCase();
 
-            if (extraList.length == 0) {
-                throw new Error("Key Field List is missing");
+            // load datasource if not exists
+            if (!axDatasourceObj[struct_sourceKey]) {
+
+                const struct_hasParams = !struct_prompt.promptParams ||
+                    (struct_paramValue && struct_paramValue.replace(/,/g, '').trim().length > 0);
+
+                if (struct_hasParams) {
+                    loadList(struct_source, struct_paramValue);
+                    return [`Loading ${struct_source}...`];
+                }
             }
-            const field = extraList[0];
 
-            keyfieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
+            const struct_dataList = axDatasourceObj[struct_sourceKey];
+
+            const struct_row = struct_dataList.find(r => r.name === transid);
+
+            const primaryField = struct_row?.keyfield
+
+            //if (!primaryField) {
+            //    throw new Error("Key Field List is missing");;
+            //}
+
+            //const extraSourceKey = `${extraPromptSource}_${transid}`.toLowerCase();
+
+            //const extraList = axDatasourceObj[extraSourceKey];
+
+            //if (extraList.length == 0) {
+                
+            //}
+            //const field = extraList[0];
+
+            //keyfieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
+
+            keyfieldName = primaryField;
+
         }
         preparePayload(saveListWithFieldNamendValues[transid] || [], transid, sourcename, isCreate, keyFieldValue, keyfieldName).then(result => {
 
@@ -7642,12 +8200,12 @@
             }
 
 
-            // 🔥 Record level variables
+            // Record level variables
             var recordid = iscreate ? "0" : "";
             var keyfield = iscreate ? "" : "";
             var keyvalue = iscreate ? "" : "";
 
-            //👉 In edit mode you will later assign:
+            // In edit mode you will later assign:
             if (!iscreate) {
                 recordid = "0";
                 keyfield = inputKeyFieldName;
@@ -8177,43 +8735,45 @@
         input.value = favObj.commandText + " ";
         const tokens = getTokens(favObj.commandText);
 
-        const accessPermissions = getAccessPermissions(); 
+        const accessPermissions = getAccessPermissions();
         // AppMgrAccess(Config)
         // ImportAccess(Upload)
         // ExportAccess(Download)
         // Build(Open)
 
-         for (const [permissionKey, hasAccess] of Object.entries(accessPermissions)) {
+        for (const [permissionKey, hasAccess] of Object.entries(accessPermissions)) {
             if (!hasAccess || hasAccess === false) {
                 switch (permissionKey) {
                     case "appMgrAccess":
                         if (tokens[0].toLowerCase() === "configure") {
-                            showToast(`User:${window.mainUserName} has no access for command:${favObj.commandText}`); 
-                            
-                            return;} 
+                            showToast(`User:${window.mainUserName} has no access for command:${favObj.commandText}`);
+
+                            return;
+                        }
                         break;
 
                     case 'importAccess':
                         if (tokens[0].toLowerCase() === "upload") {
-                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`); 
-                            
-                            return; }
-                        
+                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
+
+                            return;
+                        }
+
                         break;
                     case 'exportAccess':
                         if (tokens[0].toLowerCase() === "download") {
-                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`); 
+                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
 
-                            return;  
-                        }                       
+                            return;
+                        }
                         break;
 
                     case 'buildAccess':
                         if (tokens[0].toLowerCase() === "open") {
-                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`); 
-                            return; 
+                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
+                            return;
 
-                        }                        
+                        }
                         break;
 
                     default:
