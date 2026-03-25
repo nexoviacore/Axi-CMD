@@ -2057,6 +2057,22 @@
             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
 
+             if (staticValues.length > 0 && result.length === 0) {
+
+                console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
+                showToast("Please select a valid option from the list.");
+
+                let dummyTokens = [...tokens];
+                let lastIndex = dummyTokens.length - 1;
+                let lastTokenValue = dummyTokens[lastIndex];
+
+                dummyTokens[lastIndex] = "";
+
+                input.value = dummyTokens.join(" ");
+
+                result = [...staticValues];
+            }
+
             if (groupKey.toLowerCase() === "create" && tokens.length === 3) {
                 result.unshift(popOption);
                 result.unshift(goOption);
@@ -2256,7 +2272,7 @@
             if (dataList.length > 0 && filtered.length === 0) {
 
                 console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
-                showToast("Please select a valid option from the list.", 3000, true);
+                showToast("Please select a valid option from the list.");
 
                 let dummyTokens = [...tokens];
                 let lastIndex = dummyTokens.length - 1;

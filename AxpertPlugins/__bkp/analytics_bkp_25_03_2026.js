@@ -70,9 +70,6 @@ class AnalyticsCharts {
         this.enableFilterDebugLogs = true;
         this.analyticsIndexedDb = null;
         this.analyticsIndexedDbOpenPromise = null;
-        this.dataSourceType = "tstruct";
-        this.dataSourceName = "";
-        this.adsMetaDataCache = {};
 
 
     }
@@ -84,20 +81,9 @@ class AnalyticsCharts {
 
         const pageLoadData = JSON.parse(document.querySelector("#hdnAnalyticsPageLoadData").value);
         this.urlParams = this.getUrlParams();
-        const urlSource = this.getUrlSource();
-        this.dataSourceType = urlSource.type;
-        this.dataSourceName = urlSource.name;
-        this.pendingGroupBy = this.isAdsMode() ? "" : (this.urlParams.groupby || "");
+        this.pendingGroupBy = this.urlParams.groupby || "";
         this.applyUrlEntityContextUi();
         this.ensureLastRefreshLabel();
-
-        const shouldForceUrlSourceLoad = !!urlSource.name && (
-            urlSource.type === "ads" ||
-            this.normalizeUrlParam(pageLoadData?.result?.data?.TransId || "") !== this.normalizeUrlParam(urlSource.name)
-        );
-        if (shouldForceUrlSourceLoad && this.tryAutoLoadEntityFromUrl()) {
-            return;
-        }
 
         if (_entityCommon.inValid(pageLoadData.result.data.SelectedEntities)) {
             document.querySelector("#Entity_summary_Left").classList.add("d-none");
@@ -123,6 +109,11 @@ class AnalyticsCharts {
             this.entityTransId = pageLoadData.result.data.TransId;
             this.entityName = this.getEntityCaption(this.entityTransId);
             this.writeAnalyticsEntityCache(this.entityTransId, pageLoadData);
+            this.writeAnalyticsPrefsCache(this.entityTransId, {
+                XAXISFIELDS: this.xAxisFields || "All",
+                YAXISFIELDS: this.yAxisFields || "All",
+                CHARTTYPE: "line"
+            });
 
             this.loadStoredAnalyticsPreferences(this.entityTransId, () => {
                 this.constructXandYAxis(this.metaData, "Page Load");
@@ -136,45 +127,32 @@ class AnalyticsCharts {
     }
 
     tryAutoLoadEntityFromUrl() {
-        const source = this.getUrlSource();
-        if (!source.name) {
+        const entityParam = this.urlParams ? this.urlParams.entity : "";
+        if (!entityParam) {
             return false;
         }
-
-        this.dataSourceType = source.type;
-        this.dataSourceName = source.name;
 
         document.querySelector("#Entity_summary_Left")?.classList.remove("d-none");
         document.querySelector("#Entity_summary_Right")?.classList.remove("d-none");
         document.querySelector("#Analytics_Grid_Container")?.classList.remove("d-none");
 
         this.selectedEntitiesList = [{
-            name: source.name,
-            caption: source.name
+            name: entityParam,
+            caption: entityParam
         }];
-        this.entityTransId = source.name;
-        this.entityName = source.name;
+        this.entityTransId = entityParam;
+        this.entityName = entityParam;
 
         this.logFilterDebug("init:autoLoadEntityFromUrl", {
-            sourceName: source.name,
-            sourceType: source.type
+            entity: entityParam
         });
 
-        if (source.type === "ads") {
-            this.fetchAdsData(source.name, () => {
-                try {
-                    this.constructSelectedEntityHeader();
-                } catch (error) { }
-                this.finalizeAnalyticsLoad(true);
-            });
-        } else {
-            fetchEntityData(source.name, () => {
-                try {
-                    this.constructSelectedEntityHeader();
-                } catch (error) { }
-                this.finalizeAnalyticsLoad(true);
-            });
-        }
+        fetchEntityData(entityParam, () => {
+            try {
+                this.constructSelectedEntityHeader();
+            } catch (error) { }
+            this.finalizeAnalyticsLoad(true);
+        });
 
         return true;
     }
@@ -354,16 +332,6 @@ class AnalyticsCharts {
     openFieldSelectionOnPageLoad() {
         const entityKey = this.normalizeUrlParam(this.entityTransId);
         if (!entityKey || this.hasStoredFieldSelection || !Array.isArray(this.metaData) || this.metaData.length === 0) {
-            return;
-        }
-
-        const cachedPrefs = this.readAnalyticsPrefsCache(entityKey);
-        const cachedHasSelection = cachedPrefs && (
-            this.hasConfiguredAnalyticsFields(this.getAnalyticsPropertyValue(cachedPrefs, "XAXISFIELDS")) ||
-            this.hasConfiguredAnalyticsFields(this.getAnalyticsPropertyValue(cachedPrefs, "YAXISFIELDS"))
-        );
-        if (cachedHasSelection) {
-            this.hasStoredFieldSelection = true;
             return;
         }
 
@@ -1165,34 +1133,13 @@ class AnalyticsCharts {
         const queryString = window.location.search || "";
         const urlParams = new URLSearchParams(queryString);
         return {
-            name: this.normalizeUrlParam(urlParams.get('name')),
-            type: this.normalizeUrlParam(urlParams.get('type')),
             entity: this.normalizeUrlParam(urlParams.get('entity')),
             groupby: this.normalizeUrlParam(urlParams.get('groupby'))
         };
     }
 
-    getUrlSource() {
-        const legacyEntity = this.urlParams ? this.normalizeUrlParam(this.urlParams.entity) : "";
-        const sourceName = this.urlParams ? this.normalizeUrlParam(this.urlParams.name || legacyEntity) : legacyEntity;
-        const sourceType = this.urlParams ? this.normalizeUrlParam(this.urlParams.type || "tstruct") : "tstruct";
-        return {
-            name: sourceName,
-            type: sourceType === "ads" ? "ads" : "tstruct"
-        };
-    }
-
-    isAdsMode() {
-        const currentType = this.normalizeUrlParam(this.dataSourceType || "");
-        if (currentType) {
-            return currentType === "ads";
-        }
-        return this.getUrlSource().type === "ads";
-    }
-
     applyUrlEntityContextUi() {
-        const source = this.getUrlSource();
-        const hasEntityInUrl = !!source.name;
+        const hasEntityInUrl = !!(this.urlParams && this.urlParams.entity);
         document.querySelectorAll(".scroll-container").forEach(element => {
             element.classList.toggle("d-none", hasEntityInUrl);
         });
@@ -2924,6 +2871,7 @@ class AnalyticsCharts {
                 this.toAssetUrl("/ThirdParty/Highcharts/highcharts-3d.js", assetBaseUrl),
                 this.toAssetUrl("/ThirdParty/Highcharts/highcharts-more.js", assetBaseUrl),
                 this.toAssetUrl("/ThirdParty/Highcharts/highcharts-exporting.js", assetBaseUrl),
+                // this.toAssetUrl("/Js/analytics-charts-functions.js?v=30", assetBaseUrl)
                 this.toAssetUrl("/AxpertPlugins/Axi/HTMLPages/js/analytics-charts-functions.js", assetBaseUrl)
             ]
         };
@@ -3741,8 +3689,6 @@ class AnalyticsCharts {
         const requestedFields = [];
         const seenFields = new Set();
         const metaData = Array.isArray(this.metaData) ? this.metaData : [];
-        const hasMetaData = metaData.length > 0;
-        const metaFieldSet = new Set(metaData.map(item => this.normalizeUrlParam(item?.fldname || "")).filter(Boolean));
 
         const addField = (fieldName) => {
             if (_entityCommon.inValid(fieldName)) {
@@ -3754,9 +3700,6 @@ class AnalyticsCharts {
             }
 
             const metaField = metaData.find(item => this.normalizeUrlParam(item?.fldname || "") === normalized);
-            if (hasMetaData && !metaField) {
-                return;
-            }
             const resolvedFieldName = (metaField?.fldname || `${fieldName}`).trim();
             if (_entityCommon.inValid(resolvedFieldName)) {
                 return;
@@ -3792,17 +3735,9 @@ class AnalyticsCharts {
             this.getGridGroupFields().forEach(option => addField(option.value));
         }
 
-        const preferredDateField = this.getPreferredAnalyticsDateField();
-        if (!hasMetaData || metaFieldSet.has(this.normalizeUrlParam(preferredDateField))) {
-            addField(preferredDateField);
-        }
-
-        if (!hasMetaData || metaFieldSet.has("modifiedon")) {
-            addField("modifiedon");
-        }
-        if (!hasMetaData || metaFieldSet.has("createdon")) {
-            addField("createdon");
-        }
+        addField(this.getPreferredAnalyticsDateField());
+        addField("modifiedon");
+        addField("createdon");
 
         return requestedFields;
     }
@@ -4033,547 +3968,6 @@ class AnalyticsCharts {
         this.clearEntityListRowsCacheIndexedDb(effectiveTransId);
     }
 
-    getAxListCaller() {
-        if (typeof parent !== "undefined" && parent && typeof parent.GetDataFromAxList === "function") {
-            return parent;
-        }
-        if (typeof window !== "undefined" && window && typeof window.GetDataFromAxList === "function") {
-            return window;
-        }
-        return null;
-    }
-
-    parseAxListResponsePayload(response) {
-        let parsed = response;
-        try {
-            if (typeof parsed === "string") {
-                parsed = JSON.parse(parsed);
-            }
-            if (parsed && typeof parsed.d === "string") {
-                parsed = JSON.parse(parsed.d);
-            } else if (parsed && parsed.d && typeof parsed.d === "object" && !parsed.result) {
-                parsed = parsed.d;
-            }
-        } catch (error) {
-            this.logFilterDebug("parseAxListResponsePayload:parseError", {
-                message: error?.message || "Unknown parse error"
-            });
-        }
-        return parsed || {};
-    }
-
-    extractAdsRowsFromAxResponse(parsedResponse) {
-        const dataList = Array.isArray(parsedResponse?.result?.data)
-            ? parsedResponse.result.data
-            : (Array.isArray(parsedResponse?.data) ? parsedResponse.data : []);
-
-        let dsBlock = null;
-        if (Array.isArray(dataList) && dataList.length > 0) {
-            dsBlock = dataList.find(item => item && typeof item === "object") || dataList[0];
-        }
-
-        if (!dsBlock && parsedResponse && typeof parsedResponse === "object") {
-            dsBlock = parsedResponse?.result || parsedResponse;
-        }
-
-        let rows = [];
-        if (Array.isArray(dsBlock?.data)) {
-            rows = dsBlock.data;
-        } else if (Array.isArray(parsedResponse?.data) && (!parsedResponse?.data[0] || !Array.isArray(parsedResponse?.data[0]?.data))) {
-            rows = parsedResponse.data;
-        }
-
-        const columns = Array.isArray(dsBlock?.columns)
-            ? dsBlock.columns
-            : (Array.isArray(parsedResponse?.columns) ? parsedResponse.columns : []);
-
-        return {
-            dsBlock: dsBlock || {},
-            rows: Array.isArray(rows) ? rows.filter(item => item && typeof item === "object") : [],
-            columns: Array.isArray(columns) ? columns : []
-        };
-    }
-
-    getAdsRowValue(row, fieldName) {
-        if (!row || typeof row !== "object" || _entityCommon.inValid(fieldName)) {
-            return null;
-        }
-        if (Object.prototype.hasOwnProperty.call(row, fieldName)) {
-            return row[fieldName];
-        }
-
-        const normalizedField = this.getNormalizedFieldKey(fieldName);
-        const matchedKey = Object.keys(row).find(key => this.getNormalizedFieldKey(key) === normalizedField);
-        return matchedKey ? row[matchedKey] : null;
-    }
-
-    inferAdsFieldType(fieldName, sampleValue, columnDef = {}) {
-        const dataTypeToken = this.normalizeUrlParam(
-            columnDef?.datatype ||
-            columnDef?.fdatatype ||
-            columnDef?.type ||
-            columnDef?.cdatatype ||
-            ""
-        );
-
-        const numericTokens = ["n", "num", "number", "numeric", "decimal", "currency", "amount", "double", "float", "int", "integer", "long", "short"];
-        const dateTokens = ["d", "date", "datetime", "timestamp", "time"];
-
-        if (numericTokens.some(token => dataTypeToken === token || dataTypeToken.indexOf(token) > -1)) {
-            return "n";
-        }
-        if (dateTokens.some(token => dataTypeToken === token || dataTypeToken.indexOf(token) > -1)) {
-            return "d";
-        }
-
-        if (typeof sampleValue === "number" && !isNaN(sampleValue)) {
-            return "n";
-        }
-
-        if (typeof sampleValue === "string") {
-            const trimmedValue = sampleValue.trim();
-            if (!trimmedValue) {
-                return "c";
-            }
-
-            if (this.parseDateString(trimmedValue)) {
-                return "d";
-            }
-
-            if (/^[+-]?\d[\d,]*(\.\d+)?$/.test(trimmedValue)) {
-                return "n";
-            }
-        }
-
-        const normalizedField = this.normalizeUrlParam(fieldName || "");
-        if (normalizedField.includes("date") || normalizedField.endsWith("on")) {
-            return "d";
-        }
-        if (normalizedField.includes("amount") || normalizedField.includes("value") || normalizedField.includes("total") || normalizedField.includes("tax") || normalizedField.includes("qty")) {
-            return "n";
-        }
-
-        return "c";
-    }
-
-    formatAnalyticsFieldCaption(fieldName) {
-        const source = `${fieldName || ""}`.trim();
-        if (!source) {
-            return "";
-        }
-
-        return source
-            .replace(/[_\-]+/g, " ")
-            .replace(/([a-z])([A-Z])/g, "$1 $2")
-            .replace(/\s+/g, " ")
-            .trim()
-            .replace(/\b\w/g, char => char.toUpperCase());
-    }
-
-    sanitizeAxisFieldsAgainstMeta(metaData) {
-        const safeMetaData = Array.isArray(metaData) ? metaData : [];
-        if (!safeMetaData.length) {
-            this.xAxisFields = "All";
-            this.yAxisFields = "All";
-            return;
-        }
-
-        const availableFields = new Set(
-            safeMetaData
-                .map(item => this.normalizeUrlParam(item?.fldname || ""))
-                .filter(Boolean)
-        );
-
-        const sanitizeCsv = (fieldCsv) => {
-            const rawValue = `${fieldCsv || ""}`.trim();
-            if (!rawValue || rawValue.toLowerCase() === "all") {
-                return "All";
-            }
-
-            const validFields = rawValue
-                .split(",")
-                .map(item => item.trim())
-                .filter(item => {
-                    const normalized = this.normalizeUrlParam(item);
-                    return normalized && availableFields.has(normalized);
-                });
-
-            return validFields.length > 0 ? validFields.join(",") : "All";
-        };
-
-        this.xAxisFields = sanitizeCsv(this.xAxisFields);
-        this.yAxisFields = sanitizeCsv(this.yAxisFields);
-    }
-
-    buildAdsMetaData(adsName, columns, rows) {
-        const sourceRows = Array.isArray(rows) ? rows : [];
-        const metaMap = new Map();
-
-        const addMetaField = (rawFieldName, columnDef = {}) => {
-            const fieldName = `${rawFieldName || ""}`.trim();
-            if (!fieldName) {
-                return;
-            }
-
-            const normalizedField = this.normalizeUrlParam(fieldName);
-            if (!normalizedField || metaMap.has(normalizedField)) {
-                return;
-            }
-
-            const sampleRow = sourceRows.find(row => this.getAdsRowValue(row, fieldName) !== null && this.getAdsRowValue(row, fieldName) !== undefined);
-            const sampleValue = sampleRow ? this.getAdsRowValue(sampleRow, fieldName) : null;
-            const fdatatype = this.inferAdsFieldType(fieldName, sampleValue, columnDef);
-
-            const normalizedRaw = (columnDef?.normalized ?? columnDef?.isnormalized ?? columnDef?.isNormalized ?? columnDef?.is_normalized ?? "");
-            const isNormalized = normalizedRaw === true || `${normalizedRaw || ""}`.toUpperCase() === "T";
-
-            let cdatatype = "DropDown";
-            if (fdatatype === "n") {
-                cdatatype = "Numeric";
-            } else if (fdatatype === "d") {
-                cdatatype = "Date";
-            }
-
-            if (isNormalized) {
-                cdatatype = "DropDown";
-            }
-
-            const fldcap = `${columnDef?.caption || columnDef?.fldcap || this.formatAnalyticsFieldCaption(fieldName)}`.trim();
-            const isNumeric = fdatatype === "n";
-            const isDate = fdatatype === "d";
-
-            metaMap.set(normalizedField, {
-                fldname: fieldName,
-                fldcap: fldcap || fieldName,
-                fdatatype: fdatatype,
-                cdatatype: cdatatype,
-                aggfield: (isNumeric || isDate) ? "T" : "F",
-                grpfield: (fdatatype === "c" || isDate || isNormalized) ? "T" : "F",
-                hide: "F",
-                listingfld: "T",
-                filters: "T",
-                normalized: isNormalized ? "T" : "F",
-                ftransid: adsName,
-                dcname: columnDef?.dcname || "",
-                griddc: columnDef?.griddc || ""
-            });
-        };
-
-        if (Array.isArray(columns) && columns.length > 0) {
-            columns.forEach(column => {
-                const fieldName = column?.key || column?.name || column?.fldname || column?.fieldname || column?.column || column?.colname || "";
-                addMetaField(fieldName, column || {});
-            });
-        }
-
-        if (metaMap.size === 0 && sourceRows.length > 0) {
-            Object.keys(sourceRows[0] || {}).forEach(fieldName => addMetaField(fieldName, {}));
-        } else if (sourceRows.length > 0) {
-            Object.keys(sourceRows[0] || {}).forEach(fieldName => addMetaField(fieldName, {}));
-        }
-
-        return Array.from(metaMap.values());
-    }
-
-    normalizeFlagToTF(value, defaultValue = "F") {
-        if (value === true) {
-            return "T";
-        }
-        if (value === false) {
-            return "F";
-        }
-        const normalizedValue = `${value || ""}`.trim().toUpperCase();
-        if (normalizedValue === "T" || normalizedValue === "TRUE" || normalizedValue === "1" || normalizedValue === "Y" || normalizedValue === "YES") {
-            return "T";
-        }
-        if (normalizedValue === "F" || normalizedValue === "FALSE" || normalizedValue === "0" || normalizedValue === "N" || normalizedValue === "NO") {
-            return "F";
-        }
-        return defaultValue;
-    }
-
-    normalizeAdsMetaRows(metaRows, adsName) {
-        if (!Array.isArray(metaRows) || metaRows.length === 0) {
-            return [];
-        }
-
-        const fieldMetaMap = new Map();
-        const knownRow = metaRows.find(item => item && typeof item === "object") || {};
-
-        metaRows.forEach((row) => {
-            if (!row || typeof row !== "object") {
-                return;
-            }
-
-            const fieldName = `${row.fldname || row.fieldname || row.name || row.column || row.colname || row.srcfield || ""}`.trim();
-            if (!fieldName) {
-                return;
-            }
-
-            const normalizedField = this.normalizeUrlParam(fieldName);
-            if (!normalizedField || fieldMetaMap.has(normalizedField)) {
-                return;
-            }
-
-            const fdatatype = this.inferAdsFieldType(
-                fieldName,
-                this.getAdsRowValue(knownRow, fieldName),
-                row
-            );
-
-            const normalizedToken = this.normalizeFlagToTF(
-                row.normalized ?? row.isnormalized ?? row.isNormalized ?? row.is_normalized,
-                "F"
-            );
-            const isNormalized = normalizedToken === "T";
-
-            const cdatatypeRaw = `${row.cdatatype || row.column_type || row.columntype || row.controltype || ""}`.trim();
-            let cdatatype = cdatatypeRaw || (fdatatype === "n" ? "Numeric" : (fdatatype === "d" ? "Date" : "DropDown"));
-            if (/^dropdown$/i.test(cdatatype) || /^drop[\s_-]*down$/i.test(cdatatype) || /^select$/i.test(cdatatype)) {
-                cdatatype = "DropDown";
-            }
-            if (isNormalized) {
-                cdatatype = "DropDown";
-            }
-
-            const defaultAggField = (fdatatype === "n" || fdatatype === "d") ? "T" : "F";
-            const defaultGrpField = (isNormalized || fdatatype === "c" || fdatatype === "d") ? "T" : "F";
-
-            fieldMetaMap.set(normalizedField, {
-                fldname: fieldName,
-                fldcap: `${row.fldcaption || row.fldcap || row.caption || row.displayname || this.formatAnalyticsFieldCaption(fieldName)}`.trim() || fieldName,
-                fdatatype: fdatatype,
-                cdatatype: cdatatype,
-                aggfield: this.normalizeFlagToTF(row.aggfield ?? row.agg_field ?? row.isaggfield, defaultAggField),
-                grpfield: this.normalizeFlagToTF(row.grpfield ?? row.groupfield ?? row.grp_field ?? row.isgrpfield, defaultGrpField),
-                hide: this.normalizeFlagToTF(row.hide ?? row.ishidden ?? row.hidden, "F"),
-                listingfld: this.normalizeFlagToTF(row.listingfld ?? row.islistingfield ?? row.listingfield, "T"),
-                filters: this.normalizeFlagToTF(row.filters ?? row.isfilter ?? row.filterable, "T"),
-                normalized: normalizedToken,
-                dcname: row.dcname || row.dc || "",
-                griddc: row.griddc || row.dcname || "",
-                ftransid: `${row.ftransid || row.transid || adsName || ""}`.trim(),
-                srctable: `${row.srctable || row.src_table || row.sourcetable || ""}`.trim(),
-                srcfld: `${row.srcfld || row.src_fld || row.srcfield || row.sourcefield || ""}`.trim(),
-                psrctxt: `${row.psrctxt || row.psrctext || ""}`.trim()
-            });
-        });
-
-        return Array.from(fieldMetaMap.values());
-    }
-
-    fetchAdsMetadataFromAxList(adsName, options = {}) {
-        const caller = this.getAxListCaller();
-        if (!caller || typeof caller.GetDataFromAxList !== "function") {
-            return Promise.reject(new Error("GetDataFromAxList is not available."));
-        }
-
-        const effectiveAdsName = `${adsName || ""}`.trim();
-        const adsCacheKey = this.normalizeUrlParam(effectiveAdsName);
-        if (!options.forceRefresh && Array.isArray(this.adsMetaDataCache[adsCacheKey]) && this.adsMetaDataCache[adsCacheKey].length > 0) {
-            return Promise.resolve(this.adsMetaDataCache[adsCacheKey]);
-        }
-
-        const requestParams = {
-            adsNames: ["ds_smartlist_ads_metadata"],
-            refreshCache: !!options.forceRefresh,
-            sqlParams: { adsname: effectiveAdsName },
-            props: {
-                ADS: false,
-                CachePermissions: true,
-                getallrecordscount: false,
-                pageno: 1,
-                pagesize: 500,
-                sorting: [],
-                filters: []
-            }
-        };
-
-        return new Promise((resolve, reject) => {
-            const onSuccess = (response) => {
-                try {
-                    const parsedResponse = this.parseAxListResponsePayload(response);
-                    const extracted = this.extractAdsRowsFromAxResponse(parsedResponse);
-                    let metadata = this.normalizeAdsMetaRows(extracted.rows, effectiveAdsName);
-
-                    if ((!Array.isArray(metadata) || metadata.length === 0) && Array.isArray(extracted.columns) && extracted.columns.length > 0) {
-                        metadata = this.buildAdsMetaData(effectiveAdsName, extracted.columns, []);
-                    }
-
-                    if (Array.isArray(metadata) && metadata.length > 0) {
-                        this.adsMetaDataCache[adsCacheKey] = metadata;
-                    }
-
-                    this.logFilterDebug("fetchAdsMetadata:serverResponse", {
-                        adsName: effectiveAdsName,
-                        metaRows: extracted.rows?.length || 0,
-                        metaDataCount: Array.isArray(metadata) ? metadata.length : 0,
-                        sample: Array.isArray(metadata) ? metadata.slice(0, 2) : []
-                    });
-
-                    resolve(Array.isArray(metadata) ? metadata : []);
-                } catch (error) {
-                    reject(error);
-                }
-            };
-
-            const onError = (error) => reject(error || new Error("Unknown error while loading ADS metadata."));
-
-            try {
-                caller.GetDataFromAxList(requestParams, onSuccess, onError);
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    fetchAdsRowsFromAxList(adsName, options = {}) {
-        const caller = this.getAxListCaller();
-        if (!caller || typeof caller.GetDataFromAxList !== "function") {
-            return Promise.reject(new Error("GetDataFromAxList is not available."));
-        }
-
-        const effectiveAdsName = `${adsName || ""}`.trim();
-        const adsCacheKey = this.normalizeUrlParam(effectiveAdsName);
-        const filterPayload = Array.isArray(options.filterPayload) ? options.filterPayload : [];
-        const requestedPageSize = Number(options.pageSize);
-        const pageSize = Number.isFinite(requestedPageSize) && requestedPageSize > 0 ? requestedPageSize : 5000;
-        const requestParams = {
-            adsNames: [effectiveAdsName],
-            refreshCache: !!options.forceRefresh,
-            sqlParams: options.sqlParams || {},
-            props: {
-                ADS: false,
-                CachePermissions: true,
-                getallrecordscount: false,
-                pageno: 1,
-                pagesize: pageSize,
-                keyfield: "",
-                keyvalue: "",
-                sorting: [],
-                filters: filterPayload
-            }
-        };
-
-        return new Promise((resolve, reject) => {
-            const onSuccess = (response) => {
-                try {
-                    const parsedResponse = this.parseAxListResponsePayload(response);
-                    const extracted = this.extractAdsRowsFromAxResponse(parsedResponse);
-                    let adsMetaData = Array.isArray(this.adsMetaDataCache[adsCacheKey]) ? this.adsMetaDataCache[adsCacheKey] : [];
-                    if (!adsMetaData.length) {
-                        adsMetaData = this.buildAdsMetaData(effectiveAdsName, extracted.columns, extracted.rows);
-                    }
-                    if (adsMetaData.length > 0) {
-                        this.adsMetaDataCache[adsCacheKey] = adsMetaData;
-                    }
-                    resolve({
-                        rows: extracted.rows,
-                        metaData: adsMetaData,
-                        raw: parsedResponse
-                    });
-                } catch (error) {
-                    reject(error);
-                }
-            };
-
-            const onError = (error) => reject(error || new Error("Unknown error while loading ADS data."));
-
-            try {
-                caller.GetDataFromAxList(requestParams, onSuccess, onError);
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    buildAdsEntityCachePayload(adsName, metaData) {
-        return {
-            result: {
-                message: "success",
-                data: {
-                    TransId: adsName,
-                    EntityName: adsName,
-                    MetaData: Array.isArray(metaData) ? metaData : [],
-                    SelectedEntities: adsName,
-                    SelectedEntitiesList: [{ name: adsName, caption: adsName }],
-                    AllEntitiesList: [],
-                    Properties: {
-                        XAXISFIELDS: this.xAxisFields || "All",
-                        YAXISFIELDS: this.yAxisFields || "All",
-                        CHARTTYPE: "line"
-                    }
-                }
-            }
-        };
-    }
-
-    fetchAdsData(adsName, callback, options = {}) {
-        const effectiveAdsName = `${adsName || ""}`.trim();
-        if (!effectiveAdsName) {
-            if (typeof callback === "function") {
-                callback();
-            }
-            return;
-        }
-
-        const forceRefresh = !!options.forceRefresh;
-        const applyMetaAndContinue = (metaData) => {
-            this.metaData = Array.isArray(metaData) ? metaData : [];
-            this.entityTransId = effectiveAdsName;
-            this.entityName = effectiveAdsName;
-            this.selectedChartType = "line";
-            this.sanitizeAxisFieldsAgainstMeta(this.metaData);
-
-            this.writeAnalyticsEntityCache(effectiveAdsName, this.buildAdsEntityCachePayload(effectiveAdsName, this.metaData));
-
-            this.loadStoredAnalyticsPreferences(effectiveAdsName, () => {
-                this.constructXandYAxis(this.metaData, "Page Load");
-                this.constructSelectedEntityHeader();
-                this.updateChartButton(this.selectedChartType);
-                this.openFieldSelectionOnPageLoad();
-                if (typeof callback === "function") {
-                    callback();
-                }
-            }, { forceRefresh: forceRefresh });
-        };
-
-        if (!forceRefresh) {
-            const cachedEntity = this.readAnalyticsEntityCache(effectiveAdsName);
-            const cachedMeta = cachedEntity?.result?.data?.MetaData;
-            if (Array.isArray(cachedMeta) && cachedMeta.length > 0) {
-                applyMetaAndContinue(cachedMeta);
-                return;
-            }
-        }
-
-        Promise.all([
-            this.fetchAdsMetadataFromAxList(effectiveAdsName, { forceRefresh: forceRefresh }).catch(() => []),
-            this.fetchAdsRowsFromAxList(effectiveAdsName, {
-                forceRefresh: forceRefresh,
-                pageSize: 1,
-                filterPayload: this.getEntityListFilterPayload()
-            }).catch(() => ({ rows: [], metaData: [] }))
-        ]).then(([metaFromMetaAds, rowResponse]) => {
-            const rows = Array.isArray(rowResponse?.rows) ? rowResponse.rows : [];
-            const rowDerivedMeta = Array.isArray(rowResponse?.metaData) ? rowResponse.metaData : [];
-            const resolvedMetaData = Array.isArray(metaFromMetaAds) && metaFromMetaAds.length > 0
-                ? metaFromMetaAds
-                : (rowDerivedMeta.length > 0 ? rowDerivedMeta : this.buildAdsMetaData(effectiveAdsName, [], rows));
-
-            this.logFilterDebug("fetchAdsData:resolvedMetaData", {
-                adsName: effectiveAdsName,
-                metaFromAdsMetaCount: Array.isArray(metaFromMetaAds) ? metaFromMetaAds.length : 0,
-                rowDerivedMetaCount: rowDerivedMeta.length,
-                resolvedMetaCount: resolvedMetaData.length
-            });
-            applyMetaAndContinue(resolvedMetaData);
-        }).catch(error => {
-            console.error("Error loading ADS data for analytics:", error);
-            applyMetaAndContinue([]);
-        });
-    }
-
     fetchEntityListRows(transId, options = {}) {
         const effectiveTransId = transId || this.entityTransId;
         if (_entityCommon.inValid(effectiveTransId)) {
@@ -4630,48 +4024,6 @@ class AnalyticsCharts {
                 filterPayload: this.getEntityListFilterPayload()
             });
 
-            if (this.isAdsMode()) {
-                const requestedPageSize = Number(options.pageSize);
-                const adsPageSize = Number.isFinite(requestedPageSize) && requestedPageSize > 0 ? requestedPageSize : 5000;
-                const adsMetaCacheKey = this.normalizeUrlParam(effectiveTransId);
-                const hasCachedAdsMeta = Array.isArray(this.adsMetaDataCache[adsMetaCacheKey]) && this.adsMetaDataCache[adsMetaCacheKey].length > 0;
-                if (forceRefresh || !hasCachedAdsMeta) {
-                    try {
-                        await this.fetchAdsMetadataFromAxList(effectiveTransId, { forceRefresh: forceRefresh });
-                    } catch (metaError) {
-                        this.logFilterDebug("fetchEntityListRows:adsMetadataError", {
-                            transId: effectiveTransId,
-                            message: metaError?.message || "Unable to load ADS metadata"
-                        });
-                    }
-                }
-
-                const adsResponse = await this.fetchAdsRowsFromAxList(effectiveTransId, {
-                    forceRefresh: forceRefresh,
-                    pageSize: adsPageSize,
-                    filterPayload: this.getEntityListFilterPayload()
-                });
-
-                const adsRows = Array.isArray(adsResponse?.rows) ? adsResponse.rows : [];
-                const adsMetaData = Array.isArray(adsResponse?.metaData) ? adsResponse.metaData : [];
-                if (adsMetaData.length > 0) {
-                    this.metaData = adsMetaData;
-                }
-
-                this.entityListDataCache[cacheKey] = adsRows;
-                this.writeEntityListRowsCache(effectiveTransId, cacheKey, this.entityListDataCache[cacheKey]);
-                this.writeEntityListRowsCacheIndexedDb(effectiveTransId, cacheKey, this.entityListDataCache[cacheKey]);
-                this.logFilterDebug("fetchEntityListRows:serverResponse", {
-                    transId: effectiveTransId,
-                    sourceType: "ads",
-                    requestedFields: requestedFields,
-                    pageSize: adsPageSize,
-                    rows: this.entityListDataCache[cacheKey].length,
-                    sample: this.entityListDataCache[cacheKey].slice(0, 2)
-                });
-                return this.entityListDataCache[cacheKey];
-            }
-
             return await new Promise((resolve, reject) => {
                 $.ajax({
                     url: `${this.getAssetBaseUrl()}/aspx/Entity.aspx/GetEntityListDataWS`,
@@ -4690,20 +4042,30 @@ class AnalyticsCharts {
                     success: (data) => {
                         try {
                             const parsedResponse = typeof data?.d === "string" ? JSON.parse(data.d) : (data?.d || data);
-                            if (!this.isEntityListResponseSuccess(parsedResponse)) {
+                            if (!(parsedResponse?.result?.success)) {
                                 this.entityListDataCache[cacheKey] = [];
                                 resolve([]);
                                 return;
                             }
 
-                            const rows = this.extractEntityListRows(parsedResponse);
+                            const listData = parsedResponse?.result?.data?.ListData;
+                            const fallbackListData = parsedResponse?.result?.list;
+                            const rawJson = Array.isArray(listData) && listData[0]
+                                ? (listData[0].data_json || "[]")
+                                : (Array.isArray(fallbackListData) && fallbackListData[0] ? (fallbackListData[0].data_json || "[]") : "[]");
+                            let rows = [];
+
+                            if (typeof rawJson === "string") {
+                                rows = JSON.parse(rawJson || "[]");
+                            } else if (Array.isArray(rawJson)) {
+                                rows = rawJson;
+                            }
 
                             this.entityListDataCache[cacheKey] = Array.isArray(rows) ? rows : [];
                             this.writeEntityListRowsCache(effectiveTransId, cacheKey, this.entityListDataCache[cacheKey]);
                             this.writeEntityListRowsCacheIndexedDb(effectiveTransId, cacheKey, this.entityListDataCache[cacheKey]);
                             this.logFilterDebug("fetchEntityListRows:serverResponse", {
                                 transId: effectiveTransId,
-                                sourceType: "tstruct",
                                 requestedFields: requestedFields,
                                 rows: this.entityListDataCache[cacheKey].length,
                                 sample: this.entityListDataCache[cacheKey].slice(0, 2)
@@ -4726,132 +4088,8 @@ class AnalyticsCharts {
         });
     }
 
-    isEntityListResponseSuccess(parsedResponse) {
-        if (parsedResponse?.result?.success === true || parsedResponse?.success === true) {
-            return true;
-        }
-
-        const message = `${parsedResponse?.result?.message || parsedResponse?.message || ""}`.trim().toLowerCase();
-        return message === "success";
-    }
-
-    extractEntityListRows(parsedResponse) {
-        const resultNode = parsedResponse?.result || parsedResponse || {};
-        const dataNode = resultNode?.data || {};
-        const candidates = [
-            dataNode?.ListData,
-            dataNode?.listData,
-            resultNode?.list,
-            resultNode?.ListData,
-            dataNode?.rows,
-            resultNode?.rows,
-            dataNode?.data_json,
-            resultNode?.data_json
-        ];
-
-        let rawPayload = null;
-        for (let index = 0; index < candidates.length; index++) {
-            const candidate = candidates[index];
-            if (_entityCommon.inValid(candidate)) {
-                continue;
-            }
-
-            if (Array.isArray(candidate)) {
-                if (!candidate.length) {
-                    rawPayload = [];
-                    break;
-                }
-
-                const firstItem = candidate[0];
-                if (firstItem && typeof firstItem === "object" && Object.prototype.hasOwnProperty.call(firstItem, "data_json")) {
-                    rawPayload = firstItem.data_json;
-                } else {
-                    rawPayload = candidate;
-                }
-                break;
-            }
-
-            rawPayload = candidate;
-            break;
-        }
-
-        return this.normalizeEntityRowsPayload(rawPayload);
-    }
-
-    normalizeEntityRowsPayload(rawPayload) {
-        let payload = rawPayload;
-
-        for (let parseCount = 0; parseCount < 4; parseCount++) {
-            if (typeof payload !== "string") {
-                break;
-            }
-
-            const trimmed = payload.trim();
-            if (!trimmed) {
-                return [];
-            }
-
-            try {
-                payload = JSON.parse(trimmed);
-            } catch (error) {
-                break;
-            }
-        }
-
-        if (Array.isArray(payload)) {
-            return payload.filter(item => item && typeof item === "object");
-        }
-
-        if (!payload || typeof payload !== "object") {
-            return [];
-        }
-
-        if (Object.prototype.hasOwnProperty.call(payload, "data_json")) {
-            return this.normalizeEntityRowsPayload(payload.data_json);
-        }
-
-        if (Array.isArray(payload.rows)) {
-            return payload.rows.filter(item => item && typeof item === "object");
-        }
-
-        if (Array.isArray(payload.list)) {
-            return payload.list.filter(item => item && typeof item === "object");
-        }
-
-        const objectValues = Object.values(payload).filter(item => item && typeof item === "object");
-        if (objectValues.length) {
-            return objectValues;
-        }
-
-        return [];
-    }
-
     getNormalizedFieldKey(fieldName) {
         return `${fieldName || ""}`.replace(/[^a-z0-9]/gi, "").toLowerCase();
-    }
-
-    getPrimitiveFieldValue(value) {
-        if (value === null || value === undefined) {
-            return value;
-        }
-
-        if (typeof value !== "object" || value instanceof Date) {
-            return value;
-        }
-
-        if (Object.prototype.hasOwnProperty.call(value, "value")) {
-            return value.value;
-        }
-
-        if (Object.prototype.hasOwnProperty.call(value, "text")) {
-            return value.text;
-        }
-
-        if (Object.prototype.hasOwnProperty.call(value, "label")) {
-            return value.label;
-        }
-
-        return value;
     }
 
     getRowFieldValue(row, fieldName) {
@@ -4895,28 +4133,17 @@ class AnalyticsCharts {
         for (let index = 0; index < fieldCandidates.length; index++) {
             const currentField = fieldCandidates[index];
             if (Object.prototype.hasOwnProperty.call(row, currentField)) {
-                return this.getPrimitiveFieldValue(row[currentField]);
+                return row[currentField];
             }
 
             const exactKey = Object.keys(row).find(key => this.normalizeUrlParam(key) === this.normalizeUrlParam(currentField));
             if (exactKey) {
-                return this.getPrimitiveFieldValue(row[exactKey]);
+                return row[exactKey];
             }
 
             const normalizedKey = Object.keys(row).find(key => this.getNormalizedFieldKey(key) === this.getNormalizedFieldKey(currentField));
             if (normalizedKey) {
-                return this.getPrimitiveFieldValue(row[normalizedKey]);
-            }
-
-            const normalizedField = this.getNormalizedFieldKey(currentField);
-            if (normalizedField) {
-                const suffixMatchKey = Object.keys(row).find(key => {
-                    const normalizedRowKey = this.getNormalizedFieldKey(key);
-                    return normalizedRowKey.endsWith(normalizedField);
-                });
-                if (suffixMatchKey) {
-                    return this.getPrimitiveFieldValue(row[suffixMatchKey]);
-                }
+                return row[normalizedKey];
             }
         }
 
@@ -5110,10 +4337,9 @@ class AnalyticsCharts {
                 return;
             }
 
-            const displayValueRaw = isDateGroup
+            const displayValue = isDateGroup
                 ? this.formatAnalyticsGroupValue(rowDate, groupField)
                 : this.formatAnalyticsGroupValue(this.getRowFieldValue(row, groupField), groupField);
-            const displayValue = displayValueRaw === "" ? "NA" : displayValueRaw;
 
             if (!groupedData.has(displayValue)) {
                 groupedData.set(displayValue, {
@@ -7322,6 +6548,13 @@ function fetchEntityData(transId, callback, options = {}) {
         _analyticsCharts.xAxisFields = xAxisFields || "All";
         _analyticsCharts.yAxisFields = yAxisFields || "All";
         _analyticsCharts.selectedChartType = "line";
+        if (_analyticsCharts && typeof _analyticsCharts.writeAnalyticsPrefsCache === "function") {
+            _analyticsCharts.writeAnalyticsPrefsCache(transId, {
+                XAXISFIELDS: _analyticsCharts.xAxisFields || "All",
+                YAXISFIELDS: _analyticsCharts.yAxisFields || "All",
+                CHARTTYPE: "line"
+            });
+        }
 
         _analyticsCharts.metaData = pageLoadData.result.data.MetaData;
         _analyticsCharts.entityTransId = pageLoadData.result.data.TransId;
