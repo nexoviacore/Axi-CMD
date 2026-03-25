@@ -2649,15 +2649,14 @@
                     } else if (commandConfig.commandGroup.toLowerCase() === "view") {
                         value = "all";
                     } else value = "run";
-                } else if (param === ":structtype") {
+                } 
+                
+                else if (param === ":structtype") {
                     if (commandConfig.commandGroup.toLowerCase() === "view") {
                         value = "all";
-                    } else if (
-                        commandConfig.commandGroup.toLowerCase() == "open" &&
-                        tokens.length >= 2
-                    ) {
+                    } else if (commandConfig.commandGroup.toLowerCase() == "open" && tokens.length >= 2) {
                         let token = tokens[1].toLowerCase();
-
+ 
                         switch (token) {
                             case "iview":
                                 value = "i";
@@ -2674,7 +2673,11 @@
                             default:
                                 value = "t"; //all
                         }
-                    } else value = iviewBoolCheck ? "i" : "t";
+                    } 
+                    else if (commandConfig.commandGroup.toLowerCase() == "analyse") {
+                        value = 'analyse'
+                    }
+                    else value = iviewBoolCheck ? "i" : "t";
                 }
                 if (value) {
                     if (paramValue === "") {
@@ -5968,19 +5971,29 @@
 
     function handleAnalyse({ tokens, commandConfig }) {
 
-        let targetUrl = "../AxpertPlugins/Axi/HTMLPages/Analytics.html";
-
-        if (tokens.length === 1) {
-            targetUrl += "?calendar=t";
-            targetUrl += "&isDupTab=true-1770626614111";
-            targetUrl += "&hdnbElapsTime=0";
+        if (tokens < 1) {
+            showToast("Error:Invalid Tokens, Analyze command requires atleast 2 tokens"); 
+            console.error("Error:Invalid Tokens, Analyze command requires atleast 2 tokens"); 
+            return; 
         }
 
 
-        else {
+        let targetUrl = "../AxpertPlugins/Axi/HTMLPages/Analytics.html";
+
+        // if (tokens.length === 1) {
+        //     targetUrl += "?calendar=t";
+        //     targetUrl += `&isDupTab=true-${Date.now()}`;
+        //     targetUrl += "&hdnbElapsTime=0";
+        // }
+
+
+        // else {
 
             const captionSelected = cleanString(tokens[1]);
             const transIdAnalyse = tryResolveToken(1, captionSelected, commandConfig);
+            const paramValuesCsv = "tstruct,ads"
+
+            const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), transIdAnalyse, paramValuesCsv, tokens, commandConfig); 
 
             targetUrl += `?entity=${encodeURIComponent(transIdAnalyse)}`;
 
@@ -5995,9 +6008,12 @@
             }
 
             targetUrl += "&calendar=t";
-            targetUrl += "&isDupTab=true-1770626614111";
+            targetUrl += `&type=${type}`
+            // targetUrl += "&isDupTab=true-1770626614111";
+            targetUrl += `&isDupTab=true-${Date.now()}`;
+
             targetUrl += "&hdnbElapsTime=0";
-        }
+        // }
 
         setCommandRoutes(input.value.trim(), targetUrl);
         console.log("Target URL from analyse command : " + targetUrl);
