@@ -1303,7 +1303,7 @@
 
             const filtered = list.filter(col => {
 
-                const rawDisplay = (col.displaydata || col.name).toLowerCase();
+                const rawDisplay = (col?.displaydata || col?.name)?.toLowerCase();
 
 
                 const cleanDisplay = rawDisplay
@@ -2220,6 +2220,11 @@
                         filteredObjects = [goOption];
                         return [goOption];
                     }
+
+                    if (groupKey.toLowerCase() === "view" && tokens.length == 3) {
+                        filteredObjects = [goOption, popOption]
+                        return [goOption, popOption];
+                    }
                     return [];
                 }
                 if (hasValidParams) {
@@ -2265,9 +2270,24 @@
             }
 
 
+            //let resultList = filtered.map(item => {
+            //    if (item.createallowed === 'F') return;
+            //    return item.displaydata || item.caption || item.name || item.fname || item.keyfield
+            //});
+
             let resultList = filtered.map(item => {
-                if (item.createallowed === 'F') return;
-                return item.displaydata || item.caption || item.name || item.fname || item.keyfield
+                let key = groupKey?.toLowerCase();
+
+                if (key === 'create') {
+                    if (item.createallowed === 'F') return;
+                }
+                else if (key === 'view') {
+                    if (item.viewallowed === 'F') return;
+                }
+               
+
+                return item.displaydata || item.caption || item.name || item.fname || item.keyfield;
+
             });
 
             filteredObjects = filtered;
@@ -4866,9 +4886,9 @@
         let paramValue;
        // if (axDatasourceKey.toLowerCase() === "axi_viewlist") {
 
- if (axDatasourceKey.toLowerCase() === "axi_structmetalist") {
-            paramValue = processExtraParams(tokens, commandConfig);
-            axDatasourceKey += "_" + paramValue;
+       if (axDatasourceKey.toLowerCase() === "axi_structmetalist") {
+           paramValue = processExtraParams(tokens, commandConfig);
+           axDatasourceKey += "_" + paramValue.toLowerCase();
         }
 
 
@@ -4918,7 +4938,7 @@
         let paramValue = processExtraParams(tokens, commandConfig);
 
         //const viewList = axDatasourceObj["axi_viewlist".toLowerCase() + "_" + paramValue];
-        const viewList = axDatasourceObj["axi_structmetalist".toLowerCase() + "_" + paramValue];
+        const viewList = axDatasourceObj["axi_structmetalist".toLowerCase() + "_" + paramValue.toLowerCase()];
 
 
 
@@ -6189,7 +6209,7 @@
             }
 
             const filtered = list.filter(col => {
-                const rawDisplay = (col.displaydata || col.name).toLowerCase();
+                const rawDisplay = (col?.displaydata || col?.name)?.toLowerCase();
                 const cleanDisplay = rawDisplay
                     .replace(/\s*\(.*?\)/g, "")
                     .replace(/\s*\[[^\]]+\]\s*$/, "")
@@ -6678,7 +6698,7 @@
             }
 
             const filtered = list.filter(col => {
-                const rawDisplay = (col.displaydata || col.name).toLowerCase();
+                const rawDisplay = (col?.displaydata || col?.name)?.toLowerCase();
                 const cleanDisplay = rawDisplay
                     .replace(/\s*\(.*?\)/g, "")
                     .replace(/\s*\[[^\]]+\]\s*$/, "")
@@ -8017,7 +8037,7 @@
             // extra params
             let struct_paramValue
             if (struct_source.toLowerCase() === "axi_structmetalist")
-              struct_paramValue = processExtraParams(inputTokens, inputCommandConfig);
+                struct_paramValue = processExtraParams(inputTokens, inputCommandConfig);
 
             const struct_sourceKey = (struct_paramValue ? `${struct_source}_${struct_paramValue}` : struct_source).toLowerCase();
 
@@ -8048,7 +8068,7 @@
             //const extraList = axDatasourceObj[extraSourceKey];
 
             //if (extraList.length == 0) {
-                
+
             //}
             //const field = extraList[0];
 
@@ -8135,7 +8155,8 @@
                 .catch(error => {
 
                     //showToast("Your Data is not Submitted,Please Submit it Manually using(Ctrl + Enter)!");
-                    showToast("Save failed.Please retry with Ctrl + Enter.");
+                    // showToast("Save failed.Please retry with Ctrl + Enter.");
+                    showToast("Save failed.Please try again later.");
                     console.log("Error from AxiSaveDataFn :" + error);
                     return [];
 

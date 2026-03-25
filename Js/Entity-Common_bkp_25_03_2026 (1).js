@@ -679,50 +679,17 @@ class EntityCommon {
     loadHyperLink(link,isHyperLink) {
         if (typeof isHyperLink != "undefined" && isHyperLink == "true")
             parent.ShowDimmer(true);
-    //         // Identify if we are inside the multi-tab popup system
-    // const isInsidePopup = typeof window.frameElement.id !== "undefined" && 
-    // window.frameElement.id.toLowerCase() !== "middle1";
-
-    //        if (isInsidePopup) {
-    //        // Use openForm instead of createNewTab to prevent duplicates
-    //        // Use a generic "Loading..." or empty string; openForm will extract the real tname
-    //        parent.PopupManager.openForm("", link);
-    //     } else {
-    //       window.top.LoadIframe(link);
-    // }
-    let _thsiifId = window.frameElement.id;
-   if (typeof _thsiifId !== "undefined" && _thsiifId.toLowerCase().startsWith("axmultiiframe_")) {
-     parent.PopupManager.openForm("", link);
-   } else {
-     window.top.LoadIframe(link);
-  }
+        window.top.LoadIframe(link);
     }
-
-
-   
 
     navigateToUrl(link) {
         window.top.navigateToUrl(link);
     }
 
     replaceSpecialChars(value) {
-        //if (value.indexOf(";bkslh") != -1) {
-        //    value = value.replace(new RegExp(";bkslh", "g"), "\\");
-        //}
-        var index = value.indexOf("/^^dq");
-        while (index != -1) {
-            value = value.replace("/^^dq", '"');
-            index = value.indexOf("/^^dq");
-        }
-        var index = value.indexOf("^^dq");
-        while (index != -1) {
-            value = value.replace("^^dq", '"');
-            index = value.indexOf("^^dq");
-        }
         if (value.indexOf(";bkslh") != -1) {
             value = value.replace(new RegExp(";bkslh", "g"), "\\");
         }
-        value = value.replace(new RegExp("<br>", "g"), "\n");
 
         value = value.replace("T00:00:00", "");
         return value;
