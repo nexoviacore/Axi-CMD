@@ -2276,7 +2276,7 @@
 
                 let dummyTokens = [...tokens];
                 let lastIndex = dummyTokens.length - 1;
-                let lastTokenValue = dummyTokens[lastIndex];
+            
 
                 dummyTokens[lastIndex] = "";
 
@@ -2291,28 +2291,46 @@
             //    return item.displaydata || item.caption || item.name || item.fname || item.keyfield
             //});
 
-            let resultList = filtered.map(item => {
-                let key = groupKey?.toLowerCase();
+            // let resultList = filtered.map(item => {
+            //     let key = groupKey?.toLowerCase();
 
-                if (key === 'create') {
-                    if (item.createallowed === 'F') return;
-                }
-                else if (key === 'view') {
-                    if (item.viewallowed === 'F') return;
-                }
+            //     if (key === 'create') {
+            //         if (item.createallowed === 'F') return;
+            //     }
+            //     else if (key === 'view') {
+            //         if (item.viewallowed === 'F') return;
+            //     }
                
 
-                return item.displaydata || item.caption || item.name || item.fname || item.keyfield;
+            //     return item.displaydata || item.caption || item.name || item.fname || item.keyfield;
 
-            });
+            // });
 
-            filteredObjects = filtered;
+            const validItems = filtered.filter(item => {
+                let key = groupKey?.toLowerCase(); 
+
+                if (key === "create") return item?.createAllowed !== 'F'; 
+                if (key === "view") return item?.viewallowed !== 'F'; 
+                return true; 
+            })
+
+            filteredObjects = validItems;
+
+            let resultList = validItems.map(item => {
+                return (
+                    item.displaydata ||
+                    item.caption || 
+                    item.name || 
+                    item.fname ||
+                    item.keyfield
+                ); 
+            })
 
             if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
-                resultList.unshift(popOption);
-                resultList.unshift(goOption);
-                filteredObjects.unshift(popOption);
-                filteredObjects.unshift(goOption);
+                resultList.unshift(popOption, goOption);
+                // resultList.unshift(goOption);
+                filteredObjects.unshift(popOption, goOption);
+                // filteredObjects.unshift(goOption);
             }
             else if ((groupKey.toLowerCase() === "configure") && tokens.length === 3 && tokens[1] !== "keyfield") {
                 resultList.unshift(goOption);
