@@ -1988,10 +1988,10 @@
 
         }
 
-        if (promptInfo?.error) {
-            showToast(promptInfo.error);
-            return [];
-        }
+        // if (promptInfo?.error) {
+        //     showToast(promptInfo.error);
+        //     return [];
+        // }
 
         if (!promptInfo) {
             updateDynamicHintFromPrompt(null);
@@ -2057,20 +2057,42 @@
             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
 
-             if (staticValues.length > 0 && result.length === 0) {
+            //  if (staticValues.length > 0 && result.length === 0 && partialTyped.length > 0) {
 
-                console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
-                showToast("Please select a valid option from the list.");
+            //     console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
+            //     showToast("Please select a valid option from the list.");
 
-                let dummyTokens = [...tokens];
-                let lastIndex = dummyTokens.length - 1;
-                let lastTokenValue = dummyTokens[lastIndex];
+            //     let dummyTokens = [...tokens];
+            //     let lastIndex = dummyTokens.length - 1;
+            //     let lastTokenValue = dummyTokens[lastIndex];
 
-                dummyTokens[lastIndex] = "";
+            //     dummyTokens[lastIndex] = "";
 
-                input.value = dummyTokens.join(" ");
+            //     input.value = dummyTokens.join(" ");
 
-                result = [...staticValues];
+            //     result = [...staticValues];
+            // }
+
+            if (staticValues.length > 0 && result.length === 0 && partialTyped.length > 0) {
+                const currentInput = inputText; 
+
+                
+                clearTimeout(window._staticValidationTimer); 
+
+                window._staticValidationTimer = setTimeout(() => {
+                    if (input.value !== currentInput) return; 
+
+                    const latestTokens = getTokens(input.value); 
+                    const latestPartial = cleanString(latestTokens[latestTokens.length -1 ] || ""); 
+                    const isValid = staticValues.some(val => val.toLowerCase() === latestPartial.toLowerCase()); 
+
+                    if (!isValid) {
+                        showToast("Please select a valid option from the list.", 2000, false); 
+                        let dummyTokens = [...tokens]; 
+                        dummyTokens[dummyTokens.length -1] = ""; 
+                        input.value = dummyTokens.join(" "); 
+                    }
+                }, 400); 
             }
 
             if (groupKey.toLowerCase() === "create" && tokens.length === 3) {
@@ -3128,6 +3150,14 @@
 
         // Get Real Value logic
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
+
+        if (foundObj && isViewCommand) {
+            if (!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) {
+                showToast("Redirection link is not available for this page."); 
+                console.error("No Redirection link!"); 
+                return; 
+            }
+        }
 
 
         realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;

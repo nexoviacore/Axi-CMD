@@ -1,4 +1,4 @@
-
+debugger;
 
 window._smartviewFullData = null;
 // SmartView table is dynamic (filters add/remove columns, infinite scroll appends rows).
@@ -195,7 +195,7 @@ window._entityCommon.getDatesBasedonSelection = window._entityCommon.getDatesBas
 };
 window._entityCommon.getDatesBasedonSelectionForBetweenFilter = window._entityCommon.getDatesBasedonSelectionForBetweenFilter || function (selectionvalue) {
   const fromToObj = { from: "", to: "" };
-  const fmt = "DD/MM/YYYY";
+  const fmt = "DD-MMM-YYYY";
   const dateObj = new Date();
 
   switch (selectionvalue) {
@@ -359,17 +359,7 @@ function getAdsList() {
     };
     
     // Use parent.GetDataFromAxList if available, otherwise window
-   // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : window;
-   const scopes = [parent, window, window.top];
-
-   const caller = scopes.find(
-       w => w && typeof w.GetDataFromAxList === 'function'
-   );
-   
-   if (!caller) {
-       cb && cb(new Error('GetDataFromAxList not available'), []);
-       return;
-   }
+    const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : window;
     
     caller.GetDataFromAxList(
       params,
@@ -593,6 +583,10 @@ function applySelectedAds() {
     if (!prevAds || prevAds.toLowerCase() !== selectedAdsName.toLowerCase()) {
       ctrl.lastAdsMeta = null;
       ctrl._adsMetaFor = null;
+      // Reset projection/grouping when ADS changes.
+      ctrl.select_columns = [];
+      ctrl.groupby_columns = [];
+      ctrl.aggregations = {};
     }
 
     ctrl.resetPaging();
@@ -1945,18 +1939,61 @@ function createHiddenTableFromMetadata() {
   container.innerHTML = tableHtml;
 }
 
+function exportHiddenTableToWord(fileNameBase) {
+  try {
+    const table = document.getElementById('hiddenTable');
+    if (!table) return false;
+
+    const docHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(fileNameBase || 'export')}</title>
+</head>
+<body>
+${table.outerHTML}
+</body>
+</html>`;
+
+    const blob = new Blob(['\ufeff', docHtml], { type: 'application/msword;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${fileNameBase || 'export'}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => {
+      try { URL.revokeObjectURL(url); } catch (e) {}
+    }, 500);
+    return true;
+  } catch (e) {
+    console.error('exportHiddenTableToWord failed', e);
+    return false;
+  }
+}
+
 function handleExport(action, tableSelector) {
   // action: 'pdf'|'excel'|'word'|'print' (data-target value from menu)
   action = (action || '').toString().toUpperCase();
 
   try {
     createHiddenTableFromMetadata();
+    const fileNameBase = (_entity && (_entity.adsName || _entity.entityName))
+      ? String(_entity.adsName || _entity.entityName).replace(/\s+/g, '_')
+      : 'export';
+
+    // Word export is custom (DataTables Buttons has no native "word" button).
+    if (action === 'WORD' || action === 'DOC' || action === 'DOCX') {
+      const ok = exportHiddenTableToWord(fileNameBase);
+      if (!ok) throw new Error('Word export failed');
+      return;
+    }
 
     if ($.fn.dataTable && $.fn.dataTable.isDataTable('#hiddenTable')) {
       $('#hiddenTable').DataTable().destroy();
     }
 
-    const fileNameBase = (_entity && _entity.entityName) ? _entity.entityName.replace(/\s+/g, '_') : 'export';
     const hidden = $('#hiddenTable').DataTable({
       dom: 'Bfrtip',
       paging: false,
@@ -2039,19 +2076,18 @@ function smartviewBuildGroupFiltersForRow(meta, groupFields, rowData) {
     } else if (dt === 'NUMERIC') {
       filters.push({ fldname: fld, datatype: 'NUMERIC', from: val, to: val });
     } else if (dt === 'DATE' || dt === 'TIMESTAMP') {
-      // Normalize date/timestamp to DD/MM/YYYY (and add time for TIMESTAMP) to match backend expectations.
+      // Normalize date/timestamp to DD-MMM-YYYY (and add time for TIMESTAMP) to match backend expectations.
       let fromVal = val;
       let toVal = val;
       try {
-        let m = moment(val, ['DD/MM/YYYY', 'YYYY-MM-DD', 'YYYY-MM-DDTHH:mm:ss', 'MM/DD/YYYY', 'DD-MMM-YYYY'], true);
-        if (!m.isValid()) m = moment(val);
+        const m = moment(val, ['YYYY-MM-DD', 'YYYY-MM-DDTHH:mm:ss', 'DD/MM/YYYY', 'MM/DD/YYYY', 'DD-MMM-YYYY'], true);
         if (m.isValid()) {
           if (dt === 'TIMESTAMP') {
-            fromVal = m.format('DD/MM/YYYY 00:00:00');
-            toVal = m.format('DD/MM/YYYY 23:59:59');
+            fromVal = m.format('DD-MMM-YYYY 00:00:00');
+            toVal = m.format('DD-MMM-YYYY 23:59:59');
           } else {
-            fromVal = m.format('DD/MM/YYYY');
-            toVal = m.format('DD/MM/YYYY');
+            fromVal = m.format('DD-MMM-YYYY');
+            toVal = m.format('DD-MMM-YYYY');
           }
         }
       } catch (e) {}
@@ -2120,8 +2156,8 @@ function smartviewRenderGroupDetailTable(rows, meta) {
 
 function smartviewFetchGroupDetailRows(ctrl, groupFilters, cb) {
   try {
-    const baseFilters = smartviewNormalizeFilterDates(stripSmartviewFilterTransId(ctrl.filters || []));
-    const filters = smartviewNormalizeFilterDates(baseFilters.concat(groupFilters || []));
+    const baseFilters = stripSmartviewFilterTransId(ctrl.filters || []);
+    const filters = baseFilters.concat(groupFilters || []);
     const params = {
       adsNames: [ctrl.adsName],
       refreshCache: false,
@@ -2138,23 +2174,16 @@ function smartviewFetchGroupDetailRows(ctrl, groupFilters, cb) {
         filters: filters
       }
     };
-    params.props.axClient_dateformat = ctrl.axClient_dateformat || 'dd/mm/yyyy';
+    if (ctrl.axClient_dateformat) params.props.axClient_dateformat = ctrl.axClient_dateformat;
 
-    // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-    //   : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-    //   : null;
-    // if (!caller || typeof caller.GetDataFromAxList !== 'function') {
-    //   cb && cb(new Error('GetDataFromAxList not available'), []);
-    //   return;
-    // }
-    const scopes = [parent, window, window.top];
+    const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+      : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+      : null;
+    if (!caller || typeof caller.GetDataFromAxList !== 'function') {
+      cb && cb(new Error('GetDataFromAxList not available'), []);
+      return;
+    }
 
-    const caller = scopes.find(
-        w => w && typeof w.GetDataFromAxList === 'function'
-    );
-    
-   
-    
     caller.GetDataFromAxList(params, function (response) {
       try {
         const parsed = (typeof safeParseAxResponse === 'function')
@@ -2231,60 +2260,6 @@ function stripSmartviewFilterTransId(filters) {
     // Normalize fldname (avoid "filter_" prefix leaks).
     if (o.fldname !== undefined && o.fldname !== null) {
       o.fldname = String(o.fldname).replace(/^filter_/, '').trim();
-    }
-
-    return o;
-  });
-}
-
-function smartviewToDdMmYyyy(value, includeTime) {
-  if (value === null || value === undefined) return '';
-  const raw = (typeof smartviewCleanIncomingValue === 'function')
-    ? smartviewCleanIncomingValue(value)
-    : String(value).trim();
-  if (!raw) return '';
-
-  try {
-    const formats = [
-      'DD/MM/YYYY',
-      'DD/MM/YYYY HH:mm:ss',
-      'DD/MM/YYYY HH:mm',
-      'YYYY-MM-DD',
-      'YYYY-MM-DD HH:mm:ss',
-      'YYYY-MM-DDTHH:mm:ss',
-      'YYYY-MM-DDTHH:mm:ss.SSS',
-      'MM/DD/YYYY',
-      'DD-MMM-YYYY'
-    ];
-    if (typeof advFilterDtCulture !== 'undefined' && advFilterDtCulture) formats.push(advFilterDtCulture);
-    let m = moment(raw, formats, true);
-    if (!m.isValid()) m = moment(raw);
-    if (!m.isValid()) return raw;
-    const hasTimePart = /(?:\s|T)\d{1,2}:\d{2}/.test(raw);
-    if (includeTime && hasTimePart) return m.format('DD/MM/YYYY HH:mm:ss');
-    return m.format('DD/MM/YYYY');
-  } catch (e) {
-    return raw;
-  }
-}
-
-function smartviewNormalizeFilterDates(filters) {
-  if (!Array.isArray(filters)) return [];
-  return filters.map(f => {
-    if (!f || typeof f !== 'object') return f;
-    const o = Object.assign({}, f);
-    const dt = (o.datatype || o.fdatatype || '').toString().toUpperCase();
-    if (dt !== 'DATE' && dt !== 'TIMESTAMP') return o;
-
-    const keepTime = (dt === 'TIMESTAMP');
-    if (o.from !== undefined) o.from = smartviewToDdMmYyyy(o.from, keepTime);
-    if (o.to !== undefined) o.to = smartviewToDdMmYyyy(o.to, keepTime);
-
-    // Single-value date filters: map value -> from/to for backend consistency.
-    if ((!o.from || !o.to) && o.value !== undefined && o.value !== null && String(o.value).trim() !== '') {
-      const normalized = smartviewToDdMmYyyy(o.value, keepTime);
-      if (!o.from) o.from = normalized;
-      if (!o.to) o.to = normalized;
     }
 
     return o;
@@ -2764,43 +2739,11 @@ function smartviewInferFilterDatatype(rawItem, meta) {
 function smartviewOperatorToTextCondition(op) {
   const o = (op === null || op === undefined) ? '' : String(op).trim().toUpperCase();
   if (!o) return 'CONTAINS';
-  if (o === '=' || o === '==' || o === 'EQUAL' || o === 'EQUALS' || o === 'EQ') return 'EQUALS';
-  if (o === 'STARTSWITH' || o === 'STARTS WITH' || o === 'STARTS_WITH' || o === '^') return 'STARTSWITH';
-  if (o === 'ENDSWITH' || o === 'ENDS WITH' || o === 'ENDS_WITH' || o === '$') return 'ENDSWITH';
+  if (o === '=' || o === '==' || o === 'EQUALS') return 'EQUALS';
+  if (o === 'STARTSWITH' || o === 'STARTS WITH' || o === '^') return 'STARTSWITH';
+  if (o === 'ENDSWITH' || o === 'ENDS WITH' || o === '$') return 'ENDSWITH';
   if (o === 'CONTAINS' || o === 'LIKE' || o === '*' || o === 'INCLUDES') return 'CONTAINS';
   return 'CONTAINS';
-}
-
-function smartviewResolveTextOperatorAndValue(rawOp, rawVal) {
-  let value = smartviewCleanIncomingValue(rawVal);
-  if (!value) return { condition: '', value: '' };
-
-  // New ADS filter shorthand:
-  //   Value%  -> STARTSWITH
-  //   %Value  -> ENDSWITH
-  //   %Value% -> CONTAINS
-  let conditionFromValue = '';
-  const startsWithPercent = value.startsWith('%');
-  const endsWithPercent = value.endsWith('%');
-  if (value.length > 1 && (startsWithPercent || endsWithPercent)) {
-    if (startsWithPercent && endsWithPercent && value.length > 2) {
-      value = value.slice(1, -1).trim();
-      conditionFromValue = 'CONTAINS';
-    } else if (startsWithPercent) {
-      value = value.slice(1).trim();
-      conditionFromValue = 'ENDSWITH';
-    } else if (endsWithPercent) {
-      value = value.slice(0, -1).trim();
-      conditionFromValue = 'STARTSWITH';
-    }
-  }
-
-  if (!value) return { condition: '', value: '' };
-  const conditionFromOp = smartviewOperatorToTextCondition(rawOp);
-  return {
-    condition: conditionFromValue || conditionFromOp || 'CONTAINS',
-    value: value
-  };
 }
 
 function smartviewMapExternalFiltersToEntityFilters(rawFilters, metaData) {
@@ -2831,8 +2774,8 @@ function smartviewMapExternalFiltersToEntityFilters(rawFilters, metaData) {
     if (dt === 'DATE') {
       const fromRaw = (item.from !== undefined) ? item.from : '';
       const toRaw = (item.to !== undefined) ? item.to : '';
-      const from = smartviewToDdMmYyyy(fromRaw || rawVal);
-      const to = smartviewToDdMmYyyy(toRaw || rawVal);
+      const from = smartviewCleanIncomingValue(fromRaw || rawVal);
+      const to = smartviewCleanIncomingValue(toRaw || rawVal);
       if (!from && !to) return null;
       return { fldname: fldname, datatype: 'DATE', from: from || '', to: to || '', condition: item.condition || 'customOption' };
     }
@@ -2848,15 +2791,16 @@ function smartviewMapExternalFiltersToEntityFilters(rawFilters, metaData) {
       if (!v) return null;
       if (op === '<' || op === '<=') return { fldname: fldname, datatype: 'NUMERIC', from: '0', to: v };
       if (op === '>' || op === '>=') return { fldname: fldname, datatype: 'NUMERIC', from: v, to: '999999999' };
-      if (op === '=' || op === '==' || /^equal(s)?$/i.test(op)) return { fldname: fldname, datatype: 'NUMERIC', from: v, to: v };
+      if (op === '=' || op === '==') return { fldname: fldname, datatype: 'NUMERIC', from: v, to: v };
       // default: treat as "from"
       return { fldname: fldname, datatype: 'NUMERIC', from: v, to: '999999999' };
     }
 
     // TEXT
-    const textFilter = smartviewResolveTextOperatorAndValue(rawOp, rawVal);
-    if (!textFilter.value) return null;
-    return { fldname: fldname, datatype: 'TEXT', value: textFilter.value, condition: textFilter.condition };
+    const value = smartviewCleanIncomingValue(rawVal);
+    if (!value) return null;
+    const condition = smartviewOperatorToTextCondition(rawOp);
+    return { fldname: fldname, datatype: 'TEXT', value: value, condition: condition };
   }).filter(Boolean);
 }
 
@@ -2886,7 +2830,7 @@ function ensureSmartviewEntityFilterPatched() {
     // Minimal patch: ensure pills apply filters to SmartView controller (without requiring openFilters() first).
     window._entityFilter.applyFilters = function () {
       try {
-        const filters = smartviewNormalizeFilterDates(stripSmartviewFilterTransId(this.activeFilterArray || []));
+        const filters = stripSmartviewFilterTransId(this.activeFilterArray || []);
         const ctrl = window.smartTableController || window._smartviewController || window._smartviewTableController || null;
         if (!ctrl) return;
         ctrl.filters = filters;
@@ -2899,6 +2843,54 @@ function ensureSmartviewEntityFilterPatched() {
         console.error('smartview entityFilter.applyFilters patch error', e);
       }
     };
+
+    // Keep "remove one pill" behavior stable even before openFilters() is used.
+    if (typeof window._entityFilter.removeFilter === 'function' && !window._entityFilter._smartviewRemoveFilterPatched) {
+      window._entityFilter.removeFilter = function (key) {
+        try {
+          if (!key) return;
+          this.filterObj = this.filterObj || {};
+          if (this.filterObj[key]) delete this.filterObj[key];
+          try { if (typeof this.createFilterPills === 'function') this.createFilterPills(); } catch (e) {}
+
+          const remainingKeys = Object.keys(this.filterObj || {});
+          if (remainingKeys.length > 0) {
+            const nextKey = remainingKeys[0];
+            const next = this.filterObj[nextKey] || {};
+            this.activeFilterId = nextKey;
+            this.activeFilterName = next.caption || '';
+            this.activeFilterArray = Array.isArray(next.filter) ? next.filter : [];
+          } else {
+            this.activeFilterId = '';
+            this.activeFilterName = '';
+            this.activeFilterArray = [];
+          }
+
+          if (typeof this.applyFilters === 'function') this.applyFilters();
+
+          // Persist only saved filters (product parity).
+          try {
+            const savedObj = {};
+            remainingKeys.forEach(k => {
+              const itm = this.filterObj[k];
+              if (itm && itm.save === true) savedObj[k] = itm;
+            });
+            if (typeof _entityCommon !== 'undefined' && _entityCommon && typeof _entityCommon.setAnalyticsDataWS === 'function') {
+              const data = {
+                page: this.pageName,
+                transId: this.entityTransId,
+                properties: { FILTERS: JSON.stringify(savedObj) },
+                allUsers: false
+              };
+              _entityCommon.setAnalyticsDataWS(data, () => {}, () => {});
+            }
+          } catch (e) {}
+        } catch (e) {
+          console.error('smartview entityFilter.removeFilter patch error', e);
+        }
+      };
+      window._entityFilter._smartviewRemoveFilterPatched = true;
+    }
 
     window._entityFilter._smartviewPatchedForPills = true;
     return true;
@@ -2966,6 +2958,10 @@ function startSmartTableFromAdsName(adsName) {
     if (!prevAds || prevAds.toLowerCase() !== adsName.toLowerCase()) {
       ctrl.lastAdsMeta = null;
       ctrl._adsMetaFor = null;
+      // Reset projection/grouping when ADS changes.
+      ctrl.select_columns = [];
+      ctrl.groupby_columns = [];
+      ctrl.aggregations = {};
     }
 
     ctrl.resetPaging();
@@ -3229,16 +3225,10 @@ function openFilters() {
                             props: { ADS: true, CachePermissions: true, getallrecordscount: false, pageno: 1, pagesize: 0 }
                           };
 
-                          // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-                          //   : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-                          //   : null;
-                          const scopes = [parent, window, window.top];
+                          const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+                            : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+                            : null;
 
-                          const caller = scopes.find(
-                              w => w && typeof w.GetDataFromAxList === 'function'
-                          );
-                          
-                         
                           if (!caller || typeof caller.GetDataFromAxList !== 'function') {
                             failure && failure(new Error('GetDataFromAxList not available for ds_smartlist_filters'));
                             return;
@@ -3363,6 +3353,64 @@ function openFilters() {
         window._entityFilter._smartviewCreatePillsPatched = true;
       }
 
+      // Patch EntityFilter.removeFilter:
+      // Product implementation clears all active filters when no "saved" filters exist.
+      // In SmartView most pills are unsaved, so deleting one pill should keep remaining pills applied.
+      if (window._entityFilter && typeof window._entityFilter.removeFilter === 'function' && !window._entityFilter._smartviewRemoveFilterPatched) {
+        window._entityFilter.removeFilter = function (key) {
+          try {
+            if (!key) return;
+
+            this.filterObj = this.filterObj || {};
+            if (this.filterObj[key]) delete this.filterObj[key];
+
+            // Rebuild pills first so UI stays in sync.
+            try { if (typeof this.createFilterPills === 'function') this.createFilterPills(); } catch (e) {}
+
+            const remainingKeys = Object.keys(this.filterObj || {});
+            if (remainingKeys.length > 0) {
+              const nextKey = remainingKeys[0];
+              const next = this.filterObj[nextKey] || {};
+              this.activeFilterId = nextKey;
+              this.activeFilterName = next.caption || '';
+              this.activeFilterArray = Array.isArray(next.filter) ? next.filter : [];
+            } else {
+              this.activeFilterId = '';
+              this.activeFilterName = '';
+              this.activeFilterArray = [];
+            }
+
+            // Re-apply with remaining filters (or clear all when none remain).
+            try {
+              if (typeof this.applyFilters === 'function') this.applyFilters();
+            } catch (e) {
+              console.error('SmartView removeFilter apply error', e);
+            }
+
+            // Keep server-side saved-filters persistence behavior.
+            try {
+              const savedObj = {};
+              remainingKeys.forEach(k => {
+                const itm = this.filterObj[k];
+                if (itm && itm.save === true) savedObj[k] = itm;
+              });
+              if (typeof _entityCommon !== 'undefined' && _entityCommon && typeof _entityCommon.setAnalyticsDataWS === 'function') {
+                const data = {
+                  page: this.pageName,
+                  transId: this.entityTransId,
+                  properties: { FILTERS: JSON.stringify(savedObj) },
+                  allUsers: false
+                };
+                _entityCommon.setAnalyticsDataWS(data, () => {}, () => {});
+              }
+            } catch (e) {}
+          } catch (err) {
+            console.error('SmartView patched removeFilter failed', err);
+          }
+        };
+        window._entityFilter._smartviewRemoveFilterPatched = true;
+      }
+
       // Patch EntityFilter.readFilterInput/updateFilterLayout for field IDs that contain special characters
       // like "." (CSS selectors break, but getElementById works).
       if (window._entityFilter && !window._entityFilter._smartviewIdSafePatched) {
@@ -3397,19 +3445,19 @@ function openFilters() {
 
                   tempObj = { fldname: fldId, datatype: fldType, from: "", to: "" };
 
-                  const toDdMmYyyy = function (v) {
+                  const toDdMmm = function (v) {
                     if (!v) return "";
                     const m = moment(v, ['YYYY-MM-DD', advFilterDtCulture, 'MM/DD/YYYY', 'DD/MM/YYYY', 'DD-MMM-YYYY'], true);
                     if (!m.isValid()) return "";
-                    return m.format("DD/MM/YYYY");
+                    return m.format("DD-MMM-YYYY");
                   };
 
                   if (fromDate && fromDate.value !== "") {
-                    const dd = toDdMmYyyy(fromDate.value);
+                    const dd = toDdMmm(fromDate.value);
                     if (dd) tempObj["from"] = dd;
                   }
                   if (toDate && toDate.value !== "") {
-                    const dd = toDdMmYyyy(toDate.value);
+                    const dd = toDdMmm(toDate.value);
                     if (dd) tempObj["to"] = dd;
                   }
 
@@ -3504,7 +3552,7 @@ function openFilters() {
                     const setDateVal = function (el, raw) {
                       if (!el) return;
                       if (!raw) { el.value = ""; return; }
-                      const m = moment(raw, ['DD/MM/YYYY', 'DD-MMM-YYYY', 'YYYY-MM-DD', advFilterDtCulture, 'MM/DD/YYYY'], true);
+                      const m = moment(raw, ['DD-MMM-YYYY', 'YYYY-MM-DD', advFilterDtCulture, 'MM/DD/YYYY', 'DD/MM/YYYY'], true);
                       if (!m.isValid()) { el.value = ""; return; }
                       if ((el.type || '').toLowerCase() === 'date') el.value = m.format('YYYY-MM-DD');
                       else el.value = m.format(advFilterDtCulture);
@@ -3681,7 +3729,7 @@ if (window._entityFilter && typeof window._entityFilter.handleApply === 'functio
     // MAIN OVERRIDE: set applyFilters on the EntityFilter instance
     window._entityFilter.applyFilters = function () {
       try {
-        const filters = smartviewNormalizeFilterDates(stripSmartviewFilterTransId(Array.isArray(this.activeFilterArray) ? this.activeFilterArray : []));
+        const filters = stripSmartviewFilterTransId(Array.isArray(this.activeFilterArray) ? this.activeFilterArray : []);
         console.debug('EntityFilter.applyFilters ->', filters);
 
         // find controller (support several possible names)
@@ -3739,16 +3787,11 @@ if (window._entityFilter && typeof window._entityFilter.handleApply === 'functio
           try {
             const params = (typeof buildParams === 'function') ? buildParams(1) : { adsNames: [window._entity && window._entity.adsName], props: { ADS: true }, sqlParams: {} };
             params.props = params.props || {};
-            params.props.filters = smartviewNormalizeFilterDates(filters);
+            params.props.filters = filters;
             // do not send FILTERS / flattened sqlParams; backend expects props.filters JSON
             params.sqlParams = Object.assign({}, params.sqlParams || {});
 
-            const scopes = [parent, window, window.top];
-
-            const caller = scopes.find(
-                w => w && typeof w.GetDataFromAxList === 'function'
-            );
-                    
+            const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window : null;
             if (caller && typeof caller.GetDataFromAxList === 'function') {
               console.debug('EntityFilter fallback calling GetDataFromAxList with params ->', params);
               caller.GetDataFromAxList(params, function (resp) {
@@ -3855,6 +3898,381 @@ if (window._entityFilter && typeof window._entityFilter.handleApply === 'functio
     console.error('openFilters unexpected error', ex);
   }
 }
+
+/* --------------------------
+   SmartView Select Fields (Utilities)
+   -------------------------- */
+
+window._smartviewFieldSelectionState = window._smartviewFieldSelectionState || {
+  fields: []
+};
+
+function getSmartviewControllerInstance() {
+  return window.smartTableController || window._smartviewController || window._smartviewTableController || null;
+}
+
+function fieldsModelClose() {
+  try {
+    const modalEl = document.getElementById('fieldsModal');
+    if (!modalEl) return;
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      const instance = bootstrap.Modal.getInstance(modalEl);
+      if (instance) instance.hide();
+      else modalEl.classList.remove('show');
+    } else if (window.jQuery && typeof $('#fieldsModal').modal === 'function') {
+      $('#fieldsModal').modal('hide');
+    } else {
+      modalEl.style.display = 'none';
+      modalEl.classList.remove('show');
+    }
+  } catch (e) {}
+}
+
+function smartviewGetSelectableFieldsFromMeta(meta) {
+  const arr = Array.isArray(meta) ? meta : [];
+  const seen = new Set();
+  const out = [];
+  const skipFields = new Set(['transid', 'modifiedby', 'modifiedon', 'createdby', 'createdon', 'username', 'axpeg_nextlevel']);
+
+  arr.forEach(m => {
+    const fldname = (m && m.fldname !== undefined && m.fldname !== null) ? String(m.fldname).trim() : '';
+    if (!fldname) return;
+
+    const key = fldname.toLowerCase();
+    if (!key || seen.has(key)) return;
+    if (skipFields.has(key)) return;
+    if (String(m.hide || '').toUpperCase() === 'T') return;
+    if (String(m.griddc || '').toUpperCase() === 'T') return;
+    if (String(m.cdatatype || '').toUpperCase() === 'IMAGE') return;
+    if (m.listingfld !== undefined && m.listingfld !== null && String(m.listingfld).toUpperCase() === 'F') return;
+
+    const dcname = String(m.dcname || 'dc1').trim() || 'dc1';
+    const dccaption = String(m.dccaption || m.dcname || dcname).trim() || dcname;
+
+    seen.add(key);
+    out.push({
+      fldname: fldname,
+      fldcap: (m.fldcap || m.fldcaption || m.caption || formatFieldName(fldname) || fldname).toString(),
+      dcname: dcname,
+      dccaption: dccaption
+    });
+  });
+
+  // Keep dc1 fields first, then by dc and caption to match product behavior.
+  out.sort((a, b) => {
+    const ad = String(a.dcname || '').toLowerCase();
+    const bd = String(b.dcname || '').toLowerCase();
+    if (ad === 'dc1' && bd !== 'dc1') return -1;
+    if (ad !== 'dc1' && bd === 'dc1') return 1;
+    if (ad !== bd) return ad.localeCompare(bd);
+    return String(a.fldcap || a.fldname || '').localeCompare(String(b.fldcap || b.fldname || ''));
+  });
+
+  return out;
+}
+
+function smartviewGetCurrentSelectedFieldSet(ctrl, fieldsArr) {
+  const set = new Set();
+  const selectedCols = (ctrl && Array.isArray(ctrl.select_columns)) ? ctrl.select_columns : [];
+  selectedCols.forEach(sc => {
+    if (smartviewIsAggregationExpr(sc)) return;
+    const fld = smartviewSelectExprToFieldName(sc);
+    if (!fld) return;
+    set.add(String(fld).toLowerCase());
+  });
+
+  // If no explicit selection yet, default to "all available fields selected".
+  if (!set.size) {
+    (fieldsArr || []).forEach(f => {
+      const k = String(f.fldname || '').toLowerCase();
+      if (k) set.add(k);
+    });
+  }
+  return set;
+}
+
+function smartviewBuildGroupedFieldHtml(fields, selectedSet) {
+  const grouped = {};
+  (fields || []).forEach(f => {
+    const dc = String(f.dcname || 'dc1').trim() || 'dc1';
+    if (!grouped[dc]) grouped[dc] = [];
+    grouped[dc].push(f);
+  });
+
+  const orderedDc = Object.keys(grouped).sort((a, b) => {
+    const al = String(a).toLowerCase();
+    const bl = String(b).toLowerCase();
+    if (al === 'dc1' && bl !== 'dc1') return -1;
+    if (al !== 'dc1' && bl === 'dc1') return 1;
+    return al.localeCompare(bl);
+  });
+
+  let html = '';
+  orderedDc.forEach(dc => {
+    const dcFields = grouped[dc] || [];
+    const dcCap = (dcFields[0] && (dcFields[0].dccaption || dcFields[0].dcname)) ? String(dcFields[0].dccaption || dcFields[0].dcname) : dc;
+    const collapsed = String(dc).toLowerCase() !== 'dc1';
+    const collapseId = `fields_${String(dc).replace(/[^a-zA-Z0-9_]/g, '_')}`;
+
+    html += `
+      <div class="card KC_Items">
+        <div class="card-header collapsible cursor-pointer rotate ${collapsed ? 'collapsed' : ''}" data-bs-toggle="collapse" aria-expanded="${collapsed ? 'false' : 'true'}" data-bs-target="#${collapseId}">
+          <h3 class="card-title">${escapeHtml(dcCap)} (${escapeHtml(dc)})</h3>
+          <div class="card-toolbar rotate-180">
+            <span class="material-icons material-icons-style material-icons-2">expand_circle_down</span>
+          </div>
+        </div>
+        <div class="KC_Items_Content collapse ${collapsed ? '' : 'show'} heightControl pt-0---" id="${collapseId}">
+          <table class="table table-hover">
+            <tbody>
+    `;
+
+    dcFields.forEach(fld => {
+      const fieldName = String(fld.fldname || '').trim();
+      const fieldKey = fieldName.toLowerCase();
+      const safeId = fieldKey.replace(/[^a-z0-9_]/g, '_');
+      const checked = selectedSet.has(fieldKey) ? 'checked' : '';
+      html += `
+        <tr>
+          <td>
+            <input type="checkbox" id="chk_${safeId}" class="chk-fields chk-relateddataflds" value="${escapeHtml(fieldName)}" data-fldcap="${escapeHtml(fld.fldcap || '')}" data-dcname="${escapeHtml(dc)}" ${checked}>
+          </td>
+          <td><label for="chk_${safeId}">${escapeHtml(fld.fldcap || '')} (${escapeHtml(fieldName)})</label></td>
+        </tr>
+      `;
+    });
+
+    html += `
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  });
+
+  return html;
+}
+
+function smartviewUpdateSelectOptions() {
+  const selectField = document.getElementById('selectField');
+  if (!selectField) return;
+
+  const checkedFields = Array.from(document.querySelectorAll('#fields-selection .chk-relateddataflds:checked'));
+  const prev = (window._entity && window._entity.keyField) ? String(window._entity.keyField) : '';
+
+  selectField.innerHTML = '';
+  checkedFields.forEach(cb => {
+    const opt = document.createElement('option');
+    opt.value = cb.value;
+    opt.textContent = cb.getAttribute('data-fldcap') || cb.value;
+    selectField.appendChild(opt);
+  });
+
+  selectField.disabled = checkedFields.length === 0;
+  if (checkedFields.length === 0) return;
+
+  const hasPrev = checkedFields.some(cb => String(cb.value).toLowerCase() === prev.toLowerCase());
+  selectField.value = hasPrev ? prev : checkedFields[0].value;
+}
+
+function smartviewSyncSelectAll() {
+  const checkAll = document.getElementById('check-all');
+  if (!checkAll) return;
+  const all = Array.from(document.querySelectorAll('#fields-selection .chk-fields'));
+  if (!all.length) {
+    checkAll.checked = false;
+    checkAll.indeterminate = false;
+    return;
+  }
+  const checked = all.filter(cb => cb.checked).length;
+  checkAll.checked = checked === all.length;
+  checkAll.indeterminate = checked > 0 && checked < all.length;
+}
+
+function createFieldsLayout() {
+  const container = document.getElementById('fields-selection');
+  if (!container) return;
+
+  const ctrl = getSmartviewControllerInstance();
+  const state = window._smartviewFieldSelectionState || { fields: [] };
+  const fields = Array.isArray(state.fields) ? state.fields : [];
+  const selected = smartviewGetCurrentSelectedFieldSet(ctrl, fields);
+
+  if (!fields.length) {
+    container.innerHTML = `<div class="text-muted px-3 py-2">No fields available</div>`;
+    const checkAllEmpty = document.getElementById('check-all');
+    if (checkAllEmpty) checkAllEmpty.checked = false;
+    return;
+  }
+
+  let html = smartviewBuildGroupedFieldHtml(fields, selected);
+  html += `
+    <div class="card KC_Items">
+      <div class="card-header">
+        <h3 class="card-title">Modification Info</h3>
+      </div>
+      <div class="KC_Items_Content">
+        <table class="table table-hover">
+          <tbody>
+            <tr><td><input type="checkbox" id="chk_modifiedby" class="chk-fields chk-modification" value="modifiedby"></td><td><label for="chk_modifiedby">Modified By</label></td></tr>
+            <tr><td><input type="checkbox" id="chk_modifiedon" class="chk-fields chk-modification" value="modifiedon"></td><td><label for="chk_modifiedon">Modified On</label></td></tr>
+            <tr><td><input type="checkbox" id="chk_createdby" class="chk-fields chk-modification" value="createdby"></td><td><label for="chk_createdby">Created By</label></td></tr>
+            <tr><td><input type="checkbox" id="chk_createdon" class="chk-fields chk-modification" value="createdon"></td><td><label for="chk_createdon">Created On</label></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  container.innerHTML = html;
+
+  // Pre-select modification fields.
+  const selectedMod = (window._entity && typeof window._entity.modificationFields === 'string' && window._entity.modificationFields.trim() !== '')
+    ? window._entity.modificationFields.split(',').map(x => String(x || '').trim().toLowerCase()).filter(Boolean)
+    : ['modifiedby', 'modifiedon', 'createdby', 'createdon'];
+  document.querySelectorAll('#fields-selection .chk-modification').forEach(cb => {
+    cb.checked = selectedMod.includes(String(cb.value || '').toLowerCase());
+  });
+
+  const checkAll = document.getElementById('check-all');
+  const checkFields = Array.from(document.querySelectorAll('#fields-selection .chk-fields'));
+
+  if (checkAll) {
+    checkAll.onchange = function () {
+      checkFields.forEach(cb => { cb.checked = this.checked; });
+      smartviewSyncSelectAll();
+      smartviewUpdateSelectOptions();
+    };
+  }
+
+  checkFields.forEach(cb => cb.addEventListener('change', function () {
+    smartviewSyncSelectAll();
+    smartviewUpdateSelectOptions();
+  }));
+
+  smartviewUpdateSelectOptions();
+  smartviewSyncSelectAll();
+}
+
+function openFieldSelection() {
+  try {
+    const ctrl = getSmartviewControllerInstance();
+    if (!ctrl) {
+      alert('Please select an ADS first.');
+      return false;
+    }
+
+    const openWithMeta = (meta) => {
+      const fields = smartviewGetSelectableFieldsFromMeta(meta || []);
+      if (!fields.length) {
+        alert('No fields available for this ADS.');
+        return false;
+      }
+
+      window._smartviewFieldSelectionState = {
+        fields: fields
+      };
+
+      createFieldsLayout();
+      const modalEl = document.getElementById('fieldsModal');
+      if (!modalEl) return false;
+      if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        const instance = bootstrap.Modal.getOrCreateInstance
+          ? bootstrap.Modal.getOrCreateInstance(modalEl)
+          : new bootstrap.Modal(modalEl);
+        instance.show();
+      } else if (window.jQuery && typeof $('#fieldsModal').modal === 'function') {
+        $('#fieldsModal').modal('show');
+      } else {
+        modalEl.style.display = 'block';
+        modalEl.classList.add('show');
+      }
+      return false;
+    };
+
+    if (typeof ctrl.ensureAdsMetadata === 'function') {
+      ctrl.ensureAdsMetadata(function (err, meta) {
+        openWithMeta((Array.isArray(meta) && meta.length) ? meta : ((window._entity && window._entity.metaData) || []));
+      });
+    } else {
+      openWithMeta((window._entity && window._entity.metaData) || []);
+    }
+  } catch (e) {
+    console.error('openFieldSelection failed', e);
+  }
+  return false;
+}
+
+function applyFields() {
+  try {
+    const ctrl = getSmartviewControllerInstance();
+    if (!ctrl) return false;
+
+    const selected = Array.from(document.querySelectorAll('#fields-selection .chk-relateddataflds:checked'))
+      .map(el => String(el.value || '').trim())
+      .filter(Boolean);
+
+    if (!selected.length) {
+      alert('Please select at least one field.');
+      return false;
+    }
+
+    const selectField = document.getElementById('selectField');
+    const keyField = (selectField && selectField.value) ? String(selectField.value).trim() : '';
+    if (!keyField) {
+      alert('Please select Key Field.');
+      return false;
+    }
+
+    // Select Fields applies a flat projection, so clear active group-by projection.
+    if (Array.isArray(ctrl.groupby_columns) && ctrl.groupby_columns.length) {
+      ctrl.groupby_columns = [];
+      ctrl.aggregations = {};
+    }
+
+    ctrl.select_columns = selected;
+    window._entity = window._entity || {};
+    window._entity.keyField = keyField;
+    const selectedMods = Array.from(document.querySelectorAll('#fields-selection .chk-modification:checked'))
+      .map(el => String(el.value || '').trim())
+      .filter(Boolean);
+    window._entity.modificationFields = selectedMods.join(',');
+
+    ctrl.forceClientFiltering = false;
+    ctrl._filteredCache = null;
+    window._smartviewFullData = null;
+    if (typeof ctrl.resetPaging === 'function') ctrl.resetPaging();
+    if (typeof ctrl.loadNextPage === 'function') ctrl.loadNextPage();
+    fieldsModelClose();
+  } catch (e) {
+    console.error('applyFields failed', e);
+  }
+  return false;
+}
+
+function resetFields() {
+  try {
+    const ctrl = getSmartviewControllerInstance();
+    if (!ctrl) return false;
+
+    ctrl.select_columns = [];
+    if (Array.isArray(ctrl.groupby_columns) && ctrl.groupby_columns.length) {
+      ctrl.groupby_columns = [];
+      ctrl.aggregations = {};
+    }
+    ctrl.forceClientFiltering = false;
+    ctrl._filteredCache = null;
+    window._smartviewFullData = null;
+    window._entity = window._entity || {};
+    window._entity.modificationFields = '';
+    if (typeof ctrl.resetPaging === 'function') ctrl.resetPaging();
+    if (typeof ctrl.loadNextPage === 'function') ctrl.loadNextPage();
+    fieldsModelClose();
+  } catch (e) {
+    console.error('resetFields failed', e);
+  }
+  return false;
+}
+
 /**
  * Creates the Filter Modal exactly in the shape Entity-Filter.js expects.
  * Safe to call multiple times (will create only once).
@@ -4231,7 +4649,7 @@ class SmartViewTableController {
     this.pageno = opts.currentPage ?? 1;
     this.sorting = opts.sorting || [];
     this.filters = opts.filters || [];
-    this.axClient_dateformat = opts.axClient_dateformat || ((typeof window.axClient_dateformat !== 'undefined' && window.axClient_dateformat) ? window.axClient_dateformat : "dd/mm/yyyy");
+    this.axClient_dateformat = opts.axClient_dateformat || (typeof window.axClient_dateformat !== 'undefined' ? window.axClient_dateformat : "");
     this.select_columns = Array.isArray(opts.select_columns) ? opts.select_columns.slice() : [];
     this.groupby_columns = Array.isArray(opts.groupby_columns) ? opts.groupby_columns.slice() : [];
     this.aggregations = (opts.aggregations && typeof opts.aggregations === 'object') ? Object.assign({}, opts.aggregations) : {};
@@ -4364,6 +4782,7 @@ wireDom() {
               if (text.includes('pdf')) handleExport('pdf');
               else if (text.includes('excel') || text.includes('xls')) handleExport('excel');
               else if (text.includes('csv')) handleExport('csv');
+              else if (text.includes('word') || text.includes('doc')) handleExport('word');
               else if (text.includes('print')) handleExport('print');
               else handleExport('pdf');
             } else {
@@ -4452,7 +4871,7 @@ wireDom() {
 
     const dojFrom = document.getElementById("dojFrom")?.value || "";
     const dojTo = document.getElementById("dojTo")?.value || "";
-    if (dojFrom || dojTo) this.filters.push({ fldname: "doj", datatype: "DATE", from: smartviewToDdMmYyyy(dojFrom) || "01/01/1900", to: smartviewToDdMmYyyy(dojTo) || "31/12/2999" });
+    if (dojFrom || dojTo) this.filters.push({ fldname: "doj", datatype: "DATE", from: formatDateString(dojFrom) || "01/01/1900", to: formatDateString(dojTo) || "31/12/2999" });
 
     const deptSelect = document.getElementById("deptFilter");
     const selectedDepts = deptSelect ? Array.from(deptSelect.selectedOptions).map(o => o.value) : [];
@@ -4485,7 +4904,7 @@ wireDom() {
 
   buildParams(pageNo = 1) {
     const sqlParams = Object.assign({}, (this._entitySqlParams || {}), (this.props && this.props.sqlParams) ? this.props.sqlParams : {});
-    const safeFilters = smartviewNormalizeFilterDates(stripSmartviewFilterTransId(this.filters || []));
+    const safeFilters = stripSmartviewFilterTransId(this.filters || []);
     const props = {
       ADS: false,
       CachePermissions: true,
@@ -4499,7 +4918,7 @@ wireDom() {
       filters: safeFilters
     };
 
-    props.axClient_dateformat = this.axClient_dateformat || 'dd/mm/yyyy';
+    if (this.axClient_dateformat) props.axClient_dateformat = this.axClient_dateformat;
     if (Array.isArray(this.select_columns) && this.select_columns.length) props.select_columns = this.select_columns.slice();
     if (Array.isArray(this.groupby_columns) && this.groupby_columns.length) props.groupby_columns = this.groupby_columns.slice();
     // Do not pass aggregations; use groupby_columns with sum(...) expressions instead.
@@ -4570,16 +4989,10 @@ wireDom() {
         props: { ADS: false, CachePermissions: true, getallrecordscount: false, pageno: 1, pagesize: 500, sorting: [], filters: [] }
       };
   
-      // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-      //              : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-      //              : null;
-      const scopes = [parent, window, window.top];
-
-      const caller = scopes.find(
-          w => w && typeof w.GetDataFromAxList === 'function'
-      );
-      
-    
+      const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+                   : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+                   : null;
+  
       if (!caller || typeof caller.GetDataFromAxList !== 'function') {
         const err = new Error('GetDataFromAxList not available for fetchAdsMetadata');
         console.error(err);
@@ -4658,6 +5071,10 @@ wireDom() {
 
               // Keep a usable transid for compatibility (product code uses it for dropdown lookups).
               const ftransid = (r.ftransid || r.fTransId || r.transid || r.tstid || r.entityTransId || self.adsName || window._entity?.entityTransId || '') || '';
+              const dcname = (r.dcname || r.dc || 'dc1').toString().trim() || 'dc1';
+              const dccaption = (r.dccaption || r.dc_caption || r.dctitle || dcname).toString().trim() || dcname;
+              const griddc = (r.griddc ?? r.isgriddc ?? r.grid_dc ?? 'F');
+              const hideFlag = (r.hide ?? r.ishidden ?? r.hidden ?? 'F');
 
               // Table hyperlink metadata (optional)
               const sqlname = (r.sqlname || r.sqlName || r.adsname || r.adsName || self.adsName || '').toString().trim();
@@ -4674,6 +5091,10 @@ wireDom() {
                 fdatatype: fdatatype,   // keep the short code as provided ('c','n','d' etc)
                 cdatatype: cdatatype || undefined,
                 ftransid: ftransid,
+                dcname: dcname,
+                dccaption: dccaption,
+                griddc: (String(griddc).toUpperCase() === 'T' || griddc === true) ? 'T' : 'F',
+                hide: (String(hideFlag).toUpperCase() === 'T' || hideFlag === true) ? 'T' : 'F',
                 listingfld: (r.listingfld === 'T' || r.listingfld === true) ? 'T' : (r.listingfld || 'T'),
                 filters: filtersFlag,
                 options: options,
@@ -4696,6 +5117,10 @@ wireDom() {
 
               const fldname = (col.key || col.name || '').toString();
               const fldcap = col.caption || formatFieldName(fldname);
+              const dcname = (col.dcname || col.dc || 'dc1').toString().trim() || 'dc1';
+              const dccaption = (col.dccaption || col.dc_caption || col.dctitle || dcname).toString().trim() || dcname;
+              const griddc = (col.griddc ?? col.isgriddc ?? col.grid_dc ?? 'F');
+              const hideFlag = (col.hide ?? col.ishidden ?? col.hidden ?? 'F');
 
               const srcTable = (col.srctable || col.src_table || col.srctbl || col.sourcetable || col.source_table || col.srcTable || col.sourceTable || col.table || col.tablename || col.tblname || '').toString().trim();
               const srcFld = (col.srcfld || col.src_fld || col.srcfield || col.sourcefld || col.source_fld || col.sourcefield || col.srcField || col.sourceField || col.column || col.colname || col.columnname || '').toString().trim();
@@ -4719,6 +5144,10 @@ wireDom() {
                 fdatatype: isNormalized ? 'c' : (col.datatype || 't'),
                 cdatatype: isNormalized ? 'DropDown' : inferColumnType(col),
                 ftransid: (col.ftransid || col.fTransId || col.transid || self.adsName || window._entity?.entityTransId || '') || '',
+                dcname: dcname,
+                dccaption: dccaption,
+                griddc: (String(griddc).toUpperCase() === 'T' || griddc === true) ? 'T' : 'F',
+                hide: (String(hideFlag).toUpperCase() === 'T' || hideFlag === true) ? 'T' : 'F',
                 listingfld: "T",
                 filters: (col.filters === 'T' || col.filters === true) ? 'T' : 'F',
                 normalized: isNormalized ? 'T' : 'F',
@@ -4742,12 +5171,12 @@ wireDom() {
               const tmp = [];
               preferredOrder.forEach(k => {
                 if (keys.includes(k) && !tmp.some(m => m.fldname.toLowerCase() === k.toLowerCase())) {
-                  tmp.push({ fldname: k, fldcap: formatFieldName(k), fdatatype: 't', cdatatype: 'Text', listingfld: 'T', filters: 'F' });
+                  tmp.push({ fldname: k, fldcap: formatFieldName(k), fdatatype: 't', cdatatype: 'Text', listingfld: 'T', filters: 'F', dcname: 'dc1', dccaption: 'Fields', griddc: 'F', hide: 'F' });
                 }
               });
               keys.forEach(k => {
                 if (!tmp.some(m => m.fldname.toLowerCase() === k.toLowerCase())) {
-                  tmp.push({ fldname: k, fldcap: formatFieldName(k), fdatatype: 't', cdatatype: 'Text', listingfld: 'T', filters: 'F' });
+                  tmp.push({ fldname: k, fldcap: formatFieldName(k), fdatatype: 't', cdatatype: 'Text', listingfld: 'T', filters: 'F', dcname: 'dc1', dccaption: 'Fields', griddc: 'F', hide: 'F' });
                 }
               });
               meta = tmp;
@@ -4906,16 +5335,9 @@ wireDom() {
     console.log('loadNextPage: client-filter mode -> fetching full dataset', params);
 
     this.isFetching = true;
-    // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-    //              : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-    //              : null;
-    const scopes = [parent, window, window.top];
-
-    const caller = scopes.find(
-        w => w && typeof w.GetDataFromAxList === 'function'
-    );
-    
-    
+    const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+                 : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+                 : null;
     if (!caller || typeof caller.GetDataFromAxList !== 'function') {
       console.error('GetDataFromAxList not available');
       this.isFetching = false;
@@ -4970,16 +5392,9 @@ wireDom() {
   this.isFetching = true;
 
   // pick caller safely
-  // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-  //              : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-  //              : null;
-  const scopes = [parent, window, window.top];
-
-  const caller = scopes.find(
-      w => w && typeof w.GetDataFromAxList === 'function'
-  );
-  
- 
+  const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+               : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+               : null;
 
   if (!caller || typeof caller.GetDataFromAxList !== 'function') {
     console.error('GetDataFromAxList not available');
@@ -5114,16 +5529,10 @@ wireDom() {
       console.warn('loadNextPage: paging fallback -> fetching all rows once', params);
 
       // pick caller safely
-      // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-      //              : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-      //              : null;
-      const scopes = [parent, window, window.top];
+      const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+                   : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+                   : null;
 
-      const caller = scopes.find(
-          w => w && typeof w.GetDataFromAxList === 'function'
-      );
-      
-     
       if (!caller || typeof caller.GetDataFromAxList !== 'function') {
         console.error('GetDataFromAxList not available (paging fallback)');
         return;
@@ -5189,17 +5598,7 @@ wireDom() {
     params.props.pagesize = 0;
     this.isFetching = true;
     try {
-    //  const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : window;
-      const scopes = [parent, window, window.top];
-
-    const caller = scopes.find(
-        w => w && typeof w.GetDataFromAxList === 'function'
-    );
-    
-    if (!caller) {
-        cb && cb(new Error('GetDataFromAxList not available'), []);
-        return;
-    }
+      const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : window;
       caller.GetDataFromAxList(
         params,
 (response) => {
@@ -5619,4 +6018,3 @@ document.addEventListener('DOMContentLoaded', function () {
 
   console.log('SmartViewTableController boot logic executed (ads=', adsName, ', initialFilters=', initialFiltersRaw.length, ')');
 });
-

@@ -416,6 +416,8 @@
                 const transid = params.get("transid");
                 const caption = params.get("caption");
                 const tstid = params.get("tstid");
+                const ivname = params.get("ivname");
+                const incomingAds = params.get("ads");
 
                 // REMOVE tname from the parameter list to fix edit form loading
                 params.delete("tname");
@@ -448,14 +450,35 @@
                 }
 
                 // 4. SMART MATCH
+                // 4. SMART MATCH (Updated Fix)
                 let existingTabKey = Object.keys(this.tabs).find(key => {
-                    const tabTransId = this.tabs[key].tab.querySelector('.text-truncate').dataset[
-                        'transid'];
-                    return (
-                        tabTransId &&
-                        displayTitle &&
-                        tabTransId.toLowerCase() === displayTitle.toLowerCase()
-                    );
+                    const tabData = this.tabs[key].tab.querySelector('.text-truncate').dataset;
+                    const tabTransId = tabData.transid;
+                    const tabIvName = tabData.ivname;
+                    const tabAdsName = tabData.ads; // Fixed reference from tabEl to tabData
+
+                    // Match for TStructs
+                    if (transid && tabTransId && transid.toLowerCase() === tabTransId.toLowerCase()) {
+                        return true;
+                    }
+
+                    // Match for iViews
+                    if (ivname && tabIvName && ivname.toLowerCase() === tabIvName.toLowerCase()) {
+                        return true;
+                    }
+
+                    // Match for ADS
+                    if (incomingAds && tabAdsName && incomingAds.toLowerCase() === tabAdsName
+                    .toLowerCase()) {
+                        return true;
+                    }
+
+                    // Fallback: Match by display title only if no technical IDs are present in the request
+                    if (!transid && !ivname && !incomingAds) {
+                        return key.toLowerCase() === title1.toLowerCase();
+                    }
+
+                    return false;
                 });
 
                 if (existingTabKey) {
@@ -563,14 +586,15 @@
                 // Extract technical ID for the subtext
                 const urlParams = new URLSearchParams(url.split('?')[1]);
                 const subText = urlParams.get("tstid") || urlParams.get("transid") || "";
-
+                const ivName = urlParams.get("ivname") || ""; // Extract ivname for iViews
+                const adsName = urlParams.get("ads") || "";
                 const tab = document.createElement("div");
                 tab.className = "custom-tab active";
                 // Inline style for the "Heading at top" look
                 tab.innerHTML = `
         <div class="d-flex flex-column w-100">
             <div class="d-flex justify-content-between align-items-center">
-                <b class="text-truncate" style="font-size:12px;max-width: 130px;" title="${title}" data-transid="${subText}">${title}</b>
+                <b class="text-truncate" style="font-size:12px;max-width: 130px;" title="${title}" data-ads="${adsName}"  data-ivname="${ivName}" data-transid="${subText}">${title}</b>
                 <i class="material-icons close-tab" style="font-size:14px!important;">close</i>
             </div>
           

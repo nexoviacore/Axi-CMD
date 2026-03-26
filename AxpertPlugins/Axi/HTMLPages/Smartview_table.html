@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../../../ThirdParty/jquery-confirm-master/jquery-confirm.min.css" />
     <link href="../../../Css/datatables.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../../../Css/Entity.css" />
+    <link rel="stylesheet" href="../../../Css/Analytics_new.css" />
 </head>
 <body>
 
@@ -143,6 +144,49 @@
                                         
                                     </div>
                                 </div>
+                                <div class="modal fade" id="fieldsModal">
+                                    <div class="modal-dialog modal-md modal-dialog-scrollable">
+                                        <div class="modal-content">
+                                            <div class="modal-header" style="padding: 1.75rem !important">
+                                                <h4 class="modal-title">Fields Selection</h4>
+                                                <button type="button" title="Close" class="btn btn-icon btn-danger btn-active-primary shadow-sm tb-btn btn-sm" onclick="fieldsModelClose()">
+                                                    <span class="material-icons material-icons-style material-icons-2">close</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body" style="max-height: 65vh">
+                                                <div class="container" id="dvModalFields">
+                                                    <div class="container-fluid">
+                                                        <div class="table-responsive">
+                                                            <table class="table table-hover">
+                                                                <thead class="thead-dark">
+                                                                    <tr>
+                                                                        <th><input type="checkbox" id="check-all"></th>
+                                                                        <th>Field Name</th>
+                                                                    </tr>
+                                                                </thead>
+                                                            </table>
+                                                        </div>
+                                                        <div class="table-responsive" id="fields-selection"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <div class="d-flex align-items-end gap-3 flex-wrap w-100 justify-content-between">
+                                                    <div style="min-width: 340px;">
+                                                        <label for="selectField" class="form-label mb-1">Select Key Field:</label>
+                                                        <select id="selectField" class="form-select form-select-sm">
+                                                            <option value="">--Select--</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                    <button type="button" onclick="resetFields()" class="btn btn-white btn-sm">Reset</button>
+                                                    <button type="button" onclick="applyFields()" class="btn btn-primary btn-sm">Apply</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div class="filterPills flex-row py-2 px-2 gap-3" style="display: none;">
                                     <button
@@ -173,5 +217,5 @@
     <script src="../../../js/datatables.js"></script>
     <script src="../../../js/Entity-Filter.js"></script>
     <script src="../../../Js/Entity-Common.js"></script>
-<script type="text/javascript" src="../../../AxpertPlugins/Axi/HTMLPages/js/smartviewTable.js?v=2"></script>
+<script type="text/javascript" src="../../../AxpertPlugins/Axi/HTMLPages/js/smartviewTable.js?v=6"></script>
 </html>
