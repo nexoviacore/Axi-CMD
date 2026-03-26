@@ -32,5 +32,8 @@ Command Note: Edit ""Employee Master"" ""Mobile No""
 Schema: pgbase114
 Screen Details: Employee Master"-> mobile no is not a dc1 fiel
 
+parent.LoadIframe("../AxpertPlugins/Axi/HTMLPages/Analytics.html?entity=slord&calendar=t&isDupTab=true-1770626614111&hdnbElapsTime=0")
+
+
 
 

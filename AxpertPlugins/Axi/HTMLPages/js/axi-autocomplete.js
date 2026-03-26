@@ -1303,7 +1303,7 @@
 
             const filtered = list.filter(col => {
 
-                const rawDisplay = (col.displaydata || col.name).toLowerCase();
+                const rawDisplay = (col?.displaydata || col?.name)?.toLowerCase();
 
 
                 const cleanDisplay = rawDisplay
@@ -1988,10 +1988,10 @@
 
         }
 
-        if (promptInfo?.error) {
-            showToast(promptInfo.error);
-            return [];
-        }
+        // if (promptInfo?.error) {
+        //     showToast(promptInfo.error);
+        //     return [];
+        // }
 
         if (!promptInfo) {
             updateDynamicHintFromPrompt(null);
@@ -2056,6 +2056,44 @@
             const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
+
+            //  if (staticValues.length > 0 && result.length === 0 && partialTyped.length > 0) {
+
+            //     console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
+            //     showToast("Please select a valid option from the list.");
+
+            //     let dummyTokens = [...tokens];
+            //     let lastIndex = dummyTokens.length - 1;
+            //     let lastTokenValue = dummyTokens[lastIndex];
+
+            //     dummyTokens[lastIndex] = "";
+
+            //     input.value = dummyTokens.join(" ");
+
+            //     result = [...staticValues];
+            // }
+
+            if (staticValues.length > 0 && result.length === 0 && partialTyped.length > 0) {
+                const currentInput = inputText; 
+
+                
+                clearTimeout(window._staticValidationTimer); 
+
+                window._staticValidationTimer = setTimeout(() => {
+                    if (input.value !== currentInput) return; 
+
+                    const latestTokens = getTokens(input.value); 
+                    const latestPartial = cleanString(latestTokens[latestTokens.length -1 ] || ""); 
+                    const isValid = staticValues.some(val => val.toLowerCase() === latestPartial.toLowerCase()); 
+
+                    if (!isValid) {
+                        showToast("Please select a valid option from the list.", 2000, false); 
+                        let dummyTokens = [...tokens]; 
+                        dummyTokens[dummyTokens.length -1] = ""; 
+                        input.value = dummyTokens.join(" "); 
+                    }
+                }, 400); 
+            }
 
             if (groupKey.toLowerCase() === "create" && tokens.length === 3) {
                 result.unshift(popOption);
@@ -2220,6 +2258,11 @@
                         filteredObjects = [goOption];
                         return [goOption];
                     }
+
+                    if (groupKey.toLowerCase() === "view" && tokens.length == 3) {
+                        filteredObjects = [goOption, popOption]
+                        return [goOption, popOption];
+                    }
                     return [];
                 }
                 if (hasValidParams) {
@@ -2251,11 +2294,11 @@
             if (dataList.length > 0 && filtered.length === 0) {
 
                 console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
-                showToast("Please select a valid option from the list.", 3000, true);
+                showToast("Please select a valid option from the list.");
 
                 let dummyTokens = [...tokens];
                 let lastIndex = dummyTokens.length - 1;
-                let lastTokenValue = dummyTokens[lastIndex];
+            
 
                 dummyTokens[lastIndex] = "";
 
@@ -2265,18 +2308,51 @@
             }
 
 
-            let resultList = filtered.map(item => {
-                if (item.createallowed === 'F') return;
-                return item.displaydata || item.caption || item.name || item.fname || item.keyfield
-            });
+            //let resultList = filtered.map(item => {
+            //    if (item.createallowed === 'F') return;
+            //    return item.displaydata || item.caption || item.name || item.fname || item.keyfield
+            //});
 
-            filteredObjects = filtered;
+            // let resultList = filtered.map(item => {
+            //     let key = groupKey?.toLowerCase();
+
+            //     if (key === 'create') {
+            //         if (item.createallowed === 'F') return;
+            //     }
+            //     else if (key === 'view') {
+            //         if (item.viewallowed === 'F') return;
+            //     }
+               
+
+            //     return item.displaydata || item.caption || item.name || item.fname || item.keyfield;
+
+            // });
+
+            const validItems = filtered.filter(item => {
+                let key = groupKey?.toLowerCase(); 
+
+                if (key === "create") return item?.createAllowed !== 'F'; 
+                if (key === "view") return item?.viewallowed !== 'F'; 
+                return true; 
+            })
+
+            filteredObjects = validItems;
+
+            let resultList = validItems.map(item => {
+                return (
+                    item.displaydata ||
+                    item.caption || 
+                    item.name || 
+                    item.fname ||
+                    item.keyfield
+                ); 
+            })
 
             if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
-                resultList.unshift(popOption);
-                resultList.unshift(goOption);
-                filteredObjects.unshift(popOption);
-                filteredObjects.unshift(goOption);
+                resultList.unshift(popOption, goOption);
+                // resultList.unshift(goOption);
+                filteredObjects.unshift(popOption, goOption);
+                // filteredObjects.unshift(goOption);
             }
             else if ((groupKey.toLowerCase() === "configure") && tokens.length === 3 && tokens[1] !== "keyfield") {
                 resultList.unshift(goOption);
@@ -2613,15 +2689,14 @@
                     } else if (commandConfig.commandGroup.toLowerCase() === "view") {
                         value = "all";
                     } else value = "run";
-                } else if (param === ":structtype") {
+                } 
+                
+                else if (param === ":structtype") {
                     if (commandConfig.commandGroup.toLowerCase() === "view") {
                         value = "all";
-                    } else if (
-                        commandConfig.commandGroup.toLowerCase() == "open" &&
-                        tokens.length >= 2
-                    ) {
+                    } else if (commandConfig.commandGroup.toLowerCase() == "open" && tokens.length >= 2) {
                         let token = tokens[1].toLowerCase();
-
+ 
                         switch (token) {
                             case "iview":
                                 value = "i";
@@ -2638,7 +2713,11 @@
                             default:
                                 value = "t"; //all
                         }
-                    } else value = iviewBoolCheck ? "i" : "t";
+                    } 
+                    else if (commandConfig.commandGroup.toLowerCase() == "analyse") {
+                        value = 'analyse'
+                    }
+                    else value = iviewBoolCheck ? "i" : "t";
                 }
                 if (value) {
                     if (paramValue === "") {
@@ -3071,6 +3150,14 @@
 
         // Get Real Value logic
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
+
+        if (foundObj && isViewCommand) {
+            if (!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) {
+                showToast("Redirection link is not available for this page."); 
+                console.error("No Redirection link!"); 
+                return; 
+            }
+        }
 
 
         realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
@@ -4866,9 +4953,9 @@
         let paramValue;
        // if (axDatasourceKey.toLowerCase() === "axi_viewlist") {
 
- if (axDatasourceKey.toLowerCase() === "axi_structmetalist") {
-            paramValue = processExtraParams(tokens, commandConfig);
-            axDatasourceKey += "_" + paramValue;
+       if (axDatasourceKey.toLowerCase() === "axi_structmetalist") {
+           paramValue = processExtraParams(tokens, commandConfig);
+           axDatasourceKey += "_" + paramValue.toLowerCase();
         }
 
 
@@ -4918,7 +5005,7 @@
         let paramValue = processExtraParams(tokens, commandConfig);
 
         //const viewList = axDatasourceObj["axi_viewlist".toLowerCase() + "_" + paramValue];
-        const viewList = axDatasourceObj["axi_structmetalist".toLowerCase() + "_" + paramValue];
+        const viewList = axDatasourceObj["axi_structmetalist".toLowerCase() + "_" + paramValue.toLowerCase()];
 
 
 
@@ -5932,19 +6019,29 @@
 
     function handleAnalyse({ tokens, commandConfig }) {
 
-        let targetUrl = "../AxpertPlugins/Axi/HTMLPages/Analytics.html";
-
-        if (tokens.length === 1) {
-            targetUrl += "?calendar=t";
-            targetUrl += "&isDupTab=true-1770626614111";
-            targetUrl += "&hdnbElapsTime=0";
+        if (tokens < 1) {
+            showToast("Error:Invalid Tokens, Analyze command requires atleast 2 tokens"); 
+            console.error("Error:Invalid Tokens, Analyze command requires atleast 2 tokens"); 
+            return; 
         }
 
 
-        else {
+        let targetUrl = "../AxpertPlugins/Axi/HTMLPages/Analytics.html";
+
+        // if (tokens.length === 1) {
+        //     targetUrl += "?calendar=t";
+        //     targetUrl += `&isDupTab=true-${Date.now()}`;
+        //     targetUrl += "&hdnbElapsTime=0";
+        // }
+
+
+        // else {
 
             const captionSelected = cleanString(tokens[1]);
             const transIdAnalyse = tryResolveToken(1, captionSelected, commandConfig);
+            const paramValuesCsv = "tstruct,ads"
+
+            const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), transIdAnalyse, paramValuesCsv, tokens, commandConfig); 
 
             targetUrl += `?entity=${encodeURIComponent(transIdAnalyse)}`;
 
@@ -5959,9 +6056,12 @@
             }
 
             targetUrl += "&calendar=t";
-            targetUrl += "&isDupTab=true-1770626614111";
+            targetUrl += `&type=${type}`
+            // targetUrl += "&isDupTab=true-1770626614111";
+            targetUrl += `&isDupTab=true-${Date.now()}`;
+
             targetUrl += "&hdnbElapsTime=0";
-        }
+        // }
 
         setCommandRoutes(input.value.trim(), targetUrl);
         console.log("Target URL from analyse command : " + targetUrl);
@@ -6189,7 +6289,7 @@
             }
 
             const filtered = list.filter(col => {
-                const rawDisplay = (col.displaydata || col.name).toLowerCase();
+                const rawDisplay = (col?.displaydata || col?.name)?.toLowerCase();
                 const cleanDisplay = rawDisplay
                     .replace(/\s*\(.*?\)/g, "")
                     .replace(/\s*\[[^\]]+\]\s*$/, "")
@@ -6678,7 +6778,7 @@
             }
 
             const filtered = list.filter(col => {
-                const rawDisplay = (col.displaydata || col.name).toLowerCase();
+                const rawDisplay = (col?.displaydata || col?.name)?.toLowerCase();
                 const cleanDisplay = rawDisplay
                     .replace(/\s*\(.*?\)/g, "")
                     .replace(/\s*\[[^\]]+\]\s*$/, "")
@@ -8017,7 +8117,7 @@
             // extra params
             let struct_paramValue
             if (struct_source.toLowerCase() === "axi_structmetalist")
-              struct_paramValue = processExtraParams(inputTokens, inputCommandConfig);
+                struct_paramValue = processExtraParams(inputTokens, inputCommandConfig);
 
             const struct_sourceKey = (struct_paramValue ? `${struct_source}_${struct_paramValue}` : struct_source).toLowerCase();
 
@@ -8048,7 +8148,7 @@
             //const extraList = axDatasourceObj[extraSourceKey];
 
             //if (extraList.length == 0) {
-                
+
             //}
             //const field = extraList[0];
 
@@ -8135,7 +8235,8 @@
                 .catch(error => {
 
                     //showToast("Your Data is not Submitted,Please Submit it Manually using(Ctrl + Enter)!");
-                    showToast("Save failed.Please retry with Ctrl + Enter.");
+                    // showToast("Save failed.Please retry with Ctrl + Enter.");
+                    showToast("Save failed.Please try again later.");
                     console.log("Error from AxiSaveDataFn :" + error);
                     return [];
 
