@@ -204,6 +204,7 @@
     let adsfieldvalueanddt = {};
     let createfieldnamevaluesList = {};
     let mode = "";
+    let isCommandsLoading = false; 
     const aiModeCommands = {
         "connect": { "cmdToken": 11, "command": "", "commandGroup": "connect", "prompts": [] },
         "ask": { "cmdToken": 11, "command": "", "commandGroup": "ask", "prompts": [{ "cmdToken": 11, "wordPos": 2, "prompt": "Chat", "promptSource": "", "promptParams": "", "promptValues": "", "extraParams": "" }] },
@@ -212,6 +213,8 @@
         "analyze": { "cmdToken": 11, "command": "", "commandGroup": "analyze", "prompts": [] },
         "upload": { "cmdToken": 11, "command": "", "commandGroup": "upload", "prompts": [] }
     }
+
+
 
 
     function init() {
@@ -381,11 +384,20 @@
             console.log(JSON.stringify(commands));
 
         } else {
+
             try {
+                isCommandsLoading = true; 
+                input.disabled = isCommandsLoading; 
+                input.placeholder = "Initializing commands, Please wait...."; 
                 const accessPermissions = getAccessPermissions();
 
                 const res = await fetch(`${apiMetadataUrl}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
-                if (!res.ok) throw new Error("Metadata fetch failed");
+                if (!res.ok) { 
+                    showToast("Metadata fetch failed. Please Log in Again or Press Refresh button"); 
+                    console.error("Metadata fetch failed");
+                    return; 
+                }
+                showToast("Commands Loaded Successfully!.", 3000, true); 
                 const data = await res.json();
                 let commandsFromDb = data.commands;
 
@@ -395,6 +407,11 @@
                 localStorage.setItem("axi_commands_v1", JSON.stringify(commands));
             } catch (err) {
                 console.error("Critical: Could not load commands", err);
+            } finally {
+                isCommandsLoading = false; 
+                input.disabled = isCommandsLoading; 
+                input.placeholder = "Axpert AI"
+                // handleInput(); 
             }
         }
     }
@@ -913,6 +930,12 @@
        2. INPUT HANDLER
     =============================== */
     function handleInput() {
+        if (isCommandsLoading) {
+            items = ["Loading Commands...."]; 
+            hintDiv.textContent = "Please wait..."; 
+            render(); 
+            return; 
+        }
         const text = input.value;
 
         if (axiClearBtn) {
@@ -3126,12 +3149,14 @@
 
 
         let isAdsValue = false;
+
+          const groupKey = cleanString(tokens[0]);
+            const commandConfig = commands[groupKey];
         /**
          * ==== Robust Type checking for View command ===
          */
         if (isViewCommand && commands) {
-            const groupKey = cleanString(tokens[0]);
-            const commandConfig = commands[groupKey];
+          
 
             if (commandConfig && commandConfig.prompts && commandConfig.prompts[0]) {
                 const viewSource = commandConfig.prompts[0].promptSource;
@@ -3151,8 +3176,14 @@
         // Get Real Value logic
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
 
+    
+
         if (foundObj && isViewCommand) {
-            if (!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) {
+            const caption = foundObj?.caption ? foundObj?.caption : foundObj?.displaydata; 
+            
+         const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), caption, commandConfig.prompts?.[0]?.promptValues, tokens, commandConfig); 
+            
+            if ((!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) && type?.toLowerCase() === "page") {
                 showToast("Redirection link is not available for this page."); 
                 console.error("No Redirection link!"); 
                 return; 
@@ -3876,7 +3907,11 @@
      * @returns 
      */
     function executeCommandsV2(isNavigating = false) {
-
+        if (isCommandsLoading) {
+            showToast("Commands are not loaded!"); 
+            return; 
+        }
+        
 
 
         const text = input.value.trim();
@@ -5194,6 +5229,7 @@
         const targetUrl = "../aspx/tstruct.aspx?transid=axvar";
         setCommandRoutes(input.value.trim(), targetUrl);
         window.LoadIframe(targetUrl);
+        //  window.openDeveloperStudio("tstreact", "axvar" , true);
 
     }
 
@@ -8645,7 +8681,14 @@
 
         if (axiFavoritesUrl) {
             fetch(`${axiFavoritesUrl}?username=${window.mainUserName}&appname=${appname}`)
-                .then(res => res.json())
+                .then(res =>{ 
+                    isCommandsLoading = true; 
+                    input.disabled = isCommandsLoading; 
+                     input.placeholder = "Initializing commands, Please wait...."; 
+                    
+                    
+                     return res.json()
+                })
                 .then(data => {
                     console.log("Fetched favorites from backend: ", data);
                     console.log("type : ", typeof data);
@@ -8662,6 +8705,11 @@
                     console.error("Axi: Failed to sync favorites from backend", err);
                     // showToast("Axi: Axi: Failed to sync favorites from backend"); 
 
+                }).finally(() => {
+                    isCommandsLoading = false; 
+                    input.disabled = isCommandsLoading; 
+                    input.placeholder = "Axpert AI"
+                    
                 });
 
         }
