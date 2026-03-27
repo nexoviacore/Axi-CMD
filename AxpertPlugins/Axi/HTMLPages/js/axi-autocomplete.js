@@ -5198,21 +5198,21 @@
         let rawName = cleanCommandToken(tokens[2]);
 
 
-        if (rawName) {
-            paramName = tryResolveToken(2, rawName, commandConfig, false);
+        // if (rawName) {
+        //     paramName = tryResolveToken(2, rawName, commandConfig, false);
 
-        }
+        // }
 
         setEditSessionState(transId);
 
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
-        if (!paramName) {
+        if (!rawName) {
             setCommandRoutes(input.value.trim(), targetUrl);
             window.LoadIframe(targetUrl);
 
         } else {
-            targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
+            targetUrl += `&${fieldname}=${encodeURIComponent(rawName)}`;
             targetUrl += "&act=load";
             targetUrl += "&dummyload=false♠";
             setCommandRoutes(input.value.trim(), targetUrl);
