@@ -96,7 +96,7 @@
         Configure: {
             peg: handleConfigurePeg,
 
-            api: handleConfigureApi,
+            //api: handleConfigureApi,
 
             properties: handleConfigureProperties,
             job: handleConfigureJob,
@@ -110,6 +110,26 @@
             keyfield: handleKeyfield,
             newsandannouncement: handleConfigureNewsAndAnnouncement,
             settings: handleConfigureSettings,
+
+            users: handleUsers,
+            user: handleUser,
+            roles: handleRoles,
+            role: handleRole,
+            publishapi: handleApi,
+            publishapilisting: handleApiList,
+            publishlisting: handlePublishListing,
+            cards: handleCards,
+            //forms: handleForms,
+            //responsibility: handleResponsibility,
+            responsibilities: handleResponsibilities,
+            usergroup: handleUserGroup,
+            dimensions: handleDimensions,
+            actors: handleActors,
+            useractivation: handleUserActivation,
+            userpermissionlisting: handleUserPermissionListing,
+            userpermissions: handleUserPermission,
+            //rolepermissionlisting: handleRolePermissionListing,
+            // rolepermissions: handleRolePermission
         },
         Open: {
             default: handleOpenSource,
@@ -119,7 +139,9 @@
             appvar: handleOpenAppVar,
             devoption: handleOpenDevOptions,
             dbconsole: handleOpenDbConsole,
-            menu: handleOpenArrangeMenu
+            menu: handleOpenArrangeMenu,
+
+            api: handleConfigureApi
 
 
         },
@@ -204,6 +226,7 @@
     let adsfieldvalueanddt = {};
     let createfieldnamevaluesList = {};
     let mode = "";
+    let isCommandsLoading = false;
     const aiModeCommands = {
         "connect": { "cmdToken": 11, "command": "", "commandGroup": "connect", "prompts": [] },
         "ask": { "cmdToken": 11, "command": "", "commandGroup": "ask", "prompts": [{ "cmdToken": 11, "wordPos": 2, "prompt": "Chat", "promptSource": "", "promptParams": "", "promptValues": "", "extraParams": "" }] },
@@ -212,6 +235,8 @@
         "analyze": { "cmdToken": 11, "command": "", "commandGroup": "analyze", "prompts": [] },
         "upload": { "cmdToken": 11, "command": "", "commandGroup": "upload", "prompts": [] }
     }
+
+
 
 
     function init() {
@@ -381,11 +406,20 @@
             console.log(JSON.stringify(commands));
 
         } else {
+
             try {
+                isCommandsLoading = true;
+                input.disabled = isCommandsLoading;
+                input.placeholder = "Initializing commands, Please wait....";
                 const accessPermissions = getAccessPermissions();
 
                 const res = await fetch(`${apiMetadataUrl}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
-                if (!res.ok) throw new Error("Metadata fetch failed");
+                if (!res.ok) {
+                    showToast("Metadata fetch failed. Please Log in Again or Press Refresh button");
+                    console.error("Metadata fetch failed");
+                    return;
+                }
+                showToast("Commands Loaded Successfully!.", 3000, true);
                 const data = await res.json();
                 let commandsFromDb = data.commands;
 
@@ -395,6 +429,11 @@
                 localStorage.setItem("axi_commands_v1", JSON.stringify(commands));
             } catch (err) {
                 console.error("Critical: Could not load commands", err);
+            } finally {
+                isCommandsLoading = false;
+                input.disabled = isCommandsLoading;
+                input.placeholder = "Axpert AI"
+                // handleInput(); 
             }
         }
     }
@@ -635,6 +674,280 @@
     //        console.log("Error in Popup: TargetURL is empty");
     //        showToast("Something went wrong. Please try again later");
     //    }
+    //}
+
+    function handleUsers({ tokens, commandConfig }) {
+
+        let transId = "axusers";
+        //let fieldname = "servername";
+
+        const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+
+        redirectToIView(transId, "");
+        //redirectToTstruct(transId, "", true, fieldname, rawParamName);
+    }
+    function handleUser({ tokens, commandConfig }) {
+
+        let transId = "axusr";
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToTstruct(transId);
+    }
+    function handleRoles({ tokens, commandConfig }) {
+
+        let transId = "ad___url";
+
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToIView(transId, "");
+        //redirectToTstruct(transId, "", true, fieldname, rawParamName);
+    }
+    function handleRole({ tokens, commandConfig }) {
+
+        let transId = "ad_ur";
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToTstruct(transId);
+    }
+    function handleApi({ tokens, commandConfig }) {
+
+        let transId = "ad_pa";
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToTstruct(transId);
+    }
+    function handleApiList({ tokens, commandConfig }) {
+
+        let transId = "ad__papi";
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToIView(transId, "");
+    }
+    function handlePublishListing({ tokens, commandConfig }) {
+
+        let transId = "ad_pbcs";
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToIView(transId, "");
+    }
+    function handleCards({ tokens, commandConfig }) {
+
+        let transId = "axpcards";
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToIView(transId, "");
+    }
+    function handleForms({ tokens, commandConfig }) {
+
+        let transId = "ad___rel";
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToIView(transId, "");
+    }
+    function handleResponsibility({ tokens, commandConfig }) {
+
+        let transId = "axrol";
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToTstruct(transId);
+    }
+    function handleResponsibilities({ tokens, commandConfig }) {
+
+        let transId = "response";
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToIView(transId, "");
+    }
+    function handleActors({ tokens, commandConfig }) {
+
+        let transId = "ad__act";
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToIView(transId, "");
+    }
+    function handleDimensions({ tokens, commandConfig }) {
+
+        let transId = "ad___upg";
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToIView(transId, "");
+    }
+    function handleUserGroup({ tokens, commandConfig }) {
+
+        let transId = "ad___ugp";
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToIView(transId, "");
+    }
+    function handleUserActivation({ tokens, commandConfig }) {
+
+        let transId = "axurg";
+        //let fieldname = "servername";
+
+        //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        redirectToTstruct(transId);
+    }
+    function handleUserPermissionListing({ tokens, commandConfig }) {
+
+        //ivtoivload.aspx ? ivname = ad___upm && pusername=admin & AxOpenAct=true & isDupTab=false
+        let transId = "ad___upm";
+        //let fieldname = "pusername";
+
+        const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        // redirectToIView(transId,fieldname);
+        // let targetUrl = `../aspx/iview.aspx?ivname=${transId}`;
+        let targetUrl = `../aspx/ivtoivload.aspx?ivname=${transId}`;
+
+
+        if (rawParamName) {
+            targetUrl += `&pusername=${encodeURIComponent(rawParamName)}`;
+        }
+
+
+        targetUrl += `&AxOpenAct=true`;
+        targetUrl += `&isDupTab=false`;
+
+        setCommandRoutes(input.value.trim(), targetUrl);
+
+        // load iframe
+        window.LoadIframe(targetUrl);
+    }
+    //function handleRolePermissionListing({ tokens, commandConfig }) {
+
+    //    let transId = "ad___ugp";
+    //    //let fieldname = "servername";
+
+    //    //const rawParamName = cleanCommandToken(tokens[2]);
+
+
+    //    setEditSessionState(transId);
+    //    redirectToIView(transId, "");
+    //}
+    function handleUserPermission({ tokens, commandConfig }) {
+
+        //tstruct.aspx ? act = open & transid=a__up & axusername=aarav & fromsource=U & openerIV=axusers & isIV=true & isDupTab=false & dummyload=false % E2 % 99 % A0
+        let transId = "a__up";
+        let fieldname = "axusername";
+
+        const rawParamName = cleanCommandToken(tokens[2]);
+
+
+        setEditSessionState(transId);
+        //redirectToTstruct(transId,"",true,fieldName,rawParamName);
+        let targetUrl = `../aspx/tstruct.aspx?act=open`;
+
+        targetUrl += `&transid=${transId}`;
+
+
+        if (fieldname && rawParamName) {
+            targetUrl += `&${fieldname}=${encodeURIComponent(rawParamName)}`;
+        }
+
+
+        targetUrl += `&fromsource=U`;
+        targetUrl += `&openerIV=${transId}`;
+        targetUrl += `&isIV=true`;
+        targetUrl += `&isDupTab=false`;
+        targetUrl += `&dummyload=false♠`;
+        setCommandRoutes(input.value.trim(), targetUrl);
+
+        // load iframe
+        top.window.LoadIframe(targetUrl);
+    }
+    //function handleRolePermission({ tokens, commandConfig }) {
+
+    //    //tstruct.aspx ? act = load & transid=ad_ur & recordid=1504010000001 & recpos=6 & curpage=1 & pagetype=middle & openeriv=ad___url & isiv=true & isduptab=false & reqProc_logtime=& dummyload=false % e2 % 99 % a0
+    //    let transId = "axurg";
+    //    //let fieldname = "recordid";
+
+    //    const rawParamName = cleanCommandToken(tokens[2]);
+    //    let recordId = tryResolveToken(2, rawParamName, commandConfig, false);
+
+
+    //    setEditSessionState(transId);
+    //    //redirectToTstruct(transId);
+
+    //    let targetUrl = `../aspx/tstruct.aspx?act=load`;
+
+    //    targetUrl += `&transid=${transId}`;
+
+    //    if (recordId) {
+    //        targetUrl += `&recordid=${encodeURIComponent(recordId)}`;
+    //    }
+
+    //    // static params
+    //    targetUrl += `&recpos=6`;
+    //    targetUrl += `&curpage=1`;
+    //    targetUrl += `&pagetype=middle`;
+    //    targetUrl += `&openeriv=${transId}`; // or exact: ad___url if needed
+    //    targetUrl += `&isiv=true`;
+    //    targetUrl += `&isduptab=false`;
+    //    targetUrl += `&reqProc_logtime=`;
+    //    targetUrl += `&dummyload=false♠`;
+
+    //    // load iframe
+    //    top.window.LoadIframe(targetUrl);
     //}
 
     function openPopOption(targetURL) {
@@ -913,6 +1226,12 @@
        2. INPUT HANDLER
     =============================== */
     function handleInput() {
+        if (isCommandsLoading) {
+            items = ["Loading Commands...."];
+            hintDiv.textContent = "Please wait...";
+            render();
+            return;
+        }
         const text = input.value;
 
         if (axiClearBtn) {
@@ -2074,25 +2393,25 @@
             // }
 
             if (staticValues.length > 0 && result.length === 0 && partialTyped.length > 0) {
-                const currentInput = inputText; 
+                const currentInput = inputText;
 
-                
-                clearTimeout(window._staticValidationTimer); 
+
+                clearTimeout(window._staticValidationTimer);
 
                 window._staticValidationTimer = setTimeout(() => {
-                    if (input.value !== currentInput) return; 
+                    if (input.value !== currentInput) return;
 
-                    const latestTokens = getTokens(input.value); 
-                    const latestPartial = cleanString(latestTokens[latestTokens.length -1 ] || ""); 
-                    const isValid = staticValues.some(val => val.toLowerCase() === latestPartial.toLowerCase()); 
+                    const latestTokens = getTokens(input.value);
+                    const latestPartial = cleanString(latestTokens[latestTokens.length - 1] || "");
+                    const isValid = staticValues.some(val => val.toLowerCase() === latestPartial.toLowerCase());
 
                     if (!isValid) {
-                        showToast("Please select a valid option from the list.", 2000, false); 
-                        let dummyTokens = [...tokens]; 
-                        dummyTokens[dummyTokens.length -1] = ""; 
-                        input.value = dummyTokens.join(" "); 
+                        showToast("Please select a valid option from the list.", 2000, false);
+                        let dummyTokens = [...tokens];
+                        dummyTokens[dummyTokens.length - 1] = "";
+                        input.value = dummyTokens.join(" ");
                     }
-                }, 400); 
+                }, 400);
             }
 
             if (groupKey.toLowerCase() === "create" && tokens.length === 3) {
@@ -2298,7 +2617,7 @@
 
                 let dummyTokens = [...tokens];
                 let lastIndex = dummyTokens.length - 1;
-            
+
 
                 dummyTokens[lastIndex] = "";
 
@@ -2322,18 +2641,18 @@
             //     else if (key === 'view') {
             //         if (item.viewallowed === 'F') return;
             //     }
-               
+
 
             //     return item.displaydata || item.caption || item.name || item.fname || item.keyfield;
 
             // });
 
             const validItems = filtered.filter(item => {
-                let key = groupKey?.toLowerCase(); 
+                let key = groupKey?.toLowerCase();
 
-                if (key === "create") return item?.createAllowed !== 'F'; 
-                if (key === "view") return item?.viewallowed !== 'F'; 
-                return true; 
+                if (key === "create") return item?.createAllowed !== 'F';
+                if (key === "view") return item?.viewallowed !== 'F';
+                return true;
             })
 
             filteredObjects = validItems;
@@ -2341,11 +2660,11 @@
             let resultList = validItems.map(item => {
                 return (
                     item.displaydata ||
-                    item.caption || 
-                    item.name || 
+                    item.caption ||
+                    item.name ||
                     item.fname ||
                     item.keyfield
-                ); 
+                );
             })
 
             if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
@@ -2360,6 +2679,10 @@
             }
 
             else if (groupKey.toLowerCase() === "analyse" && tokens.length <= 3) {
+                resultList.unshift(goOption);
+                filteredObjects.unshift(goOption);
+            }
+            else if (groupKey.toLowerCase() === "open" && tokens[1]?.toLowerCase() === "api") {
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
@@ -2689,14 +3012,14 @@
                     } else if (commandConfig.commandGroup.toLowerCase() === "view") {
                         value = "all";
                     } else value = "run";
-                } 
-                
+                }
+
                 else if (param === ":structtype") {
                     if (commandConfig.commandGroup.toLowerCase() === "view") {
                         value = "all";
                     } else if (commandConfig.commandGroup.toLowerCase() == "open" && tokens.length >= 2) {
                         let token = tokens[1].toLowerCase();
- 
+
                         switch (token) {
                             case "iview":
                                 value = "i";
@@ -2713,7 +3036,7 @@
                             default:
                                 value = "t"; //all
                         }
-                    } 
+                    }
                     else if (commandConfig.commandGroup.toLowerCase() == "analyse") {
                         value = 'analyse'
                     }
@@ -3126,12 +3449,14 @@
 
 
         let isAdsValue = false;
+
+        const groupKey = cleanString(tokens[0]);
+        const commandConfig = commands[groupKey];
         /**
          * ==== Robust Type checking for View command ===
          */
         if (isViewCommand && commands) {
-            const groupKey = cleanString(tokens[0]);
-            const commandConfig = commands[groupKey];
+
 
             if (commandConfig && commandConfig.prompts && commandConfig.prompts[0]) {
                 const viewSource = commandConfig.prompts[0].promptSource;
@@ -3151,11 +3476,17 @@
         // Get Real Value logic
         const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
 
+
+
         if (foundObj && isViewCommand) {
-            if (!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) {
-                showToast("Redirection link is not available for this page."); 
-                console.error("No Redirection link!"); 
-                return; 
+            const caption = foundObj?.caption ? foundObj?.caption : foundObj?.displaydata;
+
+            const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), caption, commandConfig.prompts?.[0]?.promptValues, tokens, commandConfig);
+
+            if ((!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) && type?.toLowerCase() === "page") {
+                showToast("Redirection link is not available for this page.");
+                console.error("No Redirection link!");
+                return;
             }
         }
 
@@ -3876,6 +4207,10 @@
      * @returns 
      */
     function executeCommandsV2(isNavigating = false) {
+        if (isCommandsLoading) {
+            showToast("Commands are not loaded!");
+            return;
+        }
 
 
 
@@ -4951,11 +5286,11 @@
         const VALID_TYPES = new Set(paramList);
 
         let paramValue;
-       // if (axDatasourceKey.toLowerCase() === "axi_viewlist") {
+        // if (axDatasourceKey.toLowerCase() === "axi_viewlist") {
 
-       if (axDatasourceKey.toLowerCase() === "axi_structmetalist") {
-           paramValue = processExtraParams(tokens, commandConfig);
-           axDatasourceKey += "_" + paramValue.toLowerCase();
+        if (axDatasourceKey.toLowerCase() === "axi_structmetalist") {
+            paramValue = processExtraParams(tokens, commandConfig);
+            axDatasourceKey += "_" + paramValue.toLowerCase();
         }
 
 
@@ -5163,21 +5498,21 @@
         let rawName = cleanCommandToken(tokens[2]);
 
 
-        if (rawName) {
-            paramName = tryResolveToken(2, rawName, commandConfig, false);
+        // if (rawName) {
+        //     paramName = tryResolveToken(2, rawName, commandConfig, false);
 
-        }
+        // }
 
         setEditSessionState(transId);
 
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
-        if (!paramName) {
+        if (!rawName) {
             setCommandRoutes(input.value.trim(), targetUrl);
             window.LoadIframe(targetUrl);
 
         } else {
-            targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
+            targetUrl += `&${fieldname}=${encodeURIComponent(rawName)}`;
             targetUrl += "&act=load";
             targetUrl += "&dummyload=false♠";
             setCommandRoutes(input.value.trim(), targetUrl);
@@ -5194,6 +5529,7 @@
         const targetUrl = "../aspx/tstruct.aspx?transid=axvar";
         setCommandRoutes(input.value.trim(), targetUrl);
         window.LoadIframe(targetUrl);
+        //  window.openDeveloperStudio("tstreact", "axvar" , true);
 
     }
 
@@ -6020,9 +6356,9 @@
     function handleAnalyse({ tokens, commandConfig }) {
 
         if (tokens < 1) {
-            showToast("Error:Invalid Tokens, Analyze command requires atleast 2 tokens"); 
-            console.error("Error:Invalid Tokens, Analyze command requires atleast 2 tokens"); 
-            return; 
+            showToast("Error:Invalid Tokens, Analyze command requires atleast 2 tokens");
+            console.error("Error:Invalid Tokens, Analyze command requires atleast 2 tokens");
+            return;
         }
 
 
@@ -6037,30 +6373,30 @@
 
         // else {
 
-            const captionSelected = cleanString(tokens[1]);
-            const transIdAnalyse = tryResolveToken(1, captionSelected, commandConfig);
-            const paramValuesCsv = "tstruct,ads"
+        const captionSelected = cleanString(tokens[1]);
+        const transIdAnalyse = tryResolveToken(1, captionSelected, commandConfig);
+        const paramValuesCsv = "tstruct,ads"
 
-            const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), transIdAnalyse, paramValuesCsv, tokens, commandConfig); 
+        const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), transIdAnalyse, paramValuesCsv, tokens, commandConfig);
 
-            targetUrl += `?entity=${encodeURIComponent(transIdAnalyse)}`;
+        targetUrl += `?entity=${encodeURIComponent(transIdAnalyse)}`;
 
-            if (tokens.length == 3) {
-                let groupByFieldCaption = cleanString(tokens[2]);
-                const groupByFiedlname = tryResolveToken(2, groupByFieldCaption, commandConfig);
-                targetUrl += `&groupby=${encodeURIComponent(groupByFiedlname)}`;
-            }
-            else if (tokens.length > 3) {
-                showToast("Analyse commands requires only 3 tokens");
-                return;
-            }
+        if (tokens.length == 3) {
+            let groupByFieldCaption = cleanString(tokens[2]);
+            const groupByFiedlname = tryResolveToken(2, groupByFieldCaption, commandConfig);
+            targetUrl += `&groupby=${encodeURIComponent(groupByFiedlname)}`;
+        }
+        else if (tokens.length > 3) {
+            showToast("Analyse commands requires only 3 tokens");
+            return;
+        }
 
-            targetUrl += "&calendar=t";
-            targetUrl += `&type=${type}`
-            // targetUrl += "&isDupTab=true-1770626614111";
-            targetUrl += `&isDupTab=true-${Date.now()}`;
+        targetUrl += "&calendar=t";
+        targetUrl += `&type=${type}`
+        // targetUrl += "&isDupTab=true-1770626614111";
+        targetUrl += `&isDupTab=true-${Date.now()}`;
 
-            targetUrl += "&hdnbElapsTime=0";
+        targetUrl += "&hdnbElapsTime=0";
         // }
 
         setCommandRoutes(input.value.trim(), targetUrl);
@@ -8645,7 +8981,14 @@
 
         if (axiFavoritesUrl) {
             fetch(`${axiFavoritesUrl}?username=${window.mainUserName}&appname=${appname}`)
-                .then(res => res.json())
+                .then(res => {
+                    isCommandsLoading = true;
+                    input.disabled = isCommandsLoading;
+                    input.placeholder = "Initializing commands, Please wait....";
+
+
+                    return res.json()
+                })
                 .then(data => {
                     console.log("Fetched favorites from backend: ", data);
                     console.log("type : ", typeof data);
@@ -8661,6 +9004,11 @@
                 .catch(err => {
                     console.error("Axi: Failed to sync favorites from backend", err);
                     // showToast("Axi: Axi: Failed to sync favorites from backend"); 
+
+                }).finally(() => {
+                    isCommandsLoading = false;
+                    input.disabled = isCommandsLoading;
+                    input.placeholder = "Axpert AI"
 
                 });
 
@@ -9030,3 +9378,56 @@
 
 
 })();
+
+
+function LoadIframeac(src) {
+    try {
+        if (typeof callParentNew("addFormRuntimeDcFlag") != "undefined" && callParentNew("addFormRuntimeDcFlag") != "") {
+            AddFormDcFieldAdded('fromconfig', src);
+            return;
+        }
+    } catch (ex) {
+        callParentNew("addFormRuntimeDcFlag=", "");
+    }
+    try {
+        if (typeof callParentNew("formComponentsFlag") != "undefined" && callParentNew("formComponentsFlag") != "")
+            checkIsPageLocked();
+    } catch (ex) { }
+    isTstructSplited = false;
+    try {
+        AxOnLoadIframe();
+    }
+    catch (ex) { }
+    if (src.indexOf("iviewInteractive") !== 1)
+        src = src.replace("iviewInteractive", "iview");
+
+    if (window.globalChange) {
+        if (confirm(appGlobalVarsObject.lcm[31])) {
+            SetFormDirty(false);
+        } else {
+            return;
+        }
+    } else if ($("#middle1")[0].contentWindow.designChanged != undefined && $("#middle1")[0].contentWindow.designChanged == true) {
+
+        if (!confirm(appGlobalVarsObject.lcm[31]))
+            return;
+    }
+    var el = "";
+    let el2 = "";
+    try {
+        el2 = AxOnLoadMiddleIframe(src);
+        if (el2 != undefined || el2 != "") {
+            // el2.src = "";
+            el2.src = '../../aspx/' + src;
+        }
+    }
+    catch (ex) { }
+    if (el2 === undefined || el2 === "") {
+        el = document.getElementById('middle1');
+        // el.src = "";
+        el.src = src;
+    }
+
+    isTstructPopup = false;
+    return false;
+}
