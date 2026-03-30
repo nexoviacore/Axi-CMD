@@ -102,33 +102,32 @@
             job: handleConfigureJob,
             rule: handleConfigureRule,
             server: handleConfigureServer,
-            "form notification": handleConfigureFormNotification,
-            "peg form notification": handleCofigurePegFormNotification,
+            formnotification: handleConfigureFormNotification,
+            pegformnotification: handleCofigurePegFormNotification,
             permission: handleConfigurePermissions,
             access: handleConfigureAccess,
-            "scheduled notification": handleConfigureScheduledNotification,
+            schedulednotification: handleConfigureScheduledNotification,
             keyfield: handleKeyfield,
-            "news and announcement": handleConfigureNewsAndAnnouncement,
+            newsandannouncement: handleConfigureNewsAndAnnouncement,
             settings: handleConfigureSettings,
 
             users: handleUsers,
             user: handleUser,
             roles: handleRoles,
             role: handleRole,
-            "publish api": handleApi,
-            "publish api listing": handleApiList,
-            "publish listing": handlePublishListing,
+            publishapi: handleApi,
+            publishapilisting: handleApiList,
+            publishlisting: handlePublishListing,
             cards: handleCards,
             //forms: handleForms,
             //responsibility: handleResponsibility,
             responsibilities: handleResponsibilities,
-            "user group": handleUserGroup,
+            usergroup: handleUserGroup,
             dimensions: handleDimensions,
             actors: handleActors,
-            // useractivation: handleUserActivation,
-            "user activation": handleUserActivation,
-            "user permission listing": handleUserPermissionListing,
-            "user permissions": handleUserPermission,
+            useractivation: handleUserActivation,
+            userpermissionlisting: handleUserPermissionListing,
+            userpermissions: handleUserPermission,
             //rolepermissionlisting: handleRolePermissionListing,
             // rolepermissions: handleRolePermission
         },
@@ -137,9 +136,9 @@
             ads: handleOpenAds,
             card: handleOpenCard,
             page: handleOpenPage,
-            "app var": handleOpenAppVar,
-            "dev option": handleOpenDevOptions,
-            "db console": handleOpenDbConsole,
+            appvar: handleOpenAppVar,
+            devoption: handleOpenDevOptions,
+            dbconsole: handleOpenDbConsole,
             menu: handleOpenArrangeMenu,
 
             api: handleConfigureApi
@@ -2596,7 +2595,7 @@
                     //     }
                     //     return [];
                     // }
-                    return [`Fetching Data...`];
+                    return [`Loading ${realSource}...`];
                 }
                 return ["Waiting for input..."];
             }

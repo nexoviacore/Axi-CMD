@@ -57,6 +57,14 @@
 	margin-bottom: 40px !important;
 }
 
+#axiSuggestions,
+#axiMegaDropdown,
+.My-Command-Wrapper,
+.axi-suggestions,
+.My-Fav-Items-Wrapper {
+    overscroll-behavior: contain;
+}
+
 .AXI-Sec {
 	background: white;
 	position: fixed;
@@ -478,7 +486,9 @@
   width: 100% !important;
   left: 0;
   box-shadow: none !important;
-  height: auto !important;
+  /* height: auto !important; */
+  max-height: 300px !important; 
+  overflow-y: auto !important; 
   display: flex !important;
   flex-wrap: wrap;
   border: 0 !important;
