@@ -134,15 +134,15 @@
         },
         Open: {
             default: handleOpenSource,
-            ads: handleOpenAds,
+            "axpert data sources": handleOpenAds,
             card: handleOpenCard,
             page: handleOpenPage,
-            "app var": handleOpenAppVar,
-            "dev option": handleOpenDevOptions,
-            "db console": handleOpenDbConsole,
-            menu: handleOpenArrangeMenu,
+            "app variables": handleOpenAppVar,
+            "dev options": handleOpenDevOptions,
+            "db explorer": handleOpenDbConsole,
+            "arrange menu": handleOpenArrangeMenu,
 
-            api: handleConfigureApi
+            "api plugins": handleConfigureApi
 
 
         },
@@ -2684,7 +2684,12 @@
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
-            else if (groupKey.toLowerCase() === "open" && tokens[1]?.toLowerCase() === "api") {
+            else if (groupKey.toLowerCase() === "open" && cleanCommandToken(tokens[1])?.toLowerCase() === "api plugins") {
+                resultList.unshift(goOption);
+                filteredObjects.unshift(goOption);
+            }
+
+            else if (groupKey.toLowerCase() === "open" && cleanCommandToken(tokens[1])?.toLowerCase() === "axpert data sources") {
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
@@ -3032,7 +3037,7 @@
                             case "page":
                                 value = "p";
                                 break;
-                            case "ads":
+                            case "axpert data sources":
                                 value = "ads";
                                 break;
                             default:
