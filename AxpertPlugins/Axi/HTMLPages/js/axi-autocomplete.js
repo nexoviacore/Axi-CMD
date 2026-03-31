@@ -566,10 +566,11 @@
                 const prevTokenIndex = targetIndex - 1;
                 const prevValue = cleanString(tokens[prevTokenIndex]);
                 const allowedValues = prevPrompt.promptValues.split(',').map(v => v.trim().toLowerCase());
+                const actualPrevValue = tryResolveToken(prevTokenIndex, prevValue, commandConfig, false) || prevValue;
                 let valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
 
                 if (valueIndex === -1 && commandConfig.commandGroup?.toLowerCase() === 'view') {
-                    const detectedType = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), prevValue, prevPrompt.promptValues, tokens, commandConfig);
+                    const detectedType = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), actualPrevValue, prevPrompt.promptValues, tokens, commandConfig);
 
                     if (detectedType) {
                         valueIndex = allowedValues.indexOf(detectedType.toLowerCase());
@@ -1626,10 +1627,7 @@
                 const rawDisplay = (col?.displaydata || col?.name)?.toLowerCase();
 
 
-                const cleanDisplay = rawDisplay
-                    .replace(/\s*\(.*?\)/g, "")
-                    .replace(/\s*\[[^\]]+\]\s*$/, "")
-                    .trim();
+                const cleanDisplay = rawDisplay?.replace(/\s*\(.*?\)/g, "")?.replace(/\s*\[[^\]]+\]\s*$/, "")?.trim();
 
                 const rawName = (col.name || "").toLowerCase();
 
@@ -2231,7 +2229,8 @@
             const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
             const viewValues = commandConfig.prompts?.[0]?.promptValues;
             const firstToken = cleanString(tokens[1] || "");
-            detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues, tokens, commandConfig);
+            const actualFirstToken = tryResolveToken(1, firstToken, commandConfig, false);
+            detectedType = getType(viewSource.toLowerCase(), actualFirstToken, viewValues, tokens, commandConfig);
 
             if (detectedType === "ads") {
                 ignoreExtraParams = true;
@@ -2411,7 +2410,7 @@
                         let dummyTokens = [...tokens];
                         dummyTokens[dummyTokens.length - 1] = "";
                         input.value = dummyTokens.join(" ");
-                        handleInput(); 
+                        handleInput();
                     }
                 }, 400);
             }
@@ -5304,33 +5303,59 @@
 
         const data = axDatasourceObj?.[axDatasourceKey];
 
+        if (!data || !Array.isArray(data)) return null;
+
         console.log(JSON.stringify(data));
 
 
         const normalizedText = text.trim().toLowerCase();
 
-        const item = data?.find(d => {
-            if (typeof d.displaydata !== "string") return false;
+        const rawTokenText = tokens[1] ? cleanCommandToken(tokens[1]).toLowerCase() : normalizedText;
 
-            if (d.name && d.name.toLowerCase() === normalizedText) {
-                return true;
-            }
+        let bestMatch = null;
+
+        // const item = data?.find(d => {
+        //     if (typeof d.displaydata !== "string") return false;
+
+        //     if (d.name && d.name.toLowerCase() === normalizedText) {
+        //         return true;
+        //     }
 
 
-            const pureCaption = d.displaydata
-                .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
-                .replace(/\s*\[[^\]]+\]\s*$/, "")
-                .trim()
-                .toLowerCase();
+        //     const pureCaption = d.displaydata
+        //         .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
+        //         .replace(/\s*\[[^\]]+\]\s*$/, "")
+        //         .trim()
+        //         .toLowerCase();
 
-            return pureCaption === normalizedText;
-        });
+        //     return pureCaption === normalizedText;
+        // });
 
-        if (!item || typeof item.displaydata !== "string") {
+        bestMatch = data.find(d => typeof d.displaydata === "string" && d.displaydata.toLowerCase() === rawTokenText.toLowerCase());
+
+        if (!bestMatch) {
+            bestMatch = data.find(d => d.name && d.name.toLowerCase() === normalizedText);
+        }
+
+        if (!bestMatch) {
+            bestMatch = data.find(d => {
+                if (typeof d.displaydata !== "string") return false;
+
+                const pureCaption = d.displaydata
+                    .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
+                    .replace(/\s*\[[^\]]+\]\s*$/, "")
+                    .trim()
+                    .toLowerCase();
+
+                return pureCaption === normalizedText || pureCaption === rawTokenText;
+            });
+        }
+
+        if (!bestMatch || typeof bestMatch.displaydata !== "string") {
             return null;
         }
 
-        const matches = [...item.displaydata.matchAll(/\[([^\]]+)\]/g)];
+        const matches = [...bestMatch.displaydata.matchAll(/\[([^\]]+)\]/g)];
 
         if (matches.length === 0) {
             return null;
