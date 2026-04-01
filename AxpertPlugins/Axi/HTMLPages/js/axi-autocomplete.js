@@ -2651,7 +2651,7 @@
             const validItems = filtered.filter(item => {
                 let key = groupKey?.toLowerCase();
 
-                if (key === "create") return item?.createAllowed !== 'F';
+                if (key === "create") return item?.createallowed !== 'F';
                 if (key === "view") return item?.viewallowed !== 'F';
                 return true;
             })

@@ -2040,22 +2040,6 @@ g text {
 }
 
 /* Card Grid Analytics Layout */
-#Entity_Summary_Wrapper > .card-header.Page-title,
-#Entity_Summary_Wrapper > #analytics-grid-filter-summary {
-  flex: 0 0 100%;
-  max-width: 100%;
-  width: 100%;
-}
-
-#analytics-grid-filter-summary {
-  clear: both;
-}
-
-#Entity_Summary_Wrapper > #Analytics_Grid_Container,
-#Entity_Summary_Wrapper > #Analytics_Hyperlink_Panel {
-  align-self: flex-start;
-}
-
 #Analytics_Grid_Container {
   padding: 10px 12px 16px;
 }
@@ -2392,50 +2376,6 @@ g text {
   line-height: 1;
   min-width: 100%;
   padding: 4px 26px 4px 8px;
-}
-
-.analytics-grid-color-picker-wrap {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.analytics-grid-color-picker-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.analytics-grid-color-input {
-  border: 1px solid #d6dce5;
-  border-radius: 50%;
-  cursor: pointer;
-  height: 22px;
-  padding: 0;
-  width: 22px;
-}
-
-.analytics-grid-color-input::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-
-.analytics-grid-color-input::-webkit-color-swatch {
-  border: none;
-  border-radius: 50%;
-}
-
-.analytics-grid-color-input::-moz-color-swatch {
-  border: none;
-  border-radius: 50%;
-}
-
-.analytics-grid-color-reset-btn {
-  font-size: 11px;
-  line-height: 1;
-  margin-left: auto;
-  min-height: 20px;
-  padding: 0 !important;
 }
 
 .analytics-grid-filter-action {
