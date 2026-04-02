@@ -56,6 +56,7 @@ class AnalyticsCharts {
         this.analyticsEntityCache = {};
         this.analyticsPrefsCache = {};
         this.availableAggFields = null;
+        this.globalAggField = "count";
         this.isAggFieldAvailabilitySyncing = false;
         this.isApplyingGridCardState = false;
         this.gridBatchChartsByKey = {};
@@ -193,6 +194,7 @@ class AnalyticsCharts {
         this.initializeGridColumnControls();
         this.initializeHyperlinkPanelToggle();
         this.updateChartButton(this.selectedChartType);
+        this.ensureGlobalGridAggControl();
         this.applyUrlParams();
 
         if (showFieldSelectionPopup) {
@@ -238,7 +240,9 @@ class AnalyticsCharts {
             if (current && typeof current === "object" && !Array.isArray(current)) {
                 if (this.getAnalyticsPropertyValue(current, "XAXISFIELDS") ||
                     this.getAnalyticsPropertyValue(current, "YAXISFIELDS") ||
-                    this.getAnalyticsPropertyValue(current, "CHARTTYPE")) {
+                    this.getAnalyticsPropertyValue(current, "CHARTTYPE") ||
+                    this.getAnalyticsPropertyValue(current, "GLOBALAGGFIELD") ||
+                    this.getAnalyticsPropertyValue(current, "GRIDCARDSTATE")) {
                     return current;
                 }
             }
@@ -279,14 +283,17 @@ class AnalyticsCharts {
                 if (`${cachedYAxis || ""}`.trim() !== "") {
                     this.yAxisFields = cachedYAxis;
                 }
-                this.selectedChartType = "line";
+                const cachedChartType = this.getAnalyticsPropertyValue(cachedPrefs, "CHARTTYPE");
+                const cachedGlobalAgg = this.getAnalyticsPropertyValue(cachedPrefs, "GLOBALAGGFIELD");
+                this.selectedChartType = cachedChartType || this.selectedChartType || "line";
+                this.globalAggField = cachedGlobalAgg || this.globalAggField || "count";
                 this.logFilterDebug("loadStoredAnalyticsPreferences:cacheHit", {
                     transId: transId,
                     xAxisFields: this.xAxisFields,
-                    yAxisFields: this.yAxisFields
+                    yAxisFields: this.yAxisFields,
+                    chartType: this.selectedChartType,
+                    globalAggField: this.globalAggField
                 });
-                done();
-                return;
             }
         }
 
@@ -298,7 +305,7 @@ class AnalyticsCharts {
         const requestPayload = {
             page: "Analytics",
             transId: transId,
-            propertiesList: ["XAXISFIELDS", "YAXISFIELDS", "CHARTTYPE"]
+            propertiesList: ["XAXISFIELDS", "YAXISFIELDS", "CHARTTYPE", "GLOBALAGGFIELD", "GRIDCARDSTATE"]
         };
 
         _entityCommon.getAnalyticsDataWS(requestPayload, (response) => {
@@ -306,6 +313,9 @@ class AnalyticsCharts {
                 const properties = this.extractStoredAnalyticsProperties(response);
                 const storedXAxis = this.getAnalyticsPropertyValue(properties, "XAXISFIELDS");
                 const storedYAxis = this.getAnalyticsPropertyValue(properties, "YAXISFIELDS");
+                const storedChartType = this.getAnalyticsPropertyValue(properties, "CHARTTYPE");
+                const storedGlobalAgg = this.getAnalyticsPropertyValue(properties, "GLOBALAGGFIELD");
+                const storedGridState = this.getAnalyticsPropertyValue(properties, "GRIDCARDSTATE");
                 this.hasStoredFieldSelection =
                     this.hasConfiguredAnalyticsFields(storedXAxis) ||
                     this.hasConfiguredAnalyticsFields(storedYAxis);
@@ -316,11 +326,30 @@ class AnalyticsCharts {
                 if (`${storedYAxis || ""}`.trim() !== "") {
                     this.yAxisFields = storedYAxis;
                 }
-                this.selectedChartType = "line";
+                this.selectedChartType = storedChartType || this.selectedChartType || "line";
+                this.globalAggField = storedGlobalAgg || this.globalAggField || "count";
+
+                if (storedGridState) {
+                    try {
+                        const parsedGridState = (typeof storedGridState === "string")
+                            ? JSON.parse(storedGridState)
+                            : storedGridState;
+                        if (parsedGridState && typeof parsedGridState === "object") {
+                            const normalizedGridState = this.normalizeGridCardStatePayload(parsedGridState, {
+                                storedOn: parsedGridState.storedOn || new Date().toISOString()
+                            });
+                            this.writeGridCardState(normalizedGridState, transId);
+                        }
+                    } catch (error) {
+                        console.warn("Unable to parse stored GRIDCARDSTATE:", error);
+                    }
+                }
+
                 this.writeAnalyticsPrefsCache(transId, {
                     XAXISFIELDS: this.xAxisFields || "All",
                     YAXISFIELDS: this.yAxisFields || "All",
-                    CHARTTYPE: "line"
+                    CHARTTYPE: this.selectedChartType || "line",
+                    GLOBALAGGFIELD: this.globalAggField || "count"
                 });
             } catch (error) {
                 console.error("Error while reading analytics preferences:", error);
@@ -344,7 +373,8 @@ class AnalyticsCharts {
             properties: {
                 "XAXISFIELDS": this.xAxisFields || "All",
                 "YAXISFIELDS": this.yAxisFields || "All",
-                "CHARTTYPE": this.selectedChartType || "line"
+                "CHARTTYPE": this.selectedChartType || "line",
+                "GLOBALAGGFIELD": this.globalAggField || "count"
             },
             allUsers: false
         };
@@ -356,7 +386,8 @@ class AnalyticsCharts {
         this.mergeAnalyticsPrefsCache(transId, {
             XAXISFIELDS: this.xAxisFields || "All",
             YAXISFIELDS: this.yAxisFields || "All",
-            CHARTTYPE: "line"
+            CHARTTYPE: this.selectedChartType || "line",
+            GLOBALAGGFIELD: this.globalAggField || "count"
         });
     }
 
@@ -553,10 +584,183 @@ class AnalyticsCharts {
         };
     }
 
+    getSelectedGlobalAggField() {
+        const select = document.getElementById("analyticsGridGlobalAggSelect");
+        if (select && select.value) {
+            return select.value;
+        }
+        return this.globalAggField || "count";
+    }
+
+    getSelectedGlobalAggLabel() {
+        const select = document.getElementById("analyticsGridGlobalAggSelect");
+        if (select && select.options && select.selectedIndex > -1) {
+            return select.options[select.selectedIndex]?.text || "Count";
+        }
+        const options = this.getGridAggFields();
+        const selectedAgg = this.getSelectedGlobalAggField();
+        const option = options.find(item => this.normalizeUrlParam(item.value) === this.normalizeUrlParam(selectedAgg));
+        return option ? option.label : "Count";
+    }
+
+    setSelectedGlobalAggField(value) {
+        const targetValue = `${value || "count"}`.trim() || "count";
+        this.globalAggField = targetValue;
+        const select = document.getElementById("analyticsGridGlobalAggSelect");
+        if (!select) {
+            return;
+        }
+        const hasOption = Array.from(select.options).some(option =>
+            this.normalizeUrlParam(option.value) === this.normalizeUrlParam(targetValue)
+        );
+        if (hasOption) {
+            select.value = targetValue;
+        } else {
+            select.value = "count";
+            this.globalAggField = "count";
+        }
+    }
+
+    ensureGlobalGridAggControl() {
+        const pageHeader = document.querySelector(".card-header.Page-title");
+        if (!pageHeader) {
+            return;
+        }
+
+        let host = document.getElementById("analyticsGridAggHost");
+        if (!host) {
+            host = document.createElement("div");
+            host.id = "analyticsGridAggHost";
+            host.className = "analytics-grid-global-agg-host";
+            host.innerHTML = `
+                <label for="analyticsGridGlobalAggSelect" class="analytics-grid-global-agg-label">Aggregate</label>
+                <select id="analyticsGridGlobalAggSelect" class="form-select form-select-sm analytics-grid-global-agg-select" title="Aggregate Field"></select>
+            `;
+            const titleElement = pageHeader.querySelector("h3.card-title");
+            if (titleElement && titleElement.nextSibling) {
+                pageHeader.insertBefore(host, titleElement.nextSibling);
+            } else {
+                pageHeader.appendChild(host);
+            }
+        }
+
+        const select = host.querySelector("#analyticsGridGlobalAggSelect");
+        if (!select) {
+            return;
+        }
+
+        const options = this.getGridAggFields();
+        const currentValue = this.globalAggField || select.value || "count";
+        select.innerHTML = options.map(option =>
+            `<option value="${this.escapeHtml(option.value)}">${this.escapeHtml(option.label)}</option>`
+        ).join("");
+
+        const targetValue = options.some(option =>
+            this.normalizeUrlParam(option.value) === this.normalizeUrlParam(currentValue)
+        ) ? currentValue : "count";
+        select.value = targetValue;
+        this.globalAggField = targetValue;
+
+        if (!select.dataset.boundChange) {
+            select.addEventListener("change", () => {
+                this.globalAggField = select.value || "count";
+                this.saveGridCardState();
+                const container = document.querySelector("#analytics-yaxis-grid");
+                const cards = container ? Array.from(container.querySelectorAll(".analytics-grid-card")) : [];
+                if (cards.length > 0) {
+                    this.loadGridCardsBatch(cards, { forceRefresh: false });
+                }
+            });
+            select.dataset.boundChange = "T";
+        }
+    }
+
+    promptAndSavePreferences() {
+        if (!_entityCommon || typeof _entityCommon.setAnalyticsDataWS !== "function" || _entityCommon.inValid(this.entityTransId)) {
+            showAlertDialog("warning", "No active SmartList is selected to save.");
+            return;
+        }
+
+        const shouldSave = window.confirm("Save current SmartList changes?");
+        if (!shouldSave) {
+            return;
+        }
+
+        const applyAllUsers = window.confirm("Apply these changes for all users?\nClick OK for All Users, or Cancel for Myself only.");
+        this.saveGridCardState();
+
+        const statePayload = this.readGridCardState(this.entityTransId);
+        const normalizedState = this.normalizeGridCardStatePayload(statePayload || {}, {
+            storedOn: new Date().toISOString()
+        });
+
+        const payload = {
+            page: "Analytics",
+            transId: this.entityTransId,
+            properties: {
+                "XAXISFIELDS": this.xAxisFields || "All",
+                "YAXISFIELDS": this.yAxisFields || "All",
+                "CHARTTYPE": this.selectedChartType || "line",
+                "GLOBALAGGFIELD": this.getSelectedGlobalAggField() || "count",
+                "GRIDCARDSTATE": JSON.stringify(normalizedState)
+            },
+            confirmNeeded: false,
+            allUsers: !!applyAllUsers
+        };
+
+        _entityCommon.setAnalyticsDataWS(payload, () => {
+            this.mergeAnalyticsPrefsCache(this.entityTransId, {
+                XAXISFIELDS: this.xAxisFields || "All",
+                YAXISFIELDS: this.yAxisFields || "All",
+                CHARTTYPE: this.selectedChartType || "line",
+                GLOBALAGGFIELD: this.getSelectedGlobalAggField() || "count"
+            });
+            showAlertDialog("success", applyAllUsers
+                ? "Changes saved for all users."
+                : "Changes saved for your user.");
+        }, (error) => {
+            showAlertDialog("error", error?.status
+                ? `${error.status} ${error.statusText || ""}`.trim()
+                : "Unable to save changes.");
+        });
+    }
+
+    ensureAnalyticsSaveButton() {
+        const toolbar = document.querySelector(".Tkts-toolbar-Right");
+        if (!toolbar) {
+            return;
+        }
+
+        let saveButton = toolbar.querySelector("#btn_AnalyticsSaveScope");
+        if (!saveButton) {
+            const settingsButton = toolbar.querySelector("#btn_selectfields");
+            const buttonHtml = `<button id="btn_AnalyticsSaveScope" type="button" title="Save Preferences" class="btn btn-sm btn-icon btn-white btn-color-gray-600 btn-active-primary btn-custom-border-radius" aria-label="Save Preferences">
+                                    <span class="material-icons material-icons-style material-icons-2">save</span>
+                                </button>`;
+            if (settingsButton) {
+                settingsButton.insertAdjacentHTML("beforebegin", buttonHtml);
+            } else {
+                toolbar.insertAdjacentHTML("afterbegin", buttonHtml);
+            }
+            saveButton = toolbar.querySelector("#btn_AnalyticsSaveScope");
+        }
+
+        if (!saveButton || saveButton.dataset.analyticsSaveBound === "T") {
+            return;
+        }
+
+        saveButton.addEventListener("click", (event) => {
+            event.preventDefault();
+            this.promptAndSavePreferences();
+        });
+        saveButton.dataset.analyticsSaveBound = "T";
+    }
+
     ensureChartControls() {
         this.initializeChartTypeDropdown();
         this.ensureDateRangeDropdown();
         this.ensureAnalyticsFilterButton();
+        this.ensureAnalyticsSaveButton();
         this.ensureEntityFilterBridge();
     }
 
@@ -2058,6 +2262,66 @@ class AnalyticsCharts {
         }
     }
 
+    getChartCompactUnit(value) {
+        const numericValue = Number(`${value ?? ""}`.replace(/,/g, ""));
+        if (!isFinite(numericValue)) {
+            return { divisor: 1, suffix: "" };
+        }
+
+        const absValue = Math.abs(numericValue);
+        const isUsLocale = this.getGlobalNumberLocale() === "en-US";
+
+        if (isUsLocale) {
+            if (absValue >= 1e9) return { divisor: 1e9, suffix: "B" };
+            if (absValue >= 1e6) return { divisor: 1e6, suffix: "M" };
+            if (absValue >= 1e3) return { divisor: 1e3, suffix: "K" };
+            return { divisor: 1, suffix: "" };
+        }
+
+        if (absValue >= 1e7) return { divisor: 1e7, suffix: "Cr" };
+        if (absValue >= 1e5) return { divisor: 1e5, suffix: "L" };
+        if (absValue >= 1e3) return { divisor: 1e3, suffix: "K" };
+        return { divisor: 1, suffix: "" };
+    }
+
+    formatChartCompactValue(value, decimals = 2) {
+        const numericValue = Number(`${value ?? ""}`.replace(/,/g, ""));
+        if (!isFinite(numericValue)) {
+            return _entityCommon.inValid(value) ? "0" : `${value}`;
+        }
+
+        const compact = this.getChartCompactUnit(numericValue);
+        const scaledValue = compact.divisor > 0 ? (numericValue / compact.divisor) : numericValue;
+        const maxDigits = Math.max(0, Math.min(10, Number(decimals) || 2));
+
+        try {
+            const formatted = scaledValue.toLocaleString(this.getGlobalNumberLocale(), {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: maxDigits
+            });
+            return `${formatted}${compact.suffix ? ` ${compact.suffix}` : ""}`;
+        } catch (error) {
+            return `${scaledValue}${compact.suffix ? ` ${compact.suffix}` : ""}`;
+        }
+    }
+
+    formatChartValue(value, decimals = 2) {
+        const numericValue = Number(`${value ?? ""}`.replace(/,/g, ""));
+        if (!isFinite(numericValue)) {
+            return _entityCommon.inValid(value) ? "0" : `${value}`;
+        }
+
+        const maxDigits = Math.max(0, Math.min(10, Number(decimals) || 2));
+        try {
+            return numericValue.toLocaleString(this.getGlobalNumberLocale(), {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: maxDigits
+            });
+        } catch (error) {
+            return `${numericValue}`;
+        }
+    }
+
     updateLastRefreshDateTime(dateValue) {
         const label = this.ensureLastRefreshLabel();
         if (!label) {
@@ -2335,28 +2599,22 @@ class AnalyticsCharts {
             return;
         }
 
-        const selects = document.querySelectorAll(".analytics-grid-agg-select");
-        if (!selects.length) {
-            return;
-        }
-
         this.isAggFieldAvailabilitySyncing = true;
-        selects.forEach(select => {
-            const currentValue = select.value || "count";
-            const options = this.getGridAggFields();
-            select.innerHTML = options.map(option =>
-                `<option value="${this.escapeHtml(option.value)}">${this.escapeHtml(option.label)}</option>`
-            ).join("");
-
-            const normalizedCurrent = this.normalizeUrlParam(currentValue);
-            if (options.some(option => this.normalizeUrlParam(option.value) === normalizedCurrent)) {
-                select.value = currentValue;
-            } else {
-                select.value = "count";
-            }
-        });
+        const currentValue = this.getSelectedGlobalAggField();
+        this.ensureGlobalGridAggControl();
+        this.setSelectedGlobalAggField(currentValue);
         this.isAggFieldAvailabilitySyncing = false;
         this.saveGridCardState();
+
+        const normalizedBefore = this.normalizeUrlParam(currentValue || "count");
+        const normalizedAfter = this.normalizeUrlParam(this.getSelectedGlobalAggField() || "count");
+        if (normalizedBefore !== normalizedAfter) {
+            const container = document.querySelector("#analytics-yaxis-grid");
+            const cards = container ? Array.from(container.querySelectorAll(".analytics-grid-card")) : [];
+            if (cards.length > 0) {
+                this.loadGridCardsBatch(cards, { forceRefresh: false });
+            }
+        }
     }
     getGridGroupFields() {
         const options = [];
@@ -2398,16 +2656,12 @@ class AnalyticsCharts {
         return options;
     }
 
-    getGridCardHtml(groupOption, aggOptions, defaultChartType, index) {
+    getGridCardHtml(groupOption, defaultChartType, index) {
         const cardId = `analytics-grid-card-${this.normalizeUrlParam(groupOption.value || "all").replace(/[^a-z0-9]+/g, "-")}-${index}`;
         const preferredGroup = this.normalizeUrlParam(this.urlParams?.groupby || "");
         const isPreferredGroup = preferredGroup && preferredGroup === this.normalizeUrlParam(groupOption.value || "");
         const chartTypes = this.getSupportedChartTypes();
         const defaultColors = this.getGridDefaultPaletteColors();
-
-        const aggOptionsHtml = aggOptions.map(option =>
-            `<option value="${this.escapeHtml(option.value)}">${this.escapeHtml(option.label)}</option>`
-        ).join("");
 
         const chartOptionsHtml = chartTypes.map(option => {
             const selectedAttr = this.normalizeUrlParam(option.type) === this.normalizeUrlParam(defaultChartType) ? " selected" : "";
@@ -2421,11 +2675,6 @@ class AnalyticsCharts {
         return `<div class="analytics-grid-card${isPreferredGroup ? " selected" : ""}" data-default-selected="${isPreferredGroup ? "T" : "F"}" data-group-field="${this.escapeHtml(groupOption.value)}" data-group-caption="${this.escapeHtml(groupOption.label)}">
                     <div class="analytics-grid-card-header">
                         <h5 class="analytics-grid-card-title" title="${this.escapeHtml(groupOption.label)}">${this.escapeHtml(groupOption.label)}</h5>
-                        <div class="analytics-grid-controls">
-                            <select class="form-select form-select-sm analytics-grid-agg-select" title="X-axis">
-                                ${aggOptionsHtml}
-                            </select>
-                        </div>
                         <button type="button" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm analytics-grid-resize-btn" title="Resize card" aria-label="Resize card">
                             <span class="material-icons material-icons-style material-icons-2">drag_indicator</span>
                         </button>
@@ -3522,16 +3771,16 @@ class AnalyticsCharts {
         }
 
         const groupOptions = this.getGridGroupFields();
-        const aggOptions = this.getGridAggFields();
         if (!groupOptions.length) {
             container.innerHTML = `<div class="analytics-grid-message w-100">No group fields configured.</div>`;
             return;
         }
 
         container.innerHTML = groupOptions.map((groupOption, index) =>
-            this.getGridCardHtml(groupOption, aggOptions, this.getAutoDefaultGridChartType(index), index)
+            this.getGridCardHtml(groupOption, this.getAutoDefaultGridChartType(index), index)
         ).join("");
         this.applyStoredGridCardState(container);
+        this.ensureGlobalGridAggControl();
         this.applyGridColumnsLayout();
 
         const cards = container.querySelectorAll(".analytics-grid-card");
@@ -3539,7 +3788,6 @@ class AnalyticsCharts {
             const popupButton = card.querySelector(".analytics-grid-popup-btn");
             const menuButton = card.querySelector(".analytics-grid-menu-btn");
             const menuPanel = card.querySelector(".analytics-grid-menu-panel");
-            const aggSelect = card.querySelector(".analytics-grid-agg-select");
             const chartSelect = card.querySelector(".analytics-grid-chart-select");
             const colorInputs = Array.from(card.querySelectorAll(".analytics-grid-color-input"));
             const paletteResetButton = card.querySelector(".analytics-grid-color-reset-btn");
@@ -3582,13 +3830,6 @@ class AnalyticsCharts {
                 this.handleGridCardClickSelection(card);
             });
 
-            if (aggSelect) {
-                aggSelect.addEventListener("change", () => {
-                    this.saveGridCardState(container);
-                    const allCards = Array.from(container.querySelectorAll(".analytics-grid-card"));
-                    this.loadGridCardsBatch(allCards, { forceRefresh: false });
-                });
-            }
             if (chartSelect) {
                 chartSelect.addEventListener("change", () => {
                     this.saveGridCardState(container);
@@ -4056,6 +4297,7 @@ class AnalyticsCharts {
 
         return {
             cards: sourceState.cards && typeof sourceState.cards === "object" ? sourceState.cards : {},
+            globalAggField: `${sourceState.globalAggField || "count"}`.trim() || "count",
             selectionFilter: {
                 groupField: `${sourceSelectionFilter.groupField || ""}`.trim(),
                 values: Array.isArray(sourceSelectionFilter.values) ? sourceSelectionFilter.values.slice() : [],
@@ -4198,17 +4440,17 @@ class AnalyticsCharts {
         }
 
         const cardState = {};
+        const globalAggField = this.getSelectedGlobalAggField() || "count";
         cards.forEach(card => {
             const groupField = this.normalizeUrlParam(card.getAttribute("data-group-field") || "");
             if (!groupField) {
                 return;
             }
 
-            const aggSelect = card.querySelector(".analytics-grid-agg-select");
             const chartSelect = card.querySelector(".analytics-grid-chart-select");
             const paletteConfig = this.getGridCardPalette(card);
             cardState[groupField] = {
-                aggField: aggSelect ? (aggSelect.value || "count") : "count",
+                aggField: globalAggField,
                 chartType: chartSelect ? (chartSelect.value || this.selectedChartType || "line") : (this.selectedChartType || "line"),
                 paletteKey: paletteConfig?.paletteKey || "custom",
                 customColors: Array.isArray(paletteConfig?.customColors) ? paletteConfig.customColors.slice() : this.getGridDefaultPaletteColors()
@@ -4217,6 +4459,7 @@ class AnalyticsCharts {
 
         this.writeGridCardState({
             cards: cardState,
+            globalAggField: globalAggField,
             selectionFilter: {
                 groupField: this.gridSelectionFilter.groupField || "",
                 values: Array.isArray(this.gridSelectionFilter.values) ? this.gridSelectionFilter.values.slice() : [],
@@ -4246,6 +4489,18 @@ class AnalyticsCharts {
         this.isApplyingGridCardState = true;
         try {
             const storedCards = storedState.cards && typeof storedState.cards === "object" ? storedState.cards : {};
+            const storedGlobalAgg = `${storedState.globalAggField || ""}`.trim();
+            if (storedGlobalAgg) {
+                this.setSelectedGlobalAggField(storedGlobalAgg);
+            } else {
+                const firstCardWithAgg = Object.keys(storedCards).find(key => !!storedCards[key]?.aggField);
+                if (firstCardWithAgg) {
+                    this.setSelectedGlobalAggField(storedCards[firstCardWithAgg].aggField);
+                } else {
+                    this.setSelectedGlobalAggField(this.globalAggField || "count");
+                }
+            }
+
             Array.from(container.querySelectorAll(".analytics-grid-card")).forEach(card => {
                 const groupField = this.normalizeUrlParam(card.getAttribute("data-group-field") || "");
                 const cardConfig = storedCards[groupField];
@@ -4253,16 +4508,7 @@ class AnalyticsCharts {
                     return;
                 }
 
-                const aggSelect = card.querySelector(".analytics-grid-agg-select");
                 const chartSelect = card.querySelector(".analytics-grid-chart-select");
-
-                if (aggSelect && cardConfig.aggField) {
-                    const targetAgg = `${cardConfig.aggField}`;
-                    const hasAgg = Array.from(aggSelect.options).some(option => this.normalizeUrlParam(option.value) === this.normalizeUrlParam(targetAgg));
-                    if (hasAgg) {
-                        aggSelect.value = targetAgg;
-                    }
-                }
 
                 if (chartSelect && cardConfig.chartType) {
                     const targetChart = `${cardConfig.chartType}`;
@@ -5648,7 +5894,8 @@ class AnalyticsCharts {
                     Properties: {
                         XAXISFIELDS: this.xAxisFields || "All",
                         YAXISFIELDS: this.yAxisFields || "All",
-                        CHARTTYPE: "line"
+                        CHARTTYPE: this.selectedChartType || "line",
+                        GLOBALAGGFIELD: this.globalAggField || "count"
                     }
                 }
             }
@@ -5669,7 +5916,7 @@ class AnalyticsCharts {
             this.metaData = Array.isArray(metaData) ? metaData : [];
             this.entityTransId = effectiveAdsName;
             this.entityName = effectiveAdsName;
-            this.selectedChartType = "line";
+            this.selectedChartType = this.selectedChartType || "line";
             this.sanitizeAxisFieldsAgainstMeta(this.metaData);
 
             this.writeAnalyticsEntityCache(effectiveAdsName, this.buildAdsEntityCachePayload(effectiveAdsName, this.metaData));
@@ -6540,6 +6787,7 @@ class AnalyticsCharts {
             disableExporting: true,
             attr: chartAttr
         });
+        this.applyChartNumericFormattingWithRetry(chartDiv.id, chartType);
 
         setTimeout(() => {
             this.forceHideGridBarDataLabels(cardElement, chartType);
@@ -6547,14 +6795,13 @@ class AnalyticsCharts {
         }, 80);
     }
 
-    forceHideGridBarDataLabels(cardElement, chartType) {
+    shouldHideDataLabelsForChartType(chartType) {
         const normalizedType = this.getChartTypeConfig(chartType).type;
         const barLikeTypes = new Set(["bar", "column", "stacked-bar", "stacked-column", "stacked-percentage-column"]);
-        if (!barLikeTypes.has(normalizedType)) {
-            return;
-        }
+        return barLikeTypes.has(normalizedType);
+    }
 
-        const chart = this.getGridCardChartInstance(cardElement);
+    forceHideChartDataLabels(chart, errorLabel) {
         if (!chart) {
             return;
         }
@@ -6597,8 +6844,163 @@ class AnalyticsCharts {
                 chart.redraw();
             }
         } catch (error) {
-            console.error("Unable to disable bar data labels for analytics grid card:", error);
+            console.error(errorLabel, error);
         }
+    }
+
+    getChartInstanceByRenderToId(containerId) {
+        if (!containerId || typeof Highcharts === "undefined" || !Array.isArray(Highcharts.charts)) {
+            return null;
+        }
+
+        return Highcharts.charts.find(chart => chart && chart.renderTo && chart.renderTo.id === containerId) || null;
+    }
+
+    applyChartNumericFormatting(chart, chartType) {
+        if (!chart || typeof chart.update !== "function") {
+            return;
+        }
+
+        const hideBarLabels = this.shouldHideDataLabelsForChartType(chartType);
+        const self = this;
+
+        try {
+            chart.update({
+                xAxis: {
+                    labels: {
+                        formatter: function () {
+                            const value = this && this.value;
+                            if (typeof value === "number") {
+                                return self.formatChartCompactValue(value, 2);
+                            }
+                            return value;
+                        }
+                    }
+                },
+                yAxis: {
+                    labels: {
+                        formatter: function () {
+                            const value = this && this.value;
+                            if (typeof value === "number") {
+                                return self.formatChartCompactValue(value, 2);
+                            }
+                            return value;
+                        }
+                    }
+                },
+                tooltip: {
+                    pointFormatter: function () {
+                        const pointValue = typeof this.y === "number"
+                            ? this.y
+                            : (typeof this.value === "number" ? this.value : 0);
+                        const label = this.name || this.key || this.category || this.series?.name || "Value";
+                        return `<span style="color:${this.color}">\u25CF</span> ${label}: <b>${self.formatChartValue(pointValue, 2)}</b><br/>`;
+                    }
+                },
+                plotOptions: hideBarLabels ? {
+                    series: {
+                        dataLabels: {
+                            enabled: false
+                        }
+                    },
+                    bar: {
+                        dataLabels: {
+                            enabled: false
+                        }
+                    },
+                    column: {
+                        dataLabels: {
+                            enabled: false
+                        }
+                    }
+                } : {
+                    series: {
+                        dataLabels: {
+                            formatter: function () {
+                                const pointValue = typeof this.y === "number"
+                                    ? this.y
+                                    : (this.point && typeof this.point.y === "number" ? this.point.y : null);
+                                if (pointValue === null) {
+                                    return null;
+                                }
+                                return self.formatChartCompactValue(pointValue, 2);
+                            },
+                            allowOverlap: false,
+                            crop: true
+                        }
+                    },
+                    pie: {
+                        dataLabels: {
+                            formatter: function () {
+                                const pointValue = typeof this.y === "number" ? this.y : 0;
+                                const pointName = this.point?.name || "";
+                                return `${pointName}: ${self.formatChartCompactValue(pointValue, 2)}`;
+                            }
+                        }
+                    }
+                }
+            }, false);
+
+            if (typeof chart.redraw === "function") {
+                chart.redraw();
+            }
+        } catch (error) {
+            console.error("Unable to apply chart numeric formatting:", error);
+        }
+    }
+
+    applyChartNumericFormattingWithRetry(chartContainerId, chartType, retries = 8) {
+        const tryApply = (remaining) => {
+            const chart = this.getChartInstanceByRenderToId(chartContainerId);
+            if (chart) {
+                this.applyChartNumericFormatting(chart, chartType);
+                return;
+            }
+
+            if (remaining > 0) {
+                setTimeout(() => tryApply(remaining - 1), 140);
+            }
+        };
+
+        tryApply(retries);
+    }
+
+    forceHideGridBarDataLabels(cardElement, chartType) {
+        if (!this.shouldHideDataLabelsForChartType(chartType)) {
+            return;
+        }
+
+        const chart = this.getGridCardChartInstance(cardElement);
+        this.forceHideChartDataLabels(chart, "Unable to disable bar data labels for analytics grid card:");
+    }
+
+    forceHidePopupBarDataLabels(chartContainerId, chartType) {
+        if (!this.shouldHideDataLabelsForChartType(chartType)) {
+            return;
+        }
+
+        const chart = this.getChartInstanceByRenderToId(chartContainerId);
+        this.forceHideChartDataLabels(chart, "Unable to disable bar data labels for analytics popup chart:");
+    }
+
+    hidePopupBarDataLabelsWithRetry(chartContainerId, chartType, retries = 8) {
+        if (!this.shouldHideDataLabelsForChartType(chartType)) {
+            return;
+        }
+
+        const tryHide = (remaining) => {
+            const chart = this.getChartInstanceByRenderToId(chartContainerId);
+            if (chart) {
+                this.forceHideChartDataLabels(chart, "Unable to disable bar data labels for analytics popup chart:");
+                return;
+            }
+
+            if (remaining > 0) {
+                setTimeout(() => tryHide(remaining - 1), 140);
+            }
+        };
+
+        tryHide(retries);
     }
 
     applyGridCardPalette(cardElement) {
@@ -6635,6 +7037,7 @@ class AnalyticsCharts {
         const popupChartId = `analytics-grid-popup-chart-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const popupListId = `analytics-grid-popup-list-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const chartTypeName = this.getChartTypeConfig(payload.chartType).name;
+        const shouldHidePopupLabels = this.shouldHideDataLabelsForChartType(payload.chartType);
         const popupTitle = `${payload.groupCaption || "Chart"} - ${payload.aggLabel || "Count"} (${chartTypeName})`;
         const popupModal = createPopup("about:blank", false);
         if (!popupModal || !popupModal.modalBody) {
@@ -6659,7 +7062,7 @@ class AnalyticsCharts {
                 <div class="analytics-grid-popup-title">${this.escapeHtml(popupTitle)}</div>
                 <div class="analytics-grid-popup-layout">
                     <div class="analytics-grid-popup-chart-wrap">
-                        <div id="${popupChartId}" class="analytics-grid-popup-chart"></div>
+                        <div id="${popupChartId}" class="analytics-grid-popup-chart${shouldHidePopupLabels ? " analytics-grid-popup-hide-data-labels" : ""}"></div>
                     </div>
                     <div class="analytics-grid-popup-panel">
                         <div class="analytics-grid-popup-panel-header">
@@ -6684,7 +7087,8 @@ class AnalyticsCharts {
                     attr: (() => {
                         const popupPalette = this.resolveGridPaletteConfig(payload.paletteConfig || payload.palette || "newPalette");
                         const popupAttr = {
-                            cck: popupPalette.cck
+                            cck: popupPalette.cck,
+                            showBarDataLabels: false
                         };
                         if (popupPalette.cccv) {
                             popupAttr.cccv = popupPalette.cccv;
@@ -6692,6 +7096,8 @@ class AnalyticsCharts {
                         return popupAttr;
                     })()
                 });
+                this.applyChartNumericFormattingWithRetry(popupChartId, payload.chartType);
+                this.hidePopupBarDataLabelsWithRetry(popupChartId, payload.chartType);
                 this.reflowGridCharts();
             } catch (error) {
                 console.error("Error rendering popup chart:", error);
@@ -6728,12 +7134,11 @@ class AnalyticsCharts {
 
         const groupField = cardElement.getAttribute("data-group-field") || "all";
         const groupCaption = cardElement.getAttribute("data-group-caption") || "All";
-        const aggSelect = cardElement.querySelector(".analytics-grid-agg-select");
         const chartSelect = cardElement.querySelector(".analytics-grid-chart-select");
-        const aggField = aggSelect ? aggSelect.value : "count";
+        const aggField = this.getSelectedGlobalAggField();
         const chartType = chartSelect ? chartSelect.value : this.selectedChartType;
         const paletteConfig = this.getGridCardPalette(cardElement);
-        const aggLabel = aggSelect ? aggSelect.options[aggSelect.selectedIndex]?.text || "Count" : "Count";
+        const aggLabel = this.getSelectedGlobalAggLabel();
         const input = this.buildAnalyticsInput(groupField, aggField);
         const chartMeta = this.buildChartMetaFromInput(input);
         const chartMetaKey = this.getChartMetaKey(chartMeta);
@@ -7379,7 +7784,7 @@ function storeChartType(chartType) {
         transId: _analyticsCharts.entityTransId,
         properties: { "CHARTTYPE": chartType },
         confirmNeeded: false,
-        allUsers: true
+        allUsers: false
     };
 
     _entityCommon.setAnalyticsDataWS(data, () => {
@@ -7594,15 +7999,20 @@ function createFieldsLayout() {
     const xAxisArray = xAxisFields === "All" ? [] : xAxisFields.split(",");
     const yAxisArray = yAxisFields === "All" ? [] : yAxisFields.split(",");
 
-    var grpFields = _analyticsCharts.metaData.filter(item =>
-        (item.grpfield === "T" || item.fdatatype === "d") &&
-        (item.cdatatype === "DropDown" || item.fdatatype === "c" || item.fdatatype === "d") &&
-        skipFields.indexOf(item.fldname) == -1
-    );
-    var aggFields = _analyticsCharts.metaData.filter(item =>
-        (item.aggfield === "T" || item.fdatatype === "d") &&
-        skipFields.indexOf(item.fldname) == -1
-    );
+    var grpFields = _analyticsCharts.metaData.filter(item => {
+        const fdt = `${item?.fdatatype || ""}`.trim().toLowerCase();
+        const cdt = `${item?.cdatatype || ""}`.trim().toLowerCase();
+        return (item.grpfield === "T") &&
+            (cdt === "dropdown" || fdt === "c") &&
+            fdt !== "d" &&
+            skipFields.indexOf(item.fldname) == -1;
+    });
+    var aggFields = _analyticsCharts.metaData.filter(item => {
+        const fdt = `${item?.fdatatype || ""}`.trim().toLowerCase();
+        return (item.aggfield === "T") &&
+            fdt !== "d" &&
+            skipFields.indexOf(item.fldname) == -1;
+    });
 
     function reorderFields(fields, selectedFields) {
         return fields.sort((a, b) => {
