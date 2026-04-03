@@ -869,4 +869,17 @@ background:#303a69 !important;
     color: white !important;
     font-size: 18px !important; 
 }
+
+/*==========================================
+    Fav Delete Modal
+============================================ */
+.axi-btn-danger {
+    border: none;
+    background: #ef4444;
+    color: white;
+}
+
+.axi-btn-danger:hover {
+    background: #dc2626;
+}
 /*salman*/

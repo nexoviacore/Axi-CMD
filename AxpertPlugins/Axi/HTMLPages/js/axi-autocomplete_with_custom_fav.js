@@ -1,5 +1,5 @@
 ﻿(() => {
-    
+
 
     // /AxPlugins/Axi/HTMLPages/js/axi-autocomplete.js
 
@@ -739,7 +739,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId,cleanCommandToken(tokens[1]));
+        redirectToTstruct(transId, cleanCommandToken(tokens[1]));
     }
     function handleConfigurePublishAxpertApi({ tokens, commandConfig }) {
 
@@ -752,7 +752,7 @@
         if (tokens.length > 2) {
             rawParamName = cleanCommandToken(tokens[2]);
             actualParamvalue = tryResolveToken(2, rawParamName, commandConfig, false);
-            redirectToTstruct(transId,cleanCommandToken(tokens[1]), true, fieldname, actualParamvalue);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, actualParamvalue);
         }
         else
             redirectToTstruct(transId, cleanCommandToken(tokens[1]));
@@ -864,7 +864,7 @@
             targetUrl += `&${fieldname}=${actualName}`;
         }
         else {
-            targetUrl +=`action=add`;
+            targetUrl += `action=add`;
         }
 
         if (popUpOption) {
@@ -1036,7 +1036,7 @@
         targetUrl += `&AxOpenAct=true`;
         targetUrl += `&isDupTab=false`;
 
-        
+
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
@@ -1168,47 +1168,47 @@
 
     //******************** Open Newer introduced commands(31032026)********************//
     //********************Starts here**************************************************//
-      function handleOpenJob({ tokens, commandConfig }) {
+    function handleOpenJob({ tokens, commandConfig }) {
 
         let transId = "job_s";
         //let fieldname = "jname";
         let fieldname = "jobid";
-          let actualParamvalue;
+        let actualParamvalue;
 
-          setEditSessionState(transId);
-         if (tokens.length > 2) {
-             let rawParamName = cleanCommandToken(tokens[2]);
-             actualParamvalue = tryResolveToken(2, rawParamName, commandConfig, false);
-             redirectToTstruct(transId, "", true, fieldname, actualParamvalue);
-          }
-          else {
-             redirectToTstruct(transId);
-          }
+        setEditSessionState(transId);
+        if (tokens.length > 2) {
+            let rawParamName = cleanCommandToken(tokens[2]);
+            actualParamvalue = tryResolveToken(2, rawParamName, commandConfig, false);
+            redirectToTstruct(transId, "", true, fieldname, actualParamvalue);
+        }
+        else {
+            redirectToTstruct(transId);
+        }
 
 
-       
-      
+
+
 
     }
-      function handleOpenLanguage({ tokens, commandConfig }) {
-          //tstruct.aspx?act=open&transid=ad_lg&openerIV=axlangs&isIV=true&isDupTab=false&dummyload=false%E2%99%A0
+    function handleOpenLanguage({ tokens, commandConfig }) {
+        //tstruct.aspx?act=open&transid=ad_lg&openerIV=axlangs&isIV=true&isDupTab=false&dummyload=false%E2%99%A0
         let transId = "ad_lg";
-          let fieldname = "language";
+        let fieldname = "language";
         let rawParamName;
-          let ActualParamName;
+        let ActualParamName;
 
 
-          setEditSessionState(transId);
+        setEditSessionState(transId);
 
-          if (tokens.length > 2) {
-              rawParamName = cleanCommandToken(tokens[2]);
-              ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
+        if (tokens.length > 2) {
+            rawParamName = cleanCommandToken(tokens[2]);
+            ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
 
-              redirectToTstruct(transId, "", true, fieldname, ActualParamName);
-          }
-          else {
-              redirectToTstruct(transId);
-          }
+            redirectToTstruct(transId, "", true, fieldname, ActualParamName);
+        }
+        else {
+            redirectToTstruct(transId);
+        }
 
     }
     function handleOpenPublish({ tokens, commandConfig }) {
@@ -1237,71 +1237,71 @@
         //redirectToTstruct(transId, "", "", "", "","publist");
 
     }
-      function handleOpenCustomDataType({ tokens, commandConfig }) {
-          //tstruct.aspx?act=open&transid=ctype&openerIV=cdlist&isIV=true&isDupTab=false&dummyload=false%E2%99%A0
+    function handleOpenCustomDataType({ tokens, commandConfig }) {
+        //tstruct.aspx?act=open&transid=ctype&openerIV=cdlist&isIV=true&isDupTab=false&dummyload=false%E2%99%A0
         let transId = "ctype";
-          let fieldname = "typename";
-          let rawParamName;
-          let ActualParamName;
+        let fieldname = "typename";
+        let rawParamName;
+        let ActualParamName;
 
 
-          setEditSessionState(transId);
+        setEditSessionState(transId);
 
-          if (tokens.length > 2) {
-              rawParamName = cleanCommandToken(tokens[2]);
-              ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
+        if (tokens.length > 2) {
+            rawParamName = cleanCommandToken(tokens[2]);
+            ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
 
-              redirectToTstruct(transId, "", true, fieldname, ActualParamName);
-          }
-          else {
-              redirectToTstruct(transId);
-          }
-
-    }
-      function handleOpenEmailDef({ tokens, commandConfig }) {
-          //tstruct.aspx?act=open&transid=axeml&openerIV=emaildef&isIV=true&isDupTab=false&dummyload=false%E2%99%A0 
-          let transId = "axeml";
-          let fieldname = "emaildefname";
-          let rawParamName;
-          let ActualParamName;
-
-
-          setEditSessionState(transId);
-
-          if (tokens.length > 2) {
-              rawParamName = cleanCommandToken(tokens[2]);
-              ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
-
-              redirectToTstruct(transId, "", true, fieldname, ActualParamName);
-          }
-          else {
-              redirectToTstruct(transId);
-          }
+            redirectToTstruct(transId, "", true, fieldname, ActualParamName);
+        }
+        else {
+            redirectToTstruct(transId);
+        }
 
     }
-      function handleOpenTableFieldDescriptor({ tokens, commandConfig }) {
-          //tstruct.aspx?act=open&transid=a__td&openerIV=ad___tbd&isIV=true&isDupTab=false&dummyload=false%E2%99%A0
-          let transId = "a__td";
-          let fieldname = "dname";
-          let rawParamName;
-          let ActualParamName;
+    function handleOpenEmailDef({ tokens, commandConfig }) {
+        //tstruct.aspx?act=open&transid=axeml&openerIV=emaildef&isIV=true&isDupTab=false&dummyload=false%E2%99%A0 
+        let transId = "axeml";
+        let fieldname = "emaildefname";
+        let rawParamName;
+        let ActualParamName;
 
 
-          setEditSessionState(transId);
+        setEditSessionState(transId);
 
-          if (tokens.length > 2) {
-              rawParamName = cleanCommandToken(tokens[2]);
-              ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
+        if (tokens.length > 2) {
+            rawParamName = cleanCommandToken(tokens[2]);
+            ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
 
-              redirectToTstruct(transId, "", true, fieldname, ActualParamName);
-          }
-          else {
-              redirectToTstruct(transId);
-          }
+            redirectToTstruct(transId, "", true, fieldname, ActualParamName);
+        }
+        else {
+            redirectToTstruct(transId);
+        }
 
     }
-      function handleOpenMemDBConsole({ tokens, commandConfig }) {
-          //iview.aspx?ivname=inmemdb
+    function handleOpenTableFieldDescriptor({ tokens, commandConfig }) {
+        //tstruct.aspx?act=open&transid=a__td&openerIV=ad___tbd&isIV=true&isDupTab=false&dummyload=false%E2%99%A0
+        let transId = "a__td";
+        let fieldname = "dname";
+        let rawParamName;
+        let ActualParamName;
+
+
+        setEditSessionState(transId);
+
+        if (tokens.length > 2) {
+            rawParamName = cleanCommandToken(tokens[2]);
+            ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
+
+            redirectToTstruct(transId, "", true, fieldname, ActualParamName);
+        }
+        else {
+            redirectToTstruct(transId);
+        }
+
+    }
+    function handleOpenMemDBConsole({ tokens, commandConfig }) {
+        //iview.aspx?ivname=inmemdb
         let transId = "inmemdb";
         //let fieldname = "jname";
 
@@ -1634,7 +1634,7 @@
     }
 
 
-    function redirectToProcessFlow(caption,tstructCaption) {
+    function redirectToProcessFlow(caption, tstructCaption) {
         console.log(`Redirecting to Process flow for caption:  ${caption}`);
 
 
@@ -2665,7 +2665,7 @@
         let commandConfig = commands[groupKey];
 
 
-        /** Begin: Note: This must be removed when releasing */  
+        /** Begin: Note: This must be removed when releasing */
         if (groupKey.toLowerCase() === "configure") {
             //commandConfig.prompts[0].promptValues = "PEG,Form Notification,Scheduled Notification,Peg Form Notification,Job,Rule,Application Properties,"
             //    +"KeyField,News And Announcement,Settings,User,Users,Role,Roles,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibilities,User Group,"
@@ -2687,8 +2687,8 @@
             commandConfig.prompts[1].promptSource = "axi_structmetalist,axi_structmetalist,axi_structmetalist,axi_structmetalist,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_APINamesList,axi_jobs,axi_language,Axi_Dummy,axi_customtype,axi_emaildef,axi_tabledesc,Axi_Dummy,Axi_Dummy,axi_outbound,axi_inbound,Axi_Dummy";
         }
 
-        /** End: Note: This must be removed when releasing */  
-        
+        /** End: Note: This must be removed when releasing */
+
 
 
         if (!commandConfig) { hintDiv.textContent = ""; return []; }
@@ -2886,7 +2886,7 @@
                         let dummyTokens = [...tokens];
                         dummyTokens[dummyTokens.length - 1] = "";
                         input.value = dummyTokens.join(" ");
-                        handleInput(); 
+                        handleInput();
                     }
                 }, 400);
             }
@@ -3145,16 +3145,16 @@
             })
 
             if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
-                resultList.unshift(goOption,popOption);
+                resultList.unshift(goOption, popOption);
                 // resultList.unshift(goOption);
                 filteredObjects.unshift(popOption, goOption);
                 // filteredObjects.unshift(goOption);
             }
 
-                //otherthan keyfield and userpermissionlisting it will work for all tokens which length is eqaul to 3(ex : peg)
+            //otherthan keyfield and userpermissionlisting it will work for all tokens which length is eqaul to 3(ex : peg)
             else if ((groupKey.toLowerCase() === "configure") && tokens.length === 3 && tokens[1].toLowerCase() !== "keyfield" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "user permissions" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "role permissions") {
                 resultList.unshift(goOption, popOption);
-                filteredObjects.unshift(popOption,goOption);
+                filteredObjects.unshift(popOption, goOption);
             }
 
             else if (groupKey.toLowerCase() === "analyse" && tokens.length <= 3) {
@@ -4261,13 +4261,33 @@
     =============================== */
     function setupEventListeners() {
 
-        const favCancelBtn = document.getElementById("axiFavCancelBtn"); 
+        const favDeleteCancelBtn = document.getElementById("axiFavDeleteCancelBtn");
+
+        if (favDeleteCancelBtn) {
+            favDeleteCancelBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                hideDeleteFavoriteModal();
+            })
+        }
+
+        const favDeleteConfirmBtn = document.getElementById("axiFavDeleteConfirmBtn");
+
+        if (favDeleteConfirmBtn) {
+            favDeleteConfirmBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                confirmDeleteFavorite();
+            });
+        }
+
+
+
+        const favCancelBtn = document.getElementById("axiFavCancelBtn");
 
         if (favCancelBtn) {
             favCancelBtn.addEventListener("click", (e) => {
-                e.preventDefault(); 
-                hideFavoriteModal(); 
-            }); 
+                e.preventDefault();
+                hideFavoriteModal();
+            });
         }
 
         const favSaveBtn = document.getElementById("axiFavSaveBtn");
@@ -4288,6 +4308,26 @@
                     hideFavoriteModal();
                 }
             });
+        }
+
+        const favModalOverlay = document.getElementById("axiFavModalOverlay"); 
+
+        if (favModalOverlay) {
+            favModalOverlay.addEventListener("mousedown", (event) => {
+                if (event.target === favModalOverlay) {
+                    hideFavoriteModal(); 
+                }
+            })
+        }
+
+         const deleteModalOverlay = document.getElementById("axiFavDeleteModalOverlay"); 
+
+        if (deleteModalOverlay) {
+            deleteModalOverlay.addEventListener("mousedown", (event) => {
+                if (event.target === deleteModalOverlay) {
+                    hideFavoriteModal(); 
+                }
+            })
         }
 
         favouriteBtn.addEventListener("click", (e) => {
@@ -5362,7 +5402,7 @@
             rawTitle = cleanCommandToken(tokens[2]);
             paramValue = tryResolveToken(2, rawTitle, commandConfig, false);
 
-            redirectToTstruct(transId,cleanCommandToken(tokens[1]), true, fieldname, paramValue)
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, paramValue)
         }
         else {
             redirectToTstruct(transId, cleanCommandToken(tokens[1]));
@@ -5374,7 +5414,7 @@
         let targetUrl = "../aspx/Configuration.aspx";
 
 
-  
+
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
             targetUrl += "&AxIsPop=true";
@@ -9601,25 +9641,27 @@
                 showToast(`${cmdText} is already in Favorites`);
                 return;
             }
-            const removedFav = commandFavorites.splice(cmdIndex, 1);
-            showToast(`Removed '${cmdText}' from Favorites`);
-            localStorage.setItem(favKey, JSON.stringify(commandFavorites));
-            renderFavoritesUI();
-            render(); 
+            // const removedFav = commandFavorites.splice(cmdIndex, 1);
+            // showToast(`Removed '${cmdText}' from Favorites`);
+            // localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+            // renderFavoritesUI();
+            // render(); 
 
-            if (axiFavoritesUrl) {
-                fetch(`${axiFavoritesUrl}?appname=${appname}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        username: window.mainUserName,
-                        commandText: removedFav.commandText,
-                        action: "remove",
-                        favOrder: 0,
-                        targetURL: removedFav?.targetUrl || removedFav?.targetURL || removedFav?.targeturl
-                    })
-                }).catch(err => console.error("Axi: Failed to update on backend", err));
-            }
+            // if (axiFavoritesUrl) {
+            //     fetch(`${axiFavoritesUrl}?appname=${appname}`, {
+            //         method: "POST",
+            //         headers: { "Content-Type": "application/json" },
+            //         body: JSON.stringify({
+            //             username: window.mainUserName,
+            //             commandText: removedFav.commandText,
+            //             action: "remove",
+            //             favOrder: 0,
+            //             targetURL: removedFav?.targetUrl || removedFav?.targetURL || removedFav?.targeturl
+            //         })
+            //     }).catch(err => console.error("Axi: Failed to update on backend", err));
+            // }
+
+            showDeleteFavoriteModal(cmdText);
         } else {
             if (!commandRoute) {
                 showToast("Please Execute the command at least once before adding to favorites");
@@ -9633,7 +9675,7 @@
 
             // showToast(`Added '${cmdText}' to favorites`, 3000, true);
 
-            showFavoriteModel(cmdText, commandRoute.targetUrl); 
+            showFavoriteModel(cmdText, commandRoute.targetUrl);
         }
 
         // localStorage.setItem(favKey, JSON.stringify(commandFavorites));
@@ -9958,43 +10000,43 @@
     }
 
     function showFavoriteModel(cmdText, targetUrl) {
-        const originalCmdTextInput = document.getElementById("axiFavOriginalCmd"); 
-        const favNameInput = document.getElementById("axiFavNameInput"); 
-        const favTargetUrlInput = document.getElementById("axiFavTargetUrl"); 
+        const originalCmdTextInput = document.getElementById("axiFavOriginalCmd");
+        const favNameInput = document.getElementById("axiFavNameInput");
+        const favTargetUrlInput = document.getElementById("axiFavTargetUrl");
 
         const axiFavModal = document.getElementById("axiFavModalOverlay");
 
-        originalCmdTextInput.value = cmdText; 
-        favNameInput.value = cmdText; 
-        favTargetUrlInput.value = targetUrl; 
+        originalCmdTextInput.value = cmdText;
+        favNameInput.value = cmdText;
+        favTargetUrlInput.value = targetUrl;
 
-        axiFavModal.style.display = "flex"; 
-        favNameInput.focus(); 
-        favNameInput.select(); 
+        axiFavModal.style.display = "flex";
+        favNameInput.focus();
+        favNameInput.select();
     }
 
     function hideFavoriteModal() {
-        const modal = document.getElementById("axiFavModalOverlay"); 
+        const modal = document.getElementById("axiFavModalOverlay");
 
-        if (modal) modal.style.display = "none"; 
+        if (modal) modal.style.display = "none";
     }
 
     function confirmAddFavorite() {
         const alias = document.getElementById("axiFavNameInput").value.trim();
-        const originalCmdText  = document.getElementById("axiFavOriginalCmd").value.trim(); 
-        const targetUrl = document.getElementById("axiFavTargetUrl").value.trim(); 
-    
-        
+        const originalCmdText = document.getElementById("axiFavOriginalCmd").value.trim();
+        const targetUrl = document.getElementById("axiFavTargetUrl").value.trim();
+
+
         if (!alias) {
-            showToast("Favorite name cannot be empty"); 
-            return; 
+            showToast("Favorite name cannot be empty");
+            return;
         }
 
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
         const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
 
-       
+
 
         if (axiFavoritesUrl) {
             fetch(`${axiFavoritesUrl}?appname=${appname}`, {
@@ -10003,32 +10045,32 @@
                 body: JSON.stringify({
                     username: window.mainUserName,
                     commandText: alias,
-                    
+
                     action: "add",
                     favOrder: 0,
                     targetURL: targetUrl
                 })
                 //  username: window.mainUserName,
-        //             commandText: cmdText,
-        //             action: isAdding ? "add" : "remove",
-        //             favOrder: 0,
-        //             targetURL: commandRoute?.targetUrl
+                //             commandText: cmdText,
+                //             action: isAdding ? "add" : "remove",
+                //             favOrder: 0,
+                //             targetURL: commandRoute?.targetUrl
             }).then(
                 response => {
-                   if (response.ok) {
-                     commandFavorites.unshift({ 
-            commandText: alias, 
-            originalCmd: originalCmdText,
-            targetUrl: targetUrl 
-        });
+                    if (response.ok) {
+                        commandFavorites.unshift({
+                            commandText: alias,
+                            originalCmd: originalCmdText,
+                            targetUrl: targetUrl
+                        });
 
-        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
-        renderFavoritesUI(); 
-        render(); 
-        hideFavoriteModal(); 
+                        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                        renderFavoritesUI();
+                        render();
+                        hideFavoriteModal();
 
-                    showToast(`'${alias}' added to favorites`, 5000, true);
-                   }
+                        showToast(`'${alias}' added to favorites`, 5000, true);
+                    }
                 }
             ).catch(err => {
                 showToast("Axi: Failed to update favorite on backend");
@@ -10038,9 +10080,79 @@
 
 
 
-        
+
 
     }
+
+    function showDeleteFavoriteModal(cmdText) {
+        const modal = document.getElementById("axiFavDeleteModalOverlay");
+
+        if (!modal) return;
+
+        const favDeleteCmdText = document.getElementById("axiFavDeleteCmd");
+
+        favDeleteCmdText.value = cmdText;
+        modal.style.display = "flex";
+
+
+    }
+
+    function hideDeleteFavoriteModal() {
+        const modal = document.getElementById("axiFavDeleteModalOverlay");
+        if (modal) modal.style.display = "none";
+    }
+
+    function confirmDeleteFavorite() {
+        const cmdText = document.getElementById("axiFavDeleteCmd").value;
+        if (!cmdText) return;
+
+        executeDeleteFavorite(cmdText);
+        hideDeleteFavoriteModal();
+    }
+
+    function executeDeleteFavorite(cmdText) {
+        const appUrl = getAppBaseUrl();
+        const appname = getProjectName();
+        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
+
+        const cmdIndex = commandFavorites.findIndex(fav =>
+            fav.commandText.toLowerCase() === cmdText.toLowerCase() ||
+            (fav.originalCmd && fav.originalCmd.toLowerCase() === cmdText.toLowerCase())
+        );
+
+        if (cmdIndex !== -1) {
+            const removedFav = commandFavorites.splice(cmdIndex, 1)[0];
+
+
+            if (axiFavoritesUrl) {
+                fetch(`${axiFavoritesUrl}?appname=${appname}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        username: window.mainUserName,
+                        commandText: removedFav.commandText,
+                        action: "remove",
+                        favOrder: 0,
+                        targetURL: removedFav.targetUrl || removedFav.targetURL || ""
+                    })
+                }).then(response => {
+                    if (response.ok) {
+                        showToast(`Removed '${removedFav.commandText}' from Favorites`);
+
+                        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                        renderFavoritesUI();
+                        render();
+
+                    }
+                })
+                    .catch(err => console.error("Axi: Failed to delete on backend", err));
+            }
+        }
+    }
+
+
+
+
 
 
 
