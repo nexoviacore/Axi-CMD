@@ -9616,7 +9616,7 @@
                         commandText: removedFav.commandText,
                         action: "remove",
                         favOrder: 0,
-                        targetURL: removedFav.targetUrl || removedFav.targetURL
+                        targetURL: removedFav?.targetUrl || removedFav?.targetURL || removedFav?.targeturl
                     })
                 }).catch(err => console.error("Axi: Failed to update on backend", err));
             }
@@ -9960,11 +9960,13 @@
     function showFavoriteModel(cmdText, targetUrl) {
         const originalCmdTextInput = document.getElementById("axiFavOriginalCmd"); 
         const favNameInput = document.getElementById("axiFavNameInput"); 
+        const favTargetUrlInput = document.getElementById("axiFavTargetUrl"); 
 
         const axiFavModal = document.getElementById("axiFavModalOverlay");
 
         originalCmdTextInput.value = cmdText; 
         favNameInput.value = cmdText; 
+        favTargetUrlInput.value = targetUrl; 
 
         axiFavModal.style.display = "flex"; 
         favNameInput.focus(); 
@@ -9979,7 +9981,8 @@
 
     function confirmAddFavorite() {
         const alias = document.getElementById("axiFavNameInput").value.trim();
-        const originalCmdText  = document.getElementById("axiFavOriginalCmd").value(); 
+        const originalCmdText  = document.getElementById("axiFavOriginalCmd").value.trim(); 
+        const targetUrl = document.getElementById("axiFavTargetUrl").value.trim(); 
     
         
         if (!alias) {
@@ -9991,16 +9994,7 @@
         const appname = getProjectName();
         const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
 
-        commandFavorites.unshift({ 
-            commandText: alias, 
-            originalCmd: originalCmd,
-            targetUrl: targetUrl 
-        });
-
-        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
-        renderFavoritesUI(); 
-        render(); 
-        hideFavoriteModal(); 
+       
 
         if (axiFavoritesUrl) {
             fetch(`${axiFavoritesUrl}?appname=${appname}`, {
@@ -10009,12 +10003,34 @@
                 body: JSON.stringify({
                     username: window.mainUserName,
                     commandText: alias,
-                    // originalCmd: originalCmd, // Pass original command to DB
+                    
                     action: "add",
                     favOrder: 0,
                     targetURL: targetUrl
                 })
-            }).catch(err => {
+                //  username: window.mainUserName,
+        //             commandText: cmdText,
+        //             action: isAdding ? "add" : "remove",
+        //             favOrder: 0,
+        //             targetURL: commandRoute?.targetUrl
+            }).then(
+                response => {
+                   if (response.ok) {
+                     commandFavorites.unshift({ 
+            commandText: alias, 
+            originalCmd: originalCmdText,
+            targetUrl: targetUrl 
+        });
+
+        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+        renderFavoritesUI(); 
+        render(); 
+        hideFavoriteModal(); 
+
+                    showToast(`'${alias}' added to favorites`, 5000, true);
+                   }
+                }
+            ).catch(err => {
                 showToast("Axi: Failed to update favorite on backend");
                 console.error("Backend sync failed", err);
             });
