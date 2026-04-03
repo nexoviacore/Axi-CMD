@@ -862,28 +862,6 @@ div[data-tasktype=Check] .Task-process-list::before {
   display:flex;
   gap:6px;
 }
-.analytics-grid-global-agg-host {
-  align-items: center;
-  display: inline-flex;
-  gap: 6px;
-  margin-left: 10px;
-  min-width: 220px;
-}
-.analytics-grid-global-agg-label {
-  color: #6c757d;
-  font-size: 12px;
-  font-weight: 600;
-  margin: 0;
-  white-space: nowrap;
-}
-.analytics-grid-global-agg-select {
-  border-color: #d6dce5;
-  border-radius: 8px;
-  font-size: 12px;
-  height: 32px;
-  min-width: 170px;
-  padding: 4px 28px 4px 8px;
-}
 .analytics-last-refresh {
   color:#6c757d;
   font-size:12px;
@@ -904,8 +882,8 @@ div[data-tasktype=Check] .Task-process-list::before {
     width:auto;
   }
   #Entity_Summary_Wrapper .card-header.Page-title > .d-flex.flex-column.flex-column-fluid.col-md-9 {
-    flex:0 1 calc(100% - 680px);
-    max-width:calc(100% - 680px);
+    flex:0 1 calc(100% - 500px);
+    max-width:calc(100% - 500px);
     min-width:260px;
     width:auto;
   }
@@ -916,17 +894,6 @@ div[data-tasktype=Check] .Task-process-list::before {
   #Entity_Summary_Wrapper .card-header.Page-title > .card-toolbar {
     flex:0 0 auto;
     margin-left:auto;
-  }
-}
-@media screen and (max-width:1199px) {
-  .analytics-grid-global-agg-host {
-    margin-left: 0;
-    min-width: 100%;
-    order: 3;
-    width: 100%;
-  }
-  .analytics-grid-global-agg-select {
-    width: 100%;
   }
 }
 .card-headeradd {
@@ -2073,22 +2040,6 @@ g text {
 }
 
 /* Card Grid Analytics Layout */
-#Entity_Summary_Wrapper > .card-header.Page-title,
-#Entity_Summary_Wrapper > #analytics-grid-filter-summary {
-  flex: 0 0 100%;
-  max-width: 100%;
-  width: 100%;
-}
-
-#analytics-grid-filter-summary {
-  clear: both;
-}
-
-#Entity_Summary_Wrapper > #Analytics_Grid_Container,
-#Entity_Summary_Wrapper > #Analytics_Hyperlink_Panel {
-  align-self: flex-start;
-}
-
 #Analytics_Grid_Container {
   padding: 10px 12px 16px;
 }
@@ -2427,50 +2378,6 @@ g text {
   padding: 4px 26px 4px 8px;
 }
 
-.analytics-grid-color-picker-wrap {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.analytics-grid-color-picker-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.analytics-grid-color-input {
-  border: 1px solid #d6dce5;
-  border-radius: 50%;
-  cursor: pointer;
-  height: 22px;
-  padding: 0;
-  width: 22px;
-}
-
-.analytics-grid-color-input::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-
-.analytics-grid-color-input::-webkit-color-swatch {
-  border: none;
-  border-radius: 50%;
-}
-
-.analytics-grid-color-input::-moz-color-swatch {
-  border: none;
-  border-radius: 50%;
-}
-
-.analytics-grid-color-reset-btn {
-  font-size: 11px;
-  line-height: 1;
-  margin-left: auto;
-  min-height: 20px;
-  padding: 0 !important;
-}
-
 .analytics-grid-filter-action {
   display: flex;
   align-items: center;
@@ -2688,13 +2595,6 @@ g text {
   border-radius: 10px;
   min-height: 360px;
   padding: 8px;
-}
-
-/* In popup bar/column charts, hide dense in-bar labels and keep values in tooltip */
-.analytics-grid-popup-chart.analytics-grid-popup-hide-data-labels .highcharts-data-labels,
-.analytics-grid-popup-chart.analytics-grid-popup-hide-data-labels .highcharts-data-label,
-.analytics-grid-popup-chart.analytics-grid-popup-hide-data-labels .highcharts-data-label text {
-  display: none !important;
 }
 
 .analytics-hyperlink-item.selected-value {

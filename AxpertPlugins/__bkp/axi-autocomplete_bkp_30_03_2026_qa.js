@@ -102,47 +102,46 @@
             job: handleConfigureJob,
             rule: handleConfigureRule,
             server: handleConfigureServer,
-            "form notification": handleConfigureFormNotification,
-            "peg form notification": handleCofigurePegFormNotification,
+            formnotification: handleConfigureFormNotification,
+            pegformnotification: handleCofigurePegFormNotification,
             permission: handleConfigurePermissions,
             access: handleConfigureAccess,
-            "scheduled notification": handleConfigureScheduledNotification,
+            schedulednotification: handleConfigureScheduledNotification,
             keyfield: handleKeyfield,
-            "news and announcement": handleConfigureNewsAndAnnouncement,
+            newsandannouncement: handleConfigureNewsAndAnnouncement,
             settings: handleConfigureSettings,
 
             users: handleUsers,
             user: handleUser,
             roles: handleRoles,
             role: handleRole,
-            "publish api": handleApi,
-            "publish api listing": handleApiList,
-            "publish listing": handlePublishListing,
+            publishapi: handleApi,
+            publishapilisting: handleApiList,
+            publishlisting: handlePublishListing,
             cards: handleCards,
             //forms: handleForms,
             //responsibility: handleResponsibility,
             responsibilities: handleResponsibilities,
-            "user group": handleUserGroup,
+            usergroup: handleUserGroup,
             dimensions: handleDimensions,
             actors: handleActors,
-            // useractivation: handleUserActivation,
-            "user activation": handleUserActivation,
-            "user permission listing": handleUserPermissionListing,
-            "user permissions": handleUserPermission,
+            useractivation: handleUserActivation,
+            userpermissionlisting: handleUserPermissionListing,
+            userpermissions: handleUserPermission,
             //rolepermissionlisting: handleRolePermissionListing,
             // rolepermissions: handleRolePermission
         },
         Open: {
             default: handleOpenSource,
-            "axpert data sources": handleOpenAds,
+            ads: handleOpenAds,
             card: handleOpenCard,
             page: handleOpenPage,
-            "app variables": handleOpenAppVar,
-            "dev options": handleOpenDevOptions,
-            "db explorer": handleOpenDbConsole,
-            "arrange menu": handleOpenArrangeMenu,
+            appvar: handleOpenAppVar,
+            devoption: handleOpenDevOptions,
+            dbconsole: handleOpenDbConsole,
+            menu: handleOpenArrangeMenu,
 
-            "api plugins": handleConfigureApi
+            api: handleConfigureApi
 
 
         },
@@ -566,11 +565,10 @@
                 const prevTokenIndex = targetIndex - 1;
                 const prevValue = cleanString(tokens[prevTokenIndex]);
                 const allowedValues = prevPrompt.promptValues.split(',').map(v => v.trim().toLowerCase());
-                const actualPrevValue = tryResolveToken(prevTokenIndex, prevValue, commandConfig, false) || prevValue;
                 let valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
 
                 if (valueIndex === -1 && commandConfig.commandGroup?.toLowerCase() === 'view') {
-                    const detectedType = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), actualPrevValue, prevPrompt.promptValues, tokens, commandConfig);
+                    const detectedType = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), prevValue, prevPrompt.promptValues, tokens, commandConfig);
 
                     if (detectedType) {
                         valueIndex = allowedValues.indexOf(detectedType.toLowerCase());
@@ -962,7 +960,7 @@
                 targetURL = "../aspx/" + targetURL;
             }
 
-            let popUpContainerUrl = `../CustomPages/PopupContainer.html`
+            let popUpContainerUrl = `../AxpertPlugins/Axi/HTMLPages/PopupContainer.html`
             //let popUpContainerUrl = `../CustomPages/Axi/HTMLPages/PopUpContainer.html`;
 
             if (targetURL && targetURL.toLowerCase().includes("../")) {
@@ -1002,7 +1000,7 @@
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table_1769088257557.html`;
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table.html`;
         // let targetUrl = `${getAppBaseUrl()}/plugins/Axi/HTMLPages/Smartview_table.html`;
-        let targetUrl = `../CustomPage/Smartview_table.html`;
+        let targetUrl = `../AxpertPlugins/Axi/HTMLPages/Smartview_table.html`;
 
         // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
 
@@ -1627,7 +1625,10 @@
                 const rawDisplay = (col?.displaydata || col?.name)?.toLowerCase();
 
 
-                const cleanDisplay = rawDisplay?.replace(/\s*\(.*?\)/g, "")?.replace(/\s*\[[^\]]+\]\s*$/, "")?.trim();
+                const cleanDisplay = rawDisplay
+                    .replace(/\s*\(.*?\)/g, "")
+                    .replace(/\s*\[[^\]]+\]\s*$/, "")
+                    .trim();
 
                 const rawName = (col.name || "").toLowerCase();
 
@@ -2229,8 +2230,7 @@
             const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
             const viewValues = commandConfig.prompts?.[0]?.promptValues;
             const firstToken = cleanString(tokens[1] || "");
-            const actualFirstToken = tryResolveToken(1, firstToken, commandConfig, false);
-            detectedType = getType(viewSource.toLowerCase(), actualFirstToken, viewValues, tokens, commandConfig);
+            detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues, tokens, commandConfig);
 
             if (detectedType === "ads") {
                 ignoreExtraParams = true;
@@ -2410,7 +2410,7 @@
                         let dummyTokens = [...tokens];
                         dummyTokens[dummyTokens.length - 1] = "";
                         input.value = dummyTokens.join(" ");
-                        handleInput();
+                        handleInput(); 
                     }
                 }, 400);
             }
@@ -2595,7 +2595,7 @@
                     //     }
                     //     return [];
                     // }
-                    return [`Fetching Data...`];
+                    return [`Loading ${realSource}...`];
                 }
                 return ["Waiting for input..."];
             }
@@ -2683,12 +2683,7 @@
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
-            else if (groupKey.toLowerCase() === "open" && cleanCommandToken(tokens[1])?.toLowerCase() === "api plugins") {
-                resultList.unshift(goOption);
-                filteredObjects.unshift(goOption);
-            }
-
-            else if (groupKey.toLowerCase() === "open" && cleanCommandToken(tokens[1])?.toLowerCase() === "axpert data sources") {
+            else if (groupKey.toLowerCase() === "open" && tokens[1]?.toLowerCase() === "api") {
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
@@ -3036,7 +3031,7 @@
                             case "page":
                                 value = "p";
                                 break;
-                            case "axpert data sources":
+                            case "ads":
                                 value = "ads";
                                 break;
                             default:
@@ -5303,59 +5298,33 @@
 
         const data = axDatasourceObj?.[axDatasourceKey];
 
-        if (!data || !Array.isArray(data)) return null;
-
         console.log(JSON.stringify(data));
 
 
         const normalizedText = text.trim().toLowerCase();
 
-        const rawTokenText = tokens[1] ? cleanCommandToken(tokens[1]).toLowerCase() : normalizedText;
+        const item = data?.find(d => {
+            if (typeof d.displaydata !== "string") return false;
 
-        let bestMatch = null;
-
-        // const item = data?.find(d => {
-        //     if (typeof d.displaydata !== "string") return false;
-
-        //     if (d.name && d.name.toLowerCase() === normalizedText) {
-        //         return true;
-        //     }
+            if (d.name && d.name.toLowerCase() === normalizedText) {
+                return true;
+            }
 
 
-        //     const pureCaption = d.displaydata
-        //         .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
-        //         .replace(/\s*\[[^\]]+\]\s*$/, "")
-        //         .trim()
-        //         .toLowerCase();
+            const pureCaption = d.displaydata
+                .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
+                .replace(/\s*\[[^\]]+\]\s*$/, "")
+                .trim()
+                .toLowerCase();
 
-        //     return pureCaption === normalizedText;
-        // });
+            return pureCaption === normalizedText;
+        });
 
-        bestMatch = data.find(d => typeof d.displaydata === "string" && d.displaydata.toLowerCase() === rawTokenText.toLowerCase());
-
-        if (!bestMatch) {
-            bestMatch = data.find(d => d.name && d.name.toLowerCase() === normalizedText);
-        }
-
-        if (!bestMatch) {
-            bestMatch = data.find(d => {
-                if (typeof d.displaydata !== "string") return false;
-
-                const pureCaption = d.displaydata
-                    .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
-                    .replace(/\s*\[[^\]]+\]\s*$/, "")
-                    .trim()
-                    .toLowerCase();
-
-                return pureCaption === normalizedText || pureCaption === rawTokenText;
-            });
-        }
-
-        if (!bestMatch || typeof bestMatch.displaydata !== "string") {
+        if (!item || typeof item.displaydata !== "string") {
             return null;
         }
 
-        const matches = [...bestMatch.displaydata.matchAll(/\[([^\]]+)\]/g)];
+        const matches = [...item.displaydata.matchAll(/\[([^\]]+)\]/g)];
 
         if (matches.length === 0) {
             return null;

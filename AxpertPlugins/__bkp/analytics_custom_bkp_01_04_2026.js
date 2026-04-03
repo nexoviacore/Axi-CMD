@@ -56,7 +56,6 @@ class AnalyticsCharts {
         this.analyticsEntityCache = {};
         this.analyticsPrefsCache = {};
         this.availableAggFields = null;
-        this.globalAggField = "count";
         this.isAggFieldAvailabilitySyncing = false;
         this.isApplyingGridCardState = false;
         this.gridBatchChartsByKey = {};
@@ -68,17 +67,12 @@ class AnalyticsCharts {
             values: [],
             filters: {}
         };
-        // Filtering is now driven by the toolbar filter popup (EntityFilter pills),
-        // not by clicking chart points.
-        this.enableGridPointFilterSelection = false;
         this.enableFilterDebugLogs = true;
         this.analyticsIndexedDb = null;
         this.analyticsIndexedDbOpenPromise = null;
         this.dataSourceType = "tstruct";
         this.dataSourceName = "";
         this.adsMetaDataCache = {};
-        this.gridCardStateCache = {};
-        this.gridCardStateIndexedDbRequests = {};
 
 
     }
@@ -93,7 +87,6 @@ class AnalyticsCharts {
         const urlSource = this.getUrlSource();
         this.dataSourceType = urlSource.type;
         this.dataSourceName = urlSource.name;
-        this.updatePageHeaderTitle(this.dataSourceName || this.entityTransId || "");
         this.pendingGroupBy = this.isAdsMode() ? "" : (this.urlParams.groupby || "");
         this.applyUrlEntityContextUi();
         this.ensureLastRefreshLabel();
@@ -125,12 +118,10 @@ class AnalyticsCharts {
 
             this.selectedChartType = "line";
 
-            const transidFieldsRaw = pageLoadData?.result?.data?.Fields || pageLoadData?.result?.data?.fields || "";
-            this.metaData = this.mergeTransidFieldSourceIntoMeta(pageLoadData.result.data.MetaData, transidFieldsRaw);
+            this.metaData = pageLoadData.result.data.MetaData;
             this.selectedEntitiesList = pageLoadData.result.data.SelectedEntitiesList;
             this.entityTransId = pageLoadData.result.data.TransId;
             this.entityName = this.getEntityCaption(this.entityTransId);
-            this.updatePageHeaderTitle(this.entityName || this.entityTransId || this.dataSourceName || "");
             this.writeAnalyticsEntityCache(this.entityTransId, pageLoadData);
 
             this.loadStoredAnalyticsPreferences(this.entityTransId, () => {
@@ -163,7 +154,6 @@ class AnalyticsCharts {
         }];
         this.entityTransId = source.name;
         this.entityName = source.name;
-        this.updatePageHeaderTitle(source.name);
 
         this.logFilterDebug("init:autoLoadEntityFromUrl", {
             sourceName: source.name,
@@ -194,7 +184,6 @@ class AnalyticsCharts {
         this.initializeGridColumnControls();
         this.initializeHyperlinkPanelToggle();
         this.updateChartButton(this.selectedChartType);
-        this.ensureGlobalGridAggControl();
         this.applyUrlParams();
 
         if (showFieldSelectionPopup) {
@@ -240,9 +229,7 @@ class AnalyticsCharts {
             if (current && typeof current === "object" && !Array.isArray(current)) {
                 if (this.getAnalyticsPropertyValue(current, "XAXISFIELDS") ||
                     this.getAnalyticsPropertyValue(current, "YAXISFIELDS") ||
-                    this.getAnalyticsPropertyValue(current, "CHARTTYPE") ||
-                    this.getAnalyticsPropertyValue(current, "GLOBALAGGFIELD") ||
-                    this.getAnalyticsPropertyValue(current, "GRIDCARDSTATE")) {
+                    this.getAnalyticsPropertyValue(current, "CHARTTYPE")) {
                     return current;
                 }
             }
@@ -283,17 +270,14 @@ class AnalyticsCharts {
                 if (`${cachedYAxis || ""}`.trim() !== "") {
                     this.yAxisFields = cachedYAxis;
                 }
-                const cachedChartType = this.getAnalyticsPropertyValue(cachedPrefs, "CHARTTYPE");
-                const cachedGlobalAgg = this.getAnalyticsPropertyValue(cachedPrefs, "GLOBALAGGFIELD");
-                this.selectedChartType = cachedChartType || this.selectedChartType || "line";
-                this.globalAggField = cachedGlobalAgg || this.globalAggField || "count";
+                this.selectedChartType = "line";
                 this.logFilterDebug("loadStoredAnalyticsPreferences:cacheHit", {
                     transId: transId,
                     xAxisFields: this.xAxisFields,
-                    yAxisFields: this.yAxisFields,
-                    chartType: this.selectedChartType,
-                    globalAggField: this.globalAggField
+                    yAxisFields: this.yAxisFields
                 });
+                done();
+                return;
             }
         }
 
@@ -305,7 +289,7 @@ class AnalyticsCharts {
         const requestPayload = {
             page: "Analytics",
             transId: transId,
-            propertiesList: ["XAXISFIELDS", "YAXISFIELDS", "CHARTTYPE", "GLOBALAGGFIELD", "GRIDCARDSTATE"]
+            propertiesList: ["XAXISFIELDS", "YAXISFIELDS", "CHARTTYPE"]
         };
 
         _entityCommon.getAnalyticsDataWS(requestPayload, (response) => {
@@ -313,9 +297,6 @@ class AnalyticsCharts {
                 const properties = this.extractStoredAnalyticsProperties(response);
                 const storedXAxis = this.getAnalyticsPropertyValue(properties, "XAXISFIELDS");
                 const storedYAxis = this.getAnalyticsPropertyValue(properties, "YAXISFIELDS");
-                const storedChartType = this.getAnalyticsPropertyValue(properties, "CHARTTYPE");
-                const storedGlobalAgg = this.getAnalyticsPropertyValue(properties, "GLOBALAGGFIELD");
-                const storedGridState = this.getAnalyticsPropertyValue(properties, "GRIDCARDSTATE");
                 this.hasStoredFieldSelection =
                     this.hasConfiguredAnalyticsFields(storedXAxis) ||
                     this.hasConfiguredAnalyticsFields(storedYAxis);
@@ -326,30 +307,11 @@ class AnalyticsCharts {
                 if (`${storedYAxis || ""}`.trim() !== "") {
                     this.yAxisFields = storedYAxis;
                 }
-                this.selectedChartType = storedChartType || this.selectedChartType || "line";
-                this.globalAggField = storedGlobalAgg || this.globalAggField || "count";
-
-                if (storedGridState) {
-                    try {
-                        const parsedGridState = (typeof storedGridState === "string")
-                            ? JSON.parse(storedGridState)
-                            : storedGridState;
-                        if (parsedGridState && typeof parsedGridState === "object") {
-                            const normalizedGridState = this.normalizeGridCardStatePayload(parsedGridState, {
-                                storedOn: parsedGridState.storedOn || new Date().toISOString()
-                            });
-                            this.writeGridCardState(normalizedGridState, transId);
-                        }
-                    } catch (error) {
-                        console.warn("Unable to parse stored GRIDCARDSTATE:", error);
-                    }
-                }
-
+                this.selectedChartType = "line";
                 this.writeAnalyticsPrefsCache(transId, {
                     XAXISFIELDS: this.xAxisFields || "All",
                     YAXISFIELDS: this.yAxisFields || "All",
-                    CHARTTYPE: this.selectedChartType || "line",
-                    GLOBALAGGFIELD: this.globalAggField || "count"
+                    CHARTTYPE: "line"
                 });
             } catch (error) {
                 console.error("Error while reading analytics preferences:", error);
@@ -373,8 +335,7 @@ class AnalyticsCharts {
             properties: {
                 "XAXISFIELDS": this.xAxisFields || "All",
                 "YAXISFIELDS": this.yAxisFields || "All",
-                "CHARTTYPE": this.selectedChartType || "line",
-                "GLOBALAGGFIELD": this.globalAggField || "count"
+                "CHARTTYPE": this.selectedChartType || "line"
             },
             allUsers: false
         };
@@ -386,8 +347,7 @@ class AnalyticsCharts {
         this.mergeAnalyticsPrefsCache(transId, {
             XAXISFIELDS: this.xAxisFields || "All",
             YAXISFIELDS: this.yAxisFields || "All",
-            CHARTTYPE: this.selectedChartType || "line",
-            GLOBALAGGFIELD: this.globalAggField || "count"
+            CHARTTYPE: "line"
         });
     }
 
@@ -440,24 +400,6 @@ class AnalyticsCharts {
         return types.find(item => item.type === normalizedType) || types[0];
     }
 
-    getAutoDefaultGridChartType(cardIndex) {
-        const supportedTypes = this.getSupportedChartTypes().map(item => item.type);
-        const preferredOrder = [
-            "bar",
-            "line",
-            "column",
-            "area",
-            "pie",
-            "donut",
-            "funnel"
-        ].filter(type => supportedTypes.indexOf(type) > -1);
-
-        const fallbackOrder = supportedTypes.length > 0 ? supportedTypes : ["line"];
-        const typeOrder = preferredOrder.length > 0 ? preferredOrder : fallbackOrder;
-        const safeIndex = Number.isFinite(cardIndex) ? Math.max(0, cardIndex) : 0;
-        return typeOrder[safeIndex % typeOrder.length] || "line";
-    }
-
     getSupportedColorPalettes() {
         return [
             { value: "newPalette", label: "Default" },
@@ -474,859 +416,14 @@ class AnalyticsCharts {
         ];
     }
 
-    getGridDefaultPaletteColors() {
-        return ['#f4bc01', '#3d5996', '#e80502', '#539cfe', '#3ddab4', '#f14f5a'];
-    }
-
-    normalizeColorHex(colorValue, fallbackValue) {
-        const fallback = `${fallbackValue || "#4f8df8"}`.trim().toLowerCase();
-        const rawValue = `${colorValue || ""}`.trim().toLowerCase();
-        if (/^#[0-9a-f]{6}$/i.test(rawValue)) {
-            return rawValue;
-        }
-        if (/^#[0-9a-f]{3}$/i.test(rawValue)) {
-            return `#${rawValue[1]}${rawValue[1]}${rawValue[2]}${rawValue[2]}${rawValue[3]}${rawValue[3]}`;
-        }
-        return fallback;
-    }
-
-    resolvePaletteColorsByKey(paletteKey) {
-        const defaultColors = this.getGridDefaultPaletteColors();
-        const normalizedKey = `${paletteKey || ""}`.trim();
-        if (!normalizedKey) {
-            return defaultColors.slice();
-        }
-
-        const paletteSource = (typeof customChartColors === "object" && customChartColors)
-            ? customChartColors[normalizedKey]
-            : null;
-        if (!Array.isArray(paletteSource) || !paletteSource.length) {
-            return defaultColors.slice();
-        }
-
-        const sanitized = [];
-        for (let index = 0; index < defaultColors.length; index++) {
-            const sourceColor = paletteSource[index] || paletteSource[index % paletteSource.length];
-            sanitized.push(this.normalizeColorHex(sourceColor, defaultColors[index]));
-        }
-        return sanitized;
-    }
-
-    applyGridCardColorInputs(cardElement, colors) {
-        if (!cardElement) {
-            return;
-        }
-
-        const colorInputs = Array.from(cardElement.querySelectorAll(".analytics-grid-color-input"));
-        if (!colorInputs.length) {
-            return;
-        }
-
-        const fallbackColors = this.getGridDefaultPaletteColors();
-        const sourceColors = Array.isArray(colors) && colors.length ? colors : fallbackColors;
-        colorInputs.forEach((input, index) => {
-            const fallbackColor = fallbackColors[index % fallbackColors.length];
-            const sourceColor = sourceColors[index] || sourceColors[index % sourceColors.length];
-            input.value = this.normalizeColorHex(sourceColor, fallbackColor);
-        });
-    }
-
-    getGridCardCustomColors(cardElement) {
-        const defaultColors = this.getGridDefaultPaletteColors();
-        const colorInputs = cardElement ? Array.from(cardElement.querySelectorAll(".analytics-grid-color-input")) : [];
-        if (!colorInputs.length) {
-            return defaultColors.slice();
-        }
-
-        return colorInputs.map((input, index) => {
-            const fallback = defaultColors[index % defaultColors.length];
-            return this.normalizeColorHex(input.value, fallback);
-        });
-    }
-
-    resolveGridPaletteConfig(paletteValue) {
-        let resolvedColors = this.getGridDefaultPaletteColors();
-        let paletteKey = "custom";
-
-        if (paletteValue && typeof paletteValue === "object") {
-            const customColors = Array.isArray(paletteValue.customColors)
-                ? paletteValue.customColors
-                : (Array.isArray(paletteValue.colors) ? paletteValue.colors : []);
-            if (customColors.length > 0) {
-                resolvedColors = customColors;
-            } else if (`${paletteValue.paletteKey || ""}`.trim() !== "") {
-                resolvedColors = this.resolvePaletteColorsByKey(paletteValue.paletteKey);
-                paletteKey = `${paletteValue.paletteKey}`.trim();
-            }
-        } else if (typeof paletteValue === "string" && `${paletteValue}`.trim() !== "") {
-            resolvedColors = this.resolvePaletteColorsByKey(paletteValue);
-            paletteKey = `${paletteValue}`.trim();
-        }
-
-        const defaultColors = this.getGridDefaultPaletteColors();
-        const normalizedColors = defaultColors.map((fallbackColor, index) => {
-            const source = resolvedColors[index] || resolvedColors[index % Math.max(resolvedColors.length, 1)];
-            return this.normalizeColorHex(source, fallbackColor);
-        });
-
-        return {
-            paletteKey: paletteKey || "custom",
-            customColors: normalizedColors,
-            cck: "custom",
-            cccv: normalizedColors.join(",")
-        };
-    }
-
     getGridCardPalette(cardElement) {
-        return {
-            paletteKey: "custom",
-            customColors: this.getGridCardCustomColors(cardElement)
-        };
-    }
-
-    getSelectedGlobalAggField() {
-        const select = document.getElementById("analyticsGridGlobalAggSelect");
-        if (select && select.value) {
-            return select.value;
-        }
-        return this.globalAggField || "count";
-    }
-
-    getSelectedGlobalAggLabel() {
-        const select = document.getElementById("analyticsGridGlobalAggSelect");
-        if (select && select.options && select.selectedIndex > -1) {
-            return select.options[select.selectedIndex]?.text || "Count";
-        }
-        const options = this.getGridAggFields();
-        const selectedAgg = this.getSelectedGlobalAggField();
-        const option = options.find(item => this.normalizeUrlParam(item.value) === this.normalizeUrlParam(selectedAgg));
-        return option ? option.label : "Count";
-    }
-
-    setSelectedGlobalAggField(value) {
-        const targetValue = `${value || "count"}`.trim() || "count";
-        this.globalAggField = targetValue;
-        const select = document.getElementById("analyticsGridGlobalAggSelect");
-        if (!select) {
-            return;
-        }
-        const hasOption = Array.from(select.options).some(option =>
-            this.normalizeUrlParam(option.value) === this.normalizeUrlParam(targetValue)
-        );
-        if (hasOption) {
-            select.value = targetValue;
-        } else {
-            select.value = "count";
-            this.globalAggField = "count";
-        }
-    }
-
-    ensureGlobalGridAggControl() {
-        const pageHeader = document.querySelector(".card-header.Page-title");
-        if (!pageHeader) {
-            return;
-        }
-
-        let host = document.getElementById("analyticsGridAggHost");
-        if (!host) {
-            host = document.createElement("div");
-            host.id = "analyticsGridAggHost";
-            host.className = "analytics-grid-global-agg-host";
-            host.innerHTML = `
-                <label for="analyticsGridGlobalAggSelect" class="analytics-grid-global-agg-label">Aggregate</label>
-                <select id="analyticsGridGlobalAggSelect" class="form-select form-select-sm analytics-grid-global-agg-select" title="Aggregate Field"></select>
-            `;
-            const titleElement = pageHeader.querySelector("h3.card-title");
-            if (titleElement && titleElement.nextSibling) {
-                pageHeader.insertBefore(host, titleElement.nextSibling);
-            } else {
-                pageHeader.appendChild(host);
-            }
-        }
-
-        const select = host.querySelector("#analyticsGridGlobalAggSelect");
-        if (!select) {
-            return;
-        }
-
-        const options = this.getGridAggFields();
-        const currentValue = this.globalAggField || select.value || "count";
-        select.innerHTML = options.map(option =>
-            `<option value="${this.escapeHtml(option.value)}">${this.escapeHtml(option.label)}</option>`
-        ).join("");
-
-        const targetValue = options.some(option =>
-            this.normalizeUrlParam(option.value) === this.normalizeUrlParam(currentValue)
-        ) ? currentValue : "count";
-        select.value = targetValue;
-        this.globalAggField = targetValue;
-
-        if (!select.dataset.boundChange) {
-            select.addEventListener("change", () => {
-                this.globalAggField = select.value || "count";
-                this.saveGridCardState();
-                const container = document.querySelector("#analytics-yaxis-grid");
-                const cards = container ? Array.from(container.querySelectorAll(".analytics-grid-card")) : [];
-                if (cards.length > 0) {
-                    this.loadGridCardsBatch(cards, { forceRefresh: false });
-                }
-            });
-            select.dataset.boundChange = "T";
-        }
-    }
-
-    promptAndSavePreferences() {
-        if (!_entityCommon || typeof _entityCommon.setAnalyticsDataWS !== "function" || _entityCommon.inValid(this.entityTransId)) {
-            showAlertDialog("warning", "No active SmartList is selected to save.");
-            return;
-        }
-
-        const shouldSave = window.confirm("Save current SmartList changes?");
-        if (!shouldSave) {
-            return;
-        }
-
-        const applyAllUsers = window.confirm("Apply these changes for all users?\nClick OK for All Users, or Cancel for Myself only.");
-        this.saveGridCardState();
-
-        const statePayload = this.readGridCardState(this.entityTransId);
-        const normalizedState = this.normalizeGridCardStatePayload(statePayload || {}, {
-            storedOn: new Date().toISOString()
-        });
-
-        const payload = {
-            page: "Analytics",
-            transId: this.entityTransId,
-            properties: {
-                "XAXISFIELDS": this.xAxisFields || "All",
-                "YAXISFIELDS": this.yAxisFields || "All",
-                "CHARTTYPE": this.selectedChartType || "line",
-                "GLOBALAGGFIELD": this.getSelectedGlobalAggField() || "count",
-                "GRIDCARDSTATE": JSON.stringify(normalizedState)
-            },
-            confirmNeeded: false,
-            allUsers: !!applyAllUsers
-        };
-
-        _entityCommon.setAnalyticsDataWS(payload, () => {
-            this.mergeAnalyticsPrefsCache(this.entityTransId, {
-                XAXISFIELDS: this.xAxisFields || "All",
-                YAXISFIELDS: this.yAxisFields || "All",
-                CHARTTYPE: this.selectedChartType || "line",
-                GLOBALAGGFIELD: this.getSelectedGlobalAggField() || "count"
-            });
-            showAlertDialog("success", applyAllUsers
-                ? "Changes saved for all users."
-                : "Changes saved for your user.");
-        }, (error) => {
-            showAlertDialog("error", error?.status
-                ? `${error.status} ${error.statusText || ""}`.trim()
-                : "Unable to save changes.");
-        });
-    }
-
-    ensureAnalyticsSaveButton() {
-        const toolbar = document.querySelector(".Tkts-toolbar-Right");
-        if (!toolbar) {
-            return;
-        }
-
-        let saveButton = toolbar.querySelector("#btn_AnalyticsSaveScope");
-        if (!saveButton) {
-            const settingsButton = toolbar.querySelector("#btn_selectfields");
-            const buttonHtml = `<button id="btn_AnalyticsSaveScope" type="button" title="Save Preferences" class="btn btn-sm btn-icon btn-white btn-color-gray-600 btn-active-primary btn-custom-border-radius" aria-label="Save Preferences">
-                                    <span class="material-icons material-icons-style material-icons-2">save</span>
-                                </button>`;
-            if (settingsButton) {
-                settingsButton.insertAdjacentHTML("beforebegin", buttonHtml);
-            } else {
-                toolbar.insertAdjacentHTML("afterbegin", buttonHtml);
-            }
-            saveButton = toolbar.querySelector("#btn_AnalyticsSaveScope");
-        }
-
-        if (!saveButton || saveButton.dataset.analyticsSaveBound === "T") {
-            return;
-        }
-
-        saveButton.addEventListener("click", (event) => {
-            event.preventDefault();
-            this.promptAndSavePreferences();
-        });
-        saveButton.dataset.analyticsSaveBound = "T";
+        const paletteSelect = cardElement ? cardElement.querySelector(".analytics-grid-palette-select") : null;
+        return paletteSelect && paletteSelect.value ? paletteSelect.value : "newPalette";
     }
 
     ensureChartControls() {
         this.initializeChartTypeDropdown();
         this.ensureDateRangeDropdown();
-        this.ensureAnalyticsFilterButton();
-        this.ensureAnalyticsSaveButton();
-        this.ensureEntityFilterBridge();
-    }
-
-    ensureAnalyticsFilterButton() {
-        const toolbar = document.querySelector(".Tkts-toolbar-Right");
-        if (!toolbar) {
-            return;
-        }
-
-        let filterButton = toolbar.querySelector("#btn_AnalyticsFilter")
-            || toolbar.querySelector("button[onclick*='openFilters']");
-
-        if (!filterButton) {
-            const refreshButton = toolbar.querySelector("#btn_AnalyticsRefresh");
-            const buttonHtml = `<button id="btn_AnalyticsFilter" type="button" title="Apply Filter(s)" class="btn btn-sm btn-icon btn-white btn-color-gray-600 btn-active-primary btn-custom-border-radius" aria-label="Apply Filter(s)">
-                                    <span class="material-icons material-icons-style material-icons-2">tune</span>
-                                </button>`;
-            if (refreshButton) {
-                refreshButton.insertAdjacentHTML("afterend", buttonHtml);
-            } else {
-                toolbar.insertAdjacentHTML("afterbegin", buttonHtml);
-            }
-            filterButton = toolbar.querySelector("#btn_AnalyticsFilter");
-        }
-
-        if (!filterButton) {
-            return;
-        }
-
-        filterButton.id = "btn_AnalyticsFilter";
-        filterButton.classList.remove("d-none");
-        filterButton.setAttribute("title", "Apply Filter(s)");
-        filterButton.setAttribute("aria-label", "Apply Filter(s)");
-
-        const hasInlineOpenFilters = `${filterButton.getAttribute("onclick") || ""}`.toLowerCase().indexOf("openfilters") > -1;
-        if (!hasInlineOpenFilters && !filterButton.dataset.analyticsFilterBound) {
-            filterButton.addEventListener("click", (event) => {
-                event.preventDefault();
-                openFilters();
-            });
-            filterButton.dataset.analyticsFilterBound = "T";
-        }
-    }
-
-    ensureEntityFilterPillsContainer() {
-        let container = document.querySelector(".filterPills");
-        if (!container) {
-            container = document.querySelector("#analytics-grid-filter-summary");
-        }
-
-        if (!container) {
-            const pageHeader = document.querySelector(".card-header.Page-title");
-            if (!pageHeader) {
-                return null;
-            }
-            pageHeader.insertAdjacentHTML("afterend", `<div id="analytics-grid-filter-summary"></div>`);
-            container = document.querySelector("#analytics-grid-filter-summary");
-        }
-
-        if (!container) {
-            return null;
-        }
-
-        if (container.querySelector(".analytics-grid-filter-summary-inner")) {
-            container.innerHTML = "";
-        }
-        container.classList.add("filterPills", "flex-row", "py-2", "px-2", "gap-3", "col-12");
-        return container;
-    }
-
-    refreshEntityFilterPills() {
-        if (typeof _entityFilter === "undefined" || !_entityFilter || typeof _entityFilter.createFilterPills !== "function") {
-            return;
-        }
-
-        this.ensureEntityFilterPillsContainer();
-        try {
-            _entityFilter.createFilterPills();
-        } catch (error) {
-            console.error("analytics createFilterPills failed:", error);
-        }
-    }
-
-    ensureEntityFilterBridge() {
-        if (typeof _entityFilter === "undefined" || !_entityFilter) {
-            return;
-        }
-
-        _entityFilter.metaData = Array.isArray(this.metaData) ? this.metaData : [];
-        _entityFilter.pageName = "Analytics";
-        _entityFilter.entityTransId = this.entityTransId || this.dataSourceName || "";
-        _entityFilter.filterObj = (_entityFilter.filterObj && typeof _entityFilter.filterObj === "object")
-            ? _entityFilter.filterObj
-            : (this.filterObj && typeof this.filterObj === "object" ? this.filterObj : {});
-        this.filterObj = _entityFilter.filterObj;
-        this.ensureEntityFilterPillsContainer();
-
-        if (!_entityFilter._analyticsCreatePillsPatched && typeof _entityFilter.createFilterPills === "function") {
-            const originalCreateFilterPills = _entityFilter.createFilterPills.bind(_entityFilter);
-            _entityFilter.createFilterPills = function () {
-                const response = originalCreateFilterPills();
-                try {
-                    const hasAny = this.filterObj && Object.keys(this.filterObj).length > 0;
-                    const pillsContainer = document.querySelector(".filterPills");
-                    if (!pillsContainer) {
-                        return response;
-                    }
-
-                    if (hasAny) {
-                        pillsContainer.classList.remove("d-none");
-                        pillsContainer.style.display = "flex";
-                    } else {
-                        pillsContainer.classList.add("d-none");
-                        pillsContainer.style.display = "none";
-                    }
-                } catch (error) { }
-                return response;
-            };
-            _entityFilter._analyticsCreatePillsPatched = true;
-        }
-
-        if (!_entityFilter._analyticsEditPillPatched && typeof _entityFilter.editPill === "function") {
-            const originalEditPill = _entityFilter.editPill.bind(_entityFilter);
-            _entityFilter.editPill = function (key) {
-                try {
-                    const dv = document.getElementById("dvModalFilter");
-                    if (dv) {
-                        dv.innerHTML = "";
-                    }
-                } catch (error) { }
-                return originalEditPill(key);
-            };
-            _entityFilter._analyticsEditPillPatched = true;
-        }
-
-        if (!_entityFilter._analyticsRemoveFilterPatched && typeof _entityFilter.removeFilter === "function") {
-            _entityFilter.removeFilter = function (key) {
-                try {
-                    if (!key) {
-                        return;
-                    }
-
-                    this.filterObj = this.filterObj || {};
-                    if (this.filterObj[key]) {
-                        delete this.filterObj[key];
-                    }
-
-                    try {
-                        if (typeof this.createFilterPills === "function") {
-                            this.createFilterPills();
-                        }
-                    } catch (error) { }
-
-                    const remainingKeys = Object.keys(this.filterObj || {});
-                    if (remainingKeys.length > 0) {
-                        const nextKey = remainingKeys[0];
-                        const nextFilter = this.filterObj[nextKey] || {};
-                        this.activeFilterId = nextKey;
-                        this.activeFilterName = nextFilter.caption || "";
-                        this.activeFilterArray = Array.isArray(nextFilter.filter) ? nextFilter.filter : [];
-                    } else {
-                        this.activeFilterId = "";
-                        this.activeFilterName = "";
-                        this.activeFilterArray = [];
-                    }
-
-                    if (typeof this.applyFilters === "function") {
-                        this.applyFilters();
-                    }
-
-                    try {
-                        const savedObj = {};
-                        remainingKeys.forEach(currentKey => {
-                            const item = this.filterObj[currentKey];
-                            if (item && item.save === true) {
-                                savedObj[currentKey] = item;
-                            }
-                        });
-
-                        if (typeof _entityCommon !== "undefined" && _entityCommon && typeof _entityCommon.setAnalyticsDataWS === "function") {
-                            _entityCommon.setAnalyticsDataWS({
-                                page: this.pageName,
-                                transId: this.entityTransId,
-                                properties: { FILTERS: JSON.stringify(savedObj) },
-                                allUsers: false
-                            }, () => { }, () => { });
-                        }
-                    } catch (error) { }
-                } catch (error) {
-                    console.error("analytics patched removeFilter failed:", error);
-                }
-            };
-            _entityFilter._analyticsRemoveFilterPatched = true;
-        }
-
-        if (!_entityFilter._analyticsDropdownPatched && typeof _entityFilter.initializeDropdowns === "function") {
-            _entityFilter.initializeDropdowns = function () {
-                try {
-                    window._analyticsFilterDropdownCache = window._analyticsFilterDropdownCache || {};
-                    const pageSize = 500;
-                    const jq = window.jQuery || window.$;
-                    const hasSelect2 = !!(jq && jq.fn && typeof jq.fn.select2 === "function");
-                    const metaData = Array.isArray(this.metaData) ? this.metaData : [];
-
-                    const normalizeTF = (value, fallback = "F") => {
-                        const normalizedValue = `${value || ""}`.trim().toUpperCase();
-                        if (normalizedValue === "T" || normalizedValue === "TRUE" || normalizedValue === "1" || normalizedValue === "Y" || normalizedValue === "YES") {
-                            return "T";
-                        }
-                        if (normalizedValue === "F" || normalizedValue === "FALSE" || normalizedValue === "0" || normalizedValue === "N" || normalizedValue === "NO") {
-                            return "F";
-                        }
-                        return fallback;
-                    };
-
-                    const parseAxListResponse = (response) => {
-                        let parsed = response;
-                        try {
-                            if (typeof parsed === "string") {
-                                parsed = JSON.parse(parsed);
-                            }
-                            if (parsed && typeof parsed.d === "string") {
-                                parsed = JSON.parse(parsed.d);
-                            } else if (parsed && parsed.d && typeof parsed.d === "object" && !parsed.result) {
-                                parsed = parsed.d;
-                            }
-                        } catch (error) {
-                            console.error("analytics ds_smartlist_filters parse error:", error);
-                        }
-
-                        if (typeof safeParseAxResponse === "function") {
-                            try {
-                                parsed = safeParseAxResponse(parsed);
-                            } catch (error) {
-                                // ignore safe parser failures and continue with current parsed value
-                            }
-                        } else if (typeof _analyticsCharts !== "undefined"
-                            && _analyticsCharts
-                            && typeof _analyticsCharts.parseAxListResponsePayload === "function") {
-                            try {
-                                parsed = _analyticsCharts.parseAxListResponsePayload(parsed);
-                            } catch (error) {
-                                // ignore fallback parser failures and continue
-                            }
-                        }
-
-                        const dsBlock = parsed?.result?.data?.[0] || parsed?.data?.[0] || parsed?.result || parsed;
-                        let rows = Array.isArray(dsBlock?.data) ? dsBlock.data : (Array.isArray(parsed?.data) ? parsed.data : []);
-                        if (rows && rows.length && rows[0] && Array.isArray(rows[0].data)) {
-                            rows = rows[0].data;
-                        }
-                        return Array.isArray(rows) ? rows : [];
-                    };
-
-                    const mapRowToOption = (row) => {
-                        if (row === null || row === undefined) {
-                            return null;
-                        }
-                        if (typeof row === "string" || typeof row === "number") {
-                            const value = String(row).trim();
-                            return value ? { id: value, text: value } : null;
-                        }
-                        if (typeof row !== "object") return null;
-
-                        const id = row.datavalue ?? row.value ?? row.id ?? row.code ?? row.name ?? row.text;
-                        const text = row.datacaption ?? row.caption ?? row.text ?? row.value ?? row.name ?? row.code ?? row.id;
-
-                        const idStr = (id === null || id === undefined) ? "" : String(id).trim();
-                        const textStr = (text === null || text === undefined) ? "" : String(text).trim();
-                        const cleanId = (idStr && idStr.toLowerCase() !== "null") ? idStr : "";
-                        const cleanText = (textStr && textStr.toLowerCase() !== "null") ? textStr : cleanId;
-
-                        if (!cleanId) {
-                            for (const key in row) {
-                                const value = row[key];
-                                if (value === null || value === undefined) continue;
-                                const candidate = String(value).trim();
-                                if (!candidate || candidate.toLowerCase() === "null") continue;
-                                return { id: candidate, text: candidate };
-                            }
-                            return null;
-                        }
-
-                        return {
-                            id: cleanId,
-                            text: cleanText || cleanId
-                        };
-                    };
-
-                    const getFieldMeta = (fieldId) => {
-                        const normalizedField = `${fieldId || ""}`.trim().toLowerCase();
-                        return metaData.find(item => `${item?.fldname || ""}`.trim().toLowerCase() === normalizedField) || null;
-                    };
-
-                    const buildPsrcTxt = (fieldMeta, fieldId) => {
-                        const direct = `${fieldMeta?.psrctxt || fieldMeta?.psrcTxt || fieldMeta?.psrctext || ""}`.trim();
-                        if (direct) {
-                            return direct;
-                        }
-
-                        const fldName = `${fieldMeta?.fldname || fieldId || ""}`.trim();
-                        const normalizedToken = normalizeTF(
-                            fieldMeta?.normalized ?? fieldMeta?.isnormalized ?? fieldMeta?.isNormalized ?? fieldMeta?.is_normalized,
-                            "F"
-                        );
-                        let srcTable = `${fieldMeta?.srctable || fieldMeta?.src_table || fieldMeta?.sourcetable || fieldMeta?.srctbl || ""}`.trim();
-                        let srcField = `${fieldMeta?.srcfld || fieldMeta?.src_fld || fieldMeta?.sourcefld || fieldMeta?.sourcefield || fieldMeta?.srcfield || ""}`.trim();
-
-                        if (!fldName) {
-                            return "";
-                        }
-
-                        if (!srcTable || !srcField) {
-                            const fallbackEntity = `${fieldMeta?.ftransid || ((typeof _analyticsCharts !== "undefined" && _analyticsCharts) ? (_analyticsCharts.entityTransId || _analyticsCharts.dataSourceName || "") : "")}`.trim();
-                            if (fallbackEntity) {
-                                srcTable = srcTable || fallbackEntity;
-                                srcField = srcField || fldName;
-                            }
-                        }
-
-                        if (!srcTable || !srcField) {
-                            return "";
-                        }
-
-                        return `${fldName}~${normalizedToken}~${srcTable}~${srcField}`;
-                    };
-
-                    const caller = (typeof parent !== "undefined" && typeof parent.GetDataFromAxList === "function")
-                        ? parent
-                        : (typeof window !== "undefined" && typeof window.GetDataFromAxList === "function" ? window : null);
-                    if (!caller || typeof caller.GetDataFromAxList !== "function") {
-                        console.error("GetDataFromAxList not available for analytics filter dropdowns");
-                        return;
-                    }
-
-                    let dropdownFields = Array.from(document.querySelectorAll("#dvModalFilter .filter-fld[data-type=DropDown]"));
-                    if (dropdownFields.length === 0) {
-                        dropdownFields = Array.from(document.querySelectorAll("#dvModalFilter .filter-fld"))
-                            .filter(item => `${item?.dataset?.type || ""}`.trim().toUpperCase() === "DROPDOWN");
-                    }
-
-                    const fetchDropdownOptions = (psrctxt, term, onSuccess, onError) => {
-                        try {
-                            const normalizedTerm = `${term || ""}`.trim().toLowerCase();
-                            const cacheKey = psrctxt;
-                            const cachedOptions = window._analyticsFilterDropdownCache[cacheKey];
-
-                            const applySearch = (options) => {
-                                const safeOptions = Array.isArray(options) ? options : [];
-                                const filtered = normalizedTerm
-                                    ? safeOptions.filter(item => `${item?.text || ""}`.toLowerCase().includes(normalizedTerm) || `${item?.id || ""}`.toLowerCase().includes(normalizedTerm))
-                                    : safeOptions;
-                                onSuccess(filtered.slice(0, pageSize));
-                            };
-
-                            if (Array.isArray(cachedOptions) && cachedOptions.length > 0) {
-                                applySearch(cachedOptions);
-                                return;
-                            }
-
-                            const requestPayload = {
-                                adsNames: ["ds_smartlist_filters"],
-                                refreshCache: false,
-                                sqlParams: { psrctxt: `${psrctxt}` },
-                                props: {
-                                    ADS: true,
-                                    CachePermissions: true,
-                                    getallrecordscount: false,
-                                    pageno: 1,
-                                    pagesize: 0
-                                }
-                            };
-
-                            caller.GetDataFromAxList(requestPayload, (response) => {
-                                try {
-                                    const rows = parseAxListResponse(response);
-                                    const seenIds = new Set();
-                                    const options = [];
-                                    rows.forEach(row => {
-                                        const option = mapRowToOption(row);
-                                        if (!option || !option.id) {
-                                            return;
-                                        }
-                                        const normalizedId = option.id.toLowerCase();
-                                        if (seenIds.has(normalizedId)) {
-                                            return;
-                                        }
-                                        seenIds.add(normalizedId);
-                                        options.push(option);
-                                    });
-                                    window._analyticsFilterDropdownCache[cacheKey] = options;
-                                    applySearch(options);
-                                } catch (parseError) {
-                                    console.error("analytics ds_smartlist_filters parse error:", parseError);
-                                    onSuccess([]);
-                                }
-                            }, (error) => {
-                                console.error("analytics ds_smartlist_filters call failed:", error);
-                                onSuccess([]);
-                            });
-                        } catch (error) {
-                            if (typeof onError === "function") {
-                                onError(error);
-                            }
-                        }
-                    };
-
-                    dropdownFields.forEach((element) => {
-                        try {
-                            const fieldId = `${element.id || ""}`.replace("filter_", "");
-                            const fieldMeta = getFieldMeta(fieldId);
-                            const psrctxt = buildPsrcTxt(fieldMeta, fieldId);
-                            if (!psrctxt) {
-                                console.warn("analytics filter dropdown skipped (psrctxt missing):", fieldId, fieldMeta);
-                                return;
-                            }
-
-                            if (hasSelect2 && `${element.tagName || ""}`.toUpperCase() === "SELECT") {
-                                const $element = jq(element);
-                                let $wrapper = $element.closest(".dropdown-wrapper");
-                                if ($wrapper.length === 0) {
-                                    $wrapper = jq('<div class="dropdown-wrapper" style="position:relative;"></div>');
-                                    $element.wrap($wrapper);
-                                    $wrapper = $element.closest(".dropdown-wrapper");
-                                }
-
-                                if ($wrapper.find(".dropdown-toggle-btn").length === 0) {
-                                    $wrapper.append(`<button type="button" class="dropdown-toggle-btn btn btn-sm" aria-label="Open" title="Open"
-                                        style="position:absolute; right:36px; top:6px; z-index:1100; height:30px; padding:0 6px; line-height:1;">&#9662;</button>`);
-                                }
-                                if ($wrapper.find(".clear-all-btn").length === 0) {
-                                    $wrapper.append(`<button type="button" class="clear-all-btn btn btn-sm" aria-label="Clear" title="Clear"
-                                        style="position:absolute; right:4px; top:6px; z-index:1100; height:30px; padding:0 6px; line-height:1; display:none;">&#10005;</button>`);
-                                }
-
-                                const $openButton = $wrapper.find(".dropdown-toggle-btn");
-                                const $clearButton = $wrapper.find(".clear-all-btn");
-
-                                if (!$element.hasClass("select2-hidden-accessible")) {
-                                    $element.select2({
-                                        multiple: true,
-                                        width: "100%",
-                                        minimumInputLength: 0,
-                                        ajax: {
-                                            delay: 150,
-                                            transport: (params, success, failure) => {
-                                                const term = `${params?.data?.term || ""}`.trim();
-                                                fetchDropdownOptions(psrctxt, term, (options) => {
-                                                    success({ results: options });
-                                                }, failure);
-                                            },
-                                            processResults: (data) => data,
-                                            cache: true
-                                        },
-                                        escapeMarkup: (markup) => markup
-                                    });
-                                }
-
-                                $openButton.off("click.analyticsDropOpen").on("click.analyticsDropOpen", (event) => {
-                                    event.preventDefault();
-                                    try { $element.select2("open"); } catch (error) { }
-                                });
-
-                                $clearButton.off("click.analyticsDropClear").on("click.analyticsDropClear", (event) => {
-                                    event.preventDefault();
-                                    $element.val(null).trigger("change");
-                                    try { $element.select2("close"); } catch (error) { }
-                                });
-
-                                const updateClearVisibility = () => {
-                                    const selectedValues = $element.val() || [];
-                                    if (selectedValues.length > 0) {
-                                        $clearButton.show();
-                                    } else {
-                                        $clearButton.hide();
-                                    }
-                                };
-
-                                $element.off(".analyticsDropEvents")
-                                    .on("change.analyticsDropEvents", updateClearVisibility)
-                                    .on("select2:select.analyticsDropEvents", updateClearVisibility)
-                                    .on("select2:unselect.analyticsDropEvents", updateClearVisibility);
-                                updateClearVisibility();
-                            } else {
-                                if (element.dataset.analyticsDsBound === "T") {
-                                    return;
-                                }
-
-                                const bindLoad = () => {
-                                    fetchDropdownOptions(psrctxt, "", (options) => {
-                                        const selectedValues = Array.isArray(element.value) ? element.value : Array.from(element.selectedOptions || []).map(item => item.value);
-                                        element.innerHTML = "";
-                                        options.forEach(option => {
-                                            const optionElement = document.createElement("option");
-                                            optionElement.value = option.id;
-                                            optionElement.textContent = option.text || option.id;
-                                            if (selectedValues.indexOf(option.id) > -1) {
-                                                optionElement.selected = true;
-                                            }
-                                            element.appendChild(optionElement);
-                                        });
-                                    });
-                                };
-
-                                element.addEventListener("focus", bindLoad);
-                                element.addEventListener("mousedown", bindLoad);
-                                element.addEventListener("click", bindLoad);
-                                element.dataset.analyticsDsBound = "T";
-                            }
-                        } catch (dropdownError) {
-                            console.error("analytics dropdown initialization error:", dropdownError);
-                        }
-                    });
-                } catch (error) {
-                    console.error("analytics initializeDropdowns patch failed:", error);
-                }
-            };
-
-            _entityFilter._analyticsDropdownPatched = true;
-        }
-
-        if (_entityFilter._analyticsFilterBridgeApplied === true) {
-            return;
-        }
-
-        _entityFilter.applyFilters = () => {
-            const activeFilters = Array.isArray(_entityFilter.activeFilterArray)
-                ? JSON.parse(JSON.stringify(_entityFilter.activeFilterArray))
-                : [];
-
-            this.filter = activeFilters;
-            this.filterObj = (_entityFilter.filterObj && typeof _entityFilter.filterObj === "object")
-                ? _entityFilter.filterObj
-                : {};
-            this.gridSelectionFilter = {
-                groupField: "",
-                values: [],
-                filters: {}
-            };
-
-            this.gridBatchChartsByKey = {};
-            this.gridBatchRequests = {};
-
-            this.logFilterDebug("entityFilter:applyFilters", {
-                transId: this.entityTransId || this.dataSourceName || "",
-                filtersCount: activeFilters.length,
-                filters: activeFilters
-            });
-
-            this.refreshEntityFilterPills();
-
-            const cards = Array.from(document.querySelectorAll("#analytics-yaxis-grid .analytics-grid-card"));
-            if (cards.length > 0) {
-                this.loadGridCardsBatch(cards, { forceRefresh: false });
-            } else {
-                this.refreshCurrentChart();
-            }
-
-            try {
-                $('#filterModal').modal('hide');
-            } catch (error) {
-                // ignore modal errors in non-bootstrap context
-            }
-        };
-
-        _entityFilter._analyticsFilterBridgeApplied = true;
     }
 
     initializeChartTypeDropdown() {
@@ -2084,31 +1181,6 @@ class AnalyticsCharts {
         };
     }
 
-    formatHeaderSourceName(sourceName) {
-        const value = `${sourceName || ""}`.trim();
-        if (!value) {
-            return "";
-        }
-
-        return value
-            .split(/\s+/)
-            .filter(Boolean)
-            .map(part => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
-            .join(" ");
-    }
-
-    updatePageHeaderTitle(sourceName = "") {
-        const titleElement = document.querySelector(".card-header.Page-title .card-label");
-        if (!titleElement) {
-            return;
-        }
-
-        const displayName = this.formatHeaderSourceName(
-            sourceName || this.dataSourceName || this.entityTransId || ""
-        );
-        titleElement.textContent = displayName ? `Analytics - ${displayName}` : "Analytics";
-    }
-
     isAdsMode() {
         const currentType = this.normalizeUrlParam(this.dataSourceType || "");
         if (currentType) {
@@ -2259,66 +1331,6 @@ class AnalyticsCharts {
             });
         } catch (error) {
             return numericValue.toLocaleString();
-        }
-    }
-
-    getChartCompactUnit(value) {
-        const numericValue = Number(`${value ?? ""}`.replace(/,/g, ""));
-        if (!isFinite(numericValue)) {
-            return { divisor: 1, suffix: "" };
-        }
-
-        const absValue = Math.abs(numericValue);
-        const isUsLocale = this.getGlobalNumberLocale() === "en-US";
-
-        if (isUsLocale) {
-            if (absValue >= 1e9) return { divisor: 1e9, suffix: "B" };
-            if (absValue >= 1e6) return { divisor: 1e6, suffix: "M" };
-            if (absValue >= 1e3) return { divisor: 1e3, suffix: "K" };
-            return { divisor: 1, suffix: "" };
-        }
-
-        if (absValue >= 1e7) return { divisor: 1e7, suffix: "Cr" };
-        if (absValue >= 1e5) return { divisor: 1e5, suffix: "L" };
-        if (absValue >= 1e3) return { divisor: 1e3, suffix: "K" };
-        return { divisor: 1, suffix: "" };
-    }
-
-    formatChartCompactValue(value, decimals = 2) {
-        const numericValue = Number(`${value ?? ""}`.replace(/,/g, ""));
-        if (!isFinite(numericValue)) {
-            return _entityCommon.inValid(value) ? "0" : `${value}`;
-        }
-
-        const compact = this.getChartCompactUnit(numericValue);
-        const scaledValue = compact.divisor > 0 ? (numericValue / compact.divisor) : numericValue;
-        const maxDigits = Math.max(0, Math.min(10, Number(decimals) || 2));
-
-        try {
-            const formatted = scaledValue.toLocaleString(this.getGlobalNumberLocale(), {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: maxDigits
-            });
-            return `${formatted}${compact.suffix ? ` ${compact.suffix}` : ""}`;
-        } catch (error) {
-            return `${scaledValue}${compact.suffix ? ` ${compact.suffix}` : ""}`;
-        }
-    }
-
-    formatChartValue(value, decimals = 2) {
-        const numericValue = Number(`${value ?? ""}`.replace(/,/g, ""));
-        if (!isFinite(numericValue)) {
-            return _entityCommon.inValid(value) ? "0" : `${value}`;
-        }
-
-        const maxDigits = Math.max(0, Math.min(10, Number(decimals) || 2));
-        try {
-            return numericValue.toLocaleString(this.getGlobalNumberLocale(), {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: maxDigits
-            });
-        } catch (error) {
-            return `${numericValue}`;
         }
     }
 
@@ -2599,22 +1611,28 @@ class AnalyticsCharts {
             return;
         }
 
+        const selects = document.querySelectorAll(".analytics-grid-agg-select");
+        if (!selects.length) {
+            return;
+        }
+
         this.isAggFieldAvailabilitySyncing = true;
-        const currentValue = this.getSelectedGlobalAggField();
-        this.ensureGlobalGridAggControl();
-        this.setSelectedGlobalAggField(currentValue);
+        selects.forEach(select => {
+            const currentValue = select.value || "count";
+            const options = this.getGridAggFields();
+            select.innerHTML = options.map(option =>
+                `<option value="${this.escapeHtml(option.value)}">${this.escapeHtml(option.label)}</option>`
+            ).join("");
+
+            const normalizedCurrent = this.normalizeUrlParam(currentValue);
+            if (options.some(option => this.normalizeUrlParam(option.value) === normalizedCurrent)) {
+                select.value = currentValue;
+            } else {
+                select.value = "count";
+            }
+        });
         this.isAggFieldAvailabilitySyncing = false;
         this.saveGridCardState();
-
-        const normalizedBefore = this.normalizeUrlParam(currentValue || "count");
-        const normalizedAfter = this.normalizeUrlParam(this.getSelectedGlobalAggField() || "count");
-        if (normalizedBefore !== normalizedAfter) {
-            const container = document.querySelector("#analytics-yaxis-grid");
-            const cards = container ? Array.from(container.querySelectorAll(".analytics-grid-card")) : [];
-            if (cards.length > 0) {
-                this.loadGridCardsBatch(cards, { forceRefresh: false });
-            }
-        }
     }
     getGridGroupFields() {
         const options = [];
@@ -2656,25 +1674,35 @@ class AnalyticsCharts {
         return options;
     }
 
-    getGridCardHtml(groupOption, defaultChartType, index) {
+    getGridCardHtml(groupOption, aggOptions, defaultChartType, index) {
         const cardId = `analytics-grid-card-${this.normalizeUrlParam(groupOption.value || "all").replace(/[^a-z0-9]+/g, "-")}-${index}`;
         const preferredGroup = this.normalizeUrlParam(this.urlParams?.groupby || "");
         const isPreferredGroup = preferredGroup && preferredGroup === this.normalizeUrlParam(groupOption.value || "");
         const chartTypes = this.getSupportedChartTypes();
-        const defaultColors = this.getGridDefaultPaletteColors();
+        const palettes = this.getSupportedColorPalettes();
+
+        const aggOptionsHtml = aggOptions.map(option =>
+            `<option value="${this.escapeHtml(option.value)}">${this.escapeHtml(option.label)}</option>`
+        ).join("");
 
         const chartOptionsHtml = chartTypes.map(option => {
             const selectedAttr = this.normalizeUrlParam(option.type) === this.normalizeUrlParam(defaultChartType) ? " selected" : "";
             return `<option value="${this.escapeHtml(option.type)}"${selectedAttr}>${this.escapeHtml(option.name)}</option>`;
         }).join("");
 
-        const paletteColorInputsHtml = defaultColors.map((color, index) =>
-            `<input type="color" class="analytics-grid-color-input" data-color-index="${index}" value="${this.escapeHtml(color)}" title="Color ${index + 1}" aria-label="Color ${index + 1}" />`
-        ).join("");
+        const paletteOptionsHtml = palettes.map(option => {
+            const selectedAttr = option.value === "newPalette" ? " selected" : "";
+            return `<option value="${this.escapeHtml(option.value)}"${selectedAttr}>${this.escapeHtml(option.label)}</option>`;
+        }).join("");
 
         return `<div class="analytics-grid-card${isPreferredGroup ? " selected" : ""}" data-default-selected="${isPreferredGroup ? "T" : "F"}" data-group-field="${this.escapeHtml(groupOption.value)}" data-group-caption="${this.escapeHtml(groupOption.label)}">
                     <div class="analytics-grid-card-header">
                         <h5 class="analytics-grid-card-title" title="${this.escapeHtml(groupOption.label)}">${this.escapeHtml(groupOption.label)}</h5>
+                        <div class="analytics-grid-controls">
+                            <select class="form-select form-select-sm analytics-grid-agg-select" title="X-axis">
+                                ${aggOptionsHtml}
+                            </select>
+                        </div>
                         <button type="button" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm analytics-grid-resize-btn" title="Resize card" aria-label="Resize card">
                             <span class="material-icons material-icons-style material-icons-2">drag_indicator</span>
                         </button>
@@ -2693,13 +1721,10 @@ class AnalyticsCharts {
                                     </select>
                                 </div>
                                 <div class="analytics-grid-menu-item">
-                                    <label class="analytics-grid-menu-label">Custom colors</label>
-                                    <div class="analytics-grid-color-picker-wrap">
-                                        <div class="analytics-grid-color-picker-list">
-                                            ${paletteColorInputsHtml}
-                                        </div>
-                                        <button type="button" class="btn btn-link btn-sm analytics-grid-color-reset-btn">Reset</button>
-                                    </div>
+                                    <label class="analytics-grid-menu-label">Color palette</label>
+                                    <select class="form-select form-select-sm analytics-grid-palette-select" title="Color palette">
+                                        ${paletteOptionsHtml}
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -2905,9 +1930,6 @@ class AnalyticsCharts {
     }
 
     ensureGridSelectionSummaryContainer() {
-        if (!this.enableGridPointFilterSelection) {
-            return null;
-        }
         let container = document.querySelector("#analytics-grid-filter-summary");
         if (container) {
             return container;
@@ -2924,9 +1946,6 @@ class AnalyticsCharts {
     }
 
     renderGridSelectionSummary() {
-        if (!this.enableGridPointFilterSelection) {
-            return;
-        }
         const container = this.ensureGridSelectionSummaryContainer();
         if (!container) {
             return;
@@ -3149,9 +2168,6 @@ class AnalyticsCharts {
     }
 
     handleGridFilterSelection(payload) {
-        if (!this.enableGridPointFilterSelection) {
-            return;
-        }
         if (!payload || typeof payload !== "object") {
             return;
         }
@@ -3198,9 +2214,6 @@ class AnalyticsCharts {
 
     applyGridSelectionFilterToRows(rows, options = {}) {
         const safeRows = Array.isArray(rows) ? rows : [];
-        if (!this.enableGridPointFilterSelection) {
-            return safeRows;
-        }
         const filterEntries = this.getGridSelectionFilterEntries(options.excludeGroupField || "");
         if (!filterEntries.length) {
             return safeRows;
@@ -3251,9 +2264,6 @@ class AnalyticsCharts {
 
     getGridSelectionAwareChartData(chartsData, input, sourceRows = null) {
         const safeChartsData = Array.isArray(chartsData) ? chartsData : [];
-        if (!this.enableGridPointFilterSelection) {
-            return Promise.resolve(safeChartsData);
-        }
         if (!this.hasGridSelectionFilter()) {
             return Promise.resolve(safeChartsData);
         }
@@ -3771,16 +2781,17 @@ class AnalyticsCharts {
         }
 
         const groupOptions = this.getGridGroupFields();
+        const aggOptions = this.getGridAggFields();
         if (!groupOptions.length) {
             container.innerHTML = `<div class="analytics-grid-message w-100">No group fields configured.</div>`;
             return;
         }
 
+        const defaultChartType = this.getChartTypeConfig(this.selectedChartType).type;
         container.innerHTML = groupOptions.map((groupOption, index) =>
-            this.getGridCardHtml(groupOption, this.getAutoDefaultGridChartType(index), index)
+            this.getGridCardHtml(groupOption, aggOptions, defaultChartType, index)
         ).join("");
         this.applyStoredGridCardState(container);
-        this.ensureGlobalGridAggControl();
         this.applyGridColumnsLayout();
 
         const cards = container.querySelectorAll(".analytics-grid-card");
@@ -3788,9 +2799,9 @@ class AnalyticsCharts {
             const popupButton = card.querySelector(".analytics-grid-popup-btn");
             const menuButton = card.querySelector(".analytics-grid-menu-btn");
             const menuPanel = card.querySelector(".analytics-grid-menu-panel");
+            const aggSelect = card.querySelector(".analytics-grid-agg-select");
             const chartSelect = card.querySelector(".analytics-grid-chart-select");
-            const colorInputs = Array.from(card.querySelectorAll(".analytics-grid-color-input"));
-            const paletteResetButton = card.querySelector(".analytics-grid-color-reset-btn");
+            const paletteSelect = card.querySelector(".analytics-grid-palette-select");
             const resizeButton = card.querySelector(".analytics-grid-resize-btn");
             const clearFilterButton = card.querySelector(".analytics-grid-clear-filter-btn");
 
@@ -3830,26 +2841,21 @@ class AnalyticsCharts {
                 this.handleGridCardClickSelection(card);
             });
 
+            if (aggSelect) {
+                aggSelect.addEventListener("change", () => {
+                    this.saveGridCardState(container);
+                    const allCards = Array.from(container.querySelectorAll(".analytics-grid-card"));
+                    this.loadGridCardsBatch(allCards, { forceRefresh: false });
+                });
+            }
             if (chartSelect) {
                 chartSelect.addEventListener("change", () => {
                     this.saveGridCardState(container);
                     this.loadGridCard(card);
                 });
             }
-            if (colorInputs.length) {
-                colorInputs.forEach(input => {
-                    input.addEventListener("input", () => {
-                        this.saveGridCardState(container);
-                        this.applyGridCardPalette(card);
-                    });
-                });
-            }
-
-            if (paletteResetButton) {
-                paletteResetButton.addEventListener("click", (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    this.applyGridCardColorInputs(card, this.getGridDefaultPaletteColors());
+            if (paletteSelect) {
+                paletteSelect.addEventListener("change", () => {
                     this.saveGridCardState(container);
                     this.applyGridCardPalette(card);
                 });
@@ -4278,42 +3284,16 @@ class AnalyticsCharts {
         return `projInfo-analytics:gridCardState:v1:${projectName}:${userName}:${entityId}`;
     }
 
-    normalizeGridCardStatePayload(state, options = {}) {
-        const sourceState = state && typeof state === "object" ? state : {};
-        const sourceSelectionFilter = sourceState.selectionFilter && typeof sourceState.selectionFilter === "object"
-            ? sourceState.selectionFilter
-            : {};
-        const sourceFilters = sourceSelectionFilter.filters && typeof sourceSelectionFilter.filters === "object"
-            ? sourceSelectionFilter.filters
-            : {};
-
-        const normalizedFilters = {};
-        Object.keys(sourceFilters).forEach(groupField => {
-            const values = sourceFilters[groupField];
-            if (Array.isArray(values) && values.length > 0) {
-                normalizedFilters[groupField] = values.slice();
-            }
-        });
-
-        return {
-            cards: sourceState.cards && typeof sourceState.cards === "object" ? sourceState.cards : {},
-            globalAggField: `${sourceState.globalAggField || "count"}`.trim() || "count",
-            selectionFilter: {
-                groupField: `${sourceSelectionFilter.groupField || ""}`.trim(),
-                values: Array.isArray(sourceSelectionFilter.values) ? sourceSelectionFilter.values.slice() : [],
-                filters: normalizedFilters
-            },
-            storedOn: options.storedOn || sourceState.storedOn || new Date().toISOString()
-        };
-    }
-
-    readGridCardStateFromLocalStorage(transId) {
+    readGridCardState(transId) {
         const entityId = transId || this.entityTransId;
-        if (_entityCommon.inValid(entityId) || typeof localStorage === "undefined") {
+        if (_entityCommon.inValid(entityId)) {
             return null;
         }
 
         try {
+            if (typeof localStorage === "undefined") {
+                return null;
+            }
             const primaryKey = this.getGridCardStateStorageKey(entityId);
             const projInfoKey = this.getGridCardStateStorageKeyProjInfo(entityId);
             const legacyKey = this.getGridCardStateStorageKey(entityId, true);
@@ -4327,51 +3307,14 @@ class AnalyticsCharts {
             if (!rawValue) {
                 return null;
             }
-
             const parsedValue = JSON.parse(rawValue);
             if (!parsedValue || typeof parsedValue !== "object") {
                 return null;
             }
-
-            return this.normalizeGridCardStatePayload(parsedValue, { storedOn: parsedValue.storedOn });
+            return parsedValue;
         } catch (error) {
             return null;
         }
-    }
-
-    writeGridCardStateToLocalStorage(state, transId) {
-        const entityId = transId || this.entityTransId;
-        if (_entityCommon.inValid(entityId) || typeof localStorage === "undefined") {
-            return;
-        }
-
-        try {
-            const payload = this.normalizeGridCardStatePayload(state);
-            localStorage.setItem(this.getGridCardStateStorageKey(entityId), JSON.stringify(payload));
-        } catch (error) {
-            console.warn("Unable to write analytics grid card state:", error);
-        }
-    }
-
-    readGridCardState(transId) {
-        const entityId = transId || this.entityTransId;
-        if (_entityCommon.inValid(entityId)) {
-            return null;
-        }
-
-        const memoryCacheState = this.gridCardStateCache[entityId];
-        if (memoryCacheState && typeof memoryCacheState === "object") {
-            return memoryCacheState;
-        }
-
-        const localState = this.readGridCardStateFromLocalStorage(entityId);
-        if (localState) {
-            this.gridCardStateCache[entityId] = localState;
-            return localState;
-        }
-
-        this.ensureGridCardStateFromIndexedDb(entityId);
-        return null;
     }
 
     writeGridCardState(state, transId) {
@@ -4380,52 +3323,18 @@ class AnalyticsCharts {
             return;
         }
 
-        const payload = this.normalizeGridCardStatePayload(state);
-        this.gridCardStateCache[entityId] = payload;
-        this.writeGridCardStateToLocalStorage(payload, entityId);
-        this.writeGridCardStateIndexedDb(payload, entityId);
-    }
-
-    ensureGridCardStateFromIndexedDb(transId) {
-        const entityId = transId || this.entityTransId;
-        if (_entityCommon.inValid(entityId)) {
-            return Promise.resolve(null);
-        }
-
-        if (this.gridCardStateCache[entityId]) {
-            return Promise.resolve(this.gridCardStateCache[entityId]);
-        }
-
-        if (this.gridCardStateIndexedDbRequests[entityId]) {
-            return this.gridCardStateIndexedDbRequests[entityId];
-        }
-
-        const request = this.readGridCardStateIndexedDb(entityId).then(state => {
-            if (!state) {
-                return null;
+        try {
+            if (typeof localStorage === "undefined") {
+                return;
             }
-
-            const normalizedState = this.normalizeGridCardStatePayload(state, { storedOn: state.storedOn });
-            this.gridCardStateCache[entityId] = normalizedState;
-            this.writeGridCardStateToLocalStorage(normalizedState, entityId);
-
-            const currentEntityId = this.normalizeUrlParam(this.entityTransId || "");
-            if (currentEntityId === this.normalizeUrlParam(entityId)) {
-                const container = document.querySelector("#analytics-yaxis-grid");
-                const cards = container ? Array.from(container.querySelectorAll(".analytics-grid-card")) : [];
-                if (cards.length > 0) {
-                    this.applyStoredGridCardState(container);
-                    this.loadGridCardsBatch(cards, { forceRefresh: false });
-                }
-            }
-
-            return normalizedState;
-        }).finally(() => {
-            delete this.gridCardStateIndexedDbRequests[entityId];
-        });
-
-        this.gridCardStateIndexedDbRequests[entityId] = request;
-        return request;
+            localStorage.setItem(this.getGridCardStateStorageKey(entityId), JSON.stringify({
+                cards: state.cards || {},
+                selectionFilter: state.selectionFilter || { groupField: "", values: [] },
+                storedOn: new Date().toISOString()
+            }));
+        } catch (error) {
+            console.warn("Unable to write analytics grid card state:", error);
+        }
     }
 
     saveGridCardState(containerElement) {
@@ -4440,26 +3349,24 @@ class AnalyticsCharts {
         }
 
         const cardState = {};
-        const globalAggField = this.getSelectedGlobalAggField() || "count";
         cards.forEach(card => {
             const groupField = this.normalizeUrlParam(card.getAttribute("data-group-field") || "");
             if (!groupField) {
                 return;
             }
 
+            const aggSelect = card.querySelector(".analytics-grid-agg-select");
             const chartSelect = card.querySelector(".analytics-grid-chart-select");
-            const paletteConfig = this.getGridCardPalette(card);
+            const paletteSelect = card.querySelector(".analytics-grid-palette-select");
             cardState[groupField] = {
-                aggField: globalAggField,
+                aggField: aggSelect ? (aggSelect.value || "count") : "count",
                 chartType: chartSelect ? (chartSelect.value || this.selectedChartType || "line") : (this.selectedChartType || "line"),
-                paletteKey: paletteConfig?.paletteKey || "custom",
-                customColors: Array.isArray(paletteConfig?.customColors) ? paletteConfig.customColors.slice() : this.getGridDefaultPaletteColors()
+                paletteKey: paletteSelect ? (paletteSelect.value || "newPalette") : "newPalette"
             };
         });
 
         this.writeGridCardState({
             cards: cardState,
-            globalAggField: globalAggField,
             selectionFilter: {
                 groupField: this.gridSelectionFilter.groupField || "",
                 values: Array.isArray(this.gridSelectionFilter.values) ? this.gridSelectionFilter.values.slice() : [],
@@ -4489,18 +3396,6 @@ class AnalyticsCharts {
         this.isApplyingGridCardState = true;
         try {
             const storedCards = storedState.cards && typeof storedState.cards === "object" ? storedState.cards : {};
-            const storedGlobalAgg = `${storedState.globalAggField || ""}`.trim();
-            if (storedGlobalAgg) {
-                this.setSelectedGlobalAggField(storedGlobalAgg);
-            } else {
-                const firstCardWithAgg = Object.keys(storedCards).find(key => !!storedCards[key]?.aggField);
-                if (firstCardWithAgg) {
-                    this.setSelectedGlobalAggField(storedCards[firstCardWithAgg].aggField);
-                } else {
-                    this.setSelectedGlobalAggField(this.globalAggField || "count");
-                }
-            }
-
             Array.from(container.querySelectorAll(".analytics-grid-card")).forEach(card => {
                 const groupField = this.normalizeUrlParam(card.getAttribute("data-group-field") || "");
                 const cardConfig = storedCards[groupField];
@@ -4508,7 +3403,17 @@ class AnalyticsCharts {
                     return;
                 }
 
+                const aggSelect = card.querySelector(".analytics-grid-agg-select");
                 const chartSelect = card.querySelector(".analytics-grid-chart-select");
+                const paletteSelect = card.querySelector(".analytics-grid-palette-select");
+
+                if (aggSelect && cardConfig.aggField) {
+                    const targetAgg = `${cardConfig.aggField}`;
+                    const hasAgg = Array.from(aggSelect.options).some(option => this.normalizeUrlParam(option.value) === this.normalizeUrlParam(targetAgg));
+                    if (hasAgg) {
+                        aggSelect.value = targetAgg;
+                    }
+                }
 
                 if (chartSelect && cardConfig.chartType) {
                     const targetChart = `${cardConfig.chartType}`;
@@ -4518,10 +3423,13 @@ class AnalyticsCharts {
                     }
                 }
 
-                const restoredColors = Array.isArray(cardConfig.customColors) && cardConfig.customColors.length > 0
-                    ? cardConfig.customColors
-                    : this.resolvePaletteColorsByKey(cardConfig.paletteKey || "newPalette");
-                this.applyGridCardColorInputs(card, restoredColors);
+                if (paletteSelect && cardConfig.paletteKey) {
+                    const targetPalette = `${cardConfig.paletteKey}`;
+                    const hasPalette = Array.from(paletteSelect.options).some(option => option.value === targetPalette);
+                    if (hasPalette) {
+                        paletteSelect.value = targetPalette;
+                    }
+                }
             });
 
             const savedFilter = storedState.selectionFilter;
@@ -4981,7 +3889,7 @@ class AnalyticsCharts {
             }
 
             try {
-                const request = indexedDB.open("analyticsinfo-cache", 2);
+                const request = indexedDB.open("analyticsinfo-cache", 1);
 
                 request.onupgradeneeded = (event) => {
                     const db = event?.target?.result;
@@ -4991,10 +3899,6 @@ class AnalyticsCharts {
 
                     if (!db.objectStoreNames.contains("entityRows")) {
                         db.createObjectStore("entityRows");
-                    }
-
-                    if (!db.objectStoreNames.contains("gridCardState")) {
-                        db.createObjectStore("gridCardState");
                     }
                 };
 
@@ -5062,61 +3966,6 @@ class AnalyticsCharts {
                         .transaction("entityRows", "readwrite")
                         .objectStore("entityRows")
                         .put(payload, this.getEntityListStorageKey(transId));
-
-                    request.onsuccess = () => resolve();
-                    request.onerror = () => resolve();
-                } catch (error) {
-                    resolve();
-                }
-            });
-        });
-    }
-
-    readGridCardStateIndexedDb(transId) {
-        return this.openAnalyticsIndexedDb().then(db => {
-            if (!db) {
-                return null;
-            }
-
-            return new Promise((resolve) => {
-                try {
-                    const storageKey = this.getGridCardStateStorageKey(transId);
-                    const request = db
-                        .transaction("gridCardState", "readonly")
-                        .objectStore("gridCardState")
-                        .get(storageKey);
-
-                    request.onsuccess = () => {
-                        const payload = request.result;
-                        if (!payload || typeof payload !== "object") {
-                            resolve(null);
-                            return;
-                        }
-                        resolve(this.normalizeGridCardStatePayload(payload, { storedOn: payload.storedOn }));
-                    };
-
-                    request.onerror = () => resolve(null);
-                } catch (error) {
-                    resolve(null);
-                }
-            });
-        });
-    }
-
-    writeGridCardStateIndexedDb(state, transId) {
-        return this.openAnalyticsIndexedDb().then(db => {
-            if (!db) {
-                return;
-            }
-
-            return new Promise((resolve) => {
-                try {
-                    const storageKey = this.getGridCardStateStorageKey(transId);
-                    const payload = this.normalizeGridCardStatePayload(state);
-                    const request = db
-                        .transaction("gridCardState", "readwrite")
-                        .objectStore("gridCardState")
-                        .put(payload, storageKey);
 
                     request.onsuccess = () => resolve();
                     request.onerror = () => resolve();
@@ -5512,249 +4361,6 @@ class AnalyticsCharts {
         return Array.from(fieldMetaMap.values());
     }
 
-    parseTransidFieldsSourceMap(rawFields) {
-        const sourceMap = {};
-        const rawValue = `${rawFields || ""}`.trim();
-        if (!rawValue) {
-            return sourceMap;
-        }
-
-        const segments = rawValue.split("|").map(item => `${item || ""}`.trim()).filter(Boolean);
-        let lastKnownTable = "";
-
-        segments.forEach((segment) => {
-            let fieldBlock = segment;
-            let tablePrefix = "";
-
-            const equalIndex = segment.indexOf("=");
-            if (equalIndex > -1) {
-                tablePrefix = segment.substring(0, equalIndex).trim();
-                fieldBlock = segment.substring(equalIndex + 1).trim();
-            }
-
-            const tokens = fieldBlock.split("~").map(item => `${item || ""}`.trim());
-            const fieldName = tokens[0] || "";
-            if (!fieldName) {
-                return;
-            }
-
-            const normalizedField = this.normalizeUrlParam(fieldName);
-            if (!normalizedField) {
-                return;
-            }
-
-            const normalizedToken = this.normalizeFlagToTF(tokens[1] || "F", "F");
-            let srcTable = tokens[2] || "";
-            let srcField = tokens[3] || "";
-
-            if (tablePrefix) {
-                lastKnownTable = tablePrefix;
-            }
-
-            if (!srcTable && tablePrefix) {
-                srcTable = tablePrefix;
-            }
-            if (!srcTable && lastKnownTable) {
-                srcTable = lastKnownTable;
-            }
-            if (!srcField && srcTable) {
-                srcField = fieldName;
-            }
-
-            const psrctxt = (srcTable && srcField)
-                ? `${fieldName}~${normalizedToken}~${srcTable}~${srcField}`
-                : "";
-
-            sourceMap[normalizedField] = {
-                fldname: fieldName,
-                normalized: normalizedToken,
-                srctable: srcTable,
-                srcfld: srcField,
-                psrctxt: psrctxt
-            };
-        });
-
-        return sourceMap;
-    }
-
-    mergeTransidFieldSourceIntoMeta(metaData, rawFields) {
-        const safeMetaData = Array.isArray(metaData) ? metaData : [];
-        if (safeMetaData.length === 0) {
-            return [];
-        }
-
-        const sourceMap = this.parseTransidFieldsSourceMap(rawFields);
-        const sourceKeys = Object.keys(sourceMap);
-        if (sourceKeys.length === 0) {
-            return safeMetaData;
-        }
-
-        return safeMetaData.map((item) => {
-            const normalizedField = this.normalizeUrlParam(item?.fldname || "");
-            const sourceInfo = sourceMap[normalizedField];
-            if (!sourceInfo) {
-                return item;
-            }
-
-            const next = { ...item };
-            next.normalized = `${next.normalized || sourceInfo.normalized || "F"}`.trim().toUpperCase() || "F";
-            if (!next.srctable && sourceInfo.srctable) {
-                next.srctable = sourceInfo.srctable;
-            }
-            if (!next.srcfld && sourceInfo.srcfld) {
-                next.srcfld = sourceInfo.srcfld;
-            }
-            if (!next.psrctxt && sourceInfo.psrctxt) {
-                next.psrctxt = sourceInfo.psrctxt;
-            }
-
-            return next;
-        });
-    }
-
-    mergeMetaDataWithSupplemental(supplementalMeta) {
-        const baseMeta = Array.isArray(this.metaData) ? this.metaData : [];
-        const extraMeta = Array.isArray(supplementalMeta) ? supplementalMeta : [];
-        if (baseMeta.length === 0 || extraMeta.length === 0) {
-            return baseMeta;
-        }
-
-        const extraByField = new Map();
-        extraMeta.forEach((item) => {
-            const normalizedField = this.normalizeUrlParam(item?.fldname || "");
-            if (!normalizedField || extraByField.has(normalizedField)) {
-                return;
-            }
-            extraByField.set(normalizedField, item);
-        });
-
-        this.metaData = baseMeta.map((item) => {
-            const normalizedField = this.normalizeUrlParam(item?.fldname || "");
-            const extra = extraByField.get(normalizedField);
-            if (!extra) {
-                return item;
-            }
-
-            const next = { ...item };
-            const nextNormalized = this.normalizeFlagToTF(next.normalized ?? extra.normalized, "F");
-            next.normalized = nextNormalized;
-
-            if (!`${next.srctable || ""}`.trim() && `${extra.srctable || ""}`.trim()) {
-                next.srctable = `${extra.srctable}`.trim();
-            }
-            if (!`${next.srcfld || ""}`.trim() && `${extra.srcfld || ""}`.trim()) {
-                next.srcfld = `${extra.srcfld}`.trim();
-            }
-            if (!`${next.psrctxt || ""}`.trim() && `${extra.psrctxt || ""}`.trim()) {
-                next.psrctxt = `${extra.psrctxt}`.trim();
-            }
-            if (!`${next.ftransid || ""}`.trim() && `${extra.ftransid || ""}`.trim()) {
-                next.ftransid = `${extra.ftransid}`.trim();
-            }
-            if (!`${next.cdatatype || ""}`.trim() && `${extra.cdatatype || ""}`.trim()) {
-                next.cdatatype = `${extra.cdatatype}`.trim();
-            }
-
-            if (!`${next.psrctxt || ""}`.trim() && `${next.fldname || ""}`.trim() && `${next.srctable || ""}`.trim() && `${next.srcfld || ""}`.trim()) {
-                next.psrctxt = `${next.fldname}~${nextNormalized}~${next.srctable}~${next.srcfld}`;
-            }
-
-            return next;
-        });
-
-        return this.metaData;
-    }
-
-    hasDropdownSourceGap(metaData = this.metaData) {
-        const safeMetaData = Array.isArray(metaData) ? metaData : [];
-        return safeMetaData.some((item) => {
-            if (!item || typeof item !== "object") {
-                return false;
-            }
-
-            const cdatatype = `${item.cdatatype || ""}`.trim().toLowerCase();
-            const isDropDown = cdatatype === "dropdown" || cdatatype === "drop down" || cdatatype === "drop_down" || cdatatype === "select";
-            const isNormalized = this.normalizeFlagToTF(item.normalized, "F") === "T";
-            if (!isDropDown && !isNormalized) {
-                return false;
-            }
-
-            const isFilterEnabled = this.normalizeFlagToTF(item.filters, "T") === "T";
-            if (!isFilterEnabled) {
-                return false;
-            }
-
-            const hasPsrcTxt = `${item.psrctxt || item.psrcTxt || item.psrctext || ""}`.trim() !== "";
-            const hasSourceFields = `${item.srctable || ""}`.trim() !== "" && `${item.srcfld || ""}`.trim() !== "";
-            return !hasPsrcTxt && !hasSourceFields;
-        });
-    }
-
-    fetchEntityFieldSourceMeta(transId, options = {}) {
-        const effectiveTransId = `${transId || this.entityTransId || ""}`.trim();
-        if (!effectiveTransId) {
-            return Promise.resolve([]);
-        }
-
-        const forceRefresh = !!options.forceRefresh;
-        const jobs = [];
-
-        jobs.push(
-            this.fetchAdsMetadataFromAxList(effectiveTransId, { forceRefresh: forceRefresh })
-                .then((metaFromAds) => {
-                    if (Array.isArray(metaFromAds) && metaFromAds.length > 0) {
-                        this.mergeMetaDataWithSupplemental(metaFromAds);
-                    }
-                    return metaFromAds;
-                })
-                .catch(() => [])
-        );
-
-        if (!this.isAdsMode()) {
-            jobs.push(new Promise((resolve) => {
-                $.ajax({
-                    url: `${this.getAssetBaseUrl()}/aspx/Entity.aspx/GetEntityListDataWS`,
-                    type: "POST",
-                    cache: false,
-                    async: true,
-                    dataType: "json",
-                    data: JSON.stringify({
-                        transId: effectiveTransId,
-                        fields: this.getEntityListRequestFieldsString(),
-                        pageNo: 1,
-                        pageSize: 1,
-                        filter: this.getEntityListFilterPayload()
-                    }),
-                    contentType: "application/json",
-                    success: (data) => {
-                        try {
-                            const parsedResponse = typeof data?.d === "string" ? JSON.parse(data.d) : (data?.d || data);
-                            const fieldsRaw = parsedResponse?.result?.data?.Fields || parsedResponse?.result?.data?.fields || "";
-                            if (fieldsRaw) {
-                                this.metaData = this.mergeTransidFieldSourceIntoMeta(this.metaData, fieldsRaw);
-                            }
-                        } catch (error) {
-                            this.logFilterDebug("fetchEntityFieldSourceMeta:tstructParseError", {
-                                transId: effectiveTransId,
-                                message: error?.message || "Unable to parse Fields"
-                            });
-                        }
-                        resolve(true);
-                    },
-                    error: () => resolve(false)
-                });
-            }));
-        }
-
-        return Promise.all(jobs).then(() => {
-            this.logFilterDebug("fetchEntityFieldSourceMeta:done", {
-                transId: effectiveTransId,
-                hasGapAfter: this.hasDropdownSourceGap(this.metaData)
-            });
-            return this.metaData;
-        });
-    }
-
     fetchAdsMetadataFromAxList(adsName, options = {}) {
         const caller = this.getAxListCaller();
         if (!caller || typeof caller.GetDataFromAxList !== "function") {
@@ -5894,8 +4500,7 @@ class AnalyticsCharts {
                     Properties: {
                         XAXISFIELDS: this.xAxisFields || "All",
                         YAXISFIELDS: this.yAxisFields || "All",
-                        CHARTTYPE: this.selectedChartType || "line",
-                        GLOBALAGGFIELD: this.globalAggField || "count"
+                        CHARTTYPE: "line"
                     }
                 }
             }
@@ -5916,7 +4521,7 @@ class AnalyticsCharts {
             this.metaData = Array.isArray(metaData) ? metaData : [];
             this.entityTransId = effectiveAdsName;
             this.entityName = effectiveAdsName;
-            this.selectedChartType = this.selectedChartType || "line";
+            this.selectedChartType = "line";
             this.sanitizeAxisFieldsAgainstMeta(this.metaData);
 
             this.writeAnalyticsEntityCache(effectiveAdsName, this.buildAdsEntityCachePayload(effectiveAdsName, this.metaData));
@@ -6712,10 +5317,19 @@ class AnalyticsCharts {
                 keyname: keyname
             });
 
+            const filterLink = this.buildGridPointLink({
+                type: "grid-filter-toggle",
+                groupField: input.groupField || fldname || "",
+                value: keyname
+            });
+
+            const hasFilterValue = !_entityCommon.inValid(fldname) && !_entityCommon.inValid(keyname);
+            const pointLink = hasFilterValue ? filterLink : navLink;
+
             return {
                 label: keyname,
                 value: this.normalizeNumericValue(item.keyvalue),
-                link: navLink,
+                link: pointLink,
                 navigateLink: navLink
             };
         }).filter(item => item.label !== "");
@@ -6756,7 +5370,7 @@ class AnalyticsCharts {
         };
     }
 
-    renderChartInGridCard(cardElement, chartType, aggLabel, points, paletteConfig) {
+    renderChartInGridCard(cardElement, chartType, aggLabel, points, paletteKey) {
         const chartDiv = cardElement.querySelector(".analytics-grid-chart");
         if (!chartDiv) {
             return;
@@ -6768,14 +5382,6 @@ class AnalyticsCharts {
 
         const target = `#${chartDiv.id}`;
         const renderPayload = this.getGridChartRenderPayload(chartType, aggLabel, points);
-        const resolvedPalette = this.resolveGridPaletteConfig(paletteConfig);
-        const chartAttr = {
-            cck: resolvedPalette.cck,
-            showBarDataLabels: false
-        };
-        if (resolvedPalette.cccv) {
-            chartAttr.cccv = resolvedPalette.cccv;
-        }
 
         chartDiv.innerHTML = "";
         createAgileChart({
@@ -6785,9 +5391,11 @@ class AnalyticsCharts {
             metaData: renderPayload.metaData,
             height: 220,
             disableExporting: true,
-            attr: chartAttr
+            attr: {
+                cck: paletteKey || "newPalette",
+                showBarDataLabels: false
+            }
         });
-        this.applyChartNumericFormattingWithRetry(chartDiv.id, chartType);
 
         setTimeout(() => {
             this.forceHideGridBarDataLabels(cardElement, chartType);
@@ -6795,13 +5403,14 @@ class AnalyticsCharts {
         }, 80);
     }
 
-    shouldHideDataLabelsForChartType(chartType) {
+    forceHideGridBarDataLabels(cardElement, chartType) {
         const normalizedType = this.getChartTypeConfig(chartType).type;
         const barLikeTypes = new Set(["bar", "column", "stacked-bar", "stacked-column", "stacked-percentage-column"]);
-        return barLikeTypes.has(normalizedType);
-    }
+        if (!barLikeTypes.has(normalizedType)) {
+            return;
+        }
 
-    forceHideChartDataLabels(chart, errorLabel) {
+        const chart = this.getGridCardChartInstance(cardElement);
         if (!chart) {
             return;
         }
@@ -6844,163 +5453,8 @@ class AnalyticsCharts {
                 chart.redraw();
             }
         } catch (error) {
-            console.error(errorLabel, error);
+            console.error("Unable to disable bar data labels for analytics grid card:", error);
         }
-    }
-
-    getChartInstanceByRenderToId(containerId) {
-        if (!containerId || typeof Highcharts === "undefined" || !Array.isArray(Highcharts.charts)) {
-            return null;
-        }
-
-        return Highcharts.charts.find(chart => chart && chart.renderTo && chart.renderTo.id === containerId) || null;
-    }
-
-    applyChartNumericFormatting(chart, chartType) {
-        if (!chart || typeof chart.update !== "function") {
-            return;
-        }
-
-        const hideBarLabels = this.shouldHideDataLabelsForChartType(chartType);
-        const self = this;
-
-        try {
-            chart.update({
-                xAxis: {
-                    labels: {
-                        formatter: function () {
-                            const value = this && this.value;
-                            if (typeof value === "number") {
-                                return self.formatChartCompactValue(value, 2);
-                            }
-                            return value;
-                        }
-                    }
-                },
-                yAxis: {
-                    labels: {
-                        formatter: function () {
-                            const value = this && this.value;
-                            if (typeof value === "number") {
-                                return self.formatChartCompactValue(value, 2);
-                            }
-                            return value;
-                        }
-                    }
-                },
-                tooltip: {
-                    pointFormatter: function () {
-                        const pointValue = typeof this.y === "number"
-                            ? this.y
-                            : (typeof this.value === "number" ? this.value : 0);
-                        const label = this.name || this.key || this.category || this.series?.name || "Value";
-                        return `<span style="color:${this.color}">\u25CF</span> ${label}: <b>${self.formatChartValue(pointValue, 2)}</b><br/>`;
-                    }
-                },
-                plotOptions: hideBarLabels ? {
-                    series: {
-                        dataLabels: {
-                            enabled: false
-                        }
-                    },
-                    bar: {
-                        dataLabels: {
-                            enabled: false
-                        }
-                    },
-                    column: {
-                        dataLabels: {
-                            enabled: false
-                        }
-                    }
-                } : {
-                    series: {
-                        dataLabels: {
-                            formatter: function () {
-                                const pointValue = typeof this.y === "number"
-                                    ? this.y
-                                    : (this.point && typeof this.point.y === "number" ? this.point.y : null);
-                                if (pointValue === null) {
-                                    return null;
-                                }
-                                return self.formatChartCompactValue(pointValue, 2);
-                            },
-                            allowOverlap: false,
-                            crop: true
-                        }
-                    },
-                    pie: {
-                        dataLabels: {
-                            formatter: function () {
-                                const pointValue = typeof this.y === "number" ? this.y : 0;
-                                const pointName = this.point?.name || "";
-                                return `${pointName}: ${self.formatChartCompactValue(pointValue, 2)}`;
-                            }
-                        }
-                    }
-                }
-            }, false);
-
-            if (typeof chart.redraw === "function") {
-                chart.redraw();
-            }
-        } catch (error) {
-            console.error("Unable to apply chart numeric formatting:", error);
-        }
-    }
-
-    applyChartNumericFormattingWithRetry(chartContainerId, chartType, retries = 8) {
-        const tryApply = (remaining) => {
-            const chart = this.getChartInstanceByRenderToId(chartContainerId);
-            if (chart) {
-                this.applyChartNumericFormatting(chart, chartType);
-                return;
-            }
-
-            if (remaining > 0) {
-                setTimeout(() => tryApply(remaining - 1), 140);
-            }
-        };
-
-        tryApply(retries);
-    }
-
-    forceHideGridBarDataLabels(cardElement, chartType) {
-        if (!this.shouldHideDataLabelsForChartType(chartType)) {
-            return;
-        }
-
-        const chart = this.getGridCardChartInstance(cardElement);
-        this.forceHideChartDataLabels(chart, "Unable to disable bar data labels for analytics grid card:");
-    }
-
-    forceHidePopupBarDataLabels(chartContainerId, chartType) {
-        if (!this.shouldHideDataLabelsForChartType(chartType)) {
-            return;
-        }
-
-        const chart = this.getChartInstanceByRenderToId(chartContainerId);
-        this.forceHideChartDataLabels(chart, "Unable to disable bar data labels for analytics popup chart:");
-    }
-
-    hidePopupBarDataLabelsWithRetry(chartContainerId, chartType, retries = 8) {
-        if (!this.shouldHideDataLabelsForChartType(chartType)) {
-            return;
-        }
-
-        const tryHide = (remaining) => {
-            const chart = this.getChartInstanceByRenderToId(chartContainerId);
-            if (chart) {
-                this.forceHideChartDataLabels(chart, "Unable to disable bar data labels for analytics popup chart:");
-                return;
-            }
-
-            if (remaining > 0) {
-                setTimeout(() => tryHide(remaining - 1), 140);
-            }
-        };
-
-        tryHide(retries);
     }
 
     applyGridCardPalette(cardElement) {
@@ -7009,9 +5463,9 @@ class AnalyticsCharts {
         }
 
         const payload = cardElement.__gridChartPayload;
-        const paletteConfig = this.getGridCardPalette(cardElement);
-        payload.paletteConfig = paletteConfig;
-        this.renderChartInGridCard(cardElement, payload.chartType, payload.aggLabel, payload.points, paletteConfig);
+        const paletteKey = this.getGridCardPalette(cardElement);
+        payload.palette = paletteKey;
+        this.renderChartInGridCard(cardElement, payload.chartType, payload.aggLabel, payload.points, paletteKey);
     }
 
     openGridCardPopup(cardElement) {
@@ -7037,7 +5491,6 @@ class AnalyticsCharts {
         const popupChartId = `analytics-grid-popup-chart-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const popupListId = `analytics-grid-popup-list-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const chartTypeName = this.getChartTypeConfig(payload.chartType).name;
-        const shouldHidePopupLabels = this.shouldHideDataLabelsForChartType(payload.chartType);
         const popupTitle = `${payload.groupCaption || "Chart"} - ${payload.aggLabel || "Count"} (${chartTypeName})`;
         const popupModal = createPopup("about:blank", false);
         if (!popupModal || !popupModal.modalBody) {
@@ -7062,7 +5515,7 @@ class AnalyticsCharts {
                 <div class="analytics-grid-popup-title">${this.escapeHtml(popupTitle)}</div>
                 <div class="analytics-grid-popup-layout">
                     <div class="analytics-grid-popup-chart-wrap">
-                        <div id="${popupChartId}" class="analytics-grid-popup-chart${shouldHidePopupLabels ? " analytics-grid-popup-hide-data-labels" : ""}"></div>
+                        <div id="${popupChartId}" class="analytics-grid-popup-chart"></div>
                     </div>
                     <div class="analytics-grid-popup-panel">
                         <div class="analytics-grid-popup-panel-header">
@@ -7084,20 +5537,10 @@ class AnalyticsCharts {
                     metaData: renderPayload.metaData,
                     height: Math.max(window.innerHeight - 220, 360),
                     disableExporting: true,
-                    attr: (() => {
-                        const popupPalette = this.resolveGridPaletteConfig(payload.paletteConfig || payload.palette || "newPalette");
-                        const popupAttr = {
-                            cck: popupPalette.cck,
-                            showBarDataLabels: false
-                        };
-                        if (popupPalette.cccv) {
-                            popupAttr.cccv = popupPalette.cccv;
-                        }
-                        return popupAttr;
-                    })()
+                    attr: {
+                        cck: payload.palette || "newPalette"
+                    }
                 });
-                this.applyChartNumericFormattingWithRetry(popupChartId, payload.chartType);
-                this.hidePopupBarDataLabelsWithRetry(popupChartId, payload.chartType);
                 this.reflowGridCharts();
             } catch (error) {
                 console.error("Error rendering popup chart:", error);
@@ -7134,11 +5577,13 @@ class AnalyticsCharts {
 
         const groupField = cardElement.getAttribute("data-group-field") || "all";
         const groupCaption = cardElement.getAttribute("data-group-caption") || "All";
+        const aggSelect = cardElement.querySelector(".analytics-grid-agg-select");
         const chartSelect = cardElement.querySelector(".analytics-grid-chart-select");
-        const aggField = this.getSelectedGlobalAggField();
+        const paletteSelect = cardElement.querySelector(".analytics-grid-palette-select");
+        const aggField = aggSelect ? aggSelect.value : "count";
         const chartType = chartSelect ? chartSelect.value : this.selectedChartType;
-        const paletteConfig = this.getGridCardPalette(cardElement);
-        const aggLabel = this.getSelectedGlobalAggLabel();
+        const paletteKey = paletteSelect ? paletteSelect.value : "newPalette";
+        const aggLabel = aggSelect ? aggSelect.options[aggSelect.selectedIndex]?.text || "Count" : "Count";
         const input = this.buildAnalyticsInput(groupField, aggField);
         const chartMeta = this.buildChartMetaFromInput(input);
         const chartMetaKey = this.getChartMetaKey(chartMeta);
@@ -7147,7 +5592,7 @@ class AnalyticsCharts {
             cardElement: cardElement,
             groupCaption: groupCaption,
             chartType: chartType,
-            paletteConfig: paletteConfig,
+            paletteKey: paletteKey,
             aggLabel: aggLabel,
             input: input,
             chartMeta: chartMeta,
@@ -7160,7 +5605,7 @@ class AnalyticsCharts {
             return;
         }
 
-        const { cardElement, chartType, aggLabel, groupCaption, paletteConfig, input } = request;
+        const { cardElement, chartType, aggLabel, groupCaption, paletteKey, input } = request;
         if (cardElement.getAttribute("data-request-token") !== requestToken) {
             return;
         }
@@ -7184,7 +5629,7 @@ class AnalyticsCharts {
             aggLabel: aggLabel,
             groupCaption: groupCaption,
             points: points.map(item => ({ ...item })),
-            paletteConfig: paletteConfig
+            palette: paletteKey
         };
         this.logFilterDebug("renderGridCardFromRequest:points", {
             cardGroupField: input?.groupField || cardElement.getAttribute("data-group-field"),
@@ -7194,7 +5639,7 @@ class AnalyticsCharts {
             sample: points.slice(0, 5)
         });
         this.updateGridCardFilterAction(cardElement, input);
-        this.renderChartInGridCard(cardElement, chartType, aggLabel, points, paletteConfig);
+        this.renderChartInGridCard(cardElement, chartType, aggLabel, points, paletteKey);
         if (this.isHyperlinkPanelVisible && cardElement.classList.contains("active")) {
             this.renderHyperlinkPanelForCard(cardElement);
         }
@@ -7206,7 +5651,7 @@ class AnalyticsCharts {
             return;
         }
 
-        const { cardElement: currentCard, input, chartType, aggLabel, groupCaption, paletteConfig, chartMetaKey } = request;
+        const { cardElement: currentCard, input, chartType, aggLabel, groupCaption, paletteKey, chartMetaKey } = request;
         this.selectedChartType = this.getChartTypeConfig(chartType).type;
         currentCard.__gridChartPayload = null;
 
@@ -7238,7 +5683,7 @@ class AnalyticsCharts {
                 chartType: chartType,
                 aggLabel: aggLabel,
                 groupCaption: groupCaption,
-                paletteConfig: paletteConfig,
+                paletteKey: paletteKey,
                 input: input
             }, chartsData, requestToken);
         }).catch(error => {
@@ -7784,7 +6229,7 @@ function storeChartType(chartType) {
         transId: _analyticsCharts.entityTransId,
         properties: { "CHARTTYPE": chartType },
         confirmNeeded: false,
-        allUsers: false
+        allUsers: true
     };
 
     _entityCommon.setAnalyticsDataWS(data, () => {
@@ -7999,20 +6444,15 @@ function createFieldsLayout() {
     const xAxisArray = xAxisFields === "All" ? [] : xAxisFields.split(",");
     const yAxisArray = yAxisFields === "All" ? [] : yAxisFields.split(",");
 
-    var grpFields = _analyticsCharts.metaData.filter(item => {
-        const fdt = `${item?.fdatatype || ""}`.trim().toLowerCase();
-        const cdt = `${item?.cdatatype || ""}`.trim().toLowerCase();
-        return (item.grpfield === "T") &&
-            (cdt === "dropdown" || fdt === "c") &&
-            fdt !== "d" &&
-            skipFields.indexOf(item.fldname) == -1;
-    });
-    var aggFields = _analyticsCharts.metaData.filter(item => {
-        const fdt = `${item?.fdatatype || ""}`.trim().toLowerCase();
-        return (item.aggfield === "T") &&
-            fdt !== "d" &&
-            skipFields.indexOf(item.fldname) == -1;
-    });
+    var grpFields = _analyticsCharts.metaData.filter(item =>
+        (item.grpfield === "T" || item.fdatatype === "d") &&
+        (item.cdatatype === "DropDown" || item.fdatatype === "c" || item.fdatatype === "d") &&
+        skipFields.indexOf(item.fldname) == -1
+    );
+    var aggFields = _analyticsCharts.metaData.filter(item =>
+        (item.aggfield === "T" || item.fdatatype === "d") &&
+        skipFields.indexOf(item.fldname) == -1
+    );
 
     function reorderFields(fields, selectedFields) {
         return fields.sort((a, b) => {
@@ -8783,13 +7223,9 @@ function handleAnalyticsGridPointNavigation(linkData) {
     }
 
     if (payload.type === "grid-filter-toggle") {
-        // Deprecated flow: keep backward compatibility for old cached links by
-        // treating point click as list navigation.
-        navigateToListPageByValue(
-            payload.transid || _analyticsCharts?.entityTransId || "",
-            payload.groupField || payload.fldname || "",
-            payload.value || payload.keyname || ""
-        );
+        if (_analyticsCharts && typeof _analyticsCharts.handleGridFilterSelection === "function") {
+            _analyticsCharts.handleGridFilterSelection(payload);
+        }
         return;
     }
 
@@ -8886,8 +7322,7 @@ function fetchEntityData(transId, callback, options = {}) {
         _analyticsCharts.yAxisFields = yAxisFields || "All";
         _analyticsCharts.selectedChartType = "line";
 
-        const transidFieldsRaw = responseData.Fields || responseData.fields || "";
-        _analyticsCharts.metaData = _analyticsCharts.mergeTransidFieldSourceIntoMeta(pageLoadData.result.data.MetaData, transidFieldsRaw);
+        _analyticsCharts.metaData = pageLoadData.result.data.MetaData;
         _analyticsCharts.entityTransId = pageLoadData.result.data.TransId;
         _analyticsCharts.entityName = _analyticsCharts.getEntityCaption(_analyticsCharts.entityTransId);
 
@@ -8935,49 +7370,20 @@ function fetchEntityData(transId, callback, options = {}) {
 }
 
 function openFilters() {
-    if (!_analyticsCharts || !_entityFilter) {
-        return;
-    }
+    let metadata = _analyticsCharts.metaData;
+    let filterObj = _analyticsCharts.filterObj;
+    let containerId = 'dvModalFilter';
 
-    if (typeof _analyticsCharts.ensureEntityFilterBridge === "function") {
-        _analyticsCharts.ensureEntityFilterBridge();
-    }
+    _entityFilter.metadata = metadata;
+    _entityFilter.containerId = containerId;
+    _entityFilter.filterObj = filterObj;
 
-    const showFilterPopup = () => {
-        let metadata = _analyticsCharts.metaData;
-        let filterObj = _analyticsCharts.filterObj;
-        let containerId = 'dvModalFilter';
+    _entityFilter.createFilterLayout();
+    $('#applyFilterButton').on('click', function () {
+        _entityFilter.handleApply();
+    });
 
-        _analyticsCharts.ensureEntityFilterPillsContainer();
-        _entityFilter.metaData = Array.isArray(metadata) ? metadata : [];
-        _entityFilter.metadata = _entityFilter.metaData;
-        _entityFilter.containerId = containerId;
-        _entityFilter.filterObj = filterObj;
-        _entityFilter.pageName = "Analytics";
-        _entityFilter.entityTransId = _analyticsCharts.entityTransId || _analyticsCharts.dataSourceName || "";
-        _entityFilter.activeFilterArray = [];
-        _entityFilter.activeFilterId = "";
-        _entityFilter.activeFilterName = "";
-
-        _entityFilter.createFilterLayout();
-        $('#applyFilterButton').off('click.analyticsFilters').on('click.analyticsFilters', function () {
-            _entityFilter.handleApply();
-        });
-
-        $('#filterModal').modal('show');
-    };
-
-    const needsSourceMeta = typeof _analyticsCharts.hasDropdownSourceGap === "function"
-        ? _analyticsCharts.hasDropdownSourceGap(_analyticsCharts.metaData)
-        : false;
-
-    if (needsSourceMeta && typeof _analyticsCharts.fetchEntityFieldSourceMeta === "function") {
-        _analyticsCharts.fetchEntityFieldSourceMeta(_analyticsCharts.entityTransId || _analyticsCharts.dataSourceName, { forceRefresh: true })
-            .finally(() => showFilterPopup());
-        return;
-    }
-
-    showFilterPopup();
+    $('#filterModal').modal('show');
 }
 
 

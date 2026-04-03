@@ -57,6 +57,14 @@
 	margin-bottom: 40px !important;
 }
 
+#axiSuggestions,
+#axiMegaDropdown,
+.My-Command-Wrapper,
+.axi-suggestions,
+.My-Fav-Items-Wrapper {
+    overscroll-behavior: contain;
+}
+
 .AXI-Sec {
 	background: white;
 	position: fixed;
@@ -478,7 +486,9 @@
   width: 100% !important;
   left: 0;
   box-shadow: none !important;
-  height: auto !important;
+  /* height: auto !important; */
+  max-height: 300px !important; 
+  overflow-y: auto !important; 
   display: flex !important;
   flex-wrap: wrap;
   border: 0 !important;
@@ -749,5 +759,114 @@ background:#303a69 !important;
     display: none;
     /* box-shadow: 0 10px 25px rgba(0,0,0,0.2); */
     border-radius: 8px;
+}
+
+/* =========================================
+   AXI MODAL STYLING
+   ========================================= */
+.axi-modal-overlay {
+    display: none; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.axi-modal-container {
+    background: white;
+    padding: 24px;
+    border-radius: 10px;
+    width: 350px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    font-family: sans-serif;
+}
+
+.axi-modal-title {
+    margin-top: 0;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: #1f2937;
+}
+
+.axi-modal-label {
+    font-size: 13px;
+    color: #4b5563;
+    margin-bottom: 6px;
+    display: block;
+    font-weight: 500;
+}
+
+.axi-modal-input {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.axi-modal-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.axi-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.axi-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.axi-btn-cancel {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #374151;
+}
+
+.axi-btn-cancel:hover {
+    background: #f3f4f6;
+}
+
+.axi-btn-save {
+    border: none;
+    background: #22c55e;
+    color: white;
+}
+
+.axi-btn-save:hover {
+    background: #16a34a;
+}
+
+/* =========================================
+   AXI ICON 
+   ========================================= */
+.items-icon {
+    line-height: 1 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.My-Command-Wrapper li .symbol-label .material-icons {
+    color: white !important;
+    font-size: 18px !important; 
 }
 /*salman*/
