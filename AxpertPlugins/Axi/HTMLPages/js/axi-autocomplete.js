@@ -1,11 +1,6 @@
-﻿
- // Stable Branch: main
+﻿ // Stable Branch: main
 (() => {
-    // Released On: 03-04-2026
-
-   
-    
-
+    // Released On: 03-04-2026   
     // /AxPlugins/Axi/HTMLPages/js/axi-autocomplete.js
 
     let apiMetadataUrl = "";
