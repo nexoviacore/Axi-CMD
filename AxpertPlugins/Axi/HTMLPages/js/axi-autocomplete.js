@@ -1116,7 +1116,7 @@
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
-            targetUrl += "&AxIsPop=true";
+            targetUrl += "&AxPop=true";
 
             openPopOption(targetUrl)
         }
@@ -1583,8 +1583,7 @@
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
-            //targetUrl += "&AxPop=true";
-            targetUrl += "&AxIsPop=true";
+            targetUrl += "&AxPop=true";
 
             openPopOption(targetUrl)
         }
@@ -1624,6 +1623,7 @@
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
+            targetUrl += "&AxIsPop=true";
             openPopOption(targetUrl)
         }
         else {
@@ -5368,7 +5368,7 @@
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
-            targetUrl += "&AxIsPop=true";
+            targetUrl += "&AxPop=true";
 
             openPopOption(targetUrl)
         }
