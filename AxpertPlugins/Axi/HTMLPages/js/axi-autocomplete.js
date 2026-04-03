@@ -139,7 +139,7 @@
             //card: handleOpenCard,
             page: handleOpenPage,
             "app variables": handleOpenAppVar,
-            "dev options": handleOpenDevOptions,
+            "dev option": handleOpenDevOptions,
             "db explorer": handleOpenDbConsole,
             "arrange menu": handleOpenArrangeMenu,
 
@@ -2666,26 +2666,26 @@
 
 
         /** Begin: Note: This must be removed when releasing */  
-        if (groupKey.toLowerCase() === "configure") {
-            //commandConfig.prompts[0].promptValues = "PEG,Form Notification,Scheduled Notification,Peg Form Notification,Job,Rule,Application Properties,"
-            //    +"KeyField,News And Announcement,Settings,User,Users,Role,Roles,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibilities,User Group,"
-            //    +"Dimension,Actor,Actors,User Activation,User Permission,User Permissions,Role Permissions";
-            //commandConfig.prompts[1].promptSource = "Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_JobNamesList,Axi_RuleNamesList,Axi_Dummy,"
-            //    + "axi_structlist,axi_newsandannounce,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_usergrouplist,"
-            //    +"axi_dimensionlist,axi_actorlist,Axi_Dummy,axi_useractivation,axi_userlist,axi_userlist,axi_rolelist";
-            commandConfig.prompts[0].promptValues = "PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,"
-                + "KeyField,News And Announcement,User,Users,User Permission,User Permissions,User Activation,User Group,Role,Roles,Role Permissions,"
-                + "Actor, Actors, Publish Axpert API, Publish Config Studio, Card, Responsibility, Responsibilities,"
-                + "Dimension,Application Properties,Settings";
-            commandConfig.prompts[1].promptSource = "Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,"
-                + "axi_structlist,axi_newsandannounce,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,"
-                + "axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,"
-                + "axi_dimensionlist,Axi_Dummy,Axi_Dummy,";
-        }
-        if (groupKey.toLowerCase() === "open") {
-            commandConfig.prompts[0].promptValues = "Tstruct,Iview,Axpert Data Sources,Page,Arrange Menu,Dev Option,App Variables,Db Explorer,API Plugin,Axpert Job,Language,Publish,Custom Data Type,Email Definition,Table Field Descriptor,Custom Plugin,Queue Listing,Out Bound Queue,In Bound Queue,Mem DB Console";
-            commandConfig.prompts[1].promptSource = "axi_structmetalist,axi_structmetalist,axi_structmetalist,axi_structmetalist,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_APINamesList,axi_jobs,axi_language,Axi_Dummy,axi_customtype,axi_emaildef,axi_tabledesc,Axi_Dummy,Axi_Dummy,axi_outbound,axi_inbound,Axi_Dummy";
-        }
+        // if (groupKey.toLowerCase() === "configure") {
+        //     //commandConfig.prompts[0].promptValues = "PEG,Form Notification,Scheduled Notification,Peg Form Notification,Job,Rule,Application Properties,"
+        //     //    +"KeyField,News And Announcement,Settings,User,Users,Role,Roles,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibilities,User Group,"
+        //     //    +"Dimension,Actor,Actors,User Activation,User Permission,User Permissions,Role Permissions";
+        //     //commandConfig.prompts[1].promptSource = "Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_JobNamesList,Axi_RuleNamesList,Axi_Dummy,"
+        //     //    + "axi_structlist,axi_newsandannounce,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_usergrouplist,"
+        //     //    +"axi_dimensionlist,axi_actorlist,Axi_Dummy,axi_useractivation,axi_userlist,axi_userlist,axi_rolelist";
+        //     commandConfig.prompts[0].promptValues = "PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,"
+        //         + "KeyField,News And Announcement,User,Users,User Permission,User Permissions,User Activation,User Group,Role,Roles,Role Permissions,"
+        //         + "Actor, Actors, Publish Axpert API, Publish Config Studio, Card, Responsibility, Responsibilities,"
+        //         + "Dimension,Application Properties,Settings";
+        //     commandConfig.prompts[1].promptSource = "Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,"
+        //         + "axi_structlist,axi_newsandannounce,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,"
+        //         + "axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,"
+        //         + "axi_dimensionlist,Axi_Dummy,Axi_Dummy,";
+        // }
+        // if (groupKey.toLowerCase() === "open") {
+        //     commandConfig.prompts[0].promptValues = "Tstruct,Iview,Axpert Data Sources,Page,Arrange Menu,Dev Option,App Variables,Db Explorer,API Plugin,Axpert Job,Language,Publish,Custom Data Type,Email Definition,Table Field Descriptor,Custom Plugin,Queue Listing,Out Bound Queue,In Bound Queue,Mem DB Console";
+        //     commandConfig.prompts[1].promptSource = "axi_structmetalist,axi_structmetalist,axi_structmetalist,axi_structmetalist,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_APINamesList,axi_jobs,axi_language,Axi_Dummy,axi_customtype,axi_emaildef,axi_tabledesc,Axi_Dummy,Axi_Dummy,axi_outbound,axi_inbound,Axi_Dummy";
+        // }
 
         /** End: Note: This must be removed when releasing */  
         
