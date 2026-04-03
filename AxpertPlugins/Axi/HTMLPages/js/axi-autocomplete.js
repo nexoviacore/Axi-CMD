@@ -111,7 +111,7 @@
             "news and announcement": handleConfigureNewsAndAnnouncement,
             settings: handleConfigureSettings,
 
-            // users: handleConfigureUsers,
+            users: handleConfigureUsers,
             user: handleConfigureUser,
             roles: handleConfigureRoles,
             role: handleConfigureRole,
@@ -691,7 +691,9 @@
     //    }
     //}
 
-    function handleUsers({ tokens, commandConfig }) {
+    //******************** Configure Newer introduced commands(31032026)********************//
+    //********************Starts here*******************************************************//
+    function handleConfigureUsers({ tokens, commandConfig }) {
 
         let transId = "axusers";
         //let fieldname = "servername";
@@ -701,7 +703,7 @@
 
         setEditSessionState(transId);
 
-        redirectToIView(transId, "");
+        redirectToIView(transId, cleanCommandToken(tokens[1]));
         //redirectToTstruct(transId, "", true, fieldname, rawParamName);
     }
     function handleConfigureUser({ tokens, commandConfig }) {
@@ -713,7 +715,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId);
+        redirectToTstruct(transId, cleanCommandToken(tokens[1]));
     }
     function handleConfigureRoles({ tokens, commandConfig }) {
 
@@ -725,7 +727,7 @@
 
 
         setEditSessionState(transId);
-        redirectToIView(transId, "");
+        redirectToIView(transId, cleanCommandToken(tokens[1]));
         //redirectToTstruct(transId, "", true, fieldname, rawParamName);
     }
     function handleConfigureRole({ tokens, commandConfig }) {
@@ -737,7 +739,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId);
+        redirectToTstruct(transId,cleanCommandToken(tokens[1]));
     }
     function handleConfigurePublishAxpertApi({ tokens, commandConfig }) {
 
@@ -750,10 +752,10 @@
         if (tokens.length > 2) {
             rawParamName = cleanCommandToken(tokens[2]);
             actualParamvalue = tryResolveToken(2, rawParamName, commandConfig, false);
-            redirectToTstruct(transId, "", true, fieldname, actualParamvalue);
+            redirectToTstruct(transId,cleanCommandToken(tokens[1]), true, fieldname, actualParamvalue);
         }
         else
-         redirectToTstruct(transId);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
     }
     function handleConfigureApiList({ tokens, commandConfig }) {
 
@@ -778,12 +780,12 @@
 
 
             setEditSessionState(transId);
-            redirectToTstruct(transId, "", true, fieldname, rawParamName);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, rawParamName);
 
 
         } else {
             setEditSessionState(transId);
-            redirectToIView(transId, "");
+            redirectToIView(transId, cleanCommandToken(tokens[1]));
         }
 
 
@@ -811,10 +813,10 @@
         setEditSessionState(transId);
         if (rawParamName) {
             paramValue = tryResolveToken(2, rawParamName, commandConfig, false);
-            redirectToTstruct(transId, "", true, fieldname, paramValue);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, paramValue);
         }
         else {
-            redirectToTstruct(transId);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
         }
 
     }
@@ -866,7 +868,7 @@
         }
 
         if (popUpOption) {
-            //targetUrl += `&tname=${encodeURIComponent()}`;
+            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
             targetUrl += "&AxIsPop=true";
 
             openPopOption(targetUrl)
@@ -885,7 +887,7 @@
 
 
         setEditSessionState(transId);
-        redirectToIView(transId, "");
+        redirectToIView(transId, cleanCommandToken(tokens[1]));
     }
     function handleConfigureActor({ tokens, commandConfig }) {
 
@@ -904,11 +906,11 @@
 
             paramvalue = tryResolveToken(2, rawParamname, commandConfig, false);
 
-            redirectToTstruct(transId, "", true, fieldname, paramvalue);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, paramvalue);
 
         }
         else {
-            redirectToTstruct(transId);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
         }
     }
     function handleConfigureActorListing({ tokens, commandConfig }) {
@@ -921,7 +923,7 @@
 
 
         setEditSessionState(transId);
-        redirectToIView(transId, "");
+        redirectToIView(transId, cleanCommandToken(tokens[1]));
 
     }
     function handleConfigureDimensions({ tokens, commandConfig }) {
@@ -948,10 +950,10 @@
 
             paramValue = tryResolveToken(2, rawParamName, commandConfig, false);
 
-            redirectToTstruct(transId, "", true, fieldname, paramValue);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, paramValue);
         }
         else {
-            redirectToTstruct(transId);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
         }
     }
     function handleConfigureUserGroup({ tokens, commandConfig }) {
@@ -985,10 +987,10 @@
                 paramValue = tryResolveToken(2, rawValue, commandConfig, false);
             }
 
-            redirectToTstruct(transId, "", true, fieldname, paramValue);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, paramValue);
         }
         else {
-            redirectToTstruct(transId);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
         }
     }
     function handleConfigureUserActivation({ tokens, commandConfig }) {
@@ -1005,10 +1007,10 @@
 
             paramValue = tryResolveToken(2, rawParamName, commandConfig, false);
 
-            redirectToTstruct(transId, "", true, fieldname, paramValue);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, paramValue);
         }
         else {
-            redirectToTstruct(transId);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
         }
     }
     function handleConfigureUserPermissionListing({ tokens, commandConfig }) {
@@ -1037,7 +1039,7 @@
         
 
         if (popUpOption) {
-            //targetUrl += `&tname=${encodeURIComponent()}`;
+            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
             targetUrl += "&AxIsPop=true";
 
             openPopOption(targetUrl)
@@ -1070,8 +1072,9 @@
 
 
 
+        setEditSessionState(transId);
         if (popUpOption) {
-            //targetUrl += `&tname=${encodeURIComponent()}`;
+            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
             targetUrl += "&AxIsPop=true";
 
             openPopOption(targetUrl)
@@ -1108,10 +1111,22 @@
         targetUrl += `&isIV=true`;
         targetUrl += `&isDupTab=false`;
         targetUrl += `&dummyload=false♠`;
-        setCommandRoutes(input.value.trim(), targetUrl);
 
-        // load iframe
-        top.window.LoadIframe(targetUrl);
+        setEditSessionState(transId);
+
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
+            targetUrl += "&AxIsPop=true";
+
+            openPopOption(targetUrl)
+        }
+        else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+        }
+        //setCommandRoutes(input.value.trim(), targetUrl);
+
+        //top.window.LoadIframe(targetUrl);
     }
     //function handleRolePermission({ tokens, commandConfig }) {
 
@@ -1568,6 +1583,7 @@
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+            //targetUrl += "&AxPop=true";
             targetUrl += "&AxIsPop=true";
 
             openPopOption(targetUrl)
@@ -1618,7 +1634,7 @@
     }
 
 
-    function redirectToProcessFlow(caption) {
+    function redirectToProcessFlow(caption,tstructCaption) {
         console.log(`Redirecting to Process flow for caption:  ${caption}`);
 
 
@@ -1635,9 +1651,19 @@
             targetUrl = `../aspx/tstruct.aspx?transid=ad_pm`;
         }
 
-        setCommandRoutes(input.value.trim(), targetUrl);
 
-        top.window.LoadIframe(targetUrl);
+
+        setEditSessionState("ad_pm");
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+            targetUrl += "&AxIsPop=true";
+
+            openPopOption(targetUrl)
+        }
+        else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+        }
     }
 
 
@@ -2639,6 +2665,7 @@
         let commandConfig = commands[groupKey];
 
 
+        /** Begin: Note: This must be removed when releasing */  
         if (groupKey.toLowerCase() === "configure") {
             //commandConfig.prompts[0].promptValues = "PEG,Form Notification,Scheduled Notification,Peg Form Notification,Job,Rule,Application Properties,"
             //    +"KeyField,News And Announcement,Settings,User,Users,Role,Roles,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibilities,User Group,"
@@ -2659,6 +2686,9 @@
             commandConfig.prompts[0].promptValues = "Tstruct,Iview,Axpert Data Sources,Page,Arrange Menu,Dev Option,App Variables,Db Explorer,API Plugin,Axpert Job,Language,Publish,Custom Data Type,Email Definition,Table Field Descriptor,Custom Plugin,Queue Listing,Out Bound Queue,In Bound Queue,Mem DB Console";
             commandConfig.prompts[1].promptSource = "axi_structmetalist,axi_structmetalist,axi_structmetalist,axi_structmetalist,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_APINamesList,axi_jobs,axi_language,Axi_Dummy,axi_customtype,axi_emaildef,axi_tabledesc,Axi_Dummy,Axi_Dummy,axi_outbound,axi_inbound,Axi_Dummy";
         }
+
+        /** End: Note: This must be removed when releasing */  
+        
 
 
         if (!commandConfig) { hintDiv.textContent = ""; return []; }
@@ -2773,8 +2803,14 @@
             }
 
             else if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
-                filteredObjects = [goOption, popOption];
-                return [goOption, popOption];
+                if (cleanCommandToken(tokens[1]).toLowerCase() === "keyfield") {
+                    filteredObjects = [goOption];
+                    return [goOption];
+                }
+                else {
+                    filteredObjects = [goOption, popOption];
+                    return [goOption, popOption];
+                }
             }
 
             else if (groupKey.toLowerCase() === "analyse" && tokens.length > 2) {
@@ -3135,10 +3171,6 @@
                 filteredObjects.unshift(goOption);
             }
 
-            //else if (groupKey.toLowerCase() === "open" && cleanCommandToken(tokens[1])?.toLowerCase() === "axpert data sources") {
-              //  resultList.unshift(goOption);
-               // filteredObjects.unshift(goOption);
-            //}
 
             //else if (groupKey.toLowerCase() === "create" && tokens.length == 3) {
             //    resultList.unshift(goOption);
@@ -3471,7 +3503,7 @@
                     if (commandConfig.commandGroup.toLowerCase() === "view") {
                         value = "all";
                     } else if (commandConfig.commandGroup.toLowerCase() == "open" && tokens.length >= 2) {
-                        let token = tokens[1].toLowerCase();
+                        let token = cleanCommandToken(tokens[1]).toLowerCase();
 
                         switch (token) {
                             case "iview":
@@ -4228,35 +4260,6 @@
        SETUP LISTENERS
     =============================== */
     function setupEventListeners() {
-
-        const favCancelBtn = document.getElementById("axiFavCancelBtn"); 
-
-        if (favCancelBtn) {
-            favCancelBtn.addEventListener("click", (e) => {
-                e.preventDefault(); 
-                hideFavoriteModal(); 
-            }); 
-        }
-
-        const favSaveBtn = document.getElementById("axiFavSaveBtn");
-        if (favSaveBtn) {
-            favSaveBtn.addEventListener("click", (e) => {
-                e.preventDefault();
-                confirmAddFavorite();
-            });
-        }
-
-        const favInput = document.getElementById("axiFavNameInput");
-        if (favInput) {
-            favInput.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    confirmAddFavorite();
-                } else if (e.key === "Escape") {
-                    hideFavoriteModal();
-                }
-            });
-        }
 
         favouriteBtn.addEventListener("click", (e) => {
             e.preventDefault();
@@ -5229,7 +5232,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId, "", true, fieldname, rawParamName);
+        redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, rawParamName);
 
 
 
@@ -5247,7 +5250,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId, "", true, fieldname, rawParamName);
+        redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, rawParamName);
 
 
 
@@ -5281,7 +5284,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId, "", true, fieldname, rawParamName);
+        redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, rawParamName);
 
 
 
@@ -5293,7 +5296,7 @@
 
         let rawParamName = cleanCommandToken(tokens[2]);
 
-        redirectToProcessFlow(rawParamName);
+        redirectToProcessFlow(rawParamName, cleanCommandToken(tokens[1]));
 
 
 
@@ -5311,7 +5314,7 @@
 
 
         setEditSessionState(transId);
-        redirectToTstruct(transId, "", true, fieldname, fieldValue);
+        redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, fieldValue);
 
 
 
@@ -5330,45 +5333,64 @@
             rawTitle = cleanCommandToken(tokens[2]);
             paramValue = tryResolveToken(2, rawTitle, commandConfig, false);
 
-            redirectToTstruct(transId, "", true, fieldname, paramValue)
+            redirectToTstruct(transId,cleanCommandToken(tokens[1]), true, fieldname, paramValue)
         }
         else {
-            redirectToTstruct(transId);
+            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
         }
     }
 
     function handleConfigureSettings({ tokens, commandConfig }) {
         // const targetUrl = "../aspx/Configuration.aspx/LoadUserAppSettings"; 
-        const targetUrl = "../aspx/Configuration.aspx";
-        setCommandRoutes(input.value.trim(), targetUrl);
-        window.LoadIframe(targetUrl);
+        let targetUrl = "../aspx/Configuration.aspx";
+
+
+  
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
+            targetUrl += "&AxIsPop=true";
+
+            openPopOption(targetUrl)
+        }
+        else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            window.LoadIframe(targetUrl);
+        }
     }
 
 
 
     function handleConfigureProperties({ tokens, commandConfig }) {
         const transId = "ad_pr";
-        const targetUrl = `../aspx/tstruct.aspx?act=load&transid=${transId}&axpdef_axpertpropsid=1`;
+        let targetUrl = `../aspx/tstruct.aspx?act=load&transid=${transId}&axpdef_axpertpropsid=1`;
         //   const targetUrl = "../aspx/tstruct.aspx?act=load&transid=ad_pr&axpdef_axpertpropsid=1";
         setEditSessionState(transId);
-        setCommandRoutes(input.value.trim(), targetUrl);
 
-        top.window.LoadIframe(targetUrl);
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
+            targetUrl += "&AxIsPop=true";
 
-    }
-
-    function handleConfigureJob({ tokens, commandConfig }) {
-
-        let transId = "job_s";
-        let fieldname = "jname";
-
-        let rawParamName = cleanCommandToken(tokens[2]);
-
-
-        setEditSessionState(transId);
-        redirectToTstruct(transId, "", true, fieldname, rawParamName);
+            openPopOption(targetUrl)
+        }
+        else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+        }
 
     }
+
+    //function handleConfigureJob({ tokens, commandConfig }) {
+
+    //    let transId = "job_s";
+    //    let fieldname = "jname";
+
+    //    let rawParamName = cleanCommandToken(tokens[2]);
+
+
+    //    setEditSessionState(transId);
+    //    redirectToTstruct(transId, "", true, fieldname, rawParamName);
+
+    //}
 
     /*********************************************************
       * End 
@@ -5915,6 +5937,7 @@
 
             resolvedName = found.name;
         }
+
 
         if (type.toLowerCase() === "tstruct") {
             window.openDeveloperStudio("tstreact", resolvedName, true);
@@ -6858,10 +6881,12 @@
         return text.startsWith("Loading") ||
             text.startsWith("Waiting") ||
             text.startsWith("Error") ||
+            text.startsWith("Fetching") ||
             text === "No Data" ||
             text === "Please type the value..." ||
             text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
-            text === "Please Type the date";
+            text === "Please Type the date"; 
+            
 
     }
 
@@ -9548,25 +9573,8 @@
                 showToast(`${cmdText} is already in Favorites`);
                 return;
             }
-            const removedFav = commandFavorites.splice(cmdIndex, 1);
+            commandFavorites.splice(cmdIndex, 1);
             showToast(`Removed '${cmdText}' from Favorites`);
-            localStorage.setItem(favKey, JSON.stringify(commandFavorites));
-            renderFavoritesUI();
-            render(); 
-
-            if (axiFavoritesUrl) {
-                fetch(`${axiFavoritesUrl}?appname=${appname}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        username: window.mainUserName,
-                        commandText: removedFav.commandText,
-                        action: "remove",
-                        favOrder: 0,
-                        targetURL: removedFav.targetUrl || removedFav.targetURL
-                    })
-                }).catch(err => console.error("Axi: Failed to update on backend", err));
-            }
         } else {
             if (!commandRoute) {
                 showToast("Please Execute the command at least once before adding to favorites");
@@ -9576,35 +9584,33 @@
                 showToast(`Maximum of ${MAX_FAVORITES} favorites allowed. Please remove some favorites before adding new ones.`);
                 return;
             }
-            // commandFavorites.unshift({ commandText: cmdText, targetUrl: commandRoute.targetUrl });
+            commandFavorites.unshift({ commandText: cmdText, targetUrl: commandRoute.targetUrl });
 
-            // showToast(`Added '${cmdText}' to favorites`, 3000, true);
-
-            showFavoriteModel(cmdText, commandRoute.targetUrl); 
+            showToast(`Added '${cmdText}' to favorites`, 3000, true);
         }
 
-        // localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
 
-        // renderFavoritesUI();
-        // render();
+        renderFavoritesUI();
+        render();
 
-        // if (axiFavoritesUrl) {
-        //     fetch(`${axiFavoritesUrl}?appname=${appname}`, {
-        //         method: "POST",
-        //         headers: { "Content-Type": "application/json" },
-        //         body: JSON.stringify({
-        //             username: window.mainUserName,
-        //             commandText: cmdText,
-        //             action: isAdding ? "add" : "remove",
-        //             favOrder: 0,
-        //             targetURL: commandRoute?.targetUrl
+        if (axiFavoritesUrl) {
+            fetch(`${axiFavoritesUrl}?appname=${appname}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: window.mainUserName,
+                    commandText: cmdText,
+                    action: isAdding ? "add" : "remove",
+                    favOrder: 0,
+                    targetURL: commandRoute?.targetUrl
 
-        //         })
-        //     }).catch(err => {
-        //         showToast("Axi: Failed to update favorite on backend, Please check AxiApi Configuration");
-        //         console.error("Axi: Failed to update favorite on backend", err)
-        //     });
-        // }
+                })
+            }).catch(err => {
+                showToast("Axi: Failed to update favorite on backend, Please check AxiApi Configuration");
+                console.error("Axi: Failed to update favorite on backend", err)
+            });
+        }
 
     }
 
@@ -9902,74 +9908,6 @@
         } else {
             return false;
         }
-    }
-
-    function showFavoriteModel(cmdText, targetUrl) {
-        const originalCmdTextInput = document.getElementById("axiFavOriginalCmd"); 
-        const favNameInput = document.getElementById("axiFavNameInput"); 
-
-        const axiFavModal = document.getElementById("axiFavModalOverlay");
-
-        originalCmdTextInput.value = cmdText; 
-        favNameInput.value = cmdText; 
-
-        axiFavModal.style.display = "flex"; 
-        favNameInput.focus(); 
-        favNameInput.select(); 
-    }
-
-    function hideFavoriteModal() {
-        const modal = document.getElementById("axiFavModalOverlay"); 
-
-        if (modal) modal.style.display = "none"; 
-    }
-
-    function confirmAddFavorite() {
-        const alias = document.getElementById("axiFavNameInput").value.trim();
-        const originalCmdText  = document.getElementById("axiFavOriginalCmd").value(); 
-        
-        if (!alias) {
-            showToast("Favorite name cannot be empty"); 
-            return; 
-        }
-
-        const appUrl = getAppBaseUrl();
-        const appname = getProjectName();
-        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
-
-        commandFavorites.unshift({ 
-            commandText: alias, 
-            originalCmd: originalCmd,
-            targetUrl: targetUrl 
-        });
-
-        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
-        renderFavoritesUI(); 
-        render(); 
-        hideFavoriteModal(); 
-
-        if (axiFavoritesUrl) {
-            fetch(`${axiFavoritesUrl}?appname=${appname}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    username: window.mainUserName,
-                    commandText: alias,
-                    // originalCmd: originalCmd, // Pass original command to DB
-                    action: "add",
-                    favOrder: 0,
-                    targetURL: targetUrl
-                })
-            }).catch(err => {
-                showToast("Axi: Failed to update favorite on backend");
-                console.error("Backend sync failed", err);
-            });
-        }
-
-
-
-        
-
     }
 
 
