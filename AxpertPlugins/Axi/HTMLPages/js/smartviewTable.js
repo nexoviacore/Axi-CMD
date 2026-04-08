@@ -359,7 +359,15 @@ function getAdsList() {
     };
     
     // Use parent.GetDataFromAxList if available, otherwise window
-    const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : window;
+    // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : window;
+    
+   
+    const scopes = [parent, window, window.top];
+
+    const caller = scopes.find(
+        w => w && typeof w.GetDataFromAxList === 'function'
+    );
+    
     
     caller.GetDataFromAxList(
       params,
@@ -1178,11 +1186,23 @@ function initializeDataTable() {
     console.log('Headers added:', Array.from(addedFields));
   
     listJson.forEach((rowData, index) => {
+      let rowLinkDesc = "";
+
+      for (let f of _entity.metaData) {
+        rowLinkDesc = smartviewBuildHyperlinkDescriptor(f, rowData);
+        if (rowLinkDesc) break;
+      }
+    
+    
       html += `<tr>`;
       if (isGroupedView) {
-        html += `<td><button type="button" class="sv-expand-btn" data-rowindex="${index}" data-expanded="false">+</button><input type="checkbox" class="rowCheckbox" data-index="${index}" data-recordid="${rowData.recordid || ''}"></td>`;
+        html += `<td><button type="button" class="sv-expand-btn" data-rowindex="${index}" data-expanded="false">+</button><input type="checkbox" class="rowCheckbox" data-index="${index}" data-recordid="${rowData.recordid || ''}"> <span class="row-arrow material-icons sv-hyperlinktemp" data-link="${escapeHtml(rowLinkDesc)}" >
+        chevron_right
+      </span></td><td>`;
       } else {
-        html += `<td><input type="checkbox" class="rowCheckbox" data-index="${index}" data-recordid="${rowData.recordid || ''}"></td>`;
+        html += `<td><input type="checkbox" class="rowCheckbox" data-index="${index}" data-recordid="${rowData.recordid || ''}"> <span class="row-arrow material-icons sv-hyperlinktemp" data-link="${escapeHtml(rowLinkDesc)}">
+        chevron_right
+      </span></td>`;
       }
       
       // ADD ACTION CELL
@@ -1330,6 +1350,7 @@ function initializeDataTable() {
       attachRowOptionsHandlers();
       attachSmartviewHyperlinkHandlers();
       attachSmartviewGroupExpandHandlers();
+      attachSmartviewTempExpandHandlers();
     }, 100);
 
     // Ensure infinite-scroll sentinel exists after every render
@@ -2176,9 +2197,20 @@ function smartviewFetchGroupDetailRows(ctrl, groupFilters, cb) {
     };
     if (ctrl.axClient_dateformat) params.props.axClient_dateformat = ctrl.axClient_dateformat;
 
-    const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-      : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-      : null;
+   
+    // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+    //   : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+    //   : null;
+    // if (!caller || typeof caller.GetDataFromAxList !== 'function') {
+    //   cb && cb(new Error('GetDataFromAxList not available'), []);
+    //   return;
+    // }
+    const scopes = [parent, window, window.top];
+
+    const caller = scopes.find(
+        w => w && typeof w.GetDataFromAxList === 'function'
+    );
+    
     if (!caller || typeof caller.GetDataFromAxList !== 'function') {
       cb && cb(new Error('GetDataFromAxList not available'), []);
       return;
@@ -3225,9 +3257,17 @@ function openFilters() {
                             props: { ADS: true, CachePermissions: true, getallrecordscount: false, pageno: 1, pagesize: 0 }
                           };
 
-                          const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-                            : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-                            : null;
+                         
+    // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+    //   : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+    //   : null;
+    
+    const scopes = [parent, window, window.top];
+
+    const caller = scopes.find(
+        w => w && typeof w.GetDataFromAxList === 'function'
+    );
+    
 
                           if (!caller || typeof caller.GetDataFromAxList !== 'function') {
                             failure && failure(new Error('GetDataFromAxList not available for ds_smartlist_filters'));
@@ -3791,8 +3831,15 @@ if (window._entityFilter && typeof window._entityFilter.handleApply === 'functio
             // do not send FILTERS / flattened sqlParams; backend expects props.filters JSON
             params.sqlParams = Object.assign({}, params.sqlParams || {});
 
-            const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window : null;
-            if (caller && typeof caller.GetDataFromAxList === 'function') {
+ // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+    //   : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+    //   : null;
+    
+    const scopes = [parent, window, window.top];
+
+    const caller = scopes.find(
+        w => w && typeof w.GetDataFromAxList === 'function'
+    );            if (caller && typeof caller.GetDataFromAxList === 'function') {
               console.debug('EntityFilter fallback calling GetDataFromAxList with params ->', params);
               caller.GetDataFromAxList(params, function (resp) {
                 try {
@@ -4459,7 +4506,7 @@ function buildLinkFromParts(parts) {
   return '';
 }
 /* ---------- Open Link in Popup ---------- */
-function openLinkInPopup(input) {
+function openLinkInPopup(input, returnUrl = false) {
   try {
     if (!input) return;
 
@@ -4517,7 +4564,7 @@ function openLinkInPopup(input) {
       qp.set('hltype', 'load');
       qp.set('torecid', 'false');
       const qs = qp.toString();
-      url = qs ? `ivtstload.aspx?tstname=${struct}&${qs}` : `ivtstload.aspx?tstname=${struct}&hltype=load&torecid=false`;
+      url = qs ? `/../../aspx/tstruct.aspx?transid=${struct}&${qs}` : `ivtstload.aspx?tstname=${struct}&hltype=load&torecid=false`;
     } else if (type === 'h') {
       if ((linkStr[0] + linkStr[1]).toLowerCase() === "hp" && (/^\d+$/.test(struct.slice(1)))) 
         url = `htmlpages.aspx?load=${struct.slice(1)}&${qp.toString()}`;
@@ -4527,6 +4574,9 @@ function openLinkInPopup(input) {
 
     // Open the popup
     if (url) {
+      if (returnUrl) {
+        return url; // ✅ IMPORTANT
+      }
       if (typeof parent.createPopup === 'function') {
         parent.createPopup(url, true, ()=>{}, ()=>{});
       } else {
@@ -4989,9 +5039,16 @@ wireDom() {
         props: { ADS: false, CachePermissions: true, getallrecordscount: false, pageno: 1, pagesize: 500, sorting: [], filters: [] }
       };
   
-      const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-                   : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-                   : null;
+      // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+      //              : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+      //              : null;
+    
+    
+    const scopes = [parent, window, window.top];
+
+    const caller = scopes.find(
+        w => w && typeof w.GetDataFromAxList === 'function'
+    );
   
       if (!caller || typeof caller.GetDataFromAxList !== 'function') {
         const err = new Error('GetDataFromAxList not available for fetchAdsMetadata');
@@ -5335,9 +5392,16 @@ wireDom() {
     console.log('loadNextPage: client-filter mode -> fetching full dataset', params);
 
     this.isFetching = true;
-    const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-                 : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-                 : null;
+    // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+    //              : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+    //              : null;
+       
+    const scopes = [parent, window, window.top];
+
+    const caller = scopes.find(
+        w => w && typeof w.GetDataFromAxList === 'function'
+    );
+  
     if (!caller || typeof caller.GetDataFromAxList !== 'function') {
       console.error('GetDataFromAxList not available');
       this.isFetching = false;
@@ -5392,9 +5456,16 @@ wireDom() {
   this.isFetching = true;
 
   // pick caller safely
-  const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-               : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-               : null;
+  // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+  //              : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+  //              : null;
+     
+  const scopes = [parent, window, window.top];
+
+  const caller = scopes.find(
+      w => w && typeof w.GetDataFromAxList === 'function'
+  );
+
 
   if (!caller || typeof caller.GetDataFromAxList !== 'function') {
     console.error('GetDataFromAxList not available');
@@ -5529,10 +5600,17 @@ wireDom() {
       console.warn('loadNextPage: paging fallback -> fetching all rows once', params);
 
       // pick caller safely
-      const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
-                   : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
-                   : null;
+      // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent
+      //              : (typeof window !== 'undefined' && window.GetDataFromAxList) ? window
+      //              : null;
 
+         
+    const scopes = [parent, window, window.top];
+
+    const caller = scopes.find(
+        w => w && typeof w.GetDataFromAxList === 'function'
+    );
+  
       if (!caller || typeof caller.GetDataFromAxList !== 'function') {
         console.error('GetDataFromAxList not available (paging fallback)');
         return;
@@ -5598,7 +5676,14 @@ wireDom() {
     params.props.pagesize = 0;
     this.isFetching = true;
     try {
-      const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : window;
+      // const caller = (typeof parent !== 'undefined' && parent.GetDataFromAxList) ? parent : window;
+         
+    const scopes = [parent, window, window.top];
+
+    const caller = scopes.find(
+        w => w && typeof w.GetDataFromAxList === 'function'
+    );
+  
       caller.GetDataFromAxList(
         params,
 (response) => {
@@ -6018,3 +6103,53 @@ document.addEventListener('DOMContentLoaded', function () {
 
   console.log('SmartViewTableController boot logic executed (ads=', adsName, ', initialFilters=', initialFiltersRaw.length, ')');
 });
+
+function attachSmartviewTempExpandHandlers() {
+  try {
+    if (!window.jQuery) return;
+    $(document).off('click', '.sv-hyperlinktemp').on('click', '.sv-hyperlinktemp', function (e) {
+      
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const $icon = $(this);
+    const link = $icon.attr('data-link');
+    if (!link) return;
+
+    const $tr = $icon.closest('tr');
+    let $nextRow = $tr.next('.expand-row');
+
+    if ($nextRow.length === 0) {
+      const colspan = $tr.children('td').length;
+
+      $nextRow = $(`
+        <tr class="expand-row">
+          <td colspan="${colspan}">
+            <iframe class="tstruct-frame"
+                    style="width:80%; height:400px; border:none;"></iframe>
+          </td>
+        </tr>
+      `);
+
+      $tr.after($nextRow);
+    }
+
+    const $iframe = $nextRow.find('iframe');
+
+    if ($nextRow.is(':visible')) {
+      $nextRow.hide();
+      $icon.text('chevron_right');
+    } else {
+      const url = openLinkInPopup(link, true); // ✅ KEY CHANGE
+      if (url) $iframe.attr('src', url);
+
+      $nextRow.show();
+      $icon.text('expand_more');
+    }
+  });
+
+  } catch (e) {
+    console.error(e);
+  }
+}
