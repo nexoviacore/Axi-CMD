@@ -9601,8 +9601,15 @@
                     console.log("type : ", typeof data);
                     if (data && Array.isArray(data)) {
                         commandFavorites = data.map(item => ({
-                            commandText: item.commandText || item.commandtext,
+                            favouritesId: item?.favouritesId,
+                            username: item?.username,
+
+                            
+                            commandText: item?.commandText || item?.commandtext,
+                            originalCommandText: item.originalCommandText,
+                            favOrder: item.favOrder,
                             targetUrl: item.targetUrl || item.targetURL || item.targeturl,
+                            createdOn: item.createdOn
                         }));
                         localStorage.setItem(favKey, JSON.stringify(commandFavorites));
                         renderFavoritesUI();
@@ -9610,7 +9617,7 @@
                 })
                 .catch(err => {
                     console.error("Axi: Failed to sync favorites from backend", err);
-                    // showToast("Axi: Axi: Failed to sync favorites from backend"); 
+                    showToast("Axi: Axi: Failed to sync favorites from backend"); 
 
                 }).finally(() => {
                     isCommandsLoading = false;
@@ -9809,7 +9816,7 @@
 
     function executeFavorite(favObj) {
 
-        input.value = favObj.commandText + " ";
+        input.value = favObj.originalCmd + " ";
         const tokens = getTokens(favObj.commandText);
 
         const accessPermissions = getAccessPermissions();
@@ -10046,7 +10053,7 @@
                 body: JSON.stringify({
                     username: window.mainUserName,
                     commandText: alias,
-
+                    originalCommandText: originalCmdText,
                     action: "add",
                     favOrder: 0,
                     targetURL: targetUrl
@@ -10059,10 +10066,37 @@
             }).then(
                 response => {
                     if (response.ok) {
-                        commandFavorites.unshift({
-                            commandText: alias,
+                        // commandFavorites.unshift({
+                        //     commandText: alias,
+                        //     originalCmd: originalCmdText,
+                        //     targetUrl: targetUrl
+                        // });
+
+                        // localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                        // renderFavoritesUI();
+                        // render();
+                        // hideFavoriteModal();
+
+                        // showToast(`'${alias}' added to favorites`, 5000, true);
+
+                        return response.json(); 
+                    }
+                }
+            ).then(data => {
+                console.log("Response from backend after adding favorite: ", data);
+                // if (data) {
+
+                // }
+                const favObj = data[0]; 
+
+                 commandFavorites.unshift({
+                            favouritesId: favObj.favouritesId,
+                            username: favObj.username,
+                            commandText: favObj.commandText,
                             originalCmd: originalCmdText,
-                            targetUrl: targetUrl
+                            favOrder: favObj.favOrder,
+                            targetUrl: targetUrl,
+                            createdOn: favObj.createdOn
                         });
 
                         localStorage.setItem(favKey, JSON.stringify(commandFavorites));
@@ -10071,9 +10105,9 @@
                         hideFavoriteModal();
 
                         showToast(`'${alias}' added to favorites`, 5000, true);
-                    }
-                }
-            ).catch(err => {
+
+            })
+            .catch(err => {
                 showToast("Axi: Failed to update favorite on backend");
                 console.error("Backend sync failed", err);
             });
@@ -10132,6 +10166,7 @@
                     body: JSON.stringify({
                         username: window.mainUserName,
                         commandText: removedFav.commandText,
+                        originalCommandText: removedFav.originalCommandText,
                         action: "remove",
                         favOrder: 0,
                         targetURL: removedFav.targetUrl || removedFav.targetURL || ""
