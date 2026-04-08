@@ -133,7 +133,8 @@
             "role permissions": handleConfigureRolePermissionListing,
             //"role permission": handleRolePermission
         },
-        Open: {
+        //Open: {
+        DevTools: {
             default: handleOpenSource,
             "axpert data sources": handleOpenAds,
             //card: handleOpenCard,
@@ -592,7 +593,7 @@
 
                 }
 
-                if (valueIndex === -1 && (commandConfig.commandGroup?.toLowerCase() === "open" || commandConfig.commandGroup?.toLowerCase() === "configure")) {
+                if (valueIndex === -1 && (commandConfig.commandGroup?.toLowerCase() === "devtools" || commandConfig.commandGroup?.toLowerCase() === "configure")) {
 
                     return { config: prompt, realSource: null, error: "Not a Valid command" };
                 }
@@ -2797,7 +2798,7 @@
                 return [goOption, popOption];
             }
 
-            else if (groupKey.toLowerCase() === "open" && tokens.length > 2) {
+            else if (groupKey.toLowerCase() === "devtools" && tokens.length > 2) {
                 filteredObjects = [goOption];
                 return [goOption];
             }
@@ -3045,7 +3046,7 @@
                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
 
                 if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
-                    if (groupKey.toLowerCase() === "open" && tokens.length > 2) {
+                    if (groupKey.toLowerCase() === "devtools" && tokens.length > 2) {
                         filteredObjects = [goOption];
                         return [goOption]
                     }
@@ -3162,7 +3163,7 @@
                 filteredObjects.unshift(goOption);
             }
             //else if (groupKey.toLowerCase() === "open" && (tokens[1]?.toLowerCase() === "api"
-            else if (groupKey.toLowerCase() === "open" && (cleanCommandToken(tokens[1])?.toLowerCase().trim() === "api plugin"
+            else if (groupKey.toLowerCase() === "devtools" && (cleanCommandToken(tokens[1])?.toLowerCase().trim() === "api plugin"
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "axpert job" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "language"
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "custom data type" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "email definition"
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "table field descriptor" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "out bound queue"
@@ -3463,7 +3464,7 @@
         let iviewBoolCheck = false;
 
         if (tokens.length >= 2) {
-            if (tokens[1].toLowerCase() == "iview" && commandConfig.commandGroup.toLowerCase() == "open") {
+            if (tokens[1].toLowerCase() == "iview" && commandConfig.commandGroup.toLowerCase() == "devtools") {
                 iviewBoolCheck = true;
             }
         }
@@ -3471,7 +3472,7 @@
             let extraParams;
             if (commandConfig.commandGroup.toLowerCase() == "configure") {
                 extraParams = commandConfig?.prompts?.[1]?.extraParams;
-            } else if (commandConfig.commandGroup.toLowerCase() == "open") {
+            } else if (commandConfig.commandGroup.toLowerCase() == "devtools") {
                 extraParams = commandConfig?.prompts?.[1]?.extraParams;
             } else {
                 extraParams = commandConfig?.prompts?.[0]?.extraParams;
@@ -3492,7 +3493,7 @@
                 } else if (param === ":userresp") {
                     value = userResp;
                 } else if (param === ":mode") {
-                    if (commandConfig.commandGroup.toLowerCase() === "open") {
+                    if (commandConfig.commandGroup.toLowerCase() === "devtools") {
                         value = "dev";
                     } else if (commandConfig.commandGroup.toLowerCase() === "view") {
                         value = "all";
@@ -3502,7 +3503,7 @@
                 else if (param === ":structtype") {
                     if (commandConfig.commandGroup.toLowerCase() === "view") {
                         value = "all";
-                    } else if (commandConfig.commandGroup.toLowerCase() == "open" && tokens.length >= 2) {
+                    } else if (commandConfig.commandGroup.toLowerCase() == "devtools" && tokens.length >= 2) {
                         let token = cleanCommandToken(tokens[1]).toLowerCase();
 
                         switch (token) {
@@ -3693,7 +3694,7 @@
             "edit": "edit_note",
             "view": "visibility",
             "configure": "settings_suggest",
-            "open": "open_in_new",
+            "devtools": "open_in_new",
             "upload": "upload_file",
             "download": "download",
             "run": "play_arrow",
@@ -9756,7 +9757,7 @@
                         break;
 
                     case 'buildAccess':
-                        if (tokens[0].toLowerCase() === "open") {
+                        if (tokens[0].toLowerCase() === "devtools") {
                             showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
                             return;
 
@@ -9889,7 +9890,7 @@
                         break;
 
                     case 'buildAccess':
-                        delete commandsFromDb['Open'];
+                        delete commandsFromDb['DevTools'];
                         break;
 
                     default:
