@@ -409,12 +409,9 @@
                 // 2. Extract Data & CLEAN URL
                 const urlParts = urlString.split('?');
                 const baseUrl = urlParts[0];
+                let params = new URLSearchParams(urlParts[1]);
 
-                // Merge full query (fixes missing params issue)
-                const fullQuery = urlParts.slice(1).join('');
-                let params = new URLSearchParams(fullQuery);
-
-                // Capture values before deleting
+                // Capture values for title logic before we strip tname
                 const tname = params.get("tname");
                 const transid = params.get("transid");
                 const caption = params.get("caption");
@@ -422,12 +419,11 @@
                 const ivname = params.get("ivname");
                 const incomingAds = params.get("ads");
 
-                // Remove only tname
+                // REMOVE tname from the parameter list to fix edit form loading
                 params.delete("tname");
 
-                // Safe URL rebuild
-                const queryString = params.toString();
-                const cleanUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+                // Reconstruct the URL without tname
+                const cleanUrl = baseUrl + "?" + params.toString();
 
                 // 3. Title Logic (UI only - unaffected by URL cleaning)
                 let displayTitle = transid || tstid || caption
@@ -473,7 +469,7 @@
 
                     // Match for ADS
                     if (incomingAds && tabAdsName && incomingAds.toLowerCase() === tabAdsName
-                        .toLowerCase()) {
+                    .toLowerCase()) {
                         return true;
                     }
 
