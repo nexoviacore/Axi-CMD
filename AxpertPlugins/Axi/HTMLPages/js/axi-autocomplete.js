@@ -40,6 +40,12 @@
         isExecutable: true
     };
 
+    const sourceOption = {
+        displaydata: "Source [Ctrl + Alt + Enter",
+        name: "Source_ACTION",
+        isExecutable: true
+    }
+
 
 
     const VIEW_HANDLERS = {
@@ -85,9 +91,7 @@
         },
         View: {
             default: handleViewCommand,
-
-
-
+            source: handleViewSource,
             inbox: handleViewInbox,
 
 
@@ -584,6 +588,10 @@
                 let valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
 
                 if (valueIndex === -1 && commandConfig.commandGroup?.toLowerCase() === 'view') {
+                    if (actualPrevValue.toLowerCase() === "source") {
+                        return null; 
+
+                    }
                     const detectedType = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), actualPrevValue, prevPrompt.promptValues, tokens, commandConfig);
 
                     if (detectedType) {
@@ -2794,6 +2802,12 @@
 
             ///added as we now dont have option for go and popup in create(When create old logic works we can remove this)(T)
             else if (groupKey.toLowerCase() === "view" && tokens.length >= 3) {
+                const secondToken = cleanCommandToken(tokens[1]).toLowerCase(); 
+
+                if (secondToken === "source") {
+                    filteredObjects = [goOption];
+                    return [goOption]; 
+                } 
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
             }
@@ -3194,6 +3208,16 @@
                 //filteredObjects.unshift(popOption);
                 filteredObjects = [goOption, popOption]
                 return [goOption, popOption];
+            }
+
+            const structName = getCurrentStructName(); 
+
+             if ((groupKey.toLowerCase() === "view") && tokens.length <= 2 && structName !== null) {
+                resultList.unshift("Source");
+                // resultList.unshift(goOption);
+                filteredObjects.unshift("Source");
+                updateDynamicHintFromPrompt({ prompt: "Ready to Run"}); 
+                // filteredObjects.unshift(goOption);
             }
 
             return resultList;
@@ -5553,6 +5577,85 @@
         else {
             window.LoadIframe(targetUrl);
         }
+
+    }
+
+    function handleViewSourceAds(paramName) {
+        let targetUrl;
+        // let paramName;
+        const iviewName = "csqlist"
+        const transId = "b_sql";
+        let fieldname = "sqlname";
+
+        // let rawName = cleanCommandToken(tokens[2]);
+
+
+
+        // if (rawName) {
+        //     paramName = tryResolveToken(2, rawName, commandConfig, false);
+
+        // }
+
+
+
+        setEditSessionState(transId);
+
+
+
+        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+
+        // if (!paramName) {
+        //     setCommandRoutes(input.value.trim(), targetUrl);
+
+        //     redirectToIView(iviewName);
+
+
+        // } else {
+            targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
+            targetUrl += "&act=load";
+            targetUrl += "&dummyload=false♠";
+            // setCommandRoutes(input.value.trim(), targetUrl);
+
+            window.LoadIframe(targetUrl);
+
+        // }
+
+    }
+
+    function handleViewSource({tokens, commandConfig}) {
+        const structName = getCurrentStructName(); 
+
+        if (!structName) {
+            showToast("Unable to determine current structure"); 
+            console.error("handleViewSource: getCurrentStructName() returned null or undefined"); 
+            return; 
+        }
+
+         
+
+        switch(structName.type.toLowerCase()) {
+            case "entity": 
+                 window.openDeveloperStudio("tstreact", structName.name, true);
+                 break; 
+            case "iview":
+                 window.openDeveloperStudio("ivreact", structName.name, true);
+                 break; 
+            case "ads":
+                handleViewSourceAds(structName.name); 
+                
+                break; 
+            case "page":
+                break; 
+                
+            default:
+                alert("Unknown source type: " + structName.name); 
+                break; 
+
+
+        }
+
+      
+
 
     }
 
@@ -10186,6 +10289,85 @@
                     .catch(err => console.error("Axi: Failed to delete on backend", err));
             }
         }
+    }
+
+    function getCurrentStructName() {
+        const iframe = document.getElementById("middle1"); 
+
+        if (!iframe) return null; 
+
+          const src = iframe.getAttribute("src");
+          const searchParams = new URLSearchParams(src.includes("?") ? src.split("?")[1] : ""); 
+          const adInfo = searchParams.get("adInfo"); 
+        if (!src) return null;
+        if (adInfo) return null; 
+
+
+
+         const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!iframeDoc) return null;
+
+         const bodyId = iframeDoc.body?.id || "";
+
+         const isEntityPage = bodyId.toLowerCase() === "entitymanagement_body"; 
+
+
+         const cardContainer = document.querySelector(".cardsPageWrapper");
+
+        const isCardContainerHidden = cardContainer.classList.contains("d-none");
+
+        const ivframe = iframeDoc.getElementById("iviewFrame"); 
+
+         if (isCardContainerHidden && (src.includes("Entity.aspx") || src.includes("EntityForm.aspx"))) {
+            try {
+                const queryString = src.includes("?") ? src.split("?")[1]: ""; 
+
+                const params = new URLSearchParams(queryString); 
+
+                const structNameRaw = params.get("tstid");
+
+                // return params.get("tstid"); 
+                return {name: decodeURIComponent(structNameRaw), type: "entity"}; 
+            } catch(error) {
+                console.error("Error parsing struct name from URL: ", error); 
+                return null; 
+            }
+
+         } else if (ivframe !== null && src.includes("iview.aspx")) {
+            try {
+                const queryString = src.includes("?") ? src.split("?")[1]: ""; 
+                const params = new URLSearchParams(queryString); 
+                const structNameRaw = params.get("ivname"); 
+                // return params.get("ivname"); 
+                return {name: decodeURIComponent(structNameRaw), type: "iview"}; 
+            } catch(error) {
+                console.error("Error parsing struct name from URL: ", error); 
+                return null; 
+            }
+         } else if (src.includes("Smartview_table.html")) {
+            try {
+                 const queryString = src.includes("?") ? src.split("?")[1]: ""; 
+                const params = new URLSearchParams(queryString); 
+                const structNameRaw = params.get("ads");
+                return {name: decodeURIComponent(structNameRaw), type: "ads"};  
+            }catch(error) {
+                 console.error("Error parsing struct name from URL: ", error); 
+                return null; 
+
+            }
+
+         }
+
+        // ../AxpertPlugins/Axi/HTMLPages/Smartview_table.html?ads=Sales%20Order&load=1769601086182&filter=eyJmaWx0ZXJzIjpbXX0=&hdnbElapsTime=0
+
+
+
+
+         return null; 
+
+
+
+        
     }
 
 
