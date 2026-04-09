@@ -4326,7 +4326,7 @@
         if (deleteModalOverlay) {
             deleteModalOverlay.addEventListener("mousedown", (event) => {
                 if (event.target === deleteModalOverlay) {
-                    hideFavoriteModal(); 
+                    hideDeleteFavoriteModal(); 
                 }
             })
         }
@@ -9816,7 +9816,7 @@
 
     function executeFavorite(favObj) {
 
-        input.value = favObj.originalCmd + " ";
+        input.value = favObj.originalCommandText + " ";
         const tokens = getTokens(favObj.commandText);
 
         const accessPermissions = getAccessPermissions();
@@ -10093,7 +10093,7 @@
                             favouritesId: favObj.favouritesId,
                             username: favObj.username,
                             commandText: favObj.commandText,
-                            originalCmd: originalCmdText,
+                            originalCommandText: originalCmdText,
                             favOrder: favObj.favOrder,
                             targetUrl: targetUrl,
                             createdOn: favObj.createdOn
@@ -10127,6 +10127,8 @@
         const favDeleteCmdText = document.getElementById("axiFavDeleteCmd");
 
         favDeleteCmdText.value = cmdText;
+        const deleteModalParagraph = document.getElementById("axiDeleteModalParagraph"); 
+        deleteModalParagraph.textContent = `Are you sure you want to remove '${cmdText}' from your favourites?`;
         modal.style.display = "flex";
 
 
@@ -10152,7 +10154,7 @@
 
         const cmdIndex = commandFavorites.findIndex(fav =>
             fav.commandText.toLowerCase() === cmdText.toLowerCase() ||
-            (fav.originalCmd && fav.originalCmd.toLowerCase() === cmdText.toLowerCase())
+            (fav.originalCommandText && fav.originalCommandText.toLowerCase() === cmdText.toLowerCase())
         );
 
         if (cmdIndex !== -1) {
