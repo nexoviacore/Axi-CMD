@@ -21,6 +21,7 @@
     const MAX_FAVORITES = 20;
     let commandRoutes = [];
     let isDeleting = false;
+    let isEditing = false; 
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
@@ -144,7 +145,7 @@
             //card: handleOpenCard,
             page: handleOpenPage,
             "app variables": handleOpenAppVar,
-            "dev options": handleOpenDevOptions,
+            "dev option": handleOpenDevOptions,
             "db explorer": handleOpenDbConsole,
             "arrange menu": handleOpenArrangeMenu,
 
@@ -3952,6 +3953,12 @@
         let suggestion = items[index];
         let displayName = suggestion;
         let realValue = "";
+        // const currentToken = tokens[targetIndex - 1]; 
+
+        // if (currentToken?.toLowerCase() === "with" && tokens.length === 3) {
+        //     isEditing = true; 
+
+        // }
 
         const isViewCommand = tokens[0]?.toLowerCase() === "view";
 
@@ -3981,6 +3988,25 @@
             }
         }
 
+        // Fix: parenthesis bug 
+        // If it is a field value we will ignore the parenthesis omission 
+        let isValueToken = false; 
+        const commandGroup = groupKey?.toLowerCase();
+
+        if (commandGroup === "edit") {
+            if (targetIndex === 3) {
+                isValueToken = true; 
+            } else {
+                const withIndex = tokens.findIndex(t => cleanString(t).toLowerCase() === "with");
+
+                if (withIndex !== -1 && targetIndex > withIndex && (targetIndex - withIndex) % 2 === 0) {
+                    isValueToken = true; 
+                }
+            }
+        } else if (commandGroup === "view") {
+            if (targetIndex === 3) isValueToken = true; 
+        }
+
 
 
         // Get Real Value logic
@@ -4007,7 +4033,7 @@
 
 
 
-        if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue) {
+        if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue && !isValueToken) {
             const lastBracketIndex = suggestion.lastIndexOf("(");
 
 
@@ -4795,6 +4821,11 @@
             return;
         }
 
+        if (isEditing) {
+            showToast("Execution is not Allowed while executing"); 
+            return; 
+        }
+
 
 
         const text = input.value.trim();
@@ -4806,6 +4837,11 @@
 
 
         const tokens = getTokens(text);
+
+        if (tokens[3]?.toLowerCase() === "with"){
+            showToast("Execution is Not Allowed while editing"); 
+            return; 
+        }
 
         if (tokens.length === 0) return;
 
@@ -10322,7 +10358,7 @@
 
         const ivframe = iframeDoc.getElementById("iviewFrame"); 
 
-         if (isCardContainerHidden && (src.includes("Entity.aspx") || src.includes("EntityForm.aspx"))) {
+         if (isCardContainerHidden && (src.includes("Entity.aspx") || src.includes("EntityForm.aspx" || src.includes("tstruct.aspx")))) {
             try {
                 const queryString = src.includes("?") ? src.split("?")[1]: ""; 
 
