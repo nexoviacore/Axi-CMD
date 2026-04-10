@@ -4415,6 +4415,10 @@
         if (axiClearBtn) {
             axiClearBtn.addEventListener("click", () => {
                 input.value = "";
+                createfieldnamevaluesList = {};
+                setCommandTransid = null;
+                dateControlBoolean = false;
+                resetSetCommandState();
                 handleInput();
                 input.focus();
             })
