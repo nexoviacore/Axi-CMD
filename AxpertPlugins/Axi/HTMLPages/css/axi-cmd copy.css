@@ -101,7 +101,7 @@
 .content:has(#New-Landing-layout) {
     background: #f1f4f9 !important;
     height: 50vh !important;
-    max-height: calc(100vh - 95px) !important;
+    max-height: calc(100vh - 120px) !important;
 }
 
 /* .Axi-Logo {
@@ -883,45 +883,3 @@ background:#303a69 !important;
     background: #dc2626;
 }
 /*salman*/
-
-/*vj customization for mobile res and favourites edit btn*/
-
-.My-Fav-Name::after {
-	content: "\e745";
-	font-family: "Material Icons Outlined";
-	font-size: 20px;
-	position: relative;
-	top: 5px;
-	left: 10px;
-	color: brown;
-	visibility: hidden;
-}
-.My-Fav-Items:hover .My-Fav-Name:after {
-  visibility: visible;
-}
-
-.panel-left-inner, .splitter-wrapper {
-	height: 100% !important;
-}
- @media(max-width:768px) {
-
-.axi-suggestions.axi-grid-layout li.axi-suggestion {
-	width: fit-content;
-	min-width: 120px;
-}
-#My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown {
-	width: 100% !important;
-	left: 0 !important;
-}
-.AXI-Sec {
-	width: calc(100vw - 0px);
-}
-#btnHistoryPrev,.btn.btn-icon:has(span[data-bs-original-title="Next Page"]),
-        #History_pages,#My_Fav_Bookmarks,#btnRefresh{
-  display: none;
-}
-     .Application_Parameter-Section {
-	display: none !important;
-}
-
-}
