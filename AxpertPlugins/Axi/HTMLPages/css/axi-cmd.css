@@ -882,11 +882,21 @@ background:#303a69 !important;
 .axi-btn-danger:hover {
     background: #dc2626;
 }
+
+.edit-fav {
+  visibility: hidden;
+  margin-right: 15px; 
+
+}
+
+.My-Fav-Items:hover .edit-fav {
+  visibility: visible;
+}
 /*salman*/
 
 /*vj customization for mobile res and favourites edit btn*/
 
-.My-Fav-Name::after {
+/* .My-Fav-Name::after {
 	content: "\e745";
 	font-family: "Material Icons Outlined";
 	font-size: 20px;
@@ -898,7 +908,7 @@ background:#303a69 !important;
 }
 .My-Fav-Items:hover .My-Fav-Name:after {
   visibility: visible;
-}
+} */
 
 .panel-left-inner, .splitter-wrapper {
 	height: 100% !important;

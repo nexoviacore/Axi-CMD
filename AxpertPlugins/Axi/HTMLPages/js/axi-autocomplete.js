@@ -9883,6 +9883,27 @@
         commandFavorites.forEach(fav => {
             const cmdText = fav.commandText;
             const titleText = cmdText.replace(/"/g, '&quot;');
+            // const favHtml = `
+            //     <div class="My-Fav-Items">
+            //         <div class="symbol symbol-40px symbol-circle me-5">
+            //             <span class="symbol-label bg-light-warning">
+            //                 <span class="material-icons material-icons-style material-icons-2">grade</span>                            
+            //             </span>
+            //         </div>
+            //         <div class="My-Fav-Items-Content">
+            //             <a href="javascript:void(0);" class="My-Fav-Name" data-bs-toggle="tooltip" data-bs-placement="bottom"
+            //    data-bs-original-title="${titleText}" title="${titleText}">${cmdText}</a>
+            //             <div class="My-Fav-Name-Type">Command</div>
+            //         </div>
+            //         <div class="edit-fav" style="cursor: pointer;" title="Rename">                        
+            //             <span class="material-icons material-icons-style material-icons-2" style="color: brown;">edit</span>                          
+            //         </div>
+            //         <div class="Delete-Fav" style="cursor: pointer;">                        
+            //             <span class="material-icons material-icons-style material-icons-2">clear</span>                          
+            //         </div>
+            //     </div>
+            // `;
+
             const favHtml = `
                 <div class="My-Fav-Items">
                     <div class="symbol symbol-40px symbol-circle me-5">
@@ -9890,12 +9911,20 @@
                             <span class="material-icons material-icons-style material-icons-2">grade</span>                            
                         </span>
                     </div>
-                    <div class="My-Fav-Items-Content">
-                        <a href="javascript:void(0);" class="My-Fav-Name" data-bs-toggle="tooltip" data-bs-placement="bottom"
-               data-bs-original-title="${titleText}" title="${titleText}">${cmdText}</a>
-                        <div class="My-Fav-Name-Type">Command</div>
+                    
+                    <div class="My-Fav-Items-Content" style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="flex-grow: 1; overflow: hidden; margin-right: 10px;">
+                            <a href="javascript:void(0);" class="My-Fav-Name" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                   data-bs-original-title="${titleText}" title="${titleText}">${cmdText}</a>
+                            <div class="My-Fav-Name-Type">Command</div>
+                        </div>
+                        
+                        <div class="edit-fav" style="cursor: pointer; padding: 5px;" title="Rename">                        
+                            <span class="material-icons material-icons-style material-icons-2" style="font-size: 16px !important; color: #6b7280;">edit</span>                          
+                        </div>
                     </div>
-                    <div class="Delete-Fav" style="cursor: pointer;">                        
+
+                    <div class="Delete-Fav" style="cursor: pointer; margin-left: auto;" title="Delete">                        
                         <span class="material-icons material-icons-style material-icons-2">clear</span>                          
                     </div>
                 </div>
@@ -9911,11 +9940,20 @@
                 toggleFavorite(cmdText);
             });
 
+              element.querySelector(".edit-fav").addEventListener("click", (event) => {
+                event.preventDefault(); 
+                event.stopPropagation(); 
+                const targetUrl = fav.targetUrl; 
+                showFavoriteModel(cmdText, targetUrl,true); 
+            })
+
             element.querySelector('.My-Fav-Items-Content').addEventListener("click", (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 executeFavorite(fav);
             })
+
+          
 
             wrapper.appendChild(element);
 
@@ -9958,6 +9996,11 @@
 
 
     function executeFavorite(favObj) {
+
+        if (input.value === "") {
+            showToast("Invalid Command!"); 
+            return; 
+        }
 
         input.value = favObj.originalCommandText + " ";
         const tokens = getTokens(favObj.commandText);
@@ -10150,10 +10193,16 @@
         }
     }
 
-    function showFavoriteModel(cmdText, targetUrl) {
+    function showFavoriteModel(cmdText, targetUrl, isEdit=false) {
         const originalCmdTextInput = document.getElementById("axiFavOriginalCmd");
         const favNameInput = document.getElementById("axiFavNameInput");
         const favTargetUrlInput = document.getElementById("axiFavTargetUrl");
+        const favEditStateInput = document.getElementById("axiFavIsEdit"); 
+        const titleEl = document.querySelector(".axi-modal-title"); 
+
+        if (titleEl) titleEl.innerText = isEdit ? "Rename Favourites" : "Save to Favourites"
+
+        favEditStateInput.value = isEdit ? "true" : "false"; 
 
         const axiFavModal = document.getElementById("axiFavModalOverlay");
 
@@ -10176,6 +10225,9 @@
         const alias = document.getElementById("axiFavNameInput").value.trim();
         const originalCmdText = document.getElementById("axiFavOriginalCmd").value.trim();
         const targetUrl = document.getElementById("axiFavTargetUrl").value.trim();
+        const isEdit = document.getElementById("axiFavIsEdit").value === "true"; 
+
+
 
 
         if (!alias) {
@@ -10186,10 +10238,50 @@
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
         const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
+        
 
 
+        if (isEdit) {
+             const cmdIndex = commandFavorites.findIndex(fav => fav.commandText.toLowerCase() === originalCmdText.toLowerCase() ); 
 
-        if (axiFavoritesUrl) {
+          const favObj = commandFavorites.find(fav => fav.commandText.toLowerCase() === originalCmdText.toLowerCase()); 
+           
+           
+
+
+            if (cmdIndex !== -1) {
+                commandFavorites[cmdIndex].commandText = alias; 
+            }
+
+            if (axiFavoritesUrl) {
+                fetch(`${axiFavoritesUrl}/${favObj?.favouritesId}?username=${window.mainUserName}&appname=${appname}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        commandText: alias,
+                    })
+                }
+                ).then(response => {
+                    if (response?.ok) {
+                        localStorage.setItem(favKey, JSON.stringify(commandFavorites)); 
+        renderFavoritesUI(); 
+        render();            
+        hideFavoriteModal();
+                         showToast(`Renamed to '${alias}'`, 3000, true); 
+
+                    }
+                   
+                })
+                .catch(error => {
+                    console.error("Backend edit failed", error); 
+                    showToast("An Error occured while editing favourite"); 
+                })
+            }
+        } else {
+
+           
+
+             if (axiFavoritesUrl) {
             fetch(`${axiFavoritesUrl}?appname=${appname}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -10255,6 +10347,12 @@
                 console.error("Backend sync failed", err);
             });
         }
+
+        }
+
+
+
+       
 
 
 
