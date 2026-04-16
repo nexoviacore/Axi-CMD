@@ -893,11 +893,20 @@
         let transId = "response";
         //let fieldname = "servername";
 
-        //const rawParamName = cleanCommandToken(tokens[2]);
+        // const rawParamName = cleanCommandToken(tokens[1]);
 
 
         setEditSessionState(transId);
         redirectToIView(transId, cleanCommandToken(tokens[1]));
+
+        //   console.log("Redirecting to Iview: " + transId + "..............");
+        // let targetUrl = `../aspx/iview.aspx?ivname=${transId}`;
+
+        // setCommandRoutes(input.value.trim(), targetUrl);
+
+       
+        //     window.LoadIframe(targetUrl);
+        
     }
     function handleConfigureActor({ tokens, commandConfig }) {
 
