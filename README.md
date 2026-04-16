@@ -1,62 +1,65 @@
 # Axi Command Palette | Installation & Configuration Guide
 
-Follow these steps to deploy the Axi plugin and configure the backend API.
+Follow these steps to deploy the Axi plugin and bridge the backend API with the Axpert web interface.
 
 ---
 
 ## 🛠 Prerequisites
-* **Runtime:** .NET 8.0 Hosting Bundle installed on the server.
-* **Permissions:** Administrative access to IIS and the Axpert Web directory.
-* **Tooling:** Latest version of **AxInstaller**.
+* **Server Runtime:** [.NET 8.0 Hosting Bundle](https://dotnet.microsoft.com/download/dotnet/8.0) (Required for IIS hosting).
+* **Access Level:** Administrator privileges for IIS Manager and File System modifications.
+* **Tooling:** **AxInstaller** (Latest Version).
 
 ---
 
-## 📂 Step 1: Plugin Installation
-Execute the **AxInstaller** and select the latest **Axi Plugin** package. This will deploy the necessary source files and scripts to your `/AxpertPlugins/` directory.
+## 📂 Step 1: Core Plugin Deployment
+1. Launch **AxInstaller**.
+2. Select and install the **Axi** package. 
+3. **Verification:** Ensure the source files are populated in your `/AxpertPlugins/Axi/` directory.
 
 ---
 
-## 📄 Step 2: UI Template Deployment
-Move the Axi frontend template to the custom pages directory to ensure it is recognized by the Axpert engine.
+## 📄 Step 2: UI Template Integration
+Register the Axi frontend template within the Axpert ecosystem.
 
-1. Locate the source file:  
-   `../AxpertPlugins/Axi/HTMLPages/axi_mainpagetemplate_V2.html`
-2. Copy and paste it into:  
-   `../CustomPages/`
-
----
-
-## ⚙️ Step 3: Axpert Web Configuration
-Map the application template within your schema settings.
-
-1. Open **AxpertWeb** in your browser and log in to the required schema.
-2. Navigate to **Dev Options** > **Application Template**.
-3. Select `axi_mainpagetemplate_v2.html` from the property value dropdown list.
-4. **Troubleshooting:** If the file is missing from the dropdown:
-   * Go to **Configuration Property List**.
-   * Open the **Application Template** property.
-   * Add `axi_mainpagetemplate_V2.html` to the **Values** section manually.
+1. **Source:** `../AxpertPlugins/Axi/HTMLPages/axi_mainpagetemplate_V2.html`
+2. **Destination:** Copy to `../CustomPages/`
+3. **Note:** Do not rename the file; Axpert metadata relies on the exact filename.
 
 ---
 
-## 🌐 Step 4: IIS API Setup (AxiApi)
-Host the .NET 8 backend service in IIS.
+## ⚙️ Step 3: Axpert Environment Mapping
+Configure the schema to utilize the new UI template.
 
-1. **Application Pool:** Create a new pool named `AxiApi`. Set the .NET CLR version to **"No Managed Code"**.
-2. **Site/Application:** Create a new site (or sub-application) and point the physical path to:  
+1. Log in to **AxpertWeb** -> Navigate to **Dev Options**.
+2. Locate **Application Template** and select `axi_mainpagetemplate_v2.html` from the Property value dropdown.
+3. **Manual Override:** If the file does not appear:
+   * Navigate to **Configuration Property List**.
+   * Edit the **Application Template** property.
+   * Manually append `axi_mainpagetemplate_V2.html` to the **Values** collection.
+
+---
+
+## 🌐 Step 4: IIS Backend Configuration (AxiApi)
+Host the API service as a high-performance .NET 8 application.
+
+1. **Application Pool:** * Name: `AxiApi`
+   * .NET CLR Version: **No Managed Code**
+2. **Site Creation:** Create a new site/application pointing to:
    `../AxpertPlugins/Axi/PluginScripts/AxiApi/Release/net8.0/publish`
-3. Ensure the identity assigned to the App Pool has **Read/Write permissions** to this folder.
+3. **Dependency Injection:** * Copy `appsettings.ini` from `../AxpertWebScript/`.
+   * Paste it into the folder: `../AxiApi/Release/net8.0/`.
+4. **Permissions:** Ensure the App Pool Identity has **Full Control** over the Publish folder.
 
 ---
 
-## 🔗 Step 5: Endpoint Configuration
-Link the frontend to the backend by updating the configuration JSON.
+## 🔗 Step 5: Endpoint Connectivity
+Update the configuration to bridge the UI and the API.
 
-1. Open `axiConfig.json`.
-2. Update the `API_METADATA` and `AXI_FAVORITES_URL` with your specific **AxiApi** URL:
+1. Open `axiConfig.json` (located in the Axi plugin directory).
+2. Configure the endpoints to match your IIS binding:
 
 ```json
 {
-    "API_METADATA": "https://<YourAxiApiUrl>/api/v1/Axi/axi_get",
-    "AXI_FAVORITES_URL": "https://<YourAxiApiUrl>/api/v1/Axi/user-favourites"
+    "API_METADATA": "https://<Your_IIS_URL>/api/v1/Axi/axi_get",
+    "AXI_FAVORITES_URL": "https://<Your_IIS_URL>/api/v1/Axi/user-favourites"
 }
