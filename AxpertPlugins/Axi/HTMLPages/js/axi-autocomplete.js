@@ -1,4 +1,4 @@
-﻿ // Stable Branch: main
+﻿// Stable Branch: main
 (() => {
     // Released On: 03-04-2026   
     // /AxPlugins/Axi/HTMLPages/js/axi-autocomplete.js
@@ -434,9 +434,15 @@
                 const accessPermissions = getAccessPermissions();
 
                 const res = await fetch(`${apiMetadataUrl}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
+
                 if (!res.ok) {
                     showToast("Metadata fetch failed. Please Log in Again or Press Refresh button");
                     console.error("Metadata fetch failed");
+                    return;
+                }
+
+                if (res.status === 204) {
+                    showToast("No commands found. Please check 'AxiApi' Configuration")
                     return;
                 }
                 showToast("Commands Loaded Successfully!.", 3000, true);
@@ -904,9 +910,9 @@
 
         // setCommandRoutes(input.value.trim(), targetUrl);
 
-       
+
         //     window.LoadIframe(targetUrl);
-        
+
     }
     function handleConfigureActor({ tokens, commandConfig }) {
 
@@ -2653,6 +2659,8 @@
         Suggestion Logic
     =============================== */
 
+    const isEmpty = val => typeof val === "string" ? val.trim() === "" : val === null || val === undefined;
+
     function suggestLocal(inputText) {
         let ignoreExtraParams = false;
         let detectedType = "";
@@ -3149,25 +3157,27 @@
 
             // });
 
+            const key = groupKey?.toLowerCase();
             const validItems = filtered.filter(item => {
-                let key = groupKey?.toLowerCase();
+
+
 
                 if (key === "create") return item?.createallowed !== 'F';
                 if (key === "view") return item?.viewallowed !== 'F';
+                if (isEmpty(item?.displaydata) && isEmpty(item?.caption) && isEmpty(item?.name)) return false;
                 return true;
             })
 
             filteredObjects = validItems;
 
-            let resultList = validItems.map(item => {
-                return (
-                    item.displaydata ||
-                    item.caption ||
-                    item.name ||
-                    item.fname ||
-                    item.keyfield
-                );
-            })
+            let resultList = validItems.map(item => [
+                item.displaydata ||
+                item.caption ||
+                item.name ||
+                item.fname ||
+                item.keyfield
+            ].find(val => val !== null && val !== undefined && (typeof val === "string" ? val.trim() !== "" : true))
+            ).filter(val => val !== undefined);
 
             if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
                 resultList.unshift(goOption, popOption);
@@ -3758,20 +3768,33 @@
 
         console.log(`Valid Items: ${validItems.length}`);
 
+        // if (items.length > 0 && isSystemMessage(items[0])) {
+        //     activeIndex = -1;
+        // } else {
+        //     // const hasGoOption = validItems.some(item => typeof item === 'object' && item.name === "GO_ACTION");
+        //     // const hasSaveOption = validItems.some(item => typeof item === 'object' && item.name === "Save_ACTION");
+
+        //     // if (hasGoOption && hasSaveOption) {
+        //     //     activeIndex = 2; 
+        //     // } else if (hasGoOption || hasSaveOption) {
+        //     //     activeIndex = 1; 
+        //     // } else {
+        //     //     activeIndex = 0; 
+        //     // }
+        //     activeIndex = 0;
+        // }
+
         if (items.length > 0 && isSystemMessage(items[0])) {
             activeIndex = -1;
         } else {
-            // const hasGoOption = validItems.some(item => typeof item === 'object' && item.name === "GO_ACTION");
-            // const hasSaveOption = validItems.some(item => typeof item === 'object' && item.name === "Save_ACTION");
+            const currentToken = cleanString(currentInputTokens[currentInputTokens.length - 1]).toLowerCase();
 
-            // if (hasGoOption && hasSaveOption) {
-            //     activeIndex = 2; 
-            // } else if (hasGoOption || hasSaveOption) {
-            //     activeIndex = 1; 
-            // } else {
-            //     activeIndex = 0; 
-            // }
-            activeIndex = 0;
+            const exactMatchIndex = validItems.findIndex(item => {
+                const text = typeof item === "string" ? item : item.displaydata;
+                return text.toLowerCase() === currentToken;
+            });
+
+            activeIndex = exactMatchIndex !== -1 ? exactMatchIndex : 0;
         }
 
         if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
@@ -3864,6 +3887,10 @@
             megaDropdown.style.display = "flex";
         } else {
             list.style.display = "block";
+        }
+
+        if (activeIndex >= 0) {
+            highlight();
         }
 
     }
@@ -4825,6 +4852,10 @@
      * @returns 
      */
     function executeCommandsV2(isNavigating = false) {
+        if (input.value === "") {
+            showToast("Invalid Command!");
+            return;
+        }
         if (isCommandsLoading) {
             showToast("Commands are not loaded!");
             return;
@@ -10006,10 +10037,7 @@
 
     function executeFavorite(favObj) {
 
-        if (input.value === "") {
-            showToast("Invalid Command!");
-            return;
-        }
+
 
         input.value = favObj.originalCommandText + " ";
         const tokens = getTokens(favObj.commandText);
