@@ -9831,7 +9831,7 @@
         const appname = getProjectName();
         const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
 
-        const cmdIndex = commandFavorites.findIndex(fav => fav.commandText.toLowerCase() === cmdText.toLowerCase());
+        const cmdIndex = commandFavorites.findIndex(fav => fav?.originalCommandText?.toLowerCase() === cmdText.toLowerCase());
 
         const commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
 
@@ -10316,7 +10316,7 @@
                         renderFavoritesUI();
                         render();
                         hideFavoriteModal();
-                        showToast(`Renamed to '${alias}'`, 3000, true);
+                        showToast(`Renamed '${originalCmdText}' to '${alias}'`, 3000, true);
 
                     }
 
