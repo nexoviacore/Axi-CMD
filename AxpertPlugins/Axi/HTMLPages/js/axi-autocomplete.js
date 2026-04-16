@@ -10513,13 +10513,28 @@
 
         const ivframe = iframeDoc.getElementById("iviewFrame");
 
-        if (isCardContainerHidden && (src.includes("Entity.aspx") || src.includes("EntityForm.aspx" || src.includes("tstruct.aspx")))) {
+        if (isCardContainerHidden && (src.includes("Entity.aspx") || src.includes("EntityForm.aspx"))) {
             try {
                 const queryString = src.includes("?") ? src.split("?")[1] : "";
 
                 const params = new URLSearchParams(queryString);
 
                 const structNameRaw = params.get("tstid");
+
+                // return params.get("tstid"); 
+                return { name: decodeURIComponent(structNameRaw), type: "entity" };
+            } catch (error) {
+                console.error("Error parsing struct name from URL: ", error);
+                return null;
+            }
+
+        } else if (isCardContainerHidden && src.includes("tstruct.aspx")) {
+             try {
+                const queryString = src.includes("?") ? src.split("?")[1] : "";
+
+                const params = new URLSearchParams(queryString);
+
+                const structNameRaw = params.get("transid");
 
                 // return params.get("tstid"); 
                 return { name: decodeURIComponent(structNameRaw), type: "entity" };
