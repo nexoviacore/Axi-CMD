@@ -5697,7 +5697,7 @@
                 break;
 
             default:
-                alert("Unknown source type: " + structName.name);
+                showToast("Unknown source type: " + structName.name);
                 break;
 
 
