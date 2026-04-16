@@ -2532,28 +2532,6 @@ g text {
   padding: 14px;
 }
 
-.analytics-grid-popup-title-row {
-  align-items: center;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 10px;
-  justify-content: flex-start;
-  padding-right: 56px;
-  width: 100%;
-}
-
-.analytics-grid-popup-nav {
-  display: flex;
-  flex: 0 0 auto;
-  gap: 6px;
-  margin-left: auto;
-}
-
-.analytics-grid-popup-prev-btn,
-.analytics-grid-popup-next-btn {
-  flex: 0 0 auto;
-}
-
 .analytics-grid-popup-layout {
   display: grid;
   gap: 12px;
@@ -2562,10 +2540,7 @@ g text {
 }
 
 .analytics-grid-popup-chart-wrap {
- 
   min-width: 0;
-  overflow-x: auto;
-  overflow-y: auto;
 }
 
 .analytics-grid-popup-panel {
@@ -2702,11 +2677,9 @@ g text {
 
 .analytics-grid-popup-title {
   color: #1f2a3d;
-  flex: 0 1 auto;
   font-size: 16px;
   font-weight: 700;
   line-height: 1.35;
-  min-width: 0;
 }
 
 .analytics-grid-popup-chart {
@@ -2714,7 +2687,6 @@ g text {
   border: 1px solid #e1e7f0;
   border-radius: 10px;
   min-height: 360px;
-  min-width: 100%;
   padding: 8px;
 }
 

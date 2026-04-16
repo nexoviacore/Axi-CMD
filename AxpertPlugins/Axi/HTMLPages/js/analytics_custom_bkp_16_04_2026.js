@@ -440,236 +440,6 @@ class AnalyticsCharts {
         return types.find(item => item.type === normalizedType) || types[0];
     }
 
-    isBarLikeChartType(chartType) {
-        const normalizedType = this.getChartTypeConfig(chartType).type;
-        const barLikeTypes = new Set(["bar", "column", "stacked-bar", "stacked-column", "stacked-percentage-column"]);
-        return barLikeTypes.has(normalizedType);
-    }
-
-    resolveGridCardBarPointLimit(cardElement) {
-        const totalTracks = this.gridTotalTracks || 12;
-        const grid = document.querySelector("#analytics-yaxis-grid");
-        const effectiveColumns = Number(grid?.getAttribute("data-effective-columns")) || this.gridCardsPerRow || 4;
-        const defaultSpan = Math.max(1, Math.floor(totalTracks / Math.max(1, effectiveColumns)));
-        const currentSpan = Number(cardElement?.getAttribute("data-card-span")) || defaultSpan;
-        const spanDelta = currentSpan - defaultSpan;
-        const computedLimit = 6 + (spanDelta * 2);
-        return Math.max(5, Math.min(16, computedLimit));
-    }
-
-    resolvePopupBarPointLimit(options = {}) {
-        const popupWidth = Number(options.popupWidth) || window.innerWidth || 0;
-        if (popupWidth >= 1900) {
-            return 15;
-        }
-        if (popupWidth >= 1500) {
-            return 14;
-        }
-        if (popupWidth >= 1200) {
-            return 12;
-        }
-        return 10;
-    }
-
-    resolveChartPointLimit(chartType, options = {}) {
-        if (!this.isBarLikeChartType(chartType)) {
-            return null;
-        }
-
-        const mode = this.normalizeUrlParam(options.mode || "card");
-        if (mode === "popup") {
-            return null;
-        }
-
-        return this.resolveGridCardBarPointLimit(options.cardElement);
-    }
-
-    resolveOthersLabel(existingPoints = []) {
-        const labels = new Set((Array.isArray(existingPoints) ? existingPoints : []).map(item => this.normalizeUrlParam(item?.label || "")));
-        if (!labels.has("others")) {
-            return "Others";
-        }
-        if (!labels.has("others-combined")) {
-            return "Others (Combined)";
-        }
-        return "Others (More)";
-    }
-
-    buildLimitedChartPoints(points, chartType, options = {}) {
-        const safePoints = Array.isArray(points) ? points.map(item => ({ ...item })) : [];
-        const pointLimit = this.resolveChartPointLimit(chartType, options);
-        if (!pointLimit || safePoints.length <= pointLimit) {
-            return safePoints;
-        }
-
-        const topPointCount = Math.max(1, pointLimit - 1);
-        const sortedPoints = safePoints.map(item => ({
-            ...item,
-            __sortValue: Math.abs(this.normalizeNumericValue(item?.value))
-        })).sort((a, b) => b.__sortValue - a.__sortValue);
-
-        const topPoints = sortedPoints.slice(0, topPointCount).map(item => {
-            const sanitized = { ...item };
-            delete sanitized.__sortValue;
-            return sanitized;
-        });
-        const otherPoints = sortedPoints.slice(topPointCount);
-        const othersValue = otherPoints.reduce((sum, item) => sum + this.normalizeNumericValue(item?.value), 0);
-
-        topPoints.push({
-            label: this.resolveOthersLabel(topPoints),
-            value: othersValue,
-            link: "",
-            navigateLink: ""
-        });
-        return topPoints;
-    }
-
-    refreshGridCardDisplayPoints(cardElement) {
-        if (!cardElement || !cardElement.__gridChartPayload) {
-            return;
-        }
-
-        const payload = cardElement.__gridChartPayload;
-        const sourcePoints = Array.isArray(payload.fullPoints) ? payload.fullPoints : (Array.isArray(payload.points) ? payload.points : []);
-        if (!sourcePoints.length) {
-            return;
-        }
-
-        const limitedPoints = this.buildLimitedChartPoints(sourcePoints, payload.chartType, {
-            mode: "card",
-            cardElement: cardElement
-        });
-        const nextSignature = limitedPoints.map(item => `${item.label}::${this.normalizeNumericValue(item.value)}`).join("|");
-        if (payload.pointsSignature === nextSignature) {
-            this.reflowGridCardChart(cardElement);
-            return;
-        }
-
-        payload.points = limitedPoints.map(item => ({ ...item }));
-        payload.pointsSignature = nextSignature;
-        this.renderChartInGridCard(cardElement, payload.chartType, payload.aggLabel, payload.points, payload.paletteConfig);
-        if (this.isHyperlinkPanelVisible && cardElement.classList.contains("active")) {
-            this.renderHyperlinkPanelForCard(cardElement);
-        }
-    }
-
-    refreshAllGridCardDisplayPoints() {
-        const cards = document.querySelectorAll("#analytics-yaxis-grid .analytics-grid-card");
-        cards.forEach(card => this.refreshGridCardDisplayPoints(card));
-    }
-
-    getPopupNavigableGridCards() {
-        return Array.from(document.querySelectorAll("#analytics-yaxis-grid .analytics-grid-card")).filter(card => {
-            const payload = card.__gridChartPayload;
-            const sourcePoints = Array.isArray(payload?.fullPoints) ? payload.fullPoints : (Array.isArray(payload?.points) ? payload.points : []);
-            return sourcePoints.length > 0;
-        });
-    }
-
-    getNextPopupCard(currentCard) {
-        const cards = this.getPopupNavigableGridCards();
-        if (cards.length <= 1) {
-            return null;
-        }
-
-        const currentIndex = cards.indexOf(currentCard);
-        const baseIndex = currentIndex > -1 ? currentIndex : 0;
-        const nextIndex = (baseIndex + 1) % cards.length;
-        return cards[nextIndex] || null;
-    }
-
-    getPreviousPopupCard(currentCard) {
-        const cards = this.getPopupNavigableGridCards();
-        if (cards.length <= 1) {
-            return null;
-        }
-
-        const currentIndex = cards.indexOf(currentCard);
-        const baseIndex = currentIndex > -1 ? currentIndex : 0;
-        const prevIndex = (baseIndex - 1 + cards.length) % cards.length;
-        return cards[prevIndex] || null;
-    }
-
-    supportsPopupHorizontalScroll(chartType) {
-        const normalizedType = this.getChartTypeConfig(chartType).type;
-        return !["pie", "donut", "semi-donut"].includes(normalizedType);
-    }
-
-    resolvePopupChartMinWidth(chartType, pointCount, wrapWidth) {
-        const safeWrapWidth = Math.max(320, Number(wrapWidth) || 0);
-        const safePointCount = Math.max(0, Number(pointCount) || 0);
-        if (!this.supportsPopupHorizontalScroll(chartType) || safePointCount <= 0) {
-            return safeWrapWidth;
-        }
-
-        const normalizedType = this.getChartTypeConfig(chartType).type;
-        const perPointWidth = (normalizedType === "bar" || normalizedType === "stacked-bar") ? 88 : 76;
-        const computedWidth = 200 + (safePointCount * perPointWidth);
-        return Math.max(safeWrapWidth, Math.min(4200, computedWidth));
-    }
-
-    resolvePopupChartMinHeight(chartType, pointCount, wrapHeight) {
-        const safeWrapHeight = Math.max(360, Number(wrapHeight) || 0);
-        const safePointCount = Math.max(0, Number(pointCount) || 0);
-        if (!this.isBarLikeChartType(chartType) || safePointCount <= 0) {
-            return safeWrapHeight;
-        }
-
-        const computedHeight = 170 + (safePointCount * 40);
-        return Math.max(safeWrapHeight, Math.min(3600, computedHeight));
-    }
-
-    resolvePopupChartRenderHeight(chartType, pointCount) {
-        const baseHeight = Math.max(window.innerHeight - 220, 360);
-        if (!this.isBarLikeChartType(chartType)) {
-            return baseHeight;
-        }
-
-        const computedHeight = 170 + (Math.max(0, Number(pointCount) || 0) * 40);
-        return Math.max(baseHeight, Math.min(3600, computedHeight));
-    }
-
-    applyPopupChartScrollableWidth(chartContainerId, chartType, pointCount, modalBody) {
-        if (!chartContainerId || !modalBody) {
-            return;
-        }
-
-        const chartElement = modalBody.querySelector(`#${chartContainerId}`);
-        if (!chartElement) {
-            return;
-        }
-
-        const wrapElement = chartElement.closest(".analytics-grid-popup-chart-wrap");
-        if (!wrapElement) {
-            return;
-        }
-
-        const wrapWidth = wrapElement.clientWidth || wrapElement.getBoundingClientRect().width || 0;
-        const wrapHeight = wrapElement.clientHeight || wrapElement.getBoundingClientRect().height || Math.max(window.innerHeight - 300, 360);
-        const targetWidth = this.resolvePopupChartMinWidth(chartType, pointCount, wrapWidth);
-        const targetHeight = this.resolvePopupChartMinHeight(chartType, pointCount, wrapHeight);
-        if (targetWidth > (wrapWidth + 10)) {
-            wrapElement.classList.add("has-x-scroll");
-            chartElement.style.width = `${Math.round(targetWidth)}px`;
-            chartElement.style.minWidth = `${Math.round(targetWidth)}px`;
-        } else {
-            wrapElement.classList.remove("has-x-scroll");
-            chartElement.style.width = "100%";
-            chartElement.style.minWidth = "100%";
-        }
-
-        if (targetHeight > (wrapHeight + 10)) {
-            wrapElement.classList.add("has-y-scroll");
-            chartElement.style.height = `${Math.round(targetHeight)}px`;
-            chartElement.style.minHeight = `${Math.round(targetHeight)}px`;
-        } else {
-            wrapElement.classList.remove("has-y-scroll");
-            chartElement.style.height = "100%";
-            chartElement.style.minHeight = "360px";
-        }
-    }
-
     getAutoDefaultGridChartType(cardIndex) {
         const supportedTypes = this.getSupportedChartTypes().map(item => item.type);
         const preferredOrder = [
@@ -3635,8 +3405,6 @@ class AnalyticsCharts {
             });
         }
 
-        this.refreshAllGridCardDisplayPoints();
-
         if (plusButton) {
             const isDisabled = this.gridCardsPerRow >= maxColumnsByPanel;
             plusButton.disabled = isDisabled;
@@ -3768,7 +3536,6 @@ class AnalyticsCharts {
                     cancelAnimationFrame(this.activeResizeRafId);
                     this.activeResizeRafId = 0;
                 }
-                this.refreshGridCardDisplayPoints(cardElement);
                 this.reflowGridCardChart(cardElement);
                 this.reflowGridCharts();
             };
@@ -3884,7 +3651,7 @@ class AnalyticsCharts {
         });
     }
 
-    renderGridHyperlinkList(listContainer, cardElement, pointsOverride = null) {
+    renderGridHyperlinkList(listContainer, cardElement) {
         if (!listContainer) {
             return;
         }
@@ -3900,10 +3667,7 @@ class AnalyticsCharts {
             return;
         }
 
-        const payloadForRender = Array.isArray(pointsOverride)
-            ? { ...payload, points: pointsOverride }
-            : payload;
-        const visiblePoints = this.getVisibleHyperlinkPoints(payloadForRender);
+        const visiblePoints = this.getVisibleHyperlinkPoints(payload);
         if (visiblePoints.length === 0) {
             listContainer.innerHTML = `<div class="analytics-grid-message">No data found</div>`;
             return;
@@ -7032,7 +6796,9 @@ class AnalyticsCharts {
     }
 
     shouldHideDataLabelsForChartType(chartType) {
-        return this.isBarLikeChartType(chartType);
+        const normalizedType = this.getChartTypeConfig(chartType).type;
+        const barLikeTypes = new Set(["bar", "column", "stacked-bar", "stacked-column", "stacked-percentage-column"]);
+        return barLikeTypes.has(normalizedType);
     }
 
     forceHideChartDataLabels(chart, errorLabel) {
@@ -7254,8 +7020,7 @@ class AnalyticsCharts {
         }
 
         const payload = cardElement.__gridChartPayload;
-        const sourcePoints = Array.isArray(payload?.fullPoints) ? payload.fullPoints : (Array.isArray(payload?.points) ? payload.points : []);
-        if (!payload || sourcePoints.length === 0) {
+        if (!payload || !Array.isArray(payload.points) || payload.points.length === 0) {
             if (typeof showAlertDialog === "function") {
                 showAlertDialog("warning", "No chart data available to open.");
             }
@@ -7271,6 +7036,9 @@ class AnalyticsCharts {
 
         const popupChartId = `analytics-grid-popup-chart-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const popupListId = `analytics-grid-popup-list-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const chartTypeName = this.getChartTypeConfig(payload.chartType).name;
+        const shouldHidePopupLabels = this.shouldHideDataLabelsForChartType(payload.chartType);
+        const popupTitle = `${payload.groupCaption || "Chart"} - ${payload.aggLabel || "Count"} (${chartTypeName})`;
         const popupModal = createPopup("about:blank", false);
         if (!popupModal || !popupModal.modalBody) {
             if (typeof showAlertDialog === "function") {
@@ -7289,132 +7057,62 @@ class AnalyticsCharts {
 
         modalBody.classList.remove("overflow-hidden");
         modalBody.classList.add("overflow-auto");
-        const renderPopupForCard = (targetCard) => {
-            const targetPayload = targetCard?.__gridChartPayload;
-            const targetSourcePoints = Array.isArray(targetPayload?.fullPoints)
-                ? targetPayload.fullPoints
-                : (Array.isArray(targetPayload?.points) ? targetPayload.points : []);
-            if (!targetPayload || targetSourcePoints.length === 0) {
-                modalBody.querySelectorAll(".analytics-grid-popup-content").forEach(item => item.remove());
-                modalBody.insertAdjacentHTML("beforeend", `<div class="analytics-grid-popup-content">
-                        <div class="analytics-grid-message">No chart data available to open.</div>
-                    </div>`);
-                return;
-            }
-
-            const popupPoints = this.buildLimitedChartPoints(targetSourcePoints, targetPayload.chartType, {
-                mode: "popup",
-                cardElement: targetCard,
-                popupWidth: modalBody.clientWidth || window.innerWidth || 0
-            });
-            const chartTypeName = this.getChartTypeConfig(targetPayload.chartType).name;
-            const shouldHidePopupLabels = this.shouldHideDataLabelsForChartType(targetPayload.chartType);
-            const popupTitle = `${targetPayload.groupCaption || "Chart"} - ${targetPayload.aggLabel || "Count"} (${chartTypeName})`;
-            const prevCard = this.getPreviousPopupCard(targetCard);
-            const nextCard = this.getNextPopupCard(targetCard);
-
-            modalBody.querySelectorAll(".analytics-grid-popup-content").forEach(item => item.remove());
-            modalBody.insertAdjacentHTML("beforeend", `<div class="analytics-grid-popup-content">
-                    <div class="analytics-grid-popup-title-row">
-                        <div class="analytics-grid-popup-title">${this.escapeHtml(popupTitle)}</div>
-                        <div class="analytics-grid-popup-nav">
-                            <button type="button" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm analytics-grid-popup-prev-btn${prevCard ? "" : " disabled"}" title="Previous chart" aria-label="Previous chart" ${prevCard ? "" : "disabled"}>
-                                <span class="material-icons material-icons-style material-icons-2">arrow_back</span>
-                            </button>
-                            <button type="button" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm analytics-grid-popup-next-btn${nextCard ? "" : " disabled"}" title="Next chart" aria-label="Next chart" ${nextCard ? "" : "disabled"}>
-                                <span class="material-icons material-icons-style material-icons-2">arrow_forward</span>
-                            </button>
-                        </div>
+        modalBody.querySelectorAll(".analytics-grid-popup-content").forEach(item => item.remove());
+        modalBody.insertAdjacentHTML("beforeend", `<div class="analytics-grid-popup-content">
+                <div class="analytics-grid-popup-title">${this.escapeHtml(popupTitle)}</div>
+                <div class="analytics-grid-popup-layout">
+                    <div class="analytics-grid-popup-chart-wrap">
+                        <div id="${popupChartId}" class="analytics-grid-popup-chart${shouldHidePopupLabels ? " analytics-grid-popup-hide-data-labels" : ""}"></div>
                     </div>
-                    <div class="analytics-grid-popup-layout">
-                        <div class="analytics-grid-popup-chart-wrap">
-                            <div id="${popupChartId}" class="analytics-grid-popup-chart${shouldHidePopupLabels ? " analytics-grid-popup-hide-data-labels" : ""}"></div>
+                    <div class="analytics-grid-popup-panel">
+                        <div class="analytics-grid-popup-panel-header">
+                            <div class="analytics-grid-popup-panel-title">${this.escapeHtml(payload.groupCaption || "Details")}</div>
                         </div>
-                        <div class="analytics-grid-popup-panel">
-                            <div class="analytics-grid-popup-panel-header">
-                                <div class="analytics-grid-popup-panel-title">${this.escapeHtml(targetPayload.groupCaption || "Details")}</div>
-                            </div>
-                            <div id="${popupListId}" class="row analytics-grid-popup-panel-list"></div>
-                        </div>
+                        <div id="${popupListId}" class="row analytics-grid-popup-panel-list"></div>
                     </div>
-                </div>`);
+                </div>
+            </div>`);
+        this.renderGridHyperlinkList(modalBody.querySelector(`#${popupListId}`), cardElement);
 
-            const popupListElement = modalBody.querySelector(`#${popupListId}`);
-            this.renderGridHyperlinkList(popupListElement, targetCard, popupPoints);
-
-            const renderPayload = this.getGridChartRenderPayload(targetPayload.chartType, targetPayload.aggLabel, popupPoints);
-            const renderPopupChart = () => {
-                try {
-                    const popupChartHeight = this.resolvePopupChartRenderHeight(targetPayload.chartType, popupPoints.length);
-                    this.applyPopupChartScrollableWidth(popupChartId, targetPayload.chartType, popupPoints.length, modalBody);
-                    createAgileChart({
-                        target: `#${popupChartId}`,
-                        type: renderPayload.type,
-                        data: renderPayload.data,
-                        metaData: renderPayload.metaData,
-                        height: popupChartHeight,
-                        disableExporting: true,
-                        attr: (() => {
-                            const popupPalette = this.resolveGridPaletteConfig(targetPayload.paletteConfig || targetPayload.palette || "newPalette");
-                            const popupAttr = {
-                                cck: popupPalette.cck,
-                                showBarDataLabels: false
-                            };
-                            if (popupPalette.cccv) {
-                                popupAttr.cccv = popupPalette.cccv;
-                            }
-                            return popupAttr;
-                        })()
-                    });
-                    this.applyPopupChartScrollableWidth(popupChartId, targetPayload.chartType, popupPoints.length, modalBody);
-                    this.applyChartNumericFormattingWithRetry(popupChartId, targetPayload.chartType);
-                    this.hidePopupBarDataLabelsWithRetry(popupChartId, targetPayload.chartType);
-                    this.reflowGridCharts();
-                } catch (error) {
-                    console.error("Error rendering popup chart:", error);
-                    const chartContainer = modalBody.querySelector(`#${popupChartId}`);
-                    if (chartContainer) {
-                        chartContainer.innerHTML = `<div class="analytics-grid-message">Unable to render chart</div>`;
-                    }
+        const renderPayload = this.getGridChartRenderPayload(payload.chartType, payload.aggLabel, payload.points);
+        const renderPopupChart = () => {
+            try {
+                createAgileChart({
+                    target: `#${popupChartId}`,
+                    type: renderPayload.type,
+                    data: renderPayload.data,
+                    metaData: renderPayload.metaData,
+                    height: Math.max(window.innerHeight - 220, 360),
+                    disableExporting: true,
+                    attr: (() => {
+                        const popupPalette = this.resolveGridPaletteConfig(payload.paletteConfig || payload.palette || "newPalette");
+                        const popupAttr = {
+                            cck: popupPalette.cck,
+                            showBarDataLabels: false
+                        };
+                        if (popupPalette.cccv) {
+                            popupAttr.cccv = popupPalette.cccv;
+                        }
+                        return popupAttr;
+                    })()
+                });
+                this.applyChartNumericFormattingWithRetry(popupChartId, payload.chartType);
+                this.hidePopupBarDataLabelsWithRetry(popupChartId, payload.chartType);
+                this.reflowGridCharts();
+            } catch (error) {
+                console.error("Error rendering popup chart:", error);
+                const chartContainer = modalBody.querySelector(`#${popupChartId}`);
+                if (chartContainer) {
+                    chartContainer.innerHTML = `<div class="analytics-grid-message">Unable to render chart</div>`;
                 }
-            };
-
-            const prevButton = modalBody.querySelector(".analytics-grid-popup-prev-btn");
-            if (prevButton) {
-                prevButton.addEventListener("click", (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    const prevTargetCard = this.getPreviousPopupCard(targetCard);
-                    if (!prevTargetCard) {
-                        return;
-                    }
-                    this.setActiveGridCard(prevTargetCard);
-                    renderPopupForCard(prevTargetCard);
-                });
-            }
-
-            const nextButton = modalBody.querySelector(".analytics-grid-popup-next-btn");
-            if (nextButton) {
-                nextButton.addEventListener("click", (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    const nextTargetCard = this.getNextPopupCard(targetCard);
-                    if (!nextTargetCard) {
-                        return;
-                    }
-                    this.setActiveGridCard(nextTargetCard);
-                    renderPopupForCard(nextTargetCard);
-                });
-            }
-
-            if (popupModal.modalElement && !popupModal.modalElement.classList.contains("show")) {
-                popupModal.modalElement.addEventListener("shown.bs.modal", renderPopupChart, { once: true });
-            } else {
-                setTimeout(renderPopupChart, 60);
             }
         };
 
-        renderPopupForCard(cardElement);
+        if (popupModal.modalElement && !popupModal.modalElement.classList.contains("show")) {
+            popupModal.modalElement.addEventListener("shown.bs.modal", renderPopupChart, { once: true });
+        } else {
+            setTimeout(renderPopupChart, 80);
+        }
 
         if (popupModal.modalElement) {
             popupModal.modalElement.addEventListener("hide.bs.modal", () => {
@@ -8237,7 +7935,6 @@ function reloadPage() {
 
     window.location.reload();
 }
-
 function ShowDimmer(status) {
 
     DimmerCalled = true;

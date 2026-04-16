@@ -9813,17 +9813,19 @@
     }
 
     function toggleFavorite(cmdText, isAdding = false) {
+        let cmdIndex; 
         const tokens = getTokens(cmdText.trim());
+
 
         const groupKey = tokens[0];
         const commandVerb = tokens[1];
 
-        if (groupKey.toLowerCase() === "run") {
+        if (groupKey?.toLowerCase() === "run") {
             showToast("You cannot Run commands to favorites!");
             return;
         }
 
-        if (commandVerb.toLowerCase() === "keyfield") {
+        if (commandVerb?.toLowerCase() === "keyfield") {
             showToast("You cannot add this command to Favorites!");
             return;
         }
@@ -9831,7 +9833,13 @@
         const appname = getProjectName();
         const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
 
-        const cmdIndex = commandFavorites.findIndex(fav => fav?.originalCommandText?.toLowerCase() === cmdText.toLowerCase());
+        if (isAdding) {
+            cmdIndex = commandFavorites.findIndex(fav => fav?.originalCommandText?.toLowerCase() === cmdText.toLowerCase());
+        } else {
+            cmdIndex = commandFavorites.findIndex(fav => fav?.commandText?.toLowerCase() === cmdText.toLowerCase());
+        }
+
+       
 
         const commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
 
