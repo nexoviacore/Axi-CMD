@@ -1,5 +1,5 @@
 ﻿(() => {
-    
+
 
     // /AxPlugins/Axi/HTMLPages/js/axi-autocomplete.js
 
@@ -21,7 +21,7 @@
     const MAX_FAVORITES = 20;
     let commandRoutes = [];
     let isDeleting = false;
-    let isEditing = false; 
+    let isEditing = false;
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
@@ -590,7 +590,7 @@
 
                 if (valueIndex === -1 && commandConfig.commandGroup?.toLowerCase() === 'view') {
                     if (actualPrevValue.toLowerCase() === "source") {
-                        return null; 
+                        return null;
 
                     }
                     const detectedType = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), actualPrevValue, prevPrompt.promptValues, tokens, commandConfig);
@@ -2675,7 +2675,7 @@
         let commandConfig = commands[groupKey];
 
 
-        /** Begin: Note: This must be removed when releasing */  
+        /** Begin: Note: This must be removed when releasing */
         // if (groupKey.toLowerCase() === "configure") {
         //     //commandConfig.prompts[0].promptValues = "PEG,Form Notification,Scheduled Notification,Peg Form Notification,Job,Rule,Application Properties,"
         //     //    +"KeyField,News And Announcement,Settings,User,Users,Role,Roles,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibilities,User Group,"
@@ -2803,12 +2803,12 @@
 
             ///added as we now dont have option for go and popup in create(When create old logic works we can remove this)(T)
             else if (groupKey.toLowerCase() === "view" && tokens.length >= 3) {
-                const secondToken = cleanCommandToken(tokens[1]).toLowerCase(); 
+                const secondToken = cleanCommandToken(tokens[1]).toLowerCase();
 
                 if (secondToken === "source") {
                     filteredObjects = [goOption];
-                    return [goOption]; 
-                } 
+                    return [goOption];
+                }
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
             }
@@ -3211,13 +3211,13 @@
                 return [goOption, popOption];
             }
 
-            const structName = getCurrentStructName(); 
+            const structName = getCurrentStructName();
 
-             if ((groupKey.toLowerCase() === "view") && tokens.length <= 2 && structName !== null) {
+            if ((groupKey.toLowerCase() === "view") && tokens.length <= 2 && structName !== null) {
                 resultList.unshift("Source");
                 // resultList.unshift(goOption);
                 filteredObjects.unshift("Source");
-                updateDynamicHintFromPrompt({ prompt: "Ready to Run"}); 
+                updateDynamicHintFromPrompt({ prompt: "Ready to Run" });
                 // filteredObjects.unshift(goOption);
             }
 
@@ -3990,21 +3990,21 @@
 
         // Fix: parenthesis bug 
         // If it is a field value we will ignore the parenthesis omission 
-        let isValueToken = false; 
+        let isValueToken = false;
         const commandGroup = groupKey?.toLowerCase();
 
         if (commandGroup === "edit") {
             if (targetIndex === 3) {
-                isValueToken = true; 
+                isValueToken = true;
             } else {
                 const withIndex = tokens.findIndex(t => cleanString(t).toLowerCase() === "with");
 
                 if (withIndex !== -1 && targetIndex > withIndex && (targetIndex - withIndex) % 2 === 0) {
-                    isValueToken = true; 
+                    isValueToken = true;
                 }
             }
         } else if (commandGroup === "view") {
-            if (targetIndex === 3) isValueToken = true; 
+            if (targetIndex === 3) isValueToken = true;
         }
 
 
@@ -4361,22 +4361,22 @@
             });
         }
 
-        const favModalOverlay = document.getElementById("axiFavModalOverlay"); 
+        const favModalOverlay = document.getElementById("axiFavModalOverlay");
 
         if (favModalOverlay) {
             favModalOverlay.addEventListener("mousedown", (event) => {
                 if (event.target === favModalOverlay) {
-                    hideFavoriteModal(); 
+                    hideFavoriteModal();
                 }
             })
         }
 
-         const deleteModalOverlay = document.getElementById("axiFavDeleteModalOverlay"); 
+        const deleteModalOverlay = document.getElementById("axiFavDeleteModalOverlay");
 
         if (deleteModalOverlay) {
             deleteModalOverlay.addEventListener("mousedown", (event) => {
                 if (event.target === deleteModalOverlay) {
-                    hideDeleteFavoriteModal(); 
+                    hideDeleteFavoriteModal();
                 }
             })
         }
@@ -4822,8 +4822,8 @@
         }
 
         if (isEditing) {
-            showToast("Execution is not Allowed while executing"); 
-            return; 
+            showToast("Execution is not Allowed while executing");
+            return;
         }
 
 
@@ -4838,9 +4838,9 @@
 
         const tokens = getTokens(text);
 
-        if (tokens[3]?.toLowerCase() === "with"){
-            showToast("Execution is Not Allowed while editing"); 
-            return; 
+        if (tokens[3]?.toLowerCase() === "with") {
+            showToast("Execution is Not Allowed while editing");
+            return;
         }
 
         if (tokens.length === 0) return;
@@ -5651,50 +5651,50 @@
 
 
         // } else {
-            targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
-            targetUrl += "&act=load";
-            targetUrl += "&dummyload=false♠";
-            // setCommandRoutes(input.value.trim(), targetUrl);
+        targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
+        targetUrl += "&act=load";
+        targetUrl += "&dummyload=false♠";
+        // setCommandRoutes(input.value.trim(), targetUrl);
 
-            window.LoadIframe(targetUrl);
+        window.LoadIframe(targetUrl);
 
         // }
 
     }
 
-    function handleViewSource({tokens, commandConfig}) {
-        const structName = getCurrentStructName(); 
+    function handleViewSource({ tokens, commandConfig }) {
+        const structName = getCurrentStructName();
 
         if (!structName) {
-            showToast("Unable to determine current structure"); 
-            console.error("handleViewSource: getCurrentStructName() returned null or undefined"); 
-            return; 
+            showToast("Unable to determine current structure");
+            console.error("handleViewSource: getCurrentStructName() returned null or undefined");
+            return;
         }
 
-         
 
-        switch(structName.type.toLowerCase()) {
-            case "entity": 
-                 window.openDeveloperStudio("tstreact", structName.name, true);
-                 break; 
+
+        switch (structName.type.toLowerCase()) {
+            case "entity":
+                window.openDeveloperStudio("tstreact", structName.name, true);
+                break;
             case "iview":
-                 window.openDeveloperStudio("ivreact", structName.name, true);
-                 break; 
+                window.openDeveloperStudio("ivreact", structName.name, true);
+                break;
             case "ads":
-                handleViewSourceAds(structName.name); 
-                
-                break; 
+                handleViewSourceAds(structName.name);
+
+                break;
             case "page":
-                break; 
-                
+                break;
+
             default:
-                alert("Unknown source type: " + structName.name); 
-                break; 
+                alert("Unknown source type: " + structName.name);
+                break;
 
 
         }
 
-      
+
 
 
     }
@@ -9747,7 +9747,7 @@
                             favouritesId: item?.favouritesId,
                             username: item?.username,
 
-                            
+
                             commandText: item?.commandText || item?.commandtext,
                             originalCommandText: item.originalCommandText,
                             favOrder: item.favOrder,
@@ -9760,7 +9760,7 @@
                 })
                 .catch(err => {
                     console.error("Axi: Failed to sync favorites from backend", err);
-                    showToast("Axi: Axi: Failed to sync favorites from backend"); 
+                    showToast("Axi: Axi: Failed to sync favorites from backend");
 
                 }).finally(() => {
                     isCommandsLoading = false;
@@ -9940,11 +9940,11 @@
                 toggleFavorite(cmdText);
             });
 
-              element.querySelector(".edit-fav").addEventListener("click", (event) => {
-                event.preventDefault(); 
-                event.stopPropagation(); 
-                const targetUrl = fav.targetUrl; 
-                showFavoriteModel(cmdText, targetUrl,true); 
+            element.querySelector(".edit-fav").addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const targetUrl = fav.targetUrl;
+                showFavoriteModel(cmdText, targetUrl, true);
             })
 
             element.querySelector('.My-Fav-Items-Content').addEventListener("click", (e) => {
@@ -9953,7 +9953,7 @@
                 executeFavorite(fav);
             })
 
-          
+
 
             wrapper.appendChild(element);
 
@@ -9998,8 +9998,8 @@
     function executeFavorite(favObj) {
 
         if (input.value === "") {
-            showToast("Invalid Command!"); 
-            return; 
+            showToast("Invalid Command!");
+            return;
         }
 
         input.value = favObj.originalCommandText + " ";
@@ -10193,16 +10193,16 @@
         }
     }
 
-    function showFavoriteModel(cmdText, targetUrl, isEdit=false) {
+    function showFavoriteModel(cmdText, targetUrl, isEdit = false) {
         const originalCmdTextInput = document.getElementById("axiFavOriginalCmd");
         const favNameInput = document.getElementById("axiFavNameInput");
         const favTargetUrlInput = document.getElementById("axiFavTargetUrl");
-        const favEditStateInput = document.getElementById("axiFavIsEdit"); 
-        const titleEl = document.querySelector(".axi-modal-title"); 
+        const favEditStateInput = document.getElementById("axiFavIsEdit");
+        const titleEl = document.querySelector(".axi-modal-title");
 
         if (titleEl) titleEl.innerText = isEdit ? "Rename Favourites" : "Save to Favourites"
 
-        favEditStateInput.value = isEdit ? "true" : "false"; 
+        favEditStateInput.value = isEdit ? "true" : "false";
 
         const axiFavModal = document.getElementById("axiFavModalOverlay");
 
@@ -10225,7 +10225,7 @@
         const alias = document.getElementById("axiFavNameInput").value.trim();
         const originalCmdText = document.getElementById("axiFavOriginalCmd").value.trim();
         const targetUrl = document.getElementById("axiFavTargetUrl").value.trim();
-        const isEdit = document.getElementById("axiFavIsEdit").value === "true"; 
+        const isEdit = document.getElementById("axiFavIsEdit").value === "true";
 
 
 
@@ -10238,121 +10238,121 @@
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
         const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
-        
+
 
 
         if (isEdit) {
-             const cmdIndex = commandFavorites.findIndex(fav => fav.commandText.toLowerCase() === originalCmdText.toLowerCase() ); 
+            const cmdIndex = commandFavorites.findIndex(fav => fav.commandText.toLowerCase() === originalCmdText.toLowerCase());
 
-          const favObj = commandFavorites.find(fav => fav.commandText.toLowerCase() === originalCmdText.toLowerCase()); 
-           
-           
+            const favObj = commandFavorites.find(fav => fav.commandText.toLowerCase() === originalCmdText.toLowerCase());
+
+
 
 
             if (cmdIndex !== -1) {
-                commandFavorites[cmdIndex].commandText = alias; 
+                commandFavorites[cmdIndex].commandText = alias;
             }
 
             if (axiFavoritesUrl) {
                 fetch(`${axiFavoritesUrl}/${favObj?.favouritesId}?username=${window.mainUserName}&appname=${appname}`, {
                     method: "PATCH",
-                    headers: { "Content-Type": "application/json"},
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         commandText: alias,
                     })
                 }
                 ).then(response => {
                     if (response?.ok) {
-                        localStorage.setItem(favKey, JSON.stringify(commandFavorites)); 
-        renderFavoritesUI(); 
-        render();            
-        hideFavoriteModal();
-                         showToast(`Renamed to '${alias}'`, 3000, true); 
-
-                    }
-                   
-                })
-                .catch(error => {
-                    console.error("Backend edit failed", error); 
-                    showToast("An Error occured while editing favourite"); 
-                })
-            }
-        } else {
-
-           
-
-             if (axiFavoritesUrl) {
-            fetch(`${axiFavoritesUrl}?appname=${appname}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    username: window.mainUserName,
-                    commandText: alias,
-                    originalCommandText: originalCmdText,
-                    action: "add",
-                    favOrder: 0,
-                    targetURL: targetUrl
-                })
-                //  username: window.mainUserName,
-                //             commandText: cmdText,
-                //             action: isAdding ? "add" : "remove",
-                //             favOrder: 0,
-                //             targetURL: commandRoute?.targetUrl
-            }).then(
-                response => {
-                    if (response.ok) {
-                        // commandFavorites.unshift({
-                        //     commandText: alias,
-                        //     originalCmd: originalCmdText,
-                        //     targetUrl: targetUrl
-                        // });
-
-                        // localStorage.setItem(favKey, JSON.stringify(commandFavorites));
-                        // renderFavoritesUI();
-                        // render();
-                        // hideFavoriteModal();
-
-                        // showToast(`'${alias}' added to favorites`, 5000, true);
-
-                        return response.json(); 
-                    }
-                }
-            ).then(data => {
-                console.log("Response from backend after adding favorite: ", data);
-                // if (data) {
-
-                // }
-                const favObj = data[0]; 
-
-                 commandFavorites.unshift({
-                            favouritesId: favObj.favouritesId,
-                            username: favObj.username,
-                            commandText: favObj.commandText,
-                            originalCommandText: originalCmdText,
-                            favOrder: favObj.favOrder,
-                            targetUrl: targetUrl,
-                            createdOn: favObj.createdOn
-                        });
-
                         localStorage.setItem(favKey, JSON.stringify(commandFavorites));
                         renderFavoritesUI();
                         render();
                         hideFavoriteModal();
+                        showToast(`Renamed to '${alias}'`, 3000, true);
 
-                        showToast(`'${alias}' added to favorites`, 5000, true);
+                    }
 
-            })
-            .catch(err => {
-                showToast("Axi: Failed to update favorite on backend");
-                console.error("Backend sync failed", err);
-            });
+                })
+                    .catch(error => {
+                        console.error("Backend edit failed", error);
+                        showToast("An Error occured while editing favourite");
+                    })
+            }
+        } else {
+
+
+
+            if (axiFavoritesUrl) {
+                fetch(`${axiFavoritesUrl}?appname=${appname}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        username: window.mainUserName,
+                        commandText: alias,
+                        originalCommandText: originalCmdText,
+                        action: "add",
+                        favOrder: 0,
+                        targetURL: targetUrl
+                    })
+                    //  username: window.mainUserName,
+                    //             commandText: cmdText,
+                    //             action: isAdding ? "add" : "remove",
+                    //             favOrder: 0,
+                    //             targetURL: commandRoute?.targetUrl
+                }).then(
+                    response => {
+                        if (response.ok) {
+                            // commandFavorites.unshift({
+                            //     commandText: alias,
+                            //     originalCmd: originalCmdText,
+                            //     targetUrl: targetUrl
+                            // });
+
+                            // localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                            // renderFavoritesUI();
+                            // render();
+                            // hideFavoriteModal();
+
+                            // showToast(`'${alias}' added to favorites`, 5000, true);
+
+                            return response.json();
+                        }
+                    }
+                ).then(data => {
+                    console.log("Response from backend after adding favorite: ", data);
+                    // if (data) {
+
+                    // }
+                    const favObj = data[0];
+
+                    commandFavorites.unshift({
+                        favouritesId: favObj.favouritesId,
+                        username: favObj.username,
+                        commandText: favObj.commandText,
+                        originalCommandText: originalCmdText,
+                        favOrder: favObj.favOrder,
+                        targetUrl: targetUrl,
+                        createdOn: favObj.createdOn
+                    });
+
+                    localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                    renderFavoritesUI();
+                    render();
+                    hideFavoriteModal();
+
+                    showToast(`'${alias}' added to favorites`, 5000, true);
+
+                })
+                    .catch(err => {
+                        showToast("Axi: Failed to update favorite on backend");
+                        console.error("Backend sync failed", err);
+                    });
+            }
+
         }
 
-        }
 
 
 
-       
 
 
 
@@ -10368,7 +10368,7 @@
         const favDeleteCmdText = document.getElementById("axiFavDeleteCmd");
 
         favDeleteCmdText.value = cmdText;
-        const deleteModalParagraph = document.getElementById("axiDeleteModalParagraph"); 
+        const deleteModalParagraph = document.getElementById("axiDeleteModalParagraph");
         deleteModalParagraph.textContent = `Are you sure you want to remove '${cmdText}' from your favourites?`;
         modal.style.display = "flex";
 
@@ -10430,82 +10430,82 @@
     }
 
     function getCurrentStructName() {
-        const iframe = document.getElementById("middle1"); 
+        const iframe = document.getElementById("middle1");
 
-        if (!iframe) return null; 
+        if (!iframe) return null;
 
-          const src = iframe.getAttribute("src");
-          const searchParams = new URLSearchParams(src.includes("?") ? src.split("?")[1] : ""); 
-          const adInfo = searchParams.get("adInfo"); 
+        const src = iframe.getAttribute("src");
+        const searchParams = new URLSearchParams(src.includes("?") ? src.split("?")[1] : "");
+        const adInfo = searchParams.get("adInfo");
         if (!src) return null;
-        if (adInfo) return null; 
+        if (adInfo) return null;
 
 
 
-         const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
         if (!iframeDoc) return null;
 
-         const bodyId = iframeDoc.body?.id || "";
+        const bodyId = iframeDoc.body?.id || "";
 
-         const isEntityPage = bodyId.toLowerCase() === "entitymanagement_body"; 
+        const isEntityPage = bodyId.toLowerCase() === "entitymanagement_body";
 
 
-         const cardContainer = document.querySelector(".cardsPageWrapper");
+        const cardContainer = document.querySelector(".cardsPageWrapper");
 
         const isCardContainerHidden = cardContainer.classList.contains("d-none");
 
-        const ivframe = iframeDoc.getElementById("iviewFrame"); 
+        const ivframe = iframeDoc.getElementById("iviewFrame");
 
-         if (isCardContainerHidden && (src.includes("Entity.aspx") || src.includes("EntityForm.aspx" || src.includes("tstruct.aspx")))) {
+        if (isCardContainerHidden && (src.includes("Entity.aspx") || src.includes("EntityForm.aspx" || src.includes("tstruct.aspx")))) {
             try {
-                const queryString = src.includes("?") ? src.split("?")[1]: ""; 
+                const queryString = src.includes("?") ? src.split("?")[1] : "";
 
-                const params = new URLSearchParams(queryString); 
+                const params = new URLSearchParams(queryString);
 
                 const structNameRaw = params.get("tstid");
 
                 // return params.get("tstid"); 
-                return {name: decodeURIComponent(structNameRaw), type: "entity"}; 
-            } catch(error) {
-                console.error("Error parsing struct name from URL: ", error); 
-                return null; 
+                return { name: decodeURIComponent(structNameRaw), type: "entity" };
+            } catch (error) {
+                console.error("Error parsing struct name from URL: ", error);
+                return null;
             }
 
-         } else if (ivframe !== null && src.includes("iview.aspx")) {
+        } else if (ivframe !== null && src.includes("iview.aspx")) {
             try {
-                const queryString = src.includes("?") ? src.split("?")[1]: ""; 
-                const params = new URLSearchParams(queryString); 
-                const structNameRaw = params.get("ivname"); 
+                const queryString = src.includes("?") ? src.split("?")[1] : "";
+                const params = new URLSearchParams(queryString);
+                const structNameRaw = params.get("ivname");
                 // return params.get("ivname"); 
-                return {name: decodeURIComponent(structNameRaw), type: "iview"}; 
-            } catch(error) {
-                console.error("Error parsing struct name from URL: ", error); 
-                return null; 
+                return { name: decodeURIComponent(structNameRaw), type: "iview" };
+            } catch (error) {
+                console.error("Error parsing struct name from URL: ", error);
+                return null;
             }
-         } else if (src.includes("Smartview_table.html")) {
+        } else if (src.includes("Smartview_table.html")) {
             try {
-                 const queryString = src.includes("?") ? src.split("?")[1]: ""; 
-                const params = new URLSearchParams(queryString); 
+                const queryString = src.includes("?") ? src.split("?")[1] : "";
+                const params = new URLSearchParams(queryString);
                 const structNameRaw = params.get("ads");
-                return {name: decodeURIComponent(structNameRaw), type: "ads"};  
-            }catch(error) {
-                 console.error("Error parsing struct name from URL: ", error); 
-                return null; 
+                return { name: decodeURIComponent(structNameRaw), type: "ads" };
+            } catch (error) {
+                console.error("Error parsing struct name from URL: ", error);
+                return null;
 
             }
 
-         }
+        }
 
         // ../AxpertPlugins/Axi/HTMLPages/Smartview_table.html?ads=Sales%20Order&load=1769601086182&filter=eyJmaWx0ZXJzIjpbXX0=&hdnbElapsTime=0
 
 
 
 
-         return null; 
+        return null;
 
 
 
-        
+
     }
 
 
