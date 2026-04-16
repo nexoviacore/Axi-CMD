@@ -30,8 +30,8 @@ Move the Axi frontend template to the custom pages directory to ensure it is rec
 Map the application template within your schema settings.
 
 1. Open **AxpertWeb** in your browser and log in to the required schema.
-2. Navigate to **Developer Options** > **Configure Application Template**.
-3. Select `axi_mainpagetemplate_v2.html` from the list.
+2. Navigate to **Dev Options** > **Application Template**.
+3. Select `axi_mainpagetemplate_v2.html` from the property value dropdown list.
 4. **Troubleshooting:** If the file is missing from the dropdown:
    * Go to **Configuration Property List**.
    * Open the **Application Template** property.
