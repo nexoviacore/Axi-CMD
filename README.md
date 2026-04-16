@@ -5,7 +5,7 @@ Follow these steps to deploy the Axi plugin and configure the backend API.
 ---
 
 ## 🛠 Prerequisites
-
+* **Runtime:** .NET 8.0 Hosting Bundle installed on the server.
 * **Permissions:** Administrative access to IIS and the Axpert Web directory.
 * **Tooling:** Latest version of **AxInstaller**.
 
