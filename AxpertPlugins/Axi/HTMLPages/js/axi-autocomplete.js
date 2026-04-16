@@ -3768,34 +3768,34 @@
 
         console.log(`Valid Items: ${validItems.length}`);
 
-        // if (items.length > 0 && isSystemMessage(items[0])) {
-        //     activeIndex = -1;
-        // } else {
-        //     // const hasGoOption = validItems.some(item => typeof item === 'object' && item.name === "GO_ACTION");
-        //     // const hasSaveOption = validItems.some(item => typeof item === 'object' && item.name === "Save_ACTION");
-
-        //     // if (hasGoOption && hasSaveOption) {
-        //     //     activeIndex = 2; 
-        //     // } else if (hasGoOption || hasSaveOption) {
-        //     //     activeIndex = 1; 
-        //     // } else {
-        //     //     activeIndex = 0; 
-        //     // }
-        //     activeIndex = 0;
-        // }
-
         if (items.length > 0 && isSystemMessage(items[0])) {
             activeIndex = -1;
         } else {
-            const currentToken = cleanString(currentInputTokens[currentInputTokens.length - 1]).toLowerCase();
+            // const hasGoOption = validItems.some(item => typeof item === 'object' && item.name === "GO_ACTION");
+            // const hasSaveOption = validItems.some(item => typeof item === 'object' && item.name === "Save_ACTION");
 
-            const exactMatchIndex = validItems.findIndex(item => {
-                const text = typeof item === "string" ? item : item.displaydata;
-                return text.toLowerCase() === currentToken;
-            });
-
-            activeIndex = exactMatchIndex !== -1 ? exactMatchIndex : 0;
+            // if (hasGoOption && hasSaveOption) {
+            //     activeIndex = 2; 
+            // } else if (hasGoOption || hasSaveOption) {
+            //     activeIndex = 1; 
+            // } else {
+            //     activeIndex = 0; 
+            // }
+            activeIndex = 0;
         }
+
+        // if (items.length > 0 && isSystemMessage(items[0])) {
+        //     activeIndex = -1;
+        // } else {
+        //     const currentToken = cleanString(currentInputTokens[currentInputTokens.length - 1]).toLowerCase();
+
+        //     const exactMatchIndex = validItems.findIndex(item => {
+        //         const text = typeof item === "string" ? item : item.displaydata;
+        //         return text.toLowerCase() === currentToken;
+        //     });
+
+        //     activeIndex = exactMatchIndex !== -1 ? exactMatchIndex : 0;
+        // }
 
         if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
             list.classList.add("axi-grid-layout", "My-Command-Wrapper");
@@ -3889,9 +3889,7 @@
             list.style.display = "block";
         }
 
-        if (activeIndex >= 0) {
-            highlight();
-        }
+       
 
     }
 
