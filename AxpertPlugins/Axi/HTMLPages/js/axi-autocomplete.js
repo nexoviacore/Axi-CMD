@@ -3889,7 +3889,7 @@
             list.style.display = "block";
         }
 
-       
+
 
     }
 
@@ -9813,19 +9813,19 @@
     }
 
     function toggleFavorite(cmdText, isAdding = false) {
-        const tokens = getTokens(cmdText.trim()); 
+        const tokens = getTokens(cmdText.trim());
 
-        const groupKey = tokens[0]; 
-        const commandVerb = tokens[1]; 
+        const groupKey = tokens[0];
+        const commandVerb = tokens[1];
 
         if (groupKey.toLowerCase() === "run") {
-            showToast("You cannot Run commands to favorites!"); 
-            return; 
+            showToast("You cannot Run commands to favorites!");
+            return;
         }
 
         if (commandVerb.toLowerCase() === "keyfield") {
-            showToast("You cannot add this command to Favorites!"); 
-            return; 
+            showToast("You cannot add this command to Favorites!");
+            return;
         }
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
