@@ -63,3 +63,4 @@ Update the configuration to bridge the UI and the API.
     "API_METADATA": "https://<Your_IIS_URL>/api/v1/Axi/axi_get",
     "AXI_FAVORITES_URL": "https://<Your_IIS_URL>/api/v1/Axi/user-favourites"
 }
+```
