@@ -9966,7 +9966,7 @@
 
             const favHtml = `
                 <div class="My-Fav-Items">
-                    <div class="symbol symbol-40px symbol-circle me-5">
+                    <div class="fav-icon symbol symbol-40px symbol-circle me-5">
                         <span class="symbol-label bg-light-warning">
                             <span class="material-icons material-icons-style material-icons-2">grade</span>                            
                         </span>
@@ -10008,6 +10008,12 @@
             })
 
             element.querySelector('.My-Fav-Items-Content').addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                executeFavorite(fav);
+            })
+
+            element.querySelector('.fav-icon').addEventListener("click", (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 executeFavorite(fav);
