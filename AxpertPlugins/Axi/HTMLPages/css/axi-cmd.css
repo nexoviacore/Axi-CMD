@@ -291,6 +291,11 @@
 /* TABLET PORTRAIT & MOBILE (max 767px) */
 @media (max-width: 767px) {
 
+  .searchwrap-AXI {
+    max-width: 100% !important;
+    flex:1; 
+  }
+
     /* AXI Bar takes full width */
     .AXI-Sec {
         left: 0;
@@ -307,7 +312,6 @@
 
     .searchwrap-AXI .AXI-Logo img {
         width: 24px;
-        /* Slightly larger icon since text is gone */
         height: 24px;
         display: block;
     }
@@ -320,8 +324,8 @@
         color: var(--text);
         background: transparent;
         height: 40px;
-        /* Keep this large enough for (Hint Width + Button Width + Spacing) */
-        padding-right: 140px;
+       
+        padding-right: 45px !important; 
     }
 
     .axi-input-hint {
@@ -927,7 +931,7 @@ background:#303a69 !important;
 	width: calc(100vw - 0px);
 }
 #btnHistoryPrev,.btn.btn-icon:has(span[data-bs-original-title="Next Page"]),
-        #History_pages,#My_Fav_Bookmarks,#btnRefresh{
+        #History_pages,#My_Fav_Bookmarks{
   display: none;
 }
      .Application_Parameter-Section {
