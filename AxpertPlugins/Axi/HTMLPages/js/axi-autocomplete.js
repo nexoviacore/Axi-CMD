@@ -10179,6 +10179,7 @@
         let importAccess;
         let exportAccess;
         let buildAccess;
+       
 
 
         const appMgrAccessKey = generateLocalStorageKey("appMgrAccess", window.mainUserName);
@@ -10220,6 +10221,10 @@
     }
 
     function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions) {
+         const currentUserRole = window.AxUserRoles; 
+         const currentUserName = window.mainUserName; 
+
+        
         for (const [permissionKey, hasAccess] of Object.entries(accessPermissions)) {
             if (!hasAccess || hasAccess === false) {
                 switch (permissionKey) {
@@ -10244,7 +10249,26 @@
             }
         }
 
-        return commandsFromDb;
+       if (!commandsFromDb["Configure"]) return commandsFromDb; 
+
+       const isAdmin = currentUserName === "admin" && currentUserRole === "default"; 
+
+       if (!isAdmin) {
+        const configurePrompts = commandsFromDb["Configure"].prompts; 
+
+        configurePrompts.forEach(prompt => {
+            if (prompt.prompt === "object type" && prompt.promptValues) {
+                let values = prompt.promptValues.split(","); 
+
+                values = values.filter(v => v.trim() !== "User Activation"); 
+
+                prompt.promptValues  = values.join(","); 
+            }
+        }); 
+       }
+
+       return commandsFromDb; 
+
 
     }
 
