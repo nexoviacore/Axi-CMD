@@ -1135,7 +1135,7 @@
         targetUrl += `&openerIV=${transId}`;
         targetUrl += `&isIV=true`;
         targetUrl += `&isDupTab=false`;
-        targetUrl += `&dummyload=false♠`;
+        targetUrl += `&dummyload=false?`;
 
         setEditSessionState(transId);
 
@@ -1182,7 +1182,7 @@
     //    targetUrl += `&isiv=true`;
     //    targetUrl += `&isduptab=false`;
     //    targetUrl += `&reqProc_logtime=`;
-    //    targetUrl += `&dummyload=false♠`;
+    //    targetUrl += `&dummyload=false?`;
 
     //    // load iframe
     //    top.window.LoadIframe(targetUrl);
@@ -1591,7 +1591,7 @@
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=false`;
 
-            targetUrl += `&dummyload=false♠`;
+            targetUrl += `&dummyload=false?`;
 
         }
         else {
@@ -1601,7 +1601,7 @@
             targetUrl += `&hltype=open`;
 
             targetUrl += `&createaxiflag=true`;
-            targetUrl += `&dummyload=false♠`;
+            targetUrl += `&dummyload=false?`;
         }
 
 
@@ -1648,7 +1648,7 @@
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
-            targetUrl += "&AxIsPop=true";
+            targetUrl += "&AxPop=true";
             openPopOption(targetUrl)
         }
         else {
@@ -5514,13 +5514,13 @@
 
     function handleConfigureSettings({ tokens, commandConfig }) {
         // const targetUrl = "../aspx/Configuration.aspx/LoadUserAppSettings"; 
-        let targetUrl = "../aspx/Configuration.aspx";
+        let targetUrl = "../aspx/Configuration.aspx?";
 
 
 
         if (popUpOption) {
-            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
-            targetUrl += "&AxIsPop=true";
+            targetUrl += `tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
+            targetUrl += "&AxPop=true";
 
             openPopOption(targetUrl)
         }
