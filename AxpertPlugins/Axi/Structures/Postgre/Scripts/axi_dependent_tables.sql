@@ -2,13 +2,13 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
 >>
 
-<<
+--This may not be needed
 DROP TABLE Axi_UserFavourites
->>
+
 
 <<
 CREATE TABLE Axi_UserFavourites (
-    Id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    Id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     UserName VARCHAR(255) NOT NULL,
     CommandText TEXT NOT NULL,
     TargetURL VARCHAR(4000) NOT NULL,
@@ -16,4 +16,8 @@ CREATE TABLE Axi_UserFavourites (
     CreatedOn TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_user_command UNIQUE (UserName, CommandText)
 )
+>>
+
+<<
+ALTER TABLE axi_userfavourites ADD originalcommandtext varchar(500) NULL;
 >>

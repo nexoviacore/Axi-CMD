@@ -7,10 +7,6 @@ DROP TABLE axi_command_prompts
 >>
 
 <<
-DROP TABLE axp_tstructprops
->>
-
-<<
 CREATE TABLE axi_commands (
 	cmdtoken int4 NOT NULL,
 	command_group varchar(50) NOT NULL,
@@ -50,7 +46,6 @@ CREATE TABLE axp_tstructprops (
 >>
 
 --axi_commands starts here
-
 <<
 INSERT INTO axi_commands
 (cmdtoken, command_group, command, active)
@@ -90,7 +85,7 @@ VALUES(6, 'Download', '', 'T')
 <<
 INSERT INTO axi_commands
 (cmdtoken, command_group, command, active)
-VALUES(7, 'Open', '', 'T')
+VALUES(7, 'DevTools', '', 'T')
 >>
 
 <<
@@ -105,10 +100,7 @@ INSERT INTO axi_commands
 VALUES(10, 'Analyse', '', 'T')
 >>
 
-
-
 --axi_command_prompts starts here
-
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
@@ -118,25 +110,25 @@ VALUES('b767f878-6f6f-4d72-8a52-f987d5dc9064'::uuid, 1, 2, 'tstruct name', 'axi_
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('8faae04b-af25-4be7-b97c-de72815255f4'::uuid, 2, 2, 'tstruct name', 'axi_structlist', NULL, NULL, NULL, ':userresp,:mode,:structtype', NULL)
+VALUES('8faae04b-af25-4be7-b97c-de72815255f4'::uuid, 2, 2, 'tstruct name', 'axi_structmetalist', NULL, NULL, NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
 >>
 
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('29ce28d9-72f1-41ff-b872-faf9107774b6'::uuid, 2, 3, 'search value', 'Axi_KeyValuesWithFieldNamesList', '2', NULL, NULL, 'axi_keyfieldlist', NULL)
+VALUES('29ce28d9-72f1-41ff-b872-faf9107774b6'::uuid, 2, 3, 'search value', 'axi_getstructsdata', '', NULL, NULL, ':cmd,:username,:userrole,:transid,:selectedfield,:dimension,:permission,:keyfield,:primarytable,:globalvars', NULL)
 >>
 
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('8faae04b-af25-4be7-b97c-de72815267f5'::uuid, 2, 4, 'object name', 'Axi_FieldValuesWithKeySuffixList', '2,3', NULL, NULL, '', NULL)
+VALUES('8faae04b-af25-4be7-b97c-de72815267f5'::uuid, 2, 4, 'object name', 'axi_getstructsdata', '', NULL, NULL, ':cmd,:username,:userrole,:transid,:selectedfield,:dimension,:permission,:keyfield,:primarytable,:globalvars', NULL)
 >>
 
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('7faae15b-af25-4be7-b86c-de73925267f5'::uuid, 2, 5, 'with values', '', '', 'with', NULL, '', NULL)
+VALUES('7faae15b-af25-4be7-b86c-de73925267f5'::uuid, 2, 5, 'with values', '', '', 'With', NULL, '', NULL)
 >>
 
 <<
@@ -148,31 +140,31 @@ VALUES('b878f939-6f7f-4d72-8a78-f912d5dc9669'::uuid, 2, 6, 'field name', 'axi_no
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('46647ef0-f107-4551-8379-3b844d430016'::uuid, 3, 2, 'object name', 'Axi_ViewList', NULL, 'tstruct,iview,ads,page', NULL, ':userresp', NULL)
+VALUES('46647ef0-f107-4551-8379-3b844d430016'::uuid, 3, 2, 'object name', 'axi_structmetalist', NULL, 'Tstruct,Iview,Ads,Page', NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
 >>
 
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('46d7bb0e-12e4-4249-b508-f9e824717957'::uuid, 3, 3, 'search value', 'Axi_KeyValuesWithFieldNamesList,axi_dummylist,axi_adscolumnlist,axi_dummylist', '2', NULL, NULL, 'axi_keyfieldlist', NULL)
+VALUES('46d7bb0e-12e4-4249-b508-f9e824717957'::uuid, 3, 3, 'search value', 'axi_getstructsdata,axi_dummylist,axi_adscolumnlist,axi_dummylist', '', NULL, NULL, ':cmd,:username,:userrole,:transid,:selectedfield,:dimension,:permission,:keyfield,:primarytable,:globalvars', NULL)
 >>
 
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('8faae09b-af52-4be8-b97c-de72815276f4'::uuid, 3, 4, 'object name', 'Axi_FieldValuesWithKeySuffixList', '2,3', NULL, NULL, NULL, NULL)
+VALUES('8faae09b-af52-4be8-b97c-de72815276f4'::uuid, 3, 4, 'object name', 'axi_getstructsdata', '', NULL, NULL, ':cmd,:username,:userrole,:transid,:selectedfield,:dimension,:permission,:keyfield,:primarytable,:globalvars', NULL)
 >>
 
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('10655119-ba93-42e8-8aef-0aefccae5a80'::uuid, 4, 2, 'object type', '', NULL, 'peg,formnotification,schedulednotification,pegformnotification,job,api,rule,properties,permission,access,server,keyfield,newsandannouncement,settings', NULL, NULL, NULL)
+VALUES('10655119-ba93-42e8-8aef-0aefccae5a80'::uuid, 4, 2, 'object type', '', NULL, 'PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,KeyField,News And Announcement,User,Users,User Permission,User Permissions,User Activation,User Group,Role,Roles,Role Permissions,Actor,Actors,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibilities,Dimension,Application Properties,Settings', NULL, NULL, NULL)
 >>
 
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('0f99d918-0caa-4523-9260-f18b5bd162bf'::uuid, 4, 3, 'object name', 'Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_JobNamesList,Axi_APINamesList,Axi_RuleNamesList,Axi_Dummy,axi_userlist,axi_rolelist,Axi_ServernameList,axi_structlist', NULL, '', NULL, ':userresp,:mode,:structtype', NULL)
+VALUES('0f99d918-0caa-4523-9260-f18b5bd162bf'::uuid, 4, 3, 'object name', 'Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,axi_structlist,axi_newsandannounce,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_dimensionlist,Axi_Dummy,Axi_Dummy', NULL, '', NULL, ':userresp,:mode,:structtype', NULL)
 >>
 
 <<
@@ -196,13 +188,13 @@ VALUES('3ddb84e6-6e76-48c8-8dd5-4d46fc4f9542'::uuid, 6, NULL, NULL, NULL, NULL, 
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('369efe5f-7e05-4b00-b2fd-10fae4bd3f72'::uuid, 7, 2, 'type', NULL, NULL, 'tstruct,iview,ads,page,card,devoption,appvar,dbconsole,packager', NULL, NULL, NULL)
+VALUES('369efe5f-7e05-4b00-b2fd-10fae4bd3f72'::uuid, 7, 2, 'type', NULL, NULL, 'Tstruct,Iview,Axpert Data Sources,Page,Arrange Menu,Dev Option,App Variables,Db Explorer,API Plugin,Axpert Job,Language,Publish,Custom Data Type,Email Definition,Table Field Descriptor,Custom Plugin,Queue Listing,Out Bound Queue,In Bound Queue,Mem DB Console', NULL, NULL, NULL)
 >>
 
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('4aa86d11-a357-4ba1-ab1d-b4251676ba8f'::uuid, 7, 3, 'name', 'axi_structlist,axi_structlist,Axi_AdsList,Axi_PageList,Axi_CardList,,Axi_Dummy,,Axi_Dummy,,Axi_Dummy,,Axi_Dummy,,Axi_Dummy', NULL, NULL, NULL, ':userresp,:mode,:structtype', NULL)
+VALUES('4aa86d11-a357-4ba1-ab1d-b4251676ba8f'::uuid, 7, 3, 'name', 'axi_structmetalist,axi_structmetalist,axi_structmetalist,axi_structmetalist,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_APINamesList,axi_jobs,axi_language,Axi_Dummy,axi_customtype,axi_emaildef,axi_tabledesc,Axi_Dummy,Axi_Dummy,axi_outbound,axi_inbound,Axi_Dummy', NULL, NULL, NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
 >>
 
 <<
@@ -214,17 +206,5 @@ VALUES('8fbbe05b-af25-4be7-b97c-de71825267f6'::uuid, 8, 2, 'field name', 'Axi_Se
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('8fbbe05b-af25-4be7-b97c-de71825267f7'::uuid, 10, 2, 'entity name', 'Axi_AnalyticsList', NULL, NULL, NULL, ':username', NULL)
->>
-
-<<
-INSERT INTO axi_command_prompts
-(id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('8fbbe05b-af25-4be7-b89c-de71825278f8'::uuid, 10, 3, 'group by', 'axi_fieldlist', '2', NULL, NULL, '', NULL)
->>
-
-<<
-INSERT INTO axi_command_prompts
-(id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('c6b1f464-95ef-4f87-93e0-4b78b44da6c9'::uuid, 11, 2, 'name', NULL, NULL, 'start', NULL, NULL, NULL)
+VALUES('8fbbe05b-af25-4be7-b97c-de71825267f7'::uuid, 10, 2, 'entity name', 'axi_structmetalist', NULL, NULL, NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
 >>
