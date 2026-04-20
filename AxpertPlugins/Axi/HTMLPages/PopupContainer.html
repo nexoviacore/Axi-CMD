@@ -462,9 +462,12 @@
                     const tabAdsName = tabData.ads; // Fixed reference from tabEl to tabData
 
                     // Match for TStructs
-                    if (transid && tabTransId && transid.toLowerCase() === tabTransId.toLowerCase()) {
-                        return true;
-                    }
+                    // Match for TStructs (FIXED)
+const incomingId = transid || tstid;
+
+if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerCase()) {
+    return true;
+}
 
                     // Match for iViews
                     if (ivname && tabIvName && ivname.toLowerCase() === tabIvName.toLowerCase()) {
@@ -995,3 +998,4 @@
 </body>
 
 </html>
+
