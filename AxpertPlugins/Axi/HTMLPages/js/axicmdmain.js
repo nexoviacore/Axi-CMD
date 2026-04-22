@@ -1473,7 +1473,7 @@
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table_1769088257557.html`;
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table.html`;
         // let targetUrl = `${getAppBaseUrl()}/plugins/Axi/HTMLPages/Smartview_table.html`;
-        let targetUrl = `../AxpertPlugins/Axi/HTMLPages/Smartview_table.html`;
+        let targetUrl = `../AxpertPlugins/Axi/HTMLPages/Smartview.html`;
 
         // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
 
