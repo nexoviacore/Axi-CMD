@@ -261,6 +261,18 @@
 
 
     function init() {
+    //  "API_METADATA": "http://localhost:90/AxiApi/api/v1/Axi/axi_get",    
+    
+    // "AXI_FAVORITES_URL": "http://localhost:90/AxiApi/api/v1/Axi/user-favourites"
+
+        AxiArmUrl = window.armUrl; 
+        console.log("AxiArmUrl = " + AxiArmUrl); 
+        apiMetadataUrl = `${AxiArmUrl}/AxiApi/api/v1/Axi/axi_get`; 
+        console.log("ApiMetadataUrl = " + apiMetadataUrl); 
+
+        axiFavoritesUrl = `${AxiArmUrl}/AxiApi/api/v1/Axi/user-favourites`; 
+        console.log("AxiFavoritesUrl = " + axiFavoritesUrl); 
+
 
         AxiArmUrl = window.armUrl; 
         console.log("AxiArmUrl = " + AxiArmUrl); 
@@ -479,45 +491,45 @@
         return href.substring(0, aspxIndex);
     }
 
-    async function loadApiMetadataConfig() {
-        let configUrl = "";
-        try {
-            configUrl = `${getAppBaseUrl()}/AxpertPlugins/Axi/axiConfig.json`;
-            const res = await fetch(configUrl, { cache: "no-store" });
-            if (!res.ok) {
-                throw new Error(`Failed to load ${configUrl}. Status: ${res.status}`);
-            }
+    // async function loadApiMetadataConfig() {
+    //     let configUrl = "";
+    //     try {
+    //         configUrl = `${getAppBaseUrl()}/AxpertPlugins/Axi/axiConfig.json`;
+    //         const res = await fetch(configUrl, { cache: "no-store" });
+    //         if (!res.ok) {
+    //             throw new Error(`Failed to load ${configUrl}. Status: ${res.status}`);
+    //         }
 
-            const settings = await res.json();
-            const configuredApiMetadata = typeof settings?.API_METADATA === "string" ? settings.API_METADATA.trim() : "";
-            const configuredAxiFavoritesUrl = typeof settings?.AXI_FAVORITES_URL === "string" ? settings.AXI_FAVORITES_URL.trim() : "";
+    //         const settings = await res.json();
+    //         const configuredApiMetadata = typeof settings?.API_METADATA === "string" ? settings.API_METADATA.trim() : "";
+    //         const configuredAxiFavoritesUrl = typeof settings?.AXI_FAVORITES_URL === "string" ? settings.AXI_FAVORITES_URL.trim() : "";
 
-            if (!configuredApiMetadata) {
-                throw new Error(`API_METADATA is missing or empty in ${configUrl}`);
-            }
+    //         if (!configuredApiMetadata) {
+    //             throw new Error(`API_METADATA is missing or empty in ${configUrl}`);
+    //         }
 
-            if (!configuredAxiFavoritesUrl) {
-                throw new Error(`API_METADATA is missing or empty in ${configUrl}`);
-            }
+    //         if (!configuredAxiFavoritesUrl) {
+    //             throw new Error(`API_METADATA is missing or empty in ${configUrl}`);
+    //         }
 
-            apiMetadataUrl = configuredApiMetadata;
-            axiFavoritesUrl = configuredAxiFavoritesUrl;
-            apiMetadataConfigError = "";
-        } catch (error) {
-            apiMetadataUrl = "";
-            apiMetadataConfigError = (error && error.message) ? error.message : String(error);
-            showToast("Failed to load API metadata configuration.");
-            console.error(`Failed to resolve API_METADATA from ${configUrl || "app base URL"}`, error);
-        }
-    }
+    //         apiMetadataUrl = configuredApiMetadata;
+    //         axiFavoritesUrl = configuredAxiFavoritesUrl;
+    //         apiMetadataConfigError = "";
+    //     } catch (error) {
+    //         apiMetadataUrl = "";
+    //         apiMetadataConfigError = (error && error.message) ? error.message : String(error);
+    //         showToast("Failed to load API metadata configuration.");
+    //         console.error(`Failed to resolve API_METADATA from ${configUrl || "app base URL"}`, error);
+    //     }
+    // }
 
-    function ensureApiMetadataConfigLoaded() {
-        if (!apiMetadataConfigPromise) {
-            apiMetadataConfigPromise = loadApiMetadataConfig();
-        }
+    // function ensureApiMetadataConfigLoaded() {
+    //     if (!apiMetadataConfigPromise) {
+    //         apiMetadataConfigPromise = loadApiMetadataConfig();
+    //     }
 
-        return apiMetadataConfigPromise;
-    }
+    //     return apiMetadataConfigPromise;
+    // }
 
     function getActivePromptInfo(commandConfig, tokens, targetIndex) {
         // targetIndex is 0-based. WordPos is 1-based.
