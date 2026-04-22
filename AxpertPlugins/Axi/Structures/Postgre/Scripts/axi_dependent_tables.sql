@@ -21,3 +21,14 @@ CREATE TABLE Axi_UserFavourites (
 <<
 ALTER TABLE axi_userfavourites ADD originalcommandtext varchar(500) NULL;
 >>
+
+--This may not be needed
+DROP TABLE axiconfig; 
+
+<<
+CREATE TABLE axiconfig (axienabled varchar(1), mainpagetemplate varchar(255)); 
+>>
+
+<<
+INSERT INTO axiconfig (axienabled, mainpagetemplate) VALUES ('T','AxiCMDMainPage.html'); 
+>>
