@@ -459,7 +459,7 @@
                     showToast("No commands found. Please check 'AxiApi' Configuration")
                     return;
                 }
-                    showToast("Refreshed Successfully!", 5000, true);
+                    
                 const message = isForced ? "Refreshed Successfully!" : "Commands Loaded Successfully!."
 
                 showToast(message, 3000, true);
