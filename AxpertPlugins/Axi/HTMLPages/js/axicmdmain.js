@@ -271,6 +271,7 @@
         console.log("ApiMetadataUrl = " + apiMetadataUrl); 
 
         axiFavoritesUrl = `${AxiArmUrl}/AxiApi/api/v1/Axi/user-favourites`; 
+        // axiFavoritesUrl = `http://localhost:5057/api/v1/Axi/user-favourites`; 
         console.log("AxiFavoritesUrl = " + axiFavoritesUrl); 
 
 
@@ -449,7 +450,7 @@
                 const res = await fetch(`${apiMetadataUrl}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
 
                 if (!res.ok) {
-                    showToast("Metadata fetch failed. Please Log in Again or Press Refresh button");
+                    showToast("Metadata fetch failed. Please contact Administrator");
                     console.error("Metadata fetch failed");
                     return;
                 }
@@ -458,7 +459,10 @@
                     showToast("No commands found. Please check 'AxiApi' Configuration")
                     return;
                 }
-                showToast("Commands Loaded Successfully!.", 3000, true);
+                    showToast("Refreshed Successfully!", 5000, true);
+                const message = isForced ? "Refreshed Successfully!" : "Commands Loaded Successfully!."
+
+                showToast(message, 3000, true);
                 const data = await res.json();
                 let commandsFromDb = data.commands;
 
@@ -4470,7 +4474,6 @@
 
                     await initCommands(true);
 
-                    showToast("Refreshed Successfully!", 5000, true);
                     input.focus();
 
                 } catch (error) {
@@ -6144,16 +6147,62 @@
 
 
 
-        const item = viewList.find(v => v.displaydata.includes(text));
+        // const item = viewList.find(v => v.displaydata.includes(text));
+         const normalizedText = text.trim().toLowerCase();
 
-        const requestUrl = item.name;
+        const rawTokenText = tokens[1] ? cleanCommandToken(tokens[1]).toLowerCase() : normalizedText;
+
+        let bestMatch = null;
+
+        // const item = data?.find(d => {
+        //     if (typeof d.displaydata !== "string") return false;
+
+        //     if (d.name && d.name.toLowerCase() === normalizedText) {
+        //         return true;
+        //     }
+
+
+        //     const pureCaption = d.displaydata
+        //         .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
+        //         .replace(/\s*\[[^\]]+\]\s*$/, "")
+        //         .trim()
+        //         .toLowerCase();
+
+        //     return pureCaption === normalizedText;
+        // });
+
+        bestMatch = viewList.find(d => typeof d.displaydata === "string" && d.displaydata.toLowerCase() === rawTokenText.toLowerCase());
+
+        // if (!bestMatch) {
+        //     bestMatch = viewList.find(d => d.name && d.name.toLowerCase() === normalizedText);
+        // }
+
+        if (!bestMatch) {
+            bestMatch = viewList.find(d => {
+                if (typeof d.displaydata !== "string") return false;
+
+                const pureCaption = d.displaydata
+                    .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
+                    .replace(/\s*\[[^\]]+\]\s*$/, "")
+                    .trim()
+                    .toLowerCase();
+
+                return (pureCaption === normalizedText || pureCaption === rawTokenText) && d.stype.toLowerCase() === 'p';
+            });
+        }
+
+        if (!bestMatch || typeof bestMatch.displaydata !== "string") {
+            return null;
+        }
+
+        const requestUrl = bestMatch.name;
         console.log(requestUrl);
 
         setCommandRoutes(input.value.trim(), requestUrl);
 
         if (popUpOption) {
 
-            openPopOption(requestUrl + `&caption=${encodeURIComponent(item.caption)}`)
+            openPopOption(requestUrl + `&caption=${encodeURIComponent(bestMatch.caption)}`)
         }
         else {
             window.LoadIframe(requestUrl);
