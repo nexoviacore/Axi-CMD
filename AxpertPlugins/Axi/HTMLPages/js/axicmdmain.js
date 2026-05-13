@@ -395,13 +395,16 @@
     init();
 
     function getProjectName() {
-        let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-        console.log("Origin: " + appSessUrl);
-        const projInfoKey = `projInfo-${appSessUrl}`;
+        // let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        // console.log("Origin: " + appSessUrl);
+        // const projInfoKey = `projInfo-${appSessUrl}`;
 
-        const appname = localStorage.getItem(projInfoKey);
-        console.log(appname);
-        return appname;
+        // const appname = localStorage.getItem(projInfoKey);
+
+        // console.log(appname);
+        // return appname;
+
+        return window.mainProject; 
 
 
     }
@@ -6250,8 +6253,10 @@
 
             resolvedName = found.name;
         }
+        const cmdText = `${tokens[0]} ${tokens[1]} ${resolvedName}`; 
 
-
+            setCommandRoutes(cmdText, "");
+        
         if (type.toLowerCase() === "tstruct") {
             window.openDeveloperStudio("tstreact", resolvedName, true);
         } else if (type.toLowerCase() === "iview") {
@@ -10127,8 +10132,8 @@
 
 
 
-        input.value = favObj.originalCommandText + " ";
-        const tokens = getTokens(favObj.commandText);
+        input.value = favObj?.originalCommandText + " ";
+        const tokens = getTokens(favObj?.originalCommandText);
 
         const accessPermissions = getAccessPermissions();
         // AppMgrAccess(Config)
@@ -10195,7 +10200,18 @@
             top.window.LoadIframe(favObj.targetUrl);
         } else {
 
-            executeCommandsV2();
+            // executeCommandsV2();
+            const firstToken = tokens[0]; 
+            const secondToken = tokens[1]; 
+
+            if (firstToken.toLowerCase() === "devtools" && secondToken.toLowerCase() === "tstruct") {
+                  window.openDeveloperStudio("tstreact", secondToken, true);
+
+            } else {
+                 window.openDeveloperStudio("ivreact", secondToken, true);
+
+            }
+            
 
 
         }
