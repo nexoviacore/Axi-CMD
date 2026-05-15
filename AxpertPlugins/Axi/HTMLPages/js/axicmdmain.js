@@ -2989,6 +2989,9 @@
                     if (!axDatasourceObj[extraKey]) {
 
                         console.log(`Fetching Hidden Param Source: ${extraSource}`);
+                        if (tokens[1].toLowerCase() === "inbox") {
+                            return [goOption]; 
+                        }
                         loadList(extraSource, paramValue);
                         return [];
                     }
@@ -3115,6 +3118,9 @@
                     return [];
                 }
                 if (hasValidParams) {
+                    if (tokens[1].toLowerCase() === "inbox") {
+                        return  [goOption]; 
+                    }
                     loadList(apiSourceName, paramValue);
                     console.log(axDatasourceObj);
                     // if (realSource.toLowerCase() === "axi_dummy") {
