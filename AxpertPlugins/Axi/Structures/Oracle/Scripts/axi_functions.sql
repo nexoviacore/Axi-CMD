@@ -1,17 +1,23 @@
+<<
 UPDATE AXDIRECTSQL SET SQLSRC =CASE sqlsrc WHEN 'Application' THEN 'For users' WHEN 'Metadata' THEN 'Internal'
 ELSE 'For users' end,SQLSRCCND =CASE sqlsrc WHEN 'Application' THEN 3 WHEN 'Metadata' THEN 1
 ELSE 3  END;
+>>
 
-
+<<
 CREATE OR REPLACE TYPE axi_getstructs_obj AS OBJECT (
     displaydata   CLOB,
     id            CLOB,
     caption       CLOB,
     isfield       CLOB
 );
+>>
 
+<<
 CREATE OR REPLACE TYPE axi_getstructs_obj_tbl AS TABLE OF axi_getstructs_obj;
+>>
 
+<<
 CREATE OR REPLACE TYPE AXI_GETSTRUCTURES_META AS OBJECT (
     displaydata    VARCHAR2(4000),
     caption        VARCHAR2(4000),
@@ -24,9 +30,13 @@ CREATE OR REPLACE TYPE AXI_GETSTRUCTURES_META AS OBJECT (
     keyfield       VARCHAR2(4000),
     primarytable   VARCHAR2(4000)
 );
+>>
 
+<<
 CREATE OR REPLACE TYPE AXI_GETSTRUCTURES_META_tbl AS TABLE OF AXI_GETSTRUCTURES_META;
+>>
 
+<<
 CREATE OR REPLACE FUNCTION fn_axi_getstructs_obj (
     pcmd            VARCHAR2,
     pusername       VARCHAR2,
@@ -411,7 +421,9 @@ BEGIN
     RETURN;
 
 END;
+>>
 
+<<
 CREATE OR REPLACE FUNCTION fn_axi_getstructures_meta(
     pusername        IN VARCHAR2, 
     puserrole        IN VARCHAR2, 
@@ -495,7 +507,7 @@ BEGIN
                 REGEXP_LIKE(',' || presponsiblity || ',', ',default,')
                 OR (ua.stype = 't' AND REGEXP_LIKE(',' || presponsiblity || ',', ',' || ua.rname || ','))
               )),
-		iv as(
+        iv as(
         SELECT DISTINCT
                CAST((a.caption || ' (' || a.name || ') [iview]') AS VARCHAR2(4000)) AS displaydata,
                a.caption,
@@ -579,7 +591,9 @@ ads as(
 
     RETURN;
 END;
+>>
 
+<<
 CREATE OR REPLACE FUNCTION fn_ads_getsqlcols(payload IN CLOB)
 RETURN CLOB
 IS
@@ -608,7 +622,9 @@ EXCEPTION
     WHEN OTHERS THEN 
         RETURN 'ERROR AT FUNCTION: ' || SQLERRM; 
 END;
+>>
 
+<<
 CREATE OR REPLACE FUNCTION fn_ADS_getsql_json(
     p_appschema IN VARCHAR2,
     p_sqltext   IN VARCHAR2
@@ -625,7 +641,9 @@ EXCEPTION
     WHEN OTHERS THEN
         RETURN NULL;
 END;
+>>
 
+<<
 CREATE OR REPLACE FUNCTION fn_get_axpertcomps_name (
     pinput IN varchar2
 ) RETURN CLOB 
@@ -637,27 +655,33 @@ BEGIN
     END IF;
 
    SELECT
-	listagg(rtrim(SUBSTR(split_value, INSTR(split_value, '-(')+ 2), ')'), ',') WITHIN GROUP(
-	ORDER BY 1) INTO v_result
+    listagg(rtrim(SUBSTR(split_value, INSTR(split_value, '-(')+ 2), ')'), ',') WITHIN GROUP(
+    ORDER BY 1) INTO v_result
 FROM
-	(
-	SELECT
-		DISTINCT TRIM(REGEXP_SUBSTR( pinput, '[^,]+', 1, LEVEL)) AS split_value
-	FROM
-		dual
-	CONNECT BY
-		REGEXP_SUBSTR ( pinput,
-		'[^,]+',
-		1,
-		LEVEL) IS NOT NULL);
+    (
+    SELECT
+        DISTINCT TRIM(REGEXP_SUBSTR( pinput, '[^,]+', 1, LEVEL)) AS split_value
+    FROM
+        dual
+    CONNECT BY
+        REGEXP_SUBSTR ( pinput,
+        '[^,]+',
+        1,
+        LEVEL) IS NOT NULL);
 
     RETURN v_result;
 END;
+>>
 
+<<
 DROP TYPE AXPDEF_PERMISSION_MDATA_OBJ;
+>>
 
+<<
 DROP TYPE AXPDEF_PERMISSION_MDATA;
+>>
 
+<<
 CREATE OR REPLACE TYPE "AXPDEF_PERMISSION_MDATA" AS OBJECT (
     transid VARCHAR2(250),
     fullcontrol VARCHAR2(1),
@@ -678,12 +702,15 @@ CREATE OR REPLACE TYPE "AXPDEF_PERMISSION_MDATA" AS OBJECT (
     encryptedflds clob,
     permissiontype varchar2(10),viewctrl varchar2(10),editctrl varchar2(10)
     );
+>>
 
+<<
 CREATE OR REPLACE TYPE "AXPDEF_PERMISSION_MDATA_OBJ"                                          
    AS TABLE OF AXPDEF_PERMISSION_MDATA;
+>>
    
-  
- CREATE OR REPLACE FUNCTION fn_permissions_getpermission(
+<<
+CREATE OR REPLACE FUNCTION fn_permissions_getpermission(
     pmode          IN VARCHAR2,
     ptransid       IN VARCHAR2,
     pusername      IN VARCHAR2,
@@ -691,14 +718,14 @@ CREATE OR REPLACE TYPE "AXPDEF_PERMISSION_MDATA_OBJ"
     pglobalvars    IN VARCHAR2 DEFAULT 'NA'
 ) RETURN AXPDEF_PERMISSION_MDATA_OBJ PIPELINED
 AS    
-	rc  SYS_REFCURSOR;
+    rc  SYS_REFCURSOR;
     -- Declare local variables
     v_menuaccess_count NUMBER(10);     
     v_sql_roles VARCHAR2(4000);
    -- v_sql_permission_check VARCHAR2(4000);
-   	rolesql clob;
-   	v_permissionsql clob;
-   	v_permissionexists number(10);
+    rolesql clob;
+    v_permissionsql clob;
+    v_permissionexists number(10);
     
     -- Variables to hold results before piping
     v_transid_loop VARCHAR2(250);
@@ -721,9 +748,9 @@ AS
     v_editctrl VARCHAR2(1);
     --v_viewlist VARCHAR2(4000);
     --v_editlist VARCHAR2(4000);
-   	v_encryptedflds clob;
-  	v_permissiontype varchar2(10);
-    	
+    v_encryptedflds clob;
+    v_permissiontype varchar2(10);
+        
     v_view_includedflds    clob;
     v_view_excludedflds    clob;
     v_edit_includedflds    clob;
@@ -853,9 +880,9 @@ EXECUTE immediate v_permissionsql into  v_permissionexists;
             v_edit_access := NULL;
             v_allowcreate := NULL;
             v_filtercnd := NULL;
-           	SELECT LISTAGG(fname, ',') WITHIN GROUP (ORDER BY fname) INTO v_encryptedflds FROM axpflds 
+            SELECT LISTAGG(fname, ',') WITHIN GROUP (ORDER BY fname) INTO v_encryptedflds FROM axpflds 
            WHERE tstruct = v_transid_loop AND encrypted = 'T';        
-          	
+            
 
             -- Pipe the row
             PIPE ROW (AXPDEF_PERMISSION_MDATA(
@@ -865,11 +892,11 @@ EXECUTE immediate v_permissionsql into  v_permissionexists;
                 v_maskedflds, v_filtercnd,v_encryptedflds,NULL,'0','0'));
                
 ELSE
-	OPEN rc FOR rolesql;
+    OPEN rc FOR rolesql;
 
     LOOP
       FETCH rc INTO  
-		v_userrole,
+        v_userrole,
         v_view_includedflds,
         v_view_excludedflds,
         v_edit_includedflds,
@@ -891,7 +918,7 @@ ELSE
         v_view_includeflds := CASE WHEN v_view_includedflds IS NULL THEN v_edit_includedflds
                                  WHEN v_edit_includedflds IS NULL THEN v_view_includedflds
                                  ELSE v_view_includedflds || ',' || v_edit_includedflds END;
-	  END IF;
+      END IF;
     
      
       IF v_editctrl = '0' THEN
@@ -966,7 +993,7 @@ FROM axpflds WHERE tstruct = rec_transid.transid AND encrypted = 'T'
 
     CLOSE rc;
                
- 	END if;
+    END if;
 
   END LOOP;
 
@@ -975,4 +1002,5 @@ FROM axpflds WHERE tstruct = rec_transid.transid AND encrypted = 'T'
 
 
     RETURN; 
-END; 
+END;
+>>
