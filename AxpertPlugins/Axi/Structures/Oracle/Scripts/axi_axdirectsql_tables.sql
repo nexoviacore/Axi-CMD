@@ -321,301 +321,186 @@ order by b.axpdef_smartlist_mdatarow ' WHERE sqlname='axi_smartlist_ads_metadata
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990001, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_jobnameslist', NULL, 'Metadata', 5, 'select jname as displaydata from axpdef_jobs', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1296550000000,'F',0,null,'admin',to_date('17-02-26','DD-MM-RR'),'admin',to_date('17-02-26','DD-MM-RR'),null,1,1,null,null,null,'ds_smartlist_ads_metadata',null,'Internal',1,TO_NCLOB(q'[select a.sqlname,b.fldname,b.fldcaption,b.fdatatype, b.normalized ,b.sourcetable ,b.sourcefld ,hyp_structtype,b.hyp_transid, b.tbl_hyperlink,
+
+case when smartlistcnd like '%Dynamic select columns%' then 'T' else 'F' end dynamiccolumns,
+
+case when smartlistcnd like '%Filter%' then coalesce(b.filter,'No') else 'F' end filters,
+
+case when smartlistcnd like '%Pagination%' then 'T' else 'F' end pagination,
+
+case when smartlistcnd like '%Sorting%' then 'T' else 'F' end sorting
+
+from axdirectsql a left]')
+|| TO_NCLOB(q'[ join axdirectsql_metadata b on a.axdirectsqlid =b.axdirectsqlid 
+
+where sqlname = :adsname
+
+order by b.axdirectsql_metadatarow ]'),'adsname','adsname~Character~','ALL',null,null,'T','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990002, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_formnotifylist', NULL, 'Metadata', 5, 'select form as displaydata,stransid name from axformnotify', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1296220000000,'F',0,null,'admin',to_date('17-02-26','DD-MM-RR'),'admin',to_date('17-02-26','DD-MM-RR'),null,1,1,null,null,null,'ds_smartlist_filters',null,'Internal',1,'SELECT * from TABLE(fn_axpanalytics_filterdata( :ptransid, :psrctxt))','ptransid,psrctxt','ptransid~Character~,psrctxt~Character~','ALL',null,'column_value','T','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990003, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-24 19:34:05.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-24 19:34:05.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_userlist', NULL, 'Metadata', 5, 'select username as displaydata from axusers', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1296110000000,'F',0,null,'admin',to_date('17-02-26','DD-MM-RR'),'admin',to_date('17-02-26','DD-MM-RR'),null,1,1,null,null,null,'ds_getsmartlists',null,'Internal',1,'select sqlname from axdirectsql a where sqlsrc=''Application''',null,null,'ALL',null,'sqlname','T','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990004, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 20:50:43.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-23 20:50:43.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_fieldvaluelist', NULL, 'Metadata', 5, 'SELECT * FROM TABLE(get_dynamic_field(:param1, :param2))', 'param1,param2', 'param1~~,param2~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1295990000000,'F',0,null,'admin',to_date('17-02-26','DD-MM-RR'),'admin',to_date('17-02-26','DD-MM-RR'),null,1,1,null,null,null,'Axi_metadata_struct_obj',null,'Internal',1,'SELECT * from TABLE(fn_axi_struct_metadata( :pstructtype, :ptransid , :pobjtype ))','pstructtype,ptransid,pobjtype','pstructtype~Character~,ptransid~Character~,pobjtype~Character~','ALL',null,'objtype,objcaption,objname,dcname,asgrid','T','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990005, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_tstructlist', NULL, 'Metadata', 5, 'select caption||'' (''||name||'')'' displaydata, caption, name from tstructs', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1295660000000,'F',0,null,'admin',to_date('17-02-26','DD-MM-RR'),'admin',to_date('17-02-26','DD-MM-RR'),null,1,1,null,null,null,'Axi_getmetadata',null,'Internal',1,'SELECT * FROM TABLE(fn_axi_metadata( :pstructtype , :pusername ))','pstructtype,pusername','pstructtype~Character~,pusername~Character~','ALL',null,'structtype,caption,transid','T','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990006, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-22 14:31:09.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-20 16:20:58.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_adslist', NULL, 'Metadata', 5, 'select sqlname||'' (''||sqlsrc||'')'' displaydata,sqlname name,sqlsrc  from axdirectsql a', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1842990001535,'F',0,null,'admin',to_date('20-05-26','DD-MM-RR'),'admin',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_formnotifylist',null,'Internal',1,'select form as displaydata, stransid name from axformnotify',null,null,'ALL',null,null,'F','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990007, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_apinameslist', NULL, 'Metadata', 5, 'select execapidefname as displaydata from executeapidef', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1844990001130,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_pegnotifylist',null,'Internal',1,'select name as displaydata from axnotificationdef',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990008, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_iviewlist', NULL, 'Metadata', 5, 'select caption||'' (''||name||'')'' displaydata, caption, name from Iviews', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1845220002660,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_publishapi',null,'Internal',1,'select publickey || '' '' || ''(''||apitype||'')'' as displaydata,publickey caption,publickey name from axpdef_publishapi  order by publickey asc',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990009, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_pegnotifylist', NULL, 'Metadata', 5, 'select name as displaydata from axnotificationdef', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1847440000570,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_servernamelist',null,'Internal',1,'select servername as displaydata from dwb_publishprops',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990010, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_rulenameslist', NULL, 'Metadata', 5, 'select rulename as displaydata from axpdef_ruleeng', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1848330001331,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_usergrouplist',null,'Internal',1,'select users_group_name as displaydata from axpdef_usergroups',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990011, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_schedulenotifylist', NULL, 'Metadata', 5, 'select name as displaydata from axperiodnotify', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1092550000000,'F',0,null,'admin',to_date('09-11-23','DD-MM-RR'),'admin',to_date('09-11-23','DD-MM-RR'),null,1,1,0,null,null,'Text_Field_Intelligence',null,'Internal',1,TO_NCLOB(q'[select id,caption,source from(
+select fname id,caption,'Form' source,2 ord from axpflds where asgrid='F' and tstruct = :txttransid 
+union all
+select db_varname,db_varcaption,'Axvars' ,3 ord from axpdef_axvars_dbvar a,axpdef_axvars b
+where b.axpdef_axvarsid=a.axpdef_axvarsid 
+union all
+select 'username','Login username','App vars' ,4 ord from dual
+union all
+select 'usergroup','User role','App vars' ,4 ord from dual
+union all
+select fname,caption,'Glovar',5 ord from axpflds where tstruct='axglo'
+o]')
+|| TO_NCLOB(q'[rder by 4,1)a
+]'),'txttransid','txttransid','ALL',null,null,'T','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990012, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_peglist', NULL, 'Metadata', 5, 'select caption as displaydata from axpdef_peg_processmaster', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1840880001482,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_apinameslist',null,'Internal',1,'select execapidefname as displaydata from executeapidef',null,null,'ALL',null,null,'F','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990013, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_actorlist', NULL, 'Metadata', 5, 'select actorname as displaydata from axpdef_peg_actor', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1841010000626,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_cardlist',null,'Internal',1,'select cardname as displaydata from axp_cards',null,null,'ALL',null,null,'F','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990014, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_cardlist', NULL, 'Metadata', 5, 'select cardname as displaydata from axp_cards', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1841220000885,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_customtype',null,'Internal',1,'select typename || '' (''||datatype||'')'' as displaydata,typename as caption,typename as name from axp_customdatatype order by typename asc',null,null,'ALL',null,null,'F','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990015, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_printformlist', NULL, 'Metadata', 5, 'select template_name as displaydata from ax_configure_fast_prints', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1841440001272,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_dimensionlist',null,'Internal',1,'select grpcaption ||'' ('' || grpname ||'')'' as displaydata, grpname as caption,grpname as name from axgroupingmst order by grpcaption asc',null,null,'ALL',null,null,'F','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990016, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_servernamelist', NULL, 'Metadata', 5, 'select servername as displaydata from dwb_publishprops', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1841550001335,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_emaildef',null,'Internal',1,'select emaildefname || '' (''||emailwhat||'')'' as displaydata,emaildefname as caption,emaildefname as name from emaildef order by emaildefname asc',null,null,'ALL',null,null,'F','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990017, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_usergrouplist', NULL, 'Metadata', 5, 'select users_group_name as displaydata from axpdef_usergroups', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1842660002121,'F',0,null,'admin',to_date('20-05-26','DD-MM-RR'),'admin',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_firesql',null,'Internal',1,'SELECT * FROM TABLE(ISTF1415.axi_firesql_v2( :param1, :param2, :param3, :param4))','param1,param2,param3,param4','param1~~,param2~~,param3~~,param4~~','ALL',null,null,'F','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990018, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_rolelist', NULL, 'Metadata', 5, 'select groupname as displaydata from axusergroups', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1843990002163,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_inbound',null,'Internal',1,'select axqueuename as displaydata,axqueuename as caption from AxInQueues order by axqueuename asc',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990019, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_dimensionlist', NULL, 'Metadata', 5, 'select grpcaption ||'' ('' || grpname ||'')'' as displaydata, grpname as caption,grpname as name from axgroupingmst order by grpcaption asc', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1844220001891,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_jobs',null,'Internal',1,'select jname || '' ('' || jobid ||'')'' as displaydata, jobid as caption,jobid as name from axpdef_jobs order by jname asc',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990020, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_pagelist', NULL, 'Metadata', 5, 'select caption as displaydata,props as requesturl from axpages where pagetype = ''web''', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1844770002101,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_outbound',null,'Internal',1,'select axqueuename as displaydata, axqueuename as caption from AxOutQueuesmst order by axqueuename asc',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990021, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:35:16.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-22 16:01:14.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_keyfieldlist', NULL, 'Metadata', 5, 'SELECT keyfield FROM (SELECT keyfield, 1 AS priority, NULL AS modeofentry, NULL AS allowduplicate, NULL AS datatype, NULL AS ordno FROM axp_tstructprops WHERE name = :param1 UNION ALL SELECT fname AS keyfield, 2 AS priority, modeofentry, allowduplicate, datatype, ordno FROM axpflds WHERE tstruct = :param1 and dcname = ''dc1'' AND (modeofentry = ''autogenerate'' OR ((LOWER(allowduplicate) = ''f'' OR datatype = ''c'') AND LOWER(hidden) = ''f''))) t ORDER BY priority, CASE WHEN modeofentry = ''autogenerate'' THEN 1 WHEN LOWER(allowduplicate) = ''f'' THEN 2 WHEN datatype = ''c'' THEN 3 ELSE 4 END, ordno ASC FETCH FIRST 1 ROW ONLY', 'param1', 'param1', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1840660002880,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_adsfilteroperators',null,'Internal',1,'SELECT ''='' AS displaydata, ''='' AS name UNION ALL SELECT ''<'',''<'' UNION ALL SELECT ''>'',''>'' UNION ALL SELECT ''<='',''<='' UNION ALL SELECT ''>='',''>='' UNION ALL SELECT ''between'',''between''',null,null,'ALL',null,null,'F','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990022, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_viewlist', NULL, 'Metadata', 5, 'SELECT * FROM TABLE(axi_fn_getaxobjectlist(:param1))', 'param1', 'param1', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1844440001635,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_language',null,'Internal',1,'select language as displaydata, language as caption from axpdef_language order by language asc',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990023, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2026-01-30 00:00:00.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2026-01-30 00:00:00.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_smartlist_ads_metadata', NULL, 'Metadata', 0, 'select a.sqlname,a.sqltext,a.sqlparams, a.sqlquerycols,a.encryptedflds,a.cachedata,a.cacheinterval, b.fldname,b.fldcaption,b."normalized" ,b.sourcetable ,b.sourcefld ,hyp_structtype,b.hyp_transid, b.tbl_hyperlink, CASE WHEN lower(sqltext) LIKE ''%--axp_filter%'' THEN ''T'' ELSE ''F'' END AS filters from axdirectsql a left join axdirectsql_metadata b on a.axdirectsqlid =b.axdirectsqlid where sqlname = :adsname', 'adsname', 'adsname~Character~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1844660000929,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_nongridfieldlist',null,'Internal',1,'select caption||'' (''||fname||'')'' displaydata, caption, fname name, 
+tstruct,SUBSTR(modeofentry, 1, 1) AS moe, axpflds.datatype ,fldsql,dcname,asgrid,listvalues fromlist,srckey normalized
+ from axpflds where tstruct = :param1 and asgrid = ''F'' and hidden = ''F'' and modeofentry in (''accept'',''select'') 
+ and savevalue = ''T'' and axpflds.datatype <> ''i'' order by ordno ASC','param1','param1~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990024, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_fieldvalueswithkeysuffixlist', NULL, 'Metadata', 5, 'select * from TABLE(fn_axi_get_fieldvalues_with_keysuffix_list(:param1, :param2))', 'param1,param2', 'param1~~,param2~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1844880001538,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_peglist',null,'Internal',1,'select caption as displaydata from axpdef_peg_processmaster',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990025, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_keyvalueswithfieldnameslist', NULL, 'Metadata', 5, 'select * from TABLE(fn_axi_getkeyvalueswithfieldnameslist(:param1, :param2))', 'param1,param2', 'param1~~,param2~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1845110000722,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_primaryfieldlist',null,'Internal',1,'SELECT caption||'' (''||fname||'')'' displaydata, caption, fname name FROM axpflds WHERE tstruct = :param1 and dcname = ''dc1'' AND (modeofentry = ''autogenerate'' OR ((LOWER(allowduplicate) = ''f'' OR datatype = ''c'') AND LOWER(hidden) = ''f'')) order by ordno asc','param1','param1~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990026, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_tstructprops_insupd', NULL, 'Metadata', 5, 'select * from TABLE(fn_upsert_config_by_condition(:param1,:param2,:param3,:param4))', 'param1,param2,param3,param4', 'param1~~,param2~~,param3~~,param4~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1846880000476,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_resposibilitylist',null,'Internal',1,'select distinct rname displaydata, rname caption, rname name from axuseraccess order by rname',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990027, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_adsfilteroperators', NULL, 'Metadata', 5, 'SELECT ''='' AS displaydata, ''='' AS name FROM DUAL UNION ALL SELECT ''<'',''<'' FROM DUAL UNION ALL SELECT ''>'',''>'' FROM DUAL UNION ALL SELECT ''<='',''<='' FROM DUAL UNION ALL SELECT ''>='',''>='' FROM DUAL UNION ALL SELECT ''between'',''between'' FROM DUAL', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1846990000913,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_rolelist',null,'Internal',1,'select groupname as displaydata from axusergroups',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990028, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2026-01-30 00:00:00.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2026-01-30 00:00:00.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_adscolumnlist', NULL, 'Metadata', 0, 'select b.fldcaption || ''(''||b.fldname||'')'' displaydata,b.fldname name,b.fldcaption caption,b.normalized,b.fdatatype, b.sourcetable,b.sourcefld , CASE WHEN lower(sqltext) LIKE ''%--axp_filter%'' THEN ''T'' ELSE ''F'' END AS filters from axdirectsql a left join axdirectsql_metadata b on a.axdirectsqlid =b.axdirectsqlid where sqlname = :param1', 'param1', 'param1~Character~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1847110001525,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_rulenameslist',null,'Internal',1,'select rulename as displaydata from axpdef_ruleeng',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990029, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:35:16.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-22 16:01:14.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_fieldlist', NULL, 'Metadata', 5, 'select caption||'' (''||fname||'')'' displaydata, caption, fname name, tstruct,SUBSTR(modeofentry,1,1) moe,datatype,fldsql,dcname,asgrid,listvalues fromlist,srckey normalized from axpflds where tstruct = :param1 and dcname = ''dc1'' and hidden = ''F'' and modeofentry in (''accept'',''select'') and savevalue = ''T'' and datatype <> ''i'' order by ordno asc', 'param1', 'param1', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1847330002312,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_schedulenotifylist',null,'Internal',1,'select name as displaydata from axperiodnotify',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990030, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_adsdropdowntokens', NULL, 'Metadata', 5, 'select * from TABLE(get_ads_dropdown_data(:param1,:param2))', 'param1,param2', 'param1~~,param2~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1847660000630,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_setfieldlist',null,'Internal',1,'select caption||'' (''||fname||'')'' displaydata, caption, fname name, tstruct,substring(modeofentry,1,1) moe, axpflds.datatype,fldsql sql 
+from axpflds where tstruct = :param1 
+and dcname = ''dc1'' and hidden = ''F'' and savevalue = ''T'' and modeofentry in (''accept'',''select'') and axpflds.datatype <> ''i'' order by ordno asc','param1','param1~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990031, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:35:16.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-22 16:01:14.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_setfieldlist', NULL, 'Metadata', 5, 'select caption||'' (''||fname||'')'' displaydata, caption, fname name, tstruct,SUBSTR(modeofentry,1,1) moe,datatype,fldsql sql from axpflds where tstruct = :param1 and dcname = ''dc1'' and hidden = ''F'' and savevalue = ''T'' and modeofentry in (''accept'',''select'') and datatype <> ''i'' order by ordno asc', 'param1', 'param1', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1847880002060,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_structlist',null,'Internal',1,'select * from axi_fn_getstructlist(:param1,:param2,:param3)','param1,param2,param3','param1~Character~,param2~Character~,param3~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990032, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-24 19:34:05.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-24 19:34:05.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_analyticslist', NULL, 'Metadata', 5, 'SELECT t.caption || '' ('' || t.name || '')'' AS displaydata,t.caption,t.name FROM tstructs t JOIN ax_userconfigdata u ON INSTR('','' || u.value || '','', '','' || t.name || '','') > 0 WHERE UPPER(u.page) = ''ANALYTICS'' and UPPER(u.keyname) = ''ENTITIES'' AND (u.username = :param1 OR u.username = ''All'')', 'param1', 'param1', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1848010000918,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_structmetalist',null,'Internal',1,'SELECT * from fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5)','param1,param2,param3,param4,param5','param1~Character~,param2~Character~,param3~Character~,param4~Character~,param5~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990033, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 20:50:43.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-23 20:50:43.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_firesql', NULL, 'Metadata', 5, 'select * from TABLE(axi_firesql_v2(:param1,:param2,:param3,:param4))', 'param1,param2,param3,param4', 'param1~~,param2~~,param3~~,param4~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1848110001101,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_tabledesc',null,'Internal',1,'select dname as displaydata,dname as caption from axp_tabledescriptor order by dname asc',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990034, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_userpwd', NULL, 'Metadata', 5, 'select password  from axusers where username = :param1', 'param1', 'param1', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1848220003022,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_useractivation',null,'Internal',1,'select pusername as displaydata from axuseractivations order by pusername asc',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990035, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:35:16.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-22 16:01:14.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_primaryfieldlist', NULL, 'Metadata', 5, 'SELECT caption||'' (''||fname||'')'' displaydata, caption, fname name FROM axpflds WHERE tstruct = :param1 and dcname = ''dc1'' AND (modeofentry = ''autogenerate'' OR ((LOWER(allowduplicate) = ''f'' OR datatype = ''c'') AND LOWER(hidden) = ''f'')) order by ordno asc', 'param1', 'param1', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1848440001066,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_userlist',null,'Internal',1,'select username as displaydata from axusers',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990036, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_structlist', NULL, 'Metadata', 5, 'select * from TABLE(axi_fn_getstructlist(:param1,:param2,:param3))', 'param1,param2,param3', 'param1~~,param2~~,param3~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1840220000733,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_actorlist',null,'Internal',1,'select actorname as displaydata from axpdef_peg_actor',null,null,'ALL',null,null,'F','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990037, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:35:16.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-22 16:01:14.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_nongridfieldlist', NULL, 'Metadata', 5, 'select caption||'' (''||fname||'')'' displaydata, caption, fname name, tstruct,SUBSTR(modeofentry,1,1) moe,datatype,fldsql,dcname,asgrid,listvalues fromlist,srckey normalized from axpflds where tstruct = :param1 and asgrid = ''F'' and hidden = ''F'' and modeofentry in (''accept'',''select'') and savevalue = ''T'' and datatype <> ''i'' order by ordno asc', 'param1', 'param1', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1840440001713,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_adscolumnlist',null,'Internal',1,'select b.fldcaption || ''(''||b.fldname||'')'' displaydata,b.fldname name,b.fldcaption caption,b.normalized,b.fdatatype, b.sourcetable,b.sourcefld , CASE WHEN lower(sqltext) LIKE ''%--axp_filter%'' THEN ''T'' ELSE ''F'' END AS filters from axdirectsql a left join axdirectsql_metadata b on a.axdirectsqlid =b.axdirectsqlid where sqlname = :param1','param1''param1~Character~','ALL',null,null,'F','6 Hr',null,null,null,null,null);
 >>
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990038, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_structmetalist', NULL, 'Metadata', 5, 'SELECT * from TABLE(fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5))', 'param1,param2,param3,param4,param5', 'param1~~,param2~~,param3~~,param4~~,param5~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-<<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990039, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_getstructsdata', NULL, 'Metadata', 5, 'select * from TABLE(fn_axi_getstructs_obj(:param1, :param2, :param3, :param4, :param5, :param6, :param7, :param8, :param9, :param10))', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10', 'param1~~,param2~~,param3~~,param4~~,param5~~param6~~,param7~~,param8~~,param9~~,param10~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-<<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990040, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_resposibilitylist', NULL, 'Metadata', 5, 'select distinct rname displaydata, rname caption, rname name from axuseraccess order by rname', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-<<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990041, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_newsandannounce', NULL, 'Metadata', 5, 'select title as displaydata,title as caption,title as name from axpdef_news_events order by title asc', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-<<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990042, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_publishapi', NULL, 'Metadata', 5, 'select publickey || '' '' || ''(''||apitype||'')'' as displaydata,publickey caption,publickey name from axpdef_publishapi  order by publickey asc', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-<<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990043, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_jobs', NULL, 'Metadata', 5, 'select jname || '' ('' || jobid ||'')'' as displaydata, jobid as caption,jobid as name from axpdef_jobs order by jname asc', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-<<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990044, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_language', NULL, 'Metadata', 5, 'select language as displaydata, language as caption from axpdef_language order by language asc', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-<<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990045, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_customtype', NULL, 'Metadata', 5, 'select typename || '' (''||datatype||'')'' as displaydata,typename as caption,typename as name from axp_customdatatype order by typename asc', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-<<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990046, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_emaildef', NULL, 'Metadata', 5, 'select emaildefname || '' (''||emailwhat||'')'' as displaydata,emaildefname as caption,emaildefname as name from emaildef order by emaildefname asc', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-<<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990047, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_tabledesc', NULL, 'Metadata', 5, 'select dname as displaydata,dname as caption from axp_tabledescriptor order by dname asc', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-<<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990048, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_inbound', NULL, 'Metadata', 5, 'select axqueuename as displaydata,axqueuename as caption from AxInQueues order by axqueuename asc', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-<<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990049, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-23 13:22:07.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-19 16:06:57.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_outbound', NULL, 'Metadata', 5, 'select axqueuename as displaydata,axqueuename as caption from AxOutQueuesmst order by axqueuename asc', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-<<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990050, 'F', 0, NULL, 'admin', TO_TIMESTAMP('2025-12-24 19:34:05.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 'admin', TO_TIMESTAMP('2025-12-24 19:34:05.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), NULL, 1, 1, NULL, NULL, NULL, 'axi_useractivation', NULL, 'Metadata', 5, 'select pusername as displaydata from axuseractivations order by pusername asc', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL);
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (1844550002242,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_newsandannounce',null,'Internal',1,'select title as displaydata,title as caption,title as name from axpdef_news_events order by title asc',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F');
 >>
