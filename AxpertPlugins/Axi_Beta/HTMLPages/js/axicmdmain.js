@@ -270,7 +270,7 @@
         apiMetadataUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/axi_get`; 
         console.log("ApiMetadataUrl = " + apiMetadataUrl); 
 
-        axiFavoritesUrl = `${AxiArmUrl}/AxiApi/api/v1/Axi/user-favourites`; 
+        axiFavoritesUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/user-favourites`; 
         // axiFavoritesUrl = `http://localhost:5057/api/v1/Axi/user-favourites`; 
         console.log("AxiFavoritesUrl = " + axiFavoritesUrl); 
 
