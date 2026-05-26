@@ -1,7 +1,7 @@
 <<
 UPDATE AXDIRECTSQL SET SQLSRC =CASE sqlsrc WHEN 'Application' THEN 'For users' WHEN 'Metadata' THEN 'Internal'
 ELSE 'For users' end,SQLSRCCND =CASE sqlsrc WHEN 'Application' THEN 3 WHEN 'Metadata' THEN 1
-ELSE 3  END;
+ELSE 3  END
 >>
 
 <<
@@ -10,11 +10,11 @@ CREATE OR REPLACE TYPE axi_getstructs_obj AS OBJECT (
     id            CLOB,
     caption       CLOB,
     isfield       CLOB
-);
+)
 >>
 
 <<
-CREATE OR REPLACE TYPE axi_getstructs_obj_tbl AS TABLE OF axi_getstructs_obj;
+CREATE OR REPLACE TYPE axi_getstructs_obj_tbl AS TABLE OF axi_getstructs_obj
 >>
 
 <<
@@ -29,11 +29,11 @@ CREATE OR REPLACE TYPE AXI_GETSTRUCTURES_META AS OBJECT (
     viewallowed    VARCHAR2(4000),
     keyfield       VARCHAR2(4000),
     primarytable   VARCHAR2(4000)
-);
+)
 >>
 
 <<
-CREATE OR REPLACE TYPE AXI_GETSTRUCTURES_META_tbl AS TABLE OF AXI_GETSTRUCTURES_META;
+CREATE OR REPLACE TYPE AXI_GETSTRUCTURES_META_tbl AS TABLE OF AXI_GETSTRUCTURES_META
 >>
 
 <<
@@ -420,7 +420,7 @@ BEGIN
 
     RETURN;
 
-END;
+END
 >>
 
 <<
@@ -590,7 +590,7 @@ ads as(
     END IF;
 
     RETURN;
-END;
+END
 >>
 
 <<
@@ -621,7 +621,7 @@ BEGIN
 EXCEPTION 
     WHEN OTHERS THEN 
         RETURN 'ERROR AT FUNCTION: ' || SQLERRM; 
-END;
+END
 >>
 
 <<
@@ -640,7 +640,7 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         RETURN NULL;
-END;
+END
 >>
 
 <<
@@ -670,15 +670,15 @@ FROM
         LEVEL) IS NOT NULL);
 
     RETURN v_result;
-END;
+END
 >>
 
 <<
-DROP TYPE AXPDEF_PERMISSION_MDATA_OBJ;
+DROP TYPE AXPDEF_PERMISSION_MDATA_OBJ
 >>
 
 <<
-DROP TYPE AXPDEF_PERMISSION_MDATA;
+DROP TYPE AXPDEF_PERMISSION_MDATA
 >>
 
 <<
@@ -701,12 +701,12 @@ CREATE OR REPLACE TYPE "AXPDEF_PERMISSION_MDATA" AS OBJECT (
     filtercnd NCLOB,
     encryptedflds clob,
     permissiontype varchar2(10),viewctrl varchar2(10),editctrl varchar2(10)
-    );
+    )
 >>
 
 <<
 CREATE OR REPLACE TYPE "AXPDEF_PERMISSION_MDATA_OBJ"                                          
-   AS TABLE OF AXPDEF_PERMISSION_MDATA;
+   AS TABLE OF AXPDEF_PERMISSION_MDATA
 >>
    
 <<
@@ -1002,7 +1002,7 @@ FROM axpflds WHERE tstruct = rec_transid.transid AND encrypted = 'T'
 
 
     RETURN; 
-END;
+END
 >>
 
 <<
@@ -1010,15 +1010,15 @@ END;
 CREATE OR REPLACE TYPE axi_firesql_obj AS OBJECT (
     id          VARCHAR2(4000),
     displaydata VARCHAR2(4000)
-);
+)
 >>
-/
+
 
 <<
 -- Table Type
-CREATE OR REPLACE TYPE axi_firesql_tab AS TABLE OF axi_firesql_obj;
+CREATE OR REPLACE TYPE axi_firesql_tab AS TABLE OF axi_firesql_obj
 >>
-/
+
 
 <<
 -- Function
@@ -1160,26 +1160,26 @@ BEGIN
         END IF;
     END IF;
     RETURN;
-END axi_firesql_v2;
+END axi_firesql_v2
 >>
-/
 
-<<
+
+
 commit;
->>
+
 
 <<
 CREATE OR REPLACE TYPE obj_getstructlist AS OBJECT (
     displaydata VARCHAR2(4000),
     caption     VARCHAR2(4000),
     name        VARCHAR2(4000)
-);
+)
 >>
 
 ---------------------------------------------
 
 <<
-CREATE OR REPLACE TYPE tab_getstructlist AS TABLE OF obj_getstructlist;
+CREATE OR REPLACE TYPE tab_getstructlist AS TABLE OF obj_getstructlist
 >>
 
 --------------------------------------------
@@ -1263,6 +1263,5 @@ BEGIN
     END IF;
 
     RETURN;
-END;
+END
 >>
-/

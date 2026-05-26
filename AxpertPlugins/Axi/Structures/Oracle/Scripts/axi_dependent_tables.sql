@@ -1,9 +1,9 @@
 <<
-CREATE TABLE axiconfig (axienabled varchar2(1), mainpagetemplate varchar2(255)); 
+CREATE TABLE axiconfig (axienabled varchar2(1), mainpagetemplate varchar2(255))
 >>
 
 <<
-INSERT INTO axiconfig (axienabled, mainpagetemplate) VALUES ('T','AxiCMDMainPage.html'); 
+INSERT INTO axiconfig (axienabled, mainpagetemplate) VALUES ('T','AxiCMDMainPage.html') 
 >>
 
 <<
@@ -23,9 +23,9 @@ CREATE TABLE Axi_UserFavourites (
     TargetURL VARCHAR2(4000) NOT NULL,
     FavOrder NUMBER(10),
     CreatedOn TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+)
 >>
 
 <<
-ALTER TABLE ORCLBASE114.AXI_USERFAVOURITES  ADD originalcommandtext varchar(4000) NULL;
+ALTER TABLE ORCLBASE114.AXI_USERFAVOURITES  ADD originalcommandtext varchar(4000) NULL
 >>
