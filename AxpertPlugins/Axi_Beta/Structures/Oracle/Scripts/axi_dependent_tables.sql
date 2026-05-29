@@ -1,6 +1,12 @@
+
 <<
 CREATE TABLE axiconfig (axienabled varchar2(1), mainpagetemplate varchar2(255))
 >>
+
+<<
+DELETE FROM axiconfig where  mainpagetemplate = 'AxiCMDMainPage.html'
+<<
+
 
 <<
 INSERT INTO axiconfig (axienabled, mainpagetemplate) VALUES ('T','AxiCMDMainPage.html') 
@@ -27,5 +33,5 @@ CREATE TABLE Axi_UserFavourites (
 >>
 
 <<
-ALTER TABLE ORCLBASE114.AXI_USERFAVOURITES  ADD originalcommandtext varchar(4000) NULL
+ALTER TABLE AXI_USERFAVOURITES  ADD originalcommandtext varchar(4000) NULL
 >>

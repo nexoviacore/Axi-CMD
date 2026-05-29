@@ -1,4 +1,4 @@
-﻿var heightOfChart = 300;
+var heightOfChart = 300;
 var colors = ['#006cff', '#eb7900', '#eb0000', '#6c19ff', '#00b569', '#aa6f5b', '#eb7900', '#21b28f', '#f4bc01', '#3d5996', '#e80502', '#539cfe', '#3ddab4', '#f14f5a'];
 
 var customChartColors = {
@@ -673,7 +673,7 @@ function AgileCharts(mode) {
                         yColor = this.point.color.stops[1][1] || yColor;
                     } catch (ex) {}
                 }
-                return (glType != "ar" ? ('<span style="color:' + xColor + '">●</span>') : '') + this.x + '<br/>' + this.y + '</span>' + (glType == "ar" ? ('<span style="color:' + xColor + '">●</span>') : '');
+                return (glType != "ar" ? ('<span style="color:' + xColor + '">?</span>') : '') + this.x + '<br/>' + this.y + '</span>' + (glType == "ar" ? ('<span style="color:' + xColor + '">?</span>') : '');
             }
         };
     
@@ -948,9 +948,9 @@ function AgileCharts(mode) {
                         yColor = this.point.color.stops[1][1] || yColor;
                     } catch (ex) {}
                 }
-                return (glType != "ar" ? ('<span style="color:' + xColor + '">●</span>') : '') +
+                return (glType != "ar" ? ('<span style="color:' + xColor + '">?</span>') : '') +
                        this.x + '<br/>' + this.y +
-                       (glType == "ar" ? ('<span style="color:' + xColor + '">●</span>') : '');
+                       (glType == "ar" ? ('<span style="color:' + xColor + '">?</span>') : '');
             }
         };
     
@@ -1030,7 +1030,7 @@ function AgileCharts(mode) {
                         yColor = this.point.color.stops[1][1] || yColor;
                     }catch(ex){}
                 }
-                return (glType != "ar" ? ('<span style="color:' + xColor + '">●</span>') : '') + this.x + ' <br/><b>' + this.y + '</b></span>' + (glType == "ar" ? ('<span style="color:' + xColor + '">●</span>') : '');
+                return (glType != "ar" ? ('<span style="color:' + xColor + '">?</span>') : '') + this.x + ' <br/><b>' + this.y + '</b></span>' + (glType == "ar" ? ('<span style="color:' + xColor + '">?</span>') : '');
             }
         }
         chrtOptions.chart.type = 'area';
@@ -1107,7 +1107,7 @@ function AgileCharts(mode) {
                         yColor = this.point.color.stops[1][1] || yColor;
                     }catch(ex){}
                 }
-                return (glType != "ar" ? ('<span style="color:' + xColor + '">●</span>') : '') + this.x + '<br/>' + this.y + '</span>' + (glType == "ar" ? ('<span style="color:' + xColor + '">●</span>') : '');
+                return (glType != "ar" ? ('<span style="color:' + xColor + '">?</span>') : '') + this.x + '<br/>' + this.y + '</span>' + (glType == "ar" ? ('<span style="color:' + xColor + '">?</span>') : '');
             }
         }
         chrtOptions.chart.type = 'column';
@@ -1691,3 +1691,4 @@ function getTheValueOfThePoint({ type, key = "", event }) {
     }
     return value;
 }
+

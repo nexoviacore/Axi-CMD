@@ -1,0 +1,44 @@
+2026-05-22 13:26:31.475 +05:30 [INF] Starting Axi Api....
+2026-05-22 13:26:31.624 +05:30 [INF] Starting Axi Api....
+2026-05-22 13:26:33.778 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2026-05-22 13:26:33.782 +05:30 [INF] Hosting environment: Production
+2026-05-22 13:26:33.785 +05:30 [INF] Content root path: D:\dotnet\Featues\AxiCommandPallete\ARM11.4_13_11_2025\ARM_APIs\bin\Release\AxiApi
+2026-05-22 13:26:33.823 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost/Arm_api_for_dev/AxiApi/api/v1/Axi/user-favourites?username=admin&appname=orclbase114 - null null
+2026-05-22 13:26:33.832 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost/Arm_api_for_dev/AxiApi/api/v1/Axi/axi_get?view=metadata&forceRefresh=false&appname=orclbase114 - null null
+2026-05-22 13:26:33.887 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-05-22 13:26:33.897 +05:30 [INF] Executing endpoint 'AxiApi.Controllers.AxiController.AxiGet (AxiApi)'
+2026-05-22 13:26:33.897 +05:30 [INF] Executing endpoint 'AxiApi.Controllers.AxiController.getUserFavouritesByUser (AxiApi)'
+2026-05-22 13:26:33.945 +05:30 [INF] Route matched with {action = "getUserFavouritesByUser", controller = "Axi"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[System.Collections.Generic.List`1[AxiApi.DTOs.UserFavouritesDTO]]] getUserFavouritesByUser(System.String, System.String) on controller AxiApi.Controllers.AxiController (AxiApi).
+2026-05-22 13:26:33.961 +05:30 [INF] Route matched with {action = "AxiGet", controller = "Axi"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] AxiGet(System.String, Boolean, System.String) on controller AxiApi.Controllers.AxiController (AxiApi).
+2026-05-22 13:26:34.205 +05:30 [INF] Bootstrap: Starting Grammar Load sequence...
+2026-05-22 13:26:34.532 +05:30 [INF] Fetching UserFavourites for Username: admin
+2026-05-22 13:26:34.532 +05:30 [INF] Redis Connected. Checking UserFavourites in Redis Cache....
+2026-05-22 13:26:34.549 +05:30 [INF] Redis Cache not found Fallback to DB
+2026-05-22 13:26:34.684 +05:30 [INF] Executing OkObjectResult, writing value of type 'AxiApi.DTOs.GrammarDTO'.
+2026-05-22 13:26:34.868 +05:30 [INF] Executed action AxiApi.Controllers.AxiController.AxiGet (AxiApi) in 901.3766ms
+2026-05-22 13:26:34.876 +05:30 [INF] Executed endpoint 'AxiApi.Controllers.AxiController.AxiGet (AxiApi)'
+2026-05-22 13:26:34.905 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost/Arm_api_for_dev/AxiApi/api/v1/Axi/axi_get?view=metadata&forceRefresh=false&appname=orclbase114 - 200 null application/json; charset=utf-8 1061.9213ms
+2026-05-22 13:26:36.668 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[AxiApi.DTOs.UserFavouritesDTO, AxiApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-05-22 13:26:36.704 +05:30 [INF] Executed action AxiApi.Controllers.AxiController.getUserFavouritesByUser (AxiApi) in 2757.4145ms
+2026-05-22 13:26:36.704 +05:30 [INF] Executed endpoint 'AxiApi.Controllers.AxiController.getUserFavouritesByUser (AxiApi)'
+2026-05-22 13:26:36.705 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost/Arm_api_for_dev/AxiApi/api/v1/Axi/user-favourites?username=admin&appname=orclbase114 - 200 null application/json; charset=utf-8 2886.179ms
+2026-05-22 13:33:19.161 +05:30 [INF] Request starting HTTP/1.1 POST http://localhost/Arm_api_for_dev/AxiApi/api/v1/Axi/user-favourites?appname=orclbase114 - application/json 241
+2026-05-22 13:33:19.169 +05:30 [INF] CORS policy execution successful.
+2026-05-22 13:33:19.170 +05:30 [INF] Executing endpoint 'AxiApi.Controllers.AxiController.ToggleUserFavourites (AxiApi)'
+2026-05-22 13:33:19.182 +05:30 [INF] Route matched with {action = "ToggleUserFavourites", controller = "Axi"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[System.Object]] ToggleUserFavourites(AxiApi.DTOs.UserFavouritesRequestDTO, System.String) on controller AxiApi.Controllers.AxiController (AxiApi).
+2026-05-22 13:33:19.458 +05:30 [INF] Adding UserFavourites for Username: admin
+2026-05-22 13:33:20.302 +05:30 [INF] UserFavourites added successfully for Username: admin
+2026-05-22 13:33:20.307 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[AxiApi.DTOs.UserFavouritesDTO, AxiApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-05-22 13:33:20.316 +05:30 [INF] Executed action AxiApi.Controllers.AxiController.ToggleUserFavourites (AxiApi) in 1133.2713ms
+2026-05-22 13:33:20.316 +05:30 [INF] Executed endpoint 'AxiApi.Controllers.AxiController.ToggleUserFavourites (AxiApi)'
+2026-05-22 13:33:20.316 +05:30 [INF] Request finished HTTP/1.1 POST http://localhost/Arm_api_for_dev/AxiApi/api/v1/Axi/user-favourites?appname=orclbase114 - 200 null application/json; charset=utf-8 1155.0853ms
+2026-05-22 13:33:33.412 +05:30 [INF] Request starting HTTP/1.1 PATCH http://localhost/Arm_api_for_dev/AxiApi/api/v1/Axi/user-favourites/db1ca583-6211-4911-a2ed-4eaf3db2ffb9?username=admin&appname=orclbase114 - application/json 24
+2026-05-22 13:33:33.413 +05:30 [INF] CORS policy execution successful.
+2026-05-22 13:33:33.413 +05:30 [INF] Executing endpoint 'AxiApi.Controllers.AxiController.UpdateCommandText (AxiApi)'
+2026-05-22 13:33:33.428 +05:30 [INF] Route matched with {action = "UpdateCommandText", controller = "Axi"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[ARMCommon.Model.NonQueryResult]] UpdateCommandText(AxiApi.DTOs.UpdateUserFavouritesDTO, System.String, System.String, System.String) on controller AxiApi.Controllers.AxiController (AxiApi).
+2026-05-22 13:33:33.585 +05:30 [INF] Update: Redis cache has been removed while updating
+2026-05-22 13:33:34.255 +05:30 [INF] Executing OkObjectResult, writing value of type 'ARMCommon.Model.NonQueryResult'.
+2026-05-22 13:33:34.258 +05:30 [INF] Executed action AxiApi.Controllers.AxiController.UpdateCommandText (AxiApi) in 829.938ms
+2026-05-22 13:33:34.259 +05:30 [INF] Executed endpoint 'AxiApi.Controllers.AxiController.UpdateCommandText (AxiApi)'
+2026-05-22 13:33:34.259 +05:30 [INF] Request finished HTTP/1.1 PATCH http://localhost/Arm_api_for_dev/AxiApi/api/v1/Axi/user-favourites/db1ca583-6211-4911-a2ed-4eaf3db2ffb9?username=admin&appname=orclbase114 - 200 null application/json; charset=utf-8 847.4667ms
+2026-05-22 13:54:25.706 +05:30 [INF] Application is shutting down...
