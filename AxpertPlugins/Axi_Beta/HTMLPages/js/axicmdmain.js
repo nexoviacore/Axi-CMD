@@ -2,6 +2,7 @@
 (() => {
     // Released On: 06/05/2026 
     // /AxPlugins/Axi/HTMLPages/js/axi-autocomplete.js
+    // Fix: Name Comparison
 
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
@@ -5979,10 +5980,10 @@
         let rawStruct = cleanCommandToken(tokens[1]);
         // transId = tryResolveToken(1, rawStruct, commandConfig, false);
         const { value: rawStructValue, type: fieldType } = tryResolveToken(1, rawStruct, commandConfig, false);
-        transId = value;
+        transId = rawStructValue;
 
 
-        type = getType(viewDataSourceKey, { value, type }, promptValues, tokens, commandConfig);
+        type = getType(viewDataSourceKey, { value: rawStructValue, type: fieldType }, promptValues, tokens, commandConfig);
 
         const handler = VIEW_HANDLERS[type];
 
@@ -6401,7 +6402,8 @@
 
     // -----------------------------------
     // VALID TYPES FROM promptValues
-    // Example: "tstruct,iview,ads,page"
+    // Example:
+    // tstruct,iview,ads,page
     // -----------------------------------
     const paramList = paramValuesCsv
         ?.split(",")
@@ -6414,7 +6416,6 @@
 
     // -----------------------------------
     // HANDLE axi_structmetalist
-    // Existing logic preserved
     // -----------------------------------
     if (
         axDatasourceKey?.toLowerCase() ===
@@ -6437,6 +6438,18 @@
 
     console.log(JSON.stringify(data));
 
+    // -----------------------------------
+    // text may be:
+    //
+    // "slord"
+    //
+    // OR
+    //
+    // {
+    //   value:"slord",
+    //   type:"i"
+    // }
+    // -----------------------------------
     const resolvedText =
         typeof text === "object"
             ? (text?.value || "")
@@ -6445,6 +6458,7 @@
     const resolvedType =
         typeof text === "object"
             ? (text?.type || "")
+                .trim()
                 .toLowerCase()
             : "";
 
@@ -6455,45 +6469,167 @@
 
     let bestMatch = null;
 
-    
-    if (resolvedType) {
+    // -----------------------------------
+    // stype -> actual type
+    // -----------------------------------
+    const stypeMap = {
+        t: "tstruct",
+        i: "iview",
+        ads: "ads",
+        p: "page"
+    };
 
-        const stypeMap = {
-            t: "tstruct",
-            i: "iview",
-            ads: "ads",
-            p: "page"
-        };
+    // -----------------------------------
+    // normalize resolvedType
+    //
+    // i -> iview
+    // t -> tstruct
+    // -----------------------------------
+    const normalizedResolvedType =
+        stypeMap[
+            resolvedType
+        ] || resolvedType;
 
-        bestMatch = data.find(d => {
+    // ===================================
+    // STRICT TYPE MODE
+    //
+    // resolvedType exists
+    //
+    // 1. find ALL text matches
+    // 2. then match TYPE
+    //
+    // handles:
+    //
+    // slord[t]
+    // slord[i]
+    // ===================================
+    if (normalizedResolvedType) {
 
-            let itemType = "";
+        // -----------------------------
+        // TEXT MATCHES FIRST
+        // -----------------------------
+        const matchingRows =
+            data.filter(d => {
 
-            
-            if (d.stype) {
-                itemType =
+                const displayMatch =
+                    typeof d.displaydata ===
+                    "string" &&
+                    d.displaydata
+                        .toLowerCase() ===
+                    normalizedText;
+
+                const nameMatch =
+                    d.name &&
+                    d.name
+                        .toLowerCase() ===
+                    normalizedText;
+
+                const captionMatch =
+                    typeof d.displaydata ===
+                    "string" &&
+                    d.displaydata
+                        .replace(
+                            /\s*\(.*?\)\s*(?=\[[^\]]+\]$)/,
+                            ""
+                        )
+                        .replace(
+                            /\s*\[[^\]]+\]\s*$/,
+                            ""
+                        )
+                        .trim()
+                        .toLowerCase() ===
+                    normalizedText;
+
+                return (
+                    displayMatch ||
+                    nameMatch ||
+                    captionMatch
+                );
+            });
+
+        // -----------------------------
+        // THEN TYPE MATCH
+        // -----------------------------
+        bestMatch =
+            matchingRows.find(d => {
+
+                let itemType = "";
+
+                // stype priority
+                if (d.stype) {
+                    itemType =
+                        stypeMap[
+                            d.stype
+                                .toLowerCase()
+                        ] || "";
+                }
+
+                // [type] fallback
+                if (
+                    !itemType &&
+                    typeof d.displaydata ===
+                    "string"
+                ) {
+
+                    const matches = [
+                        ...d.displaydata.matchAll(
+                            /\[([^\]]+)\]/g
+                        )
+                    ];
+
+                    if (
+                        matches.length > 0
+                    ) {
+
+                        itemType =
+                            matches[
+                                matches.length - 1
+                            ][1]
+                                .toLowerCase();
+                    }
+                }
+
+                // compare type
+                return (
+                    itemType ===
+                    normalizedResolvedType
+                );
+            });
+
+        // -----------------------------
+        // STRICT MODE
+        //
+        // no fallback to first slord
+        // -----------------------------
+        if (bestMatch) {
+
+            let candidate = "";
+
+            if (bestMatch.stype) {
+                candidate =
                     stypeMap[
-                        d.stype
+                        bestMatch.stype
                             .toLowerCase()
                     ] || "";
             }
 
-
             if (
-                !itemType &&
-                typeof d.displaydata ===
+                !candidate &&
+                typeof bestMatch.displaydata ===
                 "string"
             ) {
 
                 const matches = [
-                    ...d.displaydata.matchAll(
+                    ...bestMatch.displaydata.matchAll(
                         /\[([^\]]+)\]/g
                     )
                 ];
 
-                if (matches.length > 0) {
+                if (
+                    matches.length > 0
+                ) {
 
-                    itemType =
+                    candidate =
                         matches[
                             matches.length - 1
                         ][1]
@@ -6501,58 +6637,26 @@
                 }
             }
 
-            // -------------------------
-            // DISPLAYDATA MATCH
-            // -------------------------
-            const displayMatch =
-                typeof d.displaydata ===
-                "string" &&
-                d.displaydata
-                    .toLowerCase() ===
-                normalizedText;
+            return VALID_TYPES.has(candidate)
+                ? candidate
+                : "";
+        }
 
-            // -------------------------
-            // NAME MATCH
-            // -------------------------
-            const nameMatch =
-                d.name &&
-                d.name
-                    .toLowerCase() ===
-                normalizedText;
-
-            
-            const captionMatch =
-                typeof d.displaydata ===
-                "string" &&
-                d.displaydata
-                    .replace(
-                        /\s*\(.*?\)\s*(?=\[[^\]]+\]$)/,
-                        ""
-                    )
-                    .replace(
-                        /\s*\[[^\]]+\]\s*$/,
-                        ""
-                    )
-                    .trim()
-                    .toLowerCase() ===
-                normalizedText;
-
-            
-            return (
-                itemType ===
-                resolvedType &&
-                (
-                    displayMatch ||
-                    nameMatch ||
-                    captionMatch
-                )
-            );
-        });
+        return VALID_TYPES.has(
+            normalizedResolvedType
+        )
+            ? normalizedResolvedType
+            : "";
     }
 
-    
+    // ===================================
+    // NORMAL MODE
+    //
+    // resolvedType empty
+    // old behavior
+    // ===================================
 
-    // displaydata exact match
+    // displaydata
     if (!bestMatch) {
         bestMatch = data.find(d =>
             typeof d.displaydata ===
@@ -6563,7 +6667,7 @@
         );
     }
 
-    // name match
+    // name
     if (!bestMatch) {
         bestMatch = data.find(d =>
             d.name &&
@@ -6573,7 +6677,7 @@
         );
     }
 
-    // pure caption match
+    // caption
     if (!bestMatch) {
         bestMatch = data.find(d => {
 
@@ -6603,29 +6707,16 @@
         });
     }
 
-    
-    if (!bestMatch) {
+    if (!bestMatch)
+        return "";
 
-        return VALID_TYPES.has(
-            resolvedType
-        )
-            ? resolvedType
-            : "";
-    }
-
-    
+    // ===================================
+    // FINAL TYPE RESOLUTION
+    // ===================================
     let candidate = "";
 
     // stype priority
     if (bestMatch.stype) {
-
-        const stypeMap = {
-            t: "tstruct",
-            i: "iview",
-            ads: "ads",
-            p: "page"
-        };
-
         candidate =
             stypeMap[
                 bestMatch.stype
@@ -6656,19 +6747,12 @@
         }
     }
 
-    // resolvedType fallback
-    if (!candidate) {
-        candidate =
-            resolvedType || "";
-    }
-
-    
     return VALID_TYPES.has(candidate)
         ? candidate
         : "";
 }
 
-
+   
     function redirectToHtmlPages(text, tokens, commandConfig) {
 
         let paramValue = processExtraParams(tokens, commandConfig);
