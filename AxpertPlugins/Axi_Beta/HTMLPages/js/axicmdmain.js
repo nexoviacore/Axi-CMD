@@ -467,7 +467,6 @@
 
                 const message = isForced ? "Refreshed Successfully!" : "Commands Loaded Successfully!."
 
-                showToast(message, 3000, true);
                 const data = await res.json();
                 let commandsFromDb = data.commands;
 
@@ -475,6 +474,8 @@
 
                 console.log(JSON.stringify(commands));
                 localStorage.setItem("axi_commands_v1", JSON.stringify(commands));
+                showToast(message, 3000, true);
+
             } catch (err) {
                 console.error("Critical: Could not load commands", err);
             } finally {
@@ -4435,6 +4436,7 @@
 
 
             if (list.length > 0) {
+                console.log("Get List Cache Key: " + cacheKey); 
                 localStorage.setItem(cacheKey, JSON.stringify(list));
 
             } else console.log(`List Data for Ads name ${axDatasourceName} is Empty`);
@@ -5834,7 +5836,7 @@
             const updated = transIdArray.filter(
                 x => x.toLowerCase() !== normalizedTransId
             );
-
+            console.log("SetEditSessioncachekey: " + storageKey); 
             localStorage.setItem(storageKey, JSON.stringify(updated));
         }
     }
@@ -10484,6 +10486,7 @@
                             targetUrl: item.targetUrl || item.targetURL || item.targeturl,
                             createdOn: item.createdOn
                         }));
+                        console.log("favKey"); 
                         localStorage.setItem(favKey, JSON.stringify(commandFavorites));
                         renderFavoritesUI();
                     }
@@ -10955,19 +10958,42 @@
         if (!commandsFromDb["Configure"]) return commandsFromDb;
 
         const isAdmin = currentUserName === "admin" && currentUserRole === "default";
+        // const isAdmin = false; 
 
         if (!isAdmin) {
             const configurePrompts = commandsFromDb["Configure"].prompts;
 
-            configurePrompts.forEach(prompt => {
-                if (prompt.prompt === "object type" && prompt.promptValues) {
-                    let values = prompt.promptValues.split(",");
+            // configurePrompts.forEach(prompt => {
+            //     if (prompt.prompt === "object type" && prompt.promptValues) {
+            //         let values = prompt.promptValues.split(",");
 
-                    values = values.filter(v => v.trim() !== "User Activation");
+            //         values = values.filter(v => v.trim() !== "User Activation");
 
-                    prompt.promptValues = values.join(",");
-                }
-            });
+            //         prompt.promptValues = values.join(",");
+            //     }
+            // });
+
+            const objectTypePrompt = configurePrompts.find(p => p.prompt === "object type"); 
+
+            const objectNamePrompt = configurePrompts.find(p => p.prompt === "object name"); 
+
+            if (objectTypePrompt && objectNamePrompt) {
+                 const types = objectTypePrompt.promptValues.split(",");
+        const sources = objectNamePrompt.promptSource.split(",");
+
+        const index = types.findIndex(
+            t => t.trim() === "User Activation"
+        );
+
+         if (index !== -1) {
+            types.splice(index, 1);
+            sources.splice(index, 1);
+
+            objectTypePrompt.promptValues = types.join(",");
+            objectNamePrompt.promptSource = sources.join(",");
+        }
+
+            }
         }
 
         return commandsFromDb;
