@@ -2,7 +2,7 @@
 (() => {
     // Released On: 06/05/2026 
     // /AxPlugins/Axi/HTMLPages/js/axi-autocomplete.js
-    // Fix: Name Comparison
+    // Today: Unit Testing
 
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
@@ -4436,7 +4436,7 @@
 
 
             if (list.length > 0) {
-                console.log("Get List Cache Key: " + cacheKey); 
+                console.log("Get List Cache Key: " + cacheKey);
                 localStorage.setItem(cacheKey, JSON.stringify(list));
 
             } else console.log(`List Data for Ads name ${axDatasourceName} is Empty`);
@@ -5836,7 +5836,7 @@
             const updated = transIdArray.filter(
                 x => x.toLowerCase() !== normalizedTransId
             );
-            console.log("SetEditSessioncachekey: " + storageKey); 
+            console.log("SetEditSessioncachekey: " + storageKey);
             localStorage.setItem(storageKey, JSON.stringify(updated));
         }
     }
@@ -6402,133 +6402,294 @@
 
     function getType(axDatasourceKey, text, paramValuesCsv, tokens, commandConfig) {
 
-    // -----------------------------------
-    // VALID TYPES FROM promptValues
-    // Example:
-    // tstruct,iview,ads,page
-    // -----------------------------------
-    const paramList = paramValuesCsv
-        ?.split(",")
-        .map(v => v.trim().toLowerCase())
-        .filter(Boolean);
+        // -----------------------------------
+        // VALID TYPES FROM promptValues
+        // Example:
+        // tstruct,iview,ads,page
+        // -----------------------------------
+        const paramList = paramValuesCsv
+            ?.split(",")
+            .map(v => v.trim().toLowerCase())
+            .filter(Boolean);
 
-    const VALID_TYPES = new Set(paramList);
+        const VALID_TYPES = new Set(paramList);
 
-    let paramValue;
+        let paramValue;
 
-    // -----------------------------------
-    // HANDLE axi_structmetalist
-    // -----------------------------------
-    if (
-        axDatasourceKey?.toLowerCase() ===
-        "axi_structmetalist"
-    ) {
-        paramValue = processExtraParams(
-            tokens,
-            commandConfig
-        );
+        // -----------------------------------
+        // HANDLE axi_structmetalist
+        // -----------------------------------
+        if (
+            axDatasourceKey?.toLowerCase() ===
+            "axi_structmetalist"
+        ) {
+            paramValue = processExtraParams(
+                tokens,
+                commandConfig
+            );
 
-        axDatasourceKey +=
-            "_" + paramValue.toLowerCase();
-    }
+            axDatasourceKey +=
+                "_" + paramValue.toLowerCase();
+        }
 
-    const data =
-        axDatasourceObj?.[axDatasourceKey];
+        const data =
+            axDatasourceObj?.[axDatasourceKey];
 
-    if (!Array.isArray(data))
-        return "";
+        if (!Array.isArray(data))
+            return "";
 
-    console.log(JSON.stringify(data));
+        console.log(JSON.stringify(data));
 
-    // -----------------------------------
-    // text may be:
-    //
-    // "slord"
-    //
-    // OR
-    //
-    // {
-    //   value:"slord",
-    //   type:"i"
-    // }
-    // -----------------------------------
-    const resolvedText =
-        typeof text === "object"
-            ? (text?.value || "")
-            : (text || "");
+        // -----------------------------------
+        // text may be:
+        //
+        // "slord"
+        //
+        // OR
+        //
+        // {
+        //   value:"slord",
+        //   type:"i"
+        // }
+        // -----------------------------------
+        const resolvedText =
+            typeof text === "object"
+                ? (text?.value || "")
+                : (text || "");
 
-    const resolvedType =
-        typeof text === "object"
-            ? (text?.type || "")
+        const resolvedType =
+            typeof text === "object"
+                ? (text?.type || "")
+                    .trim()
+                    .toLowerCase()
+                : "";
+
+        const normalizedText =
+            resolvedText
                 .trim()
-                .toLowerCase()
-            : "";
+                .toLowerCase();
 
-    const normalizedText =
-        resolvedText
-            .trim()
-            .toLowerCase();
+        let bestMatch = null;
 
-    let bestMatch = null;
+        // -----------------------------------
+        // stype -> actual type
+        // -----------------------------------
+        const stypeMap = {
+            t: "tstruct",
+            i: "iview",
+            ads: "ads",
+            p: "page"
+        };
 
-    // -----------------------------------
-    // stype -> actual type
-    // -----------------------------------
-    const stypeMap = {
-        t: "tstruct",
-        i: "iview",
-        ads: "ads",
-        p: "page"
-    };
-
-    // -----------------------------------
-    // normalize resolvedType
-    //
-    // i -> iview
-    // t -> tstruct
-    // -----------------------------------
-    const normalizedResolvedType =
-        stypeMap[
+        // -----------------------------------
+        // normalize resolvedType
+        //
+        // i -> iview
+        // t -> tstruct
+        // -----------------------------------
+        const normalizedResolvedType =
+            stypeMap[
             resolvedType
-        ] || resolvedType;
+            ] || resolvedType;
 
-    // ===================================
-    // STRICT TYPE MODE
-    //
-    // resolvedType exists
-    //
-    // 1. find ALL text matches
-    // 2. then match TYPE
-    //
-    // handles:
-    //
-    // slord[t]
-    // slord[i]
-    // ===================================
-    if (normalizedResolvedType) {
+        // ===================================
+        // STRICT TYPE MODE
+        //
+        // resolvedType exists
+        //
+        // 1. find ALL text matches
+        // 2. then match TYPE
+        //
+        // handles:
+        //
+        // slord[t]
+        // slord[i]
+        // ===================================
+        if (normalizedResolvedType) {
 
-        // -----------------------------
-        // TEXT MATCHES FIRST
-        // -----------------------------
-        const matchingRows =
-            data.filter(d => {
+            // -----------------------------
+            // TEXT MATCHES FIRST
+            // -----------------------------
+            const matchingRows =
+                data.filter(d => {
 
-                const displayMatch =
-                    typeof d.displaydata ===
-                    "string" &&
-                    d.displaydata
-                        .toLowerCase() ===
-                    normalizedText;
+                    const displayMatch =
+                        typeof d.displaydata ===
+                        "string" &&
+                        d.displaydata
+                            .toLowerCase() ===
+                        normalizedText;
 
-                const nameMatch =
-                    d.name &&
-                    d.name
-                        .toLowerCase() ===
-                    normalizedText;
+                    const nameMatch =
+                        d.name &&
+                        d.name
+                            .toLowerCase() ===
+                        normalizedText;
 
-                const captionMatch =
-                    typeof d.displaydata ===
-                    "string" &&
+                    const captionMatch =
+                        typeof d.displaydata ===
+                        "string" &&
+                        d.displaydata
+                            .replace(
+                                /\s*\(.*?\)\s*(?=\[[^\]]+\]$)/,
+                                ""
+                            )
+                            .replace(
+                                /\s*\[[^\]]+\]\s*$/,
+                                ""
+                            )
+                            .trim()
+                            .toLowerCase() ===
+                        normalizedText;
+
+                    return (
+                        displayMatch ||
+                        nameMatch ||
+                        captionMatch
+                    );
+                });
+
+            // -----------------------------
+            // THEN TYPE MATCH
+            // -----------------------------
+            bestMatch =
+                matchingRows.find(d => {
+
+                    let itemType = "";
+
+                    // stype priority
+                    if (d.stype) {
+                        itemType =
+                            stypeMap[
+                            d.stype
+                                .toLowerCase()
+                            ] || "";
+                    }
+
+                    // [type] fallback
+                    if (
+                        !itemType &&
+                        typeof d.displaydata ===
+                        "string"
+                    ) {
+
+                        const matches = [
+                            ...d.displaydata.matchAll(
+                                /\[([^\]]+)\]/g
+                            )
+                        ];
+
+                        if (
+                            matches.length > 0
+                        ) {
+
+                            itemType =
+                                matches[
+                                    matches.length - 1
+                                ][1]
+                                    .toLowerCase();
+                        }
+                    }
+
+                    // compare type
+                    return (
+                        itemType ===
+                        normalizedResolvedType
+                    );
+                });
+
+            // -----------------------------
+            // STRICT MODE
+            //
+            // no fallback to first slord
+            // -----------------------------
+            if (bestMatch) {
+
+                let candidate = "";
+
+                if (bestMatch.stype) {
+                    candidate =
+                        stypeMap[
+                        bestMatch.stype
+                            .toLowerCase()
+                        ] || "";
+                }
+
+                if (
+                    !candidate &&
+                    typeof bestMatch.displaydata ===
+                    "string"
+                ) {
+
+                    const matches = [
+                        ...bestMatch.displaydata.matchAll(
+                            /\[([^\]]+)\]/g
+                        )
+                    ];
+
+                    if (
+                        matches.length > 0
+                    ) {
+
+                        candidate =
+                            matches[
+                                matches.length - 1
+                            ][1]
+                                .toLowerCase();
+                    }
+                }
+
+                return VALID_TYPES.has(candidate)
+                    ? candidate
+                    : "";
+            }
+
+            return VALID_TYPES.has(
+                normalizedResolvedType
+            )
+                ? normalizedResolvedType
+                : "";
+        }
+
+        // ===================================
+        // NORMAL MODE
+        //
+        // resolvedType empty
+        // old behavior
+        // ===================================
+
+        // displaydata
+        if (!bestMatch) {
+            bestMatch = data.find(d =>
+                typeof d.displaydata ===
+                "string" &&
+                d.displaydata
+                    .toLowerCase() ===
+                normalizedText
+            );
+        }
+
+        // name
+        if (!bestMatch) {
+            bestMatch = data.find(d =>
+                d.name &&
+                d.name
+                    .toLowerCase() ===
+                normalizedText
+            );
+        }
+
+        // caption
+        if (!bestMatch) {
+            bestMatch = data.find(d => {
+
+                if (
+                    typeof d.displaydata !==
+                    "string"
+                )
+                    return false;
+
+                const pureCaption =
                     d.displaydata
                         .replace(
                             /\s*\(.*?\)\s*(?=\[[^\]]+\]$)/,
@@ -6539,222 +6700,61 @@
                             ""
                         )
                         .trim()
-                        .toLowerCase() ===
-                    normalizedText;
+                        .toLowerCase();
 
                 return (
-                    displayMatch ||
-                    nameMatch ||
-                    captionMatch
+                    pureCaption ===
+                    normalizedText
                 );
             });
-
-        // -----------------------------
-        // THEN TYPE MATCH
-        // -----------------------------
-        bestMatch =
-            matchingRows.find(d => {
-
-                let itemType = "";
-
-                // stype priority
-                if (d.stype) {
-                    itemType =
-                        stypeMap[
-                            d.stype
-                                .toLowerCase()
-                        ] || "";
-                }
-
-                // [type] fallback
-                if (
-                    !itemType &&
-                    typeof d.displaydata ===
-                    "string"
-                ) {
-
-                    const matches = [
-                        ...d.displaydata.matchAll(
-                            /\[([^\]]+)\]/g
-                        )
-                    ];
-
-                    if (
-                        matches.length > 0
-                    ) {
-
-                        itemType =
-                            matches[
-                                matches.length - 1
-                            ][1]
-                                .toLowerCase();
-                    }
-                }
-
-                // compare type
-                return (
-                    itemType ===
-                    normalizedResolvedType
-                );
-            });
-
-        // -----------------------------
-        // STRICT MODE
-        //
-        // no fallback to first slord
-        // -----------------------------
-        if (bestMatch) {
-
-            let candidate = "";
-
-            if (bestMatch.stype) {
-                candidate =
-                    stypeMap[
-                        bestMatch.stype
-                            .toLowerCase()
-                    ] || "";
-            }
-
-            if (
-                !candidate &&
-                typeof bestMatch.displaydata ===
-                "string"
-            ) {
-
-                const matches = [
-                    ...bestMatch.displaydata.matchAll(
-                        /\[([^\]]+)\]/g
-                    )
-                ];
-
-                if (
-                    matches.length > 0
-                ) {
-
-                    candidate =
-                        matches[
-                            matches.length - 1
-                        ][1]
-                            .toLowerCase();
-                }
-            }
-
-            return VALID_TYPES.has(candidate)
-                ? candidate
-                : "";
         }
 
-        return VALID_TYPES.has(
-            normalizedResolvedType
-        )
-            ? normalizedResolvedType
+        if (!bestMatch)
+            return "";
+
+        // ===================================
+        // FINAL TYPE RESOLUTION
+        // ===================================
+        let candidate = "";
+
+        // stype priority
+        if (bestMatch.stype) {
+            candidate =
+                stypeMap[
+                bestMatch.stype
+                    .toLowerCase()
+                ] || "";
+        }
+
+        // [type] fallback
+        if (
+            !candidate &&
+            typeof bestMatch.displaydata ===
+            "string"
+        ) {
+
+            const matches = [
+                ...bestMatch.displaydata.matchAll(
+                    /\[([^\]]+)\]/g
+                )
+            ];
+
+            if (matches.length > 0) {
+
+                candidate =
+                    matches[
+                        matches.length - 1
+                    ][1]
+                        .toLowerCase();
+            }
+        }
+
+        return VALID_TYPES.has(candidate)
+            ? candidate
             : "";
     }
 
-    // ===================================
-    // NORMAL MODE
-    //
-    // resolvedType empty
-    // old behavior
-    // ===================================
 
-    // displaydata
-    if (!bestMatch) {
-        bestMatch = data.find(d =>
-            typeof d.displaydata ===
-            "string" &&
-            d.displaydata
-                .toLowerCase() ===
-            normalizedText
-        );
-    }
-
-    // name
-    if (!bestMatch) {
-        bestMatch = data.find(d =>
-            d.name &&
-            d.name
-                .toLowerCase() ===
-            normalizedText
-        );
-    }
-
-    // caption
-    if (!bestMatch) {
-        bestMatch = data.find(d => {
-
-            if (
-                typeof d.displaydata !==
-                "string"
-            )
-                return false;
-
-            const pureCaption =
-                d.displaydata
-                    .replace(
-                        /\s*\(.*?\)\s*(?=\[[^\]]+\]$)/,
-                        ""
-                    )
-                    .replace(
-                        /\s*\[[^\]]+\]\s*$/,
-                        ""
-                    )
-                    .trim()
-                    .toLowerCase();
-
-            return (
-                pureCaption ===
-                normalizedText
-            );
-        });
-    }
-
-    if (!bestMatch)
-        return "";
-
-    // ===================================
-    // FINAL TYPE RESOLUTION
-    // ===================================
-    let candidate = "";
-
-    // stype priority
-    if (bestMatch.stype) {
-        candidate =
-            stypeMap[
-                bestMatch.stype
-                    .toLowerCase()
-            ] || "";
-    }
-
-    // [type] fallback
-    if (
-        !candidate &&
-        typeof bestMatch.displaydata ===
-        "string"
-    ) {
-
-        const matches = [
-            ...bestMatch.displaydata.matchAll(
-                /\[([^\]]+)\]/g
-            )
-        ];
-
-        if (matches.length > 0) {
-
-            candidate =
-                matches[
-                    matches.length - 1
-                ][1]
-                    .toLowerCase();
-        }
-    }
-
-    return VALID_TYPES.has(candidate)
-        ? candidate
-        : "";
-}
-
-   
     function redirectToHtmlPages(text, tokens, commandConfig) {
 
         let paramValue = processExtraParams(tokens, commandConfig);
@@ -6839,7 +6839,7 @@
         const type = cleanCommandToken(tokens[1]);
         let rawName = cleanCommandToken(tokens[2]);
 
-        let { value: resolvedName} = tryResolveToken(2, rawName, commandConfig, false);
+        let { value: resolvedName } = tryResolveToken(2, rawName, commandConfig, false);
 
 
         if (resolvedName === rawName) {
@@ -10486,7 +10486,7 @@
                             targetUrl: item.targetUrl || item.targetURL || item.targeturl,
                             createdOn: item.createdOn
                         }));
-                        console.log("favKey"); 
+                        console.log("favKey");
                         localStorage.setItem(favKey, JSON.stringify(commandFavorites));
                         renderFavoritesUI();
                     }
@@ -10957,8 +10957,8 @@
 
         if (!commandsFromDb["Configure"]) return commandsFromDb;
 
-        const isAdmin = currentUserName === "admin" && currentUserRole === "default";
-        // const isAdmin = false; 
+        // const isAdmin = currentUserName === "admin" && currentUserRole === "default";
+        const isAdmin = false; 
 
         if (!isAdmin) {
             const configurePrompts = commandsFromDb["Configure"].prompts;
@@ -10973,25 +10973,25 @@
             //     }
             // });
 
-            const objectTypePrompt = configurePrompts.find(p => p.prompt === "object type"); 
+            const objectTypePrompt = configurePrompts.find(p => p.prompt === "object type");
 
-            const objectNamePrompt = configurePrompts.find(p => p.prompt === "object name"); 
+            const objectNamePrompt = configurePrompts.find(p => p.prompt === "object name");
 
             if (objectTypePrompt && objectNamePrompt) {
-                 const types = objectTypePrompt.promptValues.split(",");
-        const sources = objectNamePrompt.promptSource.split(",");
+                const types = objectTypePrompt.promptValues.split(",");
+                const sources = objectNamePrompt.promptSource.split(",");
 
-        const index = types.findIndex(
-            t => t.trim() === "User Activation"
-        );
+                const index = types.findIndex(
+                    t => t.trim() === "User Activation"
+                );
 
-         if (index !== -1) {
-            types.splice(index, 1);
-            sources.splice(index, 1);
+                if (index !== -1) {
+                    types.splice(index, 1);
+                    sources.splice(index, 1);
 
-            objectTypePrompt.promptValues = types.join(",");
-            objectNamePrompt.promptSource = sources.join(",");
-        }
+                    objectTypePrompt.promptValues = types.join(",");
+                    objectNamePrompt.promptSource = sources.join(",");
+                }
 
             }
         }
