@@ -10958,7 +10958,7 @@
         if (!commandsFromDb["Configure"]) return commandsFromDb;
 
         // const isAdmin = currentUserName === "admin" && currentUserRole === "default";
-        const isAdmin = false; 
+        const isAdmin = false;
 
         if (!isAdmin) {
             const configurePrompts = commandsFromDb["Configure"].prompts;
@@ -11101,11 +11101,11 @@
                         showToast("Failed to edit favourite");
                     }
                 })
-                .catch(error => {
-                    console.error("Backend edit failed", error);
-                    showToast("An Error occured while editing favourite");
-                    setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-                });
+                    .catch(error => {
+                        console.error("Backend edit failed", error);
+                        showToast("An Error occured while editing favourite");
+                        setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+                    });
             } else {
                 setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
             }
@@ -11151,11 +11151,11 @@
 
                     showToast(`'${alias}' added to favorites`, 5000, true);
                 })
-                .catch(err => {
-                    showToast("Axi: Failed to update favorite on backend");
-                    console.error("Backend sync failed", err);
-                    setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-                });
+                    .catch(err => {
+                        showToast("Axi: Failed to update favorite on backend");
+                        console.error("Backend sync failed", err);
+                        setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+                    });
             } else {
                 setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
             }
@@ -11172,10 +11172,10 @@
         favDeleteCmdText.value = cmdText;
         const deleteModalParagraph = document.getElementById("axiDeleteModalParagraph");
         deleteModalParagraph.textContent = `Are you sure you want to remove '${cmdText}' from your favourites?`;
-        
+
         // Reset loading state on open
         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
-        
+
         modal.style.display = "flex";
     }
 
@@ -11227,18 +11227,18 @@
                         localStorage.setItem(favKey, JSON.stringify(commandFavorites));
                         renderFavoritesUI();
                         render();
-                        
+
                         hideDeleteFavoriteModal();
                     } else {
                         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
                         showToast("Failed to delete favorite on backend");
                     }
                 })
-                .catch(err => {
-                    console.error("Axi: Failed to delete on backend", err);
-                    setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
-                    showToast("Error deleting favorite");
-                });
+                    .catch(err => {
+                        console.error("Axi: Failed to delete on backend", err);
+                        setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
+                        showToast("Error deleting favorite");
+                    });
             } else {
                 commandFavorites.splice(cmdIndex, 1);
                 localStorage.setItem(favKey, JSON.stringify(commandFavorites));
