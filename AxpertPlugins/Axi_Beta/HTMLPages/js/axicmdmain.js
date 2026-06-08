@@ -11239,11 +11239,8 @@
                         showToast("Error deleting favorite");
                     });
             } else {
-                commandFavorites.splice(cmdIndex, 1);
-                localStorage.setItem(favKey, JSON.stringify(commandFavorites));
-                renderFavoritesUI();
-                render();
-                hideDeleteFavoriteModal();
+                setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
+                showToast("Backend API URL is not configured. Cannot delete.");
             }
         }
     }
