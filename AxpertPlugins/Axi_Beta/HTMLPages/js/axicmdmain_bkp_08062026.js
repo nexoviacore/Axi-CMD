@@ -11001,21 +11001,6 @@
 
     }
 
-    function setButtonLoading(buttonId, spinnerId, isLoading) {
-        const button = document.getElementById(buttonId);
-        const spinner = document.getElementById(spinnerId);
-        if (button) {
-            button.disabled = isLoading;
-        }
-        if (spinner) {
-            if (isLoading) {
-                spinner.classList.remove("d-none");
-            } else {
-                spinner.classList.add("d-none");
-            }
-        }
-    }
-
     function strToBool(str) {
         if (str.toLowerCase() === "t" || str.toLowerCase() === "true") {
             return true;
@@ -11041,9 +11026,6 @@
         favNameInput.value = cmdText;
         favTargetUrlInput.value = targetUrl;
 
-        // Reset loading state on open
-        setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-
         axiFavModal.style.display = "flex";
         favNameInput.focus();
         favNameInput.select();
@@ -11061,21 +11043,27 @@
         const targetUrl = document.getElementById("axiFavTargetUrl").value.trim();
         const isEdit = document.getElementById("axiFavIsEdit").value === "true";
 
+
+
+
         if (!alias) {
             showToast("Favorite name cannot be empty");
             return;
         }
 
-        // Start loading
-        setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", true);
-
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
         const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
 
+
+
         if (isEdit) {
             const cmdIndex = commandFavorites.findIndex(fav => fav.commandText.toLowerCase() === originalCmdText.toLowerCase());
+
             const favObj = commandFavorites.find(fav => fav.commandText.toLowerCase() === originalCmdText.toLowerCase());
+
+
+
 
             if (cmdIndex !== -1) {
                 commandFavorites[cmdIndex].commandText = alias;
@@ -11096,20 +11084,19 @@
                         render();
                         hideFavoriteModal();
                         showToast(`Renamed '${originalCmdText}' to '${alias}'`, 3000, true);
-                    } else {
-                        setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-                        showToast("Failed to edit favourite");
+
                     }
+
                 })
-                .catch(error => {
-                    console.error("Backend edit failed", error);
-                    showToast("An Error occured while editing favourite");
-                    setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-                });
-            } else {
-                setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+                    .catch(error => {
+                        console.error("Backend edit failed", error);
+                        showToast("An Error occured while editing favourite");
+                    })
             }
         } else {
+
+
+
             if (axiFavoritesUrl) {
                 fetch(`${axiFavoritesUrl}?appname=${appname}`, {
                     method: "POST",
@@ -11122,16 +11109,35 @@
                         favOrder: 0,
                         targetURL: targetUrl
                     })
+                    //  username: window.mainUserName,
+                    //             commandText: cmdText,
+                    //             action: isAdding ? "add" : "remove",
+                    //             favOrder: 0,
+                    //             targetURL: commandRoute?.targetUrl
                 }).then(
                     response => {
                         if (response.ok) {
+                            // commandFavorites.unshift({
+                            //     commandText: alias,
+                            //     originalCmd: originalCmdText,
+                            //     targetUrl: targetUrl
+                            // });
+
+                            // localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                            // renderFavoritesUI();
+                            // render();
+                            // hideFavoriteModal();
+
+                            // showToast(`'${alias}' added to favorites`, 5000, true);
+
                             return response.json();
-                        } else {
-                            throw new Error("Failed response");
                         }
                     }
                 ).then(data => {
                     console.log("Response from backend after adding favorite: ", data);
+                    // if (data) {
+
+                    // }
                     const favObj = data[0];
 
                     commandFavorites.unshift({
@@ -11150,16 +11156,24 @@
                     hideFavoriteModal();
 
                     showToast(`'${alias}' added to favorites`, 5000, true);
+
                 })
-                .catch(err => {
-                    showToast("Axi: Failed to update favorite on backend");
-                    console.error("Backend sync failed", err);
-                    setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-                });
-            } else {
-                setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+                    .catch(err => {
+                        showToast("Axi: Failed to update favorite on backend");
+                        console.error("Backend sync failed", err);
+                    });
             }
+
         }
+
+
+
+
+
+
+
+
+
     }
 
     function showDeleteFavoriteModal(cmdText) {
@@ -11172,11 +11186,9 @@
         favDeleteCmdText.value = cmdText;
         const deleteModalParagraph = document.getElementById("axiDeleteModalParagraph");
         deleteModalParagraph.textContent = `Are you sure you want to remove '${cmdText}' from your favourites?`;
-        
-        // Reset loading state on open
-        setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
-        
         modal.style.display = "flex";
+
+
     }
 
     function hideDeleteFavoriteModal() {
@@ -11189,6 +11201,7 @@
         if (!cmdText) return;
 
         executeDeleteFavorite(cmdText);
+        hideDeleteFavoriteModal();
     }
 
     function executeDeleteFavorite(cmdText) {
@@ -11202,10 +11215,8 @@
         );
 
         if (cmdIndex !== -1) {
-            const removedFav = commandFavorites[cmdIndex];
+            const removedFav = commandFavorites.splice(cmdIndex, 1)[0];
 
-            // Start loading
-            setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", true);
 
             if (axiFavoritesUrl) {
                 fetch(`${axiFavoritesUrl}?appname=${appname}`, {
@@ -11221,30 +11232,15 @@
                     })
                 }).then(response => {
                     if (response.ok) {
-                        commandFavorites.splice(cmdIndex, 1);
                         showToast(`Removed '${removedFav.commandText}' from Favorites`);
 
                         localStorage.setItem(favKey, JSON.stringify(commandFavorites));
                         renderFavoritesUI();
                         render();
-                        
-                        hideDeleteFavoriteModal();
-                    } else {
-                        setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
-                        showToast("Failed to delete favorite on backend");
+
                     }
                 })
-                .catch(err => {
-                    console.error("Axi: Failed to delete on backend", err);
-                    setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
-                    showToast("Error deleting favorite");
-                });
-            } else {
-                commandFavorites.splice(cmdIndex, 1);
-                localStorage.setItem(favKey, JSON.stringify(commandFavorites));
-                renderFavoritesUI();
-                render();
-                hideDeleteFavoriteModal();
+                    .catch(err => console.error("Axi: Failed to delete on backend", err));
             }
         }
     }
