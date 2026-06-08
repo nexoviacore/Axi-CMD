@@ -10215,7 +10215,6 @@
                 };
 
                 console.log("PreparedPayload : Payload is created successfully with isCreate :", iscreate);
-                console.log(payload);
 
             }
             catch (ex) {
