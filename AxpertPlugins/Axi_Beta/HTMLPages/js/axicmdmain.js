@@ -1,8 +1,8 @@
 // Stable Branch: main
 (() => {
-    // Released On: 06/05/2026 
-    // /AxPlugins/Axi/HTMLPages/js/axi-autocomplete.js
-    // Today: Unit Testing
+    // Released On: 11/06/2026
+    // /AxPlugins/Axi/HTMLPages/js/axicmdmain.js
+    
 
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
@@ -3318,7 +3318,7 @@
                 filteredObjects.unshift(popOption, goOption);
             }
 
-            else if (groupKey.toLowerCase() === "analyse" && tokens.length <= 3) {
+            else if ((groupKey.toLowerCase() === "analyse") && tokens.length === 3) {
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }

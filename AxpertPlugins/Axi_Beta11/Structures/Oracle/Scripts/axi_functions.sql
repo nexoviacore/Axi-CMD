@@ -576,13 +576,13 @@ ads as(
         )
  SELECT * FROM (
             SELECT * 
-            FROM ts WHERE pstype IN ('t', 'all', 'analyze')
+            FROM ts WHERE pstype IN ('t', 'all', 'analyse')
             UNION ALL
             SELECT * FROM iv WHERE pstype IN ('i', 'all')
             UNION ALL
             SELECT * FROM pg WHERE pstype IN ('p', 'all')
             UNION ALL
-            SELECT * FROM ads WHERE pstype IN ('ads', 'all', 'analyze')
+            SELECT * FROM ads WHERE pstype IN ('ads', 'all', 'analyse')
             UNION ALL
             SELECT * FROM inbox WHERE pstype IN ('all')
         ) final_result
@@ -1272,10 +1272,12 @@ END;
 >>
 
 
+-- Recompile the fn_axi_getstructs_obj function explicitly to validate it post-creation
 ALTER FUNCTION FN_AXI_GETSTRUCTS_OBJ COMPILE
 
 
 <<
+-- Recompile all remaining invalid schema objects dynamically
 BEGIN
   DBMS_UTILITY.COMPILE_SCHEMA(
     schema => USER,
