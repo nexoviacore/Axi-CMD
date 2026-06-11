@@ -1272,10 +1272,12 @@ END;
 >>
 
 
+-- Recompile the fn_axi_getstructs_obj function explicitly to validate it post-creation
 ALTER FUNCTION FN_AXI_GETSTRUCTS_OBJ COMPILE
 
 
 <<
+-- Recompile all remaining invalid schema objects dynamically
 BEGIN
   DBMS_UTILITY.COMPILE_SCHEMA(
     schema => USER,
