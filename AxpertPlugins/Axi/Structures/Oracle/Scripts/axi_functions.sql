@@ -420,7 +420,7 @@ BEGIN
 
     RETURN;
 
-END
+END;
 >>
 
 <<
@@ -590,7 +590,7 @@ ads as(
     END IF;
 
     RETURN;
-END
+END;
 >>
 
 <<
@@ -621,7 +621,7 @@ BEGIN
 EXCEPTION 
     WHEN OTHERS THEN 
         RETURN 'ERROR AT FUNCTION: ' || SQLERRM; 
-END
+END;
 >>
 
 <<
@@ -640,7 +640,7 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         RETURN NULL;
-END
+END;
 >>
 
 <<
@@ -670,7 +670,7 @@ FROM
         LEVEL) IS NOT NULL);
 
     RETURN v_result;
-END
+END;
 >>
 
 <<
@@ -1002,7 +1002,7 @@ FROM axpflds WHERE tstruct = rec_transid.transid AND encrypted = 'T'
 
 
     RETURN; 
-END
+END;
 >>
 
 <<
@@ -1263,5 +1263,5 @@ BEGIN
     END IF;
 
     RETURN;
-END
+END;
 >>

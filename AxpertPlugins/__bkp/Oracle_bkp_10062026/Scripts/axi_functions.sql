@@ -117,27 +117,31 @@ BEGIN
     WHERE tstruct = ptransid
       AND LOWER(fname) = LOWER(pkeyfield);
 
-    v_selectedfld_normalized := 'F';
-    v_selectedfld_srctbl := NULL;
-    v_selectedfld_srcfld := NULL;
-    FOR rec IN (
+    BEGIN
+
         SELECT srckey,
-               LOWER(srctf) AS srctf,
-               LOWER(srcfld) AS srcfld
+               LOWER(srctf),
+               LOWER(srcfld)
+        INTO v_selectedfld_normalized,
+             v_selectedfld_srctbl,
+             v_selectedfld_srcfld
         FROM axpflds
         WHERE tstruct = ptransid
-          AND LOWER(fname) = LOWER(pselectedfield)
-    ) LOOP
-        v_selectedfld_normalized := rec.srckey;
-        v_selectedfld_srctbl := rec.srctf;
-        v_selectedfld_srcfld := rec.srcfld;
-    END LOOP;
+          AND LOWER(fname) = LOWER(pselectedfield);
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            v_selectedfld_normalized := 'F';
+            v_selectedfld_srctbl := NULL;
+            v_selectedfld_srcfld := NULL;
+    END;
 
     IF pdimension = 'T' THEN
 
-        v_dimension_filter := NULL;
-        FOR rec IN (
+        BEGIN
+
             SELECT filtercnd
+            INTO v_dimension_filter
             FROM TABLE(
                 fn_permissions_getpermission(
                     'axi',
@@ -147,35 +151,41 @@ BEGIN
                     pglobalvars
                 )
             )
-            WHERE ROWNUM = 1
-        ) LOOP
-            v_dimension_filter := rec.filtercnd;
-        END LOOP;
+            WHERE ROWNUM = 1;
 
-        IF LENGTH(v_dimension_filter) > 2 THEN
+            IF LENGTH(v_dimension_filter) > 2 THEN
 
-            v_dimension_filter :=
-                ' AND ' ||
-                REPLACE(
-                    v_dimension_filter,
-                    '{primarytable.}',
-                    'p.'
-                );
+                v_dimension_filter :=
+                    ' AND ' ||
+                    REPLACE(
+                        v_dimension_filter,
+                        '{primarytable.}',
+                        'p.'
+                    );
 
-        END IF;
+            END IF;
+
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                v_dimension_filter := NULL;
+        END;
 
     END IF;
 
     IF ppermission = 'T' THEN
 
-        v_viewctrl := '0';
-        v_fullcontrol := 'T';
-        FOR rec IN (
-            SELECT LOWER(view_includedc || view_includeflds) AS inc,
-                   LOWER(view_excludedc || view_excludeflds) AS exc,
+        BEGIN
+
+            SELECT LOWER(view_includedc || view_includeflds),
+                   LOWER(view_excludedc || view_excludeflds),
                    viewctrl,
                    editctrl,
                    fullcontrol
+            INTO v_includedcomps,
+                 v_excludedcomps,
+                 v_viewctrl,
+                 v_editctrl,
+                 v_fullcontrol
             FROM TABLE(
                 fn_permissions_getpermission(
                     'axi',
@@ -185,14 +195,13 @@ BEGIN
                     pglobalvars
                 )
             )
-            WHERE ROWNUM = 1
-        ) LOOP
-            v_includedcomps := rec.inc;
-            v_excludedcomps := rec.exc;
-            v_viewctrl      := rec.viewctrl;
-            v_editctrl      := rec.editctrl;
-            v_fullcontrol   := rec.fullcontrol;
-        END LOOP;
+            WHERE ROWNUM = 1;
+
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                v_viewctrl := '0';
+                v_fullcontrol := 'T';
+        END;
 
         IF v_fullcontrol = 'T'
            OR v_viewctrl = '0' THEN
@@ -431,11 +440,8 @@ BEGIN
 
     RETURN;
 
-END;
-
+END
 >>
-
-
 
 <<
 CREATE OR REPLACE FUNCTION fn_axi_getstructures_meta(
@@ -604,8 +610,7 @@ ads as(
     END IF;
 
     RETURN;
-END;
-
+END
 >>
 
 <<
@@ -636,8 +641,7 @@ BEGIN
 EXCEPTION 
     WHEN OTHERS THEN 
         RETURN 'ERROR AT FUNCTION: ' || SQLERRM; 
-END;
-
+END
 >>
 
 <<
@@ -656,8 +660,7 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         RETURN NULL;
-END;
-
+END
 >>
 
 <<
@@ -687,8 +690,7 @@ FROM
         LEVEL) IS NOT NULL);
 
     RETURN v_result;
-END;
-
+END
 >>
 
 <<
@@ -741,11 +743,15 @@ CREATE OR REPLACE FUNCTION fn_permissions_getpermission(
 ) RETURN AXPDEF_PERMISSION_MDATA_OBJ PIPELINED
 AS    
     rc  SYS_REFCURSOR;
+    -- Declare local variables
     v_menuaccess_count NUMBER(10);     
     v_sql_roles VARCHAR2(4000);
+   -- v_sql_permission_check VARCHAR2(4000);
     rolesql clob;
     v_permissionsql clob;
     v_permissionexists number(10);
+    
+    -- Variables to hold results before piping
     v_transid_loop VARCHAR2(250);
     v_fullcontrol VARCHAR2(1);
     v_userrole VARCHAR2(250);
@@ -764,8 +770,11 @@ AS
     v_filtercnd NCLOB;
     v_viewctrl VARCHAR2(1);
     v_editctrl VARCHAR2(1);
+    --v_viewlist VARCHAR2(4000);
+    --v_editlist VARCHAR2(4000);
     v_encryptedflds clob;
-    v_permissiontype varchar2(10);        
+    v_permissiontype varchar2(10);
+        
     v_view_includedflds    clob;
     v_view_excludedflds    clob;
     v_edit_includedflds    clob;
@@ -776,7 +785,7 @@ AS
 
 
 BEGIN
-    
+    -- Loop through each transid in the comma-separated string
     FOR rec_transid IN (SELECT COLUMN_VALUE AS transid FROM TABLE(string_to_array(ptransid, ','))) LOOP
         v_transid_loop := rec_transid.transid; 
 
@@ -899,7 +908,7 @@ EXECUTE immediate v_permissionsql into  v_permissionexists;
            WHERE tstruct = v_transid_loop AND encrypted = 'T';        
             
 
-
+            -- Pipe the row
             PIPE ROW (AXPDEF_PERMISSION_MDATA(
                 v_transid_loop, v_fullcontrol, v_userrole, v_allowcreate, v_view_access,
                 v_view_includedc, v_view_excludedc, v_view_includeflds, v_view_excludeflds,
@@ -1011,9 +1020,13 @@ FROM axpflds WHERE tstruct = rec_transid.transid AND encrypted = 'T'
     END if;
 
   END LOOP;
-    RETURN; 
-END;
 
+        
+     
+
+
+    RETURN; 
+END
 >>
 
 <<
@@ -1030,6 +1043,7 @@ DROP TYPE axi_firesql_obj
 
 
 <<
+-- Object Type
 CREATE OR REPLACE TYPE axi_firesql_obj AS OBJECT (
     id          VARCHAR2(4000),
     displaydata VARCHAR2(4000)
@@ -1038,121 +1052,150 @@ CREATE OR REPLACE TYPE axi_firesql_obj AS OBJECT (
 
 
 <<
+-- Table Type
 CREATE OR REPLACE TYPE axi_firesql_tab AS TABLE OF axi_firesql_obj
 >>
 
 
 <<
+-- Function
 CREATE OR REPLACE FUNCTION axi_firesql_v2 (
-    p_sql          IN CLOB,
+    p_sql          IN VARCHAR2,       -- Changed: CLOB → VARCHAR2 (DBX cannot bind CLOB params)
     p_param_string IN VARCHAR2,
     p_sourcekey    IN VARCHAR2,
     p_fromlist     IN VARCHAR2
 )
-RETURN SYS_REFCURSOR
+RETURN axi_firesql_tab PIPELINED
 AS
-    v_sql          CLOB := p_sql;
+    v_sql          VARCHAR2(32767);   -- Changed: CLOB → VARCHAR2
+
     v_pair         VARCHAR2(4000);
-    v_param_name   VARCHAR2(4000);
+    v_param_name   VARCHAR2(1000);
     v_param_value  VARCHAR2(4000);
+
     v_pos          NUMBER := 1;
-    v_refcursor    SYS_REFCURSOR;
+    v_next         NUMBER;
+
+    TYPE refcur IS REF CURSOR;
+    rc refcur;
+
+    v_col1         VARCHAR2(4000);
+    v_col2         VARCHAR2(4000);
+
 BEGIN
 
+    v_sql := p_sql;
 
+    ------------------------------------------------------------------
+    -- Replace Parameters
+    ------------------------------------------------------------------
     IF p_param_string IS NOT NULL
-       AND TRIM(p_param_string) <> ''
+       AND TRIM(p_param_string) IS NOT NULL
        AND INSTR(v_sql, ':') > 0
     THEN
         LOOP
-            v_pair := REGEXP_SUBSTR(
-                          p_param_string,
-                          '[^;]+',
-                          1,
-                          v_pos
-                      );
+
+            v_next := INSTR(p_param_string, ';', v_pos);
+
+            IF v_next > 0 THEN
+                v_pair := SUBSTR(p_param_string, v_pos, v_next - v_pos);
+            ELSE
+                v_pair := SUBSTR(p_param_string, v_pos);
+            END IF;
 
             EXIT WHEN v_pair IS NULL;
 
-            v_param_name :=
-                TRIM(REGEXP_SUBSTR(v_pair, '[^~]+', 1, 1));
+            IF TRIM(v_pair) IS NOT NULL THEN
 
-            v_param_value :=
-                TRIM(REGEXP_SUBSTR(v_pair, '[^~]+', 1, 2));
+                v_param_name :=
+                    TRIM(SUBSTR(v_pair, 1, INSTR(v_pair, '~') - 1));
 
-            IF v_param_name IS NOT NULL
-               AND v_param_name <> ''
-            THEN
-                v_sql := REPLACE(
+                v_param_value :=
+                    TRIM(SUBSTR(v_pair, INSTR(v_pair, '~') + 1));
+
+                IF v_param_name IS NOT NULL THEN
+                    v_sql :=
+                        REPLACE(
                             v_sql,
                             ':' || v_param_name,
                             '''' || REPLACE(v_param_value, '''', '''''') || ''''
-                         );
+                        );
+                END IF;
+
             END IF;
 
-            v_pos := v_pos + 1;
+            EXIT WHEN v_next = 0;
+            v_pos := v_next + 1;
+
         END LOOP;
+
     END IF;
 
-
+    ------------------------------------------------------------------
+    -- Handle p_fromlist
+    ------------------------------------------------------------------
     IF p_fromlist IS NOT NULL
-       AND TRIM(p_fromlist) <> ''
+       AND TRIM(p_fromlist) IS NOT NULL
        AND LOWER(TRIM(p_fromlist)) <> 'null'
     THEN
 
-        OPEN v_refcursor FOR
-            'SELECT
-                 ''0'' AS id,
-                 TRIM(REGEXP_SUBSTR(:1, ''[^,]+'', 1, LEVEL)) AS displaydata
-             FROM dual
-             CONNECT BY REGEXP_SUBSTR(:1, ''[^,]+'', 1, LEVEL) IS NOT NULL';
-
-        RETURN v_refcursor;
+        FOR r IN (
+            SELECT
+                TRIM(REGEXP_SUBSTR(p_fromlist, '[^,]+', 1, LEVEL)) val
+            FROM dual
+            CONNECT BY REGEXP_SUBSTR(p_fromlist, '[^,]+', 1, LEVEL) IS NOT NULL
+        )
+        LOOP
+            IF r.val IS NOT NULL AND TRIM(r.val) IS NOT NULL THEN
+                PIPE ROW (axi_firesql_obj('0', r.val));
+            END IF;
+        END LOOP;
 
     ELSE
 
-        
-        IF UPPER(NVL(p_sourcekey,'F')) = 'T'
-        THEN
-            OPEN v_refcursor FOR
-                'SELECT
-                     TO_CHAR(col1) AS id,
-                     RTRIM(
-                         RTRIM(TRIM(TO_CHAR(col2)), ''0''),
-                         ''.''
-                     ) AS displaydata
-                 FROM (
-                     SELECT *
-                     FROM (' || v_sql || ')
-                 )
-                 WHERE col2 IS NOT NULL
-                 AND TRIM(TO_CHAR(col2)) <> ''''';
+        ------------------------------------------------------------------
+        -- Sourcekey = T  →  return col1 + col2
+        ------------------------------------------------------------------
+        IF UPPER(NVL(p_sourcekey, 'F')) = 'T' THEN
 
-        
+            OPEN rc FOR
+                'SELECT col1, RTRIM(RTRIM(col2,''0''),''.'') AS displaydata
+                 FROM (' || v_sql || ')
+                 WHERE col2 IS NOT NULL AND TRIM(col2) IS NOT NULL';
+
+            LOOP
+                FETCH rc INTO v_col1, v_col2;
+                EXIT WHEN rc%NOTFOUND;
+                PIPE ROW (axi_firesql_obj(v_col1, v_col2));
+            END LOOP;
+
+            CLOSE rc;
+
+        ------------------------------------------------------------------
+        -- Sourcekey != T  →  return col1 only
+        ------------------------------------------------------------------
         ELSE
-            OPEN v_refcursor FOR
-                'SELECT
-                     ''0'' AS id,
-                     RTRIM(
-                         RTRIM(TRIM(TO_CHAR(col1)), ''0''),
-                         ''.''
-                     ) AS displaydata
-                 FROM (
-                     SELECT *
-                     FROM (' || v_sql || ')
-                 )
-                 WHERE col1 IS NOT NULL
-                 AND TRIM(TO_CHAR(col1)) <> ''''';
+
+            OPEN rc FOR
+                'SELECT RTRIM(RTRIM(col1,''0''),''.'') AS displaydata
+                 FROM (' || v_sql || ')
+                 WHERE col1 IS NOT NULL AND TRIM(col1) IS NOT NULL';
+
+            LOOP
+                FETCH rc INTO v_col1;
+                EXIT WHEN rc%NOTFOUND;
+                PIPE ROW (axi_firesql_obj('0', v_col1));
+            END LOOP;
+
+            CLOSE rc;
 
         END IF;
 
-        RETURN v_refcursor;
-
     END IF;
 
-END;
+    RETURN;
 
-
+END axi_firesql_v2
 >>
 
 
@@ -1180,13 +1223,13 @@ CREATE OR REPLACE TYPE obj_getstructlist AS OBJECT (
 )
 >>
 
-
+---------------------------------------------
 
 <<
 CREATE OR REPLACE TYPE tab_getstructlist AS TABLE OF obj_getstructlist
 >>
 
-
+--------------------------------------------
 
 <<
 CREATE OR REPLACE FUNCTION axi_fn_getstructlist (
@@ -1267,26 +1310,6 @@ BEGIN
     END IF;
 
     RETURN;
-END;
-
+END
 >>
-
-
-ALTER FUNCTION FN_AXI_GETSTRUCTS_OBJ COMPILE
-
-
-<<
-BEGIN
-  DBMS_UTILITY.COMPILE_SCHEMA(
-    schema => USER,
-    compile_all => FALSE
-  );
-END;
->>
-
-
-
- 
-
-
 
