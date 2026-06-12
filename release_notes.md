@@ -33,12 +33,21 @@ This release brings stability improvements, database schema optimizations, secur
     *   Aligned the spelling of `'analyze'` to `'analyse'` in Oracle's `fn_axi_getstructures_meta` to match PostgreSQL and the Javascript command parser.
 *   **Metadata Table Registrations (`axi_axdirectsql_tables.sql`):**
     *   Converted the Postgres query for ID `99999999990039` to an Oracle-compatible insert (using `TABLE(fn_axi_getstructs_obj(...))` and datetime formats) and registered it.
+    *   Updated the `SQLSRC` column values from `'Internal'` to `'Metadata'` for multiple registrations (including `axi_useractivation`, `axi_userlist`, `axi_actorlist`, `axi_adscolumnlist`, and `axi_newsandannounce`) to ensure correct metadata classification.
 *   **Postgres Schema Correction (`axi_command_tables.sql`):**
     *   Corrected the Configure prompt source for the object name from `axi_structlist` to `axi_structmetalist` and updated missing context variables in `extraparams`.
 
 ### 4. Code Cleanup & Deployment Documentation
 *   **Mermaid Deployment Guide:** Enhanced the `README.md` guide with detailed flow diagrams, prerequisite badges, and specific instructions to copy the `AxiApi_Beta` folder to the target `Arm microservices` server directory.
 *   **Codebase Cleanup:** Removed unused/backup `.zip` files from the plugin folders.
+
+### 5. Bug Fixes
+*   Existing and newly created Dimensions are available in Configure "Application Properties" instead of Configure Dimension cmd: Configure "Application Properties" Branch -> Fixed #76 
+*   When clicked on the options available in Configure Publish Config Studio,getting error: Access violation at address 0000000000DED5D6 in module 'ASBTStruct.dll'. Read of address 0000000000000000 -> Fixed #74 
+*   When clicked on the options available in Configure Actor,getting error:Access violation at address 0000000000DED5D6 in module 'ASBTStruct.dll'. Read of address 0000000000000000 -> Fixed #73 
+*   Existing and newly created Cards are available in Configure Responsibility instead of Configure Card cmd: Configure Responsibility KPI Cards -> Fixed #75 
+*   Issue #74 - Existing and newly created Cards are available in Configure Responsibility instead of Configure Card cmd: Configure Responsibility KPI Cards -> Fixed 
+*   Issue #71 Iview and tstruct with same name -> Fixed 
 
 ---
 
