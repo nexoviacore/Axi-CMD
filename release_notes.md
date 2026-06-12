@@ -1,0 +1,67 @@
+# Axi Command Palette | Release Notes
+
+This release brings stability improvements, database schema optimizations, security auditing, and documentation enhancements to the **Axi Command Palette** plugin (supporting both Oracle and PostgreSQL backends).
+
+---
+
+## 🚀 Key Highlights
+
+*   **Oracle Database Support & Refactoring:** Restructured custom database functions and added schema auto-recompilation scripts for seamless setup in Oracle environments.
+*   **Security hardening:** Audited console logs to remove plaintext password/session leaks.
+*   **Command Palette Polish:** Enhanced loading animations, resolved spelling inconsistencies, and corrected token indexing bugs.
+*   **Postgres Schema Correction:** Aligned prompt mappings in Postgres config studio parameters.
+
+---
+
+## 🛠 Detailed Changelog
+
+### 1. Frontend & UI/UX Improvements
+*   **Loading Animations:** Added loading spinners to the Favourites Save and Delete modal buttons to provide visual feedback during backend API calls.
+*   **Favourites Splicing Fix:** Resolved a UI consistency issue by preventing local favorites array splicing when backend API responses fail or are missing.
+*   **Autocomplete Token Alignment:** Fixed index mismatch bugs for `View` and `Configure` commands.
+*   **Analyse Command Popup Fix:** Restrained the `analyse` command to standard frame execution (`window.LoadIframe`) and corrected autocomplete suggestions to offer the `Go [Ctrl + Enter]` option only upon entering the second token.
+*   **Iview/Tstruct Conflict Resolution:** Fixed a collision bug occurring when a Tstruct and an Iview shared the same name.
+
+### 2. Security Enhancements
+*   **Credential Leak Prevention:** Removed a debugging `console.log(payload)` from `axicmdmain.js` that exposed plain-text login credentials and active session IDs to the browser console.
+
+### 3. Database & Metadata Updates
+*   **Oracle PL/SQL Restructuring (`axi_functions.sql`):**
+    *   Refactored `axi_firesql_v2` to return `SYS_REFCURSOR` directly instead of a pipelined custom object table, simplifying query executions.
+    *   Updated `fn_axi_getstructs_obj` to use a `FOR rec IN (...) LOOP` pattern instead of `SELECT INTO`, eliminating `NO_DATA_FOUND` exceptions.
+    *   Added `ALTER FUNCTION COMPILE` and `DBMS_UTILITY.COMPILE_SCHEMA` blocks at the end of scripts to automatically compile and validate all invalid schema objects post-installation.
+    *   Aligned the spelling of `'analyze'` to `'analyse'` in Oracle's `fn_axi_getstructures_meta` to match PostgreSQL and the Javascript command parser.
+*   **Metadata Table Registrations (`axi_axdirectsql_tables.sql`):**
+    *   Converted the Postgres query for ID `99999999990039` to an Oracle-compatible insert (using `TABLE(fn_axi_getstructs_obj(...))` and datetime formats) and registered it.
+*   **Postgres Schema Correction (`axi_command_tables.sql`):**
+    *   Corrected the Configure prompt source for the object name from `axi_structlist` to `axi_structmetalist` and updated missing context variables in `extraparams`.
+
+### 4. Code Cleanup & Deployment Documentation
+*   **Mermaid Deployment Guide:** Enhanced the `README.md` guide with detailed flow diagrams, prerequisite badges, and specific instructions to copy the `AxiApi_Beta` folder to the target `Arm microservices` server directory.
+*   **Codebase Cleanup:** Removed unused/backup `.zip` files from the plugin folders.
+
+---
+
+## ⚠️ Manual Intervention Required
+
+### 1. ERPGoldDemo Environment Setup
+When applying this release to the **erpgolddemo** environment, the following database adjustments must be performed manually:
+*   **Delete & Recreate ADS:** The specific ADS (`axi_adscolumnlist`) needs to be manually deleted and recreated using the query below.
+*   **SmartView Table Compatibility:** Since the upcoming SmartView database changes are already implemented in the `erpgolddemo` schema, the **ADS Column List** is expected to operate and fetch data using these new SmartView tables.
+
+#### Reconstitution SQL Scripts for `erpgolddemo`:
+
+
+```sql
+-- Step 1: Delete the existing ADS configuration
+DELETE FROM axdirectsql WHERE sqlname = 'axi_adscolumnlist';
+
+-- Step 2: Recreate the ADS configuration with SmartView integration
+INSERT INTO axdirectsql
+(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
+VALUES(99999999990028, 'F', 0, NULL, 'admin', '2026-01-30 00:00:00.000', 'admin', '2026-01-30 00:00:00.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_adscolumnlist', NULL, 'Metadata', 0, 'select  displaydata,name,caption,normalized,fdatatype,sourcetable,sourcefld,filters  
+from fn_smartview_metadata(:param1)', 'param1', 'param1~Character~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL);
+```
+
+### 2. Other Environments
+*   **Axi CMD Consistency:** The upcoming SmartView modifications are not yet officially released across all other environments. Therefore, in all environments other than `erpgolddemo`, **Axi CMD** must continue using the currently available tables.
