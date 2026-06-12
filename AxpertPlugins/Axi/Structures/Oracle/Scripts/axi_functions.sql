@@ -1,17 +1,23 @@
+<<
 UPDATE AXDIRECTSQL SET SQLSRC =CASE sqlsrc WHEN 'Application' THEN 'For users' WHEN 'Metadata' THEN 'Internal'
 ELSE 'For users' end,SQLSRCCND =CASE sqlsrc WHEN 'Application' THEN 3 WHEN 'Metadata' THEN 1
-ELSE 3  END;
+ELSE 3  END
+>>
 
-
+<<
 CREATE OR REPLACE TYPE axi_getstructs_obj AS OBJECT (
     displaydata   CLOB,
     id            CLOB,
     caption       CLOB,
     isfield       CLOB
-);
+)
+>>
 
-CREATE OR REPLACE TYPE axi_getstructs_obj_tbl AS TABLE OF axi_getstructs_obj;
+<<
+CREATE OR REPLACE TYPE axi_getstructs_obj_tbl AS TABLE OF axi_getstructs_obj
+>>
 
+<<
 CREATE OR REPLACE TYPE AXI_GETSTRUCTURES_META AS OBJECT (
     displaydata    VARCHAR2(4000),
     caption        VARCHAR2(4000),
@@ -23,10 +29,14 @@ CREATE OR REPLACE TYPE AXI_GETSTRUCTURES_META AS OBJECT (
     viewallowed    VARCHAR2(4000),
     keyfield       VARCHAR2(4000),
     primarytable   VARCHAR2(4000)
-);
+)
+>>
 
-CREATE OR REPLACE TYPE AXI_GETSTRUCTURES_META_tbl AS TABLE OF AXI_GETSTRUCTURES_META;
+<<
+CREATE OR REPLACE TYPE AXI_GETSTRUCTURES_META_tbl AS TABLE OF AXI_GETSTRUCTURES_META
+>>
 
+<<
 CREATE OR REPLACE FUNCTION fn_axi_getstructs_obj (
     pcmd            VARCHAR2,
     pusername       VARCHAR2,
@@ -411,7 +421,9 @@ BEGIN
     RETURN;
 
 END;
+>>
 
+<<
 CREATE OR REPLACE FUNCTION fn_axi_getstructures_meta(
     pusername        IN VARCHAR2, 
     puserrole        IN VARCHAR2, 
@@ -495,7 +507,7 @@ BEGIN
                 REGEXP_LIKE(',' || presponsiblity || ',', ',default,')
                 OR (ua.stype = 't' AND REGEXP_LIKE(',' || presponsiblity || ',', ',' || ua.rname || ','))
               )),
-		iv as(
+        iv as(
         SELECT DISTINCT
                CAST((a.caption || ' (' || a.name || ') [iview]') AS VARCHAR2(4000)) AS displaydata,
                a.caption,
@@ -579,7 +591,9 @@ ads as(
 
     RETURN;
 END;
+>>
 
+<<
 CREATE OR REPLACE FUNCTION fn_ads_getsqlcols(payload IN CLOB)
 RETURN CLOB
 IS
@@ -608,7 +622,9 @@ EXCEPTION
     WHEN OTHERS THEN 
         RETURN 'ERROR AT FUNCTION: ' || SQLERRM; 
 END;
+>>
 
+<<
 CREATE OR REPLACE FUNCTION fn_ADS_getsql_json(
     p_appschema IN VARCHAR2,
     p_sqltext   IN VARCHAR2
@@ -625,7 +641,9 @@ EXCEPTION
     WHEN OTHERS THEN
         RETURN NULL;
 END;
+>>
 
+<<
 CREATE OR REPLACE FUNCTION fn_get_axpertcomps_name (
     pinput IN varchar2
 ) RETURN CLOB 
@@ -637,27 +655,33 @@ BEGIN
     END IF;
 
    SELECT
-	listagg(rtrim(SUBSTR(split_value, INSTR(split_value, '-(')+ 2), ')'), ',') WITHIN GROUP(
-	ORDER BY 1) INTO v_result
+    listagg(rtrim(SUBSTR(split_value, INSTR(split_value, '-(')+ 2), ')'), ',') WITHIN GROUP(
+    ORDER BY 1) INTO v_result
 FROM
-	(
-	SELECT
-		DISTINCT TRIM(REGEXP_SUBSTR( pinput, '[^,]+', 1, LEVEL)) AS split_value
-	FROM
-		dual
-	CONNECT BY
-		REGEXP_SUBSTR ( pinput,
-		'[^,]+',
-		1,
-		LEVEL) IS NOT NULL);
+    (
+    SELECT
+        DISTINCT TRIM(REGEXP_SUBSTR( pinput, '[^,]+', 1, LEVEL)) AS split_value
+    FROM
+        dual
+    CONNECT BY
+        REGEXP_SUBSTR ( pinput,
+        '[^,]+',
+        1,
+        LEVEL) IS NOT NULL);
 
     RETURN v_result;
 END;
+>>
 
-DROP TYPE AXPDEF_PERMISSION_MDATA_OBJ;
+<<
+DROP TYPE AXPDEF_PERMISSION_MDATA_OBJ
+>>
 
-DROP TYPE AXPDEF_PERMISSION_MDATA;
+<<
+DROP TYPE AXPDEF_PERMISSION_MDATA
+>>
 
+<<
 CREATE OR REPLACE TYPE "AXPDEF_PERMISSION_MDATA" AS OBJECT (
     transid VARCHAR2(250),
     fullcontrol VARCHAR2(1),
@@ -677,13 +701,16 @@ CREATE OR REPLACE TYPE "AXPDEF_PERMISSION_MDATA" AS OBJECT (
     filtercnd NCLOB,
     encryptedflds clob,
     permissiontype varchar2(10),viewctrl varchar2(10),editctrl varchar2(10)
-    );
+    )
+>>
 
+<<
 CREATE OR REPLACE TYPE "AXPDEF_PERMISSION_MDATA_OBJ"                                          
-   AS TABLE OF AXPDEF_PERMISSION_MDATA;
+   AS TABLE OF AXPDEF_PERMISSION_MDATA
+>>
    
-  
- CREATE OR REPLACE FUNCTION fn_permissions_getpermission(
+<<
+CREATE OR REPLACE FUNCTION fn_permissions_getpermission(
     pmode          IN VARCHAR2,
     ptransid       IN VARCHAR2,
     pusername      IN VARCHAR2,
@@ -691,14 +718,14 @@ CREATE OR REPLACE TYPE "AXPDEF_PERMISSION_MDATA_OBJ"
     pglobalvars    IN VARCHAR2 DEFAULT 'NA'
 ) RETURN AXPDEF_PERMISSION_MDATA_OBJ PIPELINED
 AS    
-	rc  SYS_REFCURSOR;
+    rc  SYS_REFCURSOR;
     -- Declare local variables
     v_menuaccess_count NUMBER(10);     
     v_sql_roles VARCHAR2(4000);
    -- v_sql_permission_check VARCHAR2(4000);
-   	rolesql clob;
-   	v_permissionsql clob;
-   	v_permissionexists number(10);
+    rolesql clob;
+    v_permissionsql clob;
+    v_permissionexists number(10);
     
     -- Variables to hold results before piping
     v_transid_loop VARCHAR2(250);
@@ -721,9 +748,9 @@ AS
     v_editctrl VARCHAR2(1);
     --v_viewlist VARCHAR2(4000);
     --v_editlist VARCHAR2(4000);
-   	v_encryptedflds clob;
-  	v_permissiontype varchar2(10);
-    	
+    v_encryptedflds clob;
+    v_permissiontype varchar2(10);
+        
     v_view_includedflds    clob;
     v_view_excludedflds    clob;
     v_edit_includedflds    clob;
@@ -853,9 +880,9 @@ EXECUTE immediate v_permissionsql into  v_permissionexists;
             v_edit_access := NULL;
             v_allowcreate := NULL;
             v_filtercnd := NULL;
-           	SELECT LISTAGG(fname, ',') WITHIN GROUP (ORDER BY fname) INTO v_encryptedflds FROM axpflds 
+            SELECT LISTAGG(fname, ',') WITHIN GROUP (ORDER BY fname) INTO v_encryptedflds FROM axpflds 
            WHERE tstruct = v_transid_loop AND encrypted = 'T';        
-          	
+            
 
             -- Pipe the row
             PIPE ROW (AXPDEF_PERMISSION_MDATA(
@@ -865,11 +892,11 @@ EXECUTE immediate v_permissionsql into  v_permissionexists;
                 v_maskedflds, v_filtercnd,v_encryptedflds,NULL,'0','0'));
                
 ELSE
-	OPEN rc FOR rolesql;
+    OPEN rc FOR rolesql;
 
     LOOP
       FETCH rc INTO  
-		v_userrole,
+        v_userrole,
         v_view_includedflds,
         v_view_excludedflds,
         v_edit_includedflds,
@@ -891,7 +918,7 @@ ELSE
         v_view_includeflds := CASE WHEN v_view_includedflds IS NULL THEN v_edit_includedflds
                                  WHEN v_edit_includedflds IS NULL THEN v_view_includedflds
                                  ELSE v_view_includedflds || ',' || v_edit_includedflds END;
-	  END IF;
+      END IF;
     
      
       IF v_editctrl = '0' THEN
@@ -966,7 +993,7 @@ FROM axpflds WHERE tstruct = rec_transid.transid AND encrypted = 'T'
 
     CLOSE rc;
                
- 	END if;
+    END if;
 
   END LOOP;
 
@@ -975,4 +1002,266 @@ FROM axpflds WHERE tstruct = rec_transid.transid AND encrypted = 'T'
 
 
     RETURN; 
-END; 
+END;
+>>
+
+<<
+-- Object Type
+CREATE OR REPLACE TYPE axi_firesql_obj AS OBJECT (
+    id          VARCHAR2(4000),
+    displaydata VARCHAR2(4000)
+)
+>>
+
+
+<<
+-- Table Type
+CREATE OR REPLACE TYPE axi_firesql_tab AS TABLE OF axi_firesql_obj
+>>
+
+
+<<
+-- Function
+CREATE OR REPLACE FUNCTION axi_firesql_v2 (
+    p_sql          IN CLOB,
+    p_param_string IN VARCHAR2,
+    p_sourcekey    IN VARCHAR2,
+    p_fromlist     IN VARCHAR2
+)
+RETURN axi_firesql_tab PIPELINED
+AS
+    v_sql          CLOB := p_sql;
+    v_pair         VARCHAR2(4000);
+    v_param_name   VARCHAR2(1000);
+    v_param_value  VARCHAR2(4000);
+
+    v_pos          NUMBER := 1;
+    v_next         NUMBER;
+    TYPE refcur IS REF CURSOR;
+    rc refcur;
+    v_col1 VARCHAR2(4000);
+    v_col2 VARCHAR2(4000);
+BEGIN
+    ------------------------------------------------------------------
+    -- Replace Parameters
+    ------------------------------------------------------------------
+    IF p_param_string IS NOT NULL
+       AND TRIM(p_param_string) <> ''
+       AND INSTR(v_sql, ':') > 0
+    THEN
+        LOOP
+            v_next := INSTR(p_param_string, ';', v_pos);
+            IF v_next > 0 THEN
+                v_pair := SUBSTR(p_param_string, v_pos, v_next - v_pos);
+            ELSE
+                v_pair := SUBSTR(p_param_string, v_pos);
+            END IF;
+            EXIT WHEN v_pair IS NULL;
+            IF TRIM(v_pair) IS NOT NULL THEN
+                v_param_name :=
+                    TRIM(SUBSTR(v_pair, 1, INSTR(v_pair, '~') - 1));
+                v_param_value :=
+                    TRIM(SUBSTR(v_pair, INSTR(v_pair, '~') + 1));
+                IF v_param_name IS NOT NULL THEN
+
+                    v_sql := REPLACE(
+                                v_sql,
+                                ':' || v_param_name,
+                                '''' || REPLACE(v_param_value, '''', '''''') || ''''
+                             );
+                END IF;
+            END IF;
+            EXIT WHEN v_next = 0;
+            v_pos := v_next + 1;
+        END LOOP;
+    END IF;
+    ------------------------------------------------------------------
+    -- Handle p_fromlist
+    ------------------------------------------------------------------
+    IF p_fromlist IS NOT NULL
+       AND TRIM(p_fromlist) <> ''
+       AND LOWER(TRIM(p_fromlist)) <> 'null'
+    THEN
+        FOR r IN (
+            SELECT TRIM(REGEXP_SUBSTR(p_fromlist, '[^,]+', 1, LEVEL)) val
+            FROM dual
+            CONNECT BY REGEXP_SUBSTR(p_fromlist, '[^,]+', 1, LEVEL) IS NOT NULL
+        )
+        LOOP
+            IF r.val IS NOT NULL
+               AND TRIM(r.val) <> ''
+            THEN
+
+                PIPE ROW (
+                    axi_firesql_obj(
+                        '0',
+                        r.val
+                    )
+                );
+            END IF;
+        END LOOP;
+    ELSE
+        ------------------------------------------------------------------
+        -- Sourcekey = T
+        ------------------------------------------------------------------
+        IF UPPER(NVL(p_sourcekey, 'F')) = 'T' THEN
+            OPEN rc FOR
+                '
+                SELECT
+                    col1,
+                    RTRIM(
+                        RTRIM(col2, ''0''),
+                    ''.'') AS displaydata
+                FROM (
+                    ' || v_sql || '
+                )
+                WHERE col2 IS NOT NULL
+                  AND TRIM(col2) <> ''''
+                ';
+            LOOP
+                FETCH rc INTO v_col1, v_col2;
+                EXIT WHEN rc%NOTFOUND;
+                PIPE ROW (
+                    axi_firesql_obj(
+                        v_col1,
+                        v_col2
+                    )
+                );
+            END LOOP;
+            CLOSE rc;
+        ------------------------------------------------------------------
+        -- Sourcekey != T
+        ------------------------------------------------------------------
+        ELSE
+            OPEN rc FOR
+                '
+                SELECT
+                    RTRIM(
+                        RTRIM(col1, ''0''),
+                    ''.'') AS displaydata
+                FROM (
+                    ' || v_sql || '
+                )
+                WHERE col1 IS NOT NULL
+                  AND TRIM(col1) <> ''''
+                ';
+            LOOP
+                FETCH rc INTO v_col1;
+                EXIT WHEN rc%NOTFOUND;
+
+                PIPE ROW (
+                    axi_firesql_obj(
+                        '0',
+                        v_col1
+                    )
+                );
+            END LOOP;
+            CLOSE rc;
+        END IF;
+    END IF;
+    RETURN;
+END axi_firesql_v2
+>>
+
+
+
+commit;
+
+
+<<
+CREATE OR REPLACE TYPE obj_getstructlist AS OBJECT (
+    displaydata VARCHAR2(4000),
+    caption     VARCHAR2(4000),
+    name        VARCHAR2(4000)
+)
+>>
+
+---------------------------------------------
+
+<<
+CREATE OR REPLACE TYPE tab_getstructlist AS TABLE OF obj_getstructlist
+>>
+
+--------------------------------------------
+
+<<
+CREATE OR REPLACE FUNCTION axi_fn_getstructlist (
+    p_roles      IN VARCHAR2,
+    p_mode       IN VARCHAR2,
+    p_structtype IN VARCHAR2
+)
+RETURN tab_getstructlist PIPELINED
+AS
+BEGIN
+
+    IF LOWER(p_structtype) = 'i' THEN
+
+        FOR rec IN (
+            SELECT DISTINCT
+                   a.caption || ' (' || a.name || ')' AS displaydata,
+                   a.caption,
+                   a.name
+            FROM iviews a
+                 JOIN axpages b
+                     ON b.pagetype = 'i' || a.name
+                 LEFT JOIN axuseraccess ua
+                     ON ua.sname = a.name
+            WHERE (LOWER(p_mode) = 'dev' OR b.visible = 'T')
+              AND (
+                    INSTR(',' || LOWER(p_roles) || ',', ',default,') > 0
+                    OR (
+                        ua.stype = 'i'
+                        AND INSTR(',' || LOWER(p_roles) || ',',
+                                   ',' || LOWER(ua.rname) || ',') > 0
+                       )
+                  )
+            ORDER BY a.caption
+        )
+        LOOP
+            PIPE ROW (
+                obj_getstructlist(
+                    rec.displaydata,
+                    rec.caption,
+                    rec.name
+                )
+            );
+        END LOOP;
+
+    ELSE
+
+        FOR rec IN (
+            SELECT DISTINCT
+                   a.caption || ' (' || a.name || ')' AS displaydata,
+                   a.caption,
+                   a.name
+            FROM tstructs a
+                 JOIN axpages b
+                     ON b.pagetype = 't' || a.name
+                 LEFT JOIN axuseraccess ua
+                     ON ua.sname = a.name
+            WHERE (LOWER(p_mode) = 'dev' OR b.visible = 'T')
+              AND (
+                    INSTR(',' || LOWER(p_roles) || ',', ',default,') > 0
+                    OR (
+                        ua.stype = 't'
+                        AND INSTR(',' || LOWER(p_roles) || ',',
+                                   ',' || LOWER(ua.rname) || ',') > 0
+                       )
+                  )
+            ORDER BY a.caption
+        )
+        LOOP
+            PIPE ROW (
+                obj_getstructlist(
+                    rec.displaydata,
+                    rec.caption,
+                    rec.name
+                )
+            );
+        END LOOP;
+
+    END IF;
+
+    RETURN;
+END;
+>>
