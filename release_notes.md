@@ -42,7 +42,20 @@ This release brings stability improvements, database schema optimizations, secur
 
 ---
 
+## 📋 QA Validation & Plugin Rollout Guidelines
+
+### 1. Cross-Database QA Verification (Axi_Beta)
+*   **Testing Requirement:** This release **must** be thoroughly tested and verified in both **PostgreSQL** and **Oracle** environments.
+*   **Approval Gate:** Under no circumstances should this release be applied to `agile-axi`, `alpha-axi`, or any other shared/production/shared instances without complete verification and explicit QA sign-off.
+
+### 2. Plugin Naming & Transition Strategy
+*   **Current State:** The plugin is packaged and named as **Axi_Beta**. During this phase, it must be treated strictly as a testing and verification plugin.
+*   **Production Rollout:** Once all validations, testing, and environment verifications are completed successfully, the existing **Axi** plugin will be replaced and overwritten by **Axi_Beta** for production use.
+
+---
+
 ## ⚠️ Manual Intervention Required
+
 
 ### 1. ERPGoldDemo Environment Setup
 When applying this release to the **erpgolddemo** environment, the following database adjustments must be performed manually:
