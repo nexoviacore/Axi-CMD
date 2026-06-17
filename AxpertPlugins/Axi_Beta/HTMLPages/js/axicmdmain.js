@@ -5097,9 +5097,25 @@
 
         const groupKey = cleanString(tokens[0]);
 
+        const groupNameNormalized = groupKey.toLowerCase();
+        const accessPermissions = getAccessPermissions();
 
-
-
+        if (groupNameNormalized === "configure" && !accessPermissions.appMgrAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+        if (groupNameNormalized === "upload" && !accessPermissions.importAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+        if (groupNameNormalized === "download" && !accessPermissions.exportAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+        if (groupNameNormalized === "devtools" && !accessPermissions.buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
 
         const groupConfig = commands[groupKey];
 
