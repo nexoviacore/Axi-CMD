@@ -420,15 +420,9 @@
             return;
         }
 
-        // let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-        // console.log("Origin: " + appSessUrl);
-        // const projInfoKey = `projInfo-${appSessUrl}`;
-
-        // const appname = localStorage.getItem(projInfoKey);
         const appname = getProjectName();
         console.log(appname);
 
-        // await ensureApiMetadataConfigLoaded();
         loadFavorites();
 
         if (!apiMetadataUrl) {
@@ -437,19 +431,21 @@
             return;
         }
 
-
-        const cached = localStorage.getItem("axi_commands_v1");
+        const cached = localStorage.getItem("axi_commands_raw_v1");
+        let commandsFromDb = null;
         if (cached && !isForced) {
-            commands = JSON.parse(cached);
-            console.log(JSON.stringify(commands));
+            try {
+                commandsFromDb = JSON.parse(cached);
+            } catch (e) {
+                console.error("Failed to parse cached raw commands", e);
+            }
+        }
 
-        } else {
-
+        if (!commandsFromDb) {
             try {
                 isCommandsLoading = true;
                 input.disabled = isCommandsLoading;
                 input.placeholder = "Initializing commands, Please wait....";
-                const accessPermissions = getAccessPermissions();
 
                 const res = await fetch(`${apiMetadataUrl}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
 
@@ -460,28 +456,31 @@
                 }
 
                 if (res.status === 204) {
-                    showToast("No commands found. Please check 'AxiApi' Configuration")
+                    showToast("No commands found. Please check 'AxiApi' Configuration");
                     return;
                 }
 
-                const message = isForced ? "Refreshed Successfully!" : "Commands Loaded Successfully!."
-
                 const data = await res.json();
-                let commandsFromDb = data.commands;
-
-                commands = buildCommandsByAccessPermissions(commandsFromDb, accessPermissions);
-
-                console.log(JSON.stringify(commands));
-                localStorage.setItem("axi_commands_v1", JSON.stringify(commands));
-                showToast(message, 3000, true);
+                commandsFromDb = data.commands;
+                localStorage.setItem("axi_commands_raw_v1", JSON.stringify(commandsFromDb));
 
             } catch (err) {
                 console.error("Critical: Could not load commands", err);
             } finally {
                 isCommandsLoading = false;
                 input.disabled = isCommandsLoading;
-                input.placeholder = "Axpert AI"
-                // handleInput(); 
+                input.placeholder = "Axpert AI";
+            }
+        }
+
+        if (commandsFromDb) {
+            const message = isForced ? "Refreshed Successfully!" : "Commands Loaded Successfully!.";
+            const accessPermissions = getAccessPermissions();
+            // Clone to avoid mutating the cached object stored in memory
+            commands = buildCommandsByAccessPermissions(JSON.parse(JSON.stringify(commandsFromDb)), accessPermissions);
+            console.log(JSON.stringify(commands));
+            if (isForced) {
+                showToast(message, 3000, true);
             }
         }
     }
@@ -10892,50 +10891,13 @@
         // AppMgrAccess(Config)
         // ImportAccess(Upload)
         // ExportAccess(Download)
-        // Build(Open)
-        let appMgrAccess;
-        let importAccess;
-        let exportAccess;
-        let buildAccess;
-
-
-
-        const appMgrAccessKey = generateLocalStorageKey("appMgrAccess", window.mainUserName);
-        const importAccessKey = generateLocalStorageKey("importAccess", window.mainUserName);
-        const exportAccessKey = generateLocalStorageKey("exportAccess", window.mainUserName);
-        const buildAccessKey = generateLocalStorageKey("buildAccess", window.mainUserName);
-        appMgrAccess = localStorage.getItem(appMgrAccessKey);
-        if (!appMgrAccess) {
-            appMgrAccess = window.getSessionValue("AppMgrAccess");
-            localStorage.setItem(appMgrAccessKey, appMgrAccess);
-        }
-
-        importAccess = localStorage.getItem(importAccessKey);
-        if (!importAccess) {
-            importAccess = window.getSessionValue("ImportAccess");
-            localStorage.setItem(importAccessKey, importAccess);
-        }
-
-        exportAccess = localStorage.getItem(exportAccessKey);
-        if (!exportAccess) {
-            exportAccess = window.getSessionValue("ExportAccess");
-            localStorage.setItem(exportAccessKey, exportAccess);
-        }
-
-        buildAccess = localStorage.getItem(buildAccessKey);
-        if (!buildAccess) {
-            buildAccess = window.getSessionValue("Build");
-            localStorage.setItem(buildAccessKey, buildAccess);
-        }
-
-
+        // Build(Open/DevTools)
         return {
-            appMgrAccess: strToBool(appMgrAccess),
-            importAccess: strToBool(importAccess),
-            exportAccess: strToBool(exportAccess),
-            buildAccess: strToBool(buildAccess),
-
-        }
+            appMgrAccess: strToBool(window.getSessionValue("AppMgrAccess")),
+            importAccess: strToBool(window.getSessionValue("ImportAccess")),
+            exportAccess: strToBool(window.getSessionValue("ExportAccess")),
+            buildAccess: strToBool(window.getSessionValue("Build")),
+        };
     }
 
     function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions) {
@@ -11029,11 +10991,9 @@
     }
 
     function strToBool(str) {
-        if (str.toLowerCase() === "t" || str.toLowerCase() === "true") {
-            return true;
-        } else {
-            return false;
-        }
+        if (!str) return false;
+        const s = String(str).toLowerCase().trim();
+        return s === "t" || s === "true";
     }
 
     function showFavoriteModel(cmdText, targetUrl, isEdit = false) {
