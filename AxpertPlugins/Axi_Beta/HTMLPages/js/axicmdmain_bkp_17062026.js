@@ -2751,22 +2751,10 @@
 
         buttonsList = Object.values(allButtons).map(btn => ({
             name: btn.id,
-            onclick: btn.element.getAttribute("onclick"),
             displaydata: `${btn.label} (${btn.id})`
         }));
 
-        const uniqueButtonsMap = new Map();
-        buttonsList.forEach(btn => {
-            if (btn.onclick) {
-                if (!uniqueButtonsMap.has(btn.onclick)) {
-                    uniqueButtonsMap.set(btn.onclick, btn);
-                }
-            } else {
-                uniqueButtonsMap.set(btn.name, btn);
-            }
-        });
-
-        const filtered = Array.from(uniqueButtonsMap.values()).filter(item =>
+        const filtered = buttonsList.filter(item =>
             item.displaydata.toLowerCase().includes(partialTyped.toLowerCase())
         );
 
@@ -5125,11 +5113,6 @@
 
 
 
-        }
-
-
-        if (groupKey.toLowerCase() === "run") {
-            return;
         }
 
 
@@ -7553,6 +7536,16 @@
         const dataExtra = btn.getAttribute("data-extra");
         if (dataExtra) return dataExtra.trim();
 
+        const title = btn.getAttribute("title");
+        if (title) return title.trim();
+
+        const menuTitle = btn.querySelector(".menu-title");
+
+        if (menuTitle) return menuTitle.textContent.trim();
+
+
+
+
         const text = Array.from(btn.childNodes)
             .filter(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
             .map(n => n.textContent.trim())
@@ -7563,13 +7556,6 @@
 
             return text;
         }
-
-        const title = btn.getAttribute("title");
-        if (title) return title.trim();
-
-        const menuTitle = btn.querySelector(".menu-title");
-
-        if (menuTitle) return menuTitle.textContent.trim();
 
 
 
