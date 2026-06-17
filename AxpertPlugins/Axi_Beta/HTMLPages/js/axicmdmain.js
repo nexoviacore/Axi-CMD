@@ -11058,6 +11058,7 @@
         const originalCmdText = document.getElementById("axiFavOriginalCmd").value.trim();
         const targetUrl = document.getElementById("axiFavTargetUrl").value.trim();
         const isEdit = document.getElementById("axiFavIsEdit").value === "true";
+        const favCancelBtn = document.getElementById("axiFavCancelBtn"); 
 
         if (!alias) {
             showToast("Favorite name cannot be empty");
@@ -11066,6 +11067,7 @@
 
         // Start loading
         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", true);
+        favCancelBtn.disabled = true; 
 
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
@@ -11096,6 +11098,7 @@
                         showToast(`Renamed '${originalCmdText}' to '${alias}'`, 3000, true);
                     } else {
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+                        favCancelBtn.disabled = false; 
                         showToast("Failed to edit favourite");
                     }
                 })
@@ -11103,6 +11106,8 @@
                         console.error("Backend edit failed", error);
                         showToast("An Error occured while editing favourite");
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+                        favCancelBtn.disabled = false; 
+
                     });
             } else {
                 setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
@@ -11153,9 +11158,13 @@
                         showToast("Axi: Failed to update favorite on backend");
                         console.error("Backend sync failed", err);
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+                        favCancelBtn.disabled = false; 
+
                     });
             } else {
                 setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+                        favCancelBtn.disabled = false; 
+
             }
         }
     }
@@ -11193,6 +11202,7 @@
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
         const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
+        const deleteFavCancelBtn = document.getElementById("axiFavDeleteCancelBtn");
 
         const cmdIndex = commandFavorites.findIndex(fav =>
             fav.commandText.toLowerCase() === cmdText.toLowerCase() ||
@@ -11204,6 +11214,7 @@
 
             // Start loading
             setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", true);
+            deleteFavCancelBtn.disabled = true; 
 
             if (axiFavoritesUrl) {
                 fetch(`${axiFavoritesUrl}?appname=${appname}`, {
@@ -11229,16 +11240,22 @@
                         hideDeleteFavoriteModal();
                     } else {
                         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
+            deleteFavCancelBtn.disabled = false; 
+
                         showToast("Failed to delete favorite on backend");
                     }
                 })
                     .catch(err => {
                         console.error("Axi: Failed to delete on backend", err);
                         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
+            deleteFavCancelBtn.disabled = false; 
+
                         showToast("Error deleting favorite");
                     });
             } else {
                 setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
+            deleteFavCancelBtn.disabled = false; 
+
                 showToast("Backend API URL is not configured. Cannot delete.");
             }
         }
