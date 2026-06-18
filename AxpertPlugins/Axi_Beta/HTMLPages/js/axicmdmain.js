@@ -2820,7 +2820,7 @@
 
         const groupKey = cleanString(tokens[0]);
 
-        if (groupKey.toLowerCase() === "help" || groupKey.toLowerCase() === "walkthrough") {
+        if (groupKey.toLowerCase() === "help") {
             return [goOption];
         }
         if (tokens.length === 1 && !endsWithSpace) {
@@ -4948,7 +4948,7 @@
 
                 const cmdText = input.value.trim().toLowerCase();
                 executeCommandsV2();
-                if (cmdText !== "walkthrough" && cmdText !== "help") {
+                if (cmdText !== "help") {
                     hide();
                 }
                 return;
@@ -5134,7 +5134,7 @@
         if (!text || !commands) return;
 
         const lowerText = text.toLowerCase();
-        if (lowerText === "walkthrough" || lowerText === "help") {
+        if (lowerText === "help") {
             startWalkthrough();
             return;
         }
@@ -11530,7 +11530,7 @@
 
     function runTour() {
         const oldVal = input.value;
-        input.value = "walkthrough";
+        input.value = "help";
         
         const tour = introJs();
         tour.setOptions({
@@ -11589,7 +11589,7 @@
                     megaDropdown.style.zIndex = "";
                 }
                 if (targetElement && targetElement.id === "Axi-Searchinp") {
-                    input.value = "walkthrough";
+                    input.value = "help";
                 }
             }
         });
