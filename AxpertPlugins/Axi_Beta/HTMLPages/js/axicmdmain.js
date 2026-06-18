@@ -478,10 +478,17 @@
             const accessPermissions = getAccessPermissions();
             // Clone to avoid mutating the cached object stored in memory
             commands = buildCommandsByAccessPermissions(JSON.parse(JSON.stringify(commandsFromDb)), accessPermissions);
+            // Append Help command to initial suggestions list
+            commands["Help"] = {
+                cmdToken: 11,
+                command: "",
+                commandGroup: "Help",
+                prompts: []
+            };
             console.log(JSON.stringify(commands));
-            if (isForced) {
+            // if (isForced) {
                 showToast(message, 3000, true);
-            }
+            // }
         }
     }
 
@@ -2803,6 +2810,10 @@
         }
 
         const groupKey = cleanString(tokens[0]);
+
+        if (groupKey.toLowerCase() === "help" || groupKey.toLowerCase() === "walkthrough") {
+            return [goOption];
+        }
         if (tokens.length === 1 && !endsWithSpace) {
             hintDiv.textContent = "";
             return Object.keys(commands).filter(k => {
@@ -3909,8 +3920,8 @@
             "ask": "question_answer",
             "end": "stop",
             "editprompt": "edit",
-            "analyze": "analytics"
-
+            "analyze": "analytics",
+            "help": "help_outline"
         };
 
 
@@ -4900,8 +4911,11 @@
 
 
 
+                const cmdText = input.value.trim().toLowerCase();
                 executeCommandsV2();
-                hide();
+                if (cmdText !== "walkthrough" && cmdText !== "help") {
+                    hide();
+                }
                 return;
 
 
@@ -5083,6 +5097,12 @@
 
 
         if (!text || !commands) return;
+
+        const lowerText = text.toLowerCase();
+        if (lowerText === "walkthrough" || lowerText === "help") {
+            startWalkthrough();
+            return;
+        }
 
 
 
@@ -11345,14 +11365,209 @@
 
     }
 
+    function startWalkthrough() {
+        if (typeof introJs !== "undefined") {
+            injectTourStyles();
+            runTour();
+            return;
+        }
 
+        const appUrl = getAppBaseUrl();
 
+        // Dynamically load CSS
+        if (!document.querySelector('link[href*="introjs.min.css"]')) {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.type = "text/css";
+            link.href = `${appUrl}/AxpertPlugins/Axi_Beta/HTMLPages/css/introjs.min.css`;
+            document.head.appendChild(link);
+        }
 
+        // Dynamically load JS
+        if (!document.querySelector('script[src*="intro.min.js"]')) {
+            const script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = `${appUrl}/AxpertPlugins/Axi_Beta/HTMLPages/js/intro.min.js`;
+            script.onload = () => {
+                injectTourStyles();
+                runTour();
+            };
+            script.onerror = () => {
+                showToast("Failed to load walkthrough tour. Please try again.");
+            };
+            document.head.appendChild(script);
+        } else {
+            const checkInterval = setInterval(() => {
+                if (typeof introJs !== "undefined") {
+                    clearInterval(checkInterval);
+                    injectTourStyles();
+                    runTour();
+                }
+            }, 50);
+        }
+    }
 
+    function injectTourStyles() {
+        if (document.getElementById("axiTourStyles")) return;
+        const style = document.createElement("style");
+        style.id = "axiTourStyles";
+        style.innerHTML = `
+            .AXI-Sec.axi-tour-active {
+                z-index: 9999999 !important;
+            }
+            .introjs-overlay {
+                background: rgba(10, 10, 18, 0.75) !important;
+                backdrop-filter: blur(4px);
+            }
+            .introjs-helperLayer {
+                z-index: 10000000 !important;
+                background: rgba(161, 0, 255, 0.1) !important;
+                border: 1px solid rgba(161, 0, 255, 0.5) !important;
+                box-shadow: 0 0 10px rgba(161, 0, 255, 0.3) !important;
+            }
+            .introjs-tooltipReferenceLayer {
+                z-index: 10000001 !important;
+            }
+            .introjs-tooltip {
+                background: #151521 !important;
+                color: #ffffff !important;
+                border: 1px solid #a100ff !important;
+                box-shadow: 0 0 15px rgba(161, 0, 255, 0.4) !important;
+                border-radius: 8px !important;
+                font-family: inherit !important;
+                padding: 15px !important;
+                min-width: 250px !important;
+            }
+            .introjs-tooltiptext {
+                font-size: 13px !important;
+                line-height: 1.5 !important;
+            }
+            .introjs-arrow.bottom {
+                border-top-color: #a100ff !important;
+            }
+            .introjs-arrow.top {
+                border-bottom-color: #a100ff !important;
+            }
+            .introjs-arrow.left {
+                border-right-color: #a100ff !important;
+            }
+            .introjs-arrow.right {
+                border-left-color: #a100ff !important;
+            }
+            .introjs-button {
+                background: #a100ff !important;
+                color: #ffffff !important;
+                border: none !important;
+                text-shadow: none !important;
+                border-radius: 4px !important;
+                font-weight: 600 !important;
+                transition: background 0.2s ease;
+                padding: 6px 12px !important;
+            }
+            .introjs-button:hover {
+                background: #c34dff !important;
+                color: #ffffff !important;
+            }
+            .introjs-disabled {
+                background: #2e2e3e !important;
+                color: #7e7e8e !important;
+                cursor: not-allowed !important;
+            }
+            .introjs-bullets ul li a.active {
+                background: #a100ff !important;
+            }
+            .introjs-bullets ul li a {
+                background: #5e5e6e !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
 
+    function runTour() {
+        const oldVal = input.value;
+        input.value = "walkthrough";
+        
+        const tour = introJs();
+        tour.setOptions({
+            steps: [
+                {
+                    element: '#Axi-Searchinp',
+                    intro: '<strong>Search & Execute</strong><br/>Type commands, pages, views, or configurations here. Press Enter to run.',
+                    position: 'bottom'
+                },
+                {
+                    element: '#axiSuggestions',
+                    intro: '<strong>Live Suggestions</strong><br/>Autocomplete matches list dynamically. Use Up/Down arrows to navigate.',
+                    position: 'bottom'
+                },
+                {
+                    element: '#axiFavouriteBtn',
+                    intro: '<strong>Bookmark Commands</strong><br/>Pin frequently used commands to your favorites card here.',
+                    position: 'bottom'
+                },
+                {
+                    element: '#btnRefresh',
+                    intro: '<strong>Force Reload Metadata</strong><br/>Click here to refresh database commands and update active shell views.',
+                    position: 'bottom'
+                },
+                {
+                    element: '.searchwrap-AXI',
+                    intro: '<strong>Quick Exit</strong><br/>Press Esc or click outside the palette to close the interface anytime.',
+                    position: 'bottom'
+                }
+            ],
+            showBullets: true,
+            showStepNumbers: false,
+            exitOnOverlayClick: true,
+            scrollToElement: false,
+            doneLabel: 'Done',
+            nextLabel: 'Next &rarr;',
+            prevLabel: '&larr; Back'
+        });
 
+        tour.onchange((targetElement) => {
+            document.querySelector(".AXI-Sec")?.classList.add("axi-tour-active");
+            if (targetElement && targetElement.id === "axiSuggestions") {
+                input.value = "";
+                handleInput();
+                if (megaDropdown) {
+                    megaDropdown.style.setProperty("display", "flex", "important");
+                    megaDropdown.style.setProperty("z-index", "10000000", "important");
+                    megaDropdown.style.setProperty("opacity", "1", "important");
+                    void megaDropdown.offsetHeight;
+                }
+                // Force synchronous browser layout reflow to compute correct width/height
+                void targetElement.offsetHeight;
+            } else {
+                hide();
+                if (megaDropdown) {
+                    megaDropdown.style.zIndex = "";
+                }
+                if (targetElement && targetElement.id === "Axi-Searchinp") {
+                    input.value = "walkthrough";
+                }
+            }
+        });
 
+        tour.onexit(() => {
+            input.value = oldVal;
+            handleInput();
+            document.querySelector(".AXI-Sec")?.classList.remove("axi-tour-active");
+            if (megaDropdown) {
+                megaDropdown.style.zIndex = "";
+            }
+        });
+        tour.oncomplete(() => {
+            input.value = oldVal;
+            handleInput();
+            document.querySelector(".AXI-Sec")?.classList.remove("axi-tour-active");
+            if (megaDropdown) {
+                megaDropdown.style.zIndex = "";
+            }
+        });
 
+        tour.start();
+    }
 
 })();
 
