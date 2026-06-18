@@ -1889,6 +1889,15 @@
 
                 return itemText !== "source";
             });
+            filteredObjects = filteredObjects.filter(item => {
+                const itemText = (
+                    typeof item === "string"
+                        ? item
+                        : (item.displaydata || item.name || "")
+                ).toLowerCase();
+
+                return itemText !== "source";
+            });
         }
 
 
@@ -3439,7 +3448,18 @@
             struct_name = struct_split[0];
         }
 
-        const struct_row = struct_dataList.find(r => r.name === struct_name);
+        let preferredType = resolvedParamType?.[1];
+        if (preferredType) {
+            preferredType = preferredType.toLowerCase();
+            if (preferredType === "tstruct") preferredType = "t";
+            if (preferredType === "iview") preferredType = "i";
+        }
+
+        const struct_row = struct_dataList.find(r => 
+            r.name === struct_name && 
+            (!preferredType || (r.stype || "").toLowerCase() === preferredType)
+        ) || struct_dataList.find(r => r.name === struct_name);
+
         if (!struct_row) {
             console.log("The give Form is not in the ads " + struct_source + " list");
             showToast("The Given Transid is not in the list");
@@ -4284,7 +4304,7 @@
         if (foundObj && isViewCommand) {
             const caption = foundObj?.caption ? foundObj?.caption : foundObj?.displaydata;
 
-            const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), caption, commandConfig.prompts?.[0]?.promptValues, tokens, commandConfig);
+            const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), caption, commandConfig?.prompts?.[0]?.promptValues, tokens, commandConfig);
 
             if ((!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) && type?.toLowerCase() === "page") {
                 showToast("Redirection link is not available for this page.");
@@ -6113,8 +6133,18 @@
         }
 
 
+        let preferredType = type;
+        if (preferredType) {
+            preferredType = preferredType.toLowerCase();
+            if (preferredType === "tstruct") preferredType = "t";
+            if (preferredType === "iview") preferredType = "i";
+        }
+
         const struct_rowList = axDatasourceObj[viewDataSourceKey];
-        const struct_row = struct_rowList.find(r => r.name === transId);
+        const struct_row = struct_rowList.find(r => 
+            r.name === transId && 
+            (!preferredType || (r.stype || "").toLowerCase() === preferredType)
+        ) || struct_rowList.find(r => r.name === transId);
 
         const primaryField = struct_row?.keyfield;
 
