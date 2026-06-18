@@ -3329,14 +3329,14 @@
             if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
                 resultList.unshift(goOption, popOption);
                 // resultList.unshift(goOption);
-                filteredObjects.unshift(popOption, goOption);
+                filteredObjects.unshift(goOption, popOption);
                 // filteredObjects.unshift(goOption);
             }
 
             //otherthan keyfield and userpermissionlisting it will work for all tokens which length is eqaul to 3(ex : peg)
             else if ((groupKey.toLowerCase() === "configure") && tokens.length === 3 && tokens[1].toLowerCase() !== "keyfield" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "user permissions" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "role permissions") {
                 resultList.unshift(goOption, popOption);
-                filteredObjects.unshift(popOption, goOption);
+                filteredObjects.unshift(goOption, popOption);
             }
 
             else if ((groupKey.toLowerCase() === "analyse") && tokens.length === 3) {
