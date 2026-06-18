@@ -3857,13 +3857,23 @@
 
             const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
             if (cachedList) {
-                const found = cachedList.find(item =>
-                    // 25/02/2026 - Updated to handle the comparison with displaydata, caption, name for robustness. Axi task no: Axi-0051
+                // Find matching items
+                const matches = cachedList.filter(item =>
                     (cleanString(item.displaydata) || "").toLowerCase() === tokenText.toLowerCase() ||
                     (cleanString(item.caption) || "").toLowerCase() === tokenText.toLowerCase() ||
                     (cleanString(item.name) || "").toLowerCase() === tokenText.toLowerCase()
                 );
-                if (found) {
+
+                if (matches.length > 0) {
+                    let found = matches[0];
+                    const preferredType = resolvedParamType?.[tokenIndex];
+                    if (preferredType && matches.length > 1) {
+                        const typeMatched = matches.find(item => (item.stype || "").toLowerCase() === preferredType.toLowerCase());
+                        if (typeMatched) {
+                            found = typeMatched;
+                        }
+                    }
+
                     let real = found.name || found.sqlname || found.displaydata;
 
                     if (real.includes("(") && real.includes(")")) {
@@ -4071,7 +4081,9 @@
 
             li.addEventListener("mousedown", e => {
                 e.preventDefault();
-                apply(i);
+                // Find the index of the selected item in the original filteredObjects array
+                const objectIndex = filteredObjects.indexOf(item);
+                apply(objectIndex !== -1 ? objectIndex : i);
             });
 
             list.appendChild(li);
@@ -4261,10 +4273,13 @@
 
 
         // Get Real Value logic
-        const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
-
-
-
+        // Fix: Select the exact object from filteredObjects using the index to avoid selecting an incorrect type when two items have the same name/caption/displaydata (e.g. slord tstruct vs slord iview).
+        let foundObj = null;
+        if (filteredObjects && index >= 0 && index < filteredObjects.length) {
+            foundObj = filteredObjects[index];
+        } else {
+            foundObj = filteredObjects.find(item => item.displaydata === suggestion);
+        }
 
         if (foundObj && isViewCommand) {
             const caption = foundObj?.caption ? foundObj?.caption : foundObj?.displaydata;
@@ -4746,7 +4761,7 @@
             if (grpKey)
                 saveCommandConfig = commands[grpKey];
 
-            if (e.key === 'Backspace' && (grpKey.toLowerCase() === "create" || grpKey.toLowerCase() === "edit")) {
+            if (e.key === 'Backspace' && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit")) {
                 let transIDcheck = setCommandTransid;
                 if (input.selectionStart !== input.selectionEnd) {
                     createfieldnamevaluesList[transIDcheck] = [];
