@@ -333,3 +333,17 @@ VALUES (gen_random_uuid(), 12, 2, 'API Name', 'axi_publishapi', ':username');
     *   Verify that you executed the database scripts (specifically `axi_commands` and `axi_command_prompts`) and the tables are populated.
 *   **Data permissions / Row filtering issue:**
     *   Axi evaluates permissions via `fn_permissions_getpermission`. Verify that the user's role responsibilities are correctly assigned in Axpert's standard user settings pages.
+
+---
+
+## 🚀 Release Notes & Recent Bug Fixes (June 18, 2026)
+
+### 1. Interactive Walkthrough Tour Enhancements
+*   **Aesthetic Tooltip Upgrades:** Visual icons inside the walkthrough tooltips are now styled with high-contrast, rounded purple badges (`#a100ff`) and bright white icon descriptors for excellent visibility.
+*   **Help Trigger Consolidation:** Consolidating user walkthrough launch commands to trigger via `"help"` (which auto-capitalizes to `"Help "` and displays suggestions instantly).
+*   **Z-Index & Reflow Fixes:** Adjusted `intro.js` z-index mappings (`10000000+`) to float above elevated palette layers, and switched lifecycle hooks to `onchange` to prevent layout calculation errors.
+
+### 2. Duplicate Metadata Name Resolution (`tstruct` vs `iview`)
+*   **Selection Index Matching:** Click interactions resolved in `apply()` now query elements by their exact array indexes in `filteredObjects` rather than finding by name string, solving duplicate click routing bugs (e.g., selecting `tstruct` loading `iview` with same name).
+*   **Type Resolution Safeguards:** Updated `tryResolveToken` and `processParamforEditndView` to check the saved `resolvedParamType` context, prioritizing matching structure types when duplicates are present.
+*   **Source Token Filter Alignment:** Synchronized suggestion array filters so that both `items` and `filteredObjects` align perfectly when stripping temporary keywords (like `"source"`) during typing.

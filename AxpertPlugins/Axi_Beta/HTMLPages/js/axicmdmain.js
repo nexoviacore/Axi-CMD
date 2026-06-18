@@ -1924,6 +1924,10 @@
 
                         return itemStr.toLowerCase() === lastTokenClean.toLowerCase();
                     });
+                } else if (lastTokenClean.toLowerCase() === "help") {
+                    input.value = "Help ";
+                    handleInput();
+                    return;
                 }
 
                 if (indexToApply !== -1) {
@@ -4851,7 +4855,7 @@
 
 
             }
-            else if (e.key === 'Backspace' && grpKey.toLowerCase() === "view") {
+            else if (e.key === 'Backspace' && grpKey?.toLowerCase() === "view") {
                 if (input.selectionStart !== input.selectionEnd) {
                     setCommandTransid = null;
                     dateControlBoolean = false;
@@ -4897,7 +4901,7 @@
             //    return;
             //}
 
-            if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "enter") && (grpKey.toLowerCase() === "create" || grpKey.toLowerCase() === "edit" || grpKey.toLowerCase() === "view" || grpKey.toLowerCase() === "configure")) {
+            if ((e.ctrlKey && e.shiftKey && e.key?.toLowerCase() === "enter") && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit" || grpKey?.toLowerCase() === "view" || grpKey?.toLowerCase() === "configure")) {
 
                 e.preventDefault();
 
@@ -11411,6 +11415,8 @@
     }
 
     function startWalkthrough() {
+        render(); 
+        renderFavoritesUI(); 
         if (typeof introJs !== "undefined") {
             injectTourStyles();
             runTour();
@@ -11530,34 +11536,34 @@
 
     function runTour() {
         const oldVal = input.value;
-        input.value = "help";
+        input.value = "Help";
         
         const tour = introJs();
         tour.setOptions({
             steps: [
                 {
                     element: '#Axi-Searchinp',
-                    intro: '<strong>Search & Execute</strong><br/>Type commands, pages, views, or configurations here. Press Enter to run.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Search & Execute</strong></div>Type commands eg: create <tstructname>, Edit <tstructname> <fieldname> <fieldvalue>, view <tstructname> <fieldvalue>, or configure peg <pegname> and access Devtools like DB Explorer, ADS creation etc  here. Press Enter to run.',
                     position: 'bottom'
                 },
                 {
                     element: '#axiSuggestions',
-                    intro: '<strong>Live Suggestions</strong><br/>Autocomplete matches list dynamically. Use Up/Down arrows to navigate.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">list</span></span><strong style="color: #a100ff;">Live Suggestions</strong></div>Autocomplete matches list dynamically. Use Up/Down arrows to navigate.',
                     position: 'bottom'
                 },
                 {
                     element: '#axiFavouriteBtn',
-                    intro: '<strong>Bookmark Commands</strong><br/>Pin frequently used commands to your favorites card here.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">star</span></span><strong style="color: #a100ff;">Bookmark Commands</strong></div>Pin frequently used commands to your favorites card here.',
                     position: 'bottom'
                 },
                 {
                     element: '#btnRefresh',
-                    intro: '<strong>Force Reload Metadata</strong><br/>Click here to refresh database commands and update active shell views.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">refresh</span></span><strong style="color: #a100ff;">Force Reload Metadata</strong></div>Click here to refresh database commands and update active shell views.',
                     position: 'bottom'
                 },
                 {
                     element: '.searchwrap-AXI',
-                    intro: '<strong>Quick Exit</strong><br/>Press Esc or click outside the palette to close the interface anytime.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">logout</span></span><strong style="color: #a100ff;">Quick Exit</strong></div>Press Esc or click outside the palette to close the interface anytime.',
                     position: 'bottom'
                 }
             ],
@@ -11589,7 +11595,7 @@
                     megaDropdown.style.zIndex = "";
                 }
                 if (targetElement && targetElement.id === "Axi-Searchinp") {
-                    input.value = "help";
+                    input.value = "Help";
                 }
             }
         });
