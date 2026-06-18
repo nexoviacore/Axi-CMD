@@ -3890,9 +3890,13 @@
 
                 if (matches.length > 0) {
                     let found = matches[0];
-                    const preferredType = resolvedParamType?.[tokenIndex];
-                    if (preferredType && matches.length > 1) {
-                        const typeMatched = matches.find(item => (item.stype || "").toLowerCase() === preferredType.toLowerCase());
+                    let preferredType = resolvedParamType?.[tokenIndex];
+                    const cmdGroup = currentTokens[0]?.toLowerCase();
+                    if (cmdGroup === "edit" && tokenIndex === 1) {
+                        preferredType = "t";
+                    }
+                    if ((preferredType || (cmdGroup === "edit" && tokenIndex === 1)) && matches.length > 1) {
+                        const typeMatched = matches.find(item => (item.stype || "").toLowerCase() === (preferredType || "t").toLowerCase());
                         if (typeMatched) {
                             found = typeMatched;
                         }
@@ -5395,7 +5399,17 @@
 
         const struct_dataList = axDatasourceObj[struct_sourceKey];
 
-        const struct_row = struct_dataList.find(r => r.name === transId);
+        let preferredType = resolvedParamType?.[1];
+        if (preferredType) {
+            preferredType = preferredType.toLowerCase();
+            if (preferredType === "tstruct") preferredType = "t";
+            if (preferredType === "iview") preferredType = "i";
+        }
+
+        const struct_row = struct_dataList.find(r => 
+            r.name === transId && 
+            (!preferredType || (r.stype || "").toLowerCase() === preferredType)
+        ) || struct_dataList.find(r => r.name === transId);
 
         const primaryField = struct_row?.keyfield;
 
@@ -11543,7 +11557,7 @@
             steps: [
                 {
                     element: '#Axi-Searchinp',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Search & Execute</strong></div>Type commands eg: create <tstructname>, Edit <tstructname> <fieldname> <fieldvalue>, view <tstructname> <fieldvalue>, or configure peg <pegname> and access Devtools like DB Explorer, ADS creation etc  here. Press Enter to run.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Search & Execute</strong></div>Type commands eg: create tstructname, Edit tstructname fieldname fieldvalue, view tstructname fieldvalue, or configure peg pegname and access Devtools like DB Explorer, ADS creation etc  here. Press Enter to run.',
                     position: 'bottom'
                 },
                 {
