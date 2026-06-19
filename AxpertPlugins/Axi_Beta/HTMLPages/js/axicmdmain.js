@@ -266,7 +266,10 @@
 
         // "AXI_FAVORITES_URL": "http://localhost:90/AxiApi/api/v1/Axi/user-favourites"
 
-        AxiArmUrl = armUrl;
+        AxiArmUrl = (typeof armUrl !== "undefined" && armUrl) || 
+                    (typeof parent !== "undefined" && typeof parent.armUrl !== "undefined" && parent.armUrl) || 
+                    (typeof top !== "undefined" && typeof top.armUrl !== "undefined" && top.armUrl) || 
+                    "";
         console.log("AxiArmUrl = " + AxiArmUrl);
         apiMetadataUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/axi_get`;
         console.log("ApiMetadataUrl = " + apiMetadataUrl);
