@@ -7471,7 +7471,7 @@
         const toolbar = doc.querySelector(".BottomToolbarBar");
         if (!toolbar) return {};
 
-        const buttons = toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit']");
+        const buttons = toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn");
 
         const result = {};
 
@@ -7484,6 +7484,7 @@
             if (!id) return;
             const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
+            if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
 
 
 
@@ -7508,7 +7509,7 @@
         const toolbar = doc.querySelector(".toolbarRightMenu");
         if (!toolbar) return {};
 
-        const buttons = toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit']");
+        const buttons = toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn");
 
         const result = {};
 
@@ -7521,6 +7522,7 @@
             if (!id) return;
             const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
+            if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
 
 
 
