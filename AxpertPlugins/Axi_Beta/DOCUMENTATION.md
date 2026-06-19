@@ -239,10 +239,9 @@ Execute the appropriate scripts based on your target database:
 
 ## 📖 User Usage Guide
 
-### Activating the Palette
-1.  Focus anywhere on the Axpert application home shell.
-2.  Press **`Ctrl + Space`** on your keyboard. The search input bar labeled "Axpert AI" will glide into focus, overlaying suggestions.
-3.  To hide the palette, click anywhere outside the suggestion box or press `Escape`.
+### Activating the Palette & Help Walkthrough
+Type **`help`** (case-insensitive) inside the Axi Command pallete search bar. The palette will automatically convert it to `"Help "` and suggest the next token. Select the action or hit **Enter** to launch the interactive onboarding tour.
+
 
 ### Constructing Commands with Auto-Complete Hints
 Axi features a **predictive parameter builder** that dynamically shows context hints inside the search bar as you type:
@@ -283,12 +282,6 @@ When searching lists of entities, Axi routes the data into the interactive **Sma
 *   **Column Customization:** Click the **Services** icon (Utilities) and select **Select Fields**. Check or uncheck columns to customize your data table view.
 *   **Batch Action (Delete):** Select multiple records using checkboxes, then click the **Trash/Delete** icon in the toolbar to batch-delete them.
 
-### Visual Dashboards (Analytics)
-Launch the analytics command to monitor business operations:
-1.  Type `Analyse` followed by your data ledger name (e.g., `Analyse sales_ledger`).
-2.  A visual dashboard will load, rendering bar, pie, and line charts based on real-time database queries.
-3.  **Adjust Layout:** Click the **`+`** (Plus) or **`-`** (Minus) icons in the Analytics toolbar to scale the size of cards, modifying how many charts appear per row.
-4.  **Data Refresh:** Click the **Refresh** icon to query the database and reload the charts.
 
 ---
 
@@ -324,7 +317,7 @@ VALUES (gen_random_uuid(), 12, 2, 'API Name', 'axi_publishapi', ':username');
 
 ## 🛠 Troubleshooting & Maintenance
 
-*   **Command Palette is not opening:**
+*   **Command Palette is not visible:**
     *   Ensure the web application has registered `AxiCMDMainPage.html` as the Application Template in Dev Options.
     *   Check if the console logs show `Axi Input not ready yet... waiting`. If so, ensure that the search input ID (`Axi-Searchinp`) is present in the rendered HTML.
 *   **Search suggestions are empty:**
@@ -336,14 +329,19 @@ VALUES (gen_random_uuid(), 12, 2, 'API Name', 'axi_publishapi', ':username');
 
 ---
 
-## 🚀 Release Notes & Recent Bug Fixes (June 18, 2026)
+## 🚀 Release Notes & Recent Bug Fixes (June 19, 2026)
 
-### 1. Interactive Walkthrough Tour Enhancements
-*   **Aesthetic Tooltip Upgrades:** Visual icons inside the walkthrough tooltips are now styled with high-contrast, rounded purple badges (`#a100ff`) and bright white icon descriptors for excellent visibility.
-*   **Help Trigger Consolidation:** Consolidating user walkthrough launch commands to trigger via `"help"` (which auto-capitalizes to `"Help "` and displays suggestions instantly).
-*   **Z-Index & Reflow Fixes:** Adjusted `intro.js` z-index mappings (`10000000+`) to float above elevated palette layers, and switched lifecycle hooks to `onchange` to prevent layout calculation errors.
+### 1. Interactive Walkthrough Tour & Help Command
+*   **Help Trigger Consolidation:** Consolidated help triggers so typing `"help"` (case-insensitive) auto-converts to `"Help "` and displays interactive suggestion tokens instantly.
+*   **Aesthetic Tooltip Upgrades:** Styled walkthrough tooltips with high-contrast, rounded purple badges (`#a100ff`) and bright white icons for high visibility.
+*   **Z-Index & Reflow Fixes:** Adjusted `intro.js` z-index to `10000000+` to float tooltips cleanly above elevated palette layers.
 
 ### 2. Duplicate Metadata Name Resolution (`tstruct` vs `iview`)
-*   **Selection Index Matching:** Click interactions resolved in `apply()` now query elements by their exact array indexes in `filteredObjects` rather than finding by name string, solving duplicate click routing bugs (e.g., selecting `tstruct` loading `iview` with same name).
-*   **Type Resolution Safeguards:** Updated `tryResolveToken` and `processParamforEditndView` to check the saved `resolvedParamType` context, prioritizing matching structure types when duplicates are present.
-*   **Source Token Filter Alignment:** Synchronized suggestion array filters so that both `items` and `filteredObjects` align perfectly when stripping temporary keywords (like `"source"`) during typing.
+*   **Index-Based Dispatching:** Updated element click resolution inside `apply()` to select elements by exact array index in `filteredObjects` rather than name string, preventing type selection conflicts.
+*   **Type Resolution Safeguards:** Enhanced `tryResolveToken`, `processParamforEditndView`, and `handleEditData` to reference the active `resolvedParamType`, prioritizing the matching type structure.
+*   **Edit Command Type Constraint:** Forced `tryResolveToken` under `Edit` command contexts to resolve structure names as type `"t"` (Tstruct) rather than `"i"` (Iview), enabling edit parameter properties like the `"with"` token to suggest correctly.
+
+### 3. Executable Toolbar Button Scanners (`Run` Command)
+*   **Direct Element Targeting:** Refactored toolbar query selectors to select only direct links, buttons, and custom wrappers (`a`, `button`, `input`, and actionable `div[data-kt-menu-trigger]`). This resolves issues where inner buttons (e.g., `"format_list_bulleted"` list view) without explicit `id` parameters were skipped, and restores dropdown trigger options (e.g. `ivirActionButton`).
+*   **Hidden Wrapper Exclusions:** Added recursive container checks to filter out hidden buttons or buttons wrapped inside hidden lists (`.d-none`, `.hidden`, `display: none` wrappers) like `"add"`, `"remove"`, and other unused dropdown utility items.
+*   **Utility Dropdown Filters:** Screened out generic parent dropdown toggle buttons (such as the wrapper labeled `"Data"`) to display only execution-ready options inside command suggestions.
