@@ -420,9 +420,15 @@
             return;
         }
 
+        // let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        // console.log("Origin: " + appSessUrl);
+        // const projInfoKey = `projInfo-${appSessUrl}`;
+
+        // const appname = localStorage.getItem(projInfoKey);
         const appname = getProjectName();
         console.log(appname);
 
+        // await ensureApiMetadataConfigLoaded();
         loadFavorites();
 
         if (!apiMetadataUrl) {
@@ -431,21 +437,19 @@
             return;
         }
 
-        const cached = localStorage.getItem("axi_commands_raw_v1");
-        let commandsFromDb = null;
-        if (cached && !isForced) {
-            try {
-                commandsFromDb = JSON.parse(cached);
-            } catch (e) {
-                console.error("Failed to parse cached raw commands", e);
-            }
-        }
 
-        if (!commandsFromDb) {
+        const cached = localStorage.getItem("axi_commands_v1");
+        if (cached && !isForced) {
+            commands = JSON.parse(cached);
+            console.log(JSON.stringify(commands));
+
+        } else {
+
             try {
                 isCommandsLoading = true;
                 input.disabled = isCommandsLoading;
                 input.placeholder = "Initializing commands, Please wait....";
+                const accessPermissions = getAccessPermissions();
 
                 const res = await fetch(`${apiMetadataUrl}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
 
@@ -456,39 +460,29 @@
                 }
 
                 if (res.status === 204) {
-                    showToast("No commands found. Please check 'AxiApi' Configuration");
+                    showToast("No commands found. Please check 'AxiApi' Configuration")
                     return;
                 }
 
+                const message = isForced ? "Refreshed Successfully!" : "Commands Loaded Successfully!."
+
                 const data = await res.json();
-                commandsFromDb = data.commands;
-                localStorage.setItem("axi_commands_raw_v1", JSON.stringify(commandsFromDb));
+                let commandsFromDb = data.commands;
+
+                commands = buildCommandsByAccessPermissions(commandsFromDb, accessPermissions);
+
+                console.log(JSON.stringify(commands));
+                localStorage.setItem("axi_commands_v1", JSON.stringify(commands));
+                showToast(message, 3000, true);
 
             } catch (err) {
                 console.error("Critical: Could not load commands", err);
             } finally {
                 isCommandsLoading = false;
                 input.disabled = isCommandsLoading;
-                input.placeholder = "Axpert AI";
+                input.placeholder = "Axpert AI"
+                // handleInput(); 
             }
-        }
-
-        if (commandsFromDb) {
-            const message = isForced ? "Refreshed Successfully!" : "Commands Loaded Successfully!.";
-            const accessPermissions = getAccessPermissions();
-            // Clone to avoid mutating the cached object stored in memory
-            commands = buildCommandsByAccessPermissions(JSON.parse(JSON.stringify(commandsFromDb)), accessPermissions);
-            // Append Help command to initial suggestions list
-            commands["Help"] = {
-                cmdToken: 11,
-                command: "",
-                commandGroup: "Help",
-                prompts: []
-            };
-            console.log(JSON.stringify(commands));
-            // if (isForced) {
-                showToast(message, 3000, true);
-            // }
         }
     }
 
@@ -1889,15 +1883,6 @@
 
                 return itemText !== "source";
             });
-            filteredObjects = filteredObjects.filter(item => {
-                const itemText = (
-                    typeof item === "string"
-                        ? item
-                        : (item.displaydata || item.name || "")
-                ).toLowerCase();
-
-                return itemText !== "source";
-            });
         }
 
 
@@ -1924,10 +1909,6 @@
 
                         return itemStr.toLowerCase() === lastTokenClean.toLowerCase();
                     });
-                } else if (lastTokenClean.toLowerCase() === "help") {
-                    input.value = "Help ";
-                    handleInput();
-                    return;
                 }
 
                 if (indexToApply !== -1) {
@@ -2770,22 +2751,10 @@
 
         buttonsList = Object.values(allButtons).map(btn => ({
             name: btn.id,
-            onclick: btn.element.getAttribute("onclick"),
             displaydata: `${btn.label} (${btn.id})`
         }));
 
-        const uniqueButtonsMap = new Map();
-        buttonsList.forEach(btn => {
-            if (btn.onclick) {
-                if (!uniqueButtonsMap.has(btn.onclick)) {
-                    uniqueButtonsMap.set(btn.onclick, btn);
-                }
-            } else {
-                uniqueButtonsMap.set(btn.name, btn);
-            }
-        });
-
-        const filtered = Array.from(uniqueButtonsMap.values()).filter(item =>
+        const filtered = buttonsList.filter(item =>
             item.displaydata.toLowerCase().includes(partialTyped.toLowerCase())
         );
 
@@ -2823,10 +2792,6 @@
         }
 
         const groupKey = cleanString(tokens[0]);
-
-        if (groupKey.toLowerCase() === "help") {
-            return [goOption];
-        }
         if (tokens.length === 1 && !endsWithSpace) {
             hintDiv.textContent = "";
             return Object.keys(commands).filter(k => {
@@ -3342,14 +3307,14 @@
             if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
                 resultList.unshift(goOption, popOption);
                 // resultList.unshift(goOption);
-                filteredObjects.unshift(goOption, popOption);
+                filteredObjects.unshift(popOption, goOption);
                 // filteredObjects.unshift(goOption);
             }
 
             //otherthan keyfield and userpermissionlisting it will work for all tokens which length is eqaul to 3(ex : peg)
             else if ((groupKey.toLowerCase() === "configure") && tokens.length === 3 && tokens[1].toLowerCase() !== "keyfield" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "user permissions" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "role permissions") {
                 resultList.unshift(goOption, popOption);
-                filteredObjects.unshift(goOption, popOption);
+                filteredObjects.unshift(popOption, goOption);
             }
 
             else if ((groupKey.toLowerCase() === "analyse") && tokens.length === 3) {
@@ -3452,18 +3417,7 @@
             struct_name = struct_split[0];
         }
 
-        let preferredType = resolvedParamType?.[1];
-        if (preferredType) {
-            preferredType = preferredType.toLowerCase();
-            if (preferredType === "tstruct") preferredType = "t";
-            if (preferredType === "iview") preferredType = "i";
-        }
-
-        const struct_row = struct_dataList.find(r => 
-            r.name === struct_name && 
-            (!preferredType || (r.stype || "").toLowerCase() === preferredType)
-        ) || struct_dataList.find(r => r.name === struct_name);
-
+        const struct_row = struct_dataList.find(r => r.name === struct_name);
         if (!struct_row) {
             console.log("The give Form is not in the ads " + struct_source + " list");
             showToast("The Given Transid is not in the list");
@@ -3881,27 +3835,13 @@
 
             const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
             if (cachedList) {
-                // Find matching items
-                const matches = cachedList.filter(item =>
+                const found = cachedList.find(item =>
+                    // 25/02/2026 - Updated to handle the comparison with displaydata, caption, name for robustness. Axi task no: Axi-0051
                     (cleanString(item.displaydata) || "").toLowerCase() === tokenText.toLowerCase() ||
                     (cleanString(item.caption) || "").toLowerCase() === tokenText.toLowerCase() ||
                     (cleanString(item.name) || "").toLowerCase() === tokenText.toLowerCase()
                 );
-
-                if (matches.length > 0) {
-                    let found = matches[0];
-                    let preferredType = resolvedParamType?.[tokenIndex];
-                    const cmdGroup = currentTokens[0]?.toLowerCase();
-                    if (cmdGroup === "edit" && tokenIndex === 1) {
-                        preferredType = "t";
-                    }
-                    if ((preferredType || (cmdGroup === "edit" && tokenIndex === 1)) && matches.length > 1) {
-                        const typeMatched = matches.find(item => (item.stype || "").toLowerCase() === (preferredType || "t").toLowerCase());
-                        if (typeMatched) {
-                            found = typeMatched;
-                        }
-                    }
-
+                if (found) {
                     let real = found.name || found.sqlname || found.displaydata;
 
                     if (real.includes("(") && real.includes(")")) {
@@ -3958,8 +3898,8 @@
             "ask": "question_answer",
             "end": "stop",
             "editprompt": "edit",
-            "analyze": "analytics",
-            "help": "help_outline"
+            "analyze": "analytics"
+
         };
 
 
@@ -4109,9 +4049,7 @@
 
             li.addEventListener("mousedown", e => {
                 e.preventDefault();
-                // Find the index of the selected item in the original filteredObjects array
-                const objectIndex = filteredObjects.indexOf(item);
-                apply(objectIndex !== -1 ? objectIndex : i);
+                apply(i);
             });
 
             list.appendChild(li);
@@ -4301,18 +4239,15 @@
 
 
         // Get Real Value logic
-        // Fix: Select the exact object from filteredObjects using the index to avoid selecting an incorrect type when two items have the same name/caption/displaydata (e.g. slord tstruct vs slord iview).
-        let foundObj = null;
-        if (filteredObjects && index >= 0 && index < filteredObjects.length) {
-            foundObj = filteredObjects[index];
-        } else {
-            foundObj = filteredObjects.find(item => item.displaydata === suggestion);
-        }
+        const foundObj = filteredObjects.find(item => item.displaydata === suggestion);
+
+
+
 
         if (foundObj && isViewCommand) {
             const caption = foundObj?.caption ? foundObj?.caption : foundObj?.displaydata;
 
-            const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), caption, commandConfig?.prompts?.[0]?.promptValues, tokens, commandConfig);
+            const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), caption, commandConfig.prompts?.[0]?.promptValues, tokens, commandConfig);
 
             if ((!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) && type?.toLowerCase() === "page") {
                 showToast("Redirection link is not available for this page.");
@@ -4789,7 +4724,7 @@
             if (grpKey)
                 saveCommandConfig = commands[grpKey];
 
-            if (e.key === 'Backspace' && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit")) {
+            if (e.key === 'Backspace' && (grpKey.toLowerCase() === "create" || grpKey.toLowerCase() === "edit")) {
                 let transIDcheck = setCommandTransid;
                 if (input.selectionStart !== input.selectionEnd) {
                     createfieldnamevaluesList[transIDcheck] = [];
@@ -4859,7 +4794,7 @@
 
 
             }
-            else if (e.key === 'Backspace' && grpKey?.toLowerCase() === "view") {
+            else if (e.key === 'Backspace' && grpKey.toLowerCase() === "view") {
                 if (input.selectionStart !== input.selectionEnd) {
                     setCommandTransid = null;
                     dateControlBoolean = false;
@@ -4905,7 +4840,7 @@
             //    return;
             //}
 
-            if ((e.ctrlKey && e.shiftKey && e.key?.toLowerCase() === "enter") && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit" || grpKey?.toLowerCase() === "view" || grpKey?.toLowerCase() === "configure")) {
+            if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "enter") && (grpKey.toLowerCase() === "create" || grpKey.toLowerCase() === "edit" || grpKey.toLowerCase() === "view" || grpKey.toLowerCase() === "configure")) {
 
                 e.preventDefault();
 
@@ -4954,11 +4889,8 @@
 
 
 
-                const cmdText = input.value.trim().toLowerCase();
                 executeCommandsV2();
-                if (cmdText !== "help") {
-                    hide();
-                }
+                hide();
                 return;
 
 
@@ -5141,12 +5073,6 @@
 
         if (!text || !commands) return;
 
-        const lowerText = text.toLowerCase();
-        if (lowerText === "help") {
-            startWalkthrough();
-            return;
-        }
-
 
 
         const tokens = getTokens(text);
@@ -5160,25 +5086,9 @@
 
         const groupKey = cleanString(tokens[0]);
 
-        const groupNameNormalized = groupKey.toLowerCase();
-        const accessPermissions = getAccessPermissions();
 
-        if (groupNameNormalized === "configure" && !accessPermissions.appMgrAccess) {
-            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
-            return;
-        }
-        if (groupNameNormalized === "upload" && !accessPermissions.importAccess) {
-            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
-            return;
-        }
-        if (groupNameNormalized === "download" && !accessPermissions.exportAccess) {
-            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
-            return;
-        }
-        if (groupNameNormalized === "devtools" && !accessPermissions.buildAccess) {
-            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
-            return;
-        }
+
+
 
         const groupConfig = commands[groupKey];
 
@@ -5203,11 +5113,6 @@
 
 
 
-        }
-
-
-        if (groupKey.toLowerCase() === "run") {
-            return;
         }
 
 
@@ -5399,17 +5304,7 @@
 
         const struct_dataList = axDatasourceObj[struct_sourceKey];
 
-        let preferredType = resolvedParamType?.[1];
-        if (preferredType) {
-            preferredType = preferredType.toLowerCase();
-            if (preferredType === "tstruct") preferredType = "t";
-            if (preferredType === "iview") preferredType = "i";
-        }
-
-        const struct_row = struct_dataList.find(r => 
-            r.name === transId && 
-            (!preferredType || (r.stype || "").toLowerCase() === preferredType)
-        ) || struct_dataList.find(r => r.name === transId);
+        const struct_row = struct_dataList.find(r => r.name === transId);
 
         const primaryField = struct_row?.keyfield;
 
@@ -6151,18 +6046,8 @@
         }
 
 
-        let preferredType = type;
-        if (preferredType) {
-            preferredType = preferredType.toLowerCase();
-            if (preferredType === "tstruct") preferredType = "t";
-            if (preferredType === "iview") preferredType = "i";
-        }
-
         const struct_rowList = axDatasourceObj[viewDataSourceKey];
-        const struct_row = struct_rowList.find(r => 
-            r.name === transId && 
-            (!preferredType || (r.stype || "").toLowerCase() === preferredType)
-        ) || struct_rowList.find(r => r.name === transId);
+        const struct_row = struct_rowList.find(r => r.name === transId);
 
         const primaryField = struct_row?.keyfield;
 
@@ -7471,20 +7356,16 @@
         const toolbar = doc.querySelector(".BottomToolbarBar");
         if (!toolbar) return {};
 
-        const buttons = toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn");
+        const buttons = toolbar.querySelectorAll("a");
 
         const result = {};
 
         buttons.forEach((btn) => {
-            // Check if element or its parent is hidden
-            if (btn.offsetParent === null) return;
-            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[style*='display: none']")) return;
-
-            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
+            if (!hasAction(btn)) return;
+            const id = btn.id || btn.getAttribute("data-id");
             if (!id) return;
             const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
-            if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
 
 
 
@@ -7509,20 +7390,17 @@
         const toolbar = doc.querySelector(".toolbarRightMenu");
         if (!toolbar) return {};
 
-        const buttons = toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn");
+        const buttons = toolbar.querySelectorAll("a");
 
         const result = {};
 
         buttons.forEach((btn) => {
-            // Check if element or its parent is hidden
-            if (btn.offsetParent === null) return;
-            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[style*='display: none']") || btn.closest(".hidden") || btn.closest("[style*='display:none']")) return;
-
-            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
+            if (!hasAction(btn)) return;
+            const id = btn.id || btn.getAttribute("data-id");
             if (!id) return;
+            // const label = btn.innerText.trim();
             const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
-            if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
 
 
 
@@ -7658,6 +7536,16 @@
         const dataExtra = btn.getAttribute("data-extra");
         if (dataExtra) return dataExtra.trim();
 
+        const title = btn.getAttribute("title");
+        if (title) return title.trim();
+
+        const menuTitle = btn.querySelector(".menu-title");
+
+        if (menuTitle) return menuTitle.textContent.trim();
+
+
+
+
         const text = Array.from(btn.childNodes)
             .filter(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
             .map(n => n.textContent.trim())
@@ -7668,13 +7556,6 @@
 
             return text;
         }
-
-        const title = btn.getAttribute("title");
-        if (title) return title.trim();
-
-        const menuTitle = btn.querySelector(".menu-title");
-
-        if (menuTitle) return menuTitle.textContent.trim();
 
 
 
@@ -10997,13 +10878,50 @@
         // AppMgrAccess(Config)
         // ImportAccess(Upload)
         // ExportAccess(Download)
-        // Build(Open/DevTools)
+        // Build(Open)
+        let appMgrAccess;
+        let importAccess;
+        let exportAccess;
+        let buildAccess;
+
+
+
+        const appMgrAccessKey = generateLocalStorageKey("appMgrAccess", window.mainUserName);
+        const importAccessKey = generateLocalStorageKey("importAccess", window.mainUserName);
+        const exportAccessKey = generateLocalStorageKey("exportAccess", window.mainUserName);
+        const buildAccessKey = generateLocalStorageKey("buildAccess", window.mainUserName);
+        appMgrAccess = localStorage.getItem(appMgrAccessKey);
+        if (!appMgrAccess) {
+            appMgrAccess = window.getSessionValue("AppMgrAccess");
+            localStorage.setItem(appMgrAccessKey, appMgrAccess);
+        }
+
+        importAccess = localStorage.getItem(importAccessKey);
+        if (!importAccess) {
+            importAccess = window.getSessionValue("ImportAccess");
+            localStorage.setItem(importAccessKey, importAccess);
+        }
+
+        exportAccess = localStorage.getItem(exportAccessKey);
+        if (!exportAccess) {
+            exportAccess = window.getSessionValue("ExportAccess");
+            localStorage.setItem(exportAccessKey, exportAccess);
+        }
+
+        buildAccess = localStorage.getItem(buildAccessKey);
+        if (!buildAccess) {
+            buildAccess = window.getSessionValue("Build");
+            localStorage.setItem(buildAccessKey, buildAccess);
+        }
+
+
         return {
-            appMgrAccess: strToBool(window.getSessionValue("AppMgrAccess")),
-            importAccess: strToBool(window.getSessionValue("ImportAccess")),
-            exportAccess: strToBool(window.getSessionValue("ExportAccess")),
-            buildAccess: strToBool(window.getSessionValue("Build")),
-        };
+            appMgrAccess: strToBool(appMgrAccess),
+            importAccess: strToBool(importAccess),
+            exportAccess: strToBool(exportAccess),
+            buildAccess: strToBool(buildAccess),
+
+        }
     }
 
     function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions) {
@@ -11097,9 +11015,11 @@
     }
 
     function strToBool(str) {
-        if (!str) return false;
-        const s = String(str).toLowerCase().trim();
-        return s === "t" || s === "true";
+        if (str.toLowerCase() === "t" || str.toLowerCase() === "true") {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     function showFavoriteModel(cmdText, targetUrl, isEdit = false) {
@@ -11435,211 +11355,14 @@
 
     }
 
-    function startWalkthrough() {
-        render(); 
-        renderFavoritesUI(); 
-        if (typeof introJs !== "undefined") {
-            injectTourStyles();
-            runTour();
-            return;
-        }
 
-        const appUrl = getAppBaseUrl();
 
-        // Dynamically load CSS
-        if (!document.querySelector('link[href*="introjs.min.css"]')) {
-            const link = document.createElement("link");
-            link.rel = "stylesheet";
-            link.type = "text/css";
-            link.href = `${appUrl}/AxpertPlugins/Axi_Beta/HTMLPages/css/introjs.min.css`;
-            document.head.appendChild(link);
-        }
 
-        // Dynamically load JS
-        if (!document.querySelector('script[src*="intro.min.js"]')) {
-            const script = document.createElement("script");
-            script.type = "text/javascript";
-            script.src = `${appUrl}/AxpertPlugins/Axi_Beta/HTMLPages/js/intro.min.js`;
-            script.onload = () => {
-                injectTourStyles();
-                runTour();
-            };
-            script.onerror = () => {
-                showToast("Failed to load walkthrough tour. Please try again.");
-            };
-            document.head.appendChild(script);
-        } else {
-            const checkInterval = setInterval(() => {
-                if (typeof introJs !== "undefined") {
-                    clearInterval(checkInterval);
-                    injectTourStyles();
-                    runTour();
-                }
-            }, 50);
-        }
-    }
 
-    function injectTourStyles() {
-        if (document.getElementById("axiTourStyles")) return;
-        const style = document.createElement("style");
-        style.id = "axiTourStyles";
-        style.innerHTML = `
-            .AXI-Sec.axi-tour-active {
-                z-index: 9999999 !important;
-            }
-            .introjs-overlay {
-                background: rgba(10, 10, 18, 0.75) !important;
-                backdrop-filter: blur(4px);
-            }
-            .introjs-helperLayer {
-                z-index: 10000000 !important;
-                background: rgba(161, 0, 255, 0.1) !important;
-                border: 1px solid rgba(161, 0, 255, 0.5) !important;
-                box-shadow: 0 0 10px rgba(161, 0, 255, 0.3) !important;
-            }
-            .introjs-tooltipReferenceLayer {
-                z-index: 10000001 !important;
-            }
-            .introjs-tooltip {
-                background: #151521 !important;
-                color: #ffffff !important;
-                border: 1px solid #a100ff !important;
-                box-shadow: 0 0 15px rgba(161, 0, 255, 0.4) !important;
-                border-radius: 8px !important;
-                font-family: inherit !important;
-                padding: 15px !important;
-                min-width: 250px !important;
-            }
-            .introjs-tooltiptext {
-                font-size: 13px !important;
-                line-height: 1.5 !important;
-            }
-            .introjs-arrow.bottom {
-                border-top-color: #a100ff !important;
-            }
-            .introjs-arrow.top {
-                border-bottom-color: #a100ff !important;
-            }
-            .introjs-arrow.left {
-                border-right-color: #a100ff !important;
-            }
-            .introjs-arrow.right {
-                border-left-color: #a100ff !important;
-            }
-            .introjs-button {
-                background: #a100ff !important;
-                color: #ffffff !important;
-                border: none !important;
-                text-shadow: none !important;
-                border-radius: 4px !important;
-                font-weight: 600 !important;
-                transition: background 0.2s ease;
-                padding: 6px 12px !important;
-            }
-            .introjs-button:hover {
-                background: #c34dff !important;
-                color: #ffffff !important;
-            }
-            .introjs-disabled {
-                background: #2e2e3e !important;
-                color: #7e7e8e !important;
-                cursor: not-allowed !important;
-            }
-            .introjs-bullets ul li a.active {
-                background: #a100ff !important;
-            }
-            .introjs-bullets ul li a {
-                background: #5e5e6e !important;
-            }
-        `;
-        document.head.appendChild(style);
-    }
 
-    function runTour() {
-        const oldVal = input.value;
-        input.value = "Help";
-        
-        const tour = introJs();
-        tour.setOptions({
-            steps: [
-                {
-                    element: '#Axi-Searchinp',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Search & Execute</strong></div>Type commands eg: create tstructname, Edit tstructname fieldname fieldvalue, view tstructname fieldvalue, or configure peg pegname and access Devtools like DB Explorer, ADS creation etc  here. Press Enter to run.',
-                    position: 'bottom'
-                },
-                {
-                    element: '#axiSuggestions',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">list</span></span><strong style="color: #a100ff;">Live Suggestions</strong></div>Autocomplete matches list dynamically. Use Up/Down arrows to navigate.',
-                    position: 'bottom'
-                },
-                {
-                    element: '#axiFavouriteBtn',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">star</span></span><strong style="color: #a100ff;">Bookmark Commands</strong></div>Pin frequently used commands to your favorites card here.',
-                    position: 'bottom'
-                },
-                {
-                    element: '#btnRefresh',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">refresh</span></span><strong style="color: #a100ff;">Force Reload Metadata</strong></div>Click here to refresh database commands and update active shell views.',
-                    position: 'bottom'
-                },
-                {
-                    element: '.searchwrap-AXI',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">logout</span></span><strong style="color: #a100ff;">Quick Exit</strong></div>Press Esc or click outside the palette to close the interface anytime.',
-                    position: 'bottom'
-                }
-            ],
-            showBullets: true,
-            showStepNumbers: false,
-            exitOnOverlayClick: true,
-            scrollToElement: false,
-            doneLabel: 'Done',
-            nextLabel: 'Next &rarr;',
-            prevLabel: '&larr; Back'
-        });
 
-        tour.onchange((targetElement) => {
-            document.querySelector(".AXI-Sec")?.classList.add("axi-tour-active");
-            if (targetElement && targetElement.id === "axiSuggestions") {
-                input.value = "";
-                handleInput();
-                if (megaDropdown) {
-                    megaDropdown.style.setProperty("display", "flex", "important");
-                    megaDropdown.style.setProperty("z-index", "10000000", "important");
-                    megaDropdown.style.setProperty("opacity", "1", "important");
-                    void megaDropdown.offsetHeight;
-                }
-                // Force synchronous browser layout reflow to compute correct width/height
-                void targetElement.offsetHeight;
-            } else {
-                hide();
-                if (megaDropdown) {
-                    megaDropdown.style.zIndex = "";
-                }
-                if (targetElement && targetElement.id === "Axi-Searchinp") {
-                    input.value = "Help";
-                }
-            }
-        });
 
-        tour.onexit(() => {
-            input.value = oldVal;
-            handleInput();
-            document.querySelector(".AXI-Sec")?.classList.remove("axi-tour-active");
-            if (megaDropdown) {
-                megaDropdown.style.zIndex = "";
-            }
-        });
-        tour.oncomplete(() => {
-            input.value = oldVal;
-            handleInput();
-            document.querySelector(".AXI-Sec")?.classList.remove("axi-tour-active");
-            if (megaDropdown) {
-                megaDropdown.style.zIndex = "";
-            }
-        });
 
-        tour.start();
-    }
 
 })();
 
