@@ -7471,13 +7471,16 @@
         const toolbar = doc.querySelector(".BottomToolbarBar");
         if (!toolbar) return {};
 
-        const buttons = toolbar.querySelectorAll("a");
+        const buttons = toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit']");
 
         const result = {};
 
         buttons.forEach((btn) => {
-            if (!hasAction(btn)) return;
-            const id = btn.id || btn.getAttribute("data-id");
+            // Check if element or its parent is hidden
+            if (btn.offsetParent === null) return;
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[style*='display: none']")) return;
+
+            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
             if (!id) return;
             const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
@@ -7505,15 +7508,17 @@
         const toolbar = doc.querySelector(".toolbarRightMenu");
         if (!toolbar) return {};
 
-        const buttons = toolbar.querySelectorAll("a");
+        const buttons = toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit']");
 
         const result = {};
 
         buttons.forEach((btn) => {
-            if (!hasAction(btn)) return;
-            const id = btn.id || btn.getAttribute("data-id");
+            // Check if element or its parent is hidden
+            if (btn.offsetParent === null) return;
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[style*='display: none']") || btn.closest(".hidden") || btn.closest("[style*='display:none']")) return;
+
+            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
             if (!id) return;
-            // const label = btn.innerText.trim();
             const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
 
