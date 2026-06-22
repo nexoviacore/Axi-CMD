@@ -140,7 +140,7 @@
             "smart view attributes": handleConfigureSmartViewAttributes
         },
         //Open: {
-        SDK: {
+        DevTools: {
             default: handleOpenSource,
             "axpert data sources": handleOpenAds,
             //card: handleOpenCard,
@@ -641,7 +641,7 @@
 
                 }
 
-                if (valueIndex === -1 && (commandConfig.commandGroup?.toLowerCase() === "sdk" || commandConfig.commandGroup?.toLowerCase() === "configure")) {
+                if (valueIndex === -1 && (commandConfig.commandGroup?.toLowerCase() === "devtools" || commandConfig.commandGroup?.toLowerCase() === "configure")) {
 
                     return { config: prompt, realSource: null, error: "Not a Valid command" };
                 }
@@ -1155,6 +1155,8 @@
             window.LoadIframe(targetUrl);
         }
     }
+
+    
     function handleConfigureUserPermission({ tokens, commandConfig }) {
 
         //tstruct.aspx ? act = open & transid=a__up & axusername=aarav & fromsource=U & openerIV=axusers & isIV=true & isDupTab=false & dummyload=false % E2 % 99 % A0
@@ -3075,7 +3077,7 @@
                 return [goOption, popOption];
             }
 
-            else if (groupKey.toLowerCase() === "sdk" && tokens.length > 2) {
+            else if (groupKey.toLowerCase() === "devtools" && tokens.length > 2) {
                 filteredObjects = [goOption];
                 return [goOption];
             }
@@ -3330,7 +3332,7 @@
                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
 
                 if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
-                    if (groupKey.toLowerCase() === "sdk" && tokens.length > 2) {
+                    if (groupKey.toLowerCase() === "devtools" && tokens.length > 2) {
                         filteredObjects = [goOption];
                         return [goOption]
                     }
@@ -3452,7 +3454,7 @@
                 filteredObjects.unshift(goOption);
             }
             //else if (groupKey.toLowerCase() === "open" && (tokens[1]?.toLowerCase() === "api"
-            else if (groupKey.toLowerCase() === "sdk" && (cleanCommandToken(tokens[1])?.toLowerCase().trim() === "api plugin"
+            else if (groupKey.toLowerCase() === "devtools" && (cleanCommandToken(tokens[1])?.toLowerCase().trim() === "api plugin"
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "axpert job" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "language"
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "custom data type" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "email definition"
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "table field descriptor" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "out bound queue"
@@ -3774,7 +3776,7 @@
         let iviewBoolCheck = false;
 
         if (tokens.length >= 2) {
-            if (tokens[1].toLowerCase() == "iview" && commandConfig.commandGroup.toLowerCase() == "sdk") {
+            if (tokens[1].toLowerCase() == "iview" && commandConfig.commandGroup.toLowerCase() == "devtools") {
                 iviewBoolCheck = true;
             }
         }
@@ -3782,7 +3784,7 @@
             let extraParams;
             if (commandConfig.commandGroup.toLowerCase() == "configure") {
                 extraParams = commandConfig?.prompts?.[1]?.extraParams;
-            } else if (commandConfig.commandGroup.toLowerCase() == "sdk") {
+            } else if (commandConfig.commandGroup.toLowerCase() == "devtools") {
                 extraParams = commandConfig?.prompts?.[1]?.extraParams;
             } else {
                 extraParams = commandConfig?.prompts?.[0]?.extraParams;
@@ -3803,7 +3805,7 @@
                 } else if (param === ":userresp") {
                     value = userResp;
                 } else if (param === ":mode") {
-                    if (commandConfig.commandGroup.toLowerCase() === "sdk") {
+                    if (commandConfig.commandGroup.toLowerCase() === "devtools") {
                         value = "dev";
                     } else if (commandConfig.commandGroup.toLowerCase() === "view") {
                         value = "all";
@@ -3813,7 +3815,7 @@
                 else if (param === ":structtype") {
                     if (commandConfig.commandGroup.toLowerCase() === "view") {
                         value = "all";
-                    } else if (commandConfig.commandGroup.toLowerCase() == "sdk" && tokens.length >= 2) {
+                    } else if (commandConfig.commandGroup.toLowerCase() == "devtools" && tokens.length >= 2) {
                         let token = cleanCommandToken(tokens[1]).toLowerCase();
 
                         switch (token) {
@@ -4043,7 +4045,7 @@
             "edit": "edit_note",
             "view": "visibility",
             "configure": "settings_suggest",
-            "sdk": "open_in_new",
+            "devtools": "open_in_new",
             "upload": "upload_file",
             "download": "download",
             "run": "play_arrow",
@@ -5284,7 +5286,7 @@
             showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
             return;
         }
-        if (groupNameNormalized === "sdk" && !accessPermissions.buildAccess) {
+        if (groupNameNormalized === "devtools" && !accessPermissions.buildAccess) {
             showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
             return;
         }
@@ -11030,7 +11032,7 @@
                         break;
 
                     case 'buildAccess':
-                        if (tokens[0].toLowerCase() === "sdk") {
+                        if (tokens[0].toLowerCase() === "devtools") {
                             showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
                             return;
 
@@ -11065,7 +11067,7 @@
             const firstToken = tokens[0];
             const secondToken = tokens[1];
 
-            if (firstToken.toLowerCase() === "sdk" && secondToken.toLowerCase() === "tstruct") {
+            if (firstToken.toLowerCase() === "devtools" && secondToken.toLowerCase() === "tstruct") {
                 window.openDeveloperStudio("tstreact", secondToken, true);
 
             } else {
@@ -11113,7 +11115,7 @@
         // AppMgrAccess(Config)
         // ImportAccess(Upload)
         // ExportAccess(Download)
-        // Build(Open/sdk)
+        // Build(Open/DevTools)
         return {
             appMgrAccess: strToBool(window.getSessionValue("AppMgrAccess")),
             importAccess: strToBool(window.getSessionValue("ImportAccess")),
@@ -11142,7 +11144,7 @@
                         break;
 
                     case 'buildAccess':
-                        delete commandsFromDb['SDK'];
+                        delete commandsFromDb['DevTools'];
                         break;
 
                     default:
@@ -11153,8 +11155,7 @@
 
         if (!commandsFromDb["Configure"]) return commandsFromDb;
 
-        const roles = (currentUserRole || "").split(",").map(r => r.trim().toLowerCase());
-        const isAdmin = currentUserName === "admin" && roles.includes("default");
+        const isAdmin = currentUserName === "admin" && currentUserRole === "default";
         // const isAdmin = false;
 
         if (!isAdmin) {
@@ -11681,7 +11682,7 @@
             steps: [
                 {
                     element: '#Axi-Searchinp',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Search & Execute</strong></div>Type commands eg: create tstructname, Edit tstructname fieldname fieldvalue, view tstructname fieldvalue, or configure peg pegname and access sdk like DB Explorer, ADS creation etc  here. Press Enter to run.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Search & Execute</strong></div>Type commands eg: create tstructname, Edit tstructname fieldname fieldvalue, view tstructname fieldvalue, or configure peg pegname and access Devtools like DB Explorer, ADS creation etc  here. Press Enter to run.',
                     position: 'bottom'
                 },
                 {
