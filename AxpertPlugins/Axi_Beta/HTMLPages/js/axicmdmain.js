@@ -1208,7 +1208,7 @@
 
         
         let transId = "a__sl";
-        let fieldname = "ADS";
+        let fieldname = "adsname";
         let rawParamName;
         let actualParamName;
 
@@ -1226,6 +1226,8 @@
             const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
             paramValue = value;
             targetUrl += `&${fieldname}=${encodeURIComponent(paramValue)}`;
+            targetUrl += "&act=load";
+            targetUrl += "&dummyload=false?";
         }
 
         // targetUrl += `&fromsource=U`;
