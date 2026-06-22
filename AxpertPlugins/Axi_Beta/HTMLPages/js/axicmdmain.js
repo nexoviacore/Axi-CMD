@@ -178,9 +178,9 @@
         Run: {
             default: handleRunCommand,
         },
-        Analyse: {
-            default: handleAnalyse
-        },
+        // Analyse: {
+        //     default: handleAnalyse
+        // },
         Ai: {
             start: handleAiStart,
 
