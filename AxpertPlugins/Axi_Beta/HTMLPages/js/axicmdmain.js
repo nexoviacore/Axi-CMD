@@ -137,6 +137,7 @@
             "user permission": handleConfigureUserPermission,
             "role permissions": handleConfigureRolePermissionListing,
             //"role permission": handleRolePermission
+            "smart view attributes": handleConfigureSmartViewAttributes
         },
         //Open: {
         DevTools: {
@@ -1154,6 +1155,8 @@
             window.LoadIframe(targetUrl);
         }
     }
+
+    
     function handleConfigureUserPermission({ tokens, commandConfig }) {
 
         //tstruct.aspx ? act = open & transid=a__up & axusername=aarav & fromsource=U & openerIV=axusers & isIV=true & isDupTab=false & dummyload=false % E2 % 99 % A0
@@ -1183,6 +1186,55 @@
         targetUrl += `&isIV=true`;
         targetUrl += `&isDupTab=false`;
         targetUrl += `&dummyload=false?`;
+
+        setEditSessionState(transId);
+
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
+            targetUrl += "&AxPop=true";
+
+            openPopOption(targetUrl)
+        }
+        else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+        }
+        //setCommandRoutes(input.value.trim(), targetUrl);
+
+        //top.window.LoadIframe(targetUrl);
+    }
+
+    function handleConfigureSmartViewAttributes({ tokens, commandConfig }) {
+
+        
+        let transId = "a__sl";
+        let fieldname = "adsname";
+        let rawParamName;
+        let actualParamName;
+
+
+
+        let targetUrl = `../aspx/tstruct.aspx`;
+
+        targetUrl += `?transid=${transId}`;
+
+
+
+        if (tokens.length > 2) {
+            rawParamName = cleanCommandToken(tokens[2]);
+            // actualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
+            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
+            paramValue = value;
+            targetUrl += `&${fieldname}=${encodeURIComponent(paramValue)}`;
+            targetUrl += "&act=load";
+            targetUrl += "&dummyload=false?";
+        }
+
+        // targetUrl += `&fromsource=U`;
+        // targetUrl += `&openerIV=${transId}`;
+        
+        // targetUrl += `&isDupTab=false`;
+        // targetUrl += `&dummyload=false?`;
 
         setEditSessionState(transId);
 
@@ -1530,7 +1582,13 @@
 
         let encodedFilterQuery;
 
-        if (filters && filters.length === 1 && (filters[0].datatype === "c" || filters[0].datatype === "d") && (!filters[0].value || filters[0].value === "")) {
+        let isGroupable = false;
+        if (filters && filters.length === 1 && (!filters[0].value || filters[0].value === "")) {
+            const datatypes = (filters[0].datatype || "").split(",");
+            isGroupable = datatypes.length > 0 && datatypes.every(dt => dt === "c" || dt === "d" || dt === "t" || dt === "NA" || !dt);
+        }
+
+        if (isGroupable) {
             const columnName = filters[0].field;
             targetUrl += `&groupby=${encodeURIComponent(columnName)}`;
         }
@@ -1770,6 +1828,14 @@
     }
 
     function handleInput() {
+        if (input.value && input.value.includes(" ,")) {
+            const cursorPos = input.selectionStart;
+            input.value = input.value.replace(/ ,/g, ",");
+            if (cursorPos !== null) {
+                const newPos = Math.max(0, cursorPos - 1);
+                input.setSelectionRange(newPos, newPos);
+            }
+        }
         if (isCommandsLoading) {
             items = ["Loading Commands...."];
             hintDiv.textContent = "Please wait...";
@@ -2164,7 +2230,7 @@
 
     function processAdsRepetitiveTokens(tokens, commandConfig) {
         let targetIndex = tokens.length - 1;
-        const partialTyped = cleanString(tokens[targetIndex]);
+        let partialTyped = cleanString(tokens[targetIndex]);
 
         const adsName = cleanString(tokens[1]);
         setCommandTransid = adsName;
@@ -2215,6 +2281,16 @@
                 usedColumns.add(usedToken);
             }
 
+            const lastToken = tokens[targetIndex];
+            if (lastToken && lastToken.includes(",")) {
+                const parts = lastToken.split(",");
+                partialTyped = cleanString(parts[parts.length - 1]);
+                for (let i = 0; i < parts.length - 1; i++) {
+                    const p = cleanString(parts[i]).toLowerCase();
+                    if (p) usedColumns.add(p);
+                }
+            }
+
 
 
 
@@ -2259,6 +2335,12 @@
 
 
         } else {
+            const prevColToken = tokens[targetIndex - 1];
+            if (prevColToken && prevColToken.includes(",")) {
+                SET_COMMAND_STATE.isDropDown = false;
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
             if (!SET_COMMAND_STATE.isNextField) {
                 let prevColumnName
                 if (!SET_COMMAND_STATE.currentField) {
@@ -4378,7 +4460,14 @@
             displayName = `"${displayName}"`;
         }
 
-        tokens[targetIndex] = displayName;
+        const originalToken = tokens[targetIndex];
+        if (originalToken && originalToken.includes(",")) {
+            const parts = originalToken.split(",");
+            parts[parts.length - 1] = displayName;
+            tokens[targetIndex] = parts.join(",");
+        } else {
+            tokens[targetIndex] = displayName;
+        }
 
         input.value = tokens.join(" ") + " ";
 
@@ -4896,7 +4985,14 @@
                 //tokens.pop();
 
                 let lastIndex = tokens.length - 1;
-                tokens[lastIndex] = "";
+                const lastToken = tokens[lastIndex];
+                if (lastToken && lastToken.includes(",")) {
+                    const parts = lastToken.split(",");
+                    parts.pop();
+                    tokens[lastIndex] = parts.join(",");
+                } else {
+                    tokens[lastIndex] = "";
+                }
 
                 input.value = tokens.join(" ");
 
@@ -7409,11 +7505,18 @@
                 rawValue = normalizeDate(rawValue);
             }
 
+            let filterDatatype = colMetadata.datatype;
+            if (rawColToken && rawColToken.includes(",")) {
+                filterDatatype = rawColToken.split(",")
+                    .map(colName => adsfieldvalueanddt[colName.trim()]?.datatype || "c")
+                    .join(",");
+            }
+
             filters.push({
                 field: rawColToken,
                 operator: operator,
                 value: rawValue,
-                datatype: colMetadata.datatype,
+                datatype: filterDatatype,
                 isAccept: colMetadata.isAccept
             });
         }
@@ -11052,8 +11155,8 @@
 
         if (!commandsFromDb["Configure"]) return commandsFromDb;
 
-        // const isAdmin = currentUserName === "admin" && currentUserRole === "default";
-        const isAdmin = false;
+        const isAdmin = currentUserName === "admin" && currentUserRole === "default";
+        // const isAdmin = false;
 
         if (!isAdmin) {
             const configurePrompts = commandsFromDb["Configure"].prompts;
