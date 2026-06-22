@@ -82,7 +82,7 @@ VALUES(6, 'Download', ' ', 'T')
 <<
 INSERT INTO axi_commands
 (cmdtoken, command_group, command, active)
-VALUES(7, 'DevTools', ' ', 'T')
+VALUES(7, 'SDK', ' ', 'T')
 >>
 
 <<
