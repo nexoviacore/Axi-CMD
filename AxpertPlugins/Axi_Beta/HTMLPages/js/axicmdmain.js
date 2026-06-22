@@ -11052,8 +11052,9 @@
 
         if (!commandsFromDb["Configure"]) return commandsFromDb;
 
-        // const isAdmin = currentUserName === "admin" && currentUserRole === "default";
-        const isAdmin = false;
+        const roles = (currentUserRole || "").split(",").map(r => r.trim().toLowerCase());
+        const isAdmin = currentUserName === "admin" && roles.includes("default");
+        // const isAdmin = false;
 
         if (!isAdmin) {
             const configurePrompts = commandsFromDb["Configure"].prompts;
