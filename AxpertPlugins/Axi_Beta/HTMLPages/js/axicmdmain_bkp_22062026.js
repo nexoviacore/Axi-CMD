@@ -1757,18 +1757,6 @@
     /* ===============================
        2. INPUT HANDLER
     =============================== */
-    function getInitialCommandsList() {
-        if (!commands) return [];
-        const structType = getStructType();
-        const isRunnable = structType && structType !== "o";
-        return Object.keys(commands).filter(key => {
-            if (key.toLowerCase() === "run") {
-                return isRunnable;
-            }
-            return true;
-        });
-    }
-
     function handleInput() {
         if (isCommandsLoading) {
             items = ["Loading Commands...."];
@@ -1790,7 +1778,7 @@
 
         if (!text.trim()) {
 
-            items = getInitialCommandsList();
+            items = Object.keys(commands);
             hintDiv.textContent = "";
             render();
             return;
@@ -2834,7 +2822,7 @@
 
         if (tokens.length === 0) {
             hintDiv.textContent = "";
-            return getInitialCommandsList();
+            return Object.keys(commands);
         }
 
         const groupKey = cleanString(tokens[0]);
@@ -2844,7 +2832,7 @@
         }
         if (tokens.length === 1 && !endsWithSpace) {
             hintDiv.textContent = "";
-            return getInitialCommandsList().filter(k => {
+            return Object.keys(commands).filter(k => {
                 const key = k.toLowerCase();
                 return key.startsWith(groupKey.toLowerCase())
             });
