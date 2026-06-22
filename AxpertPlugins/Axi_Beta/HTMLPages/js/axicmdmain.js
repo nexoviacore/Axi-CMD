@@ -1225,7 +1225,7 @@
             paramValue = value;
             targetUrl += `&${fieldname}=${encodeURIComponent(paramValue)}`;
             targetUrl += "&act=load";
-            targetUrl += "&dummyload=false?";
+            targetUrl += "&dummyload=false";
         }
 
         // targetUrl += `&fromsource=U`;
