@@ -137,9 +137,10 @@
             "user permission": handleConfigureUserPermission,
             "role permissions": handleConfigureRolePermissionListing,
             //"role permission": handleRolePermission
+            "smart view attributes": handleConfigureSmartViewAttributes
         },
         //Open: {
-        SDK: {
+        DevTools: {
             default: handleOpenSource,
             "axpert data sources": handleOpenAds,
             //card: handleOpenCard,
@@ -640,7 +641,7 @@
 
                 }
 
-                if (valueIndex === -1 && (commandConfig.commandGroup?.toLowerCase() === "sdk" || commandConfig.commandGroup?.toLowerCase() === "configure")) {
+                if (valueIndex === -1 && (commandConfig.commandGroup?.toLowerCase() === "devtools" || commandConfig.commandGroup?.toLowerCase() === "configure")) {
 
                     return { config: prompt, realSource: null, error: "Not a Valid command" };
                 }
@@ -1154,6 +1155,8 @@
             window.LoadIframe(targetUrl);
         }
     }
+
+    
     function handleConfigureUserPermission({ tokens, commandConfig }) {
 
         //tstruct.aspx ? act = open & transid=a__up & axusername=aarav & fromsource=U & openerIV=axusers & isIV=true & isDupTab=false & dummyload=false % E2 % 99 % A0
@@ -1183,6 +1186,55 @@
         targetUrl += `&isIV=true`;
         targetUrl += `&isDupTab=false`;
         targetUrl += `&dummyload=false?`;
+
+        setEditSessionState(transId);
+
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
+            targetUrl += "&AxPop=true";
+
+            openPopOption(targetUrl)
+        }
+        else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+        }
+        //setCommandRoutes(input.value.trim(), targetUrl);
+
+        //top.window.LoadIframe(targetUrl);
+    }
+
+    function handleConfigureSmartViewAttributes({ tokens, commandConfig }) {
+
+        
+        let transId = "a__sl";
+        let fieldname = "adsname";
+        let rawParamName;
+        let actualParamName;
+
+
+
+        let targetUrl = `../aspx/tstruct.aspx`;
+
+        targetUrl += `?transid=${transId}`;
+
+
+
+        if (tokens.length > 2) {
+            rawParamName = cleanCommandToken(tokens[2]);
+            // actualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
+            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
+            paramValue = value;
+            targetUrl += `&${fieldname}=${encodeURIComponent(paramValue)}`;
+            targetUrl += "&act=load";
+            targetUrl += "&dummyload=false?";
+        }
+
+        // targetUrl += `&fromsource=U`;
+        // targetUrl += `&openerIV=${transId}`;
+        
+        // targetUrl += `&isDupTab=false`;
+        // targetUrl += `&dummyload=false?`;
 
         setEditSessionState(transId);
 
@@ -1530,7 +1582,13 @@
 
         let encodedFilterQuery;
 
-        if (filters && filters.length === 1 && (filters[0].datatype === "c" || filters[0].datatype === "d") && (!filters[0].value || filters[0].value === "")) {
+        let isGroupable = false;
+        if (filters && filters.length === 1 && (!filters[0].value || filters[0].value === "")) {
+            const datatypes = (filters[0].datatype || "").split(",");
+            isGroupable = datatypes.length > 0 && datatypes.every(dt => dt === "c" || dt === "d" || dt === "t" || dt === "NA" || !dt);
+        }
+
+        if (isGroupable) {
             const columnName = filters[0].field;
             targetUrl += `&groupby=${encodeURIComponent(columnName)}`;
         }
@@ -1770,6 +1828,14 @@
     }
 
     function handleInput() {
+        if (input.value && input.value.includes(" ,")) {
+            const cursorPos = input.selectionStart;
+            input.value = input.value.replace(/ ,/g, ",");
+            if (cursorPos !== null) {
+                const newPos = Math.max(0, cursorPos - 1);
+                input.setSelectionRange(newPos, newPos);
+            }
+        }
         if (isCommandsLoading) {
             items = ["Loading Commands...."];
             hintDiv.textContent = "Please wait...";
@@ -2164,7 +2230,7 @@
 
     function processAdsRepetitiveTokens(tokens, commandConfig) {
         let targetIndex = tokens.length - 1;
-        const partialTyped = cleanString(tokens[targetIndex]);
+        let partialTyped = cleanString(tokens[targetIndex]);
 
         const adsName = cleanString(tokens[1]);
         setCommandTransid = adsName;
@@ -2215,6 +2281,16 @@
                 usedColumns.add(usedToken);
             }
 
+            const lastToken = tokens[targetIndex];
+            if (lastToken && lastToken.includes(",")) {
+                const parts = lastToken.split(",");
+                partialTyped = cleanString(parts[parts.length - 1]);
+                for (let i = 0; i < parts.length - 1; i++) {
+                    const p = cleanString(parts[i]).toLowerCase();
+                    if (p) usedColumns.add(p);
+                }
+            }
+
 
 
 
@@ -2259,6 +2335,12 @@
 
 
         } else {
+            const prevColToken = tokens[targetIndex - 1];
+            if (prevColToken && prevColToken.includes(",")) {
+                SET_COMMAND_STATE.isDropDown = false;
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
             if (!SET_COMMAND_STATE.isNextField) {
                 let prevColumnName
                 if (!SET_COMMAND_STATE.currentField) {
@@ -2995,7 +3077,7 @@
                 return [goOption, popOption];
             }
 
-            else if (groupKey.toLowerCase() === "sdk" && tokens.length > 2) {
+            else if (groupKey.toLowerCase() === "devtools" && tokens.length > 2) {
                 filteredObjects = [goOption];
                 return [goOption];
             }
@@ -3250,7 +3332,7 @@
                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
 
                 if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
-                    if (groupKey.toLowerCase() === "sdk" && tokens.length > 2) {
+                    if (groupKey.toLowerCase() === "devtools" && tokens.length > 2) {
                         filteredObjects = [goOption];
                         return [goOption]
                     }
@@ -3372,7 +3454,7 @@
                 filteredObjects.unshift(goOption);
             }
             //else if (groupKey.toLowerCase() === "open" && (tokens[1]?.toLowerCase() === "api"
-            else if (groupKey.toLowerCase() === "sdk" && (cleanCommandToken(tokens[1])?.toLowerCase().trim() === "api plugin"
+            else if (groupKey.toLowerCase() === "devtools" && (cleanCommandToken(tokens[1])?.toLowerCase().trim() === "api plugin"
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "axpert job" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "language"
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "custom data type" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "email definition"
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "table field descriptor" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "out bound queue"
@@ -3694,7 +3776,7 @@
         let iviewBoolCheck = false;
 
         if (tokens.length >= 2) {
-            if (tokens[1].toLowerCase() == "iview" && commandConfig.commandGroup.toLowerCase() == "sdk") {
+            if (tokens[1].toLowerCase() == "iview" && commandConfig.commandGroup.toLowerCase() == "devtools") {
                 iviewBoolCheck = true;
             }
         }
@@ -3702,7 +3784,7 @@
             let extraParams;
             if (commandConfig.commandGroup.toLowerCase() == "configure") {
                 extraParams = commandConfig?.prompts?.[1]?.extraParams;
-            } else if (commandConfig.commandGroup.toLowerCase() == "sdk") {
+            } else if (commandConfig.commandGroup.toLowerCase() == "devtools") {
                 extraParams = commandConfig?.prompts?.[1]?.extraParams;
             } else {
                 extraParams = commandConfig?.prompts?.[0]?.extraParams;
@@ -3723,7 +3805,7 @@
                 } else if (param === ":userresp") {
                     value = userResp;
                 } else if (param === ":mode") {
-                    if (commandConfig.commandGroup.toLowerCase() === "sdk") {
+                    if (commandConfig.commandGroup.toLowerCase() === "devtools") {
                         value = "dev";
                     } else if (commandConfig.commandGroup.toLowerCase() === "view") {
                         value = "all";
@@ -3733,7 +3815,7 @@
                 else if (param === ":structtype") {
                     if (commandConfig.commandGroup.toLowerCase() === "view") {
                         value = "all";
-                    } else if (commandConfig.commandGroup.toLowerCase() == "sdk" && tokens.length >= 2) {
+                    } else if (commandConfig.commandGroup.toLowerCase() == "devtools" && tokens.length >= 2) {
                         let token = cleanCommandToken(tokens[1]).toLowerCase();
 
                         switch (token) {
@@ -3963,7 +4045,7 @@
             "edit": "edit_note",
             "view": "visibility",
             "configure": "settings_suggest",
-            "sdk": "open_in_new",
+            "devtools": "open_in_new",
             "upload": "upload_file",
             "download": "download",
             "run": "play_arrow",
@@ -4378,7 +4460,14 @@
             displayName = `"${displayName}"`;
         }
 
-        tokens[targetIndex] = displayName;
+        const originalToken = tokens[targetIndex];
+        if (originalToken && originalToken.includes(",")) {
+            const parts = originalToken.split(",");
+            parts[parts.length - 1] = displayName;
+            tokens[targetIndex] = parts.join(",");
+        } else {
+            tokens[targetIndex] = displayName;
+        }
 
         input.value = tokens.join(" ") + " ";
 
@@ -4896,7 +4985,14 @@
                 //tokens.pop();
 
                 let lastIndex = tokens.length - 1;
-                tokens[lastIndex] = "";
+                const lastToken = tokens[lastIndex];
+                if (lastToken && lastToken.includes(",")) {
+                    const parts = lastToken.split(",");
+                    parts.pop();
+                    tokens[lastIndex] = parts.join(",");
+                } else {
+                    tokens[lastIndex] = "";
+                }
 
                 input.value = tokens.join(" ");
 
@@ -5190,7 +5286,7 @@
             showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
             return;
         }
-        if (groupNameNormalized === "sdk" && !accessPermissions.buildAccess) {
+        if (groupNameNormalized === "devtools" && !accessPermissions.buildAccess) {
             showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
             return;
         }
@@ -7409,11 +7505,18 @@
                 rawValue = normalizeDate(rawValue);
             }
 
+            let filterDatatype = colMetadata.datatype;
+            if (rawColToken && rawColToken.includes(",")) {
+                filterDatatype = rawColToken.split(",")
+                    .map(colName => adsfieldvalueanddt[colName.trim()]?.datatype || "c")
+                    .join(",");
+            }
+
             filters.push({
                 field: rawColToken,
                 operator: operator,
                 value: rawValue,
-                datatype: colMetadata.datatype,
+                datatype: filterDatatype,
                 isAccept: colMetadata.isAccept
             });
         }
@@ -10929,7 +11032,7 @@
                         break;
 
                     case 'buildAccess':
-                        if (tokens[0].toLowerCase() === "sdk") {
+                        if (tokens[0].toLowerCase() === "devtools") {
                             showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
                             return;
 
@@ -10964,7 +11067,7 @@
             const firstToken = tokens[0];
             const secondToken = tokens[1];
 
-            if (firstToken.toLowerCase() === "sdk" && secondToken.toLowerCase() === "tstruct") {
+            if (firstToken.toLowerCase() === "devtools" && secondToken.toLowerCase() === "tstruct") {
                 window.openDeveloperStudio("tstreact", secondToken, true);
 
             } else {
@@ -11012,7 +11115,7 @@
         // AppMgrAccess(Config)
         // ImportAccess(Upload)
         // ExportAccess(Download)
-        // Build(Open/sdk)
+        // Build(Open/DevTools)
         return {
             appMgrAccess: strToBool(window.getSessionValue("AppMgrAccess")),
             importAccess: strToBool(window.getSessionValue("ImportAccess")),
@@ -11041,7 +11144,7 @@
                         break;
 
                     case 'buildAccess':
-                        delete commandsFromDb['SDK'];
+                        delete commandsFromDb['DevTools'];
                         break;
 
                     default:
@@ -11052,8 +11155,8 @@
 
         if (!commandsFromDb["Configure"]) return commandsFromDb;
 
-        // const isAdmin = currentUserName === "admin" && currentUserRole === "default";
-        const isAdmin = false;
+        const isAdmin = currentUserName === "admin" && currentUserRole === "default";
+        // const isAdmin = false;
 
         if (!isAdmin) {
             const configurePrompts = commandsFromDb["Configure"].prompts;
@@ -11579,7 +11682,7 @@
             steps: [
                 {
                     element: '#Axi-Searchinp',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Search & Execute</strong></div>Type commands eg: create tstructname, Edit tstructname fieldname fieldvalue, view tstructname fieldvalue, or configure peg pegname and access sdk like DB Explorer, ADS creation etc  here. Press Enter to run.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Search & Execute</strong></div>Type commands eg: create tstructname, Edit tstructname fieldname fieldvalue, view tstructname fieldvalue, or configure peg pegname and access Devtools like DB Explorer, ADS creation etc  here. Press Enter to run.',
                     position: 'bottom'
                 },
                 {
