@@ -3417,8 +3417,12 @@
 
 
 
-                if (key === "create") return item?.createallowed !== 'F';
-                if (key === "view") return item?.viewallowed !== 'F';
+                if (key === "create") return item?.createallowed !== 'F' && item?.createallowed !== 'NA';
+                if (key === "view") {
+                    // if (item.caption === "testmar10") console.log(JSON.stringify(item)); 
+                    if (item?.viewallowed === "NA") return false;
+                    return item?.viewallowed !== 'F';
+                }
                 if (isEmpty(item?.displaydata) && isEmpty(item?.caption) && isEmpty(item?.name)) return false;
                 return true;
             })
