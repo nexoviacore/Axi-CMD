@@ -41,13 +41,6 @@ This release brings stability improvements, database schema optimizations, secur
 *   **Mermaid Deployment Guide:** Enhanced the `README.md` guide with detailed flow diagrams, prerequisite badges, and specific instructions to copy the `AxiApi_Beta` folder to the target `Arm microservices` server directory.
 *   **Codebase Cleanup:** Removed unused/backup `.zip` files from the plugin folders.
 
-### 5. Bug Fixes
-*   Existing and newly created Dimensions are available in Configure "Application Properties" instead of Configure Dimension cmd: Configure "Application Properties" Branch -> Fixed #76 
-*   When clicked on the options available in Configure Publish Config Studio,getting error: Access violation at address 0000000000DED5D6 in module 'ASBTStruct.dll'. Read of address 0000000000000000 -> Fixed #74 
-*   When clicked on the options available in Configure Actor,getting error:Access violation at address 0000000000DED5D6 in module 'ASBTStruct.dll'. Read of address 0000000000000000 -> Fixed #73 
-*   Existing and newly created Cards are available in Configure Responsibility instead of Configure Card cmd: Configure Responsibility KPI Cards -> Fixed #75 
-*   Issue #74 - Existing and newly created Cards are available in Configure Responsibility instead of Configure Card cmd: Configure Responsibility KPI Cards -> Fixed 
-*   Issue #71 Iview and tstruct with same name -> Fixed 
 
 ---
 
