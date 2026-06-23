@@ -1005,8 +1005,7 @@
 
   #btnHistoryPrev,
   .btn.btn-icon:has(span[data-bs-original-title="Next Page"]),
-  #History_pages,
-  #My_Fav_Bookmarks {
+  #History_pages {
     display: none;
   }
 

@@ -1,4 +1,4 @@
-﻿// Stable Branch: main
+// Stable Branch: main
 (() => {
     // Released On: 06/05/2026 
     // /AxPlugins/Axi/HTMLPages/js/axi-autocomplete.js
@@ -3188,8 +3188,11 @@
 
 
 
-                if (key === "create") return item?.createallowed !== 'F';
-                if (key === "view") return item?.viewallowed !== 'F';
+                if (key === "create") return item?.createallowed !== 'F' && item?.createallowed !== 'NA';
+                if (key === "view") {
+                    if (item?.stype === "ads" && item?.viewallowed === "NA") return false;
+                    return item?.viewallowed !== 'F';
+                }
                 if (isEmpty(item?.displaydata) && isEmpty(item?.caption) && isEmpty(item?.name)) return false;
                 return true;
             })

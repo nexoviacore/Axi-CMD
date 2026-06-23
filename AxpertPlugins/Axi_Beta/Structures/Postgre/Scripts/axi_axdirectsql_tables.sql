@@ -1,206 +1,206 @@
-
+﻿
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990001
+DELETE FROM axdirectsql where sqlname = 'axi_jobnameslist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990002
+DELETE FROM axdirectsql where sqlname = 'axi_formnotifylist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990003
+DELETE FROM axdirectsql where sqlname = 'axi_userlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990004
+DELETE FROM axdirectsql where sqlname = 'axi_fieldvaluelist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990005
+DELETE FROM axdirectsql where sqlname = 'axi_tstructlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990006
+DELETE FROM axdirectsql where sqlname = 'axi_adslist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990007
+DELETE FROM axdirectsql where sqlname = 'axi_apinameslist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990008
+DELETE FROM axdirectsql where sqlname = 'axi_iviewlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990009
+DELETE FROM axdirectsql where sqlname = 'axi_pegnotifylist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990010
+DELETE FROM axdirectsql where sqlname = 'axi_rulenameslist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990011
+DELETE FROM axdirectsql where sqlname = 'axi_schedulenotifylist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990012
+DELETE FROM axdirectsql where sqlname = 'axi_peglist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990013
+DELETE FROM axdirectsql where sqlname = 'axi_actorlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990014
+DELETE FROM axdirectsql where sqlname = 'axi_cardlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990015
+DELETE FROM axdirectsql where sqlname = 'axi_printformlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990016
+DELETE FROM axdirectsql where sqlname = 'axi_servernamelist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990017
+DELETE FROM axdirectsql where sqlname = 'axi_usergrouplist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990018
+DELETE FROM axdirectsql where sqlname = 'axi_rolelist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990019
+DELETE FROM axdirectsql where sqlname = 'axi_dimensionlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990020
+DELETE FROM axdirectsql where sqlname = 'axi_pagelist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990021
+DELETE FROM axdirectsql where sqlname = 'axi_keyfieldlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990022
+DELETE FROM axdirectsql where sqlname = 'axi_viewlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990023
+DELETE FROM axdirectsql where sqlname = 'axi_smartlist_ads_metadata'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990024
+DELETE FROM axdirectsql where sqlname = 'axi_fieldvalueswithkeysuffixlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990025
+DELETE FROM axdirectsql where sqlname = 'axi_keyvalueswithfieldnameslist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990026
+DELETE FROM axdirectsql where sqlname = 'axi_tstructprops_insupd'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990027
+DELETE FROM axdirectsql where sqlname = 'axi_adsfilteroperators'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990028
+DELETE FROM axdirectsql where sqlname = 'axi_adscolumnlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990029
+DELETE FROM axdirectsql where sqlname = 'axi_fieldlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990030
+DELETE FROM axdirectsql where sqlname = 'axi_adsdropdowntokens'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990031
+DELETE FROM axdirectsql where sqlname = 'axi_setfieldlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990032
+DELETE FROM axdirectsql where sqlname = 'axi_analyticslist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990033
+DELETE FROM axdirectsql where sqlname = 'axi_firesql'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990034
+DELETE FROM axdirectsql where sqlname = 'axi_userpwd'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990035
+DELETE FROM axdirectsql where sqlname = 'axi_primaryfieldlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990036
+DELETE FROM axdirectsql where sqlname = 'axi_structlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990037
+DELETE FROM axdirectsql where sqlname = 'axi_nongridfieldlist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990038
+DELETE FROM axdirectsql where sqlname = 'axi_structmetalist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990039
+DELETE FROM axdirectsql where sqlname = 'axi_getstructsdata'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990040
+DELETE FROM axdirectsql where sqlname = 'axi_resposibilitylist'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990041
+DELETE FROM axdirectsql where sqlname = 'axi_newsandannounce'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990042
+DELETE FROM axdirectsql where sqlname = 'axi_publishapi'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990043
+DELETE FROM axdirectsql where sqlname = 'axi_jobs'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990044
+DELETE FROM axdirectsql where sqlname = 'axi_language'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990045
+DELETE FROM axdirectsql where sqlname = 'axi_customtype'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990046
+DELETE FROM axdirectsql where sqlname = 'axi_emaildef'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990047
+DELETE FROM axdirectsql where sqlname = 'axi_tabledesc'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990048
+DELETE FROM axdirectsql where sqlname = 'axi_inbound'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990049
+DELETE FROM axdirectsql where sqlname = 'axi_outbound'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990050
+DELETE FROM axdirectsql where sqlname = 'axi_useractivation'
 >>
 
 <<
-DELETE FROM axdirectsql where axdirectsqlid = 99999999990051
+DELETE FROM axdirectsql where sqlname = 'axi_smartviewlist'
 >>
 
 
@@ -494,14 +494,11 @@ INSERT INTO axdirectsql
 VALUES(99999999990027, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_adsfilteroperators', NULL, 'Metadata', 5, 'SELECT ''='' AS displaydata, ''='' AS name UNION ALL SELECT ''<'',''<'' UNION ALL SELECT ''>'',''>'' UNION ALL SELECT ''<='',''<='' UNION ALL SELECT ''>='',''>='' UNION ALL SELECT ''between'',''between''', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
 >>
 
+
+
+
+
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990028, 'F', 0, NULL, 'admin', '2026-01-30 00:00:00.000', 'admin', '2026-01-30 00:00:00.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_adscolumnlist', NULL, 'Metadata', 0, 'select b.fldcaption || ''(''||b.fldname||'')'' displaydata,b.fldname name,b.fldcaption caption,b.normalized,b.fdatatype, b.sourcetable,b.sourcefld , CASE WHEN lower(sqltext) LIKE ''%--axp_filter%'' THEN ''T'' ELSE ''F'' END AS filters from axdirectsql a left join axdirectsql_metadata b on a.axdirectsqlid =b.axdirectsqlid where sqlname = :param1', 'param1', 'param1~Character~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-
-
 INSERT INTO axdirectsql
 (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
 VALUES(99999999990028, 'F', 0, NULL, 'admin', '2026-01-30 00:00:00.000', 'admin', '2026-01-30 00:00:00.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_adscolumnlist', NULL, 'Metadata', 0, 'select b.fldcaption || ''('' || b.fldname || '')'' displaydata,
@@ -525,6 +522,13 @@ left join axpflds f
        on b.srctransid = f.tstruct
       and b.srcfldname = f.fname
 where a.sqlname = :param1', 'param1', 'param1~Character~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+>>
+
+
+INSERT INTO axdirectsql
+(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
+VALUES(99999999990028, 'F', 0, NULL, 'admin', '2026-01-30 00:00:00.000', 'admin', '2026-01-30 00:00:00.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_adscolumnlist', NULL, 'Metadata', 0, 'select b.fldcaption || ''(''||b.fldname||'')'' displaydata,b.fldname name,b.fldcaption caption,b.normalized,b.fdatatype, b.sourcetable,b.sourcefld , CASE WHEN lower(sqltext) LIKE ''%--axp_filter%'' THEN ''T'' ELSE ''F'' END AS filters from axdirectsql a left join axdirectsql_metadata b on a.axdirectsqlid =b.axdirectsqlid where sqlname = :param1', 'param1', 'param1~Character~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+
 
 
 <<

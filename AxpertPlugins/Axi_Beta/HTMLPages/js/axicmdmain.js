@@ -3417,8 +3417,13 @@
 
 
 
-                if (key === "create") return item?.createallowed !== 'F';
-                if (key === "view") return item?.viewallowed !== 'F';
+                if (key === "create") return item?.createallowed !== 'F' && item?.createallowed !== 'NA';
+                if (key === "view") {
+                    // if (item.caption === "testmar10") console.log(JSON.stringify(item)); 
+                    if (item?.stype === "p" || item?.stype === "page") return true;
+                    if (item?.viewallowed === "NA") return false;
+                    return item?.viewallowed !== 'F';
+                }
                 if (isEmpty(item?.displaydata) && isEmpty(item?.caption) && isEmpty(item?.name)) return false;
                 return true;
             })
@@ -7090,9 +7095,9 @@
 
             resolvedName = found.name;
         }
-        const cmdText = `${tokens[0]} ${tokens[1]} ${resolvedName}`;
+        const targetUrl = `developerstudio:${type.toLowerCase()}:${resolvedName}`;
 
-        setCommandRoutes(cmdText, "");
+        setCommandRoutes(input.value.trim(), targetUrl);
 
         if (type.toLowerCase() === "tstruct") {
             window.openDeveloperStudio("tstreact", resolvedName, true);
@@ -7600,6 +7605,7 @@
             if (!id) return;
             const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
+            if (label.toLowerCase() === "plugin custom code") return;
             if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
 
 
@@ -7638,6 +7644,7 @@
             if (!id) return;
             const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
+            if (label.toLowerCase() === "plugin custom code") return;
             if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
 
 
@@ -7672,6 +7679,7 @@
             if (!id) return;
             const label = btn.innerText.trim();
             if (!label) console.log("There is no label for Element: " + btn);
+            if (label.toLowerCase() === "plugin custom code") return;
 
 
 
@@ -7690,8 +7698,12 @@
         const iframe = document.getElementById("middle1");
         if (!iframe) return null;
 
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (!iframeDoc) return null;
+        let iframeDoc = null;
+        try {
+            iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        } catch (e) {
+            console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
+        }
 
         const src = iframe.getAttribute("src");
         if (!src) return null;
@@ -7702,11 +7714,18 @@
             return null;
         }
 
-        const bodyId = iframeDoc.body?.id || "";
+        let bodyId = "";
+        if (iframeDoc) {
+            try {
+                bodyId = iframeDoc.body?.id || "";
+            } catch (e) {
+                // Ignore body ID access failure
+            }
+        }
 
         const cardContainer = document.querySelector(".cardsPageWrapper");
 
-        const isCardContainerHidden = cardContainer.classList.contains("d-none");
+        const isCardContainerHidden = cardContainer ? cardContainer.classList.contains("d-none") : true;
 
         if ((page.endsWith("/tstruct.aspx") || page.includes("tstruct.aspx")) && bodyId !== "Entitymanagement_Body" && isCardContainerHidden) {
             return "t" // tstruct page
@@ -7819,6 +7838,8 @@
         return false;
     }
 
+
+
     function getEntityToolbarButtons() {
         const iframe = document.getElementById("middle1");
 
@@ -7848,8 +7869,9 @@
             if (!id) return;
 
             const label = extractButtonLabel(btn);
-            if (label.toLowerCase() === "export" || label.toLowerCase() === "theme" || label.toLowerCase() === "field captions" || label.toLowerCase() === "view" || label.toLowerCase() === "pattern") return;
             if (!label) return;
+            if (label.toLowerCase() === "plugin custom code") return;
+            if (label.toLowerCase() === "export" || label.toLowerCase() === "theme" || label.toLowerCase() === "field captions" || label.toLowerCase() === "view" || label.toLowerCase() === "pattern") return;
 
             result[id] = {
                 id,
@@ -7889,6 +7911,7 @@
             // const label = btn.innerText.trim();
             const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
+            if (label.toLowerCase() === "plugin custom code") return;
 
 
 
@@ -7955,6 +7978,7 @@
 
             const label = extractButtonLabel(btn);
             if (!label) return;
+            if (label.toLowerCase() === "plugin custom code") return;
 
             result[id] = {
                 id,
@@ -8022,6 +8046,7 @@
 
                 const label = extractButtonLabel(el);
                 if (!label) return;
+                if (label.toLowerCase() === "plugin custom code") return;
 
                 const id =
                     el.id ||
@@ -11045,36 +11070,34 @@
 
         axiClearBtn.style.display = "flex";
 
-        if (favObj.targetUrl && favObj.targetUrl.trim() !== "") {
+        if (favObj.targetUrl && favObj.targetUrl.trim() !== "" && !favObj.targetUrl.startsWith("developerstudio:")) {
             console.log("Executing Favorite directly via Target URL:", favObj.targetUrl);
             const params = new URLSearchParams(favObj.targetUrl.split("?")[1]);
             const transId = params.get("transid");
-            // if (tokens[0].toLowerCase() === "edit") {
             if (transId) {
                 setEditSessionState(transId);
-
-
             }
-
-            // }
-
             top.window.LoadIframe(favObj.targetUrl);
+        } else if (favObj.targetUrl && favObj.targetUrl.startsWith("developerstudio:")) {
+            console.log("Executing Favorite via Developer Studio custom target URL:", favObj.targetUrl);
+            const parts = favObj.targetUrl.split(":");
+            const type = parts[1]; // tstruct or iview
+            const name = parts[2]; // the resolved name
+            if (type === "tstruct") {
+                window.openDeveloperStudio("tstreact", name, true);
+            } else if (type === "iview") {
+                window.openDeveloperStudio("ivreact", name, true);
+            }
         } else {
-
-            // executeCommandsV2();
             const firstToken = tokens[0];
             const secondToken = tokens[1];
+            const nameToken = tokens[2]; // Resolved name / third token
 
             if (firstToken.toLowerCase() === "sdk" && secondToken.toLowerCase() === "tstruct") {
-                window.openDeveloperStudio("tstreact", secondToken, true);
-
+                window.openDeveloperStudio("tstreact", nameToken, true);
             } else {
-                window.openDeveloperStudio("ivreact", secondToken, true);
-
+                window.openDeveloperStudio("ivreact", nameToken, true);
             }
-
-
-
         }
 
         hide();
@@ -11238,6 +11261,8 @@
 
         // Reset loading state on open
         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+        const favCancelBtn = document.getElementById("axiFavCancelBtn");
+        if (favCancelBtn) favCancelBtn.disabled = false;
 
         axiFavModal.style.display = "flex";
         favNameInput.focus();
@@ -11379,6 +11404,8 @@
 
         // Reset loading state on open
         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
+        const deleteFavCancelBtn = document.getElementById("axiFavDeleteCancelBtn");
+        if (deleteFavCancelBtn) deleteFavCancelBtn.disabled = false;
 
         modal.style.display = "flex";
     }
@@ -11667,6 +11694,43 @@
             }
             .introjs-bullets ul li a {
                 background: #5e5e6e !important;
+            }
+            @media (max-width: 768px) {
+                .introjs-tooltipReferenceLayer {
+                    position: fixed !important;
+                    top: auto !important;
+                    left: 50% !important;
+                    bottom: 80px !important;
+                    transform: translateX(-50%) !important;
+                    width: 90% !important;
+                    max-width: 380px !important;
+                    min-width: 280px !important;
+                    z-index: 10000001 !important;
+                }
+                .introjs-tooltip {
+                    position: absolute !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    top: auto !important;
+                    width: 100% !important;
+                    min-width: 0 !important;
+                    max-width: 100% !important;
+                    margin: 0 !important;
+                    box-sizing: border-box !important;
+                    padding: 12px !important;
+                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(161, 0, 255, 0.4) !important;
+                }
+                .introjs-arrow {
+                    display: none !important;
+                }
+                .introjs-tooltiptext {
+                    font-size: 12px !important;
+                }
+                .introjs-button {
+                    padding: 5px 10px !important;
+                    font-size: 11px !important;
+                }
             }
         `;
         document.head.appendChild(style);
