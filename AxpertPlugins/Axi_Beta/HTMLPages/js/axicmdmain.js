@@ -11242,6 +11242,8 @@
 
         // Reset loading state on open
         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+        const favCancelBtn = document.getElementById("axiFavCancelBtn");
+        if (favCancelBtn) favCancelBtn.disabled = false;
 
         axiFavModal.style.display = "flex";
         favNameInput.focus();
@@ -11383,6 +11385,8 @@
 
         // Reset loading state on open
         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
+        const deleteFavCancelBtn = document.getElementById("axiFavDeleteCancelBtn");
+        if (deleteFavCancelBtn) deleteFavCancelBtn.disabled = false;
 
         modal.style.display = "flex";
     }
