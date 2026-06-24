@@ -1816,7 +1816,7 @@
     function getInitialCommandsList() {
         if (!commands) return [];
         const structType = getStructType();
-        const isRunnable = structType && structType !== "o";
+        const isRunnable = structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage();
         return Object.keys(commands).filter(key => {
             if (key.toLowerCase() === "run") {
                 return isRunnable;
@@ -3003,7 +3003,10 @@
         if (groupKey.toLowerCase() === "run") {
             const structType = getStructType();
 
-            if (!structType || structType === "o") {
+            if (!structType || structType === "o" || isPreviewModalOpen() || isRunDisabledForPage()) {
+                if (isPreviewModalOpen() || isRunDisabledForPage()) {
+                    return [];
+                }
                 showToast("Warning: CommandGroup Invalid: Please open Tstruct or Any other page");
                 return [];
             }
@@ -5275,6 +5278,10 @@
         const groupKey = cleanString(tokens[0]);
 
         const groupNameNormalized = groupKey.toLowerCase();
+        if (groupNameNormalized === "run" && (isPreviewModalOpen() || isRunDisabledForPage())) {
+            showToast("Execution of run command is not allowed when the active page or preview modal is not runnable");
+            return;
+        }
         const accessPermissions = getAccessPermissions();
 
         if (groupNameNormalized === "configure" && !accessPermissions.appMgrAccess) {
@@ -7592,7 +7599,8 @@
         const toolbar = doc.querySelector(".BottomToolbarBar");
         if (!toolbar) return {};
 
-        const buttons = toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn");
+        const buttons = Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn"));
+        if (buttons.length === 0) return {};
 
         const result = {};
 
@@ -7619,6 +7627,90 @@
         });
 
         return result;
+    }
+
+    function isPreviewModalOpen() {
+        let rootWin = window;
+        try {
+            if (window.top && window.top.document) {
+                rootWin = window.top;
+            }
+        } catch (e) {
+            console.warn("Axi: Failed to access window.top due to cross-origin boundary.");
+        }
+
+        function checkWindow(win) {
+            try {
+                if (!win || !win.document) return false;
+
+                // 1. Check for remodal wrapper containing the popupIframeRemodal
+                const openedModal = win.document.querySelector(".remodal-wrapper.remodal-is-opened #popupIframeRemodal");
+                if (openedModal) {
+                    console.log("Axi: found active preview modal via remodal selector");
+                    return true;
+                }
+
+                // 2. Check for remodal wrapper containing any htmlPages.aspx iframe
+                const htmlPagesModal = win.document.querySelector(".remodal-wrapper.remodal-is-opened iframe[src*='htmlPages.aspx']");
+                if (htmlPagesModal) {
+                    console.log("Axi: found active preview modal via htmlPages src selector");
+                    return true;
+                }
+
+                // 3. Fallback check for popupIframeRemodal direct element
+                const modal = win.document.getElementById("popupIframeRemodal");
+                if (modal) {
+                    const wrapper = win.document.getElementById("axpertPopupWrapper") || win.document.querySelector("[data-remodal-id=axpertPopupModal]");
+                    if (wrapper) {
+                        if (wrapper.offsetWidth > 0 || wrapper.offsetHeight > 0 || wrapper.classList.contains("remodal-is-opened")) {
+                            console.log("Axi: found active preview modal via wrapper visibility/class");
+                            return true;
+                        }
+                    } else if (modal.offsetWidth > 0 || modal.offsetHeight > 0) {
+                        console.log("Axi: found active preview modal via modal direct visibility");
+                        return true;
+                    }
+                }
+
+                // 4. Recursively check iframes
+                const frames = win.document.querySelectorAll("iframe");
+                for (let i = 0; i < frames.length; i++) {
+                    const frameWin = frames[i].contentWindow;
+                    if (frameWin && checkWindow(frameWin)) {
+                        return true;
+                    }
+                }
+            } catch (err) {
+                // Ignore cross-origin error on frame access
+            }
+            return false;
+        }
+
+        const result = checkWindow(rootWin);
+        console.log("Axi: isPreviewModalOpen returning:", result);
+        return result;
+    }
+
+    function isRunDisabledForPage(src) {
+        if (!src) {
+            const iframe = document.getElementById("middle1");
+            if (!iframe) return false;
+            src = iframe.getAttribute("src") || "";
+        }
+        const srcLower = src.toLowerCase();
+
+        // 1. Dev Studio check
+        if (srcLower.includes("qadev") || srcLower.includes("adinfo=") || srcLower.includes("adinfo%3d") || srcLower.includes("axidev")) {
+            return true;
+        }
+
+        // 2. Specific non-runnable pages check
+        if (srcLower.includes("arrangemenu.aspx")) return true;
+        if (srcLower.includes("axdbscript.aspx")) return true;
+        if (srcLower.includes("tstruct.aspx") && srcLower.includes("transid=ad_lg")) return true;
+        if (srcLower.includes("iview.aspx") && srcLower.includes("ivname=inmemdb")) return true;
+
+        return false;
     }
 
     function getTopToolbarButtons() {
@@ -7708,6 +7800,10 @@
         const src = iframe.getAttribute("src");
         if (!src) return null;
 
+        if (isRunDisabledForPage(src)) {
+            return "o";
+        }
+
         const page = src.split("?")[0].toLowerCase();
 
         if (!page) {
@@ -7788,6 +7884,9 @@
     }
 
     function extractButtonLabel(btn) {
+        if (btn && btn.id === "smartviewFilterToolbarBtn") {
+            return "Filter";
+        }
 
 
         const dataExtra = btn.getAttribute("data-extra");
@@ -7849,9 +7948,18 @@
         if (!doc) return {};
 
         const toolbar = doc.querySelector(".card-toolbar");
-        if (!toolbar) return {};
+        const buttons = [];
+        if (toolbar) {
+            buttons.push(...Array.from(toolbar.querySelectorAll("a, button")));
+        }
 
-        const buttons = toolbar.querySelectorAll("a, button");
+        const filterBtn = doc.querySelector("#smartviewFilterToolbarBtn");
+        if (filterBtn && !buttons.includes(filterBtn)) {
+            buttons.push(filterBtn);
+        }
+
+        if (buttons.length === 0) return {};
+
         const result = {};
 
         buttons.forEach((btn, index) => {
