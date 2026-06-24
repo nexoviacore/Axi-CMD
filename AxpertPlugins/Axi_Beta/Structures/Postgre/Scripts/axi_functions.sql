@@ -1472,22 +1472,3 @@ return query execute v_sql;
 END; $function$
 >>
 
-<<
-CREATE OR REPLACE FUNCTION fn_get_axpertcomps_name(pinput text)
-RETURNS text
-LANGUAGE sql
-AS $function$
-    SELECT string_agg(pout, ',')
-    FROM (
-        SELECT 
-            substring(
-                val, 
-                position('-(' in val) + 2, 
-                length(val) - (position('-(' in val) + 1) - 1
-            ) AS pout
-        FROM unnest(string_to_array(pinput, ',')) AS val
-        WHERE length(pinput) > 2
-    ) a;
-$function$
->>
-
