@@ -55,6 +55,8 @@ drop function fn_axi_getstructs_obj
 >>
 
 
+
+
 <<
 CREATE OR REPLACE FUNCTION fn_axi_get_fieldvalues_with_keysuffix_list
 (
@@ -1082,8 +1084,8 @@ CREATE OR REPLACE FUNCTION fn_axi_getstructures_meta(pusername character varying
 AS $function$
 BEGIN
 
-if pstype='t' then
-    RETURN QUERY
+RETURN QUERY
+with ts as(
 SELECT DISTINCT
                (a.caption || ' (' || a.name || ') [tstruct]')::varchar,
                a.caption tcaption,
@@ -1136,11 +1138,8 @@ ORDER BY formtransid, ord ASC)p on a.name=p.formtransid
           AND (
                 'default' = ANY(string_to_array(presponsiblity,','))
                 OR (ua.stype = 't' AND ua.rname = ANY(string_to_array(presponsiblity,','))
-              )) order by 1; 
-
-elsif pstype='i' then
-  RETURN QUERY
-SELECT DISTINCT
+              ))), 
+iv as (SELECT DISTINCT
                (a.caption || ' (' || a.name || ') [iview]')::varchar,
                a.caption,
                a.name,'i'::varchar stype,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar
@@ -1151,9 +1150,8 @@ SELECT DISTINCT
           AND (
                 'default' = ANY(string_to_array(presponsiblity,','))
                 OR (ua.stype = 'i' AND ua.rname = ANY(string_to_array(presponsiblity,','))
-              ))order by 1;
-elsif pstype='p' then
-  RETURN QUERY
+              ))),
+pg as(
  SELECT DISTINCT
                (b.caption || ' [page]')::varchar,
                b.caption,
@@ -1165,182 +1163,31 @@ elsif pstype='p' then
           AND (
                 'default' = ANY(string_to_array(presponsiblity,','))
                 OR (ua.rname = ANY(string_to_array(presponsiblity,','))
-              ))order by 1; 
-
-elsif pstype='ads' then
-  RETURN QUERY
-select (a.sqlname || ' (' || a.sqlsrc || ') [ads]')::varchar displaydata,sqlname caption,sqlname name,'ads'::varchar stype,'NA'::varchar dimension,
+              ))),
+ads as (select (a.sqlname || ' (' || a.sqlsrc || ') [ads]')::varchar displaydata,sqlname caption,sqlname name,'ads'::varchar stype,'NA'::varchar dimension,
 case when a2.axpermissionsid>0 then 'T' else 'NA' end::varchar permission,
 'NA'::varchar createallowed,
 case when a2.axpermissionsid>0 or a.createdby=pusername or 'default' = ANY(string_to_array(puserrole,',')) then 'T' else 'NA' end::varchar viewallowed,
 'NA'::varchar keyfield,'NA'::varchar primarytable
 from axdirectsql a
 left join axpermissions a2 on a.sqlname =a2.formcap and (a2.axusername = pusername or a2.axuserrole = ANY(string_to_array(puserrole,',')))
-where sqlsrc !='Metadata'
-order by 1;
-
-elsif pstype='all' then
-
-return query
-select * from(SELECT DISTINCT
-               (a.caption || ' (' || a.name || ') [tstruct]')::varchar,
-               a.caption tcaption,
-               a.name transid,'t'::varchar stype,coalesce(g.dimensions,'F')::varchar dimensions,
-    coalesce(p.permissions,'F')::varchar,coalesce(p.newrecord,'T')::varchar,coalesce(p.viewctrl,'T')::varchar,kf.kfld,d.tablename
-        FROM tstructs a
-join axpdc d on a.name = d.tstruct and d.dname='dc1'
-        left JOIN axpages b ON b.pagetype = 't' || a.name
-        LEFT JOIN axuseraccess ua ON ua.sname = a.name
-left join (SELECT DISTINCT ON (combined_results.name) 
-    combined_results.name tstruct,  
-    kfld, 
-    ord
-FROM (
-    SELECT 
-        a.name,
-        a.keyfield AS kfld,
-        1 AS ord       
-    FROM axp_tstructprops a 
-    UNION ALL
-    SELECT 
-        tstruct AS name,
-        fname AS kfld,
-        CASE 
-            WHEN modeofentry = 'autogenerate' THEN 2
-            WHEN LOWER(allowduplicate) = 'f' AND LOWER(allowempty) = 'f' AND datatype = 'c' AND LOWER(hidden) = 'f' THEN 3
-            WHEN LOWER(hidden) = 'f' AND datatype = 'c' THEN 4
-            ELSE 5
-        END AS ord       
-    FROM axpflds
-    WHERE dcname = 'dc1'
-) combined_results
-ORDER BY combined_results.name, ord ASC)kf on kf.tstruct = a.name
-        left join (select ftransid,'T' dimensions from axgrouptstructs)g on a."name" = g.ftransid
-        left join (SELECT DISTINCT ON (formtransid) 
-    formtransid, 
-    newrecord, 
-    permissions,viewctrl
-FROM (
-    SELECT formtransid, case when allowcreate='Yes' then 'T' else 'F' end newrecord, 'U' as type, 1 as ord ,'T'permissions,case when viewctrl='4' then 'F' else 'T' end viewctrl
-    FROM axpermissions
-    WHERE axusername = pusername AND comptype = 'Form'
-    UNION ALL
-    SELECT formtransid, case when allowcreate='Yes' then 'T' else 'F' end newrecord, 'R' as type, 2 as ord ,'T' permissions,case when viewctrl='4' then 'F' else 'T' end viewctrl
-    FROM axpermissions
-    WHERE axuserrole = ANY(string_to_array(puserrole, ',')) and  comptype = 'Form'
-) combined_permissions
-ORDER BY formtransid, ord ASC)p on a.name=p.formtransid
-        WHERE (pmode = 'dev' OR b.visible = 'T')
-          AND (
-                'default' = ANY(string_to_array(presponsiblity,','))
-                OR (ua.stype = 't' AND ua.rname = ANY(string_to_array(presponsiblity,','))
-              ))
-union all
-SELECT DISTINCT
-               (a.caption || ' (' || a.name || ') [iview]')::varchar,
-               a.caption,
-               a.name,'i'::varchar stype,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar
-        FROM iviews a
-        left JOIN axpages b ON b.pagetype = 'i' || a.name
-        LEFT JOIN axuseraccess ua ON ua.sname = a.name     
-        WHERE (lower(pmode) = 'dev' OR b.visible = 'T')
-          AND (
-                'default' = ANY(string_to_array(presponsiblity,','))
-                OR (ua.stype = 'i' AND ua.rname = ANY(string_to_array(presponsiblity,','))
-              ))
-union all
- SELECT DISTINCT
-               (b.caption || ' [page]')::varchar,
-               b.caption,
-               b.props,'p'::varchar stype,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar
-        FROM  axpages b 
-        left JOIN axuseraccess ua ON ua.sname = b.name     
-        WHERE b.pagetype='web'
-        and (lower(pmode) = 'dev' OR b.visible = 'T')
-          AND (
-                'default' = ANY(string_to_array(presponsiblity,','))
-                OR (ua.rname = ANY(string_to_array(presponsiblity,','))
-              ))
-union all
-select (a.sqlname || ' (' || a.sqlsrc || ') [ads]')::varchar displaydata,sqlname caption,sqlname name,'ads'::varchar stype,'NA'::varchar dimension,
-case when a2.axpermissionsid>0 then 'T' else 'NA' end::varchar permission,
-'NA'::varchar createallowed,
-case when a2.axpermissionsid>0 or a.createdby=pusername or 'default' = ANY(string_to_array(puserrole,',')) then 'T' else 'NA' end::varchar viewallowed,
-'NA'::varchar keyfield,'NA'::varchar primarytable
-from axdirectsql a
-left join axpermissions a2 on a.sqlname =a2.formcap and (a2.axusername = pusername or a2.axuserrole = ANY(string_to_array(puserrole,',')))
-where sqlsrc !='Metadata'
-union all
-SELECT
+where sqlsrccnd !=1),
+inbox as(SELECT
                'Inbox'::varchar displaydata,
                'Inbox'::varchar caption,
-               'Inbox'::varchar name,'Inbox'::varchar stype,'NA','NA','NA','NA','NA','NA')a order by 1;
-elsif pstype='analyse' then 
-RETURN QUERY
-SELECT DISTINCT
-               (a.caption || ' (' || a.name || ') [tstruct]')::varchar,
-               a.caption tcaption,
-               a.name transid,'t'::varchar stype,coalesce(g.dimensions,'F')::varchar dimensions,
-    coalesce(p.permissions,'F')::varchar,coalesce(p.newrecord,'T')::varchar,coalesce(p.viewctrl,'T')::varchar,kf.kfld,d.tablename
-        FROM tstructs a
-join axpdc d on a.name = d.tstruct and d.dname='dc1'
-        left JOIN axpages b ON b.pagetype = 't' || a.name
-        LEFT JOIN axuseraccess ua ON ua.sname = a.name
-left join (SELECT DISTINCT ON (combined_results.name) 
-    combined_results.name tstruct,  
-    kfld, 
-    ord
-FROM (
-    SELECT 
-        a.name,
-        a.keyfield AS kfld,
-        1 AS ord       
-    FROM axp_tstructprops a 
+               'Inbox'::varchar name,'Inbox'::varchar stype,'NA','NA','NA','NA','NA','NA')
+SELECT * FROM (
+    SELECT * FROM ts WHERE pstype IN ('t', 'all', 'analyze')
     UNION ALL
-    SELECT 
-        tstruct AS name,
-        fname AS kfld,
-        CASE 
-            WHEN modeofentry = 'autogenerate' THEN 2
-            WHEN LOWER(allowduplicate) = 'f' AND LOWER(allowempty) = 'f' AND datatype = 'c' AND LOWER(hidden) = 'f' THEN 3
-            WHEN LOWER(hidden) = 'f' AND datatype = 'c' THEN 4
-            ELSE 5
-        END AS ord       
-    FROM axpflds
-    WHERE dcname = 'dc1'
-) combined_results
-ORDER BY combined_results.name, ord ASC)kf on kf.tstruct = a.name
-        left join (select ftransid,'T' dimensions from axgrouptstructs)g on a."name" = g.ftransid
-        left join (SELECT DISTINCT ON (formtransid) 
-    formtransid, 
-    newrecord, 
-    permissions,viewctrl
-FROM (
-    SELECT formtransid, case when allowcreate='Yes' then 'T' else 'F' end newrecord, 'U' as type, 1 as ord ,'T'permissions,case when viewctrl='4' then 'F' else 'T' end viewctrl
-    FROM axpermissions
-    WHERE axusername = pusername AND comptype = 'Form'
+   SELECT * FROM iv  WHERE pstype IN ('i', 'all')
     UNION ALL
-    SELECT formtransid, case when allowcreate='Yes' then 'T' else 'F' end newrecord, 'R' as type, 2 as ord ,'T' permissions,case when viewctrl='4' then 'F' else 'T' end viewctrl
-    FROM axpermissions
-    WHERE axuserrole = ANY(string_to_array(puserrole, ',')) and  comptype = 'Form'
-) combined_permissions
-ORDER BY formtransid, ord ASC)p on a.name=p.formtransid
-        WHERE (pmode = 'dev' OR b.visible = 'T')
-          AND (
-                'default' = ANY(string_to_array(presponsiblity,','))
-                OR (ua.stype = 't' AND ua.rname = ANY(string_to_array(presponsiblity,','))
-              ))
-union all
-select (a.sqlname || ' (' || a.sqlsrc || ') [ads]')::varchar displaydata,sqlname caption,sqlname name,'ads'::varchar stype,'NA'::varchar dimension,
-case when a2.axpermissionsid>0 then 'T' else 'NA' end::varchar permission,
-'NA'::varchar createallowed,
-case when a2.axpermissionsid>0 or a.createdby=pusername or 'default' = ANY(string_to_array(puserrole,',')) then 'T' else 'NA' end::varchar viewallowed,
-'NA'::varchar keyfield,'NA'::varchar primarytable
-from axdirectsql a
-left join axpermissions a2 on a.sqlname =a2.formcap and (a2.axusername = pusername or a2.axuserrole = ANY(string_to_array(puserrole,',')))
-where sqlsrc !='Metadata'
-order by 1;
-end if;
+    SELECT * FROM pg   WHERE pstype IN ('p', 'all')
+    UNION ALL
+    SELECT * FROM ads WHERE pstype IN ('ads', 'all', 'analyze')
+    UNION ALL
+    SELECT * FROM inbox WHERE pstype IN ('all')
+) final_result
+ORDER BY displaydata;
  
 END;
 $function$
@@ -1622,3 +1469,4 @@ return query execute v_sql;
 
 END; $function$
 >>
+

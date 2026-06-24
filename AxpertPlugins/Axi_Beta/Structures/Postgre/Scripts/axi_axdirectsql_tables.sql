@@ -502,34 +502,27 @@ VALUES(99999999990027, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin'
 INSERT INTO axdirectsql
 (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
 VALUES(99999999990028, 'F', 0, NULL, 'admin', '2026-01-30 00:00:00.000', 'admin', '2026-01-30 00:00:00.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_adscolumnlist', NULL, 'Metadata', 0, 'select b.fldcaption || ''('' || b.fldname || '')'' displaydata,
-       b.fldname name,
-       b.fldcaption caption,
-       b.normalized,
-       b.fdatatype,
-       f.srctf,
-       f.srcfld,
-       CASE
-           WHEN lower(sqltext) LIKE ''%--axp_filter%''
-           THEN ''T''
-           ELSE ''F''
-       END AS filters
-from axdirectsql a
-left join axpdef_smartlist c
-       on a.sqlname = c.adsname
-left join axpdef_smartlist_mdata b
-       on b.axpdef_smartlistid = c.axpdef_smartlistid
-left join axpflds f
-       on b.srctransid = f.tstruct
-      and b.srcfldname = f.fname
-where a.sqlname = :param1', 'param1', 'param1~Character~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+        b.fldname name,
+        b.fldcaption caption,
+        b.normalized,
+        b.fdatatype,
+        f.tablename sourcetable,
+        f.fname sourcefld,
+        CASE
+            WHEN lower(sqltext) LIKE ''%--axp_filter%''
+            THEN ''T''
+            ELSE ''F''
+        END AS filters
+   from axdirectsql a
+   left join axpdef_smartlist c
+          on a.sqlname = c.adsname
+   left join axpdef_smartlist_mdata b
+          on b.axpdef_smartlistid = c.axpdef_smartlistid
+   left join axpflds f
+          on b.srctransid = f.tstruct
+         and b.srcfldname = f.fname
+  where a.sqlname = :param1', 'param1', 'param1~Character~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
 >>
-
-
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990028, 'F', 0, NULL, 'admin', '2026-01-30 00:00:00.000', 'admin', '2026-01-30 00:00:00.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_adscolumnlist', NULL, 'Metadata', 0, 'select b.fldcaption || ''(''||b.fldname||'')'' displaydata,b.fldname name,b.fldcaption caption,b.normalized,b.fdatatype, b.sourcetable,b.sourcefld , CASE WHEN lower(sqltext) LIKE ''%--axp_filter%'' THEN ''T'' ELSE ''F'' END AS filters from axdirectsql a left join axdirectsql_metadata b on a.axdirectsqlid =b.axdirectsqlid where sqlname = :param1', 'param1', 'param1~Character~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
-
-
 
 <<
 INSERT INTO axdirectsql
@@ -667,4 +660,8 @@ VALUES(99999999990050, 'F', 0, NULL, 'admin', '2025-12-24 19:34:05.000', 'admin'
 INSERT INTO axdirectsql
 (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd, pagination, applydimensions)
 VALUES(99999999990051, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_smartviewlist', NULL, 'Metadata', 1, 'select adsname as displaydata,adsname as caption,adsname as name from axpdef_smartlist order by adsname asc', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL, NULL, NULL);
+>>
+
+<<
+update axdirectsql set sqlsrc = 'Internal', sqlsrccnd = 1 where sqlsrc = 'Metadata';
 >>

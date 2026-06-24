@@ -13126,7 +13126,7 @@ function smartviewOpenSingleNewTstruct(transid) {
     return true;
   }
 
-  const url = `../aspx/tstruct.aspx?transid=${encodeURIComponent(safeTransid)}&act=open`;
+  const url = `../../../aspx/tstruct.aspx?transid=${encodeURIComponent(safeTransid)}&act=open`;
   if (typeof parent !== 'undefined' && parent && typeof parent.createPopup === 'function') {
     parent.createPopup(url, true, ()=>{}, ()=>{});
   } else {
