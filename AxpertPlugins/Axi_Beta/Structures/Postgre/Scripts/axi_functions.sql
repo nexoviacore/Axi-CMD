@@ -54,9 +54,7 @@ drop function fn_permissions_getpermission
 drop function fn_axi_getstructs_obj
 >>
 
-<<
-drop function fn_get_axpertcomps_name
->>
+
 
 
 <<

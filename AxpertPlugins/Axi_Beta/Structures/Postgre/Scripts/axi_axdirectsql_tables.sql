@@ -661,3 +661,7 @@ INSERT INTO axdirectsql
 (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd, pagination, applydimensions)
 VALUES(99999999990051, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_smartviewlist', NULL, 'Metadata', 1, 'select adsname as displaydata,adsname as caption,adsname as name from axpdef_smartlist order by adsname asc', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL, NULL, NULL);
 >>
+
+<<
+update axdirectsql set sqlsrc = 'Internal', sqlsrccnd = 1 where sqlsrc = 'Metadata';
+>>
