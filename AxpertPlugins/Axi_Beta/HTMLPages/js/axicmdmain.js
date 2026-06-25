@@ -3424,6 +3424,7 @@
                 if (key === "view") {
                     // if (item.caption === "testmar10") console.log(JSON.stringify(item)); 
                     if (item?.stype === "p" || item?.stype === "page") return true;
+                    if (item?.stype === "i" || item?.stype === "iview") return item?.viewallowed !== 'F';
                     if (item?.viewallowed === "NA") return false;
                     return item?.viewallowed !== 'F';
                 }
