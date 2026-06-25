@@ -676,30 +676,23 @@ class EntityCommon {
         return typeof elem == "undefined";
     };
 
-    loadHyperLink(link,isHyperLink) {
-        if (typeof isHyperLink != "undefined" && isHyperLink == "true")
-            parent.ShowDimmer(true);
-    //         // Identify if we are inside the multi-tab popup system
-    // const isInsidePopup = typeof window.frameElement.id !== "undefined" && 
-    // window.frameElement.id.toLowerCase() !== "middle1";
-
-    //        if (isInsidePopup) {
-    //        // Use openForm instead of createNewTab to prevent duplicates
-    //        // Use a generic "Loading..." or empty string; openForm will extract the real tname
-    //        parent.PopupManager.openForm("", link);
-    //     } else {
-    //       window.top.LoadIframe(link);
-    // }
-    let _thsiifId = window.frameElement.id;
-   if (typeof _thsiifId !== "undefined" && _thsiifId.toLowerCase().startsWith("axmultiiframe_")) {
-     parent.PopupManager.openForm("", link);
-   } else {
-     window.top.LoadIframe(link);
-  }
+    loadHyperLink(link, isHyperLink) {
+        if (typeof isHyperLink != "undefined" && isHyperLink == "true"){
+               if (typeof parent.ShowDimmer === "function")
+        parent.ShowDimmer(true);
+    else if (typeof top.ShowDimmer === "function")
+        top.ShowDimmer(true);
+    else if (typeof ShowDimmer === "function")
+        ShowDimmer(true);
+        }
+           
+        let _thsiifId = window.frameElement.id;
+        if (typeof _thsiifId !== "undefined" && _thsiifId.toLowerCase().startsWith("axmultiiframe_")) {
+            parent.PopupManager.openForm("", link)
+        } else {
+            window.top.LoadIframe(link);
+        }
     }
-
-
-   
 
     navigateToUrl(link) {
         window.top.navigateToUrl(link);
