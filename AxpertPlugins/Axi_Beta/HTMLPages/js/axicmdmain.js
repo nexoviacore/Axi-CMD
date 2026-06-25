@@ -3424,6 +3424,7 @@
                 if (key === "view") {
                     // if (item.caption === "testmar10") console.log(JSON.stringify(item)); 
                     if (item?.stype === "p" || item?.stype === "page") return true;
+                    if (item?.stype === "i" || item?.stype === "iview") return item?.viewallowed !== 'F';
                     if (item?.viewallowed === "NA") return false;
                     return item?.viewallowed !== 'F';
                 }
@@ -4628,76 +4629,147 @@
        TOAST HELPER
     =============================== */
     function showToast(message, duration = 5000, isSuccess = false) {
+        let styleTag = document.getElementById("axi-toast-styles");
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = "axi-toast-styles";
+            styleTag.innerHTML = `
+                #axi-toast-container {
+                    position: fixed;
+                    bottom: 80px;
+                    right: 24px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    z-index: 100000;
+                    pointer-events: none;
+                }
+                .axi-toast-card {
+                    display: flex;
+                    align-items: center;
+                    padding: 12px 16px;
+                    border-radius: 10px;
+                    min-width: 300px;
+                    max-width: 420px;
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+                    opacity: 0;
+                    transform: translateY(16px) scale(0.95);
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    pointer-events: auto;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                    font-size: 13.5px;
+                    line-height: 1.4;
+                    color: #ffffff;
+                }
+                @media (max-width: 576px) {
+                    #axi-toast-container {
+                        right: 16px;
+                        left: 16px;
+                        bottom: 80px;
+                    }
+                    .axi-toast-card {
+                        min-width: 0;
+                        max-width: 100%;
+                    }
+                }
+            `;
+            document.head.appendChild(styleTag);
+        }
+
+        let container = document.getElementById("axi-toast-container");
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "axi-toast-container";
+            document.body.appendChild(container);
+        }
 
         const toast = document.createElement("div");
+        toast.className = "axi-toast-card";
+
+        // Determine Theme based on type
+        let iconSvg = "";
+        let borderStyle = "";
+        let bgStyle = "";
+
+        if (isSuccess === true || isSuccess === "success") {
+            bgStyle = "rgba(16, 28, 21, 0.9)"; // Dark green glass
+            borderStyle = "1px solid rgba(34, 197, 94, 0.3)";
+            iconSvg = `<svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #22c55e; margin-right: 12px; flex-shrink: 0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18ZM13.7071 8.70711C14.0976 8.31658 14.0976 7.68342 13.7071 7.29289C13.3166 6.90237 12.6834 6.90237 12.2929 7.29289L9 10.5858L7.70711 9.29289C7.31658 8.90237 6.68342 8.90237 6.29289 9.29289C5.90237 9.68342 5.90237 10.3166 6.29289 10.7071L8.29289 12.7071C8.68342 13.0976 9.31658 13.0976 9.70711 12.7071L13.7071 8.70711Z" fill="currentColor"/></svg>`;
+        } else if (isSuccess === false || isSuccess === "error" || isSuccess === "danger") {
+            bgStyle = "rgba(35, 18, 18, 0.9)"; // Dark red glass
+            borderStyle = "1px solid rgba(239, 68, 68, 0.3)";
+            iconSvg = `<svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #ef4444; margin-right: 12px; flex-shrink: 0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10ZM11 14C11 14.5523 10.5523 15 10 15C9.44772 15 9 14.5523 9 14C9 13.4477 9.44772 13 10 13C10.5523 13 11 13.4477 11 14ZM10 5C9.44772 5 9 5.44772 9 6V10C9 10.5523 9.44772 11 10 11C10.5523 11 11 10.5523 11 10V6C11 5.44772 10.5523 5 10 5Z" fill="currentColor"/></svg>`;
+        } else {
+            bgStyle = "rgba(22, 22, 22, 0.9)"; // Dark charcoal glass
+            borderStyle = "1px solid rgba(255, 255, 255, 0.1)";
+            iconSvg = `<svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #3b82f6; margin-right: 12px; flex-shrink: 0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10ZM11 10C11 10.5523 10.5523 11 10 11C9.44772 11 9 10.5523 9 10V14C9 14.5523 9.44772 15 10 15C10.5523 15 11 14.5523 11 14V10ZM10 5C9.44772 5 9 5.44772 9 6C9 6.55228 9.44772 7 10 7C10.5523 7 11 6.55228 11 6C11 5.44772 10.5523 5 10 5Z" fill="currentColor"/></svg>`;
+        }
+
+        toast.style.backgroundColor = bgStyle;
+        toast.style.border = borderStyle;
+
+        // Create elements inside toast
+        const iconDiv = document.createElement("div");
+        iconDiv.innerHTML = iconSvg;
+        iconDiv.style.display = "flex";
+        iconDiv.style.alignItems = "center";
 
         const textSpan = document.createElement("span");
         textSpan.textContent = message;
         textSpan.style.flexGrow = "1";
-        textSpan.style.marginRight = "15px";
+        textSpan.style.marginRight = "12px";
 
+        const closeBtn = document.createElement("button");
+        closeBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.4 1.4L12.6 12.6M1.4 12.6L12.6 1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+        Object.assign(closeBtn.style, {
+            background: "none",
+            border: "none",
+            color: "rgba(255, 255, 255, 0.4)",
+            cursor: "pointer",
+            padding: "6px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "4px",
+            transition: "all 0.2s ease",
+            outline: "none",
+            flexShrink: "0"
+        });
 
-        const closeBtn = document.createElement("span");
-        closeBtn.innerHTML = "&times;";
-        closeBtn.style.cursor = "pointer";
-        closeBtn.style.fontWeight = "bold";
-        closeBtn.style.fontSize = "20px";
-        closeBtn.style.lineHeight = "1";
+        closeBtn.onmouseenter = () => {
+            closeBtn.style.color = "rgba(255, 255, 255, 0.85)";
+            closeBtn.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+        };
+        closeBtn.onmouseleave = () => {
+            closeBtn.style.color = "rgba(255, 255, 255, 0.4)";
+            closeBtn.style.backgroundColor = "transparent";
+        };
 
-
-        closeBtn.onclick = () => {
+        const removeToast = () => {
             toast.style.opacity = "0";
+            toast.style.transform = "translateY(-12px) scale(0.95)";
             setTimeout(() => {
-                if (document.body.contains(toast)) {
-                    document.body.removeChild(toast);
+                if (container.contains(toast)) {
+                    container.removeChild(toast);
                 }
             }, 300);
         };
-        const bgColor = isSuccess ? "rgba(34, 197, 94, 0.9)" : "rgba(239, 68, 68, 0.9)";
 
+        closeBtn.onclick = removeToast;
 
-
-        Object.assign(toast.style, {
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "10px",
-            position: "fixed",
-            bottom: "50px",
-            right: "20px",
-            minWidth: "300px",
-            width: "fit-content",
-            backgroundColor: bgColor,
-            color: "white",
-            padding: "12px 24px",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-            zIndex: "10000",
-            fontFamily: "sans-serif",
-            fontSize: "14px",
-            opacity: "0",
-            transition: "opacity 0.3s ease-in-out",
-            backdropFilter: "blur(4px)"
-        });
-
-        document.body.appendChild(toast);
+        toast.appendChild(iconDiv);
         toast.appendChild(textSpan);
         toast.appendChild(closeBtn);
-
+        container.appendChild(toast);
 
         requestAnimationFrame(() => {
             toast.style.opacity = "1";
+            toast.style.transform = "translateY(0) scale(1)";
         });
 
-
-        setTimeout(() => {
-            toast.style.opacity = "0";
-            setTimeout(() => {
-                if (document.body.contains(toast)) {
-                    document.body.removeChild(toast);
-                }
-            }, 300);
-        }, duration);
+        setTimeout(removeToast, duration);
     }
 
 
@@ -7709,6 +7781,7 @@
         if (srcLower.includes("axdbscript.aspx")) return true;
         if (srcLower.includes("tstruct.aspx") && srcLower.includes("transid=ad_lg")) return true;
         if (srcLower.includes("iview.aspx") && srcLower.includes("ivname=inmemdb")) return true;
+        if (srcLower.includes("processflow.aspx") && (srcLower.includes("dashboard=t") || srcLower.includes("calendar=t"))) return true;
 
         return false;
     }
