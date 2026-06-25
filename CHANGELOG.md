@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Autocomplete Suggestions**: Restored visibility of `iview` items (which natively return `viewallowed = "NA"`) under the `view` autocomplete list.
 
 ### Changed
-- **Script Caching**: Bumped frontend loader caching versions (`AxiCMDMainPage.html` to `?v=90`) to enforce loading of the latest command palette logic.
+- **Script Caching**: Bumped frontend loader caching versions (`AxiCMDMainPage.html` to `?v=92`) to enforce loading of the latest command palette logic.
 - **PostgreSQL Script Optimization**: Optimized functions inside PostgreSQL `axi_functions.sql` and removed deprecated `fn_get_axpertcomps_name` function.
 - **Cleanup**: Deprecated and deleted unused/legacy wrapper scripts (`Entity-Common.js` and `Entity-Common.min.js`) in `PopUpcontainer/js/` and obsolete resource `axi_axdirectsql_tables.zip` under Oracle script folders.
 - **Command Palette Deprecations**: Deprecated the legacy `analyse` command.
@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Configured Git to ignore local `.zip` release and backup files by updating `.gitignore`.
   - Cleaned up formatting and indentation inside `smartview.js`.
 - **Entity Dimmer Integration**: Wrapped `ShowDimmer` calls inside `Entity-Common.js` with dynamic type verification checks (`typeof ShowDimmer === "function"`) across parent, top, and local window frames to prevent exceptions on deeply nested iframe pages.
+- **Command Suggestions Restriction**: Excluded the `Pop-Up` action option from the suggestions dropdown when typing the `configure responsibilities` command.
 
 ### Fixed
 - **Iview Auto-complete Suggestions**: Fixed a bug where `iview` items having `"viewallowed": "NA"` were blocked from suggestion dropdowns under the `/view` command group. Bypassed the `"NA"` check to allow them.
@@ -38,5 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SQL Syntactical Issue**: Corrected quoted column `normalized` mapping inside the Oracle table script `axi_axdirectsql_tables.sql` to avoid structural compilation errors.
 - **Oracle DDL Script Validation**: Added metadata reference sanity checks (`AND b.axdirectsqlid IS NOT NULL`) and corrected format queries in the Oracle SQL scripts.
 - **PostgreSQL DDL Structures**: Added structural column updates (`pagination` and `applydimensions`) to direct SQL table structures on PostgreSQL.
+
 
 

@@ -2919,6 +2919,11 @@
 
         const groupKey = cleanString(tokens[0]);
 
+        if (groupKey.toLowerCase() === "configure" && tokens[1] && cleanString(tokens[1]).toLowerCase() === "responsibilities") {
+            filteredObjects = [goOption];
+            return [goOption];
+        }
+
         if (groupKey.toLowerCase() === "help") {
             return [goOption];
         }
@@ -3339,6 +3344,10 @@
                     }
 
                     if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
+                        if (tokens[1] && cleanString(tokens[1]).toLowerCase() === "responsibilities") {
+                            filteredObjects = [goOption];
+                            return [goOption];
+                        }
                         filteredObjects = [goOption, popOption];
                         return [goOption, popOption];
                     }
@@ -3451,7 +3460,7 @@
             }
 
             //otherthan keyfield and userpermissionlisting it will work for all tokens which length is eqaul to 3(ex : peg)
-            else if ((groupKey.toLowerCase() === "configure") && tokens.length === 3 && tokens[1].toLowerCase() !== "keyfield" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "user permissions" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "role permissions") {
+            else if ((groupKey.toLowerCase() === "configure") && tokens.length === 3 && tokens[1].toLowerCase() !== "keyfield" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "user permissions" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "role permissions" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "responsibilities") {
                 resultList.unshift(goOption, popOption);
                 filteredObjects.unshift(goOption, popOption);
             }
