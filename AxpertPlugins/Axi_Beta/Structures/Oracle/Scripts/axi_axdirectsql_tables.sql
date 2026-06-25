@@ -275,7 +275,7 @@ CREATE TABLE axdirectsql_metadata (
     axdirectsql_metadatarow NUMBER(10) NULL,
     fldname VARCHAR2(100) NULL,
     fldcaption VARCHAR2(100) NULL,
-    "normalized" VARCHAR2(3) NULL,
+    normalized VARCHAR2(3) NULL,
     sourcetable VARCHAR2(50) NULL,
     sourcefld VARCHAR2(50) NULL,
     CONSTRAINT aglaxdirectsql_metadataid PRIMARY KEY (axdirectsql_metadataid)
