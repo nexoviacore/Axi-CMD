@@ -141,8 +141,10 @@ public partial class Workflownotification : System.Web.UI.Page
         {
             if (_strProj != string.Empty)
             {
+                //FDR fdrObj = new FDR();
+                //string SSOJsoncontent = fdrObj.StringFromRedis(Constants.AXSSO_CONN_KEY, _strProj);
                 FDR fdrObj = new FDR();
-                string SSOJsoncontent = fdrObj.StringFromRedis(Constants.AXSSO_CONN_KEY, _strProj);
+                string SSOJsoncontent = fdrObj.HashGetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXSSO_CONN_KEY, _strProj);
                 if (SSOJsoncontent == string.Empty)
                 {
                     string ScriptsPath = ConfigurationManager.AppSettings["ScriptsPath"].ToString();
@@ -159,18 +161,21 @@ public partial class Workflownotification : System.Web.UI.Page
                             enableSSOBtnsKeys(SSOJsoncontent);
 
                             FDW fdwObj = new FDW();
-                            fdwObj.SaveInRedisServer(Constants.AXSSO_CONN_KEY, SSOJsoncontent, Constants.AXSSO_CONN_KEY, _strProj);
+                            //fdwObj.SaveInRedisServer(Constants.AXSSO_CONN_KEY, SSOJsoncontent, Constants.AXSSO_CONN_KEY, _strProj);
+                            fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXSSO_CONN_KEY, SSOJsoncontent, _strProj);
                         }
                         else
                         {
                             FDW fdwObj = new FDW();
-                            fdwObj.SaveInRedisServer(Constants.AXSSO_CONN_KEY, "nossoconnection", Constants.AXSSO_CONN_KEY, _strProj);
+                            //fdwObj.SaveInRedisServer(Constants.AXSSO_CONN_KEY, "nossoconnection", Constants.AXSSO_CONN_KEY, _strProj);
+                            fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXSSO_CONN_KEY, "nossoconnection", _strProj);
                         }
                     }
                     else
                     {
                         FDW fdwObj = new FDW();
-                        fdwObj.SaveInRedisServer(Constants.AXSSO_CONN_KEY, "nossoconnection", Constants.AXSSO_CONN_KEY, _strProj);
+                        //fdwObj.SaveInRedisServer(Constants.AXSSO_CONN_KEY, "nossoconnection", Constants.AXSSO_CONN_KEY, _strProj);
+                        fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXSSO_CONN_KEY, "nossoconnection", _strProj);
                     }
                 }
                 else if (SSOJsoncontent != "nossoconnection")

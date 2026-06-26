@@ -352,7 +352,7 @@ public class IviewData
     private bool retainIviewParams = false;
     private bool iviewSessionCaching = true;
     LogFile.Log logobj = new LogFile.Log();
-
+    public string ivDataRes = string.Empty;
     #endregion
 
 
@@ -740,6 +740,7 @@ public class IviewData
         if (resStringArray.Length > 1)
         {
             resString = resStringArray[1];
+            ivDataRes = resString;
         }
 
         string errMsg = objUtil.ParseXmlErrorNode(resString);

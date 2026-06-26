@@ -221,9 +221,14 @@ function addSheetRow1() {
     var selectForm = createSelect("Choose Form", formArr, "selectform");
     // var selectDC = createSelect("Choose DC", ["DC 1", "DC 2", "DC 3"], "selectDC");
     // var dcTooltip ='<i tabindex="0" data-bs-trigger="focus" class="material-icons material-icons-style material-icons-2 align-middle ms-2" data-bs-toggle="popover" id="icocl1" data-bs-content="Select an Existing ImportName from which the data needs to be imported." data-bs-placement="right">help_outline</i>';
-    var selectPrimaryKey = createSelect("Choose Primary Key", [], "selectPrimaryKey");
+    var selectPrimaryKey = createSelect("Choose Group Key", [], "selectPrimaryKey");
     //var selectGroupBy = createSelect("Choose Group By", ["Group 1", "Group 2", "Group 3"], "selectGroupBy" + i);
-    $('#btnSaveTemplateXl').after(selectPrimaryKey).after(selectForm);//.after(label);
+    var dataUpdateSwitch = `<div id="dataupdateflagdiv" class="form-check form-switch form-check-custom form-check-solid d-inline-flex align-items-center ms-3"><input name="dataupdateflag" type="checkbox" id="dataupdateflagcheck" class="form-check-input h-25px w-45px"><label for="dataupdateflagcheck" class="form-check-label fw-bold ms-2 mb-0">Data Update</label><span tabindex="0" class="material-icons material-icons-style material-icons-2 align-middle ms-2" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Enable this only if you want to update existing data.">help_outline</span></div>`;
+    var selectUpdatePrimaryKey = createSelect("Choose Primary Key", [], "selectUpdatePrimaryKey");
+    var _container = $('<div id="selectUpdatePrimaryKeyContainer" style="display:none;"></div>').append(selectUpdatePrimaryKey);
+    //var selectUpdatePrimaryKey = '<div id="selectUpdatePrimaryKeyContainer" >' + createSelect("Choose Primary Key", [], "selectUpdatePrimaryKey") + '</div>';
+    //$('#btnSaveTemplateXl').after(selectPrimaryKey).after(selectForm);//.after(label);
+    $('#btnSaveTemplateXl').after(selectPrimaryKey).after(_container).after(dataUpdateSwitch).after(selectForm);
     var $container = $('<div>').addClass('d-flex align-items-center mb-3');
 
     // Move selectform and btnSaveTemplateXl into the container
@@ -337,6 +342,20 @@ function addSheetRow1() {
                     $(selectedValueseMapid).append($('<option></option>').attr('value', option).text(option));
                 });
                 $(selectedValueseMapid).select2();
+
+                var UpdatePkeyArray = newStr.split(",");
+                var UpdateselectedValueseMapid = "#selectUpdatePrimaryKey";
+                $(UpdateselectedValueseMapid).empty();
+                $(UpdateselectedValueseMapid).append($('<option></option>').attr('value', '').text(''));
+                UpdatePkeyArray.forEach(function (option) {
+                    $(UpdateselectedValueseMapid).append(
+                        $('<option></option>').attr('value', option).text(option)
+                    );
+                });
+                $(UpdateselectedValueseMapid).select2({
+                    placeholder: "Choose Primary Key",
+                    allowClear: true
+                }).val(null).trigger('change');
             },
             error: function (xhr, status, error) {
                 // Handle error
@@ -461,6 +480,12 @@ function countSheets(numberSheets, fileName) {
         success: function (response) {
             if (response.d) {
                 var responseObject = JSON.parse(response.d);
+                if (typeof responseObject.error != "undefined" && responseObject.error != "") {
+                    $("#btnContinue").addClass('d-none');
+                    ShowDimmer(false);
+                    showAlertDialog("error", responseObject.error);
+                    return;
+                }
                 var headersString = responseObject.Headers;
                 var jsonData = JSON.parse(responseObject.Data);
 
@@ -616,6 +641,12 @@ function countSheets(numberSheets, fileName) {
             success: function (response) {
                 if (response.d) {
                     var responseObject = JSON.parse(response.d);
+                    if (typeof responseObject.error != "undefined" && responseObject.error != "") {
+                        $("#btnContinue").addClass('d-none');
+                        ShowDimmer(false);
+                        showAlertDialog("error", responseObject.error);
+                        return;
+                    }
                     var headersString = responseObject.Headers;
                     var jsonData = JSON.parse(responseObject.Data);
 
@@ -1819,6 +1850,18 @@ function GetImpData(redisip, redisport, redispwd, proj, token, seed, authkey, tr
         hasHeader = "true";
     var sheetnames = $('#hdnsheetSequence').val();
     sheetnames = sheetnames.replaceAll(' ', '');
+    let _DataUpdateFlag = $("#dataupdateflagcheck").is(":checked") == true ? "true" : "false";
+    let _updatePrimaryKey = '';
+    if (_DataUpdateFlag == 'true') {
+        if ($("#selectUpdatePrimaryKey").val() == "") {
+            showAlertDialog('warning', "Please select primary key.");
+            return;
+        } else {
+            _updatePrimaryKey = $("#selectUpdatePrimaryKey").val();
+            _updatePrimaryKey = (_updatePrimaryKey.match(/\((.*?)\)/) || [])[1] || "";
+        }
+    } else
+        _updatePrimaryKey = '';
     ShowDimmer(true);
     var json = {
         "convertxltojson": {
@@ -1828,9 +1871,14 @@ function GetImpData(redisip, redisport, redispwd, proj, token, seed, authkey, tr
             "project": proj,
             "s": "$SESSIONID$",
             "username": "$USERNAME$",
+            "ARMSessionId": "$ARMSESSIONID$",
+            "ARMToken": "$ARMTOKEN$",
             "signalrurl": "$SIGNALRURL$",
             "armscripturl": "$ARMSCRIPTURL$",
             "transid": transid,
+            "isaxput": false,
+            "dataupdate": _DataUpdateFlag,
+            "primarykey": _updatePrimaryKey,
             "keyfield": primarykey,
             "importfile": impfile,
             "sheetnames": sheetnames,
@@ -1854,6 +1902,10 @@ function GetImpData(redisip, redisport, redispwd, proj, token, seed, authkey, tr
             result = "error";
             ShowDimmer(false);
             showAlertDialog('warning', "Previous request still in process. Please wait till you get the notification");
+        } else if (response.d && response.d.startsWith("Error:")) {
+            result = "error";
+            ShowDimmer(false);
+            showAlertDialog("error", appGlobalVarsObject.lcm[572]);            
         } else if (response.d && !response.d.startsWith("RMQError:") && JSON.parse(response.d) && JSON.parse(response.d)?.result?.success == true) {
             result = true;
         } else if (response.d.startsWith("RMQError:")) {
@@ -1871,14 +1923,20 @@ function GetImpData(redisip, redisport, redispwd, proj, token, seed, authkey, tr
         // Update the content and apply styling classes
         if (result) {
             ShowDimmer(false);
-            callParentNew("btn-close", "class")[0].click();
+            if (typeof callParentNew("btn-close", "class")[0] != "undefined")
+                callParentNew("btn-close", "class")[0].click();
+            else
+                window.location.href = window.location.href;
             showAlertDialog("success", "Your Excel file has been successfully uploaded and queued for processing. The file will be processed shortly, and you will be notified upon completion.You can continue with other tasks while the import is being handled.");
             //  messageDiv.innerHTML = `<h3>File Queued for Processing</h3><p>Your Excel file has been successfully uploaded and queued for processing. The file will be processed shortly, and you will be notified upon completion.You can continue with other tasks while the import is being handled.</p><div><h4>Additional Details:</h4><ul><li><strong>File Name:</strong> ${fileNametoShow}</li><li><strong>Queue Status:</strong> ${queueSats}</li><li><strong>Expected Processing Time:</strong> ~${rowCount} minutes</li></ul></div>`; 
             // messageDiv.className = "form-label col-form-label pb-1 fw-boldest"; // Add the styling classes
             // messageDiv.style.display = "block"; // Ensure the div is visible
         } else {
             ShowDimmer(false);
-            callParentNew("btn-close", "class")[0].click();
+            if (typeof callParentNew("btn-close", "class")[0] != "undefined")
+                callParentNew("btn-close", "class")[0].click();
+            else
+                window.location.href = window.location.href;
             showAlertDialog("error", "An error occurred while processing the file. Please ensure that the file is correct and the environment is properly set up. Refer to the logs for more details and try again.");
             // messageDiv.innerHTML = "An error occurred while processing the file. Please ensure that the file is correct and the environment is properly set up. Refer to the logs for more details and try again.";
             // messageDiv.className = "form-label col-form-label pb-1 fw-boldest";
@@ -2101,7 +2159,9 @@ $(document).ready(function () {
             $('#selectform, #selectPrimaryKey').prop('disabled', true);
             $('#hdnmulForm').val("true");
             $("#xlnum").addClass("d-none");
-
+            $("#selectUpdatePrimaryKey").val('');
+            $("#dataupdateflagcheck").prop("checked", false).prop("disabled", true);
+            $("#selectUpdatePrimaryKeyContainer").hide();
         } else {
             // Code to execute when the checkbox is unchecked
             $('#selectform, #selectPrimaryKey').prop('disabled', false);
@@ -2112,7 +2172,8 @@ $(document).ready(function () {
                 $('#selectPrimaryKey').attr("disabled", true);
 
             }
-
+            $("#dataupdateflagcheck").prop("checked", false).prop("disabled", false);
+            $("#selectUpdatePrimaryKeyContainer").hide();
         }
     });
     $("#selectform").select2();
@@ -2380,6 +2441,16 @@ $(document).ready(function () {
     })
     $("#DropDownList1").addClass("d-none");
     $("#DropDownList1").removeClass("select2-hidden-accessible");
+
+    $(document).on("change", "#dataupdateflagcheck", function () {
+        if ($(this).is(":checked")) {
+            $("#selectUpdatePrimaryKeyContainer").show();
+        } else {
+            $("#selectUpdatePrimaryKeyContainer").hide();
+            $("#selectUpdatePrimaryKey").val('').trigger("change");
+        }
+    });
+
     // Function to add a row for each sheet
     //function addSheetRow(sheetName) {
     //    // Create a new row container
@@ -4228,6 +4299,11 @@ function AxRuleSetMandatory() {
 /* ends:: ImportData with AxRule Engine */
 
 function ShowImportError(errorMsg) {
+    ShowDimmer(false);
+    showAlertDialog("error", errorMsg);
+}
+function ShowImportErrorAce(errorMsg) {
+    $("#btnContinue").addClass('d-none');
     ShowDimmer(false);
     showAlertDialog("error", errorMsg);
 }

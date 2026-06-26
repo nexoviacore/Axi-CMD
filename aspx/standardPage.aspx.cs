@@ -38,6 +38,9 @@ public partial class aspx_standardPage : System.Web.UI.Page
     [WebMethod]
     public static object GetStandardPages(string name)
     {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return new { status = "failure", result = "SESSION_TIMEOUT" };
         string returnString = string.Empty;
 
         ASBExt.WebServiceExt asbExt = new ASBExt.WebServiceExt();

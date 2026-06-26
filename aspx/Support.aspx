@@ -85,7 +85,7 @@
     <link href="../Css/Icons/icon.css" rel="stylesheet" />
     <script type="text/javascript" src="../Js/thirdparty/jquery/3.1.1/jquery.min.js"></script>
     <script src="../Js/Support.min.js?v=2" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
     <link href="../Css/Support.min.css" rel="stylesheet" />
 </head>
 <body>

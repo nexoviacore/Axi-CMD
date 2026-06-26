@@ -12,9 +12,11 @@
     <link rel="stylesheet" href="../UI/axpertUI/plugins.bundle.css" />
     <link rel="stylesheet" href="../ThirdParty/jquery-confirm-master/jquery-confirm.min.css" />
     <link href="../css/datatables.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="../css/Entity.min.css?v=11" />
-    <style>
-        </style>
+    <link rel="stylesheet" href="../css/Entity.min.css?v=13" />
+    <script type="text/javascript">
+        var entityPageLoadData = `<%= HttpUtility.JavaScriptStringEncode(PageLoadData) %>`;
+        var entityPageVarsData = `<%= HttpUtility.JavaScriptStringEncode(PageVarsData) %>`;
+</script>
 
 </head>
 
@@ -108,63 +110,6 @@
 
                                                 <!-- Utilities Dropdown Menu -->
                                                 <div id="selectUtilities" class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-title-gray-700 menu-icon-gray-500 menu-active-bg menu-state-color fw-semibold py-4 fs-base w-200px" data-kt-menu="true">
-                                                    <!-- Main Menu -->
-                                                    <div id="mainMenu">
-                                                        <!-- View Menu Item -->
-                                                        <div class="menu-item px-3 my-0" id="viewMenuItem" data-kt-menu-trigger="hover" data-kt-menu-placement="right-end">
-                                                            <a href="#" class="menu-link px-3 py-2">
-                                                                <span class="material-icons material-icons-style material-icons-2">view_module</span>
-                                                                <span class="menu-title">View</span>
-                                                                <span class="arrow">›</span>
-                                                                <!-- Arrow for View -->
-                                                            </a>
-
-                                                            <!-- View Submenu -->
-                                                            <div class="menu-sub menu-sub-dropdown w-175px py-4">
-                                                                <div class="menu-item px-3">
-                                                                    <a href="#" class="menu-link px-3" id="tableView" onclick="onToggleViewButtonClick('table'); return false;">
-                                                                        <span class="material-icons material-icons-style">view_list</span> Table
-                                                                    </a>
-                                                                </div>
-                                                                <div class="menu-item px-3">
-                                                                    <a href="#" class="menu-link px-3" id="listView" onclick="onToggleViewButtonClick('card'); return false;">
-                                                                        <span class="material-icons material-icons-style">view_module</span> List
-                                                                    </a>
-                                                                </div>
-                                                            </div>
-
-
-
-                                                        </div>
-
-
-                                                        <!-- Field Captions Menu Item -->
-                                                        <div class="menu-item px-3 my-0" id="fieldCaptionsMenuItem" data-kt-menu-trigger="hover" data-kt-menu-placement="right-end">
-                                                            <a href="#" class="menu-link px-3 py-2">
-                                                                <span class="material-icons material-icons-style material-icons-2">subtitles</span>
-                                                                <span class="menu-title">Field Captions</span>
-                                                                <span class="arrow">›</span>
-                                                                <!-- Arrow for Field Captions -->
-                                                            </a>
-
-                                                            <!-- Field Captions Submenu -->
-                                                            <div class="menu-sub menu-sub-dropdown w-175px py-4">
-                                                                <div class="menu-item px-3">
-                                                                    <a href="#" class="menu-link px-3" id="visible" onclick="selectCaptions('visible')">
-                                                                        <span class="material-icons material-icons-style">visibility</span> Visible
-                                                                    </a>
-                                                                </div>
-                                                                <div class="menu-item px-3">
-                                                                    <a href="#" class="menu-link px-3" id="hidden" onclick="selectCaptions('hidden')">
-                                                                        <span class="material-icons material-icons-style">visibility_off</span> Hidden
-                                                                    </a>
-                                                                </div>
-                                                            </div>
-
-                                                        </div>
-
-                                                    </div>
-
                                                     <!-- Select Fields Menu Item -->
                                                     <div class="menu-item px-3 my-0">
                                                         <a href="#" class="menu-link px-3 py-2" onclick="openFieldSelection(); return false;">
@@ -771,7 +716,7 @@
                     </div>
                 </div> -->
         </div>
-        <asp:HiddenField ID="hdnEntityPageLoadData" runat="server" />
+
     </form>
 
     <!--end::Content-->
@@ -781,16 +726,16 @@
     <script type="text/javascript" src="../UI/axpertUI/plugins.bundle.js"></script>
     <script type="text/javascript" src="../UI/axpertUI/scripts.bundle.js"></script>
     <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
-    <script type="text/javascript" src="../Js/common.min.js?v=158"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=164"></script>
     <script type="text/javascript" src="../Js/alerts.min.js"></script>
     <script type="text/javascript" src="../Js/xmlToJson.js"></script>
     <script type="text/javascript" src="../Js/handlebars.min.js"></script>
     <script type="text/javascript" src="../ThirdParty/DataTables-1.10.13/extensions/Extras/moment.min.js"></script>
 
     <script src="../js/datatables.min.js"></script>
-    <script src="../js/Entity-Filter.min.js?v=8"></script>
-    <script src="../js/Entity-common.min.js?v=14"></script>
-    <script src="../js/Entity.min.js?v=27"></script>
+    <script src="../js/Entity-Filter.min.js?v=9"></script>
+    <script src="../js/Entity-common.min.js?v=17"></script>
+    <script src="../js/Entity.min.js?v=36"></script>
 
     <script type="text/javascript">
         /* Variables from mainpage */

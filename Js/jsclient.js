@@ -4158,6 +4158,19 @@ function AxReadOnly() {
     $(".dz-hidden-input").prop("disabled", true);
     $(".fldImageCamera").addClass('disabled');
     $(".fileuploadmore").prop("disabled", true);
+    try {
+        tstReadOnly = true;
+        let _saveBtn = $('a[onclick*="javascript:FormSubmit();"]');
+        _saveBtn.addClass("disabled").css({ "pointer-events": "none" }).off("click").on("click", function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        });
+        let _delBtn = $('a[onclick*="javascript:DeleteTstruct();"]');
+        _delBtn.addClass("disabled").css({ "pointer-events": "none", "opacity": "0.5" }).off("click").on("click", function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        });
+    } catch (ex) { }
 }
 
 function AxMask(fldNames, maskChar, applyType) {

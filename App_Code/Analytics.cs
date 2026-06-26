@@ -22,7 +22,7 @@ public class Analytics
 
     public string GetAnalyticsEntityData(string page = "", string transId = "")
     {        
-        string apiUrl = ARM_URL + "/api/v1/GetAnalyticsEntityData";
+        string apiUrl = ARM_URL + "/AxList/api/v1/GetAnalyticsEntityData";
 
         var inputJson = new
         {
@@ -45,7 +45,7 @@ public class Analytics
 
     public string SetAnalyticsData(string page, string transId, Dictionary<string, string> properties, bool allUsers)
     {       
-        string apiUrl = ARM_URL + "/api/v1/SetAnalyticsData";
+        string apiUrl = ARM_URL + "/ARM_APIs/api/v1/SetAnalyticsData";
 
         var inputJson = new
         {
@@ -69,7 +69,7 @@ public class Analytics
 
     public string GetAnalyticsData(string page, string transId, List<string> propertiesList)
     {        
-        string apiUrl = ARM_URL + "/api/v1/GetAnalyticsData";
+        string apiUrl = ARM_URL + "/ARM_APIs/api/v1/GetAnalyticsData";
 
         var inputJson = new
         {
@@ -92,7 +92,7 @@ public class Analytics
 
     public string GetAnalyticsChartsData(string page, string transId, string aggField, string aggTransId, string groupField, string groupTransId, string aggFunc)
     {
-        string apiUrl = ARM_URL + "/api/v1/GetAnalyticsChartsData";
+        string apiUrl = ARM_URL + "/AxList/api/v1/GetAnalyticsChartsData";
 
         var inputJson = new
         {
@@ -127,7 +127,7 @@ public class Analytics
 
     public string GetAnalyticsMultipleChartsData(string page, string transId, List<object> charts)
     {
-        string apiUrl = ARM_URL + "/api/v1/GetAnalyticsChartsData";
+        string apiUrl = ARM_URL + "/AxList/api/v1/GetAnalyticsChartsData";
 
         var inputJson = new
         {
@@ -151,9 +151,9 @@ public class Analytics
         return result;
     }
     
-    public string GetEntityDropDownData(string transId, string fldId)
+    public string GetEntityDropDownData(string transId, string fldId, string searchText)
     {
-        string apiUrl = ARM_URL + "/api/v1/GetEntityDropdownValues";
+        string apiUrl = ARM_URL + "/AxList/api/v1/GetEntityDropdownValues";
 
         var inputJson = new
         {
@@ -163,6 +163,7 @@ public class Analytics
             AppName = HttpContext.Current.Session["project"].ToString(),
             TransId = transId,
             FieldId = fldId,
+            SearchText = searchText,
             UserName = HttpContext.Current.Session["username"].ToString(),
             SchemaName = HttpContext.Current.Session["dbuser"].ToString(),
             Language = HttpContext.Current.Session["language"].ToString()
@@ -174,7 +175,7 @@ public class Analytics
 
     public string GetEntityList(string selectedEntites = "")
     {
-        string tasksUrl = ARM_URL + "/api/v1/GetEntityList";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/GetEntityList";
 
         var entityDetails = new
         {

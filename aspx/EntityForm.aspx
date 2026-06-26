@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="EntityForm.aspx.cs" Inherits="aspx_EntityForm" %>
+﻿ <%@ Page Language="C#" AutoEventWireup="true" CodeFile="EntityForm.aspx.cs" Inherits="aspx_EntityForm" %>
 
 <!DOCTYPE html>
 
@@ -13,7 +13,7 @@
          <%:Styles.Render(direction == "ltr" ? "~/UI/axpertUI/ltrBundleCss" : "~/UI/axpertUI/rtlBundleCss") %>
      </asp:PlaceHolder>
     <link rel="stylesheet" href="../ThirdParty/jquery-confirm-master/jquery-confirm.min.css" />
-    <link rel="stylesheet" href="../css/EntityForm.min.css?v=11" />
+    <link rel="stylesheet" href="../css/EntityForm.min.css?v=12" />
       
 </head>
 
@@ -173,6 +173,9 @@
 
 
                                 <div id="Project_Entity_form" class="card-body Project_items_Entity">
+                                    <div class="row" style="position: relative; right: 3px;" id="cancelremarks" data-name="cancelremarks">
+
+                                    </div>
                                     <div  id="entityform-container">
                                     </div>
                                     <div id="noMoreRecordsMessage" class="no-more-records-message" style="display: none;">No more records</div>
@@ -459,7 +462,8 @@
         </div>
         <asp:HiddenField ID="hdnScriptsUrlpath" runat="server" />
         <asp:HiddenField ID="hdnEntityFormPageData" runat="server" />        
-        <asp:HiddenField ID="hdnEntityFormPageMetaData" runat="server" />        
+        <asp:HiddenField ID="hdnEntityFormPageMetaData" runat="server" />
+        <asp:HiddenField ID="hdnTstPermission" runat="server" />
     </form>
 
 

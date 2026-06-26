@@ -896,6 +896,16 @@ function GetConfigVals() {
             $j("#hdnDevInstance").val("true");
         else
             $j("#hdnDevInstance").val("false");
+
+        if ($j("#ckbStaySignin").prop("checked") == true) {
+            $j("#hdnStaySignin").val("true");
+            $("#txtExpiryDays").removeClass("d-none");
+        }
+        else {
+            $j("#hdnStaySignin").val("false");
+            $("#txtExpiryDays").addClass("d-none");
+        }
+
         //$('#hdnAutoGen').val($('input[name=optAutoGen]:checked').val());
         if ($j("#enableautognrText").prop("checked") == true)
             $j("#hdnAutoGen").val("true");
@@ -1105,6 +1115,16 @@ function SetConfigVals() {
             $j("#enableDevInstance").prop('checked', true);
         else
             $j("#enableDevInstance").prop('checked', false);
+
+        if ($j("#hdnStaySignin").val() == "true") {
+            $j("#ckbStaySignin").prop('checked', true);
+            $("#txtExpiryDays").removeClass("d-none");
+        }
+        else {
+            $j("#ckbStaySignin").prop('checked', false);
+            $("#txtExpiryDays").addClass("d-none");
+        }
+
         //$('input[name=optAutoGen]').filter('[value="' + $('#hdnAutoGen').val() + '"]').prop('checked', true);
         if ($j("#hdnAutoGen").val() == "true")
             $j("#enableautognrText").prop('checked', true);
@@ -2073,3 +2093,12 @@ function setProjectImages(proj) {
         mobBgImageDiv.nextAll(".delete-button").addClass("hide");
     }
 }
+
+$j(document).on("change", "#ckbStaySignin", function (e) {
+    let chked = $(this).is(":checked");
+    if (chked) {
+        $("#txtExpiryDays").removeClass("d-none");
+    } else {
+        $("#txtExpiryDays").addClass("d-none");
+    }
+});

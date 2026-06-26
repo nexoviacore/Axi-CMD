@@ -70,7 +70,7 @@ public partial class aspx_ImportNew : System.Web.UI.Page
     string uniqueNamesStringSheet = string.Empty;
     string uniqueNamesStringheaders = string.Empty;
     string sheetSequence = string.Empty;
-
+    public string errorNode = string.Empty;
     protected override void InitializeCulture()
     {
         if (Session["language"] != null)
@@ -103,7 +103,7 @@ public partial class aspx_ImportNew : System.Web.UI.Page
                 CheckDesignAccess();
                 ViewState["ExImpTStructs"] = GetAllTStructs();
                 CreateExportImportPanel();
-                GETimpnames();
+                //GETimpnames();
 
 
                 //if url contains transid value then select that tstruct in the tstruct dropdown & get all fields
@@ -647,6 +647,8 @@ public partial class aspx_ImportNew : System.Web.UI.Page
         chkForIgnoreErr.Checked = true;
         string sid = Session["nsessionid"].ToString();
         string ScriptsPath = HttpContext.Current.Application["ScriptsPath"].ToString();
+        if (HttpContext.Current.Session["ImportACEissue"] != null)
+            HttpContext.Current.Session.Remove("ImportACEissue");
         string sFileName = upFileName.Value;
         string fname = sFileName.Split('-')[0];
         aspx_ImportNew Importnew = new aspx_ImportNew();
@@ -657,6 +659,14 @@ public partial class aspx_ImportNew : System.Web.UI.Page
             ddlSeparator.Visible = false;
             //dt = exceldt(sFileDir + sFileName);
             List<DataTable> dataTables = GetExcelDataTables(sFileDir + sFileName);
+            if (HttpContext.Current.Session["ImportACEissue"] != null && HttpContext.Current.Session["ImportACEissue"].ToString() != "")
+            {
+                string errorace = HttpContext.Current.Session["ImportACEissue"].ToString();
+                errorace = errorace.Replace("'", "\\'");
+                HttpContext.Current.Session.Remove("ImportACEissue");
+                ScriptManager.RegisterStartupScript(updatePln3, typeof(UpdatePanel), "uploadAlertErrorMessage", "ShowImportErrorAce('" + errorace + "');", true);
+                return;
+            }
             hdnSheetCount.Value = dataTables.Count().ToString();
             sheetcount = dataTables.Count().ToString();
             string resultSheet = ""; // Initialize an empty string
@@ -706,7 +716,7 @@ public partial class aspx_ImportNew : System.Web.UI.Page
 
 
             IsFileUploaded.Value = "1";
-            if (dataTables[0].Rows.Count == 0)
+            if (dataTables.Count > 0 && dataTables[0].Rows.Count == 0)
             {
                 ScriptManager.RegisterStartupScript(updatePln3, typeof(UpdatePanel), "uploadAlertErrorMessage", "ShowImportError('Empty file can not be import. Please check and try again.');", true);
                 return;
@@ -866,13 +876,32 @@ public partial class aspx_ImportNew : System.Web.UI.Page
         // Path to the network directory
         try
         {
-            FDR fdrObj = new FDR();
-            jsoncontents = fdrObj.StringFromRedis(Constants.AXFileServer_CONN_KEY, strProj);
+            //FDR fdrObj = new FDR();
+            //jsoncontents = fdrObj.StringFromRedis(Constants.AXFileServer_CONN_KEY, strProj);
+            jsoncontents = util.GetAllSettings(strProj, Constants.AXFileServer_CONN_KEY);
             if (jsoncontents == string.Empty || jsoncontents == "nofileserverconnection")
             {
-                //alert();
-                ScriptManager.RegisterStartupScript(updatePln3, typeof(UpdatePanel), "uploadAlertErrorMessage", "ShowImportError('File Upload Virtual Path is empty, Please verify and add the required path information through AxpertAdmin Settings.');", true);
-                return;
+                if (jsoncontents == string.Empty)
+                {
+                    util.GetAxIniFileKeys(strProj);
+                    jsoncontents = util.GetAllSettings(strProj, Constants.AXFileServer_CONN_KEY);
+                    if (jsoncontents == string.Empty || jsoncontents == "nofileserverconnection")
+                    {
+                        try
+                        {
+                            var _jsoncontents = (Dictionary<string, string>)HttpContext.Current.Session["AppAllSettingsKey-" + strProj];
+                            logobj.CreateLog("File Upload Virtual Path is empty: jsoncontents:" + jsoncontents + " strProj:" + strProj + " _jsoncontents:" + _jsoncontents, Session["nsessionid"].ToString(), "ImportData-eror", "", "true");
+                        }
+                        catch (Exception ex) { }
+                        ScriptManager.RegisterStartupScript(updatePln3, typeof(UpdatePanel), "uploadAlertErrorMessage", "ShowImportError('File Upload Virtual Path is empty, Please verify and add the required path information through AxpertAdmin Settings.');", true);
+                        return;
+                    }
+                }
+                else
+                {
+                    ScriptManager.RegisterStartupScript(updatePln3, typeof(UpdatePanel), "uploadAlertErrorMessage", "ShowImportError('File Upload Virtual Path is empty, Please verify and add the required path information through AxpertAdmin Settings.');", true);
+                    return;
+                }
             }
             else
             {
@@ -969,7 +998,7 @@ public partial class aspx_ImportNew : System.Web.UI.Page
         }
         else
         {
-            DataSet dataSet = ReadExcelUsingOleDb(sourceFilePath);
+            //DataSet dataSet = ReadExcelUsingOleDb(sourceFilePath);
             //if (!Directory.Exists(networkPath))
             //{
             //    //Console.WriteLine("Destination folder does not exist.");
@@ -1156,6 +1185,8 @@ public partial class aspx_ImportNew : System.Web.UI.Page
         string ScriptsPath = HttpContext.Current.Application["ScriptsPath"].ToString();
         string sFileDir = ScriptsPath + "Axpert\\" + sid + "\\";
         int sheetnames = Convert.ToInt32(sheetname);
+        if (HttpContext.Current.Session["ImportACEissue"] != null)
+            HttpContext.Current.Session.Remove("ImportACEissue");
         List<DataTable> dataTabless;
         if (xlhasheader != "" && xlhasheader == "false")
         {
@@ -1164,6 +1195,16 @@ public partial class aspx_ImportNew : System.Web.UI.Page
         else
         {
             dataTabless = GetExcelDataTables(sFileDir + filename);
+        }
+        if (HttpContext.Current.Session["ImportACEissue"] != null && HttpContext.Current.Session["ImportACEissue"].ToString() != "")
+        {
+            string errorace = HttpContext.Current.Session["ImportACEissue"].ToString();
+            HttpContext.Current.Session.Remove("ImportACEissue");
+            var _result = new
+            {
+                error = errorace
+            };
+            return JsonConvert.SerializeObject(_result);
         }
         DataTable sheet = dataTabless[Convert.ToInt32(sheetname)]; // Access the second DataTable (index 1)
         string headersString = Importnew.GetHeadersAsString(sheet);
@@ -1911,18 +1952,40 @@ public partial class aspx_ImportNew : System.Web.UI.Page
                             schemaLoaded = true;
                         }
 
+                        //while (reader.Read() && rowCount < 10)
+                        //{
+                        //    DataRow newRow = dt.NewRow();
+                        //    for (int i = 0; i < reader.FieldCount; i++)
+                        //    {
+                        //        newRow[i] = reader.IsDBNull(i) ? "" : reader.GetValue(i);
+
+                        //    }
+                        //    dt.Rows.Add(newRow);
+                        //    rowCount++;
+                        //}
                         while (reader.Read() && rowCount < 10)
                         {
                             DataRow newRow = dt.NewRow();
+                            bool hasAnyValue = false;
                             for (int i = 0; i < reader.FieldCount; i++)
                             {
-                                newRow[i] = reader.IsDBNull(i) ? "" : reader.GetValue(i);
-
+                                if (!reader.IsDBNull(i))
+                                {
+                                    object value = reader.GetValue(i);
+                                    if (!string.IsNullOrWhiteSpace(value.ToString()))
+                                        hasAnyValue = true;
+                                    newRow[i] = value;
+                                }
+                                else
+                                {
+                                    newRow[i] = DBNull.Value;
+                                }
                             }
+                            if (!hasAnyValue)
+                                continue;
                             dt.Rows.Add(newRow);
                             rowCount++;
                         }
-
                         // Add DataTable even if only headers exist
                         if (dt.Columns.Count > 0)
                             dataTables.Add(dt);
@@ -1932,7 +1995,9 @@ public partial class aspx_ImportNew : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            // Optionally log ex.Message
+            LogFile.Log logobj = new LogFile.Log();
+            HttpContext.Current.Session["ImportACEissue"] = ex.Message;
+            logobj.CreateLog("Import data- Microsoft ACE Driver issue - GetExcelDataTables -" + ex.Message, HttpContext.Current.Session.SessionID, "GetExcelDataTables", "new", "true");
         }
 
         return dataTables;
@@ -1999,7 +2064,12 @@ public partial class aspx_ImportNew : System.Web.UI.Page
                 }
             }
         }
-        catch (Exception ex) { }
+        catch (Exception ex)
+        {
+            LogFile.Log logobj = new LogFile.Log();
+            HttpContext.Current.Session["ImportACEissue"] = ex.Message;
+            logobj.CreateLog("Import data- Microsoft ACE Driver issue - GetExcelDataTablesNoHDR -" + ex.Message, HttpContext.Current.Session.SessionID, "GetExcelDataTablesNoHDR", "new", "true");
+        }
 
         return dataTables;
     }
@@ -2069,7 +2139,6 @@ public partial class aspx_ImportNew : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            // Console.WriteLine($"An error occurred: {ex.Message}");
         }
 
     }
@@ -2383,10 +2452,13 @@ public partial class aspx_ImportNew : System.Web.UI.Page
         {
             string URL = String.Empty;
             string ArmScriptURL = string.Empty;
+            string ARM_Notification_URL = string.Empty;
             if (HttpContext.Current.Session["ARM_URL"] != null)
                 URL = HttpContext.Current.Session["ARM_URL"].ToString();
             if (HttpContext.Current.Session["ARM_Scripts_URL"] != null)
                 ArmScriptURL = HttpContext.Current.Session["ARM_Scripts_URL"].ToString();
+            if (HttpContext.Current.Session["ARM_Notification_URL"] != null)
+                ARM_Notification_URL = HttpContext.Current.Session["ARM_Notification_URL"].ToString();
 
             if (URL == string.Empty || ArmScriptURL == string.Empty)
                 return "RMQError: ARM Connection is not defined";
@@ -2403,7 +2475,11 @@ public partial class aspx_ImportNew : System.Web.UI.Page
 
             queueData = queueData.Replace("$SESSIONID$", HttpContext.Current.Session.SessionID);
             queueData = queueData.Replace("$USERNAME$", HttpContext.Current.Session["username"].ToString());
-            queueData = queueData.Replace("$SIGNALRURL$", URL.TrimEnd('/') + "/api/v1/SendSignalR");
+            AnalyticsUtils _aUtils = new AnalyticsUtils();
+            string armSessionId = _aUtils.ARMSessionId;
+            queueData = queueData.Replace("$ARMSESSIONID$", armSessionId);
+            queueData = queueData.Replace("$ARMTOKEN$", HttpContext.Current.Session["ARM_Token"].ToString());             
+            queueData = queueData.Replace("$SIGNALRURL$", ARM_Notification_URL.TrimEnd('/') + "/api/v1/SendSignalR");
             queueData = queueData.Replace("$ARMSCRIPTURL$", ArmScriptURL.TrimEnd('/') + "/ASBRapidSaveRest.dll/datasnap/rest/TASBRapidSaveRest/ConvertXLToJSON");
             if (queueData.EndsWith("}"))
                 queueData = queueData.Substring(0, queueData.Length - 1);
@@ -2415,7 +2491,7 @@ public partial class aspx_ImportNew : System.Web.UI.Page
 
             queueData += ",\"axprops\":\"" + HttpContext.Current.Application["axProps"].ToString() + "\",\"axapps\":\"" + _axapps + "\",\"globalvars\":\"" + globalVars + "\",\"uservars\":\"" + HttpContext.Current.Session["axUserVars"].ToString() + "\"}";
 
-            string pushToQueueURL = URL.TrimEnd('/') + "/api/v1/ARMPushToQueue";
+            string pushToQueueURL = URL.TrimEnd('/') + "/ARM_APIs/api/v1/ARMPushToQueue";
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(pushToQueueURL);
             request.Method = "POST";
@@ -2432,11 +2508,12 @@ public partial class aspx_ImportNew : System.Web.UI.Page
             string rmqstatus = asbWebService.CheckRabbitMqStatus("AxConvertXLtoJSONQueue");
             if (rmqstatus == "OK")
             {
-                string axrapidimportsave = asbWebService.CheckRabbitMqStatus("axrapidimportsave");
-                if (axrapidimportsave == "OK")
-                    isRMQExist = true;
-                else if (axrapidimportsave != "Queue does not exist or queue name incorrect")
-                    return "RMQError:" + axrapidimportsave;
+                isRMQExist = true;
+                //string axrapidimportsave = asbWebService.CheckRabbitMqStatus("axrapidimportsave");
+                //if (axrapidimportsave == "OK")
+                //    isRMQExist = true;
+                //else if (axrapidimportsave != "Queue does not exist or queue name incorrect")
+                //    return "RMQError:" + axrapidimportsave;
             }
             else if (rmqstatus != "Queue does not exist or queue name incorrect")
                 return "RMQError:" + rmqstatus;
@@ -2462,20 +2539,20 @@ public partial class aspx_ImportNew : System.Web.UI.Page
                     string _rmqstatus = asbWebService.CheckRabbitMqStatus("AxConvertXLtoJSONQueue");
                     if (_rmqstatus != "OK")
                         return "RMQError:" + _rmqstatus;
-                    else
-                    {
-                        int retries = 5;
-                        int delayMs = 2000;
-                        string rapidImportStatus = "";
-                        for (int i = 0; i < retries; i++)
-                        {
-                            rapidImportStatus = asbWebService.CheckRabbitMqStatus("axrapidimportsave");
-                            if (rapidImportStatus == "OK")
-                                return response;
-                            Thread.Sleep(delayMs);
-                        }
-                        return "RMQError:" + rapidImportStatus;
-                    }
+                    //else
+                    //{
+                    //    int retries = 5;
+                    //    int delayMs = 2000;
+                    //    string rapidImportStatus = "";
+                    //    for (int i = 0; i < retries; i++)
+                    //    {
+                    //        rapidImportStatus = asbWebService.CheckRabbitMqStatus("axrapidimportsave");
+                    //        if (rapidImportStatus == "OK")
+                    //            return response;
+                    //        Thread.Sleep(delayMs);
+                    //    }
+                    //    return "RMQError:" + rapidImportStatus;
+                    //}
                 }
                 else
                     return response;

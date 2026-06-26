@@ -16,6 +16,8 @@ var rowsep = "";
 var rowObj = $();
 var isfromSqlExec = false;
 var tblFldFTot = [];
+var fldValAlign = [];
+var colFillNames = [];
 
 $j(document).ready(function () {
 
@@ -113,6 +115,7 @@ var dtAssoc = [];
 var searchResult = [];
 var AutPageNo = 1, AutPageSize = 50, rcount = 0, fetchRCount = callParentNew("FetchPickListRows") || 1000; PageCount = 0;
 var CangefldName = '', isNavigation = false, refreshAC = false, pickarrow = false;
+var tbldfName = "";
 function createFormSelect(fld) {
     const formSelect = $(fld);
     var fldNameAc = "",
@@ -201,6 +204,7 @@ function createFormSelect(fld) {
                         }
 
                         dtAssoc = serResult.pickdata[3].data;
+                        tbldfName = serResult.pickdata[2].dfname;
                         if (dtAssoc != undefined && dtAssoc.length != 0) {
                             if (fastdll) {
                                 var aSearch = [];
@@ -271,6 +275,26 @@ function createFormSelect(fld) {
     }).on('select2:open', function (e) {
         let fldId = $(this).attr("data-id");
         fldNameAc = fldId;
+    }).on('select2:select', function (event) {
+        let depList = undefined;
+        if (typeof event.params.data.dep != "undefined")
+            depList = event.params.data.dep;
+        if (depList != undefined && depList != null && tbldfName != "") {
+            try {
+                let thisId = $(this).attr("id");
+                let vRowNo = $(this).attr("id").replace($(this).attr("name") + "R", '');
+                var depText = depList.split('^');
+                var dfCount = 0;
+                $.each(depText, function (index, value) {
+                    var depfldId = tbldfName.split('^')[dfCount];
+                    dfCount++;
+                    let findx = $j.inArray(depfldId, colFillNames);
+                    let fillfName = colNames[findx];
+                    $("#" + fillfName + 'R' + vRowNo).val(value);
+                    MainBlur($("#" + fillfName + 'R' + vRowNo), "input");
+                });
+            } catch (Ex) { }
+        }
     });
 }
 
@@ -362,11 +386,20 @@ function GetTableHtml() {
 
                         colNames.push(tableJson.columns[i + 1].name);
 
+                        if (typeof tableJson.columns[i + 1].fillval != "undefined")
+                            colFillNames.push(tableJson.columns[i + 1].fillval);
+                        else
+                            colFillNames.push('');
+
                         if (typeof tableJson.columns[i + 1].ftot != "undefined")
                             tblFldFTot.push(tableJson.columns[i + 1].ftot);
                         else
                             tblFldFTot.push('');
-
+                        if (typeof tableJson.columns[i + 1].align != "undefined" && tableJson.columns[i + 1].align != '')
+                            fldValAlign.push(tableJson.columns[i + 1].align);
+                        else
+                            fldValAlign.push('left');
+                        
                         parent.ChangedTblFields.push(tableJson.columns[i + 1].name);
                         parent.ChangedTblFieldVals.push('');
                         if (tfhide != "")
@@ -481,10 +514,10 @@ function GetTableHtml() {
                                     colValue = $(callParentNew(sourceFldId)).val();
                                 if (typeof colValue == "undefined")
                                     colValue = "";
-                                tdRow += "<td class=\"input-group-sm " + tfhide + "\"><input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" class=\"tem Family form-control fldtableinput\" name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + j) + "\" value=\"" + colValue + "\"></td>";
+                                tdRow += "<td class=\"input-group-sm " + tfhide + "\"><input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" style=\"text-align:" + fldValAlign[i] + ";\" class=\"tem Family form-control fldtableinput\" name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + j) + "\" value=\"" + colValue + "\"></td>";
                             }
                             else if (typeof aportionWhat[i] != "undefined" && aportionWhat[i] != "") {
-                                tdRow += "<td class=\"input-group-sm " + tfhide + "\"><input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" class=\"tem Family form-control fldtableinput\" readonly name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + j) + "\" value=\"" + colValue + "\"></td>";
+                                tdRow += "<td class=\"input-group-sm " + tfhide + "\"><input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" style=\"text-align:" + fldValAlign[i] + ";\" class=\"tem Family form-control fldtableinput\" readonly name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + j) + "\" value=\"" + colValue + "\"></td>";
                             }
                             else {
                                 if (typeof callParentNew("FDataType") != "undefined" && callParentNew("FDataType")[sourFldInd] == "Numeric") {
@@ -528,7 +561,7 @@ function GetTableHtml() {
                                                 colValue = $(callParentNew(sourceFldId)).val();
                                             if (typeof colValue == "undefined")
                                                 colValue = "";
-                                            tdRow += "<td class=\"input-group-sm " + tfhide + "\"><input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" class=\"tem Family form-control fldtableinput\" name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + j) + "\" value=\"" + colValue + "\"></td>";
+                                            tdRow += "<td class=\"input-group-sm " + tfhide + "\"><input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" style=\"text-align:" + fldValAlign[i] + ";\" class=\"tem Family form-control fldtableinput\" name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + j) + "\" value=\"" + colValue + "\"></td>";
                                         }
                                     }
                                 }
@@ -592,6 +625,10 @@ function GetTableHtml() {
                         formDiv += "<div class=\"col-lg-12 col-sm-3 col-md-3 col-xs-12 " + tfhide + "\"><label>" + colCaption + "</label></div>";
                         formDiv += "<div class=\"col-lg-12 col-sm-9 col-md-9 col-xs-12 " + tfhide + "\">";
                         colNames.push(tableJson.columns[i + 1].name);
+                        if (typeof tableJson.columns[i + 1].fillval != "undefined")
+                            colFillNames.push(tableJson.columns[i + 1].fillval);
+                        else
+                            colFillNames.push('');
                         parent.ChangedTblFields.push(tableJson.columns[i + 1].name);
                         parent.ChangedTblFieldVals.push('');
                         let colExp = tableJson.columns[i + 1].exp;
@@ -603,6 +640,10 @@ function GetTableHtml() {
                         }
                         fldExpData.push(result);
                         colVExp.push(tableJson.columns[i + 1].vexp);
+                        if (typeof tableJson.columns[i + 1].align != "undefined" && tableJson.columns[i + 1].align != '')
+                            fldValAlign.push(tableJson.columns[i + 1].align);
+                        else
+                            fldValAlign.push('left');
                         if (typeof tableJson.columns[i + 1].aportionwhat != "undefined" && tableJson.columns[i + 1].aportionwhat != "") {
                             aportionWhat.push(tableJson.columns[i + 1].aportionwhat);
                             let fldaportionwhat = tableJson.columns[i + 1].aportionwhat;
@@ -688,10 +729,10 @@ function GetTableHtml() {
                                 colValue = $(callParentNew(sourceFldId)).val();
                             if (typeof colValue == "undefined")
                                 colValue = "";
-                            formDiv += "<input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" class=\"tem Family form-control fldtableinput\" name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + 0) + "\" value=\"" + colValue + "\">";
+                            formDiv += "<input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" style=\"text-align:" + fldValAlign[i] + ";\" class=\"tem Family form-control fldtableinput\" name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + 0) + "\" value=\"" + colValue + "\">";
                         }
                         else if (typeof aportionWhat[i] != "undefined" && aportionWhat[i] != "") {
-                            formDiv += "<input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" class=\"tem Family form-control fldtableinput\" readonly name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + 0) + "\" value=\"" + colValue + "\">";
+                            formDiv += "<input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" style=\"text-align:" + fldValAlign[i] + ";\" class=\"tem Family form-control fldtableinput\" readonly name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + 0) + "\" value=\"" + colValue + "\">";
                         }
                         else {
                             if (callParentNew("FDataType")[sourFldInd] == "Numeric") {
@@ -729,7 +770,7 @@ function GetTableHtml() {
                                         colValue = $(callParentNew(sourceFldId)).val();
                                     if (typeof colValue == "undefined")
                                         colValue = "";
-                                    formDiv += "<input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" class=\"tem Family form-control fldtableinput\" name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + 0) + "\" value=\"" + colValue + "\">";
+                                    formDiv += "<input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" style=\"text-align:" + fldValAlign[i] + ";\" class=\"tem Family form-control fldtableinput\" name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + 0) + "\" value=\"" + colValue + "\">";
                                 }
                             }
                         }
@@ -856,7 +897,13 @@ function AddTableData() {
         try {
             parent.AxAfterAddTableData();
         } catch (ex) { }
-        callParentNew("modalIdTableField", "id").dispatchEvent(new CustomEvent("close"));
+        //callParentNew("modalIdTableField", "id").dispatchEvent(new CustomEvent("close"));
+        let modalEl = parent.document.getElementById('modalIdTableField');
+        parent.allowClose = true;
+        let modalInstance = parent.bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
     }
 }
 
@@ -953,6 +1000,12 @@ function AddTableRows(thisTblId, isAddRowClk = '') {
                     _colValue = $(callParentNew(sourceFldId)).val();
                 if (typeof _colValue != "undefined" && _colValue != "" && $("#" + _thisEleName).length > 0) {
                     $("#" + _thisEleName).val(_colValue);
+
+                    let vRowNo = $("#" + _thisEleName).attr("id").replace($("#" + _thisEleName).attr("name") + "R", '');
+                    let indx = $j.inArray($("#" + _thisEleName).attr("name"), parent.ChangedTblFields);
+                    let cellVal = String(parent.ChangedTblFieldVals[indx]).split('~');
+                    cellVal[vRowNo] = _colValue;
+                    parent.ChangedTblFieldVals[indx] = cellVal.join("~");
                 }
             }
         });
@@ -1287,10 +1340,10 @@ function SqlFillData() {
                                 for (var key in varData[keyData]) {
                                     let KeyName = key;
 
-                                    var obj = $($("#" + KeyName + "R" + l));
+                                    var obj = $('[id="' + KeyName + 'R' + l + '" i]');// $($("#" + KeyName + "R" + l));
                                     if (obj.length == 0) {
                                         AddTableRows('fldTable');
-                                        obj = $($("#" + KeyName + "R" + l));
+                                        obj = $('[id="' + KeyName + 'R' + l + '" i]');// $($("#" + KeyName + "R" + l));
                                     }
                                     let KeyValue = varData[keyData][key];
                                     let type = $(obj).attr("type");
@@ -1310,6 +1363,11 @@ function SqlFillData() {
                                             $(obj).attr("value", ddlValue);
                                         }
                                     }
+                                    try {
+                                        let vRowNo = obj.attr("id").replace(obj.attr("name") + "R", '');
+                                        let indx = $j.inArray(obj.attr("name"), parent.ChangedTblFields);
+                                        TableEvalonBlur(indx, vRowNo);
+                                    } catch (ex) { }
                                 }
                             }
                         }
@@ -1333,10 +1391,10 @@ function SqlFillData() {
                 for (var key in varData[keyData]) {
                     let KeyName = key;
 
-                    var obj = $($("#" + KeyName + "R" + l));
+                    var obj = $('[id="' + KeyName + 'R' + l + '" i]');// $($("#" + KeyName + "R" + l));
                     if (obj.length == 0) {
                         AddTableRows('fldTable');
-                        obj = $($("#" + KeyName + "R" + l));
+                        obj = $('[id="' + KeyName + 'R' + l + '" i]');// $($("#" + KeyName + "R" + l));
                     }
                     let KeyValue = varData[keyData][key];
                     let type = $(obj).attr("type");

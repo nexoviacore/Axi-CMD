@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Web;
-using System.IO;
-using System.Text;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using DocumentFormat.OpenXml.Spreadsheet;
 
 public class Entity
 {
-    List<string> entityProperties = new List<string> { "FIELDS", "FILTERS", "TABLEVIEW", "KEYFIELD", "CHARTS", "CAPTIONVALUE", "RIGHTPANEL", "MODIFICATIONFIELDS", "CONFIG","THEME" };
+    List<string> entityProperties = new List<string> { "FIELDS", "FILTERS", "KEYFIELD", "CHARTS", "RIGHTPANEL", "MODIFICATIONFIELDS", "CONFIG","THEME" };
     string ARM_URL = string.Empty;
     string ARMSessionId = string.Empty;
     AnalyticsUtils _aUtils;
@@ -24,7 +19,7 @@ public class Entity
 
     public string GetEntityListPageLoadData(string page, string transId, int pageNo, int pageSize, List<Dictionary<string, Object>> filters, bool onlyData = true)
     {
-        string apiUrl = ARM_URL + "/api/v1/GetEntityListPageLoadData";
+        string apiUrl = ARM_URL + "/AxList/api/v1/GetEntityListPageLoadData";
         
         var inputJson = new
         {
@@ -44,7 +39,8 @@ public class Entity
             PageSize = pageSize,
             //ViewFilters = _aUtils.GetViewFilters(new List<string> { transId }),
             //GlobalParams = _aUtils.GetGlobalParams(),
-            Filters = filters
+            Filters = filters,
+            CalledFromDataList = true
         };
 
         var analyticsData = _aUtils.CallWebAPI(apiUrl, "POST", "application/json", JsonConvert.SerializeObject(inputJson));
@@ -53,7 +49,7 @@ public class Entity
 
     public string GetEntityEditableFlag(string page, string transId, string recordId, string action)
     {
-        string apiUrl = ARM_URL + "/api/v1/AxGetEditableFlag";
+        string apiUrl = ARM_URL + "/ARM_APIs/api/v1/AxGetEditableFlag";
 
         var inputJson = new
         {

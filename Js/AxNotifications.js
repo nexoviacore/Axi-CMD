@@ -12,6 +12,7 @@ var notificationtrigger;
 var pendingCount = 0;
 var _thisClickCount = 0;
 var readNotifications = [];
+var signalRNotificationIds = [];
 $(document).ready(function () {
     if (typeof signalRNotifications != "undefined" && signalRNotifications == "true") {
         $.ajax({
@@ -22,33 +23,49 @@ $(document).ready(function () {
             contentType: "application/json;charset=utf-8",
             dataType: "json",
             success: function (data) {
-                //console.log(data);
-                var dataParse = data.d;
-                apiUrl = dataParse.url;
-                apiSessionId = dataParse.sessionId;
-                apiToken = dataParse.token;
-
-                //clientId = mainUserName;
-                //clientId = "ARM-" + mainProject + "-" + mainUserName;
-                loginToken = apiToken
-                signalrServiceinit = new SignalrService();
-                signalrServiceinit.startConnection();
-                if (typeof callParentNew("pwdExpDaysAlert") != "undefined" && callParentNew("pwdExpDaysAlert") > 0) {
-                    const connectionCheckInterval = setInterval(function () {
-                        if (typeof signalrServiceinit !== 'undefined' && signalrServiceinit.connectionId) {
-                            clearInterval(connectionCheckInterval);
-                            setTimeout(function () {
-                                let messageType = 'Password Expiry';
-                                let messageText = 'Your login password will expire within ' + callParentNew("pwdExpDaysAlert") + ' days';
-                                ASB.WebService.GenerateSignalRNotification(messageType, messageText);
-                            }, 0);
+                try {
+                    var dataParse = data.d;
+                    try {
+                        if (dataParse.startsWith("Error")) {
+                            showAlertDialog("error", dataParse);
+                            ShowDimmer(false);
+                            return;
                         }
-                    }, 100);
+                    }
+                    catch { }
+
+                    apiUrl = dataParse.url;
+                    apiSessionId = dataParse.sessionId;
+                    apiToken = dataParse.token;
+
+                    //clientId = mainUserName;
+                    //clientId = "ARM-" + mainProject + "-" + mainUserName;
+                    loginToken = apiToken
+                    signalrServiceinit = new SignalrService();
+                    signalrServiceinit.startConnection();
+                    if (typeof callParentNew("pwdExpDaysAlert") != "undefined" && callParentNew("pwdExpDaysAlert") > 0) {
+                        const connectionCheckInterval = setInterval(function () {
+                            if (typeof signalrServiceinit !== 'undefined' && signalrServiceinit.connectionId) {
+                                clearInterval(connectionCheckInterval);
+                                setTimeout(function () {
+                                    let messageType = 'Password Expiry';
+                                    let messageText = 'Your login password will expire within ' + callParentNew("pwdExpDaysAlert") + ' days';
+                                    ASB.WebService.GenerateSignalRNotification(messageType, messageText);
+                                }, 0);
+                            }
+                        }, 100);
+                    }
                 }
+                catch { }
+            },
+            error: function (er) {
+                //showAlertDialog("error", "Error occurred in ARM/Notification Hub connection.");
+                showAlertDialog("error", appGlobalVarsObject.lcm[572]);            
+                ShowDimmer(false);
             }
         });
 
-        
+
     }
 });
 
@@ -57,13 +74,13 @@ class SignalrService {
         this.data = null;
         this.connectionId = null;
         this.hubConnection = new signalR.HubConnectionBuilder()
-            .withUrl(apiUrl + "/notificationHub?userId=" + mainUserName + "&project=" + mainProject, { accessTokenFactory: () => loginToken })                        
+            .withUrl(apiUrl + "/notificationHub?userId=" + mainUserName + "&project=" + mainProject, { accessTokenFactory: () => loginToken })
             .withAutomaticReconnect()
             .build();
 
         this.hubConnection.on("ReceiveNotification", (message) => {
             this.constructNotification(message);
-        });        
+        });
         this.hubConnection.onclose(err => console.log("Disconnected", err));
         this.hubConnection.onreconnecting(() => console.log("Reconnecting..."));
         this.hubConnection.onreconnected(id => console.log("Reconnected with ID:", id));
@@ -73,6 +90,11 @@ class SignalrService {
 
         try {
             var notificationId = message.split("♠*♠")[0];
+
+            if (signalRNotificationIds.indexOf(notificationId) > -1)
+                return;
+
+            signalRNotificationIds.push(notificationId);
             message = message.split("♠*♠")[1];
             newNotifications = JSON.parse(message);
             newNotifications[0].notificationId = notificationId;
@@ -197,7 +219,7 @@ class SignalrService {
     //        .catch(err => console.error(err));
     //}
     //getMessage() {
-        
+
     //}
     init() {
         this.onclick();
@@ -289,7 +311,7 @@ class SignalrService {
                 titleH5.classList.add("notificationText-h5", "title");
                 titleH5.title = notification.title;
                 titleH5.textContent = notification.title;
-
+                titleH5.setAttribute('data-notificationid', notification.notificationId);
                 var notificationLink = notification.link;
                 if (notificationLink !== '') {
                     if (_isReadNoti)
@@ -353,6 +375,7 @@ class SignalrService {
                 var clickLink = ele.getAttribute('data-link');
                 $(ele).parents('.notificationList').addClass('bg-light');
                 $(ele).removeClass('fw-boldest').addClass('fw-normal');
+                deleteNotification(ele.getAttribute('data-notificationid'));
                 readNotifications.push($(ele).parent().find('.notificationText-dt').text());
                 if (clickLink.startsWith('i')) {
                     clickLink = clickLink.substring(1);
@@ -362,6 +385,15 @@ class SignalrService {
                     clickLink = clickLink.substring(1);
                     AxNotifyMsgId = ele.getAttribute('data-axmsgid');
                     callParentNew("isdummyLoad=", "false");
+                    clickLink += "&dummyload=false♠";
+                    let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+                    let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+                    let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
+                    let _thisTrId = clickLink.split('&')[0];
+                    if (_transidArray.includes(_thisTrId)) {
+                        _transidArray = _transidArray.filter(x => x.toLowerCase() !== _thisTrId.toLowerCase());
+                        localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
+                    }
                     LoadIframe(`tstruct.aspx?transid=${clickLink}`);
                     menu.hide(item);
                 } else if (clickLink.startsWith('HP')) {
@@ -373,7 +405,7 @@ class SignalrService {
                     if (clickLink == "import") {
                         const failedMatches = [...$(".notificationText").find("span")[0].title.matchAll(/Failed:(\d+)/g)];
                         const failedValues = failedMatches.map(match => parseInt(match[1]));
-                        if ((failedValues.length === 1 && failedValues[0] !== 0) ||(failedValues.length > 1 && failedValues.some(val => val !== 0))) {
+                        if ((failedValues.length === 1 && failedValues[0] !== 0) || (failedValues.length > 1 && failedValues.some(val => val !== 0))) {
                             AxNotifyMsgId = ele.getAttribute('data-axmsgid');
                             let myImportModal = new BSModal("ImportData", "Import Data", "<iframe src='../aspx/ImportAll.aspx?axmsgid=" + AxNotifyMsgId + "' class='vw-100 vh-100'></iframe>", () => {
                                 //shown callback
@@ -480,7 +512,7 @@ function successfileMoved(result, eventArgs) {
     document.body.removeChild(anchor);
 }
 function clearAll() {
-    deleteAllNotifications()    
+    deleteAllNotifications()
     var notificationWindow = document.querySelector('#notificationWindow');
     notificationWindow.innerHTML = '';
     var nodata = document.createElement('span');
@@ -554,7 +586,7 @@ function deleteNotification(notificationId) {
 
 function deleteAllNotifications() {
     var url = apiUrl + "/api/v1/DeleteAllNotifications";
-    var input = { userId: mainUserName, project: mainProject};
+    var input = { userId: mainUserName, project: mainProject };
     $.ajax({
         type: "POST",
         url: url,

@@ -47,7 +47,6 @@
       <%--  var armlist = '<%=existingJsonARM%>';
         var filelist = '<%=existingJsonFile%>';--%>        
         var appSettingList = <%= existingAppSettings %>;
-        var SSOlistcon = '<%=existingJsonSSO%>';
         var strudioScriptUrlMesg ='<%=strudioScriptUrlMesg%>';
     </script>
 </head>
@@ -85,100 +84,6 @@
                                     <div class="clearfix"></div>
                                 </div>
                                 <div class="content">
-                                    <div class="panel-body licActivationWrapper card login-inner w-lg-1000px m-auto my-6 d-none">
-                                        <div class="card-header align-items-center">
-                                            <div class="licKeyActTitle card-title align-items-start flex-column">
-                                                <div>
-                                                    <h3>
-                                                        <asp:Label ID="lbllicinfo" runat="server">License Information</asp:Label>
-                                                    </h3>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row w-lg-1000px p-8 p-lg-12 mx-auto">
-                                            <div class="col-sm-12">
-                                                <div class="licActivationForm">
-                                                    <div class="licKeyActDesc">
-                                                        <asp:Label ID="Label1" class="form-label text-dark fs-6 mb-0" runat="server">This is licensed to Demo data corp. 
-                                                        <label id="lbllicExpiry" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server"></label>
-                                                        </asp:Label>
-                                                        <button class="licInfoAccordion btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm float-end" type="button" data-bs-toggle="collapse" data-bs-target="#demo" aria-expanded="false" aria-controls="demo">
-                                                            <span class="material-icons">expand_more</span>
-                                                        </button>
-                                                    </div>
-
-                                                    <div class="collapse" id="demo">
-                                                        <div class="licActOptions">
-                                                            <div class="col-sm-12 ">
-                                                                <asp:RadioButtonList ID="rbllictype" runat="server" RepeatDirection="Horizontal">
-                                                                    <asp:ListItem Value="online" Selected="True">Activate online &nbsp;</asp:ListItem>
-                                                                    <asp:ListItem Value="offline">Activate offline&nbsp;</asp:ListItem>
-                                                                </asp:RadioButtonList>
-                                                            </div>
-                                                        </div>
-                                                        <div class="clearfix"></div>
-                                                        <div id="dvOnline">
-                                                            <%--Online--%>
-                                                            <div class="" id="dvlicmessage">
-                                                                <p>
-                                                                    The machine/processor ids will be captured and sent to Agile licensing server to get the license file. No other data will be captured.
-                                                                </p>
-                                                            </div>
-                                                            <div class="clearfix"></div>
-                                                            <div class="licKeyInfoBox row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblerkey" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Enter the registration key: </asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:TextBox ID="txtlicappkey" runat="server" autocomplete="off" class="form-control"></asp:TextBox>
-                                                                </div>
-                                                            </div>
-                                                            <div class="clearfix"></div>
-                                                            <div class="licKeyInfoBox">
-                                                                <div class="col-sm-3"></div>
-                                                                <div class="col-sm-11 licKeyActivateBtn">
-                                                                    <asp:Button ID="btnActivateasp" runat="server" Text="Activate" ToolTip="Activate for new license" OnClick="btnActivate_Click" Style="display: none"></asp:Button>
-                                                                    <asp:Button ID="btnRefreshasp" runat="server" Text="Refresh" ToolTip="Refresh existing license" OnClick="btnRefresh_Click" Style="display: none" />
-                                                                    <asp:Button ID="btnTrialasp" runat="server" Text="Trial" ToolTip="Activate for trial license" OnClick="btnTrial_Click" Style="display: none" />
-                                                                    <a href="javascript:void()" title="Activate" id="btnActivate" onclick="licActivateCheck();"><span class="material-icons licActBtnIcon">check_circle</span><span>Activate</span></a>
-                                                                    <a href="javascript:void()" class="btn btn-primary d-inline-flex align-items-center shadow-sm me-2 my-4" title="Refresh" id="btnRefresh" onclick="licRefreshCheck();"><span class="material-icons licActBtnIcon">autorenew</span>Refresh</a>
-                                                                    <a href="javascript:void()" title="Activate Trial" id="btnTrial" onclick="licTrialCheck();"><span class="material-icons licActBtnIcon">history_toggle_off</span><span>Activate Trial</span></a>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div id="dvOffline" style="display: none">
-                                                            <%--Offline--%>
-                                                            <div class="">
-                                                                <p>
-                                                                    The machine/processor ids will be captured and sent to Agile licensing server to get the license file. No other data will be captured.
-                                                                </p>
-                                                            </div>
-                                                            <div class="licKeyInfoBox">
-                                                                <div class="col-sm-3">
-                                                                    <asp:Label ID="Label3" runat="server">Enter the registration key: </asp:Label>
-                                                                </div>
-                                                                <div class="col-sm-9">
-                                                                    <asp:TextBox ID="txtlicofflinekey" runat="server" autocomplete="off" class="form-control"></asp:TextBox>
-                                                                </div>
-                                                            </div>
-                                                            <div class="licKeyInfoBox">
-                                                                <div class="col-sm-3">
-                                                                    <asp:Button ID="btndownloadfile" runat="server" Text="Download registration file" ToolTip="Download registration file" OnClick="btndownloadfile_Click" Style="display: none"></asp:Button>
-                                                                </div>
-                                                                <div class="col-sm-9 licKeyActivateBtn">
-                                                                    <asp:Button ID="btnDownloadasp" runat="server" Text="Download registration file" ToolTip="Download registration file" OnClick="btnDownload_Click" Style="display: none"></asp:Button>
-                                                                    <a href="javascript:void()" title="Download registration file" id="btnDownload" onclick="offlinelicDownload();"><span class="material-icons licActBtnIcon">file_download</span><span>Download registration file</span></a>
-                                                                    <a href="javascript:void()" title="Upload license file" id="btnUpload"><span class="material-icons licActBtnIcon">file_upload</span><span>Upload license file</span></a>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <div class="dbConnectionWrapper my-6" id="dvdbConnection">
                                         <div class="panel-body card login-inner w-lg-1000px m-auto" style="border: 1px solid rgba(210,215,221,0.8);">
                                             <div class="card-header align-items-center">
@@ -256,16 +161,28 @@
                                                             </div>
                                                             <div class="clearfix"></div>
                                                         </div>
+                                                        <div class="postgresodbc configRightFormFields row g-3 align-items-center">
+                                                            <div class="col-md-4 col-sm-12">
+                                                                <asp:Label ID="lblpostgresodbc" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">ODBC Connection</asp:Label>
+                                                            </div>
+                                                            <div class="col-md-8 col-sm-12">
+                                                                <div class="form-check form-switch form-check-custom px-1 ">
+                                                                    <input type="checkbox" id="txtpostgresodbc" runat="server" autocomplete="off" class="form-check-input h-25px w-45px opacity-100" />
+                                                                </div>
+                                                            </div>
+                                                            <div class="clearfix"></div>
+                                                        </div>
                                                         <div class="configRightFormFields row g-3 align-items-center">
                                                             <div class="col-md-4 col-sm-12">
                                                                 <asp:Label ID="lblccname" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Client connection name</asp:Label>
+                                                                <asp:Label ID="lblccnameodbc" class="form-label fw-boldest text-dark fs-6 mb-0 d-none" runat="server">ODBC Connection Name</asp:Label>
                                                             </div>
                                                             <div class="col-md-8 col-sm-12">
                                                                 <asp:TextBox ID="txtccname" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
                                                             </div>
                                                             <div class="clearfix"></div>
                                                         </div>
-                                                        <div class="configRightFormFields row g-3 align-items-center">
+                                                        <div id="dbtxtusername" class="configRightFormFields row g-3 align-items-center">
                                                             <div class="col-md-4 col-sm-12">
                                                                 <asp:Label ID="lblusername" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">User name</asp:Label>
                                                             </div>
@@ -274,7 +191,7 @@
                                                             </div>
                                                             <div class="clearfix"></div>
                                                         </div>
-                                                        <div class="configRightFormFields row g-3 align-items-center mb-4">
+                                                        <div id="dbtxtPassword" class="configRightFormFields row g-3 align-items-center mb-4">
                                                             <div class="col-md-4 col-sm-12">
                                                                 <asp:Label ID="lblPassword" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Password</asp:Label>
                                                             </div>
@@ -650,20 +567,6 @@
                                                             <div class="clearfix"></div>
                                                         </div>
 
-                                                        <div class="configRightFormFields row g-3 align-items-center">
-                                                            <div class="col-md-4 col-sm-12">
-                                                                <asp:Label ID="lblarmclientsso" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Client SSO Required</asp:Label>
-                                                            </div>
-
-                                                            <div class="col-md-8 col-sm-12">
-                                                                <select class="form-select" runat="server" id="txtarmclientsso" data-control="select2" data-placeholder="Select Client SSO Required" data-allow-clear="true">
-                                                                    <option value="false">false</option>
-                                                                    <option value="true">true</option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="clearfix"></div>
-                                                        </div>
-
                                                         <div class="card-header-- align-items-center" style="margin-top: 15px; margin-bottom: 15px;">
                                                             <div class="configLeftForm card-title align-items-start flex-column">
                                                                 <div>
@@ -729,6 +632,7 @@
                                                         <div class="configRightFormFooterButton pull-right">
                                                             <input type="button" class="btn btn-active-primary shadow-sm me-2 mx-2" title="Apply" id="btnARMsave" value="Save" onclick="TestARMConnectionWs();" />
                                                             <input type="button" class="btn btn-active-primary shadow-sm me-2" title="Delete" id="btnARMCancel" value="Delete" onclick="DelARMConnectionWs();" />
+                                                            <input type="button" class="btn btn-active-primary shadow-sm me-2" title="Delete" id="btnARMVerifySettings" value="Validate ARM Settings" onclick="ValidateARMSettings();" />
                                                         </div>
                                                     </div>
                                                     <div class="clearfix"></div>
@@ -893,6 +797,34 @@
                                                             <div class="col-md-8 col-sm-12">
                                                                 <asp:HiddenField ID="HiddenField2" runat="server" Value="" />
                                                                 <asp:TextBox ID="tstfileMapPwd" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
+                                                            </div>
+                                                            <div class="clearfix"></div>
+                                                        </div>
+                                                        <div class="configRightFormFields row g-3 align-items-center">
+                                                            <div class="col-md-4 col-sm-12">
+                                                                <asp:Label ID="Label34" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Max Attachments Size in MB</asp:Label>
+                                                            </div>
+
+                                                            <div class="col-md-8 col-sm-12">
+                                                                <asp:HiddenField ID="hdnAttachmentSize" runat="server" Value="" />
+                                                                <select id="ddlAttachmentSize" class="form-select my-2--" data-control="select2" runat="server" data-placeholder="Select Attachment Size">
+                                                                    <option value="1" selected="selected">1</option>
+                                                                    <option value="2">2</option>
+                                                                    <option value="3">3</option>
+                                                                    <option value="4">4</option>
+                                                                    <option value="5">5</option>
+                                                                    <option value="6">6</option>
+                                                                    <option value="7">7</option>
+                                                                    <option value="8">8</option>
+                                                                    <option value="9">9</option>
+                                                                    <option value="10">10</option>
+                                                                    <option value="20">20</option>
+                                                                    <option value="40">40</option>
+                                                                    <option value="50">50</option>
+                                                                    <option value="70">70</option>
+                                                                    <option value="250">250</option>
+                                                                    <option value="500">500</option>
+                                                                </select>
                                                             </div>
                                                             <div class="clearfix"></div>
                                                         </div>
@@ -1078,13 +1010,13 @@
                                         </div>
                                     </div>
 
-                                    <div class="redicConnectionWrapper my-6 d-none" id="dvSSOInfo">
+                                    <div class="redicConnectionWrapper my-6" id="dvAxpertDevOptions">
                                         <div class="panel-body card login-inner w-lg-1000px m-auto" style="border: 1px solid rgba(210,215,221,0.8);">
                                             <div class="card-header align-items-center">
                                                 <div class="configLeftForm card-title align-items-start flex-column">
                                                     <div>
                                                         <h3>
-                                                            <asp:Label ID="Label8" runat="server">SSO Configuration</asp:Label>
+                                                            <asp:Label ID="Label1" runat="server">Axpert Developer Options Menu</asp:Label>
                                                         </h3>
                                                     </div>
                                                 </div>
@@ -1096,302 +1028,43 @@
                                                     <div class="configRightForm">
                                                         <div class="configRightFormFields row g-3 align-items-center">
                                                             <div class="col-md-4 col-sm-12">
-                                                                <asp:Label ID="lblssoConn" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">SSO Connection Name</asp:Label>
+                                                                <asp:Label ID="Label8" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Connection Name</asp:Label>
                                                             </div>
                                                             <div class="configConList col-md-8 col-sm-12 d-flex flex-row">
-                                                                <select id="ssoProj" data-control="select2" data-placeholder="SSO Connection Name" runat="server" class="multiselect form-select" size="10">
+                                                                <select id="axpDevOptions" data-control="select2" data-placeholder="Select Project" runat="server" class="multiselect form-select" size="10">
                                                                 </select>
-                                                                <a href="javascript:void()" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm ms-2" title="Delete SSO Connection" id="btnSSOdeleteCon"><span class="material-icons">delete</span></a>
-                                                                <%--<asp:Button ID="btnSSoConDelete" class="btn btn-secondary d-none" runat="server" Text="Delete" OnClick="btnSSoConDelete_Click" />--%>
                                                             </div>
+                                                            <asp:HiddenField ID="hdnaxpDevOptions" runat="server" Value="" />
                                                             <div class="clearfix"></div>
                                                         </div>
                                                         <div class="configRightFormFields row g-3 align-items-center">
                                                             <div class="col-md-4 col-sm-12">
-                                                                <asp:Label ID="lblssoType" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">SSO Type</asp:Label>
+                                                                <asp:Label ID="Label35" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Show All Options</asp:Label>
                                                             </div>
-                                                            <div class="configConList col-md-8 col-sm-12 d-flex flex-row">
-                                                                <select id="ssoType" runat="server" class="form-select" data-placeholder="Select SSO Type" data-control="select2">
-                                                                    <option value=""></option>
-                                                                    <option value="windows">Windows</option>
-                                                                    <option value="saml">SAML</option>
-                                                                    <option value="office365">Office 365 (Azure)</option>
-                                                                    <option value="okta">OKTA</option>
-                                                                    <option value="google">Google</option>
-                                                                    <option value="facebook">Facebook</option>
-                                                                    <option value="openid">OpenID</option>
+                                                            <div class="col-md-8 col-sm-12">
+                                                                <select class="form-select" runat="server" multiple="true" id="ddlAxpertdevOptions" data-control="select2" data-placeholder="Select Options" data-allow-clear="true">
+                                                                    <option value="all">Select All</option>
+                                                                    <option value="Tstruct">Tstruct</option>
+                                                                    <option value="Iview">Iview</option>
+                                                                    <option value="pluginCustomCode">Custom Plugins</option>
+                                                                    <option value="CustomPages">Custom Pages</option>
+                                                                    <option value="ADS">Axpert Data Sources</option>
+                                                                    <option value="APIPlugins">API Plugins</option>
+                                                                    <option value="DevOptions">Dev Options</option>
+                                                                    <option value="AxpertJobs">Axpert Jobs</option>
+                                                                    <option value="DevLanguages">Languages</option>
+                                                                    <option value="DevPublish">Publish</option>
+                                                                    <option value="CustomDataType">Custom Data Type</option>
+                                                                    <option value="Appvariables">App Variables</option>
+                                                                    <option value="DevExplorer">DB Explorer</option>
+                                                                    <option value="ArrangeMenu">Arrange Menu</option>
+                                                                    <option value="EmailDefinitions">Email Definitions</option>
+                                                                    <option value="TableDescriptor">Table Field Descriptor</option>
+                                                                    <option value="QueueListing">Queue Listing</option>
+                                                                    <option value="MemDBConsole">Mem DB Console</option>
                                                                 </select>
-                                                                <a href="javascript:void()" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm ms-2" title="Delete SSO" id="btnSSOdeleteType"><span class="material-icons">delete</span></a>
-                                                                <%--<asp:Button ID="btnSSoTypeDelete" class="btn btn-secondary d-none" runat="server" Text="Delete" OnClick="btnSSoTypeDelete_Click" />--%>
                                                             </div>
                                                             <div class="clearfix"></div>
-                                                        </div>
-
-                                                        <asp:HiddenField ID="hdnssoProj" runat="server" Value="" />
-                                                        <asp:HiddenField ID="hdnssoType" runat="server" Value="" />
-
-                                                        <div id="dvssoOptionWindow" class="d-none">
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoOptionWindow" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Only SSO Login</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <div class="form-check form-switch form-check-custom px-1 ">
-                                                                        <input type="checkbox" id="ssoOptionWindow" runat="server" autocomplete="off" class="form-check-input h-25px w-45px opacity-100" />
-                                                                    </div>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                        </div>
-
-                                                        <%--Windows SSO LDAP--%>
-                                                        <div id="dvssoWindows" class="d-none">
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblwindowsdomain" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Windows Domain Name</asp:Label>
-                                                                </div>
-
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:TextBox ID="ssowindowsdomain" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                        </div>
-
-                                                        <%--SAML SSO--%>
-                                                        <div id="dvssoSAML" class="d-none">
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblSamlPartnerIdP" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">SAML Partnet IDP</asp:Label>
-                                                                </div>
-
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnSamlPartnerIdP" runat="server" Value="" />
-                                                                    <asp:TextBox ID="SamlPartnerIdP" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblSamlIdentifier" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">SAML Identifier</asp:Label>
-                                                                </div>
-
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnSamlIdentifier" runat="server" Value="" />
-                                                                    <asp:TextBox ID="SamlIdentifier" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblSamlCertificate" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">SAML Certificate</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnSamlCertificate" runat="server" Value="" />
-                                                                    <asp:TextBox ID="SamlCertificate" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoredirecturlsaml" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">SAML Redirect URL</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoredirecturlsaml" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoredirecturlsaml" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                        </div>
-
-                                                        <%--Office365 SSO--%>
-                                                        <div id="dvssoOff365" class="d-none">
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoclientKeyof365" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Office365 Client Key</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnof365ssoclientKey" runat="server" Value="" />
-                                                                    <asp:TextBox ID="of365ssoclientKey" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoclientsecretKeyof365" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Office365 Secret Key</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnof365ssoclientsecretKey" runat="server" Value="" />
-                                                                    <asp:TextBox ID="of365ssoclientsecretKey" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoredirecturlof365" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Office365 Redirect URL</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoredirecturlof365" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoredirecturlof365" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                        </div>
-
-                                                        <%--OKTA SSO--%>
-                                                        <div id="dvssoOkta" class="d-none">
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoclientKeyOkta" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">OKAT Client Key</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoclientKeyokta" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoclientKeyokta" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoclientsecretKeyokta" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">OKTA Secret Key</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoclientsecretKeyokta" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoclientsecretKeyokta" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssooktadomain" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">OKTA Domain</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssooktadomain" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssooktadomain" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoredirecturlokta" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">OKTA Redirect URL</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoredirecturlokta" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoredirecturlokta" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                        </div>
-
-                                                        <%--Google SSO--%>
-                                                        <div id="dvssoGoogle" class="d-none">
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoclientKeygoogle" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Google Client Key</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoclientKeygoogle" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoclientKeygoogle" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoclientsecretKeygoogle" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Google Secret Key</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoclientsecretKeygoogle" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoclientsecretKeygoogle" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoredirecturlgoogle" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Google Redirect URL</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoredirecturlgoogle" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoredirecturlgoogle" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                        </div>
-
-                                                        <%--FaceBook SSO--%>
-                                                        <div id="dvssoFb" class="d-none">
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoclientKeyfb" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Facebook Client Key</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoclientKeyfb" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoclientKeyfb" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoclientsecretKeyfb" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Facebook Secret Key</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoclientsecretKeyfb" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoclientsecretKeyfb" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoredirecturlfb" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Facebook Redirect URL</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoredirecturlfb" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoredirecturlfb" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                        </div>
-
-                                                        <%--OpenID SSO--%>
-                                                        <div id="dvssoOpenId" class="d-none">
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoclientKeyOpenId" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">OpenID Client Key</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoclientKeyOpenId" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoclientKeyOpenId" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoclientsecretKeyOpenId" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">OpenID Secret Key</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoclientsecretKeyOpenId" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoclientsecretKeyOpenId" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoopeniddomain" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">OpenID Domain</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoopeniddomain" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoopeniddomain" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
-                                                            <div class="configRightFormFields row g-3 align-items-center">
-                                                                <div class="col-md-4 col-sm-12">
-                                                                    <asp:Label ID="lblssoredirecturlopenid" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">OpenID Redirect URL</asp:Label>
-                                                                </div>
-                                                                <div class="col-md-8 col-sm-12">
-                                                                    <asp:HiddenField ID="hdnssoredirecturlopenid" runat="server" Value="" />
-                                                                    <asp:TextBox ID="ssoredirecturlopenid" runat="server" autocomplete="off" class="m-wrap placeholder-no-fix form-control"></asp:TextBox>
-                                                                </div>
-                                                                <div class="clearfix"></div>
-                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1400,16 +1073,15 @@
                                                 <div class="configRightFormFields">
                                                     <div class="col-sm-12">
                                                         <div class="configRightFormFooterButton pull-right">
-                                                            <input type="button" class="btn btn-active-primary shadow-sm me-2 mx-2" title="Apply" id="btnSSOSave" value="Save" onclick="SaveSSOConnectionWs();" />
-                                                            <%--<input type="button" class="btn btn-active-primary shadow-sm me-2" title="Delete" id="btnSSOCancel" value="Delete" onclick="DelSSOConnectionWs();" />--%>
+                                                            <input type="button" class="btn btn-active-primary shadow-sm me-2 mx-2" title="Save" id="btnSaveAxpDevOptions" value="Save" onclick="SaveAxpertDevOptions();" />
                                                         </div>
                                                     </div>
                                                     <div class="clearfix"></div>
                                                 </div>
-
                                             </div>
                                         </div>
                                     </div>
+
                                     <div class="panel-body licActivationWrapper card login-inner w-lg-1000px m-auto my-6 d-none">
                                         <div class="card-header align-items-center py-6">
                                             <div class="col-md-4 col-sm-12">
@@ -1600,46 +1272,6 @@
                             </div>
                         </div>
 
-                        <div id="myModalLicUpload" class="modal fade in" role="dialog">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeUploadDialog();">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                        <h4 class="modal-title">Upload License File</h4>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="panel-body licFileUpload">
-                                            <div class="licFileUploadDesc">
-                                                <asp:Label ID="lblslctfilename" runat="server">Please select a lic file and then click 'Upload' button.</asp:Label>
-                                            </div>
-                                            <div class="clearfix"></div>
-                                            <div class="file-upload">
-                                                <div tabindex="0" class="file-select">
-                                                    <div class="file-select-button" id="fileName">
-                                                        <asp:Label ID="lblfilename" meta:resourcekey="lblfilename" runat="server">Choose File</asp:Label>
-                                                    </div>
-                                                    <div class="file-select-name" id="noFile">
-                                                        <asp:Label ID="lblnofilename" meta:resourcekey="lblnofilename" runat="server">No file chosen...</asp:Label>
-                                                    </div>
-                                                    <input runat="server" type="file" tabindex="-1" name="filMyFile" id="filMyFile" accept=".lic" />
-                                                </div>
-                                            </div>
-                                            <div class="clearfix"></div>
-                                            <div class="licFileUploadStatus">
-                                                <asp:Label ID="lblfuerror" runat="server"></asp:Label>
-                                            </div>
-                                            <div class="clearfix"></div>
-                                            <div class="licFileUploadFooterButton">
-                                                <asp:Button ID="btnFileUpload" runat="server" Text="Upload" disabled="disabled" OnClick="btnFileUpload_Click" />
-                                                <input name="close" type="button" id="close" value="Close" title="Close" onclick="closeUploadDialog();" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
                         <div id="myModalRedis" class="modal fade in" role="dialog">
                             <div class="modal-dialog ">
@@ -1756,6 +1388,7 @@
 
                         </div>
                     </asp:Panel>
+                    <asp:HiddenField ID="_antiforgery" runat="server" />
                 </form>
             </div>
         </div>
@@ -1768,8 +1401,8 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
     <script src="../Js/xmlToJson.min.js?v=2"></script>
-    <script src="../Js/config.min.js?v=24" type="text/javascript"></script>
+    <script src="../Js/config.min.js?v=30" type="text/javascript"></script>
     <script src="../Js/lang/content-<%=langType%>.js?v=64" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
 </body>
 </html>

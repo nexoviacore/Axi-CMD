@@ -85,10 +85,10 @@
     <title><%=appTitle%></title>
     <link rel="shortcut icon" href="../images/favicon.ico" />
     <script src="../Js/xmlToJson.js?v=2"></script>
-    <script src="../Js/helper.min.js?v=172"></script>
+    <script src="../Js/helper.min.js?v=175"></script>
     <script src="../assets/js/loadingoverlay.min.js?v=3" type="text/javascript"></script>
-    <script type="text/javascript" src="../Js/common.min.js?v=158"></script>
-    <script src="../Js/process.min.js?v=344"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=164"></script>
+    <script src="../Js/process.min.js?v=357"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
     <script src="../ThirdParty/QRcode/qrcode.js?v=1"></script>
 
@@ -176,12 +176,14 @@
         var pwdExpDaysAlert = '<%=pwdExpDays%>';
         var axpertstudioReact = '<%=axpertstudioReact%>';
         var axOldModelFlag = '<%=axOldModelFlag%>';
+        var axpertDevOpt = '<%=axpertDevOpt%>';
+        <%--var isAxiPlugin = '<%=isAxiPlugin%>';--%>
     </script>
     <script type="text/javascript" src="../Js/util.min.js?v=2"></script>
     <script src="../Js/sso.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/msal.min.js" type="text/javascript"></script>
     <script src="../Js/okta-auth-js.min.js" type="text/javascript"></script>
-    <script type="text/javascript" src="../js/main.js"></script>
+    <script type="text/javascript" src="../js/main.min.js?v=340"></script>
 </head>
 
 <body id="mainNewPageBody" onload="ChangeDir('<');"

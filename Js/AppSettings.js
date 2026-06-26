@@ -10,6 +10,10 @@
         dataType: "json",
         success: function (response) {
             var res = response.d;
+            if (typeof res != "undefined" && res != "" && res == "SESSION_TIMEOUT") {
+                parent.window.location.href = "../aspx/sess.aspx";
+                return;
+            }
             //$(x).find('USERAPPSETTINGS').html()
             var $xmlDoc = $.parseXML(res),
             $xml = $($xmlDoc),

@@ -1256,7 +1256,7 @@ Home Cunfiguration Page Templete
     files.js.push("/Js/handlebars.min.js?v=2");
     files.js.push("/Js/handleBarsHelpers.min.js");
     if (homePageType == "cards") {
-        files.js.push("/Js/AxInterface.min.js?v=16");//min
+        files.js.push("/Js/AxInterface.min.js?v=20");//min
         files.js.push("/ThirdParty/Highcharts/highcharts.js");
         files.js.push("/ThirdParty/Highcharts/highcharts-3d.js");
         files.js.push("/ThirdParty/Highcharts/highcharts-more.js");
@@ -1291,9 +1291,9 @@ Home Cunfiguration Page Templete
     files.css.push("/Css/HomeConfigPageCards.min.css?v=12");
     files.js.push("/Js/signalr.min.js");
     files.js.push("/Js/axpertUI_homecards.min.js?v=29");
-    files.js.push("/Js/AxNotifications.min.js?v=12");
+    files.js.push("/Js/AxNotifications.min.js?v=16");
     files.js.push("/Js/HomeConfigPageCards.min.js?v=15");
-    files.js.push("/Js/Entity-common.min.js?v=14");
+    files.js.push("/Js/Entity-common.min.js?v=17");
     var dirLeft = true;
 
     if ($("body").hasClass("btextDir-rtl")) {
@@ -2017,7 +2017,9 @@ Home Cunfiguration Page Templete
                     appGlobalVarsObject._CONSTANTS.history = tempaxpertUIObj.history;
 
                     appGlobalVarsObject.methods.toggleCompressModeUI($("body"));
-
+                    try {
+                        axpertDevOptAccess();
+                    } catch (ex) { }
                 } catch (ex) { }
                 //end AxpertUI Init
 

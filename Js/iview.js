@@ -131,10 +131,13 @@ var grandtoaltColor = "";
 
 var advMultilingualPdf = "";
 var previewfileinsteaddownload = false;
-
+var showallrecordsbutton = false;
+var isIvRefreshParentOnClose = "";
 var ivFreezeColumn = [];
 var ivCurrentRows = "";
 let ivParamBeforeEnc = "";
+let inmemClearTstId = [];
+var inmemClearAll = "";
 var axpertDevIVList = ["hplist", "csqlist", "exapidef", "dop_list", "jobtsk", "axlangs", "publist", "cdlist", "axvars", "ivconfdt", "axpubls", "pservers", "emaildef", "ad___tbd", "ad__qls", "inmemdb", "ad__qlog"];
 //This function clears the cache files on unload and on opening another iview.
 function DeleteIviewCacheFiles() {
@@ -315,7 +318,7 @@ function pageLoad(sender, args) {
         ivVarNode = "";
     }
     var iVData = ivVarNode;// $("#hdnIViewData").val();
-        if (iVData != "") {
+    if (iVData != "" && iVData != 'No Data') {
             try {
                 if (iVData) {
                     createIvir(iVData);
@@ -337,6 +340,19 @@ function pageLoad(sender, args) {
 
             }
         } else {
+            try {
+                if (iVData == "No Data") {
+                    $(".animationLoading").hide();
+                    hideDataTableLoading();
+                    $("#dvNoData").removeClass("d-none");
+                    $("#dvNoData").css({ "margin-top": "150px" });
+                    processParamBadge();
+                    if ($("#FilterValues").children().length > 0) {
+                        $("#dvSelectedFilters").removeClass('d-none');
+                    }
+                }
+            } catch (error) {
+            }
             showParamsPlaceholder();
             checkIfNextDBRowsExist(true);
         }
@@ -866,11 +882,15 @@ function onRecPerPageChange(event) {
  * @author Prashik
  * @Date   2019-04-11T10:40:40+0530
  */
+var isIviewRecordCountClicked = false;
 function getIviewRecordCount() {
     try {
-        if (totRowCount == "" && $("#getIviewRecordCountVal").length > 0) {
-            $("#getIviewRecordCountVal").addClass("fa-spin");
+        if (totRowCount == "" && $("#getIviewRecordCountVal").length > 0 && !isIviewRecordCountClicked) {
+            isIviewRecordCountClicked = true;
+            AxWaitCursor(true);
+            $("#getIviewRecordCountVal").addClass("fa-spin").css("cursor","wait");
             ASB.WebService.GetIviewRecordCount(iName, $j("#hdnparamValues").val(), isListView, function (e, t) {
+                AxWaitCursor(false);
                 //Success
                 if (e.indexOf("<totalrows>") == 0) {
                     var closingIndex = e.indexOf("</totalrows>");
@@ -881,14 +901,19 @@ function getIviewRecordCount() {
                 } else {
 
                 }
-                $("#getIviewRecordCountVal").addClass("d-none");
+                $("#getIviewRecordCountVal").addClass("d-none").css("cursor", "pointer");
+                isIviewRecordCountClicked = false;
             }, function (e) {
+                AxWaitCursor(false);
                 //Failure
-                $("#getIviewRecordCountVal").addClass("d-none");
+                $("#getIviewRecordCountVal").addClass("d-none").css("cursor", "pointer");
+                isIviewRecordCountClicked = false;
             });
         }
     } catch (ex) {
-        $("#getIviewRecordCountVal").addClass("d-none");
+        AxWaitCursor(false);
+        $("#getIviewRecordCountVal").addClass("d-none").css("cursor", "pointer");
+        isIviewRecordCountClicked = false;
         console.log(ex.message);
     }
 }
@@ -1299,6 +1324,12 @@ $(document).ready(function () {
         if (typeof parent.axProcessObj != "undefined") {
             parent.$("#Process_Flow").scrollTop(0);
             parent.ShowDimmer(false);
+        }
+    } catch (ex) { }
+
+    try {
+        if (typeof showallrecordsbutton != "undefined" && showallrecordsbutton == true) {
+            $("#lnkShowAll").addClass('d-none');
         }
     } catch (ex) { }
 
@@ -1746,6 +1777,24 @@ function callAction(a, x, conf, appl) {
         isScript = (ivScripts[a]["@script"] || "false") == "true";
     }
     catch (e) { }
+    let _isconfrmReq = "";
+    let _confrmMsg = "";
+    if (isScript) {
+        try {
+            _isconfrmReq = ivScripts[a]["@confreq"];
+            _confrmMsg = ivScripts[a]["@confmsg"];
+        }
+        catch (e) { }
+    }
+    if (typeof _isconfrmReq != "undefined" && _isconfrmReq == "t" && _confrmMsg != "") {
+        if (!confirm(_confrmMsg)) {
+            ShowDimmer(false);
+            $("#hdnAct").val("");
+            actionCallbackFlag = actionCallFlag;
+            $("#icons,#btnSaveTst,.wizardNextPrevWrapper").css({ "pointer-events": "auto" });
+            return;
+        }
+    }
 
     var actXML = '<root axpapp="' + proj + '" trace="' + trace + '" sessionid="' + sid + '"  stype="' + ivtype + '" sname="' + x + '" actname="' + a + '"><params>' + pa + '</params><varlist>' + selXML + '</varlist>';
 
@@ -1779,7 +1828,7 @@ function ActButtonClick(btnId, confirmMsg, allRow, NavigationURL) {
     if (allRow == "") {
         checked = true;
     }
-
+    inmemClearAll = "";
     $("#GridView1" + " tr").each(function () {
         $(this).find("input:checkbox").each(function () {
             if ($j(this).attr("name") == "chkItem" && $j(this).prop("checked") == true) {
@@ -1793,6 +1842,7 @@ function ActButtonClick(btnId, confirmMsg, allRow, NavigationURL) {
     let _selectedIvRows = "";
     if ($j("#chkall").prop("checked")) {
         _selectedIvRows = "all";
+        inmemClearAll = "all";
     } else if (rows != "") {
         _selectedIvRows = rows;
     }
@@ -1891,16 +1941,71 @@ function callRemoteDoActionWS(rows) {
     var actName = $j("#hdnAct").val().substr(4);
     var paramxml = generateParamX();
     var trace = traceSplitStr + "trace" + traceSplitStr;
+    inmemClearTstId = [];
     var iXml = "";
     iXml = iXml + '<root axpapp="' + proj + '" trace="' + trace + '" sessionid="' + sid + '"  appsessionkey="' + appsessionkey + '" stype="iviews" sname="' + iName + '" actname="' + actName + '" username="' + username + '"><params>' + paramxml + '</params><varlist>';
     iXml += jsonToXml(rows);
     iXml += '</varlist>';
     ivkey = $("#hdnKey").val();
+
+    if (iName == 'inmemdb') {
+        if (inmemClearAll != "") {
+            let _inmemdbMsg = "Application will be signed out once " + inmemClearAll + " the keys are cleared. Do you want to proceed";
+            if (confirm(_inmemdbMsg)) {
+                //inmemClearAll
+            } else {
+                inmemClearAll = "";
+            }
+        }
+    }
+    if (iName == 'inmemdb' && inmemClearTstId.length > 0) {
+        let appSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        try {
+            inmemClearTstId.forEach(function (eVal) {
+                let _thisKey = callParentNew("getKeysWithPrefix(tstHtml♠" + eVal + "-" + appSUrl + "♥)", "function");
+                if (_thisKey.length > 0) {
+                    for (const val of _thisKey) {
+                        localStorage.removeItem(val);
+                    }
+                }
+                try {
+                    let storedKey = 'originaltrIds-' + appSUrl;
+                    let transidArray = JSON.parse(localStorage.getItem(storedKey) || '[]');
+                    let index = transidArray.indexOf(eVal);
+                    if (index > -1) {
+                        transidArray.splice(index, 1);
+                        localStorage.setItem(storedKey, JSON.stringify(transidArray));
+                    }
+                } catch (ex) { }                
+                callParentNew("clearKeysByFormat(tstDDFVal♠" + eVal + "♦♣♦" + appSUrl + "♥)", "function");
+            });
+        } catch (ex) { }
+    }   
+
     var isScript = false;
     try {
         isScript = (ivScripts[actName]["@script"] || "false") == "true";
     }
     catch (e) { }
+    let _isconfrmReq = "";
+    let _confrmMsg = "";
+    if (isScript) {
+        try {
+            _isconfrmReq = ivScripts[actName]["@confreq"];
+            _confrmMsg = ivScripts[actName]["@confmsg"];
+        }
+        catch (e) { }
+    }
+    if (typeof _isconfrmReq != "undefined" && _isconfrmReq == "t" && _confrmMsg != "") {
+        if (!confirm(_confrmMsg)) {
+            ShowDimmer(false);
+            $("#hdnAct").val("");
+            actionCallbackFlag = actionCallFlag;
+            $("#icons,#btnSaveTst,.wizardNextPrevWrapper").css({ "pointer-events": "auto" });
+            return;
+        }
+    }
+
     let _pushtoQueue = "";
     let _queueName = "";
     let _scriptCaption = "";
@@ -1971,7 +2076,10 @@ function callRemoteDoActionWS(rows) {
                     ivirDataTableApi.rows.add(ivDatas).draw();  //append next records to the datatable & redraw it
                     callCharts();
 
-                    showAlertDialog('success', appGlobalVarsObject.lcm[267]);
+                    showAlertDialog('success', appGlobalVarsObject.lcm[267]);   
+                    if (iName == 'inmemdb' && inmemClearAll != "") {
+                        parent.window.location.href = "../aspx/sess.aspx";
+                    }
                 }
                 else {
                     if (data.ActBtnNavigation != undefined)
@@ -2066,6 +2174,8 @@ function SuccessCallbackScriptPushtoQueueIv(result, eventArgs) {
 function jsonToXml(rows) {
     rows = rows.split("♣");
     var selectedRow = "";
+    inmemClearTstId = [];
+    let isGeneralKey = false;
     $(rows).each(function (ind, val) {
         if (val != "") {
             var doc = $.parseXML("<row/>")
@@ -2077,13 +2187,23 @@ function jsonToXml(rows) {
                 if (json.hasOwnProperty(key)) {
                     elem = doc.createElement(newKey);
                     $(elem).text(json[key]);
+                    if (typeof json[key] != "undefined" && json[key] == 'Tstruct')
+                        inmemClearTstId.push(json['@TNAME']);
+                    if (typeof json[key] != "undefined" && json[key] == 'General')
+                        isGeneralKey = true;
                     xml.appendChild(elem);
                 }
             }
-
             selectedRow += xml.outerHTML || new XMLSerializer().serializeToString(xml);
         }
     });
+    try {
+        if (isGeneralKey && inmemClearAll == "") {
+            inmemClearAll = "general";
+        } else if (!isGeneralKey && inmemClearAll == "all" && ivirDataTableApi.rows().count() != rows.length - 1) {
+            inmemClearAll = "";
+        }
+    } catch (ex) { }
     return selectedRow;
 }
 function GetSelectedChkRowsData(rows) {
@@ -2159,6 +2279,25 @@ function callHLaction(a, x, name) {
         isScript = (ivScripts[a]["@script"] || "false") == "true";
     }
     catch (e) { }
+    let _isconfrmReq = "";
+    let _confrmMsg = "";
+    if (isScript) {
+        try {
+            _isconfrmReq = ivScripts[a]["@confreq"];
+            _confrmMsg = ivScripts[a]["@confmsg"];
+        }
+        catch (e) { }
+    }
+    if (typeof _isconfrmReq != "undefined" && _isconfrmReq == "t" && _confrmMsg != "") {
+        if (!confirm(_confrmMsg)) {
+            ShowDimmer(false);
+            $("#hdnAct").val("");
+            actionCallbackFlag = actionCallFlag;
+            $("#icons,#btnSaveTst,.wizardNextPrevWrapper").css({ "pointer-events": "auto" });
+            return;
+        }
+    }
+
     try {
         if (window && window.frameElement && window.frameElement.id == "loadPopUpPage" && isParamVisible && $j("#hdnparamValues").val() != "") {//&& $("#hdnSelParamsAftrChWin").val() != ""
             let linkParams = $("#hdnparamValues").val();
@@ -3412,9 +3551,27 @@ function callOpenAction(a, b) {
 
     if (iName == "ad___url" && b == "ad_ur") {
         ShowDimmer(true);
-        parent.callParentNew('loadFrame();', 'function');
-        parent.LoadIframeac('tstruct.aspx?transid=ad_ur');
-        parent.callParentNew('closeFrame();', 'function');
+        if (typeof parent.LoadIframeac == 'function') {
+            parent.callParentNew('loadFrame();', 'function');
+            parent.LoadIframeac('tstruct.aspx?transid=ad_ur');
+            parent.callParentNew('closeFrame();', 'function');
+        } else {
+            let _thsiifId = window.frameElement.id;
+            if (typeof _thsiifId !== "undefined" && _thsiifId.toLowerCase().startsWith("axmultiiframe_")) {
+                if (typeof parent.ShowDimmer === "function")
+                    parent.ShowDimmer(true);
+                else if (typeof top.ShowDimmer === "function")
+                    top.ShowDimmer(true);
+                else if (typeof ShowDimmer === "function")
+                    ShowDimmer(true);
+                parent.PopupManager.openForm("", "tstruct.aspx?transid=ad_ur");
+            }
+            else {
+                callParentNew('loadFrame();', 'function');
+                callParentNew("LoadIframe(tstruct.aspx?transid=ad_ur)", "function");
+                callParentNew('closeFrame();', 'function');
+            }
+        }
         return;
     }
 
@@ -3779,7 +3936,22 @@ function GetParamValues(calledFrom, evt) {
 
                         if (ctrl.parents(".paramtd2").hasClass("pick-list")) {
                             if ($(ctrl).find("option[data-select2-tag=true]") != undefined && $(ctrl).find("option[data-select2-tag=true]").length != 0) {
-                                newval = $(ctrl).find("option[data-select2-tag=true]").val();                              
+                                newval = $(ctrl).find("option[data-select2-tag=true]").val();    
+                                var exists = false;
+                                if (newval != "") {
+                                    $(ctrl).next(".select2-container").find(".select2-selection__choice")
+                                        .each(function () {
+                                            var txt = $(this).find(".select2-selection__choice__display").text().trim();
+                                            if (txt.toLowerCase() === newval.toLowerCase()) {
+                                                exists = true;
+                                                return false;
+                                            }
+                                        });
+
+                                    if (!exists) {
+                                        newval = typeof ctrl.val()[0] == "undefined" ? "" : ctrl.val()[0];
+                                    }
+                                }
                             } else if ($(ctrl).parent().find(".selection textarea").val() != "") {
                                 newval = $(ctrl).parent().find(".selection textarea").val();
                             } else if (typeof $(ctrl).find("option") != "undefined" && $(ctrl).find("option").val() != "" && typeof ctrl.val() != "undefined" && ctrl.val().length == 0 && ctrl.val()[0] == "") {
@@ -3939,7 +4111,8 @@ function SetParamValues(pval, depsForViewsObj = "") {
                             $j(this).removeAttr("selected");
                             if ($j(this).text() == strVal[1]) {
                                 $j(this).prop("selected", true);
-
+                                if (typeof isIviewPopup != "undefined" && isIviewPopup == true)
+                                    $j(this).val(strVal[1]).trigger('change');
                             }
                         });
                     } else if (fldType == "select-multiple" && !pctrl.parents(".paramtd2").hasClass("pick-list")) {
@@ -9429,6 +9602,7 @@ function valdDecPts(obj, actValue) {
 
 function setRefreshParent(val) {
     eval(callParent('isRefreshParentOnClose') + "=" + val.toLowerCase() + "");
+    isIvRefreshParentOnClose = val.toLowerCase().toString();
 }
 
 /**
@@ -9786,7 +9960,10 @@ function getAllRecords() {
             setTimeout(function () {
                 setTimeout(() => {
                     exportType = '';
-                    checkKeyARMExport(exportType);
+                    if (checkNextDBRowsExist)
+                        checkKeyARMExport(exportType);
+                    else
+                        exportExcelAllRows('excel');
                 }, 0);
             }, 100);
         } else if (exportType == "word") {
@@ -9848,7 +10025,45 @@ function getAllRecords() {
         }
     }
 }
-
+function exportExcelAllRows(_exportType) {
+    if (_exportType) {
+        ShowDimmer(true);
+        var ivParamCaption = processParamStringForExport();
+        let _glCulture = eval(callParent('glCulture'));
+        let _dtFormat = "dd/MM/yyyy";
+        if (_glCulture == "en-us")
+            _dtFormat = "MM/dd/yyyy";
+        const ivKey = $j("#hdnKey").val();
+        $.ajax({
+            type: "POST",
+            url: "iview.aspx/ExportIviewData",
+            cache: false,
+            async: false,
+            contentType: "application/json;charset=utf-8",
+            data: JSON.stringify({
+                ivName: iName, ivKey: ivKey, ivParamCaption: ivParamCaption, IVIRCaption: IVIRCaption, _dtFormat: _dtFormat,
+            }),
+            dataType: "json",
+            success: function (data) {
+                if (data.d != "" && !data.d.startsWith("error:")) {
+                    var fileUrl = data.d;
+                    var fileName = data.d.substring(data.d.lastIndexOf('/') + 1);
+                    var anchor = document.createElement('a');
+                    anchor.href = fileUrl;
+                    anchor.download = fileName;
+                    document.body.appendChild(anchor);
+                    anchor.click();
+                    document.body.removeChild(anchor);
+                } else
+                    showAlertDialog("error", data.d);
+                ShowDimmer(false);
+            },
+            error: function (response) {
+                ShowDimmer(false);
+            }
+        });
+    }
+}
 function checkKeyARMExport(_exportType) {
     ShowDimmer(true);
     var pa = form1.param.value;
@@ -9938,14 +10153,19 @@ function SuccessCallbackARMQueue(result, eventArgs) {
             if (resJson.result.success == true) {
                 showAlertDialog('success', "Data submitted to Queue successfully.");
             } else {
-                showAlertDialog('error', "There was an error please try again");
+                //let _result = resJson.result.replace("error:", "");
+                //showAlertDialog('error', _result);// "There was an error please try again");
+                showAlertDialog('error', appGlobalVarsObject.lcm[572]);
             }
         } else {
             if (result != "" && result.startsWith('warning:')) {
                 let res = result.replace('warning:', '');
                 showAlertDialog('warning', res);
-            } else
-                showAlertDialog('error', "There was an error please try again");
+            } else {
+                //result = result.replace("error:", "");
+                //showAlertDialog('error', result);// "There was an error please try again");                
+                showAlertDialog('error', appGlobalVarsObject.lcm[572]);
+            }
         }
     }
 }
@@ -10134,6 +10354,11 @@ function getNextDtRecords(pageNo) {
                                 nxtScrollSize = ivDatas.length;
 
                                 checkIfNextDBRowsExist();
+                                try {
+                                    if (typeof showallrecordsbutton != "undefined" && showallrecordsbutton == true) {
+                                        $("#lnkShowAll").addClass('d-none');
+                                    }
+                                } catch (ex) { }
 
                                 pageScrollToEnd = true;
                                 ivirDataTableApi.rows.add(ivDatas.slice(currRowSize, ivDatas.length)).draw(false);  //append next records to the datatable & redraw it
@@ -10297,6 +10522,11 @@ function checkIfNextDBRowsExist(onPageLoad) {
             
             checkNextDBRowsExist = true;
             $("#lnkShowAll").removeClass("d-none");
+            try {
+                if (typeof showallrecordsbutton != "undefined" && showallrecordsbutton == true) {
+                    $("#lnkShowAll").addClass('d-none');
+                }
+            } catch (ex) { }
             return true;
 
 
@@ -11217,6 +11447,12 @@ function processIvConfiguration(InnerIvConfigurations) {
         previewfileinsteaddownload = getCaseInSensitiveJsonProperty(InnerIvConfigurations.filter((val, ind) => {
             var thisVal = getCaseInSensitiveJsonProperty(val, "PROPS");
             return thisVal && thisVal.toString() && thisVal.toString().toLowerCase() == "preview file in reports instead of download"
+        })[0], ["PROPSVAL"]).toString().toLowerCase() == "true";
+    } catch (ex) { }
+    try {
+        showallrecordsbutton = getCaseInSensitiveJsonProperty(InnerIvConfigurations.filter((val, ind) => {
+            var thisVal = getCaseInSensitiveJsonProperty(val, "PROPS");
+            return thisVal && thisVal.toString() && thisVal.toString().toLowerCase() == "show all records button hide in iview"
         })[0], ["PROPSVAL"]).toString().toLowerCase() == "true";
     } catch (ex) { }
 }

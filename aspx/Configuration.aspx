@@ -95,9 +95,9 @@
     <script>
         var AxApiUrl = '<%=apiUrl%>';
     </script>
-    <script src="../Js/Configuration.min.js?v=96"></script>
-    <script src="../Js/AppSettings.min.js?v=12" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
+    <script src="../Js/Configuration.min.js?v=97"></script>
+    <script src="../Js/AppSettings.min.js?v=13" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
     <script>
         var attchmentLimit = '<%=Session["AxAttachmentSize"]%>' == '' ? '1' : '<%=Session["AxAttachmentSize"]%>'
         callParentNew("axAttachmentSize=", attchmentLimit);
@@ -392,13 +392,27 @@
                                                     </a>
                                                     <asp:HiddenField ID="showSubmitCancel" runat="server" />
                                                 </div>
+
                                                 <div class="form-group row my-2">
+                                                    <div class="col-md-6 align-items-center justify-content-end">
+                                                        <span id="lblstaysignin" class="form-check-label form-label col-form-label pb-1 fw-boldest ms-0" runat="server" meta:resourcekey="lblcpwd" for="enable">Keep me signin</span>
+                                                    </div>
+                                                    <div class="col-md-6 d-flex align-items-center">
+                                                        <a href="javascript:void(0)" class="swtchDummyAnchr form-check form-switch form-check-solid m-0 ps-0-- py-4">
+                                                            <input class="form-check-input w-45px h-25px" name="ckbStaySignin" id="ckbStaySignin" type="checkbox">
+                                                            <label class="" for="ckbStaySignin" id="lblckbStaySignin"></label>
+                                                        </a>
+                                                    </div>
+                                                    <asp:HiddenField ID="hdnStaySignin" runat="server" />
+                                                </div>
+
+                                                <div class="form-group row my-2" id="txtExpiryDays">
                                                     <div class="col-md-6">
                                                         <asp:Label ID="lblSessionExpiryDays" class="form-check-label form-label col-form-label pb-1 fw-boldest" runat="server" meta:resourcekey="lblSessionExpiryDays" for="txtSessionExpiryDays">Application Session Expiry in Days</asp:Label>
                                                         <span class="material-icons material-icons-style align-middle material-icons-3 cursor-pointer" title="This is the value used in stay signed in functionality">info</span>
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <input type="number" maxlength="2" min="1" max="10" id="txtSessionExpiryDays" class="form-control placeholder-no-fix" runat="server" />
+                                                        <input type="number" maxlength="2" min="1" id="txtSessionExpiryDays" class="form-control placeholder-no-fix" runat="server" />
                                                     </div>
                                                 </div>
 
@@ -424,7 +438,7 @@
                                                     <asp:HiddenField ID="hdnDevInstance" runat="server" />
                                                 </div>
 
-                                                <div class="form-group row my-2">
+                                                <%--<div class="form-group row my-2">
                                                     <div class="col-md-6">
                                                         <asp:Label ID="lblAttachmentSize" class="form-check-label form-label col-form-label pb-1 fw-boldest" runat="server" meta:resourcekey="lblAttachmentSize">Max Attachment Size in MB</asp:Label>
                                                     </div>
@@ -448,7 +462,7 @@
                                                             <option value="500">500</option>
                                                         </select>
                                                     </div>
-                                                </div>
+                                                </div>--%>
                                                 <div class="form-group row my-2">
                                                     <div class="col-md-6">
                                                         <asp:Label ID="lblapptitle" class="form-check-label form-label col-form-label pb-1 fw-boldest" runat="server" meta:resourcekey="lblapptitle">Application Title</asp:Label>

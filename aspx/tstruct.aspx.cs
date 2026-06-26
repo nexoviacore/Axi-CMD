@@ -316,11 +316,24 @@ public partial class Tstruct : System.Web.UI.Page
             {
                 SaveDraftOnDummy(_thistrId);
                 IncludeJsFilesDummy(_thistrId);
-                string _strGlobalVar = util.GetGlobalVarString();
+                string _strGlobalVar = util.GetGlobalVarString("nofilter");
                 if (_strGlobalVar != string.Empty)
                 {
                     hdnDummyParams.Value = _strGlobalVar;
                 }
+
+                ASB.WebService objws = new ASB.WebService();
+                if (Request.QueryString["recordid"] != null && Request.QueryString["recordid"].ToString() != "")
+                    hdnTstPermission.Value = objws.GetTstPermissions(_thistrId, "recordid", Request.QueryString["recordid"].ToString(), "edit");
+                else
+                {
+                    if (Request.QueryString["createaxiflag"] != null && Request.QueryString["createaxiflag"].ToString() == "true")
+                        hdnTstPermission.Value = "";
+                    else
+                        hdnTstPermission.Value = objws.GetTstPermissions(_thistrId, "", "", "create");
+                }
+                util.TempAttaServerFiles();
+                util.DeleteKeyOnRefreshSave();
                 if (Session["project"] != null)
                     hdnTstSInfo.Value = Session["project"].ToString() + "~" + Session["user"].ToString() + "~" + _thistrId + "~" + Session["nsessionid"].ToString() + "~" + Session["AxRole"].ToString() + "~" + Session["AxTrace"].ToString();
                 ScriptManager.RegisterStartupScript(this, this.GetType(), "dummyload", "tstDummyLoad('" + _thistrId + "');", true);
@@ -435,7 +448,7 @@ public partial class Tstruct : System.Web.UI.Page
                             {
                                 SaveDraftOnDummy(_thisTrId);
 
-                                string _strGlobalVar = util.GetGlobalVarString();
+                                string _strGlobalVar = util.GetGlobalVarString("nofilter");
                                 if (_strGlobalVar != string.Empty)
                                 {
                                     hdnDummyParams.Value = _strGlobalVar;
@@ -942,7 +955,7 @@ public partial class Tstruct : System.Web.UI.Page
                 tstScript.Append(AxvalErrorcode_Scripts);
             }
 
-            strGlobalVar = util.GetGlobalVarString();
+            strGlobalVar = util.GetGlobalVarString("nofilter");
             if (strGlobalVar != string.Empty)
             {
                 string global_Scripts = "<script language='javascript' type='text/javascript' >" + strGlobalVar + "</script>";
@@ -1356,6 +1369,12 @@ public partial class Tstruct : System.Web.UI.Page
                 else
                     Session.Remove("TstAllowVideoAtta-" + transId);
 
+                var TstAllowSpecificAtta = axpConfigStr.AsEnumerable().Where(x => x.Field<string>("PROPS").ToLower() == "allow specific file types in attachments").Select(x => new { val = x.Field<string>("PROPSVAL"), alfiles = x.Field<string>("PROPVALUE2") }).ToList();
+                if (TstAllowSpecificAtta.Count > 0 && TstAllowSpecificAtta[0].val != "" && TstAllowSpecificAtta[0].val.ToLower() == "true")
+                    Session["TstAllowSpecificAtta-" + transId] = TstAllowSpecificAtta[0].alfiles;
+                else
+                    Session.Remove("TstAllowSpecificAtta-" + transId);
+
                 var fileprotected = axpConfigStr.AsEnumerable().Where(x => x.Field<string>("PROPS").ToLower() == "file protected in tstruct attachments").Select(x => new { val = x.Field<string>("PROPSVAL"), sfld = x.Field<string>("SFIELD") }).ToList();
                 if (fileprotected.Count > 0)
                     tstIsFileProtected = fileprotected[0].val;
@@ -1720,7 +1739,7 @@ public partial class Tstruct : System.Web.UI.Page
             tstJsArrays.Append("var FNames = new Array();var FldsFrmLst = new Array();var ExprPosArray= new Array();var FLowerNames = new Array();var FToolTip = new Array();var FDataType = new Array();var FTableTypeVal = new Array();");
             tstJsArrays.Append("var FMaxLength = new Array();var FDecimal = new Array();var FDupDecimals=new Array(); var FldValidateExpr = new Array();var FCaption = new Array();var HTMLFldNames = new Array();var FCustDecimal=new Array();var FNumDisplayTot=new Array();");
             tstJsArrays.Append("var FldFrameNo = new Array();var FldDcRange = new Array();var FProps = new Array(); var ExpFldNames = new Array();");
-            tstJsArrays.Append("var Expressions = new Array();var Formcontrols = new Array();var tstActionName=new Array();var tstActionCaption=new Array();var actParRefresh=new Array();var actSaveTask=new Array();var PatternNames = new Array();var Patterns = new Array();var SFormControls=new Array();var SFCFldNames=new Array();var SFCApply=new Array();var SFCActionName=new Array();var actScriptTask=new Array();var actScriptCancel=new Array();var actScriptActive=new Array();var actScriptPushtoQueue=new Array();var SFCIsActive=new Array();var actScriptQueueName=new Array();");
+            tstJsArrays.Append("var Expressions = new Array();var Formcontrols = new Array();var tstActionName=new Array();var tstActionCaption=new Array();var actParRefresh=new Array();var actSaveTask=new Array();var PatternNames = new Array();var Patterns = new Array();var SFormControls=new Array();var SFCFldNames=new Array();var SFCApply=new Array();var SFCActionName=new Array();var actScriptTask=new Array();var actScriptCancel=new Array();var actScriptActive=new Array();var actScriptPushtoQueue=new Array();var SFCIsActive=new Array();var actScriptQueueName=new Array();var actConfreq=new Array();var actConfmsg=new Array();");
             tstJsArrays.Append("var FMoe = new Array();var FldDependents = new Array();var FldParents = new Array();var ClientFldParents = new Array();var FldAutoSelect = new Array();var FldIsSql = new Array();var FldAlignType = new Array();var FldIsAPI = new Array();var FldDSqlParams=new Array();");
             tstJsArrays.Append("var FldRapidDeps = new Array();var FldRapidDepType = new Array();var FldRapidExpDeps = new Array();var FldRapidParents = new Array();var FldPurpose= new Array();var FSetCarry=new Array();");
         }
@@ -2764,6 +2783,8 @@ public partial class Tstruct : System.Web.UI.Page
             bool isDropDwn = btn.isDrpDwn;
             string isFooter = btn.footer;
             bool isVisible = btn.visible == "true" ? true : false;
+            if (!isVisible)
+                continue;
             string iconStyle = string.Empty;
             btnFunction = string.Empty;
             btnStyle = string.Empty;
@@ -3118,6 +3139,8 @@ public partial class Tstruct : System.Web.UI.Page
                         string strFirstChars = "A";
                         if (actBtnNames != "")
                             strFirstChars = actBtnNames.Substring(0, 1);
+                        if (strFirstChars != null && strFirstChars.Length == 1)
+                            strFirstChars = strFirstChars.ToUpper();
                         btnFunction = " onclick='javascript:DeleteTstruct();' ";
                         string _hint = string.IsNullOrEmpty(hint) ? (caption == "" ? task : caption) : hint;
                         if (isMobileView)
@@ -3141,6 +3164,8 @@ public partial class Tstruct : System.Web.UI.Page
                         string strFirstChars = "A";
                         if (actBtnNames != "")
                             strFirstChars = actBtnNames.Substring(0, 1);
+                        if (strFirstChars != null && strFirstChars.Length == 1)
+                            strFirstChars = strFirstChars.ToUpper();
                         btnFunction = " onclick=\"javascript:OpenPrint('" + transId + "');\" ";
                         string _hint = string.IsNullOrEmpty(hint) ? (caption == "" ? task : caption) : hint;
                         if (strObj.tstPform == "yes")
@@ -3165,6 +3190,8 @@ public partial class Tstruct : System.Web.UI.Page
                         string strFirstChars = "A";
                         if (actBtnNames != "")
                             strFirstChars = actBtnNames.Substring(0, 1);
+                        if (strFirstChars != null && strFirstChars.Length == 1)
+                            strFirstChars = strFirstChars.ToUpper();
                         string hideStyle = string.Empty;
                         string _hint = string.IsNullOrEmpty(hint) ? (caption == "" ? task : caption) : hint;
                         if (strObj.pdfList == "")
@@ -3187,6 +3214,8 @@ public partial class Tstruct : System.Web.UI.Page
                         string strFirstChars = "A";
                         if (actBtnNames != "")
                             strFirstChars = actBtnNames.Substring(0, 1);
+                        if (strFirstChars != null && strFirstChars.Length == 1)
+                            strFirstChars = strFirstChars.ToUpper();
                         btnFunction = " onclick=\"javascript:OpenHistory('" + transId + "');\" ";
                         if (btnType == "classic")
                             BtnHtml.Append("<div class=\"menu-item px-3\"><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + (caption == "" ? task : caption) + "' title='" + (caption == "" ? task : caption) + "' class=\"menu-link px-3\"><div class=\"symbol symbol-25px symbol-circle me-5 dropdownIconUI\"><span class=\"symbol-label bg-primary text-white fw-normal fs-3 iconUITitle\">" + strFirstChars + "</span></div><span class=\"dropdownIconName\">" + actBtnNames + "</span></a></div>");
@@ -3205,6 +3234,8 @@ public partial class Tstruct : System.Web.UI.Page
                             string strFirstChars = "A";
                             if (actBtnNames != "")
                                 strFirstChars = actBtnNames.Substring(0, 1);
+                            if (strFirstChars != null && strFirstChars.Length == 1)
+                                strFirstChars = strFirstChars.ToUpper();
                             btnFunction = " onclick=\"javascript:CallListView('" + transId + "');\" ";
                             if (isMobileView)
                             {
@@ -3229,6 +3260,8 @@ public partial class Tstruct : System.Web.UI.Page
                             string strFirstChars = "A";
                             if (actBtnNames != "")
                                 strFirstChars = actBtnNames.Substring(0, 1);
+                            if (strFirstChars != null && strFirstChars.Length == 1)
+                                strFirstChars = strFirstChars.ToUpper();
                             btnFunction = " onclick=\"javascript:CallEntityList('" + transId + "');\" ";
                             if (isMobileView)
                             {
@@ -3257,6 +3290,8 @@ public partial class Tstruct : System.Web.UI.Page
                         string strFirstChars = "A";
                         if (actBtnNames != "")
                             strFirstChars = actBtnNames.Substring(0, 1);
+                        if (strFirstChars != null && strFirstChars.Length == 1)
+                            strFirstChars = strFirstChars.ToUpper();
                         btnFunction = " onclick='javascript:AttachFiles();' ";
                         if (isMobileView)
                         {
@@ -3280,6 +3315,8 @@ public partial class Tstruct : System.Web.UI.Page
                         string strFirstChars = "D";
                         if (actBtnNames != "")
                             strFirstChars = actBtnNames.Substring(0, 1);
+                        if (strFirstChars != null && strFirstChars.Length == 1)
+                            strFirstChars = strFirstChars.ToUpper();
                         if (isMobileView)
                         {
                             if (btnType == "classic")
@@ -3362,6 +3399,8 @@ public partial class Tstruct : System.Web.UI.Page
                         string strFirstChars = "A";
                         if (actBtnNames != "")
                             strFirstChars = actBtnNames.Substring(0, 1);
+                        if (strFirstChars != null && strFirstChars.Length == 1)
+                            strFirstChars = strFirstChars.ToUpper();
                         btnFunction = " onclick=\"javascript:OpenPrint('" + transId + "')\" ";
                         if (strObj.tstPform == "yes")
                         {
@@ -3396,6 +3435,10 @@ public partial class Tstruct : System.Web.UI.Page
                             string strFirstChars = "A";
                             if (actBtnNames != "")
                                 strFirstChars = actBtnNames.Substring(0, 1);
+                            if (btn.icon.text != null && btn.icon.text != "" && btn.icon.text != "task_alt")
+                                strFirstChars = btn.icon.text;
+                            if (strFirstChars != null && strFirstChars.Length == 1)
+                                strFirstChars = strFirstChars.ToUpper();
                             btnFunction = " onclick=\"javascript:CallAction('" + btn.action + "','" + btn.fileupload + "','" + actConfirmMsg + "','" + actRem + "','" + manRem + "','','" + script.ToString().ToLower() + "');\" ";
 
                             if (btnType == "classic")
@@ -3413,6 +3456,10 @@ public partial class Tstruct : System.Web.UI.Page
                                 string strFirstChars = "A";
                                 if (actBtnNames != "")
                                     strFirstChars = actBtnNames.Substring(0, 1);
+                                if (btn.icon.text != null && btn.icon.text != "" && btn.icon.text != "task_alt")
+                                    strFirstChars = btn.icon.text;
+                                if (strFirstChars != null && strFirstChars.Length == 1)
+                                    strFirstChars = strFirstChars.ToUpper();
                                 if (isFooter == "true" && parentID == "")
                                     modernFooterActBtnHtml.Append("<a href=\"javascript: void(0)\" id=" + id + " " + btnFunction.ToString() + " data-extra='" + _hint + "' class=\"btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm\"><span class=\"material-icons\">" + btn.icon.text + "</span>" + actBtnNames + "</a><input type=hidden id='cb_sactbu' name='cb_sactbu'>");
                                 else
@@ -3430,6 +3477,10 @@ public partial class Tstruct : System.Web.UI.Page
                                 string strFirstChars = "A";
                                 if (actBtnNames != "")
                                     strFirstChars = actBtnNames.Substring(0, 1);
+                                if (btn.icon.text != null && btn.icon.text != "" && btn.icon.text != "task_alt")
+                                    strFirstChars = btn.icon.text;
+                                if (strFirstChars != null && strFirstChars.Length == 1)
+                                    strFirstChars = strFirstChars.ToUpper();
                                 btnFunction = " onclick='javascript:AttachFiles();' ";
                                 if (isFooter == "true" && parentID == "")
                                     modernFooterActBtnHtml.Append("<a href=\"javascript: void(0)\" id=" + id + " " + btnFunction.ToString() + " data-extra='" + _hint + "' class=\"btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm\"><span class=\"material-icons\">" + btn.icon.text + "</span>" + actBtnNames + "</a>");
@@ -3452,6 +3503,10 @@ public partial class Tstruct : System.Web.UI.Page
                                 string strFirstChars = "A";
                                 if (actBtnNames != "")
                                     strFirstChars = actBtnNames.Substring(0, 1);
+                                if (btn.icon.text != null && btn.icon.text != "" && btn.icon.text != "task_alt")
+                                    strFirstChars = btn.icon.text;
+                                if (strFirstChars != null && strFirstChars.Length == 1)
+                                    strFirstChars = strFirstChars.ToUpper();
                                 btnFunction = " onclick=\"javascript:CallAction('" + btn.action + "','" + btn.fileupload + "','" + actConfirmMsg + "','" + actRem + "','" + manRem + "','','" + script.ToString().ToLower() + "');\" ";
                                 if (isFooter == "true" && parentID == "")
                                     modernFooterActBtnHtml.Append("<a href=\"javascript: void(0)\" id=" + id + " " + btnFunction.ToString() + " data-extra='" + _hint + "' class=\"btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm\"><span class=\"material-icons\">" + btn.icon.text + "</span>" + actBtnNames + "</a>");
@@ -3472,6 +3527,10 @@ public partial class Tstruct : System.Web.UI.Page
                             string strFirstChars = "A";
                             if (actBtnNames != "")
                                 strFirstChars = actBtnNames.Substring(0, 1);
+                            if (btn.icon.text != null && btn.icon.text != "" && btn.icon.text != "task_alt")
+                                strFirstChars = btn.icon.text;
+                            if (strFirstChars != null && strFirstChars.Length == 1)
+                                strFirstChars = strFirstChars.ToUpper();
                             btnFunction = " onclick=\"javascript:" + id + "onclick();\" ";
                             if (btnType == "classic")
                                 BtnHtml.Append("<div class=\"menu-item px-3\"><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' title='" + (caption == "" ? task : caption) + "' class=\"menu-link px-3\"><div class=\"symbol symbol-25px symbol-circle me-5 dropdownIconUI\"><span class=\"symbol-label bg-primary text-white fw-normal fs-3 iconUITitle\">" + strFirstChars + "</span></div><span class=\"dropdownIconName text-truncate w-100 overflow-hidden\">" + actBtnNames + "</span></a></div>");
@@ -3485,6 +3544,10 @@ public partial class Tstruct : System.Web.UI.Page
                             string strFirstChars = "A";
                             if (actBtnNames != "")
                                 strFirstChars = actBtnNames.Substring(0, 1);
+                            if (btn.icon.text != null && btn.icon.text != "" && btn.icon.text != "task_alt")
+                                strFirstChars = btn.icon.text;
+                            if (strFirstChars != null && strFirstChars.Length == 1)
+                                strFirstChars = strFirstChars.ToUpper();
                             btnFunction = " onclick=\"callAddFormRuntime('addfield','" + transId + "','" + tstCaption + "');\" ";
                             if (isFooter == "true" && parentID == "")
                                 modernFooterActBtnHtml.Append("<a href=\"javascript: void(0)\" id=" + id + " " + btnFunction.ToString() + " data-extra='" + _hint + "' class=\"btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm\"><span class=\"material-icons\">" + btn.icon.text + "</span>" + actBtnNames + "</a>");
@@ -3503,6 +3566,10 @@ public partial class Tstruct : System.Web.UI.Page
                             string strFirstChars = "A";
                             if (actBtnNames != "")
                                 strFirstChars = actBtnNames.Substring(0, 1);
+                            if (btn.icon.text != null && btn.icon.text != "" && btn.icon.text != "task_alt")
+                                strFirstChars = btn.icon.text;
+                            if (strFirstChars != null && strFirstChars.Length == 1)
+                                strFirstChars = strFirstChars.ToUpper();
                             btnFunction = " onclick=\"getAxpertStudioAddFormData();\" ";
                             if (isFooter == "true" && parentID == "")
                                 modernFooterActBtnHtml.Append("<a href=\"javascript: void(0)\" id=" + id + " " + btnFunction.ToString() + " data-extra='" + _hint + "' class=\"btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm\"><span class=\"material-icons\">" + btn.icon.text + "</span>" + actBtnNames + "</a>");
@@ -3521,6 +3588,10 @@ public partial class Tstruct : System.Web.UI.Page
                             string strFirstChars = "A";
                             if (actBtnNames != "")
                                 strFirstChars = actBtnNames.Substring(0, 1);
+                            if (btn.icon.text != null && btn.icon.text != "" && btn.icon.text != "task_alt")
+                                strFirstChars = btn.icon.text;
+                            if (strFirstChars != null && strFirstChars.Length == 1)
+                                strFirstChars = strFirstChars.ToUpper();
                             btnFunction = " onclick=\"javascript:CallAction('" + btn.action + "','" + btn.fileupload + "','" + actConfirmMsg + "','" + actRem + "','" + manRem + "','','" + script.ToString().ToLower() + "');\" ";
                             if (isFooter == "true" && parentID == "")
                                 modernFooterActBtnHtml.Append("<a href=\"javascript: void(0)\" id=" + id + " " + btnFunction.ToString() + " data-extra='" + _hint + "' class=\"btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm\"><span class=\"material-icons\">" + btn.icon.text + "</span>" + actBtnNames + "</a>");
@@ -3540,7 +3611,10 @@ public partial class Tstruct : System.Web.UI.Page
                         string strFirstChar = "A";
                         if (actBtnName != "")
                             strFirstChar = actBtnName.Substring(0, 1);
-
+                        if (btn.icon.text != null && btn.icon.text != "" && btn.icon.text != "task_alt")
+                            strFirstChar = btn.icon.text;
+                        if (strFirstChar != null && strFirstChar.Length == 1)
+                            strFirstChar = strFirstChar.ToUpper();
                         if (parentID == "")
                         {
                             if (btnType == "classic")
@@ -3568,6 +3642,10 @@ public partial class Tstruct : System.Web.UI.Page
                         string strFirstChars = "A";
                         if (actBtnNames != "")
                             strFirstChars = actBtnNames.Substring(0, 1);
+                        if (btn.icon.text != null && btn.icon.text != "" && btn.icon.text != "task_alt")
+                            strFirstChars = btn.icon.text;
+                        if (strFirstChars != null && strFirstChars.Length == 1)
+                            strFirstChars = strFirstChars.ToUpper();
                         btnFunction = " onclick=\"javascript:callExecuteScriptApi('t','" + btn.ID + "','');\" ";
                         if (isFooter == "true" && parentID == "")
                             modernFooterActBtnHtml.Append("<a href=\"javascript: void(0)\" id=" + id + " " + btnFunction.ToString() + " data-extra='" + _hint + "' class=\"btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm\"><span class=\"material-icons\">" + btn.icon.text + "</span>" + actBtnNames + "</a>");
@@ -3586,6 +3664,10 @@ public partial class Tstruct : System.Web.UI.Page
                         string strFirstChar = "A";
                         if (actBtnName != "")
                             strFirstChar = actBtnName.Substring(0, 1);
+                        if (btn.icon.text != null && btn.icon.text != "" && btn.icon.text != "task_alt")
+                            strFirstChar = btn.icon.text;
+                        if (strFirstChar != null && strFirstChar.Length == 1)
+                            strFirstChar = strFirstChar.ToUpper();
                         if (isFooter == "true" && parentID == "")
                             modernFooterActBtnHtml.Append("<a href=\"javascript: void(0)\" id=" + id + " data-extra='" + _hint + "' class=\"btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm\"><span class=\"material-icons\">" + btn.icon.text + "</span>" + actBtnName + "</a>");
                         else
@@ -3637,6 +3719,8 @@ public partial class Tstruct : System.Web.UI.Page
             string strFirstChars = "D";
             if (actBtnNames != "")
                 strFirstChars = actBtnNames.Substring(0, 1);
+            if (strFirstChars != null && strFirstChars.Length == 1)
+                strFirstChars = strFirstChars.ToUpper();
             if (isMobileView)
             {
                 draftbtn.Append("<div class=\"menu-item px-3\" data-kt-menu-trigger=\"click\" data-kt-menu-placement=\"left-start\" data-kt-menu-flip=\"center, top\"><a href=\"javascript:void(0)\" id='draft' alt='draft' title='draft' class=\"menu-link px-3\"><span class=\"menu-title\"><div class=\"symbol symbol-25px symbol-circle me-5 dropdownIconUI\"><span class=\"symbol-label bg-primary text-white fw-normal fs-3 iconUITitle\">" + strFirstChars.ToUpper() + "</span></div><span class=\"dropdownIconName\">" + actBtnNames + "</span></span><span class=\"menu-arrow\"></span></a><div class=\"menu-sub menu-sub-dropdown w-175px py-4\" style=\"\">");
@@ -3828,6 +3912,8 @@ public partial class Tstruct : System.Web.UI.Page
                         string strFirstChar = "H";
                         if (actBtnName != "")
                             strFirstChar = actBtnName.Substring(0, 1);
+                        if (strFirstChar != null && strFirstChar.Length == 1)
+                            strFirstChar = strFirstChar.ToUpper();
                         if (btnType == "classic")
                             htmlpdfButtons.Append("<div class=\"menu-item px-3\" data-kt-menu-trigger=\"click\" data-kt-menu-placement=\"left-start\" data-kt-menu-flip=\"center, top\"><a href=\"javascript:void(0)\" id='" + htmlToPDFBtnName + "' alt='" + htmlToPDFBtnName + "' title='" + htmlToPDFBtnName + "' class=\"menu-link px-3 printhtmltopdfbtn\"><span class=\"menu-title\"><div class=\"symbol symbol-25px symbol-circle me-5 dropdownIconUI\"><span class=\"symbol-label bg-primary text-white fw-normal fs-3 iconUITitle\">" + strFirstChar + "</span></div><span class=\"dropdownIconName\">" + htmlToPDFBtnName + "</span></span><span class=\"menu-arrow\"></span></a><div class=\"menu-sub menu-sub-dropdown w-175px py-4\" style=\"\">");
                         else
@@ -3842,6 +3928,8 @@ public partial class Tstruct : System.Web.UI.Page
                             string strFirstC = "H";
                             if (actBName != "")
                                 strFirstC = actBName.Substring(0, 1);
+                            if (strFirstChar != null && strFirstChar.Length == 1)
+                                strFirstChar = strFirstChar.ToUpper();
                             if (btnType == "classic")
                                 htmlpdfButtons.Append("<div class=\"menu-item px-3 printhtmltopdf\"><a href=\"javascript:void(0)\" id='" + htpForms.ToString() + "' alt='" + formName + "' title='" + formName + "' class=\"menu-link px-3\"><div class=\"symbol symbol-25px symbol-circle me-5 dropdownIconUI\"><span class=\"symbol-label bg-primary text-white fw-normal fs-3 iconUITitle\">" + strFirstC + "</span></div><span class=\"dropdownIconName\">" + formName + "</span></a></div>");
                             else
@@ -3857,6 +3945,8 @@ public partial class Tstruct : System.Web.UI.Page
                         string strFirstChar = "H";
                         if (actBtnName != "")
                             strFirstChar = actBtnName.Substring(0, 1);
+                        if (strFirstChar != null && strFirstChar.Length == 1)
+                            strFirstChar = strFirstChar.ToUpper();
                         if (btnType == "classic")
                             htmlpdfButtons.Append("<div class=\"menu-item px-3\"><a href=\"javascript:void(0)\" id='" + htmlToPDFForms[0].ToString() + "' title='" + htmlToPDFBtnName + "' class=\"menu-link px-3 printhtmltopdf\"><div class=\"symbol symbol-25px symbol-circle me-5 dropdownIconUI\"><span class=\"symbol-label bg-primary text-white fw-normal fs-3 iconUITitle\">" + strFirstChar + "</span></div><span class=\"dropdownIconName\">" + htmlToPDFBtnName + "</span></a></div>");
                         else
@@ -4021,7 +4111,8 @@ public partial class Tstruct : System.Web.UI.Page
                     string strFirstChar = "A";
                     if (actBtnName != "")
                         strFirstChar = actBtnName.Substring(0, 1);
-
+                    if (strFirstChar != null && strFirstChar.Length == 1)
+                        strFirstChar = strFirstChar.ToUpper();
                     if (btnType == "classic")
                         grooupBtnsModern.Append("<div class=\"menu-item px-3\" data-kt-menu-trigger=\"click\" data-kt-menu-placement=\"left-start\" data-kt-menu-flip=\"center, top\"><a href=\"javascript:void(0)\" alt='" + actBtnName + "' title='" + actBtnName + "' class=\"menu-link px-3\"><span class=\"menu-title\"><div class=\"symbol symbol-25px symbol-circle me-5 dropdownIconUI\"><span class=\"symbol-label bg-primary text-white fw-normal fs-3 iconUITitle\">" + strFirstChar + "</span></div><span class=\"dropdownIconName text-truncate w-100 overflow-hidden\">" + actBtnName + "</span></span><span class=\"menu-arrow\"></span></a><div class=\"menu-sub menu-sub-dropdown w-175px py-4\" style=\"\">");
                     else
@@ -4517,7 +4608,8 @@ public partial class Tstruct : System.Web.UI.Page
                                     string strFirstChars = "A";
                                     if (actBtnNames != "")
                                         strFirstChars = actBtnNames.Substring(0, 1);
-
+                                    if (strFirstChars != null && strFirstChars.Length == 1)
+                                        strFirstChars = strFirstChars.ToUpper();
                                     if (btnType == "classic")
                                         taskBtnHtml.Append("<div class=\"menu-item px-3\"><a href=\"javascript:void(0)\" " + btnFunction.ToString() + " data-extra='" + _hint + "' title='" + (caption == "" ? task : caption) + "' class=\"menu-link px-3\"><div class=\"symbol symbol-25px symbol-circle me-5 dropdownIconUI\"><span class=\"symbol-label bg-primary text-white fw-normal fs-3 iconUITitle\">" + strFirstChars + "</span></div><span class=\"dropdownIconName\">" + actBtnNames + "</span></a></div><input type=hidden id='cb_sactbu' name='cb_sactbu'>");
                                     else
@@ -4530,6 +4622,8 @@ public partial class Tstruct : System.Web.UI.Page
                                     string strFirstChars = "A";
                                     if (actBtnNames != "")
                                         strFirstChars = actBtnNames.Substring(0, 1);
+                                    if (strFirstChars != null && strFirstChars.Length == 1)
+                                        strFirstChars = strFirstChars.ToUpper();
                                     btnFunction = " onclick='javascript:AttachFiles();' ";
                                     if (btnType == "classic")
                                         taskBtnHtml.Append("<div class=\"menu-item px-3\"><a href=\"javascript:void(0)\" " + btnFunction.ToString() + " data-extra='" + _hint + "' title='" + (caption == "" ? task : caption) + "' class=\"menu-link px-3\"><div class=\"symbol symbol-25px symbol-circle me-5 dropdownIconUI\"><span class=\"symbol-label bg-primary text-white fw-normal fs-3 iconUITitle\">" + strFirstChars + "</span></div><span class=\"dropdownIconName\">" + actBtnNames + "</span></a></div>");
@@ -4548,7 +4642,8 @@ public partial class Tstruct : System.Web.UI.Page
                                     string strFirstChars = "A";
                                     if (actBtnNames != "")
                                         strFirstChars = actBtnNames.Substring(0, 1);
-
+                                    if (strFirstChars != null && strFirstChars.Length == 1)
+                                        strFirstChars = strFirstChars.ToUpper();
                                     btnFunction = " onclick=\"javascript:CallAction('" + btn.action + "','" + btn.fileupload + "','" + actConfirmMsg + "','" + actRem + "','" + manRem + "','','" + script.ToString().ToLower() + "');\" ";
                                     if (btnType == "classic")
                                         taskBtnHtml.Append("<div class=\"menu-item px-3\"><a href=\"javascript:void(0)\" " + btnFunction.ToString() + " data-extra='" + _hint + "' title='" + (caption == "" ? task : caption) + "' class=\"menu-link px-3\"><div class=\"symbol symbol-25px symbol-circle me-5 dropdownIconUI\"><span class=\"symbol-label bg-primary text-white fw-normal fs-3 iconUITitle\">" + strFirstChars + "</span></div><span class=\"dropdownIconName\">" + actBtnNames + "</span></a></div>");
@@ -4564,6 +4659,8 @@ public partial class Tstruct : System.Web.UI.Page
                                 string strFirstChars = "A";
                                 if (actBtnNames != "")
                                     strFirstChars = actBtnNames.Substring(0, 1);
+                                if (strFirstChars != null && strFirstChars.Length == 1)
+                                    strFirstChars = strFirstChars.ToUpper();
                                 btnFunction = " onclick=\"javascript:CallAction('" + btn.action + "','" + btn.fileupload + "','" + actConfirmMsg + "','" + actRem + "','" + manRem + "','','" + script.ToString().ToLower() + "');\" ";
                                 if (btnType == "classic")
                                     taskBtnHtml.Append("<div class=\"menu-item px-3\"><a href=\"javascript:void(0)\" " + btnFunction.ToString() + " data-extra='" + _hint + "' title='" + (caption == "" ? task : caption) + "' class=\"menu-link px-3\"><div class=\"symbol symbol-25px symbol-circle me-5 dropdownIconUI\"><span class=\"symbol-label bg-primary text-white fw-normal fs-3 iconUITitle\">" + strFirstChars + "</span></div><span class=\"dropdownIconName\">" + actBtnNames + "</span></a></div>");
@@ -4578,6 +4675,8 @@ public partial class Tstruct : System.Web.UI.Page
                             string strFirstChars = "A";
                             if (actBtnNames != "")
                                 strFirstChars = actBtnNames.Substring(0, 1);
+                            if (strFirstChars != null && strFirstChars.Length == 1)
+                                strFirstChars = strFirstChars.ToUpper();
                             if (btnType == "classic")
                                 taskBtnHtml.Append("<div class=\"menu-item px-3\"><a href=\"javascript:void(0)\" onclick='javascript:AlertNoAction();' data-extra='" + _hint + "' title='" + (caption == "" ? task : caption) + "' class=\"menu-link px-3\"><div class=\"symbol symbol-25px symbol-circle me-5 dropdownIconUI\"><span class=\"symbol-label bg-primary text-white fw-normal fs-3 iconUITitle\">" + strFirstChars + "</span></div><span class=\"dropdownIconName\">" + actBtnNames + "</span></a></div>");
                             else
@@ -4590,6 +4689,8 @@ public partial class Tstruct : System.Web.UI.Page
                         string strFirstChar = "A";
                         if (actBtnName != "")
                             strFirstChar = actBtnName.Substring(0, 1);
+                        if (strFirstChar != null && strFirstChar.Length == 1)
+                            strFirstChar = strFirstChar.ToUpper();
                         if (btnType == "classic")
                             taskBtnHtml.Append("<div class=\"menu-item px-3\"><a href=\"javascript:void(0)\" onclick='javascript:AlertNoAction();' data-extra='" + _hint + "' title='" + (caption == "" ? task : caption) + "' class=\"menu-link px-3\"><div class=\"symbol symbol-25px symbol-circle me-5 dropdownIconUI\"><span class=\"symbol-label bg-primary text-white fw-normal fs-3 iconUITitle\">" + strFirstChar + "</span></div><span class=\"dropdownIconName\">" + actBtnName + "</span></a></div>");
                         else
@@ -4840,7 +4941,7 @@ public partial class Tstruct : System.Web.UI.Page
         for (int qs = 0; qs <= paramNames.Count - 1; qs++)
         {
             paramValues[qs] = CheckSpecialChars(paramValues[qs].ToString());
-            if (paramNames[qs].ToString().ToLower() != "transid" && paramNames[qs].ToString().ToLower() != "themode" && paramNames[qs].ToString().ToLower() != "hltype" && paramNames[qs].ToString().ToLower() != "torecid" && paramNames[qs].ToString().ToLower() != "layout" && paramNames[qs].ToString().ToLower() != "act" && paramNames[qs].ToString().ToLower() != "loadformdata" && paramNames[qs].ToString().ToLower() != "trromode")
+            if (paramNames[qs].ToString().ToLower() != "transid" && paramNames[qs].ToString().ToLower() != "themode" && paramNames[qs].ToString().ToLower() != "hltype" && paramNames[qs].ToString().ToLower() != "torecid" && paramNames[qs].ToString().ToLower() != "layout" && paramNames[qs].ToString().ToLower() != "act" && paramNames[qs].ToString().ToLower() != "loadformdata" && paramNames[qs].ToString().ToLower() != "trromode" && paramNames[qs].ToString().ToLower() != "createaxiflag")
             {
                 paramXml.Append("<" + paramNames[qs].ToString() + ">" + paramValues[qs].ToString() + "</" + paramNames[qs].ToString() + ">");
             }
@@ -4867,6 +4968,8 @@ public partial class Tstruct : System.Web.UI.Page
         string dvRefreshFromLoadModern = "false";
         bool wsPerfFormLoad = strObj.wsPerfFormLoadCall;
         bool isDoFormload = false;
+        bool isFormload = false;
+        ASB.WebService objws = new ASB.WebService();
         if (Session["DraftName"] != null)
         {
             isDraft = true;
@@ -4884,6 +4987,12 @@ public partial class Tstruct : System.Web.UI.Page
 
             if (rid != "0")
             {
+                hdnTstPermission.Value = objws.GetTstPermissions(transId, "recordid", rid, "edit");
+                if (hdnTstPermission.Value != "" && !hdnTstPermission.Value.ToString().StartsWith("{"))
+                {
+                    Response.Redirect(util.ERRPATH + hdnTstPermission.Value, false);
+                    return;
+                }
                 LoadRecidFromList();
                 string ConfigDataAttr = string.Empty;
                 string AxVarAttr = string.Empty;
@@ -4966,6 +5075,7 @@ public partial class Tstruct : System.Web.UI.Page
             }
             else
             {
+                isFormload = true;
                 bool callDFforCOnfigData = false;// IF WSFLD is false and the form have Configdata then need to call forcelly formload service.
                 try
                 {
@@ -5115,7 +5225,7 @@ public partial class Tstruct : System.Web.UI.Page
 
             if (loadRes != "" && strObj.FEncryptFlag.Count > 0)
             {
-                ASB.WebService objws = new ASB.WebService();
+                //ASB.WebService objws = new ASB.WebService();
                 loadRes = objws.AxpFieldDataDecrypt(loadRes, strObj.FEncryptFlag);
             }
         }
@@ -5150,6 +5260,30 @@ public partial class Tstruct : System.Web.UI.Page
                 var axp_recid1 = strDataObj.GetFieldValue("1", "axp_recid1");
                 if (rid == "0" && axp_recid1 != string.Empty && axp_recid1 != "0")
                     rid = axp_recid1.ToString();
+                if (isFormload)
+                {
+                    if (rid == "0")
+                    {
+                        if (Request.QueryString["createaxiflag"] != null && Request.QueryString["createaxiflag"].ToString() == "true")
+                            hdnTstPermission.Value = "";
+                        else
+                            hdnTstPermission.Value = objws.GetTstPermissions(transId, "", "", "create");
+                        if (hdnTstPermission.Value != "" && !hdnTstPermission.Value.ToString().StartsWith("{"))
+                        {
+                            Response.Redirect(util.ERRPATH + hdnTstPermission.Value, false);
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        hdnTstPermission.Value = objws.GetTstPermissions(transId, "recordid", rid, "edit");
+                        if (hdnTstPermission.Value != "" && !hdnTstPermission.Value.ToString().StartsWith("{"))
+                        {
+                            Response.Redirect(util.ERRPATH + hdnTstPermission.Value, false);
+                            return;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -5425,7 +5559,7 @@ public partial class Tstruct : System.Web.UI.Page
             }
             else
             {
-                if (Request.QueryString.AllKeys[qn].ToLower() == "axfromhyperlink" || Request.QueryString.AllKeys[qn].ToLower() == "axpop" || Request.QueryString.AllKeys[qn].ToLower() == "axhyptstrefresh" || Request.QueryString.AllKeys[qn].ToLower() == "recpos" || Request.QueryString.AllKeys[qn].ToLower() == "pagetype" || Request.QueryString.AllKeys[qn].ToLower() == "curpage" || Request.QueryString.AllKeys[qn].ToLower() == "dynnavtst" || Request.QueryString.AllKeys[qn].ToLower() == "openeriv" || Request.QueryString.AllKeys[qn].ToLower() == "isduptab" || Request.QueryString.AllKeys[qn].ToLower() == "fromprocess" || Request.QueryString.AllKeys[qn].ToLower() == "ispegedit" || Request.QueryString.AllKeys[qn].ToLower() == "isiv" || Request.QueryString.AllKeys[qn].ToLower() == "axsplit" || Request.QueryString.AllKeys[qn].ToLower() == "hdnbelapstime" || Request.QueryString.AllKeys[qn].ToLower() == "reqproc_logtime" || Request.QueryString.AllKeys[qn].ToLower() == "hltype" || Request.QueryString.AllKeys[qn].ToLower() == "torecid" || Request.QueryString.AllKeys[qn].ToLower() == "act" || Request.QueryString.AllKeys[qn].ToLower() == "dummyload" || Request.QueryString.AllKeys[qn].ToLower() == "loadformdata" || Request.QueryString.AllKeys[qn].ToLower() == "trromode" || Request.QueryString.AllKeys[qn].ToLower() == "ivdatakey")
+                if (Request.QueryString.AllKeys[qn].ToLower() == "axfromhyperlink" || Request.QueryString.AllKeys[qn].ToLower() == "axpop" || Request.QueryString.AllKeys[qn].ToLower() == "axhyptstrefresh" || Request.QueryString.AllKeys[qn].ToLower() == "recpos" || Request.QueryString.AllKeys[qn].ToLower() == "pagetype" || Request.QueryString.AllKeys[qn].ToLower() == "curpage" || Request.QueryString.AllKeys[qn].ToLower() == "dynnavtst" || Request.QueryString.AllKeys[qn].ToLower() == "openeriv" || Request.QueryString.AllKeys[qn].ToLower() == "isduptab" || Request.QueryString.AllKeys[qn].ToLower() == "fromprocess" || Request.QueryString.AllKeys[qn].ToLower() == "ispegedit" || Request.QueryString.AllKeys[qn].ToLower() == "isiv" || Request.QueryString.AllKeys[qn].ToLower() == "axsplit" || Request.QueryString.AllKeys[qn].ToLower() == "hdnbelapstime" || Request.QueryString.AllKeys[qn].ToLower() == "reqproc_logtime" || Request.QueryString.AllKeys[qn].ToLower() == "hltype" || Request.QueryString.AllKeys[qn].ToLower() == "torecid" || Request.QueryString.AllKeys[qn].ToLower() == "act" || Request.QueryString.AllKeys[qn].ToLower() == "dummyload" || Request.QueryString.AllKeys[qn].ToLower() == "loadformdata" || Request.QueryString.AllKeys[qn].ToLower() == "trromode" || Request.QueryString.AllKeys[qn].ToLower() == "ivdatakey" || Request.QueryString.AllKeys[qn].ToLower() == "createaxiflag")
                     continue;
 
                 string strParams = string.Empty;
@@ -6812,6 +6946,7 @@ public partial class Tstruct : System.Web.UI.Page
         string formFoadData = "";
         string _strParamName = string.Empty;
         string _strParamValue = string.Empty;
+        string _creataxiflag = string.Empty;
         string AxDisplayAutoGenVal = HttpContext.Current.Session["AxDisplayAutoGenVal"].ToString();
         bool wsPerfFormLoad = false;
         try
@@ -6826,6 +6961,7 @@ public partial class Tstruct : System.Web.UI.Page
             formFoadData = queryStringParamsData.Split('♠')[3];
             _strParamName = queryStringParamsData.Split('♠')[4];
             _strParamValue = queryStringParamsData.Split('♠')[5];
+            _creataxiflag = queryStringParamsData.Split('♠')[6];
             if (formFoadData != string.Empty)
                 formFoadData = " loadformdata='" + formFoadData + "' ";
             DateTime sTime1 = DateTime.Now;
@@ -7145,11 +7281,27 @@ public partial class Tstruct : System.Web.UI.Page
                 wbdrHtml = GetTstHtml(transId, strObj, errorLog);
             string tabDCStatus = string.Join(",", strObj.tabDCStatus.ToArray());
             string tstCancelled = strObj.tstCancelled;
+            string tstPermissions = string.Empty;
+            ASB.WebService objwss = new ASB.WebService();
+            if (rid != "0")
+                tstPermissions = objwss.GetTstPermissions(transId, "recordid", rid, "edit");
+            else
+            {
+                if (_creataxiflag != "" && _creataxiflag == "true")
+                    tstPermissions = string.Empty;
+                else
+                    tstPermissions = objwss.GetTstPermissions(transId, "", "", "create");
+            }
+            if (tstPermissions != string.Empty && !tstPermissions.StartsWith("{"))
+            {
+                //throw (new Exception(tstPermissions));
+                return "Error:" + tstPermissions;
+            }
             result = wbdrHtml + "*$*" + dcHmtl + "*$*" + tstVarScript.ToString() + "*$*" + ImgVals + "*$*" + tabDCStatus + "*$*" + AxDisplayAutoGenVal + "*$*" + tstCancelled;
             result += "*$*" + strObj.ArrFFieldHidden.ToString() + "*$*" + strObj.ArrFFieldReadOnly.ToString() + "*$*" + thisResult;
             requestProcess_logtime += ObjExecTrace.RequestProcessTime("Response", result);
             string serverprocesstm = ObjExecTrace.TotalServerElapsTime();
-            result = result + "*♠♦*" + serverprocesstm + "*♠♦*" + requestProcess_logtime;
+            result = result + "*♠♦*" + serverprocesstm + "*♠♦*" + requestProcess_logtime + "*♦♠*" + tstPermissions;
         }
         catch (Exception ex)
         {
@@ -7355,6 +7507,12 @@ public partial class Tstruct : System.Web.UI.Page
             if (tstData == null)
                 return Constants.DUPLICATESESS;
             string transId = tstData.transID;
+            ASB.WebService objws = new ASB.WebService();
+            string tstPermissions = objws.GetTstPermissions(transId, "recordid", recordid, "edit");
+            if (tstPermissions != string.Empty && !tstPermissions.StartsWith("{"))
+            {
+                return "Error:" + tstPermissions;
+            }
             Util.Util.DeletedraftRediskeys(transId);
             string errorLog = logobj.CreateLog("Load Data service.", HttpContext.Current.Session["nsessionid"].ToString(), "LoadData-" + transId, "new");
             //LoadRecidFromListNew(transId, recordid); // Not required to call here because this session getting updated through webservice method
@@ -7365,7 +7523,6 @@ public partial class Tstruct : System.Web.UI.Page
             TStructDef strObj = tstData.tstStrObj;
             if (result != "" && strObj.FEncryptFlag.Count > 0)
             {
-                ASB.WebService objws = new ASB.WebService();
                 result = objws.AxpFieldDataDecrypt(result, strObj.FEncryptFlag);
             }
             strDataObj = new TStructData(result, transId, recordid, strObj);
@@ -7417,7 +7574,7 @@ public partial class Tstruct : System.Web.UI.Page
             result += "*$*" + strObj.ArrFFieldHidden.ToString() + "*$*" + strObj.ArrFFieldReadOnly.ToString() + "*$*" + thisResult;
             requestProcess_logtime += ObjExecTrace.RequestProcessTime("Response", result);
             string serverprocesstm = ObjExecTrace.TotalServerElapsTime();
-            result = result + "*♠♦*" + serverprocesstm + "*♠♦*" + requestProcess_logtime;
+            result = result + "*♠♦*" + serverprocesstm + "*♠♦*" + requestProcess_logtime + "*♦♠*" + tstPermissions;
             logobj.CreateLog("Load Data service completed.", HttpContext.Current.Session["nsessionid"].ToString(), "LoadData-" + transId, "");
         }
         catch (Exception ex)
@@ -7548,6 +7705,7 @@ public partial class Tstruct : System.Web.UI.Page
         string isAxSplit = "false";
         string Isloadformdata = "";
         string transactionROMode = "";
+        string createaxiflag = "";
         ArrayList paramNames = new ArrayList();
         ArrayList clientParamValues = new ArrayList();
         if (tstQureystr != string.Empty)
@@ -7619,6 +7777,9 @@ public partial class Tstruct : System.Web.UI.Page
                             case "loadformdata":
                                 Isloadformdata = prValue;
                                 break;
+                            case "createaxiflag":
+                                createaxiflag = prValue;
+                                break;
                             case "trromode":
                                 transactionROMode = prValue;
                                 break;
@@ -7671,7 +7832,7 @@ public partial class Tstruct : System.Web.UI.Page
             _strParamName = string.Join(",", paramNames.ToArray());
             _strParamValue = string.Join(",", clientParamValues.ToArray());
         }
-        return returnString.ToString() + "♠" + hltype + "♠" + isAxSplit + "♠" + Isloadformdata + "♠" + _strParamName + "♠" + _strParamValue;
+        return returnString.ToString() + "♠" + hltype + "♠" + isAxSplit + "♠" + Isloadformdata + "♠" + _strParamName + "♠" + _strParamValue + "♠" + createaxiflag;
     }
 
     public static void GetConfigOnDummyLoad(string transId)
@@ -7799,6 +7960,12 @@ public partial class Tstruct : System.Web.UI.Page
                     HttpContext.Current.Session["TstAllowVideoAtta-" + transId] = TstAllowVideoAtta[0].alfiles;
                 else
                     HttpContext.Current.Session.Remove("TstAllowVideoAtta-" + transId);
+
+                var TstAllowSpecificAtta = axpConfigStr.AsEnumerable().Where(x => x.Field<string>("PROPS").ToLower() == "allow specific file types in attachments").Select(x => new { val = x.Field<string>("PROPSVAL"), alfiles = x.Field<string>("PROPVALUE2") }).ToList();
+                if (TstAllowSpecificAtta.Count > 0 && TstAllowSpecificAtta[0].val != "" && TstAllowSpecificAtta[0].val.ToLower() == "true")
+                    HttpContext.Current.Session["TstAllowSpecificAtta-" + transId] = TstAllowSpecificAtta[0].alfiles;
+                else
+                    HttpContext.Current.Session.Remove("TstAllowSpecificAtta-" + transId);
 
                 var formdatavalidateworkflowaction = axpConfigStr.AsEnumerable().Where(x => x.Field<string>("PROPS").ToLower() == "form data validate on workflow action").Select(x => new { val = x.Field<string>("PROPSVAL"), sfld = x.Field<string>("SFIELD") }).ToList();
                 if (formdatavalidateworkflowaction.Count > 0 && formdatavalidateworkflowaction[0].val != "" && formdatavalidateworkflowaction[0].val.ToLower() == "true")
@@ -8028,27 +8195,39 @@ public partial class Tstruct : System.Web.UI.Page
     [WebMethod]
     public static string callExecuteSQL(string queryString)
     {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return "SESSION_TIMEOUT";
         ASBExt.WebServiceExt asbExt = new ASBExt.WebServiceExt();
         string result = "";
         try
         {
+            util.ValidateSql(queryString);
             result = asbExt.ExecuteSQL("", queryString, "JSON");
-            //DataSet ds = new DataSet();
-            //System.IO.StringReader sr = new System.IO.StringReader(result);
-            //ds.ReadXml(sr);
-
         }
-        catch (Exception ex) { }
+        catch (Exception ex)
+        {
+            result = "Error:" + ex.Message;
+        }
         return result;
-
     }
 
     [WebMethod]
     public static string GetWfPdComments(string wftype, string wfid, string strTransid)
     {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return "SESSION_TIMEOUT";
         string result = "";
         try
         {
+            if (!Regex.IsMatch(wfid, @"^[a-zA-Z0-9_]+$"))
+                throw new Exception("Invalid wfid");
+            if (!Regex.IsMatch(wftype, @"^[a-zA-Z0-9_]+$"))
+                throw new Exception("Invalid wftype");
+            if (!Regex.IsMatch(strTransid, @"^[a-zA-Z0-9_]+$"))
+                throw new Exception("Invalid strTransid");
+
             string sqlQuery = Constants.SQL_GET_WFPDCOMMENTS;
             sqlQuery = sqlQuery.Replace("$actiontype$", wftype);
             sqlQuery = sqlQuery.Replace("$tid$", strTransid);
@@ -8384,11 +8563,13 @@ public partial class Tstruct : System.Web.UI.Page
         string result = string.Empty;
         LogFile.Log logobj = new LogFile.Log();
         Util.Util utils = new Util.Util();
+        string _creataxiflag = string.Empty;
         try
         {
             utils.TempAttaServerFiles();
             utils.DeleteKeyOnRefreshSave();
-            QueryStringParams(tstQureystr);
+            string queryStringParamsData = QueryStringParams(tstQureystr);
+            _creataxiflag = queryStringParamsData.Split('♠')[6];
             if (HttpContext.Current.Session["project"] == null)
                 return utils.SESSTIMEOUT;
             //if (isTstHtmlLs != "")
@@ -8427,11 +8608,24 @@ public partial class Tstruct : System.Web.UI.Page
             string AxGANotExistList = string.Join(",", tstData.AxGridAttNotExistList.ToArray());
             string tabDCStatus = string.Join(",", strObj.tabDCStatus.ToArray());
             string tstCancelled = strObj.tstCancelled;
+            string tstPermissions = string.Empty;
+            if (_creataxiflag != "" && _creataxiflag == "true")
+                tstPermissions = string.Empty;
+            else
+            {
+                ASB.WebService objws = new ASB.WebService();
+                tstPermissions = objws.GetTstPermissions(transId, "", "", "create");
+            }
+            if (tstPermissions != string.Empty && !tstPermissions.StartsWith("{"))
+            {
+                //throw (new Exception(tstPermissions));
+                return "Error:" + tstPermissions;
+            }
             result = wbdrHtml + "*$*" + dcHmtl + "*$*" + tstVarScript.ToString() + "*$*" + ImgVals + "*$*" + tabDCStatus + "*$*" + tstCancelled + "*$*" + AxGANotExistList;
             result += "*$*" + strObj.ArrFFieldHidden.ToString() + "*$*" + strObj.ArrFFieldReadOnly.ToString() + "*$*" + thisResult;
             requestProcess_logtime += ObjExecTrace.RequestProcessTime("Response", result);
             string serverprocesstm = ObjExecTrace.TotalServerElapsTime();
-            result = result + "*♠♦*" + serverprocesstm + "*♠♦*" + requestProcess_logtime;
+            result = result + "*♠♦*" + serverprocesstm + "*♠♦*" + requestProcess_logtime + "*♦♠*" + tstPermissions;
             logobj.CreateLog("Load Data service completed.", HttpContext.Current.Session["nsessionid"].ToString(), "LoadData-" + transId, "");
         }
         catch (Exception ex)
@@ -9026,38 +9220,35 @@ public partial class Tstruct : System.Web.UI.Page
     [WebMethod]
     public static object renderHtmlPagesFiles(string htmlFileName, string[] cssFileName, string[] jsFileName, bool getTemplate)
     {
+        if (HttpContext.Current.Session["project"] == null)
+            throw new Exception("SESSION_TIMEOUT");
         var returnObject = new Dictionary<string, object>();
-
         string axpertWebDir = string.Empty;
         if (ConfigurationManager.AppSettings["axpertWebDirPath"] != null && ConfigurationManager.AppSettings["axpertWebDirPath"].ToString() != "" && !getTemplate)
+        {
             axpertWebDir = ConfigurationManager.AppSettings["axpertWebDirPath"].ToString();
+        }
         else
+        {
             axpertWebDir = HttpRuntime.AppDomainAppPath;
+        }
         string projName = HttpContext.Current.Session["project"].ToString();
-        string cssFileDir = getTemplate ? axpertWebDir + "AxpTemplates\\css\\" : axpertWebDir + projName + "\\HTMLPages\\css\\";
-        string jsFileDir = getTemplate ? axpertWebDir + "AxpTemplates\\js\\" : axpertWebDir + projName + "\\HTMLPages\\js\\";
-        string htmlFileDir = getTemplate ? axpertWebDir + "AxpTemplates\\" : axpertWebDir + projName + "\\HTMLPages\\";
-
-
-        returnObject.Add("html", getFileContent(htmlFileDir + htmlFileName));
-
+        string cssFileDir = getTemplate ? Path.Combine(axpertWebDir, "AxpTemplates", "css") : Path.Combine(axpertWebDir, projName, "HTMLPages", "css");
+        string jsFileDir = getTemplate ? Path.Combine(axpertWebDir, "AxpTemplates", "js") : Path.Combine(axpertWebDir, projName, "HTMLPages", "js");
+        string htmlFileDir = getTemplate ? Path.Combine(axpertWebDir, "AxpTemplates") : Path.Combine(axpertWebDir, projName, "HTMLPages");
+        returnObject.Add("html", File.ReadAllText(GetSafePath(htmlFileDir, htmlFileName, new[] { ".html" })));
         Dictionary<string, string> cssFiles = new Dictionary<string, string>();
-
         foreach (string css in cssFileName)
         {
-            cssFiles.Add(css, getFileContent(cssFileDir + css));
+            cssFiles.Add(css, File.ReadAllText(GetSafePath(cssFileDir, css, new[] { ".css" })));
         }
         returnObject.Add("css", cssFiles);
-
         Dictionary<string, string> jsFiles = new Dictionary<string, string>();
-
         foreach (string js in jsFileName)
         {
-            jsFiles.Add(js, getFileContent(jsFileDir + js));
+            jsFiles.Add(js, File.ReadAllText(GetSafePath(jsFileDir, js, new[] { ".js" })));
         }
-
         returnObject.Add("js", jsFiles);
-
         return returnObject;
     }
     private static string getFileContent(string fullPath)
@@ -9138,6 +9329,8 @@ public partial class Tstruct : System.Web.UI.Page
         if (HttpContext.Current.Session["project"] == null)
             return util.SESSTIMEOUT;
         LogFile.Log logObj = new LogFile.Log();
+        //string pageName = pageCaption.Replace(" ", "_") + "_" + pageNo + ".html";
+        pageCaption = Regex.Replace(pageCaption, @"[^a-zA-Z0-9_\- ]", "");
         string pageName = pageCaption.Replace(" ", "_") + "_" + pageNo + ".html";
         string curSessId = HttpContext.Current.Session["nsessionid"].ToString();
         try
@@ -9153,10 +9346,17 @@ public partial class Tstruct : System.Web.UI.Page
             string jsFileDir = axpertWebDir + projName + "\\HTMLPages\\js\\";
             string htmlFileDir = axpertWebDir + projName + "\\HTMLPages\\";
 
+            if (cssFileName.Length != cssContents.Length)
+                throw new Exception("CSS file/content mismatch");
+
+            if (jsFileName.Length != jsContents.Length)
+                throw new Exception("JS file/content mismatch");
+
             int i = 0, j = 0;
             foreach (string Name in cssFileName)
             {
-                string cssFile = cssFileDir + Name;
+                //string cssFile = cssFileDir + Name;
+                string cssFile = GetSafePath(cssFileDir, Name, new[] { ".css" });
                 DirectoryInfo dir = new DirectoryInfo(cssFileDir);
                 if (!dir.Exists)
                 {
@@ -9173,7 +9373,8 @@ public partial class Tstruct : System.Web.UI.Page
                         File.Create(cssFile).Close();
                     }
                 }
-
+                string ext = Path.GetExtension(Name).ToLowerInvariant();
+                ValidateContent(cssContents[i], ext);
                 using (StreamWriter writer = new StreamWriter(cssFile, false))
                 {
                     writer.WriteLine(cssContents[i++]);
@@ -9182,7 +9383,8 @@ public partial class Tstruct : System.Web.UI.Page
             }
             foreach (string Name in jsFileName)
             {
-                string jsFile = jsFileDir + Name;
+                //string jsFile = jsFileDir + Name;
+                string jsFile = GetSafePath(jsFileDir, Name, new[] { ".js" });
                 DirectoryInfo dir = new DirectoryInfo(jsFileDir);
                 if (!dir.Exists)
                 {
@@ -9200,6 +9402,8 @@ public partial class Tstruct : System.Web.UI.Page
                     }
 
                 }
+                string ext = Path.GetExtension(Name).ToLowerInvariant();
+                ValidateContent(jsContents[j], ext);
                 using (StreamWriter writer = new StreamWriter(jsFile, false))
                 {
                     writer.WriteLine(jsContents[j++]);
@@ -9207,7 +9411,8 @@ public partial class Tstruct : System.Web.UI.Page
                 }
             }
 
-            string htmlFile = htmlFileDir + pageName;
+            //string htmlFile = htmlFileDir + pageName;
+            string htmlFile = GetSafePath(htmlFileDir, pageName, new[] { ".html" });
             htmlContent = util.ReverseCheckSpecialChars(htmlContent);
             DirectoryInfo di = new DirectoryInfo(htmlFileDir);
             if (!di.Exists)
@@ -9225,6 +9430,7 @@ public partial class Tstruct : System.Web.UI.Page
                     File.Create(htmlFile).Close();
                 }
             }
+            ValidateContent(htmlContent, ".html");
             using (StreamWriter writer = new StreamWriter(htmlFile, false))
             {
                 writer.WriteLine(htmlContent);
@@ -9238,13 +9444,55 @@ public partial class Tstruct : System.Web.UI.Page
             return ex.Message;
         }
     }
+    private static string GetSafePath(string baseDir, string fileName, string[] allowedExt)
+    {
+        fileName = Path.GetFileName(fileName);
+        string ext = Path.GetExtension(fileName).ToLowerInvariant();
+        if (!allowedExt.Contains(ext))
+            throw new Exception("Invalid file extension");
+        if (!Regex.IsMatch(fileName, @"^[a-zA-Z0-9_\-\.]+$"))
+            throw new Exception("Invalid filename");
+
+        string fullPath = Path.GetFullPath(Path.Combine(baseDir, fileName));
+
+        string root = Path.GetFullPath(baseDir);
+
+        if (!fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+            throw new Exception("Path traversal blocked");
+
+        return fullPath;
+    }
+    private static void ValidateContent(string content, string ext)
+    {
+        if (ext == ".css" &&
+            Regex.IsMatch(content,
+            @"<script|<%|<\?php",
+            RegexOptions.IgnoreCase))
+            throw new Exception("Invalid CSS content");
+
+        if (ext == ".js" &&
+            Regex.IsMatch(content,
+            @"<%|<\?php",
+            RegexOptions.IgnoreCase))
+            throw new Exception("Invalid JS content");
+
+        if (ext == ".html" &&
+            Regex.IsMatch(content,
+            @"<%|<\?php",
+            RegexOptions.IgnoreCase))
+            throw new Exception("Invalid HTML content");
+    }
 
     [WebMethod]
     public static string GetFromDBJSON(string funName, string funParams)
     {
+        Util.Util objUtil = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return "error:SESSION_TIMEOUT";
         string ResJSON = string.Empty;
         try
         {
+            objUtil.ValidateFunctionName(funName);
             string funParamVals = "";
             if (funParams != "")
             {
@@ -9293,6 +9541,7 @@ public partial class Tstruct : System.Web.UI.Page
         {
             LogFile.Log logObj = new LogFile.Log();
             logObj.CreateLog("Get From DB Variable JSON:" + ex.Message, HttpContext.Current.Session.SessionID, "GetFromDBJSON", "new");
+            ResJSON = "error:" + ex.Message;
         }
         return ResJSON;
     }
@@ -9348,4 +9597,16 @@ public partial class Tstruct : System.Web.UI.Page
         return res;
     }
 
+    [WebMethod]
+    public static void DeleteTstGridAtt()
+    {
+        try
+        {
+            Util.Util _util = new Util.Util();
+            _util.TempAttaServerFiles();
+            _util.DeleteKeyOnRefreshSave();
+        }
+        catch (Exception ex)
+        { }
+    }
 }

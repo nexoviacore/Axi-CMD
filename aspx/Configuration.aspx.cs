@@ -381,6 +381,7 @@ public partial class aspx_Configuration : System.Web.UI.Page
         newConfig.Append("{\"AxImpExpTemptPath\": \"" + ReplacePathChar(txtImpEmpTmpPath.Value) + "\"},");
         newConfig.Append("{\"AxGlobalSrchLimit\": \"" + txtGlobalSrchLimit.Value + "\"},");
         newConfig.Append("{\"AxAlertTimeout\": \"" + txtAlertTimeout.Value + "\"},");
+        newConfig.Append("{\"AxStaySignIn\": \"" + hdnStaySignin.Value + "\"},");
         newConfig.Append("{\"AxSessionExpiryDays\": \"" + txtSessionExpiryDays.Value + "\"},");
 
         //error message timeout
@@ -407,7 +408,7 @@ public partial class aspx_Configuration : System.Web.UI.Page
         newConfig.Append("{\"AxGridAttachPath\": \"" + ReplacePathChar(txtGridAttachPath.Value) + "\"},");
         newConfig.Append("{\"AxMaxDraftsCount\": \"" + txtMaxDraftsCount.Value + "\"},");
 
-        newConfig.Append("{\"AxAttachmentSize\": \"" + ddlAttachmentSize.Value + "\"},");
+        //newConfig.Append("{\"AxAttachmentSize\": \"" + ddlAttachmentSize.Value + "\"},");
         newConfig.Append("{\"AxInlineGridEdit\": \"" + (ddlInlineGrid.Value == "inline" ? "true" : "false") + "\"},");
         newConfig.Append("{\"AxShowSubmitCancel\": \"" + showSubmitCancel.Value + "\"},");
         newConfig.Append("{\"AxDesignerAccess\": \"" + hdnDesignerResp.Value + "\"},");
@@ -448,7 +449,8 @@ public partial class aspx_Configuration : System.Web.UI.Page
         try
         {
             FDW fdwObj = new FDW();
-            fdwObj.SaveInRedisServer(Constants.CONFIGAPP_JSON_KEY, newConfig.ToString(), Constants.CONFIGAPP_JSON_KEY, proj.ToLower());
+            //fdwObj.SaveInRedisServer(Constants.CONFIGAPP_JSON_KEY, newConfig.ToString(), Constants.CONFIGAPP_JSON_KEY, proj.ToLower());
+            fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.CONFIGAPP_JSON_KEY, newConfig.ToString(), proj.ToLower());
             util.SaveConfigFile(proj, newConfig.ToString());
             util.SaveConfigFile(proj, savedConfigStr, true);
 
@@ -639,6 +641,7 @@ public partial class aspx_Configuration : System.Web.UI.Page
             Session["AxImpExpTemptPath"] = txtImpEmpTmpPath.Value;
             Session["AxGlobalSrchLimit"] = txtGlobalSrchLimit.Value;
             Session["AxAlertTimeout"] = txtAlertTimeout.Value;
+            Session["AxStaySignIn"] = hdnStaySignin.Value;
             Session["AxSessionExpiryDays"] = txtSessionExpiryDays.Value;
             // enable error messages
             Session["AxErrorMsg"] = hdnEnableErrorMsg.Value;
@@ -662,7 +665,7 @@ public partial class aspx_Configuration : System.Web.UI.Page
             Session["AxAttachFilePath"] = txtAttachPath.Value;
             Session["AxGridAttachPath"] = txtGridAttachPath.Value;
             Session["AxMaxDraftsCount"] = txtMaxDraftsCount.Value;
-            Session["AxAttachmentSize"] = ddlAttachmentSize.Value;
+            //Session["AxAttachmentSize"] = ddlAttachmentSize.Value;
             Session["AxInlineGridEdit"] = (ddlInlineGrid.Value == "inline" ? "true" : "false");
             Session["AxShowSubmitCancel"] = showSubmitCancel.Value;
             Session["AxDesignerAccess"] = hdnDesignerResp.Value;
@@ -725,7 +728,8 @@ public partial class aspx_Configuration : System.Web.UI.Page
             hdnActSess.Value = "false";
             txtImpEmpTmpPath.Value = "";
             txtAlertTimeout.Value = "3000";
-            txtSessionExpiryDays.Value = "5";
+            hdnStaySignin.Value = "true";
+            txtSessionExpiryDays.Value = "14";
             txtGlobalSrchLimit.Value = "5000";
             //enable error settings
             hdnEnableErrorMsg.Value = "false";
@@ -812,6 +816,10 @@ public partial class aspx_Configuration : System.Web.UI.Page
                 hdnActSess.Value = Session["AxShowLoggedinUsersCount"].ToString().ToLower();
                 txtImpEmpTmpPath.Value = Session["AxImpExpTemptPath"].ToString();
                 txtAlertTimeout.Value = Session["AxAlertTimeout"].ToString();
+                if (Session["AxStaySignIn"] != null)
+                    hdnStaySignin.Value = Session["AxStaySignIn"].ToString();
+                else
+                    hdnStaySignin.Value = "false";
                 txtSessionExpiryDays.Value = Session["AxSessionExpiryDays"].ToString();
 
                 hdnotpauth.Value = Session["AxOTPAuth"].ToString().ToLower();
@@ -887,13 +895,13 @@ public partial class aspx_Configuration : System.Web.UI.Page
                 hdnSubMenuCount.Value = Session["AxSubMenuCount"].ToString();
                 hdnDirSubMenuCount.Value = Session["AxDirectSubMenuCount"].ToString();
 
-                if (Session["AxAttachmentSize"] == null)
-                {
-                    ddlAttachmentSize.Value = "1";
-                    Session["AxAttachmentSize"] = "1";
-                }
-                else
-                    ddlAttachmentSize.Value = Session["AxAttachmentSize"].ToString();
+                //if (Session["AxAttachmentSize"] == null)
+                //{
+                //    ddlAttachmentSize.Value = "1";
+                //    Session["AxAttachmentSize"] = "1";
+                //}
+                //else
+                //    ddlAttachmentSize.Value = Session["AxAttachmentSize"].ToString();
             }
             catch (Exception ex)
             {
@@ -919,8 +927,9 @@ public partial class aspx_Configuration : System.Web.UI.Page
     [System.Web.Services.WebMethod(EnableSession = true)]
     public static string LoadUserAppSettings()
     {
+        if (HttpContext.Current.Session["project"] == null)
+            return "SESSION_TIMEOUT";
         string result = String.Empty;
-        //ASBCustom.CustomWebservice objCWbSer = new ASBCustom.CustomWebservice();
         ASB.WebService objCWbSer = new ASB.WebService();
         string sql = string.Empty;
         try

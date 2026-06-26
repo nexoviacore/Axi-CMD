@@ -5,8 +5,10 @@ var isiPad = isiOS && !/iPhone|iPod/i.test(navigator.userAgent);
 var appGlobalVarsObject = undefined;
 
 iframeScrollFix();
-
-CheckSuccCallBackValidate();
+let _appSessUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
+let logoutKey = "axpertLogoutLock-" + _appSessUrl;
+if (!localStorage.getItem(logoutKey))
+    CheckSuccCallBackValidate();
 
 function CheckSuccCallBackValidate(dupSession = "") {
     var returnValue = false;
@@ -874,14 +876,34 @@ function BootstrapDialogResponsibiltyShow(url) {
     let myModal = new BSModal("EditResponsibility", `Access Control for responsibility ${name}`, "<iframe src=\"" + url + "\" class='d-flex w-100 h-100'></iframe>", () => {
         //shown callback
         $(".btn-close").focus();
-        $(callParentNew("configStudio", "id")).find(".modal-body>.btn").addClass("d-none");
-        $('#axpiframeac')[0].contentWindow.ShowDimmer(false);
+        if ($(callParentNew("configStudio", "id"))?.length > 0) {
+            $(callParentNew("configStudio", "id")).find(".modal-body>.btn").addClass("d-none");
+            $('#axpiframeac')[0].contentWindow.ShowDimmer(false);
+        } else if ($(callParentNew("middle1", "id"))?.length > 0) {
+            $(callParentNew("middle1", "id")).find(".modal-body>.btn").addClass("d-none");
+            $('#middle1')[0].contentWindow.ShowDimmer(false);
+        } else {
+            $(callParentNew("configStudio", "id")).find(".modal-body>.btn").addClass("d-none");
+            $('#axpiframeac')[0].contentWindow.ShowDimmer(false);
+        }
     }, () => {
         //hide callback
-        callParentNew("loadFrame()","function");                        
-        $($('#axpiframeac')[0].contentWindow.document).find('#dvRefreshParamIcon').trigger("click");        
-        callParentNew("closeFrame()","function");
-        $(callParentNew("configStudio", "id")).find(".modal-body>.btn").removeClass("d-none");         
+        if ($(callParentNew("configStudio", "id"))?.length > 0) {
+            callParentNew("loadFrame()", "function");
+            $($('#axpiframeac')[0].contentWindow.document).find('#dvRefreshParamIcon').trigger("click");
+            callParentNew("closeFrame()", "function");
+            $(callParentNew("configStudio", "id")).find(".modal-body>.btn").removeClass("d-none");
+        } else if ($(callParentNew("middle1", "id"))?.length > 0) {
+            callParentNew("loadFrame()", "function");
+            $($('#middle1')[0].contentWindow.document).find('#dvRefreshParamIcon').trigger("click");
+            callParentNew("closeFrame()", "function");
+            $(callParentNew("middle1", "id")).find(".modal-body>.btn").removeClass("d-none");
+        } else {
+            callParentNew("loadFrame()", "function");
+            $($('#axpiframeac')[0].contentWindow.document).find('#dvRefreshParamIcon').trigger("click");
+            callParentNew("closeFrame()", "function");
+            $(callParentNew("configStudio", "id")).find(".modal-body>.btn").removeClass("d-none");
+        }
     });
 
     myModal.changeSize("fullscreen");
@@ -1031,22 +1053,34 @@ function OpenResponsibiltyFromRolesPage(url) {
         $("#" + divId + " .modal-dialog").css({ "margin": "0px auto" }).parent().css({ "top": "25px" });
     }
 
-
+var axpertRedirecting = false;
 function SignOutAllTabs(event) {
-    let _apploggedin = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-    if (event.key === 'logged_in-' + _apploggedin && event.newValue == "no") {
+    let _apploggedin = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
+    if (event.key === 'logged_in-' + _apploggedin && event.newValue === "no") {
+        if (axpertRedirecting) return;
+        axpertRedirecting = true;
+        doPageUnload = "false";
         setTimeout(function () {
-            if (typeof callParentNew("cpwdLoadExit") != 'undefined' && callParentNew("cpwdLoadExit") == "true") {
+            if (typeof callParentNew("cpwdLoadExit") != 'undefined' &&
+                callParentNew("cpwdLoadExit") == "true") {
                 setTimeout(function () {
-                    window.location.href = "../aspx/signin.aspx";
+                    window.location.href = _apploggedin + "/aspx/signin.aspx";
                 }, 100);
+            } else {
+                let _localStorageLogged = localStorage["current_tabsignin-" + _apploggedin];
+                if (typeof _localStorageLogged != "undefined" && _localStorageLogged != "") {
+                    localStorage.removeItem("current_tabsignin-" + _apploggedin);
+                    window.location.href = _localStorageLogged;
+                } else
+                    window.location.href = _apploggedin + "/aspx/sessnew.aspx";
             }
-            else
-                window.location.href = "../aspx/sessnew.aspx";
         }, 0);
     }
+    if (event.key === "refresh_other_tabs" && event.newValue) {
+        localStorage.removeItem("refresh_other_tabs");
+        location.reload();
+    }
 }
-
 window.addEventListener('storage', SignOutAllTabs, false);
 
     $(document).ready(function () {
@@ -1743,6 +1777,11 @@ function iframePopupLoadOpts(dialogWindow) {
                     left: 50px !important;
                 }
 
+                .container-fluid > div.d-flex.align-items-center.flex-nowrap.text-nowrap.ms-auto > div{
+                    position: relative;
+                    right: 40px;
+                    }
+
                 .requestJSON #ivInSearch {
                     position: absolute;
                 }
@@ -1814,6 +1853,11 @@ function iframePopupLoadOpts(dialogWindow) {
                     position: relative;
                     right: 50px !important;
                 }
+
+                .container-fluid > div.d-flex.align-items-center.flex-nowrap.text-nowrap.ms-auto > div{
+                    position: relative;
+                    right: 40px;
+                    }
 
                 .requestJSON #ivInSearch {
                     position: absolute;
@@ -1907,6 +1951,11 @@ function iframePopupLoadOptsNew() {
                     left: 50px !important;
                 }
 
+                .container-fluid > div.d-flex.align-items-center.flex-nowrap.text-nowrap.ms-auto > div{
+                    position: relative;
+                    right: 40px;
+                    }
+
                 //.requestJSON #ivInSearch {
                 //    position: absolute;
                 //}
@@ -1981,6 +2030,12 @@ function iframePopupLoadOptsNew() {
                     position: relative;
                     right: 50px !important;
                 }
+
+                .container-fluid > div.d-flex.align-items-center.flex-nowrap.text-nowrap.ms-auto > div{
+                    position: relative;
+                    right: 40px;
+                    }
+
                 .requestJSON:not(.isMobile) #ivInSearch {
                   position: absolute;
                 }
@@ -2164,7 +2219,9 @@ function createPopup (modalBodyLink, delayLoad = false, shownCallBack = "", hide
                     try {
                         callParentNew("updateSessionVar")('IsFromChildWindow', 'true')
                     } catch (ex) { }
-                    if (eval(callParent('isRefreshParentOnClose'))) {
+                    if (eval(callParent('isRefreshParentOnClose')) || (typeof isIvRefreshParentOnClose != "undefined" && eval(isIvRefreshParentOnClose))) {
+                        if (typeof isIvRefreshParentOnClose != "undefined" && eval(isIvRefreshParentOnClose))
+                            isIvRefreshParentOnClose = "false";
                         eval(callParent('isRefreshParentOnClose') + "= false");
                         ShowDimmer(true);
                         if (isIviewPopup) {
@@ -2187,10 +2244,19 @@ function createPopup (modalBodyLink, delayLoad = false, shownCallBack = "", hide
                     // window.location.href = window.location.href;
                 } else {
                     try {
+                        if (typeof isIvRefreshParentOnClose != "undefined" && eval(isIvRefreshParentOnClose))
+                            isIvRefreshParentOnClose = "false";
+                        eval(callParent('isRefreshParentOnClose') + "= false");
+                    } catch (e) { }
+                    try {
                         scrollToLastKnownDrilldown();
                     } catch (ex) { }
                 }
-            } else if (isIvAxpop && eval(callParent('isRefreshParentOnClose'))) {
+            } else if (isIvAxpop && (eval(callParent('isRefreshParentOnClose')) || (typeof isIvRefreshParentOnClose != "undefined" && eval(isIvRefreshParentOnClose)) || (typeof isTstRefreshParentOnClose != "undefined" && eval(isTstRefreshParentOnClose)))) {
+                if (typeof isIvRefreshParentOnClose != "undefined" && eval(isIvRefreshParentOnClose))
+                    isIvRefreshParentOnClose = "false";
+                else if (typeof isTstRefreshParentOnClose != "undefined" && eval(isTstRefreshParentOnClose))
+                    isTstRefreshParentOnClose = "false";
                 eval(callParent('isRefreshParentOnClose') + "= false");
                 ShowDimmer(true);
                 if (window.document.loadPopUpPage.isIviewPopup) {//isIviewPopup {
@@ -2207,11 +2273,21 @@ function createPopup (modalBodyLink, delayLoad = false, shownCallBack = "", hide
                     } else
                         window.location.href = window.location.href;
                 }
-                else
-                    window.location.href = window.location.href;
-
-            } else if (isTstAxPop && (window.document.title == "Load Tstruct" || window.document.title == "Tstruct") && eval(callParent('isRefreshParentOnClose'))) {
+                else {
+                    let linkParams = $j("#hdnparamValues").val();
+                    if (typeof linkParams != "undefined" && linkParams != "") {
+                        linkParams = linkParams.replace(/&/g, '--.--');
+                        linkParams = linkParams.replace(/~/g, "=");
+                        linkParams = linkParams.replace(/¿/g, "&");
+                        linkParams = ReplaceUrlSpecialChars(linkParams);
+                        window.location.href = 'ivtoivload.aspx?ivname=' + iName + "&" + linkParams + `isDupTab=${callParentNew('isDuplicateTab')}`;
+                    } else
+                        window.location.href = window.location.href;
+                }
+            } else if (isTstAxPop && (window.document.title == "Load Tstruct" || window.document.title == "Tstruct") && (eval(callParent('isRefreshParentOnClose')) || (typeof isTstRefreshParentOnClose != "undefined" && eval(isTstRefreshParentOnClose)))) {
                 setTimeout(function () {
+                    if (typeof isTstRefreshParentOnClose != "undefined" && eval(isTstRefreshParentOnClose))
+                        isTstRefreshParentOnClose = "false";
                     eval(callParent('isRefreshParentOnClose') + "= false");
                     ShowDimmer(true);
                     if (recordid != "" && recordid != '0' && window.location.href.toLowerCase().indexOf('&recordid=') == -1)
@@ -2349,7 +2425,12 @@ function callAxpertConfigStudio(configType, sourceTransId, sourceCaption) {
     } catch (ex) { }
 }
 
-function callAddFormRuntime(configType, sourceTransId, sourceCaption, _formInfo="") {
+function callAddFormRuntime(configType, sourceTransId, sourceCaption, _formInfo = "") {
+    try {
+        if (CheckBtnReadOnly(`callAddFormRuntime('${configType}','${sourceTransId}','${sourceCaption}')`)) {
+            return;
+        }
+    } catch (ex) { }
     try {
         try {
             if (typeof AxRulesBtnConMsg != "undefined" && AxRulesBtnConMsg == "true") {
@@ -2442,6 +2523,11 @@ function callAddFieldRuntime(additionalInfo) {
 /**
  *  @description : A modal for Axpert Studio's get "Add New Form" input*/
 function getAxpertStudioAddFormData(_formInfo = "") {
+    try {
+        if (CheckBtnReadOnly('getAxpertStudioAddFormData()')) {
+            return;
+        }
+    } catch (ex) { }
     try {
         if (typeof AxRulesBtnConMsg != "undefined" && AxRulesBtnConMsg == "true") {
             if (!AxRulesBtnConMsgParser(event.currentTarget)) {

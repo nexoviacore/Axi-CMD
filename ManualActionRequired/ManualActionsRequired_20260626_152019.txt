@@ -1,0 +1,120 @@
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release46\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release46\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\ARMNotificationHub\ManualActionRequired\Version 11.4\Release46\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\ARMNotificationHub\ManualActionRequired\Version 11.4\Release46\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\ARM_APIs\ManualActionRequired\Version 11.4\Release46\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\ARM_APIs\ManualActionRequired\Version 11.4\Release46\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\AxAuth\ManualActionRequired\Version 11.4\Release46\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\AxAuth\ManualActionRequired\Version 11.4\Release46\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\AxList\ManualActionRequired\Version 11.4\Release46\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\AxList\ManualActionRequired\Version 11.4\Release46\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\AxStructUtils\ManualActionRequired\Version 11.4\Release46\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\AxStructUtils\ManualActionRequired\Version 11.4\Release46\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\AxTstructData\ManualActionRequired\Version 11.4\Release46\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\AxTstructData\ManualActionRequired\Version 11.4\Release46\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\AxUtils\ManualActionRequired\Version 11.4\Release46\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\AxUtils\ManualActionRequired\Version 11.4\Release46\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertServices\ARMExportWorkerService\ManualActionRequired\Version 11.4\Release46\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertServices\ARMRapidSaveWorkerService\ManualActionRequired\Version 11.4\Release46\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\AxTstructData\ManualActionRequired\Version 11.4\Release47\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertServices\ARMCachedSaveWorkerService\ManualActionRequired\Version 11.4\Release47\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertServices\ARMConvertXLtoJSONWorkerService\ManualActionRequired\Version 11.4\Release47\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertServices\ARMExecuteScriptService\ManualActionRequired\Version 11.4\Release47\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertServices\ARMExportWorkerService\ManualActionRequired\Version 11.4\Release47\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertServices\ARMRapidSaveWorkerService\ManualActionRequired\Version 11.4\Release47\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release48\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release48\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARM\AxTstructData\ManualActionRequired\Version 11.4\Release48\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertServices\ARMPEGNotificationWorkerService\ManualActionRequired\Version 11.4\Release48\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release49\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release49\web.config

@@ -75,7 +75,7 @@
     <link href="../Css/thirdparty/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" />
     <script src="../Js/Jquery-2.2.2.min.js" type="text/javascript"></script>
     <script src="../Js/thirdparty/bootstrap/3.3.6/bootstrap.min.js" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
     <script src="../Js/thirdparty/jquery-ui/jquery-ui.min.js"></script>
     <script src="../Js/script.js"></script>
     <script src="../Js/DND.js"></script>

@@ -1952,8 +1952,15 @@ function UpdateChangedRows(fldName, dbRowNo) {
                     break;
                 }
             }
-            if (!rowExits)
-                ChangedDcRows[recIdx] = ChangedDcRows[recIdx] + "," + dbRowNo;
+            if (!rowExits) {
+                /* let arr = ChangedDcRows[recIdx].split(",");*/
+                let arr = String(ChangedDcRows[recIdx] || "").split(",").filter(x => x !== "");
+                let normalizedDbRowNo = parseInt(dbRowNo, 10);
+                if (!arr.some(x => parseInt(x, 10) === normalizedDbRowNo)) {
+                    ChangedDcRows[recIdx] += "," + dbRowNo;
+                }
+                //ChangedDcRows[recIdx] = ChangedDcRows[recIdx] + "," + dbRowNo;
+            }
         } else {
             ChangedDcs.push(chdRowStr);
             ChangedDcRows.push(dbRowNo);
@@ -3979,6 +3986,8 @@ function tsddlRefreshSelect() {
             tmpSelVal = recordidax;
 
         if (tmpSelText != "") {
+            let appSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+            callParentNew("clearKeysByFormat(tstDDFVal♠" + parent.transid + "♦" + axpRefSelectID + "♦♣♦" + appSUrl + "♥)", "function");
             var tmpSelFld = $j("#" + tmpRefSelId, window.parent.document);
 
             if (tmpSelFld.length > 0) {
@@ -4538,4 +4547,32 @@ function SetPositionfldDisplayTot() {
             }
         });
     } catch (ex) { }
+}
+
+function CheckBtnReadOnly(thisFunVal) {
+    try {
+        if (thisFunVal) {
+            if (thisFunVal == "SaveAsDraftNew()" || thisFunVal == "getDraftsListNew()")
+                thisFunVal = "btnAppsDraft";
+            function normalizeFn(str) {
+                //return str.replace(/"/g, "'").replace(/\s+/g, '');
+                if (!str)
+                    return '';
+                str = str.replace(/"/g, "'").trim();
+                if (str.startsWith("CallAction(")) {
+                    const match = str.match(/CallAction\(\s*'([^']+)'/);
+                    return match ? `CallAction('${match[1]}'` : str;
+                }
+                return str.replace(/\s+/g, '');
+            }
+            const index = AxFCBtnReadOnly.findIndex(x => normalizeFn(x) === normalizeFn(thisFunVal));
+            if (index !== -1) {
+                showAlertDialog("error", 'Invalid operation. Please try again.');
+                return true;
+            }
+        }
+        return false;
+    } catch (ex) {
+        return false;
+    }
 }

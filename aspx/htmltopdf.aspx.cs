@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Services;
 using System.Web.UI;
@@ -19,8 +20,8 @@ using System.Web.UI.WebControls;
 
 public partial class htmltopdf : System.Web.UI.Page
 {
-    static Util.Util util = new Util.Util();
-    static TStructDef strObj = null;
+    //static Util.Util util = new Util.Util();
+    //static TStructDef strObj = null;
     protected void Page_Load(object sender, EventArgs e)
     {
 
@@ -29,6 +30,7 @@ public partial class htmltopdf : System.Web.UI.Page
     [WebMethod]
     public static string Getpdftohtml(string key, string fname)
     {
+        Util.Util util = new Util.Util();
         string dtnow = DateTime.Now.ToString();
         HttpContext.Current.Session["LastUpdatedSess"] = dtnow;
         if (HttpContext.Current.Session["project"] == null)
@@ -51,6 +53,7 @@ public partial class htmltopdf : System.Web.UI.Page
 
     public static string GetHTML(TStructData tsData, string fileName)
     {
+        Util.Util util = new Util.Util();
         string pdfFileurl = string.Empty;
         try
         {
@@ -78,7 +81,8 @@ public partial class htmltopdf : System.Web.UI.Page
                     string htmltopdfParams = string.Empty;
                     String[] htmlParams = new String[] { };
                     CacheManager cacheMgr = util.GetCacheObject();
-                    strObj = util.GetStrObject(cacheMgr, tsData.transID);
+                    //strObj = util.GetStrObject(cacheMgr, tsData.transID);
+                    TStructDef strObj = tsData.tstStrObj;
                     htmltopdfParams = strObj.htmlToPDF;
 
                     if (!string.IsNullOrEmpty(htmltopdfParams))
@@ -214,7 +218,13 @@ public partial class htmltopdf : System.Web.UI.Page
                 IsPrintExe = bool.Parse(HttpContext.Current.Session["AxIsPrintExe"].ToString());
             if (IsPrintExe == true || IsPrintExe == false)// Actually this condition for to check to use exe or dll, so now we dont have dll 
             {
-                string tempHtmlfile = printUlr + "\\printTemplates\\temp_" + DateTime.Now.ToString("yyyy-MM-dd-hh-mm-ss-fff") + ".html";
+                string uName = string.Empty;
+                if (HttpContext.Current.Session["username"] != null)
+                    uName = HttpContext.Current.Session["username"].ToString();
+                else
+                    uName = Guid.NewGuid().ToString("N");
+                string requestId = Guid.NewGuid().ToString("N");
+                string tempHtmlfile = printUlr + "\\printTemplates\\temp_" + uName + "_" + requestId + "_" + DateTime.Now.ToString("yyyy-MM-dd-hh-mm-ss-fff") + ".html";
                 FileStream fs = new FileStream(tempHtmlfile, FileMode.Create);
                 StreamWriter swXLS = new StreamWriter(fs, Encoding.UTF8);
                 string hdcontent = string.Empty, ftcontent = string.Empty;
@@ -232,7 +242,7 @@ public partial class htmltopdf : System.Web.UI.Page
                     HtmlDocument doc = new HtmlDocument();
                     doc.LoadHtml(data1);
                     string headercontent = doc.DocumentNode.InnerHtml + hdcontent;
-                    File.WriteAllText(printUlr + "\\printTemplates\\header_content.html", headercontent);
+                    File.WriteAllText(printUlr + "\\printTemplates\\" + uName + "_" + requestId + "-header_content.html", headercontent);
                 }
                 if (strHTML.ToString().ToLower().IndexOf("<footer>") > -1 && strHTML.ToString().ToLower().IndexOf("</footer>") > -1)
                 {
@@ -245,18 +255,19 @@ public partial class htmltopdf : System.Web.UI.Page
                     doc.LoadHtml(data1);
                     string headercontent = doc.DocumentNode.InnerHtml;
                     headercontent = headercontent.Replace("<footer></footer>", ftcontent);
-                    File.WriteAllText(printUlr + "\\printTemplates\\footer_content.html", headercontent);
+                    File.WriteAllText(printUlr + "\\printTemplates\\" + uName + "_" + requestId + "-footer_content.html", headercontent);
                 }
                 swXLS.WriteLine(strHTML.ToString());
                 swXLS.Close();
+
                 if (hdpage && ftpage)
-                    fileName = Wkhtmltopdf.PdfGenerator.HtmlToPdf(pdfUlr, "discharge", " --header-spacing " + hspacing + " --header-html " + printUlr + "\\printTemplates\\" + "header_content.html --footer-spacing " + fspacing + " --footer-html " + printUlr + "\\printTemplates\\" + "footer_content.html " + tempHtmlfile + "", "html");
+                    fileName = Wkhtmltopdf.PdfGenerator.HtmlToPdf(pdfUlr, uName + "-discharge", " --header-spacing " + hspacing + " --header-html " + printUlr + "\\printTemplates\\" + uName + "_" + requestId + "-header_content.html --footer-spacing " + fspacing + " --footer-html " + printUlr + "\\printTemplates\\" + uName + "_" + requestId + "-footer_content.html " + tempHtmlfile + "", "html");
                 else if (hdpage)
-                    fileName = Wkhtmltopdf.PdfGenerator.HtmlToPdf(pdfUlr, "discharge", " --header-spacing " + hspacing + " --header-html " + printUlr + "\\printTemplates\\" + "header_content.html --footer-html " + printUlr + "\\printTemplates\\" + "footer.html " + tempHtmlfile + "", "html");
+                    fileName = Wkhtmltopdf.PdfGenerator.HtmlToPdf(pdfUlr, uName + "-discharge", " --header-spacing " + hspacing + " --header-html " + printUlr + "\\printTemplates\\" + uName + "_" + requestId + "-header_content.html --footer-html " + printUlr + "\\printTemplates\\" + "footer.html " + tempHtmlfile + "", "html");
                 else if (ftpage)
-                    fileName = Wkhtmltopdf.PdfGenerator.HtmlToPdf(pdfUlr, "discharge", " --header-spacing " + hspacing + " --header-html " + printUlr + "\\printTemplates\\" + "header.html --footer-spacing " + fspacing + " --footer-html " + printUlr + "\\printTemplates\\" + "footer_content.html " + tempHtmlfile + "", "html");
+                    fileName = Wkhtmltopdf.PdfGenerator.HtmlToPdf(pdfUlr, uName + "-discharge", " --header-spacing " + hspacing + " --header-html " + printUlr + "\\printTemplates\\" + "header.html --footer-spacing " + fspacing + " --footer-html " + printUlr + "\\printTemplates\\" + uName + "_" + requestId + "-footer_content.html " + tempHtmlfile + "", "html");
                 else
-                    fileName = Wkhtmltopdf.PdfGenerator.HtmlToPdf(pdfUlr, "discharge", " --header-spacing " + hspacing + " --header-html " + printUlr + "\\printTemplates\\" + "header.html --footer-html " + printUlr + "\\printTemplates\\" + "footer.html " + tempHtmlfile + "", "html");
+                    fileName = Wkhtmltopdf.PdfGenerator.HtmlToPdf(pdfUlr, uName + "-discharge", " --header-spacing " + hspacing + " --header-html " + printUlr + "\\printTemplates\\" + "header.html --footer-html " + printUlr + "\\printTemplates\\" + "footer.html " + tempHtmlfile + "", "html");
 
                 if (!string.IsNullOrEmpty(fileName))
                 {
@@ -272,6 +283,11 @@ public partial class htmltopdf : System.Web.UI.Page
                             File.Delete(printUlr + "\\printTemplates\\header_content.html");
                         if (File.Exists(printUlr + "\\printTemplates\\footer_content.html"))
                             File.Delete(printUlr + "\\printTemplates\\footer_content.html");
+
+                        if (File.Exists(printUlr + "\\printTemplates\\" + uName + "_" + requestId + "-header_content.html"))
+                            File.Delete(printUlr + "\\printTemplates\\" + uName + "_" + requestId + "-header_content.html");
+                        if (File.Exists(printUlr + "\\printTemplates\\" + uName + "_" + requestId + "-footer_content.html"))
+                            File.Delete(printUlr + "\\printTemplates\\" + uName + "_" + requestId + "-footer_content.html");
                     }
                     else
                     {
@@ -313,14 +329,42 @@ public partial class htmltopdf : System.Web.UI.Page
         return pdfFileurl;
     }
 
+    //[WebMethod]
+    //public static string DeletePrintPDF(string pdfPath)
+    //{
+    //    if (File.Exists(HttpContext.Current.Server.MapPath(pdfPath)))
+    //    {
+    //        File.Delete(HttpContext.Current.Server.MapPath(pdfPath));
+    //    }
+    //    return "true";
+    //}
+
     [WebMethod]
     public static string DeletePrintPDF(string pdfPath)
     {
-        if (File.Exists(HttpContext.Current.Server.MapPath(pdfPath)))
+        Util.Util util = new Util.Util();
+        HttpContext.Current.Session["LastUpdatedSess"] = DateTime.Now.ToString();
+        if (HttpContext.Current.Session["project"] == null)
+            return "session~" + util.SESSEXPIRYPATH;
+        try
         {
-            File.Delete(HttpContext.Current.Server.MapPath(pdfPath));
+            if (string.IsNullOrWhiteSpace(pdfPath))
+                return "INVALID_FILE";
+            string fileName = Path.GetFileName(pdfPath);
+            if (!Regex.IsMatch(fileName, @"^[a-zA-Z0-9_\-\.]+$"))
+                return "INVALID_FILE";
+            string allowedDir = HttpContext.Current.Server.MapPath("~/downloads/");
+            string fullPath = Path.GetFullPath(Path.Combine(allowedDir, fileName));
+            if (!fullPath.StartsWith(allowedDir, StringComparison.OrdinalIgnoreCase))
+                return "ACCESS_DENIED";
+            if (File.Exists(fullPath))
+                File.Delete(fullPath);
+            return "true";
         }
-        return "true";
+        catch
+        {
+            return "ERROR";
+        }
     }
 
 

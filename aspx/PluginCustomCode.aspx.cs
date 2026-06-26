@@ -45,6 +45,12 @@ public partial class PluginCustomCode : System.Web.UI.Page
             }
 
             hdnStructures.Value = strutureJson;
+
+            string headerPath = util.GetAdvConfigs("ApplicationTemplate");
+            if (!string.IsNullOrEmpty(headerPath))
+            {
+                hdnApplicationTemplate.Value = headerPath;
+            }
         }
     }
 
@@ -110,7 +116,7 @@ public partial class PluginCustomCode : System.Web.UI.Page
                 return Constants.SESSIONTIMEOUT;
             }
             AnalyticsUtils _aUtils = new AnalyticsUtils();
-            string apiUrl = _aUtils.ARM_URL + "/api/v1/AddorEditHTMLPlugin";
+            string apiUrl = _aUtils.ARM_URL + "/ARM_APIs/api/v1/AddorEditHTMLPlugin";
 
             var inputJson = new
             {
@@ -159,7 +165,7 @@ public partial class PluginCustomCode : System.Web.UI.Page
                 return Constants.SESSIONTIMEOUT;
             }
             AnalyticsUtils _aUtils = new AnalyticsUtils();
-            string apiUrl = _aUtils.ARM_URL + "/api/v1/GetHTMLPlugins";
+            string apiUrl = _aUtils.ARM_URL + "/ARM_APIs/api/v1/GetHTMLPlugins";
 
             var inputJson = new
             {
@@ -309,9 +315,10 @@ public partial class PluginCustomCode : System.Web.UI.Page
         string applicationPath = HttpRuntime.AppDomainAppPath;
         string project = Convert.ToString(HttpContext.Current.Session["project"]);
         string[] folderPaths = {
-        applicationPath + "\\CustomPages",
-        applicationPath + "\\" + project
-    };
+            applicationPath + "\\AxpertPlugins",
+            applicationPath + "\\CustomPages",
+            applicationPath + "\\" + project
+        };
 
         List<FileDetails> fileList = new List<FileDetails>();
         List<FolderDetails> folderList = new List<FolderDetails>();
@@ -402,15 +409,30 @@ public partial class PluginCustomCode : System.Web.UI.Page
                 string project = HttpContext.Current.Session["project"].ToString();
                 string tmpPath = filePath.ToLower().Replace(project.ToLower(), "app");
                 string tempFilePath = "";
-                switch (tmpPath.ToLower())
+                Util.Util util = new Util.Util();
+                string headerPath = util.GetAdvConfigs("ApplicationTemplate");
+                if (string.IsNullOrEmpty(headerPath))
                 {
-                    case "custompages\\agilebizmainpage.html":
-                    case "custompages\\app-mainpage.html":
-                        tempFilePath = Path.Combine(applicationPath, "aspx\\mainhomeconfigtemplate.html");
-                        break;
-                    default:
-                        break;
+                    headerPath = string.Empty;
                 }
+
+                if (tmpPath.ToLower() == "custompages\\" + headerPath.ToLower())
+                {
+                    tempFilePath = Path.Combine(applicationPath, "aspx\\mainhomeconfigtemplate.html");
+                }
+                else
+                {
+                    switch (tmpPath.ToLower())
+                    {
+                        case "custompages\\agilebizmainpage.html":
+                        case "custompages\\app-mainpage.html":
+                            tempFilePath = Path.Combine(applicationPath, "aspx\\mainhomeconfigtemplate.html");
+                            break;
+                        default:
+                            break;
+                    }
+                }                       
+
                 if (tempFilePath != "" && File.Exists(tempFilePath))
                 {
                     return File.ReadAllText(tempFilePath);
@@ -474,7 +496,20 @@ public partial class PluginCustomCode : System.Web.UI.Page
                 string directory = Path.GetDirectoryName(fullFilePath);
                 Directory.CreateDirectory(directory);
                 File.WriteAllText(fullFilePath, content);
-                return "File saved successfully.";
+
+                FileInfo fileInfo = new FileInfo(fullFilePath);
+                var fileProps = new FileDetails
+                {
+                    FolderName = fileInfo.Directory.FullName.Replace(applicationPath, ""),
+                    FileName = fileInfo.Name,
+                    FullFilePath = fileInfo.FullName.Replace(applicationPath, ""),
+                    FileType = fileInfo.Extension,
+                    FileSize = Math.Round(fileInfo.Length / 1024.0, 2),
+                    CreatedOn = fileInfo.CreationTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                    ModifiedOn = fileInfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
+                };
+
+                return "File saved successfully.~~" + JsonConvert.SerializeObject(fileProps);
             }
             catch (Exception ex)
             {
@@ -541,11 +576,12 @@ public partial class PluginCustomCode : System.Web.UI.Page
 
         string applicationPath = HttpRuntime.AppDomainAppPath;
         string project = HttpContext.Current.Session["project"].ToString();
+        string axpertPluginsPath = Path.Combine(applicationPath, "AxpertPlugins");
         string customPagesPath = Path.Combine(applicationPath, "CustomPages");
         string projectPath = Path.Combine(applicationPath, project);
         string backupPath = Path.Combine(applicationPath, "UI-Plugin-Backups" + "\\" + project);
 
-        if (!fullFilePath.StartsWith(customPagesPath, StringComparison.OrdinalIgnoreCase) &&
+        if (!fullFilePath.StartsWith(axpertPluginsPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(customPagesPath, StringComparison.OrdinalIgnoreCase) &&
             !fullFilePath.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(backupPath, StringComparison.OrdinalIgnoreCase))
         {
             return "Access denied. Folder is not accessible.";
@@ -578,11 +614,12 @@ public partial class PluginCustomCode : System.Web.UI.Page
 
         string applicationPath = HttpRuntime.AppDomainAppPath;
         string project = HttpContext.Current.Session["project"].ToString();
+        string axpertPluginsPath = Path.Combine(applicationPath, "AxpertPlugins");
         string customPagesPath = Path.Combine(applicationPath, "CustomPages");
         string projectPath = Path.Combine(applicationPath, project);
         string backupPath = Path.Combine(applicationPath, "UI-Plugin-Backups" + "\\" + project);
 
-        if (!fullFilePath.StartsWith(customPagesPath, StringComparison.OrdinalIgnoreCase) &&
+        if (!fullFilePath.StartsWith(axpertPluginsPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(customPagesPath, StringComparison.OrdinalIgnoreCase) &&
             !fullFilePath.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(backupPath, StringComparison.OrdinalIgnoreCase))
         {
             return "Access denied. Folder is not accessible.";
@@ -603,11 +640,12 @@ public partial class PluginCustomCode : System.Web.UI.Page
 
         string applicationPath = HttpRuntime.AppDomainAppPath;
         string project = HttpContext.Current.Session["project"].ToString();
+        string axpertPluginsPath = Path.Combine(applicationPath, "AxpertPlugins");
         string customPagesPath = Path.Combine(applicationPath, "CustomPages");
         string projectPath = Path.Combine(applicationPath, project);
         string backupPath = Path.Combine(applicationPath, "UI-Plugin-Backups" + "\\" + project);
 
-        if (!fullFilePath.StartsWith(customPagesPath, StringComparison.OrdinalIgnoreCase) &&
+        if (!fullFilePath.StartsWith(axpertPluginsPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(customPagesPath, StringComparison.OrdinalIgnoreCase) &&
             !fullFilePath.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(backupPath, StringComparison.OrdinalIgnoreCase))
         {
             return "Access denied. Folder is not accessible.";

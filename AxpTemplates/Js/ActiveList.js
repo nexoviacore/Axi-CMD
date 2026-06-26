@@ -641,7 +641,7 @@ class AxTasks {
         let url = "../../aspx/AxPEG.aspx/GetActiveTasks";
         let data = {};
         if (_this.isAxpertFlutter) {
-            url = "../../api/v1/ARMGetActiveTasks";
+            url = "../../ARM_APIs/api/v1/ARMGetActiveTasks";
         }
         this.callAPI(url, data, false, result => {
             if (result.success) {
@@ -654,7 +654,7 @@ class AxTasks {
 
     connectToAxpert() {
         let _this = this;
-        let url = "../../api/v1/ARMConnectToAxpert";
+        let url = "../../AxAuth/api/v1/ARMConnectToAxpert";
         let data = {};
         this.callAPI(url, data, false, result => {
             if (result.success) {
@@ -674,7 +674,7 @@ class AxTasks {
         let _this = this;
         let url = "../../aspx/AxPEG.aspx/AxGetProcessTask";
         if (_this.isAxpertFlutter) {
-            url = "../../api/v1/ARMGetProcessTask";
+            url = "../../ARM_APIs/api/v1/ARMGetProcessTask";
         }
         let _task = this.task;
 
@@ -741,7 +741,7 @@ class AxTasks {
         ShowDimmer(true);
         let url = "../../aspx/AxPEG.aspx/AxDoTaskAction";
         if (_this.isAxpertFlutter) {
-            url = "../../api/v1/ARMDoTaskAction";
+            url = "../../ARM_APIs/api/v1/ARMDoTaskAction";
         }
 
         let taskReason = "";

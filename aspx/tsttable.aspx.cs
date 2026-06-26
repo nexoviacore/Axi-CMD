@@ -221,6 +221,7 @@ public partial class tsttable : System.Web.UI.Page
             string result = asbExt.ExecuteSQL("", prName);
             if (result != "")
             {
+                result = result.Replace("\\r\\n", "");
                 XmlDocument xmlDoc = new XmlDocument();
                 xmlDoc.LoadXml(result);
                 XmlNodeList globNode = xmlDoc.SelectNodes("//row");

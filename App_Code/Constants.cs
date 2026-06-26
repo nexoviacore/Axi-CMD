@@ -218,7 +218,8 @@ public class Constants
 
     //public const string GET_SEARCH_DATA_LANG = " select case when  b.dispname= :language and b.dispname is not null then b.compcaption  else searchtext end  as caption,HLTYPE,STRUCTNAME,PARAMS , case when b.dispname is null then 'ALL' else b.dispname end  as language, b.compcaption as searchtext from axp_appsearch a left join axlanguage b on a.params is null and b.compname like '%'||a.structname and b.sname= 'axpages' where username =:username and lower(b.compcaption) like $KEYWORD$";
     public const string GET_SEARCH_DATA_LANG = " select case when lower(b.dispname)= :language and b.dispname is not null then b.compcaption  else a.searchtext end  as caption, a.hltype,a.structname,a.params , case when b.dispname is null then 'ALL' else b.dispname end  as language, coalesce(b.compcaption, a.searchtext) as searchtext from axp_appsearch a left join axlanguage b on a.params is null and b.compname like '%'||a.structname and lower(b.sname) = 'axpages' where username =:username  and (lower(b.compcaption) like $KEYWORD$ or lower(a.searchtext) like $KEYWORD$)";
-    public const string GET_SEARCH_DATA_LANG_MSSQL = " select case when lower(b.dispname)= :language and b.dispname is not null then b.compcaption  else a.searchtext end  as caption, a.hltype,a.structname,a.params , case when b.dispname is null then 'ALL' else b.dispname end  as language, coalesce(b.compcaption, a.searchtext) as searchtext from axp_appsearch a left join axlanguage b on a.params is null and b.compname like '%'+ a.structname and lower(b.sname) = 'axpages' where username =:username  and (lower(b.compcaption) like $KEYWORD$ or lower(a.searchtext) like $KEYWORD$)";
+    //public const string GET_SEARCH_DATA_LANG_MSSQL = " select case when lower(b.dispname)= :language and b.dispname is not null then b.compcaption  else a.searchtext end  as caption, a.hltype,a.structname,a.params , case when b.dispname is null then 'ALL' else b.dispname end  as language, coalesce(b.compcaption, a.searchtext) as searchtext from axp_appsearch a left join axlanguage b on a.params is null and b.compname like '%'+ a.structname and lower(b.sname) = 'axpages' where username =:username  and (lower(b.compcaption) like $KEYWORD$ or lower(a.searchtext) like $KEYWORD$)";
+    public const string GET_SEARCH_DATA_LANG_MSSQL = "WITH base AS (SELECT * FROM axp_appsearch WHERE username = :username AND searchtext LIKE $KEYWORD$) SELECT CASE WHEN b.dispname = :language THEN b.compcaption ELSE a.searchtext END caption,a.hltype,a.structname,a.params,ISNULL(b.dispname,'ALL') language,COALESCE(b.compcaption, a.searchtext) searchtext FROM base a LEFT JOIN axlanguage b ON a.params IS NULL AND CHARINDEX(a.structname, b.compname) > 0 AND b.sname = 'axpages' WHERE b.compcaption LIKE $KEYWORD$ OR a.searchtext LIKE $KEYWORD$";
     public const string COLLAPSEMENU = "Collapse";
 
     public const string CFG_CONFIG_FILE = "generic_config";
@@ -226,7 +227,7 @@ public class Constants
 
     //Note: While changing 'DEFAULT_CONFIGSTR', verify the 'AppConfiguration.cs' scenarios as well. No spaces should be used before and after in Key Names.
 
-    public const string DEFAULT_CONFIGSTR = "{\"configStr\": [{\"AxLoginTrace\": \"false\"},{\"AxAlertTimeout\": \"3\"},{\"AxSessionExpiryDays\": \"5\"},{\"AxBreadCrumb\": \"false\"},{\"AxEnableCards\": \"true\"},{\"AxExportTallyTid\": \"\"},{\"AxCPWDOnLogin\": \"true\"},{\"AxHelpIview\": \"\"},{\"AxSessionExtend\": \"true\"},{\"AxTimezoneVariation\": \"true\"},{\"AxDisableSplit\":\"false\"},{\"AxGlobalSrchLimit\":\"5000\"},{\"AxErrorMsg\": \"false\"},{\"AxErrorMsgTimeout\": \"0\"},{\"AxShowLoggedinUsersCount\": \"false\"},{\"AxImpExpTemptPath\": \"\"},{\"AxLanguages\": \"english\"},{\"AxUSCulture\": \"false\"},{\"AxUserLevelLang\": \"false\"},{\"AxDevInstance\": \"false\"},{\"AxDisplayAutoGenVal\": \"false\"},{\"AxIsPerfCode\": \"true\"},{\"AxDcGridOnSave\": \"true\"},{\"AxAttachmentSize\": \"1\"},{\"AxImagePath\": \"\"},{\"AxAttachFilePath\": \"\"},{\"AxGridAttachPath\": \"\"},{\"AxShowSubmitCancel\": \"false\"},{\"AxDesignerAccess\": \"designer\"},{\"AxIsPrintExe\": \"true\"},{\"AxPrintExePath\": \"\"},{\"AxHtmlPath\": \"\"},{\"AxPrintMargins\": \"50,50,200,100\"},{\"AxPrintTitleAlign\": \"center\"},{\"AxIviewcelltextwrap\": \"true\"},{\"AxMergeRowIviews\": \"\"},{\"AxPrintRowsMaxLimit\": \"10000\"},{\"AxDbPagination\": \"true\"},{\"AxDefaultPageSize\": \"30\"},{\"AxShowAppTitle\": \"true\"},{\"AxShowStripedReport\": \"false\"},{\"AxGetIviewRowCount\": \"false\"},{\"AxIviewDataWSRows\": \"1000\"},{\"AxInlineGridEdit\": \"true\"},{\"AxHomeBuildAccess\": \"default\"},{\"AxMaxNumOfWidgets\": \"99\"},{\"AxMenuStyle\": \"default\"},{\"AxMenuColumns\": \"3\"},{\"AxSubmenuPerView\": \"6\"},{\"AxMenuWordWrap\": \"false\"},{\"AxSubMenuCount\": \"4\"},{\"AxDirectSubMenuCount\": \"6\"},{\"AxWizardType\": \"classic\"},{\"AxOTPAuth\": \"false\"},{\"AxOTPAuthCahrs\": \"3\"},{\"AxOTPAuthExpiry\": \"1\"},{\"AxDrafts\": \"false\"},{\"AxAutoPurge\": \"true\"},{\"AxMaxDraftsCount\": \"1\"},{\"AutoSavePublish\" : \"false\"}],\"configLangKeys\": [{\"AxAppTitle_ENG\": \"\"},{\"AxCopyRightText_ENG\": \"Powered by Axpert\"},{\"AxPrintTitle_ENG\": \"\"}]}";
+    public const string DEFAULT_CONFIGSTR = "{\"configStr\": [{\"AxLoginTrace\": \"false\"},{\"AxAlertTimeout\": \"3\"},{\"AxStaySignIn\": \"false\"},{\"AxSessionExpiryDays\": \"14\"},{\"AxBreadCrumb\": \"false\"},{\"AxEnableCards\": \"true\"},{\"AxExportTallyTid\": \"\"},{\"AxCPWDOnLogin\": \"true\"},{\"AxHelpIview\": \"\"},{\"AxSessionExtend\": \"true\"},{\"AxTimezoneVariation\": \"true\"},{\"AxDisableSplit\":\"false\"},{\"AxGlobalSrchLimit\":\"5000\"},{\"AxErrorMsg\": \"false\"},{\"AxErrorMsgTimeout\": \"0\"},{\"AxShowLoggedinUsersCount\": \"false\"},{\"AxImpExpTemptPath\": \"\"},{\"AxLanguages\": \"english\"},{\"AxUSCulture\": \"false\"},{\"AxUserLevelLang\": \"false\"},{\"AxDevInstance\": \"false\"},{\"AxDisplayAutoGenVal\": \"false\"},{\"AxIsPerfCode\": \"true\"},{\"AxDcGridOnSave\": \"true\"},{\"AxImagePath\": \"\"},{\"AxAttachFilePath\": \"\"},{\"AxGridAttachPath\": \"\"},{\"AxShowSubmitCancel\": \"false\"},{\"AxDesignerAccess\": \"designer\"},{\"AxIsPrintExe\": \"true\"},{\"AxPrintExePath\": \"\"},{\"AxHtmlPath\": \"\"},{\"AxPrintMargins\": \"50,50,200,100\"},{\"AxPrintTitleAlign\": \"center\"},{\"AxIviewcelltextwrap\": \"true\"},{\"AxMergeRowIviews\": \"\"},{\"AxPrintRowsMaxLimit\": \"10000\"},{\"AxDbPagination\": \"true\"},{\"AxDefaultPageSize\": \"30\"},{\"AxShowAppTitle\": \"true\"},{\"AxShowStripedReport\": \"false\"},{\"AxGetIviewRowCount\": \"false\"},{\"AxIviewDataWSRows\": \"1000\"},{\"AxInlineGridEdit\": \"true\"},{\"AxHomeBuildAccess\": \"default\"},{\"AxMaxNumOfWidgets\": \"99\"},{\"AxMenuStyle\": \"default\"},{\"AxMenuColumns\": \"3\"},{\"AxSubmenuPerView\": \"6\"},{\"AxMenuWordWrap\": \"false\"},{\"AxSubMenuCount\": \"4\"},{\"AxDirectSubMenuCount\": \"6\"},{\"AxWizardType\": \"classic\"},{\"AxOTPAuth\": \"false\"},{\"AxOTPAuthCahrs\": \"3\"},{\"AxOTPAuthExpiry\": \"1\"},{\"AxDrafts\": \"false\"},{\"AxAutoPurge\": \"true\"},{\"AxMaxDraftsCount\": \"1\"},{\"AutoSavePublish\" : \"false\"}],\"configLangKeys\": [{\"AxAppTitle_ENG\": \"\"},{\"AxCopyRightText_ENG\": \"Powered by Axpert\"},{\"AxPrintTitle_ENG\": \"\"}]}";
 
 
     #region Fast Data
@@ -240,7 +241,8 @@ public class Constants
 
     //public const string IMPEXP_GETTSTUCTS = "select name,caption from tstructs where blobno=1 and name in (SELECT SNAME FROM AXUSERACCESS WHERE STYPE = 't' AND RNAME IN (select userroles from axuserlevelgroups ul join axusergroups ug on ul.usergroup= ug.groupname where ul.username = '{0}')) order by lower(caption)";
 
-    public const string IMPEXP_GETTSTRUCTS = "select distinct t.name, t.caption from tstructs t left outer join AXUSERACCESS a on a.sname=t.name and  a.stype='t' where (('default' in (select userroles from axuserlevelgroups ul join axusergroups ug on ul.usergroup=ug.groupname where ul.username = '{0}')) or a.rname in (select userroles from axuserlevelgroups ul join axusergroups ug on ul.usergroup=ug.groupname where ul.username = '{0}')) order by 2";
+    //public const string IMPEXP_GETTSTRUCTS = "select distinct t.name, t.caption from tstructs t left outer join AXUSERACCESS a on a.sname=t.name and  a.stype='t' where (('default' in (select userroles from axuserlevelgroups ul join axusergroups ug on ul.usergroup=ug.groupname where ul.username = '{0}')) or a.rname in (select userroles from axuserlevelgroups ul join axusergroups ug on ul.usergroup=ug.groupname where ul.username = '{0}')) order by 2";
+    public const string IMPEXP_GETTSTRUCTS = "select distinct t.name, t.caption from tstructs t left outer join AXUSERACCESS a on a.sname=t.name and a.stype='t' where (('default' in (select axusergroup from axuserlevelgroups ul where ul.username = '{0}')) or a.rname in (select ugd.ROLES_ID from axuserlevelgroups ul join axusergroups ug on ul.usergroup=ug.groupname JOIN AXUSERGROUPSDETAIL ugd ON ugd.AXUSERGROUPSID = ug.AXUSERGROUPSID where ul.username = '{0}')) order by 2";
     public const string SQL_GET_AXLANGSOURCE = "Select distinct langname from axlangsource order by langname asc";
 
     public const string AXPATTACHMENTPATH = "axpattachmentpath";
@@ -268,6 +270,9 @@ public class Constants
     public const string AXEMAILSMTP_CONN_KEY = "AxEmailSMTPJSON";
     public const string AXPASSWORDPOL_CONN_KEY = "AxPwdPolicy";
     public const string AXPMOBSETTING_CONN_KEY = "AxMobSetting";
+    public const string AXPDEVOPTION_CONN_KEY = "AxDevOption";
+
+    public const string AX_COMMON_APPSETTING_KEY = "AxAccessCodeSettings";
 
     //Axpert Web Logs
     public const string SQL_GET_AXPWEBLOGS = "SELECT USERNAME, LOGTIME, SESSIONID, IPADDRESS, LOGDETAILS FROM AXPWEBLOGS WHERE TYPE = '$Type$'";
@@ -308,16 +313,19 @@ public class Constants
     public const string SQL_GET_WFPDCOMMENTS = "select wfcomments from ax_wfcomments where wfid='$wfid$' and wfaction='$actiontype$' and stransid='$tid$'";
     public const string SQL_GET_EMAIL = "select EMAIL,ACTIVE,NICKNAME from axusers where USERNAME ='$USERNAME$'";
 
-    public const string LBLHL_GETTSTRUCTS = "select caption,ntransid as name from axpdef_tstruct order by caption";
-    public const string LBLHL_GETIVIEWS = "select name,caption from dwb_iviews order by caption";
+    public const string LBLHL_GETTSTRUCTS = "select caption, name from tstructs order by caption";// "select caption,ntransid as name from axpdef_tstruct order by caption";
+    public const string LBLHL_GETIVIEWS = "select caption,name from iviews order by caption";// "select name,caption from dwb_iviews order by caption";
     public const string LBLHL_GETPAGES = "select pageno as name,caption from htmlsections";//"select name,caption from axpages";
     public const string LBLHL_GETTSTRUCTFIELDS = "select caption,fname AS name from axpflds where tstruct=$stransid$";// "select caption,name from coretstructhdr where STRANSID=$stransid$";
-    public const string LBLHL_GETIVIEWPARAMS = "select pname from iviewparams where iname=$iname$";// "select pname from dwb_iviewparams where iname=$iname$";
+    public const string LBLHL_GETIVIEWPARAMS = "select pcaption as caption,pname AS name from iviewparams where iname=$iname$";// "select pname from dwb_iviewparams where iname=$iname$";
 
     public const string AXHYBRID_GETUSERDEVICEID = "select imei_no as deviceid from ax_mobilenotify where username = '$USERNAME$' and projectname = '$PROJECTNAME$'";
 
     //public const string SQL_GET_AXUSERLANG = "select axlang,pwdauth,otpauth from axusers where username='$USERNAME$'";
-    public const string SQL_GET_AXUSERLANG = "select axlang,pwdauth,otpauth,email,mobile,active from axusers where username='$USERNAME$'";
+    //public const string SQL_GET_AXUSERLANG = "select axlang,pwdauth,otpauth,email,mobile,active from axusers where username='$USERNAME$'";
+    //public const string SQL_GET_AXUSERLANG = "select axlang,pwdauth,otpauth,email,mobile,active,staysignedin,signinexpiry from axusers where username='$USERNAME$'";
+    //public const string SQL_GET_AXUSERLANG = "SELECT b.axlang, b.pwdauth, b.otpauth, b.email, b.mobile, b.active, b.staysignedin, b.signinexpiry, a.img, a.blobno FROM axusers b LEFT JOIN axusrprofilepic a ON a.recordid = b.axusersid WHERE b.username = '$USERNAME$'";
+    public const string SQL_GET_AXUSERLANG = "SELECT b.axlang,b.pwdauth,b.otpauth, b.email, b.mobile,CASE WHEN b.username = 'admin' THEN b.active WHEN (b.authkey IS NULL OR b.authkey = '') AND (b.userkey IS NULL OR b.userkey = '') THEN CASE WHEN b.active = 'T' THEN 'ET' ELSE 'F' END ELSE b.active END AS active,b.staysignedin,b.signinexpiry,a.img,a.blobno FROM axusers b LEFT JOIN axusrprofilepic a ON a.recordid = b.axusersid WHERE b.username = '$USERNAME$'";
 
     public const string IMP_GETTEMPLATES = "SELECT AXPDEF_IMPDATA_TEMPLATESID,TEMPLATENAME, TEMPLATECAP, IMPFIELDS, DATAUPD, FLDPKEY FROM AXPDEF_IMPDATA_TEMPLATES WHERE STRANSID = '$STRANSID$'";
     public const string IMP_DELTEMPLATES = "DELETE FROM AXPDEF_IMPDATA_TEMPLATES WHERE STRANSID = '$STRANSID$' AND TEMPLATENAME = '$TEMPLATENAME$'";
@@ -340,13 +348,18 @@ public class Constants
     public const string REDISARMCONNECTEDDATAMETADATA = "ARM-AX-DATAPAGE-ConnectedData";
     public const string REDISARMCONNECTEDDATAPERMISSION = "ARM-AX-CONNECTEDDATA-PERMISSION";
 
+    public const string REDISARMPERMISSIONNEW = "*-ARM-*";
+
     public const string REDISARMAXADSSQL = "AxADSSQL";
     public const string REDISARMAXADSDATA = "AxADSData";
 
     public const string REDISARMAXCARDSLIST = "AxCardsList";
     #endregion
 
-    public const string SQL_Bulk_User_Activation = "select username, case when portaluser='T' then 'p' else null end usertype from axusers WHERE username != 'admin' AND (authkey IS NULL OR authkey = '') AND (userkey IS NULL OR userkey = '')";
-    public const string SQL_InActive_User_Count = "SELECT COUNT(*) AS InactiveCount FROM axusers WHERE username != 'admin' AND (authkey IS NULL OR authkey = '') AND (userkey IS NULL OR userkey = '')";
+    public const string SQL_Bulk_User_Activation = "select username, case when portaluser='T' then 'p' else null end usertype from axusers WHERE username != 'admin' AND (authkey IS NULL OR authkey = '') AND (userkey IS NULL OR userkey = '') and active='T' and actflag ='T'";
+    public const string SQL_InActive_User_Count = "SELECT COUNT(*) AS InactiveCount FROM axusers WHERE username != 'admin' AND (authkey IS NULL OR authkey = '') AND (userkey IS NULL OR userkey = '') and active='T' and actflag ='T'";
     public const string REDISBULKUSERACTIVATE = "BulkUserActivate";
+
+    public const string SQL_TSTPERMISSION = "select * from fn_permissions_apptstructs('$USERNAME$','$ROLES$')";
+    public const string AX_PERMISSIONS = "AxTstPermissions";
 }

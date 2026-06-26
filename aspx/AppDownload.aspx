@@ -63,7 +63,7 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
 
     <script src="../Js/AppDownload.min.js?v=2" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
 </head>
 <body dir="<%=direction%>">
     <form id="form1" runat="server">

@@ -113,16 +113,23 @@ public partial class aspx_cpwd : System.Web.UI.Page
         if (PasswordprotectKEY != "true")
         {
             string _proj = Session["project"].ToString();
-            string AxOTPAuth = util.GetOTPSettings(_proj, "AxOTPAuth");
-            if (AxOTPAuth == "true")
+            //string AxOTPAuth = util.GetOTPSettings(_proj, "AxOTPAuth");
+            //if (AxOTPAuth == "true")
+            //{
+            //    FDR fdrObj = new FDR();
+            //    string jsoncontents = fdrObj.StringFromRedis(Constants.AXPASSWORDPOL_CONN_KEY, Session["project"].ToString());
+            //    if (jsoncontents != string.Empty)
+            //    {
+            //        hdnpwdPolicy.Value = jsoncontents.Trim();
+            //        btnSumit.Text = "Next";
+            //    }
+            //}
+            FDR fdrObj = new FDR();
+            string jsoncontents = fdrObj.StringFromRedis(Constants.AXPASSWORDPOL_CONN_KEY, Session["project"].ToString());
+            if (jsoncontents != string.Empty)
             {
-                FDR fdrObj = new FDR();
-                string jsoncontents = fdrObj.StringFromRedis(Constants.AXPASSWORDPOL_CONN_KEY, Session["project"].ToString());
-                if (jsoncontents != string.Empty)
-                {
-                    hdnpwdPolicy.Value = jsoncontents.Trim();
-                    btnSumit.Text = "Next";
-                }
+                hdnpwdPolicy.Value = jsoncontents.Trim();
+                btnSumit.Text = "Next";
             }
         }
         // End
@@ -274,7 +281,8 @@ public partial class aspx_cpwd : System.Web.UI.Page
         if (AxOTPAuth == "true" && PasswordprotectKEY != "true")
         {
             FDR fdrObj = new FDR();
-            string jsoncontents = fdrObj.StringFromRedis(Constants.AXEMAILSMTP_CONN_KEY, _proj);
+            //string jsoncontents = fdrObj.StringFromRedis(Constants.AXEMAILSMTP_CONN_KEY, _proj);
+            string jsoncontents = util.GetAllSettings(_proj, Constants.AXEMAILSMTP_CONN_KEY);
             if (jsoncontents != string.Empty && jsoncontents != "noemailsettings")
             {
                 JObject _jsonAxEmail = JObject.Parse(jsoncontents);
@@ -511,7 +519,6 @@ public partial class aspx_cpwd : System.Web.UI.Page
                     System.Web.HttpContext.Current.Session.Abandon();
                     SessionIDManager manager = new SessionIDManager();
                     manager.RemoveSessionID(System.Web.HttpContext.Current);
-
                     Page.ClientScript.RegisterStartupScript(GetType(), "closepopup", "<script>parent.ShowDimmer(true); parent.showAlertDialog('success','" + result + "'); setTimeout(function(){window.location.href= '../aspx/SignIn.aspx';},200)</script>");
                 }
                 else
@@ -520,7 +527,10 @@ public partial class aspx_cpwd : System.Web.UI.Page
                     tabbody1.Style.Add("display", "none");
 
                     Session["changeSuccess"] = result;
-                    Page.ClientScript.RegisterStartupScript(GetType(), "closepopup", "<script>closeDialog('" + result + "','/aspx/SignIn.aspx')</script>");
+                    if (Session["AxiProjectLogin"] != null && Session["AxiProjectLogin"].ToString() == "true")
+                        Page.ClientScript.RegisterStartupScript(GetType(), "closepopup", "<script>closeDialog('" + result + "','/AxiPortal/index.html')</script>");
+                    else
+                        Page.ClientScript.RegisterStartupScript(GetType(), "closepopup", "<script>closeDialog('" + result + "','/aspx/SignIn.aspx')</script>");
                 }
             }
             else
@@ -666,7 +676,8 @@ public partial class aspx_cpwd : System.Web.UI.Page
         if (AxOTPAuth == "true")
         {
             FDR fdrObj = new FDR();
-            string jsoncontents = fdrObj.StringFromRedis(Constants.AXEMAILSMTP_CONN_KEY, _proj);
+            //string jsoncontents = fdrObj.StringFromRedis(Constants.AXEMAILSMTP_CONN_KEY, _proj);
+            string jsoncontents = util.GetAllSettings(_proj, Constants.AXEMAILSMTP_CONN_KEY);
             if (jsoncontents != string.Empty && jsoncontents != "noemailsettings")
             {
                 JObject _jsonAxEmail = JObject.Parse(jsoncontents);

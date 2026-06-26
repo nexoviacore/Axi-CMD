@@ -2003,3 +2003,52 @@ table.dataTable > tbody > tr > th,table.dataTable > tbody > tr > th span,.dt-col
 	overflow-x: hidden !important;
 }
 /* right chart height and scroll issue */
+
+
+#Entitymanagement_Body-overalldiv {
+    width: 100% !important;
+}
+
+#table-body_Container {
+    padding: 3px 8px 0 0 !important;
+    box-sizing: border-box;
+}
+
+    #table-body_Container .table-responsive {
+        width: 100% !important;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-y: auto !important;
+        overflow-x: auto !important;
+        scrollbar-width: auto;
+    }
+
+        #table-body_Container .table-responsive::-webkit-scrollbar {
+            width: 10px;
+            height: 4px;
+            -webkit-appearance: none;
+        }
+
+        #table-body_Container .table-responsive::-webkit-scrollbar-thumb:vertical {
+            background: #7f8899;
+            border-radius: 8px;
+        }
+
+        #table-body_Container .table-responsive::-webkit-scrollbar-track:vertical {
+            background: #dfe3eb;
+            border-radius: 8px;
+        }
+
+        #table-body_Container .table-responsive::-webkit-scrollbar-thumb:horizontal {
+            background: #9ea6b6;
+            border-radius: 999px;
+        }
+
+        #table-body_Container .table-responsive::-webkit-scrollbar-track:horizontal,
+        #table-body_Container .table-responsive::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+
+.btn.btn-active-primary:hover:not(.btn-active) .material-icons.material-icons-style {
+    color: #fff !important;
+}

@@ -85,7 +85,7 @@
         })();
     </script>
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158"></script>
+    <script src="../Js/common.min.js?v=164"></script>
     <script type="text/javascript" src="../Js/alerts.min.js?v=32"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
     <script>
@@ -131,7 +131,8 @@
         if (typeof instanceName != "undefined" && instanceName != null)
             instanceName = instanceName.replace(/[^a-zA-Z0-9_\-\/]/g, "");
 
-        clearLocalStorage(['projInfo-', 'versionInfo-', 'langInfo-', 'hybridGUID-', 'hybridDeviceId-', 'compressedMode-', 'duplicateUser-', 'instanceName-', 'customGlobalStylesExist-', 'axGlobalThemeStyle-', 'axThemeFldr-', 'tstDDFVal♠'], true);
+        localStorage.removeItem("axpertLogoutLock-" + appSessUrl);
+        clearLocalStorage(['projInfo-', 'versionInfo-', 'langInfo-', 'hybridGUID-', 'hybridDeviceId-', 'compressedMode-', 'duplicateUser-', 'instanceName-', 'customGlobalStylesExist-', 'axGlobalThemeStyle-', 'axThemeFldr-', 'tstDDFVal♠','current_tabsignin-'], true);
         var diFileInfo = '<%=strFileinfo%>';
         var showAlertMsgText = '<%=showAlertMsgText%>';
         $(document).ready(function () {
@@ -263,13 +264,13 @@
                 </div>
                 <div class="d-flex align-items-top py-2">
                     <span class="bullet bg-primary me-3 mt-3"></span>
-                    <asp:Label ID="lblsessdup" class="" runat="server" meta:resourcekey="lblsessdup">You might have logged into another session.</asp:Label>
+                    <asp:Label ID="lblsessdup" class="" runat="server" meta:resourcekey="lblsessdup">You might have signed into another session.</asp:Label>
                 </div>
 
 
                 <div class="d-flex align-items-center pt-2">
                     <a href="<%=loginStr %>" class="btn btn-lg btn-primary m-auto w-50" id="btnSessLogin">
-                        <asp:Label ID="lblsesslogin" runat="server" meta:resourcekey="lblsesslogin">Log in</asp:Label>
+                        <asp:Label ID="lblsesslogin" runat="server" meta:resourcekey="lblsesslogin">Sign In</asp:Label>
                     </a>
                 </div>
             </div>

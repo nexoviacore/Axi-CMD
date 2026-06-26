@@ -344,7 +344,7 @@ class AxProcessFlow {
         if (name == "ProcessList") {
             url = "../../aspx/AxPEG.aspx/AxGetProcessList";
             if (_this.isAxpertFlutter) {
-                url = "../../api/v1/ARMGetProcessList";
+                url = "../../ARM_APIs/api/v1/ARMGetProcessList";
             }
         }
 

@@ -90,7 +90,7 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <link id="themecss" type="text/css" rel="Stylesheet" href="" />
     <script src="../Js/OpenLogFile.min.js?v=4" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
     <script>
         $(document).ready(function () {
             //for focusing tab within the page

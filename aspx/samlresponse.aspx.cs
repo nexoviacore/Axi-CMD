@@ -76,7 +76,8 @@ public partial class samlresponse : System.Web.UI.Page
         {
             string _strProj = proj;
             FDR fdrObj = new FDR(_strProj);
-            string SSOJsoncontent = fdrObj.StringFromRedis(Constants.AXSSO_CONN_KEY, _strProj);
+            //string SSOJsoncontent = fdrObj.StringFromRedis(Constants.AXSSO_CONN_KEY, _strProj);
+            string SSOJsoncontent = fdrObj.HashGetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXSSO_CONN_KEY, _strProj);
             if (SSOJsoncontent != string.Empty)
             {
                 JObject config = JObject.Parse(SSOJsoncontent);

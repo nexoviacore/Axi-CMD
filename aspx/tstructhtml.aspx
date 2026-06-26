@@ -115,8 +115,8 @@
         <script type="text/javascript" src="../Js/noConflict.min.js?v=1"></script>
         <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2"></script>
         <script type="text/javascript" src="../Js/alerts.min.js?v=32"></script>
-        <script type="text/javascript" src="../Js/helper.min.js?v=172"></script>
-        <script type="text/javascript" src="../Js/common.min.js?v=158"></script>
+        <script type="text/javascript" src="../Js/helper.min.js?v=175"></script>
+        <script type="text/javascript" src="../Js/common.min.js?v=164"></script>
         <script type="text/javascript">
             var strcvalue = "<%= HttpUtility.JavaScriptStringEncode(strcvalue) %>";
             $(document).ready(function () {

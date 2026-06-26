@@ -1966,6 +1966,114 @@ public class FDR
         return result;
     }
 
+    public string HashGet(string key, string field)
+    {
+        string result = string.Empty;
+        var redis = RedisConnect();
+        try
+        {            
+            IDatabase cacheClient = redis.GetDatabase();
+            if (redis.IsConnected)
+            {
+                result = cacheClient.HashGet(key, field);
+            }
+        }
+        catch (Exception ex)
+        {
+            logObj.CreateLog("Redis Server Function(HashGet), Message:" + ex.Message, GetSessionId(), "HashGet", "new");
+        }
+        finally
+        {
+            RedisClose(redis);
+        }
+        return result;
+    }
+
+
+    public string HashGetKeyWithSchema(string ThisKey, string ThisKeyParam, string schemaName = "")
+    {
+        string result = string.Empty;
+        var redis = RedisConnect();
+        try
+        {
+            byte[] bytes = null;
+            if (schemaNameKey == string.Empty)
+            {
+                if (HttpContext.Current.Session["dbuser"] != null)
+                    schemaName = HttpContext.Current.Session["dbuser"].ToString();
+            }
+            else if (schemaNameKey == string.Empty && schemaName == string.Empty)
+                return result = "schemaNamecannotbenull";
+            IDatabase cacheClient = redis.GetDatabase();
+            if (redis.IsConnected)
+            {
+                ThisKey = schemaName == "" ? schemaNameKey + '-' + ThisKey : schemaName + '-' + ThisKey;
+                bytes = (byte[])cacheClient.HashGet(ThisKey, ThisKeyParam);
+                if (bytes != null)
+                {
+                    using (var stream = new MemoryStream(bytes))
+                    {
+                        result = (string)new BinaryFormatter().Deserialize(stream);
+                        if (result == null) result = string.Empty;
+                    }
+                }
+            }
+            else
+                result = "redisnotconnected";// Redis not connected 
+        }
+        catch (Exception ex)
+        {
+            logObj.CreateLog("Redis Server Function(HashGetKey), Message:" + ex.Message, GetSessionId(), "HashGetKey", "new");
+        }
+        finally
+        {
+            RedisClose(redis);
+        }
+        return result;
+    }
+    public Dictionary<string, string> HashGetAllKey(string ThisKey, string schemaName = "")
+    {
+        var result = new Dictionary<string, string>();
+        var redis = RedisConnect();
+        try
+        {
+            if (schemaNameKey == string.Empty)
+            {
+                if (HttpContext.Current.Session["dbuser"] != null)
+                    schemaName = HttpContext.Current.Session["dbuser"].ToString();
+            }
+            else if (schemaNameKey == string.Empty && schemaName == string.Empty)
+                return result;
+            IDatabase cacheClient = redis.GetDatabase();
+            if (!redis.IsConnected)
+                return result;
+
+            ThisKey = schemaName == "" ? schemaNameKey + '-' + ThisKey : schemaName + '-' + ThisKey;
+            var entries = cacheClient.HashGetAll(ThisKey);
+            foreach (var entry in entries)
+            {
+                if (entry.Value.HasValue)
+                {
+                    byte[] bytes = entry.Value;
+                    using (var stream = new MemoryStream(bytes))
+                    {
+                        string value = (string)new BinaryFormatter().Deserialize(stream);
+                        result[entry.Name] = value ?? string.Empty;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logObj.CreateLog("Redis Server Function(HashGetAllKey), Message:" + ex.Message, GetSessionId(), "HashGetAllKey", "new");
+        }
+        finally
+        {
+            RedisClose(redis);
+        }
+        return result;
+    }
+
     public IviewParams HashGetParamObjFromRedis(string key, string subKey)
     {
         IviewParams result = null;

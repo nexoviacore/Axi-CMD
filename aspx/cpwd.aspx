@@ -41,9 +41,9 @@
     <script src="../Js/md5.min.js" type="text/javascript"></script>
     <script src="../Js/user.min.js?v=20" type="text/javascript"></script>
     <script src="../Js/gen.min.js?v=14" type="text/javascript"></script>
-    <script src="../Js/helper.min.js?v=172" type="text/javascript"></script>
+    <script src="../Js/helper.min.js?v=175" type="text/javascript"></script>
     <script src="../Js/cpwd.min.js?v=23" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
     <script>
         (function () {
@@ -166,7 +166,7 @@
                                 <asp:ScriptManager ID="ScriptManager1" runat="server">
                                     <Scripts>
                                         <asp:ScriptReference Path="../Js/gen.min.js?v=14" />
-                                        <asp:ScriptReference Path="../Js/tstruct.min.js?v=673" />
+                                        <asp:ScriptReference Path="../Js/tstruct.min.js?v=692" />
                                     </Scripts>
                                     <Services>
                                         <asp:ServiceReference Path="../WebService.asmx" />

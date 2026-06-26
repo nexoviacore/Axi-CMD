@@ -169,6 +169,29 @@ public partial class aspx_ArrangeMenu : System.Web.UI.Page
         {
             try
             {
+                string[] allowedExtensions =
+          {
+            ".jpg",
+            ".jpeg",
+            ".png"
+        };
+
+                string originalFileName = Path.GetFileName(uploadIcon.FileName);
+                string extension = Path.GetExtension(originalFileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(extension))
+                {
+                    Response.StatusCode = 400;
+                    Response.StatusDescription = "Selected file is not supported, please select .jpg, .jpeg, .png file only";
+                    uploadIcon.FailedValidation = true;
+                    return;
+                }
+                if (uploadIcon.PostedFile.ContentLength > 515785)
+                {
+                    Response.StatusCode = 400;
+                    Response.StatusDescription = "Max file size is 500 KB";
+                    uploadIcon.FailedValidation = true;
+                    return;
+                }
                 try
                 {
 
@@ -188,7 +211,10 @@ public partial class aspx_ArrangeMenu : System.Web.UI.Page
             }
             catch (Exception ex)
             {
+                Response.StatusCode = 500;
+                Response.StatusDescription = ex.Message;
 
+                uploadIcon.FailedValidation = true;
             }
 
         }

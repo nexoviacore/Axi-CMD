@@ -290,7 +290,10 @@ class AxProcessFlow {
             if (result.success) {
                 let json = JSON.parse(result.response);
                 if (json.d == 'Error in ARM connection.') {
-                    showAlertDialog("error", 'Error in ARM connection.');
+                    showAlertDialog('error', appGlobalVarsObject.lcm[572]);
+                    return;
+                } else if (json.d.startsWith('<!DOCTYPE HTML PUBLIC ')) {
+                    showAlertDialog('error', appGlobalVarsObject.lcm[572]);
                     return;
                 }
                 let dataResult = _this.dataConvert(json, "ARM");
@@ -421,7 +424,11 @@ class AxProcessFlow {
 
                 if (json.d === "Error in ARM connection.") {
                     ShowDimmer(false);
-                    showAlertDialog("error", "Error in ARM connection.");
+                   showAlertDialog('error', appGlobalVarsObject.lcm[572]);
+                    return;
+                } else if (json.d.startsWith('<!DOCTYPE HTML PUBLIC ')) {
+                    ShowDimmer(false);
+                    showAlertDialog('error', appGlobalVarsObject.lcm[572]);
                     return;
                 }
 
@@ -939,7 +946,7 @@ class AxProcessFlow {
         files.js.push("/../ThirdParty/Highcharts/highcharts.js");
         files.js.push("/../ThirdParty/Highcharts/highcharts-exporting.js");
         files.js.push("/../Js/high-charts-functions.min.js?v=20");
-        files.js.push("/../Js/AxInterface.min.js?v=16");
+        files.js.push("/../Js/AxInterface.min.js?v=20");
 
         files.js.push("/../ThirdParty/DataTables-1.10.13/media/js/jquery.dataTables.js");
         files.js.push("/../ThirdParty/DataTables-1.10.13/media/js/dataTables.bootstrap.js");
@@ -1193,6 +1200,9 @@ class AxProcessFlow {
         if (pageType == '') {
             showAlertDialog("error", 'Page name should not be empty.');
             return false;
+        } else if (pageType == 'null') {
+            ShowDimmer(false);
+            return false;
         }
         let url = '';
         pageParams = pageParams.replace("^", "&");
@@ -1206,6 +1216,10 @@ class AxProcessFlow {
         } else if (pageType.startsWith('c')) {
             //pageType = pageType.substring(2);
             url = `../aspx/${pageParams}`;
+        } else if (pageType.startsWith('e')) {
+            this.DownloadExportFile(pageParams);
+            ShowDimmer(false);
+            return;
         }
         document.querySelector("#process_centerpanel").classList.add("d-none");
         document.querySelector("#horizontal-processbar").classList.add("d-none");

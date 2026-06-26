@@ -339,6 +339,7 @@
             </div>
         </div>
         <asp:HiddenField ID="hdnStructures" runat="server" />
+        <asp:HiddenField ID="hdnApplicationTemplate" runat="server" value=""/>
     </form>
 
 
@@ -376,8 +377,8 @@
     <script type="text/javascript" src="../ThirdParty/codemirror/addon/search/match-highlighter.js"></script>
     <script type="text/javascript" src="../ThirdParty/codemirror/addon/search/jump-to-line.js"></script>
 
-    <script src="../js/Entity-common.min.js?v=14"></script>
-    <script type="text/javascript" src="../Js/PluginCustomCode.min.js?v=4"></script>
+    <script src="../js/Entity-common.min.js?v=17"></script>
+    <script type="text/javascript" src="../Js/PluginCustomCode.min.js?v=5"></script>
 
 
 </body>

@@ -7,6 +7,7 @@ using System.Web.UI.WebControls;
 using System.Web.Services;
 using Newtonsoft.Json.Linq;
 using System.Configuration;
+using System.Text.RegularExpressions;
 
 public partial class axpertAPI : System.Web.UI.Page
 {
@@ -191,7 +192,11 @@ public partial class axpertAPI : System.Web.UI.Page
     [WebMethod]
     public static string getIviewParams(string ivName)
     {
-
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return "SESSION_TIMEOUT";
+        if (!Regex.IsMatch(ivName, @"^[a-zA-Z0-9_]+$"))
+            throw new Exception("Invalid ivName");
         ASBExt.WebServiceExt asbExt = new ASBExt.WebServiceExt();
         string sql = "SELECT a.pname,a.pcaption FROM iviewparams a WHERE a.iname = '" + ivName + "'";
         string result = "";

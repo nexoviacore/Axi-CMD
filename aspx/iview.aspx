@@ -20,7 +20,7 @@
         <%:Styles.Render(direction == "ltr" ? "~/UI/axpertUI/ltrBundleCss" : "~/UI/axpertUI/rtlBundleCss") %>
     </asp:PlaceHolder>
     <!-- The Bundle CSS is loading after this file, which is why the iviewNewUi114.css link has been added here.  -->
-    <link href="../Css/iviewNewUi114.css?v=3" rel="stylesheet" />
+    <link href="../Css/iviewNewUi114.min.css?v=5" rel="stylesheet" />
     <script>
         if (typeof localStorage != "undefined") {
             var projUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));

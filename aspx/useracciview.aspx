@@ -158,7 +158,7 @@
         <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
         <script src="../Js/helper.min.js?v=150" type="text/javascript"></script>
         <script src="../Js/useracciview.min.js?v=14" type="text/javascript"></script>
-        <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
+        <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
         <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
 
         <script>

@@ -23,6 +23,7 @@ var isLoadDataRow = false;
 var clearFormRows = false;
 var IsRowClick = false;
 var isFormGirdFirstRowDel = false;
+var isMobileGetDep = false;
 function addTheValuesToGrid(dcNo, elem, trIndexForEdit, onlySave) {
     globalOnlySave = false;
     if (typeof onlySave == "undefined" || onlySave === "") {
@@ -2962,12 +2963,13 @@ function formGridRowBlur(fldObj) {
 function createFormGridRowHTML(editGridDC) {
     var idOfelement = "divDc" + editGridDC + " #gridheaddiv";
     var data = "wrapperForEditFields" + editGridDC;
-
-    $(`#wrapperForEditFields${editGridDC} select.fldFromSelect`).each((ind, elm) => {
-        try {
-            $(elm).removeClass("initialized").select2("destroy");
-        } catch (ex) { }
-    });
+    if (!isMobileGetDep) {
+        $(`#wrapperForEditFields${editGridDC} select.fldFromSelect`).each((ind, elm) => {
+            try {
+                $(elm).removeClass("initialized").select2("destroy");
+            } catch (ex) { }
+        });
+    }
     gridDivHtml[editGridDC] = "<div class=\"row hide\" id=\"wrapperForEditFields" + editGridDC + "\">" + $("#" + data).html() + "</div>";
 
     var modalHTML = "";
@@ -3178,11 +3180,13 @@ function AddNewFormRowInDc(dcNo, calledFrom) {
         strRowNo = GetRowNoHelper(i);
     } else
         strRowNo = TrId.substring(TrId.length - 3, TrId.length);
-    if (strRowNoAdd == "001")
+    if (typeof calledFrom != "undefined" && (calledFrom == "GetDep" || calledFrom == "FillGrid"))
+        isMobileGetDep = true;
+    if (strRowNoAdd == "001")       
         editTheRow("", dcNo, "", event);
     else
         editTheRow("", dcNo, strRowNo, event);
-
+    isMobileGetDep = false;
     axpBtnClickEvent(strRowNoAdd);
     setDesignedLayout("divDc" + dcNo);
     formGridRowBlur($("#axp_recid" + dcNo + strRowNoAdd + "F" + dcNo));

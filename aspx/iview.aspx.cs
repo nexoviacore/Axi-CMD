@@ -2279,6 +2279,10 @@ public partial class iview : System.Web.UI.Page
                                     {
                                         cols = hdnLvSelectedCols.Value;
                                         hyp = hdnLvSelectedHyperlink.Value;
+                                        if (cols != string.Empty && hyp != string.Empty && objIview.smartviewSettings != string.Empty)
+                                        {
+                                            hdnLvChangedStructure.Value = string.Empty;
+                                        }
                                     }
                                 }
                                 else
@@ -2542,6 +2546,11 @@ public partial class iview : System.Web.UI.Page
                                 ivVarNode.Append("var ivVarNode=JSON.stringify(" + ivDataArray.ToString(Newtonsoft.Json.Formatting.None) + ")");
                                 dataFetched = true;
                             }
+                            else if (ivDataArray.Count == 0 && dataString == "<error>No Data</error>")
+                            {
+                                ivVarNode.Append("var ivVarNode='No Data'");
+                                dataFetched = true;
+                            }
                             else
                             {
                                 //hdnIViewData.Value = dataString;
@@ -2790,6 +2799,12 @@ public partial class iview : System.Web.UI.Page
                 requestProcess_logtime += "Server - " + errMsg + " ♦ ";
                 Response.Redirect(util.ERRPATH + Constants.ERAUTHENTICATION + "*♠*" + requestProcess_logtime);
                 return true;
+            }
+            else if (errMsg == "No Data")
+            {
+                requestProcess_logtime += "Server - " + errMsg + " ♦ ";
+                //Response.Redirect(util.ERRPATH + Constants.ERAUTHENTICATION + "*♠*" + requestProcess_logtime);
+                return false;
             }
             else
             {
@@ -3323,16 +3338,29 @@ public partial class iview : System.Web.UI.Page
         param.Value = string.Empty;
         for (i = 0; i <= strp.Length - 1; i++)
         {
-            if (!string.IsNullOrEmpty(strp[i]))
+            if (!string.IsNullOrEmpty(strp[i]) && !strp[i].ToString().ToLower().StartsWith("hltype~") && !strp[i].ToString().ToLower().StartsWith("isduptab~") && !strp[i].ToString().ToLower().StartsWith("axispop~"))
             {
                 string[] arrparam = strp[i].ToString().Split('~');
                 string pName = util.CheckSpecialChars(arrparam[0].ToString());
                 string pValue = util.CheckSpecialChars(arrparam[1].ToString());
                 pValue = util.AdditionalSpecialCharsCheck(pValue);
 
-                pXml = pXml + "<" + pName + ">";
-                pXml = pXml + pValue;
-                pXml = pXml + "</" + pName + ">";
+                //pXml = pXml + "<" + pName + ">";
+                //pXml = pXml + pValue;
+                //pXml = pXml + "</" + pName + ">";
+
+                string startTag = "<" + pName + ">";
+                string endTag = "</" + pName + ">";
+                if (pXml.Contains(startTag))
+                {
+                    int start = pXml.IndexOf(startTag) + startTag.Length;
+                    int end = pXml.IndexOf(endTag);
+                    pXml = pXml.Substring(0, start) + pValue + pXml.Substring(end);
+                }
+                else
+                {
+                    pXml += startTag + pValue + endTag;
+                }
 
                 if (pName == "mrefresh")
                 {
@@ -7330,6 +7358,25 @@ public partial class iview : System.Web.UI.Page
             }
         }
         return returnString;
+    }
+
+    [WebMethod(EnableSession = true)]
+    public static string ExportIviewData(string ivName, string ivKey, string ivParamCaption, string IVIRCaption, string _dtFormat)
+    {
+        Util.Util utilObj = new Util.Util();
+        string response = string.Empty;
+        if (HttpContext.Current.Session["project"] == null || HttpContext.Current.Session["nsessionid"] == null)
+            return "error:" + utilObj.SESSTIMEOUT;
+        try
+        {
+            IviewDataExport ivdataEx = new IviewDataExport();
+            response = ivdataEx.GetExcelFast(ivName, ivKey, ivParamCaption, IVIRCaption, _dtFormat);
+        }
+        catch (Exception ex)
+        {
+            response = "error:" + ex.Message;
+        }
+        return response;
     }
 }
 

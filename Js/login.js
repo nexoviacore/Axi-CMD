@@ -8,7 +8,7 @@ var proj = "";
 var language = "english";
 var _langSettingEnabled = "false";
 var _isOtpAuth = false;
-
+var isStaySignin = "";
 function GetSchemaDetails() {
     var regId = document.getElementById("AxRegId").value;
     try {
@@ -327,7 +327,7 @@ function AddLanguages() {
     }
 }
 
-$j(document).ready(function () {    
+$j(document).ready(function () {
     $("a[title ~= 'BotDetect']").removeAttr("style");
     $("a[title ~= 'BotDetect']").removeAttr("href");
     $("a[title ~= 'BotDetect']").css('visibility', 'hidden');
@@ -534,12 +534,13 @@ $j(document).ready(function () {
         setProjectNeeds(localStorageProj, false);
     } else {
         setProjectImages(localStorageProj)
-        GetProjLang();
+        if (typeof multipleAccessCode === "undefined" || multipleAccessCode === "true")
+            GetProjLang();
     }
 
     SetFocus();
     //GetProjLang();
-    GetProjCopyRightTxt();
+    //GetProjCopyRightTxt();
 
     $("#axSelectProj, #axUserName, #axPassword, #axLanguage, #txtName, #txtMl").on('keyup keypress blur change', function () {
         if ($(this).attr('id') == errField && $(this).val()) {
@@ -584,7 +585,7 @@ $j(document).ready(function () {
     } catch (ex) {
         GetBrowserUId();
     }
-   /* GetBrowserUId();*/
+    /* GetBrowserUId();*/
 
     if (_langSettingEnabled == "true")
         bindLang();
@@ -651,10 +652,25 @@ $j(document).ready(function () {
         }
     } catch (ex) { }
     if (typeof multipleAccessCode === "undefined" || multipleAccessCode === "false") {
-        ShowAccessCode();
+        ShowAccessCode(localStorageProj);
+    }
+
+    try {
+        if (typeof (Storage) !== "undefined") {
+            localStorageLogged = localStorage["logged_in-" + appUrl];
+            if (typeof localStorageLogged != "undefined" && localStorageLogged == "yes") {
+                LoggedInAnotherTab();
+            } else if (typeof localStorageLogged == "undefined" && $("#hdnPrevTab").length > 0 && $("#hdnPrevTab").val() != "") {
+                LoginTabChanged();
+            }
+        }
+    } catch (e) {
     }
 });
 
+$(window).on("load", function () {
+    $("#projectLogo").show();
+});
 
 
 var myVersionJSON;
@@ -771,6 +787,7 @@ function OnSuccess(response) {
         let _chklangflag = response.d.split('♣')[1];
         if (_chklangflag == 'true')
             _langSettingEnabled = "true";
+        $("#hdnKeepMeSigninFlag").val(response.d.split('♣')[2]);
     }
     if (result != "" && result.toUpperCase() != "ENGLISH") {
         $j("#axLangFld").show();
@@ -843,7 +860,7 @@ function ValidateProject() {
 
 function ValidateLanguage() {
     var strLang = $j('#axLanguage').val();
-    if (strLang.length) {
+    if (strLang != null && strLang.length) {
         var isValidLang = false;
         for (k in arrLangs) {
             if (arrLangs[k].toLowerCase() == strLang.toLowerCase()) {
@@ -1030,7 +1047,8 @@ function oktaSsoFinalise(userid, username, proj) {
 
 function Office365Init() {
     if (typeof signedin != "undefined")
-        localStorage.setItem("staySignedIn", signedin.checked);
+        //localStorage.setItem("staySignedIn", signedin.checked);
+        localStorage.setItem("staySignedIn", $j("#hdnKeepMeSignin").val());
     else
         localStorage.setItem("staySignedIn", "false");
     axOffice365SessionInit();
@@ -1038,6 +1056,7 @@ function Office365Init() {
 }
 
 function CheckIsUserLogged() {
+    GetBrowserUIdNew();
     var isUserLogged = $.confirm({
         theme: 'modern',
         closeIcon: false,
@@ -1058,7 +1077,7 @@ function CheckIsUserLogged() {
                     });
                     $j("#mobDevice").val(isMobileDevice() == true ? "True" : "False");
                     $j("#duplicateUser").val("true");
-                    $j("#hbtforDupLogin").val(bst);
+                    $j("#hbtforDupLogin").val(bst);                   
                     $j("#btnSubmitUser").click();
                 }
             },
@@ -1146,7 +1165,7 @@ function chkSSOLogin() {
 function SetLoginErrorMsg(msg) {
     let applnUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
     localStorage["lnmsg-" + applnUrl] = msg;
-    if (top.window.location.href.indexOf('?InternalSSO=') > -1 || top.window.location.href.indexOf('ssotype=') > -1)
+    if (top.window.location.href.indexOf('?InternalSSO=') > -1 || top.window.location.href.indexOf('ssotype=') > -1 || top.window.location.href.indexOf('?axi=') > -1)
         top.window.location.href = applnUrl + "/aspx/signin.aspx";
     else
         top.window.location.href = top.window.location.href;
@@ -1387,9 +1406,9 @@ function OpenNewConnection() {
 function KeepMeSigninConfirm(usrList) {
     var dvHtml = `<div class="container-fluid"><div class="row userNameGroup">`;
     $.each(usrList.split(","), function (ind, val) {
-        dvHtml += `<div class="userNameList" onclick="loginKeepSigninUser('` + val + `');"><span class="material-icons userNameIcon">account_circle</span><span class="userNameText">` + val + `</span></div>`;
+        dvHtml += `<div class="userNameList" onclick="loginKeepSigninUser('` + val + `');" style="display:flex;align-items:center;cursor:pointer;flex-direction:row;justify-content:center;"><span class="material-icons userNameIcon" style="padding-right: 5px;">account_circle</span><span class="userNameText">` + val + `</span></div>`;
     });
-    dvHtml += `<div class="userNameList" onclick="loginKeepSigninUser('Loginwithanotheruser');"><span class="material-icons userNameIcon">person_add_alt</span><span class="userNameText">Login with another user</span></div>`;
+    dvHtml += `<div class="userNameList" onclick="loginKeepSigninUser('Loginwithanotheruser');" style="display:flex;align-items:center;cursor:pointer;flex-direction:row;justify-content:center;"><span class="material-icons userNameIcon" style="padding-right: 5px;">person_add_alt</span><span class="userNameText">Login with another user</span></div>`;
     dvHtml += `</div></div>`;
     var KeepMeSignin = $.confirm({
         theme: 'modern',
@@ -1437,7 +1456,8 @@ function loginKeepSigninUser(selectedUser) {
             cache: false,
             async: true,
             data: JSON.stringify({
-                usrName: selectedUser, hdnBwsrid: $("#hdnBwsrid").val(), csrfToken: $("#_antiforgery").val()
+                usrName: selectedUser, hdnBwsrid: $("#hdnBwsrid").val(), csrfToken: $("#_antiforgery").val(),
+                projVal: ($j('#axSelectProj').val() == "" ? $("#hdnProjName").val() : $j('#axSelectProj').val())
             }),
             dataType: 'json',
             contentType: "application/json",
@@ -1449,15 +1469,24 @@ function loginKeepSigninUser(selectedUser) {
                         $j('#hdnProjName').val(jVal.axSelectProj);
                         $j('#axLanguage').val(jVal.axLanguage);
                         $("#hdnProjLang").val(jVal.axLanguage);
-                        $j("#axUserName").val(jVal.axUserName);
+                        const _thisEncVal = encryptLoginDetails(jVal.axUserName);
+                        $j("#axUserName").val(_thisEncVal);
+                        $("#hdnUserName").val(_thisEncVal);
                         $("#hdnPuser").val(jVal.KeepMeAutoPwd);
+                        const _thisEncpVal = encryptLoginDetails(jVal.KeepMeAutoPwd);
+                        $("#hdnPuser").val(_thisEncpVal);
                         $j("#hdnLastOpenpage").val(jVal.hdnLastOpenpage);
-                        $("#signedin").prop("checked", jVal.signedin);
+                        /*$("#signedin").prop("checked", jVal.signedin);*/
+                        $j("#hdnKeepMeSignin").val(jVal.signedin.toString());                        
                         $("#hdnbtforLogin").val(bst);
-                        if (jVal.ssotype == "")
+                        if (jVal.ssotype == "") {
+                            isStaySignin = "true";
                             $j("#btnSubmit").click();
-                        else if (jVal.ssotype == "windows")
+                        }
+                        else if (jVal.ssotype == "windows") {
+                            isStaySignin = "true";
                             $j("#WindowCloneBtn").click();
+                        }
                         else if (jVal.ssotype == "saml")
                             $j("#SamlBtn").click();
                         else if (jVal.ssotype == "ga")
@@ -1485,54 +1514,65 @@ function loginKeepSigninUser(selectedUser) {
 
 
 function KeepSigninWebDetails() {
-    $.ajax({
-        url: 'Signin.aspx/KeepSigninWebDetailsNew',
-        type: 'POST',
-        cache: false,
-        async: true,
-        data: JSON.stringify({
-            jsonData: JSON.stringify({
-                hdnBwsrid: $("#hdnBwsrid").val(),
-                csrfToken: $("#_antiforgery").val()
-            })
-        }),
-        dataType: 'json',
-        contentType: "application/json",
-        success: function (data) {
-            if (data.d != "") {
-                var jVal = JSON.parse(data.d);
-                if (jVal != "" && typeof jVal.userlist == "undefined") {
-                    $j('#axSelectProj').val(jVal.axSelectProj);
-                    $j('#hdnProjName').val(jVal.axSelectProj);
-                    $j('#axLanguage').val(jVal.axLanguage);
-                    $("#hdnProjLang").val(jVal.axLanguage);
-                    $j("#axUserName").val(jVal.axUserName);
-                    $("#hdnPuser").val(jVal.KeepMeAutoPwd);
-                    $j("#hdnLastOpenpage").val(jVal.hdnLastOpenpage);
-                    $("#signedin").prop("checked", jVal.signedin);
-                    $("#hdnbtforLogin").val(bst);
-                    if (jVal.ssotype == "")
-                        $j("#btnSubmit").click();
-                    else if (jVal.ssotype == "windows")
-                        $j("#WindowCloneBtn").click();
-                    else if (jVal.ssotype == "saml")
-                        $j("#SamlBtn").click();
-                    else if (jVal.ssotype == "ga")
-                        $j("#GoogleBtn").click();
-                    else if (jVal.ssotype == "fb")
-                        $j("#FacebookBtn").click();
-                    else if (jVal.ssotype == "of365")
-                        $j("#Office365Btn").click();
-                    else if (jVal.ssotype == "ot")
-                        $j("#OktaBtn").click();
+    if ($("#hdnKeepMeSigninFlag").val() == "true") {
+        $.ajax({
+            url: 'Signin.aspx/KeepSigninWebDetailsNew',
+            type: 'POST',
+            cache: false,
+            async: true,
+            data: JSON.stringify({
+                jsonData: JSON.stringify({
+                    hdnBwsrid: $("#hdnBwsrid").val(),
+                    csrfToken: $("#_antiforgery").val(),
+                    projVal: ($j('#axSelectProj').val() == "" ? $("#hdnProjName").val() : $j('#axSelectProj').val())
+                })
+            }),
+            dataType: 'json',
+            contentType: "application/json",
+            success: function (data) {
+                if (data.d != "") {
+                    var jVal = JSON.parse(data.d);
+                    if (jVal != "" && typeof jVal.userlist == "undefined") {
+                        $j('#axSelectProj').val(jVal.axSelectProj);
+                        $j('#hdnProjName').val(jVal.axSelectProj);
+                        $j('#axLanguage').val(jVal.axLanguage);
+                        $("#hdnProjLang").val(jVal.axLanguage);
+                        const _thisEncVal = encryptLoginDetails(jVal.axUserName);
+                        $j("#axUserName").val(_thisEncVal);
+                        $("#hdnUserName").val(_thisEncVal);
+                        const _thisEncpVal = encryptLoginDetails(jVal.KeepMeAutoPwd);
+                        $("#hdnPuser").val(_thisEncpVal);
+                        $j("#hdnLastOpenpage").val(jVal.hdnLastOpenpage);
+                        //$("#signedin").prop("checked", jVal.signedin);
+                        $j("#hdnKeepMeSignin").val(jVal.signedin.toString());
+                        $("#hdnbtforLogin").val(bst);
+                        if (jVal.ssotype == "") {
+                            isStaySignin = "true";
+                            $j("#btnSubmit").click();
+                        }
+                        else if (jVal.ssotype == "windows") {
+                            isStaySignin = "true";
+                            $j("#WindowCloneBtn").click();
+                        }
+                        else if (jVal.ssotype == "saml")
+                            $j("#SamlBtn").click();
+                        else if (jVal.ssotype == "ga")
+                            $j("#GoogleBtn").click();
+                        else if (jVal.ssotype == "fb")
+                            $j("#FacebookBtn").click();
+                        else if (jVal.ssotype == "of365")
+                            $j("#Office365Btn").click();
+                        else if (jVal.ssotype == "ot")
+                            $j("#OktaBtn").click();
+                    }
+                    else if (jVal != "" && typeof jVal.userlist != "undefined") {
+                        KeepMeSigninConfirm(jVal.userlist);
+                    }
                 }
-                else if (jVal != "" && typeof jVal.userlist != "undefined") {
-                    KeepMeSigninConfirm(jVal.userlist);
-                }
+            }, error: function (error) {
             }
-        }, error: function (error) {
-        }
-    });
+        });
+    }
 }
 
 function GetBrowserUId() {
@@ -1569,6 +1609,37 @@ function GetBrowserUId() {
         });
 }
 
+function GetBrowserUIdNew() {
+    // Initialize the agent at application startup.
+    const fpPromise = import('../ThirdParty/fingerprintjs/FingerprintJS.min.js')
+        .then(FingerprintJS => FingerprintJS.load())
+
+    // Get the visitor identifier when you need it.
+    fpPromise
+        .then(fp => fp.get())
+        .then(result => {
+            // This is the visitor identifier:
+            const visitorId = result.visitorId
+            var brName = "";
+            if (jQBrowser.chrome) {
+                brName = "chrome";
+            } else if (jQBrowser.safari) {
+                brName = "safari";
+            } else if (jQBrowser.opera) {
+                brName = "opera";
+            } else if (jQBrowser.mozilla) {
+                brName = "mozilla";
+            }
+            else if (jQBrowser.msie) {
+                brName = "msie";
+            }
+            else if (jQBrowser.msedge) {
+                brName = "msedge";
+            }
+            $("#hdnBwsridNew").val(visitorId + "-" + brName);
+        });
+}
+
 /*New code */
 function chkLoginFormHiden() {
     let _btnSubmitNew = document.getElementById('btnSubmitNew');
@@ -1593,6 +1664,12 @@ function chkLoginFormNew(e) {
             _btnSubmitNew.style.pointerEvents = "auto";
         chkLoginFormHiden();
         return false;
+    }
+
+    if (isStaySignin == "true" && $j("#axPassword").length == 0) {
+        GetProcessTime();
+        $("#browserElapsTime").val(browserElapsTime);
+        return true;
     }
 
     if (_isOtpAuth) {
@@ -1957,7 +2034,7 @@ function SetNextExecTime(_serverprocesstime, _requestProcess_logtime) {
 }
 
 //Access Code Code
-function ShowAccessCode() {
+function ShowAccessCode(localstrProj='') {
     const panelUser = document.getElementById("panelUser");
     const selectElement = document.getElementById("axSelectProj");
     if (!panelUser || !selectElement) {
@@ -1985,6 +2062,12 @@ function ShowAccessCode() {
         labelElement.insertAdjacentElement("afterend", newInput);
     }
     newInput.focus();
+    try {
+        if (typeof localstrProj != "undefined" && localstrProj != "") {
+            isValidProject = true;
+            $j('#newProjectInput').val(localstrProj);
+        }
+    } catch (ex) { }
     const userNameField = document.getElementById("axUserName");
     newInput.addEventListener("input", function () {
         const userInput = this.value.trim().toLowerCase();
@@ -2154,3 +2237,91 @@ function getClientInfo() {
             GetBrowserUId();
         });
 }
+
+$j(document).on("change", "#signedin", function (e) {
+    if ($(this).is(':checked')) {
+        $("#hdnKeepMeSignin").val("true");
+    } else
+        $("#hdnKeepMeSignin").val("false");
+});
+
+function LoggedInAnotherTab() {
+    var isUserulmt = $.confirm({
+        theme: 'modern',
+        closeIcon: false,
+        title: 'Security Alert',
+        escapeKey: 'buttonB',
+        onContentReady: function () {
+            disableBackDrop('bind');
+        },
+        content: eval(callParent('lcm[311]')),
+        buttons: {
+            buttonA: {
+                text: eval(callParent('lcm[279]')),
+                btnClass: 'btn btn-primary',
+                action: function () {
+                    var appUrlUser = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+                    localStorage.setItem("current_tabsignin-" + appUrlUser, appUrlUser + "/aspx/signin.aspx");
+                    localStorage.removeItem("logged_in-" + appUrlUser);
+                    $.ajax({
+                        type: "POST",
+                        data: '{uInfo: "' + $j('#hdnPrevTab').val() + '" }',
+                        url: "signin.aspx/LoggedPreviTab",
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        success: function (response) {
+                            localStorage.setItem("refresh_other_tabs", new Date().getTime());
+                            window.location.href = window.location.href;
+                        },
+                        failure: function (response) {
+                        }
+                    });
+                }
+            },
+            buttonB: {
+                text: eval(callParent('lcm[280]')),
+                btnClass: 'btn btn-bg-light btn-color-danger btn-active-light-danger',
+                action: function () {
+                    disableBackDrop('destroy');
+                    //window.location.href = "about:blank";
+                    $("#divPanelSignin").children().hide();
+                    $("#divPanelSignin").append(
+                        '<div id="multiTabWarning" style="text-align:center; padding:20px;height:250px;">' +
+                        '<label style="font-size:18px;font-weight:600;margin-top: 30px;">' +
+                        'Other opened tabs will get signed out automatically.<br>' +
+                        'Do you want to continue?' +
+                        '</label>' +
+                        '<br><br>' +
+                        '<button id="btnSigninReload" class="btn btn-primary" style="margin-top:50px;">Sign In</button>' +
+                        '</div>'
+                    );
+                }
+            }
+        },
+        onOpenBefore: function () {
+            $(".jconfirm-buttons button").each(function () {
+                $(this).addClass('Custom_Case');
+            });
+        },
+    });
+}
+function LoginTabChanged() {
+    try {
+        $.ajax({
+            type: "POST",
+            data: '{uInfo: "' + $j('#hdnPrevTab').val() + '" }',
+            url: "signin.aspx/LoggedPreviTab",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (response) {
+                window.location.href = window.location.href;
+            },
+            failure: function (response) {
+            }
+        });
+    } catch (ex) { }
+}
+
+$(document).off("click", "#btnSigninReload").on("click", "#btnSigninReload", function () {
+    window.location.href = window.location.href;
+});

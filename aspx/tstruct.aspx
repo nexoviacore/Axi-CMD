@@ -358,7 +358,8 @@
                         <asp:HiddenField ID="hdnTstLoadDummy" runat="server" />
                         <asp:HiddenField ID="hdnisHtmlLsLoad" runat="server" />
                         <asp:HiddenField ID="hdnTstAutoSD" runat="server" />
-                          <asp:HiddenField ID="hdnDummyParams" runat="server" />
+                        <asp:HiddenField ID="hdnDummyParams" runat="server" />
+                        <asp:HiddenField ID="hdnTstPermission" runat="server" />
 
                         <asp:HiddenField ID="PublishID" runat="server" />
                         <asp:HiddenField ID="isAxpImagePathHidden" runat="server" />

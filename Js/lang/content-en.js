@@ -530,7 +530,7 @@ function LoadglLangauge(message) {// Custom messages
             lngMessage = "Please select a task to delegate.";
             break;
         case 4020:
-            lngMessage = "Invalid UserName";
+            lngMessage = "Invalid User Name.";
             break;
         case 4021:
             lngMessage = "Please select user.";
@@ -1294,3 +1294,4 @@ lcm[568] = "Application Variables";
 lcm[569] = "Axpert Languages";
 lcm[570] = "Table Type Field Descriptor";
 lcm[571] = "Data Base Explorer";
+lcm[572] = "Either ARM is not running or setup is not proper. Please contact administrator to rectify ARM setup issue.";

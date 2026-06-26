@@ -748,6 +748,9 @@ function toggleStaticRunMode() {
 }
 
 function goToDesignMode() {
+    if (CheckBtnReadOnly('goToDesignMode()')) {
+        return;
+    }
     if (AxIsTstructLocked)
         return;
 
@@ -1187,8 +1190,10 @@ function labelHyperlinkStructName(ele, selectedValonLoad = "") {
                             var output = [];
                             output.push('<option value=""></option>');
                             $.each(jVal.result.row, function (ind, obj) {
-                                if (obj.name != "")
+                                if (typeof obj.name != "undefined" && obj.name != "")
                                     output.push('<option value="' + obj.name + '">' + obj.caption + '</option>');
+                                else if (typeof obj.NAME != "undefined" && obj.NAME != "")
+                                    output.push('<option value="' + obj.NAME + '">' + obj.CAPTION + '</option>');
                             });
                             $(".designTableHyperlink tbody tr").each(function (ind, val) {
                                 $(val).find("select").empty().append(output.join(''));
@@ -1198,9 +1203,17 @@ function labelHyperlinkStructName(ele, selectedValonLoad = "") {
                                         $(val).find("select").val(sVal);
                                 }
                             });
+                        } else {
+                            $(".designTableHyperlink tbody tr").each(function (ind, val) {
+                                $(val).find("select").empty();
+                                $(val).find("input.form-control").val('');
+                            });
                         }
                     } else {
-                        jsonVal = "";
+                        $(".designTableHyperlink tbody tr").each(function (ind, val) {
+                            $(val).find("select").empty();
+                            $(val).find("input.form-control").val('');
+                        });
                     }
                 },
                 error: function (error) {
@@ -1254,8 +1267,10 @@ function labelHyperlinkType(ele, selectedValonLoad = "") {
                             var output = [];
                             output.push('<option value=""></option>');
                             $.each(jVal.result.row, function (ind, obj) {
-                                if (obj.name != "")
+                                if (typeof obj.name != "undefined" && obj.name != "")
                                     output.push('<option value="' + obj.name + '">' + obj.caption + '</option>');
+                                else if (typeof obj.NAME != "undefined" && obj.NAME != "")
+                                    output.push('<option value="' + obj.NAME + '">' + obj.CAPTION + '</option>');
                             });
                             $('#ddlStructName').empty().html(output.join(''));
                             if (selectedValonLoad != "") {
@@ -2282,7 +2297,7 @@ function OnTstructLoad() {
         setListviewButtons();
     allRtfTextAreas();
     AxAllowCancel = true;
-
+    ClearRefreshOnSaveListLS();
     SetMRForFromList(AxFromLstFlds);
 
     jsonText = $j('#designHidden').val();
@@ -2324,6 +2339,8 @@ function OnTstructLoad() {
                         ChangedFieldDbRowNo = new Array();
                         ChangedFieldValues = new Array();
                         DeletedDCRows = new Array();
+                        DeletedDCs = new Array();
+                        DeletedRowNos = new Array();
                     }
                     SetFormDirty(false);
                 });
@@ -2459,7 +2476,8 @@ function OnTstructLoad() {
     if (appstatus != "Approved" && appstatus != "Rejected" && (!AxExecFormControl) && theMode != "design" && isOverridFomrControl) {
         DoFormControlOnload();
     }
-    if (appstatus != "Approved" && appstatus != "Rejected" && (!AxExecFormControl) && theMode != "design" && isOverridFomrControl) {
+    /*if (appstatus != "Approved" && appstatus != "Rejected" && (!AxExecFormControl) && theMode != "design" && isOverridFomrControl) {*/
+    if (!AxExecFormControl && theMode != "design" && isOverridFomrControl) {
         var rid = $j("#recordid000F0").val();
         if (rid != "0")
             DoScriptFormControl("", "On Data Load");
@@ -3727,13 +3745,15 @@ function validatedwbfieldtype(value, dwbfldtype, flname) {
                 //        patternErrMsg = (tmpFldCaption == "" ? tmpFldCaption : tmpFldCaption + ": ") + cutMsg;
                 //    }
                 //    break;
-                case 'Phone Number':
-                    vregex = "^[0-9]{5,10}$";
-                    if (!CheckIsvalidfield(value, vregex)) {
-                        var cutMsg = eval(callParent('lcm[496]'));
-                        patternErrMsg = (tmpFldCaption == "" ? tmpFldCaption : tmpFldCaption + ": ") + cutMsg;
-                    }
-                    break;
+                //case 'Phone Number':
+                //    //vregex = "^[0-9]{5,10}$";
+                //    /*vregex == "^$|^[0-9]{5,10}$";*/
+                //    //vregex = "^([0-9]{5,10})?$";
+                //    if (!CheckIsvalidfield(value, vregex)) {
+                //        var cutMsg = eval(callParent('lcm[496]'));
+                //        patternErrMsg = (tmpFldCaption == "" ? tmpFldCaption : tmpFldCaption + ": ") + cutMsg;
+                //    }
+                //    break;
                 case 'Pin Code':
                     vregex = "^[1-9][0-9]{5}$";
                     if (!CheckIsvalidfield(value, vregex)) {
@@ -3741,13 +3761,13 @@ function validatedwbfieldtype(value, dwbfldtype, flname) {
                         patternErrMsg = (tmpFldCaption == "" ? tmpFldCaption : tmpFldCaption + ": ") + cutMsg;
                     }
                     break;
-                case 'Zip Code':
-                    vregex = "^[0-9]{5}(?:-[0-9]{4})?$";
-                    if (!CheckIsvalidfield(value, vregex)) {
-                        var cutMsg = eval(callParent('lcm[498]'));
-                        patternErrMsg = (tmpFldCaption == "" ? tmpFldCaption : tmpFldCaption + ": ") + cutMsg;
-                    }
-                    break;
+                //case 'Zip Code':
+                //    vregex = "^[0-9]{5}(?:-[0-9]{4})?$";
+                //    if (!CheckIsvalidfield(value, vregex)) {
+                //        var cutMsg = eval(callParent('lcm[498]'));
+                //        patternErrMsg = (tmpFldCaption == "" ? tmpFldCaption : tmpFldCaption + ": ") + cutMsg;
+                //    }
+                //    break;
                 case 'Random Number':
                     return true;
                     break;
@@ -5820,7 +5840,7 @@ function SuccessGetTabData(result, eventArgs) {
             });
         }
 
-        GridDcAddEmptyRows();
+        //GridDcAddEmptyRows();
 
         FocusOnFirstField(CurrTabNo);
         DeletedDCRows = new Array();
@@ -5885,7 +5905,8 @@ function SuccessGetTabData(result, eventArgs) {
             }
         });
 
-        if (appstatus != "Approved" && appstatus != "Rejected" && (!AxExecFormControl) && theMode != "design") {
+        /* if (appstatus != "Approved" && appstatus != "Rejected" && (!AxExecFormControl) && theMode != "design") {*/
+        if (!AxExecFormControl && theMode != "design") {
             var rid = $j("#recordid000F0").val();
             if (rid != "0")
                 DoScriptFormControl("", "On Data Load");
@@ -6259,29 +6280,42 @@ function AssignJQueryEvents(dcArray,_calledFrom="") {
                     tsFormat = "m/d/Y H:i:S";
                 }
                 $j(dvId + " .flatpickr-input:not(.tstOnlyTime,.tstOnlyTime24hours,.fldtimestamp)").each(function () {
+                    let $input = $j(this);
                     let fp = flatpickr(this, {
                         dateFormat: dtFormat,
                         allowInput: true,
                         disableMobile: true,
+                        clickOpens: false,
+                        onReady: function (selectedDates, dateStr, instance) {
+                            $input.on("focus", function () {
+                                let val = $input.val();
+                                if (!val || val.trim() === "") {
+                                    instance.open();
+                                }
+                            });
+                            $input.on("click", function () {
+                                instance.open();
+                            });
+                            $input.on("keydown", function () {
+                                instance.open();
+                            });
+                        },
                         onOpen: function (selectedDates, dateStr, instance) {
-                            if (dateStr != null && dateStr != "")
+                            if (dateStr)
                                 instance.setDate(dateStr);
-                            MainFocus($(instance.element));
+                            MainFocus($input);
                         },
                         onClose: function (selectedDates, dateStr, instance) {
-                            MainBlur($(instance.element));
+                            MainBlur($input);
                         }
                     });
-
-                    $j(this)
-                        .closest(".input-group")
-                        .find(".input-group-text")
+                    $input.closest(".input-group").find(".input-group-text")
                         .on("click", function () {
                             fp.open();
                         });
                 });
-
                 $j(dvId + " .flatpickr-input.fldtimestamp").each(function () {
+                    let $input = $j(this);
                     let fp = flatpickr(this, {
                         dateFormat: tsFormat,
                         enableTime: true,
@@ -6289,9 +6323,25 @@ function AssignJQueryEvents(dcArray,_calledFrom="") {
                         enableSeconds: true,
                         allowInput: false,
                         disableMobile: true,
+                        clickOpens: false,
+                        wrap: false,
                         defaultHour: new Date().getHours(),
                         defaultMinute: new Date().getMinutes(),
                         defaultSeconds: new Date().getSeconds(),
+                        onReady: function (selectedDates, dateStr, instance) {
+                            $input.on("focus", function () {
+                                let val = $input.val();
+                                if (!val || val.trim() === "") {
+                                    instance.open();
+                                }
+                            });
+                            $input.on("click", function () {
+                                instance.open();
+                            });
+                            $input.on("keydown", function () {
+                                instance.open();
+                            });
+                        },
                         onPreCalendarPosition: function (selectedDates, dateStr, instance) {
                             let $input = $(instance.element);
                             let inputVal = $input.val();
@@ -6302,44 +6352,56 @@ function AssignJQueryEvents(dcArray,_calledFrom="") {
                             }
                         },
                         onOpen: function (selectedDates, dateStr, instance) {
-                            if (dateStr != null && dateStr != "")
-                                instance.setDate(dateStr);
-                            MainFocus($(instance.element));
+                            let val = $input.val();
+                            if (val) {
+                                instance.setDate(val, false, tsFormat);
+                            }
+                            MainFocus($input);
                         },
                         onClose: function (selectedDates, dateStr, instance) {
-                            MainBlur($(instance.element));
+                            MainBlur($input);
                         }
                     });
-
-                    // Attach icon click handler
-                    $j(this)
-                        .closest(".input-group")
-                        .find(".spanDateTime")
+                    $input.closest(".input-group").find(".spanDateTime")
                         .on("click", function () {
                             fp.open();
                         });
                 });
                 $j(dvId + " .tstOnlyTime").each(function () {
+                    let $input = $j(this);
                     let fp = flatpickr(this, {
                         enableTime: true,
-                        //allowInput: true,
                         noCalendar: true,
                         dateFormat: "h:i K",
                         disableMobile: true,
+                        clickOpens: false,
+                        onReady: function (selectedDates, dateStr, instance) {
+                            $input.on("focus", function () {
+                                let val = $input.val();
+                                if (!val || val.trim() === "") {
+                                    instance.open();
+                                }
+                            });
+                            $input.on("click", function () {
+                                instance.open();
+                            });
+                            $input.on("keydown", function () {
+                                instance.open();
+                            });
+                        },
                         onPreCalendarPosition: function (selectedDates, dateStr, instance) {
-                            let _thisfpVal = $(instance.element).val();
+                            let _thisfpVal = $input.val();
                             if (_thisfpVal != "")
                                 instance.setDate(_thisfpVal);
                         },
                         onOpen: function (selectedDates, dateStr, instance) {
-                            MainFocus($(instance.element));
+                            MainFocus($input);
                         },
                         onClose: function (selectedDates, dateStr, instance) {
-                            MainBlur($(instance.element));
+                            MainBlur($input);
                         }
                     });
-
-                    $j(this)
+                    $input
                         .closest(".input-group")
                         .find(".input-group-text")
                         .on("click", function () {
@@ -6347,27 +6409,41 @@ function AssignJQueryEvents(dcArray,_calledFrom="") {
                         });
                 });
                 $j(dvId + " .tstOnlyTime24hours").each(function () {
+                    let $input = $j(this);
                     let fp = flatpickr(this, {
                         enableTime: true,
                         noCalendar: true,
-                        //allowInput: true,
                         dateFormat: "H:i",
                         time_24hr: true,
                         disableMobile: true,
+                        clickOpens: false,
+                        onReady: function (selectedDates, dateStr, instance) {
+                            $input.on("focus", function () {
+                                let val = $input.val();
+                                if (!val || val.trim() === "") {
+                                    instance.open();
+                                }
+                            });
+                            $input.on("click", function () {
+                                instance.open();
+                            });
+                            $input.on("keydown", function () {
+                                instance.open();
+                            });
+                        },
                         onPreCalendarPosition: function (selectedDates, dateStr, instance) {
-                            let _thisfpVal = $(instance.element).val();
+                            let _thisfpVal = $input.val();
                             if (_thisfpVal != "")
                                 instance.setDate(_thisfpVal);
                         },
                         onOpen: function (selectedDates, dateStr, instance) {
-                            MainFocus($(instance.element));
+                            MainFocus($input);
                         },
                         onClose: function (selectedDates, dateStr, instance) {
-                            MainBlur($(instance.element));
+                            MainBlur($input);
                         }
                     });
-
-                    $j(this)
+                    $input
                         .closest(".input-group")
                         .find(".input-group-text")
                         .on("click", function () {
@@ -7364,7 +7440,10 @@ function CallEvaluateOnAddPerf(dcNo, rowNo, fields, calldepField) {
             EvaluateAxFunction(fields[i], fldName, rowNo + "F" + dcNo, calldepField);
         var newValue = GetFieldValue(fldName);
         var fldDbRowNo = GetDbRowNo(rowNo, dcNo);
-        UpdateFieldArray(fldName, fldDbRowNo, newValue, "parent", "AddRow");
+        if (calldepField == "AllRowClear") {
+            //do not update while clearing all rows
+        } else
+            UpdateFieldArray(fldName, fldDbRowNo, newValue, "parent", "AddRow");
         IsService = false;
         if (oldValue == parseInt(newValue, 10))
             continue;
@@ -7613,7 +7692,7 @@ function SetFormDirty(status) {
 }
 
 //Function which deletes the given row from the given dc no.
-function DeleteGridRow(dcNo, rowFrmNo, webService) {
+function DeleteGridRow(dcNo, rowFrmNo, webService,calledFrom="") {
 
     ShowDimmer(true);
 
@@ -7693,7 +7772,10 @@ function DeleteGridRow(dcNo, rowFrmNo, webService) {
             SetRowCount(dcNo, rowCnt - 1, "d");
 
         SetSerialNoCnt(dcNo, slNo);
-        AddDeletedRowsToArray(dcNo, rowNo)
+        if (calledFrom == "FillGrid" && isMobile && !axInlineGridEdit && AxpGridForm == "form" && $("#gridHd" + dcNo + " tbody tr").length > 0) {
+            //No do add row in delete
+        } else
+            AddDeletedRowsToArray(dcNo, rowNo);
 
         UpdateFldArrayInDeleteRow(dcNo, rowNo);//Remove this row field values from ALLField array 
 
@@ -7724,8 +7806,12 @@ function DeleteGridRow(dcNo, rowFrmNo, webService) {
 
         AddDeletedRowsToArray(dcNo, rowNo);
         ClearDeletedFields(dcNo, rowNo);
-        var fields = GetGridFields(dcNo);
-        CallEvaluate(dcNo, rowNo, fields);
+        if (typeof calledFrom != "undefined" && calledFrom == "FillGrid") {
+            //do nothing 
+        } else {
+            var fields = GetGridFields(dcNo);
+            CallEvaluate(dcNo, rowNo, fields);
+        }
         //Refer bug-AGI003560 - Only if the record is new wrapper div id will be reset to 1, since existing row will be sent to service in deleted array
         if (rid != "0")
             changeEditLayoutIds(0, dcNo);
@@ -8074,6 +8160,9 @@ function ResetRowStyle(rowNo, dcNo) {
 
 //Function which calls the SaveData webservice.
 function FormSubmit() {
+    if (CheckBtnReadOnly('FormSubmit()')) {
+        return;
+    }
     GetCurrentTime("Tstruct load on Save button click(ws call)");
     if (actionCallFlag == actionCallbackFlag) {
         actionCallFlag = Math.random();
@@ -8116,7 +8205,8 @@ function FormSubmit() {
     if (doSave == undefined)
         doSave = true;
 
-    if (typeof tstructCachedsave != 'undefined' && tstructCachedsave == "T" && (recordid == "" || recordid == "0")) {
+    /*if (typeof tstructCachedsave != 'undefined' && tstructCachedsave == "T" && (recordid == "" || recordid == "0")) {*/
+    if (typeof tstructCachedsave != 'undefined' && tstructCachedsave == "T") {
         if (typeof callParentNew('signalRNotifications') != 'undefined' && callParentNew('signalRNotifications') == 'true') {
             SaveTransactionJSON();
             return;
@@ -8534,7 +8624,7 @@ function IsAxFldEmpty(idx, rowNo, dcNo, allowEmpty, isPositive, calledFrom) {
                     }, showActiveTabTime);
                 } else {
                     if (isMobile && AxpGridForm == "form" && $("#gridHd" + dcNo + " tbody tr").length == 0) {
-                        //donothing
+                        return true;
                     } else
                         showAlertDialog("warning", 2056, "client", FCaption[idx] + "^♠^" + parseInt(rowNo, 10));
                 }
@@ -8655,6 +8745,7 @@ function CheckPattern() {
 var recordidax = '';
 //Callback function which returns either successfull or error message on save.
 function SucceededCallback(resultJson, eventArgs) {
+    let attaErrors = "";
     if (resultJson != "") {
         if (resultJson.split("♠*♠").length > 1) {
             tstDataId = resultJson.split("♠*♠")[0];
@@ -8663,6 +8754,8 @@ function SucceededCallback(resultJson, eventArgs) {
         if (resultJson.split("*♠*").length > 1) {
             var serverprocesstime = resultJson.split("*♠*")[0];
             var requestProcess_logtime = resultJson.split("*♠*")[1];
+            if (requestProcess_logtime.split("♣$♣").length > 1)
+                attaErrors = requestProcess_logtime.split("♣$♣")[1];
             resultJson = resultJson.split("*♠*")[2];
             WireElapsTime(serverprocesstime, requestProcess_logtime, true);
         } else {
@@ -8707,7 +8800,13 @@ function SucceededCallback(resultJson, eventArgs) {
         addfieldSaveSuccess(strResult1);
         return;
     }
-
+    try {
+        if (typeof attaErrors != "undefined" && attaErrors != "") {
+            let _attaErrors = attaErrors;
+            attaErrors = "";
+            ShowDialog('error', _attaErrors);
+        }
+    } catch (ex) { }
     for (var i = 0; i < strResult1.length; i++) {
         strResult = strResult1[i].split("*$*");
         for (var j = 0; j < strResult.length; j++) {
@@ -8818,11 +8917,16 @@ function SucceededCallback(resultJson, eventArgs) {
                                 }
                                 //Refer Bug: AXP000134
                                 var src = $(eval(callParent("loadPopUpPage"))).attr("src");
-                                if (src != undefined && src.indexOf("AxPop=true") != -1)
+                                if (src != undefined && src.indexOf("AxPop=true") != -1) {
                                     eval(callParent('isRefreshParentOnClose') + "= true");
+                                    isTstRefreshParentOnClose = "true";
+                                }
                                 //End AXP000134
                                 ShowDialog('success', result, undefined, undefined, undefined, undefined, undefined, 'true');
-                                eval(callParent('isSuccessAlertInPopUp') + "= true");
+                                eval(callParent('isSuccessAlertInPopUp') + "= true"); 
+                                try {
+                                    focusAfterSaveOnLoad = "";
+                                } catch (ex) { }                             
                                 SetFormDirty(false);
                             }
 
@@ -8831,6 +8935,9 @@ function SucceededCallback(resultJson, eventArgs) {
                         if (AxIsTstructCached && recIdDetails != "") {
                             var recId = recIdDetails.substring(recIdDetails.indexOf("=") + 1);
                             SaveInCache(recId, "Save");
+                            try {
+                                focusAfterSaveOnLoad = "";
+                            } catch (ex) { }
                         }
 
                         if (IsDraftLoad) {
@@ -9014,6 +9121,9 @@ function GetSaveDirectiveValue() {
 
 //Function which opens the pdf window.
 function OpenPdfDocList() {
+    if (CheckBtnReadOnly('OpenPdfDocList()')) {
+        return;
+    }
     recID = parseInt(recordid);
     if (recID != "0") {
         if (typeof AxRulesBtnConMsg != "undefined" && AxRulesBtnConMsg == "true") {
@@ -9036,6 +9146,9 @@ function OpenPdfDocList() {
 
 //Function which opens the search window.
 function OpenSearch(tid) {
+    if (CheckBtnReadOnly(`OpenSearch('${tid}')`)) {
+        return;
+    }
     if (typeof AxRulesBtnConMsg != "undefined" && AxRulesBtnConMsg == "true") {
         if (!AxRulesBtnConMsgParser(event.currentTarget)) {
             return;
@@ -9082,6 +9195,9 @@ function OpenSearch(tid) {
 //Function which opens a new tstsruct.
 function NewTstruct() {
     //For new tstruct,home and navigation buttons will not be available
+    if (CheckBtnReadOnly('NewTstruct()')) {
+        return;
+    }
     if (typeof AxRulesBtnConMsg != "undefined" && AxRulesBtnConMsg == "true") {
         if (!AxRulesBtnConMsgParser(event.currentTarget)) {
             return;
@@ -9238,7 +9354,8 @@ function GetFormLoadData(tstQureystr, isDraft, forceRefresh = "false",isdirectCa
 
             if (_TstlocalStorage != "") {
                 let _thisHtmlls = _TstlocalStorage.split('♠♠♠')[1];
-                GetTstHtmlLS(_thisHtmlls);
+                let _permissionVars = _TstlocalStorage.split('♠♠♠')[2];
+                GetTstHtmlLS(_thisHtmlls, _permissionVars);
                 return;
             }
         }
@@ -9265,7 +9382,11 @@ function GetFormLoadData(tstQureystr, isDraft, forceRefresh = "false",isdirectCa
                 ShowDimmer(true);
                 resTstHtmlLS = '';
                 var result = data.d;
-                if (result != "") {
+                if (result != "" && !result.startsWith("Error:")) {
+                    if (result.split("*♦♠*").length > 1) {
+                        tstPermissions = result.split("*♦♠*")[1];
+                        result = result.split("*♦♠*")[0];
+                    }
                     if (result.split("*♠♦*").length > 1) {
                         serverprocesstime = result.split("*♠♦*")[1];
                         requestProcess_logtime = result.split("*♠♦*")[2];
@@ -9274,6 +9395,10 @@ function GetFormLoadData(tstQureystr, isDraft, forceRefresh = "false",isdirectCa
                     } else {
                         UpdateExceptionMessageInET("Error : " + result);
                     }
+                } else if (result.startsWith("Error:")) {
+                    let _result = result.replace("Error:", "");
+                    window.location.href = "err.aspx?errmsg=" + _result;
+                    return;
                 }
                 Closediv();
                 if (result.toLowerCase().indexOf("access violation") === -1) {
@@ -9311,11 +9436,14 @@ function GetFormLoadData(tstQureystr, isDraft, forceRefresh = "false",isdirectCa
                     $j("#recordid000F0").val("0");
                     AxFormControlList = new Array();
                     AxSetFldCaption = new Array();
+                    AxFCBtnReadOnly = new Array();
                     RegVarFldList = new Array();
                     ChangedFields = new Array();
                     ChangedFieldDbRowNo = new Array();
                     ChangedFieldValues = new Array();
                     DeletedDCRows = new Array();
+                    DeletedDCs = new Array();
+                    DeletedRowNos = new Array();
                     ChangedDcRows = new Array();
                     ChangedDcs = new Array();
                     AllFieldNames = new Array();
@@ -9432,7 +9560,7 @@ function GetFormLoadData(tstQureystr, isDraft, forceRefresh = "false",isdirectCa
                             }
                         } catch (ex) { }
 
-                        $j("#hdnDataObjId").val(tstDataId);                      
+                        $j("#hdnDataObjId").val(tstDataId);
                         LoadResult = result;
                         isLoadDataCall = false;
                         if (typeof isDraft != "undefined" && isDraft.startsWith('true♦')) {
@@ -9554,7 +9682,7 @@ function LoadTstHtmlLS(_thisTransid, _src) {
     //ShowDimmer(false);
 }
 
-function GetTstHtmlLS(_TstlocalStorage) {
+function GetTstHtmlLS(_TstlocalStorage, _permissionVars="") {
     //Closediv();
     pageLogTime = '';
     formLogTime = '';
@@ -9563,6 +9691,10 @@ function GetTstHtmlLS(_TstlocalStorage) {
         var resResult = resTstLoadDummy;
         resTstLoadDummy = '';
         if (resResult != "") {
+            if (resResult.split("*♦♠*").length > 1) {
+                tstPermissions = resResult.split("*♦♠*")[1];
+                resResult = resResult.split("*♦♠*")[0];
+            }
             if (resResult.split("*♠♦*").length > 1) {
                 serverprocesstime = resResult.split("*♠♦*")[1];
                 requestProcess_logtime = resResult.split("*♠♦*")[2];
@@ -9570,6 +9702,11 @@ function GetTstHtmlLS(_TstlocalStorage) {
                 WireElapsTime(serverprocesstime, requestProcess_logtime, true);
             } else {
                 UpdateExceptionMessageInET("Error : " + resResult);
+                if (resResult.startsWith("Error:")) {
+                    let _result = resResult.replace("Error:", "");
+                    window.location.href = "err.aspx?errmsg=" + _result;
+                    return;
+                }
             }
         }
         Closediv();
@@ -9600,6 +9737,7 @@ function GetTstHtmlLS(_TstlocalStorage) {
         blurNextPreventId = "";
         AxFormControlList = new Array();
         AxSetFldCaption = new Array();
+        AxFCBtnReadOnly = new Array();
         RegVarFldList = new Array();
         ChangedFields = new Array();
         ChangedFieldDbRowNo = new Array();
@@ -9607,6 +9745,8 @@ function GetTstHtmlLS(_TstlocalStorage) {
         ChangedDcRows = new Array();
         ChangedDcs = new Array();
         DeletedDCRows = new Array();
+        DeletedDCs = new Array();
+        DeletedRowNos = new Array();
         AllFieldNames = new Array();
         AllFieldValues = new Array();
         ScriptMaskFields = new Array();
@@ -9779,6 +9919,20 @@ function GetTstHtmlLS(_TstlocalStorage) {
             else
                 ClearFieldsInDC(dcID);
         });
+        try {
+            $.ajax({
+                url: 'tstruct.aspx/DeleteTstGridAtt',
+                type: 'POST',
+                cache: false,
+                async: true,
+                dataType: 'json',
+                contentType: "application/json",
+                success: function (data) {
+                },
+                error: function (error) {
+                }
+            });
+        } catch (ex) { }
         ExprPosArray.forEach(function (vals, ind) {
             if (vals != "")
                 ExprPosArray[ind] = "";
@@ -9792,11 +9946,14 @@ function GetTstHtmlLS(_TstlocalStorage) {
         $j("#recordid000F0").val("0");
         AxFormControlList = new Array();
         AxSetFldCaption = new Array();
+        AxFCBtnReadOnly = new Array();
         RegVarFldList = new Array();
         ChangedFields = new Array();
         ChangedFieldDbRowNo = new Array();
         ChangedFieldValues = new Array();
         DeletedDCRows = new Array();
+        DeletedDCs = new Array();
+        DeletedRowNos = new Array();
         ChangedDcRows = new Array();
         ChangedDcs = new Array();
         AllFieldNames = new Array();
@@ -9824,7 +9981,14 @@ function GetTstHtmlLS(_TstlocalStorage) {
         changeFillGridDc = 0;
         if (isMobile)
             OnMobileNewTst();
-
+        if (_permissionVars != "") {
+            tstPermissions = _permissionVars;
+            if (tstPermissions.startsWith("Error:")) {
+                let _result = tstPermissions.replace("Error:", "");
+                window.location.href = "err.aspx?errmsg=" + _result;
+                return;
+            }
+        }
         if (_TstlocalStorage != "") {
             var resval = _TstlocalStorage.split("*$*");
             if (resval[0] == "") {
@@ -10052,7 +10216,11 @@ function GetLoadData(recid, tstQureystr) {
                 ShowDimmer(true);
                 resTstHtmlLS = '';
                 var result = data.d;
-                if (result != "") {
+                if (result != "" && !result.startsWith("Error:")) {
+                    if (result.split("*♦♠*").length > 1) {
+                        tstPermissions = result.split("*♦♠*")[1];
+                        result = result.split("*♦♠*")[0];
+                    }
                     if (result.split("*♠♦*").length > 1) {
                         serverprocesstime = result.split("*♠♦*")[1];
                         requestProcess_logtime = result.split("*♠♦*")[2];
@@ -10061,6 +10229,10 @@ function GetLoadData(recid, tstQureystr) {
                     } else {
                         UpdateExceptionMessageInET("Error : " + result);
                     }
+                } else if (result.startsWith("Error:")) {
+                    let _result = result.replace("Error:", "");
+                    window.location.href = "err.aspx?errmsg=" + _result;
+                    return;
                 }
                 Closediv();
                 if (result.toLowerCase().indexOf("access violation") === -1) {
@@ -10096,6 +10268,7 @@ function GetLoadData(recid, tstQureystr) {
                         blurNextPreventId = "";
                         AxFormControlList = new Array();
                         AxSetFldCaption = new Array();
+                        AxFCBtnReadOnly = new Array();
                         RegVarFldList = new Array();
                         ChangedFields = new Array();
                         ChangedFieldDbRowNo = new Array();
@@ -10103,6 +10276,8 @@ function GetLoadData(recid, tstQureystr) {
                         ChangedDcRows = new Array();
                         ChangedDcs = new Array();
                         DeletedDCRows = new Array();
+                        DeletedDCs = new Array();
+                        DeletedRowNos = new Array();
                         AllFieldNames = new Array();
                         AllFieldValues = new Array();
                         ScriptMaskFields = new Array();
@@ -10289,6 +10464,9 @@ function GetLoadData(recid, tstQureystr) {
 
 //Function which deletes a tstruct record.
 function DeleteTstruct() {
+    if (CheckBtnReadOnly('DeleteTstruct()')) {
+        return;
+    }
     if (AxIsTstructLocked) {
         showAlertDialog("warning", 2008, "client");
         return;
@@ -10424,6 +10602,7 @@ function SucceededCallbackDelTst(result, eventArgs) {
         } else {        
             if (typeof transid != "" && transid == "ad_af") {
                 eval(callParent('isRefreshParentOnClose') + "= true");
+                isTstRefreshParentOnClose = "true";
             }
             if (AxLogTimeTaken == "true") {
                 var edTime = new Date();
@@ -10476,6 +10655,9 @@ function SucceededCallbackDelTst(result, eventArgs) {
 var printWindow;
 //Function to print the transaction.
 function OpenPrint(tid) {
+    if (CheckBtnReadOnly(`OpenPrint('${tid}')`)) {
+        return;
+    }
     if (typeof AxRulesBtnConMsg != "undefined" && AxRulesBtnConMsg == "true") {
         if (!AxRulesBtnConMsgParser(event.currentTarget)) {
             return;
@@ -10959,6 +11141,9 @@ function HideTaskList(btnClicked) {
 
 //Function to open view history page.
 function OpenHistory(tid) {
+    if (CheckBtnReadOnly(`OpenHistory('${tid}')`)) {
+        return;
+    }
     if (typeof AxRulesBtnConMsg != "undefined" && AxRulesBtnConMsg == "true") {
         if (!AxRulesBtnConMsgParser(event.currentTarget)) {
             return;
@@ -11670,7 +11855,10 @@ function SucceededCallbackAction(result, calledFrom) {
                 callParentNew('isSuccessAlertInPopUp=', true);
             }
             showAlertDialog("info", 2051, "client", actname);
-            window.location.href = window.location.href;
+            //window.location.href = window.location.href;
+            const url = new URL(window.location.href);
+            url.searchParams.set("recordid", recordid);
+            window.location.replace(url.href);
         } else {
             // Page element to display feedback.
             var resSplit1 = result.split(",");
@@ -11690,7 +11878,10 @@ function SucceededCallbackAction(result, calledFrom) {
                     window.document.location.href = "./mid1.aspx";
                 } else {
                     if (tstType == "loadqs") {
-                        window.location.href = window.location.href;
+                        //window.location.href = window.location.href;
+                        const url = new URL(window.location.href);
+                        url.searchParams.set("recordid", recordid);
+                        window.location.replace(url.href);
                     } else {
                         window.document.location.href = "./tstruct.aspx?transid=" + tst + `&openerIV=${typeof isListView != "undefined" ? iName : tst}&isIV=${typeof isListView != "undefined" ? !isListView : "false"}&isDupTab=${callParentNew('isDuplicateTab')}`;
                     }
@@ -11860,7 +12051,7 @@ function AssignHTML(result, calledFrom, source) {
 
                 var tmpRecId = "";
                 tmpRecId = $j("#recordid000F0").val();
-                if (tmpRecId != "0" && calledFrom == "FillGrid") {
+                if (tmpRecId != "0" && calledFrom == "FillGrid" && source != "GetTabData") {
                     for (var dIdx = 1; dIdx <= parseInt(pRCnt, 10); dIdx++) {
                         var rowNo = GetRowNoHelper(dIdx);
                         UpdateChangedRows(rowNo + "F" + pDcNo, dIdx);
@@ -12053,6 +12244,14 @@ function EnableDisableBtns(obj, enable) {
             obj.attr('tabindex', -1);
             if (obj.hasClass('menu-link'))
                 obj.addClass('btn');
+            let _onclickVal = obj.attr("onclick") || "";
+            _onclickVal = _onclickVal.replace(/^javascript:\s*/i, "").replace(/;\s*$/, "");
+            if (_onclickVal && !AxFCBtnReadOnly.includes(_onclickVal)) {
+                AxFCBtnReadOnly.push(_onclickVal);
+            } else if (_onclickVal == "" && typeof obj.attr("id") != "undefined" && obj.attr("id") == "btnAppsDraft") {
+                if (!AxFCBtnReadOnly.includes('btnAppsDraft'))
+                    AxFCBtnReadOnly.push('btnAppsDraft');
+            }
         } else {
             obj.prop("disabled", false);
             obj.removeClass('disabled');
@@ -12063,6 +12262,19 @@ function EnableDisableBtns(obj, enable) {
             obj.removeAttr('tabindex');
             if (obj.hasClass('menu-link'))
                 obj.removeClass('btn');
+            let _onclickVal = obj.attr("onclick") || "";
+            _onclickVal = _onclickVal.replace(/^javascript:\s*/i, "").replace(/;\s*$/, "");
+            if (_onclickVal) {
+                const index = AxFCBtnReadOnly.indexOf(_onclickVal);
+                if (index !== -1) {
+                    AxFCBtnReadOnly.splice(index, 1);
+                }
+            } else if (_onclickVal == "" && typeof obj.attr("id") != "undefined" && obj.attr("id") == "btnAppsDraft") {
+                const index = AxFCBtnReadOnly.indexOf('btnAppsDraft');
+                if (index !== -1) {
+                    AxFCBtnReadOnly.splice(index, 1);
+                }
+            }
         }
 
         var isAxpBtn = false;
@@ -14325,7 +14537,7 @@ $j(document).on('click', '.printhtmltopdf', function () {
             success: function (data) {
                 if (data.d != null || data.d != "") {
                     if (data.d.split('~')[0] != "error" && data.d.split('~')[0] != "session") {
-                        var waitTime = 1000;
+                        var waitTime = 2000;
                         if (jQBrowser.chrome || jQBrowser.opera || jQBrowser.safari) {
                             try {
                                 printJS(data.d);
@@ -14372,7 +14584,7 @@ $j(document).on('click', '.printhtmltopdf', function () {
                             } catch (ex) {
                                 showAlertDialog("warning", eval(callParent('lcm[356]')));
                             }
-                            waitTime = 1000;
+                            waitTime = 2000;
                         } else {
                             var URL = data.d;
                             var W;
@@ -14384,7 +14596,9 @@ $j(document).on('click', '.printhtmltopdf', function () {
                             }
                         }
                         setTimeout(function () {
-                            deletepdffile(data.d);
+                            setTimeout(function () {
+                                deletepdffile(data.d);
+                            }, 0);
                         }, waitTime);
                     } else if (data.d.split('~')[0] == "session") {
                         ShowDimmer(false);
@@ -14643,6 +14857,9 @@ function SetGridElementsHeight() {
 }
 
 function lnkNextClick() {
+    if (CheckBtnReadOnly('lnkNextClick()')) {
+        return;
+    }
     if ($("#lnkNext").length > 0 && $("#lnkNext").prop("disabled") == true) {
         return false;
     }
@@ -14687,6 +14904,9 @@ function lnkNextClick() {
 }
 
 function lnkPrevClick() {
+    if (CheckBtnReadOnly('lnkPrevClick()')) {
+        return;
+    }
     if ($("#lnkPrev").length > 0 && $("#lnkPrev").prop("disabled") == true) {
         return false;
     }
@@ -15333,6 +15553,9 @@ function SuccessCallbackDraftKeys(result, eventArgs) {
 }
 
 function getDraftsListNew(elem) {
+    if (CheckBtnReadOnly(`getDraftsListNew()`)) {
+        return;
+    }
     try {
         ASB.WebService.GetDraftsFromRedisNew(tst, tstructCaption, SuccessCallbackDraftKeysNew, FailureCallBackDraftKeys);
     } catch (exp) {
@@ -15949,28 +16172,51 @@ function GetFieldId(AxFldName, AxRowNo, AxDcNo) {
     return AxFldId;
 }
 
+
+var allowClose = false;
 function FieldTypeTable(event, el) {
     let thisFldId = typeof $(el).attr("id") == "undefined" ? $(el).parent().parent().find("input").attr("id") : $(el).attr("id");
     src = "./tsttable.aspx?fldId=" + thisFldId;
     var tableHeader = GetFieldCaption(thisFldId).length != -1 ? (GetFieldCaption(thisFldId) == "&nbsp" ? "" : GetFieldCaption(thisFldId)) : "";
     // displayBootstrapModalDialog(tableHeader, "", "330px", true, src, "", "", CallbackFunctionBootstrap);
-
+    allowClose = false;
     let myModal = new BSModal("modalIdTableField", tableHeader, "<iframe class='w-100 h-400px' src='" + src + "'></iframe>", () => {
         if (typeof isTstPop != "undefined" && isTstPop == 'True')
             $(".modal-content").css({ "height": "100%" });
-        // CallbackFunctionBootstrap();
+        let isResizableApplied = false;
+        $('#modalIdTableField').on('mouseenter', '.modal-content', function () {
+            if (isResizableApplied) return;
+            isResizableApplied = true;
+            let $modal = $('#modalIdTableField');
+            let $dialog = $modal.find('.modal-dialog');
+            let width = $dialog.width();
+            let height = $dialog.height();
+            $dialog.removeClass('modal-xl modal-fullscreen modal-lg modal-sm');
+            $dialog.css({
+                width: width,
+                height: height,
+                maxWidth: 'none'
+            });
+            $modal.find('.modal-content').resizable({
+                minHeight: 300,
+                minWidth: 400
+            });
+            $dialog.draggable({
+                handle: ".modal-header"
+            });
+        });
     }, () => {
-        //hide callback
     });
     myModal.scrollableDialog();
-    myModal.modalBody.classList.add('overflow-hidden'); 
+    //myModal.modalBody.classList.add('overflow-hidden'); 
     if (typeof transid != "undefined" && transid == "b_sql")
         myModal.changeSize("xl");
     else if (typeof isTstPop != "undefined" && isTstPop == 'True') {
         myModal.changeSize("xl");
     }
-    else
-        myModal.changeSize("fullscreen");
+    else {
+        myModal.changeSize("xl");
+    }
     myModal.okBtn.innerText = "Ok";
     myModal.okBtn.addEventListener("click", (e) => {
         document.getElementById('modalIdTableField').querySelector("iframe").contentWindow.AddTableData();
@@ -15980,8 +16226,24 @@ function FieldTypeTable(event, el) {
         document.getElementById('modalIdTableField').querySelector("iframe").contentWindow.ClearTableData('fldTable');
     });
     myModal.cancelBtn.removeAttribute("data-bs-dismiss");
-    myModal.okBtn.removeAttribute("data-bs-dismiss");
+    //myModal.okBtn.removeAttribute("data-bs-dismiss");
     myModal.modalFooter.classList.add("p-2");
+
+    $(document).on('click', '#modalIdTableField .btn-close, #modalIdTableField [data-bs-dismiss="modal"]', function () {
+        allowClose = true;
+    });
+    $('#modalIdTableField').on('hide.bs.modal', function (e) {
+        if (!allowClose) {
+            e.preventDefault();
+            return false;
+        }
+        allowClose = false;
+    });
+    $(document).on('click', '#modalIdTableField .btn-close', function () {
+        allowClose = true;
+        let modalEl = document.getElementById('modalIdTableField');
+        bootstrap.Modal.getInstance(modalEl).hide();
+    });
 }
 
 function CallbackFunctionBootstrap(thisFldId) {
@@ -16382,7 +16644,12 @@ function importExceltoGrid(importDcNo) {
 
     var dcCaption = GetDcCaption(importDcNo);
     displayBootstrapModalDialog("Import Data from Excel to " + dcCaption + " ", "xs", "388px", true, "./excelimportgrid.aspx?dcNo=" + importDcNo + "", false, () => {
-        $(callParentNew('middle1', 'id').contentWindow.document.getElementsByTagName('body')).css("overflow", "");
+        if (parent.$("#loadPopUpPage").length > 0) {
+            let _thisPopId = dcCaption.split(" ").join("");
+            $("#divModalImportDatafromExcelto" + _thisPopId).parent("body").css("overflow", "auto");
+        }
+        else
+            $(callParentNew('middle1', 'id').contentWindow.document.getElementsByTagName('body')).css("overflow", "");
     }, () => { });
 
 }
@@ -17406,7 +17673,11 @@ function GetCloneFormLoadData(tstQureystr) {
             success: function (data) {
                 resTstHtmlLS = "";
                 var result = data.d;
-                if (result != "") {
+                if (result != "" && !result.startsWith("Error:")) {
+                    if (result.split("*♦♠*").length > 1) {
+                        tstPermissions = result.split("*♦♠*")[1];
+                        result = result.split("*♦♠*")[0];
+                    }
                     if (result.split("*♠♦*").length > 1) {
                         serverprocesstime = result.split("*♠♦*")[1];
                         requestProcess_logtime = result.split("*♠♦*")[2];
@@ -17415,6 +17686,10 @@ function GetCloneFormLoadData(tstQureystr) {
                     } else {
                         UpdateExceptionMessageInET("Error : " + result);
                     }
+                } else if (result.startsWith("Error:")) {
+                    let _result = result.replace("Error:", "");
+                    window.location.href = "err.aspx?errmsg=" + _result;
+                    return;
                 }
                 Closediv();
                 if (result.toLowerCase().indexOf("access violation") === -1) {
@@ -17450,11 +17725,14 @@ function GetCloneFormLoadData(tstQureystr) {
                         blurNextPreventId = "";
                         AxFormControlList = new Array();
                         AxSetFldCaption = new Array();
+                        AxFCBtnReadOnly = new Array();
                         RegVarFldList = new Array();
                         ChangedFields = new Array();
                         ChangedFieldDbRowNo = new Array();
                         ChangedFieldValues = new Array();
                         DeletedDCRows = new Array();
+                        DeletedDCs = new Array();
+                        DeletedRowNos = new Array();
                         ChangedDcRows = new Array();
                         ChangedDcs = new Array();
                         AllFieldNames = new Array();
@@ -17761,16 +18039,26 @@ function SaveTransactionJSON() {
                         } catch (ex) { }
 
                         var src = $(eval(callParent("loadPopUpPage"))).attr("src");
-                        if (src != undefined && src.indexOf("AxPop=true") != -1)
+                        if (src != undefined && src.indexOf("AxPop=true") != -1) {
                             eval(callParent('isRefreshParentOnClose') + "= true");
-                        ShowDialog('success', "Data submitted to Queue successfully.");
+                            isTstRefreshParentOnClose = "true";
+                        }
+                        if (recordid =="0")
+                            ShowDialog('success', "Data submitted to Queue successfully.");
+                        else
+                            ShowDialog('success', "Changed data pushed to queue successfully. You will notified once the data updated successfully.");
                         eval(callParent('isSuccessAlertInPopUp') + "= true");
                         SetFormDirty(false);
                     } else {
-                        ShowDialog('error', "There was an error please try again");
+                        if (typeof resJson.result.message != "undefined" && resJson.result.message != "") {
+                            ShowDialog('error', resJson.result.message);
+                        } else
+                            ShowDialog('error', "There was an error please try again");
                     }
                 } else {
-                    ShowDialog('error', "There was an error please try again");
+                    //ShowDialog('error', "There was an error please try again");
+                    result = result.replace("error:", "");
+                    showAlertDialog('error', result);
                 }
             }
         } catch (ex) {
@@ -18899,11 +19187,14 @@ function GetLoadDataForDiscard(recid, tstQureystr) {
                         blurNextPreventId = "";
                         AxFormControlList = new Array();
                         AxSetFldCaption = new Array();
+                        AxFCBtnReadOnly = new Array();
                         RegVarFldList = new Array();
                         ChangedFields = new Array();
                         ChangedFieldDbRowNo = new Array();
                         ChangedFieldValues = new Array();
                         DeletedDCRows = new Array();
+                        DeletedDCs = new Array();
+                        DeletedRowNos = new Array();
                         ChangedDcRows = new Array();
                         ChangedDcs = new Array();
                         AllFieldNames = new Array();
@@ -19362,9 +19653,13 @@ function saveFillgridColResize(_thisDcno, _thisFillgridCaption, _thisFillgridNam
     }
 }
 function clearCacheReloadForm(_thisTrId) {
+    if (CheckBtnReadOnly(`clearCacheReloadForm('${_thisTrId}')`)) {
+        return;
+    }
     let appSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
     try {
         ShowDimmer(true);
+        callParentNew("clearKeysByFormat(tstDDFVal♠" + _thisTrId + "♦♣♦" + appSUrl + "♥)", "function");
         let _thisKey = callParentNew("getKeysWithPrefix(tstHtml♠" + _thisTrId + "-" + appSUrl + "♥)", "function");
         if (_thisKey.length > 0) {
             for (const val of _thisKey) {
@@ -19486,6 +19781,9 @@ function BindAxpFilesonDep(_thisFldName, _thisfldValue) {
 
 //Function to open the list view on click of listview button in the toolbar.
 function CallEntityList(tid) {
+    if (CheckBtnReadOnly(`CallEntityList('${tid}')`)) {
+        return;
+    }
     if (typeof AxRulesBtnConMsg != "undefined" && AxRulesBtnConMsg == "true") {
         if (!AxRulesBtnConMsgParser(event.currentTarget)) {
             return;
@@ -21083,4 +21381,17 @@ function getDevOptionValue() {
         _hideCancelButton = "false";
     }
     return _hideCancelButton;
+}
+
+function ClearRefreshOnSaveListLS() {
+    try {
+        const appUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
+        const escapedUrl = appUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const pattern = new RegExp("^tstDDFVal♠" + transid + "♦[^♦]+♦true♦.*♦" + escapedUrl + "♥");
+        Object.keys(localStorage).forEach(function (key) {
+            if (pattern.test(key)) {
+                localStorage.removeItem(key);
+            }
+        });
+    } catch (ex) { }
 }

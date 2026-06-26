@@ -141,6 +141,13 @@ public class HeaderFileUpload : IHttpHandler, IRequiresSessionState
                             var videoExtList = isstrVideoFile.Split(',').Select(x => "." + x.Trim()).ToList();
                             jsonVideos = js.Serialize(videoExtList);
                         }
+                        string jsonSpecificFiles = "";
+                        if (context.Session["TstAllowSpecificAtta-" + transId] != null && context.Session["TstAllowSpecificAtta-" + transId].ToString() != "")
+                        {
+                            string isstrSpecificFile = context.Session["TstAllowSpecificAtta-" + transId].ToString();
+                            var specificExtList = isstrSpecificFile.Split(',').Select(x => "." + x.Trim()).ToList();
+                            jsonSpecificFiles = js.Serialize(specificExtList);
+                        }
                         if (file.ContentLength <= lMaxFileSize)
                         {
                             if ((sFileDir + fname).Length > 260)//display warning message if file path exceeds 260 characters
@@ -153,7 +160,7 @@ public class HeaderFileUpload : IHttpHandler, IRequiresSessionState
                                 context.Response.Write("error:Selected file type not allowed in this form as per the setting.");
                                 return;
                             }
-                            else if (json.Contains(file.FileName.Substring(fname.LastIndexOf(".")).ToLower()) == false && (jsonVideos == "" || jsonVideos.Contains(file.FileName.Substring(fname.LastIndexOf(".")).ToLower()) == false))//(Constants.fileTypes.Contains(filMyFile.PostedFile.FileName.Substring(sFileName.LastIndexOf(".")).ToLower()) == false)
+                            else if (json.Contains(file.FileName.Substring(fname.LastIndexOf(".")).ToLower()) == false && ((jsonVideos == "" || jsonVideos.Contains(file.FileName.Substring(fname.LastIndexOf(".")).ToLower()) == false) && (jsonSpecificFiles == "" || jsonSpecificFiles.Contains(file.FileName.Substring(fname.LastIndexOf(".")).ToLower()) == false)))
                             {
                                 context.Response.Write("error:Invalid File Extension");
                                 return;
