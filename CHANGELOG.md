@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [11.4.0-beta.1] - 2026-06-26
+
+### Added
+- **Configuration Fallback**: Created `axicmd-config.json` with an `axiarmurl` placeholder to allow configuring the ARM URL locally.
+
+### Changed
+- **ARM URL Resolution Fallback**: Implemented fallback logic in `axicmdmain.js` to fetch `AxiArmUrl` from the local `axicmd-config.json` file if the global `armUrl` variable is not found in the environment.
+- **Asynchronous Script Loading**: Reverted the script loading mechanism of `axicmdmain.js` in `AxiCMDMainPage.html` (for both `CustomPages` and `AxpertPlugins`) back to `files.js.push` to ensure reliable path resolution in IIS virtual directories and prevent early execution timing conflicts.
+- **Fetch Optimization**: Added execution cache flags (`isConfigLoaded`) to prevent concurrent and redundant config fetches to `axicmd-config.json` during timer-based DOM element retry loops.
+
 ## [11.4.0-beta] - 2026-06-25
 
 ### Added
