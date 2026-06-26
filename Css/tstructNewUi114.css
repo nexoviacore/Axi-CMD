@@ -834,6 +834,9 @@ transition: all ease 0.3s !important;
 }
 /*.form-control, .form-select{height: 28px !important;font-size: 13px !important;}*/
 input.form-control, .form-select{height: 28px !important;font-size: 13px !important; font-weight: 600 !important;}
+.designTableHyperlink input.form-control, .designTableHyperlink .form-select, #modalHyperlink .form-select {
+	height: 32px !important;
+}
 textarea.form-control {
 	min-height: calc(1.5em + 1.5rem + 2px);
 /*	height: auto !important;*/
@@ -1472,4 +1475,43 @@ table .dvdcframe .dropzone.dropzone-queue {
 
 /* tstruct new11.4  ends---------------------------------------------------------------------------- */
 
+#modalIdTableField {
+	padding: 0 !important;
+}
 
+	#modalIdTableField .modal-dialog {
+		max-width: 1140px;
+		width: 90%;
+		height: 90vh;
+		min-height: 300px;
+		margin: 20px auto !important;
+		display: block !important;
+	}
+
+	#modalIdTableField .modal-content {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+
+	#modalIdTableField .modal-header,
+	#modalIdTableField .modal-footer {
+		flex-shrink: 0;
+	}
+
+	#modalIdTableField .modal-body {
+		flex: 1;
+		overflow: auto;
+	}
+
+body.block-ui::after {
+	content: "";
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: transparent;
+	z-index: 999999;
+	cursor: wait;
+}

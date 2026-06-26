@@ -155,7 +155,7 @@ public partial class aspx_Analytics : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static string GetEntityDropDownDataWS(string transId, string fldId)
+    public static string GetEntityDropDownDataWS(string transId, string fldId, string searchText)
     {
         if (HttpContext.Current.Session["project"] == null || Convert.ToString(HttpContext.Current.Session["project"]) == string.Empty)
         {
@@ -163,7 +163,7 @@ public partial class aspx_Analytics : System.Web.UI.Page
         }
 
         Analytics analytics = new Analytics();
-        var result = analytics.GetEntityDropDownData(transId, fldId);
+        var result = analytics.GetEntityDropDownData(transId, fldId, searchText);
         return result;
     }
 }

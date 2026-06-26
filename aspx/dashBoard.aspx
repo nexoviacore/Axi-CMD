@@ -201,7 +201,7 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/thirdparty/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
     <script src="../ThirdParty/materialize/js/materialize.min.js?v=10"></script>
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
     <script src="../ThirdParty/Highcharts/highcharts.js"></script>
     <script src="../ThirdParty/Highcharts/highcharts-3d.js"></script>
     <script src="../ThirdParty/Highcharts/highcharts-more.js"></script>

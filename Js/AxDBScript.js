@@ -84,6 +84,11 @@ $(document).ready(function () {
                         success: function (msg) {
                             if (msg.d == "SESSION_TIMEOUT") {
                                 parent.window.location.href = "../aspx/sess.aspx";
+                            } else if (msg.d != "" && msg.d.startsWith("Error:")) {
+                                $('#txtOutput').text(msg.d);
+                                $('#txtOutput').show();
+                                $('#tblOutput').hide();
+                                $('#spnRowCnt').hide();
                             }
                             else if (msg.d != "") {
                                 var tables = $.fn.dataTable.fnTables(true);
@@ -145,6 +150,9 @@ $(document).ready(function () {
                     success: function (msg) {
                         if (msg.d == "SESSION_TIMEOUT") {
                             parent.window.location.href = "../aspx/sess.aspx";
+                        }
+                        else if (msg.d != "" && msg.d.startsWith("Error:")) {
+                            showAlertDialog("error", msg.d);
                         }
                         else if (msg.d != "") {
                             var tables = $.fn.dataTable.fnTables(true);

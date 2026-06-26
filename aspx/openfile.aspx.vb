@@ -28,7 +28,7 @@ Partial Class openfile
         If Session("nsessionid") <> Nothing Then
             sid = Session("nsessionid").ToString()
         End If
-        If utilObj.IsValidQueryString(Request.RawUrl) = False Then
+        If utilObj.IsValidQueryString(Request.RawUrl, True) = False Then
             Response.Redirect(utilObj.ERRPATH + Constants.INVALIDURL)
         End If
         Dim strRequest As String = Request.QueryString("fpath") '-- if something was passed to the file querystring
@@ -326,12 +326,41 @@ Partial Class openfile
         End Try
     End Function
 
+    '<System.Web.Services.WebMethod()>
+    'Public Shared Function DeletePrintPDF(pdfPath As String) As String
+    '    If File.Exists(HttpContext.Current.Server.MapPath(pdfPath)) Then
+    '        File.Delete(HttpContext.Current.Server.MapPath(pdfPath))
+    '    End If
+    '    Return "true"
+    'End Function
     <System.Web.Services.WebMethod()>
     Public Shared Function DeletePrintPDF(pdfPath As String) As String
-        If File.Exists(HttpContext.Current.Server.MapPath(pdfPath)) Then
-            File.Delete(HttpContext.Current.Server.MapPath(pdfPath))
+        Dim util As New Util.Util()
+        HttpContext.Current.Session("LastUpdatedSess") = DateTime.Now.ToString()
+        If HttpContext.Current.Session("project") Is Nothing Then
+            Return "session~" & util.SESSEXPIRYPATH
         End If
-        Return "true"
+        Try
+            If String.IsNullOrWhiteSpace(pdfPath) Then
+                Return "INVALID_FILE"
+            End If
+            Dim fileName As String = Path.GetFileName(pdfPath)
+            If Not Regex.IsMatch(fileName, "^[a-zA-Z0-9_\-\.]+$") Then
+                Return "INVALID_FILE"
+            End If
+            Dim allowedDir As String = HttpContext.Current.Server.MapPath("~/downloads/")
+            Dim fullPath As String = Path.GetFullPath(Path.Combine(allowedDir, fileName))
+            If Not fullPath.StartsWith(allowedDir, StringComparison.OrdinalIgnoreCase) Then
+                Return "ACCESS_DENIED"
+            End If
+
+            If File.Exists(fullPath) Then
+                File.Delete(fullPath)
+            End If
+            Return "true"
+        Catch
+            Return "ERROR"
+        End Try
     End Function
 
 End Class

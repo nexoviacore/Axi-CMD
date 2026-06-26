@@ -1,7 +1,7 @@
 ﻿<%@ Page Title="" Language="C#" MasterPageFile="~/aspx/AxMPage.master" AutoEventWireup="true" CodeFile="dwb.aspx.cs" Inherits="dwb" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
-    <script src="../js/developerWorkBench.min.js?v=25" type="text/javascript"></script>
+    <script src="../js/developerWorkBench.min.js?v=26" type="text/javascript"></script>
     <script>
         var SQLHintObj = '<%=SQLHintObj%>'
         var nodeAccessToken = '<%=nodeAccessToken%>';

@@ -16,6 +16,16 @@ delete from axdirectsql where sqlname='ds_smartlist_ads_metadata';
 delete from axdirectsql where sqlname='ds_getsmartlists';
 >>
 
+<<
+ALTER TABLE axdirectsql ADD pagination VARCHAR(1) NULL;
+>>
+
+<<
+ALTER TABLE axdirectsql ADD applydimensions VARCHAR(1) NULL;
+>>
+
+
+
 
 <<
 INSERT INTO axdirectsql (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd, pagination, applydimensions) VALUES(8887330000001, 'F', 0, NULL, 'admin', '2026-05-29 14:40:09.000', 'abinash', '2026-02-04 00:00:00.000', NULL, 1, 1, NULL, NULL, NULL, 'ds_smartlist_filters', NULL, 'Internal', 1, 'SELECT * from fn_axpanalytics_filterdata( null, :psrctxt)', 'psrctxt', 'psrctxt~Character~', 'ALL', NULL, 'datavalue', NULL, NULL, NULL, NULL, NULL, NULL, NULL);

@@ -1,0 +1,16 @@
+Manual download required for ZIP file:
+Download and extract the following file manually:
+https://raw.githubusercontent.com/Agileaxpert/AxpertReleases/main/Version%2011.4/Release33/AxpertARM/ARMAPI.zip
+--------------------------------------------------
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release33\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release33\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertServices\ARMExportService\ManualActionRequired\Version 11.4\Release33\appsettings.json

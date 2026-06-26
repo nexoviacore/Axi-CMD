@@ -30,8 +30,8 @@
     <script src="../Js/alerts.min.js?v=30" type="text/javascript"></script>
     <%--custom alerts end--%>
     <script src="../Js/gen.min.js?v=13" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
-    <script src="../Js/tstruct.min.js?v=673" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
+    <script src="../Js/tstruct.min.js?v=692" type="text/javascript"></script>
 
     <script src="../Js/axlangupload.min.js?v=9" type="text/javascript"></script>
 

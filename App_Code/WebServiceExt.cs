@@ -1326,7 +1326,7 @@ namespace ASBExt
             string result = string.Empty;
             int tempWebServiceTimeout = 0;
             int tempWebScriptTimeout = 0;
-            if (webServiceTimeout >= 0)
+            if (webServiceTimeout > 0)
             {
                 tempWebServiceTimeout = asbTStruct.Timeout;
                 asbTStruct.Timeout = webServiceTimeout;
@@ -1346,7 +1346,7 @@ namespace ASBExt
                 result = ObjExecTr.ResponseErrorMsg("Kernel - " + ex.Message) + "♠" + result;
                 CallExceptionErrorPage("SaveData", ex.Message.ToString(), "SaveData-" + transId + "");
             }
-            if (webServiceTimeout >= 0)
+            if (webServiceTimeout > 0)
             {
                 asbTStruct.Timeout = tempWebServiceTimeout;
                 HttpContext.Current.Server.ScriptTimeout = tempWebScriptTimeout;

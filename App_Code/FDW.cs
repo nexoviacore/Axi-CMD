@@ -971,6 +971,47 @@ public sealed class FDW
         return added;
     }
 
+    public bool HashSetKeyWithSchema(string KeyName, string KeyParam, string KeyValue, string schemaName)
+    {
+        bool added = false;
+        byte[] bytes;
+        var redis = RedisConnect();
+        try
+        {
+            if (schemaNameKey == string.Empty)
+            {
+                if (HttpContext.Current.Session["dbuser"] != null)
+                    schemaName = HttpContext.Current.Session["dbuser"].ToString();
+            }
+            else if (schemaNameKey == string.Empty && schemaName == string.Empty)
+                return added = false;
+
+            using (var stream = new MemoryStream())
+            {
+                new BinaryFormatter().Serialize(stream, KeyValue);
+                bytes = stream.ToArray();
+            }
+            IDatabase cacheClient = redis.GetDatabase();
+            lock (cacheClient)
+            {
+                if (redis.IsConnected)
+                {
+                    KeyName = schemaName == "" ? schemaNameKey + '-' + KeyName : schemaName + '-' + KeyName;
+                    added = cacheClient.HashSet(KeyName, KeyParam, bytes);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logObj.CreateLog("Redis Server Functon(HashSetKeyWithSchema), Message:" + ex.Message, GetSessionId(), "HashSetKeyWithSchema", "new");
+        }
+        finally
+        {
+            RedisClose(redis);
+        }
+        return added;
+    }
+
     public bool HashDeletekey(string KeyName, string KeyParam)
     {
         bool removed = false;
@@ -998,6 +1039,71 @@ public sealed class FDW
         {
             removed = false;
             logObj.CreateLog("Redis Server Functon(HashDeletekey), Message:" + ex.Message, GetSessionId(), "HashDeletekey", "new");
+        }
+        finally
+        {
+            RedisClose(redis);
+        }
+        return removed;
+    }
+
+    public bool HashDeletekeyNew(string KeyName, string KeyParam, string schemaName = "")
+    {
+        bool removed = false;
+        var redis = RedisConnect();
+        try
+        {
+            if (schemaNameKey == string.Empty)
+            {
+                if (HttpContext.Current.Session["dbuser"] != null)
+                    schemaName = HttpContext.Current.Session["dbuser"].ToString();
+            }
+            else if (schemaNameKey == string.Empty && schemaName == string.Empty)
+                return removed = false;
+
+            IDatabase cacheClient = redis.GetDatabase();
+            if (redis.IsConnected)
+            {
+                KeyName = schemaName == "" ? schemaNameKey + '-' + KeyName : schemaName + '-' + KeyName;
+                if (cacheClient.HashExists(KeyName, KeyParam))
+                    removed = cacheClient.HashDelete(KeyName, KeyParam);
+            }
+        }
+        catch (Exception ex)
+        {
+            removed = false;
+            logObj.CreateLog("Redis Server Functon(HashDeletekey), Message:" + ex.Message, GetSessionId(), "HashDeletekey", "new");
+        }
+        finally
+        {
+            RedisClose(redis);
+        }
+        return removed;
+    }
+    public bool HashDeleteAllkey(string KeyName, string schemaName = "")
+    {
+        bool removed = false;
+        var redis = RedisConnect();
+        try
+        {
+            if (schemaNameKey == string.Empty)
+            {
+                if (HttpContext.Current.Session["dbuser"] != null)
+                    schemaName = HttpContext.Current.Session["dbuser"].ToString();
+            }
+            else if (schemaNameKey == string.Empty && schemaName == string.Empty)
+                return false;
+
+            IDatabase cacheClient = redis.GetDatabase();
+            if (!redis.IsConnected)
+                return false;
+            KeyName = schemaName == "" ? schemaNameKey + '-' + KeyName : schemaName + '-' + KeyName;
+            removed = cacheClient.KeyDelete(KeyName);
+        }
+        catch (Exception ex)
+        {
+            removed = false;
+            logObj.CreateLog("Redis Server Functon(HashDeleteAllkey), Message:" + ex.Message, GetSessionId(), "HashDeleteAllkey", "new");
         }
         finally
         {
@@ -1109,5 +1215,52 @@ public sealed class FDW
         }
 
         return added;
+    }
+
+    public bool DeleteWildCharKeys(ArrayList keyPatterns)
+    {
+        bool removed = false;
+        var redis = RedisConnect();
+
+        try
+        {
+            if (redis != null && redis.IsConnected)
+            {
+                IDatabase db = redis.GetDatabase();
+
+                foreach (var endpoint in redis.GetEndPoints())
+                {
+                    var server = redis.GetServer(endpoint);
+                    if (!server.IsConnected) continue;
+
+                    foreach (string pattern in keyPatterns)
+                    {
+                        var keys = server.Keys(pattern: schemaNameKey + '-' + pattern);
+
+                        var keyList = new List<RedisKey>();
+
+                        foreach (var key in keys)
+                        {
+                            keyList.Add(key);
+                        }
+
+                        if (keyList.Count > 0)
+                        {
+                            db.KeyDelete(keyList.ToArray());
+                            removed = true;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logObj.CreateLog("Redis Server Function(DeleteKeys), Message:" + ex.Message, GetSessionId(), "DeleteKeys", "new");
+        }
+        finally
+        {
+            RedisClose(redis);
+        }
+        return removed;
     }
 }

@@ -17,7 +17,7 @@
     </script>
     <script type="text/javascript" src="../Js/thirdparty/jquery/3.1.1/jquery.min.js"></script>
     <script src="../Js/noConflict.min.js?v=1" type="text/javascript"></script>
-    <script type="text/javascript" src="../Js/common.min.js?v=158"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=164"></script>
     <title>Iview Load</title>
 </head>
 

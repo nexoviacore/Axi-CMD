@@ -2650,3 +2650,122 @@ li.nav-item a.nav-link {
 div#entityform-container .row {
     padding-bottom: 2px;
 }
+
+#dvModalConnectedData li.nav-item a.nav-link {
+    padding: 8px 15px !important;
+}
+
+    #dvModalConnectedData li.nav-item a.nav-link .d-flex.flex-column.align-items-start {
+        font-size: 14px !important;
+    }
+
+        #dvModalConnectedData li.nav-item a.nav-link .d-flex.flex-column.align-items-start .fs-4.fw-bold {
+            font-size: 14px !important;
+        }
+
+#dvModalConnectedData #connecteddata-config-TabContent li:has(.active) {
+    border: 0 !important;
+    border-radius: 0 !important;
+}
+
+.nav-link.w-100.btn.btn-flex.btn-active-light-primary.active {
+}
+
+#dvModalConnectedData #connecteddata-config-TabContent li.nav-item a.nav-link.active {
+    border: 0 !important;
+    border-radius: 0 !important;
+    border-left: 2px solid #880416 !important;
+    background: #8804160a !important;
+    color: #880416 !important;
+}
+
+#dvModalConnectedData
+#connectedDataTabMenu {
+    border-right: 1px solid #ececec !important;
+}
+
+#connecteddata-config-TabContent {
+    padding: 0px 5px 5px 0;
+    border: 0 !important;
+}
+
+    #connecteddata-config-TabContent .d-flex.flex-column.flex-md-row.rounded.border {
+        border: 0 !important;
+    }
+
+#dvModalConnectedData #connecteddata-config-TabContent li.nav-item a.nav-link i {
+    display: none;
+}
+
+.nav-link.w-100.btn.btn-flex.btn-active-light-primary.active {
+}
+
+#dvModalConnectedData #connecteddata-config-TabContent li.nav-item a.nav-link .fs-4.fw-bold {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding-left: 0 !important;
+}
+
+#dvModalConnectedData #connectedDataTabMenu .nav-link {
+    padding-left: 0 !important;
+    color: #333 !important;
+}
+
+
+#connectedDataTabBody {
+    width: 100%;
+}
+
+#connectedDataConfigModal .modal-header {
+    height: auto !important;
+    padding: 10px !important;
+    max-height: 30px;
+    background: #f4f5fb;
+}
+
+#connectedDataTabBody .card > .card-header {
+    min-height: auto;
+    padding-left: 0 !important;
+}
+
+.card-title {
+}
+
+#connectedDataTabBody .card > .card-header .card-title {
+    margin: 0 !important;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+#connecteddata-fieldslist-inloc {
+    font-weight: 600;
+    text-align: center;
+}
+
+#connectedDataConfigModal .modal-header .modal-title {
+    font-size: 17px;
+    font-weight: 800;
+}
+
+#dvModalConnectedData .container {
+    padding-block: 25px;
+    padding: 0 0 10px 10px !important;
+}
+
+.modal-body .form-select, .modal-content .form-control {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+}
+
+#dvModalConnectedData table td {
+    padding: 5px !important;
+}
+
+    #dvModalConnectedData table td.serial-number {
+        text-align: center;
+    }
+
+#Entity_management_Wrapper .card-toolbar {
+    margin-left: auto !important;
+    margin-right: 25px;
+}

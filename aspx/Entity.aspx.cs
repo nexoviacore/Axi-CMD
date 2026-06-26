@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -14,10 +16,9 @@ using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
 using System.Xml;
 using System.Xml.Linq;
+using CacheMgr;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Org.BouncyCastle.Ocsp;
-using StackExchange.Redis.Extensions.Core.Extensions;
 
 public partial class aspx_Entity : System.Web.UI.Page
 {
@@ -34,6 +35,8 @@ public partial class aspx_Entity : System.Web.UI.Page
     public string applyFilter = string.Empty;
     public string langType = "en";
     public string direction = "ltr";
+    public string PageLoadData = "";
+    public string PageVarsData = "";
     #endregion
 
     protected override void InitializeCulture()
@@ -77,6 +80,25 @@ public partial class aspx_Entity : System.Web.UI.Page
 
                 List<Dictionary<string, Object>> filters = new List<Dictionary<string, Object>>();
                 int pageSize = 100;
+                string psize = getDataListingFetchSize(transId);
+                if (!string.IsNullOrEmpty(psize))
+                {
+                    if (psize.ToLower() == "all")
+                        pageSize = 0;
+                    else 
+                    {
+                        Int32.TryParse(psize, out pageSize);
+                        if (pageSize == 0)
+                            pageSize = 100;
+                    }                    
+                }
+
+                var pageVars = new
+                {
+                    PageSize = pageSize
+                };
+
+                PageVarsData = JsonConvert.SerializeObject(pageVars);
 
                 if (Request.QueryString["applyfilter"] != null && Request.QueryString["applyfilter"].ToString() == "true" && Request.QueryString["filterfld"] != null)
                 {
@@ -101,7 +123,7 @@ public partial class aspx_Entity : System.Web.UI.Page
                     filters.Add(filterObj);
                 }
 
-                hdnEntityPageLoadData.Value = entity.GetEntityListPageLoadData("Entity", transId, 1, pageSize, filters, false);
+                PageLoadData = entity.GetEntityListPageLoadData("Entity", transId, 1, pageSize, filters, false);
 
                 string axDisallowCreate = "";
                 if (HttpContext.Current.Session["AxDisallowCreate"] != null && HttpContext.Current.Session["AxDisallowCreate"].ToString() != "")
@@ -187,7 +209,7 @@ public partial class aspx_Entity : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
 
 
-        string tasksUrl = ARM_URL + "/api/v1/GetEntityListData";
+        string tasksUrl = ARM_URL + "/AxList/api/v1/GetEntityListData";
         List<string> transIds = new List<string>();
         transIds.Add(transId);
         //Dictionary<string, string> viewFilters = GetViewFilters(transIds);
@@ -226,7 +248,7 @@ public partial class aspx_Entity : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
 
 
-        string tasksUrl = ARM_URL + "/api/v1/GetEntityChartsData";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/GetEntityChartsData";
 
         List<string> transIds = new List<string>();
         transIds.Add(transId);
@@ -266,7 +288,7 @@ public partial class aspx_Entity : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
 
 
-        string tasksUrl = ARM_URL + "/api/v1/GetEntityChartsMetaData";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/GetEntityChartsMetaData";
 
         var entityDetails = new
         {
@@ -695,7 +717,7 @@ public partial class aspx_Entity : System.Web.UI.Page
                     ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
                 else
                     return "Error in ARM connection.";
-                string connectionUrl = ARM_URL + "/api/v1/ARMConnectFromAxpert";
+                string connectionUrl = ARM_URL + "/AxAuth/api/v1/ARMConnectFromAxpert";
 
                 AnalyticsUtils _aUtils = new AnalyticsUtils();
                 var connectionResult = _aUtils.CallWebAPI(connectionUrl, "POST", "application/json", JsonConvert.SerializeObject(axpertDetails));
@@ -835,4 +857,76 @@ public partial class aspx_Entity : System.Web.UI.Page
             return JsonConvert.SerializeObject(HttpContext.Current.Session["ARMLogs"]);
         }
     }
+
+    public string getDataListingFetchSize(string transId)
+    {
+        string dataListingFetchSize = string.Empty;
+        try
+        {
+            FDW fdwObj = new FDW();
+            bool isRedisConnected = HttpContext.Current.Session["RedisIsConnected"] != null ? bool.Parse(HttpContext.Current.Session["RedisIsConnected"].ToString()) : false;
+            if (isRedisConnected)
+            {
+                FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+                if (fObj == null)
+                {
+                    fObj = new FDR();
+                    HttpContext.Current.Session["FDR"] = fObj;
+                }
+
+                DataTable lvConfigs = new DataTable();
+
+                lvConfigs = fObj.DataTableFromRedis(util.GetConfigCacheKey(Constants.AXCONFIGTSTRUCT, transId, "", HttpContext.Current.Session["AxRole"].ToString(), "ALL"));
+
+                if (lvConfigs == null || lvConfigs.Rows.Count == 0)
+                {
+                    CacheManager cacheMgr = util.GetCacheObject();
+                    TStructDef strObj = null;
+                    strObj = util.GetStrObject(cacheMgr, transId);
+                    lvConfigs = util.GetStructConfig(transId);
+
+                    string schemaName = HttpContext.Current.Session["dbuser"].ToString();
+                    string fdKey = Constants.REDISTSTRUCT;
+                    if (HttpContext.Current.Session["MobileView"] != null && HttpContext.Current.Session["MobileView"].ToString() == "True")
+                        fdKey = Constants.REDISTSTRUCTMOB;
+                    string pgKey = Constants.AXPAGETITLE;
+                    ArrayList redisvalues = new ArrayList();
+                    cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transId), strObj, Constants.REDISTSTRUCT, schemaName);
+
+                    var redisvalues1 = fObj.ObjectJsonFromRedis(util.GetRedisServerkey(pgKey, ""));
+                    if (redisvalues1 == null)
+                        redisvalues.Add(Title + "♠" + strObj.tstCaption + "♠" + transId);
+                    else
+                    {
+                        redisvalues = (ArrayList)redisvalues1;
+                        string newValue = Title + "♠" + strObj.tstCaption + "♠" + transId;
+                        if (!redisvalues.Contains(newValue))
+                            redisvalues.Add(newValue);
+
+                    }
+                    cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(pgKey, transId), redisvalues, Constants.AXPAGETITLE, schemaName);
+                }
+
+                dataListingFetchSize = lvConfigs.AsEnumerable().Where(x => x.Field<string>("PROPS").ToLower() == "fetchsize").Select(x => x.Field<string>("PROPSVAL")).FirstOrDefault();
+
+                if (dataListingFetchSize == null)
+                {
+                    dataListingFetchSize = "";
+                }
+
+            }
+        }
+        catch (Exception ex)
+        {
+            LogFile.Log logobj = new LogFile.Log();
+            logobj.CreateLog("getListviewFetchSize -" + ex.Message, HttpContext.Current.Session["nsessionid"].ToString(), "Exception in getLvFetchSize", "new");
+
+        }
+
+        if (string.IsNullOrEmpty(dataListingFetchSize))
+            dataListingFetchSize = "100";
+
+        return dataListingFetchSize;
+    }
+
 }

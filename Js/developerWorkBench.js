@@ -154,13 +154,6 @@ $(document).ready(function () {
     });
     getMainSqlHintObj();
 
-    $('html').on('click', '.btntoolbar', function () {
-       var stype = $(this).data("pgtype");
-       var name = $(".developerbreadcrumbTitle").text().substring($(".developerbreadcrumbTitle").text().indexOf('(') + 1, $(".developerbreadcrumbTitle").text().length - 1)
-       createPopupdesign('ToolbarManager.aspx?stype=' + stype + '&name=' + name + '','',"85vw","85vh");
-
-    });
-
 });
 
 function setMiddle1Height() {

@@ -591,7 +591,7 @@ public partial class ParamsTstruct : System.Web.UI.Page
                 tstScript.Append(AxvalErrorcode_Scripts);
             }
 
-            strGlobalVar = util.GetGlobalVarString();
+            strGlobalVar = util.GetGlobalVarString("nofilter");
             if (strGlobalVar != string.Empty)
             {
                 string global_Scripts = "<script language='javascript' type='text/javascript' >" + strGlobalVar + "</script>";
@@ -1319,7 +1319,7 @@ public partial class ParamsTstruct : System.Web.UI.Page
             tstJsArrays.Append("var FNames = new Array();var FldsFrmLst = new Array();var ExprPosArray= new Array();var FLowerNames = new Array();var FToolTip = new Array();var FDataType = new Array();var FTableTypeVal = new Array();");
             tstJsArrays.Append("var FMaxLength = new Array();var FDecimal = new Array();var FDupDecimals=new Array(); var FldValidateExpr = new Array();var FCaption = new Array();var HTMLFldNames = new Array();var FCustDecimal=new Array();var FNumDisplayTot=new Array();");
             tstJsArrays.Append("var FldFrameNo = new Array();var FldDcRange = new Array();var FProps = new Array(); var ExpFldNames = new Array();");
-            tstJsArrays.Append("var Expressions = new Array();var Formcontrols = new Array();var tstActionName=new Array();var tstActionCaption=new Array();var actParRefresh=new Array();var actSaveTask=new Array();var PatternNames = new Array();var Patterns = new Array();var SFormControls=new Array();var SFCFldNames=new Array();var SFCApply=new Array();var SFCActionName=new Array();var actScriptTask=new Array();var actScriptCancel=new Array();var actScriptActive=new Array();var actScriptPushtoQueue=new Array();var SFCIsActive=new Array();var actScriptQueueName=new Array();");
+            tstJsArrays.Append("var Expressions = new Array();var Formcontrols = new Array();var tstActionName=new Array();var tstActionCaption=new Array();var actParRefresh=new Array();var actSaveTask=new Array();var PatternNames = new Array();var Patterns = new Array();var SFormControls=new Array();var SFCFldNames=new Array();var SFCApply=new Array();var SFCActionName=new Array();var actScriptTask=new Array();var actScriptCancel=new Array();var actScriptActive=new Array();var actScriptPushtoQueue=new Array();var SFCIsActive=new Array();var actScriptQueueName=new Array();var actConfreq=new Array();var actConfmsg=new Array();");
             tstJsArrays.Append("var FMoe = new Array();var FldDependents = new Array();var FldParents = new Array();var ClientFldParents = new Array();var FldAutoSelect = new Array();var FldIsSql = new Array();var FldAlignType = new Array();var FldIsAPI = new Array();var FldDSqlParams=new Array();");
             tstJsArrays.Append("var FldRapidDeps = new Array();var FldRapidDepType = new Array();var FldRapidExpDeps = new Array();var FldRapidParents = new Array();var FldPurpose= new Array();var FSetCarry=new Array();");
         }
@@ -4137,7 +4137,7 @@ public partial class ParamsTstruct : System.Web.UI.Page
         for (int qs = 0; qs <= paramNames.Count - 1; qs++)
         {
             paramValues[qs] = CheckSpecialChars(paramValues[qs].ToString());
-            if (paramNames[qs].ToString().ToLower() != "transid" && paramNames[qs].ToString().ToLower() != "themode" && paramNames[qs].ToString().ToLower() != "hltype" && paramNames[qs].ToString().ToLower() != "torecid" && paramNames[qs].ToString().ToLower() != "layout" && paramNames[qs].ToString().ToLower() != "act" && paramNames[qs].ToString().ToLower() != "loadformdata" && paramNames[qs].ToString().ToLower() != "trromode")
+            if (paramNames[qs].ToString().ToLower() != "transid" && paramNames[qs].ToString().ToLower() != "themode" && paramNames[qs].ToString().ToLower() != "hltype" && paramNames[qs].ToString().ToLower() != "torecid" && paramNames[qs].ToString().ToLower() != "layout" && paramNames[qs].ToString().ToLower() != "act" && paramNames[qs].ToString().ToLower() != "loadformdata" && paramNames[qs].ToString().ToLower() != "trromode" && paramNames[qs].ToString().ToLower() != "createaxiflag")
             {
                 paramXml.Append("<" + paramNames[qs].ToString() + ">" + paramValues[qs].ToString() + "</" + paramNames[qs].ToString() + ">");
             }
@@ -4651,7 +4651,7 @@ public partial class ParamsTstruct : System.Web.UI.Page
             }
             else
             {
-                if (Request.QueryString.AllKeys[qn].ToLower() == "axfromhyperlink" || Request.QueryString.AllKeys[qn].ToLower() == "axpop" || Request.QueryString.AllKeys[qn].ToLower() == "axhyptstrefresh" || Request.QueryString.AllKeys[qn].ToLower() == "recpos" || Request.QueryString.AllKeys[qn].ToLower() == "pagetype" || Request.QueryString.AllKeys[qn].ToLower() == "curpage" || Request.QueryString.AllKeys[qn].ToLower() == "dynnavtst" || Request.QueryString.AllKeys[qn].ToLower() == "openeriv" || Request.QueryString.AllKeys[qn].ToLower() == "isduptab" || Request.QueryString.AllKeys[qn].ToLower() == "fromprocess" || Request.QueryString.AllKeys[qn].ToLower() == "ispegedit" || Request.QueryString.AllKeys[qn].ToLower() == "isiv" || Request.QueryString.AllKeys[qn].ToLower() == "axsplit" || Request.QueryString.AllKeys[qn].ToLower() == "hdnbelapstime" || Request.QueryString.AllKeys[qn].ToLower() == "reqproc_logtime" || Request.QueryString.AllKeys[qn].ToLower() == "hltype" || Request.QueryString.AllKeys[qn].ToLower() == "torecid" || Request.QueryString.AllKeys[qn].ToLower() == "act" || Request.QueryString.AllKeys[qn].ToLower() == "dummyload" || Request.QueryString.AllKeys[qn].ToLower() == "loadformdata" || Request.QueryString.AllKeys[qn].ToLower() == "trromode")
+                if (Request.QueryString.AllKeys[qn].ToLower() == "axfromhyperlink" || Request.QueryString.AllKeys[qn].ToLower() == "axpop" || Request.QueryString.AllKeys[qn].ToLower() == "axhyptstrefresh" || Request.QueryString.AllKeys[qn].ToLower() == "recpos" || Request.QueryString.AllKeys[qn].ToLower() == "pagetype" || Request.QueryString.AllKeys[qn].ToLower() == "curpage" || Request.QueryString.AllKeys[qn].ToLower() == "dynnavtst" || Request.QueryString.AllKeys[qn].ToLower() == "openeriv" || Request.QueryString.AllKeys[qn].ToLower() == "isduptab" || Request.QueryString.AllKeys[qn].ToLower() == "fromprocess" || Request.QueryString.AllKeys[qn].ToLower() == "ispegedit" || Request.QueryString.AllKeys[qn].ToLower() == "isiv" || Request.QueryString.AllKeys[qn].ToLower() == "axsplit" || Request.QueryString.AllKeys[qn].ToLower() == "hdnbelapstime" || Request.QueryString.AllKeys[qn].ToLower() == "reqproc_logtime" || Request.QueryString.AllKeys[qn].ToLower() == "hltype" || Request.QueryString.AllKeys[qn].ToLower() == "torecid" || Request.QueryString.AllKeys[qn].ToLower() == "act" || Request.QueryString.AllKeys[qn].ToLower() == "dummyload" || Request.QueryString.AllKeys[qn].ToLower() == "loadformdata" || Request.QueryString.AllKeys[qn].ToLower() == "trromode" || Request.QueryString.AllKeys[qn].ToLower() == "createaxiflag")
                     continue;
 
                 string strParams = string.Empty;
@@ -6533,6 +6533,7 @@ public partial class ParamsTstruct : System.Web.UI.Page
         string isAxSplit = "false";
         string Isloadformdata = "false";
         string transactionROMode = "";
+        string createaxiflag = "";
         if (tstQureystr != string.Empty)
         {
             string[] quertStr = tstQureystr.Split('?');
@@ -6600,6 +6601,9 @@ public partial class ParamsTstruct : System.Web.UI.Page
                                 break;
                             case "trromode":
                                 transactionROMode = prValue;
+                                break;
+                            case "createaxiflag":
+                                createaxiflag = prValue;
                                 break;
                             case "istsivparamcache":
                                 if (prValue == "true")
@@ -6833,17 +6837,20 @@ public partial class ParamsTstruct : System.Web.UI.Page
     [WebMethod]
     public static string callExecuteSQL(string queryString)
     {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return "SESSION_TIMEOUT";
         ASBExt.WebServiceExt asbExt = new ASBExt.WebServiceExt();
         string result = "";
         try
         {
+            util.ValidateSql(queryString);
             result = asbExt.ExecuteSQL("", queryString, "JSON");
-            //DataSet ds = new DataSet();
-            //System.IO.StringReader sr = new System.IO.StringReader(result);
-            //ds.ReadXml(sr);
-
         }
-        catch (Exception ex) { }
+        catch (Exception ex)
+        {
+            result = "Error:" + ex.Message;
+        }
         return result;
 
     }

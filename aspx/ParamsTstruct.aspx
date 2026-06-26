@@ -742,6 +742,6 @@
     <div id="reloaddiv" class="d-none">
         <span class="AVerror">Server is unable to process your request. Please retry...</span>
     </div>
-    <script src="../Js/ParamsTstruct.min.js?v=6" type="text/javascript"></script>
+    <script src="../Js/ParamsTstruct.min.js?v=7" type="text/javascript"></script>
 </body>
 </html>

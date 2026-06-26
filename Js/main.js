@@ -57,6 +57,7 @@ var formComponentsFlag = '';
 var mainSqlHintObj = {};
 var cpwdLoadExit = "false";
 var multiFormsJson = {};
+var isStudioOpenedInIframe = false;
 if (typeof (Storage) !== "undefined") {
     try {
         let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
@@ -461,8 +462,8 @@ function signout(path) {
                     text: lcm[280],
                     btnClass: 'btn btn-primary-white btn-bg-light',
                     action: function () {
-                        if (typeof keepAlive != "undefined" && keepAlive == "true")
-                            keepAlive = "false";
+                        //if (typeof keepAlive != "undefined" && keepAlive == "true")
+                        //    keepAlive = "false";
                         signoutCB.close();
                         SaveAxNotifyHistory();
                         setTimeout(function () {
@@ -496,12 +497,13 @@ function signout(path) {
                     text: lcm[164],
                     btnClass: 'btn btn-primary',
                     action: function () {
-                        if (typeof keepAlive != "undefined" && keepAlive == "true")
-                            keepAlive = "false";
+                        //if (typeof keepAlive != "undefined" && keepAlive == "true")
+                        //    keepAlive = "false";
                         signoutCB.close();
                         SaveAxNotifyHistory();
                         doPageUnload = "true";
                         BeforeWindowClose();
+                        doPageUnload = "false";
                         setTimeout(function () {
                             window.location.href = path;
                         }, 0);
@@ -838,56 +840,60 @@ function SetUnload(status) {
 
 //Main page on before unload- calling sgnout webservice to handle record lock
 function BeforeWindowClose() {
-
     if (doPageUnload != "false") {
         try {
             sessionStorage.removeItem("homeJsonObj");
             sessionStorage.clear();
             var localSessionVal = parseInt(window.localStorage.getItem("axpertLocalsession"));
-            //window.localStorage.setItem("axpertLocalsession", localSessionVal + 1);
-
             if (!localSessionVal || localSessionVal == 0) {
-                //var isExeSave=ExecutionTraceInterval(true);
-                /*var isExeSave = (typeof callParentNew("ExecTraceOn") != 'undefined' && callParentNew("ExecTraceOn") == "true") ? ExecutionTraceInterval(true) : true;*/
                 var isExeSave = (typeof callParentNew("axExecTraceFlag") != 'undefined' && callParentNew("axExecTraceFlag") == 'true') ? ExecutionTraceInterval(true) : true;
-                clearLocalStorage(['projInfo-', 'versionInfo-', 'langInfo-', 'hybridGUID-', 'hybridDeviceId-', 'compressedMode-', 'duplicateUser-', 'instanceName-', 'customGlobalStylesExist-', 'axGlobalThemeStyle-', 'axThemeFldr-', 'tstDDFVal♠'], true);
+                clearLocalStorage(['projInfo-', 'versionInfo-', 'langInfo-', 'hybridGUID-', 'hybridDeviceId-', 'compressedMode-', 'duplicateUser-', 'instanceName-', 'customGlobalStylesExist-', 'axGlobalThemeStyle-', 'axThemeFldr-', 'tstDDFVal♠', 'current_tabsignin-'], true);
                 window.localStorage.removeItem("axpertLocalsession");
                 if (isExeSave) {
-                    let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+                    let appSessUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
+                    let logoutKey = "axpertLogoutLock-" + appSessUrl;
                     localStorage.setItem('logged_in-' + appSessUrl, 'no');
                     if (typeof AxNotifyHistory != "undefined" && AxNotifyHistory != "")
                         SaveAxNotifyHistory();
-                    /* if (typeof callParentNew("ExecTraceOn") != 'undefined' && callParentNew("ExecTraceOn") == "false") {*/
-                    if (typeof callParentNew("axExecTraceFlag") != 'undefined' && callParentNew("axExecTraceFlag") == "false") {
-                        if (typeof keepAlive != "undefined" && keepAlive == "true") {
-                            let currPageUrl = callParentNew("middle1", "id").src;
-                            if (currPageUrl.indexOf('mainnew.aspx') > -1) {
-                                currPageUrl = "mainnew";
-                            } else {
-                                currPageUrl = currPageUrl.substring(currPageUrl.length, currPageUrl.indexOf('/aspx/') + 6);
-                                currPageUrl = currPageUrl.substring(0, currPageUrl.indexOf("&hdnbElapsTime="));
-                            }
-                            ASB.WebService.SignOut(currPageUrl);
-                        } else
-                            ASB.WebService.SignOut('false');
-                    } else
-                        ASB.WebService.SignOut();
+                    let _keepAliveFlag = 'false';
+                    if (typeof keepAlive != "undefined" && keepAlive == "true") {
+                        let currPageUrl = callParentNew("middle1", "id").src;
+                        if (currPageUrl.indexOf('mainnew.aspx') > -1) {
+                            currPageUrl = "mainnew";
+                        } else {
+                            currPageUrl = currPageUrl.substring(currPageUrl.length, currPageUrl.indexOf('/aspx/') + 6);
+                            currPageUrl = currPageUrl.substring(0, currPageUrl.indexOf("&hdnbElapsTime="));
+                        }
+                        _keepAliveFlag = currPageUrl;
+                    }
+
+                    if (!localStorage.getItem(logoutKey)) {
+                        localStorage.setItem(logoutKey, "true");
+                        if (typeof callParentNew("axExecTraceFlag") != 'undefined' &&
+                            callParentNew("axExecTraceFlag") == "false")
+                            ASB.WebService.SignOut(_keepAliveFlag);
+                        else
+                            ASB.WebService.SignOut();
+                    }
                 }
             } else {
                 if (isDuplicateTab.startsWith('true-') && isMulDuplicateTab == "false") {
-                    let _appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+                    let _appSessUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
                     if (localStorage.getItem('web_browser_dup-' + _appSessUrl) != null)
                         localStorage.removeItem('web_browser_dup-' + _appSessUrl);
-                } else if (isDuplicateTab.startsWith('true-') && isMulDuplicateTab == "true") {
+                }
+                else if (isDuplicateTab.startsWith('true-') && isMulDuplicateTab == "true") {
                     isMulDuplicateTab = "false";
                 }
                 window.localStorage.setItem("axpertLocalsession", localSessionVal - 1);
             }
         } catch (ex) { }
+
     } else if (isMobile && isFileDownload) {
         isFileDownload = false;
-    } else
+    } else {
         doPageUnload = "true";
+    }
 }
 
 function createLocalSession() {
@@ -952,10 +958,10 @@ $(document).ready(function (event) {
 
         if ($target.hasClass(stateClass)) {
             $target.removeClass(stateClass);
-            isMenuOpen= false;
+            isMenuOpen = false;
         } else {
             $target.addClass(stateClass);
-            isMenuOpen= true;
+            isMenuOpen = true;
         }
     });
     setTimeout(function () {
@@ -1142,7 +1148,7 @@ $(document).ready(function (event) {
             $(".rightPartAC").addClass("middle1_isNotCloudApp");
 
             $(".ACmainwrapper").css("margin-top", "0px");
-           /* $("#exeiddownload").hide();*/
+            /* $("#exeiddownload").hide();*/
             $("#li_ConfigApp").hide();
             $("li2").hide();
             $("#wrapperForMainNewData").css("top", "109px");
@@ -1525,8 +1531,6 @@ $(document).ready(function (event) {
         catch (ex) {
 
         }
-
-
         //ppn-AssignGloSrchScroll();
 
         if (typeof localStorUser != "undefined" && localStorUser == "true") {
@@ -1719,13 +1723,12 @@ function resetLeftMenu(isDashBoard) {
         } else {
             return;
         }
-    }
-    //else if ($("#middle1")[0].contentWindow.designChanged != undefined && $("#middle1")[0].contentWindow.designChanged == true) {
-    //    //isFunctionCalled = true;
+    } else if ($("#middle1")[0].contentWindow.designChanged != undefined && $("#middle1")[0].contentWindow.designChanged == true) {
+        //isFunctionCalled = true;
 
-    //    if (!confirm(lcm[31]))
-    //        return;
-    //}
+        if (!confirm(lcm[31]))
+            return;
+    }
 
     if ($(".leftPartAC .dropdown-menu li").length == 0) {
         $(".closeSidePanel").click();
@@ -1801,8 +1804,21 @@ function getKeysWithPrefix(prefix) {
 
     return matchingKeys;
 }
+function clearKeysByFormat(input) {
+    try {
+        var parts = input.split("♣");
+        var start = parts[0];
+        var end = parts[1];
+        var allKeys = Object.keys(localStorage);
+        allKeys.forEach(function (key) {
+            if (key.startsWith(start) && key.includes(end)) {
+                localStorage.removeItem(key);
+            }
+        });
+    } catch (ex) { }
+}
 function LoadIframe(src, isautoprocess = false) {
-    if (typeof src != "undefined" && src.toLowerCase().indexOf('iview.aspx?') == -1 && src.toLowerCase().indexOf('tstruct.aspx?') == -1 && src.toLowerCase().indexOf('htmlpages.aspx?') == -1 && src.toLowerCase().indexOf('page.aspx?') == -1 && (src.toLowerCase() == "loadhomepage" && $("#hdHomeUrl").val()==""))
+    if (typeof src != "undefined" && src.toLowerCase().indexOf('iview.aspx?') == -1 && src.toLowerCase().indexOf('tstruct.aspx?') == -1 && src.toLowerCase().indexOf('htmlpages.aspx?') == -1 && src.toLowerCase().indexOf('page.aspx?') == -1 && (src.toLowerCase() == "loadhomepage" && $("#hdHomeUrl").val() == ""))
         ShowDimmer(true);
     setTimeout(function () {
         try {
@@ -1852,20 +1868,21 @@ function LoadIframe(src, isautoprocess = false) {
                         let _ifactionUri = _el.contentWindow.jQuery('#form1').attr('action');
                         try {
                             if (typeof (Storage) !== "undefined") {
+                                removeLSKeyOnDateChange(_oepnTransid);
                                 let appSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
                                 let _thisKey = getKeysWithPrefix("tstHtml♠" + _oepnTransid + "-" + appSUrl + "♥");
                                 _TstlocalStorage = localStorage[_thisKey[0]];
                                 if (typeof _TstlocalStorage == "undefined") {
                                     _TstlocalStorage = "";
                                 }
-
                                 if (_TstlocalStorage != '') {
                                     for (const val of _thisKey) {
                                         localStorage.removeItem(val);
                                     }
                                     var _time = new Date();
                                     let _localTime = _time.getTime();
-                                    localStorage.setItem("tstHtml♠" + _oepnTransid + "-" + appSUrl + "♥" + _localTime, _TstlocalStorage);
+                                    let _localDate = String(_time.getDate()).padStart(2, '0') + String(_time.getMonth() + 1).padStart(2, '0') + _time.getFullYear();
+                                    localStorage.setItem("tstHtml♠" + _oepnTransid + "-" + appSUrl + "♥" + _localTime + "♥" + _localDate, _TstlocalStorage);
                                 }
                             }
                         } catch (e) {
@@ -1975,7 +1992,7 @@ function LoadIframe(src, isautoprocess = false) {
         }
 
         if (src == "loadhomepage") {
-            if (typeof isHomeConfigPage != "undefined" && isHomeConfigPage == "true" && $("#hdHomeUrl").val() == "") {               
+            if (typeof isHomeConfigPage != "undefined" && isHomeConfigPage == "true" && $("#hdHomeUrl").val() == "") {
                 document.querySelector(".cardsPageWrapper")?.classList.remove('d-none');
                 document.querySelector(".splitter-wrapper")?.classList.add('d-none');
                 if ($.axpertUI && $.axpertUI.cardsPage && $.axpertUI.cardsPage.options.setCards && typeof cardsData != "undefined" && cardsData.value != "[]") {
@@ -2084,13 +2101,12 @@ function LoadIframe(src, isautoprocess = false) {
             } else {
                 return;
             }
+        } else if ($("#middle1")[0].contentWindow.designChanged != undefined && $("#middle1")[0].contentWindow.designChanged == true) {
+
+
+            if (!confirm(lcm[31]))
+                return;
         }
-        //else if ($("#middle1")[0].contentWindow.designChanged != undefined && $("#middle1")[0].contentWindow.designChanged == true) {
-
-
-        //    if (!confirm(lcm[31]))
-        //        return;
-        //}
         $("#dvSelectedGlobalVar").show();
 
         if (isDuplicateTab.startsWith('true-') && src != "" && src.indexOf("&isDupTab=") == -1)
@@ -2129,7 +2145,7 @@ function LoadIframe(src, isautoprocess = false) {
         if (src.indexOf('ivname') > -1) {
             loadFrame();
         }
-        if (src.indexOf('tstruct.aspx') > -1) {
+        if (src.indexOf('tstruct.aspx') > -1 || src.toLowerCase().indexOf('entity.aspx') > -1 || src.toLowerCase().indexOf('entityform.aspx') > -1) {
             loadFrame();
         }
         if (src.toLowerCase().indexOf('htmlpages.aspx') > -1 || src.toLowerCase().indexOf('page.aspx?') > -1) {
@@ -2145,7 +2161,7 @@ function LoadIframe(src, isautoprocess = false) {
         if (src.indexOf('dashBoardTemplate.html') > -1 || src.indexOf('calendarTemplate.html') > -1 || src.indexOf('/HTMLPages/') > -1 || src.indexOf('processflow.aspx?calendar=t') > -1 || src.indexOf('processflow.aspx?dashboard=t') > -1) {
             try {
                 callParentNew("ShowDimmer(false)", "function");
-                if (src.indexOf('/HTMLPages/') > -1 && src.indexOf(".html?")>-1) {
+                if (src.indexOf('/HTMLPages/') > -1 && src.indexOf(".html?") > -1) {
                     let newLoadUrl = src;
                     callParentNew("updateAppLinkObj")?.(newLoadUrl, 0, window?.frameElement?.id == "axpiframe", { ...window?.frameElement?.dataset });
                 }
@@ -2165,6 +2181,23 @@ function LoadIframe(src, isautoprocess = false) {
         }
         return false;
     }, 0);
+}
+
+function removeLSKeyOnDateChange(_oepnTransid) {
+    let appSUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
+    let _thisKey = getKeysWithPrefix("tstHtml♠" + _oepnTransid + "-" + appSUrl + "♥");
+    var _time = new Date();
+    let _localDate = String(_time.getDate()).padStart(2, '0') + String(_time.getMonth() + 1).padStart(2, '0') + _time.getFullYear();
+        if (_thisKey.length > 0) {
+        let oldKey = _thisKey[0];
+        let keyParts = oldKey.split("♥");
+        let savedDate = keyParts[keyParts.length - 1]; 
+        if (savedDate !== _localDate) {
+            for (const val of _thisKey) {
+                localStorage.removeItem(val);
+            }
+        }
+    }
 }
 
 function LoadIframeOnline(src) {
@@ -2204,7 +2237,7 @@ function LoadIframeOnline(src) {
     $(".rightPartAC").addClass("middle1_isNotCloudApp");
 
     $(".ACmainwrapper").css("margin-top", "0px");
-   /* $("#exeiddownload").hide();*/
+    /* $("#exeiddownload").hide();*/
     $("#li_ConfigApp").hide();
     $("li2").hide();
     $("#wrapperForMainNewData").css("top", "109px");
@@ -2780,7 +2813,7 @@ function collapseAllMenus() {
     $(".menu-sub").removeClass("show");
     $(".menu-link").removeClass("show");
 }
-function selectGetsearch(viewName,isClick=false) {
+function selectGetsearch(viewName, isClick = false) {
     if (!viewName) return;
     let $found = $(
         'a.menu-link[title="' + viewName + '"], ' +
@@ -4848,7 +4881,7 @@ function refreshMenu() {
             dataType: "json",
             success: function (data) {
                 if (data.d != "") {
-                    createMenu(data.d);  
+                    createMenu(data.d);
                     ShowDimmer(false);
                 } else
                     ShowDimmer(false);
@@ -5626,97 +5659,7 @@ function openPluginEditor() {
     myModal.modalBody.classList.add(..."p-0 overflow-hidden".split(" "));
     myModal.showFloatingClose();
 }
-
-//function openDeveloperStudio(ivtstName) {
-//    if (ivtstName == "tstreact" || ivtstName == "ivreact") {
-//        try {
-//            let _adInfo = '';
-//            let _defpType = '';
-//            if (ivtstName == "tstreact") {
-//                _adInfo = `?adInfo=${callParentNew("mainProject")}♦${callParentNew("mainUserName")}♦tstruct♦${callParentNew("axTraceFlag")}`;
-//                _defpType = "tstruct";
-//            } else {
-//                _adInfo = `?adInfo=${callParentNew("mainProject")}♦${callParentNew("mainUserName")}♦iview♦${callParentNew("axTraceFlag")}`;
-//                _defpType = "iview";
-//            }
-//            let _axstudioReactUri = axpertstudioReact;
-//            if (_axstudioReactUri.endsWith('/')) {
-//                _axstudioReactUri = _axstudioReactUri.slice(0, -1);
-//            }
-
-//            try {
-//                ShowDimmer(true);
-//                ASB.WebService.isDevStudioOpenedRedis(_defpType, SuccisDevStudioOpenedRedis);
-//            } catch (exp) { }
-//            function SuccisDevStudioOpenedRedis(resultStr, eventArgs) {
-//                ShowDimmer(false);
-//                if (typeof resultStr != "undefined" && resultStr == "defSiteOpend") {
-//                    var msg = lcm[155];
-//                    var glType = gllangType;
-//                    var isRTL = false;
-//                    if (glType == "ar")
-//                        isRTL = true;
-//                    else
-//                        isRTL = false;
-//                    var _oepnDefCB = $.confirm({
-//                        theme: 'modern',
-//                        title: msg,
-//                        onContentReady: function () {
-//                            disableBackDrop('bind');
-//                        },
-//                        backgroundDismiss: 'false',
-//                        rtl: isRTL,
-//                        escapeKey: 'buttonaB',
-//                        content: _defpType == "tstruct" ? "Already opened Tstruct Definition page will get signed out automatically. Do you want to continue?" : "Already opened Iview Definition page will get signed out automatically. Do you want to continue?",
-//                        buttons: {
-//                            buttonA: {
-//                                text: lcm[164],
-//                                btnClass: 'btn btn-primary',
-//                                action: function () {
-//                                    try {
-//                                        ShowDimmer(true);
-//                                        ASB.WebService.openDevStudioRedis(_defpType, SuccOpenDevStudioRedis);
-//                                    } catch (exp) { }
-//                                }
-//                            },
-//                            buttonaB: {
-//                                text: lcm[192],
-//                                btnClass: 'btn btn-bg-light btn-color-danger btn-active-light-danger',
-//                                action: function () {
-//                                    disableBackDrop('destroy');
-//                                }
-//                            }
-
-//                        }
-//                    });
-//                } else {
-//                    try {
-//                        ShowDimmer(true);
-//                        ASB.WebService.openDevStudioRedis(_defpType, SuccOpenDevStudioRedis);
-//                    } catch (exp) { }
-//                }
-//            }
-//            function SuccOpenDevStudioRedis() {
-//                ShowDimmer(false);
-//                newWindow = window.open(_axstudioReactUri + _adInfo);
-//            }
-//        } catch (ex) {
-//        }
-//    } else {
-//        let myModal = new BSModal("devStudioPopup", "Plugin Custom Code", "<iframe src='../aspx/DeveloperStudio.aspx?ivtstName=" + ivtstName + "' class='vw-100 vh-100' ></iframe>", () => {
-//            //shown callback
-//        }, () => {
-//            //hide callback
-//        });
-//        myModal.changeSize("fullscreen");
-//        myModal.hideFooter();
-//        myModal.hideHeader();
-//        myModal.modalBody.classList.add(..."p-0 overflow-hidden".split(" "));
-//        myModal.showFloatingClose();
-//    }
-//}
-
-function openDeveloperStudio(ivtstName, structname, callFromAxi = false) {
+function openDeveloperStudio(ivtstName, structname = "", callFromAxi = false) {
     if (ivtstName == "tstreact" || ivtstName == "ivreact") {
         try {
             let _adInfo = "";
@@ -5736,105 +5679,109 @@ function openDeveloperStudio(ivtstName, structname, callFromAxi = false) {
             if (_axstudioReactUri.endsWith("/")) {
                 _axstudioReactUri = _axstudioReactUri.slice(0, -1);
             }
-
-            try {
-                ShowDimmer(true);
-                ASB.WebService.isDevStudioOpenedRedis(
-                    _defpType,
-                    SuccisDevStudioOpenedRedis
-                );
-            } catch (exp) { }
-            function SuccisDevStudioOpenedRedis(resultStr, eventArgs) {
-                ShowDimmer(false);
-                if (typeof resultStr != "undefined" && resultStr == "defSiteOpend") {
-                    var msg = lcm[155];
-                    var glType = gllangType;
-                    var isRTL = false;
-                    if (glType == "ar") isRTL = true;
-                    else isRTL = false;
-                    var _oepnDefCB = $.confirm({
-                        theme: "modern",
-                        title: msg,
-                        onContentReady: function () {
-                            disableBackDrop("bind");
-                        },
-                        backgroundDismiss: "false",
-                        rtl: isRTL,
-                        escapeKey: "buttonaB",
-                        content:
-                            _defpType == "tstruct"
-                                ? "Already opened Tstruct Definition page will get signed out automatically. Do you want to continue?"
-                                : "Already opened Iview Definition page will get signed out automatically. Do you want to continue?",
-                        buttons: {
-                            buttonA: {
-                                text: lcm[164],
-                                btnClass: "btn btn-primary",
-                                action: function () {
-                                    try {
-                                        ShowDimmer(true);
-                                        ASB.WebService.openDevStudioRedis(
-                                            _defpType,
-                                            SuccOpenDevStudioRedis
-                                        );
-                                    } catch (exp) { }
-                                },
-                            },
-                            buttonaB: {
-                                text: lcm[192],
-                                btnClass:
-                                    "btn btn-bg-light btn-color-danger btn-active-light-danger",
-                                action: function () {
-                                    disableBackDrop("destroy");
-                                },
-                            },
-                        },
-                    });
+            if (callFromAxi) {
+                _adInfo += `♦true`;
+                if (isStudioOpenedInIframe) {
+                    if (structname && structname != "") {
+                        _adInfo += `♦${structname}`;
+                        isStudioOpenedInIframe = true;
+                    }
+                    LoadIframe(_axstudioReactUri + _adInfo);
                 } else {
                     try {
                         ShowDimmer(true);
-                        ASB.WebService.openDevStudioRedis(
-                            _defpType,
-                            SuccOpenDevStudioRedis
-                        );
-                    } catch (exp) { }
+                        ASB.WebService.openDevStudioRedis(_defpType, SuccOpenDevStudioRedis);
+                    } catch (exp) {
+                        isStudioOpenedInIframe = false;
+                    }
+
+                    function SuccOpenDevStudioRedis() {
+                        ShowDimmer(false);
+                        if (structname && structname != "") {
+                            _adInfo += `♦${structname}`;
+                            isStudioOpenedInIframe = true;
+                        }
+                        LoadIframe(_axstudioReactUri + _adInfo);
+                    }
                 }
-            }
-
-            function SuccOpenDevStudioRedis() {
-                ShowDimmer(false);
-                //   newWindow = window.open(_axstudioReactUri + _adInfo);
-                //LoadIframe(_axstudioReactUri + _adInfo);
-                if (structname && structname != "") {
-                    _adInfo += `♦${structname}`;
-                } 
-
-                if (callFromAxi) {
-                LoadIframe(_axstudioReactUri + _adInfo); //single struct mode
-
-                    
-                } else {
-                     newWindow = window.open(_axstudioReactUri + _adInfo);
-
+            } else {
+                _adInfo += `♦false`;
+                isStudioOpenedInIframe = false;
+                try {
+                    ShowDimmer(true);
+                    ASB.WebService.isDevStudioOpenedRedis(
+                        _defpType,
+                        SuccisDevStudioOpenedRedis
+                    );
+                } catch (exp) { }
+                function SuccisDevStudioOpenedRedis(resultStr, eventArgs) {
+                    ShowDimmer(false);
+                    if (typeof resultStr != "undefined" && resultStr == "defSiteOpend") {
+                        var msg = lcm[155];
+                        var glType = gllangType;
+                        var isRTL = false;
+                        if (glType == "ar") isRTL = true;
+                        else isRTL = false;
+                        var _oepnDefCB = $.confirm({
+                            theme: "modern",
+                            title: msg,
+                            onContentReady: function () {
+                                disableBackDrop("bind");
+                            },
+                            backgroundDismiss: "false",
+                            rtl: isRTL,
+                            escapeKey: "buttonaB",
+                            content:
+                                _defpType == "tstruct"
+                                    ? "Already opened Tstruct Definition page will get signed out automatically. Do you want to continue?"
+                                    : "Already opened Iview Definition page will get signed out automatically. Do you want to continue?",
+                            buttons: {
+                                buttonA: {
+                                    text: lcm[164],
+                                    btnClass: "btn btn-primary",
+                                    action: function () {
+                                        try {
+                                            ShowDimmer(true);
+                                            ASB.WebService.openDevStudioRedis(
+                                                _defpType,
+                                                SuccOpenDevStudioRedis
+                                            );
+                                        } catch (exp) { }
+                                    },
+                                },
+                                buttonaB: {
+                                    text: lcm[192],
+                                    btnClass:
+                                        "btn btn-bg-light btn-color-danger btn-active-light-danger",
+                                    action: function () {
+                                        disableBackDrop("destroy");
+                                    },
+                                },
+                            },
+                        });
+                    } else {
+                        try {
+                            ShowDimmer(true);
+                            ASB.WebService.openDevStudioRedis(
+                                _defpType,
+                                SuccOpenDevStudioRedis
+                            );
+                        } catch (exp) { }
+                    }
                 }
-                
-              
 
+                function SuccOpenDevStudioRedis() {
+                    ShowDimmer(false);
+                    newWindow = window.open(_axstudioReactUri + _adInfo);
+                }
             }
         } catch (ex) { }
     } else {
-        let myModal = new BSModal(
-            "devStudioPopup",
-            "Plugin Custom Code",
-            "<iframe src='../aspx/DeveloperStudio.aspx?ivtstName=" +
-            ivtstName +
-            "' class='vw-100 vh-100' ></iframe>",
-            () => {
-                //shown callback
-            },
-            () => {
-                //hide callback
-            }
-        );
+        let myModal = new BSModal("devStudioPopup", "Plugin Custom Code", "<iframe src='../aspx/DeveloperStudio.aspx?ivtstName=" + ivtstName + "' class='vw-100 vh-100' ></iframe>", () => {
+            //shown callback
+        }, () => {
+            //hide callback
+        });
         myModal.changeSize("fullscreen");
         myModal.hideFooter();
         myModal.hideHeader();
@@ -6130,7 +6077,6 @@ function CheckNotificiationStringinRedis() {
     }
 }
 
-
 function ExecutionTraceInterval(isSignOut = false) {
     var ExecutionLongText = "";
     var keepAliveMS = "true";
@@ -6142,12 +6088,10 @@ function ExecutionTraceInterval(isSignOut = false) {
         currPageUrl = currPageUrl.substring(currPageUrl.length, currPageUrl.indexOf('/aspx/') + 6);
         currPageUrl = currPageUrl.substring(0, currPageUrl.indexOf("&hdnbElapsTime="));
     }
-
-    let appSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+    let appSUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
     if (typeof localStorage["ExecutionFullLog-" + appSUrl] != "undefined") {
         ExecutionLongText = localStorage["ExecutionFullLog-" + appSUrl];
         localStorage.setItem("ExecutionFullLog-" + appSUrl, '');
-
         ExecutionLongText = ExecutionLongText.replace(/♦/g, '\r\n');
     }
     if (ExecutionLongText != "") {
@@ -6158,40 +6102,54 @@ function ExecutionTraceInterval(isSignOut = false) {
                 cache: false,
                 async: true,
                 data: JSON.stringify({
-                    ExecutionLongText: ExecutionLongText, isSingout: isSignOut, keepAlivems: keepAliveMS, currPageUrl: currPageUrl
+                    ExecutionLongText: ExecutionLongText,
+                    isSingout: isSignOut,
+                    keepAlivems: keepAliveMS,
+                    currPageUrl: currPageUrl
                 }),
                 dataType: 'json',
                 contentType: "application/json",
-                success: function (data) {
+                success: function () {
                     if (isSignOut) {
                         SaveAxNotifyHistory();
-                        let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+                        let appSessUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
+                        let logoutKey = "axpertLogoutLock-" + appSessUrl;
                         localStorage.setItem('logged_in-' + appSessUrl, 'no');
-                        ASB.WebService.SignOut();
+                        if (!localStorage.getItem(logoutKey)) {
+                            localStorage.setItem(logoutKey, "true");
+                            ASB.WebService.SignOut();
+                        }
                     }
                 },
-                error: function (error) {
+                error: function () {
                     if (isSignOut) {
-                        SaveAxNotifyHistory()
-                        let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+                        SaveAxNotifyHistory();
+                        let appSessUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
+                        let logoutKey = "axpertLogoutLock-" + appSessUrl;
                         localStorage.setItem('logged_in-' + appSessUrl, 'no');
-                        ASB.WebService.SignOut();
+                        if (!localStorage.getItem(logoutKey)) {
+                            localStorage.setItem(logoutKey, "true");
+                            ASB.WebService.SignOut();
+                        }
                     }
                 }
             });
-        }
-        catch (exp) {
+        } catch (exp) {
             if (isSignOut) {
-                SaveAxNotifyHistory()
-                let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+                SaveAxNotifyHistory();
+                let appSessUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
+                let logoutKey = "axpertLogoutLock-" + appSessUrl;
                 localStorage.setItem('logged_in-' + appSessUrl, 'no');
-                ASB.WebService.SignOut();
+                if (!localStorage.getItem(logoutKey)) {
+                    localStorage.setItem(logoutKey, "true");
+                    ASB.WebService.SignOut();
+                }
             }
         }
         return false;
-    }
-    else
+    } else {
         return true;
+    }
 }
 
 function ExecutionTraceExceededQuota(strMsg) {
@@ -6369,4 +6327,20 @@ function showPwdExpiryAlert(pwdMsg) {
             }
         }
     });
+}
+function axpertDevOptAccess() {
+    try {
+        if (typeof axpertDevOpt !== "undefined") {
+            if (axpertDevOpt == "nooptions" || axpertDevOpt == "all")
+                return;
+            const allowedOpts = axpertDevOpt.split(',');
+            $(".DevOptions .row div").each(function () {
+                if (allowedOpts.indexOf(this.id) === -1) {
+                    $(this).remove();
+                }
+            });
+            if ($(".DevOptions .row div").length == 0)
+                $("#AllDevOptions").addClass('d-none');
+        }
+    } catch (ex) { }
 }

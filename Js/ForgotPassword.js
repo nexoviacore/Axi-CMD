@@ -131,6 +131,10 @@ function CallWebservice() {
                     $("#hdnNickname").val(nickname);
                 }
             }
+            if (json["result"][0].result.row == "") {
+                showAlertDialog("error", 4020, "client");
+                return;
+            }            
             
             $("#txtMl").focus();
             if (emailid != "") {

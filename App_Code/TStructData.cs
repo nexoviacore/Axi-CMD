@@ -125,7 +125,9 @@ public class TStructData
     public string deleteddcno = string.Empty;
 
     public string loadDataRes = string.Empty;
-
+    public string attaErrors = string.Empty;
+    public string attGridAllRowDel = string.Empty;
+    public int attGridClearAllCount = 0;
     int DeleteRowTopNo = 0;
     #endregion
 
@@ -548,8 +550,15 @@ public class TStructData
         //Load the grid attachments in the folder
         if ((recId != "0" && recId != "" && tstStrObj.ContainsGridAttach) || (recId == "0" && tstStrObj.ContainsGridRefer))
         {
-            GetGlobalAttachPath();
-            LoadGridAttsToFolder(recId, transID);
+            try
+            {
+                GetGlobalAttachPath();
+                LoadGridAttsToFolder(recId, transID);
+            }
+            catch (Exception ex)
+            {
+                logobj.CreateLog("Error while getting attachments in LoadGridAttsToFolder- destination path: " + HttpContext.Current.Session["grdAttPath"].ToString() + " Exception:" + ex.Message, sessionid, "LoadGridAttsToFolder", "new");
+            }
         }
 
         //Call the function which parses thge memvar node and updates the arrays.
@@ -775,8 +784,9 @@ public class TStructData
 
 
     //save attached file into local
-    public void SaveAttached(string files, string RecordId)
+    public string SaveAttached(string files, string RecordId)
     {
+        string res = string.Empty;
         string tidValue = string.Empty;
         //string schemaName = project;
         tidValue = GetAttachTransid();
@@ -798,42 +808,58 @@ public class TStructData
                 }
             }
         }
-        catch (Exception ex) { }
-
-        if (files != string.Empty)
+        catch (Exception ex)
         {
-            string[] fnames = files.Split(',');
-            string[] sFileName = new string[fnames.Length];
-            for (int i = 0; i < fnames.Length; i++)
-                sFileName[i] = Directory.GetFiles(scriptsPath + "Axpert\\" + sessionid + "\\tstHFile-" + transid, fnames[i])[0];
+            logobj.CreateLog("Error while deleting removed files in SaveAttached-" + desDir + " Exception:" + ex.Message, sessionid, "SaveAttached-removedfiles", "new", "true");
+        }
+        try
+        {
+            if (!string.IsNullOrEmpty(files))//(files != string.Empty)
+            {
+                string[] fnames = files.Split(',');
+                string[] sFileName = new string[fnames.Length];
+                for (int i = 0; i < fnames.Length; i++)
+                    sFileName[i] = Directory.GetFiles(scriptsPath + "Axpert\\" + sessionid + "\\tstHFile-" + transid, fnames[i])[0];
 
-            //string sFileDir = scriptsPath + "Axpert\\" + sessionid;
-            string desPath = attachDirPath + "\\" + tidValue + "\\";
-            try
-            {
-                //Save File on disk
-                if (!desDir.Exists)
-                    desDir.Create();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            string authenticationStatus = string.Empty;
-            if (util.GetAuthentication(ref authenticationStatus))
-            {
-                foreach (var file in sFileName)
-                    File.Copy(file, Path.Combine(desPath, RecordId + "-" + Path.GetFileName(file)), true);
+                //string sFileDir = scriptsPath + "Axpert\\" + sessionid;
+                string desPath = attachDirPath + "\\" + tidValue + "\\";
+                try
+                {
+                    //Save File on disk
+                    if (!desDir.Exists)
+                        desDir.Create();
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+                string authenticationStatus = string.Empty;
+                if (util.GetAuthentication(ref authenticationStatus))
+                {
+                    foreach (var file in sFileName)
+                        File.Copy(file, Path.Combine(desPath, RecordId + "-" + Path.GetFileName(file)), true);
+                }
             }
         }
-
+        catch (Exception ex)
+        {
+            string _spath = scriptsPath + "Axpert\\" + sessionid + "\\tstHFile-" + transid;
+            string _dpath = attachDirPath + "\\" + tidValue + "\\";
+            res = "filemissed";
+            logobj.CreateLog("Error while getting files in SaveAttached-" + files + " Script path:" + _spath + " destination path: " + _dpath + " Exception:" + ex.Message, sessionid, "SaveAttached", "new", "true");
+        }
         try
         {
             string sFileDir = scriptsPath + "Axpert\\" + sessionid + "\\tstHFile-" + transid;
             DirectoryInfo div = new DirectoryInfo(sFileDir);
             div.Delete(true);
         }
-        catch (Exception ex) { }
+        catch (Exception ex)
+        {
+            string sFileDir = scriptsPath + "Axpert\\" + sessionid + "\\tstHFile-" + transid;
+            logobj.CreateLog("Error while deleting directory in SaveAttached-" + sFileDir + " Exception:" + ex.Message, sessionid, "SaveAttached-delete", "new", "true");
+        }
+        return res;
     }
 
     protected void RemoveUnwantedAxpFiles(string transid, string recId, string delRows, TStructData tstData, ArrayList deletedFldArrayValues)
@@ -1049,6 +1075,7 @@ public class TStructData
     {
 
         DateTime stTime = DateTime.Now;
+        attaErrors = string.Empty;
         string successMsg = string.Empty;
         string gridAttSaveResult = string.Empty;
         string AxRelKeys = string.Empty;
@@ -1084,6 +1111,8 @@ public class TStructData
         string imagefromdb = "false";
         if (HttpContext.Current.Session["AxpSaveImageDb"] != null)
             imagefromdb = HttpContext.Current.Session["AxpSaveImageDb"].ToString();
+        if (!string.IsNullOrEmpty(files))
+            files = CheckSpecialChars(files);
         serviceInputXml = "<Transaction " + axPegApproval + " axpapp=\"" + project + "\" imagefromdb=\"" + imagefromdb + "\" afiles=\"" + files + "\" trace=\"" + errlog + "\" sessionid=\"" + sessionid + "\" appsessionkey='" + HttpContext.Current.Session["AppSessionKey"].ToString() + "' username='" + HttpContext.Current.Session["username"].ToString() + "'><data  transid=\"" + transid + "\"  recordid=\"" + rid + "\"> ";
         result = string.Empty;
         logobj.CreateLog("Cross checking field value xml length sent from client and received xml length", sessionid, filename, "");
@@ -1151,6 +1180,20 @@ public class TStructData
             }
             catch (Exception ex) { }
         }
+
+        try
+        {
+            if (transid == "axusr" && HttpContext.Current.Session["AxiProjectLogin"] != null && HttpContext.Current.Session["AxiProjectLogin"].ToString() == "true")
+            {
+                XmlDocument _xmlDoc = new XmlDocument();
+                _xmlDoc.LoadXml(serviceInputXml);
+                XmlNode _aparamNode = _xmlDoc.SelectSingleNode("//Transaction/data/isfirsttime");
+                _aparamNode.InnerText = "F";
+                serviceInputXml = _xmlDoc.OuterXml;
+            }
+        }
+        catch (Exception ex) { }
+
         logobj.CreateLog("Call to SaveData Web Service", sessionid, filename, "");
         ires = tstStrObj.structRes;
         //Call service
@@ -1273,6 +1316,7 @@ public class TStructData
                                 }
                                 catch (Exception ex)
                                 {
+                                    attaErrors += "Files were not saved properly. Please reload the record and upload the missing files and save transaction again.";
                                     if (strExecTrace != string.Empty)
                                         requestProcess_logtime += strExecTrace + " ♦ ";
                                     requestProcess_logtime += "Exception in SaveGridAttachments:" + ex.Message + " ♦ ";
@@ -1282,13 +1326,28 @@ public class TStructData
 
                             if (tstStrObj.ContainsImage)
                             {
-                                string authenticationStatus = string.Empty;
-                                bool isAuthenticated = util.GetAuthentication(ref authenticationStatus);
-                                SaveImageToFolder(tstStrObj, transid, sessionid, recId, deletedFldArrayValues);
+                                try
+                                {
+                                    string authenticationStatus = string.Empty;
+                                    bool isAuthenticated = util.GetAuthentication(ref authenticationStatus);
+                                    SaveImageToFolder(tstStrObj, transid, sessionid, recId, deletedFldArrayValues);
+                                }
+                                catch (Exception ex)
+                                {
+                                    attaErrors += "Images were not saved properly. Please reload the record and upload the missing images and save transaction again.";
+                                    if (strExecTrace != string.Empty)
+                                        requestProcess_logtime += strExecTrace + " ♦ ";
+                                    requestProcess_logtime += "Exception in SaveImageToFolder:" + ex.Message + " ♦ ";
+                                    logobj.CreateLog("Error while SaveImageToFolder-" + ex.Message, sessionid, "SaveImageToFolder", "new", "true");
+                                }
                             }
                             //Save the attach file  into the dir
                             if (attachDir && (!string.IsNullOrEmpty(filesCpy) || removeFiles.Count > 0))
-                                SaveAttached(filesCpy, recId);
+                            {
+                                string _thisRes = SaveAttached(filesCpy, recId);
+                                if (_thisRes == "filemissed")
+                                    attaErrors += "Header attachements were not saved properly. Please reload the record and upload the missing files and save transaction again.";
+                            }
                             try
                             {
                                 Custom custObj = Custom.Instance;
@@ -1330,13 +1389,17 @@ public class TStructData
             }
             else if (transid == "a__cd")
             {
-                FDW fdwObj = new FDW();
-                FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
-                if (fObj == null)
-                    fObj = new FDR();
-                string fdData = Constants.REDISARMAXCARDSLIST;
-                var dbVarKeys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(fdData, ""));
-                fdwObj.DeleteKeys(dbVarKeys);
+                try
+                {
+                    FDW fdwObj = new FDW();
+                    FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+                    if (fObj == null)
+                        fObj = new FDR();
+                    string fdData = Constants.REDISARMAXCARDSLIST;
+                    var dbVarKeys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(fdData, ""));
+                    fdwObj.DeleteKeys(dbVarKeys);
+                }
+                catch (Exception ex) { }
             }
             else if (transid == "a__na")
             {
@@ -1438,30 +1501,39 @@ public class TStructData
                         if (fObj == null)
                             fObj = new FDR();
 
-                        var keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMPERMISSION, stIdNode.InnerText, "*" + roleNode.InnerText + "*"));
-                        fdwObj.DeleteKeys(keys);
+                        //var keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMPERMISSION, stIdNode.InnerText, "*" + roleNode.InnerText + "*"));
+                        //fdwObj.DeleteKeys(keys);
 
-                        keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMMETADATA, stIdNode.InnerText, "*" + roleNode.InnerText + "*"));
-                        fdwObj.DeleteKeys(keys);
+                        //keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMMETADATA, stIdNode.InnerText, "*" + roleNode.InnerText + "*"));
+                        //fdwObj.DeleteKeys(keys);
 
-                        keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMCONNECTEDDATAMETADATA, stIdNode.InnerText, "*" + roleNode.InnerText + "*"));
-                        fdwObj.DeleteKeys(keys);
+                        //keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMCONNECTEDDATAMETADATA, stIdNode.InnerText, "*" + roleNode.InnerText + "*"));
+                        //fdwObj.DeleteKeys(keys);
 
-                        keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMCONNECTEDDATAPERMISSION, stIdNode.InnerText, "*" + roleNode.InnerText + "*"));
-                        fdwObj.DeleteKeys(keys);
+                        //keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMCONNECTEDDATAPERMISSION, stIdNode.InnerText, "*" + roleNode.InnerText + "*"));
+                        //fdwObj.DeleteKeys(keys);
 
-                        keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMPERMISSION, stIdNode.InnerText, "*All*"));
-                        fdwObj.DeleteKeys(keys);
 
-                        keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMMETADATA, stIdNode.InnerText, "*All*"));
-                        fdwObj.DeleteKeys(keys);
+                        //keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMPERMISSION, stIdNode.InnerText, "*All*"));
+                        //fdwObj.DeleteKeys(keys);
 
-                        keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMCONNECTEDDATAMETADATA, stIdNode.InnerText, "*All*"));
-                        fdwObj.DeleteKeys(keys);
+                        //keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMMETADATA, stIdNode.InnerText, "*All*"));
+                        //fdwObj.DeleteKeys(keys);
 
-                        keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMCONNECTEDDATAPERMISSION, stIdNode.InnerText, "*All*"));
+                        //keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMCONNECTEDDATAMETADATA, stIdNode.InnerText, "*All*"));
+                        //fdwObj.DeleteKeys(keys);
+
+                        //keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMCONNECTEDDATAPERMISSION, stIdNode.InnerText, "*All*"));
+                        //fdwObj.DeleteKeys(keys);
+
+                        var keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMPERMISSIONNEW, "*", stIdNode.InnerText));
                         fdwObj.DeleteKeys(keys);
                     }
+
+                    XmlNode axusername = xmlDoc.SelectSingleNode("//Transaction/data/axusername");
+                    FDW _fdwObj = new FDW();
+                    string fdData = Constants.AX_PERMISSIONS;
+                    _fdwObj.HashDeletekey(fdData, axusername.InnerText);
                 }
                 catch (Exception ex) { }
             }
@@ -1488,7 +1560,7 @@ public class TStructData
         {
             result = "{" + "\"GridAttachments\"" + ":[{" + "\"Message\"" + ":\" Attachment is not Saved : " + gridAttSaveResult + "\"}]}" + "*$*" + result;
         }
-        result = exeGeoInfo + requestProcess_logtime + "♠" + result;
+        result = exeGeoInfo + requestProcess_logtime + "♣$♣" + attaErrors + "♣$♣" + "♠" + result;
         return result;
     }
 
@@ -1652,6 +1724,19 @@ public class TStructData
                     DataTable dcTable = dsDataSet.Tables["dc" + dc.frameno];
 
                     DataTable dcDelRowTable = dsDataSet.Tables["deldc" + dc.frameno];
+                    if (attGridAllRowDel != string.Empty)// && !string.IsNullOrWhiteSpace(HttpContext.Current.Session["attGridAllRowDel"].ToString()))
+                    {
+                        List<string> rowDelList = attGridAllRowDel.Split(',').Select(x => x.Trim()).ToList();
+                        foreach (string delRow in rowDelList.ToList())
+                        {
+                            DataRow row = dcDelRowTable.AsEnumerable().FirstOrDefault(r => r["axp__delrow"].ToString().Equals(delRow));
+                            if (row != null)
+                            {
+                                dcDelRowTable.Rows.Remove(row);
+                            }
+                        }
+                        dcDelRowTable.AcceptChanges();
+                    }
 
                     bool hasDcImagePath = false;
                     hasDcImagePath = dcTable.Columns.Contains("dc" + dc.frameno + "_imagepath");
@@ -1713,10 +1798,38 @@ public class TStructData
                                     foreach (var lst in lstServerFile)
                                     {
                                         string savedFileName = lst.Split('~')[1];
-                                        File.Delete(savedFileName);
+                                        //File.Delete(savedFileName);
+                                        string attdestFilePath = string.Empty;
+                                        attdestFilePath = destFilePath + "\\" + savedFileName;
+                                        attWantToDelete.Add(attdestFilePath);
                                         strExecTrace += "Deleted File:" + savedFileName + " ♦ ";
-                                        attDelFileCount++;
-                                        HttpContext.Current.Session["attGridFileServer"] = attServerFiles = attServerFiles.Replace(lst + "♦", "").Replace(lst, "");
+                                        //attDelFileCount++;
+                                        attServerFiles = attServerFiles.Replace(lst + "♦", "").Replace(lst, "");
+                                        HttpContext.Current.Session["attGridFileServer"] = attServerFiles;
+                                    }
+                                }
+
+                                if (!deletedGridFilesExist && dcTable.Rows.Count == 1 && lstServerFiles.Length > 1)
+                                {
+                                    for (int delf = 1; delf < lstServerFiles.Length; delf++)
+                                    {
+                                        int _irow = delf + 1;
+                                        var _lstServerFile = lstServerFiles.AsEnumerable().Where(x => x.StartsWith(fldName + _irow + "~") && x.Contains(HttpContext.Current.Session["username"].ToString() + "-")).ToList();
+                                        if (_lstServerFile.Count > 0 && util.GetAuthentication(ref authenticationStatus))
+                                        {
+                                            foreach (var lst in _lstServerFile)
+                                            {
+                                                string savedFileName = lst.Split('~')[1];
+                                                //File.Delete(savedFileName);
+                                                string attdestFilePath = string.Empty;
+                                                attdestFilePath = destFilePath + "\\" + savedFileName;
+                                                attWantToDelete.Add(attdestFilePath);
+                                                strExecTrace += "Deleted File:" + savedFileName + " ♦ ";
+                                                //attDelFileCount++;
+                                                attServerFiles = attServerFiles.Replace(lst + "♦", "").Replace(lst, "");
+                                                HttpContext.Current.Session["attGridFileServer"] = attServerFiles;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1805,7 +1918,7 @@ public class TStructData
                                         {
                                             int iDelrow = j + 1;
                                             var delRowList = dcDelRowTable.AsEnumerable().Where(s => s.Field<string>("axp__delrow") == iDelrow.ToString() && s.Field<string>("axp__isGrdVld" + dc.frameno) != "false").Select(s => s.Field<string>("axp__delrow")).ToList();
-                                            if (delRowList != null && delRowList.Count > 0)
+                                            if (delRowList != null && delRowList.Count > 0 && fIdx == 0)
                                             {
                                                 string attServerFiless = HttpContext.Current.Session["attGridFileServer"].ToString();
                                                 string[] lstServerFiless = attServerFiless.Split('♦');
@@ -1823,11 +1936,34 @@ public class TStructData
                                                 }
                                             }
                                         }
+                                        if (recordID == "0")
+                                        {
+                                            if (dcDelRowTable != null && dcDelRowTable.Rows.Count > 0)
+                                            {
+                                                int newIRow = irow;
+                                                while (dcDelRowTable.AsEnumerable().Any(r => Convert.ToInt32(r["axp__delrow"]) == newIRow))
+                                                {
+                                                    newIRow++;
+                                                }
+                                                // newIRow is the first available value
+                                                irow = newIRow;
+                                            }
+                                        }
                                         string attServerFiles = HttpContext.Current.Session["attGridFileServer"].ToString();
                                         string[] lstServerFiles = attServerFiles.Split('♦');
-
-
                                         var lstServerFile = lstServerFiles.AsEnumerable().Where(x => x.StartsWith(fldName + irow + "~") && x.Contains(HttpContext.Current.Session["username"].ToString() + "-")).ToList();
+                                        if (recordID != "0")
+                                        {
+                                            if (lstServerFile.Count == 0)
+                                            {
+                                                int tiRow = j + 1;
+                                                if (dcDelRowTable != null && dcDelRowTable.Rows.Count > 0)
+                                                {
+                                                    tiRow += dcDelRowTable.Rows.Count;
+                                                }
+                                                lstServerFile = lstServerFiles.AsEnumerable().Where(x => x.StartsWith(fldName + tiRow + "~") && x.Contains(HttpContext.Current.Session["username"].ToString() + "-")).ToList();
+                                            }
+                                        }
                                         string authenticationStatus = string.Empty;
                                         if (lstServerFile.Count > 0 && util.GetAuthentication(ref authenticationStatus))
                                         {
@@ -1873,6 +2009,7 @@ public class TStructData
                                                                 }
                                                                 else
                                                                     strExecTrace += "Exception in RenameFile:" + renameFilePath + "\\" + savedFileName + " To ♦ " + atFileName + " Exception is: " + ex.Message + " ♦ ";
+                                                                attaErrors += "Files were not saved properly. Please reload the record and upload the missing files and save transaction again.";
                                                             }
 
                                                             renameFilePath = renameFilePath + "\\" + atFileName;
@@ -1916,6 +2053,7 @@ public class TStructData
                                                                 }
                                                                 else
                                                                     strExecTrace += "Exception in RenameFile:" + attdestFilePath + " To ♦ " + atFileName + " Exception is: " + ex.Message + " ♦ ";
+                                                                attaErrors += "Files were not saved properly. Please reload the record and upload the missing files and save transaction again.";
                                                             }
                                                             if (strFiles.ToString() == string.Empty)
                                                                 strFiles.Append(atFileName);
@@ -1954,6 +2092,7 @@ public class TStructData
                                                                 }
                                                                 else
                                                                     strExecTrace += "Exception in RenameFile:" + attdestFilePath + " To ♦ " + recId + "-" + atFileName + " Exception is: " + ex.Message + " ♦ ";
+                                                                attaErrors += "Files were not saved properly. Please reload the record and upload the missing files and save transaction again.";
                                                             }
                                                             if (strFiles.ToString() == string.Empty)
                                                                 strFiles.Append(recId + "-" + atFileName);
@@ -1961,7 +2100,8 @@ public class TStructData
                                                                 strFiles.Append("," + recId + "-" + atFileName);
                                                             attSavedFileCount++;
                                                         }
-                                                        HttpContext.Current.Session["attGridFileServer"] = attServerFiles = attServerFiles.Replace(lst + "♦", "").Replace(lst, "");
+                                                        attServerFiles = attServerFiles.Replace(lst + "♦", "").Replace(lst, "");
+                                                        HttpContext.Current.Session["attGridFileServer"] = attServerFiles;
                                                     }
                                                     else
                                                     {
@@ -2000,7 +2140,8 @@ public class TStructData
                                                     attDelFileCount++;
                                                     File.Delete(attdestFilePath);
                                                     strExecTrace += "Deleted File:" + attdestFilePath + " ♦ ";
-                                                    HttpContext.Current.Session["attGridFileServer"] = attServerFiles = attServerFiles.Replace(lst + "♦", "").Replace(lst, "");
+                                                    attServerFiles = attServerFiles.Replace(lst + "♦", "").Replace(lst, "");
+                                                    HttpContext.Current.Session["attGridFileServer"] = attServerFiles;
                                                 }
                                             }
                                         }
@@ -2071,9 +2212,9 @@ public class TStructData
                 if (delFcnt != 0)
                     attDelFileCount += delFcnt;
             }
-            if (attDelPath != "" && attDelFileCount != 0)
+            if (attDelPath != "" && (attDelFileCount != 0 || attGridClearAllCount != 0))
             {
-                AttDelLogFile(attDelPath, recId, attTotalFileCount, attSavedFileCount, attDelFileCount);
+                AttDelLogFile(attDelPath, recId, attTotalFileCount + attGridClearAllCount, attSavedFileCount, attDelFileCount + attGridClearAllCount);
             }
 
         }
@@ -3122,7 +3263,10 @@ public class TStructData
                         }
                     }
                 }
-                catch (Exception x) { }
+                catch (Exception x)
+                {
+                    logobj.CreateLog("Error while getting images in LoadImageToFolder- fldName:" + fldName + " Script path:" + scrPath + " destination path: " + desFilePath + " Exception:" + x.Message, sessionid, "LoadImageToFolder", "new");
+                }
             }
         }
     }
@@ -3396,6 +3540,7 @@ public class TStructData
         string news = GetTraceString(s);
         if (news != "") s = news;
         result = string.Empty;
+        attaErrors = string.Empty;
         string exeGeoInfo = string.Empty;
         if (source == "t")
         {
@@ -3598,17 +3743,33 @@ public class TStructData
                     if (fObj == null)
                         fObj = new FDR();
 
-                    var keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMPERMISSION, "*", stIdNode.InnerText + "*"));
+                    //var keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMPERMISSION, "*", stIdNode.InnerText + "*"));
+                    //fdwObj.DeleteKeys(keys);
+
+                    //keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMMETADATA, "*", stIdNode.InnerText + "*"));
+                    //fdwObj.DeleteKeys(keys);
+
+                    //keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMCONNECTEDDATAMETADATA, "*", stIdNode.InnerText + "*"));
+                    //fdwObj.DeleteKeys(keys);
+
+                    //keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMCONNECTEDDATAPERMISSION, "*", stIdNode.InnerText + "*"));
+                    //fdwObj.DeleteKeys(keys);
+
+                    var keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMPERMISSIONNEW, "*", stIdNode.InnerText));
                     fdwObj.DeleteKeys(keys);
 
-                    keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMMETADATA, "*", stIdNode.InnerText + "*"));
-                    fdwObj.DeleteKeys(keys);
-
-                    keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMCONNECTEDDATAMETADATA, "*", stIdNode.InnerText + "*"));
-                    fdwObj.DeleteKeys(keys);
-
-                    keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMCONNECTEDDATAPERMISSION, "*", stIdNode.InnerText + "*"));
-                    fdwObj.DeleteKeys(keys);
+                    try
+                    {
+                        string KeyData = Constants.REDISPROFILEPIC;
+                        fdwObj.Deletekey(util.GetRedisServerkey(KeyData, stIdNode.InnerText));
+                    }
+                    catch (Exception ex) { }
+                    try
+                    {
+                        string _KeyData = Constants.REDISPWDOTPAUTHLANG;
+                        fdwObj.Deletekey(util.GetRedisServerkey(_KeyData, stIdNode.InnerText));
+                    }
+                    catch (Exception ex) { }
                 }
             }
             catch (Exception ex) { }
@@ -3661,9 +3822,33 @@ public class TStructData
             catch (Exception ex) { }
 
         }
+        if (!result.Contains("\"error\"") && transid == "a__up" && AxActiveAction == "script10")
+        {
+            try
+            {
+                XmlNode axusername = xmlDoc.SelectSingleNode("//root/varlist/row/axusername");
+                FDW fdwObj = new FDW();
+                string fdData = Constants.AX_PERMISSIONS;
+                fdwObj.HashDeletekey(fdData, axusername.InnerText);
+
+                XmlNode roleNode = xmlDoc.SelectSingleNode("//Transaction/data/axuserrole");
+                XmlNode stIdNode = xmlDoc.SelectSingleNode("//Transaction/data/formtransid");
+                if (roleNode != null && roleNode.InnerText != "" && stIdNode != null && stIdNode.InnerText != "")
+                {
+                    FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+                    if (fObj == null)
+                        fObj = new FDR();
+
+                    var keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMPERMISSIONNEW, "*", stIdNode.InnerText));
+                    fdwObj.DeleteKeys(keys);
+                }
+            }
+            catch (Exception ex) { }
+        }
+
         AxActiveAction = string.Empty;
         logobj.CreateLog("End Time : " + DateTime.Now.ToString(), sessionid, filename, "");
-        result = exeGeoInfo + requestProcess_logtime + strExecTrace + "♠" + result;
+        result = exeGeoInfo + requestProcess_logtime + strExecTrace + "♣$♣" + attaErrors + "♣$♣" + "♠" + result;
         return result;
     }
 
@@ -3776,8 +3961,20 @@ public class TStructData
 
                         //TStructDef strObj = cm.GetStructDef(project, sessionid, user, transid, AxRole);
                         if (tstStrObj.ContainsImage)
-
-                            SaveImageToFolder(tstStrObj, transid, sessionid, recId, deletedFldArrayValues);
+                        {
+                            try
+                            {
+                                SaveImageToFolder(tstStrObj, transid, sessionid, recId, deletedFldArrayValues);
+                            }
+                            catch (Exception ex)
+                            {
+                                attaErrors += "Images were not uploaded properly. Please reload the record and upload the missing images again.";
+                                if (strExecTrace != string.Empty)
+                                    strExecTrace += strExecTrace + " ♦ ";
+                                strExecTrace += "Exception in SaveImageToFolder:" + ex.Message + " ♦ ";
+                                logobj.CreateLog("Error while SaveImageToFolder-" + ex.Message, sessionid, "SaveImageToFolder", "new", "true");
+                            }
+                        }
 
                         if (tstStrObj.ContainsGridAttach)
                         {
@@ -3788,13 +3985,18 @@ public class TStructData
                             }
                             catch (Exception ex)
                             {
+                                attaErrors += "Files were not uploaded properly. Please reload the record and upload the missing files again.";
                                 strExecTrace += "Exception in SaveGridAttachments:" + ex.Message + " ♦ ";
                                 logobj.CreateLog("Error while SaveGridAttachments-" + ex.Message, sessionid, "SaveGridAttachments", "new", "true");
                             }
                         }
 
                         if (attachDir && (!string.IsNullOrEmpty(files) || removeFiles.Count > 0))
-                            SaveAttached(files, recId);
+                        {
+                            string _thisRes = SaveAttached(files, recId);
+                            if (_thisRes == "filemissed")
+                                attaErrors += "Header attachements were not uploaded properly. Please reload the record and upload the missing files again.";
+                        }
 
                         ClearIviewDataKey();
                         if (transid == "ad_pr")
@@ -3840,7 +4042,20 @@ public class TStructData
                         RemoveUnwantedAxpFiles(transid, msgRecId, delRows, tstData, deletedFldArrayValues);
 
                     if (tstStrObj.ContainsImage)
-                        SaveImageToFolder(tstStrObj, transid, sessionid, msgRecId, deletedFldArrayValues);
+                    {
+                        try
+                        {
+                            SaveImageToFolder(tstStrObj, transid, sessionid, msgRecId, deletedFldArrayValues);
+                        }
+                        catch (Exception ex)
+                        {
+                            attaErrors += "Images were not uploaded properly. Please reload the record and upload the missing images again.";
+                            if (strExecTrace != string.Empty)
+                                strExecTrace += strExecTrace + " ♦ ";
+                            strExecTrace += "Exception in SaveImageToFolder:" + ex.Message + " ♦ ";
+                            logobj.CreateLog("Error while SaveImageToFolder-" + ex.Message, sessionid, "SaveImageToFolder", "new", "true");
+                        }
+                    }
 
                     if (tstStrObj.ContainsGridAttach)
                     {
@@ -3851,13 +4066,18 @@ public class TStructData
                         }
                         catch (Exception ex)
                         {
+                            attaErrors += "Files were not uploaded properly. Please reload the record and upload the missing files again.";
                             strExecTrace += "Exception in SaveGridAttachments:" + ex.Message + " ♦ ";
                             logobj.CreateLog("Error while SaveGridAttachments-" + ex.Message, sessionid, "SaveGridAttachments", "new", "true");
                         }
                     }
 
                     if (attachDir && (!string.IsNullOrEmpty(files) || removeFiles.Count > 0))
-                        SaveAttached(files, msgRecId);
+                    {
+                        string _thisRes = SaveAttached(files, msgRecId);
+                        if (_thisRes == "filemissed")
+                            attaErrors += "Header attachements were not uploaded properly. Please reload the record and upload the missing files again.";
+                    }
 
                     ClearIviewDataKey();
                 }
@@ -3979,6 +4199,7 @@ public class TStructData
                 string _jsonStringRedis = JsonConvert.SerializeObject(propertiesDict);
                 FDW fdwObj = new FDW();
                 fdwObj.SaveInRedisServer(Constants.AXEMAILSMTP_CONN_KEY, _jsonStringRedis, Constants.AXEMAILSMTP_CONN_KEY, strProj);
+                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXEMAILSMTP_CONN_KEY, _jsonStringRedis, strProj);
             }
             catch (Exception ex)
             {
@@ -4295,7 +4516,9 @@ public class TStructData
             try
             {
                 FDW fdwObj = new FDW();
-                fdwObj.DeleteAllKeys(dbKey + "-" + Constants.AXSSO_CONN_KEY, dbKey);
+                //fdwObj.DeleteAllKeys(dbKey + "-" + Constants.AXSSO_CONN_KEY, dbKey);
+                //fdwObj.HashDeletekeyNew(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXSSO_CONN_KEY, dbKey);
+                fdwObj.HashDeleteAllkey(Constants.AX_COMMON_APPSETTING_KEY, dbKey);
             }
             catch (Exception ex) { }
         }
@@ -4307,21 +4530,25 @@ public class TStructData
 
     private void RefFastDataOnSave(string taskName)
     {
-        //If fast data refresh events are not empty
-        FDW fobj = new FDW();
-        for (int i = 0; i < tstStrObj.fastDataRefEvent.Count; i++)
+        try
         {
-            if (tstStrObj.fastDataRefEvent[i].ToString().Contains(taskName))
+            //If fast data refresh events are not empty
+            FDW fobj = new FDW();
+            for (int i = 0; i < tstStrObj.fastDataRefEvent.Count; i++)
             {
-                //TODO: Push refresh in Fastdata
-                string dsName = string.Empty;
-                dsName = tstStrObj.fastDataRefDSName[i].ToString();
-                fobj.PushToDsRefresh(util.GetFastDataDSName(null, dsName));
-                //objfd.RefreshFastDataset(dsName);
-                //Thread thread = new Thread(() => objfd.PushRefreshDs(dsName, user));
-                //thread.Start();               
+                if (tstStrObj.fastDataRefEvent[i].ToString().Contains(taskName))
+                {
+                    //TODO: Push refresh in Fastdata
+                    string dsName = string.Empty;
+                    dsName = tstStrObj.fastDataRefDSName[i].ToString();
+                    fobj.PushToDsRefresh(util.GetFastDataDSName(null, dsName));
+                    //objfd.RefreshFastDataset(dsName);
+                    //Thread thread = new Thread(() => objfd.PushRefreshDs(dsName, user));
+                    //thread.Start();               
+                }
             }
         }
+        catch (Exception ex) { }
     }
 
     private void AddParamsToSession(string ivName, string paramNames, string paramVals, string showIn)
@@ -5521,10 +5748,17 @@ public class TStructData
                             using (ZipFile zip = ZipFile.Read(zipFilePath))
                             {
                                 zip.Password = fileProtectPwd;
-                                foreach (ZipEntry e in zip)
+                                if (zip.Entries.Count == 1)
                                 {
-                                    e.Extract(tarDir.ToString(), ExtractExistingFileAction.OverwriteSilently);
-                                    fname = e.FileName;
+                                    foreach (ZipEntry e in zip)
+                                    {
+                                        e.Extract(tarDir.ToString(), ExtractExistingFileAction.OverwriteSilently);
+                                        fname = e.FileName;
+                                    }
+                                }
+                                else
+                                {
+                                    fname = fileName;
                                 }
                             }
                             if (File.Exists(zipFilePath))
@@ -6917,7 +7151,9 @@ public class TStructData
         DataTable dt = dsDataSet.Tables["dc" + dcNo];
         if (dt.Rows.Count > 0)
         {
-            rowCount = dt.Select("axp__isGrdVld" + dcNo + " = ''").Count();
+            //rowCount = dt.Select("axp__isGrdVld" + dcNo + " = ''").Count();
+            string colName = "axp__isGrdVld" + dcNo;
+            rowCount = dt.Rows.Cast<DataRow>().Count(r => r.IsNull(colName) || string.IsNullOrWhiteSpace(r[colName].ToString()));
         }
         return rowCount;
     }
@@ -7877,6 +8113,29 @@ public class TStructData
                 }
                 catch (Exception ex) { }
             }
+            if (transid == "a__up")
+            {
+                try
+                {
+                    DataTable dt = dsDataSet.Tables["dc1"];
+                    string axusername = dt.Rows[0]["axusername"].ToString();
+                    string axuserrole = dt.Rows[0]["axuserrole"].ToString();
+                    string formtransid = dt.Rows[0]["formtransid"].ToString();
+                    FDW fdwObj = new FDW();
+                    string fdData = Constants.AX_PERMISSIONS;
+                    fdwObj.HashDeletekey(fdData, axusername);
+                    if (axuserrole != "" && formtransid != "")
+                    {
+                        FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+                        if (fObj == null)
+                            fObj = new FDR();
+
+                        var keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMPERMISSIONNEW, "*", formtransid));
+                        fdwObj.DeleteKeys(keys);
+                    }
+                }
+                catch (Exception ex) { }
+            }
         }
         //RemoveAttachFromDir("");
         if (logTimeTaken)
@@ -8085,7 +8344,57 @@ public class TStructData
             objWebServiceExt = new ASBExt.WebServiceExt();
             result = objWebServiceExt.CallDeleteRowWS(transid, s, ires);
         }
+        CheckGridAttachments(dcNo);
         return result;
+    }
+
+    protected void CheckGridAttachments(string dcNo)
+    {
+        try
+        {
+            if (dsDataSet.Tables["dc" + dcNo].Rows.Count == 0 && dsDataSet.Tables["deldc" + dcNo].Rows.Count > 0)
+            {
+                string columnName = "dc" + dcNo + "_image";
+                bool columnExists = dsDataSet.Tables["dc" + dcNo].Columns.Cast<DataColumn>().Any(c => c.ColumnName.Equals(columnName, StringComparison.OrdinalIgnoreCase));
+                if (columnExists)
+                {
+                    string rowNos = string.Join(",", dsDataSet.Tables["deldc" + dcNo].AsEnumerable().Select(r => r["axp__delrow"].ToString()));
+                    attGridAllRowDel = rowNos;
+                    if (HttpContext.Current.Session["attGridFileServer"] != null && HttpContext.Current.Session["attGridFileServer"].ToString() != string.Empty)
+                    {
+                        string attServerFiles = HttpContext.Current.Session["attGridFileServer"].ToString();
+                        string[] lstServerFiles = attServerFiles.Split('♦');
+                        string authenticationStatus = string.Empty;
+                        if (lstServerFiles.Length > 0 && util.GetAuthentication(ref authenticationStatus))
+                        {
+                            //string rowNos = string.Join(",", dsDataSet.Tables["deldc" + dcNo].AsEnumerable().Select(r => r["axp__delrow"].ToString()));
+                            //attGridAllRowDel = rowNos;
+                            foreach (var lstFile in lstServerFiles)
+                            {
+                                if (lstFile != string.Empty)
+                                {
+                                    string _fldName = lstFile.Split('~')[0];
+                                    if (_fldName.ToLower().StartsWith(columnName))
+                                    {
+                                        attGridClearAllCount++;
+                                        string filePath = lstFile.Split('~')[1];
+                                        try
+                                        {
+                                            attServerFiles = attServerFiles.Replace(lstFile + "♦", "").Replace(lstFile, "");
+                                            HttpContext.Current.Session["attGridFileServer"] = attServerFiles;
+
+                                            File.Delete(filePath);
+                                        }
+                                        catch (Exception) { }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex) { }
     }
 
     public string LoadComboValues(TStructData tstData, ArrayList fldArray, ArrayList fldDbRowNo, ArrayList fldValueArray, ArrayList fldDeletedArray, string iXml, string dcNo)
@@ -8879,7 +9188,36 @@ public class TStructData
         {
             DeletedRowsTable.ImportRow(foundRow);
             DataRow DelTableRow = DeletedRowsTable.Rows.Find(rNo);
-            DelTableRow["axp__delrow"] = DelTableRow["axp__rowno"];
+            if (recordID == "0")
+            {
+                if (DeletedRowsTable.Rows.Count > 1)
+                {
+                    string[] dcNos = deleteddcno.Split(',');
+                    string[] rowNos = deletedrno.Split(',');
+                    List<int> delRowsForDc = new List<int>();
+                    for (int i = 0; i < dcNos.Length && i < rowNos.Length; i++)
+                    {
+                        if (dcNos[i].Trim() == dcNo)
+                        {
+                            delRowsForDc.Add(Convert.ToInt32(rowNos[i]));
+                        }
+                    }
+                    DataRow delTableRow = DeletedRowsTable.Rows[DeletedRowsTable.Rows.Count - 1];
+                    int rowIndex = DeletedRowsTable.Rows.Count - 1;
+                    if (rowIndex < delRowsForDc.Count)
+                    {
+                        delTableRow["axp__delrow"] = delRowsForDc[rowIndex];
+                    }
+                    else
+                        DelTableRow["axp__delrow"] = DelTableRow["axp__rowno"];
+                }
+                else
+                    DelTableRow["axp__delrow"] = DelTableRow["axp__rowno"];
+            }
+            else
+            {
+                DelTableRow["axp__delrow"] = DelTableRow["axp__rowno"];
+            }
             DelTableRow["axp__rowno"] = deletedCount--;
 
             //copying delete contents to xml for sending to web service.
@@ -10251,36 +10589,87 @@ public class TStructData
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(s);
 
-            //XmlNode varListNode = xmlDoc.SelectSingleNode("//varlist");
+            //XmlNode varlistNode = xmlDoc.SelectSingleNode("//varlist");
+            //if (varlistNode == null)
+            //    return "{}";
+            //string json = JsonConvert.SerializeXmlNode(varlistNode, Newtonsoft.Json.Formatting.None, false);
+            //JObject fullObj = JObject.Parse(json);
+            //JToken varlistObject = fullObj["varlist"];
+            //RenameJsonProperty(varlistObject, "@rowno", "_rowno");
+            //RenameJsonProperty(varlistObject, "#text", "__text");
+            //JObject output = new JObject();
+            //output["varlist"] = varlistObject;
+            //result = JsonConvert.SerializeObject(output, Newtonsoft.Json.Formatting.Indented);
 
-            //if (varListNode != null)
-            //{
-            //    string json = Newtonsoft.Json.JsonConvert.SerializeXmlNode(varListNode, Newtonsoft.Json.Formatting.None, true);
-            //    JObject obj = JObject.Parse(json);
-            //    result = obj["varlist"] != null ? obj["varlist"].ToString() : json;
-            //}
+            //if (result.StartsWith("{"))
+            //    result = result.Substring(1);
+
+            //if (result.EndsWith("}"))
+            //    result = result.Substring(0, result.Length - 1);
+
 
             XmlNode varlistNode = xmlDoc.SelectSingleNode("//varlist");
             if (varlistNode == null)
                 return "{}";
             string json = JsonConvert.SerializeXmlNode(varlistNode, Newtonsoft.Json.Formatting.None, false);
             JObject fullObj = JObject.Parse(json);
-            JToken varlistObject = fullObj["varlist"];
-            RenameJsonProperty(varlistObject, "@rowno", "_rowno");
-            RenameJsonProperty(varlistObject, "#text", "__text");
+            JObject rowObj = (JObject)fullObj["varlist"]["row"];
+            JObject finalRow = new JObject();
+            Dictionary<string, JObject> gridRows = new Dictionary<string, JObject>();
+            string gridParentName = null;
+            foreach (JProperty prop in rowObj.Properties())
+            {
+                JToken value = prop.Value;
+                if (value.Type == JTokenType.Array)
+                {
+                    if (gridParentName == null)
+                        gridParentName = prop.Name;
+                    foreach (JToken item in (JArray)value)
+                    {
+                        string rowno = item["@rowno"] != null ? item["@rowno"].ToString() : "0";
+                        if (!gridRows.ContainsKey(rowno))
+                            gridRows[rowno] = new JObject();
+                        gridRows[rowno][prop.Name] = NormalizeField(item);
+                    }
+                }
+                else
+                {
+                    finalRow[prop.Name] = NormalizeField(value);
+                }
+            }
+            if (gridRows.Count > 0 && gridParentName != null)
+            {
+                JArray gridArray = new JArray();
+                foreach (var row in gridRows.OrderBy(r => r.Key))
+                    gridArray.Add(row.Value);
+                finalRow[gridParentName + "_gridblocks"] = gridArray;
+            }
             JObject output = new JObject();
-            output["varlist"] = varlistObject;
+            output["varlist"] = new JObject();
+            output["varlist"]["row"] = finalRow;
             result = JsonConvert.SerializeObject(output, Newtonsoft.Json.Formatting.Indented);
-
             if (result.StartsWith("{"))
                 result = result.Substring(1);
-
             if (result.EndsWith("}"))
                 result = result.Substring(0, result.Length - 1);
         }
         catch (Exception ex) { }
         return result;
     }
+
+    private static JObject NormalizeField(JToken token)
+    {
+        JObject obj = new JObject();
+
+        if (token["@rowno"] != null)
+            obj["_rowno"] = token["@rowno"];
+
+        if (token["#text"] != null && !string.IsNullOrWhiteSpace(token["#text"].ToString()))
+            obj["__text"] = token["#text"];
+
+        return obj;
+    }
+
 
     public static void RenameJsonProperty(JToken token, string oldName, string newName)
     {

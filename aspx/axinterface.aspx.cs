@@ -659,7 +659,7 @@ public partial class axinterface : System.Web.UI.Page
             DATA += jsonData + "}],\"globalvars\":{" + globalvars + "},\"uservars\":{" + uservars + "},\"axapps\":{" + axapps + "}";
             DATA += "}}]}";
 
-            var saveDetails = "{\"queuename\":\"RapidSaveQueue\",\"queuedata\":" + JsonConvert.SerializeObject(DATA) + "}";
+            var saveDetails = "{\"queuename\":\"CachedSaveQueue\",\"queuedata\":" + JsonConvert.SerializeObject(DATA) + "}";
             request.ContentLength = saveDetails.Length;
 
             StreamWriter requestWriter = new StreamWriter(request.GetRequestStream(), System.Text.Encoding.ASCII);
@@ -844,7 +844,7 @@ public partial class axinterface : System.Web.UI.Page
                     ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
                 else
                     return "Error in ARM connection.";
-                string connectionUrl = ARM_URL + "/api/v1/ARMConnectFromAxpert";
+                string connectionUrl = ARM_URL + "/AxAuth/api/v1/ARMConnectFromAxpert";
                 AnalyticsUtils _aUtils = new AnalyticsUtils();
                 var connectionResult = _aUtils.CallWebAPI(connectionUrl, "POST", "application/json", JsonConvert.SerializeObject(axpertDetails));
 
@@ -895,7 +895,7 @@ public partial class axinterface : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/ARMExecutePublishedAPI";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMExecutePublishedAPI";
 
         var connectionDetails = new
         {
@@ -968,7 +968,7 @@ public partial class axinterface : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/ARMExecutePublishedAPI";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMExecutePublishedAPI";
 
         var data = new Dictionary<string, object>();
         data["mode"] = "new";
@@ -1023,7 +1023,7 @@ public partial class axinterface : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/AxScript";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/AxScript";
 
         var connectionDetails = new
         {
@@ -1040,4 +1040,144 @@ public partial class axinterface : System.Web.UI.Page
         return tasks;
     }
 
+    [WebMethod]
+    public static string CallPushtoQueueAPI(string jsonData)
+    {
+        string json = string.Empty;
+        try
+        {
+            JObject jsonObj = JObject.Parse(jsonData);
+            JArray paramArr = (JArray)jsonObj["_parameters"];
+            if (paramArr != null && paramArr.Count > 0)
+            {
+                JObject param = (JObject)paramArr[0];
+                param["sessionid"] = HttpContext.Current.Session.SessionID;
+                param["appsessionkey"] = HttpContext.Current.Session["AppSessionKey"].ToString();
+                param["ARMSessionId"] = HttpContext.Current.Session["ARM_SessionId"].ToString();
+                param["ARMToken"] = HttpContext.Current.Session["ARM_Token"].ToString();
+                param["trace"] = HttpContext.Current.Session["AxTrace"].ToString() == "true" ? true : false;
+            }
+            jsonData = jsonObj.ToString(Newtonsoft.Json.Formatting.None);
+            string URL = String.Empty;
+            if (HttpContext.Current.Session["ARM_URL"] != null && HttpContext.Current.Session["ARMPushToQueue_API"] != null)
+            {
+                URL = HttpContext.Current.Session["ARM_URL"].ToString() +
+                      HttpContext.Current.Session["ARMPushToQueue_API"].ToString();
+            }
+            //var saveDetails = "{\"queuename\":\"CachedSaveQueue\",\"queuedata\":" + jsonData + "}";
+            //string DATA = finalObj.ToString(Newtonsoft.Json.Formatting.None);
+            string saveDetails = "{\"queuename\":\"CachedSaveQueue\",\"queuedata\":" + JsonConvert.SerializeObject(jsonData) + "}";
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
+            request.Method = "POST";
+            request.ContentType = "application/json";
+            using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
+            {
+                writer.Write(saveDetails);
+            }
+            using (WebResponse webResponse = request.GetResponse())
+            using (StreamReader reader = new StreamReader(webResponse.GetResponseStream()))
+            {
+                json = reader.ReadToEnd();
+            }
+        }
+        catch (Exception ex)
+        {
+            LogFile.Log logObj = new LogFile.Log();
+            string sessID = Constants.GeneralLog;
+
+            if (HttpContext.Current.Session != null)
+                sessID = HttpContext.Current.Session.SessionID;
+
+            logObj.CreateLog("Tstruct Save Data To ARMQ -" + ex.Message, sessID, "CallPushtoQueueAPI", "new");
+        }
+
+        return json;
+    }
+
+    [WebMethod(EnableSession = true)]
+    public static string CallAxRedisReadAPI(string AccessCode, string InMemoryKey, string InMemorySubKey, string IsBinary)
+    {
+        if (HttpContext.Current.Session["project"] == null || Convert.ToString(HttpContext.Current.Session["project"]) == string.Empty)
+        {
+            return "error:" + Constants.SESSIONTIMEOUT;
+        }
+        string json = string.Empty;
+        try
+        {
+            string ARM_URL = string.Empty;
+            if (HttpContext.Current.Session["ARM_URL"] != null)
+                ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
+            else
+                return "Error in ARM connection.";
+            string tasksUrl = ARM_URL + "/AxUtils/api/v1/AxRedisRead";
+            string saveDetails = "{\"AccessCode\":\"" + AccessCode + "\",\"InMemoryKey\":\"" + InMemoryKey + "\",\"InMemorySubKey\":\"" + InMemorySubKey + "\",\"IsBinary\":\"" + IsBinary + "\"}";
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(tasksUrl);
+            request.Method = "POST";
+            request.ContentType = "application/json";
+            using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
+            {
+                writer.Write(saveDetails);
+            }
+            using (WebResponse webResponse = request.GetResponse())
+            using (StreamReader reader = new StreamReader(webResponse.GetResponseStream()))
+            {
+                json = reader.ReadToEnd();
+            }
+        }
+        catch (Exception ex)
+        {
+            json = "error:" + ex.Message;
+            LogFile.Log logObj = new LogFile.Log();
+            string sessID = Constants.GeneralLog;
+
+            if (HttpContext.Current.Session != null)
+                sessID = HttpContext.Current.Session.SessionID;
+
+            logObj.CreateLog("Tstruct Save Data To ARMQ -" + ex.Message, sessID, "CallAxReadInMemoryAPI", "new");
+        }
+        return json;
+    }
+    [WebMethod(EnableSession = true)]
+    public static string CallAxRedisWriteAPI(string AccessCode, string InMemoryKey, string InMemorySubKey, string InMemoryValue, string IsBinary, string KeyExpiryInMins)
+    {
+        if (HttpContext.Current.Session["project"] == null || Convert.ToString(HttpContext.Current.Session["project"]) == string.Empty)
+        {
+            return "error:" + Constants.SESSIONTIMEOUT;
+        }
+        string json = string.Empty;
+        try
+        {
+            string ARM_URL = string.Empty;
+            if (HttpContext.Current.Session["ARM_URL"] != null)
+                ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
+            else
+                return "Error in ARM connection.";
+            string tasksUrl = ARM_URL + "/AxUtils/api/v1/AxRedisWrite";
+            string saveDetails = "{\"AccessCode\":\"" + AccessCode + "\",\"InMemoryKey\":\"" + InMemoryKey + "\",\"InMemorySubKey\":\"" + InMemorySubKey + "\",\"InMemoryValue\":\"" + InMemoryValue + "\",\"IsBinary\":\"" + IsBinary + "\",\"KeyExpiryInMins\":\"" + KeyExpiryInMins + "\"}";
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(tasksUrl);
+            request.Method = "POST";
+            request.ContentType = "application/json";
+            using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
+            {
+                writer.Write(saveDetails);
+            }
+            using (WebResponse webResponse = request.GetResponse())
+            using (StreamReader reader = new StreamReader(webResponse.GetResponseStream()))
+            {
+                json = reader.ReadToEnd();
+            }
+        }
+        catch (Exception ex)
+        {
+            json = "error:" + ex.Message;
+            LogFile.Log logObj = new LogFile.Log();
+            string sessID = Constants.GeneralLog;
+
+            if (HttpContext.Current.Session != null)
+                sessID = HttpContext.Current.Session.SessionID;
+
+            logObj.CreateLog("Tstruct Save Data To ARMQ -" + ex.Message, sessID, "CallAxWriteInMemoryAPI", "new");
+        }
+        return json;
+    }
 }

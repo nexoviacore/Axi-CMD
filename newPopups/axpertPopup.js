@@ -315,6 +315,11 @@ $(document).on('click', '#exeQuery', function () {
                     $('#txtOutput').show();
                     $('#tblOutput').hide();
                     $('#spnRowCnt').hide();
+                } else if (msg.d != "" && msg.d.startsWith("Error:")) {
+                    $('#txtOutput').text(msg.d);
+                    $('#txtOutput').show();
+                    $('#tblOutput').hide();
+                    $('#spnRowCnt').hide();
                 }
                 else {
                     if (typeof dataJSON["result"] != "object") {

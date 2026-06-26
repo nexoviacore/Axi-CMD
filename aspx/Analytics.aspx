@@ -470,9 +470,9 @@
     <script type="text/javascript" src="../Js/alerts.min.js"></script>
     <script type="text/javascript" src="../Js/xmlToJson.js"></script>
     <script type="text/javascript" src="../ThirdParty/DataTables-1.10.13/extensions/Extras/moment.min.js"></script>
-    <script src="../js/Entity-Filter.min.js?v=8"></script>
-    <script src="../js/Entity-common.min.js?v=14"></script>
-    <script src="../js/Analytics.js?v=11"></script>
+    <script src="../js/Entity-Filter.min.js?v=9"></script>
+    <script src="../js/Entity-common.min.js?v=17"></script>
+    <script src="../js/Analytics.min.js?v=12"></script>
 
 
     <!--end::Page Custom Javascript-->

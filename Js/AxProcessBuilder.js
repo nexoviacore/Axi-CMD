@@ -55,6 +55,10 @@ class AxProcessBuilder {
         this.callAPI(url, data, true, result => {
             if (result.success) {
                 let json = JSON.parse(result.response);
+                if (json.d.startsWith('<!DOCTYPE HTML PUBLIC ')) {
+                    showAlertDialog('error', appGlobalVarsObject.lcm[572]);
+                    return;
+                }
                 let dataResult = _this.dataConvert(json, "ARM");
                 _this.dataSources[name] = dataResult;
                 _this.showProcessDefinition();

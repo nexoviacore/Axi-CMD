@@ -103,6 +103,9 @@ public partial class aspx_dashBoard : System.Web.UI.Page
     [WebMethod]
     public static string GetDashBoardDetails() // this is main method for dash board, its contains 4 table values 
     {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return "SESSION_TIMEOUT";
         string sqlQuery = string.Empty;
         DataSet ds = new DataSet();
         string json = string.Empty;
@@ -143,12 +146,16 @@ public partial class aspx_dashBoard : System.Web.UI.Page
     [WebMethod]
     public static string GetDashBoardRightsideTable(string sqlQuery, string widgetId, string flts) // this one call for fetch the right table records 
     {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return "SESSION_TIMEOUT";
         DataSet ds = new DataSet();
         string json = string.Empty;
         try
         {
             if (HttpContext.Current.Session["user"] != null)
             {
+                util.ValidateSql(sqlQuery);
                 DBContext obj = new DBContext();
                 ds = obj.GetMainPageDBTableInline(sqlQuery, flts, widgetId);
                 json = JsonConvert.SerializeObject(ds, Formatting.Indented);
@@ -172,6 +179,9 @@ public partial class aspx_dashBoard : System.Web.UI.Page
     [WebMethod]
     public static string AddQL(string linkName, string linkUrl) // for insert quick link details, And using inline query 
     {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return "SESSION_TIMEOUT";
         string json = string.Empty;
         try
         {
@@ -199,6 +209,9 @@ public partial class aspx_dashBoard : System.Web.UI.Page
     [WebMethod]
     public static string UpdateQL(string linkUrl, string linkname, string linkId) // for insert quick link details, And using inline query
     {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return "SESSION_TIMEOUT";
         try
         {
             DBContext obj = new DBContext();
@@ -226,6 +239,9 @@ public partial class aspx_dashBoard : System.Web.UI.Page
     [WebMethod]
     public static string DeleteQL(string linkId) // for insert quick link details, And using inline query
     {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return "SESSION_TIMEOUT";
         try
         {
             DBContext obj = new DBContext();
@@ -253,12 +269,16 @@ public partial class aspx_dashBoard : System.Web.UI.Page
     [WebMethod]
     public static string GetDashBoardCharts(string sqlQuery, string widgetId, string[] chartTypes, string flts)
     {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return "SESSION_TIMEOUT";
         DataSet ds = new DataSet();
         string json = string.Empty;
         try
         {
             if (HttpContext.Current.Session["user"] != null)
             {
+                util.ValidateSql(sqlQuery);
                 DBContext obj = new DBContext();
                 ds = obj.GetMainPageDBTableInline(sqlQuery, flts, widgetId);
                 json = highChart(ds, chartTypes);
@@ -462,6 +482,9 @@ public partial class aspx_dashBoard : System.Web.UI.Page
     [WebMethod]
     public static string GetFilterParamsData(string sqlQuery)
     {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return "SESSION_TIMEOUT";
         DataSet ds = new DataSet();
         string json = string.Empty;
         try
@@ -470,6 +493,7 @@ public partial class aspx_dashBoard : System.Web.UI.Page
             {
                 DBContext obj = new DBContext();
                 sqlQuery = Constants.GET_DASHBOARD_FILTERDATA;
+                util.ValidateSql(sqlQuery);
                 ds = obj.GetMainPageDBTableInline(sqlQuery, "", "Filter");
                 json = JsonConvert.SerializeObject(ds, Formatting.Indented);
             }

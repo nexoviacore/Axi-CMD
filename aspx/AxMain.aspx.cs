@@ -86,11 +86,11 @@ public partial class AxMain : System.Web.UI.Page
     ArrayList userVariables = new ArrayList();
     LogFile.Log logobj = new LogFile.Log();
     Util.Util util = new Util.Util();
+    private string authKey = string.Empty;
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
-        {
-            string authKey = string.Empty;
+        {           
             string encAuth = string.Empty;
             string pName = string.Empty;
             string pParams = string.Empty;
@@ -147,6 +147,7 @@ public partial class AxMain : System.Web.UI.Page
 
                 GetConfigs();
                 DoUtlEncode();
+                LoadARMSessionVariables();
 
                 if (pName != null && pName != string.Empty)
                 {
@@ -217,18 +218,18 @@ public partial class AxMain : System.Web.UI.Page
                     return;
                 }
                 OpenNewSession(AxRoles, proj, userName, language);
-                GetConfigs();
-                DoUtlEncode();
-                SetLandingPage(pName, pParams);
             }
             else
             {
                 GetSessionVars();
-                LoadAppConfiguration(proj);
-                GetConfigs();
-                DoUtlEncode();
-                SetLandingPage(pName, pParams);
+                LoadAppConfiguration(proj);            
             }
+
+            GetConfigs();
+            DoUtlEncode();
+            SetLandingPage(pName, pParams);
+            LoadARMSessionVariables();
+
             InitSessExpiryAlert();
             Page.ClientScript.RegisterStartupScript(GetType(), "axmain vars", "<script>var navigatePage='" + Navigationpage + "';" + "var isCloudApp = '" + isCloudApp.ToString() + "'; " + "var userResp = '" + Session["AxResponsibilities"] + "';" + "var sesslanguage='" + language + "';" + "var mainRestDllPath='" + RestDllPath + "';" + "var mainArmRestDllPath='" + ArmRestDllPath + "';" + "var mainProject='" + proj + "';" + "var mainSessionId='" + sid + "';" + "var mainUserName='" + Session["user"].ToString() + "';" + "var AxHelpIview='';" + " var axUtlGlobalVars='" + axUtlGlobalVars + "'; var axUtlUserVars='" + axUtlUserVars + "'; var axUtlApps='" + axUtlApps + "';var alertsTimeout='" + alertsTimeout.ToString() + "';var errorTimeout='" + errorTimeout.ToString() + "';var errorEnable='" + errorEnable.ToString().ToLower() + "';var notifyTimeout ='" + notifyTimeout + "';var appDiableSplit ='" + disableSplit + "'" + "</script>");
 
@@ -563,8 +564,10 @@ public partial class AxMain : System.Web.UI.Page
                 }
                 catch (Exception ex) { }
                 bool axp_timezone = false;
-                string glbVarsFromIni = util.GetGblVarsFromIni();
-                Session["axGlobalVars"] = "<globalvars>" + childNode.InnerXml + axGridAttachPath + axAttachmentpath + glbVarsFromIni + "</globalvars>";
+                //string glbVarsFromIni = util.GetGblVarsFromIni();
+                //Session["axGlobalVars"] = "<globalvars>" + childNode.InnerXml + axGridAttachPath + axAttachmentpath + glbVarsFromIni + "</globalvars>";
+                string glbVarsFromIni = util.GetGblVarsFromIni("<globalvars>" + childNode.InnerXml + "</globalvars>");
+                Session["axGlobalVars"] = "<globalvars>" + glbVarsFromIni + axGridAttachPath + axAttachmentpath + "</globalvars>";
                 foreach (XmlNode xmlNode in childNode.ChildNodes)
                 {
                     if (xmlNode.Name.ToLower() == "axp_timezone" && xmlNode.InnerText != "")
@@ -609,7 +612,8 @@ public partial class AxMain : System.Web.UI.Page
                 }
                 if (axp_timezone)
                 {
-                    Session["axGlobalVars"] = "<globalvars>" + childNode.InnerXml + axGridAttachPath + axAttachmentpath + glbVarsFromIni + "</globalvars>";
+                    string _glbVarsFromIni = util.GetGblVarsFromIni("<globalvars>" + childNode.InnerXml + "</globalvars>");
+                    Session["axGlobalVars"] = "<globalvars>" + _glbVarsFromIni + axGridAttachPath + axAttachmentpath + "</globalvars>";
                 }
             }
             else if (childNode.Name == "uservars")
@@ -1098,6 +1102,25 @@ public partial class AxMain : System.Web.UI.Page
             langType = "en";
             direction = "ltr";
         }
+    }
+
+    private void LoadARMSessionVariables()
+    {
+        if(HttpContext.Current.Session["ARM_SessionId"] == null || HttpContext.Current.Session["ARM_SessionId"].ToString() == "" || HttpContext.Current.Session["ARM_Token"] == null || HttpContext.Current.Session["ARM_Token"].ToString() == "")
+        {
+            string armSessionId = authKey.Replace("AXPERT-", "");
+            FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+            if (fObj == null)
+            {
+                fObj = new FDR(proj);
+            }
+            var armToken = fObj.HashGet(armSessionId, "ARMTOKEN");
+            if (armToken != null)
+            {
+                HttpContext.Current.Session["ARM_SessionId"] = armSessionId;
+                HttpContext.Current.Session["ARM_Token"] = armToken;
+            }
+        }        
     }
 
     private void InitSessExpiryAlert()

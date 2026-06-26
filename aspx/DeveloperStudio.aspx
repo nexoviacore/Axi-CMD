@@ -67,8 +67,8 @@
         <%:Scripts.Render("~/UI/axpertUI/bundleJs") %>
     </asp:PlaceHolder>
 
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
-    <script src="../Js/helper.min.js?v=172" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
+    <script src="../Js/helper.min.js?v=175" type="text/javascript"></script>
     <script src="../js/developerStudio.min.js?v=1" type="text/javascript"></script>
     <script type="text/javascript">
         $(callParentNew("appBackBtn", "class")).hide();

@@ -275,7 +275,12 @@
                         if (configFileName == "") continue;
 
                         string configStr = string.Empty;
-                        configStr = fdrObj.StringFromRedis(Constants.CONFIGAPP_JSON_KEY, configFileName.ToLower());
+                        //configStr = fdrObj.StringFromRedis(Constants.CONFIGAPP_JSON_KEY, configFileName.ToLower());
+                        var _jsoncontents = fdrObj.HashGetAllKey(Constants.AX_COMMON_APPSETTING_KEY, configFileName.ToLower());
+                        if (_jsoncontents != null && _jsoncontents.ContainsKey(Constants.CONFIGAPP_JSON_KEY))
+                        {
+                            configStr = _jsoncontents[Constants.CONFIGAPP_JSON_KEY];
+                        }
                         if (configStr == string.Empty)
                             configStr = reader.ReadToEnd();
 
@@ -306,7 +311,8 @@
                         }
                         finally
                         {
-                            objFDW.SaveInRedisServer(Constants.CONFIGAPP_JSON_KEY, configStr + customDetails, Constants.CONFIGAPP_JSON_KEY, configFileName.ToLower());
+                            //objFDW.SaveInRedisServer(Constants.CONFIGAPP_JSON_KEY, configStr + customDetails, Constants.CONFIGAPP_JSON_KEY, configFileName.ToLower());
+                            objFDW.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.CONFIGAPP_JSON_KEY, configStr + customDetails, configFileName.ToLower());
                         }
                     }
                 }

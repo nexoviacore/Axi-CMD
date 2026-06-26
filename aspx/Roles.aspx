@@ -94,11 +94,11 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/dimmingdiv.min.js?v=2" type="text/javascript"></script>
 
-    <script src="../Js/umgmt.min.js?v=28" type="text/javascript"></script>
+    <script src="../Js/umgmt.min.js?v=29" type="text/javascript"></script>
     <script src="../Js/jquery.msgBox.min.js?v=2" type="text/javascript"></script>
     <link rel="stylesheet" type="text/css" href="../Css/msgBoxLight.min.css?v=5" />
     <script src="../Js/Roles.min.js?v=3" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
 </head>
 <!-- <body onload="load();adjustwin(window); ChangeTheme(window);" style="width: 100%; position: relative; margin: 0 auto;" onunload="CheckForUnsavedChangesRole();"> -->
 <body onload="load();" style="width: 100%; position: relative; margin: 0 auto;" onunload="CheckForUnsavedChangesRole();">
@@ -110,7 +110,7 @@
     %><form id="form1" runat="server" dir="<%=direction%>">
         <asp:ScriptManager ID="ScriptManager1" runat="server">
             <Scripts>
-                <asp:ScriptReference Path="~/Js/umgmt.min.js?v=28" />
+                <asp:ScriptReference Path="~/Js/umgmt.min.js?v=29" />
             </Scripts>
             <Services>
                 <asp:ServiceReference Path="../WebService.asmx" />

@@ -389,3 +389,5 @@ var axpertDevTstList = ["axvar", "ad_db", "ctype", "axpub", "ad_lg", "job_s", "a
 var isLoadFromDraft = "false";
 var tstDummyLoadParams = "";
 var isHtmlLsLoadData = "";
+var tstPermissions = "";
+var isTstRefreshParentOnClose = "";

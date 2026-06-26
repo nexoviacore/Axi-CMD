@@ -247,9 +247,71 @@ $(document).ready(function (event) {
 
     function createTheTreeView({ menuJSON, treeContainer }) {
         treeContainer = $(treeContainer);
-        menuJSON = menuJSON[0];
-        //nodeCreatorInput = $(nodeCreatorInput);
-        var FinalmenuJson = _parseTheMenuJsonForTreeView(menuJSON);
+
+        var pages = menuJSON.find(x => x.Pages)?.Pages || {};
+        var tstructs = menuJSON.find(x => x.Tstructs)?.Tstructs || {};
+        var iviews = menuJSON.find(x => x.Iviews)?.Iviews || {};
+
+        pages.child = pages.child || [];
+
+        // collect all existing page snames recursively
+        var existingSNames = new Set();
+
+        function collectSNames(nodes) {
+            if (!nodes) return;
+
+            nodes.forEach(function (node) {
+                var key = Object.keys(node)[0];
+                var item = node[key];
+
+                if (item.sname) {
+                    existingSNames.add(item.sname);
+                }
+
+                if (item.child) {
+                    collectSNames(item.child);
+                }
+            });
+        }
+
+        collectSNames(pages.child);
+
+        // append missing tstructs
+        (tstructs.child || []).forEach(function (node) {
+            var key = Object.keys(node)[0];
+
+            if (!existingSNames.has("t" + key)) {
+                pages.child.push({
+                    ["PageTs" + key]: {
+                        ...node[key],
+                        sname: "t" + key,
+                        isMissingNode: true
+                    }
+                });
+            }
+        });
+
+        // append missing iviews
+        (iviews.child || []).forEach(function (node) {
+            var key = Object.keys(node)[0];
+
+            if (!existingSNames.has("i" + key)) {
+                pages.child.push({
+                    ["PageIv" + key]: {
+                        ...node[key],
+                        sname: "i" + key,
+                        isMissingNode: true
+                    }
+                });
+            }
+        });
+
+        var FinalmenuJson = _parseTheMenuJsonForTreeView({
+            Pages: pages
+        });
+
+        //menuJSON = menuJSON[0];
+        //var FinalmenuJson = _parseTheMenuJsonForTreeView(menuJSON);
         if (FinalmenuJson.length === undefined) {
             FinalmenuJson = [FinalmenuJson];
         }
@@ -441,14 +503,20 @@ $(document).ready(function (event) {
                         htmlimg.insertBefore(nodeSpan.find(".fancytree-title"));
                     }
                     var tagName = typeof node.data.tagName == "undefined" ? "" : node.data.tagName
-
-                    var checkbox = $(`<input type="checkbox" class="fancytree-checkbox actualcheckbox treecheckbox w-auto position-absolute end-30 w-15px h-15px mt-3" data-tagName=${tagName} data-parent=${node.data.parent}> `);
+                    let _missNodeHide = "";
+                    if (typeof node.data.isMissingNode != "undefined" && node.data.isMissingNode)
+                        _missNodeHide = " d-none";
+                    
+                    var checkbox = $(`<input type="checkbox" class="fancytree-checkbox actualcheckbox treecheckbox w-auto position-absolute end-30 w-15px h-15px mt-3 ${_missNodeHide}" data-tagName=${tagName} data-parent=${node.data.parent}> `);
 
                     if (node.type === "parent" && node.data.parent === "") {
                         var parentValue;
                         node.children.forEach(function (childNode) {
                             parentValue = childNode.data.tagName;
-                            checkbox = $(`<input type="checkbox" class="fancytree-checkbox actualcheckbox treecheckbox w-auto position-absolute end-30 w-15px h-15px mt-3" data-tagName=${parentValue} data-parent=${childNode.data.parent} data-sname=${childNode.data.sname}>`);
+                            let _childmissNodeHide = "";
+                            if (typeof childNode.data.isMissingNode != "undefined" && childNode.data.isMissingNode)
+                                _childmissNodeHide = " d-none";
+                            checkbox = $(`<input type="checkbox" class="fancytree-checkbox actualcheckbox treecheckbox w-auto position-absolute end-30 w-15px h-15px mt-3 ${_childmissNodeHide}" data-tagName=${parentValue} data-parent=${childNode.data.parent} data-sname=${childNode.data.sname}>`);
                         });
                     }
 

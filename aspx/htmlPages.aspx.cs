@@ -74,6 +74,25 @@ public partial class aspx_htmlPages : System.Web.UI.Page
         {
             pageCaption = Request.QueryString["loadcaption"].ToString();
         }
+        if (Session["AxiProjectLogin"] != null && Session["AxiProjectLogin"].ToString() == "true" && Session["AxiPrimary"] != null && Session["AxiPrimary"].ToString() == "true" && pageId == "AxiInstallPackages")
+        {
+            htmlFileName = "AxiInstallPackages.HTML";
+            string axipath = axpertWebUrl + "/CustomPages/" + htmlFileName + "?v=" + DateTime.Now.ToString("ddMMyyyyHHmmss");
+            FileInfo _htmlFile = new FileInfo(HttpContext.Current.Server.MapPath("~/CustomPages/" + htmlFileName));
+            if (_htmlFile.Exists)
+            {
+                try
+                {
+                    Response.Write(@"<script language='javascript'> document.location.href='../" + axipath + "'; window.parent.callParentNew('closeFrame()','function');</script>");
+                }
+                catch (Exception ex)
+                {
+                    errorLog = logobj.CreateLog("CallGetFileNames - Call Get HTML File loading exception for available file => " + ex.Message, sessionId, "HTMLPage", "", "true");
+                    Response.Redirect("err.aspx?errmsg=Exception while loading this page.");
+                }
+                return;
+            }
+        }
 
         if (pageId != string.Empty)
         {

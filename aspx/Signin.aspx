@@ -50,11 +50,11 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/noConflict.min.js?v=1" type="text/javascript"></script>
     <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
-    <script type="text/javascript" src="../Js/login.min.js?v=104"></script>
+    <script type="text/javascript" src="../Js/login.min.js?v=114"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
     <script src="../Js/jsencrypt.js?v=1" type="text/javascript"></script>
     <script src="../Js/crypto-js.js?v=1" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
     <script type="text/javascript">
         history.go(1);
         var cdt = new Date();
@@ -85,6 +85,7 @@
         var projUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
         localStorage.removeItem('web_browser-' + projUrl);
         localStorage.removeItem('web_browser_dup-' + projUrl);
+        localStorage.removeItem("axpertLogoutLock-" + projUrl);
     </script>
 
     <script src="../Js/sso.min.js?v=2" type="text/javascript"></script>
@@ -143,7 +144,7 @@
                                 <div class="text-center mb-8">
                                     <div class="form-title">
 
-                                        <img class="mb-2" src="../images/loginlogo.png" loading="lazy" />
+                                        <img id="projectLogo" style="display: none;" class="mb-2" src="../images/loginlogo.png" loading="lazy" />
                                         <div>
                                             <asp:Label ID="lblSignin" class="form-label fs-1 fw-boldest text-dark" runat="server" meta:resourcekey="lblSignin">Sign In</asp:Label>
                                         </div>
@@ -196,7 +197,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="control-group">
+                                    <%-- <div class="control-group">
                                         <div class=" agform form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4" id="axstaysignin" runat="server" visible="false">
                                             <div class="controls my-2">
                                                 <div class="input-icon left">
@@ -205,7 +206,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div>--%>
                                     <div class="fv-plugins-message-container invalid-feedback"></div>
 
                                     <%if (ConfigurationManager.AppSettings["enableCaptcha"] != null && ConfigurationManager.AppSettings["enableCaptcha"].ToString() == "true")
@@ -351,6 +352,9 @@ c-45 8 -53 30 -33 91 22 70 14 75 -11 7z"
                         <input type="hidden" id="hdnSrtforLogin" runat="server" />
                         <input type="hidden" id="hdnBwsrid" runat="server" />
                         <input type="hidden" id="hdnEncKey" runat="server" />
+                        <input type="hidden" id="hdnKeepMeSignin" runat="server" />
+                        <input type="hidden" id="hdnKeepMeSigninFlag" runat="server" />
+                        <input type="hidden" id="hdnPrevTab" runat="server" />
                         <asp:HiddenField ID="_antiforgery" runat="server" />
                     </asp:Panel>
                 </form>
@@ -362,6 +366,7 @@ c-45 8 -53 30 -33 91 22 70 14 75 -11 7z"
         <input type="hidden" runat="server" name="mobDevice" id="mobDevice" />
         <input type="hidden" runat="server" name="duplicateUser" id="duplicateUser" />
         <input type="hidden" runat="server" name="hbtforDupLogin" id="hbtforDupLogin" />
+        <input type="hidden" runat="server" name="hdnBwsridNew" id="hdnBwsridNew" />
         <button type="submit" runat="server" title="Login" id="btnSubmitUser" class="hotbtn btn hide" />
     </form>
 

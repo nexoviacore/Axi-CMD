@@ -1161,14 +1161,17 @@ public class DBContext
         }
     }
 
-    public string UpdateALCUserInfo(string username, string isActive, string authKey, string userKey)
+    public string UpdateALCUserInfo(string username, string isActive, string authKey, string userKey, string activateType)
     {
         string _results = string.Empty;
         try
         {
             string SqlQuery = string.Empty;
             Ihelper _helper2 = new Helper().SetDatabase(db_type, _connectionString);
-            SqlQuery = "update axusers SET ACTIVE='" + isActive + "',ACTFLAG='" + isActive + "',AUTHKEY='" + authKey + "',USERKEY='" + userKey + "' where username='" + username + "'";
+            if (activateType != "deactivate")
+                SqlQuery = "update axusers SET ACTIVE='" + isActive + "',ACTFLAG='" + isActive + "',AUTHKEY='" + authKey + "',USERKEY='" + userKey + "' where username='" + username + "'";
+            else
+                SqlQuery = "update axusers SET AUTHKEY='" + authKey + "',USERKEY='" + userKey + "' where username='" + username + "'";
             //_helper2.ExecuteNonQuerySqlinline(SqlQuery);
             _results = _helper2.ExecuteNonQuerySqlinlineAlc(SqlQuery);
             if (_results == "0" || _results.StartsWith("Error:"))
@@ -1182,6 +1185,26 @@ public class DBContext
             logobj.CreateLog("UpdateALCUserInfo - " + ex.Message + "", HttpContext.Current.Session["nsessionid"].ToString(), "UpdateALCUserInfo", string.Empty, "true");
         }
         return _results;
+    }
+
+    public string GetUserEmailInfo(string username)
+    {
+        string _uEmail = string.Empty;
+        try
+        {
+            Ihelper _helper1 = new Helper().SetDatabase(db_type, _connectionString);
+            string getEmail = "select email from axusers where username='" + username + "'";
+            DataSet ds = _helper1.ExecuteDataSetSqlInline(getEmail);
+            if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+            {
+                _uEmail = ds.Tables[0].Rows[0]["email"].ToString();
+            }
+        }
+        catch (Exception ex)
+        {
+            logobj.CreateLog("GetUserEmailInfo - " + ex.Message + "", HttpContext.Current.Session["nsessionid"].ToString(), "GetUserEmailInfo", string.Empty, "true");
+        }
+        return _uEmail;
     }
 }
 

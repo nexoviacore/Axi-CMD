@@ -573,7 +573,7 @@ function AxAsyncGetApiData(apiNames = "", apiType = "axpert", cacheInfo = [], su
  * @references
  *      Following files are required to be referred in custom html along with AxInterface.js:
             <script src="../../Js/Jquery-2.2.2.min.js" type="text/javascript"></script>
-            <script src="../../Js/common.min.js?v=160" type="text/javascript"></script>
+            <script src="../../Js/common.min.js?v=164" type="text/javascript"></script>
             <script src="../../Js/AxInterface.min.js?v=15" type="text/javascript"></script>
             <script src="../../ThirdParty/Highcharts/highcharts.js"></script>
             <script src="../../ThirdParty/Highcharts/highcharts-3d.js"></script>
@@ -738,7 +738,7 @@ function customizeData(plotName) {
  * @Files
  *  Following files are required to be referred in custom html along with AxInterface.js:
  *      <script src="../../Js/Jquery-2.2.2.min.js" type="text/javascript"></script>
- *      <script src="../../Js/common.min.js?v=160" type="text/javascript"></script>
+ *      <script src="../../Js/common.min.js?v=164" type="text/javascript"></script>
  * 
  */
 function AxLoadUrl(url) {
@@ -763,7 +763,7 @@ function AxLoadUrl(url) {
  *  Following files are required to be referred in custom html along with AxInterface.js:
  *      <script src="../../ThirdParty/lodash.min.js" type="text/javascript"></script>
  *      <script src="../../ThirdParty/deepdash.min.js" type="text/javascript"></script>
- *      <script src="../../Js/common.min.js?v=160" type="text/javascript"></script>
+ *      <script src="../../Js/common.min.js?v=164" type="text/javascript"></script>
  * 
  */
  function AxGetMenus(pages) {
@@ -897,7 +897,16 @@ function navigateToUrl(input) {
     } else if (type === 't') {
         const act = queryParams.has('recordid') ? 'load' : 'open';
         queryParams.set('act', act);
-        url = `tstruct.aspx?transid=${struct}&${queryParams.toString()}`;
+
+        let _thisappSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        let _thisstoredKey = 'originaltrIds-' + _thisappSessUrl;
+        let _transidArray = JSON.parse(localStorage.getItem(_thisstoredKey) || '[]');
+        if (_transidArray.includes(struct)) {
+            _transidArray = _transidArray.filter(x => x.toLowerCase() !== struct.toLowerCase());
+            localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
+        }
+
+        url = `tstruct.aspx?transid=${struct}&${queryParams.toString()}&dummyload=false♠`;
     }
     else if (type === 'h') {
         if ((input[0] + input[1]).toLowerCase() == "hp" && (/^\d+$/.test(struct.slice(1))))
@@ -1059,7 +1068,7 @@ function AxCallSubmitDataAPI(apiPublicKey, recordId) {
         "CachePermissions": true,
         "getallrecordscount": false, //Optional flag to get total record count without pagination. Will be helpful in scenarios where total record count of ADS is needed.        
         "pageno": 1,
-        "pagesize": 0, //Pass 0 to fetch all records. Pass pagesize value to fetch records as per pagination.
+        "pagesize": 100, //Pass 0 to fetch all records. Pass pagesize value to fetch records as per pagination.
         "keyfield": "",
         "keyvalue": "",
         "AxClient_dateformat" : "", //Optional flag to pass client date format to convert date fields. Date fields in filters should be in same format as passed in this parameter
@@ -1114,10 +1123,6 @@ function GetDataFromAxList(data, successCB = () => { }, errorCB = () => { }) {
     if (typeof data.keyValue === "undefined") data.keyValue = "";
     if (typeof data.sqlParams === "undefined") data.sqlParams = {};
     if (typeof data.props === "undefined") data.props = {};
-    if (typeof data.axClient_dateformat === "undefined") data.axClient_dateformat = "";
-    if (typeof data.select_columns === "undefined") data.select_columns = [];
-    if (typeof data.aggregations === "undefined") data.aggregations = {};
-    if (typeof data.groupby_columns === "undefined") data.groupby_columns = [];
 
     $.ajax({
         url: top.window.location.href.toLowerCase().substring(0, top.window.location.href.toLowerCase().indexOf("/aspx/")) + '/aspx/AxPEG.aspx/GetDataFromAxList',
@@ -1160,6 +1165,86 @@ function AxCallScriptAPIAsync(script, type, name, recordid = "0", apiParams = {}
         async: true,
         data: JSON.stringify({
             script: script, type: type, name: name, recordid: recordid, apiParams: apiParams
+        }),
+        dataType: 'json',
+        contentType: "application/json",
+        success: function (data) {
+            if (successCB && typeof successCB == "function") {
+                successCB(data.d || data);
+            }
+        },
+        error: function (error) {
+            if (errorCB && typeof successCB == "function") {
+                errorCB(error);
+            }
+        }
+    });
+}
+
+function AxPushtoQueueAPI(jsonData, successCB = () => { }, errorCB = () => { }) {
+    $.ajax({
+        url: top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/") + 6) + 'axinterface.aspx/CallPushtoQueueAPI',
+        type: 'POST',
+        cache: false,
+        async: false,
+        data: JSON.stringify({
+            jsonData
+        }),
+        dataType: 'json',
+        contentType: "application/json",
+        success: function (data) {
+            if (successCB && typeof successCB == "function") {
+                successCB(data.d || data);
+            }
+        },
+        error: function (error) {
+            if (errorCB && typeof successCB == "function") {
+                errorCB(error);
+            }
+        }
+    });
+}
+
+function AxRedisReadAPI(AccessCode, InMemoryKey, InMemorySubKey, IsBinary, successCB = () => { }, errorCB = () => { }) {
+    $.ajax({
+        url: top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/") + 6) + 'axinterface.aspx/CallAxRedisReadAPI',
+        type: 'POST',
+        cache: false,
+        async: false,
+        data: JSON.stringify({
+            AccessCode,
+            InMemoryKey,
+            InMemorySubKey,
+            IsBinary
+        }),
+        dataType: 'json',
+        contentType: "application/json",
+        success: function (data) {
+            if (successCB && typeof successCB == "function") {
+                successCB(data.d || data);
+            }
+        },
+        error: function (error) {
+            if (errorCB && typeof successCB == "function") {
+                errorCB(error);
+            }
+        }
+    });
+}
+
+function AxRedisWriteAPI(AccessCode, InMemoryKey, InMemorySubKey, InMemoryValue, IsBinary, KeyExpiryInMins, successCB = () => { }, errorCB = () => { }) {
+    $.ajax({
+        url: top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/") + 6) + 'axinterface.aspx/CallAxRedisWriteAPI',
+        type: 'POST',
+        cache: false,
+        async: false,
+        data: JSON.stringify({
+            AccessCode,
+            InMemoryKey,
+            InMemorySubKey,
+            InMemoryValue,
+            IsBinary,
+            KeyExpiryInMins
         }),
         dataType: 'json',
         contentType: "application/json",

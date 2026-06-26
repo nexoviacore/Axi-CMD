@@ -497,6 +497,7 @@ class EntityFilter {
            
             $(fld).select2({
                 multiple: true,  // Enable multi-selection
+                minimumInputLength: 0,
                 ajax: {
                     url: top.window.location.href.toLowerCase().substring(0, top.window.location.href.toLowerCase().indexOf("/aspx/")) + '/aspx/Analytics.aspx/GetEntityDropDownDataWS',
                     type: 'POST',
@@ -506,7 +507,8 @@ class EntityFilter {
                     data: function (params) {
                         let data = {
                             fldId: fldId,
-                            transId: transId
+                            transId: transId,
+                            searchText: params.term ?? ""
                         };
                         return JSON.stringify(data);
                     },

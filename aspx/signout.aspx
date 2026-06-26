@@ -27,7 +27,7 @@
         <%:Scripts.Render("~/UI/axpertUI/bundleJs") %>
     </asp:PlaceHolder>
     <script src="../Js/noConflict.min.js?v=1" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158"></script>
+    <script src="../Js/common.min.js?v=164"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
     <script type="text/javascript" src="../Js/alerts.min.js?v=32"></script>
     <script>
@@ -36,6 +36,7 @@
         let instanceName = localStorage.getItem("instanceName-" + appSessUrl);
         localStorage.removeItem("unlmtUsername-" + appSessUrl);
         var diFileInfo = '<%=strFileinfo%>';
+        localStorage.removeItem("axpertLogoutLock-" + appSessUrl);
         var isMobile = isMobileDevice();
         $(document).ready(function () {
             if (typeof instanceName != "undefined" && instanceName != null) {

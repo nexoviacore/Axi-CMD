@@ -1006,6 +1006,9 @@ public class TStructDef
         string PushtoQueue;
         string QueueName;
 
+        string Confreq;
+        string Confmsg;
+
         public string actname
         {
             get { return actName; }
@@ -1100,6 +1103,16 @@ public class TStructDef
         {
             get { return QueueName; }
             set { QueueName = value; }
+        }
+        public string confreq
+        {
+            get { return Confreq; }
+            set { Confreq = value; }
+        }
+        public string confmsg
+        {
+            get { return Confmsg; }
+            set { Confmsg = value; }
         }
     }
 
@@ -4048,6 +4061,7 @@ public class TStructDef
             string ftype = string.Empty;
             string btnId = string.Empty;
             string position = string.Empty;
+            string isScript = string.Empty;
 
             int frameNo = 0;
             if (btnNodes.Attributes["parent"] != null)
@@ -4058,6 +4072,11 @@ public class TStructDef
             caption = btnNodes.Attributes["caption"].Value;
             task = btnNodes.Attributes["task"].Value;
             action = btnNodes.Attributes["action"].Value;
+            if (btnNodes.Attributes["script"] != null)
+            {
+                isScript = btnNodes.Attributes["script"].Value;
+                isScript = isScript.ToLower();
+            }
             hint = btnNodes.Attributes["hint"].Value;
             dimension = btnNodes.Attributes["tlhw"].Value;
             image = btnNodes.Attributes["img"].Value;
@@ -4133,7 +4152,10 @@ public class TStructDef
                             {
                                 fileupload = fileupload.Replace("\\", "\\\\");
                             }
-                            btnFunction = " onclick='javascript:CallAction(" + (char)34 + action + (char)34 + "," + (char)34 + fileupload + (char)34 + ");' ";
+                            if (isScript != string.Empty)
+                                btnFunction = " onclick='javascript:CallAction(" + (char)34 + action + (char)34 + "," + (char)34 + fileupload + (char)34 + "," + (char)34 + string.Empty + (char)34 + "," + (char)34 + string.Empty + (char)34 + "," + (char)34 + string.Empty + (char)34 + "," + (char)34 + string.Empty + (char)34 + "," + (char)34 + isScript + (char)34 + ");' ";
+                            else
+                                btnFunction = " onclick='javascript:CallAction(" + (char)34 + action + (char)34 + "," + (char)34 + fileupload + (char)34 + ");' ";
                             if (string.IsNullOrEmpty(image))
                                 btnHtml.Append("<div class=\"input-group\"><input type=button " + btnFunction.ToString() + " class=\"tstformbutton btn btn-sm col-12 m-auto shadow-sm btn btn-white btn-color-gray-900 btn-active-primary\" value=\"" + caption + "\" title=\"" + hint + "\"></div>");
                             else
@@ -4142,7 +4164,10 @@ public class TStructDef
                     }
                     else
                     {
-                        btnFunction = " onclick='javascript:CallAction(" + (char)34 + action + (char)34 + "," + (char)34 + fileupload + (char)34 + "," + (char)34 + string.Empty + (char)34 + "," + (char)34 + cancelBtn + (char)34 + ");' ";
+                        if (isScript != string.Empty)
+                            btnFunction = " onclick='javascript:CallAction(" + (char)34 + action + (char)34 + "," + (char)34 + fileupload + (char)34 + "," + (char)34 + string.Empty + (char)34 + "," + (char)34 + cancelBtn + (char)34 + "," + (char)34 + string.Empty + (char)34 + "," + (char)34 + string.Empty + (char)34 + "," + (char)34 + isScript + (char)34 + ");' ";
+                        else
+                            btnFunction = " onclick='javascript:CallAction(" + (char)34 + action + (char)34 + "," + (char)34 + fileupload + (char)34 + "," + (char)34 + string.Empty + (char)34 + "," + (char)34 + cancelBtn + (char)34 + ");' ";
                         if (!string.IsNullOrEmpty(caption) && !string.IsNullOrEmpty(image))
                         {
                             //Display Image with caption as hint.
@@ -4242,12 +4267,12 @@ public class TStructDef
                         position = btnNodes.Attributes["position"].Value;
                         script = btnNodes.Attributes["script"].Value.ToLower() == "true" ? true : false;
                         string iconStyle = string.Empty;
-
+                        string ictext = string.Empty;
                         if (ficonNode != null)
                         {
                             if (ficonNode.SelectSingleNode("text") != null)
                             {
-                                string ictext = ficonNode.SelectSingleNode("text").InnerText;
+                                ictext = ficonNode.SelectSingleNode("text").InnerText;
                                 string icaddclass = ficonNode.SelectSingleNode("addClass").InnerText;
                                 iconStyle = "<i class='" + icaddclass + "'>" + ictext + "</i>";
                             }
@@ -4439,7 +4464,9 @@ public class TStructDef
                                         btnFunction = " onclick='javascript:" + btnId + "onclick();' ";
                                     else
                                         btnFunction = " onclick=\"javascript:CallAction('" + action + "','','','','','','" + script.ToString().ToLower() + "');\" ";
-                                    gridHeaderScriptButtons.Add("<a class=\"btn btn-sm btn-icon btn-white btn-color-gray-600 btn-active-primary me-2 shadow-sm gridheaderbutton\" id=\"" + btnId + "\" " + btnFunction + " title=\"" + caption + "\"><span class=\"material-icons material-icons-style material-icons-3\">check_box_outline_blank</span></a>");
+                                    if (ictext == string.Empty || ictext == "task_alt")
+                                        ictext = "check_box_outline_blank";
+                                    gridHeaderScriptButtons.Add("<a class=\"btn btn-sm btn-icon btn-white btn-color-gray-600 btn-active-primary me-2 shadow-sm gridheaderbutton\" id=\"" + btnId + "\" " + btnFunction + " title=\"" + caption + "\"><span class=\"material-icons material-icons-style material-icons-3\">" + ictext + "</span></a>");
                                     gridHeaderScriptDcNo.Add(dcs.Count.ToString());
                                 }
                             }
@@ -4881,6 +4908,16 @@ public class TStructDef
                     else
                         act.queueName = "";
 
+                    if (actionNode.Attributes["confreq"] != null)
+                        act.confreq = actionNode.Attributes["confreq"].Value;
+                    else
+                        act.confreq = "f";
+
+                    if (actionNode.Attributes["confmsg"] != null)
+                        act.confmsg = actionNode.Attributes["confmsg"].Value;
+                    else
+                        act.confmsg = "";
+
                     if (actionNode.HasChildNodes)
                     {
                         try
@@ -4911,6 +4948,11 @@ public class TStructDef
                                     act.actSaveTask = "save";
                                     break;
                                 }
+                                else if (ndSave.Attributes["task"].Value.ToLower() == "cancel transaction")
+                                {
+                                    act.actScriptCancel = "canceltransaction♠";
+                                    break;
+                                }
                                 else if (ndSave.Attributes["task"].Value.ToLower() == "scripts")
                                 {
                                     int _icnt = 0;
@@ -4925,6 +4967,11 @@ public class TStructDef
                                         else if (ndScrp.InnerText.ToLower().StartsWith("canceltransaction("))
                                         {
                                             act.actScriptCancel = "canceltransaction♠" + ndScrp.InnerText;
+                                            break;
+                                        }
+                                        else if (ndScrp.InnerText.ToLower().StartsWith("deletetransaction("))
+                                        {
+                                            act.actScriptCancel = "deletetransaction♠" + ndScrp.InnerText;
                                             break;
                                         }
                                         else if (ndScrp.InnerText.ToLower().StartsWith("loadform(") && _icnt == 0)
@@ -5015,7 +5062,7 @@ public class TStructDef
                     }
                     if (isActButton)
                         actions.Add(act);
-                    formcontrol.Append("tstActionName[" + actNo + "]= " + "\"" + act.actname + "\";tstActionCaption[" + actNo + "]= " + "\"" + act.actcap + "\";actParRefresh[" + actNo + "]= " + "\"" + act.actParRefresh + "\";actSaveTask[" + actNo + "]= " + "\"" + act.actSaveTask + "\";actScriptTask[" + actNo + "]=" + "\"" + act.actScriptTask + "\";actScriptCancel[" + actNo + "]=\"" + act.actScriptCancel + "\";actScriptActive[" + actNo + "]=\"" + act.scriptActive + "\";actScriptPushtoQueue[" + actNo + "]=\"" + act.pushtoQueue + "\";actScriptQueueName[" + actNo + "]=\"" + act.queueName + "\";");
+                    formcontrol.Append("tstActionName[" + actNo + "]= " + "\"" + act.actname + "\";tstActionCaption[" + actNo + "]= " + "\"" + act.actcap + "\";actParRefresh[" + actNo + "]= " + "\"" + act.actParRefresh + "\";actSaveTask[" + actNo + "]= " + "\"" + act.actSaveTask + "\";actScriptTask[" + actNo + "]=" + "\"" + act.actScriptTask + "\";actScriptCancel[" + actNo + "]=\"" + act.actScriptCancel + "\";actScriptActive[" + actNo + "]=\"" + act.scriptActive + "\";actScriptPushtoQueue[" + actNo + "]=\"" + act.pushtoQueue + "\";actScriptQueueName[" + actNo + "]=\"" + act.queueName + "\";actConfreq[" + actNo + "]=\"" + act.confreq + "\";actConfmsg[" + actNo + "]=\"" + act.confmsg + "\";");
                     if (act.actSaveTask == "save")
                         SaveScriptList.Add(act.actname);
                     actNo++;

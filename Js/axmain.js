@@ -2951,3 +2951,24 @@ window.addEventListener('load', function () {
         return;
     }
 });
+function getKeysWithPrefix(prefix) {
+    var allKeys = Object.keys(localStorage);
+    var matchingKeys = allKeys.filter(function (key) {
+        return key.startsWith(prefix);
+    });
+
+    return matchingKeys;
+}
+function clearKeysByFormat(input) {
+    try {
+        var parts = input.split("♣");
+        var start = parts[0];
+        var end = parts[1];
+        var allKeys = Object.keys(localStorage);
+        allKeys.forEach(function (key) {
+            if (key.startsWith(start) && key.includes(end)) {
+                localStorage.removeItem(key);
+            }
+        });
+    } catch (ex) { }
+}

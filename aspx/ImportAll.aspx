@@ -161,28 +161,20 @@
                                 <!-- Widget Data Search - begins -->
                                 <div id="imWizardDataSearch">
                                     <div id="axstaysignin6" class="">
-                                 <div class="controls">
-                                                                                 <div id="axstaysigninforms" class="form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4">
+                                        <div class="controls">
+                                            <div id="axstaysigninforms" class="form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4">
                                                 <div class="controlsforms">
                                                     <div class="input-icon left d-flex justify-content-center customclscol">
-                                                        <input name="signedin" type="checkbox" id="mulForm" class="m-wrap placeholder-no-fix form-check-input h-25px w-45px my-2" title="Multiple Form"   meta:resourcekey="lblFileHeaders" runat="server">
+                                                        <input name="signedin" type="checkbox" id="mulForm" class="m-wrap placeholder-no-fix form-check-input h-25px w-45px my-2" title="Multiple Form" meta:resourcekey="lblFileHeaders" runat="server">
                                                         <span id="Span4" class="form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0" for="mulForm" runat="server">Multiple Form</span>
                                                         <span tabindex="0" class="material-icons material-icons-style material-icons-2 align-middle ms-2 my-3" data-bs-toggle="tooltip" id="headertip" data-bs-original-title="Enable this if you want to upload multiform only." data-bs-placement="bottom" data-bs-dismiss="click">help_outline</span>
                                                     </div>
                                                 </div>
                                             </div>
-                                     <button id="btnSaveTemplateXl" type="button" class="btn btn-light-primary shadow-sm col-md-3 ms-3 mt-n2" onclick="saveTemplateXl();">
-                            Download Template                       
-                        </button>
-                                  <%--         <button id="btnDownloadxl" type="button" class="btn btn-light-primary shadow-sm d-none">
-                            Download Uploaded Excel file                      
-                        </button>--%>
+                                            <button id="btnSaveTemplateXl" type="button" class="btn btn-light-primary shadow-sm col-md-3 ms-3 mt-n2" onclick="saveTemplateXl();">
+                                                Download Template                       
+                                            </button>
                                             <asp:Button ID="btnDownloadxl" runat="server" Text="Click here to download Excel and view the exceptions" OnClick="btnDownload_Click" CssClass="btn btn-light-primary shadow-sm my-3 d-none" />
-                                            <%--                                   <div class="input-icon left d-flex justify-content-center customclscol">
-                                       <input name="signedin" type="checkbox" id="Checkbox4" class="m-wrap placeholder-no-fix form-check-input h-25px w-45px my-2" title="File contains Headers"  checked="checked" meta:resourcekey="lblFileHeaders" runat="server">
-                                        <span id="Span4" class="form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0" for="ChkColNameInfile" runat="server">Process data through Queue</span>
-                                         <span tabindex="0" class="material-icons material-icons-style material-icons-2 align-middle ms-2 my-3" data-bs-toggle="tooltip" id="headertip1" data-bs-original-title="Enable this if you want to Process data through Queue." data-bs-placement="bottom" data-bs-dismiss="click">help_outline</span>
-                                            </div>--%>
                                         </div>
                                     </div>
                                     <section class="col-md-12  d-flex justify-content-center">
@@ -357,31 +349,31 @@
                                             </tr>
                                         </table>
                                     </section>
-                                   <%-- <button id="openTableButton" class="btn btn-primary my-3" onclick="openTableInBSModal()">Open Table in Modal</button>--%>
+                                    <%-- <button id="openTableButton" class="btn btn-primary my-3" onclick="openTableInBSModal()">Open Table in Modal</button>--%>
                                     <div class="my-3" id="xlnum" runat="server"></div>
                                     <button id="btngridxl" type="button" class="btn btn-light-primary shadow-sm my-3 d-none" onclick="openTableInBSModal()">
                                         Map Coloumns                     
                                     </button>
                                     <div class="" id="checksheets"></div>
                                     <section class="my-4">
-<%--                                        <asp:PlaceHolder ID="PlaceHolder1" runat="server"></asp:PlaceHolder>
+                                        <%--                                        <asp:PlaceHolder ID="PlaceHolder1" runat="server"></asp:PlaceHolder>
                                         <div class="importrecord d-none">
                                             <asp:Label ID="Label5" CssClass="form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0" runat="server" meta:resourcekey="lblrecords">
                                                     Top 5 records
                                             </asp:Label>
                                         </div>--%>
-                                        <div id="UpdateGridWrapper" class ="d-none">
-                                        <asp:UpdatePanel ID="UpdateGrid" runat="server">
-                                            <ContentTemplate>
+                                        <div id="UpdateGridWrapper" class="d-none">
+                                            <asp:UpdatePanel ID="UpdateGrid" runat="server">
+                                                <ContentTemplate>
 
-                                                <hr class="text-gray-500 d-none" id="txtgrey" />
-                                                <div class="importrecordtable">
-                                                    <asp:GridView CellSpacing="-1" ID="gridImpData" runat="server" Visible="true" OnRowDataBound="gridImpData_RowDataBound" CssClass="table w-100" BorderStyle="None">
-                                                    </asp:GridView>
-                                                </div>
-                                            </ContentTemplate>
-                                        </asp:UpdatePanel>
-                                            </div>
+                                                    <hr class="text-gray-500 d-none" id="txtgrey" />
+                                                    <div class="importrecordtable">
+                                                        <asp:GridView CellSpacing="-1" ID="gridImpData" runat="server" Visible="true" OnRowDataBound="gridImpData_RowDataBound" CssClass="table w-100" BorderStyle="None">
+                                                        </asp:GridView>
+                                                    </div>
+                                                </ContentTemplate>
+                                            </asp:UpdatePanel>
+                                        </div>
                                     </section>
 
                                     <asp:UpdatePanel runat="server" ID="plnUpdate1">
@@ -510,7 +502,7 @@
                                             <div id="axstaysignin" class="form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4">
                                                 <div class="controls">
                                                     <div class="input-icon left d-flex justify-content-center customclscol">
-                                                        <input name="signedin" type="checkbox" id="ChkColNameInfile" class="m-wrap placeholder-no-fix form-check-input h-25px w-45px my-2" title="File contains Headers"  checked="checked" meta:resourcekey="lblFileHeaders" runat="server">
+                                                        <input name="signedin" type="checkbox" id="ChkColNameInfile" class="m-wrap placeholder-no-fix form-check-input h-25px w-45px my-2" title="File contains Headers" checked="checked" meta:resourcekey="lblFileHeaders" runat="server">
                                                         <span id="lblstaysin" class="form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0" for="ChkColNameInfile" runat="server">File contains Headers</span>
                                                         <span tabindex="0" class="material-icons material-icons-style material-icons-2 align-middle ms-2 my-3" data-bs-toggle="tooltip" id="headertip" data-bs-original-title="Enable this after uploading the file only." data-bs-placement="bottom" data-bs-dismiss="click">help_outline</span>
                                                     </div>
@@ -558,43 +550,44 @@
                             <div id="imWizardEdit" <%-- class ="d-none"--%>>
                                 <%--<button id="openTableButton" class="btn btn-primary" onclick="openTableInBSModal()">Open Table in Modal</button>--%>
                                 <div class="controls d-none mb-6 row d-flex thread-slider d-none">
-                                 <asp:Label runat="server" class="form-label col-form-label pb-1 fw-boldest col-2">
-                                            <asp:Label ID="Label3" runat="server" meta:resourcekey="lblImptbl" Text="Thread Count"></asp:Label>
-                                        </asp:Label>
-                                     <div class="col-10 d-flex gap-5">
-                                    <output for="slider" id="sliderValue1" class="fw-bolder fs-2 my-auto">1</output>
-                                <input type="range" min="1" max="10" value="1" step="1" id="slider" class="form-range my-auto">
-                                 <output for="slider" id="sliderValue2" class="fw-bolder fs-2 my-auto">10</output>
-                                    </div></div>
-                                 <div class="controls mb-6 d-none">
-                                        <asp:Label runat="server" class="form-label col-form-label pb-1 fw-boldest">
-                                            <asp:Label ID="Label2" runat="server" Text="Process Mode"></asp:Label>
-                                        </asp:Label>
-                                        <%--<i tabindex="0" data-bs-trigger="focus" class="material-icons material-icons-style material-icons-2 align-middle ms-2" data-bs-toggle="popover" id="icocl6" data-bs-content="Select character used for separating columns in the data file." data-bs-placement="right">help_outline</i>--%>
-                                        <asp:DropDownList ID="DropDownList1" CssClass="form-select" runat="server">
-                                            <asp:ListItem Value="Process with Error" Selected="True">Process with Error</asp:ListItem>
-                                            <asp:ListItem Value="Only Validate Data">Only Validate Data</asp:ListItem>
-                                            <asp:ListItem Value="Stop on Error">Stop on Error</asp:ListItem>
-                                        </asp:DropDownList>
+                                    <asp:Label runat="server" class="form-label col-form-label pb-1 fw-boldest col-2">
+                                        <asp:Label ID="Label3" runat="server" meta:resourcekey="lblImptbl" Text="Thread Count"></asp:Label>
+                                    </asp:Label>
+                                    <div class="col-10 d-flex gap-5">
+                                        <output for="slider" id="sliderValue1" class="fw-bolder fs-2 my-auto">1</output>
+                                        <input type="range" min="1" max="10" value="1" step="1" id="slider" class="form-range my-auto">
+                                        <output for="slider" id="sliderValue2" class="fw-bolder fs-2 my-auto">10</output>
                                     </div>
-                             <div id="axstaysignin4" class="form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-6 d-none">
-                                 <div class="controls">
-                                   <div class="input-icon left d-flex justify-content-center customclscol">
-                                       <input name="signedin" type="checkbox" id="Checkbox2" class="m-wrap placeholder-no-fix form-check-input h-25px w-45px my-2" title="File contains Headers"  checked="checked" meta:resourcekey="lblFileHeaders" runat="server">
-                                        <span id="Span2" class="form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0" for="ChkColNameInfile" runat="server">Ignore Field Exceptions</span>
-                                         <span tabindex="0" class="material-icons material-icons-style material-icons-2 align-middle ms-2 my-3" data-bs-toggle="tooltip" id="headertip" data-bs-original-title="Enable this after uploading the file only." data-bs-placement="bottom" data-bs-dismiss="click">help_outline</span>
-                                            </div>
-                                               </div>
-                                            </div>
+                                </div>
+                                <div class="controls mb-6 d-none">
+                                    <asp:Label runat="server" class="form-label col-form-label pb-1 fw-boldest">
+                                        <asp:Label ID="Label2" runat="server" Text="Process Mode"></asp:Label>
+                                    </asp:Label>
+                                    <%--<i tabindex="0" data-bs-trigger="focus" class="material-icons material-icons-style material-icons-2 align-middle ms-2" data-bs-toggle="popover" id="icocl6" data-bs-content="Select character used for separating columns in the data file." data-bs-placement="right">help_outline</i>--%>
+                                    <asp:DropDownList ID="DropDownList1" CssClass="form-select" runat="server">
+                                        <asp:ListItem Value="Process with Error" Selected="True">Process with Error</asp:ListItem>
+                                        <asp:ListItem Value="Only Validate Data">Only Validate Data</asp:ListItem>
+                                        <asp:ListItem Value="Stop on Error">Stop on Error</asp:ListItem>
+                                    </asp:DropDownList>
+                                </div>
+                                <div id="axstaysignin4" class="form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-6 d-none">
+                                    <div class="controls">
+                                        <div class="input-icon left d-flex justify-content-center customclscol">
+                                            <input name="signedin" type="checkbox" id="Checkbox2" class="m-wrap placeholder-no-fix form-check-input h-25px w-45px my-2" title="File contains Headers" checked="checked" meta:resourcekey="lblFileHeaders" runat="server">
+                                            <span id="Span2" class="form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0" for="ChkColNameInfile" runat="server">Ignore Field Exceptions</span>
+                                            <span tabindex="0" class="material-icons material-icons-style material-icons-2 align-middle ms-2 my-3" data-bs-toggle="tooltip" id="headertip" data-bs-original-title="Enable this after uploading the file only." data-bs-placement="bottom" data-bs-dismiss="click">help_outline</span>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div id="axstaysignin5" class="form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-6 d-none">
-                                 <div class="controls">
-                                   <div class="input-icon left d-flex justify-content-center customclscol">
-                                       <input name="signedin" type="checkbox" id="Checkbox3" class="m-wrap placeholder-no-fix form-check-input h-25px w-45px my-2" title="File contains Headers"  checked="checked" meta:resourcekey="lblFileHeaders" runat="server">
-                                        <span id="Span3" class="form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0" for="ChkColNameInfile" runat="server">Append Data</span>
-                                         <span tabindex="0" class="material-icons material-icons-style material-icons-2 align-middle ms-2 my-3" data-bs-toggle="tooltip" id="headertip" data-bs-original-title="Enable this after uploading the file only." data-bs-placement="bottom" data-bs-dismiss="click">help_outline</span>
-                                            </div>
-                                               </div>
-                                            </div>
+                                    <div class="controls">
+                                        <div class="input-icon left d-flex justify-content-center customclscol">
+                                            <input name="signedin" type="checkbox" id="Checkbox3" class="m-wrap placeholder-no-fix form-check-input h-25px w-45px my-2" title="File contains Headers" checked="checked" meta:resourcekey="lblFileHeaders" runat="server">
+                                            <span id="Span3" class="form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0" for="ChkColNameInfile" runat="server">Append Data</span>
+                                            <span tabindex="0" class="material-icons material-icons-style material-icons-2 align-middle ms-2 my-3" data-bs-toggle="tooltip" id="headertip" data-bs-original-title="Enable this after uploading the file only." data-bs-placement="bottom" data-bs-dismiss="click">help_outline</span>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="d-flex justify-content-between mb-5 d-none">
                                     <div id="axstaysignin1" class="form-check form-switch form-check-custom form-check-solid">
                                         <div class="controls">
@@ -620,7 +613,7 @@
                                     </div>
                                 </div>
 
-<%--                                <section class ="d-none">
+                                <%--                                <section class ="d-none">
                                     <asp:PlaceHolder ID="PlaceHolder1" runat="server"></asp:PlaceHolder>
                                     <asp:UpdatePanel runat="server">
                                         <ContentTemplate>
@@ -648,58 +641,58 @@
 
                         <div class="flex-column" data-kt-stepper-element="content">
                             <%--Step 4--%>
-                            <div id="dropdownsContainerd" class ="d-none"></div>
-                                                                <div class="form-group">
-    <label for="jobSchedule" class ="form-label col-form-label pb-1 fw-boldest mb-4">Job Schedule</label>
-    <select id="jobSchedule" class="form-control">
-        <option value="everyday">Every day</option>
-        <option value="everyweek">Every week</option>
-        <option value="everymonth">Every month</option>
-        <option value="everyquarter">Every quarter</option>
-        <option value="custom">Custom</option>
-    </select>
-</div>
-<div id="weekdayGroup" class="form-group" style="display: none;">
-    <label for="weekday" class ="form-label col-form-label pb-1 fw-boldest mb-4">Weekday</label>
-    <select id="weekday" class="form-control">
-        <option value="sunday">Sunday</option>
-        <option value="monday">Monday</option>
-        <option value="tuesday">Tuesday</option>
-        <option value="wednesday">Wednesday</option>
-        <option value="thursday">Thursday</option>
-        <option value="friday">Friday</option>
-        <option value="saturday">Saturday</option>
-    </select>
-</div>
-<div id="startFromGroup" class="form-group">
-    <label for="startFrom" class ="form-label col-form-label pb-1 fw-boldest mb-4">Start From</label>
-    <input type="date" id="startFrom" class="form-control">
-</div>
+                            <div id="dropdownsContainerd" class="d-none"></div>
+                            <div class="form-group">
+                                <label for="jobSchedule" class="form-label col-form-label pb-1 fw-boldest mb-4">Job Schedule</label>
+                                <select id="jobSchedule" class="form-control">
+                                    <option value="everyday">Every day</option>
+                                    <option value="everyweek">Every week</option>
+                                    <option value="everymonth">Every month</option>
+                                    <option value="everyquarter">Every quarter</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                            <div id="weekdayGroup" class="form-group" style="display: none;">
+                                <label for="weekday" class="form-label col-form-label pb-1 fw-boldest mb-4">Weekday</label>
+                                <select id="weekday" class="form-control">
+                                    <option value="sunday">Sunday</option>
+                                    <option value="monday">Monday</option>
+                                    <option value="tuesday">Tuesday</option>
+                                    <option value="wednesday">Wednesday</option>
+                                    <option value="thursday">Thursday</option>
+                                    <option value="friday">Friday</option>
+                                    <option value="saturday">Saturday</option>
+                                </select>
+                            </div>
+                            <div id="startFromGroup" class="form-group">
+                                <label for="startFrom" class="form-label col-form-label pb-1 fw-boldest mb-4">Start From</label>
+                                <input type="date" id="startFrom" class="form-control">
+                            </div>
 
-<div id="startTimeGroup" class="form-group">
-    <label for="startTime" class ="form-label col-form-label pb-1 fw-boldest mb-4">Start Time</label>
-    <input type="time" id="startTime" class="form-control">
-</div>
+                            <div id="startTimeGroup" class="form-group">
+                                <label for="startTime" class="form-label col-form-label pb-1 fw-boldest mb-4">Start Time</label>
+                                <input type="time" id="startTime" class="form-control">
+                            </div>
 
 
 
-<div id="daysGroup" class="form-group" style="display: none;">
-    <label for="days" class ="form-label col-form-label pb-1 fw-boldest mb-4">Day</label>
-    <select id="days" class="form-control">
-    </select>
-</div>
+                            <div id="daysGroup" class="form-group" style="display: none;">
+                                <label for="days" class="form-label col-form-label pb-1 fw-boldest mb-4">Day</label>
+                                <select id="days" class="form-control">
+                                </select>
+                            </div>
 
-<div id="noOfMinutesGroup" class="form-group" style="display: none;">
-    <label for="noOfMinutes" class ="form-label col-form-label pb-1 fw-boldest mb-4">No of Minutes</label>
-    <input type="number" id="noOfMinutes" class="form-control">
-</div>
-        <div class="form-group mb-4">
-            <label for="projectName" class ="form-label col-form-label pb-1 fw-boldest mb-4">Import Folder</label>
-            <input type="text" class="form-control" id="projectName" value="">
-        </div>
-                            
+                            <div id="noOfMinutesGroup" class="form-group" style="display: none;">
+                                <label for="noOfMinutes" class="form-label col-form-label pb-1 fw-boldest mb-4">No of Minutes</label>
+                                <input type="number" id="noOfMinutes" class="form-control">
+                            </div>
+                            <div class="form-group mb-4">
+                                <label for="projectName" class="form-label col-form-label pb-1 fw-boldest mb-4">Import Folder</label>
+                                <input type="text" class="form-control" id="projectName" value="">
+                            </div>
+
                             <div class="d-flex justify-content-center d-none" id="imWizardSummary">
-                                
+
                                 <asp:Label runat="server" ID="lblPleaseWait" Visible="false"></asp:Label>
                                 <asp:UpdatePanel ID="updatePln3" runat="server">
                                     <ContentTemplate>
@@ -739,7 +732,7 @@
                                         <asp:HiddenField ID="hdnsltForm" runat="server" Value="" />
                                         <asp:HiddenField ID="hdnsltDC" runat="server" Value="" />
                                         <asp:HiddenField ID="hdnsltTemp" runat="server" Value="" />
-                                         <asp:HiddenField ID="hdnsltFormFull" runat="server" Value="" />
+                                        <asp:HiddenField ID="hdnsltFormFull" runat="server" Value="" />
                                         <asp:HiddenField ID="hdnsltPkey" runat="server" Value="" />
                                         <asp:HiddenField ID="hdnRowCount" runat="server" Value="" />
                                         <asp:HiddenField ID="hdndheetheaders" runat="server" Value="" />
@@ -775,7 +768,7 @@
             <div class="card-footer">
                 <div class="d-flex d-flex justify-content-end mx-2">
                     <div class="me-2">
-                        <button id="btnPrev" type="button" runat ="server" class="btn btn-white btn-color-gray-700 btn-active-primary shadow-sm" data-kt-stepper-action="previous">
+                        <button id="btnPrev" type="button" runat="server" class="btn btn-white btn-color-gray-700 btn-active-primary shadow-sm" data-kt-stepper-action="previous">
                             Back
                         </button>
                     </div>
@@ -813,10 +806,10 @@
         <script type="text/javascript" src="../Js/alerts.min.js?v=32"></script>
         <script type="text/javascript" src="../Js/helper.min.js?v=158"></script>
         <%--<script type="text/javascript" src="../Js/jsclient.min.js?v=103"></script>--%>
-        <script type="text/javascript" src="../Js/common.min.js?v=158"></script>
+        <script type="text/javascript" src="../Js/common.min.js?v=164"></script>
 <%--        <script type="text/javascript" src="../Js/AxInterface.min.js?v=11"></script>
         <script type="text/javascript" src="../Js/multiselect.min.js"></script>--%>
-        <script type="text/javascript" src="../Js/importall.min.js?v=15"></script>
+        <script type="text/javascript" src="../Js/importall.min.js?v=18"></script>
         <script type="text/javascript">
             var proj = '<%=proj%>';
             var sid = '<%=sid%>';

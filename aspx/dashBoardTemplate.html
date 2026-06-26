@@ -170,13 +170,13 @@
     <script type="text/javascript" src="../UI/axpertUI/scripts.bundle.js"></script>
     <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
     <script type="text/javascript" src="../Js/alerts.min.js"></script>
-    <script type="text/javascript" src="../Js/helper.min.js?v=172"></script>
-    <script type="text/javascript" src="../Js/common.min.js?v=158"></script>
+    <script type="text/javascript" src="../Js/helper.min.js?v=175"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=164"></script>
     <script type="text/javascript" src="../ThirdParty/lodash.min.js?v=1"></script>
     <script type="text/javascript" src="../ThirdParty/deepdash.min.js"></script>
     <script type="text/javascript" src="../Js/handlebars.min.js?v=2"></script>
     <script type="text/javascript" src="../Js/handleBarsHelpers.min.js"></script>
-    <script type="text/javascript" src="../Js/AxInterface.min.js?v=16"></script>
+    <script type="text/javascript" src="../Js/AxInterface.min.js?v=20"></script>
     <script type="text/javascript" src="../ThirdParty/Highcharts/highcharts.js"></script>
     <script type="text/javascript" src="../ThirdParty/Highcharts/highcharts-3d.js"></script>
     <script type="text/javascript" src="../ThirdParty/Highcharts/highcharts-more.js"></script>
@@ -186,7 +186,7 @@
     <script type="text/javascript" src="../ThirdParty/DataTables-1.10.13/media/js/dataTables.bootstrap.js"></script>
     <script type="text/javascript" src="../ThirdParty/DataTables-1.10.13/extensions/Extras/moment.min.js"></script>
     <script type="text/javascript" src="../ThirdParty/fullcalendar/lib/main.min.js"></script>
-    <script type="text/javascript" src="../Js/Entity-common.min.js?v=14"></script>
+    <script type="text/javascript" src="../Js/Entity-common.min.js?v=17"></script>
     <script type="text/javascript" src="../Js/axpertUI_dashboard.min.js?v=9"></script>
 
     <script type="text/javascript">
@@ -224,7 +224,8 @@
                     }
                 });
                 if (dashcardsData == "") {
-                    showAlertDialog("error", "No dashboard cards available.");
+                    //showAlertDialog("error", "No dashboard cards available.");
+                    showAlertDialog("error", appGlobalVarsObject.lcm[572]);            
                     return;
                 }
                 appGlobalVarsObject._CONSTANTS.dashboardcardsPage = {

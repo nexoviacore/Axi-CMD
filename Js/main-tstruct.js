@@ -67,6 +67,7 @@ var addFieldReloaduri = "";
 var fldsHideOnPage = "false";
 var iststddlcheck = false;
 var interExterResourcesData = "";
+var AxFCBtnReadOnly = new Array();
 var dynamicMobileResolution = function () {
     if ($(".grid-stack").hasClass("dynamicRunMode")) {
         if ((window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) <=
@@ -83,6 +84,9 @@ $j(document).ready(function () {
         isServerDummyPost = 'false';
         return;
     }
+    try {
+        $("body").removeClass("block-ui");
+    } catch (ex) { }
     if (typeof isTstPostBackVal == "undefined" || isTstPostBackVal == "")
         WireElapsTime(serverprocesstime, requestProcess_logtime);
     AxpGridForm = AxpGridFormCols != "" ? AxpGridFormCols.split("♠")[0] : "popup";
@@ -117,6 +121,9 @@ $j(document).ready(function () {
             $('.toolbarRightMenu a.btn,.toolbarRightMenu span button').removeClass('d-none');
             $('.toolbarRightMenu a.btn,.toolbarRightMenu span button').removeAttr("style").css({ "pointer-events": "auto" });
             $('.toolbarRightMenu a.btn,.toolbarRightMenu span button').removeAttr('disabled');
+            $('.tstructMainBottomFooter .BottomToolbarBar a:not(.d-none)').removeClass('disabled');
+            $('.tstructMainBottomFooter .BottomToolbarBar a:not(.d-none)').removeAttr("style").css({ "pointer-events": "auto" });
+            $('.tstructMainBottomFooter .BottomToolbarBar a:not(.d-none)').removeAttr('disabled');
             var modenFooter = resval[2];
             if (modenFooter != '') {
                 //$("#tstModernOpenIcons").html("");
@@ -1069,6 +1076,8 @@ $j(document).ready(function () {
     if (theMode != 'design' && !isMobile)
         GenTstHtmlLocalStorage();
 
+    tstExcludeElements();
+
     if (typeof recordid != "undefined" && recordid != "" && recordid != "0")
         CheckTransReadOnly();
 
@@ -1228,7 +1237,12 @@ function GenTstHtmlLocalStorage() {
             $("#ftbtn_iNew").addClass("d-none");
             $("#ftbtn_iDiscard").addClass("d-none");
         }
-
+        try {
+            if ($("#hdnTstPermission").length > 0 && $("#hdnTstPermission").val() != "" && $("#hdnTstPermission").val() != "no permission applied") {
+                tstPermissions = $("#hdnTstPermission").val();
+                $("#hdnTstPermission").val('');
+            }
+        } catch (ex) { }
         if (isServerSide == 'true' && (_thsiifId == 'middle1' || _thsiifId.startsWith("axMultiiframe_"))) {
             try {
                 let _thisCKEditor = false;
@@ -1259,7 +1273,7 @@ function GenTstHtmlLocalStorage() {
     } catch (ex) { }
 }
 
-function StoreTstHmtlLoad() {
+function StoreTstHmtlLoad() {   
     let _thsiifId = window.frameElement.id;
     if (_thsiifId.startsWith("axMultiiframe_"))
         callParentNew(`SetTstFrameMultiFrame(${_thsiifId})`, "function");
@@ -1284,7 +1298,8 @@ function StoreTstHmtlLoad() {
             }
             var _time = new Date();
             var _localTime = _time.getTime();
-            localStorage.setItem("tstHtml♠" + transid + "-" + appSUrl + "♥" + _localTime, _finalTstHtml);
+            let _localDate = String(_time.getDate()).padStart(2, '0') + String(_time.getMonth() + 1).padStart(2, '0') + _time.getFullYear();
+            localStorage.setItem("tstHtml♠" + transid + "-" + appSUrl + "♥" + _localTime + "♥" + _localDate, _finalTstHtml + '♠♠♠' + tstPermissions);
             StoreLsTstHtml(transid, _finalTstHtml);
         } catch (ex) {
             if (ex.message.indexOf('exceeded the quota') > -1) {
@@ -1311,7 +1326,8 @@ function StoreTstHmtlLoad() {
                     try {
                         var _ttime = new Date();
                         let _tlocalTime = _ttime.getTime();
-                        localStorage.setItem("tstHtml♠" + transid + "-" + appSUrl + "♥" + _tlocalTime, _finalTstHtml);
+                        let _tlocalDate = String(_ttime.getDate()).padStart(2, '0') + String(_ttime.getMonth() + 1).padStart(2, '0') + _ttime.getFullYear();
+                        localStorage.setItem("tstHtml♠" + transid + "-" + appSUrl + "♥" + _tlocalTime + "♥" + _tlocalDate, _finalTstHtml + '♠♠♠' + tstPermissions);
                         StoreLsTstHtml(transid, _finalTstHtml);
                     } catch (ex) { }
                 }
@@ -1445,6 +1461,7 @@ function swicthCompressMode(dvId) {
 
             $(".compressedModeUI .toolbarRightMenu a,.compressedModeUI .toolbarRightMenu button").addClass("btn-sm");
             $(".compressedModeUI .toolbarRightMenu a span,.compressedModeUI .toolbarRightMenu button span").addClass("material-icons-2");
+            $(".compressedModeUI .toolbarRightMenu a span.iconUITitle,.compressedModeUI .toolbarRightMenu button span.iconUITitle").addClass("material-icons");
 
             $(".compressedModeUI .BottomToolbarBar a").addClass("btn-sm");
             $(".compressedModeUI .BottomToolbarBar a span").addClass("material-icons-style material-icons-2");
@@ -2025,12 +2042,27 @@ function LoadEvents(dvId) {
         dtFormat = "m/d/Y";
         tsFormat = "m/d/Y H:i:S";
     }
-
     $(".flatpickr-input:not(.tstOnlyTime,.tstOnlyTime24hours,.fldtimestamp)").parent(".input-group").flatpickr({
         dateFormat: dtFormat,
         disableMobile: "true",
         allowInput: true,
         wrap: true,
+        clickOpens: false,
+        onReady: function (selectedDates, dateStr, instance) {
+            let $input = $(instance.element).find("input");
+            $input.on("focus", function () {
+                let val = $(this).val();
+                if (!val || val.trim() === "") {
+                    instance.open();
+                }
+            });
+            $input.on("click", function () {
+                instance.open();
+            });
+            $input.on("keydown", function () {
+                instance.open();
+            });
+        },
         onPreCalendarPosition: function (selectedDates, dateStr, instance) {
             let _thisfpVal = $(instance.element).find("input").val();
             if (typeof _thisfpVal == "undefined")
@@ -2051,22 +2083,36 @@ function LoadEvents(dvId) {
             MainBlur($(instance.element).find("input"));
         }
     });
-
     $(".flatpickr-input.fldtimestamp").parent(".input-group").flatpickr({
         dateFormat: tsFormat,
         enableTime: true,
         time_24hr: true,
-        enableSeconds: true, // optional
-        disableMobile: "true",
-        allowInput: false,
+        enableSeconds: true,
+        disableMobile: true,
+        allowInput: false,   
         wrap: true,
+        clickOpens: false,  
         defaultHour: new Date().getHours(),
         defaultMinute: new Date().getMinutes(),
         defaultSeconds: new Date().getSeconds(),
+        onReady: function (selectedDates, dateStr, instance) {
+            let $input = $(instance.element).find("input");
+            $input.on("focus", function () {
+                let val = $(this).val();
+                if (!val || val.trim() === "") {
+                    instance.open();
+                }
+            });
+            $input.on("click", function () {
+                instance.open();
+            });
+            $input.on("keydown", function () {
+                instance.open();
+            });
+        },
         onPreCalendarPosition: function (selectedDates, dateStr, instance) {
             let $input = $(instance.element).find("input");
             let inputVal = $input.val();
-
             if (inputVal && inputVal.trim() !== "") {
                 instance.setDate(inputVal, false, tsFormat);
             } else {
@@ -2088,6 +2134,22 @@ function LoadEvents(dvId) {
         disableMobile: "true",
         //allowInput: true,
         wrap: true,
+        clickOpens: false,  
+        onReady: function (selectedDates, dateStr, instance) {
+            let $input = $(instance.element).find("input");
+            $input.on("focus", function () {
+                let val = $(this).val();
+                if (!val || val.trim() === "") {
+                    instance.open();
+                }
+            });
+            $input.on("click", function () {
+                instance.open();
+            });
+            $input.on("keydown", function () {
+                instance.open();
+            });
+        },
         onPreCalendarPosition: function (selectedDates, dateStr, instance) {
             let _thisfpVal = $(instance.element).find("input").val();
             if (_thisfpVal != "")
@@ -2117,6 +2179,22 @@ function LoadEvents(dvId) {
         disableMobile: "true",
         //allowInput: true,
         wrap: true,
+        clickOpens: false,
+        onReady: function (selectedDates, dateStr, instance) {
+            let $input = $(instance.element).find("input");
+            $input.on("focus", function () {
+                let val = $(this).val();
+                if (!val || val.trim() === "") {
+                    instance.open();
+                }
+            });
+            $input.on("click", function () {
+                instance.open();
+            });
+            $input.on("keydown", function () {
+                instance.open();
+            });
+        },
         onPreCalendarPosition: function (selectedDates, dateStr, instance) {
             let _thisfpVal = $(instance.element).find("input").val();
             if (_thisfpVal != "")
@@ -3201,9 +3279,14 @@ function GetTstSearchData(_pageNo = "1") {
                 else if (result.indexOf('records:') == -1) {
                     showAlertDialog("error", result);
                 } else {
-                    $("#srchcontent").removeClass('d-none');
-                    result = result.replace('records:', '');
-                    $("#records").text(result);
+                    if (result.indexOf('records:Enter') > -1) {
+                        let _erMsg = result.replace('records:Enter', '').replace('values','fields not allowed to search.')
+                        showAlertDialog("error", _erMsg);
+                    } else {
+                        $("#srchcontent").removeClass('d-none');
+                        result = result.replace('records:', '');
+                        $("#records").text(result);
+                    }
                 }
             }
             AxWaitCursor(false);
@@ -4889,8 +4972,14 @@ function ProcessFormControl(fld, actionStr, fldValue) {
             newFldName = "delete";
         else if (newFldName.toLowerCase() == "list view")
             newFldName = "listview";
-        else if (newFldName.toLowerCase() == "new")
-            newFldName = "add";
+        //else if (newFldName.toLowerCase() == "new")
+        //    newFldName = "add";
+        else if (newFldName.toLowerCase() == "new") {
+            if ($j(".tstructMainBottomFooter").find('a[title^=new]').length > 0)
+                newFldName = "new";
+            else
+                newFldName = "add";
+        }
 
         if (newFldName.toLowerCase() == "save")
             isFldSaveBtn = true;
@@ -4929,7 +5018,7 @@ function ProcessFormControl(fld, actionStr, fldValue) {
         }
         if (!isFieldBtn) {
             $j(".tstructMainBottomFooter").find("a").each(function () {
-                if ($j(this).attr("id").toLowerCase() == newFldName.toLowerCase()) {
+                if ($j(this).attr("id").toLowerCase() == newFldName.toLowerCase() || (typeof $j(this).attr("title") != "undefined" && $j(this).attr("title").toLowerCase() == sfnewFldName.toLowerCase() || (typeof btnName !== 'undefined' && $j(this).text() == btnName))) {
                     destfld = $j(this);
                     isFieldBtn = true;
                 }
@@ -4957,6 +5046,11 @@ function ProcessFormControl(fld, actionStr, fldValue) {
             destfld = actTmpBtn.parent(0);
         if (isBtnInDc)
             destfld = actTmpBtn;
+
+        if (destfld.length == 0 && newFldName != "" && newFldName.toLowerCase() == "draft") {
+            destfld = $("#btnAppsDraft");
+            isFieldBtn = true;
+        }
     }
 
     // 1 - Enable Field, 2 - Disable Field, 3 - SetValue, 4 - Show DC, 5 - Hide DC(its not really hide, rather disable,
@@ -7275,7 +7369,8 @@ function SuccGetResultValue(result, eventArgs) {
         if (appstatus != "Approved" && appstatus != "Rejected" && (!AxExecFormControl) && theMode != "design" && isOverridFomrControl) {
             DoFormControlOnload();
         }
-        if (appstatus != "Approved" && appstatus != "Rejected" && (!AxExecFormControl) && theMode != "design" && isOverridFomrControl) {
+        /*if (appstatus != "Approved" && appstatus != "Rejected" && (!AxExecFormControl) && theMode != "design" && isOverridFomrControl) {*/
+        if (!AxExecFormControl && theMode != "design" && isOverridFomrControl) {
             var rid = $j("#recordid000F0").val();
             if (rid != "" && rid != "0")
                 DoScriptFormControl("", "On Data Load");
@@ -7429,6 +7524,9 @@ function UpdateFldArrayInDeleteRow(_thisDc, _thisRowNo) {
                 let _thisElId = $(this).find("textarea").attr("id");
                 if (AllFieldNames.length > 0 && typeof _thisElId != "undefined" && _thisElId != "") {
                     _thisElId = _thisElId.replace('EDIT~', '');
+                    if (_thisElId.toLowerCase().startsWith('grdadc' + _thisDc +'_image')) {
+                        _thisElId = _thisElId.replace(/^grda/i, '');
+                    }
                     var idx = $j.inArray(_thisElId, AllFieldNames);
                     if (idx != -1) {
                         AllFieldValues.splice(idx, 1);
@@ -7756,7 +7854,7 @@ function DeleteAllRows(dcNo, RowCount, calledfrom="") {
     }
 
     for (var i = axInlineGridEdit ? rCount : (AxpGridForm == "form") ? rCount : rCount - 1; i >= 1; i--) {
-        DeleteGridRow(dcNo, GetClientRowNo(i, dcNo), "all");
+        DeleteGridRow(dcNo, GetClientRowNo(i, dcNo), "all", calledfrom);
     }
     if (!axInlineGridEdit && AxpGridForm == "form") {
         $("#divDc" + dcNo + " .grid-icons").append(gridDivHtml[dcNo]);
@@ -7790,7 +7888,7 @@ function DeleteAllRows(dcNo, RowCount, calledfrom="") {
 
         if (!IsAddRowCalled) {
             IsDcPopGridCleared = true;
-            DeleteGridRow(dcNo, "001F" + dcNo, undefined);
+            DeleteGridRow(dcNo, "001F" + dcNo, undefined, calledfrom);
         } else {
             if (!axInlineGridEdit) {
                 UpdateDcRowArrays(dcNo, "001", "Add");
@@ -9629,6 +9727,9 @@ function createJSEditor(editorId, Jmode) {
 }
 
 function discardLodaData() {
+    if (CheckBtnReadOnly('discardLodaData()')) {
+        return;
+    }
     try {
         var dcldId = $j("#recordid000F0").val();
         //GetLoadData(dcldId, "");
@@ -10805,6 +10906,9 @@ function ProcessScriptFormControlEvents(scriptStr, sfName) {
                             _tstURI = _tstURI.replace(/♠/g, '%e2%99%a0');
                             callParentNew("lastLoadtstId=", _tstURI);
                             let redirectionLink = "tstruct.aspx?transid=" + thisTrId + "&" + thisParams + `&isDupTab=${callParentNew('isDuplicateTab')}` + _actflag + _thisDummyLoad + "";
+
+                            ShowDimmer(true);
+                            $("body").addClass("block-ui");
                             window.document.location.href = redirectionLink;
                         }
                     }
@@ -11109,6 +11213,16 @@ function EnableDisableSFCBtns(obj, enable) {
                 $(obj).parents("table").find("th#th-" + $(obj).attr("id")).hide();
                 $(obj).parents("table").find("tfoot td#tf-" + $(obj).attr("id")).addClass('d-none');
             }
+
+            let _onclickVal = obj.attr("onclick") || "";
+            _onclickVal = _onclickVal.replace(/^javascript:\s*/i, "").replace(/;\s*$/, "");
+            if (_onclickVal && !AxFCBtnReadOnly.includes(_onclickVal)) {
+                AxFCBtnReadOnly.push(_onclickVal);
+            } else if (_onclickVal == "" && typeof obj.attr("id") != "undefined" && obj.attr("id") == "btnAppsDraft") {
+                if (!AxFCBtnReadOnly.includes('btnAppsDraft'))
+                    AxFCBtnReadOnly.push('btnAppsDraft');
+            }
+
         } else {
             if ($(obj).hasClass("dwbIvBtnbtm"))
                 $(obj).removeClass("d-none");
@@ -11124,6 +11238,20 @@ function EnableDisableSFCBtns(obj, enable) {
                 $(obj).parent("td").show();
                 $(obj).parents("table").find("th#th-" + $(obj).attr("id")).show();
                 $(obj).parents("table").find("tfoot td#tf-" + $(obj).attr("id")).removeClass('d-none');
+            }
+
+            let _onclickVal = obj.attr("onclick") || "";
+            _onclickVal = _onclickVal.replace(/^javascript:\s*/i, "").replace(/;\s*$/, "");
+            if (_onclickVal) {
+                const index = AxFCBtnReadOnly.indexOf(_onclickVal);
+                if (index !== -1) {
+                    AxFCBtnReadOnly.splice(index, 1);
+                }
+            } else if (_onclickVal == "" && typeof obj.attr("id") != "undefined" && obj.attr("id") == "btnAppsDraft") {
+                const index = AxFCBtnReadOnly.indexOf('btnAppsDraft');
+                if (index !== -1) {
+                    AxFCBtnReadOnly.splice(index, 1);
+                }
             }
         }
     }
@@ -11281,7 +11409,7 @@ function DropzoneInit(dvId) {
             $(id).parent().addClass('readonly');
             isthisReadOnly = true;
         }
-
+        let _isDataLoad = false;
         let protectFile = "false";
         if (typeof tstConfigurations != "undefined" && tstConfigurations.config !== undefined && tstConfigurations.config.length > 0) {
             let _finalJson = [];
@@ -11353,6 +11481,7 @@ function DropzoneInit(dvId) {
                 dropzoneItem.style.display = '';
             });
             $(file.previewElement).parents(".dropzone").css({ "width": $(file.previewElement).parents(".dropzone").outerWidth() + "px" })
+            _isDataLoad = false;
         });
 
         // Hide the total progress bar when nothing"s uploading anymore
@@ -11451,8 +11580,12 @@ function DropzoneInit(dvId) {
                 var fRowNo = GetFieldsRowNo(fuInpId);
                 var dcNo = GetFieldsDcNo(fuInpId);
                 var fldDbRow = GetDbRowNo(fRowNo, dcNo);
-                UpdateFieldArray(fuInpId, fldDbRow, fuInpVal, "parent", "");
-                UpdateAllFieldValues(fuInpId, fuInpVal);
+                if (typeof recordid != "undefined" && recordid != "" && recordid != "0" && _isDataLoad) {
+                    //do not update fields
+                } else {
+                    UpdateFieldArray(fuInpId, fldDbRow, fuInpVal, "parent", "");
+                    UpdateAllFieldValues(fuInpId, fuInpVal);
+                }
                 try {
                     if (IsDcGrid(dcNo) && ((!axInlineGridEdit && AxpGridForm == "form") || (isMobile && mobileCardLayout != "none" && !axInlineGridEdit)))
                         formGridRowBlur($("#" + fuInpId));
@@ -11568,6 +11701,7 @@ function DropzoneInit(dvId) {
                     accepted: true
                 };
                 myDropzone.emit("addedfile", file);
+                _isDataLoad = true;
                 myDropzone.emit("complete", file);
                 myDropzone.files.push(file);
 
@@ -12051,6 +12185,7 @@ function DropzoneGridInit(dvId) {
         let _isDummyFirstcount = 0;
         let _valFiles = "";
         let protectFile = "false";
+        let _isDataLoad = false;
         if (typeof tstConfigurations != "undefined" && tstConfigurations.config !== undefined && tstConfigurations.config.length > 0) {
             let _finalJson = [];
             try {
@@ -12103,6 +12238,7 @@ function DropzoneGridInit(dvId) {
                             _isDummyFirstUp = true;
                             myDropzone.processFile(pendingFile);
                             pendingFile = null;
+                            _isDataLoad = false;
                         }
                     }
                 }, 100);
@@ -12139,6 +12275,7 @@ function DropzoneGridInit(dvId) {
                 dropzoneItem.style.display = '';
             });
             $(file.previewElement).parents(".dropzone").css({ "width": $(file.previewElement).parents(".dropzone").outerWidth() + "px" })
+            _isDataLoad = false;
         });
 
         // Hide the total progress bar when nothing"s uploading anymore
@@ -12238,8 +12375,12 @@ function DropzoneGridInit(dvId) {
                 var fRowNo = GetFieldsRowNo(fuInpId);
                 var dcNo = GetFieldsDcNo(fuInpId);
                 var fldDbRow = GetDbRowNo(fRowNo, dcNo);
-                UpdateFieldArray(fuInpId, fldDbRow, fuInpVal, "parent", "");
-                UpdateAllFieldValues(fuInpId, fuInpVal);
+                if (typeof recordid != "undefined" && recordid != "" && recordid != "0" && _isDataLoad) {
+                    //do not update fields
+                } else {
+                    UpdateFieldArray(fuInpId, fldDbRow, fuInpVal, "parent", "");
+                    UpdateAllFieldValues(fuInpId, fuInpVal);
+                }
                 try {
                     if (IsDcGrid(dcNo) && ((!axInlineGridEdit && AxpGridForm == "form") || (isMobile && mobileCardLayout != "none" && !axInlineGridEdit)))
                         formGridRowBlur($("#" + fuInpId));
@@ -12313,6 +12454,7 @@ function DropzoneGridInit(dvId) {
                     accepted: true
                 };
                 myDropzone.emit("addedfile", file);
+                _isDataLoad = true;
                 myDropzone.emit("complete", file);
                 myDropzone.files.push(file);
 
@@ -13159,10 +13301,24 @@ function tstDummyLoad(_openingTrId) {
         tstDummyLoadParams = $("#hdnDummyParams").val();
         $("#hdnDummyParams").val('');
     } catch (ex) { }
+    try {
+        if ($("#hdnTstPermission").length > 0 && $("#hdnTstPermission").val() != "" && $("#hdnTstPermission").val() != "no permission applied") {
+            let _tstPermissions = $("#hdnTstPermission").val();
+            if (_tstPermissions.startsWith('User does not have permissions to')) {
+                window.location.href = "err.aspx?errmsg=" + _tstPermissions;
+                return;
+            }
+        }
+    } catch (ex) { }
     callParentNew("isdummyLoad=", "true");
     if (callParentNew("originalUri") != "") {
         resTstLoadDummy = $("#hdnTstLoadDummy").val();
         $("#hdnTstLoadDummy").val('');
+        if (resTstLoadDummy != "" && resTstLoadDummy.startsWith("Error:")) {
+            let _result = resTstLoadDummy.replace("Error:", "");
+            window.location.href = "err.aspx?errmsg=" + _result;
+            return;
+        }
         let _thsiifId = window.frameElement.id;
         if (_thsiifId == "middle1")
             callParentNew("LoadIframe(" + callParentNew("originalUri") + ")", "function");
@@ -13199,6 +13355,11 @@ function tstDummyLoad(_openingTrId) {
             else {
                 resTstLoadDummy = $("#hdnTstLoadDummy").val();
                 $("#hdnTstLoadDummy").val('');
+                if (resTstLoadDummy != "" && resTstLoadDummy.startsWith("Error:")) {
+                    let _result = resTstLoadDummy.replace("Error:", "");
+                    window.location.href = "err.aspx?errmsg=" + _result;
+                    return;
+                }
                 let _thsiifId = window.frameElement.id;
                 if (_thsiifId == "middle1")
                     callParentNew("LoadIframe(" + _thisURl + ")", "function");
@@ -13242,6 +13403,11 @@ function tstHtmlDummyLoad(_transid) {
             if (_transid != "" && _lastOpenUri != _thisActUri && _lastOpenUri != "../aspx/" + _thisActUri) {
                 resTstLoadDummy = $("#hdnTstLoadDummy").val();
                 $("#hdnTstLoadDummy").val('');
+                if (resTstLoadDummy != "" && resTstLoadDummy.startsWith("Error:")) {
+                    let _result = resTstLoadDummy.replace("Error:", "");
+                    window.location.href = "err.aspx?errmsg=" + _result;
+                    return;
+                }
                 isServerDummyRec = '';
                 let _thisURl = callParentNew("lastLoadtstId");
                 if (_thisURl.toLowerCase().indexOf('transid=' + _transid.toLowerCase()) > -1) {
@@ -13257,6 +13423,11 @@ function tstHtmlDummyLoad(_transid) {
         }
         resTstLoadDummy = $("#hdnTstLoadDummy").val();
         $("#hdnTstLoadDummy").val('');
+        if (resTstLoadDummy != "" && resTstLoadDummy.startsWith("Error:")) {
+            let _result = resTstLoadDummy.replace("Error:", "");
+            window.location.href = "err.aspx?errmsg=" + _result;
+            return;
+        }
         let appSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
         var _finalTstHtml = $("#hdntstHtmlDummy").val();
         $("#hdntstHtmlDummy").val('');
@@ -13269,7 +13440,8 @@ function tstHtmlDummyLoad(_transid) {
             }
             var _time = new Date();
             var _localTime = _time.getTime();
-            localStorage.setItem("tstHtml♠" + _transid + "-" + appSUrl + "♥" + _localTime, _finalTstHtml);
+            let _localDate = String(_time.getDate()).padStart(2, '0') + String(_time.getMonth() + 1).padStart(2, '0') + _time.getFullYear();
+            localStorage.setItem("tstHtml♠" + _transid + "-" + appSUrl + "♥" + _localTime + "♥" + _localDate, _finalTstHtml);
         } catch (ex) {
             if (ex.message.indexOf('exceeded the quota') > -1) {
                 var jsonString = JSON.stringify(_finalTstHtml);
@@ -13295,7 +13467,8 @@ function tstHtmlDummyLoad(_transid) {
                     try {
                         var _ttime = new Date();
                         let _tlocalTime = _ttime.getTime();
-                        localStorage.setItem("tstHtml♠" + _transid + "-" + appSUrl + "♥" + _tlocalTime, _finalTstHtml);
+                        let _tlocalDate = String(_ttime.getDate()).padStart(2, '0') + String(_ttime.getMonth() + 1).padStart(2, '0') + _ttime.getFullYear();
+                        localStorage.setItem("tstHtml♠" + _transid + "-" + appSUrl + "♥" + _tlocalTime + "♥" + _tlocalDate, _finalTstHtml);
                     } catch (ex) { }
                 }
             }
@@ -13540,7 +13713,7 @@ $(document).on("mousedown", "#wbdrHtml", function (event) {
             $("#designContextMenu").css({ 'display': 'none' });
             $("#designContextMenuLabelEdit").css({ 'display': 'block', 'left': offSetX + 'px', 'top': offSetY + "px" });
         }
-        else if (typeof $(event.target).attr("id") == "undefined" && $(event.target).parent().find("textarea.form-control,input.form-control,input.multiFldChk,input[type=checkbox]").length > 0) {
+        else if (typeof $(event.target).attr("id") == "undefined" && $(event.target).parent().find("textarea.form-control,input.form-control,input.multiFldChk,input[type=checkbox]:not(.ckbGridStretchSwitch,.gridHdrChk)").length > 0) {
             let lblid = "";
             lblid = $(event.target).parent().find("textarea.form-control,input.form-control,input[type=checkbox]").attr("id");
             if (typeof lblid == "undefined" || lblid == "")
@@ -13555,7 +13728,10 @@ $(document).on("mousedown", "#wbdrHtml", function (event) {
                 offSetY = $(event.target).parent().find("input.multiFldChk").offset().top + ($('#heightframe').scrollTop() == 0 ? -25 : $('#heightframe').scrollTop());
             let offSetX = $(event.target).parent().find("textarea.form-control,input.form-control,input.multiFldChk,input[type=checkbox]").offset().left + event.offsetX;
             $("#designContextMenu").css({ 'display': 'none' });
-            $("#designContextMenuLabelEdit").css({ 'display': 'block', 'left': offSetX + 'px', 'top': offSetY + "px" });
+            if (typeof lblid != "undefined" && lblid.startsWith('ckbGridStretch')) {
+                //donothing
+            } else
+                $("#designContextMenuLabelEdit").css({ 'display': 'block', 'left': offSetX + 'px', 'top': offSetY + "px" });
         }
         else {
             let offSetY = event.offsetY;
@@ -13585,7 +13761,10 @@ $(document).on("mousedown", "#wbdrHtml", function (event) {
             else
                 $('#designContextMenu').attr('data-afFld', $(event.target).attr("id"));
             $("#designContextMenuLabelEdit").css({ 'display': 'none' });
-            $("#designContextMenu").css({ 'display': 'block', 'left': event.offsetX + 'px', 'top': offSetY + "px" });
+            if (typeof $(event.target).attr("id") == "undefined" || (typeof $(event.target).attr("id") != "undefined" && ($(event.target).attr("id").startsWith('colScroll') || $(event.target).attr("id").startsWith('titleCkbGridStretch') || $(event.target).attr("id").startsWith('ckbGridStretch')))) {
+                //donothing
+            } else
+                $("#designContextMenu").css({ 'display': 'block', 'left': event.offsetX + 'px', 'top': offSetY + "px" });
         }
         document.oncontextmenu = function (e) {
             e.preventDefault();
@@ -13752,4 +13931,75 @@ function setExtraBtnTooltip() {
             el.setAttribute('title', el.dataset.originalTitle || '');
         });
     });
+}
+function tstExcludeElements() {
+    if (!tstPermissions) return;
+    const permissions = JSON.parse(tstPermissions);
+    const result = permissions.result || {};
+    const totalDCs = parseInt(TotalDCs, 10) || 0;
+    const hiddenDcList = [];
+    const inclDcs = [];
+    if (result.AllowCreate === "F") {
+        window.location.href = "err.aspx?errmsg=User does not have access to this structure";
+        return;
+    }
+    if (result.ExcludedDCs && result.ExcludedDCs !== "NONE") {
+
+        result.ExcludedDCs.split(',').forEach(dc => {
+            const dcNo = dc.slice(2);
+            ShowingDc(dcNo, "hide");
+        });
+
+    } else if (result.IncludedDCs && result.IncludedDCs !== "ALL") {
+        const includedDCs = result.IncludedDCs.split(',');
+        for (let i = 1; i <= totalDCs; i++) {
+            ShowingDc(i, "hide");
+            hiddenDcList.push(i);
+        }
+        includedDCs.forEach(dc => {
+            const dcNo = parseInt(dc.slice(2), 10);
+            inclDcs.push(dcNo);
+            ShowingDc(dcNo, "show");
+            const index = hiddenDcList.indexOf(dcNo);
+            if (index > -1) hiddenDcList.splice(index, 1);
+        });
+    }
+    if (result.ExcludedFields && result.ExcludedFields !== "NONE") {
+        result.ExcludedFields.split(',').forEach(field => {
+            HideShowField(field, "hide");
+        });
+
+    } else if (result.IncludedFields && result.IncludedFields !== "ALL") {
+        const includedFields = result.IncludedFields.split(',');
+        for (let i = 1; i <= totalDCs; i++) {
+            if (!inclDcs.includes(i)) {
+                ShowingDc(i, "hide");
+                if (!hiddenDcList.includes(i))
+                    hiddenDcList.push(i);
+            }
+        }
+        includedFields.forEach(field => {
+            let dcNo = GetDcNo(field);
+            dcNo = parseInt(dcNo, 10);
+            if (hiddenDcList.includes(dcNo)) {
+                ShowingDc(dcNo, "show");
+                if (IsDcGrid(dcNo)) {
+                    let _flds = $(`#divDc${dcNo} [id*='001F${dcNo}']`).map(function () { return this.id; }).get();
+                    _flds.forEach(function (val) {
+                        let _thisFld = GetFieldsName(val);
+                        if (!includedFields.includes(_thisFld))
+                            HideShowField(_thisFld, "hide");
+                    });
+                } else {
+                    let _flds = $(`#divDc${dcNo} [id*='000F${dcNo}']`).map(function () { return this.id; }).get();
+                    _flds.forEach(function (val) {
+                        let _thisFld = GetFieldsName(val);
+                        if (!includedFields.includes(_thisFld))
+                            HideShowField(_thisFld, "hide");
+                    });
+                }
+            }
+            HideShowField(field, "show");
+        });
+    }
 }

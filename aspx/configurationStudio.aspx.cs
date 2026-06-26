@@ -51,6 +51,10 @@ public partial class aspx_configurationStudio : System.Web.UI.Page
             {
                 userActive.Visible = true;
             }
+            else if (Session["AxiProjectLogin"] != null && Session["AxiProjectLogin"].ToString().ToLower() == "true" && Session["AxiPrimary"] != null && Session["AxiPrimary"].ToString().ToLower() == "true")
+            {
+                userActive.Visible = true;
+            }            
         }
     }
     public void SessionExpired()

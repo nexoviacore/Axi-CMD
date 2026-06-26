@@ -12,6 +12,12 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.Xml;
 using StackExchange.Redis;
+using System.Net;
+using System.Security;
+using RabbitMQ.Client.Impl;
+using iTextSharp.text;
+using System.Security.Policy;
+using System.Collections.Concurrent;
 
 public partial class AxpertAdmin : System.Web.UI.Page
 {
@@ -20,7 +26,6 @@ public partial class AxpertAdmin : System.Web.UI.Page
     //public string existingJsonARM = string.Empty;
     //public string existingJsonFile = string.Empty;
     public string existingAppSettings = "{}";
-    public string existingJsonSSO = string.Empty;
     public string selProj = string.Empty;
     public string direction = "ltr";
     public string langType = "en";
@@ -33,6 +38,14 @@ public partial class AxpertAdmin : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        try
+        {
+            AntiforgeryChecker.Check(this, _antiforgery);
+        }
+        catch (Exception ex)
+        {
+            Response.Redirect("~/CusError/AxCustomError.aspx");
+        }
         if (!IsPostBack)
         {
             if (ConfigurationManager.AppSettings["EnableAxpertConfiguration"] == null || ConfigurationManager.AppSettings["EnableAxpertConfiguration"].ToString() == "false")
@@ -59,6 +72,14 @@ public partial class AxpertAdmin : System.Web.UI.Page
 
                 string authInfo = util.encrtptDecryptAES(Request.QueryString["auth"], false);
                 if (Session.SessionID != authInfo)
+                {
+                    PanelAuthenticate.Visible = true;
+                    panelewConnection.Visible = false;
+
+                    authPopup = "true";
+                    return;
+                }
+                else if (HttpContext.Current.Session != null && HttpContext.Current.Session["AxpertAdUser"] == null)
                 {
                     PanelAuthenticate.Visible = true;
                     panelewConnection.Visible = false;
@@ -125,14 +146,12 @@ public partial class AxpertAdmin : System.Web.UI.Page
             axSelectProj.DataSource = lst;
             armproj.DataSource = lst;
             fileproj.DataSource = lst;
-            ssoProj.DataSource = lst;
             //RMQueueproj.DataSource = lst;
             armExtResource.DataSource = lst;
             lstconnection.DataBind();
             axSelectProj.DataBind();
             armproj.DataBind();
             fileproj.DataBind();
-            ssoProj.DataBind();
             //RMQueueproj.DataBind();
             armExtResource.DataBind();
             lstRconnection.DataSource = lst;
@@ -142,7 +161,8 @@ public partial class AxpertAdmin : System.Web.UI.Page
             lstStudioRconnection.DataSource = lst;
             lstStudioRconnection.DataBind();
 
-            //IsLicExists();
+            axpDevOptions.DataSource = lst;
+            axpDevOptions.DataBind();
         }
     }
 
@@ -385,65 +405,6 @@ public partial class AxpertAdmin : System.Web.UI.Page
         catch (Exception ex) { }
     }
 
-    protected void IsLicExists()
-    {
-        try
-        {
-            string lic_redis = string.Empty;
-            string lic_file = string.Empty;
-            bool licExist = false;
-            string redisLicDetails = GetServerLicDetails();
-            if (redisLicDetails != string.Empty && !redisLicDetails.StartsWith("error:"))
-            {
-                lic_redis = redisLicDetails.Split('=')[1].ToString().Trim('\'');
-                licExist = true;
-            }
-            else
-            {
-                string ScriptsPath = HttpContext.Current.Application["ScriptsPath"].ToString();
-                string[] files = System.IO.Directory.GetFiles(ScriptsPath, "*.lic");
-                if (files.Count() > 0)
-                {
-                    lic_file = files[0].Split('\\').Last();
-                    licExist = true;
-                }
-            }
-            if (licExist == false)
-                isLicExist = "false";
-            else
-            {
-                string trace = ConfigurationManager.AppSettings["LoginTrace"].ToString();
-                string inputJson = "{\"_parameters\":[{\"getlicenseinfo\":{\"trace\":\"" + trace + "\"},\"licdetails\":{\"lic_redis\":\"" + lic_redis + "\",\"lic_file\":\"" + lic_file + "\"}}]}";
-
-                ASB.WebService objws = new ASB.WebService();
-                string res = objws.CallGetLicenseInfoWS(inputJson);
-                var details = JObject.Parse(res);
-                string licno = details["result"][0]["result"]["licno"].ToString();
-                string licExpiry = details["result"][0]["result"]["expiry"].ToString();
-                if (licExpiry == "Perpetual")
-                    lbllicExpiry.InnerText = licExpiry;
-                else
-                    lbllicExpiry.InnerText = "Expires on " + licExpiry;
-                if (licno == "templic")
-                {
-                    lblerkey.Text = "Trial version";
-                    txtlicappkey.Visible = false;
-                }
-                else
-                    lblerkey.Text = "Registration key:";
-                txtlicappkey.Text = licno;
-                txtlicappkey.ReadOnly = true;
-                txtlicofflinekey.Text = licno;
-                txtlicofflinekey.ReadOnly = true;
-            }
-        }
-        catch (Exception ex)
-        {
-            LogFile.Log logObj = new LogFile.Log();
-            logObj.CreateLog("IsLicExists:" + ex.Message, Session.SessionID, "IsLicExists", "new", "true");
-        }
-    }
-
     protected void SetAxpertLogo()
     {
         main_body.Attributes.Add("Dir", direction);
@@ -543,6 +504,10 @@ public partial class AxpertAdmin : System.Web.UI.Page
 
     protected void btndelete_Click(object sender, EventArgs e)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
         int slIndx = lstconnection.SelectedIndex;
         if (slIndx != -1)
         {
@@ -577,13 +542,31 @@ public partial class AxpertAdmin : System.Web.UI.Page
                         File.WriteAllText(filePath, modifiedJsonApp);
                     }
                 }
+                if (jsonApp["appsettings"] != null && jsonApp["appsettings"][selCon] != null && jsonApp["appsettings"][selCon].Type == JTokenType.Object)
+                {
+                    JObject projectObj = (JObject)jsonApp["appsettings"];
+                    if (projectObj[selCon] != null)
+                    {
+                        projectObj.Property(selCon).Remove();
+                        string modifiedJsonApp = jsonApp.ToString();
+                        File.WriteAllText(filePath, modifiedJsonApp);
+                    }
+                }
             }
             if (isConnDel)
             {
                 try
                 {
                     FDW fdwObj = new FDW(selCon);
-                    fdwObj.DeleteAllKeys(selCon + "-" + Constants.AXAPPS_XML_KEY, selCon);
+                    //fdwObj.DeleteAllKeys(selCon + "-" + Constants.AXAPPS_XML_KEY, selCon);
+
+                    //fdwObj.DeleteAllKeys(selCon + "-" + Constants.AXARM_CONN_KEY, selCon);
+                    //fdwObj.DeleteAllKeys(selCon + "-" + Constants.AXARM_IntRes_CONN_KEY, selCon);
+                    //fdwObj.DeleteAllKeys(selCon + "-" + Constants.AXFileServer_CONN_KEY, selCon);
+                    //fdwObj.DeleteAllKeys(selCon + "-" + Constants.AXSSO_CONN_KEY, selCon);
+                    //fdwObj.DeleteAllKeys(selCon + "-" + Constants.AXARM_ExtRes_CONN_KEY, selCon);
+                    fdwObj.HashDeleteAllkey(Constants.AX_COMMON_APPSETTING_KEY, selCon);
+                    HttpContext.Current.Session.Remove("AppAllSettingsKey-" + selCon);
                 }
                 catch (Exception ex) { }
                 Response.Redirect("AxpertAdmin.aspx?auth=" + Request.QueryString["auth"].ToString());
@@ -593,6 +576,10 @@ public partial class AxpertAdmin : System.Web.UI.Page
 
     protected void btnok_Click(object sender, EventArgs e)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
         string NewConName = string.Empty;
         try
         {
@@ -615,8 +602,22 @@ public partial class AxpertAdmin : System.Web.UI.Page
             xml += "<driver>" + driver + "</driver>";
             xml += "<version>" + dbverno + "</version>";
             xml += "<dbcon>" + dbconName + "</dbcon>";
-            xml += "<dbuser>" + userName + "</dbuser>";
-            xml += "<pwd>" + pwd + "</pwd>";
+            if ((dbtype.ToLower() == "postgre" || dbtype.ToLower() == "postgresql") && driver.ToLower() == "ado")
+            {
+                string _odbcConn = util.GetPostgreODBCConnection(dbconName);
+                if (_odbcConn != "")
+                    userName = _odbcConn.Split(';').First(x => x.StartsWith("Username=", StringComparison.OrdinalIgnoreCase)).Split('=')[1];
+                else
+                    userName = dbconName;
+                pwd = "";
+                xml += "<dbuser>" + userName + "</dbuser>";
+                xml += "<pwd></pwd>";
+            }
+            else
+            {
+                xml += "<dbuser>" + userName + "</dbuser>";
+                xml += "<pwd>" + pwd + "</pwd>";
+            }
             xml += "<dataurl/>";
             xml += "</" + NewConName + ">";
 
@@ -779,7 +780,9 @@ public partial class AxpertAdmin : System.Web.UI.Page
             try
             {
                 FDW fdwObj = new FDW(NewConName);
-                fdwObj.DeleteAllKeys(NewConName + "-" + Constants.AXAPPS_XML_KEY, NewConName);
+                //fdwObj.DeleteAllKeys(NewConName + "-" + Constants.AXAPPS_XML_KEY, NewConName);
+                fdwObj.HashDeleteAllkey(Constants.AX_COMMON_APPSETTING_KEY, NewConName);
+                HttpContext.Current.Session.Remove("AppAllSettingsKey-" + NewConName);
             }
             catch (Exception ex) { }
             try
@@ -803,9 +806,20 @@ public partial class AxpertAdmin : System.Web.UI.Page
         }
     }
 
-    [WebMethod]
-    public static string AppTestConnection(string ddldbtype, string ddldbversion, string ddldriver, string txtccname, string txtusername, string txtPassword)
+    [WebMethod(EnableSession = true)]
+    public static string AppTestConnection(string ddldbtype, string ddldbversion, string ddldriver, string txtccname, string txtusername, string txtPassword, string txtpostgresodbc, string csrfToken)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(ddldbtype) || Util.Util.CheckCrossScriptingInString(ddldbversion) || Util.Util.CheckCrossScriptingInString(ddldriver) || Util.Util.CheckCrossScriptingInString(txtccname) || Util.Util.CheckCrossScriptingInString(txtusername) || Util.Util.CheckCrossScriptingInString(txtPassword) || Util.Util.CheckCrossScriptingInString(txtpostgresodbc))
+            throw new SecurityException("Invalid format.");
+
         string result = string.Empty;
         Util.Util objutil = new Util.Util();
         try
@@ -828,30 +842,23 @@ public partial class AxpertAdmin : System.Web.UI.Page
             jsonData += ",\"dbcon\":\"" + dbconName + "\"";
             //jsonData += ",\"structurl\":\"\"";
             //jsonData += ",\"dataurl\":\"\"";
-            jsonData += ",\"dbuser\":\"" + userName.Replace(@"\", "\\\\") + "\"";
-            jsonData += ",\"pwd\":\"" + pwd + "\"";
+            if ((dbtype.ToLower() == "postgre" || dbtype.ToLower() == "postgresql") && driver.ToLower() == "ado" && txtpostgresodbc == "true")
+            {
+                userName = dbconName;
+                jsonData += ",\"dbuser\":\"" + dbconName + "\"";
+                jsonData += ",\"pwd\":\"\"";
+            }
+            else
+            {
+                jsonData += ",\"dbuser\":\"" + userName.Replace(@"\", "\\\\") + "\"";
+                jsonData += ",\"pwd\":\"" + pwd + "\"";
+            }
             jsonData += "}";
             string axpapp = userName;
             if (axpapp.Contains("\\"))
                 axpapp = axpapp.Split('\\')[0];
-            // GetDbConnection axapp licdetails 
-
-            string lic_redis = string.Empty;
-            string lic_file = string.Empty;
-            string redisLicDetails = GetServerLicDetails();
-            if (redisLicDetails != string.Empty && !redisLicDetails.StartsWith("error:"))
-                lic_redis = redisLicDetails.Split('=')[1].ToString().Trim('\'');
-            else
-            {
-                string ScriptsPath = HttpContext.Current.Application["ScriptsPath"].ToString();
-                string[] files = System.IO.Directory.GetFiles(ScriptsPath, "*.lic");
-                if (files.Count() > 0)
-                {
-                    lic_file = files[0].Split('\\').Last();
-                }
-            }
             string trace = ConfigurationManager.AppSettings["LoginTrace"].ToString();
-            string inputJson = "{\"_parameters\":[{\"getdbconnection\":{\"axpapp\":\"" + axpapp + "\",\"trace\":\"" + trace + "\"},\"" + axpapp + "\":" + jsonData + ",\"licdetails\":{\"lic_redis\":\"" + lic_redis + "\",\"lic_file\":\"" + lic_file + "\"}}]}";
+            string inputJson = "{\"_parameters\":[{\"getdbconnection\":{\"axpapp\":\"" + axpapp + "\",\"trace\":\"" + trace + "\"},\"" + axpapp + "\":" + jsonData + "}]}";
 
             ASB.WebService objws = new ASB.WebService();
             result = objws.CallGetDBConnectionWS(inputJson);
@@ -864,171 +871,11 @@ public partial class AxpertAdmin : System.Web.UI.Page
         return result;
     }
 
-    protected void btnActivate_Click(object sender, EventArgs e)
-    {
-        try
-        {
-            string userName = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).HostName;
-            if (userName.IndexOf(".") > -1)
-                userName = userName.Split('.')[0];
-            string licappkey = txtlicappkey.Text;
-            string trace = ConfigurationManager.AppSettings["LoginTrace"].ToString();
-            string inputXMl = "<root username=\"" + userName + "\" licno=\"" + licappkey + "\" offline=\"no\" trace=\"" + trace + "\"></root>";
-            //LogFile.Log logObj = new LogFile.Log();
-            //logObj.CreateLog("Activate Input:" + inputXMl, HttpContext.Current.Session.SessionID, "ActivateInput", "new", "true");
-            ASB.WebService objws = new ASB.WebService();
-            string result = objws.CallActivateLicenseWS(inputXMl);
-            if (result != "")
-            {
-                XmlDocument docXMl = new XmlDocument();
-                docXMl.LoadXml(result);
-                string strText = docXMl.LastChild.InnerText;
-                string strType = docXMl.LastChild.Name == "result" ? "success" : docXMl.LastChild.Name;
-                ClientScript.RegisterStartupScript(this.GetType(), "Javascript", "javascript:LicActivationSucc('" + strType + "','" + strText.TrimEnd() + "');", true);
-            }
-            else
-                ClientScript.RegisterStartupScript(this.GetType(), "Javascript", "javascript:LicActivationSucc('error','Something went wrong please try again later..');", true);
-        }
-        catch (Exception ex)
-        {
-            LogFile.Log logObj = new LogFile.Log();
-            logObj.CreateLog("Activate button:" + ex.Message, HttpContext.Current.Session.SessionID, "ActivateLic", "new", "true");
-        }
-    }
-
-    protected void btnRefresh_Click(object sender, EventArgs e)
-    {
-        try
-        {
-            string userName = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).HostName;
-            if (userName.IndexOf(".") > -1)
-                userName = userName.Split('.')[0];
-            string licappkey = txtlicappkey.Text;
-            string trace = ConfigurationManager.AppSettings["LoginTrace"].ToString();
-            string inputXMl = "<root username=\"" + userName + "\" licno=\"" + licappkey + "\" lictype=\"F\" offline=\"no\" trace=\"" + trace + "\"></root>";
-            ASB.WebService objws = new ASB.WebService();
-            string result = objws.CallActivateLicenseWS(inputXMl);
-            if (result != "")
-            {
-                XmlDocument docXMl = new XmlDocument();
-                docXMl.LoadXml(result);
-                string strText = docXMl.LastChild.InnerText;
-                string strType = docXMl.LastChild.Name == "result" ? "success" : docXMl.LastChild.Name;
-                ClientScript.RegisterStartupScript(this.GetType(), "Javascript", "javascript:LicActivationSucc('" + strType + "','" + strText.TrimEnd() + "');", true);
-            }
-            else
-                ClientScript.RegisterStartupScript(this.GetType(), "Javascript", "javascript:LicActivationSucc('error','Something went wrong please try again later..');", true);
-        }
-        catch (Exception ex)
-        {
-            LogFile.Log logObj = new LogFile.Log();
-            logObj.CreateLog("Refresh button:" + ex.Message, HttpContext.Current.Session.SessionID, "RefreshLic", "new", "true");
-        }
-    }
-
-    protected void btnTrial_Click(object sender, EventArgs e)
-    {
-        try
-        {
-            string userName = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).HostName;
-            if (userName.IndexOf(".") > -1)
-                userName = userName.Split('.')[0];
-            string licappkey = txtlicappkey.Text;
-            string trace = ConfigurationManager.AppSettings["LoginTrace"].ToString();
-            string inputXMl = "<root username=\"" + userName + "\" orgname=\"from web site\" licno=\"trial\" lictype=\"E\" offline=\"no\" trace=\"" + trace + "\"></root>";
-            ASB.WebService objws = new ASB.WebService();
-            string result = objws.CallActivateLicenseWS(inputXMl);
-            if (result != "")
-            {
-                XmlDocument docXMl = new XmlDocument();
-                docXMl.LoadXml(result);
-                string strText = docXMl.LastChild.InnerText;
-                string strType = docXMl.LastChild.Name == "result" ? "success" : docXMl.LastChild.Name;
-                ClientScript.RegisterStartupScript(this.GetType(), "Javascript", "javascript:LicActivationSucc('" + strType + "','" + strText.TrimEnd() + "');", true);
-            }
-            else
-                ClientScript.RegisterStartupScript(this.GetType(), "Javascript", "javascript:LicActivationSucc('error','Something went wrong please try again later..');", true);
-        }
-        catch (Exception ex)
-        {
-            LogFile.Log logObj = new LogFile.Log();
-            logObj.CreateLog("Activate trial button:" + ex.Message, HttpContext.Current.Session.SessionID, "ActivateTrialLic", "new", "true");
-        }
-    }
-
-    protected void btnDownload_Click(object sender, EventArgs e)
-    {
-        try
-        {
-            string userName = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).HostName;
-            if (userName.IndexOf(".") > -1)
-                userName = userName.Split('.')[0];
-            string licappkey = txtlicofflinekey.Text;
-            string trace = ConfigurationManager.AppSettings["LoginTrace"].ToString();
-            string inputXMl = "<root username=\"" + userName + "\" licno=\"" + licappkey + "\" offline=\"yes\" trace=\"" + trace + "\"></root>";
-            ASB.WebService objws = new ASB.WebService();
-            string result = objws.CallActivateLicenseWS(inputXMl);
-            if (result != "")
-            {
-                XmlDocument docXMl = new XmlDocument();
-                docXMl.LoadXml(result);
-                string strText = docXMl.LastChild.InnerText;
-                string strType = docXMl.LastChild.Name == "result" ? "success" : docXMl.LastChild.Name;
-                ClientScript.RegisterStartupScript(this.GetType(), "Javascript", "javascript:LicDownloadSucc('" + strType + "','" + strText.TrimEnd() + "');", true);
-            }
-            else
-                ClientScript.RegisterStartupScript(this.GetType(), "Javascript", "javascript:LicDownloadSucc('error','Something went wrong please try again later..');", true);
-        }
-        catch (Exception ex)
-        {
-            LogFile.Log logObj = new LogFile.Log();
-            logObj.CreateLog("DownLoad button:" + ex.Message, HttpContext.Current.Session.SessionID, "DownloadReg", "new", "true");
-        }
-    }
-
-    protected void btndownloadfile_Click(object sender, EventArgs e)
-    {
-        string scriptsPath = HttpContext.Current.Application["ScriptsPath"].ToString();
-        string filePath = scriptsPath + "\\Axpert.reg";
-        FileInfo file = new FileInfo(filePath);
-        if (file.Exists)
-        {
-            HttpContext.Current.Response.AddHeader("Content-Disposition", "attachment; filename=" + file.Name);
-            HttpContext.Current.Response.AddHeader("Content-Length", file.Length.ToString());
-            HttpContext.Current.Response.ContentType = "application/octet-stream";
-            HttpContext.Current.Response.WriteFile(file.FullName);
-            HttpContext.Current.Response.Flush();
-            HttpContext.Current.Response.Close();
-            HttpContext.Current.Response.End();
-        }
-    }
-
-    protected void btnFileUpload_Click(object sender, EventArgs e)
-    {
-        try
-        {
-            string scriptsPath = HttpContext.Current.Application["ScriptsPath"].ToString();
-            HttpFileCollection httpAttFiles = Request.Files;
-            for (int i = 0; i < httpAttFiles.Count; i++)
-            {
-                HttpPostedFile httpAttFile = httpAttFiles[i];
-                if ((httpAttFile != null) && (httpAttFile.ContentLength > 0))
-                {
-                    string thisFileName = Path.GetFileName(httpAttFile.FileName);
-                    httpAttFile.SaveAs(scriptsPath + thisFileName);
-                    ClientScript.RegisterStartupScript(this.GetType(), "Javascript", "javascript:LicActivationSucc('success','Lic file uploaded successfully.');", true);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            LogFile.Log logObj = new LogFile.Log();
-            logObj.CreateLog("Upload button:" + ex.Message, HttpContext.Current.Session.SessionID, "UploadLic", "new", "true");
-        }
-    }
-
     protected void btndbpwb_Click(object sender, EventArgs e)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
         string result = string.Empty;
         Util.Util objutil = new Util.Util();
         try
@@ -1040,6 +887,10 @@ public partial class AxpertAdmin : System.Web.UI.Page
             string userName = txtusername.Text;
             string pwd = txtPassword.Text;
             string newpwd = txtNewPassword.Text;
+            bool _txtpostgresodbc = txtpostgresodbc.Checked;
+            string txtpostgreodbc = "false";
+            if (_txtpostgresodbc)
+                txtpostgreodbc = "true";
             txtPassword.Text = "";
             txtNewPassword.Text = "";
             txtConfirmPassword.Text = "";
@@ -1057,30 +908,27 @@ public partial class AxpertAdmin : System.Web.UI.Page
             jsonData += ",\"dbcon\":\"" + dbconName + "\"";
             //jsonData += ",\"structurl\":\"\"";
             //jsonData += ",\"dataurl\":\"\"";
-            jsonData += ",\"dbuser\":\"" + userName.Replace(@"\", "\\\\") + "\"";
-            jsonData += ",\"pwd\":\"" + pwd + "\"";
+            if ((dbtype.ToLower() == "postgre" || dbtype.ToLower() == "postgresql") && driver.ToLower() == "ado" && txtpostgreodbc == "true")
+            {
+                string _odbcConn = util.GetPostgreODBCConnection(dbconName);
+                if (_odbcConn != "")
+                    userName = _odbcConn.Split(';').First(x => x.StartsWith("Username=", StringComparison.OrdinalIgnoreCase)).Split('=')[1];
+                else
+                    userName = dbconName;
+                jsonData += ",\"dbuser\":\"" + dbconName + "\"";
+                jsonData += ",\"pwd\":\"\"";
+            }
+            else
+            {
+                jsonData += ",\"dbuser\":\"" + userName.Replace(@"\", "\\\\") + "\"";
+                jsonData += ",\"pwd\":\"" + pwd + "\"";
+            }
             jsonData += "}";
             string axpapp = userName;
             if (axpapp.Contains("\\"))
                 axpapp = axpapp.Split('\\')[0];
-            // GetDbConnection axapp licdetails 
-
-            string lic_redis = string.Empty;
-            string lic_file = string.Empty;
-            string redisLicDetails = GetServerLicDetails();
-            if (redisLicDetails != string.Empty && !redisLicDetails.StartsWith("error:"))
-                lic_redis = redisLicDetails.Split('=')[1].ToString().Trim('\'');
-            else
-            {
-                string ScriptsPath = HttpContext.Current.Application["ScriptsPath"].ToString();
-                string[] files = System.IO.Directory.GetFiles(ScriptsPath, "*.lic");
-                if (files.Count() > 0)
-                {
-                    lic_file = files[0].Split('\\').Last();
-                }
-            }
             string trace = ConfigurationManager.AppSettings["LoginTrace"].ToString();
-            string inputJson = "{\"_parameters\":[{\"setdbpassword\":{\"axpapp\":\"" + axpapp + "\",\"newpwd\":\"" + newpwd + "\",\"trace\":\"" + trace + "\"},\"" + axpapp + "\":" + jsonData + ",\"licdetails\":{\"lic_redis\":\"" + lic_redis + "\",\"lic_file\":\"" + lic_file + "\"}}]}";
+            string inputJson = "{\"_parameters\":[{\"setdbpassword\":{\"axpapp\":\"" + axpapp + "\",\"newpwd\":\"" + newpwd + "\",\"trace\":\"" + trace + "\"},\"" + axpapp + "\":" + jsonData + "}]}";
 
             ASB.WebService objws = new ASB.WebService();
             string succMsg = objws.CallSetDBPasswordWS(inputJson);
@@ -1100,41 +948,102 @@ public partial class AxpertAdmin : System.Web.UI.Page
         }
     }
 
-    [WebMethod]
-    public static string UserAuthentication(string AuthUsername, string AuthPwd)
+    private static readonly ConcurrentDictionary<string, LoginAttemptInfo> LoginAttempts = new ConcurrentDictionary<string, LoginAttemptInfo>();
+    private static readonly ConcurrentDictionary<string, RateLimitInfo> RateLimits = new ConcurrentDictionary<string, RateLimitInfo>();
+    [WebMethod(EnableSession = true)]
+    public static string UserAuthentication(string AuthUsername, string AuthPwd, string csrfToken)
     {
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(AuthUsername) || Util.Util.CheckCrossScriptingInString(AuthPwd))
+        {
+            throw new SecurityException("Invalid format.");
+        }
         string result = string.Empty;
         try
         {
-            if (AuthUsername != "" && AuthPwd != "")
+            if (string.IsNullOrWhiteSpace(AuthUsername) || string.IsNullOrWhiteSpace(AuthPwd))
             {
-                Util.Util objutil = new Util.Util();
-                string inifile = File.ReadAllText(HttpContext.Current.Server.MapPath("~/ConfigAuthentication.ini"));
-                if (inifile != null && inifile != "")
+                return result;
+            }
+            string ipAddress = HttpContext.Current.Request.UserHostAddress ?? "UNKNOWN";
+            RateLimitInfo rateInfo = RateLimits.GetOrAdd(ipAddress,
+                k => new RateLimitInfo
                 {
-                    dynamic json = JsonConvert.DeserializeObject(inifile.Replace("\r\n", ""));
-                    foreach (var chlAuthUser in json)
-                    {
-                        if (chlAuthUser.uname.Value == AuthUsername && chlAuthUser.pwd.Value == AuthPwd)
-                        {
-                            result = objutil.encrtptDecryptAES(HttpContext.Current.Session.SessionID);
-                            break;
-                        }
-                    }
+                    Count = 0,
+                    WindowStart = DateTime.UtcNow
+                });
+            lock (rateInfo)
+            {
+                if ((DateTime.UtcNow - rateInfo.WindowStart).TotalMinutes >= 1)
+                {
+                    rateInfo.Count = 0;
+                    rateInfo.WindowStart = DateTime.UtcNow;
+                }
+                rateInfo.Count++;
+                if (rateInfo.Count > 10)
+                {
+                    throw new SecurityException("Too many login attempts. Please try again later.");
+                }
+            }
+            string userKey = AuthUsername.Trim().ToLowerInvariant();
+            LoginAttemptInfo loginInfo = LoginAttempts.GetOrAdd(userKey, k => new LoginAttemptInfo());
+            if (loginInfo.LockedUntil.HasValue && loginInfo.LockedUntil.Value > DateTime.UtcNow)
+            {
+                throw new SecurityException("Account is temporarily locked. Please try again later.");
+            }
+            Util.Util objutil = new Util.Util();
+            string iniFilePath = HttpContext.Current.Server.MapPath("~/ConfigAuthentication.ini");
+            if (!File.Exists(iniFilePath))
+                return result;
+            string inifile = File.ReadAllText(iniFilePath);
+            if (string.IsNullOrWhiteSpace(inifile))
+                return result;
+            dynamic json = JsonConvert.DeserializeObject(inifile.Replace("\r\n", string.Empty));
+            bool authenticated = false;
+            foreach (var chlAuthUser in json)
+            {
+                string storedUser = Convert.ToString(chlAuthUser.uname.Value);
+                string storedPwd = Convert.ToString(chlAuthUser.pwd.Value);
+                if (string.Equals(storedUser, AuthUsername, StringComparison.OrdinalIgnoreCase) && storedPwd == AuthPwd)
+                {
+                    authenticated = true;
+                    break;
+                }
+            }
+            if (authenticated)
+            {
+                loginInfo.FailedAttempts = 0;
+                loginInfo.LockedUntil = null;
+                HttpContext.Current.Session["AxpertAdUser"] = HttpContext.Current.Session.SessionID;
+                result = objutil.encrtptDecryptAES(HttpContext.Current.Session.SessionID);
+            }
+            else
+            {
+                loginInfo.FailedAttempts++;
+                if (loginInfo.FailedAttempts >= 5)
+                {
+                    loginInfo.LockedUntil = DateTime.UtcNow.AddMinutes(10);
                 }
             }
         }
         catch (Exception ex)
         {
+            result = "error:" + ex.Message;
             LogFile.Log logObj = new LogFile.Log();
-            logObj.CreateLog("User Authentication:" + ex.Message, HttpContext.Current.Session.SessionID, "UserAuthentication", "new", "true");
+            logObj.CreateLog("User Authentication: " + ex.Message, HttpContext.Current.Session.SessionID, "UserAuthentication", "new", "true");
         }
         return result;
     }
 
-
     protected void btnRedisOk_Click(object sender, EventArgs e)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
         try
         {
             string connectionType = ddlIsRedisNewConnection.SelectedValue;
@@ -1214,7 +1123,7 @@ public partial class AxpertAdmin : System.Web.UI.Page
             {
                 Application["AppSettingsIni"] = _appsettings;
             }
-
+            HttpContext.Current.Session.Remove("AppAllSettingsKey-" + RConName);
             ClientScript.RegisterStartupScript(this.GetType(), "Javascript", "javascript:SuccRedisConnection('success','" + RConName + "');", true);
         }
         catch (Exception ex)
@@ -1226,6 +1135,10 @@ public partial class AxpertAdmin : System.Web.UI.Page
 
     protected void btnRedisdelete_Click(object sender, EventArgs e)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
         int slIndx = lstRconnection.SelectedIndex;
         if (slIndx != -1)
         {
@@ -1307,9 +1220,20 @@ public partial class AxpertAdmin : System.Web.UI.Page
         return null;
     }
 
-    [WebMethod]
-    public static string RedisTestConnection(string rHost, string rPort, string rPwd, string axwConn)
+    [WebMethod(EnableSession = true)]
+    public static string RedisTestConnection(string rHost, string rPort, string rPwd, string axwConn, string csrfToken)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(rHost) || Util.Util.CheckCrossScriptingInString(rPort) || Util.Util.CheckCrossScriptingInString(rPwd) || Util.Util.CheckCrossScriptingInString(axwConn))
+            throw new SecurityException("Invalid format.");
+
         string result = string.Empty;
         try
         {
@@ -1384,9 +1308,76 @@ public partial class AxpertAdmin : System.Web.UI.Page
         if (redis != null)
             redis.Close(false);
     }
-    [WebMethod]
-    public static string ARMConnection(string aKey, string aUrl, string aScriptsUrl, string aPeg, string proj, string aExpiryMinutes, string aClientSSO, string aNotificationURL, string aNotificationExpiryHours, string aNotificationMaxPerUser)
+
+    [WebMethod(EnableSession = true)]
+    public static string VerifyARMSettings(string proj, string aUrl, string csrfToken)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(proj) || Util.Util.CheckCrossScriptingInString(aUrl))
+            throw new SecurityException("Invalid format.");
+
+        if (!IsValidArmUrl(aUrl))
+            throw new SecurityException("Invalid ARM URL");
+
+        if (string.IsNullOrWhiteSpace(proj))
+            return "Error: Project cannot be left empty";
+
+        if (string.IsNullOrWhiteSpace(aUrl))
+            return "Error: ARM URL cannot be left empty";
+
+        try
+        {
+            string URL = aUrl.TrimEnd('/') + "/ARM_APIs/api/v1/ValidateAppSettings";
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
+            request.Method = "POST";
+            request.ContentType = "application/json";
+
+            var _inputJson = "{\"appname\":\"" + proj + "\"}";
+            request.ContentLength = _inputJson.Length;
+
+            StreamWriter requestWriter = new StreamWriter(request.GetRequestStream(), System.Text.Encoding.ASCII);
+            requestWriter.Write(_inputJson);
+            requestWriter.Close();
+
+            WebResponse webResponse = request.GetResponse();
+            Stream webStream = webResponse.GetResponseStream();
+            StreamReader responseReader = new StreamReader(webStream);
+            string response = responseReader.ReadToEnd();
+            return response;
+        }
+        catch (Exception ex)
+        {
+            return "Error: " + ex.Message;
+        }
+    }
+
+    [WebMethod(EnableSession = true)]
+    public static string ARMConnection(string aKey, string aUrl, string aScriptsUrl, string aPeg, string proj, string aExpiryMinutes, string aNotificationURL, string aNotificationExpiryHours, string aNotificationMaxPerUser, string csrfToken)
+    {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(aKey) || Util.Util.CheckCrossScriptingInString(aUrl) || Util.Util.CheckCrossScriptingInString(aScriptsUrl) || Util.Util.CheckCrossScriptingInString(aPeg) || Util.Util.CheckCrossScriptingInString(proj) || Util.Util.CheckCrossScriptingInString(aExpiryMinutes) || Util.Util.CheckCrossScriptingInString(aNotificationURL) || Util.Util.CheckCrossScriptingInString(aNotificationExpiryHours) || Util.Util.CheckCrossScriptingInString(aNotificationMaxPerUser))
+            throw new SecurityException("Invalid format.");
+
+        if (!IsValidArmUrl(aUrl))
+            throw new SecurityException("Invalid ARM URL");
+
+        if (!IsValidArmUrl(aScriptsUrl))
+            throw new SecurityException("Invalid Scripts URL");
+
         string result = "";
         try
         {
@@ -1414,11 +1405,11 @@ public partial class AxpertAdmin : System.Web.UI.Page
                 armaUrl = armaUrl + "/";
             if (!armaScriptsUrl.EndsWith("/"))
                 armaScriptsUrl = armaScriptsUrl + "/";
-            aRMQapiUrl = armaUrl + "api/v1/ARMPushToQueue";
+            aRMQapiUrl = armaUrl + "ARM_APIs/api/v1/ARMPushToQueue";
             aSignalRapiUrl = aNotificationURL + "/api/v1/SendSignalR";
-            AxFCMSendMsgURL = armaUrl + "api/v1/SendFCMNotification";
+            AxFCMSendMsgURL = armaUrl + "ARM_APIs/api/v1/SendFCMNotification";
             AxRapidSaveURL = armaScriptsUrl + "ASBRapidSaveRest.dll/datasnap/rest/TASBRapidSaveRest/RapidSave";
-            axpegemailactionurl = armaUrl + "api/v1/ARMMailTaskAction";
+            axpegemailactionurl = armaUrl + "ARM_APIs/api/v1/ARMMailTaskAction";
             AxScriptsAPIURL = armaScriptsUrl + "ASBScriptRest.dll/datasnap/rest/TASBScriptRest/scriptsapi";
 
             var propertiesDict = new Dictionary<string, object>
@@ -1430,7 +1421,6 @@ public partial class AxpertAdmin : System.Web.UI.Page
                 {"ScriptsPath",webScriptsPath },
                 {"scriptsUrlPath",scriptsUrlPath },
                 {"ExpiryMinutes",aExpiryMinutes },
-                {"ClientSSO",aClientSSO },
 
                 {"ARM_Notification_URL",aNotificationURL },
                 {"ARM_Notification_ExpiryHours",aNotificationExpiryHours },
@@ -1527,8 +1517,10 @@ public partial class AxpertAdmin : System.Web.UI.Page
         try
         {
             FDW fdwObj = new FDW(proj);
-            fdwObj.DeleteAllKeys(proj + "-" + Constants.AXARM_CONN_KEY, proj);
-            fdwObj.DeleteAllKeys(proj + "-" + Constants.AXARM_IntRes_CONN_KEY, proj);
+            //fdwObj.DeleteAllKeys(proj + "-" + Constants.AXARM_CONN_KEY, proj);
+            //fdwObj.DeleteAllKeys(proj + "-" + Constants.AXARM_IntRes_CONN_KEY, proj);
+            fdwObj.HashDeleteAllkey(Constants.AX_COMMON_APPSETTING_KEY, proj);
+            HttpContext.Current.Session.Remove("AppAllSettingsKey-" + proj);
         }
         catch (Exception ex) { }
         string ScriptsPathARM = HttpContext.Current.Application["ScriptsPath"].ToString() + "AppSettings.ini";
@@ -1550,9 +1542,20 @@ public partial class AxpertAdmin : System.Web.UI.Page
     }
 
 
-    [WebMethod]
-    public static string DelARMConnectionWs(string proj)
+    [WebMethod(EnableSession = true)]
+    public static string DelARMConnectionWs(string proj, string csrfToken)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(proj))
+            throw new SecurityException("Invalid format.");
+
         string result = "";
         try
         {
@@ -1588,8 +1591,10 @@ public partial class AxpertAdmin : System.Web.UI.Page
         try
         {
             FDW fdwObj = new FDW(proj);
-            fdwObj.DeleteAllKeys(proj + "-" + Constants.AXARM_CONN_KEY, proj);
-            fdwObj.DeleteAllKeys(proj + "-" + Constants.AXARM_IntRes_CONN_KEY, proj);
+            //fdwObj.DeleteAllKeys(proj + "-" + Constants.AXARM_CONN_KEY, proj);
+            //fdwObj.DeleteAllKeys(proj + "-" + Constants.AXARM_IntRes_CONN_KEY, proj);
+            fdwObj.HashDeleteAllkey(Constants.AX_COMMON_APPSETTING_KEY, proj);
+            HttpContext.Current.Session.Remove("AppAllSettingsKey-" + proj);
         }
         catch (Exception ex) { }
         string ScriptsPathARMdel = HttpContext.Current.Application["ScriptsPath"].ToString() + "AppSettings.ini";
@@ -1610,9 +1615,20 @@ public partial class AxpertAdmin : System.Web.UI.Page
         return result;
     }
 
-    [WebMethod]
-    public static string FileConnection(string fUpload, string fDownload, string proj, string fMapUsername, string fMapPwd)
+    [WebMethod(EnableSession = true)]
+    public static string FileConnection(string fUpload, string fDownload, string proj, string fMapUsername, string fMapPwd, string AxAttachSize, string csrfToken)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(fUpload) || Util.Util.CheckCrossScriptingInString(fDownload) || Util.Util.CheckCrossScriptingInString(proj) || Util.Util.CheckCrossScriptingInString(fMapUsername) || Util.Util.CheckCrossScriptingInString(fMapPwd) || Util.Util.CheckCrossScriptingInString(AxAttachSize))
+            throw new SecurityException("Invalid format.");
+
         string result = "";
         try
         {
@@ -1628,7 +1644,8 @@ public partial class AxpertAdmin : System.Web.UI.Page
                 { "FileUploadPath", fileUploadPath },
                 { "FileDownloadPath", fileDownloadPath },
                 { "FileServerMapUsername", fMapUsername },
-                { "FileServerMapPwd", fMapPwd }
+                { "FileServerMapPwd", fMapPwd },
+                { "AxAttachmentSize", AxAttachSize }
             };
             var propData = new Dictionary<string, object> {
                 { "FileConfig", propertiesDict }
@@ -1679,7 +1696,10 @@ public partial class AxpertAdmin : System.Web.UI.Page
         try
         {
             FDW fdwObj = new FDW(proj);
-            fdwObj.DeleteAllKeys(proj + "-" + Constants.AXFileServer_CONN_KEY, proj);
+            //fdwObj.DeleteAllKeys(proj + "-" + Constants.AXFileServer_CONN_KEY, proj);
+            //fdwObj.HashDeletekeyNew(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXFileServer_CONN_KEY, proj);
+            fdwObj.HashDeleteAllkey(Constants.AX_COMMON_APPSETTING_KEY, proj);
+            HttpContext.Current.Session.Remove("AppAllSettingsKey-" + proj);
         }
         catch (Exception ex) { }
         string ScriptsPathfile = HttpContext.Current.Application["ScriptsPath"].ToString() + "AppSettings.ini";
@@ -1700,9 +1720,20 @@ public partial class AxpertAdmin : System.Web.UI.Page
         return result;
     }
 
-    [WebMethod]
-    public static string DelFileConnectionWs(string proj)
+    [WebMethod(EnableSession = true)]
+    public static string DelFileConnectionWs(string proj, string csrfToken)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(proj))
+            throw new SecurityException("Invalid format.");
+
         string result = "";
         try
         {
@@ -1738,7 +1769,10 @@ public partial class AxpertAdmin : System.Web.UI.Page
         try
         {
             FDW fdwObj = new FDW(proj);
-            fdwObj.DeleteAllKeys(proj + "-" + Constants.AXFileServer_CONN_KEY, proj);
+            //fdwObj.DeleteAllKeys(proj + "-" + Constants.AXFileServer_CONN_KEY, proj);
+            //fdwObj.HashDeletekeyNew(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXFileServer_CONN_KEY, proj);
+            fdwObj.HashDeleteAllkey(Constants.AX_COMMON_APPSETTING_KEY, proj);
+            HttpContext.Current.Session.Remove("AppAllSettingsKey-" + proj);
         }
         catch (Exception ex) { }
 
@@ -1760,198 +1794,20 @@ public partial class AxpertAdmin : System.Web.UI.Page
         return result;
     }
 
-    [WebMethod]
-    public static string SaveSSOConnection(object requestJson, string ssoType, string ssoProj)
+    [WebMethod(EnableSession = true)]
+    public static string LicDomainConnection(string domainName, string proj, string csrfToken)
     {
-        string result = "";
-        try
-        {
-            if (requestJson != null && !string.IsNullOrEmpty(ssoType) && !string.IsNullOrEmpty(ssoProj))
-            {
-                JObject newSSOData = JObject.FromObject(requestJson);
-                string scriptsPathSSo = HttpContext.Current.Application["ScriptsPath"].ToString() + "ssoinfoconfig.ini";
-                string _filePathSSo = Path.Combine(scriptsPathSSo);
-                JObject existingData = new JObject();
-                if (File.Exists(_filePathSSo))
-                {
-                    string existingJsonSSo = File.ReadAllText(_filePathSSo);
-                    if (!string.IsNullOrWhiteSpace(existingJsonSSo))
-                    {
-                        existingData = JsonConvert.DeserializeObject<JObject>(existingJsonSSo) ?? new JObject();
-                    }
-                }
-                if (existingData[ssoProj] == null || !existingData[ssoProj].HasValues)
-                {
-                    existingData[ssoProj] = new JObject();
-                }
-            ((JObject)existingData[ssoProj])[ssoType] = newSSOData;
-                string updatedJson = JsonConvert.SerializeObject(existingData, Newtonsoft.Json.Formatting.Indented);
-                File.WriteAllText(_filePathSSo, updatedJson);
-            }
-        }
-        catch (Exception ex)
-        {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
 
-        }
-        try
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
         {
-            FDW fdwObj = new FDW(ssoProj);
-            fdwObj.DeleteAllKeys(ssoProj + "-" + Constants.AXSSO_CONN_KEY, ssoProj);
+            throw new SecurityException("CSRF Attack Detected!");
         }
-        catch (Exception ex) { }
-        string ScriptsPathSSo = HttpContext.Current.Application["ScriptsPath"].ToString() + "ssoinfoconfig.ini";
-        string filePathSSo = @" " + ScriptsPathSSo + "";
-        FileInfo FileSSOfile = new FileInfo(ScriptsPathSSo);
-        try
-        {
-            if (FileSSOfile.Exists)
-            {
-                string existingJsonSSo = File.ReadAllText(filePathSSo);
-                existingJsonSSo = JsonConvert.SerializeObject(existingJsonSSo);
-                result = existingJsonSSo;
-            }
-        }
-        catch (Exception ex) { }
-        return result;
-    }
+        if (Util.Util.CheckCrossScriptingInString(domainName) || Util.Util.CheckCrossScriptingInString(proj))
+            throw new SecurityException("Invalid format.");
 
-    [WebMethod]
-    public static string SaveUpdateSSOConnection(object requestJson, string ssoType, string ssoProj, object updatereqJson, string updateSsoType)
-    {
-        string result = "";
-        try
-        {
-            if (requestJson != null && !string.IsNullOrEmpty(ssoType) && !string.IsNullOrEmpty(ssoProj))
-            {
-                JObject newSSOData = JObject.FromObject(requestJson);
-                string scriptsPathSSo = HttpContext.Current.Application["ScriptsPath"].ToString() + "ssoinfoconfig.ini";
-                string _filePathSSo = Path.Combine(scriptsPathSSo);
-                JObject existingData = new JObject();
-                if (File.Exists(_filePathSSo))
-                {
-                    string existingJsonSSo = File.ReadAllText(_filePathSSo);
-                    if (!string.IsNullOrWhiteSpace(existingJsonSSo))
-                    {
-                        existingData = JsonConvert.DeserializeObject<JObject>(existingJsonSSo) ?? new JObject();
-                    }
-                }
-                if (existingData[ssoProj] == null || !existingData[ssoProj].HasValues)
-                {
-                    existingData[ssoProj] = new JObject();
-                }
-            ((JObject)existingData[ssoProj])[ssoType] = newSSOData;
-                string updatedJson = JsonConvert.SerializeObject(existingData, Newtonsoft.Json.Formatting.Indented);
-                File.WriteAllText(_filePathSSo, updatedJson);
-
-                if (updatereqJson != null && updateSsoType != string.Empty)
-                {
-                    JObject updateSSOData = JObject.FromObject(updatereqJson);
-                    var ssoProp = updateSSOData.Properties().FirstOrDefault();
-                    if (ssoProp != null)
-                    {
-                        string dynamicType = ssoProp.Name;
-                        JObject updateSsoValue = (JObject)ssoProp.Value;
-                        ((JObject)existingData[ssoProj])[dynamicType] = updateSsoValue;
-                    }
-
-                    string _updatedJson = JsonConvert.SerializeObject(existingData, Newtonsoft.Json.Formatting.Indented);
-                    File.WriteAllText(_filePathSSo, _updatedJson);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-
-        }
-        try
-        {
-            FDW fdwObj = new FDW(ssoProj);
-            fdwObj.DeleteAllKeys(ssoProj + "-" + Constants.AXSSO_CONN_KEY, ssoProj);
-        }
-        catch (Exception ex) { }
-        string ScriptsPathSSo = HttpContext.Current.Application["ScriptsPath"].ToString() + "ssoinfoconfig.ini";
-        string filePathSSo = @" " + ScriptsPathSSo + "";
-        FileInfo FileSSOfile = new FileInfo(ScriptsPathSSo);
-        try
-        {
-            if (FileSSOfile.Exists)
-            {
-                string existingJsonSSo = File.ReadAllText(filePathSSo);
-                existingJsonSSo = JsonConvert.SerializeObject(existingJsonSSo);
-                result = existingJsonSSo;
-            }
-        }
-        catch (Exception ex) { }
-        return result;
-    }
-
-    [WebMethod]
-    public static string SSoConDelete(string ssoProj)
-    {
-        string scriptsPathSSo = HttpContext.Current.Application["ScriptsPath"].ToString() + "ssoinfoconfig.ini";
-        string filePathSSo = Path.Combine(scriptsPathSSo);
-
-        if (File.Exists(filePathSSo))
-        {
-            string existingJson = File.ReadAllText(filePathSSo);
-            JObject existingData = JsonConvert.DeserializeObject<JObject>(existingJson) ?? new JObject();
-            if (existingData[ssoProj] != null)
-            {
-                existingData.Remove(ssoProj);
-                File.WriteAllText(filePathSSo, JsonConvert.SerializeObject(existingData, Newtonsoft.Json.Formatting.Indented));
-                try
-                {
-                    FDW fdwObj = new FDW(ssoProj);
-                    fdwObj.DeleteAllKeys(ssoProj + "-" + Constants.AXSSO_CONN_KEY, ssoProj);
-                }
-                catch (Exception ex) { }
-                return "deleted";
-            }
-            else
-                return "notdeleted";
-        }
-        else
-            return "notdeleted";
-    }
-    [WebMethod]
-    public static string SSoTypeDelete(string ssoProj, string ssoType)
-    {
-        string scriptsPathSSo = HttpContext.Current.Application["ScriptsPath"].ToString() + "ssoinfoconfig.ini";
-        string filePathSSo = Path.Combine(scriptsPathSSo);
-        if (File.Exists(filePathSSo))
-        {
-            string existingJson = File.ReadAllText(filePathSSo);
-            JObject existingData = JsonConvert.DeserializeObject<JObject>(existingJson) ?? new JObject();
-            if (existingData[ssoProj] != null)
-            {
-                JObject projectData = (JObject)existingData[ssoProj];
-                if (projectData[ssoType] != null)
-                {
-                    projectData.Remove(ssoType);
-                    File.WriteAllText(filePathSSo, JsonConvert.SerializeObject(existingData, Newtonsoft.Json.Formatting.Indented));
-
-                    try
-                    {
-                        FDW fdwObj = new FDW(ssoProj);
-                        fdwObj.DeleteAllKeys(ssoProj + "-" + Constants.AXSSO_CONN_KEY, ssoProj);
-                    }
-                    catch (Exception ex) { }
-                    return "deleted";
-                }
-                else
-                    return "notdeleted";
-            }
-            else
-                return "notdeleted";
-        }
-        else
-            return "notdeleted";
-    }
-
-
-    [WebMethod]
-    public static string LicDomainConnection(string domainName, string proj)
-    {
         string result = "";
         try
         {
@@ -2025,9 +1881,20 @@ public partial class AxpertAdmin : System.Web.UI.Page
     }
 
 
-    [WebMethod]
-    public static string DelLicDomainConnection(string proj)
+    [WebMethod(EnableSession = true)]
+    public static string DelLicDomainConnection(string proj, string csrfToken)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(proj))
+            throw new SecurityException("Invalid format.");
+
         string result = "";
         try
         {
@@ -2079,6 +1946,10 @@ public partial class AxpertAdmin : System.Web.UI.Page
 
     protected void btnRedisdeleteStudio_Click(object sender, EventArgs e)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
         int slIndx = lstStudioRconnection.SelectedIndex;
         if (slIndx != -1)
         {
@@ -2112,6 +1983,10 @@ public partial class AxpertAdmin : System.Web.UI.Page
 
     protected void btnRedisOkStudio_Click(object sender, EventArgs e)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
         try
         {
             string connectionType = ddlIsRedisNewConnectionStudio.SelectedValue;
@@ -2224,9 +2099,22 @@ public partial class AxpertAdmin : System.Web.UI.Page
         }
     }
 
-    [WebMethod]
-    public static string RedisTestConnectionStudio(string rHost, string rPort, string rPwd, string axsConn, string studioUrl)
+    [WebMethod(EnableSession = true)]
+    public static string RedisTestConnectionStudio(string rHost, string rPort, string rPwd, string axsConn, string studioUrl, string csrfToken)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(rHost) || Util.Util.CheckCrossScriptingInString(rPort) || Util.Util.CheckCrossScriptingInString(rPwd) || Util.Util.CheckCrossScriptingInString(axsConn) || Util.Util.CheckCrossScriptingInString(studioUrl))
+            throw new SecurityException("Invalid format.");
+        if (!IsValidArmUrl(studioUrl))
+            throw new SecurityException("Invalid ARM URL");
+
         string result = string.Empty;
         try
         {
@@ -2298,9 +2186,20 @@ public partial class AxpertAdmin : System.Web.UI.Page
     }
 
 
-    [WebMethod]
-    public static string RMQueueConnection(string aRMQHost, string aRMQPort, string aRMQUser, string aRMQPwd)
+    [WebMethod(EnableSession = true)]
+    public static string RMQueueConnection(string aRMQHost, string aRMQPort, string aRMQUser, string aRMQPwd, string csrfToken)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(aRMQHost) || Util.Util.CheckCrossScriptingInString(aRMQPort) || Util.Util.CheckCrossScriptingInString(aRMQUser) || Util.Util.CheckCrossScriptingInString(aRMQPwd))
+            throw new SecurityException("Invalid format.");
+
         string result = "";
         try
         {
@@ -2368,9 +2267,13 @@ public partial class AxpertAdmin : System.Web.UI.Page
     }
 
 
-    [WebMethod]
+    [WebMethod(EnableSession = true)]
     public static string DelRMQueueConnectionWs()
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
         string result = "";
         try
         {
@@ -2416,13 +2319,24 @@ public partial class AxpertAdmin : System.Web.UI.Page
         return result;
     }
 
-    [WebMethod]
-    public static string SaveExternalResWs(string proj, string NamedUrls, string NamedSftp, string NamedFileServers)
+    [WebMethod(EnableSession = true)]
+    public static string SaveExternalResWs(string proj, string NamedUrls, string NamedSftp, string NamedFileServers, string csrfToken)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(proj) || Util.Util.CheckCrossScriptingInString(NamedUrls) || Util.Util.CheckCrossScriptingInString(NamedSftp) || Util.Util.CheckCrossScriptingInString(NamedFileServers))
+            throw new SecurityException("Invalid format.");
+
         string result = "";
         try
         {
-            DelExternalResWs(proj);
+            DelExternalResWs(proj, csrfToken);
             var urls = JsonConvert.DeserializeObject<List<NamedUrlItem>>(NamedUrls);
             var sftp = JsonConvert.DeserializeObject<List<NamedSftpItem>>(NamedSftp);
             var fileServers = JsonConvert.DeserializeObject<List<NamedFileServerItem>>(NamedFileServers);
@@ -2486,7 +2400,10 @@ public partial class AxpertAdmin : System.Web.UI.Page
         try
         {
             FDW fdwObj = new FDW(proj);
-            fdwObj.DeleteAllKeys(proj + "-" + Constants.AXARM_ExtRes_CONN_KEY, proj);
+            //fdwObj.DeleteAllKeys(proj + "-" + Constants.AXARM_ExtRes_CONN_KEY, proj);
+            //fdwObj.HashDeletekeyNew(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_ExtRes_CONN_KEY, proj);
+            fdwObj.HashDeleteAllkey(Constants.AX_COMMON_APPSETTING_KEY, proj);
+            HttpContext.Current.Session.Remove("AppAllSettingsKey-" + proj);
         }
         catch (Exception ex) { }
         string ScriptsPathARM = HttpContext.Current.Application["ScriptsPath"].ToString() + "AppSettings.ini";
@@ -2508,9 +2425,20 @@ public partial class AxpertAdmin : System.Web.UI.Page
     }
 
 
-    [WebMethod]
-    public static string DelExternalResWs(string proj)
+    [WebMethod(EnableSession = true)]
+    public static string DelExternalResWs(string proj, string csrfToken)
     {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(proj))
+            throw new SecurityException("Invalid format.");
+
         string result = "";
         try
         {
@@ -2546,7 +2474,10 @@ public partial class AxpertAdmin : System.Web.UI.Page
         try
         {
             FDW fdwObj = new FDW(proj);
-            fdwObj.DeleteAllKeys(proj + "-" + Constants.AXARM_ExtRes_CONN_KEY, proj);
+            //fdwObj.DeleteAllKeys(proj + "-" + Constants.AXARM_ExtRes_CONN_KEY, proj);
+            //fdwObj.HashDeletekeyNew(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_ExtRes_CONN_KEY, proj);
+            fdwObj.HashDeleteAllkey(Constants.AX_COMMON_APPSETTING_KEY, proj);
+            HttpContext.Current.Session.Remove("AppAllSettingsKey-" + proj);
         }
         catch (Exception ex) { }
         string ScriptsPathARMdel = HttpContext.Current.Application["ScriptsPath"].ToString() + "AppSettings.ini";
@@ -2566,6 +2497,135 @@ public partial class AxpertAdmin : System.Web.UI.Page
         catch (Exception ex) { }
         return result;
     }
+
+    private static bool IsValidArmUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return false;
+
+        url = url.Trim();
+
+        Uri uri;
+        if (!Uri.TryCreate(url, UriKind.Absolute, out uri))
+            return false;
+
+        if (uri.Scheme != Uri.UriSchemeHttp &&
+            uri.Scheme != Uri.UriSchemeHttps)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(uri.Host))
+            return false;
+
+        if (url.Contains("<") ||
+            url.Contains(">") ||
+            url.Contains("\"") ||
+            url.Contains("'"))
+            return false;
+
+        string decoded =
+            HttpUtility.UrlDecode(url).ToLower();
+
+        if (decoded.Contains("javascript:") ||
+            decoded.Contains("data:") ||
+            decoded.Contains("file:") ||
+            decoded.Contains("<script"))
+            return false;
+
+        return true;
+    }
+
+    [WebMethod(EnableSession = true)]
+    public static string SaveAxpertDevOptionsWs(string proj, string devOpt, string csrfToken)
+    {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(proj) || Util.Util.CheckCrossScriptingInString(devOpt))
+            throw new SecurityException("Invalid format.");
+
+        string result = "";
+        try
+        {
+            string project = proj;
+            var propertiesDict = new Dictionary<string, object>
+            {
+                { "Options", devOpt }
+            };
+            var propData = new Dictionary<string, object> {
+                { "AxpDevOptsMenu", propertiesDict }
+            };
+            var appDict = new Dictionary<string, object>
+            {
+                { project, propData }
+            };
+            var mainDict = new Dictionary<string, object>
+            {
+                { "appsettings", appDict }
+            };
+            string jsonString = JsonConvert.SerializeObject(mainDict);
+            string _ScriptsPath = HttpContext.Current.Application["ScriptsPath"].ToString() + "AppSettings.ini";
+            string filePath = @" " + _ScriptsPath + "";
+            string directoryPath = Path.GetDirectoryName(filePath);
+            FileInfo Filefi = new FileInfo(_ScriptsPath);
+            if (!Filefi.Exists)
+            {
+                File.WriteAllText(_ScriptsPath, jsonString);
+            }
+            else
+            {
+                string existingJson = File.ReadAllText(filePath);
+                if (existingJson != "")
+                {
+                    JObject json = JObject.Parse(existingJson);
+                    JObject newData = JObject.Parse(jsonString);
+                    json.Merge(newData, new JsonMergeSettings
+                    {
+                        MergeArrayHandling = MergeArrayHandling.Union
+                    });
+                    File.WriteAllText(filePath, json.ToString());
+                }
+            }
+
+            Util.Util uti = new Util.Util();
+            string _appsettings = uti.GetAxAppSettings();
+            if (!string.IsNullOrEmpty(_appsettings))
+            {
+                HttpContext.Current.Application["AppSettingsIni"] = _appsettings;
+            }
+        }
+        catch (Exception ex)
+        {
+        }
+
+        try
+        {
+            FDW fdwObj = new FDW(proj);
+            fdwObj.HashDeleteAllkey(Constants.AX_COMMON_APPSETTING_KEY, proj);
+            HttpContext.Current.Session.Remove("AppAllSettingsKey-" + proj);
+        }
+        catch (Exception ex) { }
+        string ScriptsPath = HttpContext.Current.Application["ScriptsPath"].ToString() + "AppSettings.ini";
+        string SaveddevOpt = @" " + ScriptsPath + "";
+        FileInfo Filefiarm = new FileInfo(ScriptsPath);
+        try
+        {
+            if (Filefiarm.Exists)
+            {
+                string existingJson = File.ReadAllText(SaveddevOpt);
+                existingJson = JsonConvert.SerializeObject(existingJson);
+                result = existingJson;
+            }
+
+        }
+        catch (Exception ex) { }
+        return result;
+    }
+
 }
 
 public class NamedUrlItem
@@ -2584,4 +2644,16 @@ public class NamedFileServerItem
 {
     public string Name { get; set; }
     public string FileServer { get; set; }
+}
+
+public class LoginAttemptInfo
+{
+    public int FailedAttempts { get; set; }
+    public DateTime? LockedUntil { get; set; }
+}
+
+public class RateLimitInfo
+{
+    public int Count { get; set; }
+    public DateTime WindowStart { get; set; }
 }

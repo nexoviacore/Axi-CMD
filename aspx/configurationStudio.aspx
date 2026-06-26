@@ -361,7 +361,7 @@
                                             <span class="d-flex mx-2">
                                                 <i class="setting-icon material-icons">code</i>
                                             </span>
-                                            <span class="menu-title mx-2">Script Job</span>
+                                            <span class="menu-title mx-2">Axpert Jobs</span>
                                         </a>
                                     </div>
                                     <div class="menu-item">
@@ -491,8 +491,8 @@
     </asp:PlaceHolder>
 
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
-    <script src="../Js/helper.min.js?v=172" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
+    <script src="../Js/helper.min.js?v=175" type="text/javascript"></script>
     <script src="../js/configurationStudio.min.js?v=11" type="text/javascript"></script>
     <script type="text/javascript">
         $(callParentNew("appBackBtn", "class")).hide();

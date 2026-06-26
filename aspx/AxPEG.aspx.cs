@@ -163,7 +163,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/ARMGetActiveTasks";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetActiveTasks";
 
         var connectionDetails = new
         {
@@ -193,7 +193,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/ARMGetBulkActiveTasks";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetBulkActiveTasks";
 
         var connectionDetails = new
         {
@@ -226,7 +226,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/ARMDoTaskAction";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMDoTaskAction";
         string password = MD5Hash(HttpContext.Current.Session["pwd"].ToString());
         var taskDetails = new
         {
@@ -267,7 +267,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/ARMDoBulkAction";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMDoBulkAction";
         string password = MD5Hash(HttpContext.Current.Session["pwd"].ToString());
         var taskDetails = new
         {
@@ -303,7 +303,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string processUrl = ARM_URL + "/api/v1/ARMGetProcessFlow";
+        string processUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetProcessFlow";
 
         var processDetails = new
         {
@@ -336,7 +336,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string processUrl = ARM_URL + "/api/v1/ARMGetAxProcessDefinition";
+        string processUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetAxProcessDefinition";
 
         var processDetails = new
         {
@@ -367,7 +367,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string processUrl = ARM_URL + "/api/v1/ARMGetAxProcessList";
+        string processUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetAxProcessList";
 
         var processDetails = new
         {
@@ -399,7 +399,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string processUrl = ARM_URL + "/api/v1/ARMGetProcessTask";
+        string processUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetProcessTask";
 
         var processDetails = new
         {
@@ -431,7 +431,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string processUrl = ARM_URL + "/api/v1/ARMGetProcessKeyValues";
+        string processUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetProcessKeyValues";
 
         var processDetails = new
         {
@@ -462,7 +462,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string processUrl = ARM_URL + "/api/v1/ARMGetKeyValue";
+        string processUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetKeyValue";
 
         var processDetails = new
         {
@@ -495,7 +495,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string dataUrl = ARM_URL + "/api/v1/ARMGetDataSourcesData";
+        string dataUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetDataSourcesData";
 
         var processDetails = new
         {
@@ -528,7 +528,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string dataUrl = ARM_URL + "/api/v1/ARMGetTimelineData";
+        string dataUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetTimelineData";
 
         var processDetails = new
         {
@@ -561,7 +561,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string dataUrl = ARM_URL + "/api/v1/ARMGetProcessCardsData";
+        string dataUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetProcessCardsData";
 
         var processDetails = new
         {
@@ -596,7 +596,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string dataUrl = ARM_URL + "/api/v1/ARMGetCardsDataByIds";
+        string dataUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetCardsDataByIds";
         var globalParams = GetGlobalParams(HttpContext.Current.Session["axGlobalVars"].ToString());
         foreach (KeyValuePair<string, string> kvp in cardsParams)
         {
@@ -641,7 +641,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string dataUrl = ARM_URL + "/api/v1/ARMGetSendToUsers";
+        string dataUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetSendToUsers";
 
         var processDetails = new
         {
@@ -676,7 +676,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string dataUrl = ARM_URL + "/api/v1/ARMGetProcessUserType";
+        string dataUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetProcessUserType";
 
         var processDetails = new
         {
@@ -708,7 +708,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string dataUrl = ARM_URL + "/api/v1/ARMGetNextTaskInProcess";
+        string dataUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetNextTaskInProcess";
 
         var processDetails = new
         {
@@ -737,13 +737,13 @@ public partial class aspx_AxPEG : System.Web.UI.Page
         string ARMSessionId = _aUtils.ARMSessionId;
         string sessionId = HttpContext.Current.Session.SessionID;
 
-        //string dataUrl = ConfigurationManager.AppSettings["ARM_URL"] + "/api/v1/ARMGetEditableTask";
+        //string dataUrl = ConfigurationManager.AppSettings["ARM_URL"] + "/ARM_APIs/api/v1/ARMGetEditableTask";
         string ARM_URL = string.Empty;
         if (HttpContext.Current.Session["ARM_URL"] != null)
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string dataUrl = ARM_URL + "/api/v1/ARMGetEditableTask";
+        string dataUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetEditableTask";
 
         var processDetails = new
         {
@@ -774,13 +774,13 @@ public partial class aspx_AxPEG : System.Web.UI.Page
         string ARMSessionId = _aUtils.ARMSessionId;
         string sessionId = HttpContext.Current.Session.SessionID;
 
-        //string dataUrl = ConfigurationManager.AppSettings["ARM_URL"] + "/api/v1/ARMGetEditableTask";
+        //string dataUrl = ConfigurationManager.AppSettings["ARM_URL"] + "/ARM_APIs/api/v1/ARMGetEditableTask";
         string ARM_URL = string.Empty;
         if (HttpContext.Current.Session["ARM_URL"] != null)
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string dataUrl = ARM_URL + "/api/v1/ARMGetEditableForm";
+        string dataUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetEditableForm";
 
         var processDetails = new
         {
@@ -966,7 +966,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string dataUrl = ARM_URL + "/api/v1/ARMGetActiveListPageData";
+        string dataUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetActiveListPageData";
 
         var processDetails = new
         {
@@ -998,7 +998,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
         string ARMSessionId = _aUtils.ARMSessionId;
         string sessionId = HttpContext.Current.Session.SessionID;
 
-        string dataUrl = "http://20.244.123.19/ARMTest/api/v1/ARMGetDataFromSQL";
+        string dataUrl = "http://20.244.123.19/ARMTest/ARM_APIs/api/v1/ARMGetDataFromSQL";
 
         var processDetails = new
         {
@@ -1043,7 +1043,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
         string ARMSessionId = _aUtils.ARMSessionId;
         string sessionId = HttpContext.Current.Session.SessionID;
 
-        string dataUrl = "http://20.244.123.19/ARMTest/api/v1/ARMGetDropDownDataFromSQL";
+        string dataUrl = "http://20.244.123.19/ARMTest/ARM_APIs/api/v1/ARMGetDropDownDataFromSQL";
 
         var processDetails = new
         {
@@ -1069,7 +1069,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
     //        return Constants.SESSIONTIMEOUT;
     //    }
 
-    //    string dataUrl = "http://20.244.123.19/ARMTest/api/v1/ARMPushJobsToQueue";
+    //    string dataUrl = "http://20.244.123.19/ARMTest/ARM_APIs/api/v1/ARMPushJobsToQueue";
 
     //    var processDetails = new
     //    {
@@ -1101,7 +1101,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string dataUrl = ARM_URL + "/api/v1/ARMGetOptionalTask";
+        string dataUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetOptionalTask";
 
         var processDetails = new
         {
@@ -1304,7 +1304,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/ARMGetPendingActiveTasks";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetPendingActiveTasks";
 
         var connectionDetails = new
         {
@@ -1340,7 +1340,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/ARMGetCompletedTasks";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetCompletedTasks";
 
         var connectionDetails = new
         {
@@ -1376,7 +1376,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/ARMPEGGetTaskDetails";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMPEGGetTaskDetails";
 
         var connectionDetails = new
         {
@@ -1414,9 +1414,9 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             return "Error in ARM connection.";
         string tasksUrl = string.Empty;
         if (filterType == "pending")
-            tasksUrl = ARM_URL + "/api/v1/ARMGetFilteredActiveTasks";
+            tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetFilteredActiveTasks";
         else
-            tasksUrl = ARM_URL + "/api/v1/ARMGetFilteredCompletedTasks";
+            tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetFilteredCompletedTasks";
 
         var connectionDetails = new
         {
@@ -1457,7 +1457,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/ARMGetBulkApprovalCount";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetBulkApprovalCount";
 
         var connectionDetails = new
         {
@@ -1485,7 +1485,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string dataUrl = ARM_URL + "/api/v1/ARMGetApproveToTasks";
+        string dataUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetApproveToTasks";
 
         var processDetails = new
         {
@@ -1523,7 +1523,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string dataUrl = ARM_URL + "/api/v1/ARMGetReturnToTasks";
+        string dataUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetReturnToTasks";
 
         var processDetails = new
         {
@@ -1563,7 +1563,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/ARMGetAllActiveTasks";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMGetAllActiveTasks";
 
         var connectionDetails = new
         {
@@ -1599,7 +1599,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/GetDataFromDatasource";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/GetDataFromDatasource";
 
         //AnalyticsUtils _aUtils = new AnalyticsUtils();
         var connectionDetails = new
@@ -1634,7 +1634,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/AxList";
+        string tasksUrl = ARM_URL + "/AxList/api/v1/AxList";
 
         //AnalyticsUtils _aUtils = new AnalyticsUtils();
 
@@ -1684,7 +1684,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
         else
             return "Error in ARM connection.";
-        string tasksUrl = ARM_URL + "/api/v1/ARMPushToQueue";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/ARMPushToQueue";
 
         var connectionDetails = new
         {

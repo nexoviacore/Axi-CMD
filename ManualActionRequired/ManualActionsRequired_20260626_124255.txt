@@ -1,0 +1,48 @@
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release34\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release34\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertServices\ARMExecuteScriptService\ManualActionRequired\Version 11.4\Release34\appsettings.json
+Manual download required for ZIP file:
+Download and extract the following file manually:
+https://raw.githubusercontent.com/Agileaxpert/AxpertReleases/main/Version%2011.4/Release35/AxpertARM/ARMAPI.zip
+--------------------------------------------------
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release35\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release35\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertServices\ARMConvertXLtoJSONWorkerService\ManualActionRequired\Version 11.4\Release35\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertServices\ARMRapidSaveWorkerService\ManualActionRequired\Version 11.4\Release35\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release36\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release36\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release37\appsettings.json
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertStudio\ManualActionRequired\Version 11.4\Release37\web.config

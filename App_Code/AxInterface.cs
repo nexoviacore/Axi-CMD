@@ -33,7 +33,7 @@ namespace AxInterface
         public string GenerateXMLStrucuture()
         {
             string errorLog = logobj.CreateLog("Save data from AxInterface page.", HttpContext.Current.Session["nsessionid"].ToString(), "Savedata-" + transID, "new");
-            string properties = "<Transaction axpapp=\"" + HttpContext.Current.Session["project"].ToString() + "\" afiles=\"\" trace=\"" + errorLog + "\" sessionid=\"" + HttpContext.Current.Session["nsessionid"].ToString() + "\" appsessionkey='" + HttpContext.Current.Session["AppSessionKey"].ToString() + "' username='" + HttpContext.Current.Session["username"].ToString() + "'>{0}" + HttpContext.Current.Session["axApps"].ToString() + HttpContext.Current.Application["axProps"].ToString() + HttpContext.Current.Session["axGlobalVars"].ToString() + HttpContext.Current.Session["axUserVars"].ToString() + "</Transaction>";
+            string properties = "<Transaction axpapp=\"" + HttpContext.Current.Session["project"].ToString() + "\" afiles=\"\" trace=\"" + errorLog + "\" sessionid=\"" + HttpContext.Current.Session["nsessionid"].ToString() + "\" appsessionkey='" + HttpContext.Current.Session["AppSessionKey"].ToString() + "' username='" + HttpContext.Current.Session["username"].ToString() + "'>{♦♠♣♥}" + HttpContext.Current.Session["axApps"].ToString() + HttpContext.Current.Application["axProps"].ToString() + HttpContext.Current.Session["axGlobalVars"].ToString() + HttpContext.Current.Session["axUserVars"].ToString() + "</Transaction>";
             sb.Append("<data transid=\"" + transID + "\" recordid=\""+ recordId + "\">");
 
             foreach (var dts in objDs.Tables)
@@ -54,7 +54,8 @@ namespace AxInterface
                 }
             }
             sb.Append("</data>");
-            return CallSaveDataWS(transID, string.Format(properties, sb.ToString()));
+            //return CallSaveDataWS(transID, string.Format(properties, sb.ToString()));
+            return CallSaveDataWS(transID, properties.Replace("{♦♠♣♥}", sb.ToString()));
         }
 
         private string CallSaveDataWS(string transId, string saveDataInput)

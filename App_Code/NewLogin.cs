@@ -66,7 +66,7 @@ public class LoginHelper
 
     private string Password;
 
-
+    public string adodbuserALC { get; set; }
 
 
     public string password
@@ -116,7 +116,12 @@ public class LoginHelper
     private string loginXml { get; set; }
     public string selectedLanguage { get; set; }
     private bool IsSSO;
+    public string IsAxi { get; set; }
+    //public string AxiInfoLogin { get; set; }
+    //public string axiPrimary { get; set; }
     public string ExecTraceOn { get; set; }
+
+    public Dictionary<string, string> IniInfo = new Dictionary<string, string>();
 
     public Dictionary<string, string> sessions = new Dictionary<string, string>();
 
@@ -134,6 +139,10 @@ public class LoginHelper
         proj = projectName;
         util.GetAxApps(projectName);
         axApps = HttpContext.Current.Session["axApps"].ToString();
+        if (HttpContext.Current.Session["adodbuserALC"] != null && HttpContext.Current.Session["adodbuserALC"].ToString() != "")
+            adodbuserALC = HttpContext.Current.Session["adodbuserALC"].ToString();
+        else
+            adodbuserALC = string.Empty;
         userDetails = browserDetails;
         if (HttpContext.Current.Session["AxCloudDB"] != null)
             AxCloudDb = HttpContext.Current.Session["AxCloudDB"].ToString();
@@ -236,7 +245,15 @@ public class LoginHelper
         ExecTrace ObjExecTr = ExecTrace.Instance;
         string strRequest = ObjExecTr.RequestProcessTime("Request");
         DateTime kst = DateTime.Now;
-        result = ALCClient.CallALCClientLogin(ExecTraceOn, loginXml);
+        if (HttpContext.Current.Session["AxiInfoLogin"] != null && HttpContext.Current.Session["AxiInfoLogin"] != string.Empty)
+        {
+            string AxiInfoLogin = HttpContext.Current.Session["AxiInfoLogin"].ToString();
+            HttpContext.Current.Session.Remove("AxiInfoLogin");
+            result = ALCClient.CallALCClientLogin(ExecTraceOn, loginXml, adodbuserALC + "♠" + AxiInfoLogin);
+        }
+        else
+            result = ALCClient.CallALCClientLogin(ExecTraceOn, loginXml, adodbuserALC);
+
         ASBExt.WebServiceExt objWebServiceExt = new ASBExt.WebServiceExt();
         if (ExecTraceOn == "true")
         {

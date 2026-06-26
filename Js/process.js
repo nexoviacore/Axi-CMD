@@ -868,6 +868,9 @@ function CheckDisabledActionBtn(actionName) {
 
 //Function to call action webservice. 
 function CallAction(actionName, fileup, confirmmsg, remarks, manRemarks, dsignaction, isScript) {
+    if (CheckBtnReadOnly(`CallAction('${actionName}','${fileup}','${confirmmsg}','${remarks}','${manRemarks}','${dsignaction}','${isScript}')`)) {
+        return;
+    }
     if (actionCallFlag == actionCallbackFlag) {
         actionCallFlag = Math.random();
         $("#icons,#btnSaveTst,.BottomToolbarBar a").css({ "pointer-events": "auto" });
@@ -929,6 +932,25 @@ function CallAction(actionName, fileup, confirmmsg, remarks, manRemarks, dsignac
             }
         }
         try {
+            try {
+                if (typeof actionName != "undefined" && actionName.startsWith('axpbutton_script') && typeof isScript == "undefined") {
+                    isScript = true;
+                    if (actionName.indexOf("_") != -1) {
+                        let _fullFldName = actionName;
+                        if ($j.inArray(GetFieldsName(actionName), FNames) != -1) {
+                            startIndex = actionName.lastIndexOf("_");
+                            actionName = actionName.substring(startIndex + 1);
+                        }
+                        if (actionName.indexOf("F") != -1) {
+                            activerow = parseInt(GetActiveRow(_fullFldName), 10) + 1;
+                            var fIndx = actionName.lastIndexOf("F");
+                            dcNo = parseInt(actionName.toString().substring(fIndx + 1));
+                            actionName = actionName.substring(0, fIndx - 3);
+                        }
+                    }
+                }
+            } catch (ex) { }
+
             let actInd = $j.inArray(actionName, tstActionName);
             if (actInd > -1 && typeof actScriptActive != "undefined" && actScriptActive[actInd] != "true") {
                 showAlertDialog("error", 'Script is not Active, please check the defintion.');
@@ -939,6 +961,18 @@ function CallAction(actionName, fileup, confirmmsg, remarks, manRemarks, dsignac
                 GetProcessTime();
                 GetTotalElapsTime();
                 return;
+            }
+
+            if (actInd > -1 && typeof actConfreq != "undefined" && actConfreq[actInd] == "t" && actConfmsg[actInd] != "") {
+                if (!confirm(actConfmsg[actInd])) {
+                    ShowDimmer(false);
+                    AxWaitCursor(false);
+                    actionCallbackFlag = actionCallFlag;
+                    $("#icons,#btnSaveTst,.BottomToolbarBar a,.wizardNextPrevWrapper").css({ "pointer-events": "auto" });
+                    GetProcessTime();
+                    GetTotalElapsTime();
+                    return;
+                }
             }
             if (actInd > -1 && typeof actScriptPushtoQueue != "undefined" && actScriptPushtoQueue[actInd] == "t" && actScriptQueueName[actInd] != "") {
                 if (recordid == "" || recordid == "0") {
@@ -1013,7 +1047,7 @@ function CallAction(actionName, fileup, confirmmsg, remarks, manRemarks, dsignac
                 }
             }
 
-            if (typeof actSaveTask != "undefined" && actSaveTask[actInd] == "save") {
+            if (actInd > -1 && typeof actSaveTask != "undefined" && actSaveTask[actInd] == "save") {
 
                 if (typeof tstructCachedsave != 'undefined' && tstructCachedsave == "T" && (recordid == "" || recordid == "0")) {
                     if (typeof callParentNew('signalRNotifications') != 'undefined' && callParentNew('signalRNotifications') == 'true') {
@@ -1061,6 +1095,16 @@ function CallAction(actionName, fileup, confirmmsg, remarks, manRemarks, dsignac
                         return;
                     }
                 }
+                if (typeof tstReadOnly != "undefined" && tstReadOnly) {
+                    ShowDimmer(false);
+                    AxWaitCursor(false);
+                    actionCallbackFlag = actionCallFlag;
+                    $("#icons,#btnSaveTst,.BottomToolbarBar a,.wizardNextPrevWrapper").css({ "pointer-events": "auto" });
+                    GetProcessTime();
+                    GetTotalElapsTime();
+                    showAlertDialog("error", 'Read only transaction not allowed to Save.');
+                    return;
+                }
             }
 
             if (actInd > -1 && typeof actScriptTask != "undefined" && (actScriptTask[actInd].startsWith("doformdesign♠"))) {
@@ -1101,7 +1145,6 @@ function CallAction(actionName, fileup, confirmmsg, remarks, manRemarks, dsignac
                 ShowDimmer(false);
                 AxWaitCursor(false);
                 $("#icons,#btnSaveTst,.BottomToolbarBar a,.wizardNextPrevWrapper").css({ "pointer-events": "auto" });
-
                 return;
             }
 
@@ -1122,6 +1165,28 @@ function CallAction(actionName, fileup, confirmmsg, remarks, manRemarks, dsignac
                 let scriptRemark = EvaluateDirectScript(actScriptCancel[actInd].split("♠")[1]);
                 if (scriptRemark != "" && (scriptRemark.toLowerCase() == "y" || scriptRemark.toLowerCase() == "t"))
                     remarks = "y";
+                if (typeof tstReadOnly != "undefined" && tstReadOnly) {
+                    ShowDimmer(false);
+                    AxWaitCursor(false);
+                    actionCallbackFlag = actionCallFlag;
+                    $("#icons,#btnSaveTst,.BottomToolbarBar a,.wizardNextPrevWrapper").css({ "pointer-events": "auto" });
+                    GetProcessTime();
+                    GetTotalElapsTime();
+                    showAlertDialog("error", 'Read only transaction not allowed to Cancel.');
+                    return;
+                }
+            }
+            if (actInd > -1 && typeof actScriptCancel != "undefined" && (actScriptCancel[actInd].startsWith("deletetransaction♠"))) {
+                if (typeof tstReadOnly != "undefined" && tstReadOnly) {
+                    ShowDimmer(false);
+                    AxWaitCursor(false);
+                    actionCallbackFlag = actionCallFlag;
+                    $("#icons,#btnSaveTst,.BottomToolbarBar a,.wizardNextPrevWrapper").css({ "pointer-events": "auto" });
+                    GetProcessTime();
+                    GetTotalElapsTime();
+                    showAlertDialog("error", 'Read only transaction not allowed to Delete.');
+                    return;
+                }
             }
         } catch (ex) { }
 
@@ -1308,6 +1373,7 @@ function CallActionExt(actionName, fileup, remarks, dsignaction, isScript, ruleS
 
 //callback function from the callaction webservice.
 function SuccessCallbackAction(result, eventArgs) {
+    let attaErrors = "";
     if (result != "") {
         if (result.split("♠*♠").length > 1) {
             tstDataId = result.split("♠*♠")[0];
@@ -1316,13 +1382,21 @@ function SuccessCallbackAction(result, eventArgs) {
         if (result.split("*♠*").length > 1) {
             var serverprocesstime = result.split("*♠*")[0];
             var requestProcess_logtime = result.split("*♠*")[1];
+            if (requestProcess_logtime.split("♣$♣").length > 1)
+                attaErrors = requestProcess_logtime.split("♣$♣")[1];
             result = result.split("*♠*")[2];
             WireElapsTime(serverprocesstime, requestProcess_logtime);
         } else {
             UpdateExceptionMessageInET("Error : " + result);
         }
     }
-
+    try {
+        if (typeof attaErrors != "undefined" && attaErrors != "") {
+            let _attaErrors = attaErrors;
+            attaErrors = "";
+            ShowDialog('error', _attaErrors);
+        }
+    } catch (ex) { }
     if (result != "") {// && result.toLowerCase().indexOf("access violation") === -1) {
         let _istimeTaking = false;
         if (result.indexOf('{"msg":"This proces taking time is more than expected. You will get a notification once completed"}') == -1) {
@@ -1401,19 +1475,82 @@ function SuccessCallbackAction(result, eventArgs) {
                 else if (tmpPeriod == "custom") {
                     sendOn = $("#noofmins000F1").val()
                 }
+                let _glCulture = eval(callParent('glCulture'));
+                let start_date = $("#jobstartfrom000F1").val();
+                if (_glCulture.toLowerCase() === "en-us" && start_date) {
+                    let parts = start_date.split('/');
+                    if (parts.length === 3) {
+                        let month = parts[0];
+                        let day = parts[1];
+                        let year = parts[2];
+                        start_date = day + '/' + month + '/' + year;
+                    }
+                }
                 $.ajax({
                     type: "POST",
                     url: "../aspx/AxPEG.aspx/AxPushToQueue",
                     data: JSON.stringify({
                         queueName: "ARMAxpertJobsQueue",
                         queueJson: {
-                            "start_date": $("#jobstartfrom000F1").val(),
+                            "start_date": start_date,
                             "period": period,
                             "sendtime": $("#axptm_starttime000F1").val(),
                             "sendon": sendOn,
                             "project": $("#appname000F1").val(),
                             "jobname": $("#jname000F1").val(),
                             "username": callParentNew("mainUserName")
+                        }
+                    }),
+                    cache: false,
+                    async: false,
+                    dataType: 'json',
+                    contentType: "application/json",
+                    success: function (response) {
+                        try {
+                            var result = JSON.parse(response.d);
+                            if (!result.result.success) {
+                                showAlertDialog("error", "Error occurred while Queue call-" + result.result.message);
+                                flag = true;
+                            }
+                        }
+                        catch (e) {
+                            showAlertDialog("error", "Error occurred while Queue call-" + response.d)
+                            flag = true;
+                        }
+                    },
+                    error: function (error) {
+                        ShowDialog("error", "Error occurred while Queue call-" + error.responseJSON.Message);
+                        flag = true;
+                    }
+                });
+            }
+        } else if (transid == "a__pn" && AxActiveAction == "script5") {
+            let isSuccessFullSave = (typeof result != "undefined" && result.indexOf('{\"result\":[{\"save\": \"success\"}]}') > -1);
+            if (isSuccessFullSave) {
+                let _glCulture = eval(callParent('glCulture'));
+                let start_date = $("#startdate000F1").val();
+                if (_glCulture.toLowerCase() === "en-us" && start_date) {
+                    let parts = start_date.split('/');
+                    if (parts.length === 3) {
+                        let month = parts[0];
+                        let day = parts[1];
+                        let year = parts[2];
+                        start_date = day + '/' + month + '/' + year;
+                    }
+                }
+                $.ajax({
+                    type: "POST",
+                    url: "../aspx/AxPEG.aspx/AxPushToQueue",
+                    data: JSON.stringify({
+                        queueName: "ARMPeriodicNotificationQueue",
+                        queueJson: {
+                            "project": callParentNew("mainProject"),
+                            "notification": $("#name000F1").val(),
+                            "username": callParentNew("mainUserName"),
+                            "start_date": start_date,
+                            "period": $("#frequency000F1").val(),
+                            "sendon": $("#sendday000F1").val(),
+                            "sendtime": $("#sendtime000F1").val()
                         }
                     }),
                     cache: false,
@@ -2189,7 +2326,7 @@ function ExecData(dataJsonObj, calledFrom, isExcelImp = false) {
                 if (calledFrom != "CallAdd") {
                     if ((calledFrom == "FillGrid" || calledFrom == "GetDep") && isMobile && !axInlineGridEdit && AxpGridForm == "form") {
                         let _fillCond = FillCondition[ind];
-                        if (calledFrom == "GetDep" && typeof _fillCond != "undefined") {
+                        if (calledFrom == "GetDep" && typeof _fillCond != "undefined" && delRows.indexOf("d*") > -1) {
                             if (isMobile && !axInlineGridEdit && AxpGridForm == "form" && $("#gridHd" + dcNo + " tbody tr").length > 0) {
                                 var fDcRowCount = GetDcRowCount(dcNo);
                                 DeleteAllRows(dcNo, fDcRowCount, "FillGrid");
@@ -3068,6 +3205,9 @@ function ExecWorkflow(wfJsonObj) {
                 btnarr = btn.split("~");
                 ReadonlyWfButtons();
                 for (var k = 0; k < btnarr.length; k++) {
+                    if ($j("#selectbox").length == 0) {
+                        $(".dropbox .wfselectbox").replaceWith(`<div class="wfselectbox d-none"><div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-bold w-200px py-3" data-kt-menu="true" data-popper-placement="bottom-end" id="selectbox"></div></div>`);
+                    }
                     if (btnarr[k] == "a") {
                         $j("#btntabapprove").prop("disabled", false);
                         $j("#btntabapprove").removeClass("disablewfbuttons").addClass("enablewfbuttons");
@@ -3131,6 +3271,12 @@ function ExecWorkflow(wfJsonObj) {
             if (wfJsonObj[i].readonlyform == "true") {
                 //AxOnApproveDisable = true;
                 Readonlyform();
+
+                let _saveBtn = $('a[onclick*="javascript:FormSubmit();"]');
+                _saveBtn.addClass("disabled").css({ "pointer-events": "none" }).off("click").on("click", function (e) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                });
             }
         }
         if (wfJsonObj[i].allowcancel) {
@@ -3143,24 +3289,24 @@ function ExecWorkflow(wfJsonObj) {
                 });
             }
         }
-        try {
-            if (wfJsonObj[i].allowedit) {
-                let _allowedit = wfJsonObj[i].allowedit.toString().toLowerCase();
-                if (_allowedit == 'false') {
-                    let _saveBtn = $('a[onclick*="javascript:FormSubmit();"]');
-                    _saveBtn.addClass("disabled").css({ "pointer-events": "none" }).off("click").on("click", function (e) {
-                        e.preventDefault();
-                        e.stopImmediatePropagation();
-                    });
+        //try {
+        //    if (wfJsonObj[i].allowedit) {
+        //        let _allowedit = wfJsonObj[i].allowedit.toString().toLowerCase();
+        //        if (_allowedit == 'false') {
+        //            let _saveBtn = $('a[onclick*="javascript:FormSubmit();"]');
+        //            _saveBtn.addClass("disabled").css({ "pointer-events": "none" }).off("click").on("click", function (e) {
+        //                e.preventDefault();
+        //                e.stopImmediatePropagation();
+        //            });
 
-                    //let _actBtn = $('a[onclick*="javascript:CallAction("]');
-                    //_actBtn.addClass("disabled").css({ "pointer-events": "none", "opacity": "0.5" }).off("click").on("click", function (e) {
-                    //    e.preventDefault();
-                    //    e.stopImmediatePropagation();
-                    //});
-                }
-            }
-        } catch (ex) { }
+        //            //let _actBtn = $('a[onclick*="javascript:CallAction("]');
+        //            //_actBtn.addClass("disabled").css({ "pointer-events": "none", "opacity": "0.5" }).off("click").on("click", function (e) {
+        //            //    e.preventDefault();
+        //            //    e.stopImmediatePropagation();
+        //            //});
+        //        }
+        //    }
+        //} catch (ex) { }
         if (wfJsonObj[i].maxlevel) {
             maxLevels = wfJsonObj[i].maxlevel;
         }
@@ -3419,6 +3565,17 @@ function ExecFormControl(formControlJsonObj, calledFrom) {
                 }
                 tstReadOnly = true;
                 Readonlyform();
+
+                let _saveBtn = $('a[onclick*="javascript:FormSubmit();"]');
+                _saveBtn.addClass("disabled").css({ "pointer-events": "none" }).off("click").on("click", function (e) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                });
+                let _delBtn = $('a[onclick*="javascript:DeleteTstruct();"]');
+                _delBtn.addClass("disabled").css({ "pointer-events": "none", "opacity": "0.5" }).off("click").on("click", function (e) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                });
             }
         }
 
@@ -3815,7 +3972,7 @@ function CheckUrlSpecialChars(value) {
     value = value.replace(/&/g, "%26");
     value = value.replace(/'/g, "%27");
     value = value.replace(/"/g, "%22");
-    value = value.replace("+", "%2b");
+    value = value.replace(/\+/g, "%2b");
     value = value.replace(/ /g, "%20");
     value = value.replace(/\\/g, "%5C");
     value = value.replace(/</g, "%3C");
@@ -4352,6 +4509,10 @@ function ExecCommand(cmdJsonObj, actnName, axpConfigNavType, calledFrom = "") {
 
                 if ((typeof cmdJsonObj[i].parentrefresh) != "undefined" && cmdJsonObj[i].parentrefresh == "true") {
                     eval(callParent('isRefreshParentOnClose') + "= true");
+                    if (typeof isTstRefreshParentOnClose != "undefined")
+                        isTstRefreshParentOnClose = "true";
+                    else if (typeof isIvRefreshParentOnClose != "undefined")
+                        isIvRefreshParentOnClose = "true";
                 }
 
                 //var openpopup = window.open('tstruct.aspx?act=open&transid=' + tstid + tparams, popname, 'width=800,height=500,scrollbars=yes,resizable=yes');
@@ -4419,6 +4580,10 @@ function ExecCommand(cmdJsonObj, actnName, axpConfigNavType, calledFrom = "") {
                     tparams = tparams + "&AxPop=true";
                     if ((typeof cmdJsonObj[i].parentrefresh) != "undefined" && cmdJsonObj[i].parentrefresh == "true") {
                         eval(callParent('isRefreshParentOnClose') + "= true");
+                        if (typeof isTstRefreshParentOnClose != "undefined")
+                            isTstRefreshParentOnClose = "true";
+                        else if (typeof isIvRefreshParentOnClose != "undefined")
+                            isIvRefreshParentOnClose = "true";
                     }
                     var loadpopup = 'EntityForm.aspx?tstid=' + tstid + tparams + `&act=load&isDupTab=${callParentNew('isDuplicateTab')}&loadformdata=true`;
                     createPopup(loadpopup, true);
@@ -4444,6 +4609,10 @@ function ExecCommand(cmdJsonObj, actnName, axpConfigNavType, calledFrom = "") {
 
                     if ((typeof cmdJsonObj[i].parentrefresh) != "undefined" && cmdJsonObj[i].parentrefresh == "true") {
                         eval(callParent('isRefreshParentOnClose') + "= true");
+                        if (typeof isTstRefreshParentOnClose!="undefined")
+                            isTstRefreshParentOnClose = "true";
+                        else if (typeof isIvRefreshParentOnClose != "undefined")
+                            isIvRefreshParentOnClose = "true";
                     }
 
                     //var loadpopup = window.open('tstruct.aspx?act=load&transid=' + tstid + tparams, popname, 'width=900,height=500,scrollbars=yes,resizable=yes');
@@ -4514,6 +4683,10 @@ function ExecCommand(cmdJsonObj, actnName, axpConfigNavType, calledFrom = "") {
                 tparams = tparams + "&AxIsPop=true";
                 if ((typeof cmdJsonObj[i].parentrefresh) != "undefined" && cmdJsonObj[i].parentrefresh == "true") {
                     eval(callParent('isRefreshParentOnClose') + "= true");
+                    if (typeof isTstRefreshParentOnClose != "undefined")
+                        isTstRefreshParentOnClose = "true";
+                    else if (typeof isIvRefreshParentOnClose != "undefined")
+                        isIvRefreshParentOnClose = "true";
                 }
                 if ((ivn == null || ivn == "") && _parentIview != "") {
                     ivn = callParentNew('iName');
@@ -4902,6 +5075,15 @@ function SetRows(dcNo, rowCount, delRows, calledFrom, oldHasData, dcHasRows) {
 
                         }
                         else if (calledFrom == "FillGrid" && strDelRows[i].toString() == "i1" && delRows.indexOf("i2") == -1 && delRows.indexOf("d*") != -1 && dcHasRows == "yes" && !axInlineGridEdit && AxpGridForm == "form") {
+                            AddNewFormRowInDc(dcNo, calledFrom);
+                            if (gridDummyRowVal.length > 0) {
+                                gridDummyRowVal.map(function (v) {
+                                    if (v.split("~")[0] == dcNo)
+                                        gridDummyRowVal.splice($.inArray(v, gridDummyRowVal), 1);
+                                });
+                            }
+                        }
+                        else if (calledFrom == "GetDep" && strDelRows[i].toString() == "i1" && delRows.indexOf("i2") == -1 && delRows.indexOf("d*") != -1 && dcHasRows == "no" && !axInlineGridEdit && AxpGridForm == "form") {
                             AddNewFormRowInDc(dcNo, calledFrom);
                             if (gridDummyRowVal.length > 0) {
                                 gridDummyRowVal.map(function (v) {
@@ -5516,6 +5698,7 @@ function RemoveArrVal(flname, arrayname) {
 //Function to call the service to view the attachments.
 function OpenAttachment(a, b, isNew) {
     a = ReplaceUrlSpecialChars(a);
+    a = CheckSpecialCharsInXml(a);
     var ofXml = '<root axpapp="' + proj + '"  sessionid="' + sid + '"  filename="' + a + '" transid="' + tst + '"  recordid="' + b + '"   trace="♦♦GetAttachedFile♦">';
 
     try {
@@ -6052,7 +6235,9 @@ function SuccessCallbackDrafts(result, eventArgs) {
 }
 
 function SaveAsDraftNew() {
-    // ShowDimmer(true);
+    if (CheckBtnReadOnly('SaveAsDraftNew()')) {
+        return;
+    }
     try {
         if (AxGlobalChange == true) {
             var strTabDCStatus = getTabDCStatus();
@@ -7237,14 +7422,51 @@ function ReadonlyformPeg() {
     $(".BottomToolbarBar").find('a').addClass('disabled');
     $(".BottomToolbarBar").find('a').attr('disabled', true);
     $(".BottomToolbarBar").find('a').attr('tabindex', -1);
-    $(".toolbarRightMenu").find('a').addClass('disabled');
-    $(".toolbarRightMenu").find('a').attr('disabled', true);
-    $(".toolbarRightMenu").find('button').attr('disabled', true);
-    $(".toolbarRightMenu").find('button').addClass('disabled');
-    $(".toolbarRightMenu").find('button').css({ "pointer-events": "none" });
-    $(".toolbarRightMenu").find('a').attr('tabindex', -1);
-    $(".toolbarRightMenu").find('button').attr('tabindex', -1);
-    $(".toolbarRightMenu").find('a').css({ "pointer-events": "none" });
+
+    //$(".toolbarRightMenu").find('a').addClass('disabled');
+    //$(".toolbarRightMenu").find('a').attr('disabled', true);
+    //$(".toolbarRightMenu").find('a').attr('tabindex', -1);
+    //$(".toolbarRightMenu").find('a').css({ "pointer-events": "none" });
+    //$(".toolbarRightMenu").find('button').attr('disabled', true);
+    //$(".toolbarRightMenu").find('button').addClass('disabled');
+    //$(".toolbarRightMenu").find('button').css({ "pointer-events": "none" });
+    //$(".toolbarRightMenu").find('button').attr('tabindex', -1);
+
+    $(".toolbarRightMenu").find('button:not(#btnAppsHeader)').attr('disabled', true);
+    $(".toolbarRightMenu").find('button:not(#btnAppsHeader)').addClass('disabled');
+    $(".toolbarRightMenu").find('button:not(#btnAppsHeader)').css({ "pointer-events": "none" });
+    $(".toolbarRightMenu").find('button:not(#btnAppsHeader)').attr('tabindex', -1);
+    //$(".toolbarRightMenu").find("a").each(function () {
+    //    var onclickVal = $(this).attr("onclick") || "";
+    //    if (!onclickVal.includes("CallAction(")) {
+    //        $(this).addClass("disabled").css("pointer-events", "none").attr("tabindex", -1).attr("aria-disabled", "true").removeAttr("onclick");
+    //    }
+    //});
+
+    $(".toolbarRightMenu").find("a").each(function () {
+        var $a = $(this);
+        var onclickVal = $a.attr("onclick") || "";
+        if (!onclickVal.includes("CallAction(")) {
+            disableLink($a);
+            return;
+        }
+        var match = onclickVal.match(/CallAction\s*\(\s*['"]([^'"]+)['"]/);
+        if (!match) {
+            disableLink($a);
+            return;
+        }
+        var actionName = match[1];
+        var index = tstActionName.indexOf(actionName);
+        if (index === -1) {
+            disableLink($a);
+            return;
+        }
+        if (typeof actSaveTask !== "undefined" && typeof actSaveTask[index] !== "undefined" && String(actSaveTask[index]).toLowerCase() === "save") {
+            disableLink($a);
+        }
+    });
+
+
     $(".tstructBottomLeftButton").find('.lnkPrev,.lnkNext,a').addClass('disabled');
     $(".tstructBottomLeftButton").find('.lnkPrev,.lnkNext,a').attr('disabled', true);
     $(".tstructBottomLeftButton").find('.lnkPrev,.lnkNext,a').attr('tabindex', -1);
@@ -7259,7 +7481,14 @@ function ReadonlyformPeg() {
     _obj.addClass('btndis');
     _obj.css("pointer-events", 'none');
     _obj.css("cursor", 'default');
-    _obj.attr('tabindex', -1);
+    _obj.attr('tabindex', -1);   
+}
+function disableLink($a) {
+    $a.addClass("disabled")
+        .css("pointer-events", "none")
+        .attr("tabindex", -1)
+        .attr("aria-disabled", "true")
+        .removeAttr("onclick");
 }
 
 function PEGStatusBar(pegMsg) {

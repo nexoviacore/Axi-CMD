@@ -215,10 +215,15 @@ public partial class aspx_EntityForm : System.Web.UI.Page
         string visibleDCs = string.Empty;
         visibleDCs = strObj.GetVisibleDCs();
         logobj.CreateLog("    Recordid = " + rid, sid, fileName, "");
-
+        ASB.WebService objws = new ASB.WebService();
         if (rid != "0")
         {
-            //LoadRecidFromList();
+            hdnTstPermission.Value = objws.GetTstPermissions(transId, "recordid", rid, "view");
+            if (hdnTstPermission.Value != "" && !hdnTstPermission.Value.ToString().StartsWith("{"))
+            {
+                Response.Redirect(util.ERRPATH + hdnTstPermission.Value, false);
+            }
+
             string ConfigDataAttr = string.Empty;
             string AxVarAttr = string.Empty;
             string dbmemvarsXML = string.Empty;
@@ -321,15 +326,43 @@ public partial class aspx_EntityForm : System.Web.UI.Page
                 //loadRes = GetAxMemVars(strObj, loadRes, transId);
                 //HandleFormLoadErr(loadRes, queryString);
             }
+
+            TStructData strDataObj = new TStructData(loadRes, transId, "0", strObj);
+            try
+            {
+                var axp_recid1 = strDataObj.GetFieldValue("1", "axp_recid1");
+                if (rid == "0" && axp_recid1 != string.Empty && axp_recid1 != "0")
+                    rid = axp_recid1.ToString();
+            }
+            catch (Exception ex)
+            {
+                logobj.CreateLog("Exception in Tstruct data get axp_recid1 from dataset :--- " + ex.StackTrace, HttpContext.Current.Session["nsessionid"].ToString(), "Exception-" + transId, "");
+            }
+
+            if (rid != "0")
+            {
+                hdnTstPermission.Value = objws.GetTstPermissions(transId, "recordid", rid, "view");
+                if (hdnTstPermission.Value != "" && !hdnTstPermission.Value.ToString().StartsWith("{"))
+                {
+                    Response.Redirect(util.ERRPATH + hdnTstPermission.Value, false);
+                }
+            }
+            else
+            {
+                logobj.CreateLog("Error in loading record. No record to load with the given input values." + actstr + formFoadData, HttpContext.Current.Session["nsessionid"].ToString(), "Exception-" + transId, "");
+                Response.Redirect(util.ERRPATH + "No record to load with the given input values.", false);
+            }
+
         }
+
         loadRes = loadRes.Trim();
         loadRes = loadRes.Replace("\n", "");
         loadRes = loadRes.Replace("\\", ";bkslh");
         loadRes = loadRes.Replace("'", "&quot;");
 
+
         if (loadRes != "" && strObj.FEncryptFlag.Count > 0)
         {
-            ASB.WebService objws = new ASB.WebService();
             loadRes = objws.AxpFieldDataDecrypt(loadRes, strObj.FEncryptFlag);
         }
 
@@ -728,7 +761,7 @@ public partial class aspx_EntityForm : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
 
 
-        string tasksUrl = ARM_URL + "/api/v1/GetEntityFormMetaData";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/GetEntityFormMetaData";
 
         var entityDetails = new
         {
@@ -759,7 +792,7 @@ public partial class aspx_EntityForm : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
 
 
-        string tasksUrl = ARM_URL + "/api/v1/GetEntityFormPageLoadData";
+        string tasksUrl = ARM_URL + "/AxList/api/v1/GetEntityFormPageLoadData";
 
         var entityDetails = new
         {
@@ -794,7 +827,7 @@ public partial class aspx_EntityForm : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
 
 
-        string tasksUrl = ARM_URL + "/api/v1/GetSubEntityMetaData";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/GetSubEntityMetaData";
 
         var entityDetails = new
         {
@@ -865,7 +898,7 @@ public partial class aspx_EntityForm : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
 
 
-        string tasksUrl = ARM_URL + "/api/v1/GetSubEntityListData";
+        string tasksUrl = ARM_URL + "/AxList/api/v1/GetSubEntityListData";
         string apiFlds = GetSubEntityFilter(fields, subEntityList);
         var entityDetails = new
         {
@@ -905,7 +938,7 @@ public partial class aspx_EntityForm : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
 
 
-        string tasksUrl = ARM_URL + "/api/v1/GetSubEntityChartsData";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/GetSubEntityChartsData";
 
         var entityDetails = new
         {
@@ -942,7 +975,7 @@ public partial class aspx_EntityForm : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
 
 
-        string tasksUrl = ARM_URL + "/api/v1/GetSubEntityChartsMetaData";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/GetSubEntityChartsMetaData";
 
         var entityDetails = new
         {
@@ -974,7 +1007,7 @@ public partial class aspx_EntityForm : System.Web.UI.Page
             ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
 
 
-        string tasksUrl = ARM_URL + "/api/v1/GetEntityFormConnectedDataMetrics";
+        string tasksUrl = ARM_URL + "/ARM_APIs/api/v1/GetEntityFormConnectedDataMetrics";
 
         var entityDetails = new
         {
@@ -1435,7 +1468,7 @@ public partial class aspx_EntityForm : System.Web.UI.Page
                     ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
                 else
                     return "Error in ARM connection.";
-                string connectionUrl = ARM_URL + "/api/v1/ARMConnectFromAxpert";
+                string connectionUrl = ARM_URL + "/AxAuth/api/v1/ARMConnectFromAxpert";
                 AnalyticsUtils _aUtils = new AnalyticsUtils();
                 var connectionResult = _aUtils.CallWebAPI(connectionUrl, "POST", "application/json", JsonConvert.SerializeObject(axpertDetails));
 

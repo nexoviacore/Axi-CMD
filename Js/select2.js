@@ -12,13 +12,15 @@ function createFormSelect(fld) {
     var fldNameAc = "",
         fieldName = "",
         fastdll = "",
-        termVal = "",
-        depFldName = "";
+        termVal = "";
+    var _depFldName = "";
     var isPickMinChar = false;
     var isOnCLose = false;
     var parentFldVal = "";
     var IsBindData = false;
     var isFillFromApi = false;
+    var iscalled = false;
+    var isLSNotExist = false;
     formSelect.select2({
         ajax: {
             url: 'tstruct.aspx/GetAutoCompleteData',
@@ -27,6 +29,8 @@ function createFormSelect(fld) {
             contentType: "application/json; charset=utf-8",
             delay: (typeof params.term == "undefined" || params.term == "") ? 50 : 250,
             data: function (params) {
+                iscalled = true;
+                isLSNotExist = false;
                 GetCurrentTime("Tstruct " + fldNameAc + " Dropdown click(ws call)");
                 let _$this = $(this);
                 if (select2IsOpened && (typeof params.term == "undefined" || params.term == "")) {
@@ -90,7 +94,8 @@ function createFormSelect(fld) {
                         checkDevOptDdlStoreLS();
                     }
                     let _ddlappSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-                    if (isDataStoreInLs == "true" && fastdll == true && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + transid + "♦" + fieldName + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0 && !isRefreshClick && !_$this.hasClass('multiFldChk') && _cacheTrue && isApifld != "true") {
+                    let ddlrefreshsave = $("#" + fldNameAc).hasClass('isrefreshsave');
+                    if (isDataStoreInLs == "true" && fastdll == true && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + transid + "♦" + fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0 && !isRefreshClick && !_$this.hasClass('multiFldChk') && _cacheTrue && isApifld != "true") {
                         IsBindData = true;
                     }
                     else if (FldListParents.length > 0 && FldListParents.indexOf(fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 && termVal == "" && !isRefreshClick && !_$this.hasClass('multiFldChk') && _cacheTrue && isApifld != "true") {//&& $(this).val() != null
@@ -184,15 +189,16 @@ function createFormSelect(fld) {
                             if (typeof serResult.pickdata == "undefined" && typeof serResult.result != "undefined") {
                                 isFillFromApi = true;
                                 rcountNew = serResult.result[2].data.length
-                                depFldName = serResult.result[1].dfname;
+                                _depFldName = serResult.result[1].dfname;
                             } else {
                                 rcountNew = serResult.pickdata[0].rcount;
-                                depFldName = serResult.pickdata[2].dfname;
+                                _depFldName = serResult.pickdata[2].dfname;
                             }
                         } catch (ex) {
                             rcountNew = serResult.pickdata[0].rcount;
-                            depFldName = serResult.pickdata[2].dfname;
+                            _depFldName = serResult.pickdata[2].dfname;
                         }
+                        $("#" + fldNameAc).data('depFldMap', _depFldName);
                         // AutoFillFlds[fieldName] = depFldName;
                         if (rcountNew != 0)
                             rcount = parseInt(rcountNew);
@@ -222,11 +228,12 @@ function createFormSelect(fld) {
                         if (dtAssoc != undefined && dtAssoc.length != 0) {
                             if (!$("#" + fldNameAc).hasClass('multiFldChk')) {
                                 let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);
+                                let ddlrefreshsave = $("#" + fldNameAc).hasClass('isrefreshsave');
                                 if (isDataStoreInLs == "") {
                                     checkDevOptDdlStoreLS();
                                 }
                                 if (fastdll == true && isDataStoreInLs == "true") {
-                                    setDropdownDatafromLS("tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + parentFldVal, JSON.stringify(serResult));
+                                    setDropdownDatafromLS("tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal, JSON.stringify(serResult));
                                 } else {
                                     if (termVal == "") {
                                         /* let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);*/
@@ -406,9 +413,10 @@ function createFormSelect(fld) {
                 if (IsBindData) {
                     let _ddlappSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
                     let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);
+                    let ddlrefreshsave = $("#" + fldNameAc).hasClass('isrefreshsave');
                     if (FldListParents.length > 0 && FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1) {
                         var _thisIdx = FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal);
-                        depFldName = FldListData[_thisIdx].pickdata[2].dfname;
+                        _depFldName = FldListData[_thisIdx].pickdata[2].dfname;
                         var _ArrData = FldListData[_thisIdx].pickdata[3].data;
                         var result = ($.map(_ArrData, function (item) {
                             item.i = item.i.replace(/\^\^dq/g, '&quot;');
@@ -422,14 +430,16 @@ function createFormSelect(fld) {
                         console.clear();
                         $("#" + fldNameAc).select2("data", result, true);
                         $("#" + fldNameAc).select2("updateResults");
+                        $("#" + fldNameAc).data('depFldMap', _depFldName);
                     }
-                    else if (isDataStoreInLs == "true" && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0) {
-                        let _keyPrefix = "tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";
+                    else if (isDataStoreInLs == "true" && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0) {
+                        let _keyPrefix = "tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";
                         let _thisKey = getDdlKeysWithPrefix(_keyPrefix);
                         if (_thisKey.length > 0) {
                             let resData = localStorage[_thisKey[0]];
                             if (!resData) return;
                             resData = $.parseJSON(resData);
+                            _depFldName = resData.pickdata[2].dfname;
                             let _ArrData = resData.pickdata[3].data;
                             let result = $.map(_ArrData, function (item) {
                                 item.i = item.i.replace(/\^\^dq/g, '&quot;');
@@ -439,6 +449,7 @@ function createFormSelect(fld) {
                                     dep: item.d
                                 };
                             });
+                            let depMap = {};
                             let $select = $("#" + fldNameAc);
                             let fldAcValue = $select.val();
                             $select.empty();
@@ -447,9 +458,13 @@ function createFormSelect(fld) {
                                     value: item.id,
                                     text: item.text
                                 }));
+                                depMap[item.id] = item.dep;
                             });
                             $select.val(fldAcValue);
                             $select.select2();
+                            $select.data('depMap', depMap);
+                            $select.data('depFldMap', _depFldName);
+                            $select.select2('open');
 
                             let addOption = typeof $select.attr("data-addoption") == "undefined" ? "" : $select.attr("data-addoption");
                             let dataRefresh = typeof $select.attr("data-refresh") == "undefined" ? "" : $select.attr("data-refresh");
@@ -505,7 +520,18 @@ function createFormSelect(fld) {
             }
         }
     }).on('select2:select', function (event) {
-        let depList = event.params.data.dep;
+        let depList = undefined;
+        if (typeof event.params.data.dep != "undefined") {
+            depList = event.params.data.dep;
+        }
+        else if (typeof $(this).data('depMap') != "undefined") {
+            let _sval = event.params.data.id;
+            depList = $(this).data('depMap')[_sval];
+        }
+        if (typeof _depFldName == "undefined" && typeof $(this).data('depFldMap') != "undefined" && $(this).data('depFldMap') != "")
+            var _depFldName = $(this).data('depFldMap');
+        else if (_depFldName == '' && typeof $(this).data('depFldMap') != "undefined" && $(this).data('depFldMap') != "")
+            _depFldName = $(this).data('depFldMap');
         let fldAcValue = $(this).val();
         if (typeof $(this).data("separator") != "undefined" && $(this).hasClass("multiFldChk")) {
             let separator = $(this).data("separator");
@@ -537,12 +563,12 @@ function createFormSelect(fld) {
         UpdateFieldArray(fldNameAc, rowNum, fldAcValue, "parent", "AutoComplete");
         UpdateAllFieldValues(fldNameAc, fldAcValue);
         if (isFillFromApi) {
-            if (depList != undefined && depList != null && depList != cutMsg && depFldName != "") {
+            if (depList != undefined && depList != null && depList != cutMsg && _depFldName != "") {
                 try {
                     var depText = depList.split('^');
                     var dfCount = 0;
                     $.each(depText, function (index, value) {
-                        var depfldId = depFldName.split('^')[dfCount];
+                        var depfldId = _depFldName.split('^')[dfCount];
                         let _thisfInd = GetFieldIndex(depfldId);
                         dfCount++;
                         if (_thisfInd > -1) {
@@ -576,13 +602,13 @@ function createFormSelect(fld) {
                 } catch (Ex) { }
             }
         } else {
-            if (depList != undefined && depList != null && depList != cutMsg && depFldName != "") {//Alogn with othe cindtion should check depFldName variable also should not be empty
+            if (depList != undefined && depList != null && depList != cutMsg && _depFldName != "") {//Alogn with othe cindtion should check depFldName variable also should not be empty
                 try {
                     //dep = uhid^patient_details^attending_physician~76222000000431^wardtype~Single Room
                     var depText = depList.split('^');
                     var dfCount = 0;
                     $.each(depText, function (index, value) {
-                        var depfldId = depFldName.split('^')[dfCount];
+                        var depfldId = _depFldName.split('^')[dfCount];
                         var depfldValue = value;
                         dfCount++;
                         rcID = rcID.substring(0, rcID.lastIndexOf('F') + 1) + GetDcNo(depfldId);
@@ -795,20 +821,24 @@ function createFormSelect(fld) {
         if (isDataStoreInLs == "") {
             checkDevOptDdlStoreLS();
         }
-        if (isDataStoreInLs == "true") {
+        if (isDataStoreInLs == "true" && !isLSNotExist) {
             let _ddlappSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
             let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);
+            let ddlrefreshsave = $("#" + fldNameAc).hasClass('isrefreshsave');
             parentFldVal = "";
             if (typeof wsPerfEnabled != "undefined" && wsPerfEnabled)
                 parentFldVal = ISBoundAutoCom(_fieldName, fldNameAc);
             else
                 parentFldVal = ISBoundNew(fieldName, fldNameAc);
-            let _keyPrefix = "tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";//"tstDDFVal♠tdepd♦field2♦♦http://localhost/aw11.4df♥";//
+            let _keyPrefix = "tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";//"tstDDFVal♠tdepd♦field2♦♦http://localhost/aw11.4df♥";//
             let _thisKey = getDdlKeysWithPrefix(_keyPrefix);
             if (_thisKey.length > 0) {
+                isLSNotExist = false;
+                iscalled = false;
                 let resData = localStorage[_thisKey[0]];
                 if (!resData) return;
                 resData = $.parseJSON(resData);
+                _depFldName = resData.pickdata[2].dfname;
                 let _ArrData = resData.pickdata[3].data;
                 let result = $.map(_ArrData, function (item) {
                     item.i = item.i.replace(/\^\^dq/g, '&quot;');
@@ -821,15 +851,55 @@ function createFormSelect(fld) {
                 let $select = $("#" + fldNameAc);
                 let fldAcValue = $select.val();
                 $select.empty();
+                let depMap = {};
                 $.each(result, function (_, item) {
                     $select.append($('<option>', {
                         value: item.id,
                         text: item.text
                     }));
+                    depMap[item.id] = item.dep;
                 });
+                $select.data('depMap', depMap);
+                $select.data('depFldMap', _depFldName);
                 $select.val(fldAcValue);
+            } else {
+                let $select = $("#" + fldNameAc);
+                setTimeout(function () {
+                    if (!iscalled) {
+                        /* isLSNotExist = true;*/
+                        refreshAC = true;
+                        AutPageNo = 1;
+                        rcount = 0;
+                        CangefldName = '';
+                        PageCount = 0;
+                        isSelectedValFocus = false;
+                        select2IsFocused = false;
+                        select2IsOpened = true;
+                        isRefreshClick = true;
+                        select2EventType = "click";
+
+                        isLSNotExist = true;
+                        let selectedVal = $select.val();
+                        if ($select.data('select2')) {
+                            $select.off();
+                            $select.select2('destroy');
+                        }
+                        $select.empty();
+                        if (selectedVal) {
+                            $select.append(new Option(selectedVal, selectedVal, true, true));
+                        }
+                        createFormSelect($select);
+                        setTimeout(() => {
+                            if ($select.data('select2')) {
+                                isLSNotExist = false;
+                                $select.select2('open');
+                            }
+                        }, 0);
+                    }
+                    iscalled = false;
+                }, 10);
             }
-        }
+        } 
     }).on("select2:close", function (e) {
         isOnCLose = false;
         isSelectedValFocus = false;
@@ -2179,6 +2249,10 @@ $(document).on('paste', 'span.select2', function (e) {
 });
 
 function checkDevOptDdlStoreLS() {
+    if (typeof transid != "undefined" && transid == 'axurg') {
+        isDataStoreInLs = "false";
+        return;
+    }
     if (typeof tstConfigurations != "undefined" && tstConfigurations.config !== undefined && tstConfigurations.config.length > 0) {
         let _finalJson = [];
         try {
@@ -2195,8 +2269,9 @@ function checkDevOptDdlStoreLS() {
             isDataStoreInLs = "true";
         else
             isDataStoreInLs = "false";
-    } else
+    } else {
         isDataStoreInLs = "false";
+    }
 }
 
 function getDdlKeysWithPrefix(prefix) {

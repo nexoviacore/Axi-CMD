@@ -16,7 +16,7 @@ public class AnalyticsUtils
 {
     public string ARM_URL
     {
-        get {  return GetARM_URL(); }
+        get { return GetARM_URL(); }
     }
     public string ARMSessionId
     {
@@ -171,7 +171,7 @@ public class AnalyticsUtils
                     ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
                 else
                     return "Error in ARM connection.";
-                string connectionUrl = ARM_URL + "/api/v1/ARMConnectFromAxpert";
+                string connectionUrl = ARM_URL + "/AxAuth/api/v1/ARMConnectFromAxpert";
 
                 var connectionResult = CallWebAPI(connectionUrl, "POST", "application/json", JsonConvert.SerializeObject(axpertDetails));
 
@@ -201,7 +201,10 @@ public class AnalyticsUtils
                     }
                     else
                     {
-                        return "Error in ARM connection.";
+                        if (Convert.ToBoolean(jObj["result"]["success"]) == false && jObj["result"]["message"] != null && !string.IsNullOrEmpty(jObj["result"]["message"].ToString()))
+                            return jObj["result"]["message"].ToString();
+                        else
+                            return "Error in ARM connection.";
                     }
                 }
             }

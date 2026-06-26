@@ -101,13 +101,20 @@ public partial class aspx_AxDBScript : System.Web.UI.Page
     [WebMethod]
     public static string callExecuteSQL(string queryString)
     {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return "SESSION_TIMEOUT";
         ASBExt.WebServiceExt asbExt = new ASBExt.WebServiceExt();
         string result = "";
         try
         {
+            //util.ValidateSql(queryString);
             result = asbExt.ExecuteSQL("", queryString, "JSON");
         }
-        catch (Exception ex) { }
+        catch (Exception ex)
+        {
+            result = "Error:" + ex.Message;
+        }
         return result;
     }
 
@@ -120,6 +127,7 @@ public partial class aspx_AxDBScript : System.Web.UI.Page
             Util.Util utilObj = new Util.Util();
             if (HttpContext.Current.Session["project"] == null)
                 return "{\"error\":" + utilObj.SESSTIMEOUT + " }";
+            //utilObj.ValidateSql(queryString);
 
             string DATA = string.Empty;
             string api = "";
@@ -167,7 +175,9 @@ public partial class aspx_AxDBScript : System.Web.UI.Page
                 result = obj["result"][0].ToString();
             }
         }
-        catch (Exception ex) { }
+        catch (Exception ex) {
+            result = "Error:" + ex.Message;
+        }
         return result;
     }
     public static string xmltojson(string xml)

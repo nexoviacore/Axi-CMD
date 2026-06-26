@@ -248,19 +248,20 @@ class EntityForm {
         this.formControlActions = {
             "expandcollapse": {}
         };
+        this.cancelRemarks = "";
     }
 
     init() {
         let _this = this;
         try {
-            
             const queryString = window.location.search;
             const urlParams = new URLSearchParams(queryString);
             this.entityTransId = urlParams.get('tstid');
             this.recordId = urlParams.get('recid') || urlParams.get('recordid') || "0";
 
             var entityFormMetaData = JSON.parse(document.querySelector("#hdnEntityFormPageMetaData").value);
-            var dataStr = document.querySelector("#hdnEntityFormPageData").value.split("*$*")[1].replaceAll("<br/>", "").replaceAll("<br />", "").replaceAll("<br>", "");
+            var entityFormPageData = document.querySelector("#hdnEntityFormPageData").value;
+            var dataStr = entityFormPageData.split("*$*")[1].replaceAll("<br/>", "").replaceAll("<br />", "").replaceAll("<br>", "");
             var entityFormData = JSON.parse(dataStr);
             _this.hideControls = entityFormData.data.find(i => i.n?.toLowerCase() == 'axro_hidecontrols')?.v?.toLowerCase().split(',') || [];
             _this.entityFormJson.data = entityFormData.data;
@@ -319,6 +320,13 @@ class EntityForm {
             catch {
             }
 
+            try {
+                if ($("#hdnTstPermission").length > 0 && $("#hdnTstPermission").val() != "" && $("#hdnTstPermission").val() != "no permission applied") {
+                    tstPermissions = $("#hdnTstPermission").val();
+                    $("#hdnTstPermission").val('');
+                }
+            } catch (ex) { }
+
             _this.constructEntityFormHTML();
 
             document.querySelector("#EntityTitle").innerHTML = _this.entityName + (_this.keyValue ? " - " + _this.keyValue : "");
@@ -335,12 +343,17 @@ class EntityForm {
             _this.constructRightPanel();
             _this.bindEvents();
             _this.applyTheme();
-
+            tstExcludeElements();
             DoScriptFormControl("", "On Data Load");
+
             try {
                 AxAfterDataPageLoad(_this);
             }
             catch {
+            }
+
+            if (entityFormPageData.indexOf("{\"command\":[{\"cmd\":\"canceled\",\"cmdval\":\"yes\"") > -1) {
+                _this.bindCancelationMessage(entityFormPageData);
             }
         }
         catch (ex) {
@@ -363,20 +376,30 @@ class EntityForm {
         //_this.constructFormRelatedDataAccordions();
     }
 
+
+    bindCancelationMessage(entityFormPageData) {
+        let _this = this;
+        var pageDataArray = entityFormPageData.split("*$*");
+        for (var i = 0; i < pageDataArray.length; i++) {
+            var dataObj = JSON.parse(pageDataArray[i]);
+            if (typeof dataObj.command != "undefined") {
+                for (var j = 0; j < dataObj.command.length; j++) {
+                    var cmdObj = dataObj.command[j];
+                    if (typeof cmdObj.cmd != "undefined" && cmdObj.cmd == "canceled" && cmdObj?.cmdval == "yes") {
+                        if (typeof cmdObj.reason != "undefined") {
+                            _this.cancelRemarks = cmdObj.reason; 
+                        }
+                    }
+                }
+            }
+        }
+
+        document.getElementById("cancelremarks").innerHTML = `<div id="dvMessage" class="AXinfo ps-5 p-0" style="display: block; font-weight: 700; color: rgb(104, 76, 23);"><table><tbody><tr><td>This transaction has been cancelled. ${_this.cancelRemarks}</td></tr></tbody></table></div>`;
+    }
+
     openNewTstruct() {
-
-        let inputJson = { page: "Entity", transId: this.entityTransId, recordId: '0', action: "Create" };
-        var allowCreate = _entityCommon.getEntityEditableFlag(inputJson);
-        if (allowCreate) {
-            _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${this.entityTransId}&dummyload=false`)
-            return true;
-        }
-        else {
-            showAlertDialog("error", "User does not have 'Create' access for this screen. Please check with administrator.");
-            return false;
-        }
-
-        
+        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${this.entityTransId}&dummyload=false`)
+        return true;        
     }
 
     openSubEntityTstruct(transId) {
@@ -386,47 +409,19 @@ class EntityForm {
             params = `act=open&${_this.subEntityMapping[transId]?.["mapfield"]}=${_this.subEntityMapping[transId]?.["mapsrcdata"]}`;
         }       
 
-        let inputJson = { page: "Entity", transId: transId, recordId: '0', action: "Create" };
-        var allowCreate = _entityCommon.getEntityEditableFlag(inputJson);
-        if (allowCreate) {
-            _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${transId}&${params}&dummyload=false`)
-            return true;
-        }
-        else {
-            showAlertDialog("error", "User does not have 'Create' access for this screen. Please check with administrator.");
-            return false;
-        }
+        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${transId}&${params}&dummyload=false`)
+        return true;
 
     }
 
     editEntity() {
-        var _this = this;
-        let inputJson = { page: "EntityForm", transId: _this.entityTransId, recordId: this.recordId,  action : "Edit" };
-        var editable = _entityCommon.getEntityEditableFlag(inputJson);
-
-        if (editable) {
-            _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${this.entityTransId}&act=load&recordid=${this.recordId}&dummyload=false`)
-            return true;
-        }
-        else {
-            showAlertDialog("error", "User does not have 'Edit' access for this record. Please check with administrator.");
-            return false;
-        }
-
+        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${this.entityTransId}&act=load&recordid=${this.recordId}&dummyload=false`)
+        return true;
     }
 
     editSubEntity(entityTransId, recordId) {
-        let inputJson = { page: "EntityForm", transId: entityTransId, recordId: recordId, action: "Edit" };
-        var editable = _entityCommon.getEntityEditableFlag(inputJson);
-
-        if (editable) {
-            _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${entityTransId}&act=load&recordid=${recordId}&dummyload=false`);
-            return true;
-        }
-        else {
-            showAlertDialog("error", "User does not have 'Edit' access for this record. Please check with administrator.");
-            return false;
-        }
+        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${entityTransId}&act=load&recordid=${recordId}&dummyload=false`);
+        return true;
     }
 
     reloadEntityPage() {
@@ -848,7 +843,7 @@ class EntityForm {
 
         let html = '';
         relatedFields.forEach(fld => {
-            let fldVal = fld.fldcap || '';
+            let fldVal = fld.fldcap ?? "";
             let mapDataRow = _this.entityFormJson.data.filter(item => item.n === fld.fldname);
             if (mapDataRow.length) {
                 let rowNo = 1;
@@ -862,7 +857,7 @@ class EntityForm {
                                     <span class="material-icons material-icons-style material-icons-2">account_tree</span>
                                 </div>
                                 <div class="Invoice-content">
-                                    <h6 class="subtitle">${fld.fldcap || ''} - ${fldVal}</h6>
+                                    <h6 class="subtitle">${fld.fldcap ?? ""} - ${fldVal}</h6>
                                 </div>
                             </a>
                             <div id="kt_accordion_connecteddata_${dcNameWithRowNo}${fld.fldname}" class="accordion-collapse collapse" aria-labelledby="kt_accordion_connecteddata_${dcNameWithRowNo}${fld.fldname}">
@@ -1152,7 +1147,7 @@ class EntityForm {
                                 if (skipFlds.indexOf(key) == -1) {
                                     var transId = dataJson[0]["transid"];
                                     var fieldName = key.substr(4);
-                                    var fieldCaption = _this.metaData.find(x => x.ftransid == transId && x.fldname == fieldName)?.fldcap || fieldName;
+                                    var fieldCaption = _this.metaData.find(x => x.ftransid == transId && x.fldname == fieldName)?.fldcap ?? "";
                                     var condition = key.substr(0, 3).replace("sum", "Sum").replace("avg", "Avg");
                                     
                                     html += 
@@ -1226,7 +1221,7 @@ class EntityForm {
                                     if (skipFlds.indexOf(key) == -1) {
                                         var transId = dataJson[0]["transid"];
                                         var fieldName = key.substr(4);
-                                        var fieldCaption = _this.metaData.find(x => x.ftransid == transId && x.fldname == fieldName)?.fldcap || fieldName;
+                                        var fieldCaption = _this.metaData.find(x => x.ftransid == transId && x.fldname == fieldName)?.fldcap ?? "";
                                         var condition = key.substr(0, 3).replace("sum", "Sum").replace("avg", "Avg");
 
                                         html +=
@@ -1291,7 +1286,7 @@ class EntityForm {
         var _this = this;
         
     
-        var storedTheme = this.properties.THEME|| "gradTheme";
+        var storedTheme = this.properties.THEME|| "lightTheme";
     
         _this.updateTheme(storedTheme);
     
@@ -1335,19 +1330,8 @@ class EntityForm {
         let html = '';
         let dcName = data[0].n.toLowerCase();
         let dcNo = dcName.replace("dc", "");
-        if (data[0].hasdatarows && data[0].hasdatarows === 'yes') {
-            // Initialize an object to store rows grouped by the 'r' value
-            
-            const rows = {};
-            data.forEach(item => {
-                if (item.t !== 'dc') {
-                    if (!rows[item.r]) {
-                        rows[item.r] = {};
-                    }
-                    rows[item.r][item.n] = item.v;
-                }
-            });
-    
+
+        if (data[0].hasdatarows) {
             html += `<div class="row" style="position: relative; right: 3px;" id="${dcName}" data-name="${dcName}">
                         <div class="dc-heading card-title cursor-pointer collapsible rotate" data-bs-toggle="collapse"
                             aria-expanded="true" data-bs-target="#${dcName}container" >
@@ -1358,7 +1342,7 @@ class EntityForm {
                         <div id="${dcName}container" class="row sub-entity-row collapse show">
                             <div class="table-responsive">
                                 <table class="table table-light table-striped table-bordered tabularDC">`;
-        
+
             // Create table header
             html += `<thead><tr>`;
             let dcMetaData = metadata.filter(i => i.datatype != 'dc' && i.dcname == dcName && (i.hidden != null && i.hidden != "T"));
@@ -1366,51 +1350,71 @@ class EntityForm {
                 html += `<th id="th${field.fname}" data-name="${field.fname}"><label>${field.caption}</label></th>`;
             });
             html += `</tr></thead>`;
-        
+
             // Create table body
             html += `<tbody>`;
-            Object.keys(rows).forEach(rowKey => {
-                html += `<tr>`;
-                dcMetaData.forEach((field, index) => {
-                    let fieldValue = rows[rowKey][field.fname] || '';
-                    let fieldId = getFieldId(field.fname, dcNo, true, rowKey);
-                    UpdateAllFieldValues(fieldId, fieldValue);
-                    let cellContent = '';
-        
-                    if (field.customdatatype === 'Currency') {
-                        cellContent = _entityCommon.inValid(fieldValue) ? "--" : formmatingtoillions(fieldValue);
-                    } else if (field.customdatatype === 'Numeric') {
-                        // For numeric values, you can add formatting if needed
-                        cellContent = _entityCommon.inValid(fieldValue) ? "--" : fieldValue;
-                    } else if (field.fname.startsWith("axpfile_")) {
-                        const axpfilepathUploadObject = _entityForm.entityFormJson.data.find(i => i.n === field.fname.replace("axpfile_", "axpfilepath_"));
-                        var pathVal = axpfilepathUploadObject ? axpfilepathUploadObject.v : "";
-                        if (pathVal.indexOf(";bkslh") != -1) {
-                            pathVal = pathVal.replace(new RegExp(";bkslh", "g"), "\\");
+
+            if (data[0].hasdatarows === 'yes') {
+
+                const rows = {};
+                data.forEach(item => {
+                    if (item.t !== 'dc') {
+                        if (!rows[item.r]) {
+                            rows[item.r] = {};
+                        }
+                        rows[item.r][item.n] = item.v;
+                    }
+                });
+                
+                Object.keys(rows).forEach(rowKey => {
+                    html += `<tr>`;
+                    dcMetaData.forEach((field, index) => {
+                        let fieldValue = rows[rowKey][field.fname] || '';
+                        fieldValue = _entityCommon.replaceSpecialChars(fieldValue);
+                        let fieldId = getFieldId(field.fname, dcNo, true, rowKey);
+                        UpdateAllFieldValues(fieldId, fieldValue);
+                        let cellContent = '';
+
+                        if (field.customdatatype === 'Currency') {
+                            cellContent = _entityCommon.inValid(fieldValue) ? "--" : formmatingtoillions(fieldValue);
+                        } else if (field.customdatatype === 'Numeric') {
+                            // For numeric values, you can add formatting if needed
+                            cellContent = _entityCommon.inValid(fieldValue) ? "--" : fieldValue;
+                        } else if (field.fname.startsWith("axpfile_")) {
+                            const axpfilepathUploadObject = _entityForm.entityFormJson.data.find(i => i.n === field.fname.replace("axpfile_", "axpfilepath_"));
+                            var pathVal = axpfilepathUploadObject ? axpfilepathUploadObject.v : "";
+                            if (pathVal.indexOf(";bkslh") != -1) {
+                                pathVal = pathVal.replace(new RegExp(";bkslh", "g"), "\\");
+                            }
+
+                            if (pathVal.endsWith("\\"))
+                                pathVal = pathVal.substr(0, pathVal.length - 1);
+
+                            var item = {};
+                            item["v"] = ReverseCheckSpecialChars(fieldValue);
+                            item["filepath"] = pathVal;
+                            cellContent = this.createAxpFileAttachmentHTML(item, index, field.fname);
+                        }
+                        else if (field.fname.startsWith("dc") && field.fname.endsWith("_image")) {
+                            var item = {};
+                            item["v"] = ReverseCheckSpecialChars(fieldValue);
+                            cellContent = this.createDCAttachmentHTML(item, index, "");
+                        } else {
+                            cellContent = ReverseCheckSpecialChars(fieldValue);
                         }
 
-                        if (pathVal.endsWith("\\"))
-                            pathVal = pathVal.substr(0, pathVal.length - 1);
-        
-                        var item = {};
-                        item["v"] = ReverseCheckSpecialChars(fieldValue);
-                        item["filepath"] = pathVal;
-                        cellContent = this.createAxpFileAttachmentHTML(item, index, field.fname);
-                    }
-                    else if (field.fname.startsWith("dc") && field.fname.endsWith("_image")) {
-                        var item = {};
-                        item["v"] = ReverseCheckSpecialChars(fieldValue);
-                        cellContent = this.createDCAttachmentHTML(item, index, "");
-                    } else {
-                        cellContent = ReverseCheckSpecialChars(fieldValue);
-                    }
-        
-                    // Determine if the cell should be right aligned
-                    const isRightAligned = (field.customdatatype === 'Currency' || field.customdatatype === 'Numeric');
-                    html += `<td${isRightAligned ? ' class="align-right"' : ''} id="${fieldId}" data-name="${field.fname}">${cellContent}</td>`;
+                        // Determine if the cell should be right aligned
+                        const isRightAligned = (field.customdatatype === 'Currency' || field.customdatatype === 'Numeric');
+                        html += `<td${isRightAligned ? ' class="align-right"' : ''} id="${fieldId}" data-name="${field.fname}">${cellContent}</td>`;
+                    });
+                    html += `</tr>`;
                 });
-                html += `</tr>`;
-            });
+               
+            }
+            else {
+                html += `<tr><td colspan="${dcMetaData.length}" class="no-data-cell" style="padding:5px;text-align:center;color:#888;font-style:italic;">No data available</td></tr>`;
+            }
+
             html += `</tbody>`;
             html += `</table></div></div></div>`;
         } else {
@@ -1434,11 +1438,13 @@ class EntityForm {
                 }
                 i++;
             });
-            dcHTML += `</div></div>`;
         
-            if (visibleItems > 0) {
-                html += dcHTML;
-            }
+            if (visibleItems > 0) 
+                dcHTML += `</div></div>`;                
+            else 
+                dcHTML += `<div class="no-data-cell" style="padding:5px;text-align:center;color:#888;font-style:italic;">No data available</div></div></div>`;  
+                
+            html += dcHTML;
         }
         
         return html;
@@ -1484,6 +1490,7 @@ class EntityForm {
         
         var fldName = fldjson.n;
         var fldVal = ReverseCheckSpecialChars(fldjson.v);
+        fldVal = _entityCommon.replaceSpecialChars(fldVal);
         var fldCaption = getCaption(fldjson.n);
         var comphtml = "";
         var finalhtml;
@@ -2279,6 +2286,46 @@ class EntityForm {
                 $.each(_this.metaData.filter(i => i.ftransid === subEnt), function (index, field) {
                     _this.populateEntityWiseFlds(index, field);
                 });
+
+                var cancelFld = {
+                    "ftransid": subEnt,
+                    "fcaption": _this.entityName,
+                    "fldname": "cancel",
+                    "fldcap": "Cancelled?",
+                    "cdatatype": "DropDown",
+                    "fdatatype": "c",
+                    "fmodeofentry": "accept",
+                    "hide": "F",
+                    "props": null,
+                    "normalized": "F",
+                    "allowempty": "T",
+                    "filtertype": "Text",
+                    "tablename": "",
+                    "dcname": "dc1"
+                };
+
+                var cancelRemarksFld = {
+                    "ftransid": subEnt,
+                    "fcaption": _this.entityName,
+                    "fldname": "cancelremarks",
+                    "fldcap": "Cancel Remarks",
+                    "cdatatype": "Text",
+                    "fdatatype": "c",
+                    "fmodeofentry": "accept",
+                    "hide": "F",
+                    "props": null,
+                    "normalized": "F",
+                    "allowempty": "T",
+                    "filtertype": "Text",
+                    "tablename": "",
+                    "dcname": "dc1"
+                };
+
+                _this.entityWiseMetaData[subEnt]["cancel"] = cancelFld;
+                _this.entityWiseMetaData[subEnt]["cancelremarks"] = cancelRemarksFld;
+
+                _this.entityWiseFields[subEnt].otherElements.push(cancelFld);
+                _this.entityWiseFields[subEnt].otherElements.push(cancelRemarksFld);
             }
         });
     
@@ -2304,7 +2351,7 @@ class EntityForm {
         let validFields = Object.keys(firstRow).filter(field => ![
             "projectid", "axpeg_processname", "axpeg_keyvalue", "axpeg_status",
             "axpeg_statustext", "rno", "pageno", "transid", "recordid",
-            "modifiedby", "modifiedon", "createdon", "createdby"
+            "modifiedby", "modifiedon", "createdon", "createdby", "cancel", "cancelremarks"
         ].includes(field));
     
         html += `<thead><tr>`;
@@ -2315,10 +2362,11 @@ class EntityForm {
             if (typeof _this.entityWiseMetaData[transId]?.[field] == "undefined")
                 excludedFields.push(field);
             else {
-                let fieldCaption = _this.entityWiseMetaData[transId]?.[field]?.fldcap || field;
+                let fieldCaption = _this.entityWiseMetaData[transId]?.[field]?.fldcap ?? "";
                 html += `<th>${fieldCaption}</th>`;
             }
         });
+        html += `<th>Cancelled?</th><th>Cancel Remarks</th>`;
         html += `</tr></thead>`;
     
         html += `<tbody>`;
@@ -2378,6 +2426,20 @@ class EntityForm {
                     const alignClass = (isNumeric || isCurrency) ? 'align-right' : '';
 
                     html += `<td class="${alignClass}">${cellValue}</td>`;
+                }
+            });
+
+            ["cancel", "cancelremarks"].forEach(field => {
+                if (excludedFields.indexOf(field) == -1) {
+                    let cellValue = rowData[field] != null ? rowData[field] : '';
+
+                    if (field == "cancel") {
+                        cellValue = ` <div class="form-check">
+                            <input class="form-check-input" type="checkbox" ${cellValue === 'T' ? 'checked' : ''} disabled>
+                        </div>`;
+                    } 
+
+                    html += `<td>${cellValue}</td>`;
                 }
             });
     
@@ -2596,7 +2658,7 @@ class EntityForm {
             dcFields.forEach(fld => {
                 html +=
                     `<tr>
-                        <td><label for="chk_${fld.fldname}">${fld.fldcap || ''} (${fld.fldname})</label></td>
+                        <td><label for="chk_${fld.fldname}">${fld.fldcap ?? ""} (${fld.fldname})</label></td>
                         <td><input type="checkbox" id="chk_sum_${fld.fldname}" class="chk-sum" value="sum_${fld.fldname}" data-dcname="${dc}" data-transid="${fld.ftransid}" data-fieldname="${fld.fldname}" data-condition="sum"></td>
                         <td><input type="checkbox" id="chk_avg_${fld.fldname}" class="chk-avg" value="avg_${fld.fldname}" data-dcname="${dc}" data-transid="${fld.ftransid}" data-fieldname="${fld.fldname}" data-condition="avg"></td>
                     </tr>`;
@@ -2917,7 +2979,7 @@ class EntityForm {
             dcFields.forEach(fld => {
                 html +=
                     `<tr>                        
-                        <td><label>${fld.fldcap || ''} (${fld.fldname})</label></td>
+                        <td><label>${fld.fldcap ?? ""} (${fld.fldname})</label></td>
                         <td><input type="checkbox" id="chk_${fld.fldname}" class="chk-fields chk-relateddataflds" value="${fld.fldname}" data-dcname="${dc}"></td>
                         <td><input type="checkbox" id="chkdisp_${fld.fldname}" class="chk-fields chk-displayflds" value="${fld.fldname}" data-dcname="${dc}"></td>
                     </tr>`;
@@ -3004,7 +3066,7 @@ function getCaption(fname) {
     var metadata = _entityForm.entityFormJson.metadata;
     for (var i = 0; i < metadata.length; i++) {
         if (metadata[i].fname === fname) {
-            return metadata[i].caption;
+            return metadata[i].caption ?? "";
         }
     }
     return null;
@@ -3084,7 +3146,7 @@ function generateHTMLBasedOnDataType(fld, rowData) {
     if ((fldName == _entityForm.keyField && rowData.transid == _entityForm.entityTransId) || (fldName == rowData.keycol && rowData.transid == fld.ftransid))
         return '';
     var fldtype = getFieldDataType(fld);
-    var fCaption = fld.fldcap || '';
+    var fCaption = fld.fldcap ?? "";
     var fProps = fld.props;
     var fldValue = rowData[fldName];
     if ((_entityCommon.inValid(fldValue) && fldtype.toUpperCase() != "BUTTON") || fld.fldname == "transid")
@@ -3201,7 +3263,7 @@ function generateHTMLBasedForOtherData(fld, rowData) {
     if ((fldName == _entityForm.keyField && rowData.transid == _entityForm.entityTransId) || (fldName == rowData.keycol && rowData.transid == fld.ftransid))
         return '';
     var fldtype = getFieldDataType(fld);
-    var fCaption = fld.fldcap || '';
+    var fCaption = fld.fldcap ?? "";
     var fProps = fld.props;
     var fldValue = rowData[fldName];
     if (_entityCommon.inValid(fldValue) || fld.fldname == "transid")
@@ -3419,8 +3481,8 @@ function createDisplayFieldsLayout() {
                 <tbody id="fields-table-body">`;
 
         dcFields.forEach(fld => {
-            html += `<tr><td><input type="checkbox" id="chkdisp_${fld.fldname}" class="chk-fields chk-displayflds" value="${fld.fldname}" data-fldcap="${fld.fldcap || ''}" data-dcname="${dc}" data-griddc="${dcRow.customdatatype || "T"}"></td>
-          <td><label for="chkdisp_${fld.fldname}">${fld.fldcap || ''} (${fld.fldname})</label></td></tr>`;
+            html += `<tr><td><input type="checkbox" id="chkdisp_${fld.fldname}" class="chk-fields chk-displayflds" value="${fld.fldname}" data-fldcap="${fld.fldcap ?? ""}" data-dcname="${dc}" data-griddc="${dcRow.customdatatype || "T"}"></td>
+          <td><label for="chkdisp_${fld.fldname}">${fld.fldcap ?? ""} (${fld.fldname})</label></td></tr>`;
 
         })
         html += `</tbody></table></div></div>`;
@@ -3895,3 +3957,70 @@ function ExpandCollapseDc() {
     });
 }
 //-- End - FormControl changes
+
+function tstExcludeElements() {
+    if (!tstPermissions) return;
+    const permissions = JSON.parse(tstPermissions);
+    const result = permissions.result || {};
+    const totalDCs = parseInt(TotalDCs, 10) || 0;
+    const hiddenDcList = [];
+    const inclDcs = [];
+
+
+    if (result.ExcludedDCs && result.ExcludedDCs !== "NONE") {
+        result.ExcludedDCs.split(',').forEach(dc => {
+            ShowingDc(dc, "hide");
+        });
+
+    } else if (result.IncludedDCs && result.IncludedDCs !== "ALL") {
+        const includedDCs = result.IncludedDCs.split(',');
+        for (let i = 1; i <= totalDCs; i++) {
+            ShowingDc("dc"+ i, "hide");
+            hiddenDcList.push(i);
+        }
+        includedDCs.forEach(dc => {
+            const dcNo = parseInt(dc.slice(2), 10);
+            inclDcs.push(dcNo);
+            ShowingDc(dc, "show");
+            const index = hiddenDcList.indexOf(dcNo);
+            if (index > -1) hiddenDcList.splice(index, 1);
+        });
+    }    
+
+    if (result.ExcludedFields && result.ExcludedFields !== "NONE") {
+        result.ExcludedFields.split(',').forEach(field => {
+            HideShowField(field, "hide");
+        });
+
+    } else if (result.IncludedFields && result.IncludedFields !== "ALL") {
+        const includedFields = result.IncludedFields.split(',');
+        for (let i = 1; i <= totalDCs; i++) {
+            if (!inclDcs.includes(i)) {
+                ShowingDc("dc" + i, "hide");
+                if (!hiddenDcList.includes(i))
+                    hiddenDcList.push(i);
+            }
+        }
+        includedFields.forEach(field => {
+            let dcNo = GetDcNo(field);
+            dcNo = parseInt(dcNo, 10);
+            if (hiddenDcList.includes(dcNo)) {
+                ShowingDc("dc" + dcNo, "show");
+                if (IsDcGrid(dcNo)) {
+                    let _flds = $(`#dc${dcNo}container thead th`).map(function () { return this.getAttribute("data-name"); }).get();
+                    _flds.forEach(function (fname) {
+                        if (!includedFields.includes(fname))
+                            HideShowField(fname, "hide");
+                    })
+                } else {
+                    let _flds = $(`#dc${dcNo}container .Eform_Display_Items`).map(function () { return this.getAttribute("data-name"); }).get();
+                    _flds.forEach(function (fname) {
+                        if (!includedFields.includes(fname))
+                            HideShowField(fname, "hide");
+                    })
+                }
+            }
+        });
+    }
+
+}

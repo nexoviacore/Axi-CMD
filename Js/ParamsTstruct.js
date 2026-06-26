@@ -34,6 +34,7 @@
         $j("#hdnAxGloRecId", window.parent.document).val(axSaveRecId);
         $j("#btnSetParams", window.parent.document).click();
         clearLocalStoragept(['tstHtml♠'], true);
+        clearLocalStoragept(['originaltrIds'], true);
         window.close();
     }
 }

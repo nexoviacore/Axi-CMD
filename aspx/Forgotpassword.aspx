@@ -36,9 +36,9 @@
 
     <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
 
-    <script type="text/javascript" src="../Js/login.min.js?v=104"></script>
-    <script src="../Js/ForgotPassword.min.js?v=15" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=158" type="text/javascript"></script>
+    <script type="text/javascript" src="../Js/login.min.js?v=114"></script>
+    <script src="../Js/ForgotPassword.min.js?v=16" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
 
     <%--<script>
         if(typeof localStorage != "undefined"){

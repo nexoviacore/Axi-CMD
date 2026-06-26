@@ -248,6 +248,7 @@
     let adsfieldvalueanddt = {};
     let createfieldnamevaluesList = {};
     let AxiArmUrl;
+    let isConfigLoaded = false;
     let mode = "";
     let isCommandsLoading = false;
     const aiModeCommands = {
@@ -262,15 +263,39 @@
 
 
 
-    function init() {
+    async function init() {
         //  "API_METADATA": "http://localhost:90/AxiApi/api/v1/Axi/axi_get",    
 
         // "AXI_FAVORITES_URL": "http://localhost:90/AxiApi/api/v1/Axi/user-favourites"
 
-        AxiArmUrl = (typeof armUrl !== "undefined" && armUrl) || 
-                    (typeof parent !== "undefined" && typeof parent.armUrl !== "undefined" && parent.armUrl) || 
-                    (typeof top !== "undefined" && typeof top.armUrl !== "undefined" && top.armUrl) || 
-                    "";
+        let globalArmUrl = (typeof armUrl !== "undefined" && armUrl) || 
+                           (typeof parent !== "undefined" && typeof parent.armUrl !== "undefined" && parent.armUrl) || 
+                           (typeof top !== "undefined" && typeof top.armUrl !== "undefined" && top.armUrl) || 
+                           "";
+
+        if (globalArmUrl) {
+            AxiArmUrl = globalArmUrl;
+        }
+
+        if (!AxiArmUrl && !isConfigLoaded) {
+            isConfigLoaded = true;
+            let configUrl = "";
+            try {
+                configUrl = `${getAppBaseUrl()}/AxpertPlugins/Axi_Beta/axicmd-config.json`;
+            } catch (e) {
+                configUrl = `/AxpertPlugins/Axi_Beta/axicmd-config.json`;
+            }
+            try {
+                const res = await fetch(configUrl);
+                if (res.ok) {
+                    const config = await res.json();
+                    AxiArmUrl = config.axiarmurl || config.armUrl || config.axiArmUrl || "";
+                }
+            } catch (err) {
+                console.error("Failed to load AxiArmUrl from config file:", err);
+            }
+        }
+
         console.log("AxiArmUrl = " + AxiArmUrl);
         apiMetadataUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/axi_get`;
         console.log("ApiMetadataUrl = " + apiMetadataUrl);
@@ -2919,6 +2944,11 @@
 
         const groupKey = cleanString(tokens[0]);
 
+        if (groupKey.toLowerCase() === "configure" && tokens[1] && cleanString(tokens[1]).toLowerCase() === "responsibilities") {
+            filteredObjects = [goOption];
+            return [goOption];
+        }
+
         if (groupKey.toLowerCase() === "help") {
             return [goOption];
         }
@@ -3339,6 +3369,10 @@
                     }
 
                     if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
+                        if (tokens[1] && cleanString(tokens[1]).toLowerCase() === "responsibilities") {
+                            filteredObjects = [goOption];
+                            return [goOption];
+                        }
                         filteredObjects = [goOption, popOption];
                         return [goOption, popOption];
                     }
@@ -3451,7 +3485,7 @@
             }
 
             //otherthan keyfield and userpermissionlisting it will work for all tokens which length is eqaul to 3(ex : peg)
-            else if ((groupKey.toLowerCase() === "configure") && tokens.length === 3 && tokens[1].toLowerCase() !== "keyfield" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "user permissions" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "role permissions") {
+            else if ((groupKey.toLowerCase() === "configure") && tokens.length === 3 && tokens[1].toLowerCase() !== "keyfield" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "user permissions" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "role permissions" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "responsibilities") {
                 resultList.unshift(goOption, popOption);
                 filteredObjects.unshift(goOption, popOption);
             }

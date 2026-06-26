@@ -3760,10 +3760,17 @@ namespace ASB
                             using (ZipFile zip = ZipFile.Read(zipFilePath))
                             {
                                 zip.Password = fileProtectPwd;
-                                foreach (ZipEntry e in zip)
+                                if (zip.Entries.Count == 1)
                                 {
-                                    e.Extract(dPath, ExtractExistingFileAction.OverwriteSilently);
-                                    unzipFile = e.FileName;
+                                    foreach (ZipEntry e in zip)
+                                    {
+                                        e.Extract(dPath, ExtractExistingFileAction.OverwriteSilently);
+                                        unzipFile = e.FileName;
+                                    }
+                                }
+                                else
+                                {
+                                    unzipFile = internalFileName;
                                 }
                             }
                             result += utilObj.ScriptsurlPath + "Axpert/" + Session["nsessionid"].ToString() + "/" + unzipFile + "♠";
@@ -6329,10 +6336,17 @@ namespace ASB
                         using (ZipFile zip = ZipFile.Read(zipFilePath))
                         {
                             zip.Password = fileProtectPwd;
-                            foreach (ZipEntry e in zip)
+                            if (zip.Entries.Count == 1)
                             {
-                                e.Extract(scrPath, ExtractExistingFileAction.OverwriteSilently);
-                                unzipFile = e.FileName;
+                                foreach (ZipEntry e in zip)
+                                {
+                                    e.Extract(scrPath, ExtractExistingFileAction.OverwriteSilently);
+                                    unzipFile = e.FileName;
+                                }
+                            }
+                            else
+                            {
+                                unzipFile = fileName;
                             }
                         }
                     }
@@ -6696,17 +6710,26 @@ namespace ASB
                             fileProtectPwd = HttpContext.Current.Session["axp_uploadfileprotectedpwd"].ToString();
                         if (fileProtectPwd != string.Empty && desFileName.EndsWith(".zip"))
                         {
+                            bool isZipSingle = false;
                             string zipFilePath = Path.Combine(destPath, desFileName);
                             using (ZipFile zip = ZipFile.Read(zipFilePath))
                             {
                                 zip.Password = fileProtectPwd;
-                                foreach (ZipEntry e in zip)
+                                if (zip.Entries.Count == 1)
                                 {
-                                    e.Extract(destPath, ExtractExistingFileAction.OverwriteSilently);
-                                    destFileName = e.FileName;
+                                    isZipSingle = true;
+                                    foreach (ZipEntry e in zip)
+                                    {
+                                        e.Extract(destPath, ExtractExistingFileAction.OverwriteSilently);
+                                        destFileName = e.FileName;
+                                    }
+                                }
+                                else
+                                {
+                                    destFileName = desFileName;
                                 }
                             }
-                            if (File.Exists(zipFilePath))
+                            if (isZipSingle && File.Exists(zipFilePath))
                             {
                                 File.Delete(zipFilePath);
                             }
@@ -6860,7 +6883,7 @@ namespace ASB
 
                 string webAddr = "";
                 if (Session["ARM_URL"] != null && Session["ARM_URL"].ToString() != "")
-                    webAddr = Session["ARM_URL"].ToString() + "/api/v1/SendFCMNotification";
+                    webAddr = Session["ARM_URL"].ToString() + "/ARM_APIs/api/v1/SendFCMNotification";
                 else if (Session["AxFCMSendMsgURL"] != null && Session["AxFCMSendMsgURL"].ToString() != "")
                     webAddr = Session["AxFCMSendMsgURL"].ToString();
 
@@ -7018,8 +7041,10 @@ namespace ASB
             catch (Exception ex) { }
             bool axp_timezone = false;
             string virtualdownloadpath = utilObj.VirtualFilePathUpdate();
-            string glbVarsFromIni = utilObj.GetGblVarsFromIni();
-            HttpContext.Current.Session["axGlobalVars"] = "<globalvars>" + childNode.InnerXml + axGridAttachPath + axAttachmentpath + virtualdownloadpath + glbVarsFromIni + "</globalvars>";
+            //string glbVarsFromIni = utilObj.GetGblVarsFromIni();
+            //HttpContext.Current.Session["axGlobalVars"] = "<globalvars>" + childNode.InnerXml + axGridAttachPath + axAttachmentpath + virtualdownloadpath + glbVarsFromIni + "</globalvars>";
+            string glbVarsFromIni = utilObj.GetGblVarsFromIni("<globalvars>" + childNode.InnerXml + "</globalvars>");
+            HttpContext.Current.Session["axGlobalVars"] = "<globalvars>" + glbVarsFromIni + axGridAttachPath + axAttachmentpath + virtualdownloadpath + "</globalvars>";
             string defProject = string.Empty;
             if (HttpContext.Current.Session["project"] != null)
                 defProject = HttpContext.Current.Session["project"].ToString();
@@ -7056,7 +7081,8 @@ namespace ASB
 
             if (axp_timezone)
             {
-                HttpContext.Current.Session["axGlobalVars"] = "<globalvars>" + childNode.InnerXml + axGridAttachPath + axAttachmentpath + virtualdownloadpath + glbVarsFromIni + "</globalvars>";
+                string _glbVarsFromIni = utilObj.GetGblVarsFromIni("<globalvars>" + childNode.InnerXml + "</globalvars>");
+                HttpContext.Current.Session["axGlobalVars"] = "<globalvars>" + _glbVarsFromIni + axGridAttachPath + axAttachmentpath + virtualdownloadpath + "</globalvars>";
             }
 
             if (globalVariables.Count > 0)
@@ -7486,7 +7512,7 @@ namespace ASB
                 }
 
                 if (Session["ARM_URL"] != null && Session["ARM_URL"].ToString() != "")
-                    webAddr = Session["ARM_URL"].ToString() + "/api/v1/SendFCMNotification";
+                    webAddr = Session["ARM_URL"].ToString() + "/ARM_APIs/api/v1/SendFCMNotification";
                 else if (Session["AxFCMSendMsgURL"] != null && Session["AxFCMSendMsgURL"].ToString() != "")
                     webAddr = Session["AxFCMSendMsgURL"].ToString();
 
@@ -7597,7 +7623,7 @@ namespace ASB
                     return "Redis error";
                 }
                 if (Session["ARM_URL"] != null && Session["ARM_URL"].ToString() != "")
-                    webAddr = Session["ARM_URL"].ToString() + "/api/v1/SendFCMNotification";
+                    webAddr = Session["ARM_URL"].ToString() + "/ARM_APIs/api/v1/SendFCMNotification";
                 else if (Session["AxFCMSendMsgURL"] != null && Session["AxFCMSendMsgURL"].ToString() != "")
                     webAddr = Session["AxFCMSendMsgURL"].ToString();
 
@@ -8179,7 +8205,7 @@ namespace ASB
                 URL = HttpContext.Current.Session["ARM_URL"].ToString() + HttpContext.Current.Session["ARMPushToQueue_API"].ToString();
 
             bool isRMQExist = false;
-            string rmqstatus = CheckRabbitMqStatus("RapidSaveQueue");
+            string rmqstatus = CheckRabbitMqStatus("CachedSaveQueue");
             if (rmqstatus == "OK")
                 isRMQExist = true;
             else if (rmqstatus != "Queue does not exist or queue name incorrect")
@@ -8203,6 +8229,7 @@ namespace ASB
             TStructData tstData = (TStructData)Session[tstDataId];
             if (tstData == null)
                 return Constants.DUPLICATESESS;
+            string _tstructcap = tstData.tstStrObj.tstCaption;
             string deledtedRowsJson = string.Empty;
             if (deledtedRows != "")
             {
@@ -8224,9 +8251,8 @@ namespace ASB
             string axprops = HttpContext.Current.Application["axProps"].ToString();
             axprops = xmltojson(axprops);
             string axappsNode = HttpContext.Current.Session["project"].ToString();
-            DATA = "{\"_parameters\":[{\"savedata\":{\"cachedsave\":\"true\",\"axpapp\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"appsessionkey\":\"" + appsesskey + "\" " + ",\"transid\":\"" + transId + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"password\":\"" + pwd + "\",\"afiles\":\"" + hfiles + "\",\"changedrows\":{" + changedDcs + "},\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\",\"recordid\":\"" + recordId + "\"," + deledtedRows + "";
-            //DATA += jsonData + "}],\"globalvars\":{" + globalvars + "},\"uservars\":{" + uservars + "},\"axapps\":{" + axapps + "}";
-            //DATA += "}}]}";
+            //DATA = "{\"_parameters\":[{\"savedata\":{\"cachedsave\":\"true\",\"axpapp\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"appsessionkey\":\"" + appsesskey + "\" " + ",\"transid\":\"" + transId + "\",\"tstructcap\":\"" + _tstructcap + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"password\":\"" + pwd + "\",\"afiles\":\"" + hfiles + "\",\"changedrows\":{" + changedDcs + "},\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\",\"recordid\":\"" + recordId + "\"," + deledtedRows + "";
+            DATA = "{\"_parameters\":[{\"savedata\":{\"cachedsave\":\"true\",\"axpapp\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"appsessionkey\":\"" + appsesskey + "\" " + ",\"transid\":\"" + transId + "\",\"tstructcap\":\"" + _tstructcap + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"password\":\"\",\"afiles\":\"" + hfiles + "\",\"changedrows\":{" + changedDcs + "},\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\",\"recordid\":\"" + recordId + "\"," + deledtedRows + "";
             DATA += jsonData + "}]},\"" + axappsNode + "\":{" + axapps + "},\"axprops\":{" + axprops + "},\"globalvars\":{" + globalvars + "},\"uservars\":{" + uservars + "}";
             DATA += "}]}";
 
@@ -8235,7 +8261,7 @@ namespace ASB
                 DATA = CachedSaveFldDataEncrypt(DATA, tstData.tstStrObj.FEncryptFlag);
             }
 
-            var saveDetails = "{\"queuename\":\"RapidSaveQueue\",\"queuedata\":" + JsonConvert.SerializeObject(DATA) + "}";
+            var saveDetails = "{\"queuename\":\"CachedSaveQueue\",\"queuedata\":" + JsonConvert.SerializeObject(DATA) + "}";
             request.ContentLength = saveDetails.Length;
 
             StreamWriter requestWriter = new StreamWriter(request.GetRequestStream(), System.Text.Encoding.ASCII);
@@ -8292,6 +8318,8 @@ namespace ASB
             string URL = String.Empty;
             string ArmScriptURL = String.Empty;
             string axConfigFilePath = String.Empty;
+            string AxConfigFileMapUser = string.Empty;
+            string AxConfigFileMapPwd = string.Empty;
             if (HttpContext.Current.Session["ARM_URL"] != null && HttpContext.Current.Session["ARMPushToQueue_API"] != null)
                 URL = HttpContext.Current.Session["ARM_URL"].ToString() + HttpContext.Current.Session["ARMPushToQueue_API"].ToString();
             if (HttpContext.Current.Session["ARM_Scripts_URL"] != null)
@@ -8312,6 +8340,11 @@ namespace ASB
                 axConfigFilePath = HttpContext.Current.Session["AxConfigFileUploadPath"].ToString();
                 axConfigFilePath = axConfigFilePath.Replace(@"\", "\\\\");
             }
+
+            if (HttpContext.Current.Session["AxConfigFileMapUser"] != null)
+                AxConfigFileMapUser = HttpContext.Current.Session["AxConfigFileMapUser"].ToString();
+            if (HttpContext.Current.Session["AxConfigFileMapPwd"] != null)
+                AxConfigFileMapPwd = HttpContext.Current.Session["AxConfigFileMapPwd"].ToString();
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
             request.Method = "POST";
@@ -8368,7 +8401,7 @@ namespace ASB
             globalVars = globalVars.Replace(@"\", "\\\\");
             string _axapps = HttpContext.Current.Session["axApps"].ToString();
             _axapps = _axapps.Replace(@"\", "\\\\");
-            DATA = "{\"getreport\":{\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\"," + purpose + "\"metadata\":\"true\",\"fetchhidcol\":\"false\",\"_dateformat\":\"" + dtFormat + "\",\"ivcaption\":\"" + IVIRCaption + "\",\"sqlpagination\":\"false\",\"params\":" + iviewParamsJson + ",\"ivParamCaption\":" + iviewParamsJsonCap + ",\"project\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"name\":\"" + iviewName + "\",\"token\":\"d152232e23ff6523b8104196ff1b6015\",\"seed\":\"211269\",\"userauthkey\":\"" + Session["username"].ToString() + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"arm_url\":\"" + HttpContext.Current.Session["ARM_URL"].ToString() + "\",\"ARMScriptURL\":\"" + ArmScriptURL + "\",\"axConfigFilePath\":\"" + axConfigFilePath + "\"},\"axprops\":\"" + HttpContext.Current.Application["axProps"].ToString() + "\",\"axapps\":\"" + _axapps + "\",\"globalvars\":\"" + globalVars + "\",\"uservars\":\"" + HttpContext.Current.Session["axUserVars"].ToString() + "\"}";
+            DATA = "{\"getreport\":{\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\"," + purpose + "\"metadata\":\"true\",\"fetchhidcol\":\"false\",\"_dateformat\":\"" + dtFormat + "\",\"ivcaption\":\"" + IVIRCaption + "\",\"sqlpagination\":\"false\",\"params\":" + iviewParamsJson + ",\"ivParamCaption\":" + iviewParamsJsonCap + ",\"project\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"name\":\"" + iviewName + "\",\"token\":\"d152232e23ff6523b8104196ff1b6015\",\"seed\":\"211269\",\"userauthkey\":\"" + Session["username"].ToString() + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"arm_url\":\"" + HttpContext.Current.Session["ARM_URL"].ToString() + "\",\"ARMScriptURL\":\"" + ArmScriptURL + "\",\"axConfigFilePath\":\"" + axConfigFilePath + "\",\"axConfigFileMapUser\":\"" + AxConfigFileMapUser + "\",\"axConfigFileMapPwd\":\"" + AxConfigFileMapPwd + "\"},\"axprops\":\"" + HttpContext.Current.Application["axProps"].ToString() + "\",\"axapps\":\"" + _axapps + "\",\"globalvars\":\"" + globalVars + "\",\"uservars\":\"" + HttpContext.Current.Session["axUserVars"].ToString() + "\"}";
             var saveDetails = "{\"queuename\":\"ARMExportQueue\",\"queuedata\":" + JsonConvert.SerializeObject(DATA) + ",\"timespandelay\":\"0\"}";
             request.ContentLength = saveDetails.Length;
 
@@ -8416,7 +8449,7 @@ namespace ASB
             string ArmScriptURL = string.Empty;
             string axConfigFilePath = string.Empty;
             string armurl = HttpContext.Current.Session["ARM_URL"].ToString();
-            string apiURL = HttpContext.Current.Session["ARM_URL"].ToString() + "/api/v1/GetEntityListPageLoadData";
+            string apiURL = HttpContext.Current.Session["ARM_URL"].ToString() + "/AxList/api/v1/GetEntityListPageLoadData";
 
 
             if (HttpContext.Current.Session["ARM_URL"] != null && HttpContext.Current.Session["ARMPushToQueue_API"] != null)
@@ -9902,6 +9935,14 @@ namespace ASB
             return dcHTML;
         }
 
+        public bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            string pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            return Regex.IsMatch(email, pattern, RegexOptions.IgnoreCase);
+        }
         [WebMethod(EnableSession = true)]
         public string UserActivation(string _Username, string _UserType, string _IsActive)
         {
@@ -9912,20 +9953,119 @@ namespace ASB
             {
                 _IsActive = "T";
                 string schemaName = HttpContext.Current.Session["dbuserALC"].ToString();
+                bool isAxiUser = false;
+                string isAxiUrl = string.Empty;
+                string _UserEmail = string.Empty;
+                //string _AxiToken = "";
                 //LogFile.Log _logObj = new LogFile.Log();
                 //_logObj.CreateLog("User Activate details:_Username:" + _Username + " _UserType:" + _UserType + " _IsActive:" + _IsActive + " schemaName:" + schemaName, HttpContext.Current.Session.SessionID, "UserActivate", "");
-                res = ALCClient.CallALCClient("Activate", _Username, _UserType, _IsActive, schemaName);
+                if (Session["AxiProjectLogin"] != null && Session["AxiProjectLogin"].ToString() == "true")
+                {
+                    string jsoncontents = utilObj.ReadFromFile(HttpContext.Current.Server.MapPath("~/axiglobalconfig.json"));
+                    if (jsoncontents != string.Empty)
+                    {
+                        JObject _jsonAxi = JObject.Parse(jsoncontents);
+                        if (_jsonAxi["AxiGlobal"] != null && _jsonAxi["AxiGlobal"].ToString() == "true" && _jsonAxi["AxiClientAPI"] != null && _jsonAxi["AxiClientAPI"].ToString() != "")
+                        {
+                            _UserEmail = _Username;
+                            if (!IsValidEmail(_UserEmail))
+                            {
+                                DBContext obj = new DBContext();
+                                _UserEmail = obj.GetUserEmailInfo(_Username);
+                            }
+                            if (string.IsNullOrEmpty(_UserEmail))
+                            {
+                                res = "Error: Activating user does not have emailid, please update and activate again.";
+                                return res;
+                            }
+                            string URL = _jsonAxi["AxiClientAPI"].ToString();// "http://localhost/AxiClientAPI/api/AxiClient/AxiUserDeActivate";
+                            //string tokenUrl = URL.TrimEnd('/') + "/api/AxiClient/AxiGenerateToken";
+                            //var tokenRequest = (HttpWebRequest)WebRequest.Create(tokenUrl);
+                            //tokenRequest.Method = "POST";
+                            //tokenRequest.ContentType = "application/json";
+                            //string tokenBody = "{\"email\":\"" + _UserEmail + "\"}";
+                            //using (StreamWriter writer = new StreamWriter(tokenRequest.GetRequestStream()))
+                            //    writer.Write(tokenBody);
+                            //using (WebResponse response = tokenRequest.GetResponse())
+                            //using (StreamReader reader = new StreamReader(response.GetResponseStream()))
+                            //{
+                            //    string tokenResponse = reader.ReadToEnd();
+                            //    dynamic obj = Newtonsoft.Json.JsonConvert.DeserializeObject(tokenResponse);
+                            //    _AxiToken = obj.Token;
+                            //}
+
+
+                            string appUrl = HttpContext.Current.Request.Url.Scheme + "://" + HttpContext.Current.Request.Url.Authority + "/";
+                            URL = URL.TrimEnd('/') + "/api/AxiClient/AxiUserActivate";
+                            isAxiUrl = _jsonAxi["AxiClientAPI"].ToString();
+                            string uDetails = "{\"userName\":\"" + _Username + "\",\"Email\":\"" + _UserEmail + "\",\"schemaName\":\"" + schemaName + "\",\"AppDomain\":\"" + appUrl + "\"}";
+                            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
+                            request.Method = "POST";
+                            request.ContentType = "application/json";
+                            //request.Headers["Authorization"] = "Bearer " + _AxiToken;
+                            using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
+                            {
+                                writer.Write(uDetails);
+                            }
+                            using (WebResponse webResponse = request.GetResponse())
+                            using (StreamReader reader = new StreamReader(webResponse.GetResponseStream()))
+                            {
+                                res = reader.ReadToEnd();
+                                if (res.Contains("\"Message\":\"Error:"))
+                                    res = "Error:" + res;
+                                else
+                                    isAxiUser = true;
+                            }
+                        }
+                        else
+                            res = "Error: AxiGlobalConfig is not proper, Please check and try again.";
+                    }
+                    else
+                        res = ALCClient.CallALCClient("Activate", _Username, _UserType, _IsActive, schemaName);
+                }
+                else
+                    res = ALCClient.CallALCClient("Activate", _Username, _UserType, _IsActive, schemaName);
+
                 if (!res.StartsWith("Error:") && !res.Contains("The operation has timed out"))
                 {
                     var outerObject = JsonConvert.DeserializeObject<Dictionary<string, string>>(res);
                     string authKey = outerObject["AuthKey"];
                     string userKey = outerObject["UserKey"];
                     DBContext obj = new DBContext();
-                    string _res = obj.UpdateALCUserInfo(_Username, _IsActive, authKey, userKey);
+                    string _res = obj.UpdateALCUserInfo(_Username, _IsActive, authKey, userKey, "activate");
                     if (_res == "0" || _res.StartsWith("Error:"))
                         res = _res;
                     else
+                    {
                         res = "User activated successfully";
+                        if (isAxiUser)
+                        {
+                            try
+                            {
+                                string URL = isAxiUrl;
+                                URL = URL.TrimEnd('/') + "/api/AxiClient/AxiUserActiveUpdate";
+                                string uDetails = "{\"userName\":\"" + _Username + "\",\"Email\":\"" + _UserEmail + "\",\"schemaName\":\"" + schemaName + "\"}";
+                                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
+                                request.Method = "POST";
+                                request.ContentType = "application/json";
+                                //request.Headers["Authorization"] = "Bearer " + _AxiToken;
+                                using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
+                                {
+                                    writer.Write(uDetails);
+                                }
+                                using (WebResponse webResponse = request.GetResponse())
+                                using (StreamReader reader = new StreamReader(webResponse.GetResponseStream()))
+                                {
+                                    reader.ReadToEnd();
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                obj.UpdateALCUserInfo(_Username, "F", "", "", "activate");
+                                res = "Error: Error while activating user, please try again";
+                            }
+                        }
+                    }
                 }
                 else
                 {
@@ -9934,6 +10074,13 @@ namespace ASB
                     if (res.Contains("{\"Message\":"))
                     {
                         res = res.Replace("Error: 400 - Bad Request,  Error response body: ", "");
+                        JObject jsonObject = JObject.Parse(res);
+                        res = jsonObject["Message"].ToString();
+                    }
+                    else if (res.StartsWith("Error:") && res.Contains("\"Message\":\"Error:"))
+                    {
+                        res = res.Replace("Error: 400 - Bad Request,  Error response body: ", "");
+                        res = res.Replace("Error:{", "{");
                         JObject jsonObject = JObject.Parse(res);
                         res = jsonObject["Message"].ToString();
                     }
@@ -9965,15 +10112,49 @@ namespace ASB
 
                     //LogFile.Log _logObj = new LogFile.Log();
                     //_logObj.CreateLog("User Deactivate details:_Username:" + _Username + " _UserType:" + _UserType + " _IsActive:" + _IsActive + " schemaName:" + schemaName, HttpContext.Current.Session.SessionID, "UserDeactivate", "");
+                    if (Session["AxiProjectLogin"] != null && Session["AxiProjectLogin"].ToString() == "true")
+                    {
+                        string jsoncontents = utilObj.ReadFromFile(HttpContext.Current.Server.MapPath("~/axiglobalconfig.json"));
+                        if (jsoncontents != string.Empty)
+                        {
+                            JObject _jsonAxi = JObject.Parse(jsoncontents);
+                            if (_jsonAxi["AxiGlobal"] != null && _jsonAxi["AxiGlobal"].ToString() == "true" && _jsonAxi["AxiClientAPI"] != null && _jsonAxi["AxiClientAPI"].ToString() != "")
+                            {
+                                string appUrl = HttpContext.Current.Request.Url.Scheme + "://" + HttpContext.Current.Request.Url.Authority + "/";
+                                string URL = _jsonAxi["AxiClientAPI"].ToString();
+                                URL = URL.TrimEnd('/') + "/api/AxiClient/AxiUserDeActivate";
+                                string uDetails = "{\"userName\":\"" + _Username + "\",\"schemaName\":\"" + schemaName + "\",\"AppDomain\":\"" + appUrl + "\"}";
+                                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
+                                request.Method = "POST";
+                                request.ContentType = "application/json";
+                                using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
+                                {
+                                    writer.Write(uDetails);
+                                }
+                                using (WebResponse webResponse = request.GetResponse())
+                                using (StreamReader reader = new StreamReader(webResponse.GetResponseStream()))
+                                {
+                                    res = reader.ReadToEnd();
+                                    if (res.Contains("\"Message\":\"Error:"))
+                                        res = "Error:" + res;
+                                }
+                            }
+                            else
+                                res = "Error: AxiGlobalConfig is not proper, Please check and try again.";
+                        }
+                        else
+                            res = ALCClient.CallALCClient("Deactivate", _Username, _UserType, _IsActive, schemaName);
 
-                    res = ALCClient.CallALCClient("Deactivate", _Username, _UserType, _IsActive, schemaName);
+                    }
+                    else
+                        res = ALCClient.CallALCClient("Deactivate", _Username, _UserType, _IsActive, schemaName);
                     if (!res.StartsWith("Error:") && !res.Contains("The operation has timed out"))
                     {
                         var outerObject = JsonConvert.DeserializeObject<Dictionary<string, string>>(res);
                         string authKey = "";
                         string userKey = "";
                         DBContext obj = new DBContext();
-                        string _res = obj.UpdateALCUserInfo(_Username, _IsActive, authKey, userKey);
+                        string _res = obj.UpdateALCUserInfo(_Username, _IsActive, authKey, userKey, "deactivate");
                         if (_res == "0" || _res.StartsWith("Error:"))
                             res = _res;
                         else
@@ -9986,6 +10167,13 @@ namespace ASB
                         if (res.Contains("{\"Message\":"))
                         {
                             res = res.Replace("Error: 400 - Bad Request,  Error response body: ", "");
+                            JObject jsonObject = JObject.Parse(res);
+                            res = jsonObject["Message"].ToString();
+                        }
+                        else if (res.StartsWith("Error:") && res.Contains("\"Message\":\"Error:"))
+                        {
+                            res = res.Replace("Error: 400 - Bad Request,  Error response body: ", "");
+                            res = res.Replace("Error:{", "{");
                             JObject jsonObject = JObject.Parse(res);
                             res = jsonObject["Message"].ToString();
                         }
@@ -10021,7 +10209,7 @@ namespace ASB
                     string authKey = outerObject["AuthKey"];
                     string userKey = outerObject["UserKey"];
                     DBContext obj = new DBContext();
-                    string _res = obj.UpdateALCUserInfo(_Username, _IsActive, authKey, userKey);
+                    string _res = obj.UpdateALCUserInfo(_Username, _IsActive, authKey, userKey, "update");
                     if (_res == "0" || _res.StartsWith("Error:"))
                         res = _res;
                     else
@@ -10662,7 +10850,7 @@ namespace ASB
             try
             {
                 AnalyticsUtils _aUtils = new AnalyticsUtils();
-                string apiUrl = _aUtils.ARM_URL + "/api/v1/GetCardsWithData";
+                string apiUrl = _aUtils.ARM_URL + "/AxList/api/v1/GetCardsWithData";
 
                 var inputJson = new
                 {
@@ -11012,9 +11200,15 @@ namespace ASB
                 XmlNode tfcaption = xmlDoc.SelectSingleNode("//root/varlist/row/tfcaption");
                 XmlNode dc2fldprops = xmlDoc.SelectSingleNode("//root/varlist/row/dc2fldprops");
                 XmlNode dc3fldprops = xmlDoc.SelectSingleNode("//root/varlist/row/dc3fldprops");
+
+                XmlNode tftransid2 = xmlDoc.SelectSingleNode("//root/varlist/row/tftransid2");
+                XmlNode tfcaption2 = xmlDoc.SelectSingleNode("//root/varlist/row/tfcaption2");
+                //XmlNode a_dup_dc1caption = xmlDoc.SelectSingleNode("//root/varlist/row/a_dup_dc1caption");
+                XmlNode a_dup_dc1fldprops = xmlDoc.SelectSingleNode("//root/varlist/row/a_dup_dc1fldprops");
                 AddFieldRuntimeWS(tftransid.InnerText, tfcaption.InnerText, dc2fldprops.InnerText, "new", "", "");
 
                 AddFieldRuntimeWS(tftransid.InnerText, tfcaption.InnerText, dc3fldprops.InnerText, "new", "", "");
+                AddFieldRuntimeWS(tftransid2.InnerText, tfcaption2.InnerText, a_dup_dc1fldprops.InnerText, "new", "", "");
             }
             catch (Exception ex)
             {
@@ -11244,7 +11438,7 @@ namespace ASB
                 }
                 catch (Exception e)
                 {
-                    return response;
+                    return "Either ARM is not running or setup is not proper. Please contact administrator to rectify ARM setup issue.";
                 }
             }
             catch (Exception ex)
@@ -11299,98 +11493,215 @@ namespace ASB
             return result;
         }
 
+        //[WebMethod(EnableSession = true)]
+        //public string MultiFrameDataPushToQueue(string multiframeJsonData)
+        //{
+        //    string result = string.Empty;
+        //    try
+        //    {
+        //        string response = string.Empty;
+        //        string DATA = string.Empty;
+        //        string URL = String.Empty;
+        //        if (HttpContext.Current.Session["ARM_URL"] != null && HttpContext.Current.Session["ARMPushToQueue_API"] != null)
+        //            URL = HttpContext.Current.Session["ARM_URL"].ToString() + HttpContext.Current.Session["ARMPushToQueue_API"].ToString();
+        //        string appsesskey = Session["AppSessionKey"].ToString();
+        //        string globalvars = xmltojson(Session["axGlobalVars"].ToString());
+        //        string uservars = xmltojson(Session["axUserVars"].ToString());
+        //        string axapps = xmltojson(Session["axApps"].ToString());
+        //        string pwd = utilObj.MD5Hash(Session["pwd"].ToString());
+        //        string axprops = HttpContext.Current.Application["axProps"].ToString();
+        //        axprops = xmltojson(axprops);
+        //        string axappsNode = HttpContext.Current.Session["project"].ToString();
+        //        JObject _obj = JObject.Parse(multiframeJsonData);
+        //        foreach (KeyValuePair<string, JToken> formData in _obj)
+        //        {
+        //            string formName = formData.Key;
+        //            JObject formContent = formData.Value as JObject;
+        //            if (formContent != null)
+        //            {
+        //                string tstDataId = formContent["tstDataId"] != null ? formContent["tstDataId"].ToString() : "";
+        //                string changedDcs = formContent["changedDcs"] != null ? formContent["changedDcs"].ToString() : "";
+        //                string recordid = formContent["recordid"] != null ? formContent["recordid"].ToString() : "";
+        //                string deledtedRows = formContent["delRows"] != null ? formContent["delRows"].ToString() : "";
+        //                string hfiles = formContent["files"] != null ? formContent["files"].ToString() : "";
+
+        //                JToken recdataNode = formContent["recdata"];
+        //                string recdataJsonString = recdataNode.ToString(Newtonsoft.Json.Formatting.None);
+        //                string jsonData = "\"recdata\":" + recdataJsonString;
+
+        //                TStructData tstData = (TStructData)Session[tstDataId];
+        //                if (tstData == null)
+        //                    return Constants.DUPLICATESESS;
+        //                string _transId = tstData.transid;
+
+        //                string deledtedRowsJson = string.Empty;
+        //                if (deledtedRows != "")
+        //                {
+        //                    deledtedRowsJson = tstData.GetDelRowsNode(deledtedRows);
+        //                    XmlDocument doc = new XmlDocument();
+        //                    doc.LoadXml(deledtedRowsJson);
+        //                    deledtedRows = JsonConvert.SerializeXmlNode(doc);
+        //                    deledtedRows = deledtedRows.Remove(deledtedRows.IndexOf("{"), 1);
+        //                    deledtedRows = deledtedRows.Remove(deledtedRows.LastIndexOf("}"), 1);
+        //                    deledtedRows += ",";
+        //                }
+        //                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
+        //                request.Method = "POST";
+        //                request.ContentType = "application/json";
+        //                if (changedDcs == "{}")
+        //                    DATA = "{\"_parameters\":[{\"savedata\":{\"cachedsave\":\"true\",\"axpapp\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"appsessionkey\":\"" + appsesskey + "\" " + ",\"transid\":\"" + _transId + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"password\":\"" + pwd + "\",\"afiles\":\"" + hfiles + "\",\"changedrows\":{},\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\",\"recordid\":\"" + recordid + "\"," + deledtedRows + "";
+        //                else
+        //                    DATA = "{\"_parameters\":[{\"savedata\":{\"cachedsave\":\"true\",\"axpapp\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"appsessionkey\":\"" + appsesskey + "\" " + ",\"transid\":\"" + _transId + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"password\":\"" + pwd + "\",\"afiles\":\"" + hfiles + "\",\"changedrows\":" + changedDcs + ",\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\",\"recordid\":\"" + recordid + "\"," + deledtedRows + "";
+        //                DATA += jsonData + "},\"" + axappsNode + "\":{" + axapps + "},\"axprops\":{" + axprops + "},\"globalvars\":{" + globalvars + "},\"uservars\":{" + uservars + "}";
+        //                DATA += "}]}";
+        //                if (tstData.tstStrObj.FEncryptFlag.Count > 0)
+        //                {
+        //                    DATA = CachedSaveFldDataEncrypt(DATA, tstData.tstStrObj.FEncryptFlag);
+        //                }
+        //                var saveDetails = "{\"queuename\":\"CachedSaveQueue\",\"queuedata\":" + JsonConvert.SerializeObject(DATA) + "}";
+        //                request.ContentLength = saveDetails.Length;
+        //                StreamWriter requestWriter = new StreamWriter(request.GetRequestStream(), System.Text.Encoding.ASCII);
+        //                requestWriter.Write(saveDetails);
+        //                requestWriter.Close();
+        //                try
+        //                {
+        //                    WebResponse webResponse = request.GetResponse();
+        //                    Stream webStream = webResponse.GetResponseStream();
+        //                    StreamReader responseReader = new StreamReader(webStream);
+        //                    response = responseReader.ReadToEnd();
+        //                    responseReader.Close();
+        //                    try
+        //                    {
+        //                        HttpContext.Current.Session["AxpAttFileServer-" + _transId] = null;
+        //                    }
+        //                    catch (Exception ex) { }
+        //                    result = response;
+        //                }
+        //                catch (Exception e)
+        //                {
+        //                    result = response;
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex) { }
+        //    return result;
+        //}
         [WebMethod(EnableSession = true)]
         public string MultiFrameDataPushToQueue(string multiframeJsonData)
         {
             string result = string.Empty;
             try
             {
-                string response = string.Empty;
-                string DATA = string.Empty;
-                string URL = String.Empty;
+                string URL = string.Empty;
                 if (HttpContext.Current.Session["ARM_URL"] != null && HttpContext.Current.Session["ARMPushToQueue_API"] != null)
                     URL = HttpContext.Current.Session["ARM_URL"].ToString() + HttpContext.Current.Session["ARMPushToQueue_API"].ToString();
-                string appsesskey = Session["AppSessionKey"].ToString();
-                string globalvars = xmltojson(Session["axGlobalVars"].ToString());
-                string uservars = xmltojson(Session["axUserVars"].ToString());
-                string axapps = xmltojson(Session["axApps"].ToString());
-                string pwd = utilObj.MD5Hash(Session["pwd"].ToString());
-                string axprops = HttpContext.Current.Application["axProps"].ToString();
-                axprops = xmltojson(axprops);
-                string axappsNode = HttpContext.Current.Session["project"].ToString();
-                JObject _obj = JObject.Parse(multiframeJsonData);
-                foreach (KeyValuePair<string, JToken> formData in _obj)
+
+                bool isRMQExist = false;
+                string rmqstatus = CheckRabbitMqStatus("CachedSaveQueue");
+                if (rmqstatus == "OK")
+                    isRMQExist = true;
+                else if (rmqstatus != "Queue does not exist or queue name incorrect")
+                    return "RMQError:" + rmqstatus;
+
+                AnalyticsUtils _aUtils = new AnalyticsUtils();
+                string armSessionId = _aUtils.ARMSessionId;
+                string project = HttpContext.Current.Session["project"].ToString();
+                string username = Session["username"].ToString();
+                string trace = HttpContext.Current.Session["AxTrace"].ToString();
+
+                JObject inputObj = JObject.Parse(multiframeJsonData);
+
+                JObject parameterObj = new JObject();
+                parameterObj["ARMSessionId"] = armSessionId;
+                parameterObj["project"] = project;
+                parameterObj["username"] = username;
+                parameterObj["sessionid"] = Session.SessionID;
+                parameterObj["trace"] = trace;
+                int txnCounter = 1;
+                foreach (KeyValuePair<string, JToken> formData in inputObj)
                 {
-                    string formName = formData.Key;
                     JObject formContent = formData.Value as JObject;
-                    if (formContent != null)
+                    if (formContent == null)
+                        continue;
+
+                    string tstDataId = formContent["tstDataId"] != null ? formContent["tstDataId"].ToString() : "";
+                    string changedDcs = formContent["changedDcs"] != null ? formContent["changedDcs"].ToString() : "{}";
+                    string recordid = formContent["recordid"] != null ? formContent["recordid"].ToString() : "0";
+                    string deletedRows = formContent["delRows"] != null ? formContent["delRows"].ToString() : "";
+                    string hfiles = formContent["files"] != null ? formContent["files"].ToString() : "";
+
+                    JToken recdataNode = formContent["recdata"];
+
+                    TStructData tstData = (TStructData)Session["MultiFrame_" + tstDataId.Split('_')[0]];
+                    if (tstData == null)
+                        return Constants.DUPLICATESESS;
+
+                    string transId = tstData.transid;
+
+                    JObject txnObj = new JObject();
+                    txnObj["transid"] = transId;
+                    txnObj["afiles"] = hfiles;
+                    txnObj["recordid"] = recordid;
+                    txnObj["trace"] = trace;
+                    if (changedDcs == "{}")
+                        txnObj["changedrows"] = new JObject();
+                    else
+                        txnObj["changedrows"] = JObject.Parse(changedDcs);
+                    if (!string.IsNullOrEmpty(deletedRows))
                     {
-                        string tstDataId = formContent["tstDataId"] != null ? formContent["tstDataId"].ToString() : "";
-                        string changedDcs = formContent["changedDcs"] != null ? formContent["changedDcs"].ToString() : "";
-                        string recordid = formContent["recordid"] != null ? formContent["recordid"].ToString() : "";
-                        string deledtedRows = formContent["delRows"] != null ? formContent["delRows"].ToString() : "";
-                        string hfiles = formContent["files"] != null ? formContent["files"].ToString() : "";
-
-                        JToken recdataNode = formContent["recdata"];
-                        string recdataJsonString = recdataNode.ToString(Newtonsoft.Json.Formatting.None);
-                        string jsonData = "\"recdata\":" + recdataJsonString;
-
-                        TStructData tstData = (TStructData)Session[tstDataId];
-                        if (tstData == null)
-                            return Constants.DUPLICATESESS;
-                        string _transId = tstData.transid;
-
-                        string deledtedRowsJson = string.Empty;
-                        if (deledtedRows != "")
-                        {
-                            deledtedRowsJson = tstData.GetDelRowsNode(deledtedRows);
-                            XmlDocument doc = new XmlDocument();
-                            doc.LoadXml(deledtedRowsJson);
-                            deledtedRows = JsonConvert.SerializeXmlNode(doc);
-                            deledtedRows = deledtedRows.Remove(deledtedRows.IndexOf("{"), 1);
-                            deledtedRows = deledtedRows.Remove(deledtedRows.LastIndexOf("}"), 1);
-                            deledtedRows += ",";
-                        }
-                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
-                        request.Method = "POST";
-                        request.ContentType = "application/json";
-                        if (changedDcs == "{}")
-                            DATA = "{\"_parameters\":[{\"savedata\":{\"cachedsave\":\"true\",\"axpapp\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"appsessionkey\":\"" + appsesskey + "\" " + ",\"transid\":\"" + _transId + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"password\":\"" + pwd + "\",\"afiles\":\"" + hfiles + "\",\"changedrows\":{},\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\",\"recordid\":\"" + recordid + "\"," + deledtedRows + "";
-                        else
-                            DATA = "{\"_parameters\":[{\"savedata\":{\"cachedsave\":\"true\",\"axpapp\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"appsessionkey\":\"" + appsesskey + "\" " + ",\"transid\":\"" + _transId + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"password\":\"" + pwd + "\",\"afiles\":\"" + hfiles + "\",\"changedrows\":" + changedDcs + ",\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\",\"recordid\":\"" + recordid + "\"," + deledtedRows + "";
-                        DATA += jsonData + "},\"" + axappsNode + "\":{" + axapps + "},\"axprops\":{" + axprops + "},\"globalvars\":{" + globalvars + "},\"uservars\":{" + uservars + "}";
-                        DATA += "}]}";
-                        if (tstData.tstStrObj.FEncryptFlag.Count > 0)
-                        {
-                            DATA = CachedSaveFldDataEncrypt(DATA, tstData.tstStrObj.FEncryptFlag);
-                        }
-                        var saveDetails = "{\"queuename\":\"RapidSaveQueue\",\"queuedata\":" + JsonConvert.SerializeObject(DATA) + "}";
-                        request.ContentLength = saveDetails.Length;
-                        StreamWriter requestWriter = new StreamWriter(request.GetRequestStream(), System.Text.Encoding.ASCII);
-                        requestWriter.Write(saveDetails);
-                        requestWriter.Close();
+                        string deletedRowsJson = tstData.GetDelRowsNode(deletedRows);
+                        XmlDocument doc = new XmlDocument();
+                        doc.LoadXml(deletedRowsJson);
+                        string json = JsonConvert.SerializeXmlNode(doc);
                         try
                         {
-                            WebResponse webResponse = request.GetResponse();
-                            Stream webStream = webResponse.GetResponseStream();
-                            StreamReader responseReader = new StreamReader(webStream);
-                            response = responseReader.ReadToEnd();
-                            responseReader.Close();
-                            try
-                            {
-                                HttpContext.Current.Session["AxpAttFileServer-" + _transId] = null;
-                            }
-                            catch (Exception ex) { }
-                            result = response;
+                            txnObj["delRows"] = JObject.Parse(json);
                         }
-                        catch (Exception e)
+                        catch
                         {
-                            result = response;
+                            txnObj["delRows"] = json;
                         }
                     }
+                    if (tstData != null && tstData.tstStrObj.FEncryptFlag.Count > 0)
+                    {
+                        recdataNode = CachedSaveFldDataEncrypt(recdataNode.ToString(), tstData.tstStrObj.FEncryptFlag);
+                    }
+                    txnObj["recdata"] = recdataNode;
+                    parameterObj["transaction" + txnCounter] = txnObj;
+                    txnCounter++;
+                }
+                JObject finalObj = new JObject();
+                JArray paramArray = new JArray();
+                paramArray.Add(parameterObj);
+                finalObj["_parameters"] = paramArray;
+
+                string DATA = finalObj.ToString(Newtonsoft.Json.Formatting.None);
+
+                string saveDetails = "{\"queuename\":\"CachedSaveQueue\",\"queuedata\":" + JsonConvert.SerializeObject(DATA) + "}";
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
+                request.Method = "POST";
+                request.ContentType = "application/json";
+                using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
+                {
+                    writer.Write(saveDetails);
+                }
+                using (WebResponse webResponse = request.GetResponse())
+                using (StreamReader reader = new StreamReader(webResponse.GetResponseStream()))
+                {
+                    result = reader.ReadToEnd();
+                }
+                if (!isRMQExist)
+                {
+                    string _rmqstatus = CheckRabbitMqStatus("ARMExportQueue");
+                    if (_rmqstatus != "OK")
+                        return "RMQError:" + _rmqstatus;
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                result = ex.Message;
+            }
             return result;
         }
 
@@ -11457,6 +11768,7 @@ namespace ASB
                     }
                     catch (Exception ex) { }
                     Session.Add(mtstDataId, tstData);
+                    Session.Add("MultiFrame_" + tformId, tstData);
                     result = "success";
                 }
                 else
@@ -11494,7 +11806,7 @@ namespace ASB
 
                 string _db_type = HttpContext.Current.Session["axdb"].ToString();
                 string __connectionString = HttpContext.Current.Session["axconstr"].ToString();
-
+                ALCClient.InitializeBaseUrl();
                 ThreadPool.QueueUserWorkItem(state =>
                 {
                     BulkUserActivate objss = new BulkUserActivate();
@@ -11690,33 +12002,76 @@ namespace ASB
 
                 XmlDocument xmlDoc = new XmlDocument();
                 xmlDoc.LoadXml(ivXml);
+                string _params = string.Empty;
                 XmlNode paramsObj = xmlDoc.SelectSingleNode("//params");
-                if (paramsObj == null)
-                    return "{}";
-                string paramjson = JsonConvert.SerializeXmlNode(paramsObj, Newtonsoft.Json.Formatting.None, false);
-                JObject fullParamObj = JObject.Parse(paramjson);
-                JToken paramsObject = fullParamObj["params"];
-                JObject Paramsoutput = new JObject();
-                Paramsoutput["params"] = paramsObject;
-                string _params = JsonConvert.SerializeObject(Paramsoutput, Newtonsoft.Json.Formatting.Indented);
-                if (_params.StartsWith("{"))
-                    _params = _params.Substring(1);
-                if (_params.EndsWith("}"))
-                    _params = _params.Substring(0, _params.Length - 1);
+                if (paramsObj != null && paramsObj.OuterXml != "<params></params>")
+                {
+                    string paramjson = JsonConvert.SerializeXmlNode(paramsObj, Newtonsoft.Json.Formatting.None, false);
+                    JObject fullParamObj = JObject.Parse(paramjson);
+                    JToken paramsObject = fullParamObj["params"];
+                    JObject Paramsoutput = new JObject();
+                    Paramsoutput["params"] = paramsObject;
+                    _params = JsonConvert.SerializeObject(Paramsoutput, Newtonsoft.Json.Formatting.Indented);
+                    if (_params.StartsWith("{"))
+                        _params = _params.Substring(1);
+                    if (_params.EndsWith("}"))
+                        _params = _params.Substring(0, _params.Length - 1);
+                }
+                string _varlist = string.Empty;
 
                 XmlNode varlist = xmlDoc.SelectSingleNode("//varlist");
-                if (varlist == null)
-                    return "{}";
-                string json = JsonConvert.SerializeXmlNode(varlist, Newtonsoft.Json.Formatting.None, false);
-                JObject fullObj = JObject.Parse(json);
-                JToken varlistObject = fullObj["varlist"];
-                JObject output = new JObject();
-                output["varlist"] = varlistObject;
-                string _varlist = JsonConvert.SerializeObject(output, Newtonsoft.Json.Formatting.Indented);
-                if (_varlist.StartsWith("{"))
-                    _varlist = _varlist.Substring(1);
-                if (_varlist.EndsWith("}"))
-                    _varlist = _varlist.Substring(0, _varlist.Length - 1);
+                if (varlist != null && varlist.OuterXml != "<varlist></varlist>")
+                {
+                    string json = JsonConvert.SerializeXmlNode(varlist, Newtonsoft.Json.Formatting.None, false);
+                    JObject fullObj = JObject.Parse(json);
+                    JToken rowsToken = fullObj.SelectToken("varlist.row");
+                    if (rowsToken == null)
+                        return "{}";
+                    JArray rowArray = rowsToken.Type == JTokenType.Array ? (JArray)rowsToken : new JArray(rowsToken);
+                    JArray rowGridBlocks = new JArray();
+                    int index = 1;
+                    foreach (JToken rowToken in rowArray)
+                    {
+                        JObject rowObj = rowToken as JObject;
+                        if (rowObj == null)
+                            continue;
+                        string paddedRowNo = index.ToString("D3");
+                        JObject gridRow = new JObject();
+
+                        foreach (JProperty prop in rowObj.Properties())
+                        {
+                            if (prop.Name == "#text")
+                                continue;
+                            gridRow[prop.Name] = new JObject
+                        {
+                            { "_rowno", paddedRowNo },
+                            { "__text", prop.Value.Type == JTokenType.Object ? prop.Value["#text"].ToString() : prop.Value.ToString() }
+                        };
+                        }
+                        rowGridBlocks.Add(gridRow);
+                        index++;
+                    }
+                    JObject output = new JObject    {
+                    {
+                        "varlist", new JObject
+                    {
+                            {
+                                "row", new JObject
+                                {
+                                    {
+                                        "row_gridblocks", rowGridBlocks
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    };
+                    _varlist = JsonConvert.SerializeObject(output, Newtonsoft.Json.Formatting.Indented);
+                    if (_varlist.StartsWith("{"))
+                        _varlist = _varlist.Substring(1);
+                    if (_varlist.EndsWith("}"))
+                        _varlist = _varlist.Substring(0, _varlist.Length - 1);
+                }
 
                 string DATA = string.Empty;
                 string URL = String.Empty;
@@ -11738,7 +12093,7 @@ namespace ASB
                 string _axapps = HttpContext.Current.Session["axApps"].ToString();
                 _axapps = _axapps.Replace(@"\", "\\\\");
 
-                DATA = "{\"executescript\":{\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\",\"project\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"script\":\"" + _scripName + "\",\"scriptcaption\":\"" + _scriptCaption + "\",\"scriptqueuename\":\"" + _queueName + "\",\"type\":\"report\",\"name\":\"" + iviewName + "\",\"pageCaption\":\"" + iviewCaption + "\"}," + _params.Replace("\r\n", "") + "," + _varlist.Replace("\r\n", "") + ",\"axprops\":\"" + HttpContext.Current.Application["axProps"].ToString() + "\",\"axapps\":\"" + _axapps + "\",\"globalvars\":\"" + globalVars + "\",\"uservars\":\"" + HttpContext.Current.Session["axUserVars"].ToString() + "\"}";
+                DATA = "{\"executescript\":{\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\",\"project\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"script\":\"" + _scripName + "\",\"scriptcaption\":\"" + _scriptCaption + "\",\"scriptqueuename\":\"" + _queueName + "\",\"type\":\"report\",\"name\":\"" + iviewName + "\",\"pageCaption\":\"" + iviewCaption + "\"}," + (_params != string.Empty ? _params.Replace("\r\n", "") + "," : "") + (_varlist != string.Empty ? _varlist.Replace("\r\n", "") + "," : "") + "\"axprops\":\"" + HttpContext.Current.Application["axProps"].ToString() + "\",\"axapps\":\"" + _axapps + "\",\"globalvars\":\"" + globalVars + "\",\"uservars\":\"" + HttpContext.Current.Session["axUserVars"].ToString() + "\"}";
 
                 var saveDetails = "{\"queuename\":\"" + _queueName + "\",\"queuedata\":" + JsonConvert.SerializeObject(DATA) + ",\"timespandelay\":\"0\"}";
 
@@ -11868,6 +12223,81 @@ namespace ASB
                 return QueueStatus.ServerDown;
             }
         }
+
+        [WebMethod(EnableSession = true)]
+        public string GetTstPermissions(string transId, string keyfield, string keyvalue, string action)
+        {
+            LogFile.Log logObj = new LogFile.Log();
+            string response = string.Empty;
+            string URL = String.Empty;
+            if (HttpContext.Current.Session["ARM_URL"] != null && HttpContext.Current.Session["ARM_URL"].ToString() != "")
+                URL = HttpContext.Current.Session["ARM_URL"].ToString() + "/AxTstructData/api/v1/AxUserPermission";
+            if (URL == string.Empty)
+                return "error:ARM Connection defined";
+
+            string tstpermission = utilObj.GetTstPermissions(transId);
+            if (tstpermission == string.Empty || tstpermission == "no permission applied")
+            {
+                return response;
+            }
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
+            request.Method = "POST";
+            request.ContentType = "application/json";
+            AnalyticsUtils _aUtils = new AnalyticsUtils();
+            if (HttpContext.Current.Session["ARM_Token"] != null && HttpContext.Current.Session["ARM_Token"].ToString() != string.Empty)
+            {
+                var token = HttpContext.Current.Session["ARM_Token"].ToString();
+                request.Headers.Add("Authorization", "Bearer " + token);
+            }
+            string armSessionId = _aUtils.ARMSessionId;
+            var saveDetails = string.Empty;
+            bool axTrace = false;
+            if (HttpContext.Current.Session["AxTrace"] != null)
+                axTrace = Convert.ToBoolean(HttpContext.Current.Session["AxTrace"]);
+            string traceValue = axTrace.ToString().ToLower();
+            if (action == "edit" || action == "view")
+                saveDetails = "{\"ARMSessionId\":\"" + armSessionId + "\",\"action\":\"" + action + "\",\"trace\":" + traceValue + ",\"transid\":\"" + transId + "\",\"keyfield\":\"" + keyfield + "\",\"keyvalue\":\"" + keyvalue + "\"}";
+            else
+                saveDetails = "{\"ARMSessionId\":\"" + armSessionId + "\",\"action\":\"" + action + "\",\"trace\":" + traceValue + ",\"transid\":\"" + transId + "\"}";
+            request.ContentLength = saveDetails.Length;
+            StreamWriter requestWriter = new StreamWriter(request.GetRequestStream(), System.Text.Encoding.ASCII);
+            requestWriter.Write(saveDetails);
+            requestWriter.Close();
+            try
+            {
+                WebResponse webResponse = request.GetResponse();
+                Stream webStream = webResponse.GetResponseStream();
+                StreamReader responseReader = new StreamReader(webStream);
+                response = responseReader.ReadToEnd();
+                responseReader.Close();
+                response = ProcessResponse(response);
+                logObj.CreateLog("GetTstPermissions tstpermissionflag: " + tstpermission + " payload:" + saveDetails + " URL: " + URL, HttpContext.Current.Session.SessionID, "GetTstPermissions", "new");
+                return response;
+            }
+            catch (Exception e)
+            {
+                logObj.CreateLog("GetTstPermissions exception tstpermissionflag: " + tstpermission + " payload:" + saveDetails + " URL: " + URL + " Eexception: " + e.Message, HttpContext.Current.Session.SessionID, "GetTstPermissions", "new");
+                return response;
+            }
+        }
+        public string ProcessResponse(string response)
+        {
+            JObject json = JObject.Parse(response);
+            JToken resultToken = json["result"];
+            if (resultToken != null)
+            {
+                JToken successToken = resultToken["success"];
+                if (successToken != null && successToken.ToString().ToLower() == "false")
+                {
+                    JToken messageToken = resultToken["message"];
+                    if (messageToken != null)
+                        return messageToken.ToString();
+                }
+            }
+            return response;
+        }
+
     }
 }
 public class DummyConsumer : DefaultBasicConsumer

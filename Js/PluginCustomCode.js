@@ -2,6 +2,8 @@
 var _codeMirrorEdit;
 var _codeMirrorNewPlugin;
 var _entityCommon;
+var dtCulture = eval(callParent('glCulture'));
+
 class CustomPlugins {
     constructor() {
         this.appName = window.top.mainProject || "agileerpdemo";
@@ -40,6 +42,17 @@ class CustomPlugins {
             <div class="fs-6 fw-bold">
                 <span class="text-gray-700">{{FullFilePath}}</span>
                 
+            </div>`;
+        this.newFilePropsHTML =
+            `<div class="fs-6 fw-bold">
+                <span class="text-success fw-bold">{{CreatedOn}}</span>
+            </div>
+            <div class="fs-6 fw-bold">
+            </div>
+            <div class="fs-6 fw-bold">
+            </div>
+            <div class="fs-6 fw-bold">
+                <span class="text-success fw-bold">{{FullFilePath}}</span>
             </div>`
 
         this.imageGallaryHTML =
@@ -288,7 +301,7 @@ class CustomPlugins {
                 },
                 "type": "main",
                 "groupname": "Main Page"
-            },
+            },           
             "Custom Iview Reports - All": {
                 "files": {
                     "JS": {
@@ -382,6 +395,22 @@ class CustomPlugins {
                 "groupname": "Images"
             }
         }
+
+        if (document.getElementById("hdnApplicationTemplate").value != "") {
+            _this.navList["Custom Main - Application Template"] = {
+                "files": {
+                    "HTML": {
+                        "FolderName": "CustomPages",
+                        "FileName": document.getElementById("hdnApplicationTemplate").value,
+                        "FullFilePath": "CustomPages\\" + document.getElementById("hdnApplicationTemplate").value,
+                        "FileType": ".html"
+                    }
+                },
+                "type": "main",
+                "groupname": "Main Page"
+            }
+
+        };
 
         var tempObjStr = JSON.stringify(_this.navList);
         _this.navList = JSON.parse(tempObjStr.replaceAll("$APP_NAME$", _this.appName))
@@ -512,7 +541,7 @@ class CustomPlugins {
                             </div>
     
                             <div class="col-4 text-end">
-                                <span><i class="fas fa-clock me-1"></i>${formatDate(file.ModifiedOn)}</span>
+                                <span><i class="fas fa-clock me-1"></i>${_customPlugins.formatDate(file.ModifiedOn)}</span>
                             </div>
                         </div>
                     </div>
@@ -525,11 +554,7 @@ class CustomPlugins {
             if (size === 0) return '0 KB';
             if (size < 1024) return size.toFixed(2) + ' KB';
             return (size / 1024).toFixed(2) + ' MB';
-        }
-
-        function formatDate(dateString) {
-            return new Date(dateString).toLocaleString();
-        }
+        }        
 
 
         updateUI();
@@ -553,6 +578,8 @@ class CustomPlugins {
                 }
                 else if (fileName == `${appName}-mainpage.html` || fileName == `${appName}-mainpage-custom.js` || fileName == `${appName}-mainpage-custom.css`) {
                     menuName = `Custom Main - ${appName}`;                    
+                } else if (fileName == document.getElementById("hdnApplicationTemplate").value) {
+                    menuName = `Custom Main - Application Template`;
                 }
                 pageType = "main";
                 groupName = "Main Page";
@@ -786,7 +813,20 @@ class CustomPlugins {
 
     constructFilePropertiesHeader(props) {
         var _this = this;
-        var propsHtml = Handlebars.compile(_this.filePropsHTML)(props);
+        if (typeof props.CreatedOn != "undefined" && props.CreatedOn != "")
+            props.CreatedOn = _customPlugins.formatDate(props.CreatedOn);
+        else
+            props.CreatedOn = 'New File';
+
+        if (typeof props.ModifiedOn != "undefined")
+            props.ModifiedOn = _customPlugins.formatDate(props.ModifiedOn);
+
+        var propsHtml = "";
+
+        if (props.CreatedOn == 'New File')
+            propsHtml = Handlebars.compile(_this.newFilePropsHTML)(props);
+        else
+            propsHtml = Handlebars.compile(_this.filePropsHTML)(props);
 
         $("#analytics-chart-title").html(propsHtml);
 
@@ -841,6 +881,7 @@ class CustomPlugins {
             $.ajax({
                 type: "POST",
                 url: "../aspx/PluginCustomCode.aspx/GetFileContent",
+                async: false,
                 data: JSON.stringify({ filePath: filePath }),
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
@@ -928,9 +969,15 @@ class CustomPlugins {
             async: false,
             dataType: "json",
             success: function (response) {
-                if (response.d == "File saved successfully.") {
-                    showAlertDialog("success", "File saved successfully!");
+                if (response.d.indexOf("File saved successfully.") > -1) {
+                    showAlertDialog("success", "File saved successfully!");                    
                     $("#dv_EntityContainer .active").click();
+
+                    try {
+                        var props = JSON.parse(response.d.split('~~')[1]);
+                        _customPlugins.constructFilePropertiesHeader(props);
+                    }
+                    catch { }
                 }
                 else
                     showAlertDialog("error", "Error: " + response.d);
@@ -1478,6 +1525,57 @@ class CustomPlugins {
         var _this = this;
         _this.callHTMLPluginWS(_this.HTMLPluginName, "cards", "NA", "DELETE", "Plugin deleted successfully.")
         return false;
+    }
+
+    formatDate(dateString) {
+
+        if (!dateString) return '';
+
+        if (dateString == "New File") return '';
+
+        dateString = dateString.replaceAll("T", " ");
+
+        const dateTimeParts = dateString.split(' ');
+        var dateParts;
+        if (dateTimeParts[0].split('-').length == 3) {
+            dateParts = dateTimeParts[0].split('-');
+        }
+        else if (dateTimeParts[0].split('/').length == 3) {
+            dateParts = dateTimeParts[0].split('/');
+        }
+
+        if (dateParts.length == 3) {
+            const timeParts = (dateTimeParts[1] || "00:00:00").split(':');
+
+            var year, month, day;
+            if (dateParts[0].length == 4) {
+                year = dateParts[0];
+                month = dateParts[1];
+                day = dateParts[2];
+            }
+            else {
+                year = dateParts[2];
+                month = dateParts[1];
+                day = dateParts[0];
+            }
+
+            const hours = timeParts[0];
+            const minutes = timeParts[1];
+            const seconds = timeParts[2];
+
+            const formattedDate = dtCulture === "en-us"
+                ? `${month}/${day}/${year}`
+                : `${day}/${month}/${year}`;
+
+            const timePart = (hours !== "00" || minutes !== "00" || seconds !== "00")
+                ? `${hours}:${minutes}:${seconds}`
+                : '';
+
+            return timePart ? `${formattedDate} ${timePart}` : formattedDate;
+        }
+        else {
+            return dateString;
+        }
     }
 
 }

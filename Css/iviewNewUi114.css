@@ -835,14 +835,22 @@ div#dvSelectedFilters {
 
 }
 */
-td:has(.rowOptionsExist) {
+/*td:has(.rowOptionsExist) {
   visibility: hidden;
 }
-td:has(.rowOptionsExist):hover {
-/*  display: block !important;*/ visibility: visible !important;
+td:has(.rowOptionsExist):hover {*/
+/*  display: block !important;*/ /*visibility: visible !important;
 }
 tr:hover td:has(.rowOptionsExist) {
   visibility: visible !important;
+}*/
+
+tr:hover td .rowOptionsExist {
+	visibility: visible !important;
+}
+
+td .rowOptionsExist {
+	visibility: hidden;
 }
 
 .pageInformationNew {
@@ -982,12 +990,23 @@ tr:hover td:has(.rowOptionsExist) {
 
 /* view parameter css fix */
 
-#ivirMainDataTableWrapper .gridData {
+/*#ivirMainDataTableWrapper .gridData {
+	table-layout: fixed !important;
+}*/
+#ivirMainDataTableWrapper .gridData.dt-fixed-layout {
 	table-layout: fixed !important;
 }
+#ivirMainDataTableWrapper .gridData.dt-auto-layout {
+	table-layout: auto !important;
+}
+
 
 	#ivirMainDataTableWrapper .gridData th {
 		/*white-space: nowrap;*/
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
+
+.dataTables_scrollBody, .dataTables_scrollHead {
+	width: auto !important;
+}

@@ -95,7 +95,7 @@
             </asp:PlaceHolder>
             <asp:ScriptManager ID="ScriptManager1" runat="server" AsyncPostBackTimeout="36000">
                 <%--<Scripts>
-                    <asp:ScriptReference Path="../Js/helper.min.js?v=172" />
+                    <asp:ScriptReference Path="../Js/helper.min.js?v=175" />
                 </Scripts>--%>
                 <Services>
                     <asp:ServiceReference Path="../WebService.asmx" />

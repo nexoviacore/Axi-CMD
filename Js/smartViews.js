@@ -2430,7 +2430,29 @@ function createIvirDataTable(task, index, totalArray, grandTotalArray) {
             */
             dataTblObj = $.isEmptyObject(newDtConfig = axUpdateDtConfig(dataTblObj)) ? dataTblObj : newDtConfig;
         } catch (ex) { }
+
+        const $table = $("#GridView1");// $(ivirDataTableApi.table().node());
+        const theadRowCount = $table.find('thead tr').length;
+
+        if (theadRowCount === 1) {
+            $('table.gridData').removeClass('dt-auto-layout');
+            $('table.gridData').addClass('dt-fixed-layout');
+        } else {
+            $('table.gridData').removeClass('dt-fixed-layout');
+            $('table.gridData').addClass('dt-auto-layout');
+        }        
         ivirDataTableApi = $(ivirTable).DataTable(dataTblObj);
+        const groupSync = setupGroupedColumnSync(ivirDataTableApi, 0, 1);
+        groupSync.sync();
+        //// initial alignment
+        //requestAnimationFrame(() => {
+        //    groupSync.sync();
+        //});
+        //ivirDataTableApi.on('draw.dt column-sizing.dt', function () {
+        //    requestAnimationFrame(() => {
+        //        groupSync.sync();
+        //    });
+        //});
         if (task == "clear") {
             if (pillsAccordionHtml != "") {
                 $("#pillsWrapper").html(pillsAccordionHtml);
@@ -2728,6 +2750,176 @@ function createIvirDataTable(task, index, totalArray, grandTotalArray) {
         }
         lastScrollTop = st;
     });
+    function setupGroupedColumnSync(datatable, groupRowIndex = 0, detailRowIndex = 1) {
+        let syncTimeout;
+        let isAdjusting = false;
+        let lastAppliedWidths = null;
+        const doSync = function () {
+            if (isAdjusting) return;
+            isAdjusting = true;
+            requestAnimationFrame(() => {
+                try {
+                    const $table = $(datatable.table().node());
+                    const $container = $table.closest('.dataTables_wrapper') || $table.closest('.dataTables_scroll');
+                    if (!$container.length) {
+                        isAdjusting = false;
+                        return;
+                    }
+                    const settings = datatable.settings()[0];
+                    const columns = settings.aoColumns || [];
+                    const $headTable = $container.find('.dataTables_scrollHead table');
+                    const $bodyTable = $container.find('.dataTables_scrollBody table');
+                    const $footTable = $container.find('.dataTables_scrollFoot table');
+                    if (!$headTable.length || !$bodyTable.length) {
+                        isAdjusting = false;
+                        return;
+                    }
+                    const $bodyDetailRow = $bodyTable.find('thead tr').eq(detailRowIndex);
+                    const columnWidths = [];
+                    let totalWidth = 0;
+                    $bodyDetailRow.find('th').each((idx, th) => {
+                        const $th = $(th);
+                        let headerName = $th.attr('data-header-name') || $th.text().trim();
+                        let configuredWidth = null;
+                        const matchingCol = columns.find(col =>
+                            col.sName === headerName ||
+                            col.name === headerName ||
+                            col.data === headerName
+                        );
+                        if (matchingCol && matchingCol.sWidth) {
+                            configuredWidth = matchingCol.sWidth;
+                            totalWidth += parseInt(configuredWidth);
+                        }
+                        columnWidths.push({
+                            width: configuredWidth,
+                            headerName: headerName,
+                            visible: true
+                        });
+                    });
+                    const widthsJson = JSON.stringify(columnWidths);
+                    if (widthsJson === lastAppliedWidths) {
+                        isAdjusting = false;
+                        return;
+                    }
+                    lastAppliedWidths = widthsJson;
+                    if (totalWidth > 0) {
+                        $headTable.css('width', totalWidth + 'px').css('table-layout', 'fixed');
+                        $bodyTable.css('width', totalWidth + 'px').css('table-layout', 'fixed');
+                        if ($footTable.length) {
+                            $footTable.css('width', totalWidth + 'px').css('table-layout', 'fixed');
+                        }
+                        const $headInner = $container.find('.dataTables_scrollHeadInner');
+                        const $footInner = $container.find('.dataTables_scrollFootInner');
+                        if ($headInner.length) {
+                            $headInner.css('width', (totalWidth + 10) + 'px');
+                        }
+                        if ($footInner.length) {
+                            $footInner.css('width', (totalWidth + 10) + 'px');
+                        }
+                    }
+                    [
+                        { $table: $headTable, name: 'head' },
+                        { $table: $bodyTable, name: 'body' }
+                    ].forEach(item => {
+                        const $detailRow = item.$table.find('thead tr').eq(detailRowIndex);
+                        let colIndex = 0;
+
+                        $detailRow.find('th').each(function () {
+                            const $th = $(this);
+                            if (colIndex < columnWidths.length && columnWidths[colIndex].width) {
+                                $th.css({
+                                    'width': columnWidths[colIndex].width,
+                                    //'min-width': columnWidths[colIndex].width,
+                                    'max-width': columnWidths[colIndex].width
+                                });
+                            }
+                            colIndex++;
+                        });
+                    });
+                    $bodyTable.find('tbody tr').each(function () {
+                        $(this).find('td').each(function (tdIdx) {
+                            if (tdIdx < columnWidths.length && columnWidths[tdIdx].width) {
+                                $(this).css({
+                                    'width': columnWidths[tdIdx].width,
+                                    //'min-width': columnWidths[tdIdx].width,
+                                    'max-width': columnWidths[tdIdx].width
+                                });
+                            }
+                        });
+                    });
+                    $bodyTable.find('tfoot tr td').each(function (tdIdx) {
+                        if (tdIdx < columnWidths.length && columnWidths[tdIdx].width) {
+                            $(this).css({
+                                'width': columnWidths[tdIdx].width,
+                                //'min-width': columnWidths[tdIdx].width,
+                                'max-width': columnWidths[tdIdx].width
+                            });
+                        }
+                    });
+                    if ($footTable.length) {
+                        $footTable.find('tfoot tr td').each(function (tdIdx) {
+                            if (tdIdx < columnWidths.length && columnWidths[tdIdx].width) {
+                                $(this).css({
+                                    'width': columnWidths[tdIdx].width,
+                                    //'min-width': columnWidths[tdIdx].width,
+                                    'max-width': columnWidths[tdIdx].width
+                                });
+                            }
+                        });
+                    }
+                    [
+                        { $table: $headTable, name: 'head' },
+                        { $table: $bodyTable, name: 'body' }
+                    ].forEach(item => {
+                        const $groupRow = item.$table.find('thead tr').eq(groupRowIndex);
+                        let detailColIndex = 0;
+
+                        $groupRow.find('th').each(function () {
+                            const $groupTh = $(this);
+                            const colspan = parseInt($groupTh.attr('colspan') || 1, 10);
+                            let totalGroupWidth = 0;
+
+                            for (let i = 0; i < colspan; i++) {
+                                if (detailColIndex < columnWidths.length && columnWidths[detailColIndex].width) {
+                                    totalGroupWidth += parseInt(columnWidths[detailColIndex].width);
+                                }
+                                detailColIndex++;
+                            }
+
+                            if (totalGroupWidth > 0) {
+                                $groupTh.css({
+                                    'width': totalGroupWidth + 'px',
+                                    //'min-width': totalGroupWidth + 'px',
+                                    'max-width': totalGroupWidth + 'px'
+                                });
+                            }
+                        });
+                    });
+
+                } catch (error) {
+                } finally {
+                    isAdjusting = false;
+                }
+            });
+        };
+        const $node = $(datatable.table().node());
+        $node.on('draw.dt', doSync);
+        $node.on('column-visibility.dt', () => {
+            clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(doSync, 300);
+        });
+        $node.on('init.dt', () => {
+            setTimeout(doSync, 500);
+        });
+        setTimeout(doSync, 500);
+        return {
+            sync: doSync,
+            destroy: () => {
+                clearTimeout(syncTimeout);
+                $node.off('draw.dt column-visibility.dt init.dt');
+            }
+        };
+    }
 
     /**
      * @description: drawCallback pagination logic
@@ -4186,10 +4378,6 @@ function clickOnDemand(elem, open = true, cellData, row, col){
         } catch (ex) {}
 
         $(returnString).click();
-        console.log("HLINK =", ivHeadRows[colID]["@hlink"]);
-console.log("HLACTION =", ivHeadRows[colID]["@hlaction"]);
-console.log("FINAL HTML =", returnString);
-
     }else{
         return returnString;
     }
@@ -5171,12 +5359,17 @@ function toggleGrandTotal(indexOfCol, elem) {
     try {
         event.preventDefault();
         event.stopPropagation();
-    } catch (ex) {}
-    
-    if(typeof elem != "undefined"){
-        $(elem).parents('.rightClickMenuContainer').attr('id', '').empty();
+    } catch (ex) { }
+    let iLeftColumns = 0;
+    if (fixedColumnsObj && fixedColumnsObj.s.iLeftColumns) {
+        iLeftColumns = fixedColumnsObj.s.iLeftColumns - 1;
+        freezeColumn(iLeftColumns, this);
     }
 
+    if (typeof elem != "undefined") {
+        $(elem).parents('.rightClickMenuContainer').attr('id', '').empty();
+    }
+    $(".dataTables_scrollFoot tfoot td").css("display", "");
     if ($('#rightClickMenu' + indexOfCol + ' li.columnGrndTotal i').hasClass('icon-arrows-check')) {
         var idx = allGrandTotal.indexOf(indexOfCol);
         allGrandTotal.splice(idx, 1);
@@ -5184,12 +5377,25 @@ function toggleGrandTotal(indexOfCol, elem) {
         if ($.inArray(indexOfCol, allGrandTotal) === -1)
             allGrandTotal.push(indexOfCol);
     }
-    if (groupingCol === "")
+    if (groupingCol === "") {
+        var $runningTotalTd = $(".dataTables_scrollFoot tfoot td, table.dataTable tfoot td").filter(function () {
+            return $(this).text().replace(/\s+/g, " ").toLowerCase().includes("running total");
+        });
+        if ($runningTotalTd.length) {
+            allGrandTotal.splice(0, 1);
+        }
         createIvirDataTable('clear', '', '', allGrandTotal);
+    }
     else {
         var groupArrayIndex = $("[id^='grouppillCB']:checked").data("index");
         createIvirDataTable('groupApply', groupArrayIndex, '', allGrandTotal);
     }
+    setTimeout(function () {
+        if (iLeftColumns != 0) {
+            freezeColumn(iLeftColumns, this);
+            $(".dataTables_scrollFoot tfoot td").css("display", "none");
+        }        
+    }, 0);
 }
 
 
@@ -5682,7 +5888,7 @@ onContentReadyRef = (task, showValuesOnOpen, isEditPill) => {
                     "/Js/thirdparty/jquery/3.1.1/jquery.min.js",
                     "/Js/noConflict.min.js",
                     "/ThirdParty/lodash.min.js",
-                    "/Js/common.min.js?v=158",
+                    "/Js/common.min.js?v=164",
                     "/ThirdParty/DataTables-1.10.13/media/js/jquery.dataTables.min.js",
                     "/ThirdParty/DataTables-1.10.13/media/js/dataTables.bootstrap.min.js",
                     "/ThirdParty/DataTables-1.10.13/extensions/FixedHeader/js/dataTables.fixedHeader.min.js",

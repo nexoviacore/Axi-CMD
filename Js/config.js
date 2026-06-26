@@ -11,7 +11,7 @@ $j(document).ready(function () {
     // $(".axSelectProj").select2();
     $("#ddldbversion").select2();
     $("#lstStudioRconnection").select2();
-
+    $('#axpDevOptions').select2();
     /*    $("#lstconnection").val(selProj).trigger('change');*/
 
     $("#btnaddcon").click(function () {
@@ -118,9 +118,20 @@ $j(document).ready(function () {
                 $("#ddldbversion").val(version).prop("disabled", false);
             else
                 $("#ddldbversion").val(version).prop("disabled", true);
+            if ((db.toString().toLowerCase() == "postgre" || db.toString().toLowerCase() == "postgresql") && driver.toLowerCase() == "ado") {
+                $("#txtpostgresodbc").prop("checked", true);
+                $("#dbtxtusername").addClass("d-none");
+                $("#dbtxtPassword").addClass("d-none");
+                $("#lblccname").addClass("d-none");
+                $("#lblccnameodbc").removeClass("d-none");
+            }
             $("#txtccname").val(dbcon);
             $("#txtusername").val(dbuser);
             $("#ddldriver").val(driver);
+            if (driver == "dbx")
+                $("#ddldriver").prop('selectedIndex', 0);
+            else
+                $("#ddldriver").prop('selectedIndex', 1);
         }
         else if (applstJson != "") {
             var fstValue = $("#lstconnection option:first").val();
@@ -140,10 +151,20 @@ $j(document).ready(function () {
                     $("#ddldbversion").val(version).prop("disabled", false);
                 else
                     $("#ddldbversion").val(version).prop("disabled", true);
+                if ((db.toString().toLowerCase() == "postgre" || db.toString().toLowerCase() == "postgresql") && driver.toLowerCase() == "ado") {
+                    $("#txtpostgresodbc").prop("checked", true);
+                    $("#dbtxtusername").addClass("d-none");
+                    $("#dbtxtPassword").addClass("d-none");
+                    $("#lblccname").addClass("d-none");
+                    $("#lblccnameodbc").removeClass("d-none");
+                }
                 $("#txtccname").val(dbcon);
                 $("#txtusername").val(dbuser);
                 $("#ddldriver").val(driver);
-
+                if (driver == "dbx")
+                    $("#ddldriver").prop('selectedIndex', 0);
+                else
+                    $("#ddldriver").prop('selectedIndex', 1);
                 $('#lstconnection').val(fstValue);
                 $('#lstconnection').trigger('change');
 
@@ -153,7 +174,7 @@ $j(document).ready(function () {
     if (applstJson != "") {
         var fstValuearm = $("#armproj option:first").val();
         if (typeof fstValuearm != "undefined") {
-            $("#armproj").val(fstValuearm).focus();
+            $("#armproj").val(fstValuearm);//.focus();
             $('#armproj').trigger('change');
             //var dbuserarm = applstJson.connections[fstValuearm].dbuser;
             //var proj = dbuserarm;
@@ -183,18 +204,16 @@ $j(document).ready(function () {
                     document.getElementById("txtpeg").value = projData.ARM.PEG || "";
 
                     document.getElementById("txtArmExpiryMinutes").value = projData.ARM.ExpiryMinutes || "";
-                    document.getElementById("txtarmclientsso").value = projData.ARM.ClientSSO || "false";
 
                     document.getElementById("txtNotificationURL").value = projData.ARM.ARM_Notification_URL || "";
                     document.getElementById("txtNotificationExpiryHours").value = projData.ARM.ARM_Notification_ExpiryHours || "12";
                     document.getElementById("txtNotificationMaxPerUser").value = projData.ARM.ARM_Notification_MaxPerUser || "10";
 
                     $('#txtpeg').trigger('change');
-                    $('#txtarmclientsso').trigger('change');
 
                     $('#txtNotificationExpiryHours').trigger('change');
                     $('#txtNotificationMaxPerUser').trigger('change');
-                }                
+                }
             }
         }
     }
@@ -216,7 +235,7 @@ $j(document).ready(function () {
     if (applstJson != "") {
         var extResValuearm = $("#armExtResource option:first").val();
         if (typeof extResValuearm != "undefined") {
-            $("#armExtResource").val(extResValuearm).focus();
+            $("#armExtResource").val(extResValuearm);//.focus();
             $('#armExtResource').trigger('change');
             var proj = extResValuearm;
             if (proj.indexOf("\\") != -1)
@@ -256,9 +275,45 @@ $j(document).ready(function () {
     }
 
     if (applstJson != "") {
+        var axpDevOptions = $("#axpDevOptions option:first").val();
+        if (typeof axpDevOptions != "undefined") {
+            $("#axpDevOptions").val(axpDevOptions);//.focus();
+            $('#axpDevOptions').trigger('change');
+            let _proj = extResValuearm;
+            if (_proj.indexOf("\\") != -1)
+                _proj = _proj.split("\\")[0];
+            $("#hdnaxpDevOptions").val(_proj);
+            if (appSettingList && typeof appSettingList === "string") {
+                appSettingList = JSON.parse(appSettingList);
+            }
+            if (appSettingList && appSettingList.appsettings) {
+                if (appSettingList.appsettings.hasOwnProperty(_proj) && appSettingList.appsettings[_proj].AxpDevOptsMenu) {
+                    let savedValue = appSettingList.appsettings[_proj].AxpDevOptsMenu.Options || "";
+                    var $ddl = $('#ddlAxpertdevOptions');
+                    if (savedValue === "all") {
+                        var allVals = [];
+                        $ddl.find('option').each(function () {
+                            if ($(this).val() !== "all")
+                                allVals.push($(this).val());
+                        });
+                        $ddl.val(allVals).trigger('change');
+                    }
+                    else if (savedValue !== "") {
+                        $ddl.val(savedValue.split(',')).trigger('change');
+                    }
+                    else {
+                        $ddl.val(null).trigger('change');
+                    }
+                    $('#axpDevOptions').trigger('change');
+                }
+            }
+        }
+    }
+
+    if (applstJson != "") {
         var fstValuefile = $("#fileproj option:first").val();
         if (typeof fstValuefile != "undefined") {
-            $("#fileproj").val(fstValuefile).focus();
+            $("#fileproj").val(fstValuefile);//.focus();
             $('#fileproj').trigger('change');
             var projfile = fstValuefile;
             if (projfile.indexOf("\\") != -1)
@@ -276,6 +331,9 @@ $j(document).ready(function () {
                     document.getElementById("txtfiledownload").value = projData.FileConfig.FileDownloadPath || "";
                     document.getElementById("txtfileMapUsername").value = projData.FileConfig.FileServerMapUsername || "";
                     document.getElementById("tstfileMapPwd").value = projData.FileConfig.FileServerMapPwd || "";
+                    document.getElementById("ddlAttachmentSize").value = projData.FileConfig.AxAttachmentSize || "1";
+
+                    $('#ddlAttachmentSize').trigger('change');
                 }
             }
         }
@@ -415,6 +473,13 @@ $j(document).on("click", "#lstconnection option", function (e) {
         if (db != "")
             $("#ddldbtype").val(db).trigger('change');
 
+        if ((db.toString().toLowerCase() == "postgre" || db.toString().toLowerCase() == "postgresql") && driver.toLowerCase() == "ado") {
+            $("#txtpostgresodbc").prop("checked", true);
+            $("#dbtxtusername").addClass("d-none");
+            $("#dbtxtPassword").addClass("d-none");
+            $("#lblccname").addClass("d-none");
+            $("#lblccnameodbc").removeClass("d-none");
+        }
 
         if (version != "") {
             $("#ddldbversion").val(version).prop("disabled", false);
@@ -425,6 +490,10 @@ $j(document).on("click", "#lstconnection option", function (e) {
         $("#txtccname").val(dbcon);
         $("#txtusername").val(dbuser);
         $("#ddldriver").val(driver);
+        if (driver == "dbx")
+            $("#ddldriver").prop('selectedIndex', 0);
+        else
+            $("#ddldriver").prop('selectedIndex', 1);
     }
 });
 
@@ -454,12 +523,27 @@ $j(document).on("change", "#lstconnection", function (e) {
         }
         else {
             $("#ddldbversion").val(version).prop("disabled", true);
-
+        }
+        if ((db.toString().toLowerCase() == "postgre" || db.toString().toLowerCase() == "postgresql") && driver.toLowerCase() == "ado") {
+            $(".postgresodbc").removeClass('d-none');
+            $("#txtpostgresodbc").prop("checked", true);
+            $("#dbtxtusername").addClass("d-none");
+            $("#dbtxtPassword").addClass("d-none");
+            $("#lblccname").addClass("d-none");
+            $("#lblccnameodbc").removeClass("d-none");
+        } else if (db.toString().toLowerCase() == "postgre" || db.toString().toLowerCase() == "postgresql") {
+            $(".postgresodbc").removeClass('d-none');
+            $("#txtpostgresodbc").prop("checked", false);
+        } else {
+            $(".postgresodbc").addClass('d-none');
         }
         $("#txtccname").val(dbcon);
         $("#txtusername").val(dbuser);
         $("#ddldriver").val(driver);
-
+        if (driver == "dbx")
+            $("#ddldriver").prop('selectedIndex', 0);
+        else
+            $("#ddldriver").prop('selectedIndex', 1);
         // setProjectImages(lvalue);
 
         $('#selLicDomain').val(lvalue).trigger('change');
@@ -475,6 +559,8 @@ $j(document).on("change", "#lstconnection", function (e) {
         $('#fileproj').val(lvalue).trigger('change');
 
         $('#armExtResource').val(lvalue).trigger('change');
+
+        $('#axpDevOptions').val(lvalue).trigger('change');        
     }
 });
 
@@ -497,12 +583,16 @@ $j(document).on("change", "#fileproj", function (e) {
                     document.getElementById("txtfiledownload").value = projData.FileConfig.FileDownloadPath || "";
                     document.getElementById("txtfileMapUsername").value = projData.FileConfig.FileServerMapUsername || "";
                     document.getElementById("tstfileMapPwd").value = projData.FileConfig.FileServerMapPwd || "";
+                    document.getElementById("ddlAttachmentSize").value = projData.FileConfig.AxAttachmentSize || "1";
+                    $('#ddlAttachmentSize').trigger('change');
                 }
                 else {
                     document.getElementById("txtfileupload").value = "";
                     document.getElementById("txtfiledownload").value = "";
                     document.getElementById("txtfileMapUsername").value = "";
                     document.getElementById("tstfileMapPwd").value = "";
+                    document.getElementById("ddlAttachmentSize").value = "1";
+                    $('#ddlAttachmentSize').trigger('change');
                 }
             }
         }
@@ -533,7 +623,6 @@ $j(document).on("change", "#armproj", function (e) {
                     document.getElementById("txtpeg").value = projData.ARM.PEG || "";
 
                     document.getElementById("txtArmExpiryMinutes").value = projData.ARM.ExpiryMinutes || "";
-                    document.getElementById("txtarmclientsso").value = projData.ARM.ClientSSO || "false";
 
                     document.getElementById("txtNotificationURL").value = projData.ARM.ARM_Notification_URL || "";
                     document.getElementById("txtNotificationExpiryHours").value = projData.ARM.ARM_Notification_ExpiryHours || "12";
@@ -556,7 +645,6 @@ $j(document).on("change", "#armproj", function (e) {
                     }
 
                     $('#txtpeg').trigger('change');
-                    $('#txtarmclientsso').trigger('change');
 
                     $('#txtNotificationExpiryHours').trigger('change');
                     $('#txtNotificationMaxPerUser').trigger('change');
@@ -568,21 +656,19 @@ $j(document).on("change", "#armproj", function (e) {
                     document.getElementById("txtpeg").value = "";
 
                     document.getElementById("txtArmExpiryMinutes").value = "";
-                    document.getElementById("txtarmclientsso").value = "false";
 
                     document.getElementById("txtNotificationURL").value = "";
                     document.getElementById("txtNotificationExpiryHours").value = "12";
                     document.getElementById("txtNotificationMaxPerUser").value = "10";
 
-                    document.getElementById("txtRMQAPIURL").value =  "";
-                    document.getElementById("txtSignalRapiURL").value =  "";
-                    document.getElementById("txtFCMSendMsgURL").value =  "";
+                    document.getElementById("txtRMQAPIURL").value = "";
+                    document.getElementById("txtSignalRapiURL").value = "";
+                    document.getElementById("txtFCMSendMsgURL").value = "";
                     document.getElementById("txtRapidSaveURL").value = "";
-                    document.getElementById("txtpegemailactionurl").value =  "";
-                    document.getElementById("txtScriptsAPIURL").value =  "";
+                    document.getElementById("txtpegemailactionurl").value = "";
+                    document.getElementById("txtScriptsAPIURL").value = "";
 
                     $('#txtpeg').trigger('change');
-                    $('#txtarmclientsso').trigger('change');
 
                     $('#txtNotificationExpiryHours').trigger('change');
                     $('#txtNotificationMaxPerUser').trigger('change');
@@ -666,6 +752,7 @@ $j(document).on("click", "#btnaddcon", function (e) {
     $("#txtPassword").val("");
     $("#txtNewPassword").val("");
     $("#txtConfirmPassword").val("");
+    $("#txtpostgresodbc").prop("checked", false);
 });
 
 $j(document).on("click", "#btncdelete", function (e) {
@@ -702,11 +789,51 @@ $j(document).on("change", "#ddldbtype", function (e) {
     if (dbtype == "MS SQL") {
         $("#ddldbversion").prop("disabled", false);
         $("#ddldriver").val("ado");
+        $("#ddldriver").prop('selectedIndex', 1);
     }
     else {
         $("#ddldbversion").val("").prop("disabled", true);
         $("#ddldriver").val("dbx");
+        $("#ddldriver").prop('selectedIndex', 0);
     }
+
+    if ((dbtype.toLowerCase() == "postgre" || dbtype.toLowerCase() == "postgresql") && $("#ddldriver").val() == "ado") {
+        $(".postgresodbc").removeClass('d-none');
+        $("#txtpostgresodbc").prop("checked", true);
+        $("#dbtxtusername").addClass("d-none");
+        $("#dbtxtPassword").addClass("d-none");
+        $("#lblccname").addClass('d-none');
+        $("#lblccnameodbc").removeClass('d-none');
+    } else if (dbtype.toLowerCase() == "postgre" || dbtype.toLowerCase() == "postgresql") {
+        $(".postgresodbc").removeClass('d-none');
+        $("#txtpostgresodbc").prop("checked", false);
+        $("#dbtxtusername").removeClass("d-none");
+        $("#dbtxtPassword").removeClass("d-none");
+        $("#lblccname").removeClass('d-none');
+        $("#lblccnameodbc").addClass('d-none');
+    } else {
+        $(".postgresodbc").addClass('d-none');
+        $("#dbtxtusername").removeClass("d-none");
+        $("#dbtxtPassword").removeClass("d-none");
+        $("#lblccname").removeClass('d-none');
+        $("#lblccnameodbc").addClass('d-none');
+    }
+});
+
+$j(document).on("change", "#txtpostgresodbc", function (e) {
+    if ($(this).is(':checked')) {
+        $("#dbtxtusername").addClass("d-none");
+        $("#dbtxtPassword").addClass("d-none");
+        $("#lblccname").addClass("d-none");
+        $("#lblccnameodbc").removeClass("d-none");
+    } else {
+        $("#dbtxtusername").removeClass("d-none");
+        $("#dbtxtPassword").removeClass("d-none");
+        $("#lblccname").removeClass("d-none");
+        $("#lblccnameodbc").addClass("d-none");
+    }
+    $("#btnApply").attr("disabled", true).addClass("btndisable");
+    $("#btnChangePassword").attr("disabled", true).addClass("btndisable");
 });
 
 function OpenSignIn() {
@@ -736,6 +863,18 @@ function TestConnection() {
         showAlertDialog("error", "Database verion should not be left empty.");
         return false;
     }
+    let isPostgreOdbc = false;
+    if (dbtype.toLowerCase() == "postgre" || dbtype.toLowerCase() == "postgresql") {
+        if ($("#txtpostgresodbc").is(':checked')) {
+            isPostgreOdbc = true;
+            $("#ddldriver").val("ado");
+            $("#ddldriver").prop('selectedIndex', 1);
+        } else {
+            isPostgreOdbc = false;
+            $("#ddldriver").val("dbx");
+            $("#ddldriver").prop('selectedIndex', 0);
+        }
+    }
 
     let txtccname = $("#txtccname").val();
     if (txtccname == "") {
@@ -744,32 +883,37 @@ function TestConnection() {
         return false;
     }
 
-    let txtusername = $("#txtusername").val();
-    if (txtusername == "") {
-        $("#txtusername").focus();
-        showAlertDialog("error", "User name should not be left empty.");
-        return false;
-    }
+    if (!isPostgreOdbc) {
+        let txtusername = $("#txtusername").val();
+        if (txtusername == "") {
+            $("#txtusername").focus();
+            showAlertDialog("error", "User name should not be left empty.");
+            return false;
+        }
 
-    let txtPassword = $("#txtPassword").val();
-    if (txtPassword == "") {
-        $("#txtPassword").focus();
-        showAlertDialog("error", "Password should not be left empty.");
-        return false;
+        let txtPassword = $("#txtPassword").val();
+        if (txtPassword == "") {
+            $("#txtPassword").focus();
+            showAlertDialog("error", "Password should not be left empty.");
+            return false;
+        }
     }
-
     TestConnectionWs();
     // return true;
 }
 
 function TestConnectionWs() {
+    let _txtpostgresodbc = "false";
+    if ($("#txtpostgresodbc").is(':checked'))
+        _txtpostgresodbc = "true";
     $.ajax({
         url: 'AxpertAdmin.aspx/AppTestConnection',
         type: 'POST',
         cache: false,
         async: true,
         data: JSON.stringify({
-            ddldbtype: $("#ddldbtype").val(), ddldbversion: $("#ddldbversion").val(), ddldriver: $("#ddldriver").val(), txtccname: $("#txtccname").val(), txtusername: $("#txtusername").val(), txtPassword: $("#txtPassword").val()
+            ddldbtype: $("#ddldbtype").val(), ddldbversion: $("#ddldbversion").val(), ddldriver: $("#ddldriver").val(), txtccname: $("#txtccname").val(), txtusername: $("#txtusername").val(), txtPassword: $("#txtPassword").val(), txtpostgresodbc: _txtpostgresodbc,
+            csrfToken: $("#_antiforgery").val()
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -786,7 +930,10 @@ function TestConnectionWs() {
             else
                 showAlertDialog("error", data.d);
         }, error: function (error) {
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -804,7 +951,7 @@ function applyconnection() {
         showAlertDialog("error", "Connection name should not be left empty.");
         return false;
     }
-    var regex = new RegExp("^[a-zA-Z0-9]+$");
+    var regex = new RegExp("^[a-zA-Z0-9_]+$");
     if (!regex.test(txtNewConName)) {
         $("#txtNewConName").focus();
         showAlertDialog("error", "Invalid Name - Special characters not allowed.");
@@ -939,75 +1086,10 @@ function setProjectImages(proj) {
     }
 }
 
-$j(document).on("click", "#btnUpload", function (e) {
-    $("#myModalLicUpload").show();
-});
-
-function licActivateCheck() {
-    if (!$("#btnActivate").hasClass("disabledButton")) {
-        let txtlicappkey = $("#txtlicappkey").val();
-        if (txtlicappkey == "") {
-            $("#txtlicappkey").focus();
-            showAlertDialog("error", "Please enter license key provided by Agile Labs...");
-        }
-        else {
-            $("#btnActivateasp").trigger("click");
-        }
-    }
-}
-
-function licRefreshCheck() {
-    if (!$("#btnRefresh").hasClass("disabledButton")) {
-        $("#btnRefreshasp").trigger("click");
-    }
-}
-
-function licTrialCheck() {
-    if (!$("#btnTrial").hasClass("disabledButton")) {
-        $("#btnTrialasp").trigger("click");
-    }
-}
-
-function offlinelicDownload() {
-    let txtlicofflinekey = $("#txtlicofflinekey").val();
-    if (txtlicofflinekey == "") {
-        $("#txtlicofflinekey").focus();
-        showAlertDialog("error", "Please enter license key provided by Agile Labs...");
-    }
-    else {
-        $("#btnDownloadasp").trigger("click");
-    }
-}
-
-function LicActivationSucc(mdgtype, msg) {
-    if (mdgtype == "success") {
-        showAlertDialog("success", msg);
-        setTimeout(function () {
-            var qstr = window.document.location.href;
-            window.document.location.href = qstr;
-        }, 300);
-    }
-    else {
-        showAlertDialog("error", msg);
-    }
-}
-
-function LicDownloadSucc(mdgtype, msg) {
-    if (mdgtype == "success") {
-        showAlertDialog("success", msg);
-        $("#btndownloadfile").trigger("click");
-        //$('#rbllictype input').val('online');
-    }
-    else {
-        showAlertDialog("error", msg);
-    }
-}
-
 function closeUploadDialog() {
     $('#btnFileUpload').prop('disabled', false);
     $("#filMyFile").val('');
     $("#lblnofilename").text('');
-    $("#myModalLicUpload").hide();
 }
 
 $j(document).on("change", "#rbllictype input", function (e) {
@@ -1090,7 +1172,8 @@ function AuthenticateUser() {
         cache: false,
         async: true,
         data: JSON.stringify({
-            AuthUsername: $("#txtAuthUsername").val(), AuthPwd: $("#txtAuthPwd").val()
+            AuthUsername: $("#txtAuthUsername").val(), AuthPwd: $("#txtAuthPwd").val(),
+            csrfToken: $("#_antiforgery").val()
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -1098,7 +1181,7 @@ function AuthenticateUser() {
             $('#configbody').removeClass('m-auto');
 
             $('#main_body').removeAttr("style")
-            if (data.d != "") {
+            if (data.d != "" && !data.d.startsWith("error:")) {
                 var qstr = window.document.location.href;
                 if (qstr.indexOf("?") > -1) {
                     var qsAuth = qstr.split("?")[1];
@@ -1116,10 +1199,17 @@ function AuthenticateUser() {
                 else
                     window.document.location.href = "AxpertAdmin.aspx?auth=" + data.d;
             }
-            else
-                showAlertDialog("error", "Incorrect credentials. please try again!");
+            else {
+                if (data.d != "")
+                    showAlertDialog("error", data.d.replace("error:", ""));
+                else
+                    showAlertDialog("error", "Incorrect credentials. please try again!");
+            }
         }, error: function (error) {
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -1235,7 +1325,8 @@ function TestRedisConnectionWs() {
         cache: false,
         async: true,
         data: JSON.stringify({
-            rHost: $("#txtrhotname").val(), rPort: $("#txtrport").val(), rPwd: $("#txtrpwd").val(), axwConn: $("#lstRconnection").val()
+            rHost: $("#txtrhotname").val(), rPort: $("#txtrport").val(), rPwd: $("#txtrpwd").val(), axwConn: $("#lstRconnection").val(),
+            csrfToken: $("#_antiforgery").val()
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -1273,7 +1364,72 @@ function TestRedisConnectionWs() {
             }
         }, error: function (error) {
             $("#hdnRPwd").val("true");
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
+        }
+    });
+}
+
+function ValidateARMSettings() {
+    var proj = $("#hdnprojarm").val();
+    if (proj.indexOf("\\") != -1)
+        proj = proj.split("\\")[0];
+    if ($.trim(proj) === '')
+        return showAlertDialog("error", "Project cannot be left empty");
+    if ($.trim($("#txtarmurl").val()) === '')
+        return showAlertDialog("error", "ARM URL cannot be left empty");
+    if ($.trim($("#txtarmkey").val()) === '')
+        return showAlertDialog("error", "ARMPrivate Key cannot be left empty");
+    if ($.trim($("#txtscripturl").val()) === '')
+        return showAlertDialog("error", "ARM Scripts URL cannot be left empty");
+    if ($.trim($("#txtpeg").val()) === '')
+        return showAlertDialog("error", "PEG cannot be left empty");
+
+    if ($.trim($("#txtArmExpiryMinutes").val()) === '')
+        return showAlertDialog("error", "ARM Expiry Minutes cannot be left empty");
+
+    if ($.trim($("#txtNotificationURL").val()) === '')
+        return showAlertDialog("error", "Notification URL cannot be left empty");
+    if ($.trim($("#txtNotificationExpiryHours").val()) === '')
+        return showAlertDialog("error", "Notification Expiry Hours cannot be left empty");
+    if ($.trim($("#txtNotificationMaxPerUser").val()) === '')
+        return showAlertDialog("error", "Notification Max Per User cannot be left empty");
+
+    $.ajax({
+        url: 'AxpertAdmin.aspx/VerifyARMSettings',
+        type: 'POST',
+        cache: false,
+        async: true,
+        data: JSON.stringify({
+            proj: proj,
+            aUrl: $("#txtarmurl").val(),
+            csrfToken: $("#_antiforgery").val()
+        }),
+        dataType: 'json',
+        contentType: "application/json",
+        success: function (data) {
+            if (data.d != "" && !data.d.startsWith("Error:")) {
+                let _settings = JSON.parse(data.d);
+                if (typeof _settings.result.errors != "undefined") {
+                    let errorsArr = JSON.parse(data.d).result.errors;
+                    let errorMsg = errorsArr.join("<br/>");
+                    showAlertDialog("warning", errorMsg);
+                } else if (_settings.result.success) {
+                    showAlertDialog("success", "ARM is running successfully.");
+                }
+            } else if (data.d != "" && data.d.startsWith("Error:")) {
+                let _error = data.d;
+                showAlertDialog("error", _error.replace("Error: ", ""));
+            } else if (data.d == "") {
+                showAlertDialog("error", "ARM is not running ");
+            }
+        }, error: function (error) {
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -1310,9 +1466,10 @@ function TestARMConnectionWs() {
         async: true,
         data: JSON.stringify({
             aKey: $("#txtarmkey").val(), aUrl: $("#txtarmurl").val(), aScriptsUrl: $("#txtscripturl").val(), aPeg: $("#txtpeg").val(), proj: proj,
-            aExpiryMinutes: $("#txtArmExpiryMinutes").val(), aClientSSO: $("#txtarmclientsso").val(),
+            aExpiryMinutes: $("#txtArmExpiryMinutes").val(),
             aNotificationURL: $("#txtNotificationURL").val(), aNotificationExpiryHours: $("#txtNotificationExpiryHours").val(),
-            aNotificationMaxPerUser: $("#txtNotificationMaxPerUser").val()
+            aNotificationMaxPerUser: $("#txtNotificationMaxPerUser").val(),
+            csrfToken: $("#_antiforgery").val()
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -1329,12 +1486,11 @@ function TestARMConnectionWs() {
                 document.getElementById("txtpeg").value = "";
 
                 document.getElementById("txtArmExpiryMinutes").value = "";
-                document.getElementById("txtarmclientsso").value = "false";
 
                 document.getElementById("txtNotificationURL").value = "";
                 document.getElementById("txtNotificationExpiryHours").value = "12";
                 document.getElementById("txtNotificationMaxPerUser").value = "10";
-               
+
                 document.getElementById("txtRMQAPIURL").value = "";
                 document.getElementById("txtSignalRapiURL").value = "";
                 document.getElementById("txtFCMSendMsgURL").value = "";
@@ -1343,7 +1499,6 @@ function TestARMConnectionWs() {
                 document.getElementById("txtScriptsAPIURL").value = "";
 
                 $('#txtpeg').trigger('change');
-                $('#txtarmclientsso').trigger('change');
 
                 $('#txtNotificationExpiryHours').trigger('change');
                 $('#txtNotificationMaxPerUser').trigger('change');
@@ -1351,7 +1506,10 @@ function TestARMConnectionWs() {
                 $('#armproj').val(null).trigger('change');
             }
         }, error: function (error) {
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -1366,7 +1524,8 @@ function DelARMConnectionWs() {
         cache: false,
         async: true,
         data: JSON.stringify({
-            proj: proj
+            proj: proj,
+            csrfToken: $("#_antiforgery").val()
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -1381,7 +1540,6 @@ function DelARMConnectionWs() {
                 document.getElementById("txtpeg").value = "";
 
                 document.getElementById("txtArmExpiryMinutes").value = "";
-                document.getElementById("txtarmclientsso").value = "false";
 
                 document.getElementById("txtNotificationURL").value = "";
                 document.getElementById("txtNotificationExpiryHours").value = "12";
@@ -1395,13 +1553,15 @@ function DelARMConnectionWs() {
                 document.getElementById("txtScriptsAPIURL").value = "";
 
                 $('#txtpeg').trigger('change');
-                $('#txtarmclientsso').trigger('change');
 
                 $('#txtNotificationExpiryHours').trigger('change');
                 $('#txtNotificationMaxPerUser').trigger('change');
             }
         }, error: function (error) {
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -1421,7 +1581,9 @@ function RMQueuesaveWs() {
         type: 'POST',
         cache: false,
         async: true,
-        data: JSON.stringify({aRMQHost: $("#txtRmQueueHost").val(), aRMQPort: $("#txtRmQueuePort").val(), aRMQUser: $("#txtrmqueueuser").val(), aRMQPwd: $("#txtrmqueuepwd").val()
+        data: JSON.stringify({
+            aRMQHost: $("#txtRmQueueHost").val(), aRMQPort: $("#txtRmQueuePort").val(), aRMQUser: $("#txtrmqueueuser").val(), aRMQPwd: $("#txtrmqueuepwd").val(),
+            csrfToken: $("#_antiforgery").val()
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -1437,7 +1599,10 @@ function RMQueuesaveWs() {
                 //$('#RMQueueproj').val(null).trigger('change');
             }
         }, error: function (error) {
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -1461,7 +1626,10 @@ function RMQueueCancelWs() {
                 document.getElementById("txtrmqueuepwd").value = "";
             }
         }, error: function (error) {
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -1484,7 +1652,8 @@ function TestFileConnectionWs() {
         cache: false,
         async: true,
         data: JSON.stringify({
-            fUpload: $("#txtfileupload").val(), fDownload: $("#txtfiledownload").val(), proj: proj, fMapUsername: $("#txtfileMapUsername").val(), fMapPwd: $("#tstfileMapPwd").val()
+            fUpload: $("#txtfileupload").val(), fDownload: $("#txtfiledownload").val(), proj: proj, fMapUsername: $("#txtfileMapUsername").val(), fMapPwd: $("#tstfileMapPwd").val(), AxAttachSize: $('#ddlAttachmentSize').val(),
+            csrfToken: $("#_antiforgery").val()
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -1496,7 +1665,10 @@ function TestFileConnectionWs() {
                 appSettingList = JSON.parse(data.d)
             }
         }, error: function (error) {
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -1511,7 +1683,8 @@ function DelFileConnectionWs() {
         cache: false,
         async: true,
         data: JSON.stringify({
-            proj: proj
+            proj: proj,
+            csrfToken: $("#_antiforgery").val()
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -1522,11 +1695,16 @@ function DelFileConnectionWs() {
                 document.getElementById("txtfiledownload").value = "";
                 document.getElementById("txtfileMapUsername").value = "";
                 document.getElementById("tstfileMapPwd").value = "";
-                /*appSettingList = data.d;*/
+                document.getElementById("ddlAttachmentSize").value = "1";
+                $('#ddlAttachmentSize').trigger('change');
+
                 appSettingList = JSON.parse(data.d)
             }
         }, error: function (error) {
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -1539,7 +1717,7 @@ function CreateRedisConnection() {
         showAlertDialog("error", "Connection name should not be left empty.");
         return false;
     }
-    var regex = new RegExp("^[a-zA-Z0-9]+$");
+    var regex = new RegExp("^[a-zA-Z0-9_]+$");
     if (!regex.test(txtNewConName)) {
         $("#txtRedisNewConn").focus();
         showAlertDialog("error", "Invalid Name - Special characters not allowed.");
@@ -1648,510 +1826,6 @@ $j(document).on("click", "#btnRcdelete", function (e) {
 $j(document).on("click", "#btnrnewcancel,#myModalRedisclose", function (e) {
     $('#myModalRedis').modal("hide");
 });
-
-function SaveSSOConnectionWs() {
-    var proj = $("#hdnssoProj").val();
-    if (proj.indexOf("\\") != -1)
-        proj = proj.split("\\")[0];
-    if ($.trim(proj) === '')
-        return showAlertDialog("error", "Project cannot be left empty");
-    let _ssoType = $("#ssoType").val();
-    $("#hdnssoType").val(_ssoType);
-    if (typeof _ssoType != "undefined" && _ssoType != "") {
-        let ssoOptionWindow = $("#ssoOptionWindow").is(":checked") == true ? "true" : "false";
-        let requestData = {};
-        if (_ssoType == "windows") {
-            if ($.trim($("#ssowindowsdomain").val()) === '')
-                return showAlertDialog("error", "Windows Domain Name cannot be left empty");
-            requestData = {
-                ssoType: _ssoType,
-                ssoWinDomain: $("#ssowindowsdomain").val(),
-                onlysso: ssoOptionWindow
-            };
-        } else if (_ssoType == "saml") {
-            if ($.trim($("#SamlPartnerIdP").val()) === '')
-                return showAlertDialog("error", "SAML Partnet IDP cannot be left empty");
-            if ($.trim($("#SamlIdentifier").val()) === '')
-                return showAlertDialog("error", "SAML Identifier cannot be left empty");
-            if ($.trim($("#SamlCertificate").val()) === '')
-                return showAlertDialog("error", "SAML Certificate cannot be left empty");
-            if ($.trim($("#ssoredirecturlsaml").val()) === '')
-                return showAlertDialog("error", "SAML Redirect URL cannot be left empty");
-            requestData = {
-                ssoType: _ssoType,
-                SamlPartnerIdP: $("#SamlPartnerIdP").val(),
-                SamlIdentifier: $("#SamlIdentifier").val(),
-                SamlCertificate: $("#SamlCertificate").val(),
-                SamlRedirectUrl: $("#ssoredirecturlsaml").val(),
-                onlysso: ssoOptionWindow
-            };
-        } else if (_ssoType == "office365") {
-            if ($.trim($("#of365ssoclientKey").val()) === '')
-                return showAlertDialog("error", "Office365 Client Key cannot be left empty");
-            if ($.trim($("#of365ssoclientsecretKey").val()) === '')
-                return showAlertDialog("error", "Office365 Secret Key cannot be left empty");
-            if ($.trim($("#ssoredirecturlof365").val()) === '')
-                return showAlertDialog("error", "Office365 Redirect URL cannot be left empty");
-            requestData = {
-                ssoType: _ssoType,
-                of365clientkey: $("#of365ssoclientKey").val(),
-                of365secretkey: $("#of365ssoclientsecretKey").val(),
-                of365redirecturl: $("#ssoredirecturlof365").val(),
-                onlysso: ssoOptionWindow
-            };
-        } else if (_ssoType == "okta") {
-            if ($.trim($("#ssoclientKeyokta").val()) === '')
-                return showAlertDialog("error", "OKAT Client Key cannot be left empty");
-            if ($.trim($("#ssoclientsecretKeyokta").val()) === '')
-                return showAlertDialog("error", "OKTA Secret Key cannot be left empty");
-            if ($.trim($("#ssooktadomain").val()) === '')
-                return showAlertDialog("error", "OKTA Domain cannot be left empty");
-            if ($.trim($("#ssoredirecturlokta").val()) === '')
-                return showAlertDialog("error", "OKTA Redirect URL cannot be left empty");
-            requestData = {
-                ssoType: _ssoType,
-                oktaclientkey: $("#ssoclientKeyokta").val(),
-                oktasecretkey: $("#ssoclientsecretKeyokta").val(),
-                oktadomain: $("#ssooktadomain").val(),
-                oktaredirecturl: $("#ssoredirecturlokta").val(),
-                onlysso: ssoOptionWindow
-            };
-        } else if (_ssoType == "google") {
-            if ($.trim($("#ssoclientKeygoogle").val()) === '')
-                return showAlertDialog("error", "Google Client Key cannot be left empty");
-            if ($.trim($("#ssoclientsecretKeygoogle").val()) === '')
-                return showAlertDialog("error", "Google Secret Key cannot be left empty");
-            if ($.trim($("#ssoredirecturlgoogle").val()) === '')
-                return showAlertDialog("error", "Google Redirect URL cannot be left empty");
-            requestData = {
-                ssoType: _ssoType,
-                googleclientkey: $("#ssoclientKeygoogle").val(),
-                googlesecretkey: $("#ssoclientsecretKeygoogle").val(),
-                googleredirecturl: $("#ssoredirecturlgoogle").val(),
-                onlysso: ssoOptionWindow
-            };
-        } else if (_ssoType == "facebook") {
-            if ($.trim($("#ssoclientKeyfb").val()) === '')
-                return showAlertDialog("error", "Facebook Client Key cannot be left empty");
-            if ($.trim($("#ssoclientsecretKeyfb").val()) === '')
-                return showAlertDialog("error", "Facebook Secret Key cannot be left empty");
-            if ($.trim($("#ssoredirecturlfb").val()) === '')
-                return showAlertDialog("error", "Facebook Redirect URL cannot be left empty");
-            requestData = {
-                ssoType: _ssoType,
-                fbclientkey: $("#ssoclientKeyfb").val(),
-                fbsecretkey: $("#ssoclientsecretKeyfb").val(),
-                fbredirecturl: $("#ssoredirecturlfb").val(),
-                onlysso: ssoOptionWindow
-            };
-        } else if (_ssoType == "openid") {
-            if ($.trim($("#ssoclientKeyOpenId").val()) === '')
-                return showAlertDialog("error", "OpenID Client Key cannot be left empty");
-            if ($.trim($("#ssoclientsecretKeyOpenId").val()) === '')
-                return showAlertDialog("error", "OpenID Secret Key cannot be left empty");
-            if ($.trim($("#ssoopeniddomain").val()) === '')
-                return showAlertDialog("error", "OpenID Domain cannot be left empty");
-            if ($.trim($("#ssoredirecturlopenid").val()) === '')
-                return showAlertDialog("error", "OpenID Redirect URL cannot be left empty");
-            requestData = {
-                ssoType: _ssoType,
-                openidclientkey: $("#ssoclientKeyOpenId").val(),
-                openidsecretkey: $("#ssoclientsecretKeyOpenId").val(),
-                openiddomain: $("#ssoopeniddomain").val(),
-                openidredirecturl: $("#ssoredirecturlopenid").val(),
-                onlysso: ssoOptionWindow
-            };
-        }
-
-        if (ssoOptionWindow == "true") {
-            if (SSOlistcon != "") {
-                let cleanedSSOlistcon = SSOlistcon.trim();
-                cleanedSSOlistcon = cleanedSSOlistcon.replace(/^"|"$/g, '');
-                cleanedSSOlistcon = cleanedSSOlistcon.replace(/\\r\\n|\\n|\\r/g, '');
-                cleanedSSOlistcon = cleanedSSOlistcon.replace(/\\"/g, '"');
-                let _SSOlistcon = JSON.parse(cleanedSSOlistcon);
-                let projectData = _SSOlistcon[proj];
-                let existingOnlySSO = null;
-                for (let ssoType in projectData) {
-                    if (projectData[ssoType]["onlysso"] === "true") {
-                        existingOnlySSO = ssoType;
-                    }
-                }
-                if (existingOnlySSO && existingOnlySSO !== _ssoType) {
-                    var conDelete = $.confirm({
-                        closeIcon: false,
-                        title: 'Confirm',
-                        escapeKey: 'buttonB',
-                        theme: 'modern',
-                        onContentReady: function () {
-                            disableBackDrop('bind');
-                        },
-                        content: "Only SSO login can be enabled for a single SSO. Do you want to continue?",
-                        buttons: {
-                            buttonA: {
-                                text: eval(callParent('lcm[279]')),
-                                btnClass: 'btn btn-primary',
-                                action: function () {
-                                    let updatereqJson = {};
-                                    updatereqJson[existingOnlySSO] = { ...projectData[existingOnlySSO] };
-                                    updatereqJson[existingOnlySSO]["onlysso"] = "false";
-                                    $.ajax({
-                                        url: 'AxpertAdmin.aspx/SaveUpdateSSOConnection',
-                                        type: 'POST',
-                                        cache: false,
-                                        async: true,
-                                        data: JSON.stringify({ requestJson: requestData, ssoType: _ssoType, ssoProj: proj, updatereqJson: updatereqJson, updateSsoType: existingOnlySSO }),
-                                        dataType: 'json',
-                                        contentType: "application/json",
-                                        success: function (data) {
-                                            if (data.d != "") {
-                                                showAlertDialog("success", "SSO Connection is saved successfully");
-                                                SSOlistcon = data.d;
-                                                window.location.href = window.location.href;
-                                            }
-                                        }, error: function (error) {
-                                            showAlertDialog("error", error);
-                                        }
-                                    });
-                                }
-                            },
-                            buttonB: {
-                                text: eval(callParent('lcm[280]')),
-                                btnClass: 'btn btn-bg-light btn-color-danger btn-active-light-danger',
-                                action: function () {
-                                    disableBackDrop('destroy');
-                                }
-                            }
-                        }
-                    });
-                } else {
-                    $.ajax({
-                        url: 'AxpertAdmin.aspx/SaveSSOConnection',
-                        type: 'POST',
-                        cache: false,
-                        async: true,
-                        data: JSON.stringify({ requestJson: requestData, ssoType: _ssoType, ssoProj: proj }),
-                        dataType: 'json',
-                        contentType: "application/json",
-                        success: function (data) {
-                            if (data.d != "") {
-                                showAlertDialog("success", "SSO Connection is saved successfully");
-                                SSOlistcon = data.d;
-                                window.location.href = window.location.href;
-                            }
-                        }, error: function (error) {
-                            showAlertDialog("error", error);
-                        }
-                    });
-                }
-            } else {
-                $.ajax({
-                    url: 'AxpertAdmin.aspx/SaveSSOConnection',
-                    type: 'POST',
-                    cache: false,
-                    async: true,
-                    data: JSON.stringify({ requestJson: requestData, ssoType: _ssoType, ssoProj: proj }),
-                    dataType: 'json',
-                    contentType: "application/json",
-                    success: function (data) {
-                        if (data.d != "") {
-                            showAlertDialog("success", "SSO Connection is saved successfully");
-                            SSOlistcon = data.d;
-                            window.location.href = window.location.href;
-                        }
-                    }, error: function (error) {
-                        showAlertDialog("error", error);
-                    }
-                });
-            }
-        } else {
-            $.ajax({
-                url: 'AxpertAdmin.aspx/SaveSSOConnection',
-                type: 'POST',
-                cache: false,
-                async: true,
-                data: JSON.stringify({ requestJson: requestData, ssoType: _ssoType, ssoProj: proj }),
-                dataType: 'json',
-                contentType: "application/json",
-                success: function (data) {
-                    if (data.d != "") {
-                        showAlertDialog("success", "SSO Connection is saved successfully");
-                        SSOlistcon = data.d;
-                        window.location.href = window.location.href;
-                    }
-                }, error: function (error) {
-                    showAlertDialog("error", error);
-                }
-            });
-        }
-    } else
-        return showAlertDialog("error", "SSO Type cannot be left empty");
-}
-
-$j(document).on("change", "#ssoProj", function (e) {
-    let ssoProjValue = $(this).val();
-    if (ssoProjValue != "") {
-        var proj = ssoProjValue;
-        if (proj.indexOf("\\") != -1)
-            proj = proj.split("\\")[0];
-        $("#hdnssoProj").val(proj);
-        let _ssoType = $("#ssoType").val();
-        $("#hdnssoType").val(_ssoType);
-        if (typeof _ssoType != "undefined" && _ssoType != "") {
-            if (_ssoType == "windows") {
-                $("#dvssoWindows").removeClass("d-none");
-                $("#dvssoSAML").addClass("d-none");
-                $("#dvssoOff365").addClass("d-none");
-                $("#dvssoOkta").addClass("d-none");
-                $("#dvssoGoogle").addClass("d-none");
-                $("#dvssoFb").addClass("d-none");
-                $("#dvssoOpenId").addClass("d-none");
-            }
-
-        } else {
-            try {
-                if (SSOlistcon != "") {
-                    var configDataSSO = JSON.parse(SSOlistcon);
-                    if (configDataSSO.hasOwnProperty(proj)) {
-
-                    }
-                    else {
-
-                    }
-                }
-            }
-            catch (ex) { }
-        }
-    }
-});
-
-$j(document).on("change", "#ssoType", function (e) {
-    let _ssoType = $(this).val();
-    let _proj = $("#ssoProj").val();
-    if (_ssoType != "" && _proj != "") {
-        if (_proj.indexOf("\\") != -1)
-            _proj = _proj.split("\\")[0];
-        $("#hdnssoProj").val(_proj);
-        $("#hdnssoType").val(_ssoType);
-        $("#dvssoOptionWindow").removeClass("d-none");
-        if (_ssoType == "windows") {
-            $("#dvssoWindows").removeClass("d-none");
-            $("#dvssoSAML").addClass("d-none");
-            $("#dvssoOff365").addClass("d-none");
-            $("#dvssoOkta").addClass("d-none");
-            $("#dvssoGoogle").addClass("d-none");
-            $("#dvssoFb").addClass("d-none");
-            $("#dvssoOpenId").addClass("d-none");
-            existtingSSOInfo(_proj, _ssoType);
-        } else if (_ssoType == "saml") {
-            $("#dvssoWindows").addClass("d-none");
-            $("#dvssoSAML").removeClass("d-none");
-            $("#dvssoOff365").addClass("d-none");
-            $("#dvssoOkta").addClass("d-none");
-            $("#dvssoGoogle").addClass("d-none");
-            $("#dvssoFb").addClass("d-none");
-            $("#dvssoOpenId").addClass("d-none");
-            existtingSSOInfo(_proj, _ssoType);
-        } else if (_ssoType == "office365") {
-            $("#dvssoWindows").addClass("d-none");
-            $("#dvssoSAML").addClass("d-none");
-            $("#dvssoOff365").removeClass("d-none");
-            $("#dvssoOkta").addClass("d-none");
-            $("#dvssoGoogle").addClass("d-none");
-            $("#dvssoFb").addClass("d-none");
-            $("#dvssoOpenId").addClass("d-none");
-            existtingSSOInfo(_proj, _ssoType);
-        } else if (_ssoType == "okta") {
-            $("#dvssoWindows").addClass("d-none");
-            $("#dvssoSAML").addClass("d-none");
-            $("#dvssoOff365").addClass("d-none");
-            $("#dvssoOkta").removeClass("d-none");
-            $("#dvssoGoogle").addClass("d-none");
-            $("#dvssoFb").addClass("d-none");
-            $("#dvssoOpenId").addClass("d-none");
-            existtingSSOInfo(_proj, _ssoType);
-        } else if (_ssoType == "google") {
-            $("#dvssoWindows").addClass("d-none");
-            $("#dvssoSAML").addClass("d-none");
-            $("#dvssoOff365").addClass("d-none");
-            $("#dvssoOkta").addClass("d-none");
-            $("#dvssoGoogle").removeClass("d-none");
-            $("#dvssoFb").addClass("d-none");
-            $("#dvssoOpenId").addClass("d-none");
-            existtingSSOInfo(_proj, _ssoType);
-        } else if (_ssoType == "facebook") {
-            $("#dvssoWindows").addClass("d-none");
-            $("#dvssoSAML").addClass("d-none");
-            $("#dvssoOff365").addClass("d-none");
-            $("#dvssoOkta").addClass("d-none");
-            $("#dvssoGoogle").addClass("d-none");
-            $("#dvssoFb").removeClass("d-none");
-            $("#dvssoOpenId").addClass("d-none");
-            existtingSSOInfo(_proj, _ssoType);
-        } else if (_ssoType == "openid") {
-            $("#dvssoWindows").addClass("d-none");
-            $("#dvssoSAML").addClass("d-none");
-            $("#dvssoOff365").addClass("d-none");
-            $("#dvssoOkta").addClass("d-none");
-            $("#dvssoGoogle").addClass("d-none");
-            $("#dvssoFb").addClass("d-none");
-            $("#dvssoOpenId").removeClass("d-none");
-            existtingSSOInfo(_proj, _ssoType);
-        }
-    }
-});
-
-function existtingSSOInfo(_proj, _ssoType) {
-    if (SSOlistcon != "") {
-        let cleanedSSOlistcon = SSOlistcon.trim();
-        cleanedSSOlistcon = cleanedSSOlistcon.replace(/^"|"$/g, '');
-        cleanedSSOlistcon = cleanedSSOlistcon.replace(/\\r\\n|\\n|\\r/g, '');
-        cleanedSSOlistcon = cleanedSSOlistcon.replace(/\\"/g, '"');
-        let _SSOlistcon = JSON.parse(cleanedSSOlistcon);
-        if (_ssoType == "windows") {
-            $("#ssoOptionWindow").prop("checked", _SSOlistcon[_proj][_ssoType]['onlysso'] == 'true' ? true : false);
-            $("#ssowindowsdomain").val(_SSOlistcon[_proj][_ssoType]['ssoWinDomain']);
-        } else if (_ssoType == "saml") {
-            $("#ssoOptionWindow").prop("checked", _SSOlistcon[_proj][_ssoType]['onlysso'] == 'true' ? true : false);
-            $("#SamlPartnerIdP").val(_SSOlistcon[_proj][_ssoType]['SamlPartnerIdP']);
-            $("#SamlIdentifier").val(_SSOlistcon[_proj][_ssoType]['SamlIdentifier']);
-            $("#SamlCertificate").val(_SSOlistcon[_proj][_ssoType]['SamlCertificate']);
-            $("#ssoredirecturlsaml").val(_SSOlistcon[_proj][_ssoType]['SamlRedirectUrl']);
-        } else if (_ssoType == "office365") {
-            $("#ssoOptionWindow").prop("checked", _SSOlistcon[_proj][_ssoType]['onlysso'] == 'true' ? true : false);
-            $("#of365ssoclientKey").val(_SSOlistcon[_proj][_ssoType]['of365clientkey']);
-            $("#of365ssoclientsecretKey").val(_SSOlistcon[_proj][_ssoType]['of365secretkey']);
-            $("#ssoredirecturlof365").val(_SSOlistcon[_proj][_ssoType]['of365redirecturl']);
-        } else if (_ssoType == "okta") {
-            $("#ssoOptionWindow").prop("checked", _SSOlistcon[_proj][_ssoType]['onlysso'] == 'true' ? true : false);
-            $("#ssoclientKeyokta").val(_SSOlistcon[_proj][_ssoType]['oktaclientkey']);
-            $("#ssoclientsecretKeyokta").val(_SSOlistcon[_proj][_ssoType]['oktasecretkey']);
-            $("#ssooktadomain").val(_SSOlistcon[_proj][_ssoType]['oktadomain']);
-            $("#ssoredirecturlokta").val(_SSOlistcon[_proj][_ssoType]['oktaredirecturl']);
-        } else if (_ssoType == "google") {
-            $("#ssoOptionWindow").prop("checked", _SSOlistcon[_proj][_ssoType]['onlysso'] == 'true' ? true : false);
-            $("#ssoclientKeygoogle").val(_SSOlistcon[_proj][_ssoType]['googleclientkey']);
-            $("#ssoclientsecretKeygoogle").val(_SSOlistcon[_proj][_ssoType]['googlesecretkey']);
-            $("#ssoredirecturlgoogle").val(_SSOlistcon[_proj][_ssoType]['googleredirecturl']);
-        } else if (_ssoType == "google") {
-            $("#ssoOptionWindow").prop("checked", _SSOlistcon[_proj][_ssoType]['onlysso'] == 'true' ? true : false);
-            $("#ssoclientKeygoogle").val(_SSOlistcon[_proj][_ssoType]['googleclientkey']);
-            $("#ssoclientsecretKeygoogle").val(_SSOlistcon[_proj][_ssoType]['googlesecretkey']);
-            $("#ssoredirecturlgoogle").val(_SSOlistcon[_proj][_ssoType]['googleredirecturl']);
-        } else if (_ssoType == "facebook") {
-            $("#ssoOptionWindow").prop("checked", _SSOlistcon[_proj][_ssoType]['onlysso'] == 'true' ? true : false);
-            $("#ssoclientKeyfb").val(_SSOlistcon[_proj][_ssoType]['fbclientkey']);
-            $("#ssoclientsecretKeyfb").val(_SSOlistcon[_proj][_ssoType]['fbsecretkey']);
-            $("#ssoredirecturlfb").val(_SSOlistcon[_proj][_ssoType]['fbredirecturl']);
-        } else if (_ssoType == "openid") {
-            $("#ssoOptionWindow").prop("checked", _SSOlistcon[_proj][_ssoType]['onlysso'] == 'true' ? true : false);
-            $("#ssoclientKeyOpenId").val(_SSOlistcon[_proj][_ssoType]['openidclientkey']);
-            $("#ssoclientsecretKeyOpenId").val(_SSOlistcon[_proj][_ssoType]['openidsecretkey']);
-            $("#ssoopeniddomain").val(_SSOlistcon[_proj][_ssoType]['openiddomain']);
-            $("#ssoredirecturlopenid").val(_SSOlistcon[_proj][_ssoType]['openidredirecturl']);
-        }
-    }
-}
-$j(document).on("click", "#btnSSOdeleteType", function (e) {
-    if ($("#ssoProj").val() != null && $("#ssoProj").val() != "" && $("#ssoType").val() != null && $("#ssoType").val() != "") {
-        var conDelete = $.confirm({
-            closeIcon: false,
-            title: 'Confirm',
-            escapeKey: 'buttonB',
-            theme: 'modern',
-            onContentReady: function () {
-                disableBackDrop('bind');
-            },
-            content: eval(callParent('lcm[538]')),
-            buttons: {
-                buttonA: {
-                    text: eval(callParent('lcm[279]')),
-                    btnClass: 'btn btn-primary',
-                    action: function () {
-                        $.ajax({
-                            url: 'AxpertAdmin.aspx/SSoTypeDelete',
-                            type: 'POST',
-                            cache: false,
-                            async: true,
-                            data: JSON.stringify({ ssoProj: $("#ssoProj").val(), ssoType: $("#ssoType").val() }),
-                            dataType: 'json',
-                            contentType: "application/json",
-                            success: function (data) {
-                                if (data.d != "" && data.d == "deleted") {
-                                    showAlertDialog("success", "SSO Connection deleted successfully");
-                                    window.location.href = window.location.href;
-                                } else
-                                    showAlertDialog("error", "Error while deleting SSO Connection, please try later.");
-                            }, error: function (error) {
-                                showAlertDialog("error", error);
-                            }
-                        });
-                    }
-                },
-                buttonB: {
-                    text: eval(callParent('lcm[280]')),
-                    btnClass: 'btn btn-bg-light btn-color-danger btn-active-light-danger',
-                    action: function () {
-                        disableBackDrop('destroy');
-                    }
-                }
-            }
-        });
-    } else {
-        showAlertDialog("error", "Please Select SSO Connection Name and SSO Type.");
-    }
-});
-
-$j(document).on("click", "#btnSSOdeleteCon", function (e) {
-    if ($("#ssoProj").val() != null && $("#ssoProj").val() != "") {
-        var conDelete = $.confirm({
-            closeIcon: false,
-            title: 'Confirm',
-            escapeKey: 'buttonB',
-            theme: 'modern',
-            onContentReady: function () {
-                disableBackDrop('bind');
-            },
-            content: eval(callParent('lcm[537]')),
-            buttons: {
-                buttonA: {
-                    text: eval(callParent('lcm[279]')),
-                    btnClass: 'btn btn-primary',
-                    action: function () {
-                        $.ajax({
-                            url: 'AxpertAdmin.aspx/SSoConDelete',
-                            type: 'POST',
-                            cache: false,
-                            async: true,
-                            data: JSON.stringify({ ssoProj: $("#ssoProj").val() }),
-                            dataType: 'json',
-                            contentType: "application/json",
-                            success: function (data) {
-                                if (data.d != "" && data.d == "deleted") {
-                                    showAlertDialog("success", "SSO Connection deleted successfully");
-                                    window.location.href = window.location.href;
-                                } else
-                                    showAlertDialog("error", "Error while deleting SSO Connection, please try later.");
-                            }, error: function (error) {
-                                showAlertDialog("error", error);
-                            }
-                        });
-                    }
-                },
-                buttonB: {
-                    text: eval(callParent('lcm[280]')),
-                    btnClass: 'btn btn-bg-light btn-color-danger btn-active-light-danger',
-                    action: function () {
-                        disableBackDrop('destroy');
-                    }
-                }
-            }
-        });
-    } else {
-        showAlertDialog("error", "Please Select SSO Connection Name.");
-    }
-});
-
 function SaveLicDomain() {
     var proj = $("#hdnLicDomainProj").val();
     if (proj.indexOf("\\") != -1)
@@ -2167,7 +1841,8 @@ function SaveLicDomain() {
         cache: false,
         async: true,
         data: JSON.stringify({
-            domainName: $("#txtLicensedDomain").val(), proj: proj
+            domainName: $("#txtLicensedDomain").val(), proj: proj,
+            csrfToken: $("#_antiforgery").val()
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -2179,7 +1854,10 @@ function SaveLicDomain() {
                 $('#selLicDomain').val(null).trigger('change');
             }
         }, error: function (error) {
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -2194,7 +1872,8 @@ function DelLicDomain() {
         cache: false,
         async: true,
         data: JSON.stringify({
-            proj: proj
+            proj: proj,
+            csrfToken: $("#_antiforgery").val()
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -2206,7 +1885,10 @@ function DelLicDomain() {
                 $('#selLicDomain').val(null).trigger('change');
             }
         }, error: function (error) {
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -2294,7 +1976,7 @@ function CreateRedisConnectionStudio() {
         showAlertDialog("error", "Connection name should not be left empty.");
         return false;
     }
-    var regex = new RegExp("^[a-zA-Z0-9]+$");
+    var regex = new RegExp("^[a-zA-Z0-9_]+$");
     if (!regex.test(txtNewConName)) {
         $("#txtRedisNewConnStudio").focus();
         showAlertDialog("error", "Invalid Name - Special characters not allowed.");
@@ -2318,7 +2000,7 @@ $j(document).on("click", "#lstStudioRconnection option", function (e) {
             document.getElementById("txtStudioScriptPath").value = projData.AxStudioRedis.studioScriptPath || "";
             document.getElementById("txtStudioURLPath").value = projData.AxStudioRedis.studioURLPath || "";
 
-           
+
         } else {
             $("#txtStudioUrl").val("");
             $("#txtrhotnameStudio").val("");
@@ -2416,7 +2098,8 @@ function TestRedisConnectionStudioWs() {
         cache: false,
         async: true,
         data: JSON.stringify({
-            rHost: $("#txtrhotnameStudio").val(), rPort: $("#txtrportStudio").val(), rPwd: $("#txtrpwdStudio").val(), axsConn: $("#lstStudioRconnection").val(), studioUrl: $("#txtStudioUrl").val()
+            rHost: $("#txtrhotnameStudio").val(), rPort: $("#txtrportStudio").val(), rPwd: $("#txtrpwdStudio").val(), axsConn: $("#lstStudioRconnection").val(), studioUrl: $("#txtStudioUrl").val(),
+            csrfToken: $("#_antiforgery").val()
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -2448,7 +2131,10 @@ function TestRedisConnectionStudioWs() {
                 $("#btnRedisApplyStudio").attr("disabled", "true").addClass("btndisable");
             }
         }, error: function (error) {
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -2575,7 +2261,8 @@ function SaveExternalResWs() {
             proj: proj,
             NamedUrls: JSON.stringify(namedUrls),
             NamedSftp: JSON.stringify(namedSftp),
-            NamedFileServers: JSON.stringify(namedFileServers)
+            NamedFileServers: JSON.stringify(namedFileServers),
+            csrfToken: $("#_antiforgery").val()
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -2587,7 +2274,10 @@ function SaveExternalResWs() {
                 appSettingList = JSON.parse(data.d)
             }
         }, error: function (error) {
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -2602,7 +2292,8 @@ function DelExternalResWs() {
         cache: false,
         async: true,
         data: JSON.stringify({
-            proj: proj
+            proj: proj,
+            csrfToken: $("#_antiforgery").val()
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -2611,12 +2302,15 @@ function DelExternalResWs() {
                 appSettingList = JSON.parse(data.d)
                 showAlertDialog("success", "External resources is deleted successfully");
 
-             
+
 
                 $('#armExtResource').trigger('change');
             }
         }, error: function (error) {
-            showAlertDialog("error", error);
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
         }
     });
 }
@@ -2645,4 +2339,98 @@ function renderNamedItems(container, dataObject, type) {
         $j(container).append(row);
         index++;
     }
+}
+
+$j(document).on("change", "#axpDevOptions", function () {
+    var lvalue = $(this).val();
+    if (applstJson != "") {
+        var projDevOpt = lvalue;
+        if (projDevOpt.indexOf("\\") != -1)
+            projDevOpt = projDevOpt.split("\\")[0];
+        $("#hdnaxpDevOptions").val(projDevOpt);
+        try {
+            if (appSettingList && typeof appSettingList === "string")
+                appSettingList = JSON.parse(appSettingList);
+            if (appSettingList && appSettingList.appsettings && projDevOpt != null) {
+                if (appSettingList.appsettings.hasOwnProperty(projDevOpt) && typeof appSettingList.appsettings[projDevOpt].AxpDevOptsMenu != "undefined") {
+                    let savedValue = appSettingList.appsettings[projDevOpt].AxpDevOptsMenu.Options || "";
+                    var $ddl = $('#ddlAxpertdevOptions');
+                    if (savedValue === "all") {
+                        var allVals = [];
+                        $ddl.find('option').each(function () {
+                            if ($(this).val() !== "all")
+                                allVals.push($(this).val());
+                        });
+                        $ddl.val(allVals).trigger('change');
+                    }
+                    else if (savedValue !== "") {
+                        $ddl.val(savedValue.split(',')).trigger('change');
+                    }
+                    else {
+                        $ddl.val(null).trigger('change');
+                    }
+                } else {
+                    $('#ddlAxpertdevOptions').val(null).trigger('change');
+                }
+            } else {
+                $('#ddlAxpertdevOptions').val(null).trigger('change');
+            }
+        }
+        catch (ex) {
+        }
+    }
+});
+
+$j(document).on("change", "#ddlAxpertdevOptions", function () {
+    var values = $(this).val();
+    if (values && values.includes("all")) {
+        var allVals = [];
+        $(this).find('option').each(function () {
+            if ($(this).val() !== "all")
+                allVals.push($(this).val());
+        });
+        $(this).val(allVals).trigger('change.select2');
+    }
+});
+
+function SaveAxpertDevOptions() {
+    var proj = $("#hdnaxpDevOptions").val();
+    if (proj.indexOf("\\") != -1)
+        proj = proj.split("\\")[0];
+    if ($.trim(proj) === '')
+        return showAlertDialog("error", "Project cannot be left empty");
+    var selectedVals = $("#ddlAxpertdevOptions").val();
+    if (!selectedVals || selectedVals.length === 0) {
+      /*  return showAlertDialog("error", "Options cannot be empty");*/
+        showAlertDialog("warning", "No Axpert Developer Options selected. All Axpert Developer Options will be hidden in runtime.");
+    }
+    var devOpt = "";
+    if (selectedVals.includes("all"))
+        devOpt = "all";
+    else
+        devOpt = selectedVals.join(",");
+    $.ajax({
+        url: 'AxpertAdmin.aspx/SaveAxpertDevOptionsWs',
+        type: 'POST',
+        cache: false,
+        async: true,
+        data: JSON.stringify({
+            proj: proj,
+            devOpt: devOpt,
+            csrfToken: $("#_antiforgery").val()
+        }),
+        dataType: 'json',
+        contentType: "application/json",
+        success: function (data) {
+            if (data.d != "") {
+                showAlertDialog("success", "Axpert Developer Options Menu saved successfully");
+                appSettingList = JSON.parse(data.d)
+            }
+        }, error: function (error) {
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
+        }
+    });
 }

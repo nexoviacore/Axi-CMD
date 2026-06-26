@@ -28,6 +28,9 @@ using System.Globalization;
 using System.Data.Odbc;
 using StackExchange.Redis;
 using Microsoft.Win32;
+using System.Drawing;
+using Npgsql;
+using System.util.collections;
 
 namespace Util
 {
@@ -115,7 +118,7 @@ namespace Util
         public bool IsTransIdValid(string str)
         {
             if (str == null) return false;
-            if (IsUserNameValid(str) && (str.Length <= 5))
+            if (IsUserNameValid(str) && (str.Length <= 15)) //transid relaxed 5 to 15 
                 return true;
             else
                 return false;
@@ -124,7 +127,7 @@ namespace Util
         public bool IsValidIvName(string str)
         {
             if (str == null) return false;
-            if (IsUserNameValid(str) && (str.Length <= 8))
+            if (IsUserNameValid(str) && (str.Length <= 15)) //ivname relaxed 8 to 15 
                 return true;
             else
                 return false;
@@ -2599,20 +2602,32 @@ namespace Util
             string db = string.Empty;
             if (strProj != string.Empty)
             {
-                FDR fdrObj = new FDR(strProj);
-                xmlcontents = fdrObj.StringFromRedis(Constants.AXAPPS_XML_KEY, strProj);
+                //FDR fdrObj = new FDR(strProj);
+                //xmlcontents = fdrObj.StringFromRedis(Constants.AXAPPS_XML_KEY, strProj);
+                xmlcontents = GetAllSettings(strProj, Constants.AXAPPS_XML_KEY);
                 if (xmlcontents == string.Empty)
                 {
-                    FileInfo fi = new FileInfo(ScriptsPath + "\\axapps.xml");
-                    if (fi.Exists)
+                    try
                     {
-                        XmlDocument doc = new XmlDocument();
-                        doc.Load(ScriptsPath + "\\axapps.xml");
-                        XmlNodeList pNode = doc.SelectNodes("/connections/" + strProj);
-                        xmlcontents = pNode[0].OuterXml;
-                        updateAppSettingsini(strProj, xmlcontents);
-                        FDW fdwObj = new FDW(strProj);
-                        fdwObj.SaveInRedisServer(Constants.AXAPPS_XML_KEY, xmlcontents, Constants.AXAPPS_XML_KEY, strProj);
+                        FDR fdrObj = new FDR(strProj);
+                        xmlcontents = fdrObj.HashGetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXAPPS_XML_KEY, strProj);
+                    }
+                    catch (Exception) { }
+                    if (xmlcontents == string.Empty)
+                    {
+                        FileInfo fi = new FileInfo(ScriptsPath + "\\axapps.xml");
+                        if (fi.Exists)
+                        {
+                            XmlDocument doc = new XmlDocument();
+                            doc.Load(ScriptsPath + "\\axapps.xml");
+                            XmlNodeList pNode = doc.SelectNodes("/connections/" + strProj);
+                            xmlcontents = pNode[0].OuterXml;
+                            updateAppSettingsini(strProj, xmlcontents);
+                            FDW fdwObj = new FDW(strProj);
+                            //fdwObj.SaveInRedisServer(Constants.AXAPPS_XML_KEY, xmlcontents, Constants.AXAPPS_XML_KEY, strProj);
+                            //fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXAPPS_XML_KEY, xmlcontents, strProj);
+                            GetAxIniFileKeys(strProj);
+                        }
                     }
                 }
             }
@@ -2676,29 +2691,38 @@ namespace Util
             }
 
             HttpContext.Current.Session["axdb"] = db;
-            if (contents != string.Empty)
-            {
-                XmlDocument xmlDoc = new XmlDocument();
-                xmlDoc.LoadXml(contents);
-                XmlNodeList dbuser = xmlDoc.GetElementsByTagName("dbuser");
-                XmlNodeList dbtype = xmlDoc.GetElementsByTagName("db");
-                string appPWD = string.Empty;
-                if (dbtype[0].InnerText.ToLower() == "postgresql" || dbtype[0].InnerText.ToLower() == "postgre")
-                {
-                    appPWD = dbuser[0].InnerText;
-                    appPWD = appPWD.Split('\\')[0];
-                    appPWD = GetDBPasswordService(appPWD);
-                }
-                else
-                    appPWD = GetDBPasswordService(dbuser[0].InnerText);
-                if (xmlDoc.DocumentElement.SelectSingleNode("pwd") == null)
-                {
-                    XmlElement pwd = xmlDoc.CreateElement("pwd");
-                    xmlDoc.DocumentElement.AppendChild(pwd);
-                }
-                xmlDoc.DocumentElement.SelectSingleNode("pwd").InnerText = appPWD;
-                contents = xmlDoc.OuterXml;
-            }
+            //if (contents != string.Empty) // Test connection done in axpertadmin page and saved password as encrypted in axapps and ini file not required again to read from pwd file.
+            //{
+            //    XmlDocument xmlDoc = new XmlDocument();
+            //    xmlDoc.LoadXml(contents);
+            //    XmlNodeList dbuser = xmlDoc.GetElementsByTagName("dbuser");
+            //    XmlNodeList dbtype = xmlDoc.GetElementsByTagName("db");
+            //    string appPWD = string.Empty;
+            //    if (dbtype[0].InnerText.ToLower() == "postgresql" || dbtype[0].InnerText.ToLower() == "postgre")
+            //    {
+            //        XmlNodeList dbDriver = xmlDoc.GetElementsByTagName("driver");
+            //        string dbDriverVal = dbDriver[0].InnerText;
+            //        if (dbDriverVal == "ado")
+            //        {
+            //            appPWD = "";
+            //        }
+            //        else
+            //        {
+            //            appPWD = dbuser[0].InnerText;
+            //            appPWD = appPWD.Split('\\')[0];
+            //            appPWD = GetDBPasswordService(appPWD);
+            //        }
+            //    }
+            //    else
+            //        appPWD = GetDBPasswordService(dbuser[0].InnerText);
+            //    if (xmlDoc.DocumentElement.SelectSingleNode("pwd") == null)
+            //    {
+            //        XmlElement pwd = xmlDoc.CreateElement("pwd");
+            //        xmlDoc.DocumentElement.AppendChild(pwd);
+            //    }
+            //    xmlDoc.DocumentElement.SelectSingleNode("pwd").InnerText = appPWD;
+            //    contents = xmlDoc.OuterXml;
+            //}
             HttpContext.Current.Session["axApps"] = contents;
             GetDBConnection(strProj, contents);
         }
@@ -2743,6 +2767,7 @@ namespace Util
             dataTable.Columns.Add("structurl", typeof(string));
             dataTable.Columns.Add("dataurl", typeof(string));
             dataTable.Columns.Add("pwd", typeof(string));
+            dataTable.Columns.Add("odbcdbuser", typeof(string));
             dataSet.Tables.Add(dataTable);
             System.IO.StringReader xmlSR = new System.IO.StringReader(contents);
             dataSet.ReadXml(xmlSR, XmlReadMode.IgnoreSchema);
@@ -2752,11 +2777,23 @@ namespace Util
             string Server = dataSet.Tables[0].Rows[0]["dbcon"].ToString();
             string database = dataSet.Tables[0].Rows[0]["dbuser"].ToString();
             string version = dataSet.Tables[0].Rows[0]["version"].ToString().Trim();
+            string dbDriver = dataSet.Tables[0].Rows[0]["driver"].ToString().Trim();
+            string odbcdbuser = string.Empty;
+            if (dataSet.Tables[0].Columns.Contains("odbcdbuser"))
+            {
+                if (dataSet.Tables[0].Rows[0]["odbcdbuser"] != null && dataSet.Tables[0].Rows[0]["odbcdbuser"].ToString() != "")
+                    odbcdbuser = dataSet.Tables[0].Rows[0]["odbcdbuser"].ToString().Trim();
+            }
 
             string dbuserALC = dbuser;
             string cs = "";
+            if (HttpContext.Current.Session["adodbuserALC"] != null)
+                HttpContext.Current.Session.Remove("adodbuserALC");
 
-            if (dbtype.ToLower() != "postgresql" && dbtype.ToLower() != "postgre")
+            if (!string.IsNullOrEmpty(pwd))
+                pwd = DecryptPWD(pwd);
+
+            if (dbtype.ToLower() != "postgresql" && dbtype.ToLower() != "postgre" && string.IsNullOrEmpty(pwd))
                 pwd = GetDBPassword(database);
 
             if (dbtype.ToLower() == "ms sql" || dbtype.ToLower() == "mssql")
@@ -2789,14 +2826,65 @@ namespace Util
             }
             if (dbtype.ToLower() == "postgresql" || dbtype.ToLower() == "postgre")
             {
-                if (Server.Contains(":"))
+                if (dbDriver == "ado")
                 {
-                    if (dbuser.Contains("\\") || database.Contains("\\"))
-                    {
+                    //cs = GetPostgreODBCConnection(Server);
+                    //dbuserALC = dbuser + "~" + Server;
+                    //dbuser = dbuser + "~" + Server;
 
-                        string[] userDtls = dbuser.Split('\\');
-                        string[] databaseDtls = database.Split('\\');
-                        if (userDtls.Length > 1 && userDtls[1] != "")
+                    cs = GetPostgreODBCConnection(Server, odbcdbuser, pwd);
+                    string _database = cs.Split('♣')[1];
+                    cs = cs.Split('♣')[0];
+                    //if (string.IsNullOrEmpty(dbuser) && !string.IsNullOrEmpty(odbcdbuser))
+                    if (!string.IsNullOrEmpty(odbcdbuser))
+                        dbuser = odbcdbuser;
+                    dbuserALC = dbuser + "~" + _database;
+                    HttpContext.Current.Session["adodbuserALC"] = dbuserALC;
+                    dbuser = dbuser + "~" + Server;
+                }
+                else
+                {
+                    if (Server.Contains(":"))
+                    {
+                        if (dbuser.Contains("\\") || database.Contains("\\"))
+                        {
+
+                            string[] userDtls = dbuser.Split('\\');
+                            string[] databaseDtls = database.Split('\\');
+                            if (userDtls.Length > 1 && userDtls[1] != "")
+                                if ((userDtls.Length > 1 && userDtls[1] != "") && (databaseDtls.Length > 1 && databaseDtls[1] != ""))
+                                {
+                                    dbuser = userDtls[0];
+                                    database = databaseDtls[1];
+                                }
+                                else
+                                {
+                                    dbuser = userDtls[0];
+                                    database = databaseDtls[0];
+                                }
+                            dbuserALC = dbuser + "~" + database;
+                        }
+                        else
+                        {
+                            database = "axpertdb";
+                            dbuserALC = dbuser;
+                        }
+                        //Default port for postgres is 5432. if it was changed we need to pass the port no seperately in the Conn Str. 
+                        if (string.IsNullOrEmpty(pwd))
+                            pwd = GetDBPassword(dbuser);
+                        string serverPort = Server.Substring(Server.IndexOf(':') + 1);
+                        cs = @"Server=" + Server.Substring(0, Server.IndexOf(':')) + "; Port=" + serverPort + "; Database=" + database + ";Uid=" + dbuser + ";Pwd=" + pwd + ";Pooling=false;";
+                        dbuser = dbuser + "~" + database;
+                    }
+                    else
+                    {
+                        //int start_index = dbuser.IndexOf('\\');
+                        //start_index = start_index + 1;
+                        //dbuser = dbuser.Substring(start_index, dbuser.Length-1);
+                        if (dbuser.Contains("\\") || database.Contains("\\"))
+                        {
+                            string[] userDtls = dbuser.Split('\\');
+                            string[] databaseDtls = database.Split('\\');
                             if ((userDtls.Length > 1 && userDtls[1] != "") && (databaseDtls.Length > 1 && databaseDtls[1] != ""))
                             {
                                 dbuser = userDtls[0];
@@ -2807,48 +2895,18 @@ namespace Util
                                 dbuser = userDtls[0];
                                 database = databaseDtls[0];
                             }
-                        dbuserALC = dbuser + "~" + database;
-                    }
-                    else
-                    {
-                        database = "axpertdb";
-                        dbuserALC = dbuser;
-                    }
-                    //Default port for postgres is 5432. if it was changed we need to pass the port no seperately in the Conn Str. 
-                    pwd = GetDBPassword(dbuser);
-                    string serverPort = Server.Substring(Server.IndexOf(':') + 1);
-                    cs = @"Server=" + Server.Substring(0, Server.IndexOf(':')) + "; Port=" + serverPort + "; Database=" + database + ";Uid=" + dbuser + ";Pwd=" + pwd + ";Pooling=false;";
-                    dbuser = dbuser + "~" + database;
-                }
-                else
-                {
-                    //int start_index = dbuser.IndexOf('\\');
-                    //start_index = start_index + 1;
-                    //dbuser = dbuser.Substring(start_index, dbuser.Length-1);
-                    if (dbuser.Contains("\\") || database.Contains("\\"))
-                    {
-                        string[] userDtls = dbuser.Split('\\');
-                        string[] databaseDtls = database.Split('\\');
-                        if ((userDtls.Length > 1 && userDtls[1] != "") && (databaseDtls.Length > 1 && databaseDtls[1] != ""))
-                        {
-                            dbuser = userDtls[0];
-                            database = databaseDtls[1];
+                            dbuserALC = dbuser + "~" + database;
                         }
                         else
                         {
-                            dbuser = userDtls[0];
-                            database = databaseDtls[0];
+                            database = "axpertdb";
+                            dbuserALC = dbuser;
                         }
-                        dbuserALC = dbuser + "~" + database;
+                        if (string.IsNullOrEmpty(pwd))
+                            pwd = GetDBPassword(dbuser);
+                        cs = @"Server=" + Server + ";Database=" + database + ";Uid=" + dbuser + ";Pwd=" + pwd + ";Pooling=false;";
+                        dbuser = dbuser + "~" + database;
                     }
-                    else
-                    {
-                        database = "axpertdb";
-                        dbuserALC = dbuser;
-                    }
-                    pwd = GetDBPassword(dbuser);
-                    cs = @"Server=" + Server + ";Database=" + database + ";Uid=" + dbuser + ";Pwd=" + pwd + ";Pooling=false;";
-                    dbuser = dbuser + "~" + database;
                 }
             }
 
@@ -2884,6 +2942,79 @@ namespace Util
                 return dataSourceName;
             else
                 return serverName;
+        }
+        public string GetPostgreODBCConnection(string dsnName, string odbcdbuser = "", string pwd = "")
+        {
+            //string odbcConnStr = "DSN=" + dsnName + ";";
+            //using (var odbcConn = new OdbcConnection(odbcConnStr))
+            //{
+            //    odbcConn.Open(); 
+            //}
+            Dictionary<string, string> dsnData = ReadOdbcDsn(dsnName);
+            string host = dsnData.ContainsKey("Servername") ? dsnData["Servername"] : null;
+            string database = dsnData.ContainsKey("Database") ? dsnData["Database"] : null;
+            string port = dsnData.ContainsKey("Port") ? dsnData["Port"] : "5432";
+            string username = dsnData.ContainsKey("Username") ? dsnData["Username"] : null;
+            string password = dsnData.ContainsKey("Password") ? dsnData["Password"] : null;
+            if (string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(odbcdbuser) && string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(pwd))
+                password = pwd;
+            else if (string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(odbcdbuser) && string.IsNullOrEmpty(password) && string.IsNullOrEmpty(pwd))
+                password = "log";
+            if (string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(odbcdbuser))
+                username = odbcdbuser;
+            string sslModeOdbc = dsnData.ContainsKey("SSLmode") ? dsnData["SSLmode"].ToLower() : "prefer";
+            Npgsql.SslMode sslMode = Npgsql.SslMode.Prefer;
+            if (sslModeOdbc == "disable")
+                sslMode = Npgsql.SslMode.Disable;
+            else if (sslModeOdbc == "require")
+                sslMode = Npgsql.SslMode.Require;
+            //else if (sslModeOdbc == "verify-ca")
+            //    sslMode = Npgsql.SslMode.VerifyCA;
+            //else if (sslModeOdbc == "verify-full")
+            //    sslMode = Npgsql.SslMode.VerifyFull;
+
+            var builder = new NpgsqlConnectionStringBuilder();
+            builder.Host = host;
+            builder.Port = Convert.ToInt32(port);
+            builder.Database = database;
+            builder.SslMode = sslMode;
+
+            if (!string.IsNullOrEmpty(username))
+                builder.Username = username;
+            //if (!string.IsNullOrEmpty(password))
+            //    builder.Password = password;
+            if (!string.IsNullOrEmpty(password))
+            {
+                password = Uri.UnescapeDataString(password);
+                builder.Password = password;
+            }
+            builder.TrustServerCertificate = (sslMode == Npgsql.SslMode.Require);
+            return builder.ConnectionString + "♣" + database;
+        }
+        private Dictionary<string, string> ReadOdbcDsn(string dsnName)
+        {
+            string[] registryPaths = new string[]
+            {
+            @"SOFTWARE\ODBC\ODBC.INI\" + dsnName, // System DSN
+            };
+
+            foreach (string path in registryPaths)
+            {
+                RegistryKey key =
+                    Registry.LocalMachine.OpenSubKey(path) ??
+                    Registry.CurrentUser.OpenSubKey(path);
+
+                if (key == null)
+                    continue;
+
+                var dict = new Dictionary<string, string>();
+                foreach (string valueName in key.GetValueNames())
+                {
+                    dict[valueName] = Convert.ToString(key.GetValue(valueName));
+                }
+                return dict;
+            }
+            throw new Exception("ODBC DSN not found: " + dsnName);
         }
 
         public static string GetServerIpAndPort(string serverName, string uid, string pwd)
@@ -3019,6 +3150,10 @@ namespace Util
                     if (existingJson != "")
                     {
                         JObject json = JObject.Parse(existingJson);
+                        if (json["appconnections"][ConName] != null)
+                        {
+                            return;
+                        }
                         JObject newData = JObject.Parse(jsonString);
                         json.Merge(newData, new JsonMergeSettings
                         {
@@ -3274,6 +3409,63 @@ namespace Util
                                 if (prop.Name.ToUpper() == attrName.ToUpper())
                                 {
                                     return prop.Value.ToString();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogFile.Log logobj = new LogFile.Log();
+                logobj.CreateLog("GetConfigAttrValue function -" + ex.Message, "GetProjectArray", "GetConfigAttrValue", "new", "true");
+                return strLang;
+            }
+            return strLang;
+        }
+
+        public string GetConfigLangInfo(string proj)
+        {
+            string strLang = string.Empty;
+            try
+            {
+                string configStr = string.Empty;
+                if (HttpContext.Current.Session["AxStrConfig-" + proj] == null || HttpContext.Current.Session["AxStrConfig-" + proj].ToString() == string.Empty)
+                {
+                    configStr = GetConfigAppJSON(proj);
+                    if (configStr != "" && configStr.StartsWith("Error:"))
+                        return configStr;
+                    HttpContext.Current.Session["AxStrConfig-" + proj] = configStr;
+                }
+                else
+                {
+                    configStr = HttpContext.Current.Session["AxStrConfig-" + proj].ToString();
+                }
+                if (configStr != string.Empty)
+                {
+                    JArray configNode = null;
+                    JArray configLangNode = null;
+                    JObject objConfig = JObject.Parse(configStr);
+                    configNode = (JArray)objConfig["configStr"];
+                    if (configNode != null)
+                    {
+                        foreach (JObject content in configNode.Children<JObject>())
+                        {
+                            foreach (JProperty prop in content.Properties())
+                            {
+                                if (prop.Name == "AxLanguages")
+                                {
+                                    if (strLang == "")
+                                        strLang = prop.Value.ToString();
+                                    else
+                                        strLang = prop.Value.ToString() + "♣" + strLang;
+                                }
+                                if (prop.Name == "AxUserLevelLang")
+                                {
+                                    if (strLang == "")
+                                        strLang = prop.Value.ToString();
+                                    else
+                                        strLang = strLang + "♣" + prop.Value.ToString();
                                 }
                             }
                         }
@@ -4665,6 +4857,9 @@ namespace Util
                 case Constants.REDISARMCONNECTEDDATAPERMISSION:
                     key = "*" + transId.Substring(1) + "*" + Constants.REDISARMPERMISSION + "*" + user;
                     break;
+                case Constants.REDISARMPERMISSIONNEW:
+                    key = type + "-" + user + "-";
+                    break;
                 case Constants.REDISARMAXADSSQL:
                     key = "ARM-" + Constants.REDISARMAXADSSQL + "-" + transId;
                     break;
@@ -4676,6 +4871,9 @@ namespace Util
                     break;
                 case Constants.REDISBULKUSERACTIVATE:
                     key = Constants.REDISBULKUSERACTIVATE + "-" + transId;
+                    break;
+                case Constants.AX_PERMISSIONS:
+                    key = Constants.AX_PERMISSIONS;
                     break;
                 default:
                     key = "General-" + AxRole + '-' + lang;
@@ -5133,21 +5331,26 @@ namespace Util
 
                 string keyAccess = Constants.RedisIvData;
 
+                ArrayList keyList = new ArrayList();
                 string keyPattern = fObj.MakeKeyName(keyAccess, "*", user, "*", -1);
 
-                ArrayList keyList = fObj.GetPrefixedKeys(keyPattern, true, string.Empty, false);
+                //ArrayList keyList = fObj.GetPrefixedKeys(keyPattern, true, string.Empty, false);
 
-                fdwObj.DeleteKeys(keyList);
+                //fdwObj.DeleteKeys(keyList);
 
                 ///////////////////////
 
                 keyAccess = Constants.RedisLvData;
 
-                keyPattern = fObj.MakeKeyName(keyAccess, "*", user, "*", -1);
+                string LvkeyPattern = fObj.MakeKeyName(keyAccess, "*", user, "*", -1);
 
-                keyList = fObj.GetPrefixedKeys(keyPattern, true, string.Empty, false);
+                //keyList = fObj.GetPrefixedKeys(keyPattern, true, string.Empty, false);
 
-                fdwObj.DeleteKeys(keyList);
+                //fdwObj.DeleteKeys(keyList);
+
+                keyList.Add(keyPattern);
+                keyList.Add(LvkeyPattern);
+                fdwObj.DeleteWildCharKeys(keyList);
 
                 /////////////////////// 
             }
@@ -5354,14 +5557,27 @@ namespace Util
             string configStr = string.Empty;
             try
             {
+                configStr = GetAllSettings(proj, Constants.CONFIGAPP_JSON_KEY);
+                if (configStr != string.Empty)
+                    return configStr;
+
                 FDR fdrObj = (FDR)HttpContext.Current.Session["FDR"];
                 if (fdrObj == null)
                     fdrObj = new FDR(proj);
+                try
+                {
+                    if (HttpContext.Current.Session != null && HttpContext.Current.Session["FDR"] == null)
+                    {
+                        HttpContext.Current.Session["FDR"] = fdrObj;
+                    }
+                }
+                catch (Exception ex)
+                { }
                 if (fdrObj.redisIpLocalHost == "localhost")
                 {
                     return "Error: Please use the proper IP Address for Redis Host.";
                 }
-                configStr = fdrObj.StringFromRedis(Constants.CONFIGAPP_JSON_KEY, proj.ToLower());
+                //configStr = fdrObj.StringFromRedis(Constants.CONFIGAPP_JSON_KEY, proj.ToLower());
                 if (configStr == "")
                 {
                     configStr = ReadFromFile(HttpContext.Current.Server.MapPath("~/Config/") + proj + ".cfg");
@@ -5371,7 +5587,8 @@ namespace Util
                     if (proj != String.Empty)
                     {
                         FDW fdwObj = new FDW(proj);
-                        fdwObj.SaveInRedisServer(Constants.CONFIGAPP_JSON_KEY, configStr, Constants.CONFIGAPP_JSON_KEY, proj.ToLower());
+                        //fdwObj.SaveInRedisServer(Constants.CONFIGAPP_JSON_KEY, configStr, Constants.CONFIGAPP_JSON_KEY, proj.ToLower());
+                        fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.CONFIGAPP_JSON_KEY, configStr, proj.ToLower());
                     }
                 }
             }
@@ -5396,25 +5613,30 @@ namespace Util
                         FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
                         string axconfigKey = Constants.AXCONFIGGENERAL;
                         DataTable configData = fObj.DataTableFromRedis(GetConfigCacheKey(axconfigKey, "", "", "ALL", "ALL"));
-                        if (configData != null && configData.Rows.Count > 0)
+                        if (configData != null && configData.Rows.Count > 0 && configData.Columns.Count > 1)
                         {
                             HttpContext.Current.Session["AdvConfigsGeneral"] = configData;
                             stsPage = GetGenConfigString(configData, ConfType, structureType, structureName);
                         }
                         else
                         {
-                            string axconfigNoKey = Constants.AXNODATACONFIGGENERAL;
-                            string nodata = fObj.StringFromRedis(GetNoDataConfigCacheKey(axconfigNoKey, "", "", "ALL", "ALL"));
-                            if (nodata == "NoData")
+                            //string axconfigNoKey = Constants.AXNODATACONFIGGENERAL;
+                            //string nodata = fObj.StringFromRedis(GetNoDataConfigCacheKey(axconfigNoKey, "", "", "ALL", "ALL"));
+                            //if (nodata == "NoData")
+                            //{
+                            //    HttpContext.Current.Session["AdvConfigsGeneral"] = "NoData";
+                            //    return stsPage;
+                            //}
+                            if (configData != null && configData.Rows.Count > 0 && configData.Columns.Count == 1)
                             {
-                                HttpContext.Current.Session["AdvConfigsGeneral"] = "NoData";
                                 return stsPage;
                             }
                             else
                             {
                                 DataTable dt = GetGenConfigsFromDB(schemaName);
                                 HttpContext.Current.Session["AdvConfigsGeneral"] = dt;
-                                stsPage = GetGenConfigString(dt, ConfType, structureType, structureName);
+                                if (dt != null && dt.Rows.Count > 0 && dt.Columns.Count > 1)
+                                    stsPage = GetGenConfigString(dt, ConfType, structureType, structureName);
                             }
                         }
                     }
@@ -5422,7 +5644,8 @@ namespace Util
                     {
                         DataTable dt = GetGenConfigsFromDB(schemaName);
                         HttpContext.Current.Session["AdvConfigsGeneral"] = dt;
-                        stsPage = GetGenConfigString(dt, ConfType, structureType, structureName);
+                        if (dt != null && dt.Rows.Count > 0 && dt.Columns.Count > 1)
+                            stsPage = GetGenConfigString(dt, ConfType, structureType, structureName);
                     }
                 }
                 else
@@ -5432,7 +5655,8 @@ namespace Util
                     else
                     {
                         DataTable dt = (DataTable)HttpContext.Current.Session["AdvConfigsGeneral"];
-                        stsPage = GetGenConfigString(dt, ConfType, structureType, structureName);
+                        if (dt != null && dt.Rows.Count > 0 && dt.Columns.Count > 1)
+                            stsPage = GetGenConfigString(dt, ConfType, structureType, structureName);
                     }
                 }
             }
@@ -5478,7 +5702,17 @@ namespace Util
                     if (dt != null && dt.Rows.Count > 0)
                         fdwObj.SaveInRedisServerDT(GetConfigCacheKey(axconfigKey, "", "", "ALL", "ALL"), dt, axconfigKey, schemaName);
                     else
-                        fdwObj.SaveInRedisServer(GetNoDataConfigCacheKey(axconfigNoKey, "", "", "ALL", "ALL"), "NoData", axconfigNoKey, schemaName);
+                    {
+                        DataTable dtNew = new DataTable();
+                        dtNew.Columns.Add("Status", typeof(string));
+                        DataRow row = dtNew.NewRow();
+                        row[0] = "NoData";
+                        dtNew.Rows.Add(row);
+
+                        fdwObj.SaveInRedisServerDT(GetConfigCacheKey(axconfigKey, "", "", "ALL", "ALL"), dtNew, axconfigKey, schemaName);
+                        //fdwObj.SaveInRedisServer(GetNoDataConfigCacheKey(axconfigNoKey, "", "", "ALL", "ALL"), "NoData", axconfigNoKey, schemaName);
+                        return dtNew;
+                    }
                 }
                 return dt;
             }
@@ -5571,31 +5805,59 @@ namespace Util
         //        return true;
         //}
 
+        //public static bool CheckCrossScriptingInString(string value)
+        //{
+        //    //if (ConfigurationManager.AppSettings["doXSSCheck"] == null || string.IsNullOrEmpty(ConfigurationManager.AppSettings["doXSSCheck"].ToString()) || ConfigurationManager.AppSettings["doXSSCheck"].ToLower() != "true")
+        //    //    return false;
+
+        //    if (!string.IsNullOrEmpty(value))
+        //    {
+
+        //        List<string> tgs = new List<string>() { "<applet", "<body", "<embed", "<frame", "<script", "<html", "<iframe", "<img", "<style", "<layer", "<link", "<ilayer", "<meta", "<object", "alert(", "<svg", "<xss", "confirm(", "prompt(", "<prompt", "expression(", "onerror", "scriptlet", "setTimeout(", "/vbs", "eval(", ".href", ".location.", "document.", "onchange", "onclick", "onmouseover", "onmouseout", "onkeydown", "onload", "<h1>", "<h2>", "<h3>", "<h4>", "<h5>", "<h6>", "</h1>", "</h2>", "</h3>", "</h4>", "</h5>", "</h6>", "<marquee" };
+        //        //string temp = Regex.Replace(value.ToLower(), @"\s", "");
+        //        string temp = value.ToLower();
+        //        // Replace & to acceptable html encode character. Thne replace it with & to bypass the htmltag method
+        //        //Replace & to some other character
+        //        // string beforesign = temp.Replace("&", "♦");
+        //        // if (CheckHTMLTags(beforesign))
+        //        //     return true;
+        //        //beforesign = temp.Replace("♦", "&");
+        //        //Replace the character back to &
+
+        //        if (tgs.FirstOrDefault(s => (temp.IndexOf(s.ToLower()) > -1 || temp.Contains(s.ToLower()))) != null)
+        //        {
+        //            return true;
+        //        }
+        //    }
+        //    return false;
+        //}
+
+        //private static readonly Regex EventRegex = new Regex(@"on\w+\s*[:=]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        //private static readonly List<string> XssTags = new List<string> { "<applet", "<body", "<embed", "<frame", "<script", "<html", "<iframe", "<img", "<style", "<layer", "<link", "<ilayer", "<meta", "<object", "alert(", "<svg", "<xss", "confirm(", "prompt(", "<prompt", "expression(", "onerror", "scriptlet", "settimeout(", "/vbs", "eval(", ".href", ".location.", "document.", "onchange", "onclick", "onmouseover", "onmouseout", "onkeydown", "onload", "<h1>", "<h2>", "<h3>", "<h4>", "<h5>", "<h6>", "</h1>", "</h2>", "</h3>", "</h4>", "</h5>", "</h6>", "<marquee" };
+        //public static bool CheckCrossScriptingInString(string value)
+        //{
+        //    if (string.IsNullOrEmpty(value))
+        //        return false;
+        //    string temp = value.ToLower();
+        //    //if (XssTags.Any(tag => temp.Contains(tag)))
+        //    //{
+        //    //    if (EventRegex.IsMatch(temp))
+        //    //        return true;
+        //    //}
+        //    //return false;
+        //    return XssTags.Any(tag => temp.Contains(tag)) || EventRegex.IsMatch(temp);
+        //}
+        private static readonly Regex EventRegex = new Regex(@"\bon(?:click|change|load|error|focus|blur|submit|keydown|keyup|mouseover|mouseout|dblclick|contextmenu|input|paste|copy|cut|drag|drop|wheel|touchstart|touchend|animationstart|animationend|transitionend|pointerdown|pointerup)\s*[:=]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly List<string> XssTags = new List<string> { "<applet", "<body", "<embed", "<frame", "<script", "<html", "<iframe", "<img", "<style", "<layer", "<link", "<ilayer", "<meta", "<object", "alert(", "<svg", "<xss", "confirm(", "prompt(", "<prompt", "expression(", "settimeout(", "/vbs", "eval(", "<h1>", "<h2>", "<h3>", "<h4>", "<h5>", "<h6>", "</h1>", "</h2>", "</h3>", "</h4>", "</h5>", "</h6>", "<marquee", ".href", ".location.", "document." };
+        private static readonly List<string> XssWords = new List<string> { "onerror", "scriptlet", "onchange", "onclick", "onmouseover", "onmouseout", "onkeydown", "onload" };
         public static bool CheckCrossScriptingInString(string value)
         {
-            //if (ConfigurationManager.AppSettings["doXSSCheck"] == null || string.IsNullOrEmpty(ConfigurationManager.AppSettings["doXSSCheck"].ToString()) || ConfigurationManager.AppSettings["doXSSCheck"].ToLower() != "true")
-            //    return false;
-
-            if (!string.IsNullOrEmpty(value))
-            {
-
-                List<string> tgs = new List<string>() { "<applet", "<body", "<embed", "<frame", "<script", "<html", "<iframe", "<img", "<style", "<layer", "<link", "<ilayer", "<meta", "<object", "alert(", "<svg", "<xss", "confirm(", "prompt(", "<prompt", "expression(", "onerror", "scriptlet", "setTimeout(", "/vbs", "eval(", ".href", ".location.", "document.", "onchange", "onclick", "onmouseover", "onmouseout", "onkeydown", "onload", "<h1>", "<h2>", "<h3>", "<h4>", "<h5>", "<h6>", "</h1>", "</h2>", "</h3>", "</h4>", "</h5>", "</h6>", "<marquee" };
-                //string temp = Regex.Replace(value.ToLower(), @"\s", "");
-                string temp = value.ToLower();
-                // Replace & to acceptable html encode character. Thne replace it with & to bypass the htmltag method
-                //Replace & to some other character
-                // string beforesign = temp.Replace("&", "♦");
-                // if (CheckHTMLTags(beforesign))
-                //     return true;
-                //beforesign = temp.Replace("♦", "&");
-                //Replace the character back to &
-
-                if (tgs.FirstOrDefault(s => (temp.IndexOf(s.ToLower()) > -1 || temp.Contains(s.ToLower()))) != null)
-                {
-                    return true;
-                }
-            }
-            return false;
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+            string temp = value.ToLowerInvariant();
+            bool hasTag = XssTags.Any(t => temp.Contains(t));
+            bool hasWord = XssWords.Any(w => Regex.IsMatch(temp, "\\b" + Regex.Escape(w) + "\\b", RegexOptions.IgnoreCase));
+            return hasTag || hasWord || EventRegex.IsMatch(temp);
         }
         public static bool ContainsXSS(string value)
         {
@@ -5955,7 +6217,7 @@ namespace Util
             }
         }
 
-        public string GetGlobalVarString()
+        public string GetGlobalVarString(string isReqFilter = "")
         {
             string GlobalVarString = string.Empty;
             try
@@ -5974,11 +6236,55 @@ namespace Util
             { }
             if (GlobalVarString == string.Empty && HttpContext.Current.Session["globalvarstring"] != null)
                 GlobalVarString = HttpContext.Current.Session["globalvarstring"].ToString();
+
+            //if (GlobalVarString != string.Empty && isReqFilter == "nofilter")
+            //{
+            //    try
+            //    {
+            //        var items = GlobalVarString.Split(new[] { "\";" }, StringSplitOptions.RemoveEmptyEntries).Where(s => !s.Contains("_filter~")).ToList();
+            //        var rebuilt = new List<string>();
+            //        for (int i = 0; i < items.Count; i++)
+            //        {
+            //            string trimmed = items[i].Trim();
+            //            int eqIndex = trimmed.IndexOf('=');
+            //            string value = eqIndex >= 0 ? trimmed.Substring(eqIndex + 1).Trim() : trimmed;
+            //            value = value.Trim().Trim('"');
+            //            if (string.IsNullOrWhiteSpace(value))
+            //                continue;
+            //            value = value.Replace("\r", "\\r").Replace("\n", "\\n");
+            //            rebuilt.Add(string.Format("Parameters[{0}] = \"{1}\";", rebuilt.Count, value));
+            //        }
+            //        GlobalVarString = string.Join(" ", rebuilt);
+            //    }
+            //    catch (Exception ex) { }
+            //}
             return GlobalVarString;
         }
 
         public void SetGlobalVarString(string GlobalVarString)
         {
+            if (GlobalVarString != string.Empty)
+            {
+                try
+                {
+                    var items = GlobalVarString.Split(new[] { "\";" }, StringSplitOptions.RemoveEmptyEntries).Where(s => !s.Contains("_filter~")).ToList();
+                    var rebuilt = new List<string>();
+                    for (int i = 0; i < items.Count; i++)
+                    {
+                        string trimmed = items[i].Trim();
+                        int eqIndex = trimmed.IndexOf('=');
+                        string value = eqIndex >= 0 ? trimmed.Substring(eqIndex + 1).Trim() : trimmed;
+                        value = value.Trim().Trim('"');
+                        if (string.IsNullOrWhiteSpace(value))
+                            continue;
+                        value = value.Replace("\r", "\\r").Replace("\n", "\\n");
+                        rebuilt.Add(string.Format("Parameters[{0}] = \"{1}\";", rebuilt.Count, value));
+                    }
+                    GlobalVarString = string.Join(" ", rebuilt);
+                }
+                catch (Exception ex) { }
+            }
+
             try
             {
                 string fdKeyData = Constants.REDISGLOBALVARS;
@@ -6322,18 +6628,37 @@ namespace Util
                     urlDomain = urlDomain.Substring(0, urlDomain.ToLower().IndexOf("/aspx/mainnew.aspx"));
 
                 ipad += "-" + brOwner + "-" + urlDomain;
-
+                string userName = string.Empty;
+                if (HttpContext.Current.Session["username"] != null)
+                    userName = HttpContext.Current.Session["username"].ToString();
                 string sessionexpirydays = string.Empty;
-                if (HttpContext.Current.Session["AxSessionExpiryDays"] != null && HttpContext.Current.Session["AxSessionExpiryDays"].ToString() != "")
-                    sessionexpirydays = HttpContext.Current.Session["AxSessionExpiryDays"].ToString();
-                if (sessionexpirydays != "0")
+                string userExpiryDays = GetPwdAuthLang(userName);
+                string userKeepMe = "F";
+                if (userExpiryDays != string.Empty)
                 {
+                    userKeepMe = userExpiryDays.Split('♣')[6];
+                    userExpiryDays = userExpiryDays.Split('♣')[7];
+                }
+                if (userKeepMe == "T")
+                {
+                    if (userExpiryDays != string.Empty && userExpiryDays != "0")
+                        sessionexpirydays = userExpiryDays;
+                    else if (HttpContext.Current.Session["AxSessionExpiryDays"] != null && HttpContext.Current.Session["AxSessionExpiryDays"].ToString() != "")
+                        sessionexpirydays = HttpContext.Current.Session["AxSessionExpiryDays"].ToString();
+                    else
+                        sessionexpirydays = "14";
+                }
+                if (HttpContext.Current.Session["staySignedId"] != null && HttpContext.Current.Session["staySignedId"].ToString() == "true" && HttpContext.Current.Session["AxiProjectLogin"] != null && HttpContext.Current.Session["AxiProjectLogin"].ToString() == "true")
+                {
+                    userKeepMe = "T";
+                    sessionexpirydays = "14";
+
+                    string isPrimary = HttpContext.Current.Session["AxiPrimary"].ToString();
+                    string userEmail_id = HttpContext.Current.Session["userEmail_id"].ToString();
+
                     FDW fdwObj = new FDW();
                     FDR fdrObj = (FDR)HttpContext.Current.Session["FDR"];
-                    string userName = string.Empty;
                     string pwd = string.Empty;
-                    if (HttpContext.Current.Session["username"] != null)
-                        userName = HttpContext.Current.Session["username"].ToString();
                     if (HttpContext.Current.Session["pwd"] != null)
                         pwd = HttpContext.Current.Session["pwd"].ToString();
 
@@ -6350,16 +6675,52 @@ namespace Util
                         string[] KeepMeSavedInfo = KeepMeDetails.Split('~');
                         if (KeepMeSavedInfo[0] != kaProj || KeepMeSavedInfo[1] != userName || KeepMeSavedInfo[2] != pwd || KeepMeSavedInfo[3] != kalanguage || KeepMeSavedInfo[4] != urlDomain || KeepMeSavedInfo[5] != sessionexpirydays || KeepMeSavedInfo[6] != currPageUrl)
                         {
-                            string datajson = kaProj + "~" + userName + "~" + pwd + "~" + kalanguage + "~" + urlDomain + "~" + sessionexpirydays + "~" + currPageUrl + "~" + ssotype;
+                            string datajson = kaProj + "~" + userName + "~" + pwd + "~" + kalanguage + "~" + urlDomain + "~" + sessionexpirydays + "~" + currPageUrl + "~" + ssotype + "~" + userEmail_id + "~" + isPrimary;
                             int expiryTime = int.Parse(sessionexpirydays) * 24 * 60;
                             fdwObj.WriteKeyNoSchema(RsKey, datajson, expiryTime);
                         }
                     }
                     else
                     {
-                        string datajson = kaProj + "~" + userName + "~" + pwd + "~" + kalanguage + "~" + urlDomain + "~" + sessionexpirydays + "~" + currPageUrl + "~" + ssotype;
+                        string datajson = kaProj + "~" + userName + "~" + pwd + "~" + kalanguage + "~" + urlDomain + "~" + sessionexpirydays + "~" + currPageUrl + "~" + ssotype + "~" + userEmail_id + "~" + isPrimary;
                         int expiryTime = int.Parse(sessionexpirydays) * 24 * 60;
                         fdwObj.WriteKeyNoSchema(RsKey, datajson, expiryTime);
+                    }
+                }
+                else
+                {
+                    if (sessionexpirydays != string.Empty && sessionexpirydays != "0")
+                    {
+                        FDW fdwObj = new FDW();
+                        FDR fdrObj = (FDR)HttpContext.Current.Session["FDR"];
+                        string pwd = string.Empty;
+                        if (HttpContext.Current.Session["pwd"] != null)
+                            pwd = HttpContext.Current.Session["pwd"].ToString();
+
+                        string kaProj = HttpContext.Current.Session["project"].ToString();
+                        string kalanguage = HttpContext.Current.Session["language"].ToString();
+                        string ssotype = string.Empty;
+                        if (HttpContext.Current.Session["isSSOLogin"] != null && HttpContext.Current.Session["isSSOLogin"].ToString() == "True")
+                            ssotype = HttpContext.Current.Session["SSOLoginType"].ToString();
+                        string RsKey = fdrObj.MakeKeyName(Constants.REDISKEEPWEBINFO, ipad) + "-" + userName;
+
+                        string KeepMeDetails = fdrObj.ReadKeyNoSchema(RsKey);
+                        if (KeepMeDetails != string.Empty)
+                        {
+                            string[] KeepMeSavedInfo = KeepMeDetails.Split('~');
+                            if (KeepMeSavedInfo[0] != kaProj || KeepMeSavedInfo[1] != userName || KeepMeSavedInfo[2] != pwd || KeepMeSavedInfo[3] != kalanguage || KeepMeSavedInfo[4] != urlDomain || KeepMeSavedInfo[5] != sessionexpirydays || KeepMeSavedInfo[6] != currPageUrl)
+                            {
+                                string datajson = kaProj + "~" + userName + "~" + pwd + "~" + kalanguage + "~" + urlDomain + "~" + sessionexpirydays + "~" + currPageUrl + "~" + ssotype;
+                                int expiryTime = int.Parse(sessionexpirydays) * 24 * 60;
+                                fdwObj.WriteKeyNoSchema(RsKey, datajson, expiryTime);
+                            }
+                        }
+                        else
+                        {
+                            string datajson = kaProj + "~" + userName + "~" + pwd + "~" + kalanguage + "~" + urlDomain + "~" + sessionexpirydays + "~" + currPageUrl + "~" + ssotype;
+                            int expiryTime = int.Parse(sessionexpirydays) * 24 * 60;
+                            fdwObj.WriteKeyNoSchema(RsKey, datajson, expiryTime);
+                        }
                     }
                 }
             }
@@ -6680,6 +7041,16 @@ namespace Util
                     axulang += "♣" + dt.Rows[0]["ACTIVE"].ToString();
                     axulang += "♣" + dt.Rows[0]["EMAIL"].ToString();
                     axulang += "♣" + dt.Rows[0]["MOBILE"].ToString();
+                    axulang += "♣" + dt.Rows[0]["STAYSIGNEDIN"].ToString();
+                    axulang += "♣" + dt.Rows[0]["SIGNINEXPIRY"].ToString();
+                    string strRes = "";
+                    if (dt.Rows[0]["IMG"] != "" && dt.Rows[0]["IMG"].ToString() != "")
+                    {
+                        byte[] Uimage = (byte[])dt.Rows[0]["IMG"];
+                        strRes = Convert.ToBase64String(Uimage);
+                    }
+                    axulang += "♣" + strRes;
+                    axulang += "♣" + dt.Rows[0]["BLOBNO"].ToString();
                 }
             }
             catch (Exception ex)
@@ -6727,7 +7098,7 @@ namespace Util
                 string projName = string.Empty;
                 if (!string.IsNullOrEmpty(thisProj))
                     projName = thisProj;
-                else if (HttpContext.Current.Session["project"] != null)
+                else if (HttpContext.Current.Session != null && HttpContext.Current.Session["project"] != null)
                 {
                     projName = HttpContext.Current.Session["project"].ToString();
                 }
@@ -6960,10 +7331,11 @@ namespace Util
             string jsoncontents = string.Empty;
             if (strProj != string.Empty)
             {
+                Dictionary<string, string> _jsoncontents = new Dictionary<string, string>();
                 try
                 {
-                    FDR fdrObj = new FDR();
-                    jsoncontents = fdrObj.StringFromRedis(Constants.AXARM_CONN_KEY, strProj);
+                    jsoncontents = GetAllSettings(strProj, Constants.AXARM_CONN_KEY);
+                    //jsoncontents = fdrObj.StringFromRedis(Constants.AXARM_CONN_KEY, strProj);
                     if (jsoncontents == string.Empty)
                     {
                         FileInfo fi = new FileInfo(ScriptsPath + "\\AppSettings.ini");
@@ -6987,7 +7359,7 @@ namespace Util
                                         HttpContext.Current.Session["ARM_Notification_URL"] = _jsonARM["ARM_Notification_URL"].ToString();
                                     if (_jsonARM["ARM_Scripts_URL"] != null)
                                         HttpContext.Current.Session["ARM_Scripts_URL"] = _jsonARM["ARM_Scripts_URL"].ToString();
-                                    HttpContext.Current.Session["ARMPushToQueue_API"] = "/api/v1/ARMPushToQueue";
+                                    HttpContext.Current.Session["ARMPushToQueue_API"] = "/ARM_APIs/api/v1/ARMPushToQueue";
                                     if (_jsonARM["PEG"] != null)
                                         HttpContext.Current.Session["ARMPEG"] = _jsonARM["PEG"].ToString();
                                 }
@@ -6998,18 +7370,21 @@ namespace Util
                                 }
 
                                 FDW fdwObj = new FDW(strProj);
-                                fdwObj.SaveInRedisServer(Constants.AXARM_CONN_KEY, jsoncontents, Constants.AXARM_CONN_KEY, strProj);
+                                //fdwObj.SaveInRedisServer(Constants.AXARM_CONN_KEY, jsoncontents, Constants.AXARM_CONN_KEY, strProj);
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_CONN_KEY, jsoncontents, strProj);
                             }
                             else
                             {
                                 FDW fdwObj = new FDW(strProj);
-                                fdwObj.SaveInRedisServer(Constants.AXARM_CONN_KEY, "noarmconnection", Constants.AXARM_CONN_KEY, strProj);
+                                //fdwObj.SaveInRedisServer(Constants.AXARM_CONN_KEY, "noarmconnection", Constants.AXARM_CONN_KEY, strProj);
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_CONN_KEY, "noarmconnection", strProj);
                             }
                         }
                         else
                         {
                             FDW fdwObj = new FDW(strProj);
-                            fdwObj.SaveInRedisServer(Constants.AXARM_CONN_KEY, "noarmconnection", Constants.AXARM_CONN_KEY, strProj);
+                            //fdwObj.SaveInRedisServer(Constants.AXARM_CONN_KEY, "noarmconnection", Constants.AXARM_CONN_KEY, strProj);
+                            fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_CONN_KEY, "noarmconnection", strProj);
                         }
                     }
                     else if (jsoncontents != "noarmconnection")
@@ -7025,7 +7400,7 @@ namespace Util
                                 HttpContext.Current.Session["ARM_Notification_URL"] = _jsonARM["ARM_Notification_URL"].ToString();
                             if (_jsonARM["ARM_Scripts_URL"] != null)
                                 HttpContext.Current.Session["ARM_Scripts_URL"] = _jsonARM["ARM_Scripts_URL"].ToString();
-                            HttpContext.Current.Session["ARMPushToQueue_API"] = "/api/v1/ARMPushToQueue";
+                            HttpContext.Current.Session["ARMPushToQueue_API"] = "/ARM_APIs/api/v1/ARMPushToQueue";
                             if (_jsonARM["PEG"] != null)
                                 HttpContext.Current.Session["ARMPEG"] = _jsonARM["PEG"].ToString();
                         }
@@ -7042,6 +7417,8 @@ namespace Util
                     logobj.CreateLog("Exception in GetAxARMConnection - util.cs-" + ex.Message, HttpContext.Current.Session["nsessionid"].ToString(), "GetAxARMConnection", "new");
                 }
 
+                GetAxConfigFileServer(strProj);
+
                 GetAxRMQSettings(strProj);
 
                 GetAxARMInternalResources(strProj);
@@ -7056,8 +7433,9 @@ namespace Util
             {
                 try
                 {
-                    FDR fdrObj = new FDR();
-                    jsoncontents = fdrObj.StringFromRedis(Constants.AXARM_IntRes_CONN_KEY, strProj);
+                    //FDR fdrObj = new FDR();
+                    //jsoncontents = fdrObj.StringFromRedis(Constants.AXARM_IntRes_CONN_KEY, strProj);
+                    jsoncontents = GetAllSettings(strProj, Constants.AXARM_IntRes_CONN_KEY);
                     if (jsoncontents == string.Empty)
                     {
                         FileInfo fi = new FileInfo(ScriptsPath + "\\AppSettings.ini");
@@ -7093,18 +7471,21 @@ namespace Util
                                 }
 
                                 FDW fdwObj = new FDW(strProj);
-                                fdwObj.SaveInRedisServer(Constants.AXARM_IntRes_CONN_KEY, jsoncontents, Constants.AXARM_IntRes_CONN_KEY, strProj);
+                                //fdwObj.SaveInRedisServer(Constants.AXARM_IntRes_CONN_KEY, jsoncontents, Constants.AXARM_IntRes_CONN_KEY, strProj);
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_IntRes_CONN_KEY, jsoncontents, strProj);
                             }
                             else
                             {
                                 FDW fdwObj = new FDW(strProj);
-                                fdwObj.SaveInRedisServer(Constants.AXARM_IntRes_CONN_KEY, "noarmconnection", Constants.AXARM_IntRes_CONN_KEY, strProj);
+                                //fdwObj.SaveInRedisServer(Constants.AXARM_IntRes_CONN_KEY, "noarmconnection", Constants.AXARM_IntRes_CONN_KEY, strProj);
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_IntRes_CONN_KEY, "noarmconnection", strProj);
                             }
                         }
                         else
                         {
                             FDW fdwObj = new FDW(strProj);
-                            fdwObj.SaveInRedisServer(Constants.AXARM_IntRes_CONN_KEY, "noarmconnection", Constants.AXARM_IntRes_CONN_KEY, strProj);
+                            //fdwObj.SaveInRedisServer(Constants.AXARM_IntRes_CONN_KEY, "noarmconnection", Constants.AXARM_IntRes_CONN_KEY, strProj);
+                            fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_IntRes_CONN_KEY, "noarmconnection", strProj);
                         }
                     }
                     else if (jsoncontents != "noarmconnection")
@@ -7148,8 +7529,9 @@ namespace Util
             {
                 try
                 {
-                    FDR fdrObj = new FDR();
-                    jsoncontents = fdrObj.StringFromRedis(Constants.AXARM_ExtRes_CONN_KEY, strProj);
+                    //FDR fdrObj = new FDR();
+                    //jsoncontents = fdrObj.StringFromRedis(Constants.AXARM_ExtRes_CONN_KEY, strProj);
+                    jsoncontents = GetAllSettings(strProj, Constants.AXARM_ExtRes_CONN_KEY);
                     if (jsoncontents == string.Empty)
                     {
                         FileInfo fi = new FileInfo(ScriptsPath + "\\AppSettings.ini");
@@ -7164,18 +7546,21 @@ namespace Util
                                 jsoncontents = jsonARM["appsettings"][strProj]["ExternalResources"].ToString();
 
                                 FDW fdwObj = new FDW(strProj);
-                                fdwObj.SaveInRedisServer(Constants.AXARM_ExtRes_CONN_KEY, jsoncontents, Constants.AXARM_ExtRes_CONN_KEY, strProj);
+                                //fdwObj.SaveInRedisServer(Constants.AXARM_ExtRes_CONN_KEY, jsoncontents, Constants.AXARM_ExtRes_CONN_KEY, strProj);
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_ExtRes_CONN_KEY, jsoncontents, strProj);
                             }
                             else
                             {
                                 FDW fdwObj = new FDW(strProj);
-                                fdwObj.SaveInRedisServer(Constants.AXARM_ExtRes_CONN_KEY, "noarmconnection", Constants.AXARM_ExtRes_CONN_KEY, strProj);
+                                //fdwObj.SaveInRedisServer(Constants.AXARM_ExtRes_CONN_KEY, "noarmconnection", Constants.AXARM_ExtRes_CONN_KEY, strProj);
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_ExtRes_CONN_KEY, "noarmconnection", strProj);
                             }
                         }
                         else
                         {
                             FDW fdwObj = new FDW(strProj);
-                            fdwObj.SaveInRedisServer(Constants.AXARM_ExtRes_CONN_KEY, "noarmconnection", Constants.AXARM_ExtRes_CONN_KEY, strProj);
+                            //fdwObj.SaveInRedisServer(Constants.AXARM_ExtRes_CONN_KEY, "noarmconnection", Constants.AXARM_ExtRes_CONN_KEY, strProj);
+                            fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_ExtRes_CONN_KEY, "noarmconnection", strProj);
                         }
                     }
                     else if (jsoncontents != "noarmconnection")
@@ -7252,8 +7637,9 @@ namespace Util
             {
                 try
                 {
-                    FDR fdrObj = new FDR();
-                    jsoncontents = fdrObj.StringFromRedis(Constants.AXFileServer_CONN_KEY, strProj);
+                    //FDR fdrObj = new FDR();
+                    //jsoncontents = fdrObj.StringFromRedis(Constants.AXFileServer_CONN_KEY, strProj);
+                    jsoncontents = GetAllSettings(strProj, Constants.AXFileServer_CONN_KEY);
                     if (jsoncontents == string.Empty)
                     {
                         FileInfo fi = new FileInfo(ScriptsPath + "\\AppSettings.ini");
@@ -7277,6 +7663,8 @@ namespace Util
                                         HttpContext.Current.Session["AxConfigFileMapUser"] = _jsonAxFile["FileServerMapUsername"].ToString();
                                     if (_jsonAxFile["FileServerMapPwd"] != null)
                                         HttpContext.Current.Session["AxConfigFileMapPwd"] = _jsonAxFile["FileServerMapPwd"].ToString();
+                                    if (_jsonAxFile["AxAttachmentSize"] != null)
+                                        HttpContext.Current.Session["AxAttachmentSize"] = _jsonAxFile["AxAttachmentSize"].ToString();
                                 }
                                 catch (Exception ex)
                                 {
@@ -7285,18 +7673,21 @@ namespace Util
                                 }
 
                                 FDW fdwObj = new FDW(strProj);
-                                fdwObj.SaveInRedisServer(Constants.AXFileServer_CONN_KEY, jsoncontents, Constants.AXFileServer_CONN_KEY, strProj);
+                                //fdwObj.SaveInRedisServer(Constants.AXFileServer_CONN_KEY, jsoncontents, Constants.AXFileServer_CONN_KEY, strProj);
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXFileServer_CONN_KEY, jsoncontents, strProj);
                             }
                             else
                             {
                                 FDW fdwObj = new FDW(strProj);
-                                fdwObj.SaveInRedisServer(Constants.AXFileServer_CONN_KEY, "nofileserverconnection", Constants.AXFileServer_CONN_KEY, strProj);
+                                //fdwObj.SaveInRedisServer(Constants.AXFileServer_CONN_KEY, "nofileserverconnection", Constants.AXFileServer_CONN_KEY, strProj);
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXFileServer_CONN_KEY, "nofileserverconnection", strProj);
                             }
                         }
                         else
                         {
                             FDW fdwObj = new FDW(strProj);
-                            fdwObj.SaveInRedisServer(Constants.AXFileServer_CONN_KEY, "nofileserverconnection", Constants.AXFileServer_CONN_KEY, strProj);
+                            //fdwObj.SaveInRedisServer(Constants.AXFileServer_CONN_KEY, "nofileserverconnection", Constants.AXFileServer_CONN_KEY, strProj);
+                            fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXFileServer_CONN_KEY, "nofileserverconnection", strProj);
                         }
                     }
                     else if (jsoncontents != "nofileserverconnection")
@@ -7312,6 +7703,8 @@ namespace Util
                                 HttpContext.Current.Session["AxConfigFileMapUser"] = _jsonAxFile["FileServerMapUsername"].ToString();
                             if (_jsonAxFile["FileServerMapPwd"] != null)
                                 HttpContext.Current.Session["AxConfigFileMapPwd"] = _jsonAxFile["FileServerMapPwd"].ToString();
+                            if (_jsonAxFile["AxAttachmentSize"] != null)
+                                HttpContext.Current.Session["AxAttachmentSize"] = _jsonAxFile["AxAttachmentSize"].ToString();
                         }
                         catch (Exception ex)
                         {
@@ -7732,32 +8125,39 @@ namespace Util
         public string GetAxEmailSettings(string _proj)
         {
             string result = string.Empty;
-            FileInfo _emailfi = new FileInfo(ScriptsPath + "\\AppSettings.ini");
-            if (_emailfi.Exists)
+            result = GetAllSettings(_proj, Constants.AXEMAILSMTP_CONN_KEY);
+            if (result == string.Empty)
             {
-                string scriptsPathAxEmail = ScriptsPath + "\\AppSettings.ini";
-                string filePatharm = @" " + scriptsPathAxEmail + "";
-                string existingJsonAxEmail = File.ReadAllText(filePatharm);
-                JObject jsonAxEmail = JObject.Parse(existingJsonAxEmail);
-                if (jsonAxEmail["appsettings"] != null && jsonAxEmail["appsettings"][_proj] != null && jsonAxEmail["appsettings"][_proj]["EmailSettings"] != null)
+                FileInfo _emailfi = new FileInfo(ScriptsPath + "\\AppSettings.ini");
+                if (_emailfi.Exists)
                 {
-                    string jsoncontents = jsonAxEmail["appsettings"][_proj]["EmailSettings"].ToString();
-                    result = jsoncontents;
-                    FDW fdwObj = new FDW(_proj);
-                    fdwObj.SaveInRedisServer(Constants.AXEMAILSMTP_CONN_KEY, jsoncontents, Constants.AXEMAILSMTP_CONN_KEY, _proj);
+                    string scriptsPathAxEmail = ScriptsPath + "\\AppSettings.ini";
+                    string filePatharm = @" " + scriptsPathAxEmail + "";
+                    string existingJsonAxEmail = File.ReadAllText(filePatharm);
+                    JObject jsonAxEmail = JObject.Parse(existingJsonAxEmail);
+                    if (jsonAxEmail["appsettings"] != null && jsonAxEmail["appsettings"][_proj] != null && jsonAxEmail["appsettings"][_proj]["EmailSettings"] != null)
+                    {
+                        string jsoncontents = jsonAxEmail["appsettings"][_proj]["EmailSettings"].ToString();
+                        result = jsoncontents;
+                        FDW fdwObj = new FDW(_proj);
+                        fdwObj.SaveInRedisServer(Constants.AXEMAILSMTP_CONN_KEY, jsoncontents, Constants.AXEMAILSMTP_CONN_KEY, _proj);
+                        fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXEMAILSMTP_CONN_KEY, jsoncontents, _proj);
+                    }
+                    else
+                    {
+                        FDW fdwObj = new FDW(_proj);
+                        fdwObj.SaveInRedisServer(Constants.AXEMAILSMTP_CONN_KEY, "noemailsettings", Constants.AXEMAILSMTP_CONN_KEY, _proj);
+                        fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXEMAILSMTP_CONN_KEY, "noemailsettings", _proj);
+                        result = string.Empty;
+                    }
                 }
                 else
                 {
                     FDW fdwObj = new FDW(_proj);
                     fdwObj.SaveInRedisServer(Constants.AXEMAILSMTP_CONN_KEY, "noemailsettings", Constants.AXEMAILSMTP_CONN_KEY, _proj);
+                    fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXEMAILSMTP_CONN_KEY, "noemailsettings", _proj);
                     result = string.Empty;
                 }
-            }
-            else
-            {
-                FDW fdwObj = new FDW(_proj);
-                fdwObj.SaveInRedisServer(Constants.AXEMAILSMTP_CONN_KEY, "noemailsettings", Constants.AXEMAILSMTP_CONN_KEY, _proj);
-                result = string.Empty;
             }
             return result;
         }
@@ -7968,27 +8368,401 @@ namespace Util
             return rcDetails;
         }
 
-        public string GetGblVarsFromIni()
+        //public string GetGblVarsFromIni(string glbXML)
+        //{
+        //    string gblIniVars = string.Empty;
+        //    try
+        //    {
+        //        if (HttpContext.Current.Session["RMQueueAPIURL"] != null)
+        //            gblIniVars += "<AxRMQAPIURL>" + HttpContext.Current.Session["RMQueueAPIURL"].ToString() + "</AxRMQAPIURL>";
+        //        if (HttpContext.Current.Session["SignalRAPIURL"] != null)
+        //            gblIniVars += "<AxSignalRapiURL>" + HttpContext.Current.Session["SignalRAPIURL"].ToString() + "</AxSignalRapiURL>";
+        //        if (HttpContext.Current.Session["FCMSendMsgURL"] != null)
+        //            gblIniVars += "<AxFCMSendMsgURL>" + HttpContext.Current.Session["FCMSendMsgURL"].ToString() + "</AxFCMSendMsgURL>";
+        //        if (HttpContext.Current.Session["RapidSaveURL"] != null)
+        //            gblIniVars += "<AxRapidSaveURL>" + HttpContext.Current.Session["RapidSaveURL"].ToString() + "</AxRapidSaveURL>";
+        //        if (HttpContext.Current.Session["pegemailactionurl"] != null)
+        //            gblIniVars += "<axpegemailactionurl>" + HttpContext.Current.Session["pegemailactionurl"].ToString() + "</axpegemailactionurl>";
+        //        if (HttpContext.Current.Session["ScriptsAPIURL"] != null)
+        //            gblIniVars += "<AxScriptsAPIURL>" + HttpContext.Current.Session["ScriptsAPIURL"].ToString() + "</AxScriptsAPIURL>";
+        //    }
+        //    catch (Exception ex) { }
+        //    return gblIniVars;
+        //}
+
+        public string GetGblVarsFromIni(string glbXML)
         {
-            string gblIniVars = string.Empty;
+            XDocument doc;
+            if (!string.IsNullOrWhiteSpace(glbXML))
+                doc = XDocument.Parse(glbXML);
+            else
+                doc = new XDocument(new XElement("GlobalVars"));
+            XElement root = doc.Root;
+            SetOrUpdate(root, "AxRMQAPIURL", "RMQueueAPIURL");
+            SetOrUpdate(root, "AxSignalRapiURL", "SignalRAPIURL");
+            SetOrUpdate(root, "AxFCMSendMsgURL", "FCMSendMsgURL");
+            SetOrUpdate(root, "AxRapidSaveURL", "RapidSaveURL");
+            SetOrUpdate(root, "axpegemailactionurl", "pegemailactionurl");
+            SetOrUpdate(root, "AxScriptsAPIURL", "ScriptsAPIURL");
+            return string.Concat(root.Elements());
+        }
+
+        private void SetOrUpdate(XElement root, string nodeName, string sessionKey)
+        {
+            var value = HttpContext.Current.Session[sessionKey] as string;
+            if (string.IsNullOrEmpty(value))
+                return;
+            var node = root.Element(nodeName);
+            if (node != null)
+                node.Value = value;
+            else
+                root.Add(new XElement(nodeName, value));
+        }
+
+        public string GetPwdAuthLang(string username)
+        {
+            string res = string.Empty;
             try
             {
-                if (HttpContext.Current.Session["RMQueueAPIURL"] != null)
-                    gblIniVars += "<AxRMQAPIURL>" + HttpContext.Current.Session["RMQueueAPIURL"].ToString() + "</AxRMQAPIURL>";
-                if (HttpContext.Current.Session["SignalRAPIURL"] != null)
-                    gblIniVars += "<AxSignalRapiURL>" + HttpContext.Current.Session["SignalRAPIURL"].ToString() + "</AxSignalRapiURL>";
-                if (HttpContext.Current.Session["FCMSendMsgURL"] != null)
-                    gblIniVars += "<AxFCMSendMsgURL>" + HttpContext.Current.Session["FCMSendMsgURL"].ToString() + "</AxFCMSendMsgURL>";
-                if (HttpContext.Current.Session["RapidSaveURL"] != null)
-                    gblIniVars += "<AxRapidSaveURL>" + HttpContext.Current.Session["RapidSaveURL"].ToString() + "</AxRapidSaveURL>";
-                if (HttpContext.Current.Session["pegemailactionurl"] != null)
-                    gblIniVars += "<axpegemailactionurl>" + HttpContext.Current.Session["pegemailactionurl"].ToString() + "</axpegemailactionurl>";
-                if (HttpContext.Current.Session["ScriptsAPIURL"] != null)
-                    gblIniVars += "<AxScriptsAPIURL>" + HttpContext.Current.Session["ScriptsAPIURL"].ToString() + "</AxScriptsAPIURL>";
+                string fdKeypwdOtpAuth = Constants.REDISPWDOTPAUTHLANG;
+                string schemaName = string.Empty;
+                if (HttpContext.Current.Session["dbuser"] != null)
+                    schemaName = HttpContext.Current.Session["dbuser"].ToString();
+                FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+                if (fObj != null)
+                    res = fObj.StringFromRedis(GetRedisServerkey(fdKeypwdOtpAuth, username), schemaName);
+            }
+            catch (Exception ex)
+            { }
+            return res;
+        }
+
+        public string GetAllSettings(string strProj, string SettingKeyName)
+        {
+            string jsoncontents = string.Empty;
+            try
+            {
+                if (!string.IsNullOrEmpty(strProj))
+                {
+                    if (HttpContext.Current != null && HttpContext.Current.Session != null && HttpContext.Current.Session["AppAllSettingsKey-" + strProj] != null)
+                    {
+                        var _jsoncontents = (Dictionary<string, string>)HttpContext.Current.Session["AppAllSettingsKey-" + strProj];
+                        if (_jsoncontents != null && _jsoncontents.ContainsKey(SettingKeyName))
+                        {
+                            jsoncontents = _jsoncontents[SettingKeyName];
+                        }
+                    }
+                }
             }
             catch (Exception ex) { }
-            return gblIniVars;
+            return jsoncontents;
         }
+
+        public void GetAxIniFileKeys(string strProj)
+        {
+            string jsoncontents = string.Empty;
+            if (strProj != string.Empty)
+            {
+                try
+                {
+                    //LogFile.Log logobj = new LogFile.Log();
+                    //logobj.CreateLog("start before file in redis - util.cs-" + strProj, HttpContext.Current.Session.SessionID, "GetAxARMConnection", "new", "true");
+                    FDR fdrObj = new FDR(strProj);
+                    Dictionary<string, string> _jsoncontents = fdrObj.HashGetAllKey(Constants.AX_COMMON_APPSETTING_KEY, strProj);
+                    if (_jsoncontents == null || _jsoncontents.Count == 0)
+                    {
+                        if (HttpContext.Current != null && HttpContext.Current.Session != null && HttpContext.Current.Session["AxiProjectFirst"] != null && HttpContext.Current.Session["AxiProjectFirst"].ToString() == "true")
+                            HttpContext.Current.Application["AppSettingsIni"] = null;
+                        FDW fdwObj = new FDW(strProj);
+                        //logobj.CreateLog("start before file in read - util.cs-", HttpContext.Current.Session.SessionID, "GetAxARMConnection", "", "true");
+                        string readaxappsFile = ReadIniFile(strProj, "axapps");
+                        if (readaxappsFile != string.Empty)
+                        {
+                            fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXAPPS_XML_KEY, readaxappsFile, strProj);
+                        }
+                        string readconfigFile = ReadIniFile(strProj, "config");
+                        if (readconfigFile != string.Empty)
+                        {
+                            fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.CONFIGAPP_JSON_KEY, readconfigFile, strProj);
+                        }
+
+                        string readIniFile = ReadIniFile(strProj, "ini");
+                        //logobj.CreateLog("start after file in read - util.cs- ini:" + readIniFile + " axapps:" + readaxappsFile + " config:" + readconfigFile, HttpContext.Current.Session.SessionID, "GetAxARMConnection", "", "true");
+                        if (readIniFile != string.Empty)
+                        {
+                            JObject jsonARM = JObject.Parse(readIniFile);
+                            if (jsonARM != null && jsonARM["ARM"] != null)
+                            {
+                                jsoncontents = jsonARM["ARM"].ToString();
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_CONN_KEY, jsoncontents, strProj);
+                            }
+                            else
+                            {
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_CONN_KEY, "noarmconnection", strProj);
+                            }
+
+                            if (jsonARM != null && jsonARM["FileConfig"] != null)
+                            {
+                                jsoncontents = jsonARM["FileConfig"].ToString();
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXFileServer_CONN_KEY, jsoncontents, strProj);
+                            }
+                            else
+                            {
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXFileServer_CONN_KEY, "nofileserverconnection", strProj);
+                            }
+
+                            if (jsonARM != null && jsonARM["InternalResources"] != null)
+                            {
+                                jsoncontents = jsonARM["InternalResources"].ToString();
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_IntRes_CONN_KEY, jsoncontents, strProj);
+                            }
+                            else
+                            {
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_IntRes_CONN_KEY, "noarmconnection", strProj);
+                            }
+
+                            if (jsonARM != null && jsonARM["ExternalResources"] != null)
+                            {
+                                jsoncontents = jsonARM["ExternalResources"].ToString();
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_ExtRes_CONN_KEY, jsoncontents, strProj);
+                            }
+                            else
+                            {
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXARM_ExtRes_CONN_KEY, "noarmconnection", strProj);
+                            }
+
+                            if (jsonARM != null && jsonARM["EmailSettings"] != null)
+                            {
+                                jsoncontents = jsonARM["EmailSettings"].ToString();
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXEMAILSMTP_CONN_KEY, jsoncontents, strProj);
+                            }
+                            else
+                            {
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXEMAILSMTP_CONN_KEY, "noemailsettings", strProj);
+                            }
+
+                            if (jsonARM != null && jsonARM["SSO"] != null)
+                            {
+                                jsoncontents = jsonARM["SSO"].ToString();
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXSSO_CONN_KEY, jsoncontents, strProj);
+                            }
+                            else
+                            {
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXSSO_CONN_KEY, "nossoconnection", strProj);
+                            }
+
+                            if (jsonARM != null && jsonARM["AxpDevOptsMenu"] != null)
+                            {
+                                jsoncontents = jsonARM["AxpDevOptsMenu"].ToString();
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXPDEVOPTION_CONN_KEY, jsoncontents, strProj);
+                            }
+                            else
+                            {
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXPDEVOPTION_CONN_KEY, "nooptions", strProj);
+                            }
+
+                            Dictionary<string, string> savedSettings = fdrObj.HashGetAllKey(Constants.AX_COMMON_APPSETTING_KEY, strProj);
+                            //logobj.CreateLog("start before session - util.cs-" + savedSettings.Count(), HttpContext.Current.Session.SessionID, "GetAxARMConnection", "", "true");
+                            if (HttpContext.Current != null && HttpContext.Current.Session != null)
+                            {
+                                //logobj.CreateLog("start before session 2 - util.cs-" + savedSettings, HttpContext.Current.Session.SessionID, "GetAxARMConnection", "", "true");
+                                HttpContext.Current.Session["AppAllSettingsKey-" + strProj] = savedSettings;
+                            }
+                        }
+                        else
+                        {
+                            HttpContext.Current.Session["IniSettingError"] = "Axpert Admin Settings not exist. Please contact administrator.";
+                        }
+                    }
+                    else
+                    {
+                        if (HttpContext.Current != null && HttpContext.Current.Session != null)
+                        {
+                            HttpContext.Current.Session["AppAllSettingsKey-" + strProj] = _jsoncontents;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogFile.Log logobj = new LogFile.Log();
+                    logobj.CreateLog("Exception in GetAxARMConnection - util.cs-" + ex.Message, HttpContext.Current.Session.SessionID, "GetAxARMConnection-ex", "new", "true");
+                }
+            }
+        }
+
+        public string ReadIniFile(string strProj, string fileType)
+        {
+            string ReadIniFileValue = string.Empty;
+            try
+            {
+                if (fileType == "ini")
+                {
+                    if (HttpContext.Current.Session["ReadIniFile-" + strProj] == null)
+                    {
+                        FileInfo fi = new FileInfo(ScriptsPath + "\\AppSettings.ini");
+                        if (fi.Exists)
+                        {
+                            string scriptsPathARM = ScriptsPath + "\\AppSettings.ini";
+                            string filePatharm = @" " + scriptsPathARM + "";
+                            string existingJsonARM = File.ReadAllText(filePatharm);
+                            JObject jsonARM = JObject.Parse(existingJsonARM);
+                            if (jsonARM["appsettings"] != null && jsonARM["appsettings"][strProj] != null)
+                            {
+                                HttpContext.Current.Session["ReadIniFile-" + strProj] = jsonARM["appsettings"][strProj].ToString();
+                                ReadIniFileValue = jsonARM["appsettings"][strProj].ToString();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ReadIniFileValue = HttpContext.Current.Session["ReadIniFile-" + strProj].ToString();
+                    }
+                }
+                else if (fileType == "axapps")
+                {
+                    FileInfo fiapps = new FileInfo(ScriptsPath + "\\axapps.xml");
+                    if (fiapps.Exists)
+                    {
+                        XmlDocument doc = new XmlDocument();
+                        doc.Load(ScriptsPath + "\\axapps.xml");
+                        XmlNodeList pNode = doc.SelectNodes("/connections/" + strProj);
+                        ReadIniFileValue = pNode[0].OuterXml;
+                    }
+                }
+                else if (fileType == "config")
+                {
+                    ReadIniFileValue = ReadFromFile(HttpContext.Current.Server.MapPath("~/Config/") + strProj + ".cfg");
+                    if (ReadIniFileValue == "")
+                        ReadIniFileValue = SaveDefaultConfigFile(strProj);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogFile.Log logobj = new LogFile.Log();
+                logobj.CreateLog("ReadIniFile - util.cs-", HttpContext.Current.Session.SessionID, "ReadIniFile", "new", "true");
+            }
+            return ReadIniFileValue;
+        }
+
+        public string GetTstPermissions(string transId)
+        {
+            string res = string.Empty;
+            try
+            {
+                string schemaName = string.Empty;
+                if (HttpContext.Current.Session["dbuser"] != null)
+                    schemaName = HttpContext.Current.Session["dbuser"].ToString();
+                string username = string.Empty;
+                if (HttpContext.Current.Session["username"] != null)
+                    username = HttpContext.Current.Session["username"].ToString();
+                string axrole = string.Empty;
+                if (HttpContext.Current.Session["AxRole"] != null)
+                    axrole = HttpContext.Current.Session["AxRole"].ToString();
+                FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+                res = fObj.HashGetKeyWithSchema(Constants.AX_PERMISSIONS, username, schemaName);
+                if (res == string.Empty)
+                {
+                    FDW fdwObj = new FDW();
+                    DBContext objDbCont = new DBContext();
+                    string sqlQuery = Constants.SQL_TSTPERMISSION;
+                    sqlQuery = sqlQuery.Replace("$USERNAME$", username);
+                    sqlQuery = sqlQuery.Replace("$ROLES$", axrole);
+                    DataTable dt = objDbCont.GetDataTableInline(sqlQuery);
+                    if (dt != null && dt.Rows.Count > 0)
+                    {
+                        string _result = string.Join(",", dt.AsEnumerable().Select(r => r[0].ToString()));
+                        if (_result != string.Empty)
+                        {
+                            fdwObj.HashSetKeyWithSchema(Constants.AX_PERMISSIONS, username, _result, schemaName);
+                            HashSet<string> transIds = new HashSet<string>(_result.Split(','));
+                            if (transIds.Contains(transId))
+                                res = transId;
+                            else
+                                res = string.Empty;
+                        }
+                        else
+                        {
+                            fdwObj.HashSetKeyWithSchema(Constants.AX_PERMISSIONS, username, "no permission applied", schemaName);
+                            res = "no permission applied";
+                        }
+                    }
+                    else
+                    {
+                        fdwObj.HashSetKeyWithSchema(Constants.AX_PERMISSIONS, username, "no permission applied", schemaName);
+                        res = "no permission applied";
+                    }
+                }
+                else if (res != "no permission applied")
+                {
+                    HashSet<string> transIds = new HashSet<string>(res.Split(','));
+                    if (transIds.Contains(transId))
+                        res = transId;
+                    else
+                        res = string.Empty;
+                }
+            }
+            catch (Exception ex)
+            {
+                res = string.Empty;
+            }
+            return res;
+        }
+        public void ValidateSql(string sql)
+        {
+            if (string.IsNullOrWhiteSpace(sql))
+                throw new Exception("Empty query");
+            string normalized = sql.Trim().ToUpperInvariant();
+            if (normalized.EndsWith(";"))
+                normalized = normalized.Substring(0, normalized.Length - 1).Trim();
+            if (normalized.Contains(";"))
+                throw new Exception("Multiple statements are not allowed");
+            //string[] allowed = { "SELECT", "INSERT", "UPDATE", "DELETE" };
+            //if (!allowed.Any(cmd => normalized.StartsWith(cmd)))
+            //    throw new Exception("Only SELECT, INSERT, UPDATE, DELETE are allowed");
+            string[] allowed = { "SELECT" };
+            if (!allowed.Any(cmd => normalized.StartsWith(cmd)))
+                throw new Exception("Only SELECT allowed");
+            string[] blocked = { "--", "/*", "*/", "COPY", "PROGRAM", "DO $$", "EXECUTE", "ALTER", "DROP", "TRUNCATE", "CREATE", "GRANT", "REVOKE", "VACUUM", "ANALYZE", "PG_SLEEP", "PG_READ_FILE", "PG_WRITE_FILE", "PG_EXECUTE_SERVER_PROGRAM", "LO_IMPORT", "LO_EXPORT" };
+            foreach (var item in blocked)
+            {
+                if (normalized.Contains(item))
+                    throw new Exception("Blocked keyword: " + item);
+            }
+        }
+        public void ValidateFunctionName(string funName)
+        {
+            if (string.IsNullOrWhiteSpace(funName))
+                throw new Exception("Function name required");
+            if (!Regex.IsMatch(funName, @"^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$"))
+            {
+                throw new Exception("Invalid function name");
+            }
+            string upper = funName.ToUpperInvariant();
+            string[] blocked =
+            {
+            "PG_SLEEP",
+            "PG_READ_FILE",
+            "PG_WRITE_FILE",
+            "PG_EXECUTE_SERVER_PROGRAM",
+            "LO_IMPORT",
+            "LO_EXPORT",
+            "COPY",
+            "PROGRAM",
+            "DROP",
+            "ALTER",
+            "CREATE",
+            "EXECUTE",
+            "TRUNCATE",
+            "GRANT",
+            "REVOKE"
+        };
+            foreach (var item in blocked)
+            {
+                if (upper.Contains(item))
+                    throw new Exception("Blocked function");
+            }
+        }
+
     }
 
     /// <summary>

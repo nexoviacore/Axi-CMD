@@ -29,10 +29,11 @@ namespace Wkhtmltopdf
                         urlsSeparatedBySpaces = urls; //Concatenate URLs
 
                     string outputFolder = pdfOutputLocation;
+                    string requestId = Guid.NewGuid().ToString("N");
                     if (type == "iview")
                         outputFilename = outputFilenamePrefix + ".pdf";
                     else
-                        outputFilename = outputFilenamePrefix + "_" + DateTime.Now.ToString("yyyy_MM_dd_hh_mm_ss_fff") + ".PDF"; // assemble destination PDF file name
+                        outputFilename = outputFilenamePrefix + "_" + requestId + "_" + DateTime.Now.ToString("yyyy_MM_dd_hh_mm_ss_fff") + ".PDF"; // assemble destination PDF file name
 
                     var p = new System.Diagnostics.Process()
                     {

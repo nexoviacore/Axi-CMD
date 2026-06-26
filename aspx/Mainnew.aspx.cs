@@ -177,10 +177,11 @@ public partial class aspx_Mainnew : System.Web.UI.Page
     public string newHomeCards = "false";
     public string ExecTraceOn = "false";
     public string axOldModelFlag = "false";
+    //public string isAxiPlugin = "false";
     public string axpertstudioReact = string.Empty;
     public string pwdExpiryAlert = string.Empty;
+    public string axpertDevOpt = string.Empty;
     JObject AxGeneralconfigs = new JObject();
-
     LoginHelper loginHelper = new LoginHelper();
     protected override void InitializeCulture()
     {
@@ -427,10 +428,21 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                     Session["isSSOLogin"] = loginHelper.isSSO;
                     Session["SSOLoginType"] = loginHelper.SSOType;
                     Session["staySignedId"] = loginHelper.staySignedId;
+                    if (loginHelper.staySignedId == "false" && Request.Form["hdnKeepMeSignin"] != null && Request.Form["hdnKeepMeSignin"] == "true")
+                    {
+                        Session["staySignedId"] = "true";
+                    }
                     Session["Svrlic_redis"] = loginHelper.lic_redis;
                     lastOpenPage = loginHelper.lastOpenPage;
                     Session["loggedBroserId"] = loginHelper.loggedBroserId;
                     Session["dbotpauth"] = loginHelper.otpauthlogin == null ? "" : loginHelper.otpauthlogin;
+                    Session["AppAllSettingsKey-" + signinProj] = loginHelper.IniInfo;
+                    //Session["AxiProjectLogin"] = loginHelper.IsAxi;
+                    //Session["AxiPrimary"] = loginHelper.axiPrimary;
+                    if (loginHelper.IsAxi != string.Empty)
+                    {
+                        GetAxiLoginInfo(loginHelper.IsAxi, Session["project"].ToString());
+                    }
                 }
                 else
                 {
@@ -502,14 +514,6 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                     logobj.CreateLog("Calling ValidatePage", Session.SessionID.ToString(), "login", "");
                     if (!isCloud)
                         ValidatePage();
-
-                    if (Session["project"].ToString() == "bafco")//temporary code added to analyse the issue duplicate user issue in BACFO
-                    {
-                        string AxLoggedUser = string.Empty;
-                        if (Request.Form["hdnAxLoggedUser"] != null)
-                            AxLoggedUser = Request.Form["hdnAxLoggedUser"].ToString();
-                        SaveLoggedUserInfo(AxLoggedUser, user);
-                    }
                 }
                 else
                 {
@@ -685,7 +689,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
 
         EncryptConnDtls();
         SetPageLoadVars();
-        CheckConfigLock();
+        //CheckConfigLock();
         if (Session["AxCloudDB"] != null)
         {
             complaintLI.Visible = true;
@@ -732,6 +736,36 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         requestProcess_logtime += ObjExecTr.RequestProcessTime("Response");
         serverprocesstime = ObjExecTr.TotalServerElapsTime();
 
+    }
+
+    protected void GetAxiLoginInfo(string axiQuery, string _thisPorj)
+    {
+        try
+        {
+            FDR fObj = new FDR(_thisPorj);
+            if (fObj != null)
+            {
+                string res = fObj.ReadKeyStringValueNoSchema(axiQuery);
+                if (res != null && res != string.Empty)
+                {
+                    string axiinfo = util.encrtptDecryptAES(res, false);
+
+                    string isprimary = axiinfo.Split('~')[3];
+                    isprimary = isprimary.Split('=')[1];
+                    if (isprimary == "T")
+                        Session["AxiPrimary"] = "true";
+                    else
+                        Session["AxiPrimary"] = "false";
+                    Session["AxiProjectLogin"] = "true";
+
+                    FDW fdwObj = new FDW(_thisPorj);
+                    ArrayList raxiKey = new ArrayList();
+                    raxiKey.Add(axiQuery);
+                    fdwObj.DeleteKeys(raxiKey);
+                }
+            }
+        }
+        catch (Exception ex) { }
     }
 
     private void ValidateHybridUserDeviceId()
@@ -788,7 +822,8 @@ public partial class aspx_Mainnew : System.Web.UI.Page
             loginObj = fObj.ReadKeyNoSchema(gid);
             if (loginObj != string.Empty)
             {
-                FDW fdwObj = new FDW();
+                string thisPorj = gid.Split('-')[0];
+                FDW fdwObj = new FDW(thisPorj);
                 ArrayList arList = new ArrayList();
                 arList.Add(gid);
                 fdwObj.DeleteKeys(arList);
@@ -824,9 +859,10 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         try
         {
             string _strProj = Session["Project"].ToString();
-            FDR fdrObj = new FDR();
-            string SSOJsoncontent = fdrObj.StringFromRedis(Constants.AXSSO_CONN_KEY, _strProj);
-            if (SSOJsoncontent != string.Empty)
+            //FDR fdrObj = new FDR();
+            ////string SSOJsoncontent = fdrObj.StringFromRedis(Constants.AXSSO_CONN_KEY, _strProj);
+            string SSOJsoncontent = util.GetAllSettings(_strProj, Constants.AXSSO_CONN_KEY);
+            if (SSOJsoncontent != string.Empty && SSOJsoncontent != "nossoconnection")
             {
                 JObject config = JObject.Parse(SSOJsoncontent);
                 foreach (var section in config)
@@ -881,23 +917,24 @@ public partial class aspx_Mainnew : System.Web.UI.Page
 
     private void GetUserOptions()
     {
-        string KeyData = Constants.REDISAXUSEROPTIONS;
-        string schemaName = string.Empty;
-        if (HttpContext.Current.Session["dbuser"] != null)
-            schemaName = HttpContext.Current.Session["dbuser"].ToString();
-        try
-        {
-            FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
-            if (fObj == null)
-                fObj = new FDR();
-            axUserOptions = fObj.StringFromRedis(util.GetRedisServerkey(KeyData, "axUserOptions", Session["username"].ToString()), schemaName);
-            // btnSetParams.Click()
-        }
-        catch (Exception) { }
-        if (axUserOptions == string.Empty && (Session["axUserOptions"] != null && Session["axUserOptions"].ToString() != "cached"))
+        //string KeyData = Constants.REDISAXUSEROPTIONS;
+        //string schemaName = string.Empty;
+        //if (HttpContext.Current.Session["dbuser"] != null)
+        //    schemaName = HttpContext.Current.Session["dbuser"].ToString();
+        //try
+        //{
+        //    FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+        //    if (fObj == null)
+        //        fObj = new FDR();
+        //    axUserOptions = fObj.StringFromRedis(util.GetRedisServerkey(KeyData, "axUserOptions", Session["username"].ToString()), schemaName);
+        //    // btnSetParams.Click()
+        //}
+        //catch (Exception) { }
+        //if (axUserOptions == string.Empty && (Session["axUserOptions"] != null && Session["axUserOptions"].ToString() != "cached"))
+        //    axUserOptions = Session["axUserOptions"].ToString();
+        if (Session["axUserOptions"] != null)
             axUserOptions = Session["axUserOptions"].ToString();
-
-        if (Session["axUserOptions"] == null || axUserOptions == string.Empty)// (Session["axUserOptions"] != null && Session["axUserOptions"].ToString() != "cached"))
+        else if (Session["axUserOptions"] == null)// || axUserOptions == string.Empty)// (Session["axUserOptions"] != null && Session["axUserOptions"].ToString() != "cached"))
         {
             if (GlobalParameterForm == "hide")
             {
@@ -1034,6 +1071,22 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                     //UserOptions.Add("developerworkbench", "\"display\":\"block\"♠\"onclick\":\"showWorkBench('" + axpertdeveloperUrl + "')\"♠\"title\":\"Axpert Developer\"");
                     UserOptions.Add("developerworkbench", "\"display\":\"none\"♠\"title\":\"Axpert Developer\"");
                     UserOptions.Add("axpertstudio", "\"display\":\"block\"♠\"title\":\"Axpert Developer Studio\"");
+                    string _strProj = Session["Project"].ToString();
+                    string axpDevOption = util.GetAllSettings(_strProj, Constants.AXPDEVOPTION_CONN_KEY);
+                    if (axpDevOption != string.Empty && axpDevOption != "nooptions")
+                    {
+                        try
+                        {
+                            JObject obj = JObject.Parse(axpDevOption);
+                            axpertDevOpt = obj["Options"] == null ? "" : obj["Options"].ToString();
+                        }
+                        catch (Exception)
+                        {
+                            axpertDevOpt = string.Empty;
+                        }
+                    }
+                    else
+                        axpertDevOpt = "nooptions";
                     //UserOptions.Add("pluginCustomCode", "\"display\":\"block\"♠\"onclick\":\"openPluginEditor()\"♠\"title\":\"Plugin Custom Code\"");
                 }
             }
@@ -1062,12 +1115,13 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                     usOprions.Append("\"" + option.Key + "\":{" + option.Value.Replace("♠", ",") + "},");
                 }
                 axUserOptions = "{" + usOprions.ToString().Substring(0, usOprions.Length - 1) + "}";
-                FDW fdwObj = new FDW();
-                bool IsCache = fdwObj.SaveInRedisServer(util.GetRedisServerkey(KeyData, "axUserOptions", Session["username"].ToString()), axUserOptions, Constants.REDISAXUSEROPTIONS, schemaName);
-                if (IsCache == false)
-                    Session["axUserOptions"] = axUserOptions;
-                else
-                    Session["axUserOptions"] = "cached";
+                //FDW fdwObj = new FDW();
+                //bool IsCache = fdwObj.SaveInRedisServer(util.GetRedisServerkey(KeyData, "axUserOptions", Session["username"].ToString()), axUserOptions, Constants.REDISAXUSEROPTIONS, schemaName);
+                //if (IsCache == false)
+                //    Session["axUserOptions"] = axUserOptions;
+                //else
+                //    Session["axUserOptions"] = "cached";
+                Session["axUserOptions"] = axUserOptions;
             }
             catch (Exception ex)
             { }
@@ -1427,14 +1481,18 @@ public partial class aspx_Mainnew : System.Web.UI.Page
 
         try
         {
-            DataTable configData = util.getAllGenConfigsData();
-            if (configData != null)
+            if (HttpContext.Current.Session["AdvConfigsGeneral"] != null)
             {
-                DataSet ds = new DataSet();
-                ds.Merge(configData.Copy());
-                ds.DataSetName = "configurations";
-                ds.Tables[0].TableName = "config";
-                AxGeneralconfigs = JObject.Parse(JsonConvert.SerializeObject(ds));
+                DataTable configData = (DataTable)HttpContext.Current.Session["AdvConfigsGeneral"];
+                //configData = util.getAllGenConfigsData();
+                if (configData != null && configData.Rows.Count > 0 && configData.Columns.Count > 1)
+                {
+                    DataSet ds = new DataSet();
+                    ds.Merge(configData.Copy());
+                    ds.DataSetName = "configurations";
+                    ds.Tables[0].TableName = "config";
+                    AxGeneralconfigs = JObject.Parse(JsonConvert.SerializeObject(ds));
+                }
             }
         }
         catch (Exception ex)
@@ -1713,7 +1771,12 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                 hdKeepMeDefaultUrl.Value = "htmlPages.aspx?" + parms;
             }
         }
-        hdHomeUrl.Value = Navigationpage;
+        if (Session["AxiProjectLogin"] != null && Session["AxiProjectLogin"].ToString() == "true" && Session["AxiPrimary"] != null && Session["AxiPrimary"].ToString() == "true")
+        {
+            Navigationpage = hdHomeUrl.Value = "htmlPages.aspx?load=AxiInstallPackages";
+        }
+        else
+            hdHomeUrl.Value = Navigationpage;
         string serverprocesstime = ObjExecTr.TotalServerElapsTimeMethod();
         requestProcess_logtime += " ♦ SetLandingPage:" + serverprocesstime + " (This time is included in Response processed at server) ♦ ";
     }
@@ -1861,8 +1924,8 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         if (Session["project"] != null && Session["project"].ToString() != "")
             util.GetAxARMConnection(Session["project"].ToString());
 
-        if (Session["project"] != null && Session["project"].ToString() != "")
-            util.GetAxConfigFileServer(Session["project"].ToString());
+        //if (Session["project"] != null && Session["project"].ToString() != "")
+        //    util.GetAxConfigFileServer(Session["project"].ToString());
 
         if (Session["ARM_Scripts_URL"] != null)
         {
@@ -3111,8 +3174,9 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                 Session[key] = val;
         }
         golVarNode += util.VirtualFilePathUpdate();
-        golVarNode += util.GetGblVarsFromIni();
+        //golVarNode += util.GetGblVarsFromIni();
         golVarNode += "</globalvars>";
+        golVarNode = "<globalvars>" + util.GetGblVarsFromIni(golVarNode) + "</globalvars>";
         Session["axGlobalVars"] = golVarNode;
         DisplayGloVars(globalVarToShow.ToString());
 
@@ -4040,7 +4104,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
             if (splitout[0].Substring(5, 1) == "T")
             {
                 export = true;
-                Session["ExportAccess"] = import;
+                Session["ExportAccess"] = export;
             }
 
             if (import)
@@ -4358,8 +4422,10 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                 catch (Exception ex) { }
                 bool axp_timezone = false;
                 string virtualdownloadpath = util.VirtualFilePathUpdate();
-                string glbVarsFromIni = util.GetGblVarsFromIni();
-                Session["axGlobalVars"] = "<globalvars>" + childNode.InnerXml + axGridAttachPath + axAttachmentpath + virtualdownloadpath + glbVarsFromIni + "</globalvars>";
+                //string glbVarsFromIni = util.GetGblVarsFromIni();
+                string glbVarsFromIni = util.GetGblVarsFromIni("<globalvars>" + childNode.InnerXml + "</globalvars>");
+                //Session["axGlobalVars"] = "<globalvars>" + childNode.InnerXml + axGridAttachPath + axAttachmentpath + virtualdownloadpath + glbVarsFromIni + "</globalvars>";
+                Session["axGlobalVars"] = "<globalvars>" + glbVarsFromIni + axGridAttachPath + axAttachmentpath + virtualdownloadpath + "</globalvars>";
                 foreach (XmlNode xmlNode in childNode.ChildNodes)
                 {
                     if (xmlNode.Name.ToLower() == "axp_timezone" && xmlNode.InnerText != "")
@@ -4405,7 +4471,9 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                 }
                 if (axp_timezone)
                 {
-                    Session["axGlobalVars"] = "<globalvars>" + childNode.InnerXml + axGridAttachPath + axAttachmentpath + virtualdownloadpath + glbVarsFromIni + "</globalvars>";
+                    string _glbVarsFromIni = util.GetGblVarsFromIni("<globalvars>" + childNode.InnerXml + "</globalvars>");
+                    //Session["axGlobalVars"] = "<globalvars>" + childNode.InnerXml + axGridAttachPath + axAttachmentpath + virtualdownloadpath + glbVarsFromIni + "</globalvars>";
+                    Session["axGlobalVars"] = "<globalvars>" + _glbVarsFromIni + axGridAttachPath + axAttachmentpath + virtualdownloadpath + "</globalvars>";
                 }
             }
             else if (childNode.Name == "uservars")
@@ -4526,27 +4594,26 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         string strRes = string.Empty;
         try
         {
-            string KeyData = Constants.REDISPROFILEPIC;
+            string fdKeypwdOtpAuth = Constants.REDISPWDOTPAUTHLANG;
             string schemaName = string.Empty;
             if (HttpContext.Current.Session["dbuser"] != null)
                 schemaName = HttpContext.Current.Session["dbuser"].ToString();
-
             FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
             if (fObj == null)
                 fObj = new FDR();
-            strRes = fObj.StringFromRedis(util.GetRedisServerkey(KeyData, Session["username"].ToString()), schemaName);
-            if (strRes == string.Empty)
+            if (fObj != null)
             {
-                DBContext obj = new DBContext();
-                strRes = obj.GetUserProfilePic();
-            }
-
-            if (strRes != string.Empty)
-            {
-                if (strRes == "no profile pic")
-                    strRes = string.Empty;
+                string res = fObj.StringFromRedis(util.GetRedisServerkey(fdKeypwdOtpAuth, Session["username"].ToString()), schemaName);
+                if (res != string.Empty)
+                {
+                    strRes = res.Split('♣')[8];
+                    if (strRes != string.Empty)
+                        strRes = String.Format("data:image/png;base64,{0}", strRes);
+                    else
+                        strRes = string.Empty;
+                }
                 else
-                    strRes = String.Format("data:image/png;base64,{0}", strRes);
+                    strRes = string.Empty;
             }
         }
         catch (Exception ex)
@@ -4603,7 +4670,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
             else if (xmlNode.Name == "export" && xmlNode.InnerText == "T")
             {
                 export = true;
-                Session["ExportAccess"] = import;
+                Session["ExportAccess"] = export;
             }
             else if (xmlNode.Name == "sessionexists")
             {
@@ -4937,8 +5004,9 @@ public partial class aspx_Mainnew : System.Web.UI.Page
             golVarNode += "<" + key + ">" + val + "</" + key + ">";
         }
         golVarNode += util.VirtualFilePathUpdate();
-        golVarNode += util.GetGblVarsFromIni();
+        //golVarNode += util.GetGblVarsFromIni();
         golVarNode += "</globalvars>";
+        golVarNode = "<globalvars>" + util.GetGblVarsFromIni(golVarNode) + "</globalvars>";
         Session["axGlobalVars"] = golVarNode;
         CreateParamaterArray();
 
@@ -5026,17 +5094,31 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         try
         {
             string hybridsessionexpiry = string.Empty;
-            if (HttpContext.Current.Session["AxSessionExpiryDays"] != null && HttpContext.Current.Session["AxSessionExpiryDays"].ToString() != "")
-                hybridsessionexpiry = HttpContext.Current.Session["AxSessionExpiryDays"].ToString();
+            string userName = string.Empty;
+            if (HttpContext.Current.Session["username"] != null)
+                userName = HttpContext.Current.Session["username"].ToString();
+            string userExpiryDays = util.GetPwdAuthLang(userName);
+            string userKeepMe = "F";
+            if (userExpiryDays != string.Empty)
+            {
+                userKeepMe = userExpiryDays.Split('♣')[6];
+                userExpiryDays = userExpiryDays.Split('♣')[7];
+            }
+            if (userKeepMe == "T")
+            {
+                if (userExpiryDays != string.Empty && userExpiryDays != "0")
+                    hybridsessionexpiry = userExpiryDays;
+                else if (HttpContext.Current.Session["AxSessionExpiryDays"] != null && HttpContext.Current.Session["AxSessionExpiryDays"].ToString() != "")
+                    hybridsessionexpiry = HttpContext.Current.Session["AxSessionExpiryDays"].ToString();
+                else
+                    hybridsessionexpiry = "14";
+            }
             if (Session["hybridDeviceId"] != null && hybridsessionexpiry != string.Empty && hybridsessionexpiry != "0")
             {
                 string hgDevId = Session["hybridDeviceId"].ToString();
                 FDW fdwObj = new FDW();
                 FDR fdrObj = (FDR)HttpContext.Current.Session["FDR"];
-                string userName = string.Empty;
                 string pwd = string.Empty;
-                if (HttpContext.Current.Session["username"] != null)
-                    userName = HttpContext.Current.Session["username"].ToString();
                 if (HttpContext.Current.Session["pwd"] != null)
                     pwd = HttpContext.Current.Session["pwd"].ToString();
 
