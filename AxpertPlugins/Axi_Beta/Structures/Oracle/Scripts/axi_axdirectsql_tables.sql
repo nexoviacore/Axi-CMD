@@ -237,35 +237,35 @@ CREATE TABLE axdirectsql (
 >>
 
 <<
-ALTER TABLE axdirectsql ADD sqlquerycols varchar(4000) NULL
+ALTER TABLE axdirectsql ADD sqlquerycols VARCHAR2(4000) NULL
 >>
 
 <<
-ALTER TABLE axdirectsql ADD cachedata varchar(1) NULL
+ALTER TABLE axdirectsql ADD cachedata VARCHAR2(1) NULL
 >>
 
 <<
-ALTER TABLE axdirectsql ADD cacheinterval varchar(10) NULL
+ALTER TABLE axdirectsql ADD cacheinterval VARCHAR2(10) NULL
 >>
 
 <<
-ALTER TABLE axdirectsql ADD encryptedflds varchar(4000) NULL
+ALTER TABLE axdirectsql ADD encryptedflds VARCHAR2(4000) NULL
 >>
 
 <<
-ALTER TABLE axdirectsql ADD adsdesc text NULL
+ALTER TABLE axdirectsql ADD adsdesc CLOB NULL
 >>
 
 <<
-ALTER TABLE axdirectsql ADD smartlistcnd varchar(500) NULL
+ALTER TABLE axdirectsql ADD smartlistcnd VARCHAR2(500) NULL
 >>
 
 <<
-ALTER TABLE axdirectsql ADD pagination varchar(1) NULL
+ALTER TABLE axdirectsql ADD pagination VARCHAR2(1) NULL
 >>
 
 <<
-ALTER TABLE axdirectsql ADD applydimensions varchar(1) NULL
+ALTER TABLE axdirectsql ADD applydimensions VARCHAR2(1) NULL
 >>
 
 <<
