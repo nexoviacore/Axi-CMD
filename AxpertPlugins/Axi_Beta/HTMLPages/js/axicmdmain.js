@@ -11024,7 +11024,7 @@
         const commandVerb = tokens[1];
 
         if (groupKey?.toLowerCase() === "run") {
-            showToast("You cannot Run commands to favorites!");
+            showToast("You cannot add 'run' commands to favorites");
             return;
         }
 
@@ -11543,6 +11543,12 @@
 
         if (!alias) {
             showToast("Favorite name cannot be empty");
+            return;
+        }
+
+        const aliasTokens = getTokens(alias);
+        if (aliasTokens[0]?.toLowerCase() === "run") {
+            showToast("You cannot save 'run' commands in favorites");
             return;
         }
 

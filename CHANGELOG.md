@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Roles Popup Configuration**: Configured the roles popup container and fixed the new icon click loading behavior inside `Js/iview.js`.
 - **Oracle DDL Datatypes**: Corrected non-Oracle-compatible datatypes (`varchar` to `VARCHAR2`, and `text` to `CLOB`) inside `axi_axdirectsql_tables.sql` and `axi_dependent_tables.sql`.
+- **Undefined Appname/ArmUrl Fallbacks**: Resolved timing issues when `axicmdmain.js` loads before `main.min.js` by adding a deferred retry initialization loop (`startInit()`) and dynamic frame/parent/top and `callParentNew` fallbacks for `mainProject`, `mainUserName`, and `armUrl`.
+- **Run Command Favorites Validation**: Added validation in `toggleFavorite()` and `confirmAddFavorite()` to prevent users from adding or renaming favorites to `run` commands.
 
 ## [11.4.0-beta.1] - 2026-06-26
 
