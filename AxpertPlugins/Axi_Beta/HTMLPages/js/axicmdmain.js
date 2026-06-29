@@ -4924,6 +4924,10 @@
         if (btnRefresh) {
             btnRefresh.addEventListener("click", async () => {
                 console.log("Refresh Logic......");
+                const refreshIcon = btnRefresh.querySelector(".axi-refresh-icon");
+                if (refreshIcon) {
+                    refreshIcon.classList.add("rotating");
+                }
 
                 try {
                     clearAxiLocalStorage("axi_");
@@ -4943,9 +4947,11 @@
                     console.log("Refresh Failed: " + error);
                     alert("Error refreshing: " + error);
 
+                } finally {
+                    if (refreshIcon) {
+                        refreshIcon.classList.remove("rotating");
+                    }
                 }
-
-
             });
         }
 
@@ -11480,6 +11486,8 @@
         if (favCancelBtn) favCancelBtn.disabled = false;
 
         axiFavModal.style.display = "flex";
+        axiFavModal.offsetHeight; // force layout
+        axiFavModal.classList.add("open");
         favNameInput.focus();
         favNameInput.select();
     }
@@ -11487,7 +11495,14 @@
     function hideFavoriteModal() {
         const modal = document.getElementById("axiFavModalOverlay");
 
-        if (modal) modal.style.display = "none";
+        if (modal) {
+            modal.classList.remove("open");
+            setTimeout(() => {
+                if (!modal.classList.contains("open")) {
+                    modal.style.display = "none";
+                }
+            }, 200);
+        }
     }
 
     function confirmAddFavorite() {
@@ -11623,11 +11638,20 @@
         if (deleteFavCancelBtn) deleteFavCancelBtn.disabled = false;
 
         modal.style.display = "flex";
+        modal.offsetHeight; // force layout
+        modal.classList.add("open");
     }
 
     function hideDeleteFavoriteModal() {
         const modal = document.getElementById("axiFavDeleteModalOverlay");
-        if (modal) modal.style.display = "none";
+        if (modal) {
+            modal.classList.remove("open");
+            setTimeout(() => {
+                if (!modal.classList.contains("open")) {
+                    modal.style.display = "none";
+                }
+            }, 200);
+        }
     }
 
     function confirmDeleteFavorite() {

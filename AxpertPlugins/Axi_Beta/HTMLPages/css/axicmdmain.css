@@ -842,10 +842,16 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0);
   z-index: 100000;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(0px);
+  transition: background 0.2s ease, backdrop-filter 0.2s ease;
+}
+
+.axi-modal-overlay.open {
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(2px);
 }
 
@@ -856,6 +862,14 @@
   width: 350px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   font-family: sans-serif;
+  opacity: 0;
+  transform: scale(0.9) translateY(-20px);
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.axi-modal-overlay.open .axi-modal-container {
+  opacity: 1;
+  transform: scale(1) translateY(0);
 }
 
 .axi-modal-title {
@@ -1033,6 +1047,11 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.rotating {
+  display: inline-block !important;
+  animation: axi-spin 1s linear infinite;
 }
 
 .axi-btn:disabled {
