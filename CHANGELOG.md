@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [11.4.0-beta.2] - 2026-06-29
+
+### Added
+- **Refresh Icon Animation**: Added a rotation animation to the refresh button icon when clicked. The animation starts automatically when the request starts and stops cleanly when the request completes or fails.
+
+### Changed
+- **Favorites Modal Transitions**: Implemented smooth entry and exit transitions for the Favorites modals (Add, Rename, and Delete modals) using CSS transitions, transforming scale, opacity, and backdrop blur.
+- **Resource Versioning**: Bumped the resource query parameters for `axicmdmain.js` and `axicmdmain.css` in both `CustomPages/AxiCMDMainPage.html` and `AxpertPlugins/Axi_Beta/HTMLPages/AxiCMDMainPage.html` to prevent browser caching.
+
+### Fixed
+- **Roles Popup Configuration**: Configured the roles popup container and fixed the new icon click loading behavior inside `Js/iview.js`.
+
 ## [11.4.0-beta.1] - 2026-06-26
 
 ### Added
