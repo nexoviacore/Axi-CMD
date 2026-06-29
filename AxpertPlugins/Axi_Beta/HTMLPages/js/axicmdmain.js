@@ -264,6 +264,19 @@
 
 
     async function init() {
+        if (typeof window.mainUserName === "undefined" || !window.mainUserName) {
+            window.mainUserName = (typeof callParentNew === "function" && callParentNew("mainUserName")) || 
+                                  (typeof parent !== "undefined" && parent.mainUserName) || 
+                                  (typeof top !== "undefined" && top.mainUserName) || 
+                                  "";
+        }
+        if (typeof window.mainProject === "undefined" || !window.mainProject) {
+            window.mainProject = (typeof callParentNew === "function" && callParentNew("mainProject")) || 
+                                 (typeof parent !== "undefined" && parent.mainProject) || 
+                                 (typeof top !== "undefined" && top.mainProject) || 
+                                 "";
+        }
+
         //  "API_METADATA": "http://localhost:90/AxiApi/api/v1/Axi/axi_get",    
 
         // "AXI_FAVORITES_URL": "http://localhost:90/AxiApi/api/v1/Axi/user-favourites"
@@ -271,6 +284,7 @@
         let globalArmUrl = (typeof armUrl !== "undefined" && armUrl) || 
                            (typeof parent !== "undefined" && typeof parent.armUrl !== "undefined" && parent.armUrl) || 
                            (typeof top !== "undefined" && typeof top.armUrl !== "undefined" && top.armUrl) || 
+                           (typeof callParentNew === "function" && callParentNew("armUrl")) ||
                            "";
 
         if (globalArmUrl) {
@@ -422,7 +436,20 @@
         initCommands(false);
     }
 
-    init();
+    let initRetries = 0;
+    function startInit() {
+        const proj = window.mainProject || (typeof callParentNew === "function" && callParentNew("mainProject"));
+        const user = window.mainUserName || (typeof callParentNew === "function" && callParentNew("mainUserName"));
+        
+        if ((!proj || !user) && initRetries < 20) {
+            initRetries++;
+            setTimeout(startInit, 100);
+            return;
+        }
+        init();
+    }
+
+    startInit();
 
     function getProjectName() {
         // let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
@@ -434,9 +461,11 @@
         // console.log(appname);
         // return appname;
 
-        return window.mainProject;
-
-
+        return window.mainProject || 
+               (typeof callParentNew === "function" && callParentNew("mainProject")) || 
+               (typeof parent !== "undefined" && parent.mainProject) || 
+               (typeof top !== "undefined" && top.mainProject) || 
+               "";
     }
 
     /* ===============================
@@ -9649,18 +9678,18 @@
             let rawName = cleanCommandToken(tokens[1]);
             let { value: transId, type } = tryResolveToken(1, rawName, commandConfig, false);
 
-            if (transId === rawName) {
-                const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
-                const found = list?.find(
-                    x => x.caption.toLowerCase() === rawName.toLowerCase()
-                );
-                if (found) transId = found.name
-                else {
-                    console.error("Invalid Tstruct name");
-                    showToast("Invalid Tstruct name please select the valid tstruct");
-                    return;
-                }
-            }
+            // if (transId === rawName) {
+            //     const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+            //     const found = list?.find(
+            //         x => x.caption.toLowerCase() === rawName.toLowerCase()
+            //     );
+            //     if (found) transId = found.name
+            //     else {
+            //         console.error("Invalid Tstruct name");
+            //         showToast("Invalid Tstruct name please select the valid tstruct");
+            //         return;
+            //     }
+            // }
 
             const sourceName = commandConfig?.prompts?.[2]?.promptSource?.toLowerCase();
             const sourceKey = `${sourceName}_${transId}`.toLowerCase();

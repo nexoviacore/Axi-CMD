@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Roles Popup Configuration**: Configured the roles popup container and fixed the new icon click loading behavior inside `Js/iview.js`.
+- **Oracle DDL Datatypes**: Corrected non-Oracle-compatible datatypes (`varchar` to `VARCHAR2`, and `text` to `CLOB`) inside `axi_axdirectsql_tables.sql` and `axi_dependent_tables.sql`.
 
 ## [11.4.0-beta.1] - 2026-06-26
 
