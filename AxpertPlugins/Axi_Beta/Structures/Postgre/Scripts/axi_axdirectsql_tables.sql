@@ -204,7 +204,11 @@ DELETE FROM axdirectsql where sqlname = 'axi_smartviewlist'
 >>
 
 <<
-ALTER TABLE axdirectsql ADD pagination VARCHAR(1) NULL;
+ALTER TABLE axdirectsql ADD pagination VARCHAR(1) NULL
+>>
+
+<<
+ALTER TABLE axdirectsql ADD applydimensions VARCHAR(1) NULL
 >>
 
 
