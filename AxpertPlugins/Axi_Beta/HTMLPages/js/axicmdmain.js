@@ -7771,6 +7771,23 @@
     }
 
     function isPreviewModalOpen() {
+        // Check if current window or frameElement indicates it is inside the loadPopUpPage modal or middle1 frame
+        try {
+            if (window.frameElement) {
+                const el = window.frameElement;
+                if (el.id === "loadPopUpPage" || el.name === "loadPopUpPage" || el.id === "middle1" || el.name === "middle1" || el.classList.contains("middle") || el.classList.contains("middle1")) {
+                    console.log("Axi: running inside loadPopUpPage or middle1 iframe");
+                    return true;
+                }
+            }
+            if (window.name === "loadPopUpPage" || window.name === "middle" || window.name === "middle1") {
+                console.log("Axi: running inside frame with name loadPopUpPage, middle or middle1");
+                return true;
+            }
+        } catch (e) {
+            // Ignore cross-origin errors
+        }
+
         let rootWin = window;
         try {
             if (window.top && window.top.document) {
@@ -7783,6 +7800,30 @@
         function checkWindow(win) {
             try {
                 if (!win || !win.document) return false;
+
+                // Check for loadPopUpPage modal
+                const loadPopUpPageModal = win.document.getElementById("loadPopUpPage");
+                if (loadPopUpPageModal) {
+                    if (loadPopUpPageModal.offsetWidth > 0 || loadPopUpPageModal.offsetHeight > 0 || loadPopUpPageModal.style.display === "block" || loadPopUpPageModal.classList.contains("show")) {
+                        console.log("Axi: found active preview modal via loadPopUpPage");
+                        return true;
+                    }
+                }
+
+                // Check inside middle1 iframe document
+                const middleIframe = win.document.getElementById("middle1");
+                if (middleIframe) {
+                    const middleDoc = middleIframe.contentDocument || middleIframe.contentWindow?.document;
+                    if (middleDoc) {
+                        const innerModal = middleDoc.getElementById("loadPopUpPage");
+                        if (innerModal) {
+                            if (innerModal.offsetWidth > 0 || innerModal.offsetHeight > 0 || innerModal.style.display === "block" || innerModal.classList.contains("show")) {
+                                console.log("Axi: found active preview modal inside middle1 iframe");
+                                return true;
+                            }
+                        }
+                    }
+                }
 
                 // 1. Check for remodal wrapper containing the popupIframeRemodal
                 const openedModal = win.document.querySelector(".remodal-wrapper.remodal-is-opened #popupIframeRemodal");
