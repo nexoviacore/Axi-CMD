@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [11.4.0-beta.4] - 2026-07-01
+
+### Fixed
+- **Help Command Input Blocking**: Disabled typing, backspacing, or key navigation in the search command line while the Help walkthrough/tour is active.
+- **Help Tour Resize Positioning**: Registered a debounced window resize event listener during the tour to call `tour.refresh()` and ensure help dialog positions dynamically update when screen resolution changes.
+- **Help Tour Toolbar Button Disabling**: Disabled all toolbar buttons inside the `.AXI-Sec` container (like send, history, favourites, and refresh) using pointer-events and opacity styling when the Help walkthrough tour is active.
+
 ## [11.4.0-beta.3] - 2026-06-30
 
 ### Fixed

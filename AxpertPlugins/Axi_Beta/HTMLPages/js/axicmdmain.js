@@ -5029,6 +5029,10 @@
         input.addEventListener("input", handleInput);
         input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
         input.addEventListener("keydown", e => {
+            if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
+                e.preventDefault();
+                return;
+            }
             isDeleting = (e.key === "Backspace" || e.key === "Delete");
             console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
 
@@ -12007,6 +12011,17 @@
             .introjs-bullets ul li a.active {
                 background: #a100ff !important;
             }
+            .AXI-Sec.axi-tour-active .btn,
+            .AXI-Sec.axi-tour-active #runBtn,
+            .AXI-Sec.axi-tour-active #btnHistoryPrev,
+            .AXI-Sec.axi-tour-active #History_pages,
+            .AXI-Sec.axi-tour-active #axiFavouriteBtn,
+            .AXI-Sec.axi-tour-active #btnRefresh,
+            .AXI-Sec.axi-tour-active .clearbtn {
+                pointer-events: none !important;
+                opacity: 0.5 !important;
+                cursor: not-allowed !important;
+            }
             .introjs-bullets ul li a {
                 background: #5e5e6e !important;
             }
@@ -12054,6 +12069,7 @@
     function runTour() {
         const oldVal = input.value;
         input.value = "Help";
+        input.readOnly = true;
         
         const tour = introJs();
         tour.setOptions({
@@ -12117,8 +12133,24 @@
             }
         });
 
+        let resizeTimeout;
+        const handleResize = () => {
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                try {
+                    if (tour) {
+                        tour.refresh();
+                    }
+                } catch (e) {}
+            }, 100);
+        };
+        window.addEventListener("resize", handleResize);
+
         tour.onexit(() => {
+            window.removeEventListener("resize", handleResize);
+            if (resizeTimeout) clearTimeout(resizeTimeout);
             input.value = oldVal;
+            input.readOnly = false;
             handleInput();
             document.querySelector(".AXI-Sec")?.classList.remove("axi-tour-active");
             if (megaDropdown) {
@@ -12126,7 +12158,10 @@
             }
         });
         tour.oncomplete(() => {
+            window.removeEventListener("resize", handleResize);
+            if (resizeTimeout) clearTimeout(resizeTimeout);
             input.value = oldVal;
+            input.readOnly = false;
             handleInput();
             document.querySelector(".AXI-Sec")?.classList.remove("axi-tour-active");
             if (megaDropdown) {
