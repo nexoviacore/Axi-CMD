@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [11.4.0-beta.4] - 2026-07-01
+
+### Fixed
+- **Help Command Input Blocking**: Disabled typing, backspacing, or key navigation in the search command line while the Help walkthrough/tour is active.
+- **Help Tour Resize Positioning**: Registered a debounced window resize event listener during the tour to call `tour.refresh()` and ensure help dialog positions dynamically update when screen resolution changes.
+- **Help Tour Toolbar Button Disabling**: Disabled all toolbar buttons inside the `.AXI-Sec` container (like send, history, favourites, and refresh) using pointer-events and opacity styling when the Help walkthrough tour is active.
+
+## [11.4.0-beta.3] - 2026-06-30
+
+### Fixed
+- **Preview Modal Run Prevention**: Disabled displaying and executing run commands when the `loadPopUpPage` preview modal is visible, or when running inside an iframe with ID/name `loadPopUpPage` or name/ID/class `middle` / `middle1`.
+- **PostgreSQL DDL script updates**: Added missing `pagination` and `applydimensions` columns to `axdirectsql` table structure inside PostgreSQL scripts.
+
+## [11.4.0-beta.2] - 2026-06-29
+
+### Added
+- **Refresh Icon Animation**: Added a rotation animation to the refresh button icon when clicked. The animation starts automatically when the request starts and stops cleanly when the request completes or fails.
+
+### Changed
+- **Favorites Modal Transitions**: Implemented smooth entry and exit transitions for the Favorites modals (Add, Rename, and Delete modals) using CSS transitions, transforming scale, opacity, and backdrop blur.
+- **Resource Versioning**: Bumped the resource query parameters for `axicmdmain.js` and `axicmdmain.css` in both `CustomPages/AxiCMDMainPage.html` and `AxpertPlugins/Axi_Beta/HTMLPages/AxiCMDMainPage.html` to prevent browser caching.
+
+### Fixed
+- **Roles Popup Configuration**: Configured the roles popup container and fixed the new icon click loading behavior inside `Js/iview.js`.
+- **Oracle DDL Datatypes**: Corrected non-Oracle-compatible datatypes (`varchar` to `VARCHAR2`, and `text` to `CLOB`) inside `axi_axdirectsql_tables.sql` and `axi_dependent_tables.sql`.
+- **Undefined Appname/ArmUrl Fallbacks**: Resolved timing issues when `axicmdmain.js` loads before `main.min.js` by adding a deferred retry initialization loop (`startInit()`) and dynamic frame/parent/top and `callParentNew` fallbacks for `mainProject`, `mainUserName`, and `armUrl`.
+- **Run Command Favorites Validation**: Added validation in `toggleFavorite()` and `confirmAddFavorite()` to prevent users from adding or renaming favorites to `run` commands.
+
 ## [11.4.0-beta.1] - 2026-06-26
 
 ### Added

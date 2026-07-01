@@ -33,5 +33,5 @@ CREATE TABLE Axi_UserFavourites (
 >>
 
 <<
-ALTER TABLE AXI_USERFAVOURITES  ADD originalcommandtext varchar(4000) NULL
+ALTER TABLE AXI_USERFAVOURITES  ADD originalcommandtext VARCHAR2(4000) NULL
 >>

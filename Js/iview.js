@@ -3558,13 +3558,17 @@ function callOpenAction(a, b) {
         } else {
             let _thsiifId = window.frameElement.id;
             if (typeof _thsiifId !== "undefined" && _thsiifId.toLowerCase().startsWith("axmultiiframe_")) {
+                try{
+                 ShowDimmer(false);
+                }catch(ex){}
                 if (typeof parent.ShowDimmer === "function")
                     parent.ShowDimmer(true);
                 else if (typeof top.ShowDimmer === "function")
                     top.ShowDimmer(true);
                 else if (typeof ShowDimmer === "function")
                     ShowDimmer(true);
-                parent.PopupManager.openForm("", "tstruct.aspx?transid=ad_ur");
+                // parent.PopupManager.openForm("", "tstruct.aspx?transid=ad_ur");
+                parent.PopupManager.openForm("", `../aspx/tstruct.aspx?transid=ad_ur&dummyload=false`);  
             }
             else {
                 callParentNew('loadFrame();', 'function');

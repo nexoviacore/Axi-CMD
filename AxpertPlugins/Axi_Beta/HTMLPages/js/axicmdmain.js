@@ -264,6 +264,19 @@
 
 
     async function init() {
+        if (typeof window.mainUserName === "undefined" || !window.mainUserName) {
+            window.mainUserName = (typeof callParentNew === "function" && callParentNew("mainUserName")) || 
+                                  (typeof parent !== "undefined" && parent.mainUserName) || 
+                                  (typeof top !== "undefined" && top.mainUserName) || 
+                                  "";
+        }
+        if (typeof window.mainProject === "undefined" || !window.mainProject) {
+            window.mainProject = (typeof callParentNew === "function" && callParentNew("mainProject")) || 
+                                 (typeof parent !== "undefined" && parent.mainProject) || 
+                                 (typeof top !== "undefined" && top.mainProject) || 
+                                 "";
+        }
+
         //  "API_METADATA": "http://localhost:90/AxiApi/api/v1/Axi/axi_get",    
 
         // "AXI_FAVORITES_URL": "http://localhost:90/AxiApi/api/v1/Axi/user-favourites"
@@ -271,6 +284,7 @@
         let globalArmUrl = (typeof armUrl !== "undefined" && armUrl) || 
                            (typeof parent !== "undefined" && typeof parent.armUrl !== "undefined" && parent.armUrl) || 
                            (typeof top !== "undefined" && typeof top.armUrl !== "undefined" && top.armUrl) || 
+                           (typeof callParentNew === "function" && callParentNew("armUrl")) ||
                            "";
 
         if (globalArmUrl) {
@@ -422,7 +436,20 @@
         initCommands(false);
     }
 
-    init();
+    let initRetries = 0;
+    function startInit() {
+        const proj = window.mainProject || (typeof callParentNew === "function" && callParentNew("mainProject"));
+        const user = window.mainUserName || (typeof callParentNew === "function" && callParentNew("mainUserName"));
+        
+        if ((!proj || !user) && initRetries < 20) {
+            initRetries++;
+            setTimeout(startInit, 100);
+            return;
+        }
+        init();
+    }
+
+    startInit();
 
     function getProjectName() {
         // let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
@@ -434,9 +461,11 @@
         // console.log(appname);
         // return appname;
 
-        return window.mainProject;
-
-
+        return window.mainProject || 
+               (typeof callParentNew === "function" && callParentNew("mainProject")) || 
+               (typeof parent !== "undefined" && parent.mainProject) || 
+               (typeof top !== "undefined" && top.mainProject) || 
+               "";
     }
 
     /* ===============================
@@ -4924,6 +4953,10 @@
         if (btnRefresh) {
             btnRefresh.addEventListener("click", async () => {
                 console.log("Refresh Logic......");
+                const refreshIcon = btnRefresh.querySelector(".axi-refresh-icon");
+                if (refreshIcon) {
+                    refreshIcon.classList.add("rotating");
+                }
 
                 try {
                     clearAxiLocalStorage("axi_");
@@ -4943,9 +4976,11 @@
                     console.log("Refresh Failed: " + error);
                     alert("Error refreshing: " + error);
 
+                } finally {
+                    if (refreshIcon) {
+                        refreshIcon.classList.remove("rotating");
+                    }
                 }
-
-
             });
         }
 
@@ -4994,6 +5029,10 @@
         input.addEventListener("input", handleInput);
         input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
         input.addEventListener("keydown", e => {
+            if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
+                e.preventDefault();
+                return;
+            }
             isDeleting = (e.key === "Backspace" || e.key === "Delete");
             console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
 
@@ -7736,6 +7775,23 @@
     }
 
     function isPreviewModalOpen() {
+        // Check if current window or frameElement indicates it is inside the loadPopUpPage modal or middle1 frame
+        try {
+            if (window.frameElement) {
+                const el = window.frameElement;
+                if (el.id === "loadPopUpPage" || el.name === "loadPopUpPage" || el.id === "middle1" || el.name === "middle1" || el.classList.contains("middle") || el.classList.contains("middle1")) {
+                    console.log("Axi: running inside loadPopUpPage or middle1 iframe");
+                    return true;
+                }
+            }
+            if (window.name === "loadPopUpPage" || window.name === "middle" || window.name === "middle1") {
+                console.log("Axi: running inside frame with name loadPopUpPage, middle or middle1");
+                return true;
+            }
+        } catch (e) {
+            // Ignore cross-origin errors
+        }
+
         let rootWin = window;
         try {
             if (window.top && window.top.document) {
@@ -7748,6 +7804,30 @@
         function checkWindow(win) {
             try {
                 if (!win || !win.document) return false;
+
+                // Check for loadPopUpPage modal
+                const loadPopUpPageModal = win.document.getElementById("loadPopUpPage");
+                if (loadPopUpPageModal) {
+                    if (loadPopUpPageModal.offsetWidth > 0 || loadPopUpPageModal.offsetHeight > 0 || loadPopUpPageModal.style.display === "block" || loadPopUpPageModal.classList.contains("show")) {
+                        console.log("Axi: found active preview modal via loadPopUpPage");
+                        return true;
+                    }
+                }
+
+                // Check inside middle1 iframe document
+                const middleIframe = win.document.getElementById("middle1");
+                if (middleIframe) {
+                    const middleDoc = middleIframe.contentDocument || middleIframe.contentWindow?.document;
+                    if (middleDoc) {
+                        const innerModal = middleDoc.getElementById("loadPopUpPage");
+                        if (innerModal) {
+                            if (innerModal.offsetWidth > 0 || innerModal.offsetHeight > 0 || innerModal.style.display === "block" || innerModal.classList.contains("show")) {
+                                console.log("Axi: found active preview modal inside middle1 iframe");
+                                return true;
+                            }
+                        }
+                    }
+                }
 
                 // 1. Check for remodal wrapper containing the popupIframeRemodal
                 const openedModal = win.document.querySelector(".remodal-wrapper.remodal-is-opened #popupIframeRemodal");
@@ -9643,18 +9723,18 @@
             let rawName = cleanCommandToken(tokens[1]);
             let { value: transId, type } = tryResolveToken(1, rawName, commandConfig, false);
 
-            if (transId === rawName) {
-                const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
-                const found = list?.find(
-                    x => x.caption.toLowerCase() === rawName.toLowerCase()
-                );
-                if (found) transId = found.name
-                else {
-                    console.error("Invalid Tstruct name");
-                    showToast("Invalid Tstruct name please select the valid tstruct");
-                    return;
-                }
-            }
+            // if (transId === rawName) {
+            //     const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+            //     const found = list?.find(
+            //         x => x.caption.toLowerCase() === rawName.toLowerCase()
+            //     );
+            //     if (found) transId = found.name
+            //     else {
+            //         console.error("Invalid Tstruct name");
+            //         showToast("Invalid Tstruct name please select the valid tstruct");
+            //         return;
+            //     }
+            // }
 
             const sourceName = commandConfig?.prompts?.[2]?.promptSource?.toLowerCase();
             const sourceKey = `${sourceName}_${transId}`.toLowerCase();
@@ -10989,7 +11069,7 @@
         const commandVerb = tokens[1];
 
         if (groupKey?.toLowerCase() === "run") {
-            showToast("You cannot Run commands to favorites!");
+            showToast("You cannot add 'run' commands to favorites");
             return;
         }
 
@@ -11480,6 +11560,8 @@
         if (favCancelBtn) favCancelBtn.disabled = false;
 
         axiFavModal.style.display = "flex";
+        axiFavModal.offsetHeight; // force layout
+        axiFavModal.classList.add("open");
         favNameInput.focus();
         favNameInput.select();
     }
@@ -11487,7 +11569,14 @@
     function hideFavoriteModal() {
         const modal = document.getElementById("axiFavModalOverlay");
 
-        if (modal) modal.style.display = "none";
+        if (modal) {
+            modal.classList.remove("open");
+            setTimeout(() => {
+                if (!modal.classList.contains("open")) {
+                    modal.style.display = "none";
+                }
+            }, 200);
+        }
     }
 
     function confirmAddFavorite() {
@@ -11499,6 +11588,12 @@
 
         if (!alias) {
             showToast("Favorite name cannot be empty");
+            return;
+        }
+
+        const aliasTokens = getTokens(alias);
+        if (aliasTokens[0]?.toLowerCase() === "run") {
+            showToast("You cannot save 'run' commands in favorites");
             return;
         }
 
@@ -11623,11 +11718,20 @@
         if (deleteFavCancelBtn) deleteFavCancelBtn.disabled = false;
 
         modal.style.display = "flex";
+        modal.offsetHeight; // force layout
+        modal.classList.add("open");
     }
 
     function hideDeleteFavoriteModal() {
         const modal = document.getElementById("axiFavDeleteModalOverlay");
-        if (modal) modal.style.display = "none";
+        if (modal) {
+            modal.classList.remove("open");
+            setTimeout(() => {
+                if (!modal.classList.contains("open")) {
+                    modal.style.display = "none";
+                }
+            }, 200);
+        }
     }
 
     function confirmDeleteFavorite() {
@@ -11907,6 +12011,17 @@
             .introjs-bullets ul li a.active {
                 background: #a100ff !important;
             }
+            .AXI-Sec.axi-tour-active .btn,
+            .AXI-Sec.axi-tour-active #runBtn,
+            .AXI-Sec.axi-tour-active #btnHistoryPrev,
+            .AXI-Sec.axi-tour-active #History_pages,
+            .AXI-Sec.axi-tour-active #axiFavouriteBtn,
+            .AXI-Sec.axi-tour-active #btnRefresh,
+            .AXI-Sec.axi-tour-active .clearbtn {
+                pointer-events: none !important;
+                opacity: 0.5 !important;
+                cursor: not-allowed !important;
+            }
             .introjs-bullets ul li a {
                 background: #5e5e6e !important;
             }
@@ -11954,6 +12069,7 @@
     function runTour() {
         const oldVal = input.value;
         input.value = "Help";
+        input.readOnly = true;
         
         const tour = introJs();
         tour.setOptions({
@@ -12017,8 +12133,24 @@
             }
         });
 
+        let resizeTimeout;
+        const handleResize = () => {
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                try {
+                    if (tour) {
+                        tour.refresh();
+                    }
+                } catch (e) {}
+            }, 100);
+        };
+        window.addEventListener("resize", handleResize);
+
         tour.onexit(() => {
+            window.removeEventListener("resize", handleResize);
+            if (resizeTimeout) clearTimeout(resizeTimeout);
             input.value = oldVal;
+            input.readOnly = false;
             handleInput();
             document.querySelector(".AXI-Sec")?.classList.remove("axi-tour-active");
             if (megaDropdown) {
@@ -12026,7 +12158,10 @@
             }
         });
         tour.oncomplete(() => {
+            window.removeEventListener("resize", handleResize);
+            if (resizeTimeout) clearTimeout(resizeTimeout);
             input.value = oldVal;
+            input.readOnly = false;
             handleInput();
             document.querySelector(".AXI-Sec")?.classList.remove("axi-tour-active");
             if (megaDropdown) {
