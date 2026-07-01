@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [11.4.0-beta.5] - 2026-07-01
+
+### Added
+- **Target-First Command Restructure**: Reversed the command syntax for primary entity actions (`create`, `view`, `edit`) from `<action> <target>` to `<target> <action>`.
+- **Target Autocomplete Suggestions**: Restructured the autocomplete suggestions to show target entities (`tstructs` and `iviews` loaded from `axi_structmetalist` dynamically via `loadList` on startup) and unreversed commands first. Restricts secondary suggestions strictly to `create`, `edit`, and `view` based on target capability.
+- **Go/Popup Suggestions for Completed Actions**: Updated `suggestLocal()` to display `Go` and `Popup` options immediately when a target-first action (like `create` or `view`) is fully typed.
+- **Token Ingestion Swapping Layer**: Integrated virtual token normalization swapping inside `suggestLocal()`, `apply()`, `handleInput()`, `executeCommandsV2()`, and the keydown backspace handlers in `axicmdmain.js` to route target-first inputs seamlessly through the existing execution, routing, and verification engines.
+- **Master Target Lookup Fallback**: Integrated a fallback search inside the master metadata list `axi_structmetalist` inside `tryResolveToken` and `getResolvedParamType` to resolve target names/captions (including quoted strings like `"Sales Order FORM"`) to their exact transaction IDs.
+- **Case-Insensitive Configuration and Handler Resolution**: Added case-insensitive resolvers (`getCommandConfig` and `getGroupHandlers`) for commands dictionary and `COMMAND_HANDLERS` objects to prevent case-mismatch errors when routing lowercased swapped action keys against capitalized configuration headers.
+
 ## [11.4.0-beta.4] - 2026-07-01
 
 ### Fixed

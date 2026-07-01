@@ -544,6 +544,11 @@
                 prompts: []
             };
             console.log(JSON.stringify(commands));
+            
+            // Load target entities (tstructs and iviews) from metadata on startup
+            const userName = window.mainUserName || "admin";
+            const metadataParams = `${userName}$#$default$#$default$#$all$#$all`;
+            loadList("axi_structmetalist", metadataParams);
             // if (isForced) {
                 showToast(message, 3000, true);
             // }
@@ -2006,6 +2011,15 @@
         items = suggestLocal(text);
 
         const tokens = getTokens(text);
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+                const temp = tokens[0];
+                tokens[0] = tokens[1];
+                tokens[1] = temp;
+            }
+        }
         const grpKey = tokens[0]?.toLowerCase();
 
         if (
@@ -2077,17 +2091,126 @@
     =============================== */
 
 
-    function getTokens(str) {
+    function getTokens(str, shouldNormalize = true) {
 
 
         //const regex = new RegExp(`"[^"]*"?|${OPERATOR_REGEX_PART}|[^\\s=<>!]+`, "g");
         // const regex = new RegExp(`"[^"]*"|[^\\s]+`, "g");
         const regex = new RegExp(`"[^"]*"?|[^\\s]+`, "g");
-        return str.match(regex) || [];
+        let tokens = str.match(regex) || [];
+        if (shouldNormalize && tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+                const temp = tokens[0];
+                tokens[0] = tokens[1];
+                tokens[1] = temp;
+            }
+        }
+        return tokens;
     }
 
     function cleanString(val) {
         return (val || "").replace(/["]/g, "").trim();
+    }
+
+    function isTargetEntity(token) {
+        if (!token) return false;
+        const cleanTok = token.replace(/"/g, "").toLowerCase();
+        const userName = window.mainUserName || "admin";
+        const metadataParams = `${userName}$#$default$#$default$#$all$#$all`;
+        const key = "axi_structmetalist_" + metadataParams.toLowerCase();
+        const list = axDatasourceObj[key] || [];
+        return list.some(d => {
+            const name = d.name || d.NAME || "";
+            const caption = d.caption || d.CAPTION || "";
+            const displaydata = d.displaydata || d.DISPLAYDATA || "";
+            
+            const nameMatch = name && name.toLowerCase() === cleanTok;
+            const displayMatch = displaydata && displaydata.toLowerCase() === cleanTok;
+            const captionMatch = typeof displaydata === "string" && 
+                displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
+            const captionDirect = caption && caption.toLowerCase() === cleanTok;
+            return nameMatch || displayMatch || captionMatch || captionDirect;
+        });
+    }
+
+    function getTargetEntityObj(token) {
+        if (!token) return null;
+        const cleanTok = token.replace(/"/g, "").toLowerCase();
+        const userName = window.mainUserName || "admin";
+        const metadataParams = `${userName}$#$default$#$default$#$all$#$all`;
+        const key = "axi_structmetalist_" + metadataParams.toLowerCase();
+        const list = axDatasourceObj[key] || [];
+        return list.find(d => {
+            const name = d.name || d.NAME || "";
+            const caption = d.caption || d.CAPTION || "";
+            const displaydata = d.displaydata || d.DISPLAYDATA || "";
+
+            const nameMatch = name && name.toLowerCase() === cleanTok;
+            const displayMatch = displaydata && displaydata.toLowerCase() === cleanTok;
+            const captionMatch = typeof displaydata === "string" && 
+                displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
+            const captionDirect = caption && caption.toLowerCase() === cleanTok;
+            return nameMatch || displayMatch || captionMatch || captionDirect;
+        });
+    }
+
+    function getInitialSuggestions() {
+        const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view"].includes(k.toLowerCase()));
+        const userName = window.mainUserName || "admin";
+        const metadataParams = `${userName}$#$default$#$default$#$all$#$all`;
+        const key = "axi_structmetalist_" + metadataParams.toLowerCase();
+        const targets = axDatasourceObj[key] || [];
+        return [...targets, ...verbs];
+    }
+
+    function normalizeGlobalState() {
+        if (!input) return;
+        const tokens = getTokens(input.value, false);
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+                const val0 = (resolvedParams[0] || "").toLowerCase();
+                const val1 = (resolvedParams[1] || "").toLowerCase();
+                if (val0 && !["create", "edit", "view"].includes(val0) && val1 && ["create", "edit", "view"].includes(val1)) {
+                    const tempVal = resolvedParams[0];
+                    resolvedParams[0] = resolvedParams[1];
+                    resolvedParams[1] = tempVal;
+
+                    const tempType = resolvedParamType[0];
+                    resolvedParamType[0] = resolvedParamType[1];
+                    resolvedParamType[1] = tempType;
+                    console.log("Global state: Swapped to normalized order");
+                }
+            } else {
+                const val0 = (resolvedParams[0] || "").toLowerCase();
+                const val1 = (resolvedParams[1] || "").toLowerCase();
+                if (val0 && ["create", "edit", "view"].includes(val0) && val1 && !["create", "edit", "view"].includes(val1)) {
+                    const tempVal = resolvedParams[0];
+                    resolvedParams[0] = resolvedParams[1];
+                    resolvedParams[1] = tempVal;
+
+                    const tempType = resolvedParamType[0];
+                    resolvedParamType[0] = resolvedParamType[1];
+                    resolvedParamType[1] = tempType;
+                    console.log("Global state: Swapped back to user order");
+                }
+            }
+        } else {
+            const val0 = (resolvedParams[0] || "").toLowerCase();
+            if (val0 && ["create", "edit", "view"].includes(val0)) {
+                const tempVal = resolvedParams[0];
+                resolvedParams[0] = resolvedParams[1];
+                resolvedParams[1] = tempVal;
+
+                const tempType = resolvedParamType[0];
+                resolvedParamType[0] = resolvedParamType[1];
+                resolvedParamType[1] = tempType;
+                console.log("Global state: Swapped back to user order (length < 2)");
+            }
+        }
     }
 
 
@@ -2956,19 +3079,85 @@
     const isEmpty = val => typeof val === "string" ? val.trim() === "" : val === null || val === undefined;
 
     function suggestLocal(inputText) {
+        normalizeGlobalState();
         let ignoreExtraParams = false;
         let detectedType = "";
-        const tokens = getTokens(inputText);
+        const rawTokens = getTokens(inputText, false);
         const endsWithSpace = inputText.endsWith(" ");
 
 
-        const lastTokenRaw = tokens[tokens.length - 1];
+        const lastTokenRaw = rawTokens[rawTokens.length - 1];
         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
-        if (endsWithSpace && !isUnclosedString) tokens.push("");
+        if (endsWithSpace && !isUnclosedString) rawTokens.push("");
 
-        if (tokens.length === 0) {
+        if (rawTokens.length === 0) {
             hintDiv.textContent = "";
-            return getInitialCommandsList();
+            const allSuggestions = getInitialSuggestions();
+            filteredObjects = allSuggestions.map(item => {
+                if (typeof item === "string") {
+                    return { name: item, displaydata: item };
+                }
+                return item;
+            });
+            return allSuggestions.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
+        }
+
+        const groupKeyRaw = cleanString(rawTokens[0]);
+
+        if (rawTokens.length === 1 && !endsWithSpace) {
+            hintDiv.textContent = "";
+            const prefix = groupKeyRaw.toLowerCase();
+            const allSuggestions = getInitialSuggestions();
+            const filtered = allSuggestions.filter(item => {
+                if (typeof item === "string") {
+                    return item.toLowerCase().startsWith(prefix);
+                } else {
+                    const nameMatch = item.name && item.name.toLowerCase().startsWith(prefix);
+                    const displayMatch = item.displaydata && item.displaydata.toLowerCase().startsWith(prefix);
+                    const captionMatch = typeof item.displaydata === "string" && 
+                        item.displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase().startsWith(prefix);
+                    return nameMatch || displayMatch || captionMatch;
+                }
+            });
+            filteredObjects = filtered.map(item => {
+                if (typeof item === "string") {
+                    return { name: item, displaydata: item };
+                }
+                return item;
+            });
+            return filtered.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
+        }
+
+        if (rawTokens.length === 2 && isTargetEntity(rawTokens[0])) {
+            const entityObj = getTargetEntityObj(rawTokens[0]);
+            const partial = cleanString(rawTokens[1] || "");
+
+            if (["create", "view"].includes(partial.toLowerCase())) {
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
+
+            let actions = ["create", "edit", "view"];
+            if (entityObj) {
+                const type = entityObj.stype || "";
+                if (type === "i" || type === "p") {
+                    actions = ["view"];
+                }
+            }
+            const filteredActions = actions.filter(act => act.toLowerCase().startsWith(partial.toLowerCase()));
+            filteredObjects = filteredActions.map(act => ({ name: act, displaydata: act }));
+            return filteredActions;
+        }
+
+        let tokens = [...rawTokens];
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+                const temp = tokens[0];
+                tokens[0] = tokens[1];
+                tokens[1] = temp;
+            }
         }
 
         const groupKey = cleanString(tokens[0]);
@@ -2981,18 +3170,11 @@
         if (groupKey.toLowerCase() === "help") {
             return [goOption];
         }
-        if (tokens.length === 1 && !endsWithSpace) {
-            hintDiv.textContent = "";
-            return getInitialCommandsList().filter(k => {
-                const key = k.toLowerCase();
-                return key.startsWith(groupKey.toLowerCase())
-            });
-        }
 
         //const commandConfig = commands[groupKey];
 
 
-        let commandConfig = commands[groupKey];
+        let commandConfig = getCommandConfig(groupKey);
 
 
         /** Begin: Note: This must be removed when releasing */
@@ -3191,6 +3373,13 @@
             const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
+
+            if (groupKey.toLowerCase() === "create" && tokens.length === 3) {
+                result.unshift(popOption);
+                result.unshift(goOption);
+                filteredObjects.unshift(popOption);
+                filteredObjects.unshift(goOption);
+            }
 
             //  if (staticValues.length > 0 && result.length === 0 && partialTyped.length > 0) {
 
@@ -3619,7 +3808,7 @@
             struct_name = struct_split[0];
         }
 
-        let preferredType = resolvedParamType?.[1];
+        let preferredType = getResolvedParamType(1);
         if (preferredType) {
             preferredType = preferredType.toLowerCase();
             if (preferredType === "tstruct") preferredType = "t";
@@ -3926,16 +4115,69 @@
     }
 
 
+    function getUnswappedIndex(tokenIndex) {
+        if (!input) return tokenIndex;
+        const tokens = getTokens(input.value, false);
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+                if (tokenIndex === 0) return 1;
+                if (tokenIndex === 1) return 0;
+            }
+        }
+        return tokenIndex;
+    }
+
+    function getResolvedParamType(tokenIndex) {
+        const rawIndex = getUnswappedIndex(tokenIndex);
+        return resolvedParamType?.[rawIndex];
+    }
+
+    function getCommandConfig(groupKey) {
+        if (!groupKey || !commands) return null;
+        const lowKey = groupKey.toLowerCase();
+        if (commands[groupKey]) return commands[groupKey];
+        const matchedKey = Object.keys(commands).find(k => k.toLowerCase() === lowKey);
+        return matchedKey ? commands[matchedKey] : null;
+    }
+
     function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
 
         tokenText = cleanString(tokenText);
         if (!tokenText) return { value: "", type: "" };
 
-        // if (resolvedParams[tokenIndex] && !forceResolve) return resolvedParams[tokenIndex];
-        if (resolvedParams[tokenIndex] && !forceResolve) return {
-            value: resolvedParams[tokenIndex],
-            type: resolvedParamType?.[tokenIndex] || ""
+        const rawIndex = getUnswappedIndex(tokenIndex);
+
+        if (resolvedParams[rawIndex] && !forceResolve) return {
+            value: resolvedParams[rawIndex],
+            type: resolvedParamType?.[rawIndex] || ""
         };
+
+        if (tokenIndex === 1 && !forceResolve) {
+            const userName = window.mainUserName || "admin";
+            const key = "axi_structmetalist_" + `${userName}$#$default$#$default$#$all$#$all`.toLowerCase();
+            const list = axDatasourceObj[key] || [];
+            const cleanTok = tokenText.toLowerCase();
+
+            let found = list.find(d => {
+                const nameMatch = d.name && d.name.toLowerCase() === cleanTok;
+                const displayMatch = d.displaydata && d.displaydata.toLowerCase() === cleanTok;
+                const captionMatch = typeof d.displaydata === "string" && 
+                    d.displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
+                const captionDirect = d.caption && d.caption.toLowerCase() === cleanTok;
+                return nameMatch || displayMatch || captionMatch || captionDirect;
+            });
+
+            if (found) {
+                resolvedParams[rawIndex] = found.name;
+                if (found.stype) resolvedParamType[rawIndex] = found.stype;
+                return {
+                    value: found.name,
+                    type: found.stype || ""
+                };
+            }
+        }
         // if (!tokenText && !forceResolve) return "";
         // if (!commandConfig) return tokenText;
         if (!commandConfig) return {
@@ -4078,8 +4320,8 @@
 
                     }
 
-                    resolvedParams[tokenIndex] = real;
-                    if (found?.stype) resolvedParamType[tokenIndex] = found?.stype;
+                    resolvedParams[rawIndex] = real;
+                    if (found?.stype) resolvedParamType[rawIndex] = found?.stype;
                     // return real;
                     return {
                         value: real,
@@ -4250,7 +4492,7 @@
                 li.style.borderBottom = "1px solid #eee";
                 li.textContent = text;
 
-            } else if (isInitialCommandStage && commands[text]) {
+            } else if (isInitialCommandStage && getCommandConfig(text)) {
                 const iconName = commandIcons[text.toLowerCase()] || "chevron_right";
 
                 li.innerHTML = `
@@ -4328,10 +4570,21 @@
 
 
         const currentInput = input.value;
-        const tokens = getTokens(currentInput);
+        const tokens = getTokens(currentInput, false);
 
-        const saveGroupKeyCheck = cleanString(tokens[0]);
-        const saveCommandConfig = commands[saveGroupKeyCheck];
+        let checkTokens = [...tokens];
+        if (checkTokens.length >= 2) {
+            const first = cleanString(checkTokens[0]).toLowerCase();
+            const second = cleanString(checkTokens[1]).toLowerCase();
+            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+                const temp = checkTokens[0];
+                checkTokens[0] = checkTokens[1];
+                checkTokens[1] = temp;
+            }
+        }
+
+        const saveGroupKeyCheck = cleanString(checkTokens[0]);
+        const saveCommandConfig = getCommandConfig(saveGroupKeyCheck);
 
         if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "GO_ACTION") {
             console.log("Action item selected. Executing command...");
@@ -4342,14 +4595,14 @@
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "create") {
             console.log("Save Option Selected...Submitting Data...");
             hide();
-            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
+            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, checkTokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "edit") {
             console.log("Save Option Selected...Submitting Data...");
             hide();
-            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, tokens, saveCommandConfig);
+            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, checkTokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
@@ -4404,15 +4657,15 @@
 
         // }
 
-        const isViewCommand = tokens[0]?.toLowerCase() === "view";
+        const isViewCommand = checkTokens[0]?.toLowerCase() === "view";
 
 
 
 
         let isAdsValue = false;
 
-        const groupKey = cleanString(tokens[0]);
-        const commandConfig = commands[groupKey];
+        const groupKey = cleanString(checkTokens[0]);
+        const commandConfig = getCommandConfig(groupKey);
         /**
          * ==== Robust Type checking for View command ===
          */
@@ -4422,7 +4675,7 @@
             if (commandConfig && commandConfig.prompts && commandConfig.prompts[0]) {
                 const viewSource = commandConfig.prompts[0].promptSource;
                 const viewValues = commandConfig.prompts[0].promptValues;
-                const firstToken = cleanString(tokens[1] || "");
+                const firstToken = cleanString(checkTokens[1] || "");
 
                 // const detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues, tokens, commandConfig);
                 const resolved = tryResolveToken(
@@ -4436,7 +4689,7 @@
                     viewSource.toLowerCase(),
                     resolved,
                     viewValues,
-                    tokens,
+                    checkTokens,
                     commandConfig
                 );
 
@@ -4455,7 +4708,7 @@
             if (targetIndex === 3) {
                 isValueToken = true;
             } else {
-                const withIndex = tokens.findIndex(t => cleanString(t).toLowerCase() === "with");
+                const withIndex = checkTokens.findIndex(t => cleanString(t).toLowerCase() === "with");
 
                 if (withIndex !== -1 && targetIndex > withIndex && (targetIndex - withIndex) % 2 === 0) {
                     isValueToken = true;
@@ -4479,7 +4732,7 @@
         if (foundObj && isViewCommand) {
             const caption = foundObj?.caption ? foundObj?.caption : foundObj?.displaydata;
 
-            const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), caption, commandConfig?.prompts?.[0]?.promptValues, tokens, commandConfig);
+            const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), caption, commandConfig?.prompts?.[0]?.promptValues, checkTokens, commandConfig);
 
             if ((!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) && type?.toLowerCase() === "page") {
                 showToast("Redirection link is not available for this page.");
@@ -5037,12 +5290,20 @@
             console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
 
             const tokens = getTokens(input.value.trim());
-
+            if (tokens.length >= 2) {
+                const first = cleanString(tokens[0]).toLowerCase();
+                const second = cleanString(tokens[1]).toLowerCase();
+                if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+                    const temp = tokens[0];
+                    tokens[0] = tokens[1];
+                    tokens[1] = temp;
+                }
+            }
             const grpKey = tokens[0];
 
             let saveCommandConfig;
             if (grpKey)
-                saveCommandConfig = commands[grpKey];
+                saveCommandConfig = getCommandConfig(grpKey);
 
             if (e.key === 'Backspace' && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit")) {
                 let transIDcheck = setCommandTransid;
@@ -5412,6 +5673,15 @@
 
 
         const tokens = getTokens(text);
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+                const temp = tokens[0];
+                tokens[0] = tokens[1];
+                tokens[1] = temp;
+            }
+        }
 
         if (tokens[3]?.toLowerCase() === "with") {
             showToast("Execution is Not Allowed while editing");
@@ -5446,7 +5716,7 @@
             return;
         }
 
-        const groupConfig = commands[groupKey];
+        const groupConfig = getCommandConfig(groupKey);
 
         if (!groupConfig) {
             console.warn(`Unknown command group: ${groupKey}`);
@@ -5501,6 +5771,14 @@
         return val.replace(/["]/g, "").trim();
     }
 
+    function getGroupHandlers(group) {
+        if (!group || typeof COMMAND_HANDLERS === "undefined") return null;
+        const lowGroup = group.toLowerCase();
+        if (COMMAND_HANDLERS[group]) return COMMAND_HANDLERS[group];
+        const matchedKey = Object.keys(COMMAND_HANDLERS).find(k => k.toLowerCase() === lowGroup);
+        return matchedKey ? COMMAND_HANDLERS[matchedKey] : null;
+    }
+
     function dispatchCommand(ctx) {
         const { group, config, tokens } = ctx;
 
@@ -5519,7 +5797,7 @@
         }
 
         // Locate the handler function in the mapping
-        const groupHandlers = COMMAND_HANDLERS[group];
+        const groupHandlers = getGroupHandlers(group);
 
         if (!groupHandlers) {
             console.error(`System Error: No handlers object defined for command group '${group}'`);
@@ -5665,7 +5943,7 @@
 
         const struct_dataList = axDatasourceObj[struct_sourceKey];
 
-        let preferredType = resolvedParamType?.[1];
+        let preferredType = getResolvedParamType(1);
         if (preferredType) {
             preferredType = preferredType.toLowerCase();
             if (preferredType === "tstruct") preferredType = "t";
