@@ -545,7 +545,7 @@
             };
             console.log(JSON.stringify(commands));
             
-            // Load target entities (tstructs and iviews) from metadata on startup
+            // Load target entities (tstructs, iview, ads and pages) from metadata on startup
             const userName = window.mainUserName || "admin";
             const metadataParams = `${userName}$#$default$#$default$#$all$#$all`;
             loadList("axi_structmetalist", metadataParams);
@@ -2014,7 +2014,7 @@
         if (tokens.length >= 2) {
             const first = cleanString(tokens[0]).toLowerCase();
             const second = cleanString(tokens[1]).toLowerCase();
-            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
                 const temp = tokens[0];
                 tokens[0] = tokens[1];
                 tokens[1] = temp;
@@ -2101,7 +2101,7 @@
         if (shouldNormalize && tokens.length >= 2) {
             const first = cleanString(tokens[0]).toLowerCase();
             const second = cleanString(tokens[1]).toLowerCase();
-            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
                 const temp = tokens[0];
                 tokens[0] = tokens[1];
                 tokens[1] = temp;
@@ -2135,14 +2135,14 @@
         });
     }
 
-    function getTargetEntityObj(token) {
+    function getTargetEntityObj(token, action) {
         if (!token) return null;
         const cleanTok = token.replace(/"/g, "").toLowerCase();
         const userName = window.mainUserName || "admin";
         const metadataParams = `${userName}$#$default$#$default$#$all$#$all`;
         const key = "axi_structmetalist_" + metadataParams.toLowerCase();
         const list = axDatasourceObj[key] || [];
-        return list.find(d => {
+        const matches = list.filter(d => {
             const name = d.name || d.NAME || "";
             const caption = d.caption || d.CAPTION || "";
             const displaydata = d.displaydata || d.DISPLAYDATA || "";
@@ -2154,6 +2154,49 @@
             const captionDirect = caption && caption.toLowerCase() === cleanTok;
             return nameMatch || displayMatch || captionMatch || captionDirect;
         });
+
+        if (matches.length === 0) return null;
+        if (matches.length === 1) return matches[0];
+
+        const rawIndex = 0;
+        if (resolvedParams[rawIndex]) {
+            const resolvedVal = resolvedParams[rawIndex].toLowerCase();
+            const matched = matches.find(d => (d.name || d.NAME || "").toLowerCase() === resolvedVal);
+            if (matched) return matched;
+        }
+
+        if (action) {
+            const lowAction = action.toLowerCase();
+            if (lowAction === "create" || lowAction === "edit") {
+                const tstructMatch = matches.find(d => {
+                    const type = (d.stype || d.STYPE || "").toLowerCase();
+                    return type === "t" || type === "tstruct";
+                });
+                if (tstructMatch) return tstructMatch;
+            } else if (lowAction === "view") {
+                const nonTstructMatch = matches.find(d => {
+                    const type = (d.stype || d.STYPE || "").toLowerCase();
+                    return type !== "t" && type !== "tstruct";
+                });
+                if (nonTstructMatch) return nonTstructMatch;
+            }
+        }
+
+        return matches[0];
+    }
+
+    function isValidActionForTarget(target, action) {
+        if (!target || !action) return false;
+        const entityObj = getTargetEntityObj(target, action);
+        const lowAction = action.toLowerCase();
+        let actions = ["view"];
+        if (entityObj) {
+            const type = (entityObj.stype || entityObj.STYPE || "").toLowerCase();
+            if (type === "t" || type === "tstruct") {
+                actions = ["create", "edit", "view"];
+            }
+        }
+        return actions.includes(lowAction);
     }
 
     function getInitialSuggestions() {
@@ -2171,7 +2214,7 @@
         if (tokens.length >= 2) {
             const first = cleanString(tokens[0]).toLowerCase();
             const second = cleanString(tokens[1]).toLowerCase();
-            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
                 const val0 = (resolvedParams[0] || "").toLowerCase();
                 const val1 = (resolvedParams[1] || "").toLowerCase();
                 if (val0 && !["create", "edit", "view"].includes(val0) && val1 && ["create", "edit", "view"].includes(val1)) {
@@ -3104,7 +3147,7 @@
 
         const groupKeyRaw = cleanString(rawTokens[0]);
 
-        if (rawTokens.length === 1 && !endsWithSpace) {
+        if (rawTokens.length === 1 && (!endsWithSpace || isUnclosedString)) {
             hintDiv.textContent = "";
             const prefix = groupKeyRaw.toLowerCase();
             const allSuggestions = getInitialSuggestions();
@@ -3130,21 +3173,55 @@
 
         if (rawTokens.length === 2 && isTargetEntity(rawTokens[0])) {
             const entityObj = getTargetEntityObj(rawTokens[0]);
-            const partial = cleanString(rawTokens[1] || "");
+            const partial = cleanString(rawTokens[1] || "").toLowerCase();
 
-            if (["create", "view"].includes(partial.toLowerCase())) {
+            let actions = ["view"];
+            let targetType = "";
+            if (entityObj) {
+                targetType = (entityObj.stype || entityObj.STYPE || "").toLowerCase();
+            }
+
+            if (targetType === "t" || targetType === "tstruct") {
+                actions = ["create", "edit", "view"];
+            } else if (!targetType) {
+                const cleanTok = rawTokens[0].replace(/"/g, "").toLowerCase();
+                const userName = window.mainUserName || "admin";
+                const metadataParams = `${userName}$#$default$#$default$#$all$#$all`.toLowerCase();
+                const key = "axi_structmetalist_" + userName.toLowerCase() + "$#$default$#$default$#$all$#$all";
+                const list = axDatasourceObj[key] || axDatasourceObj["axi_structmetalist_" + metadataParams] || [];
+                
+                const matches = list.filter(d => {
+                    const name = d.name || d.NAME || "";
+                    const caption = d.caption || d.CAPTION || "";
+                    const displaydata = d.displaydata || d.DISPLAYDATA || "";
+
+                    const nameMatch = name && name.toLowerCase() === cleanTok;
+                    const displayMatch = displaydata && displaydata.toLowerCase() === cleanTok;
+                    const captionMatch = typeof displaydata === "string" && 
+                        displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
+                    const captionDirect = caption && caption.toLowerCase() === cleanTok;
+                    return nameMatch || displayMatch || captionMatch || captionDirect;
+                });
+
+                let hasTstruct = false;
+                for (let i = 0; i < matches.length; i++) {
+                    const type = (matches[i].stype || matches[i].STYPE || "").toLowerCase();
+                    if (type === "t" || type === "tstruct") {
+                        hasTstruct = true;
+                        break;
+                    }
+                }
+                if (hasTstruct) {
+                    actions = ["create", "edit", "view"];
+                }
+            }
+
+            if (actions.includes(partial)) {
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
             }
 
-            let actions = ["create", "edit", "view"];
-            if (entityObj) {
-                const type = entityObj.stype || "";
-                if (type === "i" || type === "p") {
-                    actions = ["view"];
-                }
-            }
-            const filteredActions = actions.filter(act => act.toLowerCase().startsWith(partial.toLowerCase()));
+            const filteredActions = actions.filter(act => act.toLowerCase().startsWith(partial));
             filteredObjects = filteredActions.map(act => ({ name: act, displaydata: act }));
             return filteredActions;
         }
@@ -3153,7 +3230,7 @@
         if (tokens.length >= 2) {
             const first = cleanString(tokens[0]).toLowerCase();
             const second = cleanString(tokens[1]).toLowerCase();
-            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
                 const temp = tokens[0];
                 tokens[0] = tokens[1];
                 tokens[1] = temp;
@@ -4121,7 +4198,7 @@
         if (tokens.length >= 2) {
             const first = cleanString(tokens[0]).toLowerCase();
             const second = cleanString(tokens[1]).toLowerCase();
-            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
                 if (tokenIndex === 0) return 1;
                 if (tokenIndex === 1) return 0;
             }
@@ -4160,7 +4237,7 @@
             const list = axDatasourceObj[key] || [];
             const cleanTok = tokenText.toLowerCase();
 
-            let found = list.find(d => {
+            const matches = list.filter(d => {
                 const nameMatch = d.name && d.name.toLowerCase() === cleanTok;
                 const displayMatch = d.displaydata && d.displaydata.toLowerCase() === cleanTok;
                 const captionMatch = typeof d.displaydata === "string" && 
@@ -4169,7 +4246,26 @@
                 return nameMatch || displayMatch || captionMatch || captionDirect;
             });
 
-            if (found) {
+            if (matches.length > 0) {
+                let found = matches[0];
+                if (matches.length > 1) {
+                    const currentTokens = getTokens(input.value);
+                    const cmdGroup = currentTokens[0]?.toLowerCase();
+                    if (cmdGroup === "create" || cmdGroup === "edit") {
+                        const typeMatched = matches.find(item => {
+                            const type = (item.stype || "").toLowerCase();
+                            return type === "t" || type === "tstruct";
+                        });
+                        if (typeMatched) found = typeMatched;
+                    } else if (cmdGroup === "view") {
+                        const typeMatched = matches.find(item => {
+                            const type = (item.stype || "").toLowerCase();
+                            return type !== "t" && type !== "tstruct";
+                        });
+                        if (typeMatched) found = typeMatched;
+                    }
+                }
+
                 resolvedParams[rawIndex] = found.name;
                 if (found.stype) resolvedParamType[rawIndex] = found.stype;
                 return {
@@ -4301,11 +4397,18 @@
                     let found = matches[0];
                     let preferredType = resolvedParamType?.[tokenIndex];
                     const cmdGroup = currentTokens[0]?.toLowerCase();
-                    if (cmdGroup === "edit" && tokenIndex === 1) {
+                    if ((cmdGroup === "edit" || cmdGroup === "create") && tokenIndex === 1) {
                         preferredType = "t";
                     }
-                    if ((preferredType || (cmdGroup === "edit" && tokenIndex === 1)) && matches.length > 1) {
-                        const typeMatched = matches.find(item => (item.stype || "").toLowerCase() === (preferredType || "t").toLowerCase());
+                    if (cmdGroup === "view" && tokenIndex === 1 && !preferredType) {
+                        const typeMatched = matches.find(item => {
+                            const type = (item.stype || "").toLowerCase();
+                            return type !== "t" && type !== "tstruct";
+                        });
+                        if (typeMatched) found = typeMatched;
+                    }
+                    if (preferredType && matches.length > 1) {
+                        const typeMatched = matches.find(item => (item.stype || "").toLowerCase() === preferredType.toLowerCase());
                         if (typeMatched) {
                             found = typeMatched;
                         }
@@ -4576,7 +4679,7 @@
         if (checkTokens.length >= 2) {
             const first = cleanString(checkTokens[0]).toLowerCase();
             const second = cleanString(checkTokens[1]).toLowerCase();
-            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
                 const temp = checkTokens[0];
                 checkTokens[0] = checkTokens[1];
                 checkTokens[1] = temp;
@@ -5289,17 +5392,18 @@
             isDeleting = (e.key === "Backspace" || e.key === "Delete");
             console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
 
-            const tokens = getTokens(input.value.trim());
-            if (tokens.length >= 2) {
-                const first = cleanString(tokens[0]).toLowerCase();
-                const second = cleanString(tokens[1]).toLowerCase();
-                if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
-                    const temp = tokens[0];
-                    tokens[0] = tokens[1];
-                    tokens[1] = temp;
+            const tokens = getTokens(input.value.trim(), false);
+            let normalizedTokens = [...tokens];
+            if (normalizedTokens.length >= 2) {
+                const first = cleanString(normalizedTokens[0]).toLowerCase();
+                const second = cleanString(normalizedTokens[1]).toLowerCase();
+                if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                    const temp = normalizedTokens[0];
+                    normalizedTokens[0] = normalizedTokens[1];
+                    normalizedTokens[1] = temp;
                 }
             }
-            const grpKey = tokens[0];
+            const grpKey = normalizedTokens[0];
 
             let saveCommandConfig;
             if (grpKey)
@@ -5498,7 +5602,7 @@
 
                     const isFirstToken = tokens.length === 1;
 
-                    if (!lastTokenRaw.startsWith('"') && !isFirstToken) {
+                    if (!lastTokenRaw.startsWith('"') && (!isFirstToken || !getCommandConfig(lastTokenRaw))) {
                         const hasMultiWordMatch = items.some(item => {
                             const str = (typeof item === 'string' ? item : item.displaydata).toLowerCase();
                             return str.startsWith(lastTokenRaw.toLowerCase()) && str.includes(" ");
@@ -5676,7 +5780,7 @@
         if (tokens.length >= 2) {
             const first = cleanString(tokens[0]).toLowerCase();
             const second = cleanString(tokens[1]).toLowerCase();
-            if (isTargetEntity(first) && ["create", "edit", "view"].includes(second)) {
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
                 const temp = tokens[0];
                 tokens[0] = tokens[1];
                 tokens[1] = temp;
@@ -6728,8 +6832,10 @@
         //}
 
         rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
+        rawFieldName = cleanCommandToken(tokens[fieldValueIndex - 1]); 
         // fieldValue = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
         const { value } = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
+        const { value: fieldname } = tryResolveToken(fieldValueIndex - 1, rawFieldName, commandConfig, false);
         fieldValue = value;
         fieldUniqueId = getUniqueId(fieldValue);
 
@@ -6740,7 +6846,7 @@
 
         handler({
             transId,
-            fieldName: primaryField,
+            fieldName: fieldValueIndex === 3 ? fieldname : primaryField,
             fieldValue: fieldUniqueId,
             rawStruct
         })

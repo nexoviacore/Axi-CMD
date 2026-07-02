@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [11.4.0-beta.6] - 2026-07-02
+
+### Added
+- **Structure Capability Action Constraints**: Restricted available actions for target-first commands based on target structure type (`stype`). Targets with `stype === "t"` (TStruct) allow `create`, `edit`, and `view`, while targets with other types (e.g. `iview`, `ads`, `page`) are constrained strictly to `view`.
+- **Context-Aware Duplicate Target Resolution**: Configured target entity lookup (`getTargetEntityObj`) and token resolver (`tryResolveToken`) to handle duplicate names/captions (e.g., TStruct named `"test 1"` vs Page named `"test 1"`). Prioritizes TStruct resolution when action is `create` or `edit`, and Page/IView/ADS resolution when action is `view`. In autocomplete (`suggestLocal`), checks if the target has been selected and resolved in `resolvedParams` to suggest the correct actions, falling back to the union of all matching target capabilities only if not yet resolved.
+- **First-Token Space Auto-Quoting**: Configured the space key handler in the `keydown` event listener to automatically double-quote unquoted typed text on spacebar press, now checking the first token as well as long as it does not match a defined command verb (such as `create`, `edit`, or `view`).
+
+### Fixed
+- **Autocomplete Hidden on First-Token Auto-Quoting**: Allowed suggestion matching for unclosed quoted strings inside `suggestLocal()` even when a trailing space is present inside the quotes (e.g. `'"sales '`), resolving an issue where the autocomplete panel incorrectly hid upon spacebar auto-quoting.
+- **Backspace Token Interchanging**: Prevented the `keydown` event listener from mutating/swapping the raw `tokens` array in-place. Cloned the tokens array into `normalizedTokens` for group key verification, ensuring raw typed token order (e.g. `"Sales Order FORM" view`) is preserved when reconstructing the input value after a backspace deletion.
+- **Raw Input Token Retrieval in Keydown**: Configured `getTokens` inside the `keydown` event listener to disable automatic token normalization swapping (`shouldNormalize=false`) when fetching raw input elements, resolving an issue where backspacing `"Sales Order FORM" view` deleted the target caption instead of the action verb.
+
 ## [11.4.0-beta.5] - 2026-07-01
 
 ### Added
