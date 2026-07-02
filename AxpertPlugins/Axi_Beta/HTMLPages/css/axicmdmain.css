@@ -141,7 +141,32 @@
   box-shadow: none !important;
   margin-right: 15px;
   border-right: 1px solid #ccc !important;
-  padding-left: 10px !important;
+  padding-left: 10px; /* no !important — allows JS badge offset override */
+  transition: padding-left 0.15s ease;
+}
+
+/* Mode badge — sits as a flex item between logo and input */
+.searchwrap-AXI .badge-mode {
+  display: none;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 50px;
+  margin-right: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+  user-select: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.searchwrap-AXI .badge-mode.badge-visible {
+  display: flex;
 }
 
 .searchwrap-AXI #Axi-Searchinp::placeholder {

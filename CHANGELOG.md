@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [11.4.0-beta.5] - 2026-07-02
+
+### Added
+- **Multi-Mode Architecture**: Refactored the command palette to support operating modes. Initially implemented `/cmd` (default mode) and `/search` (structured query building mode) with full extensibility.
+- **Visual Mode Badge**: Implemented a visual badge in the input bar to display the active mode dynamically, adjusting the input field padding to prevent text overlap.
+- **Search Mode Token Swap and Parameter Resolution**: Allowed search mode queries to start with structure names (`employee create`), and normalizes them to command verbs on execution. Reused existing parameter matching/resolutions transparently.
+- **Escape Mode Key Bindings**: Allowed users to exit `/search` mode back to `/cmd` using a backspace on an empty input field.
+
 ## [11.4.0-beta.4] - 2026-07-01
 
 ### Fixed

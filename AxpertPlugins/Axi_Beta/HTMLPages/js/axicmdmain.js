@@ -234,6 +234,8 @@
     const OPERATOR_REGEX_PART = OPERATORS_LIST.join("|");
 
     // STATE
+    let currentMode = "cmd";
+    let inModeSelection = false;
     let commands = null;
     let items = [];
     let activeIndex = -1;
@@ -260,10 +262,20 @@
         "upload": { "cmdToken": 11, "command": "", "commandGroup": "upload", "prompts": [] }
     }
 
-
+    function injectBadgeStyles() {
+        // Badge styles are now in axicmdmain.css.
+        // This function is kept for backward-compat but no longer injects a <style> tag.
+    }
 
 
     async function init() {
+        window.addEventListener("error", function (e) {
+            showToast("Error: " + e.message + " at " + e.filename + ":" + e.lineno);
+        });
+        window.addEventListener("unhandledrejection", function (e) {
+            showToast("Rejection: " + e.reason);
+        });
+        injectBadgeStyles();
         if (typeof window.mainUserName === "undefined" || !window.mainUserName) {
             window.mainUserName = (typeof callParentNew === "function" && callParentNew("mainUserName")) || 
                                   (typeof parent !== "undefined" && parent.mainUserName) || 
@@ -430,9 +442,7 @@
 
 
         setupEventListeners();
-
-
-
+        setTimeout(updateModeUI, 0);
         initCommands(false);
     }
 
@@ -1906,9 +1916,18 @@
         }
         if (!commands) return;
 
-        if (!text.trim()) {
+        if (text.startsWith("/")) {
+            inModeSelection = true;
+        } else {
+            inModeSelection = false;
+        }
 
-            items = getInitialCommandsList();
+        if (!text.trim()) {
+            if (currentMode === "search") {
+                items = suggestLocal(text);
+            } else {
+                items = getInitialCommandsList();
+            }
             hintDiv.textContent = "";
             render();
             return;
@@ -1979,12 +1998,18 @@
             const cleanToken = token.replace(/"/g, "");
             const lastToken = lastTypedTokens[idx] ? lastTypedTokens[idx].replace(/"/g, "") : null;
 
-            if (lastToken && cleanToken !== lastToken && resolvedParams[idx]) {
+            let mappedIdx = idx;
+            if (currentMode === "search") {
+                if (idx === 0) mappedIdx = 1;
+                else if (idx === 1) mappedIdx = 0;
+            }
+
+            if (lastToken && cleanToken !== lastToken && resolvedParams[mappedIdx]) {
                 console.log(`Token changed at position ${idx}: "${lastToken}" ? "${cleanToken}"`);
-                delete resolvedParams[idx];
-                delete resolvedParamType[idx];
+                delete resolvedParams[mappedIdx];
+                delete resolvedParamType[mappedIdx];
                 Object.keys(resolvedParams).forEach(key => {
-                    if (parseInt(key) > idx) {
+                    if (parseInt(key) > mappedIdx) {
                         delete resolvedParams[key];
                         console.log(`Cleared dependent resolution at index ${key}`);
                     }
@@ -1994,10 +2019,15 @@
 
         if (currentTokens.length < lastTypedTokens.length) {
             for (let i = currentTokens.length; i < lastTypedTokens.length; i++) {
-                if (resolvedParams[i]) {
-                    delete resolvedParams[i];
-                    delete resolvedParamType[i];
-                    console.log(`Cleared deleted token resolution at index ${i}`);
+                let mappedI = i;
+                if (currentMode === "search") {
+                    if (i === 0) mappedI = 1;
+                    else if (i === 1) mappedI = 0;
+                }
+                if (resolvedParams[mappedI]) {
+                    delete resolvedParams[mappedI];
+                    delete resolvedParamType[mappedI];
+                    console.log(`Cleared deleted token resolution at index ${mappedI}`);
                 }
             }
         }
@@ -2084,6 +2114,23 @@
         // const regex = new RegExp(`"[^"]*"|[^\\s]+`, "g");
         const regex = new RegExp(`"[^"]*"?|[^\\s]+`, "g");
         return str.match(regex) || [];
+    }
+
+    function getCurrentTokens(trim = false) {
+        let text = trim ? input.value.trim() : input.value;
+        let currentTokens = getTokens(text);
+        if (currentMode === "search") {
+            if (currentTokens.length >= 2) {
+                const action = currentTokens[1];
+                const entity = currentTokens[0];
+                
+                const firstTokenLower = cleanString(entity).toLowerCase();
+                if (!["create", "view", "edit"].includes(firstTokenLower)) {
+                    currentTokens = [action, entity, ...currentTokens.slice(2)];
+                }
+            }
+        }
+        return currentTokens;
     }
 
     function cleanString(val) {
@@ -2955,7 +3002,253 @@
 
     const isEmpty = val => typeof val === "string" ? val.trim() === "" : val === null || val === undefined;
 
+    function getStructureTypeInSearchMode(name) {
+        if (!name) return "";
+        const cleanName = name.toLowerCase();
+        const STRUCT_PARAM  = "admin$#$default$#$default$#$all$#$all";
+        const STRUCT_KEY    = ("axi_structmetalist_" + STRUCT_PARAM).toLowerCase();
+        const rawList = axDatasourceObj[STRUCT_KEY] || [];
+        
+        const found = rawList.find(item => 
+            (item.name && item.name.toLowerCase() === cleanName) ||
+            (item.caption && item.caption.toLowerCase() === cleanName)
+        );
+        
+        if (found && found.stype) {
+            const stypeCode = found.stype.toLowerCase();
+            const map = { t: "tstruct", a: "ads", p: "page", i: "iview" };
+            return map[stypeCode] || stypeCode;
+        }
+        return "";
+    }
+
+    function updateModeUI() {
+        let badge = document.getElementById("axiModeBadge");
+        if (!badge && input && input.parentNode) {
+            badge = document.createElement("span");
+            badge.id = "axiModeBadge";
+            badge.className = "badge-mode";
+            input.parentNode.insertBefore(badge, input);
+            console.log("AxiModeBadge was missing in DOM, created dynamically.");
+        }
+
+        let logoText = document.getElementById("axiLogoModeText");
+        const logo = document.getElementById("axiLogo");
+        if (!logoText) {
+            if (logo) {
+                logoText = document.createElement("span");
+                logoText.id = "axiLogoModeText";
+                logoText.textContent = "cmd";
+                logo.appendChild(logoText);
+                console.log("AxiLogoModeText was missing in DOM, created dynamically.");
+            }
+        }
+
+        const logoImg = logo ? logo.querySelector("img") : null;
+
+        if (!badge || !input) return;
+
+        // Ensure Bootstrap's d-none doesn't interfere
+        badge.classList.remove("d-none");
+
+        const config = ModeRegistry[currentMode];
+
+        if (config) {
+            badge.textContent = config.badgeText;
+            badge.style.backgroundColor = config.badgeColor;
+            badge.style.display = "flex"; 
+            badge.style.alignItems = "center";
+            badge.style.flexShrink = "0";
+            badge.style.fontSize = "10px";
+            badge.style.fontWeight = "700";
+            badge.style.color = "#ffffff";
+            badge.style.padding = "4px 12px";
+            badge.style.borderRadius = "50px";
+            badge.style.marginRight = "10px";
+            badge.style.textTransform = "uppercase";
+            badge.style.letterSpacing = "0.8px";
+            badge.style.whiteSpace = "nowrap";
+            badge.style.position = "relative";
+            badge.style.zIndex = "999";
+            badge.classList.add("badge-visible");
+            if (logoText) logoText.textContent = config.badgeText.toLowerCase();
+            if (logoImg && config.icon) {
+                logoImg.src = config.icon;
+            }
+            if (currentMode === "search" && favouritesCard) {
+                favouritesCard.style.display = "none";
+            }
+            console.log(`[DEBUG] Badge updated to mode: ${config.badgeText}, display: ${badge.style.display}`);
+        } else {
+            badge.style.display = "none";
+            badge.classList.remove("badge-visible");
+            badge.textContent = "";
+            badge.style.backgroundColor = "";
+            if (logoText) logoText.textContent = "cmd";
+            if (logoImg) {
+                logoImg.src = "https://cdn-icons-png.flaticon.com/128/12822/12822485.png";
+            }
+        }
+
+        input.style.paddingLeft = "";
+    }
+
+
+    function normalizeSearchCommand(inputText) {
+        const tokens = getTokens(inputText);
+        if (tokens.length >= 2) {
+            const action = tokens[1];
+            const entity = tokens[0];
+            
+            const firstTokenLower = cleanString(entity).toLowerCase();
+            if (["create", "view", "edit"].includes(firstTokenLower)) {
+                return inputText;
+            }
+
+            const remaining = tokens.slice(2);
+            return [action, entity, ...remaining].join(" ");
+        }
+        return inputText;
+    }
+
+    function getSearchSuggestions(inputText) {
+
+        // ---- Shared helpers ----
+        const STRUCT_PARAM  = "admin$#$default$#$default$#$all$#$all";
+        const STRUCT_KEY    = ("axi_structmetalist_" + STRUCT_PARAM).toLowerCase();
+        const ALLOWED_TYPES = ["t", "a", "p", "i"]; // tstruct, ads, page, iview
+
+        function ensureStructList() {
+            console.log(`[DEBUG] ensureStructList: STRUCT_KEY=${STRUCT_KEY}, exists=${!!axDatasourceObj[STRUCT_KEY]}, activeFetch=${activeFetches.has(STRUCT_KEY)}`);
+            if (!axDatasourceObj[STRUCT_KEY]) {
+                if (!activeFetches.has(STRUCT_KEY)) {
+                    loadList("axi_structmetalist", STRUCT_PARAM);
+                }
+                return null;
+            }
+            return axDatasourceObj[STRUCT_KEY];
+        }
+
+        function stypeLabel(stype) {
+            if (!stype) return "";
+            const cleanStype = stype.toLowerCase();
+            const map = { t: "tstruct", a: "ads", p: "page", i: "iview" };
+            return map[cleanStype] || cleanStype;
+        }
+
+        function buildStructItems(rawList, partialTyped) {
+            return rawList
+                .filter(item => item.stype && ALLOWED_TYPES.includes(item.stype.toLowerCase()))
+                .filter(item =>
+                    !partialTyped ||
+                    (item.name && item.name.toLowerCase().startsWith(partialTyped)) ||
+                    (item.caption && item.caption.toLowerCase().startsWith(partialTyped))
+                )
+                .map(item => ({
+                    name: item.name,
+                    displaydata: item.displaydata ||
+                        `${item.caption || item.name} (${item.name}) [${stypeLabel(item.stype)}]`,
+                    stype: stypeLabel(item.stype),
+                    caption: item.caption || item.displaydata || item.name,
+                    keyfield: item.keyfield
+                }));
+        }
+
+        const tokens = getTokens(inputText);
+        const endsWithSpace = inputText.endsWith(" ");
+        const lastTokenRaw = tokens[tokens.length - 1];
+        const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') &&
+            (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
+        if (endsWithSpace && !isUnclosedString) tokens.push("");
+
+        // ---- Token 0: empty input OR typing first word (structure name) ----
+        if (tokens.length === 0 || tokens.length === 1) {
+            const rawList = ensureStructList();
+            if (!rawList) {
+                filteredObjects = [];
+                return ["Loading structures..."];
+            }
+
+            const partialTyped = tokens.length === 0 ? "" : cleanString(tokens[0]).toLowerCase();
+            const filtered = buildStructItems(rawList, partialTyped);
+            console.log(`[DEBUG] getSearchSuggestions: rawList length=${rawList.length}, filtered length=${filtered.length}`);
+
+            filteredObjects = filtered;
+            return filtered.map(item => item.displaydata);
+        }
+
+        // ---- Token 1: user typed "structName " and now choosing action ----
+        if (tokens.length === 2) {
+            const rawList = ensureStructList();
+            if (!rawList) {
+                filteredObjects = [];
+                return ["Loading structures..."];
+            }
+
+            const selectedStructName = cleanString(tokens[0]).toLowerCase();
+            const foundItem = rawList.find(item => 
+                (item.name && item.name.toLowerCase() === selectedStructName) ||
+                (item.caption && item.caption.toLowerCase() === selectedStructName)
+            );
+
+            if (!foundItem) {
+                // Unknown struct name — still try to autocomplete as if token 0
+                const filtered = buildStructItems(rawList, selectedStructName);
+                filteredObjects = filtered;
+                return filtered.map(item => item.displaydata);
+            }
+
+            const stypeCode = foundItem.stype ? foundItem.stype.toLowerCase() : "";
+            const actions = (stypeCode === "t" || stypeCode === "tstruct") ? ["Create", "View", "Edit"] : ["View"];
+            const partialTyped = cleanString(tokens[1]).toLowerCase();
+            const filtered = actions.filter(act => act.startsWith(partialTyped));
+            filteredObjects = filtered.map(act => ({ name: act, displaydata: act }));
+            return filtered;
+        }
+
+        // ---- 3+ tokens: reorder [structName, action, ...params] → [action, structName, ...params] ----
+        // and delegate to the standard cmd suggestion engine
+        const normalizedTokens = [tokens[1], tokens[0], ...tokens.slice(2)];
+        const normalizedInput = normalizedTokens.join(" ");
+        return getCmdSuggestions(normalizedInput);
+    }
+
+     const ModeRegistry = {
+        cmd: {
+            badgeText: "CMD",
+            badgeColor: "#a100ff",
+            icon: "https://cdn-icons-png.flaticon.com/128/12822/12822485.png",
+            getSuggestions: (text) => getCmdSuggestions(text),
+            execute: () => executeCommandsV2()
+        },
+        search: {
+            badgeText: "SEARCH",
+            badgeColor: "#00c853",
+            icon: "https://cdn-icons-png.flaticon.com/128/954/954591.png",
+            getSuggestions: (text) => getSearchSuggestions(text),
+            execute: () => {
+                executeCommandsV2();
+            }
+        }
+    };
+
     function suggestLocal(inputText) {
+        if (inModeSelection) {
+            const list = ["/cmd", "/search"];
+            const partial = cleanString(inputText).toLowerCase();
+            const filtered = list.filter(m => m.startsWith(partial));
+            filteredObjects = filtered.map(m => ({ name: m, displaydata: m }));
+            return filtered;
+        }
+
+        const config = ModeRegistry[currentMode];
+        if (config) {
+            return config.getSuggestions(inputText);
+        }
+        return [];
+    }
+
+    function getCmdSuggestions(inputText) {
         let ignoreExtraParams = false;
         let detectedType = "";
         const tokens = getTokens(inputText);
@@ -3217,7 +3510,7 @@
                 window._staticValidationTimer = setTimeout(() => {
                     if (input.value !== currentInput) return;
 
-                    const latestTokens = getTokens(input.value);
+                    const latestTokens = getCurrentTokens();
                     const latestPartial = cleanString(latestTokens[latestTokens.length - 1] || "");
                     const isValid = staticValues.some(val => val.toLowerCase() === latestPartial.toLowerCase());
 
@@ -3944,10 +4237,10 @@
         };
 
 
-        const currentTokens = getTokens(input.value);
+        const currentTokens = getCurrentTokens();
 
 
-        const promptInfo = getActivePromptInfo(commandConfig, getTokens(input.value), tokenIndex);
+        const promptInfo = getActivePromptInfo(commandConfig, getCurrentTokens(), tokenIndex);
         // if (!promptInfo) return tokenText;
         if (!promptInfo) return {
             value: tokenText,
@@ -3967,7 +4260,7 @@
                 const values = indices.map(idx => {
                     const logicalWordPos = parseInt(idx.trim());
                     const depTokenIndex = logicalWordPos - 1;
-                    const depToken = cleanString(getTokens(input.value)[depTokenIndex] || "");
+                    const depToken = cleanString(getCurrentTokens()[depTokenIndex] || "");
                     // return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
                     const resolved = tryResolveToken(depTokenIndex, depToken, commandConfig, true);
                     return resolved.value;
@@ -4046,7 +4339,29 @@
 
             let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
 
-            const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
+            let cachedList = axDatasourceObj[cacheKey.toLowerCase()];
+            if (!cachedList || cachedList.length === 0) {
+                const searchParam = "admin$#$default$#$default$#$all$#$all";
+                const searchKey = `axi_structmetalist_${searchParam}`;
+                if (axDatasourceObj[searchKey]) {
+                    cachedList = axDatasourceObj[searchKey];
+                } else {
+                    for (const k in axDatasourceObj) {
+                        if (axDatasourceObj[k] && Array.isArray(axDatasourceObj[k])) {
+                            const hasMatch = axDatasourceObj[k].some(item =>
+                                (cleanString(item.displaydata) || "").toLowerCase() === tokenText.toLowerCase() ||
+                                (cleanString(item.caption) || "").toLowerCase() === tokenText.toLowerCase() ||
+                                (cleanString(item.name) || "").toLowerCase() === tokenText.toLowerCase()
+                            );
+                            if (hasMatch) {
+                                cachedList = axDatasourceObj[k];
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
             if (cachedList) {
                 // Find matching items
                 const matches = cachedList.filter(item =>
@@ -4148,7 +4463,7 @@
         if (items.length > 0 && isSystemMessage(items[0])) {
             activeIndex = -1;
         } else {
-            const currentTokens = getTokens(input.value.trim());
+            const currentTokens = getCurrentTokens(true);
             const isUserTyping = currentTokens.length > 1 && !input.value.endsWith(" ");
             // const hasGoOption = validItems.some(item => typeof item === 'object' && item.name === "GO_ACTION");
             // const hasSaveOption = validItems.some(item => typeof item === 'object' && item.name === "Save_ACTION");
@@ -4204,7 +4519,7 @@
         //     activeIndex = exactMatchIndex !== -1 ? exactMatchIndex : 0;
         // }
 
-        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
+        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0]) && currentMode !== "search") {
             list.classList.add("axi-grid-layout", "My-Command-Wrapper");
             if (favouritesCard) favouritesCard.style.display = "flex";
             if (commandHeader) commandHeader.style.display = "flex";
@@ -4228,7 +4543,7 @@
             return;
         }
 
-        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
+        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0]) && currentMode !== "search") {
             list.classList.add("axi-grid-layout", "My-Command-Wrapper");
             if (favouritesCard) favouritesCard.style.display = "flex";
             if (commandHeader) commandHeader.style.display = "flex";
@@ -4322,15 +4637,28 @@
 
     function apply(index) {
 
-        if (!items[index] || isSystemMessage(items[index])) return;
-
         const selectedItem = items[index];
+
+        if (inModeSelection) {
+            if (selectedItem === "/search" || selectedItem === "/cmd") {
+                currentMode = selectedItem.replace("/", "");
+                inModeSelection = false;
+                input.value = "";
+                updateModeUI();
+                handleInput();
+                input.focus();
+                return;
+            }
+        }
 
 
         const currentInput = input.value;
         const tokens = getTokens(currentInput);
 
-        const saveGroupKeyCheck = cleanString(tokens[0]);
+        let saveGroupKeyCheck = cleanString(tokens[0]);
+        if (currentMode === "search" && tokens.length >= 2) {
+            saveGroupKeyCheck = cleanString(tokens[1]);
+        }
         const saveCommandConfig = commands[saveGroupKeyCheck];
 
         if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "GO_ACTION") {
@@ -4404,45 +4732,41 @@
 
         // }
 
-        const isViewCommand = tokens[0]?.toLowerCase() === "view";
+        let isViewCommand = tokens[0]?.toLowerCase() === "view";
+        if (currentMode === "search" && tokens.length >= 2) {
+            isViewCommand = tokens[1]?.toLowerCase() === "view";
+        }
 
 
 
 
         let isAdsValue = false;
 
-        const groupKey = cleanString(tokens[0]);
+        let groupKey = cleanString(tokens[0]);
+        if (currentMode === "search" && tokens.length >= 2) {
+            groupKey = cleanString(tokens[1]);
+        }
         const commandConfig = commands[groupKey];
         /**
          * ==== Robust Type checking for View command ===
          */
         if (isViewCommand && commands) {
+            const structName = (currentMode === "search") ? cleanString(tokens[0] || "") : cleanString(tokens[1] || "");
+            const detectedType = (currentMode === "search")
+                ? getStructureTypeInSearchMode(structName)
+                : (() => {
+                      if (commandConfig && commandConfig.prompts && commandConfig.prompts[0]) {
+                          const viewSource = commandConfig.prompts[0].promptSource;
+                          const viewValues = commandConfig.prompts[0].promptValues;
+                          const firstToken = cleanString(tokens[1] || "");
+                          const resolved = tryResolveToken(1, firstToken, commandConfig, false);
+                          return getType(viewSource.toLowerCase(), resolved, viewValues, tokens, commandConfig);
+                      }
+                      return "";
+                  })();
 
-
-            if (commandConfig && commandConfig.prompts && commandConfig.prompts[0]) {
-                const viewSource = commandConfig.prompts[0].promptSource;
-                const viewValues = commandConfig.prompts[0].promptValues;
-                const firstToken = cleanString(tokens[1] || "");
-
-                // const detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues, tokens, commandConfig);
-                const resolved = tryResolveToken(
-                    1,
-                    firstToken,
-                    commandConfig,
-                    false
-                );
-
-                const detectedType = getType(
-                    viewSource.toLowerCase(),
-                    resolved,
-                    viewValues,
-                    tokens,
-                    commandConfig
-                );
-
-                if (detectedType === "ads" && targetIndex >= 3 && targetIndex % 2 !== 0) {
-                    isAdsValue = true;
-                }
+            if (detectedType === "ads" && targetIndex >= 3 && targetIndex % 2 !== 0) {
+                isAdsValue = true;
             }
         }
 
@@ -4520,8 +4844,13 @@
             displayName = text.replace(/\s*\[[^\]]*\]$/, "").trim();
         }
 
-        resolvedParams[targetIndex] = realValue;
-        resolvedParamType[targetIndex] = realType;
+        let resolvedIndex = targetIndex;
+        if (currentMode === "search") {
+            if (targetIndex === 0) resolvedIndex = 1;
+            else if (targetIndex === 1) resolvedIndex = 0;
+        }
+        resolvedParams[resolvedIndex] = realValue;
+        resolvedParamType[resolvedIndex] = realType;
 
         displayName = displayName.replace(/[\r\n]+/g, " ").trim();
 
@@ -4592,11 +4921,19 @@
 
     async function getAxListAsync(data) {
         return new Promise((resolve, reject) => {
-            window.GetDataFromAxList(
-                data,
-                res => resolve(res),
-                err => reject(err)
-            );
+            const func = window.GetDataFromAxList || 
+                         (typeof parent !== "undefined" && parent.GetDataFromAxList) || 
+                         (typeof top !== "undefined" && top.GetDataFromAxList) || 
+                         (typeof callParentNew === "function" && callParentNew("GetDataFromAxList"));
+            if (typeof func === "function") {
+                func(
+                    data,
+                    res => resolve(res),
+                    err => reject(err)
+                );
+            } else {
+                reject(new Error("GetDataFromAxList function is not found on window, parent, or top"));
+            }
         });
 
     }
@@ -4634,7 +4971,7 @@
             }
 
             // ---- Stable cache key ----
-            const cacheKey = `axi_${axDatasourceName}_${normalizedParams.join("|")}_v1`;
+            const cacheKey = `axi_${axDatasourceName}_${normalizedParams.join("|")}_v2`;
 
             const cached = localStorage.getItem(cacheKey);
             if (cached) {
@@ -4659,13 +4996,19 @@
 
 
 
-            const dataObj = typeof res === "string" ? JSON.parse(res) : res;
+            let dataObj = res;
+            if (typeof res === "string") {
+                dataObj = JSON.parse(res);
+            }
+            if (dataObj && dataObj.d) {
+                dataObj = typeof dataObj.d === "string" ? JSON.parse(dataObj.d) : dataObj.d;
+            }
 
-            console.log("DATA obj is : " + dataObj);
+            console.log("DATA obj is : ", dataObj);
             console.log("Type of DATA OBJ: " + typeof dataObj);
             const list = dataObj?.result?.data?.[0]?.data ?? [];
 
-            if (dataObj?.result?.data?.[0].error) {
+            if (dataObj?.result?.data?.[0]?.error) {
                 showToast(`Error: ${dataObj?.result?.data?.[0].error}`);
                 console.log(`Error: ${list[0].error}`);
                 return;
@@ -4683,6 +5026,8 @@
             return list;
 
         } catch (err) {
+            console.error("getList error:", err);
+            showToast("Failed to fetch list: " + err.message);
             return [];
         }
     }
@@ -5033,10 +5378,18 @@
                 e.preventDefault();
                 return;
             }
+            if (e.key === "Backspace" && input.value === "" && currentMode !== "cmd") {
+                e.preventDefault();
+                currentMode = "cmd";
+                inModeSelection = false;
+                updateModeUI();
+                handleInput();
+                return;
+            }
             isDeleting = (e.key === "Backspace" || e.key === "Delete");
             console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
 
-            const tokens = getTokens(input.value.trim());
+            const tokens = getCurrentTokens(true);
 
             const grpKey = tokens[0];
 
@@ -5381,7 +5734,16 @@
      * @returns 
      */
     function executeCommandsV2(isNavigating = false) {
-        if (input.value === "") {
+        let text = input.value.trim();
+        if (currentMode === "search") {
+            const tokens = getTokens(text);
+            if (tokens.length < 2) {
+                showToast("Please select an action (create, view, edit) to execute.");
+                return;
+            }
+            text = normalizeSearchCommand(text);
+        }
+        if (text === "") {
             showToast("Invalid Command!");
             return;
         }
@@ -5394,11 +5756,6 @@
             showToast("Execution is not Allowed while executing");
             return;
         }
-
-
-
-        const text = input.value.trim();
-
 
 
         if (!text || !commands) return;
@@ -5477,23 +5834,29 @@
         }
 
 
-        setTimeout(() => {
-            input.focus();
+        if (currentMode !== "search") {
+            setTimeout(() => {
+                input.focus();
 
-            if (tokens.length > 0) {
-                const firstToken = tokens[0];
+                if (tokens.length > 0) {
+                    const firstToken = tokens[0];
 
-                let startIndex = input.value.indexOf(firstToken) + firstToken.length;
+                    let startIndex = input.value.indexOf(firstToken) + firstToken.length;
 
-                while (input.value[startIndex] === ' ') {
-                    startIndex++;
+                    while (input.value[startIndex] === ' ') {
+                        startIndex++;
+                    }
+
+                    input.setSelectionRange(startIndex, input.value.length);
+
                 }
 
-                input.setSelectionRange(startIndex, input.value.length);
-
-            }
-
-        }, 200)
+            }, 200);
+        } else {
+            setTimeout(() => {
+                input.focus();
+            }, 200);
+        }
     }
 
 
@@ -5560,9 +5923,11 @@
         let transId = value;
 
         if (transId === rawName) {
-            const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+            const list = axDatasourceObj["Axi_TStructList".toLowerCase()] || 
+                         axDatasourceObj["axi_structmetalist_admin$#$default$#$default$#$all$#$all"];
             const found = list?.find(
-                x => x.caption.toLowerCase() === rawName.toLowerCase()
+                x => (x.caption && x.caption.toLowerCase() === rawName.toLowerCase()) ||
+                     (x.name && x.name.toLowerCase() === rawName.toLowerCase())
             );
             if (found) transId = found.name
             else {
@@ -6615,7 +6980,13 @@
 
         const res = await getAxListAsync(requestBody);
 
-        const dataObj = typeof res === "string" ? JSON.parse(res) : res;
+        let dataObj = res;
+        if (typeof res === "string") {
+            dataObj = JSON.parse(res);
+        }
+        if (dataObj && dataObj.d) {
+            dataObj = typeof dataObj.d === "string" ? JSON.parse(dataObj.d) : dataObj.d;
+        }
 
         console.log("DATA obj is :", dataObj);
         console.log("Type of DATA OBJ:", typeof dataObj);
