@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [11.4.0-beta.6] - 2026-07-02
+
+### Added
+- **Run Command Hidden Button Filtering**: Improved button parsers (`getButtons`, `getDesignModeToolbarButtons`, `getProcessFlowToolbarButtons`, and `getAxiBotActionButtons`) to dynamically filter out hidden buttons having Bootstrap class `.d-none` or residing inside parent hidden containers.
+
+### Changed
+- **Search Mode Input Preservation**: Modified `executeCommandsV2()` to execute search queries using internal normalized commands while keeping the visual input string unchanged (`"Sales Order FORM" Create`).
+
+### Fixed
+- **Search Mode Token Resolution & Swap**: Fixed dynamic token mapping inside `tryResolveToken` and `apply` for search mode, ensuring indices map correctly to the internal normalized layout from suggestion selection to execution.
+
 ## [11.4.0-beta.5] - 2026-07-02
 
 ### Added

@@ -8570,7 +8570,7 @@
             if (btn.type === "hidden") return;
             if (btn.style.display === "none") return;
             if (btn.offsetParent === null) return;
-            if (btn.classList.contains("disabled")) return;
+            if (btn.classList.contains("disabled") || btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[style*='display: none']") || btn.closest(".hidden") || btn.closest("[style*='display:none']")) return;
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || btn.name || btn.getAttribute("data-kt-stepper-action");
             if (!id) return;
@@ -8637,7 +8637,8 @@
         const result = {};
 
         buttons.forEach((btn, index) => {
-            // if (!hasAction(btn)) return;
+            if (btn.offsetParent === null) return;
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[style*='display: none']") || btn.closest(".hidden") || btn.closest("[style*='display:none']")) return;
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
             if (!id) return;
@@ -8697,7 +8698,8 @@
 
             elements.forEach((el, index) => {
                 // skip hidden
-                if (el.classList.contains("d-none")) return;
+                if (el.offsetParent === null) return;
+                if (el.classList.contains("d-none") || el.closest(".d-none") || el.closest("[style*='display: none']") || el.closest(".hidden") || el.closest("[style*='display:none']")) return;
 
                 // must be actionable
                 // if (!hasAction(el)) return;
@@ -11206,7 +11208,8 @@
         const result = {};
 
         buttons.forEach((btn, index) => {
-            if (btn.classList.contains("d-none")) return;
+            if (btn.offsetParent === null) return;
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[style*='display: none']") || btn.closest(".hidden") || btn.closest("[style*='display:none']")) return;
 
             const id =
                 btn.id ||
