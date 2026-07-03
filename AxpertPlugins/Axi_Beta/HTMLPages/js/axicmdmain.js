@@ -2002,12 +2002,20 @@
                 console.log(`Token changed at position ${idx}: "${lastToken}" ? "${cleanToken}"`);
                 delete resolvedParams[mappedIdx];
                 delete resolvedParamType[mappedIdx];
-                Object.keys(resolvedParams).forEach(key => {
-                    if (parseInt(key) > mappedIdx) {
-                        delete resolvedParams[key];
-                        console.log(`Cleared dependent resolution at index ${key}`);
+                
+                // Clear dependent resolutions based on visual index, not mapped index
+                for (let i = idx + 1; i < currentTokens.length; i++) {
+                    let depMappedIdx = i;
+                    if (currentMode === "search") {
+                        if (i === 0) depMappedIdx = 1;
+                        else if (i === 1) depMappedIdx = 0;
                     }
-                });
+                    if (resolvedParams[depMappedIdx]) {
+                        delete resolvedParams[depMappedIdx];
+                        delete resolvedParamType[depMappedIdx];
+                        console.log(`Cleared dependent resolution at mapped index ${depMappedIdx} (visual index ${i})`);
+                    }
+                }
             }
         });
 
@@ -3010,10 +3018,10 @@
         }
 
         return rawList.find(item => 
-            (item.name && item.name.toLowerCase() === cleanName) ||
-            (item.caption && item.caption.toLowerCase() === cleanName) ||
-            (structNameFromParentheses && item.name && item.name.toLowerCase() === structNameFromParentheses) ||
-            (structCaptionFromParentheses && item.caption && item.caption.toLowerCase() === structCaptionFromParentheses)
+            (item.name && item.name.trim().toLowerCase() === cleanName) ||
+            (item.caption && item.caption.trim().toLowerCase() === cleanName) ||
+            (structNameFromParentheses && item.name && item.name.trim().toLowerCase() === structNameFromParentheses) ||
+            (structCaptionFromParentheses && item.caption && item.caption.trim().toLowerCase() === structCaptionFromParentheses)
         );
     }
 
@@ -3022,6 +3030,22 @@
         const STRUCT_PARAM  = "admin$#$default$#$default$#$all$#$all";
         const STRUCT_KEY    = ("axi_structmetalist_" + STRUCT_PARAM).toLowerCase();
         const rawList = axDatasourceObj[STRUCT_KEY] || [];
+        
+        // Use the stored type from user's selection to avoid ambiguity
+        const storedType = resolvedParamType?.[1];
+        if (storedType) {
+            const cleanName = name.replace(/['"]/g, "").trim().toLowerCase();
+            const typed = rawList.find(item =>
+                ((item.name && item.name.trim().toLowerCase() === cleanName) ||
+                 (item.caption && item.caption.trim().toLowerCase() === cleanName)) &&
+                matchStype(item.stype, storedType)
+            );
+            if (typed && typed.stype) {
+                const stypeCode = typed.stype.toLowerCase();
+                const map = { t: "tstruct", a: "ads", p: "page", i: "iview" };
+                return map[stypeCode] || stypeCode;
+            }
+        }
         
         const found = findStructMetadata(name, rawList);
         
@@ -3174,7 +3198,7 @@
 
         if (currentMode === "search") {
             if (endsWithSpace) {
-                if (tokens.length === 1) {
+                if (tokens.length === 1 && !isUnclosedString) {
                     tokens.push("");
                 } else if (tokens.length > 1 && !isUnclosedString) {
                     tokens.push("");
@@ -3209,7 +3233,22 @@
             }
 
             const selectedStructName = tokens[0];
-            const foundItem = findStructMetadata(selectedStructName, rawList);
+            // Use resolvedParamType to pick the correct item when names are ambiguous.
+            // In search mode, visual token 0 (struct name) maps to logical index 1.
+            const storedType = resolvedParamType?.[1];
+            let foundItem = null;
+            if (storedType) {
+                // Find the item that matches BOTH the name/caption AND the stored type
+                const cleanName = selectedStructName.replace(/['"]/g, "").trim().toLowerCase();
+                foundItem = rawList.find(item =>
+                    ((item.name && item.name.trim().toLowerCase() === cleanName) ||
+                     (item.caption && item.caption.trim().toLowerCase() === cleanName)) &&
+                    matchStype(item.stype, storedType)
+                );
+            }
+            if (!foundItem) {
+                foundItem = findStructMetadata(selectedStructName, rawList);
+            }
 
             if (!foundItem) {
                 // Unknown struct name — still try to autocomplete as if token 0
@@ -4238,6 +4277,16 @@
         return paramValue;
     }
 
+    function matchStype(itemStype, preferredType) {
+        if (!itemStype || !preferredType) return false;
+        const iType = itemStype.toLowerCase();
+        const pType = preferredType.toLowerCase();
+        if (iType === pType) return true;
+        const map = { t: "tstruct", a: "ads", p: "page", i: "iview" };
+        if (map[iType] === pType) return true;
+        if (iType === map[pType]) return true;
+        return false;
+    }
 
     function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
 
@@ -4394,13 +4443,21 @@
                     let found = matches[0];
                     let preferredType = resolvedParamType?.[tokenIndex];
                     const cmdGroup = currentTokens[0]?.toLowerCase();
-                    if (cmdGroup === "edit" && tokenIndex === 1) {
+                    // For edit/create, default to tstruct if no type was stored
+                    if ((cmdGroup === "edit" || cmdGroup === "create") && tokenIndex === 1 && !preferredType) {
                         preferredType = "t";
                     }
-                    if ((preferredType || (cmdGroup === "edit" && tokenIndex === 1)) && matches.length > 1) {
-                        const typeMatched = matches.find(item => (item.stype || "").toLowerCase() === (preferredType || "t").toLowerCase());
+                    // When we have a preferred type AND multiple matches, filter by type
+                    if (preferredType && matches.length > 1) {
+                        const typeMatched = matches.find(item => matchStype(item.stype, preferredType));
                         if (typeMatched) {
                             found = typeMatched;
+                        }
+                    } else if (matches.length > 1) {
+                        // No preferred type — try exact caption match as a last resort
+                        const exactMatch = matches.find(item => (cleanString(item.caption) || "").toLowerCase() === tokenText.toLowerCase());
+                        if (exactMatch) {
+                            found = exactMatch;
                         }
                     }
 
@@ -5961,8 +6018,9 @@
             const list = axDatasourceObj["Axi_TStructList".toLowerCase()] || 
                          axDatasourceObj["axi_structmetalist_admin$#$default$#$default$#$all$#$all"];
             const found = list?.find(
-                x => (x.caption && x.caption.toLowerCase() === rawName.toLowerCase()) ||
-                     (x.name && x.name.toLowerCase() === rawName.toLowerCase())
+                x => ((x.caption && x.caption.toLowerCase() === rawName.toLowerCase()) ||
+                     (x.name && x.name.toLowerCase() === rawName.toLowerCase())) &&
+                     (!x.stype || x.stype.toLowerCase() === 't')
             );
             if (found) transId = found.name
             else {
