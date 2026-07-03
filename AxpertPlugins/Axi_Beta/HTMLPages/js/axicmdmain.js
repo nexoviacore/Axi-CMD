@@ -3151,7 +3151,7 @@
         // ---- Shared helpers ----
         const STRUCT_PARAM  = "admin$#$default$#$default$#$all$#$all";
         const STRUCT_KEY    = ("axi_structmetalist_" + STRUCT_PARAM).toLowerCase();
-        const ALLOWED_TYPES = ["t", "a", "p", "i"]; // tstruct, ads, page, iview
+        const ALLOWED_TYPES = ["t", "tstruct", "a", "ads", "p", "page", "i", "iview"]; // tstruct, ads, page, iview
 
         function ensureStructList() {
             console.log(`[DEBUG] ensureStructList: STRUCT_KEY=${STRUCT_KEY}, exists=${!!axDatasourceObj[STRUCT_KEY]}, activeFetch=${activeFetches.has(STRUCT_KEY)}`);
