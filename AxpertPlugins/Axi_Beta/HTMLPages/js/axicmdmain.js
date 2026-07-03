@@ -269,12 +269,6 @@
 
 
     async function init() {
-        window.addEventListener("error", function (e) {
-            showToast("Error: " + e.message + " at " + e.filename + ":" + e.lineno);
-        });
-        window.addEventListener("unhandledrejection", function (e) {
-            showToast("Rejection: " + e.reason);
-        });
         injectBadgeStyles();
         if (typeof window.mainUserName === "undefined" || !window.mainUserName) {
             window.mainUserName = (typeof callParentNew === "function" && callParentNew("mainUserName")) || 
@@ -1995,8 +1989,8 @@
         // Clear stale resolutions when input changes
         const currentTokens = getTokens(text);
         currentTokens.forEach((token, idx) => {
-            const cleanToken = token.replace(/"/g, "");
-            const lastToken = lastTypedTokens[idx] ? lastTypedTokens[idx].replace(/"/g, "") : null;
+            const cleanToken = token.replace(/['"]/g, "");
+            const lastToken = lastTypedTokens[idx] ? lastTypedTokens[idx].replace(/['"]/g, "") : null;
 
             let mappedIdx = idx;
             if (currentMode === "search") {
@@ -2112,7 +2106,7 @@
 
         //const regex = new RegExp(`"[^"]*"?|${OPERATOR_REGEX_PART}|[^\\s=<>!]+`, "g");
         // const regex = new RegExp(`"[^"]*"|[^\\s]+`, "g");
-        const regex = new RegExp(`"[^"]*"?|[^\\s]+`, "g");
+        const regex = new RegExp(`'[^']*'?|"[^"]*"?|[^\\s]+`, "g");
         return str.match(regex) || [];
     }
 
@@ -2134,7 +2128,7 @@
     }
 
     function cleanString(val) {
-        return (val || "").replace(/["]/g, "").trim();
+        return (val || "").replace(/['"]/g, "").trim();
     }
 
 
@@ -3002,17 +2996,34 @@
 
     const isEmpty = val => typeof val === "string" ? val.trim() === "" : val === null || val === undefined;
 
+    function findStructMetadata(name, rawList) {
+        if (!name) return null;
+        let cleanName = name.replace(/['"]/g, "").trim().toLowerCase();
+        
+        // Match parenthesized name like: sales order (so)
+        let structNameFromParentheses = "";
+        let structCaptionFromParentheses = "";
+        const parenMatch = cleanName.match(/(.*?)\s*\(([^)]+)\)$/);
+        if (parenMatch) {
+            structCaptionFromParentheses = parenMatch[1].trim();
+            structNameFromParentheses = parenMatch[2].trim();
+        }
+
+        return rawList.find(item => 
+            (item.name && item.name.toLowerCase() === cleanName) ||
+            (item.caption && item.caption.toLowerCase() === cleanName) ||
+            (structNameFromParentheses && item.name && item.name.toLowerCase() === structNameFromParentheses) ||
+            (structCaptionFromParentheses && item.caption && item.caption.toLowerCase() === structCaptionFromParentheses)
+        );
+    }
+
     function getStructureTypeInSearchMode(name) {
         if (!name) return "";
-        const cleanName = name.toLowerCase();
         const STRUCT_PARAM  = "admin$#$default$#$default$#$all$#$all";
         const STRUCT_KEY    = ("axi_structmetalist_" + STRUCT_PARAM).toLowerCase();
         const rawList = axDatasourceObj[STRUCT_KEY] || [];
         
-        const found = rawList.find(item => 
-            (item.name && item.name.toLowerCase() === cleanName) ||
-            (item.caption && item.caption.toLowerCase() === cleanName)
-        );
+        const found = findStructMetadata(name, rawList);
         
         if (found && found.stype) {
             const stypeCode = found.stype.toLowerCase();
@@ -3157,9 +3168,21 @@
         const tokens = getTokens(inputText);
         const endsWithSpace = inputText.endsWith(" ");
         const lastTokenRaw = tokens[tokens.length - 1];
-        const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') &&
-            (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
-        if (endsWithSpace && !isUnclosedString) tokens.push("");
+        const isUnclosedString = lastTokenRaw && 
+            ((lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"')) ||
+             (lastTokenRaw.startsWith("'") && (!lastTokenRaw.endsWith("'") || lastTokenRaw === "'")));
+
+        if (currentMode === "search") {
+            if (endsWithSpace) {
+                if (tokens.length === 1) {
+                    tokens.push("");
+                } else if (tokens.length > 1 && !isUnclosedString) {
+                    tokens.push("");
+                }
+            }
+        } else {
+            if (endsWithSpace && !isUnclosedString) tokens.push("");
+        }
 
         // ---- Token 0: empty input OR typing first word (structure name) ----
         if (tokens.length === 0 || tokens.length === 1) {
@@ -3185,15 +3208,12 @@
                 return ["Loading structures..."];
             }
 
-            const selectedStructName = cleanString(tokens[0]).toLowerCase();
-            const foundItem = rawList.find(item => 
-                (item.name && item.name.toLowerCase() === selectedStructName) ||
-                (item.caption && item.caption.toLowerCase() === selectedStructName)
-            );
+            const selectedStructName = tokens[0];
+            const foundItem = findStructMetadata(selectedStructName, rawList);
 
             if (!foundItem) {
                 // Unknown struct name — still try to autocomplete as if token 0
-                const filtered = buildStructItems(rawList, selectedStructName);
+                const filtered = buildStructItems(rawList, cleanString(selectedStructName).toLowerCase());
                 filteredObjects = filtered;
                 return filtered.map(item => item.displaydata);
             }
@@ -3201,7 +3221,7 @@
             const stypeCode = foundItem.stype ? foundItem.stype.toLowerCase() : "";
             const actions = (stypeCode === "t" || stypeCode === "tstruct") ? ["Create", "View", "Edit"] : ["View"];
             const partialTyped = cleanString(tokens[1]).toLowerCase();
-            const filtered = actions.filter(act => act.startsWith(partialTyped));
+            const filtered = actions.filter(act => act.toLowerCase().startsWith(partialTyped));
             filteredObjects = filtered.map(act => ({ name: act, displaydata: act }));
             return filtered;
         }
@@ -5386,6 +5406,21 @@
                 handleInput();
                 return;
             }
+            if (currentMode === "search" && e.key === " " && input.value.trim().length > 0) {
+                const val = input.value;
+                if (!val.startsWith('"')) {
+                    e.preventDefault();
+                    const start = input.selectionStart;
+                    const end = input.selectionEnd;
+                    const before = val.substring(0, start);
+                    const after = val.substring(end);
+                    input.value = `"${before} ${after}`;
+                    const newCursorPos = start + 2;
+                    input.setSelectionRange(newCursorPos, newCursorPos);
+                    handleInput();
+                    return;
+                }
+            }
             isDeleting = (e.key === "Backspace" || e.key === "Delete");
             console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
 
@@ -5397,7 +5432,7 @@
             if (grpKey)
                 saveCommandConfig = commands[grpKey];
 
-            if (e.key === 'Backspace' && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit")) {
+            if (currentMode !== "search" && e.key === 'Backspace' && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit")) {
                 let transIDcheck = setCommandTransid;
                 if (input.selectionStart !== input.selectionEnd) {
                     createfieldnamevaluesList[transIDcheck] = [];
@@ -5467,7 +5502,7 @@
 
 
             }
-            else if (e.key === 'Backspace' && grpKey?.toLowerCase() === "view") {
+            else if (currentMode !== "search" && e.key === 'Backspace' && grpKey?.toLowerCase() === "view") {
                 if (input.selectionStart !== input.selectionEnd) {
                     setCommandTransid = null;
                     dateControlBoolean = false;
@@ -11435,6 +11470,10 @@
     }
 
     function toggleFavorite(cmdText, isAdding = false) {
+        if (currentMode === "search") {
+            showToast("You cannot add commands to Favorites in Search Mode!");
+            return;
+        }
         let cmdIndex;
         const tokens = getTokens(cmdText.trim());
 
