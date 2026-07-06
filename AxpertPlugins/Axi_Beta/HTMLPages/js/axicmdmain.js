@@ -2,7 +2,7 @@
 (() => {
     // Released On: 11/06/2026
     // /AxPlugins/Axi/HTMLPages/js/axicmdmain.js
-    
+
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
     let apiMetadataConfigError = "";
@@ -271,27 +271,27 @@
     async function init() {
         injectBadgeStyles();
         if (typeof window.mainUserName === "undefined" || !window.mainUserName) {
-            window.mainUserName = (typeof callParentNew === "function" && callParentNew("mainUserName")) || 
-                                  (typeof parent !== "undefined" && parent.mainUserName) || 
-                                  (typeof top !== "undefined" && top.mainUserName) || 
-                                  "";
+            window.mainUserName = (typeof callParentNew === "function" && callParentNew("mainUserName")) ||
+                (typeof parent !== "undefined" && parent.mainUserName) ||
+                (typeof top !== "undefined" && top.mainUserName) ||
+                "";
         }
         if (typeof window.mainProject === "undefined" || !window.mainProject) {
-            window.mainProject = (typeof callParentNew === "function" && callParentNew("mainProject")) || 
-                                 (typeof parent !== "undefined" && parent.mainProject) || 
-                                 (typeof top !== "undefined" && top.mainProject) || 
-                                 "";
+            window.mainProject = (typeof callParentNew === "function" && callParentNew("mainProject")) ||
+                (typeof parent !== "undefined" && parent.mainProject) ||
+                (typeof top !== "undefined" && top.mainProject) ||
+                "";
         }
 
         //  "API_METADATA": "http://localhost:90/AxiApi/api/v1/Axi/axi_get",    
 
         // "AXI_FAVORITES_URL": "http://localhost:90/AxiApi/api/v1/Axi/user-favourites"
 
-        let globalArmUrl = (typeof armUrl !== "undefined" && armUrl) || 
-                           (typeof parent !== "undefined" && typeof parent.armUrl !== "undefined" && parent.armUrl) || 
-                           (typeof top !== "undefined" && typeof top.armUrl !== "undefined" && top.armUrl) || 
-                           (typeof callParentNew === "function" && callParentNew("armUrl")) ||
-                           "";
+        let globalArmUrl = (typeof armUrl !== "undefined" && armUrl) ||
+            (typeof parent !== "undefined" && typeof parent.armUrl !== "undefined" && parent.armUrl) ||
+            (typeof top !== "undefined" && typeof top.armUrl !== "undefined" && top.armUrl) ||
+            (typeof callParentNew === "function" && callParentNew("armUrl")) ||
+            "";
 
         if (globalArmUrl) {
             AxiArmUrl = globalArmUrl;
@@ -444,7 +444,7 @@
     function startInit() {
         const proj = window.mainProject || (typeof callParentNew === "function" && callParentNew("mainProject"));
         const user = window.mainUserName || (typeof callParentNew === "function" && callParentNew("mainUserName"));
-        
+
         if ((!proj || !user) && initRetries < 20) {
             initRetries++;
             setTimeout(startInit, 100);
@@ -465,11 +465,11 @@
         // console.log(appname);
         // return appname;
 
-        return window.mainProject || 
-               (typeof callParentNew === "function" && callParentNew("mainProject")) || 
-               (typeof parent !== "undefined" && parent.mainProject) || 
-               (typeof top !== "undefined" && top.mainProject) || 
-               "";
+        return window.mainProject ||
+            (typeof callParentNew === "function" && callParentNew("mainProject")) ||
+            (typeof parent !== "undefined" && parent.mainProject) ||
+            (typeof top !== "undefined" && top.mainProject) ||
+            "";
     }
 
     /* ===============================
@@ -549,7 +549,7 @@
             };
             console.log(JSON.stringify(commands));
             // if (isForced) {
-                showToast(message, 3000, true);
+            showToast(message, 3000, true);
             // }
         }
     }
@@ -1262,7 +1262,7 @@
 
     function handleConfigureSmartViewAttributes({ tokens, commandConfig }) {
 
-        
+
         let transId = "a__sl";
         let fieldname = "adsname";
         let rawParamName;
@@ -1288,7 +1288,7 @@
 
         // targetUrl += `&fromsource=U`;
         // targetUrl += `&openerIV=${transId}`;
-        
+
         // targetUrl += `&isDupTab=false`;
         // targetUrl += `&dummyload=false?`;
 
@@ -2002,7 +2002,7 @@
                 console.log(`Token changed at position ${idx}: "${lastToken}" ? "${cleanToken}"`);
                 delete resolvedParams[mappedIdx];
                 delete resolvedParamType[mappedIdx];
-                
+
                 // Clear dependent resolutions based on visual index, not mapped index
                 for (let i = idx + 1; i < currentTokens.length; i++) {
                     let depMappedIdx = i;
@@ -2125,7 +2125,7 @@
             if (currentTokens.length >= 2) {
                 const action = currentTokens[1];
                 const entity = currentTokens[0];
-                
+
                 const firstTokenLower = cleanString(entity).toLowerCase();
                 if (!["create", "view", "edit"].includes(firstTokenLower)) {
                     currentTokens = [action, entity, ...currentTokens.slice(2)];
@@ -3007,7 +3007,7 @@
     function findStructMetadata(name, rawList) {
         if (!name) return null;
         let cleanName = name.replace(/['"]/g, "").trim().toLowerCase();
-        
+
         // Match parenthesized name like: sales order (so)
         let structNameFromParentheses = "";
         let structCaptionFromParentheses = "";
@@ -3017,7 +3017,7 @@
             structNameFromParentheses = parenMatch[2].trim();
         }
 
-        return rawList.find(item => 
+        return rawList.find(item =>
             (item.name && item.name.trim().toLowerCase() === cleanName) ||
             (item.caption && item.caption.trim().toLowerCase() === cleanName) ||
             (structNameFromParentheses && item.name && item.name.trim().toLowerCase() === structNameFromParentheses) ||
@@ -3027,17 +3027,17 @@
 
     function getStructureTypeInSearchMode(name) {
         if (!name) return "";
-        const STRUCT_PARAM  = "admin$#$default$#$default$#$all$#$all";
-        const STRUCT_KEY    = ("axi_structmetalist_" + STRUCT_PARAM).toLowerCase();
+        const STRUCT_PARAM = "admin$#$default$#$default$#$all$#$all";
+        const STRUCT_KEY = ("axi_structmetalist_" + STRUCT_PARAM).toLowerCase();
         const rawList = axDatasourceObj[STRUCT_KEY] || [];
-        
+
         // Use the stored type from user's selection to avoid ambiguity
         const storedType = resolvedParamType?.[1];
         if (storedType) {
             const cleanName = name.replace(/['"]/g, "").trim().toLowerCase();
             const typed = rawList.find(item =>
                 ((item.name && item.name.trim().toLowerCase() === cleanName) ||
-                 (item.caption && item.caption.trim().toLowerCase() === cleanName)) &&
+                    (item.caption && item.caption.trim().toLowerCase() === cleanName)) &&
                 matchStype(item.stype, storedType)
             );
             if (typed && typed.stype) {
@@ -3046,9 +3046,9 @@
                 return map[stypeCode] || stypeCode;
             }
         }
-        
+
         const found = findStructMetadata(name, rawList);
-        
+
         if (found && found.stype) {
             const stypeCode = found.stype.toLowerCase();
             const map = { t: "tstruct", a: "ads", p: "page", i: "iview" };
@@ -3091,7 +3091,7 @@
         if (config) {
             badge.textContent = config.badgeText;
             badge.style.backgroundColor = config.badgeColor;
-            badge.style.display = "flex"; 
+            badge.style.display = "flex";
             badge.style.alignItems = "center";
             badge.style.flexShrink = "0";
             badge.style.fontSize = "10px";
@@ -3134,7 +3134,7 @@
         if (tokens.length >= 2) {
             const action = tokens[1];
             const entity = tokens[0];
-            
+
             const firstTokenLower = cleanString(entity).toLowerCase();
             if (["create", "view", "edit"].includes(firstTokenLower)) {
                 return inputText;
@@ -3149,8 +3149,8 @@
     function getSearchSuggestions(inputText) {
 
         // ---- Shared helpers ----
-        const STRUCT_PARAM  = "admin$#$default$#$default$#$all$#$all";
-        const STRUCT_KEY    = ("axi_structmetalist_" + STRUCT_PARAM).toLowerCase();
+        const STRUCT_PARAM = "admin$#$default$#$default$#$all$#$all";
+        const STRUCT_KEY = ("axi_structmetalist_" + STRUCT_PARAM).toLowerCase();
         const ALLOWED_TYPES = ["t", "tstruct", "a", "ads", "p", "page", "i", "iview"]; // tstruct, ads, page, iview
 
         function ensureStructList() {
@@ -3192,9 +3192,9 @@
         const tokens = getTokens(inputText);
         const endsWithSpace = inputText.endsWith(" ");
         const lastTokenRaw = tokens[tokens.length - 1];
-        const isUnclosedString = lastTokenRaw && 
+        const isUnclosedString = lastTokenRaw &&
             ((lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"')) ||
-             (lastTokenRaw.startsWith("'") && (!lastTokenRaw.endsWith("'") || lastTokenRaw === "'")));
+                (lastTokenRaw.startsWith("'") && (!lastTokenRaw.endsWith("'") || lastTokenRaw === "'")));
 
         if (currentMode === "search") {
             if (endsWithSpace) {
@@ -3242,7 +3242,7 @@
                 const cleanName = selectedStructName.replace(/['"]/g, "").trim().toLowerCase();
                 foundItem = rawList.find(item =>
                     ((item.name && item.name.trim().toLowerCase() === cleanName) ||
-                     (item.caption && item.caption.trim().toLowerCase() === cleanName)) &&
+                        (item.caption && item.caption.trim().toLowerCase() === cleanName)) &&
                     matchStype(item.stype, storedType)
                 );
             }
@@ -3272,7 +3272,7 @@
         return getCmdSuggestions(normalizedInput);
     }
 
-     const ModeRegistry = {
+    const ModeRegistry = {
         cmd: {
             badgeText: "CMD",
             badgeColor: "#a100ff",
@@ -3978,8 +3978,8 @@
             if (preferredType === "iview") preferredType = "i";
         }
 
-        const struct_row = struct_dataList.find(r => 
-            r.name === struct_name && 
+        const struct_row = struct_dataList.find(r =>
+            r.name === struct_name &&
             (!preferredType || (r.stype || "").toLowerCase() === preferredType)
         ) || struct_dataList.find(r => r.name === struct_name);
 
@@ -4832,15 +4832,15 @@
             const detectedType = (currentMode === "search")
                 ? getStructureTypeInSearchMode(structName)
                 : (() => {
-                      if (commandConfig && commandConfig.prompts && commandConfig.prompts[0]) {
-                          const viewSource = commandConfig.prompts[0].promptSource;
-                          const viewValues = commandConfig.prompts[0].promptValues;
-                          const firstToken = cleanString(tokens[1] || "");
-                          const resolved = tryResolveToken(1, firstToken, commandConfig, false);
-                          return getType(viewSource.toLowerCase(), resolved, viewValues, tokens, commandConfig);
-                      }
-                      return "";
-                  })();
+                    if (commandConfig && commandConfig.prompts && commandConfig.prompts[0]) {
+                        const viewSource = commandConfig.prompts[0].promptSource;
+                        const viewValues = commandConfig.prompts[0].promptValues;
+                        const firstToken = cleanString(tokens[1] || "");
+                        const resolved = tryResolveToken(1, firstToken, commandConfig, false);
+                        return getType(viewSource.toLowerCase(), resolved, viewValues, tokens, commandConfig);
+                    }
+                    return "";
+                })();
 
             if (detectedType === "ads" && targetIndex >= 3 && targetIndex % 2 !== 0) {
                 isAdsValue = true;
@@ -4998,10 +4998,10 @@
 
     async function getAxListAsync(data) {
         return new Promise((resolve, reject) => {
-            const func = window.GetDataFromAxList || 
-                         (typeof parent !== "undefined" && parent.GetDataFromAxList) || 
-                         (typeof top !== "undefined" && top.GetDataFromAxList) || 
-                         (typeof callParentNew === "function" && callParentNew("GetDataFromAxList"));
+            const func = window.GetDataFromAxList ||
+                (typeof parent !== "undefined" && parent.GetDataFromAxList) ||
+                (typeof top !== "undefined" && top.GetDataFromAxList) ||
+                (typeof callParentNew === "function" && callParentNew("GetDataFromAxList"));
             if (typeof func === "function") {
                 func(
                     data,
@@ -6015,12 +6015,12 @@
         let transId = value;
 
         if (transId === rawName) {
-            const list = axDatasourceObj["Axi_TStructList".toLowerCase()] || 
-                         axDatasourceObj["axi_structmetalist_admin$#$default$#$default$#$all$#$all"];
+            const list = axDatasourceObj["Axi_TStructList".toLowerCase()] ||
+                axDatasourceObj["axi_structmetalist_admin$#$default$#$default$#$all$#$all"];
             const found = list?.find(
                 x => ((x.caption && x.caption.toLowerCase() === rawName.toLowerCase()) ||
-                     (x.name && x.name.toLowerCase() === rawName.toLowerCase())) &&
-                     (!x.stype || x.stype.toLowerCase() === 't')
+                    (x.name && x.name.toLowerCase() === rawName.toLowerCase())) &&
+                    (!x.stype || x.stype.toLowerCase() === 't')
             );
             if (found) transId = found.name
             else {
@@ -6130,8 +6130,8 @@
             if (preferredType === "iview") preferredType = "i";
         }
 
-        const struct_row = struct_dataList.find(r => 
-            r.name === transId && 
+        const struct_row = struct_dataList.find(r =>
+            r.name === transId &&
             (!preferredType || (r.stype || "").toLowerCase() === preferredType)
         ) || struct_dataList.find(r => r.name === transId);
 
@@ -6883,8 +6883,8 @@
         }
 
         const struct_rowList = axDatasourceObj[viewDataSourceKey];
-        const struct_row = struct_rowList.find(r => 
-            r.name === transId && 
+        const struct_row = struct_rowList.find(r =>
+            r.name === transId &&
             (!preferredType || (r.stype || "").toLowerCase() === preferredType)
         ) || struct_rowList.find(r => r.name === transId);
 
@@ -12055,7 +12055,7 @@
         const originalCmdText = document.getElementById("axiFavOriginalCmd").value.trim();
         const targetUrl = document.getElementById("axiFavTargetUrl").value.trim();
         const isEdit = document.getElementById("axiFavIsEdit").value === "true";
-        const favCancelBtn = document.getElementById("axiFavCancelBtn"); 
+        const favCancelBtn = document.getElementById("axiFavCancelBtn");
 
         if (!alias) {
             showToast("Favorite name cannot be empty");
@@ -12070,7 +12070,7 @@
 
         // Start loading
         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", true);
-        favCancelBtn.disabled = true; 
+        favCancelBtn.disabled = true;
 
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
@@ -12101,7 +12101,7 @@
                         showToast(`Renamed '${originalCmdText}' to '${alias}'`, 3000, true);
                     } else {
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-                        favCancelBtn.disabled = false; 
+                        favCancelBtn.disabled = false;
                         showToast("Failed to edit favourite");
                     }
                 })
@@ -12109,7 +12109,7 @@
                         console.error("Backend edit failed", error);
                         showToast("An Error occured while editing favourite");
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-                        favCancelBtn.disabled = false; 
+                        favCancelBtn.disabled = false;
 
                     });
             } else {
@@ -12161,12 +12161,12 @@
                         showToast("Axi: Failed to update favorite on backend");
                         console.error("Backend sync failed", err);
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-                        favCancelBtn.disabled = false; 
+                        favCancelBtn.disabled = false;
 
                     });
             } else {
                 setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-                        favCancelBtn.disabled = false; 
+                favCancelBtn.disabled = false;
 
             }
         }
@@ -12228,7 +12228,7 @@
 
             // Start loading
             setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", true);
-            deleteFavCancelBtn.disabled = true; 
+            deleteFavCancelBtn.disabled = true;
 
             if (axiFavoritesUrl) {
                 fetch(`${axiFavoritesUrl}?appname=${appname}`, {
@@ -12254,7 +12254,7 @@
                         hideDeleteFavoriteModal();
                     } else {
                         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
-            deleteFavCancelBtn.disabled = false; 
+                        deleteFavCancelBtn.disabled = false;
 
                         showToast("Failed to delete favorite on backend");
                     }
@@ -12262,13 +12262,13 @@
                     .catch(err => {
                         console.error("Axi: Failed to delete on backend", err);
                         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
-            deleteFavCancelBtn.disabled = false; 
+                        deleteFavCancelBtn.disabled = false;
 
                         showToast("Error deleting favorite");
                     });
             } else {
                 setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
-            deleteFavCancelBtn.disabled = false; 
+                deleteFavCancelBtn.disabled = false;
 
                 showToast("Backend API URL is not configured. Cannot delete.");
             }
@@ -12370,8 +12370,8 @@
     }
 
     function startWalkthrough() {
-        render(); 
-        renderFavoritesUI(); 
+        render();
+        renderFavoritesUI();
         if (typeof introJs !== "undefined") {
             injectTourStyles();
             runTour();
@@ -12541,7 +12541,7 @@
         const oldVal = input.value;
         input.value = "Help";
         input.readOnly = true;
-        
+
         const tour = introJs();
         tour.setOptions({
             steps: [
@@ -12612,7 +12612,7 @@
                     if (tour) {
                         tour.refresh();
                     }
-                } catch (e) {}
+                } catch (e) { }
             }, 100);
         };
         window.addEventListener("resize", handleResize);
