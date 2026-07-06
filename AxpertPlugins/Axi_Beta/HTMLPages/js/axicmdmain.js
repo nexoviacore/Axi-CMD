@@ -3004,6 +3004,15 @@
 
     const isEmpty = val => typeof val === "string" ? val.trim() === "" : val === null || val === undefined;
 
+    function hasViewPermission(item) {
+        if (!item) return false;
+        const stype = item.stype ? item.stype.toLowerCase() : "";
+        if (stype === "p" || stype === "page") return true;
+        if (stype === "i" || stype === "iview") return item.viewallowed !== 'F';
+        if (item.viewallowed === "NA") return false;
+        return item.viewallowed !== 'F';
+    }
+
     function findStructMetadata(name, rawList) {
         if (!name) return null;
         let cleanName = name.replace(/['"]/g, "").trim().toLowerCase();
@@ -3030,12 +3039,13 @@
         const STRUCT_PARAM = "admin$#$default$#$default$#$all$#$all";
         const STRUCT_KEY = ("axi_structmetalist_" + STRUCT_PARAM).toLowerCase();
         const rawList = axDatasourceObj[STRUCT_KEY] || [];
+        const permittedList = rawList.filter(hasViewPermission);
 
         // Use the stored type from user's selection to avoid ambiguity
         const storedType = resolvedParamType?.[1];
         if (storedType) {
             const cleanName = name.replace(/['"]/g, "").trim().toLowerCase();
-            const typed = rawList.find(item =>
+            const typed = permittedList.find(item =>
                 ((item.name && item.name.trim().toLowerCase() === cleanName) ||
                     (item.caption && item.caption.trim().toLowerCase() === cleanName)) &&
                 matchStype(item.stype, storedType)
@@ -3047,7 +3057,7 @@
             }
         }
 
-        const found = findStructMetadata(name, rawList);
+        const found = findStructMetadata(name, permittedList);
 
         if (found && found.stype) {
             const stypeCode = found.stype.toLowerCase();
@@ -3215,9 +3225,10 @@
                 filteredObjects = [];
                 return ["Loading structures..."];
             }
+            const permittedList = rawList.filter(hasViewPermission);
 
             const partialTyped = tokens.length === 0 ? "" : cleanString(tokens[0]).toLowerCase();
-            const filtered = buildStructItems(rawList, partialTyped);
+            const filtered = buildStructItems(permittedList, partialTyped);
             console.log(`[DEBUG] getSearchSuggestions: rawList length=${rawList.length}, filtered length=${filtered.length}`);
 
             filteredObjects = filtered;
@@ -3231,6 +3242,7 @@
                 filteredObjects = [];
                 return ["Loading structures..."];
             }
+            const permittedList = rawList.filter(hasViewPermission);
 
             const selectedStructName = tokens[0];
             // Use resolvedParamType to pick the correct item when names are ambiguous.
@@ -3240,19 +3252,19 @@
             if (storedType) {
                 // Find the item that matches BOTH the name/caption AND the stored type
                 const cleanName = selectedStructName.replace(/['"]/g, "").trim().toLowerCase();
-                foundItem = rawList.find(item =>
+                foundItem = permittedList.find(item =>
                     ((item.name && item.name.trim().toLowerCase() === cleanName) ||
                         (item.caption && item.caption.trim().toLowerCase() === cleanName)) &&
                     matchStype(item.stype, storedType)
                 );
             }
             if (!foundItem) {
-                foundItem = findStructMetadata(selectedStructName, rawList);
+                foundItem = findStructMetadata(selectedStructName, permittedList);
             }
 
             if (!foundItem) {
                 // Unknown struct name — still try to autocomplete as if token 0
-                const filtered = buildStructItems(rawList, cleanString(selectedStructName).toLowerCase());
+                const filtered = buildStructItems(permittedList, cleanString(selectedStructName).toLowerCase());
                 filteredObjects = filtered;
                 return filtered.map(item => item.displaydata);
             }
