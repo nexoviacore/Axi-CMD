@@ -3922,8 +3922,9 @@
             }
 
             const structName = getCurrentStructName();
+            const accessPermissions = getAccessPermissions();
 
-            if ((groupKey.toLowerCase() === "view") && tokens.length <= 2 && structName !== null) {
+            if ((groupKey.toLowerCase() === "view") && tokens.length <= 2 && structName !== null && accessPermissions?.buildAccess) {
                 resultList.unshift("Source");
                 // resultList.unshift(goOption);
                 filteredObjects.unshift("Source");
@@ -6751,6 +6752,12 @@
     }
 
     function handleViewSource({ tokens, commandConfig }) {
+        const accessPermissions = getAccessPermissions();
+        if (!accessPermissions?.buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${input.value.trim()}`);
+            return;
+        }
+
         const structName = getCurrentStructName();
 
         if (!structName) {
