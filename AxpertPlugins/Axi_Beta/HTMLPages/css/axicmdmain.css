@@ -169,6 +169,15 @@
   display: flex;
 }
 
+.searchwrap-AXI .badge-separator {
+  display: none;
+  height: 20px;
+  width: 1px;
+  background-color: #e5e7eb;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
 .searchwrap-AXI #Axi-Searchinp::placeholder {
   color: #9ca3af;
 }

@@ -2970,7 +2970,7 @@
             name: btn.id,
             onclick: btn.element.getAttribute("onclick"),
             displaydata: `${btn.label} (${btn.id})`
-        }));
+        })).filter(btn => !((structType === "e" || structType === "ef") && btn.name === "deleteSelectedButton"));
 
         const uniqueButtonsMap = new Map();
         buttonsList.forEach(btn => {
@@ -3081,6 +3081,15 @@
             console.log("AxiModeBadge was missing in DOM, created dynamically.");
         }
 
+        let separator = document.getElementById("axiBadgeSeparator");
+        if (!separator && input && input.parentNode) {
+            separator = document.createElement("span");
+            separator.id = "axiBadgeSeparator";
+            separator.className = "badge-separator";
+            input.parentNode.insertBefore(separator, input);
+            console.log("AxiBadgeSeparator was missing in DOM, created dynamically.");
+        }
+
         let logoText = document.getElementById("axiLogoModeText");
         const logo = document.getElementById("axiLogo");
         if (!logoText) {
@@ -3120,6 +3129,9 @@
             badge.style.position = "relative";
             badge.style.zIndex = "999";
             badge.classList.add("badge-visible");
+            if (separator) {
+                separator.style.display = "flex";
+            }
             if (logoText) logoText.textContent = config.badgeText.toLowerCase();
             if (logoImg && config.icon) {
                 logoImg.src = config.icon;
@@ -3133,6 +3145,9 @@
             badge.classList.remove("badge-visible");
             badge.textContent = "";
             badge.style.backgroundColor = "";
+            if (separator) {
+                separator.style.display = "none";
+            }
             if (logoText) logoText.textContent = "cmd";
             if (logoImg) {
                 logoImg.src = "https://cdn-icons-png.flaticon.com/128/12822/12822485.png";
