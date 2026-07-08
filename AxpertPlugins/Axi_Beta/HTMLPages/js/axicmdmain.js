@@ -2955,6 +2955,25 @@
 
     const isEmpty = val => typeof val === "string" ? val.trim() === "" : val === null || val === undefined;
 
+    function getMatchedField(tokenText, transId) {
+        if (!tokenText || !transId) return null;
+        const searchStr = transId.toLowerCase();
+        let list = [];
+        for (const key in axDatasourceObj) {
+            const keyLower = key.toLowerCase();
+            if (keyLower.startsWith("axi_getstructsdata") && keyLower.includes(searchStr)) {
+                list = axDatasourceObj[key] || [];
+                break;
+            }
+        }
+        const cleanToken = cleanString(tokenText).toLowerCase();
+        return list.find(item => 
+            (item.name && item.name.toLowerCase() === cleanToken) ||
+            (item.caption && item.caption.toLowerCase() === cleanToken) ||
+            (item.displaydata && item.displaydata.toLowerCase() === cleanToken)
+        ) || null;
+    }
+
     function suggestLocal(inputText) {
         let ignoreExtraParams = false;
         let detectedType = "";
@@ -6363,6 +6382,15 @@
 
 
         type = getType(viewDataSourceKey, { value: rawStructValue, type: fieldType }, promptValues, tokens, commandConfig);
+
+        if (type === "tstruct" && tokens.length === 3) {
+            const lastToken = tokens[tokens.length - 1];
+            const matchedField = getMatchedField(lastToken, transId);
+            if (matchedField && matchedField.isfield === "t") {
+                showToast(`A value is required after the field '${matchedField.caption || matchedField.name || lastToken}'.`);
+                return;
+            }
+        }
 
         const handler = VIEW_HANDLERS[type];
 
