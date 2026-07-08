@@ -2921,7 +2921,7 @@
             name: btn.id,
             onclick: btn.element.getAttribute("onclick"),
             displaydata: `${btn.label} (${btn.id})`
-        }));
+        })).filter(btn => !((structType === "e" || structType === "ef") && btn.name === "deleteSelectedButton"));
 
         const uniqueButtonsMap = new Map();
         buttonsList.forEach(btn => {
