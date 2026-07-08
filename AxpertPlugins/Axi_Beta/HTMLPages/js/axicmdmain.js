@@ -3013,6 +3013,10 @@
         return item.viewallowed !== 'F';
     }
 
+    function getStructParam() {
+        return `${window.mainUserName || ""}$#$${window.AxUserRoles || ""}$#$${window.userResp || ""}$#$all$#$all`;
+    }
+
     function findStructMetadata(name, rawList) {
         if (!name) return null;
         let cleanName = name.replace(/['"]/g, "").trim().toLowerCase();
@@ -3036,7 +3040,7 @@
 
     function getStructureTypeInSearchMode(name) {
         if (!name) return "";
-        const STRUCT_PARAM = "admin$#$default$#$default$#$all$#$all";
+        const STRUCT_PARAM = getStructParam();
         const STRUCT_KEY = ("axi_structmetalist_" + STRUCT_PARAM).toLowerCase();
         const rawList = axDatasourceObj[STRUCT_KEY] || [];
         const permittedList = rawList.filter(hasViewPermission);
@@ -3159,7 +3163,7 @@
     function getSearchSuggestions(inputText) {
 
         // ---- Shared helpers ----
-        const STRUCT_PARAM = "admin$#$default$#$default$#$all$#$all";
+        const STRUCT_PARAM = getStructParam();
         const STRUCT_KEY = ("axi_structmetalist_" + STRUCT_PARAM).toLowerCase();
         const ALLOWED_TYPES = ["t", "tstruct", "a", "ads", "p", "page", "i", "iview"]; // tstruct, ads, page, iview
 
@@ -6029,7 +6033,7 @@
 
         if (transId === rawName) {
             const list = axDatasourceObj["Axi_TStructList".toLowerCase()] ||
-                axDatasourceObj["axi_structmetalist_admin$#$default$#$default$#$all$#$all"];
+                axDatasourceObj[("axi_structmetalist_" + getStructParam()).toLowerCase()];
             const found = list?.find(
                 x => ((x.caption && x.caption.toLowerCase() === rawName.toLowerCase()) ||
                     (x.name && x.name.toLowerCase() === rawName.toLowerCase())) &&
