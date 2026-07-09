@@ -3296,6 +3296,23 @@
                 }
             }
 
+            const specialTypes = ["iview", "i", "ads", "p", "page"];
+            if (targetType && specialTypes.includes(targetType)) {
+                const viewAction = { name: "view", displaydata: "view" };
+                const allOptions = [viewAction, goOption, popOption];
+                const filtered = allOptions.filter(opt => {
+                    const displayText = opt.displaydata || opt.name;
+                    return displayText.toLowerCase().startsWith(partial);
+                });
+                filteredObjects = filtered;
+                return filtered.map(item => {
+                    if (item.isExecutable) {
+                        return item;
+                    }
+                    return item.displaydata || item.name;
+                });
+            }
+
             if (actions.includes(partial)) {
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
@@ -4783,6 +4800,12 @@
 
         if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "GO_ACTION") {
             console.log("Action item selected. Executing command...");
+            const rawInput = input.value.trim();
+            const rawTokens = getTokens(rawInput, false);
+            const firstToken = rawTokens.length > 0 ? cleanString(rawTokens[0]).toLowerCase() : "";
+            if (rawTokens.length === 1 && firstToken && isTargetEntity(firstToken)) {
+                input.value = "view " + rawInput + " ";
+            }
             hide();
             executeCommandsV2();
             return;
@@ -4804,7 +4827,15 @@
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Pop_ACTION") {
             console.log("Pop Option Selected......");
             try {
-                if (tokens.length >= 2) {
+                let executeTokens = tokens;
+                const rawInput = input.value.trim();
+                const rawTokens = getTokens(rawInput, false);
+                const firstToken = rawTokens.length > 0 ? cleanString(rawTokens[0]).toLowerCase() : "";
+                if (rawTokens.length === 1 && firstToken && isTargetEntity(firstToken)) {
+                    input.value = "view " + rawInput + " ";
+                    executeTokens = getTokens(input.value, false);
+                }
+                if (executeTokens.length >= 2) {
                     hide();
                     popUpOption = true;
                     executeCommandsV2();
