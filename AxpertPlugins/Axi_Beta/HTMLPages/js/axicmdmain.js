@@ -2034,7 +2034,7 @@
 
 
         // Clear stale resolutions when input changes
-        const currentTokens = getTokens(text);
+        const currentTokens = getTokens(text, false);
         currentTokens.forEach((token, idx) => {
             const cleanToken = token.replace(/"/g, "");
             const lastToken = lastTypedTokens[idx] ? lastTypedTokens[idx].replace(/"/g, "") : null;
@@ -4303,10 +4303,17 @@
 
         const rawIndex = getUnswappedIndex(tokenIndex);
 
-        if (resolvedParams[rawIndex] && !forceResolve) return {
-            value: resolvedParams[rawIndex],
-            type: resolvedParamType?.[rawIndex] || ""
-        };
+        if (resolvedParams[rawIndex] && !forceResolve) {
+            const val = resolvedParams[rawIndex];
+            const lowerVal = val.toLowerCase();
+            const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop"].includes(lowerVal);
+            if (!(tokenIndex === 1 && isVerb)) {
+                return {
+                    value: val,
+                    type: resolvedParamType?.[rawIndex] || ""
+                };
+            }
+        }
 
         if (tokenIndex === 1 && !forceResolve) {
             const key = "axi_structmetalist_" + getStructParam().toLowerCase();
@@ -5968,23 +5975,7 @@
         }
 
 
-        setTimeout(() => {
-            input.focus();
 
-            if (tokens.length > 0) {
-                const firstToken = tokens[0];
-
-                let startIndex = input.value.indexOf(firstToken) + firstToken.length;
-
-                while (input.value[startIndex] === ' ') {
-                    startIndex++;
-                }
-
-                input.setSelectionRange(startIndex, input.value.length);
-
-            }
-
-        }, 200)
     }
 
 
@@ -6977,10 +6968,10 @@
         //}
 
         rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
-        rawFieldName = cleanCommandToken(tokens[fieldValueIndex - 1]); 
+        // rawFieldName = cleanCommandToken(tokens[fieldValueIndex - 1]); 
         // fieldValue = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
         const { value } = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
-        const { value: fieldname } = tryResolveToken(fieldValueIndex - 1, rawFieldName, commandConfig, false);
+        // const { value: fieldname } = tryResolveToken(fieldValueIndex - 1, rawFieldName, commandConfig, false);
         fieldValue = value;
         fieldUniqueId = getUniqueId(fieldValue);
 
@@ -6991,7 +6982,7 @@
 
         handler({
             transId,
-            fieldName: fieldValueIndex === 3 ? fieldname : primaryField,
+            fieldName: primaryField,
             fieldValue: fieldUniqueId,
             rawStruct
         })

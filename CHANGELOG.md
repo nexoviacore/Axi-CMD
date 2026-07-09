@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Dropdown Close on Search Click**: Excluded the `megaDropdown` element inside the document-wide click-outside handler to prevent the Favorites dropdown from unexpectedly closing when users click or type inside the Favorites search filter input.
+- **Run/Send and Refresh Button Tooltips**: Integrated native HTML tooltips for Run/Send and Refresh toolbar buttons by removing the hardcoded `initialized` class.
+- **resolvedParams Overwrite Prevention**: Switched token check in `handleInput()` to retrieve raw/unswapped tokens using `getTokens(text, false)` to prevent accidental resets of resolved parameters during target-first command typing.
 
 ## [11.4.0-beta.6] - 2026-07-02
 
