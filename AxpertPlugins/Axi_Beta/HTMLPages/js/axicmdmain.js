@@ -4803,11 +4803,20 @@
             const rawInput = input.value.trim();
             const rawTokens = getTokens(rawInput, false);
             const firstToken = rawTokens.length > 0 ? cleanString(rawTokens[0]).toLowerCase() : "";
+            let shouldRestoreInput = false;
             if (rawTokens.length === 1 && firstToken && isTargetEntity(firstToken)) {
+                const entityObj = getTargetEntityObj(firstToken);
+                const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
+                if (["i", "iview", "ads", "p", "page"].includes(stype)) {
+                    shouldRestoreInput = true;
+                }
                 input.value = "view " + rawInput + " ";
             }
             hide();
             executeCommandsV2();
+            if (shouldRestoreInput) {
+                input.value = rawInput + " ";
+            }
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "create") {
@@ -4831,7 +4840,13 @@
                 const rawInput = input.value.trim();
                 const rawTokens = getTokens(rawInput, false);
                 const firstToken = rawTokens.length > 0 ? cleanString(rawTokens[0]).toLowerCase() : "";
+                let shouldRestoreInput = false;
                 if (rawTokens.length === 1 && firstToken && isTargetEntity(firstToken)) {
+                    const entityObj = getTargetEntityObj(firstToken);
+                    const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
+                    if (["i", "iview", "ads", "p", "page"].includes(stype)) {
+                        shouldRestoreInput = true;
+                    }
                     input.value = "view " + rawInput + " ";
                     executeTokens = getTokens(input.value, false);
                 }
@@ -4839,6 +4854,9 @@
                     hide();
                     popUpOption = true;
                     executeCommandsV2();
+                    if (shouldRestoreInput) {
+                        input.value = rawInput + " ";
+                    }
                     return;
                 }
                 //else return;
