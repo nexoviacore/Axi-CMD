@@ -546,8 +546,7 @@
             console.log(JSON.stringify(commands));
             
             // Load target entities (tstructs, iview, ads and pages) from metadata on startup
-            const userName = window.mainUserName || "admin";
-            const metadataParams = `${userName}$#$default$#$default$#$all$#$all`;
+            const metadataParams = getStructParam();
             loadList("axi_structmetalist", metadataParams);
             // if (isForced) {
                 showToast(message, 3000, true);
@@ -2114,12 +2113,14 @@
         return (val || "").replace(/["]/g, "").trim();
     }
 
+    function getStructParam() {
+        return `${window.mainUserName || ""}$#$${window.AxUserRoles || ""}$#$${window.userResp || ""}$#$all$#$all`;
+    }
+
     function isTargetEntity(token) {
         if (!token) return false;
         const cleanTok = token.replace(/"/g, "").toLowerCase();
-        const userName = window.mainUserName || "admin";
-        const metadataParams = `${userName}$#$default$#$default$#$all$#$all`;
-        const key = "axi_structmetalist_" + metadataParams.toLowerCase();
+        const key = "axi_structmetalist_" + getStructParam().toLowerCase();
         const list = axDatasourceObj[key] || [];
         return list.some(d => {
             const name = d.name || d.NAME || "";
@@ -2138,9 +2139,7 @@
     function getTargetEntityObj(token, action) {
         if (!token) return null;
         const cleanTok = token.replace(/"/g, "").toLowerCase();
-        const userName = window.mainUserName || "admin";
-        const metadataParams = `${userName}$#$default$#$default$#$all$#$all`;
-        const key = "axi_structmetalist_" + metadataParams.toLowerCase();
+        const key = "axi_structmetalist_" + getStructParam().toLowerCase();
         const list = axDatasourceObj[key] || [];
         const matches = list.filter(d => {
             const name = d.name || d.NAME || "";
@@ -2201,9 +2200,7 @@
 
     function getInitialSuggestions() {
         const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view"].includes(k.toLowerCase()));
-        const userName = window.mainUserName || "admin";
-        const metadataParams = `${userName}$#$default$#$default$#$all$#$all`;
-        const key = "axi_structmetalist_" + metadataParams.toLowerCase();
+        const key = "axi_structmetalist_" + getStructParam().toLowerCase();
         const targets = axDatasourceObj[key] || [];
         return [...targets, ...verbs];
     }
@@ -3087,7 +3084,7 @@
             name: btn.id,
             onclick: btn.element.getAttribute("onclick"),
             displaydata: `${btn.label} (${btn.id})`
-        }));
+        })).filter(btn => !((structType === "e" || structType === "ef") && btn.name === "deleteSelectedButton"));
 
         const uniqueButtonsMap = new Map();
         buttonsList.forEach(btn => {
@@ -3185,10 +3182,8 @@
                 actions = ["create", "edit", "view"];
             } else if (!targetType) {
                 const cleanTok = rawTokens[0].replace(/"/g, "").toLowerCase();
-                const userName = window.mainUserName || "admin";
-                const metadataParams = `${userName}$#$default$#$default$#$all$#$all`.toLowerCase();
-                const key = "axi_structmetalist_" + userName.toLowerCase() + "$#$default$#$default$#$all$#$all";
-                const list = axDatasourceObj[key] || axDatasourceObj["axi_structmetalist_" + metadataParams] || [];
+                const key = "axi_structmetalist_" + getStructParam().toLowerCase();
+                const list = axDatasourceObj[key] || [];
                 
                 const matches = list.filter(d => {
                     const name = d.name || d.NAME || "";
@@ -3824,8 +3819,9 @@
             }
 
             const structName = getCurrentStructName();
+            const accessPermissions = getAccessPermissions();
 
-            if ((groupKey.toLowerCase() === "view") && tokens.length <= 2 && structName !== null) {
+            if ((groupKey.toLowerCase() === "view") && tokens.length <= 2 && structName !== null && accessPermissions?.buildAccess) {
                 resultList.unshift("Source");
                 // resultList.unshift(goOption);
                 filteredObjects.unshift("Source");
@@ -4232,8 +4228,7 @@
         };
 
         if (tokenIndex === 1 && !forceResolve) {
-            const userName = window.mainUserName || "admin";
-            const key = "axi_structmetalist_" + `${userName}$#$default$#$default$#$all$#$all`.toLowerCase();
+            const key = "axi_structmetalist_" + getStructParam().toLowerCase();
             const list = axDatasourceObj[key] || [];
             const cleanTok = tokenText.toLowerCase();
 
@@ -6663,6 +6658,12 @@
     }
 
     function handleViewSource({ tokens, commandConfig }) {
+        const accessPermissions = getAccessPermissions();
+        if (!accessPermissions?.buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${input.value.trim()}`);
+            return;
+        }
+
         const structName = getCurrentStructName();
 
         if (!structName) {
