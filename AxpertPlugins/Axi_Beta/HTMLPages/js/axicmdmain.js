@@ -4807,7 +4807,7 @@
             if (rawTokens.length === 1 && firstToken && isTargetEntity(firstToken)) {
                 const entityObj = getTargetEntityObj(firstToken);
                 const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
-                if (["i", "ads", "page"].includes(stype)) {
+                if (["i", "iview", "ads", "page", "p"].includes(stype)) {
                     shouldRestoreInput = true;
                 }
                 input.value = "view " + rawInput + " ";
@@ -4844,7 +4844,7 @@
                 if (rawTokens.length === 1 && firstToken && isTargetEntity(firstToken)) {
                     const entityObj = getTargetEntityObj(firstToken);
                     const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
-                    if (["i", "ads", "page"].includes(stype)) {
+                    if (["i", "iview", "ads", "page", "p"].includes(stype)) {
                         shouldRestoreInput = true;
                     }
                     input.value = "view " + rawInput + " ";
@@ -11658,11 +11658,15 @@
 
 
 
-        const commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
+        let commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
 
-
-
-
+        if (!commandRoute) {
+            const cmdTokens = getTokens(cmdText);
+            if (cmdTokens.length === 1 && isTargetEntity(cmdTokens[0])) {
+                const viewCmd = "view " + cmdText;
+                commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === viewCmd.toLowerCase());
+            }
+        }
 
         if (cmdIndex !== -1) {
             if (isAdding) {
