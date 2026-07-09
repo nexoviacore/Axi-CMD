@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [11.4.0-beta.7] - 2026-07-09
+
+### Added
+- **Structure-Level Permissions for First-Token Suggestions**: Applied the `view` command structure-level permissions (`isViewAllowed` check) to filter structure listings when the command palette is first opened or when typing the first token. Structures that the user does not have permission to view are now excluded from initial suggestions.
+- **`isField` Validation for Edit Command**: Implemented the same `isField` check used by the View command on the Edit command. Users are prompted if they select a field without supplying a corresponding field value.
+
+### Changed
+- **Favorites Search Input Redesign**: Modernized layout of the Favorites search input inside `AxiCMDMainPage.html` with a search icon, smooth border hover/focus transitions, and a subtle focus glow.
+- **Redundant Startup Loading Removal**: Removed the initial `loadFavorites()` call from `initCommands()` to optimize startup loading speed and prevent unsolicited background requests.
+
+### Fixed
+- **Dropdown Close on Search Click**: Excluded the `megaDropdown` element inside the document-wide click-outside handler to prevent the Favorites dropdown from unexpectedly closing when users click or type inside the Favorites search filter input.
+
 ## [11.4.0-beta.6] - 2026-07-02
 
 ### Added
