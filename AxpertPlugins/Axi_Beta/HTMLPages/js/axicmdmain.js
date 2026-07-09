@@ -4807,7 +4807,7 @@
             if (rawTokens.length === 1 && firstToken && isTargetEntity(firstToken)) {
                 const entityObj = getTargetEntityObj(firstToken);
                 const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
-                if (["i", "iview", "ads", "p", "page"].includes(stype)) {
+                if (["i", "ads", "page"].includes(stype)) {
                     shouldRestoreInput = true;
                 }
                 input.value = "view " + rawInput + " ";
@@ -4844,7 +4844,7 @@
                 if (rawTokens.length === 1 && firstToken && isTargetEntity(firstToken)) {
                     const entityObj = getTargetEntityObj(firstToken);
                     const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
-                    if (["i", "iview", "ads", "p", "page"].includes(stype)) {
+                    if (["i", "ads", "page"].includes(stype)) {
                         shouldRestoreInput = true;
                     }
                     input.value = "view " + rawInput + " ";
