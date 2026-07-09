@@ -264,28 +264,72 @@
 
 
     async function init() {
+        let parentUserName = "";
+        let parentProject = "";
+        let parentUserRoles = "";
+        let parentUserResp = "";
+        let parentArmUrl = "";
+
+        // 1. Try callParentNew
+        try {
+            if (typeof callParentNew === "function") {
+                parentUserName = callParentNew("mainUserName") || "";
+                parentProject = callParentNew("mainProject") || "";
+                parentUserRoles = callParentNew("AxUserRoles") || "";
+                parentUserResp = callParentNew("userResp") || "";
+                parentArmUrl = callParentNew("armUrl") || "";
+            }
+        } catch (e) {
+            console.warn("callParentNew failed", e);
+        }
+
+        // 2. Try parent window
+        try {
+            if (typeof parent !== "undefined" && parent) {
+                if (!parentUserName) parentUserName = parent.mainUserName || "";
+                if (!parentProject) parentProject = parent.mainProject || "";
+                if (!parentUserRoles) parentUserRoles = parent.AxUserRoles || "";
+                if (!parentUserResp) parentUserResp = parent.userResp || "";
+                if (!parentArmUrl) parentArmUrl = parent.armUrl || "";
+            }
+        } catch (e) {
+            console.warn("parent access failed", e);
+        }
+
+        // 3. Try top window
+        try {
+            if (typeof top !== "undefined" && top) {
+                if (!parentUserName) parentUserName = top.mainUserName || "";
+                if (!parentProject) parentProject = top.mainProject || "";
+                if (!parentUserRoles) parentUserRoles = top.AxUserRoles || "";
+                if (!parentUserResp) parentUserResp = top.userResp || "";
+                if (!parentArmUrl) parentArmUrl = top.armUrl || "";
+            }
+        } catch (e) {
+            console.warn("top access failed", e);
+        }
+
+        // 4. Try local variable scope fallback
+        try {
+            if (!parentArmUrl && typeof armUrl !== "undefined") {
+                parentArmUrl = armUrl || "";
+            }
+        } catch (e) {}
+
         if (typeof window.mainUserName === "undefined" || !window.mainUserName) {
-            window.mainUserName = (typeof callParentNew === "function" && callParentNew("mainUserName")) || 
-                                  (typeof parent !== "undefined" && parent.mainUserName) || 
-                                  (typeof top !== "undefined" && top.mainUserName) || 
-                                  "";
+            window.mainUserName = parentUserName || "";
         }
         if (typeof window.mainProject === "undefined" || !window.mainProject) {
-            window.mainProject = (typeof callParentNew === "function" && callParentNew("mainProject")) || 
-                                 (typeof parent !== "undefined" && parent.mainProject) || 
-                                 (typeof top !== "undefined" && top.mainProject) || 
-                                 "";
+            window.mainProject = parentProject || "";
+        }
+        if (typeof window.AxUserRoles === "undefined" || !window.AxUserRoles) {
+            window.AxUserRoles = parentUserRoles || "";
+        }
+        if (typeof window.userResp === "undefined" || !window.userResp) {
+            window.userResp = parentUserResp || "";
         }
 
-        //  "API_METADATA": "http://localhost:90/AxiApi/api/v1/Axi/axi_get",    
-
-        // "AXI_FAVORITES_URL": "http://localhost:90/AxiApi/api/v1/Axi/user-favourites"
-
-        let globalArmUrl = (typeof armUrl !== "undefined" && armUrl) || 
-                           (typeof parent !== "undefined" && typeof parent.armUrl !== "undefined" && parent.armUrl) || 
-                           (typeof top !== "undefined" && typeof top.armUrl !== "undefined" && top.armUrl) || 
-                           (typeof callParentNew === "function" && callParentNew("armUrl")) ||
-                           "";
+        let globalArmUrl = parentArmUrl || "";
 
         if (globalArmUrl) {
             AxiArmUrl = globalArmUrl;
@@ -480,8 +524,6 @@
 
         const appname = getProjectName();
         console.log(appname);
-
-        loadFavorites();
 
         if (!apiMetadataUrl) {
             console.error("Metadata API URL is not configured.", apiMetadataConfigError);
@@ -736,7 +778,9 @@
             const data = await getList(sourceName, paramValue);
             axDatasourceObj[key] = data;
             console.log(JSON.stringify(axDatasourceObj));
-            handleInput();
+            if (document.activeElement === input) {
+                handleInput();
+            }
 
         } catch (error) {
             console.error("loadlist failed", error);
@@ -1876,7 +1920,11 @@
         const structType = getStructType();
         const isRunnable = structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage();
         return Object.keys(commands).filter(key => {
-            if (key.toLowerCase() === "run") {
+            const lowerKey = key.toLowerCase();
+            if (lowerKey === "create" || lowerKey === "view" || lowerKey === "edit") {
+                return false;
+            }
+            if (lowerKey === "run") {
                 return isRunnable;
             }
             return true;
@@ -1884,6 +1932,14 @@
     }
 
     function handleInput() {
+        if (favouritesCard) {
+            favouritesCard.style.display = "none";
+        }
+        const suggCard = list.closest(".card");
+        if (suggCard) {
+            suggCard.style.display = "flex";
+        }
+
         if (input.value && input.value.includes(" ,")) {
             const cursorPos = input.selectionStart;
             input.value = input.value.replace(/ ,/g, ",");
@@ -1912,7 +1968,7 @@
 
         if (!text.trim()) {
 
-            items = getInitialCommandsList();
+            items = getInitialSuggestions();
             hintDiv.textContent = "";
             render();
             return;
@@ -2114,7 +2170,29 @@
     }
 
     function getStructParam() {
-        return `${window.mainUserName || ""}$#$${window.AxUserRoles || ""}$#$${window.userResp || ""}$#$all$#$all`;
+        const userName = window.mainUserName || "";
+        const userRoles = window.AxUserRoles || "default";
+        const userResp = window.userResp || "default";
+        return `${userName}$#$${userRoles}$#$${userResp}$#$all$#$all`;
+    }
+
+    function getMatchedField(tokenText, transId) {
+        if (!tokenText || !transId) return null;
+        const searchStr = transId.toLowerCase();
+        let list = [];
+        for (const key in axDatasourceObj) {
+            const keyLower = key.toLowerCase();
+            if (keyLower.startsWith("axi_getstructsdata") && keyLower.includes(searchStr)) {
+                list = axDatasourceObj[key] || [];
+                break;
+            }
+        }
+        const cleanToken = cleanString(tokenText).toLowerCase();
+        return list.find(item => 
+            (item.name && item.name.toLowerCase() === cleanToken) ||
+            (item.caption && item.caption.toLowerCase() === cleanToken) ||
+            (item.displaydata && item.displaydata.toLowerCase() === cleanToken)
+        ) || null;
     }
 
     function isTargetEntity(token) {
@@ -2198,10 +2276,17 @@
         return actions.includes(lowAction);
     }
 
+    function isViewAllowed(item) {
+        if (item?.stype === "p" || item?.stype === "page") return true;
+        if (item?.stype === "i" || item?.stype === "iview") return item?.viewallowed !== 'F';
+        if (item?.viewallowed === "NA") return false;
+        return item?.viewallowed !== 'F';
+    }
+
     function getInitialSuggestions() {
         const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view"].includes(k.toLowerCase()));
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
-        const targets = axDatasourceObj[key] || [];
+        const targets = (axDatasourceObj[key] || []).filter(item => isViewAllowed(item));
         return [...targets, ...verbs];
     }
 
@@ -3746,11 +3831,7 @@
 
                 if (key === "create") return item?.createallowed !== 'F' && item?.createallowed !== 'NA';
                 if (key === "view") {
-                    // if (item.caption === "testmar10") console.log(JSON.stringify(item)); 
-                    if (item?.stype === "p" || item?.stype === "page") return true;
-                    if (item?.stype === "i" || item?.stype === "iview") return item?.viewallowed !== 'F';
-                    if (item?.viewallowed === "NA") return false;
-                    return item?.viewallowed !== 'F';
+                    return isViewAllowed(item);
                 }
                 if (isEmpty(item?.displaydata) && isEmpty(item?.caption) && isEmpty(item?.name)) return false;
                 return true;
@@ -4545,12 +4626,12 @@
         // }
 
         if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
-            list.classList.add("axi-grid-layout", "My-Command-Wrapper");
-            if (favouritesCard) favouritesCard.style.display = "flex";
+            list.classList.add("My-Command-Wrapper");
+            if (favouritesCard) favouritesCard.style.display = "none";
             if (commandHeader) commandHeader.style.display = "flex";
 
         } else {
-            list.classList.remove("axi-grid-layout", "My-Command-Wrapper");
+            list.classList.remove("My-Command-Wrapper");
             if (favouritesCard) favouritesCard.style.display = "none";
             if (commandHeader) commandHeader.style.display = "none";
         }
@@ -4569,12 +4650,12 @@
         }
 
         if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
-            list.classList.add("axi-grid-layout", "My-Command-Wrapper");
-            if (favouritesCard) favouritesCard.style.display = "flex";
+            list.classList.add("My-Command-Wrapper");
+            if (favouritesCard) favouritesCard.style.display = "none";
             if (commandHeader) commandHeader.style.display = "flex";
 
         } else {
-            list.classList.remove("axi-grid-layout", "My-Command-Wrapper");
+            list.classList.remove("My-Command-Wrapper");
             if (favouritesCard) favouritesCard.style.display = "none";
             if (commandHeader) commandHeader.style.display = "none";
         }
@@ -4647,7 +4728,16 @@
             megaDropdown.style.display = "none";
         }
         list.style.display = "none";
-        list.classList.remove("axi-grid-layout", "My-Command-Wrapper");
+        list.classList.remove("My-Command-Wrapper");
+
+        if (favouritesCard) {
+            favouritesCard.style.display = "none";
+        }
+        const suggCard = list.closest(".card");
+        if (suggCard) {
+            suggCard.style.display = "flex";
+        }
+
         items = [];
         activeIndex = -1;
     }
@@ -4744,7 +4834,7 @@
             tokens.push("");
         }
 
-        let suggestion = items[index];
+        let suggestion = typeof items[index] === "string" ? items[index] : items[index].displaydata;
         let displayName = suggestion;
         let realValue = "";
         let realType = "";
@@ -5281,6 +5371,36 @@
             toggleFavorite(input.value.trim(), true);
 
         })
+
+        const newAddFavBtn = document.getElementById("axiAddFavoriteBtn");
+        if (newAddFavBtn) {
+            newAddFavBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleFavorite(input.value.trim(), true);
+            });
+        }
+
+        const newViewFavBtn = document.getElementById("axiViewFavoritesBtn");
+        if (newViewFavBtn) {
+            newViewFavBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                loadFavorites();
+                showFavoritesPopupOnly();
+            });
+        }
+
+        const favFilterInput = document.getElementById("axiFavFilterInput");
+        if (favFilterInput) {
+            favFilterInput.addEventListener("input", (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                const filtered = commandFavorites.filter(fav => 
+                    (fav.commandText || "").toLowerCase().includes(query)
+                );
+                renderFavoritesUI(filtered);
+            });
+        }
         const historyBtn = document.getElementById("History_pages");
         if (historyBtn) {
             historyBtn.addEventListener("click", () => {
@@ -5663,7 +5783,9 @@
 
         document.addEventListener("click", e => {
             if (list && list.style.display !== "none") {
-                if (searchWrapper && !searchWrapper.contains(e.target) && e.target !== input) {
+                const insideSearchWrapper = searchWrapper && searchWrapper.contains(e.target);
+                const insideDropdown = megaDropdown && megaDropdown.contains(e.target);
+                if (!insideSearchWrapper && !insideDropdown && e.target !== input) {
                     hide();
                 }
             }
@@ -6064,7 +6186,17 @@
 
         setEditSessionState(transId)
 
-
+        if (tokens.length === 3) {
+            const lastToken = tokens[tokens.length - 1];
+            const matchedField = getMatchedField(lastToken, transId);
+            if (matchedField) {
+                const isFieldVal = (matchedField.isfield || "").toString().toLowerCase();
+                if (isFieldVal === "t" || isFieldVal === "true") {
+                    showToast(`A value is required after the field '${matchedField.caption || matchedField.name || lastToken}'.`);
+                    return;
+                }
+            }
+        }
 
         ///We need to optimize this(token index)(optimized one is below 17-03-26-T)
         let tokenIndex;
@@ -6739,6 +6871,18 @@
 
 
         type = getType(viewDataSourceKey, { value: rawStructValue, type: fieldType }, promptValues, tokens, commandConfig);
+
+        if (type === "tstruct" && tokens.length === 3) {
+            const lastToken = tokens[tokens.length - 1];
+            const matchedField = getMatchedField(lastToken, transId);
+            if (matchedField) {
+                const isFieldVal = (matchedField.isfield || "").toString().toLowerCase();
+                if (isFieldVal === "t" || isFieldVal === "true") {
+                    showToast(`A value is required after the field '${matchedField.caption || matchedField.name || lastToken}'.`);
+                    return;
+                }
+            }
+        }
 
         const handler = VIEW_HANDLERS[type];
 
@@ -11547,7 +11691,7 @@
 
     }
 
-    function renderFavoritesUI() {
+    function renderFavoritesUI(itemsToRender = commandFavorites) {
         if (!favouritesCard) return;
 
         const wrapper = favouritesCard.querySelector(".My-Fav-Items-Wrapper");
@@ -11563,7 +11707,7 @@
 
         }
 
-        if (commandFavorites.length === 0) {
+        if (itemsToRender.length === 0) {
             wrapper.innerHTML = `<div style="padding: 15px; color: #999; text-align: center; width: 100%;">No favourites yet. Pin commands to see them here.</div>`;
             return;
 
@@ -11573,8 +11717,8 @@
 
 
 
-        commandFavorites.forEach(fav => {
-            const cmdText = fav.commandText;
+        itemsToRender.forEach(fav => {
+            const cmdText = fav.commandText || fav.commandtext || "";
             const titleText = cmdText.replace(/"/g, '&quot;');
             // const favHtml = `
             //     <div class="My-Fav-Items">
@@ -11636,7 +11780,7 @@
             element.querySelector(".edit-fav").addEventListener("click", (event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                const targetUrl = fav.targetUrl;
+                const targetUrl = fav.targetUrl || fav.targetURL || fav.targeturl || "";
                 showFavoriteModel(cmdText, targetUrl, true);
             })
 
@@ -11652,12 +11796,25 @@
                 executeFavorite(fav);
             })
 
-
-
             wrapper.appendChild(element);
 
-
         });
+    }
+
+    function showFavoritesPopupOnly() {
+        const filterInput = document.getElementById("axiFavFilterInput");
+        if (filterInput) filterInput.value = "";
+
+        if (megaDropdown) {
+            megaDropdown.style.display = "flex";
+        }
+        if (favouritesCard) {
+            favouritesCard.style.display = "flex";
+        }
+        const suggCard = list.closest(".card");
+        if (suggCard) {
+            suggCard.style.display = "none";
+        }
     }
 
     // async function executeFavorite(cmdText) {
@@ -11698,8 +11855,9 @@
 
 
 
-        input.value = favObj?.originalCommandText + " ";
-        const tokens = getTokens(favObj?.originalCommandText);
+        const cmdText = favObj?.originalCommandText || favObj?.originalcommandtext || favObj?.commandText || favObj?.commandtext || "";
+        input.value = cmdText + " ";
+        const tokens = getTokens(cmdText);
 
         const accessPermissions = getAccessPermissions();
         // AppMgrAccess(Config)
