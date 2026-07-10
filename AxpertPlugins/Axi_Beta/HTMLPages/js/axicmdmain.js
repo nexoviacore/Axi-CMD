@@ -478,6 +478,7 @@
 
 
         initCommands(false);
+        loadFavorites();
     }
 
     let initRetries = 0;
@@ -2266,14 +2267,14 @@
         if (!target || !action) return false;
         const entityObj = getTargetEntityObj(target, action);
         const lowAction = action.toLowerCase();
-        let actions = ["view"];
+        let actions = ["View"];
         if (entityObj) {
             const type = (entityObj.stype || entityObj.STYPE || "").toLowerCase();
             if (type === "t" || type === "tstruct") {
-                actions = ["create", "edit", "view"];
+                actions = ["Create", "Edit", "View"];
             }
         }
-        return actions.includes(lowAction);
+        return actions.map(act => act.toLowerCase()).includes(lowAction);
     }
 
     function isViewAllowed(item) {
@@ -3257,14 +3258,14 @@
             const entityObj = getTargetEntityObj(rawTokens[0]);
             const partial = cleanString(rawTokens[1] || "").toLowerCase();
 
-            let actions = ["view"];
+            let actions = ["View"];
             let targetType = "";
             if (entityObj) {
                 targetType = (entityObj.stype || entityObj.STYPE || "").toLowerCase();
             }
 
             if (targetType === "t" || targetType === "tstruct") {
-                actions = ["create", "edit", "view"];
+                actions = ["Create", "Edit", "View"];
             } else if (!targetType) {
                 const cleanTok = rawTokens[0].replace(/"/g, "").toLowerCase();
                 const key = "axi_structmetalist_" + getStructParam().toLowerCase();
@@ -3292,13 +3293,13 @@
                     }
                 }
                 if (hasTstruct) {
-                    actions = ["create", "edit", "view"];
+                    actions = ["Create", "Edit", "View"];
                 }
             }
 
             const specialTypes = ["iview", "i", "ads", "p", "page"];
             if (targetType && specialTypes.includes(targetType)) {
-                const viewAction = { name: "view", displaydata: "view" };
+                const viewAction = { name: "View", displaydata: "View" };
                 const allOptions = [viewAction, goOption, popOption];
                 const filtered = allOptions.filter(opt => {
                     const displayText = opt.displaydata || opt.name;
@@ -3313,7 +3314,7 @@
                 });
             }
 
-            if (actions.includes(partial)) {
+            if (actions.map(act => act.toLowerCase()).includes(partial)) {
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
             }
@@ -5022,6 +5023,10 @@
 
         displayName = displayName.replace(/[\r\n]+/g, " ").trim();
 
+        if (["create", "view", "edit"].includes(displayName.toLowerCase())) {
+            displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1).toLowerCase();
+        }
+
         // Auto-Quote if necessary
         if (displayName.includes(" ")) {
             displayName = `"${displayName}"`;
@@ -5703,13 +5708,15 @@
             //    return;
             //}
 
-            if ((e.ctrlKey && e.shiftKey && e.key?.toLowerCase() === "enter") && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit" || grpKey?.toLowerCase() === "view" || grpKey?.toLowerCase() === "configure")) {
+            const isSingleTarget = tokens.length === 1 && isTargetEntity(tokens[0]);
+
+            if ((e.ctrlKey && e.shiftKey && e.key?.toLowerCase() === "enter") && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit" || grpKey?.toLowerCase() === "view" || grpKey?.toLowerCase() === "configure" || isSingleTarget)) {
 
                 e.preventDefault();
 
 
                 try {
-                    if (tokens.length >= 2) {
+                    if (tokens.length >= 1) {
                         hide();
                         popUpOption = true;
                         executeCommandsV2();
@@ -5950,6 +5957,14 @@
 
 
         const tokens = getTokens(text);
+        if (tokens.length === 1 && isTargetEntity(tokens[0])) {
+            const entityObj = getTargetEntityObj(tokens[0]);
+            const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
+            if (["i", "iview", "ads", "page", "p", "t", "tstruct"].includes(stype)) {
+                tokens.unshift("view");
+            }
+        }
+
         if (tokens.length >= 2) {
             const first = cleanString(tokens[0]).toLowerCase();
             const second = cleanString(tokens[1]).toLowerCase();
@@ -11630,6 +11645,7 @@
     }
 
     function toggleFavorite(cmdText, isAdding = false) {
+        loadFavorites();
         let cmdIndex;
         const tokens = getTokens(cmdText.trim());
 
@@ -11668,9 +11684,16 @@
             }
         }
 
+        if (isAdding) {
+            if (isDuplicateFavorite(cmdText)) {
+                showToast("This command is already in your Favorites.");
+                return;
+            }
+        }
+
         if (cmdIndex !== -1) {
             if (isAdding) {
-                showToast(`${cmdText} is already in Favorites`);
+                showToast("This command is already in your Favorites.");
                 return;
             }
             // const removedFav = commandFavorites.splice(cmdIndex, 1);
@@ -12124,6 +12147,21 @@
         return s === "t" || s === "true";
     }
 
+    function normalizeCommandForCompare(cmd) {
+        if (!cmd) return "";
+        return cmd.trim().toLowerCase().replace(/\s+/g, " ");
+    }
+
+    function isDuplicateFavorite(cmd) {
+        if (!cmd) return false;
+        const normalizedNew = normalizeCommandForCompare(cmd);
+        return commandFavorites.some(fav => {
+            const normalizedOrig = normalizeCommandForCompare(fav.originalCommandText);
+            const normalizedText = normalizeCommandForCompare(fav.commandText);
+            return normalizedOrig === normalizedNew || normalizedText === normalizedNew;
+        });
+    }
+
     function showFavoriteModel(cmdText, targetUrl, isEdit = false) {
         const originalCmdTextInput = document.getElementById("axiFavOriginalCmd");
         const favNameInput = document.getElementById("axiFavNameInput");
@@ -12182,6 +12220,25 @@
         if (aliasTokens[0]?.toLowerCase() === "run") {
             showToast("You cannot save 'run' commands in favorites");
             return;
+        }
+
+        if (!isEdit) {
+            if (isDuplicateFavorite(alias) || isDuplicateFavorite(originalCmdText)) {
+                showToast("This command is already in your Favorites.");
+                return;
+            }
+        } else {
+            const isDuplicate = commandFavorites.some(fav => {
+                if (fav.commandText.toLowerCase() === originalCmdText.toLowerCase()) return false;
+                const normalizedText = normalizeCommandForCompare(fav.commandText);
+                const normalizedOrig = normalizeCommandForCompare(fav.originalCommandText);
+                const normalizedAlias = normalizeCommandForCompare(alias);
+                return normalizedText === normalizedAlias || normalizedOrig === normalizedAlias;
+            });
+            if (isDuplicate) {
+                showToast("This command is already in your Favorites.");
+                return;
+            }
         }
 
         // Start loading
