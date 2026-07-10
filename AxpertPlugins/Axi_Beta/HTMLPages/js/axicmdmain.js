@@ -12609,6 +12609,10 @@
                 opacity: 0.5 !important;
                 cursor: not-allowed !important;
             }
+            .AXI-Sec.axi-tour-active .btn.introjs-showElement,
+            .AXI-Sec.axi-tour-active #btnRefresh.introjs-showElement {
+                opacity: 1 !important;
+            }
             .introjs-bullets ul li a {
                 background: #5e5e6e !important;
             }
@@ -12663,27 +12667,32 @@
             steps: [
                 {
                     element: '#Axi-Searchinp',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Search & Execute</strong></div>Type commands eg: create tstructname, Edit tstructname fieldname fieldvalue, view tstructname fieldvalue, or configure peg pegname and access sdk like DB Explorer, ADS creation etc  here. Press Enter to run.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Command Search &amp; Execution</strong></div><div style="font-size: 12px; line-height: 1.6;">Use the modern <strong>Target-First</strong> command syntax:<br>• <code>&quot;Customer Form&quot; create</code> (Open forms)<br>• <code>&quot;Sales Order&quot; view &quot;SO-101&quot;</code> (View record)<br>• <code>&quot;Items&quot; edit quantity 50</code> (Modify records)<br><br>Or run system administration commands:<br>• <code>configure peg &lt;pegname&gt;</code>, <code>configure settings</code><br>• <code>sdk db console</code> (Access developer tools)<br><br>Press <strong>Enter</strong> to run the command.</div>',
+                    position: 'bottom'
+                },
+                {
+                    element: '#axiAddFavoriteBtn',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">bookmark_add</span></span><strong style="color: #a100ff;">Add to Favorites</strong></div><div style="font-size: 12px; line-height: 1.6;">Click this button to save the current command in the search box to your personal favorites card.<br>Name it as you like for quick reference later (excludes <code>run</code> commands).</div>',
+                    position: 'bottom'
+                },
+                {
+                    element: '#axiViewFavoritesBtn',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">bookmarks</span></span><strong style="color: #a100ff;">View &amp; Search Favorites</strong></div><div style="font-size: 12px; line-height: 1.6;">Click this button to open the sliding Favorites card.<br>Use the new built-in filter field to search and execute your bookmarks instantly.</div>',
                     position: 'bottom'
                 },
                 {
                     element: '#axiSuggestions',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">list</span></span><strong style="color: #a100ff;">Live Suggestions</strong></div>Autocomplete matches list dynamically. Use Up/Down arrows to navigate.',
-                    position: 'bottom'
-                },
-                {
-                    element: '#axiFavouriteBtn',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">star</span></span><strong style="color: #a100ff;">Bookmark Commands</strong></div>Pin frequently used commands to your favorites card here.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">list</span></span><strong style="color: #a100ff;">Smart Autocomplete Suggestions</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Target-First Matching:</strong> Search results list target forms, views, and commands first.<br>• <strong>Space Auto-Quoting:</strong> Pressing space automatically wraps multi-word targets in quotes.<br>• <strong>Capability-Constrained Actions:</strong> Available actions (<code>create</code>, <code>edit</code>, <code>view</code>) are limited based on target type capability (TStructs allow all; IViews, Pages, and ADS allow <code>view</code> only).<br>• <strong>Flexible Navigation:</strong> Select <strong>Go</strong> or <strong>Pop-Up</strong> from suggestion options.</div>',
                     position: 'bottom'
                 },
                 {
                     element: '#btnRefresh',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">refresh</span></span><strong style="color: #a100ff;">Force Reload Metadata</strong></div>Click here to refresh database commands and update active shell views.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">refresh</span></span><strong style="color: #a100ff;">Force Reload Metadata</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Force Reload:</strong> Click to immediately reload structural metadata, active shell views, and database commands.<br>• <strong>Animation Feedback:</strong> The refresh icon rotates dynamically while loading and resets cleanly upon completion.</div>',
                     position: 'bottom'
                 },
                 {
                     element: '.searchwrap-AXI',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">logout</span></span><strong style="color: #a100ff;">Quick Exit</strong></div>Press Esc or click outside the palette to close the interface anytime.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">keyboard</span></span><strong style="color: #a100ff;">Shortcuts &amp; Quick Exit</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Ctrl + Enter:</strong> Execute the default <strong>Go</strong> option (opens target in current frame).<br>• <strong>Ctrl + Shift + Enter:</strong> Execute in a new <strong>Pop-Up</strong> window/modal.<br>• <strong>Esc:</strong> Closes the command palette instantly, or click anywhere outside to exit.</div>',
                     position: 'bottom'
                 }
             ],
@@ -12709,6 +12718,9 @@
                 }
                 // Force synchronous browser layout reflow to compute correct width/height
                 void targetElement.offsetHeight;
+            } else if (targetElement && targetElement.id === "axiViewFavoritesBtn") {
+                loadFavorites();
+                showFavoritesPopupOnly();
             } else {
                 hide();
                 if (megaDropdown) {
