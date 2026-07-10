@@ -12667,7 +12667,7 @@
             steps: [
                 {
                     element: '#Axi-Searchinp',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Command Search &amp; Execution</strong></div><div style="font-size: 12px; line-height: 1.6;">Use the modern <strong>Target-First</strong> command syntax:<br>• <code>&quot;Customer Form&quot; create</code> (Open forms)<br>• <code>&quot;Sales Order&quot; view &quot;SO-101&quot;</code> (View record)<br>• <code>&quot;Items&quot; edit quantity 50</code> (Modify records)<br><br>Or run system administration commands:<br>• <code>configure peg &lt;pegname&gt;</code>, <code>configure settings</code><br>• <code>sdk db console</code> (Access developer tools)<br><br>Press <strong>Enter</strong> to run the command.</div>',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Command Search &amp; Execution</strong></div><div style="font-size: 12px; line-height: 1.6;">command syntax:<br>• <code>&quot;Customer Form&quot; create</code> (Open forms)<br>• <code>&quot;Sales Order&quot; view &quot;SO-101&quot;</code> (View record)<br>• <code>&quot;Items&quot; edit quantity 50</code> (Modify records)<br><br>Or run system administration commands:<br>• <code>configure peg &lt;pegname&gt;</code>, <code>configure settings</code><br>• <code>sdk db console</code> (Access developer tools)<br><br>Press <strong>Enter</strong> to run the command.</div>',
                     position: 'bottom'
                 },
                 {
@@ -12687,7 +12687,7 @@
                 },
                 {
                     element: '#btnRefresh',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">refresh</span></span><strong style="color: #a100ff;">Force Reload Metadata</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Force Reload:</strong> Click to immediately reload structural metadata, active shell views, and database commands.<br>• <strong>Animation Feedback:</strong> The refresh icon rotates dynamically while loading and resets cleanly upon completion.</div>',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">refresh</span></span><strong style="color: #a100ff;">Force Reload Metadata</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Force Reload:</strong> Click to immediately reload structural metadata, active shell views, and database commands.</div>',
                     position: 'bottom'
                 },
                 {
