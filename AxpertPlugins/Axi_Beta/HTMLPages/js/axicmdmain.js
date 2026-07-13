@@ -4719,6 +4719,18 @@
         const currentInput = input.value;
         const currentInputTokens = getTokens(currentInput.trim());
 
+        // Determine the current suggestion token position/level (0-based)
+        let suggestionTokenIndex = currentInputTokens.length;
+        if (currentInputTokens.length > 0 && !currentInput.endsWith(" ")) {
+            suggestionTokenIndex = currentInputTokens.length - 1;
+        }
+        const shouldCapitalize = (suggestionTokenIndex <= 1);
+
+        const capitalizeFirstLetter = (str) => {
+            if (!str) return str;
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        };
+
         const isInitialCommandStage = currentInputTokens.length === 0 || (currentInputTokens.length === 1 && !currentInput.endsWith(" "));
 
         const commandIcons = {
@@ -4856,11 +4868,15 @@
             const text = typeof item === "string" ? item : item.displaydata;
             li.className = "axi-suggestion";
 
+            const displayText = (shouldCapitalize && !(typeof item === 'object' && item.isExecutable)) 
+                ? capitalizeFirstLetter(text) 
+                : text;
+
             if (typeof item === 'object' && item.isExecutable) {
                 li.style.fontWeight = "bold";
                 li.style.color = "#22c55e";
                 li.style.borderBottom = "1px solid #eee";
-                li.textContent = text;
+                li.textContent = displayText;
 
             } else if (isInitialCommandStage && getCommandConfig(text)) {
                 const iconName = commandIcons[text.toLowerCase()] || "chevron_right";
@@ -4875,10 +4891,10 @@
                                 </div>
                             </div>
                         </div>
-                        <span class="command-text">${text}</span>
+                        <span class="command-text">${displayText}</span>
                     </div>`;
             } else {
-                li.textContent = text;
+                li.textContent = displayText;
 
             }
 
