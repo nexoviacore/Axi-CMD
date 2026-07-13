@@ -59,10 +59,9 @@
         page: ({ transId, fieldName, fieldValue }) =>
             redirectToEntity(transId, fieldName, fieldValue),
 
-        ads: ({ transId, fieldName, fieldValue }) => redirectToEntity(transId, "", fieldName, fieldValue)
+        ads: ({ transId, fieldName, fieldValue }) => redirectToEntity(transId, "", fieldName, fieldValue),
 
-
-
+        inbox: () => handleViewInbox()
     };
 
 
@@ -93,7 +92,6 @@
         View: {
             default: handleViewCommand,
             source: handleViewSource,
-            inbox: handleViewInbox,
 
 
 
@@ -584,6 +582,13 @@
                 cmdToken: 11,
                 command: "",
                 commandGroup: "Help",
+                prompts: []
+            };
+            // Append Version command to initial suggestions list
+            commands["Version"] = {
+                cmdToken: 12,
+                command: "",
+                commandGroup: "Version",
                 prompts: []
             };
             console.log(JSON.stringify(commands));
@@ -2263,31 +2268,126 @@
         return matches[0];
     }
 
+    function isInboxStructure(item) {
+        if (!item) return false;
+        const stype = item.stype !== undefined ? item.stype : item.STYPE;
+        const name = (item.name || item.NAME || item.displaydata || item.DISPLAYDATA || "").toLowerCase().trim();
+        
+        if (stype !== undefined && stype !== null) {
+            const stypeStr = String(stype).trim().toLowerCase();
+            if (stypeStr === "inbox") {
+                return true;
+            }
+        }
+        
+        const isStypeEmpty = stype === undefined || stype === null || String(stype).trim() === "";
+        if (isStypeEmpty && name === "inbox") {
+            return true;
+        }
+        
+        return false;
+    }
+
+    function isAdsStructure(item) {
+        if (!item) return false;
+        const stype = item.stype || item.STYPE;
+        if (stype === undefined || stype === null) return false;
+        return String(stype).trim().toLowerCase() === "ads";
+    }
+
+    function isAdsVisible(item) {
+        if (!item) return false;
+        const view = item.viewallowed;
+        if (view === "F" || view === false || view === "false" || view === "NA" || view === "f" || view === "False") {
+            return false;
+        }
+        return true;
+    }
+
+    function isActionAllowed(item, action) {
+        if (!item) return true;
+        const act = action.toLowerCase();
+        const stype = (item.stype || item.STYPE || "").toLowerCase().trim();
+        if (stype === "p" || stype === "page" || stype === "i" || stype === "iview" || stype === "") {
+            return true;
+        }
+        const hasView = item.viewallowed !== undefined;
+        const hasCreate = item.createallowed !== undefined;
+        if (!hasView && !hasCreate) {
+            return true;
+        }
+        if (act === "view") {
+            return hasView ? item.viewallowed === "T" : true;
+        }
+        if (act === "create" || act === "edit") {
+            return hasCreate ? item.createallowed === "T" : true;
+        }
+        return true;
+    }
+
     function isValidActionForTarget(target, action) {
         if (!target || !action) return false;
         const entityObj = getTargetEntityObj(target, action);
         const lowAction = action.toLowerCase();
-        let actions = ["View"];
+        let actions = [];
         if (entityObj) {
-            const type = (entityObj.stype || entityObj.STYPE || "").toLowerCase();
+            const type = (entityObj.stype || entityObj.STYPE || "").toLowerCase().trim();
             if (type === "t" || type === "tstruct") {
-                actions = ["Create", "Edit", "View"];
+                if (isActionAllowed(entityObj, "view")) actions.push("View");
+                if (isActionAllowed(entityObj, "create")) {
+                    actions.push("Create");
+                    actions.push("Edit");
+                }
+            } else if (isInboxStructure(entityObj)) {
+                actions.push("Go");
+            } else if (type === "ads") {
+                if (isAdsVisible(entityObj)) actions.push("View");
+            } else {
+                if (type === "p" || type === "page" || isActionAllowed(entityObj, "view")) actions.push("View");
             }
         }
         return actions.map(act => act.toLowerCase()).includes(lowAction);
     }
 
     function isViewAllowed(item) {
-        if (item?.stype === "p" || item?.stype === "page") return true;
-        if (item?.stype === "i" || item?.stype === "iview") return item?.viewallowed !== 'F';
-        if (item?.viewallowed === "NA") return false;
-        return item?.viewallowed !== 'F';
+        if (!item) return false;
+        if (isInboxStructure(item)) {
+            return false;
+        }
+        if (isAdsStructure(item)) {
+            return isAdsVisible(item);
+        }
+        const stype = (item.stype || item.STYPE || "").toLowerCase().trim();
+        if (stype === "p" || stype === "page" || stype === "i" || stype === "iview") {
+            return true;
+        }
+        return isActionAllowed(item, "view");
+    }
+
+    function isStructureVisible(item) {
+        if (!item) return false;
+        if (isInboxStructure(item)) {
+            return true;
+        }
+        if (isAdsStructure(item)) {
+            return isAdsVisible(item);
+        }
+        const stype = (item.stype || item.STYPE || "").toLowerCase().trim();
+        if (stype === "p" || stype === "page" || stype === "i" || stype === "iview") {
+            return true;
+        }
+        const hasView = item.viewallowed !== undefined;
+        const hasCreate = item.createallowed !== undefined;
+        if (!hasView && !hasCreate) {
+            return true;
+        }
+        return (hasView && item.viewallowed === "T") || (hasCreate && item.createallowed === "T");
     }
 
     function getInitialSuggestions() {
         const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view"].includes(k.toLowerCase()));
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
-        const targets = (axDatasourceObj[key] || []).filter(item => isViewAllowed(item));
+        const targets = (axDatasourceObj[key] || []).filter(item => isStructureVisible(item));
         return [...targets, ...verbs];
     }
 
@@ -3258,15 +3358,40 @@
             const entityObj = getTargetEntityObj(rawTokens[0]);
             const partial = cleanString(rawTokens[1] || "").toLowerCase();
 
-            let actions = ["View"];
+            if (entityObj && isInboxStructure(entityObj)) {
+                const filtered = [goOption].filter(opt => {
+                    const displayText = opt.displaydata || opt.name;
+                    return displayText.toLowerCase().startsWith(partial);
+                });
+                filteredObjects = filtered;
+                return filtered;
+            }
+
+            let actions = [];
             let targetType = "";
             if (entityObj) {
                 targetType = (entityObj.stype || entityObj.STYPE || "").toLowerCase();
             }
 
             if (targetType === "t" || targetType === "tstruct") {
-                actions = ["Create", "Edit", "View"];
-            } else if (!targetType) {
+                const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
+                if (!hasPerms) {
+                    actions = ["Create", "Edit", "View"];
+                } else {
+                    if (entityObj.viewallowed === "T") actions.push("View");
+                    if (entityObj.createallowed === "T") {
+                        actions.push("Create");
+                        actions.push("Edit");
+                    }
+                }
+            } else if (targetType === "p" || targetType === "page") {
+                actions.push("View");
+            } else if (targetType === "ads") {
+                if (isAdsVisible(entityObj)) actions.push("View");
+            } else if (targetType) {
+                const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
+                if (!hasPerms || entityObj.viewallowed === "T") actions.push("View");
+            } else {
                 const cleanTok = rawTokens[0].replace(/"/g, "").toLowerCase();
                 const key = "axi_structmetalist_" + getStructParam().toLowerCase();
                 const list = axDatasourceObj[key] || [];
@@ -3284,16 +3409,43 @@
                     return nameMatch || displayMatch || captionMatch || captionDirect;
                 });
 
+                let hasView = false;
+                let hasCreate = false;
+                let hasGo = false;
                 let hasTstruct = false;
+                let matchesAnyTstructWithoutPerms = false;
+                let matchesAnyIviewWithoutPerms = false;
                 for (let i = 0; i < matches.length; i++) {
-                    const type = (matches[i].stype || matches[i].STYPE || "").toLowerCase();
-                    if (type === "t" || type === "tstruct") {
+                    const m = matches[i];
+                    const type = (m.stype || m.STYPE || "").toLowerCase().trim();
+                    const hasPerms = m.viewallowed !== undefined || m.createallowed !== undefined;
+                    if (isInboxStructure(m)) {
+                        hasGo = true;
+                    } else if (type === "t" || type === "tstruct") {
                         hasTstruct = true;
-                        break;
+                        if (!hasPerms) {
+                            matchesAnyTstructWithoutPerms = true;
+                        } else {
+                            if (m.viewallowed === "T") hasView = true;
+                            if (m.createallowed === "T") hasCreate = true;
+                        }
+                    } else if (type === "ads") {
+                        if (isAdsVisible(m)) hasView = true;
+                    } else if (type === "p" || type === "page") {
+                        hasView = true;
+                    } else {
+                        if (!hasPerms) {
+                            matchesAnyIviewWithoutPerms = true;
+                        } else {
+                            if (m.viewallowed === "T") hasView = true;
+                        }
                     }
                 }
-                if (hasTstruct) {
-                    actions = ["Create", "Edit", "View"];
+                if (hasView || matchesAnyTstructWithoutPerms || matchesAnyIviewWithoutPerms) actions.push("View");
+                if (hasGo) actions.push("Go");
+                if (hasTstruct && (hasCreate || matchesAnyTstructWithoutPerms)) {
+                    actions.push("Create");
+                    actions.push("Edit");
                 }
             }
 
@@ -3343,6 +3495,10 @@
         }
 
         if (groupKey.toLowerCase() === "help") {
+            return [goOption];
+        }
+
+        if (groupKey.toLowerCase() === "version") {
             return [goOption];
         }
 
@@ -3770,14 +3926,19 @@
                         return [goOption, popOption];
                     }
 
-                    if (groupKey.toLowerCase() === "view" && tokens.length == 3) {
+                    if ((groupKey.toLowerCase() === "view" || groupKey.toLowerCase() === "go") && tokens.length == 3) {
+                        if (tokens[1] && tokens[1].toLowerCase() === "inbox") {
+                            filteredObjects = [goOption];
+                            return [goOption];
+                        }
                         filteredObjects = [goOption, popOption]
                         return [goOption, popOption];
                     }
                     return [];
                 }
                 if (hasValidParams) {
-                    if (tokens[1].toLowerCase() === "inbox") {
+                    if (tokens[1] && tokens[1].toLowerCase() === "inbox") {
+                        filteredObjects = [goOption];
                         return [goOption];
                     }
                     loadList(apiSourceName, paramValue);
@@ -3844,16 +4005,17 @@
 
             const key = groupKey?.toLowerCase();
             const validItems = filtered.filter(item => {
-
-
-
-                if (key === "create") return item?.createallowed !== 'F' && item?.createallowed !== 'NA';
+                const hasPerms = item?.viewallowed !== undefined || item?.createallowed !== undefined;
+                if (!hasPerms) return true;
+                if (key === "create" || key === "edit") {
+                    return isActionAllowed(item, key);
+                }
                 if (key === "view") {
                     return isViewAllowed(item);
                 }
                 if (isEmpty(item?.displaydata) && isEmpty(item?.caption) && isEmpty(item?.name)) return false;
                 return true;
-            })
+            });
 
             filteredObjects = validItems;
 
@@ -3866,11 +4028,14 @@
             ].find(val => val !== null && val !== undefined && (typeof val === "string" ? val.trim() !== "" : true))
             ).filter(val => val !== undefined);
 
-            if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
-                resultList.unshift(goOption, popOption);
-                // resultList.unshift(goOption);
-                filteredObjects.unshift(goOption, popOption);
-                // filteredObjects.unshift(goOption);
+            if ((groupKey.toLowerCase() === "view" || groupKey.toLowerCase() === "go") && tokens.length === 3) {
+                if (tokens[1] && tokens[1].toLowerCase() === "inbox") {
+                    resultList.unshift(goOption);
+                    filteredObjects.unshift(goOption);
+                } else {
+                    resultList.unshift(goOption, popOption);
+                    filteredObjects.unshift(goOption, popOption);
+                }
             }
 
             //otherthan keyfield and userpermissionlisting it will work for all tokens which length is eqaul to 3(ex : peg)
@@ -4324,7 +4489,7 @@
         if (resolvedParams[rawIndex] && !forceResolve) {
             const val = resolvedParams[rawIndex];
             const lowerVal = val.toLowerCase();
-            const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop"].includes(lowerVal);
+            const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version"].includes(lowerVal);
             if (!(tokenIndex === 1 && isVerb)) {
                 return {
                     value: val,
@@ -4572,7 +4737,8 @@
             "end": "stop",
             "editprompt": "edit",
             "analyze": "analytics",
-            "help": "help_outline"
+            "help": "help_outline",
+            "version": "info_outline"
         };
 
 
@@ -4808,7 +4974,7 @@
             if (rawTokens.length === 1 && firstToken && isTargetEntity(firstToken)) {
                 const entityObj = getTargetEntityObj(firstToken);
                 const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
-                if (["i", "iview", "ads", "page", "p"].includes(stype)) {
+                if (["i", "iview", "ads", "page", "p"].includes(stype) || isInboxStructure(entityObj)) {
                     shouldRestoreInput = true;
                 }
                 input.value = "view " + rawInput + " ";
@@ -5348,6 +5514,26 @@
         });
 
         setTimeout(removeToast, duration);
+    }
+
+    async function showVersionInfo() {
+        try {
+            const url = `${getAppBaseUrl()}/AxpertPlugins/Axi_Beta/AxiCMDVersioninfo.json`;
+            const res = await fetch(url, { cache: "no-store" });
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.version) {
+                    showToast(`Axi Version: ${data.version}`, 3000, true);
+                } else {
+                    showToast("Version information is not available.");
+                }
+            } else {
+                showToast("Failed to fetch version information.");
+            }
+        } catch (err) {
+            console.error("Failed to load version info", err);
+            showToast("Failed to load version information.");
+        }
     }
 
 
@@ -5967,13 +6153,18 @@
             return;
         }
 
+        if (lowerText === "version") {
+            showVersionInfo();
+            return;
+        }
+
 
 
         const tokens = getTokens(text);
         if (tokens.length === 1 && isTargetEntity(tokens[0])) {
             const entityObj = getTargetEntityObj(tokens[0]);
             const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
-            if (["i", "iview", "ads", "page", "p", "t", "tstruct"].includes(stype)) {
+            if (["i", "iview", "ads", "page", "p", "t", "tstruct"].includes(stype) || isInboxStructure(entityObj)) {
                 tokens.unshift("view");
             }
         }
@@ -5998,6 +6189,21 @@
         const groupKey = cleanString(tokens[0]);
 
         const groupNameNormalized = groupKey.toLowerCase();
+
+        // Enforce Structure Permissions
+        if (["view", "create", "edit"].includes(groupNameNormalized)) {
+            const targetToken = tokens[1];
+            if (targetToken && targetToken.toLowerCase() !== "inbox") {
+                const entityObj = getTargetEntityObj(targetToken, groupNameNormalized);
+                if (entityObj) {
+                    if (!isActionAllowed(entityObj, groupNameNormalized)) {
+                        showToast("You do not have permission to execute this command.", 3000, false);
+                        return;
+                    }
+                }
+            }
+        }
+
         if (groupNameNormalized === "run" && (isPreviewModalOpen() || isRunDisabledForPage())) {
             showToast("Execution of run command is not allowed when the active page or preview modal is not runnable");
             return;
@@ -6995,6 +7201,9 @@
             redirectToIView(transId, rawStruct);
             return;
 
+        } else if (type === "inbox") {
+            handleViewInbox();
+            return;
         }
 
 
@@ -7390,6 +7599,7 @@
             .filter(Boolean);
 
         const VALID_TYPES = new Set(paramList);
+        VALID_TYPES.add("inbox");
 
         let paramValue;
 
@@ -7592,6 +7802,10 @@
                         ] || "";
                 }
 
+                if (isInboxStructure(bestMatch)) {
+                    candidate = "inbox";
+                }
+
                 if (
                     !candidate &&
                     typeof bestMatch.displaydata ===
@@ -7701,6 +7915,9 @@
                 bestMatch.stype
                     .toLowerCase()
                 ] || "";
+        }
+        if (isInboxStructure(bestMatch)) {
+            candidate = "inbox";
         }
 
         // [type] fallback

@@ -190,6 +190,10 @@ Axi evaluates the command using **Target-First** syntax parser rules, allowing t
 *   **Description:** Launches the interactive onboarding walkthrough tour highlighting search syntax, autocomplete suggestions, direct execution shortcuts, and favorites manager. During the tour, input editing and shell toolbar buttons are disabled to guide the user cleanly.
 *   **Example:** `Help`
 
+### 9. `Version`
+*   **Description:** Fetches and displays the current plugin release version from the local version file.
+*   **Example:** `Version`
+
 ---
 
 ## ⚙️ Installation & Deployment Steps
@@ -332,6 +336,15 @@ VALUES (gen_random_uuid(), 12, 2, 'API Name', 'axi_publishapi', ':username');
     *   Verify that you executed the database scripts (specifically `axi_commands` and `axi_command_prompts`) and the tables are populated.
 *   **Data permissions / Row filtering issue:**
     *   Axi evaluates permissions via `fn_permissions_getpermission`. Verify that the user's role responsibilities are correctly assigned in Axpert's standard user settings pages.
+
+## 🚀 Release Notes & Recent Bug Fixes (July 13, 2026)
+
+### 1. Enforced Structure Permissions (View, Create, Edit)
+*   **Visibility Rules:** Autocomplete lists filter `View` suggestions based on `viewallowed === "T"`, and `Create` / `Edit` suggestions based on `createallowed === "T"`.
+*   **Execution Block:** Enforces permissions at the execution layer (manual typing, history, favorites, shortcuts). Aborts execution and shows a toast error message if unauthorized.
+*   **Backward Compatibility:** If a structure does not have `viewallowed` and `createallowed` fields defined, all permission checks are skipped and it is shown and executed as before.
+*   **Bypass Logic for Page and Inbox:** Structures of type `p` (Page) or with missing `stype` (Inbox) bypass permission check rules entirely and are always shown and executed.
+*   **Version Command:** Introduced the `Version` command to fetch and show the current plugin version in a toast.
 
 ---
 
