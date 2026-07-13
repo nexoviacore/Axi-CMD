@@ -263,7 +263,7 @@
 
 
 
-    async function init() {
+    function init() {
         let parentUserName = "";
         let parentProject = "";
         let parentUserRoles = "";
@@ -344,9 +344,9 @@
                 configUrl = `/AxpertPlugins/Axi_Beta/axicmd-config.json`;
             }
             try {
-                const res = await fetch(configUrl);
+                const res = fetch(configUrl);
                 if (res.ok) {
-                    const config = await res.json();
+                    const config = res.json();
                     AxiArmUrl = config.axiarmurl || config.armUrl || config.axiArmUrl || "";
                 }
             } catch (err) {
@@ -5158,8 +5158,18 @@
 
             console.log("Get List data: " + JSON.stringify(res));
 
-
-
+            if (res) {
+                const resStr = (typeof res === "string" ? res : JSON.stringify(res)).toLowerCase();
+                if (resStr.includes("sessionid is not valid") || 
+                    resStr.includes("session is not valid") || 
+                    resStr.includes("session expired") || 
+                    resStr.includes("sessionid is invalid") || 
+                    resStr.includes("session is invalid")) {
+                    const baseUrl = getAppBaseUrl();
+                    top.window.location.href = `${baseUrl}/aspx/sess.aspx`;
+                    throw new Error("SessionId is not valid");
+                }
+            }
 
             const dataObj = typeof res === "string" ? JSON.parse(res) : res;
 
@@ -5185,6 +5195,9 @@
             return list;
 
         } catch (err) {
+            if (err.message === "SessionId is not valid") {
+                throw err;
+            }
             return [];
         }
     }
