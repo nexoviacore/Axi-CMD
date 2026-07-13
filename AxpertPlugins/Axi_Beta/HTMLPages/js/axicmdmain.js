@@ -5518,17 +5518,42 @@
 
     async function showVersionInfo() {
         try {
-            const url = `${getAppBaseUrl()}/AxpertPlugins/Axi_Beta/AxiCMDVersioninfo.json`;
-            const res = await fetch(url, { cache: "no-store" });
-            if (res.ok) {
-                const data = await res.json();
-                if (data && data.version) {
-                    showToast(`Axi Version: ${data.version}`, 3000, true);
-                } else {
-                    showToast("Version information is not available.");
+            const axiUrl = `${getAppBaseUrl()}/AxpertPlugins/Axi_Beta/AxiCMDVersioninfo.json`;
+            const axpertUrl = `${getAppBaseUrl()}/versionInfo.json`;
+
+            const [axiRes, axpertRes] = await Promise.all([
+                fetch(axiUrl, { cache: "no-store" }),
+                fetch(axpertUrl, { cache: "no-store" })
+            ]);
+
+            let axiVersion = "";
+            let axpertVersion = "";
+
+            if (axiRes.ok) {
+                const axiData = await axiRes.json();
+                axiVersion = axiData?.version || "";
+            }
+
+            if (axpertRes.ok) {
+                const axpertData = await axpertRes.json();
+                const ver = axpertData?.version || "";
+                const sub = axpertData?.subVersion || "";
+                if (ver) {
+                    axpertVersion = ver;
+                    if (sub) {
+                        axpertVersion += ` (${sub})`;
+                    }
                 }
+            }
+
+            if (axiVersion && axpertVersion) {
+                showToast(`Axpert Version: ${axpertVersion} | Axi CMD Version: ${axiVersion}`, 5000, true);
+            } else if (axiVersion) {
+                showToast(`Axi CMD Version: ${axiVersion}`, 5000, true);
+            } else if (axpertVersion) {
+                showToast(`Axpert Version: ${axpertVersion}`, 5000, true);
             } else {
-                showToast("Failed to fetch version information.");
+                showToast("Version information is not available.");
             }
         } catch (err) {
             console.error("Failed to load version info", err);
@@ -11494,7 +11519,6 @@
 
             // In edit mode you will later assign:
             if (!iscreate) {
-                recordid = "0";
                 keyfield = inputKeyFieldName;
                 keyvalue = inputKeyFieldValue;
             }
@@ -11543,6 +11567,8 @@
                     }
 
                     rowObj.columns[fieldName] = value;
+                    rowObj.columns[keyfield] = keyvalue;
+                    
                 }
 
                 const recdata = Object.keys(dcMap).map(recKey => ({
@@ -11563,7 +11589,7 @@
 
                 payload = {
                     savedata: {
-                        cachedsave: "true",
+                        cachedsave: "false",
                         axpapp: mainProject,
                         //appsessionkey: "010198670011016401680166017301540168015301640101009800994939364141171051310018",
                         transid: transid,
@@ -11572,6 +11598,9 @@
                         password: password,
                         changedrows: {},
                         trace: "true",
+                        forpaybooks: "true",
+                        dataupdate: iscreate ? "false" : "true",
+                        primarykey: keyfield,
                         recordid: recordid,
                         keyfield: keyfield,
                         keyvalue: keyvalue,
