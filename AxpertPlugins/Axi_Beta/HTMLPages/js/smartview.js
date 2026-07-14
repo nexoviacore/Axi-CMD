@@ -11135,7 +11135,11 @@
       try {
         if (window.parent && typeof window.parent.createPopup === 'function') {
           window.parent.createPopup(url, true, () => {}, () => {});
-        } else {
+        } else if (window.parent && typeof window.parent.PopupManager.openForm === 'function') {
+          let popupurl = '../aspx/' + url + '&dummyload=false?&AxPop=true';               
+          window.parent.PopupManager.openForm("", popupurl);
+        }  
+        else {
           window.open(url, '_blank', 'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=1000,height=760');
         }
       } catch (e) {
