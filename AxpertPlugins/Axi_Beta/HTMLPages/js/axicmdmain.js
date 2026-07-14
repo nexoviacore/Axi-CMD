@@ -3304,6 +3304,25 @@
 
     const isEmpty = val => typeof val === "string" ? val.trim() === "" : val === null || val === undefined;
 
+    function getMatchedField(tokenText, transId) {
+        if (!tokenText || !transId) return null;
+        const searchStr = transId.toLowerCase();
+        let list = [];
+        for (const key in axDatasourceObj) {
+            const keyLower = key.toLowerCase();
+            if (keyLower.startsWith("axi_getstructsdata") && keyLower.includes(searchStr)) {
+                list = axDatasourceObj[key] || [];
+                break;
+            }
+        }
+        const cleanToken = cleanString(tokenText).toLowerCase();
+        return list.find(item => 
+            (item.name && item.name.toLowerCase() === cleanToken) ||
+            (item.caption && item.caption.toLowerCase() === cleanToken) ||
+            (item.displaydata && item.displaydata.toLowerCase() === cleanToken)
+        ) || null;
+    }
+
     function suggestLocal(inputText) {
         normalizeGlobalState();
         let ignoreExtraParams = false;
