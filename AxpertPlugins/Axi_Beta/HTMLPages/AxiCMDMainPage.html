@@ -1364,15 +1364,29 @@ Home Cunfiguration Page Templete
                                 <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
                                     id="runBtn" data-kt-menu-placement="bottom" data-kt-menu-flip="top"
                                     data-kt-menu-attach="parent" data-kt-menu-trigger="click">
-                                    <span class="material-icons material-icons-style material-icons-2 initialized"
-                                        data-bs-toggle="tooltip" data-bs-original-title="Run"
-                                        title="Run (ctrl + ENTER)">send</span>
+                                    <span class="material-icons material-icons-style material-icons-2"
+                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                        title="Run">send</span>
+                                </div>
+
+                                <!-- Add to Favorites Button -->
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                    id="axiAddFavoriteBtn" aria-label="Add to Favorites">
+                                    <span class="material-icons material-icons-style material-icons-2"
+                                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add to Favorites">bookmark_add</span>
+                                </div>
+
+                                <!-- View Favorites Button -->
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                    id="axiViewFavoritesBtn" aria-label="View Favorites">
+                                    <span class="material-icons material-icons-style material-icons-2"
+                                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="View Favorites">bookmarks</span>
                                 </div>
 
 
                                 <!--                                Previous Page Btn-->
                                 <div id="btnHistoryPrev"
-                                    class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn">
+                                    class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn d-none">
                                     <span data-bs-toggle="tooltip" data-bs-placement="bottom" title=""
                                         class="material-icons material-icons-style material-icons-2 "
                                         data-bs-original-title="Previous Page">keyboard_arrow_left</span>
@@ -1381,7 +1395,7 @@ Home Cunfiguration Page Templete
 
                                 <!--  Next Page Btn-->
                                 <div
-                                    class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn">
+                                    class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn d-none">
                                     <span data-bs-toggle="tooltip" data-bs-placement="bottom" title=""
                                         class="material-icons material-icons-style material-icons-2 "
                                         data-bs-original-title="Next Page">keyboard_arrow_right</span>
@@ -1389,7 +1403,7 @@ Home Cunfiguration Page Templete
                                 <!--  Next Page Btn-->
 
                                 <!--  History Pages Btn-->
-                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm d-none"
                                     id="History_pages" data-kt-menu-placement="bottom" data-kt-menu-flip="top"
                                     data-kt-menu-attach="parent">
                                     <span class="material-icons material-icons-style material-icons-2 "
@@ -1434,6 +1448,16 @@ Home Cunfiguration Page Templete
 
                                             <!--begin::Card body-->
                                             <div class="card-body p-0">
+                                                <div class="axi-fav-search-container" id="axiFavFilterContainer">
+                                                    <div class="axi-fav-search-wrapper">
+                                                        <span class="axi-fav-search-icon material-icons">search</span>
+                                                        <input type="text" 
+                                                            id="axiFavFilterInput" 
+                                                            class="axi-fav-search-input" 
+                                                            placeholder="Search favorites..." 
+                                                            autocomplete="off">
+                                                    </div>
+                                                </div>
                                                 <!--begin::Notifications-->
                                                 <div class="scroll-y My-Fav-Items-Wrapper">
 
@@ -1487,7 +1511,7 @@ Home Cunfiguration Page Templete
                                 <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
                                     id="btnRefresh" data-kt-menu-placement="bottom" data-kt-menu-flip="top"
                                     data-kt-menu-attach="parent">
-                                    <span class="material-icons material-icons-style material-icons-2 initialized axi-refresh-icon"
+                                    <span class="material-icons material-icons-style material-icons-2 axi-refresh-icon"
                                         data-bs-toggle="tooltip" data-bs-placement="bottom"
                                         title="Refresh">refresh</span>
                                 </div>
@@ -1746,12 +1770,12 @@ Home Cunfiguration Page Templete
     // files.js.push("/AxpertPlugins/Axi/HTMLPages/js/axi-autocomplete.js?v=67");
     // files.js.push("/AxpertPlugins/Axi/HTMLPages/js/axi-autocomplete_with_custom_fav.js?v=1");
 
-    files.js.push("/AxpertPlugins/Axi_Beta/HTMLPages/js/axicmdmain.js?v=100");
+    files.js.push("/AxpertPlugins/Axi_Beta/HTMLPages/js/axicmdmain.js?v=128");
     // files.js.push("/AxpertPlugins/Axi/HTMLPages/js/axi-autocomplete_with_custom_fav.js");
 
     // files.js.push("/AxpertPlugins/Axi/HTMLPages/js/axi-autocomplete_bkp_30_03_2026_qa.js?v=2");
 
-    files.css.push("/AxpertPlugins/Axi_Beta/HTMLPages/css/axicmdmain.css?v=8");
+    files.css.push("/AxpertPlugins/Axi_Beta/HTMLPages/css/axicmdmain.css?v=13");
 
     var dirLeft = true;
 

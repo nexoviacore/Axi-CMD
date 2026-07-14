@@ -677,12 +677,20 @@ class EntityCommon {
     };
 
     loadHyperLink(link, isHyperLink) {
-        if (typeof isHyperLink != "undefined" && isHyperLink == "true")
-            parent.ShowDimmer(true);
+        //if (typeof isHyperLink != "undefined" && isHyperLink == "true")
+        //    parent.ShowDimmer(true);
         let _thsiifId = window.frameElement.id;
         if (typeof _thsiifId !== "undefined" && _thsiifId.toLowerCase().startsWith("axmultiiframe_")) {
+            if (typeof parent.ShowDimmer === "function")
+                parent.ShowDimmer(true);
+            else if (typeof top.ShowDimmer === "function")
+                top.ShowDimmer(true);
+            else if (typeof ShowDimmer === "function")
+                ShowDimmer(true);
             parent.PopupManager.openForm("", link)
         } else {
+            if (typeof isHyperLink != "undefined" && isHyperLink == "true")
+                parent.ShowDimmer(true);
             window.top.LoadIframe(link);
         }
     }

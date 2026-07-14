@@ -439,7 +439,7 @@
         Exception ex = Server.GetLastError();
         errLogObj.LogException(ex, "Application_Error - Global.asax", sb.ToString());
 
-        Response.Redirect("~/CusError/AxCustomError.aspx");
+       // Response.Redirect("~/CusError/AxCustomError.aspx");
     }
 
 
