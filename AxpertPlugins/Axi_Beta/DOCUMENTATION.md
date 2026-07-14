@@ -42,7 +42,6 @@ graph TD
         Frontend -->|Command Processing| JS[axicmdmain.js]
         Frontend -->|Tabbed Records| PC[PopupContainer.html]
         Frontend -->|Record Lists| SV[Smartview.html]
-        Frontend -->|Charts/Metrics| AN[Analytics.html]
     end
 ```
 
@@ -51,7 +50,7 @@ graph TD
 *   **axicmdmain.js** ([axicmdmain.js](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/js/axicmdmain.js)): Contains the main autocomplete suggestion logic, command parser, state machine, and API client.
 *   **Smartview.html** ([Smartview.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/Smartview.html)): Handles interactive record list views, filtering, utility actions, and multi-select deletion.
 *   **PopupContainer.html** ([PopupContainer.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/PopupContainer.html)): Provides a tabbed interface to manage multiple open transactions in parallel.
-*   **Analytics.html** ([Analytics.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/Analytics.html)): Coordinates dynamic entity analysis, rendering chart panels, custom KPI metrics, and layout scaling.
+
 
 ### 2. Backend API Layer (`AxiApi_Beta`)
 *   Built on **.NET 8.0** for high performance and native async request processing.
@@ -118,13 +117,12 @@ The .NET 8 backend API acts as the bridge. It provides two key endpoints consume
 *   **Route:** `/api/v1/Axi/axi_get`
 *   **Method:** `POST`
 *   **Headers:** `Content-Type: application/json`
-*   **Query Parameters / Body:** Passes parameters such as `username`, `roles`, `responsibility`, and `mode`.
 *   **Response:** A JSON collection of structs, pages, and direct SQL datasets mapped to the user's workspace profile.
 
 ### 2. Manage Favorites / Recents
 *   **Route:** `/api/v1/Axi/user-favourites`
 *   **Method:** `GET` / `POST` / `DELETE`
-*   **Purpose:** Fetches, adds, or deletes commands frequently executed by the user. Caches these actions locally to populate the initial autocomplete list on `Ctrl + Space`.
+
 
 ---
 
@@ -149,29 +147,29 @@ Users can operate the command palette entirely via key combinations:
 | Keyboard Shortcut | Context / Input Focus | Action Triggered |
 | :--- | :--- | :--- |
 | **`Ctrl + Space`** | Anywhere in the application | **Toggle Command Palette** (opens or focuses the search input). |
-| **`Ctrl + Enter`** | Inside `Axi-Searchinp` | **Run / Execute Command** (triggers navigation, form load, or save). |
+| **`Ctrl + Enter`** | Inside `Axi-Searchinp` | **Run / Execute (Go)** (triggers default action or "goOption", loading the target in the current frame). Supports direct single-target execution. |
 | **`Ctrl + S`** | Inside active forms | **Save Record** (automatically commits active structural fields). |
-| **`Ctrl + Shift + Enter`** | Selecting suggestions | **Open in Popup** (loads the screen within the tabbed `PopupContainer.html` iframe). |
+| **`Ctrl + Shift + Enter`** | Inside `Axi-Searchinp` | **Open in Popup (Pop-Up)** (loads the screen within the tabbed `PopupContainer.html` iframe). Supports direct single-target execution. |
 | **`Ctrl + Alt + Enter`** | Suggestions selected | **View Command Source / Metadata** (opens underlying schema configuration). |
-| **`Backspace`** | After command word | **Command Reset** (erases trailing tokens and parameters safely). |
+| **`Backspace`** | After action word | **Command Reset** (erases trailing tokens and parameters safely). |
 
 ---
 
 ## 📋 Supported Command Catalog
 
-Axi evaluates the first word of the user's input to determine the command state.
+Axi evaluates the command using **Target-First** syntax parser rules, allowing the target structure name to be specified first followed by capability-constrained actions.
 
-### 1. `Create [tstruct]`
+### 1. `"[tstruct]" Create`
 *   **Description:** Opens a fresh form to create a new transaction record.
-*   **Example:** `Create customer`
+*   **Example:** `"Customer Form" Create`
 
-### 2. `Edit [tstruct] [search value] [object name] with [field name]`
+### 2. `"[tstruct]" Edit [search value] with [field name] [value]`
 *   **Description:** Navigates directly to an existing transaction record to edit specific fields.
-*   **Example:** `Edit customer 10452 John Doe with Email`
+*   **Example:** `"Customer Form" Edit 10452 with Email "john.doe@gmail.com"`
 
-### 3. `View [Tstruct/Iview/Page/ADS] [search value] [object name]`
+### 3. `"[Tstruct/Iview/Page/ADS]" View [search value]`
 *   **Description:** Displays records in read-only view. Works with transaction forms (`Tstruct`), database views (`Iview`), standard web pages (`Page`), or custom direct SQL configurations (`ADS`).
-*   **Example:** `View invoice 2099`
+*   **Example:** `"Invoice" View 2099`
 
 ### 4. `Configure [type] [name] [key field]`
 *   **Description:** Quick access to system configuration settings. Supported types include `Rule`, `KeyField`, `User`, `Role`, `Responsibility`, `Dimension`, `Form Notification`, and `PEG`.
@@ -180,13 +178,21 @@ Axi evaluates the first word of the user's input to determine the command state.
 ### 5. `Upload` & `Download`
 *   **Description:** Import or export datasets.
 
-### 6. `DevTools [type] [name]`
+### 6. `SDK [type] [name]`
 *   **Description:** Opens utility tools. Types include `DB Explorer`, `App Variables`, `Arrange Menu`, `Dev Option`, `Language`, and `Custom Plugin`.
-*   **Example:** `DevTools DB Explorer`
+*   **Example:** `SDK DB Explorer`
 
 ### 7. `Analyse [entity]` (Deprecated)
 *   **Description:** Displays the custom dashboard (`Analytics.html`) showing charts, summary metrics, and KPI graphs for the selected entity. *(Note: This command is deprecated and no longer recommended).*
 *   **Example:** `Analyse sales_ledger`
+
+### 8. `Help`
+*   **Description:** Launches the interactive onboarding walkthrough tour highlighting search syntax, autocomplete suggestions, direct execution shortcuts, and favorites manager. During the tour, input editing and shell toolbar buttons are disabled to guide the user cleanly.
+*   **Example:** `Help`
+
+### 9. `Version`
+*   **Description:** Fetches and displays the current plugin release version from the local version file.
+*   **Example:** `Version`
 
 ---
 
@@ -244,29 +250,33 @@ Type **`help`** (case-insensitive) inside the Axi Command pallete search bar. Th
 
 
 ### Constructing Commands with Auto-Complete Hints
-Axi features a **predictive parameter builder** that dynamically shows context hints inside the search bar as you type:
+Axi features a **predictive parameter builder** that dynamically shows context hints inside the search bar as you type using target-first execution flow:
 
 ```
-Step 1: Type "Create" ──────────> Suggestion lists Tstructs (e.g., "customer")
-Step 2: Type "customer" ────────> Input hint shows "[tstruct name]"
-Step 3: Press "Ctrl + Enter" ───> Opens Customer Creation form immediately.
+Step 1: Type Target name (e.g., "Customer Form"). Auto-quoting encloses multi-word targets in quotes when space is typed.
+Step 2: Type/select Action (e.g., "Create"). Suggestions list capability-constrained actions in PascalCase.
+Step 3: Press "Ctrl + Enter" (Go) or "Ctrl + Shift + Enter" (Pop-Up) to execute immediately.
 ```
+
+For structure types `iview`, `i`, `ads`, or `p`/`page`, the default action option list displays `View`, `goOption`, and `popOption` options.
 
 If editing a record:
-1.  Type `Edit`.
-2.  Type `customer`.
+1.  Type target name `"Customer Form"`.
+2.  Type or select action `Edit`.
 3.  Type a search value (like a customer ID `10452`). Axi will fetch matching records from the database. Select `John Doe` from the recommendations list.
 4.  Type `with`.
 5.  Type `Email`. Axi will position the cursor directly onto the Email field of John Doe's customer record for immediate editing.
 
 ### Pinning Favourites and Recents
 Frequently used commands can be saved for quick execution:
-1.  Type any valid command syntax into the input bar and execute it(e.g., `View invoice 2099`).
-2.  Click the **Bookmark icon** (`axiFavouriteBtn`) located on the right side of the input.
+1.  Type any valid command syntax into the input bar and execute it (e.g., `"Invoice" View 2099`).
+2.  Click the **Bookmark icon** (`#axiAddFavoriteBtn`) located on the top toolbar, or press the shortcut.
 3.  A popup modal will appear prompting you to name this favorite (e.g., "Check Invoice 2099").
-4.  Type the name and press **Enter** (or click **Save**).
-5.  Next time you open the Command Palette with `Ctrl + Space`, your saved favorites will populate immediately at the top of the suggestion panel.
-6.  **Removing a Favorite:** Hover over the favorite command card in the suggestion list and click the **X icon** (Delete) to remove it from the backend list.
+4.  **Duplicate Validation:** Before adding, Axi normalizes the entered command name and original command text (case/whitespace-insensitive check). If a duplicate exists, it displays `"This command is already in your Favorites."` and prevents saving.
+5.  Type the name and press **Enter** (or click **Save**).
+6.  Your favorites list is loaded automatically on startup, populating your saved favorites instantly at the top of the suggestion panel.
+7.  **Viewing Favorites:** Click the **View Favorites icon** (`#axiViewFavoritesBtn`) on the toolbar to open the sliding favorites dropdown list.
+8.  **Removing a Favorite:** Hover over the favorite command card in the suggestion list and click the **X icon** (Delete) to remove it.
 
 ### Tabbed Window Management (Popup Container)
 When launching screens from the Command Palette, you can preserve your current shell layout by loading them into a tabbed popup:
@@ -327,9 +337,33 @@ VALUES (gen_random_uuid(), 12, 2, 'API Name', 'axi_publishapi', ':username');
 *   **Data permissions / Row filtering issue:**
     *   Axi evaluates permissions via `fn_permissions_getpermission`. Verify that the user's role responsibilities are correctly assigned in Axpert's standard user settings pages.
 
+## 🚀 Release Notes & Recent Bug Fixes (July 13, 2026)
+
+### 1. Enforced Structure Permissions (View, Create, Edit)
+*   **Visibility Rules:** Autocomplete lists filter `View` suggestions based on `viewallowed === "T"`, and `Create` / `Edit` suggestions based on `createallowed === "T"`.
+*   **Execution Block:** Enforces permissions at the execution layer (manual typing, history, favorites, shortcuts). Aborts execution and shows a toast error message if unauthorized.
+*   **Backward Compatibility:** If a structure does not have `viewallowed` and `createallowed` fields defined, all permission checks are skipped and it is shown and executed as before.
+*   **Bypass Logic for Page and Inbox:** Structures of type `p` (Page) or with missing `stype` (Inbox) bypass permission check rules entirely and are always shown and executed.
+*   **Version Command:** Introduced the `Version` command to fetch and show the current plugin version in a toast.
+
 ---
 
-## 🚀 Release Notes & Recent Bug Fixes (June 19, 2026)
+## 🚀 Release Notes & Recent Bug Fixes (July 10, 2026)
+
+### 1. PascalCase Autocomplete Action Suggestions
+*   **PascalCase Casing:** Autocomplete action recommendations (`Create`, `Edit`, `View`) are generated in PascalCase and inserted in PascalCase inside the search input.
+*   **Shortcut Execution Consistency:** Shortcut keys `Ctrl + Enter` (Go) and `Ctrl + Shift + Enter` (Pop-Up) resolve the default view option when direct single-token targets are typed without explicitly writing the action verb.
+
+### 2. Favorites Duplicate Validation & Startup Sync
+*   **Validation Rules:** Implemented case/whitespace-insensitive validation inside `toggleFavorite()` and `confirmAddFavorite()`, preventing duplicate entries. Shows `"This command is already in your Favorites."` toast.
+*   **Startup Hydration:** Added automatic initialization to call `loadFavorites()` during the main IIFE `init()` flow, ensuring local storage data is in sync right when the shell loads.
+
+### 3. Visual & Styling Enhancements
+*   **Refresh Rotation Animation:** Configured a rotation loading animation on the metadata refresh button (`#btnRefresh`) to give immediate interactive feedback during reload.
+
+---
+
+## 🚀 Prior Release Notes & Recent Bug Fixes (June 19, 2026)
 
 ### 1. Interactive Walkthrough Tour & Help Command
 *   **Help Trigger Consolidation:** Consolidated help triggers so typing `"help"` (case-insensitive) auto-converts to `"Help "` and displays interactive suggestion tokens instantly.

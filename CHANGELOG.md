@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [11.4.0-beta.7] - 2026-07-09
+
+### Added
+- **Structure-Level Permissions for First-Token Suggestions**: Applied the `view` command structure-level permissions (`isViewAllowed` check) to filter structure listings when the command palette is first opened or when typing the first token. Structures that the user does not have permission to view are now excluded from initial suggestions.
+- **`isField` Validation for Edit Command**: Implemented the same `isField` check used by the View command on the Edit command. Users are prompted if they select a field without supplying a corresponding field value.
+
+### Changed
+- **Favorites Search Input Redesign**: Modernized layout of the Favorites search input inside `AxiCMDMainPage.html` with a search icon, smooth border hover/focus transitions, and a subtle focus glow.
+- **Redundant Startup Loading Removal**: Removed the initial `loadFavorites()` call from `initCommands()` to optimize startup loading speed and prevent unsolicited background requests.
+
+### Fixed
+- **Dropdown Close on Search Click**: Excluded the `megaDropdown` element inside the document-wide click-outside handler to prevent the Favorites dropdown from unexpectedly closing when users click or type inside the Favorites search filter input.
+- **Run/Send and Refresh Button Tooltips**: Integrated native HTML tooltips for Run/Send and Refresh toolbar buttons by removing the hardcoded `initialized` class.
+- **resolvedParams Overwrite Prevention**: Switched token check in `handleInput()` to retrieve raw/unswapped tokens using `getTokens(text, false)` to prevent accidental resets of resolved parameters during target-first command typing.
+
+## [11.4.0-beta.6] - 2026-07-02
+
+### Added
+- **Structure Capability Action Constraints**: Restricted available actions for target-first commands based on target structure type (`stype`). Targets with `stype === "t"` (TStruct) allow `create`, `edit`, and `view`, while targets with other types (e.g. `iview`, `ads`, `page`) are constrained strictly to `view`.
+- **Context-Aware Duplicate Target Resolution**: Configured target entity lookup (`getTargetEntityObj`) and token resolver (`tryResolveToken`) to handle duplicate names/captions (e.g., TStruct named `"test 1"` vs Page named `"test 1"`). Prioritizes TStruct resolution when action is `create` or `edit`, and Page/IView/ADS resolution when action is `view`. In autocomplete (`suggestLocal`), checks if the target has been selected and resolved in `resolvedParams` to suggest the correct actions, falling back to the union of all matching target capabilities only if not yet resolved.
+- **First-Token Space Auto-Quoting**: Configured the space key handler in the `keydown` event listener to automatically double-quote unquoted typed text on spacebar press, now checking the first token as well as long as it does not match a defined command verb (such as `create`, `edit`, or `view`).
+
+### Fixed
+- **Autocomplete Hidden on First-Token Auto-Quoting**: Allowed suggestion matching for unclosed quoted strings inside `suggestLocal()` even when a trailing space is present inside the quotes (e.g. `'"sales '`), resolving an issue where the autocomplete panel incorrectly hid upon spacebar auto-quoting.
+- **Backspace Token Interchanging**: Prevented the `keydown` event listener from mutating/swapping the raw `tokens` array in-place. Cloned the tokens array into `normalizedTokens` for group key verification, ensuring raw typed token order (e.g. `"Sales Order FORM" view`) is preserved when reconstructing the input value after a backspace deletion.
+- **Raw Input Token Retrieval in Keydown**: Configured `getTokens` inside the `keydown` event listener to disable automatic token normalization swapping (`shouldNormalize=false`) when fetching raw input elements, resolving an issue where backspacing `"Sales Order FORM" view` deleted the target caption instead of the action verb.
+
+## [11.4.0-beta.5] - 2026-07-01
+
+### Added
+- **Target-First Command Restructure**: Reversed the command syntax for primary entity actions (`create`, `view`, `edit`) from `<action> <target>` to `<target> <action>`.
+- **Target Autocomplete Suggestions**: Restructured the autocomplete suggestions to show target entities (`tstructs` and `iviews` loaded from `axi_structmetalist` dynamically via `loadList` on startup) and unreversed commands first. Restricts secondary suggestions strictly to `create`, `edit`, and `view` based on target capability.
+- **Go/Popup Suggestions for Completed Actions**: Updated `suggestLocal()` to display `Go` and `Popup` options immediately when a target-first action (like `create` or `view`) is fully typed.
+- **Token Ingestion Swapping Layer**: Integrated virtual token normalization swapping inside `suggestLocal()`, `apply()`, `handleInput()`, `executeCommandsV2()`, and the keydown backspace handlers in `axicmdmain.js` to route target-first inputs seamlessly through the existing execution, routing, and verification engines.
+- **Master Target Lookup Fallback**: Integrated a fallback search inside the master metadata list `axi_structmetalist` inside `tryResolveToken` and `getResolvedParamType` to resolve target names/captions (including quoted strings like `"Sales Order FORM"`) to their exact transaction IDs.
+- **Case-Insensitive Configuration and Handler Resolution**: Added case-insensitive resolvers (`getCommandConfig` and `getGroupHandlers`) for commands dictionary and `COMMAND_HANDLERS` objects to prevent case-mismatch errors when routing lowercased swapped action keys against capitalized configuration headers.
+
 ## [11.4.0-beta.4] - 2026-07-01
 
 ### Fixed

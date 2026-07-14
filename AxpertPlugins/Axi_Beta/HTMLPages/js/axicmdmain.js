@@ -59,10 +59,9 @@
         page: ({ transId, fieldName, fieldValue }) =>
             redirectToEntity(transId, fieldName, fieldValue),
 
-        ads: ({ transId, fieldName, fieldValue }) => redirectToEntity(transId, "", fieldName, fieldValue)
+        ads: ({ transId, fieldName, fieldValue }) => redirectToEntity(transId, "", fieldName, fieldValue),
 
-
-
+        inbox: () => handleViewInbox()
     };
 
 
@@ -93,7 +92,6 @@
         View: {
             default: handleViewCommand,
             source: handleViewSource,
-            inbox: handleViewInbox,
 
 
 
@@ -263,29 +261,73 @@
 
 
 
-    async function init() {
+    function init() {
+        let parentUserName = "";
+        let parentProject = "";
+        let parentUserRoles = "";
+        let parentUserResp = "";
+        let parentArmUrl = "";
+
+        // 1. Try callParentNew
+        try {
+            if (typeof callParentNew === "function") {
+                parentUserName = callParentNew("mainUserName") || "";
+                parentProject = callParentNew("mainProject") || "";
+                parentUserRoles = callParentNew("AxUserRoles") || "";
+                parentUserResp = callParentNew("userResp") || "";
+                parentArmUrl = callParentNew("armUrl") || "";
+            }
+        } catch (e) {
+            console.warn("callParentNew failed", e);
+        }
+
+        // 2. Try parent window
+        try {
+            if (typeof parent !== "undefined" && parent) {
+                if (!parentUserName) parentUserName = parent.mainUserName || "";
+                if (!parentProject) parentProject = parent.mainProject || "";
+                if (!parentUserRoles) parentUserRoles = parent.AxUserRoles || "";
+                if (!parentUserResp) parentUserResp = parent.userResp || "";
+                if (!parentArmUrl) parentArmUrl = parent.armUrl || "";
+            }
+        } catch (e) {
+            console.warn("parent access failed", e);
+        }
+
+        // 3. Try top window
+        try {
+            if (typeof top !== "undefined" && top) {
+                if (!parentUserName) parentUserName = top.mainUserName || "";
+                if (!parentProject) parentProject = top.mainProject || "";
+                if (!parentUserRoles) parentUserRoles = top.AxUserRoles || "";
+                if (!parentUserResp) parentUserResp = top.userResp || "";
+                if (!parentArmUrl) parentArmUrl = top.armUrl || "";
+            }
+        } catch (e) {
+            console.warn("top access failed", e);
+        }
+
+        // 4. Try local variable scope fallback
+        try {
+            if (!parentArmUrl && typeof armUrl !== "undefined") {
+                parentArmUrl = armUrl || "";
+            }
+        } catch (e) {}
+
         if (typeof window.mainUserName === "undefined" || !window.mainUserName) {
-            window.mainUserName = (typeof callParentNew === "function" && callParentNew("mainUserName")) || 
-                                  (typeof parent !== "undefined" && parent.mainUserName) || 
-                                  (typeof top !== "undefined" && top.mainUserName) || 
-                                  "";
+            window.mainUserName = parentUserName || "";
         }
         if (typeof window.mainProject === "undefined" || !window.mainProject) {
-            window.mainProject = (typeof callParentNew === "function" && callParentNew("mainProject")) || 
-                                 (typeof parent !== "undefined" && parent.mainProject) || 
-                                 (typeof top !== "undefined" && top.mainProject) || 
-                                 "";
+            window.mainProject = parentProject || "";
+        }
+        if (typeof window.AxUserRoles === "undefined" || !window.AxUserRoles) {
+            window.AxUserRoles = parentUserRoles || "";
+        }
+        if (typeof window.userResp === "undefined" || !window.userResp) {
+            window.userResp = parentUserResp || "";
         }
 
-        //  "API_METADATA": "http://localhost:90/AxiApi/api/v1/Axi/axi_get",    
-
-        // "AXI_FAVORITES_URL": "http://localhost:90/AxiApi/api/v1/Axi/user-favourites"
-
-        let globalArmUrl = (typeof armUrl !== "undefined" && armUrl) || 
-                           (typeof parent !== "undefined" && typeof parent.armUrl !== "undefined" && parent.armUrl) || 
-                           (typeof top !== "undefined" && typeof top.armUrl !== "undefined" && top.armUrl) || 
-                           (typeof callParentNew === "function" && callParentNew("armUrl")) ||
-                           "";
+        let globalArmUrl = parentArmUrl || "";
 
         if (globalArmUrl) {
             AxiArmUrl = globalArmUrl;
@@ -300,9 +342,9 @@
                 configUrl = `/AxpertPlugins/Axi_Beta/axicmd-config.json`;
             }
             try {
-                const res = await fetch(configUrl);
+                const res = fetch(configUrl);
                 if (res.ok) {
-                    const config = await res.json();
+                    const config = res.json();
                     AxiArmUrl = config.axiarmurl || config.armUrl || config.axiArmUrl || "";
                 }
             } catch (err) {
@@ -434,6 +476,7 @@
 
 
         initCommands(false);
+        loadFavorites();
     }
 
     let initRetries = 0;
@@ -480,8 +523,6 @@
 
         const appname = getProjectName();
         console.log(appname);
-
-        loadFavorites();
 
         if (!apiMetadataUrl) {
             console.error("Metadata API URL is not configured.", apiMetadataConfigError);
@@ -543,7 +584,18 @@
                 commandGroup: "Help",
                 prompts: []
             };
+            // Append Version command to initial suggestions list
+            commands["Version"] = {
+                cmdToken: 12,
+                command: "",
+                commandGroup: "Version",
+                prompts: []
+            };
             console.log(JSON.stringify(commands));
+            
+            // Load target entities (tstructs, iview, ads and pages) from metadata on startup
+            const metadataParams = getStructParam();
+            loadList("axi_structmetalist", metadataParams);
             // if (isForced) {
                 showToast(message, 3000, true);
             // }
@@ -732,7 +784,9 @@
             const data = await getList(sourceName, paramValue);
             axDatasourceObj[key] = data;
             console.log(JSON.stringify(axDatasourceObj));
-            handleInput();
+            if (document.activeElement === input) {
+                handleInput();
+            }
 
         } catch (error) {
             console.error("loadlist failed", error);
@@ -1872,7 +1926,11 @@
         const structType = getStructType();
         const isRunnable = structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage();
         return Object.keys(commands).filter(key => {
-            if (key.toLowerCase() === "run") {
+            const lowerKey = key.toLowerCase();
+            if (lowerKey === "create" || lowerKey === "view" || lowerKey === "edit") {
+                return false;
+            }
+            if (lowerKey === "run") {
                 return isRunnable;
             }
             return true;
@@ -1880,6 +1938,14 @@
     }
 
     function handleInput() {
+        if (favouritesCard) {
+            favouritesCard.style.display = "none";
+        }
+        const suggCard = list.closest(".card");
+        if (suggCard) {
+            suggCard.style.display = "flex";
+        }
+
         if (input.value && input.value.includes(" ,")) {
             const cursorPos = input.selectionStart;
             input.value = input.value.replace(/ ,/g, ",");
@@ -1908,7 +1974,7 @@
 
         if (!text.trim()) {
 
-            items = getInitialCommandsList();
+            items = getInitialSuggestions();
             hintDiv.textContent = "";
             render();
             return;
@@ -1974,7 +2040,7 @@
 
 
         // Clear stale resolutions when input changes
-        const currentTokens = getTokens(text);
+        const currentTokens = getTokens(text, false);
         currentTokens.forEach((token, idx) => {
             const cleanToken = token.replace(/"/g, "");
             const lastToken = lastTypedTokens[idx] ? lastTypedTokens[idx].replace(/"/g, "") : null;
@@ -2006,6 +2072,15 @@
         items = suggestLocal(text);
 
         const tokens = getTokens(text);
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                const temp = tokens[0];
+                tokens[0] = tokens[1];
+                tokens[1] = temp;
+            }
+        }
         const grpKey = tokens[0]?.toLowerCase();
 
         if (
@@ -2077,17 +2152,291 @@
     =============================== */
 
 
-    function getTokens(str) {
+    function getTokens(str, shouldNormalize = true) {
 
 
         //const regex = new RegExp(`"[^"]*"?|${OPERATOR_REGEX_PART}|[^\\s=<>!]+`, "g");
         // const regex = new RegExp(`"[^"]*"|[^\\s]+`, "g");
         const regex = new RegExp(`"[^"]*"?|[^\\s]+`, "g");
-        return str.match(regex) || [];
+        let tokens = str.match(regex) || [];
+        if (shouldNormalize && tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                const temp = tokens[0];
+                tokens[0] = tokens[1];
+                tokens[1] = temp;
+            }
+        }
+        return tokens;
     }
 
     function cleanString(val) {
         return (val || "").replace(/["]/g, "").trim();
+    }
+
+    function getStructParam() {
+        const userName = window.mainUserName || "";
+        const userRoles = window.AxUserRoles || "default";
+        const userResp = window.userResp || "default";
+        return `${userName}$#$${userRoles}$#$${userResp}$#$all$#$all`;
+    }
+
+    function getMatchedField(tokenText, transId) {
+        if (!tokenText || !transId) return null;
+        const searchStr = transId.toLowerCase();
+        let list = [];
+        for (const key in axDatasourceObj) {
+            const keyLower = key.toLowerCase();
+            if (keyLower.startsWith("axi_getstructsdata") && keyLower.includes(searchStr)) {
+                list = axDatasourceObj[key] || [];
+                break;
+            }
+        }
+        const cleanToken = cleanString(tokenText).toLowerCase();
+        return list.find(item => 
+            (item.name && item.name.toLowerCase() === cleanToken) ||
+            (item.caption && item.caption.toLowerCase() === cleanToken) ||
+            (item.displaydata && item.displaydata.toLowerCase() === cleanToken)
+        ) || null;
+    }
+
+    function isTargetEntity(token) {
+        if (!token) return false;
+        const cleanTok = token.replace(/"/g, "").toLowerCase();
+        const key = "axi_structmetalist_" + getStructParam().toLowerCase();
+        const list = axDatasourceObj[key] || [];
+        return list.some(d => {
+            const name = d.name || d.NAME || "";
+            const caption = d.caption || d.CAPTION || "";
+            const displaydata = d.displaydata || d.DISPLAYDATA || "";
+            
+            const nameMatch = name && name.toLowerCase() === cleanTok;
+            const displayMatch = displaydata && displaydata.toLowerCase() === cleanTok;
+            const captionMatch = typeof displaydata === "string" && 
+                displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
+            const captionDirect = caption && caption.toLowerCase() === cleanTok;
+            return nameMatch || displayMatch || captionMatch || captionDirect;
+        });
+    }
+
+    function getTargetEntityObj(token, action) {
+        if (!token) return null;
+        const cleanTok = token.replace(/"/g, "").toLowerCase();
+        const key = "axi_structmetalist_" + getStructParam().toLowerCase();
+        const list = axDatasourceObj[key] || [];
+        const matches = list.filter(d => {
+            const name = d.name || d.NAME || "";
+            const caption = d.caption || d.CAPTION || "";
+            const displaydata = d.displaydata || d.DISPLAYDATA || "";
+
+            const nameMatch = name && name.toLowerCase() === cleanTok;
+            const displayMatch = displaydata && displaydata.toLowerCase() === cleanTok;
+            const captionMatch = typeof displaydata === "string" && 
+                displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
+            const captionDirect = caption && caption.toLowerCase() === cleanTok;
+            return nameMatch || displayMatch || captionMatch || captionDirect;
+        });
+
+        if (matches.length === 0) return null;
+        if (matches.length === 1) return matches[0];
+
+        const rawIndex = 0;
+        if (resolvedParams[rawIndex]) {
+            const resolvedVal = resolvedParams[rawIndex].toLowerCase();
+            const matched = matches.find(d => (d.name || d.NAME || "").toLowerCase() === resolvedVal);
+            if (matched) return matched;
+        }
+
+        if (action) {
+            const lowAction = action.toLowerCase();
+            if (lowAction === "create" || lowAction === "edit") {
+                const tstructMatch = matches.find(d => {
+                    const type = (d.stype || d.STYPE || "").toLowerCase();
+                    return type === "t" || type === "tstruct";
+                });
+                if (tstructMatch) return tstructMatch;
+            } else if (lowAction === "view") {
+                const nonTstructMatch = matches.find(d => {
+                    const type = (d.stype || d.STYPE || "").toLowerCase();
+                    return type !== "t" && type !== "tstruct";
+                });
+                if (nonTstructMatch) return nonTstructMatch;
+            }
+        }
+
+        return matches[0];
+    }
+
+    function isInboxStructure(item) {
+        if (!item) return false;
+        const stype = item.stype !== undefined ? item.stype : item.STYPE;
+        const name = (item.name || item.NAME || item.displaydata || item.DISPLAYDATA || "").toLowerCase().trim();
+        
+        if (stype !== undefined && stype !== null) {
+            const stypeStr = String(stype).trim().toLowerCase();
+            if (stypeStr === "inbox") {
+                return true;
+            }
+        }
+        
+        const isStypeEmpty = stype === undefined || stype === null || String(stype).trim() === "";
+        if (isStypeEmpty && name === "inbox") {
+            return true;
+        }
+        
+        return false;
+    }
+
+    function isAdsStructure(item) {
+        if (!item) return false;
+        const stype = item.stype || item.STYPE;
+        if (stype === undefined || stype === null) return false;
+        return String(stype).trim().toLowerCase() === "ads";
+    }
+
+    function isAdsVisible(item) {
+        if (!item) return false;
+        const view = item.viewallowed;
+        if (view === "F" || view === false || view === "false" || view === "NA" || view === "f" || view === "False") {
+            return false;
+        }
+        return true;
+    }
+
+    function isActionAllowed(item, action) {
+        if (!item) return true;
+        const act = action.toLowerCase();
+        const stype = (item.stype || item.STYPE || "").toLowerCase().trim();
+        if (stype === "p" || stype === "page" || stype === "i" || stype === "iview" || stype === "") {
+            return true;
+        }
+        const hasView = item.viewallowed !== undefined;
+        const hasCreate = item.createallowed !== undefined;
+        if (!hasView && !hasCreate) {
+            return true;
+        }
+        if (act === "view") {
+            return hasView ? item.viewallowed === "T" : true;
+        }
+        if (act === "create" || act === "edit") {
+            return hasCreate ? item.createallowed === "T" : true;
+        }
+        return true;
+    }
+
+    function isValidActionForTarget(target, action) {
+        if (!target || !action) return false;
+        const entityObj = getTargetEntityObj(target, action);
+        const lowAction = action.toLowerCase();
+        let actions = [];
+        if (entityObj) {
+            const type = (entityObj.stype || entityObj.STYPE || "").toLowerCase().trim();
+            if (type === "t" || type === "tstruct") {
+                if (isActionAllowed(entityObj, "view")) actions.push("View");
+                if (isActionAllowed(entityObj, "create")) {
+                    actions.push("Create");
+                    actions.push("Edit");
+                }
+            } else if (isInboxStructure(entityObj)) {
+                actions.push("Go");
+            } else if (type === "ads") {
+                if (isAdsVisible(entityObj)) actions.push("View");
+            } else {
+                if (type === "p" || type === "page" || isActionAllowed(entityObj, "view")) actions.push("View");
+            }
+        }
+        return actions.map(act => act.toLowerCase()).includes(lowAction);
+    }
+
+    function isViewAllowed(item) {
+        if (!item) return false;
+        if (isInboxStructure(item)) {
+            return false;
+        }
+        if (isAdsStructure(item)) {
+            return isAdsVisible(item);
+        }
+        const stype = (item.stype || item.STYPE || "").toLowerCase().trim();
+        if (stype === "p" || stype === "page" || stype === "i" || stype === "iview") {
+            return true;
+        }
+        return isActionAllowed(item, "view");
+    }
+
+    function isStructureVisible(item) {
+        if (!item) return false;
+        if (isInboxStructure(item)) {
+            return true;
+        }
+        if (isAdsStructure(item)) {
+            return isAdsVisible(item);
+        }
+        const stype = (item.stype || item.STYPE || "").toLowerCase().trim();
+        if (stype === "p" || stype === "page" || stype === "i" || stype === "iview") {
+            return true;
+        }
+        const hasView = item.viewallowed !== undefined;
+        const hasCreate = item.createallowed !== undefined;
+        if (!hasView && !hasCreate) {
+            return true;
+        }
+        return (hasView && item.viewallowed === "T") || (hasCreate && item.createallowed === "T");
+    }
+
+    function getInitialSuggestions() {
+        const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view"].includes(k.toLowerCase()));
+        const key = "axi_structmetalist_" + getStructParam().toLowerCase();
+        const targets = (axDatasourceObj[key] || []).filter(item => isStructureVisible(item));
+        return [...targets, ...verbs];
+    }
+
+    function normalizeGlobalState() {
+        if (!input) return;
+        const tokens = getTokens(input.value, false);
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                const val0 = (resolvedParams[0] || "").toLowerCase();
+                const val1 = (resolvedParams[1] || "").toLowerCase();
+                if (val0 && !["create", "edit", "view"].includes(val0) && val1 && ["create", "edit", "view"].includes(val1)) {
+                    const tempVal = resolvedParams[0];
+                    resolvedParams[0] = resolvedParams[1];
+                    resolvedParams[1] = tempVal;
+
+                    const tempType = resolvedParamType[0];
+                    resolvedParamType[0] = resolvedParamType[1];
+                    resolvedParamType[1] = tempType;
+                    console.log("Global state: Swapped to normalized order");
+                }
+            } else {
+                const val0 = (resolvedParams[0] || "").toLowerCase();
+                const val1 = (resolvedParams[1] || "").toLowerCase();
+                if (val0 && ["create", "edit", "view"].includes(val0) && val1 && !["create", "edit", "view"].includes(val1)) {
+                    const tempVal = resolvedParams[0];
+                    resolvedParams[0] = resolvedParams[1];
+                    resolvedParams[1] = tempVal;
+
+                    const tempType = resolvedParamType[0];
+                    resolvedParamType[0] = resolvedParamType[1];
+                    resolvedParamType[1] = tempType;
+                    console.log("Global state: Swapped back to user order");
+                }
+            }
+        } else {
+            const val0 = (resolvedParams[0] || "").toLowerCase();
+            if (val0 && ["create", "edit", "view"].includes(val0)) {
+                const tempVal = resolvedParams[0];
+                resolvedParams[0] = resolvedParams[1];
+                resolvedParams[1] = tempVal;
+
+                const tempType = resolvedParamType[0];
+                resolvedParamType[0] = resolvedParamType[1];
+                resolvedParamType[1] = tempType;
+                console.log("Global state: Swapped back to user order (length < 2)");
+            }
+        }
     }
 
 
@@ -2975,19 +3324,186 @@
     }
 
     function suggestLocal(inputText) {
+        normalizeGlobalState();
         let ignoreExtraParams = false;
         let detectedType = "";
-        const tokens = getTokens(inputText);
+        const rawTokens = getTokens(inputText, false);
         const endsWithSpace = inputText.endsWith(" ");
 
 
-        const lastTokenRaw = tokens[tokens.length - 1];
+        const lastTokenRaw = rawTokens[rawTokens.length - 1];
         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
-        if (endsWithSpace && !isUnclosedString) tokens.push("");
+        if (endsWithSpace && !isUnclosedString) rawTokens.push("");
 
-        if (tokens.length === 0) {
+        if (rawTokens.length === 0) {
             hintDiv.textContent = "";
-            return getInitialCommandsList();
+            const allSuggestions = getInitialSuggestions();
+            filteredObjects = allSuggestions.map(item => {
+                if (typeof item === "string") {
+                    return { name: item, displaydata: item };
+                }
+                return item;
+            });
+            return allSuggestions.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
+        }
+
+        const groupKeyRaw = cleanString(rawTokens[0]);
+
+        if (rawTokens.length === 1 && (!endsWithSpace || isUnclosedString)) {
+            hintDiv.textContent = "";
+            const prefix = groupKeyRaw.toLowerCase();
+            const allSuggestions = getInitialSuggestions();
+            const filtered = allSuggestions.filter(item => {
+                if (typeof item === "string") {
+                    return item.toLowerCase().startsWith(prefix);
+                } else {
+                    const nameMatch = item.name && item.name.toLowerCase().startsWith(prefix);
+                    const displayMatch = item.displaydata && item.displaydata.toLowerCase().startsWith(prefix);
+                    const captionMatch = typeof item.displaydata === "string" && 
+                        item.displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase().startsWith(prefix);
+                    return nameMatch || displayMatch || captionMatch;
+                }
+            });
+            filteredObjects = filtered.map(item => {
+                if (typeof item === "string") {
+                    return { name: item, displaydata: item };
+                }
+                return item;
+            });
+            return filtered.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
+        }
+
+        if (rawTokens.length === 2 && isTargetEntity(rawTokens[0])) {
+            const entityObj = getTargetEntityObj(rawTokens[0]);
+            const partial = cleanString(rawTokens[1] || "").toLowerCase();
+
+            if (entityObj && isInboxStructure(entityObj)) {
+                const filtered = [goOption].filter(opt => {
+                    const displayText = opt.displaydata || opt.name;
+                    return displayText.toLowerCase().startsWith(partial);
+                });
+                filteredObjects = filtered;
+                return filtered;
+            }
+
+            let actions = [];
+            let targetType = "";
+            if (entityObj) {
+                targetType = (entityObj.stype || entityObj.STYPE || "").toLowerCase();
+            }
+
+            if (targetType === "t" || targetType === "tstruct") {
+                const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
+                if (!hasPerms) {
+                    actions = ["Create", "Edit", "View"];
+                } else {
+                    if (entityObj.viewallowed === "T") actions.push("View");
+                    if (entityObj.createallowed === "T") {
+                        actions.push("Create");
+                        actions.push("Edit");
+                    }
+                }
+            } else if (targetType === "p" || targetType === "page") {
+                actions.push("View");
+            } else if (targetType === "ads") {
+                if (isAdsVisible(entityObj)) actions.push("View");
+            } else if (targetType) {
+                const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
+                if (!hasPerms || entityObj.viewallowed === "T") actions.push("View");
+            } else {
+                const cleanTok = rawTokens[0].replace(/"/g, "").toLowerCase();
+                const key = "axi_structmetalist_" + getStructParam().toLowerCase();
+                const list = axDatasourceObj[key] || [];
+                
+                const matches = list.filter(d => {
+                    const name = d.name || d.NAME || "";
+                    const caption = d.caption || d.CAPTION || "";
+                    const displaydata = d.displaydata || d.DISPLAYDATA || "";
+
+                    const nameMatch = name && name.toLowerCase() === cleanTok;
+                    const displayMatch = displaydata && displaydata.toLowerCase() === cleanTok;
+                    const captionMatch = typeof displaydata === "string" && 
+                        displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
+                    const captionDirect = caption && caption.toLowerCase() === cleanTok;
+                    return nameMatch || displayMatch || captionMatch || captionDirect;
+                });
+
+                let hasView = false;
+                let hasCreate = false;
+                let hasGo = false;
+                let hasTstruct = false;
+                let matchesAnyTstructWithoutPerms = false;
+                let matchesAnyIviewWithoutPerms = false;
+                for (let i = 0; i < matches.length; i++) {
+                    const m = matches[i];
+                    const type = (m.stype || m.STYPE || "").toLowerCase().trim();
+                    const hasPerms = m.viewallowed !== undefined || m.createallowed !== undefined;
+                    if (isInboxStructure(m)) {
+                        hasGo = true;
+                    } else if (type === "t" || type === "tstruct") {
+                        hasTstruct = true;
+                        if (!hasPerms) {
+                            matchesAnyTstructWithoutPerms = true;
+                        } else {
+                            if (m.viewallowed === "T") hasView = true;
+                            if (m.createallowed === "T") hasCreate = true;
+                        }
+                    } else if (type === "ads") {
+                        if (isAdsVisible(m)) hasView = true;
+                    } else if (type === "p" || type === "page") {
+                        hasView = true;
+                    } else {
+                        if (!hasPerms) {
+                            matchesAnyIviewWithoutPerms = true;
+                        } else {
+                            if (m.viewallowed === "T") hasView = true;
+                        }
+                    }
+                }
+                if (hasView || matchesAnyTstructWithoutPerms || matchesAnyIviewWithoutPerms) actions.push("View");
+                if (hasGo) actions.push("Go");
+                if (hasTstruct && (hasCreate || matchesAnyTstructWithoutPerms)) {
+                    actions.push("Create");
+                    actions.push("Edit");
+                }
+            }
+
+            const specialTypes = ["iview", "i", "ads", "p", "page"];
+            if (targetType && specialTypes.includes(targetType)) {
+                const viewAction = { name: "View", displaydata: "View" };
+                const allOptions = [viewAction, goOption, popOption];
+                const filtered = allOptions.filter(opt => {
+                    const displayText = opt.displaydata || opt.name;
+                    return displayText.toLowerCase().startsWith(partial);
+                });
+                filteredObjects = filtered;
+                return filtered.map(item => {
+                    if (item.isExecutable) {
+                        return item;
+                    }
+                    return item.displaydata || item.name;
+                });
+            }
+
+            if (actions.map(act => act.toLowerCase()).includes(partial)) {
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
+
+            const filteredActions = actions.filter(act => act.toLowerCase().startsWith(partial));
+            filteredObjects = filteredActions.map(act => ({ name: act, displaydata: act }));
+            return filteredActions;
+        }
+
+        let tokens = [...rawTokens];
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                const temp = tokens[0];
+                tokens[0] = tokens[1];
+                tokens[1] = temp;
+            }
         }
 
         const groupKey = cleanString(tokens[0]);
@@ -3000,18 +3516,15 @@
         if (groupKey.toLowerCase() === "help") {
             return [goOption];
         }
-        if (tokens.length === 1 && !endsWithSpace) {
-            hintDiv.textContent = "";
-            return getInitialCommandsList().filter(k => {
-                const key = k.toLowerCase();
-                return key.startsWith(groupKey.toLowerCase())
-            });
+
+        if (groupKey.toLowerCase() === "version") {
+            return [goOption];
         }
 
         //const commandConfig = commands[groupKey];
 
 
-        let commandConfig = commands[groupKey];
+        let commandConfig = getCommandConfig(groupKey);
 
 
         /** Begin: Note: This must be removed when releasing */
@@ -3210,6 +3723,13 @@
             const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
+
+            if (groupKey.toLowerCase() === "create" && tokens.length === 3) {
+                result.unshift(popOption);
+                result.unshift(goOption);
+                filteredObjects.unshift(popOption);
+                filteredObjects.unshift(goOption);
+            }
 
             //  if (staticValues.length > 0 && result.length === 0 && partialTyped.length > 0) {
 
@@ -3425,14 +3945,19 @@
                         return [goOption, popOption];
                     }
 
-                    if (groupKey.toLowerCase() === "view" && tokens.length == 3) {
+                    if ((groupKey.toLowerCase() === "view" || groupKey.toLowerCase() === "go") && tokens.length == 3) {
+                        if (tokens[1] && tokens[1].toLowerCase() === "inbox") {
+                            filteredObjects = [goOption];
+                            return [goOption];
+                        }
                         filteredObjects = [goOption, popOption]
                         return [goOption, popOption];
                     }
                     return [];
                 }
                 if (hasValidParams) {
-                    if (tokens[1].toLowerCase() === "inbox") {
+                    if (tokens[1] && tokens[1].toLowerCase() === "inbox") {
+                        filteredObjects = [goOption];
                         return [goOption];
                     }
                     loadList(apiSourceName, paramValue);
@@ -3499,20 +4024,17 @@
 
             const key = groupKey?.toLowerCase();
             const validItems = filtered.filter(item => {
-
-
-
-                if (key === "create") return item?.createallowed !== 'F' && item?.createallowed !== 'NA';
+                const hasPerms = item?.viewallowed !== undefined || item?.createallowed !== undefined;
+                if (!hasPerms) return true;
+                if (key === "create" || key === "edit") {
+                    return isActionAllowed(item, key);
+                }
                 if (key === "view") {
-                    // if (item.caption === "testmar10") console.log(JSON.stringify(item)); 
-                    if (item?.stype === "p" || item?.stype === "page") return true;
-                    if (item?.stype === "i" || item?.stype === "iview") return item?.viewallowed !== 'F';
-                    if (item?.viewallowed === "NA") return false;
-                    return item?.viewallowed !== 'F';
+                    return isViewAllowed(item);
                 }
                 if (isEmpty(item?.displaydata) && isEmpty(item?.caption) && isEmpty(item?.name)) return false;
                 return true;
-            })
+            });
 
             filteredObjects = validItems;
 
@@ -3525,11 +4047,14 @@
             ].find(val => val !== null && val !== undefined && (typeof val === "string" ? val.trim() !== "" : true))
             ).filter(val => val !== undefined);
 
-            if ((groupKey.toLowerCase() === "view") && tokens.length === 3) {
-                resultList.unshift(goOption, popOption);
-                // resultList.unshift(goOption);
-                filteredObjects.unshift(goOption, popOption);
-                // filteredObjects.unshift(goOption);
+            if ((groupKey.toLowerCase() === "view" || groupKey.toLowerCase() === "go") && tokens.length === 3) {
+                if (tokens[1] && tokens[1].toLowerCase() === "inbox") {
+                    resultList.unshift(goOption);
+                    filteredObjects.unshift(goOption);
+                } else {
+                    resultList.unshift(goOption, popOption);
+                    filteredObjects.unshift(goOption, popOption);
+                }
             }
 
             //otherthan keyfield and userpermissionlisting it will work for all tokens which length is eqaul to 3(ex : peg)
@@ -3639,7 +4164,7 @@
             struct_name = struct_split[0];
         }
 
-        let preferredType = resolvedParamType?.[1];
+        let preferredType = getResolvedParamType(1);
         if (preferredType) {
             preferredType = preferredType.toLowerCase();
             if (preferredType === "tstruct") preferredType = "t";
@@ -3946,16 +4471,94 @@
     }
 
 
+    function getUnswappedIndex(tokenIndex) {
+        if (!input) return tokenIndex;
+        const tokens = getTokens(input.value, false);
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                if (tokenIndex === 0) return 1;
+                if (tokenIndex === 1) return 0;
+            }
+        }
+        return tokenIndex;
+    }
+
+    function getResolvedParamType(tokenIndex) {
+        const rawIndex = getUnswappedIndex(tokenIndex);
+        return resolvedParamType?.[rawIndex];
+    }
+
+    function getCommandConfig(groupKey) {
+        if (!groupKey || !commands) return null;
+        const lowKey = groupKey.toLowerCase();
+        if (commands[groupKey]) return commands[groupKey];
+        const matchedKey = Object.keys(commands).find(k => k.toLowerCase() === lowKey);
+        return matchedKey ? commands[matchedKey] : null;
+    }
+
     function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
 
         tokenText = cleanString(tokenText);
         if (!tokenText) return { value: "", type: "" };
 
-        // if (resolvedParams[tokenIndex] && !forceResolve) return resolvedParams[tokenIndex];
-        if (resolvedParams[tokenIndex] && !forceResolve) return {
-            value: resolvedParams[tokenIndex],
-            type: resolvedParamType?.[tokenIndex] || ""
-        };
+        const rawIndex = getUnswappedIndex(tokenIndex);
+
+        if (resolvedParams[rawIndex] && !forceResolve) {
+            const val = resolvedParams[rawIndex];
+            const lowerVal = val.toLowerCase();
+            const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version"].includes(lowerVal);
+            if (!(tokenIndex === 1 && isVerb)) {
+                return {
+                    value: val,
+                    type: resolvedParamType?.[rawIndex] || ""
+                };
+            }
+        }
+
+        if (tokenIndex === 1 && !forceResolve) {
+            const key = "axi_structmetalist_" + getStructParam().toLowerCase();
+            const list = axDatasourceObj[key] || [];
+            const cleanTok = tokenText.toLowerCase();
+
+            const matches = list.filter(d => {
+                const nameMatch = d.name && d.name.toLowerCase() === cleanTok;
+                const displayMatch = d.displaydata && d.displaydata.toLowerCase() === cleanTok;
+                const captionMatch = typeof d.displaydata === "string" && 
+                    d.displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
+                const captionDirect = d.caption && d.caption.toLowerCase() === cleanTok;
+                return nameMatch || displayMatch || captionMatch || captionDirect;
+            });
+
+            if (matches.length > 0) {
+                let found = matches[0];
+                if (matches.length > 1) {
+                    const currentTokens = getTokens(input.value);
+                    const cmdGroup = currentTokens[0]?.toLowerCase();
+                    if (cmdGroup === "create" || cmdGroup === "edit") {
+                        const typeMatched = matches.find(item => {
+                            const type = (item.stype || "").toLowerCase();
+                            return type === "t" || type === "tstruct";
+                        });
+                        if (typeMatched) found = typeMatched;
+                    } else if (cmdGroup === "view") {
+                        const typeMatched = matches.find(item => {
+                            const type = (item.stype || "").toLowerCase();
+                            return type !== "t" && type !== "tstruct";
+                        });
+                        if (typeMatched) found = typeMatched;
+                    }
+                }
+
+                resolvedParams[rawIndex] = found.name;
+                if (found.stype) resolvedParamType[rawIndex] = found.stype;
+                return {
+                    value: found.name,
+                    type: found.stype || ""
+                };
+            }
+        }
         // if (!tokenText && !forceResolve) return "";
         // if (!commandConfig) return tokenText;
         if (!commandConfig) return {
@@ -4079,11 +4682,18 @@
                     let found = matches[0];
                     let preferredType = resolvedParamType?.[tokenIndex];
                     const cmdGroup = currentTokens[0]?.toLowerCase();
-                    if (cmdGroup === "edit" && tokenIndex === 1) {
+                    if ((cmdGroup === "edit" || cmdGroup === "create") && tokenIndex === 1) {
                         preferredType = "t";
                     }
-                    if ((preferredType || (cmdGroup === "edit" && tokenIndex === 1)) && matches.length > 1) {
-                        const typeMatched = matches.find(item => (item.stype || "").toLowerCase() === (preferredType || "t").toLowerCase());
+                    if (cmdGroup === "view" && tokenIndex === 1 && !preferredType) {
+                        const typeMatched = matches.find(item => {
+                            const type = (item.stype || "").toLowerCase();
+                            return type !== "t" && type !== "tstruct";
+                        });
+                        if (typeMatched) found = typeMatched;
+                    }
+                    if (preferredType && matches.length > 1) {
+                        const typeMatched = matches.find(item => (item.stype || "").toLowerCase() === preferredType.toLowerCase());
                         if (typeMatched) {
                             found = typeMatched;
                         }
@@ -4098,8 +4708,8 @@
 
                     }
 
-                    resolvedParams[tokenIndex] = real;
-                    if (found?.stype) resolvedParamType[tokenIndex] = found?.stype;
+                    resolvedParams[rawIndex] = real;
+                    if (found?.stype) resolvedParamType[rawIndex] = found?.stype;
                     // return real;
                     return {
                         value: real,
@@ -4128,6 +4738,18 @@
         const currentInput = input.value;
         const currentInputTokens = getTokens(currentInput.trim());
 
+        // Determine the current suggestion token position/level (0-based)
+        let suggestionTokenIndex = currentInputTokens.length;
+        if (currentInputTokens.length > 0 && !currentInput.endsWith(" ")) {
+            suggestionTokenIndex = currentInputTokens.length - 1;
+        }
+        const shouldCapitalize = (suggestionTokenIndex <= 1);
+
+        const capitalizeFirstLetter = (str) => {
+            if (!str) return str;
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        };
+
         const isInitialCommandStage = currentInputTokens.length === 0 || (currentInputTokens.length === 1 && !currentInput.endsWith(" "));
 
         const commandIcons = {
@@ -4146,7 +4768,8 @@
             "end": "stop",
             "editprompt": "edit",
             "analyze": "analytics",
-            "help": "help_outline"
+            "help": "help_outline",
+            "version": "info_outline"
         };
 
 
@@ -4225,12 +4848,12 @@
         // }
 
         if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
-            list.classList.add("axi-grid-layout", "My-Command-Wrapper");
-            if (favouritesCard) favouritesCard.style.display = "flex";
+            list.classList.add("My-Command-Wrapper");
+            if (favouritesCard) favouritesCard.style.display = "none";
             if (commandHeader) commandHeader.style.display = "flex";
 
         } else {
-            list.classList.remove("axi-grid-layout", "My-Command-Wrapper");
+            list.classList.remove("My-Command-Wrapper");
             if (favouritesCard) favouritesCard.style.display = "none";
             if (commandHeader) commandHeader.style.display = "none";
         }
@@ -4249,12 +4872,12 @@
         }
 
         if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
-            list.classList.add("axi-grid-layout", "My-Command-Wrapper");
-            if (favouritesCard) favouritesCard.style.display = "flex";
+            list.classList.add("My-Command-Wrapper");
+            if (favouritesCard) favouritesCard.style.display = "none";
             if (commandHeader) commandHeader.style.display = "flex";
 
         } else {
-            list.classList.remove("axi-grid-layout", "My-Command-Wrapper");
+            list.classList.remove("My-Command-Wrapper");
             if (favouritesCard) favouritesCard.style.display = "none";
             if (commandHeader) commandHeader.style.display = "none";
         }
@@ -4264,13 +4887,17 @@
             const text = typeof item === "string" ? item : item.displaydata;
             li.className = "axi-suggestion";
 
+            const displayText = (shouldCapitalize && !(typeof item === 'object' && item.isExecutable)) 
+                ? capitalizeFirstLetter(text) 
+                : text;
+
             if (typeof item === 'object' && item.isExecutable) {
                 li.style.fontWeight = "bold";
                 li.style.color = "#22c55e";
                 li.style.borderBottom = "1px solid #eee";
-                li.textContent = text;
+                li.textContent = displayText;
 
-            } else if (isInitialCommandStage && commands[text]) {
+            } else if (isInitialCommandStage && getCommandConfig(text)) {
                 const iconName = commandIcons[text.toLowerCase()] || "chevron_right";
 
                 li.innerHTML = `
@@ -4283,10 +4910,10 @@
                                 </div>
                             </div>
                         </div>
-                        <span class="command-text">${text}</span>
+                        <span class="command-text">${displayText}</span>
                     </div>`;
             } else {
-                li.textContent = text;
+                li.textContent = displayText;
 
             }
 
@@ -4327,7 +4954,16 @@
             megaDropdown.style.display = "none";
         }
         list.style.display = "none";
-        list.classList.remove("axi-grid-layout", "My-Command-Wrapper");
+        list.classList.remove("My-Command-Wrapper");
+
+        if (favouritesCard) {
+            favouritesCard.style.display = "none";
+        }
+        const suggCard = list.closest(".card");
+        if (suggCard) {
+            suggCard.style.display = "flex";
+        }
+
         items = [];
         activeIndex = -1;
     }
@@ -4348,38 +4984,81 @@
 
 
         const currentInput = input.value;
-        const tokens = getTokens(currentInput);
+        const tokens = getTokens(currentInput, false);
 
-        const saveGroupKeyCheck = cleanString(tokens[0]);
-        const saveCommandConfig = commands[saveGroupKeyCheck];
+        let checkTokens = [...tokens];
+        if (checkTokens.length >= 2) {
+            const first = cleanString(checkTokens[0]).toLowerCase();
+            const second = cleanString(checkTokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                const temp = checkTokens[0];
+                checkTokens[0] = checkTokens[1];
+                checkTokens[1] = temp;
+            }
+        }
+
+        const saveGroupKeyCheck = cleanString(checkTokens[0]);
+        const saveCommandConfig = getCommandConfig(saveGroupKeyCheck);
 
         if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "GO_ACTION") {
             console.log("Action item selected. Executing command...");
+            const rawInput = input.value.trim();
+            const rawTokens = getTokens(rawInput, false);
+            const firstToken = rawTokens.length > 0 ? cleanString(rawTokens[0]).toLowerCase() : "";
+            let shouldRestoreInput = false;
+            if (rawTokens.length === 1 && firstToken && isTargetEntity(firstToken)) {
+                const entityObj = getTargetEntityObj(firstToken);
+                const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
+                if (["i", "iview", "ads", "page", "p"].includes(stype) || isInboxStructure(entityObj)) {
+                    shouldRestoreInput = true;
+                }
+                input.value = "view " + rawInput + " ";
+            }
             hide();
             executeCommandsV2();
+            if (shouldRestoreInput) {
+                input.value = rawInput + " ";
+            }
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "create") {
             console.log("Save Option Selected...Submitting Data...");
             hide();
-            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
+            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, checkTokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "edit") {
             console.log("Save Option Selected...Submitting Data...");
             hide();
-            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, tokens, saveCommandConfig);
+            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, checkTokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Pop_ACTION") {
             console.log("Pop Option Selected......");
             try {
-                if (tokens.length >= 2) {
+                let executeTokens = tokens;
+                const rawInput = input.value.trim();
+                const rawTokens = getTokens(rawInput, false);
+                const firstToken = rawTokens.length > 0 ? cleanString(rawTokens[0]).toLowerCase() : "";
+                let shouldRestoreInput = false;
+                if (rawTokens.length === 1 && firstToken && isTargetEntity(firstToken)) {
+                    const entityObj = getTargetEntityObj(firstToken);
+                    const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
+                    if (["i", "iview", "ads", "page", "p"].includes(stype)) {
+                        shouldRestoreInput = true;
+                    }
+                    input.value = "view " + rawInput + " ";
+                    executeTokens = getTokens(input.value, false);
+                }
+                if (executeTokens.length >= 2) {
                     hide();
                     popUpOption = true;
                     executeCommandsV2();
+                    if (shouldRestoreInput) {
+                        input.value = rawInput + " ";
+                    }
                     return;
                 }
                 //else return;
@@ -4413,7 +5092,7 @@
             tokens.push("");
         }
 
-        let suggestion = items[index];
+        let suggestion = typeof items[index] === "string" ? items[index] : items[index].displaydata;
         let displayName = suggestion;
         let realValue = "";
         let realType = "";
@@ -4424,15 +5103,15 @@
 
         // }
 
-        const isViewCommand = tokens[0]?.toLowerCase() === "view";
+        const isViewCommand = checkTokens[0]?.toLowerCase() === "view";
 
 
 
 
         let isAdsValue = false;
 
-        const groupKey = cleanString(tokens[0]);
-        const commandConfig = commands[groupKey];
+        const groupKey = cleanString(checkTokens[0]);
+        const commandConfig = getCommandConfig(groupKey);
         /**
          * ==== Robust Type checking for View command ===
          */
@@ -4442,7 +5121,7 @@
             if (commandConfig && commandConfig.prompts && commandConfig.prompts[0]) {
                 const viewSource = commandConfig.prompts[0].promptSource;
                 const viewValues = commandConfig.prompts[0].promptValues;
-                const firstToken = cleanString(tokens[1] || "");
+                const firstToken = cleanString(checkTokens[1] || "");
 
                 // const detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues, tokens, commandConfig);
                 const resolved = tryResolveToken(
@@ -4456,7 +5135,7 @@
                     viewSource.toLowerCase(),
                     resolved,
                     viewValues,
-                    tokens,
+                    checkTokens,
                     commandConfig
                 );
 
@@ -4475,7 +5154,7 @@
             if (targetIndex === 3) {
                 isValueToken = true;
             } else {
-                const withIndex = tokens.findIndex(t => cleanString(t).toLowerCase() === "with");
+                const withIndex = checkTokens.findIndex(t => cleanString(t).toLowerCase() === "with");
 
                 if (withIndex !== -1 && targetIndex > withIndex && (targetIndex - withIndex) % 2 === 0) {
                     isValueToken = true;
@@ -4499,7 +5178,7 @@
         if (foundObj && isViewCommand) {
             const caption = foundObj?.caption ? foundObj?.caption : foundObj?.displaydata;
 
-            const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), caption, commandConfig?.prompts?.[0]?.promptValues, tokens, commandConfig);
+            const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), caption, commandConfig?.prompts?.[0]?.promptValues, checkTokens, commandConfig);
 
             if ((!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) && type?.toLowerCase() === "page") {
                 showToast("Redirection link is not available for this page.");
@@ -4544,6 +5223,10 @@
         resolvedParamType[targetIndex] = realType;
 
         displayName = displayName.replace(/[\r\n]+/g, " ").trim();
+
+        if (["create", "view", "edit"].includes(displayName.toLowerCase())) {
+            displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1).toLowerCase();
+        }
 
         // Auto-Quote if necessary
         if (displayName.includes(" ")) {
@@ -4676,8 +5359,18 @@
 
             console.log("Get List data: " + JSON.stringify(res));
 
-
-
+            if (res) {
+                const resStr = (typeof res === "string" ? res : JSON.stringify(res)).toLowerCase();
+                if (resStr.includes("sessionid is not valid") || 
+                    resStr.includes("session is not valid") || 
+                    resStr.includes("session expired") || 
+                    resStr.includes("sessionid is invalid") || 
+                    resStr.includes("session is invalid")) {
+                    const baseUrl = getAppBaseUrl();
+                    top.window.location.href = `${baseUrl}/aspx/sess.aspx`;
+                    throw new Error("SessionId is not valid");
+                }
+            }
 
             const dataObj = typeof res === "string" ? JSON.parse(res) : res;
 
@@ -4703,6 +5396,9 @@
             return list;
 
         } catch (err) {
+            if (err.message === "SessionId is not valid") {
+                throw err;
+            }
             return [];
         }
     }
@@ -4855,6 +5551,51 @@
         setTimeout(removeToast, duration);
     }
 
+    async function showVersionInfo() {
+        try {
+            const axiUrl = `${getAppBaseUrl()}/AxpertPlugins/Axi_Beta/AxiCMDVersioninfo.json`;
+            const axpertUrl = `${getAppBaseUrl()}/versionInfo.json`;
+
+            const [axiRes, axpertRes] = await Promise.all([
+                fetch(axiUrl, { cache: "no-store" }),
+                fetch(axpertUrl, { cache: "no-store" })
+            ]);
+
+            let axiVersion = "";
+            let axpertVersion = "";
+
+            if (axiRes.ok) {
+                const axiData = await axiRes.json();
+                axiVersion = axiData?.version || "";
+            }
+
+            if (axpertRes.ok) {
+                const axpertData = await axpertRes.json();
+                const ver = axpertData?.version || "";
+                const sub = axpertData?.subVersion || "";
+                if (ver) {
+                    axpertVersion = ver;
+                    if (sub) {
+                        axpertVersion += ` (${sub})`;
+                    }
+                }
+            }
+
+            if (axiVersion && axpertVersion) {
+                showToast(`Axpert Version: ${axpertVersion} | Axi CMD Version: ${axiVersion}`, 5000, true);
+            } else if (axiVersion) {
+                showToast(`Axi CMD Version: ${axiVersion}`, 5000, true);
+            } else if (axpertVersion) {
+                showToast(`Axpert Version: ${axpertVersion}`, 5000, true);
+            } else {
+                showToast("Version information is not available.");
+            }
+        } catch (err) {
+            console.error("Failed to load version info", err);
+            showToast("Failed to load version information.");
+        }
+    }
+
 
 
 
@@ -4950,6 +5691,36 @@
             toggleFavorite(input.value.trim(), true);
 
         })
+
+        const newAddFavBtn = document.getElementById("axiAddFavoriteBtn");
+        if (newAddFavBtn) {
+            newAddFavBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleFavorite(input.value.trim(), true);
+            });
+        }
+
+        const newViewFavBtn = document.getElementById("axiViewFavoritesBtn");
+        if (newViewFavBtn) {
+            newViewFavBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                loadFavorites();
+                showFavoritesPopupOnly();
+            });
+        }
+
+        const favFilterInput = document.getElementById("axiFavFilterInput");
+        if (favFilterInput) {
+            favFilterInput.addEventListener("input", (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                const filtered = commandFavorites.filter(fav => 
+                    (fav.commandText || "").toLowerCase().includes(query)
+                );
+                renderFavoritesUI(filtered);
+            });
+        }
         const historyBtn = document.getElementById("History_pages");
         if (historyBtn) {
             historyBtn.addEventListener("click", () => {
@@ -5056,13 +5827,22 @@
             isDeleting = (e.key === "Backspace" || e.key === "Delete");
             console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
 
-            const tokens = getTokens(input.value.trim());
-
-            const grpKey = tokens[0];
+            const tokens = getTokens(input.value.trim(), false);
+            let normalizedTokens = [...tokens];
+            if (normalizedTokens.length >= 2) {
+                const first = cleanString(normalizedTokens[0]).toLowerCase();
+                const second = cleanString(normalizedTokens[1]).toLowerCase();
+                if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                    const temp = normalizedTokens[0];
+                    normalizedTokens[0] = normalizedTokens[1];
+                    normalizedTokens[1] = temp;
+                }
+            }
+            const grpKey = normalizedTokens[0];
 
             let saveCommandConfig;
             if (grpKey)
-                saveCommandConfig = commands[grpKey];
+                saveCommandConfig = getCommandConfig(grpKey);
 
             if (e.key === 'Backspace' && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit")) {
                 let transIDcheck = setCommandTransid;
@@ -5187,13 +5967,15 @@
             //    return;
             //}
 
-            if ((e.ctrlKey && e.shiftKey && e.key?.toLowerCase() === "enter") && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit" || grpKey?.toLowerCase() === "view" || grpKey?.toLowerCase() === "configure")) {
+            const isSingleTarget = tokens.length === 1 && isTargetEntity(tokens[0]);
+
+            if ((e.ctrlKey && e.shiftKey && e.key?.toLowerCase() === "enter") && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit" || grpKey?.toLowerCase() === "view" || grpKey?.toLowerCase() === "configure" || isSingleTarget)) {
 
                 e.preventDefault();
 
 
                 try {
-                    if (tokens.length >= 2) {
+                    if (tokens.length >= 1) {
                         hide();
                         popUpOption = true;
                         executeCommandsV2();
@@ -5257,7 +6039,7 @@
 
                     const isFirstToken = tokens.length === 1;
 
-                    if (!lastTokenRaw.startsWith('"') && !isFirstToken) {
+                    if (!lastTokenRaw.startsWith('"') && (!isFirstToken || !getCommandConfig(lastTokenRaw))) {
                         const hasMultiWordMatch = items.some(item => {
                             const str = (typeof item === 'string' ? item : item.displaydata).toLowerCase();
                             return str.startsWith(lastTokenRaw.toLowerCase()) && str.includes(" ");
@@ -5323,7 +6105,9 @@
 
         document.addEventListener("click", e => {
             if (list && list.style.display !== "none") {
-                if (searchWrapper && !searchWrapper.contains(e.target) && e.target !== input) {
+                const insideSearchWrapper = searchWrapper && searchWrapper.contains(e.target);
+                const insideDropdown = megaDropdown && megaDropdown.contains(e.target);
+                if (!insideSearchWrapper && !insideDropdown && e.target !== input) {
                     hide();
                 }
             }
@@ -5429,9 +6213,31 @@
             return;
         }
 
+        if (lowerText === "version") {
+            showVersionInfo();
+            return;
+        }
+
 
 
         const tokens = getTokens(text);
+        if (tokens.length === 1 && isTargetEntity(tokens[0])) {
+            const entityObj = getTargetEntityObj(tokens[0]);
+            const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
+            if (["i", "iview", "ads", "page", "p", "t", "tstruct"].includes(stype) || isInboxStructure(entityObj)) {
+                tokens.unshift("view");
+            }
+        }
+
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                const temp = tokens[0];
+                tokens[0] = tokens[1];
+                tokens[1] = temp;
+            }
+        }
 
         if (tokens[3]?.toLowerCase() === "with") {
             showToast("Execution is Not Allowed while editing");
@@ -5443,6 +6249,21 @@
         const groupKey = cleanString(tokens[0]);
 
         const groupNameNormalized = groupKey.toLowerCase();
+
+        // Enforce Structure Permissions
+        if (["view", "create", "edit"].includes(groupNameNormalized)) {
+            const targetToken = tokens[1];
+            if (targetToken && targetToken.toLowerCase() !== "inbox") {
+                const entityObj = getTargetEntityObj(targetToken, groupNameNormalized);
+                if (entityObj) {
+                    if (!isActionAllowed(entityObj, groupNameNormalized)) {
+                        showToast("You do not have permission to execute this command.", 3000, false);
+                        return;
+                    }
+                }
+            }
+        }
+
         if (groupNameNormalized === "run" && (isPreviewModalOpen() || isRunDisabledForPage())) {
             showToast("Execution of run command is not allowed when the active page or preview modal is not runnable");
             return;
@@ -5466,7 +6287,7 @@
             return;
         }
 
-        const groupConfig = commands[groupKey];
+        const groupConfig = getCommandConfig(groupKey);
 
         if (!groupConfig) {
             console.warn(`Unknown command group: ${groupKey}`);
@@ -5497,28 +6318,20 @@
         }
 
 
-        setTimeout(() => {
-            input.focus();
 
-            if (tokens.length > 0) {
-                const firstToken = tokens[0];
-
-                let startIndex = input.value.indexOf(firstToken) + firstToken.length;
-
-                while (input.value[startIndex] === ' ') {
-                    startIndex++;
-                }
-
-                input.setSelectionRange(startIndex, input.value.length);
-
-            }
-
-        }, 200)
     }
 
 
     function cleanCommandToken(val = "") {
         return val.replace(/["]/g, "").trim();
+    }
+
+    function getGroupHandlers(group) {
+        if (!group || typeof COMMAND_HANDLERS === "undefined") return null;
+        const lowGroup = group.toLowerCase();
+        if (COMMAND_HANDLERS[group]) return COMMAND_HANDLERS[group];
+        const matchedKey = Object.keys(COMMAND_HANDLERS).find(k => k.toLowerCase() === lowGroup);
+        return matchedKey ? COMMAND_HANDLERS[matchedKey] : null;
     }
 
     function dispatchCommand(ctx) {
@@ -5539,7 +6352,7 @@
         }
 
         // Locate the handler function in the mapping
-        const groupHandlers = COMMAND_HANDLERS[group];
+        const groupHandlers = getGroupHandlers(group);
 
         if (!groupHandlers) {
             console.error(`System Error: No handlers object defined for command group '${group}'`);
@@ -5685,7 +6498,7 @@
 
         const struct_dataList = axDatasourceObj[struct_sourceKey];
 
-        let preferredType = resolvedParamType?.[1];
+        let preferredType = getResolvedParamType(1);
         if (preferredType) {
             preferredType = preferredType.toLowerCase();
             if (preferredType === "tstruct") preferredType = "t";
@@ -5707,7 +6520,17 @@
 
         setEditSessionState(transId)
 
-
+        if (tokens.length === 3) {
+            const lastToken = tokens[tokens.length - 1];
+            const matchedField = getMatchedField(lastToken, transId);
+            if (matchedField) {
+                const isFieldVal = (matchedField.isfield || "").toString().toLowerCase();
+                if (isFieldVal === "t" || isFieldVal === "true") {
+                    showToast(`A value is required after the field '${matchedField.caption || matchedField.name || lastToken}'.`);
+                    return;
+                }
+            }
+        }
 
         ///We need to optimize this(token index)(optimized one is below 17-03-26-T)
         let tokenIndex;
@@ -6386,9 +7209,12 @@
         if (type === "tstruct" && tokens.length === 3) {
             const lastToken = tokens[tokens.length - 1];
             const matchedField = getMatchedField(lastToken, transId);
-            if (matchedField && matchedField.isfield === "t") {
-                showToast(`A value is required after the field '${matchedField.caption || matchedField.name || lastToken}'.`);
-                return;
+            if (matchedField) {
+                const isFieldVal = (matchedField.isfield || "").toString().toLowerCase();
+                if (isFieldVal === "t" || isFieldVal === "true") {
+                    showToast(`A value is required after the field '${matchedField.caption || matchedField.name || lastToken}'.`);
+                    return;
+                }
             }
         }
 
@@ -6435,6 +7261,9 @@
             redirectToIView(transId, rawStruct);
             return;
 
+        } else if (type === "inbox") {
+            handleViewInbox();
+            return;
         }
 
 
@@ -6485,8 +7314,10 @@
         //}
 
         rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
+        // rawFieldName = cleanCommandToken(tokens[fieldValueIndex - 1]); 
         // fieldValue = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
         const { value } = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
+        // const { value: fieldname } = tryResolveToken(fieldValueIndex - 1, rawFieldName, commandConfig, false);
         fieldValue = value;
         fieldUniqueId = getUniqueId(fieldValue);
 
@@ -6828,6 +7659,7 @@
             .filter(Boolean);
 
         const VALID_TYPES = new Set(paramList);
+        VALID_TYPES.add("inbox");
 
         let paramValue;
 
@@ -7030,6 +7862,10 @@
                         ] || "";
                 }
 
+                if (isInboxStructure(bestMatch)) {
+                    candidate = "inbox";
+                }
+
                 if (
                     !candidate &&
                     typeof bestMatch.displaydata ===
@@ -7139,6 +7975,9 @@
                 bestMatch.stype
                     .toLowerCase()
                 ] || "";
+        }
+        if (isInboxStructure(bestMatch)) {
+            candidate = "inbox";
         }
 
         // [type] fallback
@@ -10715,7 +11554,6 @@
 
             // In edit mode you will later assign:
             if (!iscreate) {
-                recordid = "0";
                 keyfield = inputKeyFieldName;
                 keyvalue = inputKeyFieldValue;
             }
@@ -10764,6 +11602,8 @@
                     }
 
                     rowObj.columns[fieldName] = value;
+                    rowObj.columns[keyfield] = keyvalue;
+                    
                 }
 
                 const recdata = Object.keys(dcMap).map(recKey => ({
@@ -10784,7 +11624,7 @@
 
                 payload = {
                     savedata: {
-                        cachedsave: "true",
+                        cachedsave: "false",
                         axpapp: mainProject,
                         //appsessionkey: "010198670011016401680166017301540168015301640101009800994939364141171051310018",
                         transid: transid,
@@ -10793,6 +11633,9 @@
                         password: password,
                         changedrows: {},
                         trace: "true",
+                        forpaybooks: "true",
+                        dataupdate: iscreate ? "false" : "true",
+                        primarykey: keyfield,
                         recordid: recordid,
                         keyfield: keyfield,
                         keyvalue: keyvalue,
@@ -11096,6 +11939,7 @@
     }
 
     function toggleFavorite(cmdText, isAdding = false) {
+        loadFavorites();
         let cmdIndex;
         const tokens = getTokens(cmdText.trim());
 
@@ -11124,15 +11968,26 @@
 
 
 
-        const commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
+        let commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
 
+        if (!commandRoute) {
+            const cmdTokens = getTokens(cmdText);
+            if (cmdTokens.length === 1 && isTargetEntity(cmdTokens[0])) {
+                const viewCmd = "view " + cmdText;
+                commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === viewCmd.toLowerCase());
+            }
+        }
 
-
-
+        if (isAdding) {
+            if (isDuplicateFavorite(cmdText)) {
+                showToast("This command is already in your Favorites.");
+                return;
+            }
+        }
 
         if (cmdIndex !== -1) {
             if (isAdding) {
-                showToast(`${cmdText} is already in Favorites`);
+                showToast("This command is already in your Favorites.");
                 return;
             }
             // const removedFav = commandFavorites.splice(cmdIndex, 1);
@@ -11197,7 +12052,7 @@
 
     }
 
-    function renderFavoritesUI() {
+    function renderFavoritesUI(itemsToRender = commandFavorites) {
         if (!favouritesCard) return;
 
         const wrapper = favouritesCard.querySelector(".My-Fav-Items-Wrapper");
@@ -11213,7 +12068,7 @@
 
         }
 
-        if (commandFavorites.length === 0) {
+        if (itemsToRender.length === 0) {
             wrapper.innerHTML = `<div style="padding: 15px; color: #999; text-align: center; width: 100%;">No favourites yet. Pin commands to see them here.</div>`;
             return;
 
@@ -11223,8 +12078,8 @@
 
 
 
-        commandFavorites.forEach(fav => {
-            const cmdText = fav.commandText;
+        itemsToRender.forEach(fav => {
+            const cmdText = fav.commandText || fav.commandtext || "";
             const titleText = cmdText.replace(/"/g, '&quot;');
             // const favHtml = `
             //     <div class="My-Fav-Items">
@@ -11286,7 +12141,7 @@
             element.querySelector(".edit-fav").addEventListener("click", (event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                const targetUrl = fav.targetUrl;
+                const targetUrl = fav.targetUrl || fav.targetURL || fav.targeturl || "";
                 showFavoriteModel(cmdText, targetUrl, true);
             })
 
@@ -11302,12 +12157,25 @@
                 executeFavorite(fav);
             })
 
-
-
             wrapper.appendChild(element);
 
-
         });
+    }
+
+    function showFavoritesPopupOnly() {
+        const filterInput = document.getElementById("axiFavFilterInput");
+        if (filterInput) filterInput.value = "";
+
+        if (megaDropdown) {
+            megaDropdown.style.display = "flex";
+        }
+        if (favouritesCard) {
+            favouritesCard.style.display = "flex";
+        }
+        const suggCard = list.closest(".card");
+        if (suggCard) {
+            suggCard.style.display = "none";
+        }
     }
 
     // async function executeFavorite(cmdText) {
@@ -11348,8 +12216,9 @@
 
 
 
-        input.value = favObj?.originalCommandText + " ";
-        const tokens = getTokens(favObj?.originalCommandText);
+        const cmdText = favObj?.originalCommandText || favObj?.originalcommandtext || favObj?.commandText || favObj?.commandtext || "";
+        input.value = cmdText + " ";
+        const tokens = getTokens(cmdText);
 
         const accessPermissions = getAccessPermissions();
         // AppMgrAccess(Config)
@@ -11572,6 +12441,21 @@
         return s === "t" || s === "true";
     }
 
+    function normalizeCommandForCompare(cmd) {
+        if (!cmd) return "";
+        return cmd.trim().toLowerCase().replace(/\s+/g, " ");
+    }
+
+    function isDuplicateFavorite(cmd) {
+        if (!cmd) return false;
+        const normalizedNew = normalizeCommandForCompare(cmd);
+        return commandFavorites.some(fav => {
+            const normalizedOrig = normalizeCommandForCompare(fav.originalCommandText);
+            const normalizedText = normalizeCommandForCompare(fav.commandText);
+            return normalizedOrig === normalizedNew || normalizedText === normalizedNew;
+        });
+    }
+
     function showFavoriteModel(cmdText, targetUrl, isEdit = false) {
         const originalCmdTextInput = document.getElementById("axiFavOriginalCmd");
         const favNameInput = document.getElementById("axiFavNameInput");
@@ -11630,6 +12514,25 @@
         if (aliasTokens[0]?.toLowerCase() === "run") {
             showToast("You cannot save 'run' commands in favorites");
             return;
+        }
+
+        if (!isEdit) {
+            if (isDuplicateFavorite(alias) || isDuplicateFavorite(originalCmdText)) {
+                showToast("This command is already in your Favorites.");
+                return;
+            }
+        } else {
+            const isDuplicate = commandFavorites.some(fav => {
+                if (fav.commandText.toLowerCase() === originalCmdText.toLowerCase()) return false;
+                const normalizedText = normalizeCommandForCompare(fav.commandText);
+                const normalizedOrig = normalizeCommandForCompare(fav.originalCommandText);
+                const normalizedAlias = normalizeCommandForCompare(alias);
+                return normalizedText === normalizedAlias || normalizedOrig === normalizedAlias;
+            });
+            if (isDuplicate) {
+                showToast("This command is already in your Favorites.");
+                return;
+            }
         }
 
         // Start loading
@@ -12057,6 +12960,10 @@
                 opacity: 0.5 !important;
                 cursor: not-allowed !important;
             }
+            .AXI-Sec.axi-tour-active .btn.introjs-showElement,
+            .AXI-Sec.axi-tour-active #btnRefresh.introjs-showElement {
+                opacity: 1 !important;
+            }
             .introjs-bullets ul li a {
                 background: #5e5e6e !important;
             }
@@ -12111,27 +13018,32 @@
             steps: [
                 {
                     element: '#Axi-Searchinp',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Search & Execute</strong></div>Type commands eg: create tstructname, Edit tstructname fieldname fieldvalue, view tstructname fieldvalue, or configure peg pegname and access sdk like DB Explorer, ADS creation etc  here. Press Enter to run.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Command Search &amp; Execution</strong></div><div style="font-size: 12px; line-height: 1.6;">command syntax:<br>• <code>&quot;Customer Form&quot; create</code> (Open forms)<br>• <code>&quot;Sales Order&quot; view &quot;SO-101&quot;</code> (View record)<br>• <code>&quot;Items&quot; edit quantity 50</code> (Modify records)<br><br>Or run system administration commands:<br>• <code>configure peg &lt;pegname&gt;</code>, <code>configure settings</code><br>• <code>sdk db console</code> (Access developer tools)<br><br>Press <strong>Enter</strong> to run the command.</div>',
+                    position: 'bottom'
+                },
+                {
+                    element: '#axiAddFavoriteBtn',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">bookmark_add</span></span><strong style="color: #a100ff;">Add to Favorites</strong></div><div style="font-size: 12px; line-height: 1.6;">Click this button to save the current command in the search box to your personal favorites card.<br>Name it as you like for quick reference later (excludes <code>run</code> commands).</div>',
+                    position: 'bottom'
+                },
+                {
+                    element: '#axiViewFavoritesBtn',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">bookmarks</span></span><strong style="color: #a100ff;">View &amp; Search Favorites</strong></div><div style="font-size: 12px; line-height: 1.6;">Click this button to open the sliding Favorites card.<br>Use the new built-in filter field to search and execute your bookmarks instantly.</div>',
                     position: 'bottom'
                 },
                 {
                     element: '#axiSuggestions',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">list</span></span><strong style="color: #a100ff;">Live Suggestions</strong></div>Autocomplete matches list dynamically. Use Up/Down arrows to navigate.',
-                    position: 'bottom'
-                },
-                {
-                    element: '#axiFavouriteBtn',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">star</span></span><strong style="color: #a100ff;">Bookmark Commands</strong></div>Pin frequently used commands to your favorites card here.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">list</span></span><strong style="color: #a100ff;">Smart Autocomplete Suggestions</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Target-First Matching:</strong> Search results list target forms, views, and commands first.<br>• <strong>Space Auto-Quoting:</strong> Pressing space automatically wraps multi-word targets in quotes.<br>• <strong>Capability-Constrained Actions:</strong> Available actions (<code>create</code>, <code>edit</code>, <code>view</code>) are limited based on target type capability (TStructs allow all; IViews, Pages, and ADS allow <code>view</code> only).<br>• <strong>Flexible Navigation:</strong> Select <strong>Go</strong> or <strong>Pop-Up</strong> from suggestion options.</div>',
                     position: 'bottom'
                 },
                 {
                     element: '#btnRefresh',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">refresh</span></span><strong style="color: #a100ff;">Force Reload Metadata</strong></div>Click here to refresh database commands and update active shell views.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">refresh</span></span><strong style="color: #a100ff;">Force Reload Metadata</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Force Reload:</strong> Click to immediately reload structural metadata, active shell views, and database commands.</div>',
                     position: 'bottom'
                 },
                 {
                     element: '.searchwrap-AXI',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">logout</span></span><strong style="color: #a100ff;">Quick Exit</strong></div>Press Esc or click outside the palette to close the interface anytime.',
+                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">keyboard</span></span><strong style="color: #a100ff;">Shortcuts &amp; Quick Exit</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Ctrl + Enter:</strong> Execute the default <strong>Go</strong> option (opens target in current frame).<br>• <strong>Ctrl + Shift + Enter:</strong> Execute in a new <strong>Pop-Up</strong> window/modal.<br>• <strong>Esc:</strong> Closes the command palette instantly, or click anywhere outside to exit.</div>',
                     position: 'bottom'
                 }
             ],
@@ -12157,6 +13069,9 @@
                 }
                 // Force synchronous browser layout reflow to compute correct width/height
                 void targetElement.offsetHeight;
+            } else if (targetElement && targetElement.id === "axiViewFavoritesBtn") {
+                loadFavorites();
+                showFavoritesPopupOnly();
             } else {
                 hide();
                 if (megaDropdown) {
