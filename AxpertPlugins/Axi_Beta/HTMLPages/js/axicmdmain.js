@@ -3230,7 +3230,11 @@
                     bottomToolbarButtons = getBottomToolbarButtons();
                     topToolbarButtons = getTopToolbarButtons();
                     allButtons = { ...bottomToolbarButtons, ...topToolbarButtons };
-
+                    
+                    if (structType === "i") {
+                        const utilityButtons = getIViewUtilityButtons();
+                        allButtons = { ...allButtons, ...utilityButtons };
+                    }
                 }
 
 
@@ -3266,11 +3270,29 @@
                 break;
         }
 
-        buttonsList = Object.values(allButtons).map(btn => ({
-            name: btn.id,
-            onclick: btn.element.getAttribute("onclick"),
-            displaydata: `${btn.label} (${btn.id})`
-        })).filter(btn => !((structType === "e" || structType === "ef") && btn.name === "deleteSelectedButton"));
+        buttonsList = Object.values(allButtons).map(btn => {
+            const element = btn.element;
+            let displayLabel = "";
+            if (element) {
+                const titleAttr = element.getAttribute("title");
+                if (titleAttr && titleAttr.trim()) {
+                    displayLabel = titleAttr.trim();
+                } else {
+                    displayLabel = (element.textContent || "").trim();
+                }
+            }
+            if (!displayLabel) {
+                displayLabel = (btn.label || "").trim();
+            }
+            // Normalize whitespaces and newlines
+            displayLabel = displayLabel.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+            return {
+                name: btn.id,
+                onclick: btn.element.getAttribute("onclick"),
+                displaydata: displayLabel
+            };
+        })
+        .filter(btn => !((structType === "e" || structType === "ef") && btn.name === "deleteSelectedButton"));
 
         const uniqueButtonsMap = new Map();
         buttonsList.forEach(btn => {
@@ -8338,8 +8360,11 @@
                     if (!topToolbarButtons) topToolbarButtons = getTopToolbarButtons();
                     allButtons = [...Object.values(bottomToolbarButtons),
                     ...Object.values(topToolbarButtons)];
-
-
+                    
+                    if (structType === "i") {
+                        const utilityButtons = getIViewUtilityButtons();
+                        allButtons = [...allButtons, ...Object.values(utilityButtons)];
+                    }
                 }
 
 
@@ -8393,15 +8418,22 @@
 
         if (!targetBtn) {
             targetBtn = allButtons.find(btn => {
-                const rawLabel = btn.label || "";
-
-                const normalizedBtnLabel = rawLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
-
                 const normalizedInputLabel = buttonLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
 
-                return normalizedBtnLabel === normalizedInputLabel;
+                const rawLabel = btn.label || "";
+                const normalizedBtnLabel = rawLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+                if (normalizedBtnLabel === normalizedInputLabel) return true;
 
+                const element = btn.element;
+                if (element) {
+                    const titleAttr = (element.getAttribute("title") || "").toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+                    if (titleAttr === normalizedInputLabel) return true;
 
+                    const textContentVal = (element.textContent || "").toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+                    if (textContentVal === normalizedInputLabel) return true;
+                }
+
+                return false;
             });
 
         }
@@ -8607,6 +8639,60 @@
     //}
 
 
+
+    function getIViewUtilityButtons() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        let doc = null;
+        try {
+            doc = iframe.contentDocument || iframe.contentWindow?.document;
+        } catch (e) {
+            console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
+        }
+        if (!doc) return {};
+
+        const utilityContainer = doc.getElementById("iconsNewUtility") || doc.querySelector("#iconsNewUtility");
+        if (!utilityContainer) return {};
+
+        const links = Array.from(utilityContainer.querySelectorAll("a, button, [onclick]"));
+        if (links.length === 0) return {};
+
+        const result = {};
+        links.forEach((link) => {
+            const title = link.getAttribute("title") || "";
+            let label = title.trim();
+            if (!label) {
+                const nameSpan = link.querySelector(".dropdownIconName");
+                label = (nameSpan ? nameSpan.textContent : link.textContent || "").trim();
+            }
+            label = label.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+            if (!label) return;
+
+            const id = link.id || link.getAttribute("id") || `utility_${label.toLowerCase().replace(/\s+/g, '_')}`;
+
+            result[id] = {
+                id,
+                label,
+                element: link,
+                click: () => {
+                    if (link.href && link.href.startsWith("javascript:")) {
+                        try {
+                            const jsCode = decodeURIComponent(link.href.replace(/^javascript:/i, ''));
+                            iframe.contentWindow.eval(jsCode);
+                        } catch (e) {
+                            console.error("Failed to execute javascript: href for utility link", e);
+                            link.click();
+                        }
+                    } else {
+                        link.click();
+                    }
+                }
+            };
+        });
+
+        return result;
+    }
 
     function getBottomToolbarButtons() {
         const iframe = document.getElementById("middle1");
