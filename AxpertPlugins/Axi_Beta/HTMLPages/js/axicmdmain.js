@@ -1867,16 +1867,20 @@
 
     function redirectToIView(iViewName, iViewCaption = "") {
         console.log("Redirecting to Iview: " + iViewName + "..............");
-        let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
 
-        setCommandRoutes(input.value.trim(), targetUrl);
 
         if (popUpOption) {
+         let targetUrl = `../aspx/ivtoivload.aspx?ivname=${iViewName}`;
+        // setCommandRoutes(input.value.trim(), targetUrl);
+
+
             targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
-            targetUrl += "&AxPop=true";
+            targetUrl += "&AxIsPop=true";
             openPopOption(targetUrl)
         }
         else {
+        let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
+        setCommandRoutes(input.value.trim(), targetUrl);
             window.LoadIframe(targetUrl);
         }
 
@@ -1924,7 +1928,7 @@
     function getInitialCommandsList() {
         if (!commands) return [];
         const structType = getStructType();
-        const isRunnable = structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage();
+        const isRunnable = structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage() && !isViewDesignerModalOpen();
         return Object.keys(commands).filter(key => {
             const lowerKey = key.toLowerCase();
             if (lowerKey === "create" || lowerKey === "view" || lowerKey === "edit") {
@@ -3233,7 +3237,8 @@
                     
                     if (structType === "i") {
                         const utilityButtons = getIViewUtilityButtons();
-                        allButtons = { ...allButtons, ...utilityButtons };
+                        const actionButtons = getIViewActionDropdownButtons();
+                        allButtons = { ...allButtons, ...utilityButtons, ...actionButtons };
                     }
                 }
 
@@ -3278,7 +3283,9 @@
                 if (titleAttr && titleAttr.trim()) {
                     displayLabel = titleAttr.trim();
                 } else {
-                    displayLabel = (element.textContent || "").trim();
+                    const cloned = element.cloneNode(true);
+                    cloned.querySelectorAll(".material-icons, .material-icons-style").forEach(node => node.remove());
+                    displayLabel = (cloned.textContent || "").trim();
                 }
             }
             if (!displayLabel) {
@@ -3286,9 +3293,11 @@
             }
             // Normalize whitespaces and newlines
             displayLabel = displayLabel.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+            // Remove trailing brackets containing icon names
+            displayLabel = displayLabel.replace(/\s*\[[^\]]+\]\s*$/, '').trim();
             return {
                 name: btn.id,
-                onclick: btn.element.getAttribute("onclick"),
+                onclick: btn.element ? btn.element.getAttribute("onclick") : null,
                 displaydata: displayLabel
             };
         })
@@ -3616,8 +3625,8 @@
         if (groupKey.toLowerCase() === "run") {
             const structType = getStructType();
 
-            if (!structType || structType === "o" || isPreviewModalOpen() || isRunDisabledForPage()) {
-                if (isPreviewModalOpen() || isRunDisabledForPage()) {
+            if (!structType || structType === "o" || isPreviewModalOpen() || isRunDisabledForPage() || isViewDesignerModalOpen()) {
+                if (isPreviewModalOpen() || isRunDisabledForPage() || isViewDesignerModalOpen()) {
                     return [];
                 }
                 showToast("Warning: CommandGroup Invalid: Please open Tstruct or Any other page");
@@ -6286,8 +6295,8 @@
             }
         }
 
-        if (groupNameNormalized === "run" && (isPreviewModalOpen() || isRunDisabledForPage())) {
-            showToast("Execution of run command is not allowed when the active page or preview modal is not runnable");
+        if (groupNameNormalized === "run" && (isPreviewModalOpen() || isRunDisabledForPage() || isViewDesignerModalOpen())) {
+            showToast("Execution of run command is not allowed when the active page, preview modal or view designer is not runnable");
             return;
         }
         const accessPermissions = getAccessPermissions();
@@ -8363,7 +8372,8 @@
                     
                     if (structType === "i") {
                         const utilityButtons = getIViewUtilityButtons();
-                        allButtons = [...allButtons, ...Object.values(utilityButtons)];
+                        const actionButtons = getIViewActionDropdownButtons();
+                        allButtons = [...allButtons, ...Object.values(utilityButtons), ...Object.values(actionButtons)];
                     }
                 }
 
@@ -8664,7 +8674,13 @@
             let label = title.trim();
             if (!label) {
                 const nameSpan = link.querySelector(".dropdownIconName");
-                label = (nameSpan ? nameSpan.textContent : link.textContent || "").trim();
+                if (nameSpan) {
+                    label = nameSpan.textContent.trim();
+                } else {
+                    const cloned = link.cloneNode(true);
+                    cloned.querySelectorAll(".material-icons, .material-icons-style").forEach(node => node.remove());
+                    label = (cloned.textContent || "").trim();
+                }
             }
             label = label.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
             if (!label) return;
@@ -8694,6 +8710,54 @@
         return result;
     }
 
+    function getIViewActionDropdownButtons() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        let doc = null;
+        try {
+            doc = iframe.contentDocument || iframe.contentWindow?.document;
+        } catch (e) {
+            console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
+        }
+        if (!doc) return {};
+
+        const items = Array.from(doc.querySelectorAll(".dropDownButton__list li.dropDownButton__item, li.dropDownButton__item"));
+        if (items.length === 0) return {};
+
+        const result = {};
+        items.forEach((item) => {
+            const dropdownVal = item.getAttribute("data-dropdown-value") || "";
+            if (dropdownVal !== "chart" && dropdownVal !== "saveAs") return;
+
+            const link = item.querySelector("a") || item;
+            
+            let title = item.getAttribute("title") || link.getAttribute("title") || "";
+            let label = title.trim();
+            if (!label) {
+                const tempNode = link.cloneNode(true);
+                const icons = tempNode.querySelectorAll("span, i, .material-icons");
+                icons.forEach(node => node.remove());
+                label = tempNode.textContent.trim();
+            }
+            label = label.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+            if (!label) return;
+
+            const id = item.id || link.id || `action_${dropdownVal}`;
+
+            result[id] = {
+                id,
+                label,
+                element: item,
+                click: () => {
+                    item.click();
+                }
+            };
+        });
+
+        return result;
+    }
+
     function getBottomToolbarButtons() {
         const iframe = document.getElementById("middle1");
         if (!iframe) return {};
@@ -8716,6 +8780,8 @@
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
             if (!id) return;
+            if (id === "ivirActionButton") return;
+
             const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
             if (label.toLowerCase() === "plugin custom code") return;
@@ -8837,6 +8903,25 @@
         return result;
     }
 
+    function isViewDesignerModalOpen() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return false;
+
+        let doc = null;
+        try {
+            doc = iframe.contentDocument || iframe.contentWindow?.document;
+        } catch (e) {
+            // Ignore cross-origin error
+        }
+        if (!doc) return false;
+
+        const modal = doc.getElementById("newViewTabId") || doc.querySelector("#newViewTabId");
+        if (modal) {
+            return modal.offsetWidth > 0 || modal.offsetHeight > 0 || modal.style.display === "block" || modal.classList.contains("show");
+        }
+        return false;
+    }
+
     function isRunDisabledForPage(src) {
         if (!src) {
             const iframe = document.getElementById("middle1");
@@ -8881,6 +8966,8 @@
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
             if (!id) return;
+            if (id === "ivirActionButton") return;
+
             const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
             if (label.toLowerCase() === "plugin custom code") return;
@@ -9060,7 +9147,9 @@
 
 
 
-        return btn.innerText.trim();
+        const cloned = btn.cloneNode(true);
+        cloned.querySelectorAll(".material-icons, .material-icons-style").forEach(node => node.remove());
+        return cloned.innerText.trim();
 
     }
 
