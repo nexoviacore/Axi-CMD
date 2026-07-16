@@ -96,6 +96,9 @@
 
 
         },
+        Source: {
+            default: handleSourceCommand,
+        },
         Configure: {
             peg: handleConfigurePeg,
 
@@ -591,6 +594,7 @@
                 commandGroup: "Version",
                 prompts: []
             };
+
             console.log(JSON.stringify(commands));
             
             // Load target entities (tstructs, iview, ads and pages) from metadata on startup
@@ -1931,7 +1935,7 @@
         const isRunnable = structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage() && !isViewDesignerModalOpen();
         return Object.keys(commands).filter(key => {
             const lowerKey = key.toLowerCase();
-            if (lowerKey === "create" || lowerKey === "view" || lowerKey === "edit") {
+            if (lowerKey === "create" || lowerKey === "view" || lowerKey === "edit" || lowerKey === "source") {
                 return false;
             }
             if (lowerKey === "run") {
@@ -2266,6 +2270,12 @@
                     return type !== "t" && type !== "tstruct";
                 });
                 if (nonTstructMatch) return nonTstructMatch;
+            } else if (lowAction === "source") {
+                const sourceMatch = matches.find(d => {
+                    const type = (d.stype || d.STYPE || "").toLowerCase();
+                    return ["t", "tstruct", "i", "iview", "ads"].includes(type);
+                });
+                if (sourceMatch) return sourceMatch;
             }
         }
 
@@ -2336,18 +2346,29 @@
         let actions = [];
         if (entityObj) {
             const type = (entityObj.stype || entityObj.STYPE || "").toLowerCase().trim();
+            const accessPermissions = getAccessPermissions();
+            const canBuild = accessPermissions && accessPermissions.buildAccess;
+
             if (type === "t" || type === "tstruct") {
                 if (isActionAllowed(entityObj, "view")) actions.push("View");
                 if (isActionAllowed(entityObj, "create")) {
                     actions.push("Create");
                     actions.push("Edit");
                 }
+                if (canBuild) actions.push("Source");
             } else if (isInboxStructure(entityObj)) {
                 actions.push("Go");
             } else if (type === "ads") {
                 if (isAdsVisible(entityObj)) actions.push("View");
+                if (canBuild) actions.push("Source");
+            } else if (type === "i" || type === "iview") {
+                if (isActionAllowed(entityObj, "view")) actions.push("View");
+                if (canBuild) actions.push("Source");
             } else {
                 if (type === "p" || type === "page" || isActionAllowed(entityObj, "view")) actions.push("View");
+                if ((type === "i" || type === "iview" || type === "t" || type === "tstruct" || type === "ads") && canBuild) {
+                    actions.push("Source");
+                }
             }
         }
         return actions.map(act => act.toLowerCase()).includes(lowAction);
@@ -2389,7 +2410,7 @@
     }
 
     function getInitialSuggestions() {
-        const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view"].includes(k.toLowerCase()));
+        const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view", "source"].includes(k.toLowerCase()));
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
         const targets = (axDatasourceObj[key] || []).filter(item => isStructureVisible(item));
         return [...verbs, ...targets];
@@ -2404,7 +2425,7 @@
             if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
                 const val0 = (resolvedParams[0] || "").toLowerCase();
                 const val1 = (resolvedParams[1] || "").toLowerCase();
-                if (val0 && !["create", "edit", "view"].includes(val0) && val1 && ["create", "edit", "view"].includes(val1)) {
+                if (val0 && !["create", "edit", "view", "source"].includes(val0) && val1 && ["create", "edit", "view", "source"].includes(val1)) {
                     const tempVal = resolvedParams[0];
                     resolvedParams[0] = resolvedParams[1];
                     resolvedParams[1] = tempVal;
@@ -2417,7 +2438,7 @@
             } else {
                 const val0 = (resolvedParams[0] || "").toLowerCase();
                 const val1 = (resolvedParams[1] || "").toLowerCase();
-                if (val0 && ["create", "edit", "view"].includes(val0) && val1 && !["create", "edit", "view"].includes(val1)) {
+                if (val0 && ["create", "edit", "view", "source"].includes(val0) && val1 && !["create", "edit", "view", "source"].includes(val1)) {
                     const tempVal = resolvedParams[0];
                     resolvedParams[0] = resolvedParams[1];
                     resolvedParams[1] = tempVal;
@@ -2430,7 +2451,7 @@
             }
         } else {
             const val0 = (resolvedParams[0] || "").toLowerCase();
-            if (val0 && ["create", "edit", "view"].includes(val0)) {
+            if (val0 && ["create", "edit", "view", "source"].includes(val0)) {
                 const tempVal = resolvedParams[0];
                 resolvedParams[0] = resolvedParams[1];
                 resolvedParams[1] = tempVal;
@@ -3423,6 +3444,9 @@
                 targetType = (entityObj.stype || entityObj.STYPE || "").toLowerCase();
             }
 
+            const accessPermissions = getAccessPermissions();
+            const canBuild = accessPermissions && accessPermissions.buildAccess;
+
             if (targetType === "t" || targetType === "tstruct") {
                 const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
                 if (!hasPerms) {
@@ -3434,13 +3458,28 @@
                         actions.push("Edit");
                     }
                 }
+                if (canBuild) {
+                    actions.push("Source");
+                }
             } else if (targetType === "p" || targetType === "page") {
                 actions.push("View");
             } else if (targetType === "ads") {
                 if (isAdsVisible(entityObj)) actions.push("View");
+                if (canBuild) {
+                    actions.push("Source");
+                }
+            } else if (targetType === "i" || targetType === "iview") {
+                const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
+                if (!hasPerms || entityObj.viewallowed === "T") actions.push("View");
+                if (canBuild) {
+                    actions.push("Source");
+                }
             } else if (targetType) {
                 const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
                 if (!hasPerms || entityObj.viewallowed === "T") actions.push("View");
+                if ((targetType === "i" || targetType === "iview" || targetType === "t" || targetType === "tstruct" || targetType === "ads") && canBuild) {
+                    actions.push("Source");
+                }
             } else {
                 const cleanTok = rawTokens[0].replace(/"/g, "").toLowerCase();
                 const key = "axi_structmetalist_" + getStructParam().toLowerCase();
@@ -3465,6 +3504,7 @@
                 let hasTstruct = false;
                 let matchesAnyTstructWithoutPerms = false;
                 let matchesAnyIviewWithoutPerms = false;
+                let hasSource = false;
                 for (let i = 0; i < matches.length; i++) {
                     const m = matches[i];
                     const type = (m.stype || m.STYPE || "").toLowerCase().trim();
@@ -3479,15 +3519,27 @@
                             if (m.viewallowed === "T") hasView = true;
                             if (m.createallowed === "T") hasCreate = true;
                         }
+                        if (canBuild) hasSource = true;
                     } else if (type === "ads") {
                         if (isAdsVisible(m)) hasView = true;
+                        if (canBuild) hasSource = true;
                     } else if (type === "p" || type === "page") {
                         hasView = true;
+                    } else if (type === "i" || type === "iview") {
+                        if (!hasPerms) {
+                            matchesAnyIviewWithoutPerms = true;
+                        } else {
+                            if (m.viewallowed === "T") hasView = true;
+                        }
+                        if (canBuild) hasSource = true;
                     } else {
                         if (!hasPerms) {
                             matchesAnyIviewWithoutPerms = true;
                         } else {
                             if (m.viewallowed === "T") hasView = true;
+                        }
+                        if ((type === "i" || type === "iview" || type === "t" || type === "tstruct" || type === "ads") && canBuild) {
+                            hasSource = true;
                         }
                     }
                 }
@@ -3497,12 +3549,17 @@
                     actions.push("Create");
                     actions.push("Edit");
                 }
+                if (hasSource) actions.push("Source");
             }
 
             const specialTypes = ["iview", "i", "ads", "p", "page"];
             if (targetType && specialTypes.includes(targetType)) {
                 const viewAction = { name: "View", displaydata: "View" };
-                const allOptions = [viewAction, goOption, popOption];
+                const allOptions = [viewAction];
+                if (["iview", "i", "ads"].includes(targetType) && canBuild) {
+                    allOptions.push({ name: "Source", displaydata: "Source" });
+                }
+                allOptions.push(goOption, popOption);
                 const filtered = allOptions.filter(opt => {
                     const displayText = opt.displaydata || opt.name;
                     return displayText.toLowerCase().startsWith(partial);
@@ -3517,6 +3574,10 @@
             }
 
             if (actions.map(act => act.toLowerCase()).includes(partial)) {
+                if (partial === "source") {
+                    filteredObjects = [goOption];
+                    return [goOption];
+                }
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
             }
@@ -3549,6 +3610,11 @@
         }
 
         if (groupKey.toLowerCase() === "version") {
+            return [goOption];
+        }
+
+        if (groupKey.toLowerCase() === "source" && tokens.length >= 2 && isTargetEntity(tokens[1])) {
+            filteredObjects = [goOption];
             return [goOption];
         }
 
@@ -3698,6 +3764,11 @@
                 }
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
+            }
+
+            else if (groupKey.toLowerCase() === "source" && tokens.length >= 3) {
+                filteredObjects = [goOption];
+                return [goOption];
             }
 
             else if (groupKey.toLowerCase() === "sdk" && tokens.length > 2) {
@@ -4062,6 +4133,10 @@
                 }
                 if (key === "view") {
                     return isViewAllowed(item);
+                }
+                if (key === "source") {
+                    const stype = (item.stype || item.STYPE || "").toLowerCase().trim();
+                    return ["t", "tstruct", "i", "iview", "ads"].includes(stype);
                 }
                 if (isEmpty(item?.displaydata) && isEmpty(item?.caption) && isEmpty(item?.name)) return false;
                 return true;
@@ -4539,7 +4614,7 @@
         if (resolvedParams[rawIndex] && !forceResolve) {
             const val = resolvedParams[rawIndex];
             const lowerVal = val.toLowerCase();
-            const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version"].includes(lowerVal);
+            const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(lowerVal);
             if (!(tokenIndex === 1 && isVerb)) {
                 return {
                     value: val,
@@ -5309,7 +5384,7 @@
 
         displayName = displayName.replace(/[\r\n]+/g, " ").trim();
 
-        if (["create", "view", "edit"].includes(displayName.toLowerCase())) {
+        if (["create", "view", "edit", "source"].includes(displayName.toLowerCase())) {
             displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1).toLowerCase();
         }
 
@@ -6412,6 +6487,11 @@
         }
         const accessPermissions = getAccessPermissions();
 
+        if (groupNameNormalized === "source" && !accessPermissions.buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+
         if (groupNameNormalized === "configure" && !accessPermissions.appMgrAccess) {
             showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
             return;
@@ -7306,6 +7386,34 @@
 
 
 
+    }
+
+    function handleSourceCommand({ tokens, commandConfig }) {
+        const accessPermissions = getAccessPermissions();
+        if (!accessPermissions?.buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${input.value.trim()}`);
+            return;
+        }
+
+        let rawName = cleanCommandToken(tokens[1]);
+        const entityObj = getTargetEntityObj(rawName, "source");
+        if (!entityObj) {
+            showToast("Invalid structure name: " + rawName);
+            return;
+        }
+
+        const type = (entityObj.stype || entityObj.STYPE || "").toLowerCase().trim();
+        const name = entityObj.name || entityObj.NAME || "";
+
+        if (type === "t" || type === "tstruct") {
+            window.openDeveloperStudio("tstreact", name, true);
+        } else if (type === "i" || type === "iview") {
+            window.openDeveloperStudio("ivreact", name, true);
+        } else if (type === "ads") {
+            handleViewSourceAds(name);
+        } else {
+            showToast("Unknown source type: " + name);
+        }
     }
 
     function handleViewCommand({ tokens, commandConfig }) {
@@ -12651,6 +12759,7 @@
 
                     case 'buildAccess':
                         delete commandsFromDb['SDK'];
+                        delete commandsFromDb['Source'];
                         break;
 
                     default:
