@@ -22,6 +22,7 @@
     let commandRoutes = [];
     let isDeleting = false;
     let isEditing = false;
+    let isProgrammaticExecution = false;
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
@@ -5246,7 +5247,12 @@
                 input.value = "view " + rawInput + " ";
             }
             hide();
-            executeCommandsV2();
+            isProgrammaticExecution = true;
+            try {
+                executeCommandsV2();
+            } finally {
+                isProgrammaticExecution = false;
+            }
             if (shouldRestoreInput) {
                 input.value = rawInput + " ";
             }
@@ -5286,7 +5292,12 @@
                 if (executeTokens.length >= 2) {
                     hide();
                     popUpOption = true;
-                    executeCommandsV2();
+                    isProgrammaticExecution = true;
+                    try {
+                        executeCommandsV2();
+                    } finally {
+                        isProgrammaticExecution = false;
+                    }
                     if (shouldRestoreInput) {
                         input.value = rawInput + " ";
                     }
@@ -6536,10 +6547,10 @@
         const rawTokens = getTokens(text, false);
         if (rawTokens.length > 0) {
             const firstToken = cleanString(rawTokens[0]).toLowerCase();
-            const secondToken = cleanString(rawTokens[1].toLowerCase()); 
+            const secondToken = rawTokens[1] ? cleanString(rawTokens[1].toLowerCase()) : ""; 
 
             
-            if (["create", "view", "edit", "source"].includes(firstToken) && secondToken !== "inbox") {
+            if (!isProgrammaticExecution && ["create", "view", "edit", "source"].includes(firstToken) && secondToken !== "inbox") {
                 showToast("Invalid Command!");
                 return;
             }
@@ -8021,6 +8032,7 @@
 
         const VALID_TYPES = new Set(paramList);
         VALID_TYPES.add("inbox");
+        VALID_TYPES.add("page");
 
         let paramValue;
 
@@ -8084,9 +8096,12 @@
         // -----------------------------------
         const stypeMap = {
             t: "tstruct",
+            tstruct: "tstruct",
             i: "iview",
+            iview: "iview",
             ads: "ads",
             p: "page",
+            page: "page",
             inbox: "inbox"
         };
 
@@ -8408,14 +8423,19 @@
         //     return pureCaption === normalizedText;
         // });
 
-        bestMatch = viewList.find(d => typeof d.displaydata === "string" && d.displaydata.toLowerCase() === rawTokenText.toLowerCase());
-
-        // if (!bestMatch) {
-        //     bestMatch = viewList.find(d => d.name && d.name.toLowerCase() === normalizedText);
-        // }
+        bestMatch = viewList.find(d => {
+            const isPageType = ['p', 'page'].includes((d.stype || "").toLowerCase());
+            return isPageType && typeof d.displaydata === "string" && d.displaydata.toLowerCase() === rawTokenText.toLowerCase();
+        });
 
         if (!bestMatch) {
             bestMatch = viewList.find(d => {
+                const isPageType = ['p', 'page'].includes((d.stype || "").toLowerCase());
+                if (!isPageType) return false;
+
+                if (d.name && d.name.toLowerCase() === rawTokenText.toLowerCase()) {
+                    return true;
+                }
                 if (typeof d.displaydata !== "string") return false;
 
                 const pureCaption = d.displaydata
@@ -8424,7 +8444,7 @@
                     .trim()
                     .toLowerCase();
 
-                return (pureCaption === normalizedText || pureCaption === rawTokenText) && d.stype.toLowerCase() === 'p';
+                return (pureCaption === normalizedText || pureCaption === rawTokenText);
             });
         }
 
