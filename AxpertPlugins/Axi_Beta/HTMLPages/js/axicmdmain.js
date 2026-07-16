@@ -6450,7 +6450,10 @@
         const rawTokens = getTokens(text, false);
         if (rawTokens.length > 0) {
             const firstToken = cleanString(rawTokens[0]).toLowerCase();
-            if (["create", "view", "edit", "source"].includes(firstToken)) {
+            const secondToken = cleanString(rawTokens[1].toLowerCase()); 
+
+            
+            if (["create", "view", "edit", "source"].includes(firstToken) && secondToken !== "inbox") {
                 showToast("Invalid Command!");
                 return;
             }
