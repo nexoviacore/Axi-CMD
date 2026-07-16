@@ -3477,20 +3477,41 @@
                 if (typeof item === "string") {
                     return item.toLowerCase().startsWith(prefix);
                 } else {
-                    const nameMatch = item.name && item.name.toLowerCase().startsWith(prefix);
-                    const displayMatch = item.displaydata && item.displaydata.toLowerCase().startsWith(prefix);
-                    const captionMatch = typeof item.displaydata === "string" && 
-                        getCleanCaption(item).startsWith(prefix);
-                    return nameMatch || displayMatch || captionMatch;
+                    const nameMatch = item.name && item.name.toLowerCase().includes(prefix);
+                    const displayMatch = item.displaydata && item.displaydata.toLowerCase().includes(prefix);
+                    const cleanCaptionMatch = typeof item.displaydata === "string" && 
+                        getCleanCaption(item).includes(prefix);
+                    const captionMatch = item.caption && item.caption.toLowerCase().includes(prefix);
+                    return nameMatch || displayMatch || cleanCaptionMatch || captionMatch;
                 }
             });
-            filteredObjects = filtered.map(item => {
+
+            // Rank startsWith matches higher than includes matches to keep better matching.
+            const startsWithPrefix = [];
+            const containsPrefix = [];
+            filtered.forEach(item => {
+                if (typeof item === "string") {
+                    startsWithPrefix.push(item);
+                } else {
+                    const starts = (item.name && item.name.toLowerCase().startsWith(prefix)) ||
+                                   (item.displaydata && item.displaydata.toLowerCase().startsWith(prefix)) ||
+                                   (typeof item.displaydata === "string" && getCleanCaption(item).startsWith(prefix)) ||
+                                   (item.caption && item.caption.toLowerCase().startsWith(prefix));
+                    if (starts) {
+                        startsWithPrefix.push(item);
+                    } else {
+                        containsPrefix.push(item);
+                    }
+                }
+            });
+            const rankedFiltered = [...startsWithPrefix, ...containsPrefix];
+             filteredObjects = rankedFiltered.map(item => {
                 if (typeof item === "string") {
                     return { name: item, displaydata: item };
                 }
                 return item;
-            });
-            return filtered.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
+             });
+             return rankedFiltered.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
         }
 
         if (rawTokens.length === 2 && isTargetEntity(rawTokens[0])) {
