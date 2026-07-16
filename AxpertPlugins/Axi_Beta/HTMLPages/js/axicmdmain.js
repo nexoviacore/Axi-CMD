@@ -6346,22 +6346,44 @@
 
         const iframe = document.getElementById("middle1");
         if (iframe) {
+            const attachClickToDoc = (doc) => {
+                if (!doc) return;
+                if (doc._axiClickAttached) return;
+                doc._axiClickAttached = true;
+
+                doc.addEventListener("click", () => {
+                    hide();
+                });
+
+                try {
+                    const iframes = doc.getElementsByTagName("iframe");
+                    for (let i = 0; i < iframes.length; i++) {
+                        const subIframe = iframes[i];
+                        try {
+                            const subDoc = subIframe.contentDocument || subIframe.contentWindow?.document;
+                            if (subDoc) attachClickToDoc(subDoc);
+                        } catch (e) {}
+
+                        subIframe.addEventListener("load", () => {
+                            try {
+                                const subDoc = subIframe.contentDocument || subIframe.contentWindow?.document;
+                                if (subDoc) attachClickToDoc(subDoc);
+                            } catch (e) {}
+                        });
+                    }
+                } catch (e) {}
+            };
+
             const attachIframeClick = () => {
                 try {
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-
-                    iframeDoc.removeEventListener("click", () => hide());
-                    iframeDoc.addEventListener("click", () => {
-                        hide();
-                    });
+                    attachClickToDoc(iframeDoc);
                 } catch (err) {
                     console.warn("Could not attach click listener to iframe (likely CORS restriction):", err);
                 }
             };
 
-
             attachIframeClick();
-
 
             iframe.addEventListener("load", attachIframeClick);
         }
