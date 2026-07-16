@@ -3380,6 +3380,14 @@
         let ignoreExtraParams = false;
         let detectedType = "";
         const rawTokens = getTokens(inputText, false);
+        if (rawTokens.length > 0) {
+            const firstToken = cleanString(rawTokens[0]).toLowerCase();
+            if (["create", "view", "edit", "source"].includes(firstToken)) {
+                filteredObjects = [];
+                hintDiv.textContent = "";
+                return [];
+            }
+        }
         const endsWithSpace = inputText.endsWith(" ");
 
 
@@ -6439,7 +6447,14 @@
             return;
         }
 
-
+        const rawTokens = getTokens(text, false);
+        if (rawTokens.length > 0) {
+            const firstToken = cleanString(rawTokens[0]).toLowerCase();
+            if (["create", "view", "edit", "source"].includes(firstToken)) {
+                showToast("Invalid Command!");
+                return;
+            }
+        }
 
         const tokens = getTokens(text);
         if (tokens.length === 1 && isTargetEntity(tokens[0])) {
