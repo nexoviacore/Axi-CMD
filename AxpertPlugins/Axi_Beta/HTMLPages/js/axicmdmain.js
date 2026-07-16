@@ -2392,7 +2392,7 @@
         const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view"].includes(k.toLowerCase()));
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
         const targets = (axDatasourceObj[key] || []).filter(item => isStructureVisible(item));
-        return [...targets, ...verbs];
+        return [...verbs, ...targets];
     }
 
     function normalizeGlobalState() {
@@ -4913,7 +4913,7 @@
             if (commandHeader) commandHeader.style.display = "none";
         }
 
-        validItems.forEach((item, i) => {
+        function createSuggestionLi(item, i) {
             const li = document.createElement("li");
             const text = typeof item === "string" ? item : item.displaydata;
             li.className = "axi-suggestion";
@@ -4945,7 +4945,6 @@
                     </div>`;
             } else {
                 li.textContent = displayText;
-
             }
 
             if (i === activeIndex) {
@@ -4954,13 +4953,68 @@
 
             li.addEventListener("mousedown", e => {
                 e.preventDefault();
-                // Find the index of the selected item in the original filteredObjects array
                 const objectIndex = filteredObjects.indexOf(item);
                 apply(objectIndex !== -1 ? objectIndex : i);
             });
 
-            list.appendChild(li);
-        });
+            return li;
+        }
+
+        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
+            const verbs = [];
+            const structures = [];
+            validItems.forEach((item, i) => {
+                const text = typeof item === "string" ? item : item.displaydata;
+                if (getCommandConfig(text)) {
+                    verbs.push({ item, index: i });
+                } else {
+                    structures.push({ item, index: i });
+                }
+            });
+
+            if (verbs.length > 0) {
+                const gridContainer = document.createElement("div");
+                gridContainer.className = "axi-verbs-grid-container";
+                
+                const header = document.createElement("div");
+                header.className = "axi-grid-header";
+                header.textContent = "Commands";
+                gridContainer.appendChild(header);
+
+                const grid = document.createElement("div");
+                grid.className = "axi-verbs-grid";
+
+                verbs.forEach(({ item, index }) => {
+                    const li = createSuggestionLi(item, index);
+                    grid.appendChild(li);
+                });
+
+                gridContainer.appendChild(grid);
+                list.appendChild(gridContainer);
+            }
+
+            if (structures.length > 0) {
+                const listContainer = document.createElement("div");
+                listContainer.className = "axi-structures-list-container";
+
+                const header = document.createElement("div");
+                header.className = "axi-grid-header";
+                header.textContent = "Structures";
+                listContainer.appendChild(header);
+
+                structures.forEach(({ item, index }) => {
+                    const li = createSuggestionLi(item, index);
+                    listContainer.appendChild(li);
+                });
+
+                list.appendChild(listContainer);
+            }
+        } else {
+            validItems.forEach((item, i) => {
+                const li = createSuggestionLi(item, i);
+                list.appendChild(li);
+            });
+        }
 
         if (list.classList.contains("axi-grid-layout")) {
             list.style.display = "flex";
@@ -6092,19 +6146,75 @@
 
             // ---------------------------------------------------
             if (list.style.display === "none" || items.length === 0) return;
-            if (e.key === "ArrowDown") { e.preventDefault(); activeIndex = (activeIndex + 1) % items.length; highlight(); }
-            if (e.key === "ArrowUp") { e.preventDefault(); activeIndex = (activeIndex - 1 + items.length) % items.length; highlight(); }
-            if (list.classList.contains("axi-grid-layout")) {
-                if (e.key === "ArrowRight") {
-                    e.preventDefault();
+            const isInitialGrid = (list.querySelector(".axi-verbs-grid") !== null);
+            const verbsCount = isInitialGrid ? list.querySelectorAll(".axi-verbs-grid .axi-suggestion").length : 0;
+            const cols = 3;
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (isInitialGrid) {
+                    if (activeIndex < verbsCount) {
+                        const nextRowIndex = activeIndex + cols;
+                        if (nextRowIndex < verbsCount) {
+                            activeIndex = nextRowIndex;
+                        } else {
+                            if (items.length > verbsCount) {
+                                activeIndex = verbsCount;
+                            } else {
+                                activeIndex = (activeIndex + 1) % verbsCount;
+                            }
+                        }
+                    } else {
+                        activeIndex = (activeIndex + 1) % items.length;
+                    }
+                } else {
                     activeIndex = (activeIndex + 1) % items.length;
-                    highlight();
                 }
-                if (e.key === "ArrowLeft") {
-                    e.preventDefault();
+                highlight();
+            }
+            else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                if (isInitialGrid) {
+                    if (activeIndex >= verbsCount) {
+                        if (activeIndex === verbsCount) {
+                            const lastRowStart = Math.floor((verbsCount - 1) / cols) * cols;
+                            activeIndex = lastRowStart + (cols - 1);
+                            if (activeIndex >= verbsCount) {
+                                activeIndex = verbsCount - 1;
+                            }
+                        } else {
+                            activeIndex = activeIndex - 1;
+                        }
+                    } else {
+                        const prevRowIndex = activeIndex - cols;
+                        if (prevRowIndex >= 0) {
+                            activeIndex = prevRowIndex;
+                        } else {
+                            activeIndex = items.length - 1;
+                        }
+                    }
+                } else {
                     activeIndex = (activeIndex - 1 + items.length) % items.length;
-                    highlight();
                 }
+                highlight();
+            }
+            else if (e.key === "ArrowRight") {
+                e.preventDefault();
+                if (isInitialGrid && activeIndex < verbsCount) {
+                    activeIndex = (activeIndex + 1) % verbsCount;
+                } else {
+                    activeIndex = (activeIndex + 1) % items.length;
+                }
+                highlight();
+            }
+            else if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                if (isInitialGrid && activeIndex < verbsCount) {
+                    activeIndex = (activeIndex - 1 + verbsCount) % verbsCount;
+                } else {
+                    activeIndex = (activeIndex - 1 + items.length) % items.length;
+                }
+                highlight();
             }
             if (e.key === "Tab") { e.preventDefault(); if (activeIndex === -1) activeIndex = 0; apply(activeIndex); }
             // if (e.key === "Enter" && activeIndex >= 0) {
@@ -6187,10 +6297,11 @@
     }
 
     function highlight() {
-        if (list.children.length > 0) {
-            [...list.children].forEach((li, i) => li.classList.toggle("active", i === activeIndex));
+        const suggestionElements = Array.from(list.querySelectorAll(".axi-suggestion"));
+        if (suggestionElements.length > 0) {
+            suggestionElements.forEach((li, i) => li.classList.toggle("active", i === activeIndex));
 
-            const activeItem = list.children[activeIndex];
+            const activeItem = suggestionElements[activeIndex];
             if (activeItem) {
                 const itemTop = activeItem.offsetTop;
                 const itemBottom = itemTop + activeItem.clientHeight;
