@@ -2146,6 +2146,25 @@
                     return;
                 }
 
+                // Second-token verb auto-resolve: when the user fully types an
+                // action verb (e.g., "edit") after a target entity, resolve to
+                // proper case and advance to next-level suggestions.
+                if (indexToApply === -1) {
+                    const rawCheckTokens = getTokens(text, false);
+                    if (rawCheckTokens.length === 2) {
+                        const entityToken = rawCheckTokens[0];
+                        const verbClean = cleanString(rawCheckTokens[1]).toLowerCase();
+                        const verbsToAutoResolve = ["create", "edit", "view", "source"];
+                        if (verbClean.length >= 2 && verbsToAutoResolve.includes(verbClean) && isTargetEntity(entityToken)) {
+                            const properVerb = verbClean.charAt(0).toUpperCase() + verbClean.slice(1).toLowerCase();
+                            input.value = entityToken + " " + properVerb + " ";
+                            lastTypedTokens = getTokens(input.value, false);
+                            setTimeout(() => { handleInput(); }, 50);
+                            return;
+                        }
+                    }
+                }
+
                 if (indexToApply !== -1) {
                     setTimeout(() => {
                         apply(indexToApply);
