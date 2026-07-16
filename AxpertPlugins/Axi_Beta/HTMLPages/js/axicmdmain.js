@@ -4657,11 +4657,15 @@
                     }
                 }
 
+                let foundStype = found.stype || "";
+                if (!foundStype && isInboxStructure(found)) {
+                    foundStype = "inbox";
+                }
                 resolvedParams[rawIndex] = found.name;
-                if (found.stype) resolvedParamType[rawIndex] = found.stype;
+                if (foundStype) resolvedParamType[rawIndex] = foundStype;
                 return {
                     value: found.name,
-                    type: found.stype || ""
+                    type: foundStype
                 };
             }
         }
@@ -6649,8 +6653,11 @@
 
     function handleViewInbox() {
         // LoadIframe('processflow.aspx?activelist=t')
-        window.LoadIframe('../aspx/processflow.aspx?activelist=t');
-
+        if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
+            top.window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+        } else {
+            window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+        }
     }
 
 
@@ -7975,7 +7982,8 @@
             t: "tstruct",
             i: "iview",
             ads: "ads",
-            p: "page"
+            p: "page",
+            inbox: "inbox"
         };
 
         // -----------------------------------
@@ -7984,10 +7992,14 @@
         // i -> iview
         // t -> tstruct
         // -----------------------------------
-        const normalizedResolvedType =
+        let normalizedResolvedType =
             stypeMap[
             resolvedType
             ] || resolvedType;
+
+        if (!normalizedResolvedType && normalizedText === "inbox") {
+            normalizedResolvedType = "inbox";
+        }
 
         // ===================================
         // STRICT TYPE MODE
