@@ -533,22 +533,22 @@
             return;
         }
 
-        const cached = localStorage.getItem("axi_commands_raw_v1");
-        let commandsFromDb = null;
-        if (cached && !isForced) {
-            try {
-                commandsFromDb = JSON.parse(cached);
-            } catch (e) {
-                console.error("Failed to parse cached raw commands", e);
+        try {
+            isCommandsLoading = true;
+            input.disabled = isCommandsLoading;
+            input.placeholder = "Initializing commands, Please wait....";
+
+            const cached = localStorage.getItem("axi_commands_raw_v1");
+            let commandsFromDb = null;
+            if (cached && !isForced) {
+                try {
+                    commandsFromDb = JSON.parse(cached);
+                } catch (e) {
+                    console.error("Failed to parse cached raw commands", e);
+                }
             }
-        }
 
-        if (!commandsFromDb) {
-            try {
-                isCommandsLoading = true;
-                input.disabled = isCommandsLoading;
-                input.placeholder = "Initializing commands, Please wait....";
-
+            if (!commandsFromDb) {
                 const res = await fetch(`${apiMetadataUrl}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
 
                 if (!res.ok) {
@@ -565,44 +565,43 @@
                 const data = await res.json();
                 commandsFromDb = data.commands;
                 localStorage.setItem("axi_commands_raw_v1", JSON.stringify(commandsFromDb));
-
-            } catch (err) {
-                console.error("Critical: Could not load commands", err);
-            } finally {
-                isCommandsLoading = false;
-                input.disabled = isCommandsLoading;
-                input.placeholder = "Axpert AI";
             }
-        }
 
-        if (commandsFromDb) {
-            const message = isForced ? "Refreshed Successfully!" : "Commands Loaded Successfully!.";
-            const accessPermissions = getAccessPermissions();
-            // Clone to avoid mutating the cached object stored in memory
-            commands = buildCommandsByAccessPermissions(JSON.parse(JSON.stringify(commandsFromDb)), accessPermissions);
-            // Append Help command to initial suggestions list
-            commands["Help"] = {
-                cmdToken: 11,
-                command: "",
-                commandGroup: "Help",
-                prompts: []
-            };
-            // Append Version command to initial suggestions list
-            commands["Version"] = {
-                cmdToken: 12,
-                command: "",
-                commandGroup: "Version",
-                prompts: []
-            };
+            if (commandsFromDb) {
+                const message = isForced ? "Refreshed Successfully!" : "Commands Loaded Successfully!.";
+                const accessPermissions = getAccessPermissions();
+                // Clone to avoid mutating the cached object stored in memory
+                commands = buildCommandsByAccessPermissions(JSON.parse(JSON.stringify(commandsFromDb)), accessPermissions);
+                // Append Help command to initial suggestions list
+                commands["Help"] = {
+                    cmdToken: 11,
+                    command: "",
+                    commandGroup: "Help",
+                    prompts: []
+                };
+                // Append Version command to initial suggestions list
+                commands["Version"] = {
+                    cmdToken: 12,
+                    command: "",
+                    commandGroup: "Version",
+                    prompts: []
+                };
 
-            console.log(JSON.stringify(commands));
-            
-            // Load target entities (tstructs, iview, ads and pages) from metadata on startup
-            const metadataParams = getStructParam();
-            loadList("axi_structmetalist", metadataParams);
-            // if (isForced) {
-                showToast(message, 3000, true);
-            // }
+                console.log(JSON.stringify(commands));
+                
+                // Load target entities (tstructs, iview, ads and pages) from metadata on startup
+                const metadataParams = getStructParam();
+                await loadList("axi_structmetalist", metadataParams);
+                // if (isForced) {
+                    showToast(message, 3000, true);
+                // }
+            }
+        } catch (err) {
+            console.error("Critical: Could not load commands", err);
+        } finally {
+            isCommandsLoading = false;
+            input.disabled = isCommandsLoading;
+            input.placeholder = "Axpert AI";
         }
     }
 
@@ -2228,42 +2227,75 @@
         ) || null;
     }
 
-    function isTargetEntity(token) {
-        if (!token) return false;
+    function getCleanCaption(item) {
+        if (!item || typeof item !== "object") return "";
+        if (item._cleanCaption !== undefined) return item._cleanCaption;
+        const displaydata = item.displaydata || item.DISPLAYDATA || "";
+        if (typeof displaydata === "string" && displaydata !== "") {
+            item._cleanCaption = displaydata
+                .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
+                .replace(/\s*\[[^\]]+\]\s*$/, "")
+                .trim()
+                .toLowerCase();
+        } else {
+            item._cleanCaption = "";
+        }
+        return item._cleanCaption;
+    }
+
+    let targetEntitiesCache = {
+        sourceList: null,
+        matchesMap: null
+    };
+
+    function getTargetEntityMatches(token) {
+        if (!token) return [];
         const cleanTok = token.replace(/"/g, "").toLowerCase();
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
         const list = axDatasourceObj[key] || [];
-        return list.some(d => {
-            const name = d.name || d.NAME || "";
-            const caption = d.caption || d.CAPTION || "";
-            const displaydata = d.displaydata || d.DISPLAYDATA || "";
-            
-            const nameMatch = name && name.toLowerCase() === cleanTok;
-            const displayMatch = displaydata && displaydata.toLowerCase() === cleanTok;
-            const captionMatch = typeof displaydata === "string" && 
-                displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
-            const captionDirect = caption && caption.toLowerCase() === cleanTok;
-            return nameMatch || displayMatch || captionMatch || captionDirect;
-        });
+
+        if (targetEntitiesCache.sourceList !== list || !targetEntitiesCache.matchesMap) {
+            const map = new Map();
+            for (let i = 0; i < list.length; i++) {
+                const d = list[i];
+                const namesSet = new Set();
+                
+                const name = d.name || d.NAME;
+                if (name) namesSet.add(name.toLowerCase());
+
+                const caption = d.caption || d.CAPTION;
+                if (caption) namesSet.add(caption.toLowerCase());
+
+                const displaydata = d.displaydata || d.DISPLAYDATA;
+                if (displaydata) {
+                    namesSet.add(displaydata.toLowerCase());
+                    const cleanCaption = getCleanCaption(d);
+                    if (cleanCaption) namesSet.add(cleanCaption);
+                }
+
+                namesSet.forEach(val => {
+                    let itemsArray = map.get(val);
+                    if (!itemsArray) {
+                        itemsArray = [];
+                        map.set(val, itemsArray);
+                    }
+                    itemsArray.push(d);
+                });
+            }
+            targetEntitiesCache.sourceList = list;
+            targetEntitiesCache.matchesMap = map;
+        }
+
+        return targetEntitiesCache.matchesMap.get(cleanTok) || [];
+    }
+
+    function isTargetEntity(token) {
+        return getTargetEntityMatches(token).length > 0;
     }
 
     function getTargetEntityObj(token, action) {
         if (!token) return null;
-        const cleanTok = token.replace(/"/g, "").toLowerCase();
-        const key = "axi_structmetalist_" + getStructParam().toLowerCase();
-        const list = axDatasourceObj[key] || [];
-        const matches = list.filter(d => {
-            const name = d.name || d.NAME || "";
-            const caption = d.caption || d.CAPTION || "";
-            const displaydata = d.displaydata || d.DISPLAYDATA || "";
-
-            const nameMatch = name && name.toLowerCase() === cleanTok;
-            const displayMatch = displaydata && displaydata.toLowerCase() === cleanTok;
-            const captionMatch = typeof displaydata === "string" && 
-                displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
-            const captionDirect = caption && caption.toLowerCase() === cleanTok;
-            return nameMatch || displayMatch || captionMatch || captionDirect;
-        });
+        const matches = getTargetEntityMatches(token);
 
         if (matches.length === 0) return null;
         if (matches.length === 1) return matches[0];
@@ -2428,11 +2460,20 @@
         return (hasView && item.viewallowed === "T") || (hasCreate && item.createallowed === "T");
     }
 
+    let initialSuggestionsCache = null;
+    let initialSuggestionsSourceList = null;
+
     function getInitialSuggestions() {
-        const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view", "source"].includes(k.toLowerCase()));
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
-        const targets = (axDatasourceObj[key] || []).filter(item => isStructureVisible(item));
-        return [...verbs, ...targets];
+        const currentList = axDatasourceObj[key] || [];
+        if (initialSuggestionsCache && initialSuggestionsSourceList === currentList) {
+            return initialSuggestionsCache;
+        }
+        const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view", "source"].includes(k.toLowerCase()));
+        const targets = currentList.filter(item => isStructureVisible(item));
+        initialSuggestionsCache = [...verbs, ...targets];
+        initialSuggestionsSourceList = currentList;
+        return initialSuggestionsCache;
     }
 
     function normalizeGlobalState() {
@@ -3439,7 +3480,7 @@
                     const nameMatch = item.name && item.name.toLowerCase().startsWith(prefix);
                     const displayMatch = item.displaydata && item.displaydata.toLowerCase().startsWith(prefix);
                     const captionMatch = typeof item.displaydata === "string" && 
-                        item.displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase().startsWith(prefix);
+                        getCleanCaption(item).startsWith(prefix);
                     return nameMatch || displayMatch || captionMatch;
                 }
             });
@@ -3508,22 +3549,7 @@
                     actions.push("Source");
                 }
             } else {
-                const cleanTok = rawTokens[0].replace(/"/g, "").toLowerCase();
-                const key = "axi_structmetalist_" + getStructParam().toLowerCase();
-                const list = axDatasourceObj[key] || [];
-                
-                const matches = list.filter(d => {
-                    const name = d.name || d.NAME || "";
-                    const caption = d.caption || d.CAPTION || "";
-                    const displaydata = d.displaydata || d.DISPLAYDATA || "";
-
-                    const nameMatch = name && name.toLowerCase() === cleanTok;
-                    const displayMatch = displaydata && displaydata.toLowerCase() === cleanTok;
-                    const captionMatch = typeof displaydata === "string" && 
-                        displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
-                    const captionDirect = caption && caption.toLowerCase() === cleanTok;
-                    return nameMatch || displayMatch || captionMatch || captionDirect;
-                });
+                const matches = getTargetEntityMatches(rawTokens[0]);
 
                 let hasView = false;
                 let hasCreate = false;
@@ -4651,18 +4677,7 @@
         }
 
         if (tokenIndex === 1 && !forceResolve) {
-            const key = "axi_structmetalist_" + getStructParam().toLowerCase();
-            const list = axDatasourceObj[key] || [];
-            const cleanTok = tokenText.toLowerCase();
-
-            const matches = list.filter(d => {
-                const nameMatch = d.name && d.name.toLowerCase() === cleanTok;
-                const displayMatch = d.displaydata && d.displaydata.toLowerCase() === cleanTok;
-                const captionMatch = typeof d.displaydata === "string" && 
-                    d.displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
-                const captionDirect = d.caption && d.caption.toLowerCase() === cleanTok;
-                return nameMatch || displayMatch || captionMatch || captionDirect;
-            });
+            const matches = getTargetEntityMatches(tokenText);
 
             if (matches.length > 0) {
                 let found = matches[0];
@@ -5066,6 +5081,8 @@
             return li;
         }
 
+        const fragment = document.createDocumentFragment();
+
         if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
             const verbs = [];
             const structures = [];
@@ -5096,7 +5113,7 @@
                 });
 
                 gridContainer.appendChild(grid);
-                list.appendChild(gridContainer);
+                fragment.appendChild(gridContainer);
             }
 
             if (structures.length > 0) {
@@ -5113,14 +5130,16 @@
                     listContainer.appendChild(li);
                 });
 
-                list.appendChild(listContainer);
+                fragment.appendChild(listContainer);
             }
         } else {
             validItems.forEach((item, i) => {
                 const li = createSuggestionLi(item, i);
-                list.appendChild(li);
+                fragment.appendChild(li);
             });
         }
+
+        list.appendChild(fragment);
 
         if (list.classList.contains("axi-grid-layout")) {
             list.style.display = "flex";
@@ -5949,6 +5968,11 @@
                     resolvedParams = {};
                     createfieldnamevaluesList = {};
                     resetSetCommandState();
+                    cachedAccessPermissions = null;
+                    initialSuggestionsCache = null;
+                    initialSuggestionsSourceList = null;
+                    targetEntitiesCache.sourceList = null;
+                    targetEntitiesCache.matchesMap = null;
 
                     await initCommands(true);
 
@@ -12796,17 +12820,23 @@
 
     }
 
+    let cachedAccessPermissions = null;
+
     function getAccessPermissions() {
         // AppMgrAccess(Config)
         // ImportAccess(Upload)
         // ExportAccess(Download)
         // Build(Open/sdk)
-        return {
+        if (cachedAccessPermissions) {
+            return cachedAccessPermissions;
+        }
+        cachedAccessPermissions = {
             appMgrAccess: strToBool(window.getSessionValue("AppMgrAccess")),
             importAccess: strToBool(window.getSessionValue("ImportAccess")),
             exportAccess: strToBool(window.getSessionValue("ExportAccess")),
             buildAccess: strToBool(window.getSessionValue("Build")),
         };
+        return cachedAccessPermissions;
     }
 
     function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions) {
