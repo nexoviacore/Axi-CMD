@@ -2483,17 +2483,22 @@
 
     let initialSuggestionsCache = null;
     let initialSuggestionsSourceList = null;
+    let initialSuggestionsRunnable = null;
 
     function getInitialSuggestions() {
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
         const currentList = axDatasourceObj[key] || [];
-        if (initialSuggestionsCache && initialSuggestionsSourceList === currentList) {
+        const structType = getStructType();
+        const isRunnable = !!(structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage() && !isViewDesignerModalOpen());
+
+        if (initialSuggestionsCache && initialSuggestionsSourceList === currentList && initialSuggestionsRunnable === isRunnable) {
             return initialSuggestionsCache;
         }
         const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view", "source"].includes(k.toLowerCase()));
         const targets = currentList.filter(item => isStructureVisible(item));
         initialSuggestionsCache = [...verbs, ...targets];
         initialSuggestionsSourceList = currentList;
+        initialSuggestionsRunnable = isRunnable;
         return initialSuggestionsCache;
     }
 
@@ -6024,6 +6029,7 @@
                     cachedAccessPermissions = null;
                     initialSuggestionsCache = null;
                     initialSuggestionsSourceList = null;
+                    initialSuggestionsRunnable = null;
                     targetEntitiesCache.sourceList = null;
                     targetEntitiesCache.matchesMap = null;
 
@@ -9513,7 +9519,10 @@
             return text;
         }
 
-        const title = btn.getAttribute("title");
+        const title = btn.getAttribute("title") || 
+                      btn.getAttribute("data-bs-original-title") || 
+                      btn.getAttribute("data-original-title") ||
+                      btn.getAttribute("data-bs-title");
         if (title) return title.trim();
 
         const menuTitle = btn.querySelector(".menu-title");
@@ -9592,6 +9601,17 @@
             if (!label) return;
             if (label.toLowerCase() === "plugin custom code") return;
             if (label.toLowerCase() === "export" || label.toLowerCase() === "theme" || label.toLowerCase() === "field captions" || label.toLowerCase() === "view" || label.toLowerCase() === "pattern") return;
+
+            if (getStructType() === "e") {
+                const dataElement = btn.getAttribute("data-kt-element");
+                const dataTarget = btn.getAttribute("data-target");
+                const isThemeMode = dataElement === "mode" ||
+                                    dataTarget === "lightTheme" ||
+                                    dataTarget === "blackTheme" ||
+                                    dataTarget === "gradTheme" ||
+                                    dataTarget === "compactTheme";
+                if (isThemeMode) return;
+            }
 
             result[id] = {
                 id,
