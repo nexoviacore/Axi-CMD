@@ -536,8 +536,8 @@
 
         try {
             isCommandsLoading = true;
-            input.disabled = isCommandsLoading;
-            input.placeholder = "Initializing commands, Please wait....";
+            input.disabled = false;
+            input.placeholder = "Axpert AI";
 
             const cached = localStorage.getItem("axi_commands_raw_v1");
             let commandsFromDb = null;
@@ -590,9 +590,9 @@
 
                 console.log(JSON.stringify(commands));
                 
-                // Load target entities (tstructs, iview, ads and pages) from metadata on startup
+                // Load target entities (tstructs, iview, ads and pages) from metadata on startup asynchronously
                 const metadataParams = getStructParam();
-                await loadList("axi_structmetalist", metadataParams);
+                loadList("axi_structmetalist", metadataParams);
                 // if (isForced) {
                     showToast(message, 3000, true);
                 // }
@@ -601,7 +601,7 @@
             console.error("Critical: Could not load commands", err);
         } finally {
             isCommandsLoading = false;
-            input.disabled = isCommandsLoading;
+            input.disabled = false;
             input.placeholder = "Axpert AI";
         }
     }
@@ -1982,7 +1982,10 @@
                 input.setSelectionRange(newPos, newPos);
             }
         }
-        if (isCommandsLoading) {
+        const initialTokens = getTokens(input.value.trim());
+        const isInitialCommandStage = initialTokens.length === 0 || (initialTokens.length === 1 && !input.value.endsWith(" "));
+
+        if (isCommandsLoading && !isInitialCommandStage) {
             items = ["Loading Commands...."];
             hintDiv.textContent = "Please wait...";
             render();
@@ -1998,7 +2001,15 @@
                 axiClearBtn.style.display = "none";
             }
         }
-        if (!commands) return;
+        if (!commands) {
+            if (isInitialCommandStage) {
+                items = getInitialSuggestions();
+                hintDiv.textContent = "";
+                render();
+                return;
+            }
+            return;
+        }
 
         if (!text.trim()) {
 
@@ -2314,6 +2325,18 @@
         return getTargetEntityMatches(token).length > 0;
     }
 
+    function areTypesMatching(type1, type2) {
+        if (!type1 || !type2) return false;
+        const t1 = String(type1).trim().toLowerCase();
+        const t2 = String(type2).trim().toLowerCase();
+        if (t1 === t2) return true;
+        if ((t1 === "t" || t1 === "tstruct") && (t2 === "t" || t2 === "tstruct")) return true;
+        if ((t1 === "i" || t1 === "iview") && (t2 === "i" || t2 === "iview")) return true;
+        if ((t1 === "p" || t1 === "page") && (t2 === "p" || t2 === "page")) return true;
+        if ((t1 === "a" || t1 === "ads") && (t2 === "a" || t2 === "ads")) return true;
+        return false;
+    }
+
     function getTargetEntityObj(token, action) {
         if (!token) return null;
         const matches = getTargetEntityMatches(token);
@@ -2321,12 +2344,36 @@
         if (matches.length === 0) return null;
         if (matches.length === 1) return matches[0];
 
-        const rawIndex = 0;
-        if (resolvedParams[rawIndex]) {
-            const resolvedVal = resolvedParams[rawIndex].toLowerCase();
-            const matched = matches.find(d => (d.name || d.NAME || "").toLowerCase() === resolvedVal);
-            if (matched) return matched;
+        let matched = null;
+        const lowerToken = token.toLowerCase();
+        for (const idx in resolvedParams) {
+            if (resolvedParams[idx]) {
+                const resolvedVal = resolvedParams[idx].toLowerCase();
+                const preferredType = resolvedParamType[idx];
+
+                const found = matches.find(d => {
+                    const name = (d.name || d.NAME || d.sqlname || "").toLowerCase();
+                    const caption = (d.caption || d.CAPTION || "").toLowerCase();
+                    const displaydata = (d.displaydata || d.DISPLAYDATA || "").toLowerCase();
+                    const cleanCaption = getCleanCaption(d);
+
+                    const nameMatch = name === resolvedVal || caption === resolvedVal || displaydata === resolvedVal || cleanCaption === resolvedVal;
+                    if (!nameMatch) return false;
+
+                    if (preferredType) {
+                        return areTypesMatching(d.stype || d.STYPE, preferredType);
+                    }
+                    return true;
+                });
+
+                if (found) {
+                    matched = found;
+                    break;
+                }
+            }
         }
+
+        if (matched) return matched;
 
         if (action) {
             const lowAction = action.toLowerCase();
@@ -5046,18 +5093,25 @@
         //     activeIndex = exactMatchIndex !== -1 ? exactMatchIndex : 0;
         // }
 
-        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
+        const metadataParams = getStructParam();
+        const structKey = "axi_structmetalist_" + metadataParams.toLowerCase();
+        const isCmdsLoading = isCommandsLoading || !commands;
+        const isStructsLoading = activeFetches.has(structKey) || !axDatasourceObj[structKey];
+
+        const showInitialWrapper = isInitialCommandStage && (validItems.length > 0 || isCmdsLoading || isStructsLoading) && !isSystemMessage(validItems[0]);
+
+        if (showInitialWrapper) {
             list.classList.add("My-Command-Wrapper");
             if (favouritesCard) favouritesCard.style.display = "none";
             if (commandHeader) commandHeader.style.display = "flex";
-
         } else {
             list.classList.remove("My-Command-Wrapper");
             if (favouritesCard) favouritesCard.style.display = "none";
             if (commandHeader) commandHeader.style.display = "none";
         }
 
-        if (validItems.length === 0) {
+        const showNoData = validItems.length === 0 && !(isInitialCommandStage && (isCmdsLoading || isStructsLoading));
+        if (showNoData) {
             const li = document.createElement("li");
             li.textContent = "No Data";
             li.className = "no-data-axi-suggestion";
@@ -5068,17 +5122,6 @@
             list.appendChild(li);
             list.style.display = "block";
             return;
-        }
-
-        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
-            list.classList.add("My-Command-Wrapper");
-            if (favouritesCard) favouritesCard.style.display = "none";
-            if (commandHeader) commandHeader.style.display = "flex";
-
-        } else {
-            list.classList.remove("My-Command-Wrapper");
-            if (favouritesCard) favouritesCard.style.display = "none";
-            if (commandHeader) commandHeader.style.display = "none";
         }
 
         function createSuggestionLi(item, i) {
@@ -5130,7 +5173,7 @@
 
         const fragment = document.createDocumentFragment();
 
-        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
+        if (isInitialCommandStage && (validItems.length > 0 || isCmdsLoading || isStructsLoading) && !isSystemMessage(validItems[0])) {
             const verbs = [];
             const structures = [];
             validItems.forEach((item, i) => {
@@ -5142,7 +5185,18 @@
                 }
             });
 
-            if (verbs.length > 0) {
+            const createLoadingElement = (text) => {
+                const div = document.createElement("div");
+                div.className = "d-flex align-items-center justify-content-center py-2 px-5 text-muted gap-2";
+                div.style.fontSize = "13px";
+                div.innerHTML = `
+                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-right: 6px;"></span>
+                    <span>${text}</span>
+                `;
+                return div;
+            };
+
+            if (verbs.length > 0 || isCmdsLoading) {
                 const gridContainer = document.createElement("div");
                 gridContainer.className = "axi-verbs-grid-container";
                 
@@ -5151,19 +5205,24 @@
                 header.textContent = "Commands";
                 gridContainer.appendChild(header);
 
-                const grid = document.createElement("div");
-                grid.className = "axi-verbs-grid";
+                if (isCmdsLoading) {
+                    gridContainer.appendChild(createLoadingElement("Loading commands..."));
+                } else {
+                    const grid = document.createElement("div");
+                    grid.className = "axi-verbs-grid";
 
-                verbs.forEach(({ item, index }) => {
-                    const li = createSuggestionLi(item, index);
-                    grid.appendChild(li);
-                });
+                    verbs.forEach(({ item, index }) => {
+                        const li = createSuggestionLi(item, index);
+                        grid.appendChild(li);
+                    });
 
-                gridContainer.appendChild(grid);
+                    gridContainer.appendChild(grid);
+                }
+
                 fragment.appendChild(gridContainer);
             }
 
-            if (structures.length > 0) {
+            if (structures.length > 0 || isStructsLoading) {
                 const listContainer = document.createElement("div");
                 listContainer.className = "axi-structures-list-container";
 
@@ -5172,10 +5231,14 @@
                 header.textContent = "Structures";
                 listContainer.appendChild(header);
 
-                structures.forEach(({ item, index }) => {
-                    const li = createSuggestionLi(item, index);
-                    listContainer.appendChild(li);
-                });
+                if (isStructsLoading) {
+                    listContainer.appendChild(createLoadingElement("Loading structures..."));
+                } else {
+                    structures.forEach(({ item, index }) => {
+                        const li = createSuggestionLi(item, index);
+                        listContainer.appendChild(li);
+                    });
+                }
 
                 fragment.appendChild(listContainer);
             }
@@ -12467,8 +12530,8 @@
             fetch(`${axiFavoritesUrl}?username=${window.mainUserName}&appname=${appname}`)
                 .then(res => {
                     isCommandsLoading = true;
-                    input.disabled = isCommandsLoading;
-                    input.placeholder = "Initializing commands, Please wait....";
+                    input.disabled = false;
+                    input.placeholder = "Axpert AI";
 
 
                     return res.json()
@@ -12499,7 +12562,7 @@
 
                 }).finally(() => {
                     isCommandsLoading = false;
-                    input.disabled = isCommandsLoading;
+                    input.disabled = false;
                     input.placeholder = "Axpert AI"
 
                 });
