@@ -5703,6 +5703,7 @@
                     font-size: 13.5px;
                     line-height: 1.4;
                     color: #ffffff;
+                    white-space: pre-line;
                 }
                 @media (max-width: 576px) {
                     #axi-toast-container {
@@ -5844,7 +5845,7 @@
             }
 
             if (axiVersion && axpertVersion) {
-                showToast(`Axpert Version: ${axpertVersion} | Axi CMD Version: ${axiVersion}`, 5000, true);
+                showToast(`Axpert Version: ${axpertVersion}\nAxi CMD Version: ${axiVersion}`, 5000, true);
             } else if (axiVersion) {
                 showToast(`Axi CMD Version: ${axiVersion}`, 5000, true);
             } else if (axpertVersion) {
@@ -12497,6 +12498,11 @@
         const groupKey = tokens[0];
         const commandVerb = tokens[1];
 
+        if (groupKey?.toLowerCase() === "help" || groupKey?.toLowerCase() === "version") {
+            showToast("You cannot add this command to Favorites!");
+            return;
+        }
+
         if (groupKey?.toLowerCase() === "run") {
             showToast("You cannot add 'run' commands to favorites");
             return;
@@ -13068,6 +13074,17 @@
         }
 
         const aliasTokens = getTokens(alias);
+        if (aliasTokens[0]?.toLowerCase() === "help" || aliasTokens[0]?.toLowerCase() === "version") {
+            showToast("You cannot add this command to Favorites!");
+            return;
+        }
+
+        const origTokens = getTokens(originalCmdText);
+        if (origTokens[0]?.toLowerCase() === "help" || origTokens[0]?.toLowerCase() === "version") {
+            showToast("You cannot add this command to Favorites!");
+            return;
+        }
+
         if (aliasTokens[0]?.toLowerCase() === "run") {
             showToast("You cannot save 'run' commands in favorites");
             return;
@@ -13493,6 +13510,11 @@
                 font-weight: 600 !important;
                 transition: background 0.2s ease;
                 padding: 6px 12px !important;
+            }
+            .introjs-tooltipbuttons {
+                display: flex !important;
+                gap: 8px !important;
+                justify-content: flex-end !important;
             }
             .introjs-button:hover {
                 background: #c34dff !important;
