@@ -1977,7 +1977,7 @@ function callRemoteDoActionWS(rows) {
                         localStorage.setItem(storedKey, JSON.stringify(transidArray));
                     }
                 } catch (ex) { }                
-                callParentNew("clearKeysByFormat(tstDDFVal♠" + eVal + "♦♣♦" + appSUrl + "♥)", "function");
+                callParentNew("clearKeysByFormat(tstDDFVal♠" + proj + "♦" + eVal + "♦♣♦" + appSUrl + "♥)", "function");
             });
         } catch (ex) { }
     }   
@@ -3558,17 +3558,16 @@ function callOpenAction(a, b) {
         } else {
             let _thsiifId = window.frameElement.id;
             if (typeof _thsiifId !== "undefined" && _thsiifId.toLowerCase().startsWith("axmultiiframe_")) {
-                try{
-                 ShowDimmer(false);
-                }catch(ex){}
+                try {
+                    ShowDimmer(false);
+                } catch (ex) { }
                 if (typeof parent.ShowDimmer === "function")
                     parent.ShowDimmer(true);
                 else if (typeof top.ShowDimmer === "function")
                     top.ShowDimmer(true);
                 else if (typeof ShowDimmer === "function")
                     ShowDimmer(true);
-                // parent.PopupManager.openForm("", "tstruct.aspx?transid=ad_ur");
-                parent.PopupManager.openForm("", `../aspx/tstruct.aspx?transid=ad_ur&dummyload=false`);  
+                parent.PopupManager.openForm("", `../aspx/tstruct.aspx?transid=ad_ur&dummyload=false`);                
             }
             else {
                 callParentNew('loadFrame();', 'function');
@@ -10183,7 +10182,7 @@ function requestNextRecords() {
 //get next page records based on fetch size & page no
 function getNextDtRecords(pageNo) {
     showDataTableLoading();
-
+    const _instanceId = $j("#hdnInstanceId").val();
     var ivKey = $j("#hdnKey").val();
     var url = "iview.aspx/GetiViewData";
     var paramX = generateParamX();
@@ -10239,6 +10238,7 @@ function getNextDtRecords(pageNo) {
         {
             iName,
             ivKey,
+            instanceId: _instanceId,
             recsPerPage: defaultRecsPerPage,
             pageno: pageNo,
             paramX,

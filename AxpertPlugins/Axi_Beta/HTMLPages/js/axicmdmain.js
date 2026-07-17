@@ -1869,6 +1869,28 @@
         top.window.LoadIframe(targetUrl);
     }
 
+    // function redirectToIView(iViewName, iViewCaption = "") {
+    //     console.log("Redirecting to Iview: " + iViewName + "..............");
+
+
+    //     if (popUpOption) {
+    //      let targetUrl = `../aspx/ivtoivload.aspx?ivname=${iViewName}`;
+    //     // setCommandRoutes(input.value.trim(), targetUrl);
+
+
+    //         targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
+    //         targetUrl += "&AxIsPop=true";
+    //         openPopOption(targetUrl)
+    //     }
+    //     else {
+    //     let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
+    //     setCommandRoutes(input.value.trim(), targetUrl);
+    //         window.LoadIframe(targetUrl);
+    //     }
+
+
+    // }
+
     function redirectToIView(iViewName, iViewCaption = "") {
         console.log("Redirecting to Iview: " + iViewName + "..............");
 
@@ -1876,10 +1898,8 @@
         if (popUpOption) {
          let targetUrl = `../aspx/ivtoivload.aspx?ivname=${iViewName}`;
         // setCommandRoutes(input.value.trim(), targetUrl);
-
-
             targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
-            targetUrl += "&AxIsPop=true";
+            targetUrl += "&AxIsPop=true&isDupTab=true-";
             openPopOption(targetUrl)
         }
         else {
