@@ -7617,15 +7617,22 @@
         const type = (entityObj.stype || entityObj.STYPE || "").toLowerCase().trim();
         const name = entityObj.name || entityObj.NAME || "";
 
+        let targetUrl = "";
         if (type === "t" || type === "tstruct") {
+            targetUrl = "developerstudio:tstruct:" + name;
             window.openDeveloperStudio("tstreact", name, true);
         } else if (type === "i" || type === "iview") {
+            targetUrl = "developerstudio:iview:" + name;
             window.openDeveloperStudio("ivreact", name, true);
         } else if (type === "ads") {
+            targetUrl = `../aspx/tstruct.aspx?transid=b_sql&sqlname=${encodeURIComponent(name)}&act=load&dummyload=false?`;
             handleViewSourceAds(name);
         } else {
             showToast("Unknown source type: " + name);
+            return;
         }
+
+        setCommandRoutes(input.value.trim(), targetUrl);
     }
 
     function handleViewCommand({ tokens, commandConfig }) {
@@ -12893,7 +12900,7 @@
                         break;
 
                     case 'buildAccess':
-                        if (tokens[0].toLowerCase() === "sdk") {
+                        if (tokens[0].toLowerCase() === "sdk" || tokens[0].toLowerCase() === "source") {
                             showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
                             return;
 
