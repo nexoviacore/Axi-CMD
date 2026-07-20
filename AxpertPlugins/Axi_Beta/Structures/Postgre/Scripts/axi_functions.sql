@@ -1200,7 +1200,7 @@ ORDER BY displaydata;
  
 END;
 $function$
-;
+
 >>
 
 -- fn_axi_getstructs_obj | replace for primaryfieldvalue+fieldnames and selected fieldvalue with primary fieldvalue suffix
