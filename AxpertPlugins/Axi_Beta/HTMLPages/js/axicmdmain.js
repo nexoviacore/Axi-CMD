@@ -5053,12 +5053,6 @@
             // activeIndex = 0;
             //           if (isUserTyping) {
             //     const firstNonActionIndex = validItems.findIndex(
-            //         item => typeof item !== 'object' || !item.isExecutable || item === "source"
-            //     );
-            //     activeIndex = firstNonActionIndex !== -1 ? firstNonActionIndex : 0;
-            // } else {
-            //     activeIndex = 0;
-            // }
 
             if (isUserTyping) {
                 const lastToken = cleanString(
@@ -5081,23 +5075,16 @@
 
         }
 
-        // if (items.length > 0 && isSystemMessage(items[0])) {
-        //     activeIndex = -1;
-        // } else {
-        //     const currentToken = cleanString(currentInputTokens[currentInputTokens.length - 1]).toLowerCase();
-
-        //     const exactMatchIndex = validItems.findIndex(item => {
-        //         const text = typeof item === "string" ? item : item.displaydata;
-        //         return text.toLowerCase() === currentToken;
-        //     });
-
-        //     activeIndex = exactMatchIndex !== -1 ? exactMatchIndex : 0;
-        // }
-
         const metadataParams = getStructParam();
         const structKey = "axi_structmetalist_" + metadataParams.toLowerCase();
         const isCmdsLoading = isCommandsLoading || !commands;
         const isStructsLoading = activeFetches.has(structKey) || !axDatasourceObj[structKey];
+
+        const isAnyLoadingItem = items.some(item => {
+            const text = typeof item === "string" ? item : (item?.displaydata || "");
+            return typeof text === "string" && text.startsWith("Loading");
+        });
+        const isAnyFetchActive = activeFetches.size > 0 || isCmdsLoading || isStructsLoading || isAnyLoadingItem;
 
         const showInitialWrapper = isInitialCommandStage && (validItems.length > 0 || isCmdsLoading || isStructsLoading) && !isSystemMessage(validItems[0]);
 
@@ -5111,7 +5098,24 @@
             if (commandHeader) commandHeader.style.display = "none";
         }
 
-        const showNoData = validItems.length === 0 && !(isInitialCommandStage && (isCmdsLoading || isStructsLoading));
+        if (validItems.length === 0 && isAnyFetchActive) {
+            if (!showInitialWrapper) {
+                list.innerHTML = "";
+                const li = document.createElement("li");
+                li.className = "axi-suggestion-loading d-flex align-items-center justify-content-center py-3 px-4 text-muted gap-2";
+                li.style.fontSize = "13px";
+                li.style.textAlign = "center";
+                li.innerHTML = `
+                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-right: 6px;"></span>
+                    <span>Loading options...</span>
+                `;
+                list.appendChild(li);
+                list.style.display = "block";
+                return;
+            }
+        }
+
+        const showNoData = validItems.length === 0 && !isAnyFetchActive;
         if (showNoData) {
             const li = document.createElement("li");
             li.textContent = "No Data";
