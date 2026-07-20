@@ -1078,8 +1078,10 @@ $function$
 
 --fn_axi_getstructures_meta with userpermission meta data
 <<
+DROP FUNCTION fn_axi_getstructures_meta(varchar, varchar, varchar, varchar, varchar);
+
 CREATE OR REPLACE FUNCTION fn_axi_getstructures_meta(pusername character varying, puserrole character varying, presponsiblity character varying, pmode character varying, pstype character varying)
- RETURNS TABLE(displaydata character varying, caption character varying, name character varying, stype character varying, dimension character varying, permission character varying, createallowed character varying, viewallowed character varying, keyfield character varying, primarytable character varying)
+ RETURNS TABLE(displaydata character varying, caption character varying, name character varying, stype character varying, dimension character varying, permission character varying, createallowed character varying, viewallowed character varying, keyfield character varying, primarytable character varying,keyfieldforedit varchar)
  LANGUAGE plpgsql
 AS $function$
 BEGIN
@@ -1087,10 +1089,11 @@ BEGIN
 RETURN QUERY
 with ts as(
 SELECT DISTINCT
-               (a.caption || ' (' || a.name || ') [tstruct]')::varchar,
+               (a.caption || ' (' || a.name || ') [form]')::varchar,
                a.caption tcaption,
                a.name transid,'t'::varchar stype,coalesce(g.dimensions,'F')::varchar dimensions,
-    coalesce(p.permissions,'F')::varchar,coalesce(p.newrecord,'T')::varchar,coalesce(p.viewctrl,'T')::varchar,kf.kfld,d.tablename
+    coalesce(p.permissions,'F')::varchar,coalesce(p.newrecord,'T')::varchar,coalesce(p.viewctrl,'T')::varchar,
+kf.kfld,d.tablename,kf.kfldforedit::varchar 
         FROM tstructs a
 join axpdc d on a.name = d.tstruct and d.dname='dc1'
         left JOIN axpages b ON b.pagetype = 't' || a.name
@@ -1098,12 +1101,12 @@ join axpdc d on a.name = d.tstruct and d.dname='dc1'
 left join (SELECT DISTINCT ON (combined_results.name) 
     combined_results.name tstruct,  
     kfld, 
-    ord
+    ord,kfldforedit
 FROM (
     SELECT 
         a.name,
         a.keyfield AS kfld,
-        1 AS ord       
+        1 AS ord ,'T' kfldforedit   
     FROM axp_tstructprops a 
     UNION ALL
     SELECT 
@@ -1114,7 +1117,11 @@ FROM (
             WHEN LOWER(allowduplicate) = 'f' AND LOWER(allowempty) = 'f' AND datatype = 'c' AND LOWER(hidden) = 'f' THEN 3
             WHEN LOWER(hidden) = 'f' AND datatype = 'c' THEN 4
             ELSE 5
-        END AS ord       
+        END AS ord,
+     CASE 
+            WHEN modeofentry = 'autogenerate' THEN 'T'
+            WHEN LOWER(allowduplicate) = 'f' AND LOWER(allowempty) = 'f' AND datatype = 'c' AND LOWER(hidden) = 'f' THEN 'T'
+            ELSE 'F' END AS kfldforedit        
     FROM axpflds
     WHERE dcname = 'dc1'
 ) combined_results
@@ -1140,9 +1147,10 @@ ORDER BY formtransid, ord ASC)p on a.name=p.formtransid
                 OR (ua.stype = 't' AND ua.rname = ANY(string_to_array(presponsiblity,','))
               ))), 
 iv as (SELECT DISTINCT
-               (a.caption || ' (' || a.name || ') [iview]')::varchar,
+               (a.caption || ' (' || a.name || ') [report]')::varchar,
                a.caption,
-               a.name,'i'::varchar stype,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar
+               a.name,'i'::varchar stype,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar,
+ 'NA'::varchar,'NA'::varchar
         FROM iviews a
         left JOIN axpages b ON b.pagetype = 'i' || a.name
         LEFT JOIN axuseraccess ua ON ua.sname = a.name     
@@ -1155,7 +1163,8 @@ pg as(
  SELECT DISTINCT
                (b.caption || ' [page]')::varchar,
                b.caption,
-               b.props::varchar name,'p'::varchar stype,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar
+               b.props::varchar name,'p'::varchar stype,'NA'::varchar,'NA'::varchar,'NA'::varchar,'NA'::varchar,
+'NA'::varchar,'NA'::varchar,'NA'::varchar
         FROM  axpages b 
         left JOIN axuseraccess ua ON ua.sname = b.name     
         WHERE b.pagetype='web'
@@ -1164,18 +1173,18 @@ pg as(
                 'default' = ANY(string_to_array(presponsiblity,','))
                 OR (ua.rname = ANY(string_to_array(presponsiblity,','))
               ))),
-ads as (select (a.sqlname || ' (' || a.sqlsrc || ') [ads]')::varchar displaydata,sqlname caption,sqlname name,'ads'::varchar stype,'NA'::varchar dimension,
+ads as (select (a.sqlname || ' (' || a.sqlsrc || ') [datasource]')::varchar displaydata,sqlname caption,sqlname name,'ads'::varchar stype,'NA'::varchar dimension,
 case when a2.axpermissionsid>0 then 'T' else 'NA' end::varchar permission,
 'NA'::varchar createallowed,
 case when a2.axpermissionsid>0 or a.createdby=pusername or 'default' = ANY(string_to_array(puserrole,',')) then 'T' else 'NA' end::varchar viewallowed,
-'NA'::varchar keyfield,'NA'::varchar primarytable
+'NA'::varchar keyfield,'NA'::varchar primarytable,'NA'::varchar
 from axdirectsql a
 left join axpermissions a2 on a.sqlname =a2.formcap and (a2.axusername = pusername or a2.axuserrole = ANY(string_to_array(puserrole,',')))
 where sqlsrccnd !=1),
 inbox as(SELECT
                'Inbox'::varchar displaydata,
                'Inbox'::varchar caption,
-               'Inbox'::varchar name,'Inbox'::varchar stype,'NA','NA','NA','NA','NA','NA')
+               'Inbox'::varchar name,'Inbox'::varchar stype,'NA','NA','NA','NA','NA','NA','NA'::varchar)
 SELECT * FROM (
     SELECT * FROM ts WHERE pstype IN ('t', 'all', 'analyze')
     UNION ALL
@@ -1191,6 +1200,7 @@ ORDER BY displaydata;
  
 END;
 $function$
+;
 >>
 
 -- fn_axi_getstructs_obj | replace for primaryfieldvalue+fieldnames and selected fieldvalue with primary fieldvalue suffix
