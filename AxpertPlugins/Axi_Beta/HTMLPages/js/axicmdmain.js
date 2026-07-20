@@ -12397,7 +12397,7 @@
                     }
 
                     rowObj.columns[fieldName] = value;
-                    rowObj.columns[keyfield] = keyvalue;
+                    if (fieldName !== keyfield) rowObj.columns[keyfield] = keyvalue;
                 }
 
                 const recdata = Object.keys(dcMap).map(recKey => ({
