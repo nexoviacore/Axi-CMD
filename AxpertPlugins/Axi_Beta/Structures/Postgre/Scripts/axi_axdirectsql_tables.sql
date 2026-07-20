@@ -581,8 +581,91 @@ VALUES(99999999990036, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin'
 
 <<
 INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990037, 'F', 0, NULL, 'admin', '2025-12-23 13:35:16.000', 'admin', '2025-12-22 16:01:14.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_nongridfieldlist', NULL, 'Metadata', 5, 'select caption||'' (''||fname||'')'' displaydata, caption, fname name, tstruct,substring(modeofentry,1,1) moe,"datatype",fldsql,dcname,asgrid,listvalues fromlist,srckey normalized from axpflds where tstruct = :param1 and asgrid = ''F'' and hidden = ''F'' and modeofentry in (''accept'',''select'')and savevalue = ''T'' and "datatype" <> ''i'' order by ordno asc', 'param1', 'param1', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+(
+    axdirectsqlid,
+    cancel,
+    sourceid,
+    mapname,
+    username,
+    modifiedon,
+    createdby,
+    createdon,
+    wkid,
+    app_level,
+    app_desc,
+    app_slevel,
+    cancelremarks,
+    wfroles,
+    sqlname,
+    ddldatatype,
+    sqlsrc,
+    sqlsrccnd,
+    sqltext,
+    paramcal,
+    sqlparams,
+    accessstring,
+    groupname,
+    sqlquerycols,
+    cachedata,
+    cacheinterval,
+    encryptedflds,
+    adsdesc,
+    smartlistcnd
+)
+VALUES
+(
+    99999999990037,
+    'F',
+    0,
+    NULL,
+    'admin',
+    '2025-12-23 13:35:16.000',
+    'admin',
+    '2025-12-22 16:01:14.000',
+    NULL,
+    1,
+    1,
+    NULL,
+    NULL,
+    NULL,
+    'axi_nongridfieldlist',
+    NULL,
+    'Metadata',
+    5,
+    'select caption || '' ('' || fname || '')'' displaydata,
+            caption,
+            fname name,
+            tstruct,
+            substring(modeofentry,1,1) moe,
+            "datatype",
+            fldsql,
+            dcname,
+            asgrid,
+            listvalues fromlist,
+            srckey normalized,
+            modeofentry
+     from axpflds
+     where tstruct = :param1
+       and asgrid = ''F''
+       and hidden = ''F''
+       and readonly = ''F''
+       and modeofentry in (''accept'', ''select'')
+       and savevalue = ''T''
+       and "datatype" not in (''i'', ''t'')
+       and lower(fname) not like ''axpfile%''
+       and lower(fname) not like ''dc__image%''
+     order by ordno asc',
+    'param1',
+    'param1',
+    'ALL',
+    NULL,
+    NULL,
+    'F',
+    '6 Hr',
+    NULL,
+    NULL,
+    NULL
+)
 >>
 
 <<
