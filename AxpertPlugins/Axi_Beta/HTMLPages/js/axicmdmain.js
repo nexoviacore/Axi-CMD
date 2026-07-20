@@ -5169,7 +5169,12 @@
 
             li.addEventListener("mousedown", e => {
                 e.preventDefault();
-                const objectIndex = filteredObjects.indexOf(item);
+                let objectIndex = validItems.findIndex(obj => {
+                    if (obj === item) return true;
+                    const itemText = typeof item === "string" ? item : (item?.displaydata || item?.name || "");
+                    const objText = typeof obj === "string" ? obj : (obj?.displaydata || obj?.name || "");
+                    return itemText && objText && itemText.toLowerCase() === objText.toLowerCase();
+                });
                 apply(objectIndex !== -1 ? objectIndex : i);
             });
 
@@ -5302,10 +5307,26 @@
     }
 
     function apply(index) {
+        if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
+            return;
+        }
 
-        if (!items[index] || isSystemMessage(items[index])) return;
+        const validItems = items.filter(item => {
+            if (!item) return false;
+            if (typeof item === "string") {
+                return (!item.startsWith("Loading") && item !== "No Data" && item.trim() !== "");
+            }
+            if (typeof item === "object") {
+                const text = item.displaydata || item.name || "";
+                return (typeof text === "string" && !text.startsWith("Loading") && text !== "No Data" && text.trim() !== "");
+            }
+            return false;
+        });
 
-        const selectedItem = items[index];
+        const targetList = (validItems && validItems.length > 0 && index >= 0 && index < validItems.length) ? validItems : items;
+        const selectedItem = targetList[index];
+
+        if (!selectedItem || isSystemMessage(selectedItem)) return;
 
 
         const currentInput = input.value;
@@ -5427,7 +5448,7 @@
             tokens.push("");
         }
 
-        let suggestion = typeof items[index] === "string" ? items[index] : items[index].displaydata;
+        let suggestion = typeof selectedItem === "string" ? selectedItem : (selectedItem.displaydata || selectedItem.name || "");
         let displayName = suggestion;
         let realValue = "";
         let realType = "";
@@ -5502,12 +5523,20 @@
 
 
         // Get Real Value logic
-        // Fix: Select the exact object from filteredObjects using the index to avoid selecting an incorrect type when two items have the same name/caption/displaydata (e.g. slord tstruct vs slord iview).
         let foundObj = null;
         if (filteredObjects && index >= 0 && index < filteredObjects.length) {
-            foundObj = filteredObjects[index];
-        } else {
-            foundObj = filteredObjects.find(item => item.displaydata === suggestion);
+            const cand = filteredObjects[index];
+            const candText = typeof cand === "string" ? cand : (cand?.displaydata || cand?.name || "");
+            if (candText && suggestion && candText.toLowerCase() === suggestion.toLowerCase()) {
+                foundObj = cand;
+            }
+        }
+        if (!foundObj && filteredObjects) {
+            foundObj = filteredObjects.find(itemObj => {
+                if (itemObj === selectedItem) return true;
+                const objText = typeof itemObj === "string" ? itemObj : (itemObj?.displaydata || itemObj?.name || "");
+                return objText && suggestion && objText.toLowerCase() === suggestion.toLowerCase();
+            });
         }
 
         if (foundObj && isViewCommand) {
@@ -6664,6 +6693,9 @@
      * @returns 
      */
     function executeCommandsV2(isNavigating = false) {
+        if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
+            return;
+        }
         if (input.value === "") {
             showToast("Invalid Command!");
             return;
@@ -9177,15 +9209,31 @@
         }
         if (!doc) return {};
 
+        const searchElem = doc.getElementById("iconsNewSearch") || doc.querySelector("#iconsNewSearch");
+        const refreshElem = doc.getElementById("iconsNewRefresh") || doc.querySelector("#iconsNewRefresh") || doc.getElementById("iviewRefresh") || doc.querySelector(".iviewRefresh");
+        const refreshParamElem = doc.getElementById("dvRefreshParam") || doc.querySelector("#dvRefreshParam");
+        const refreshParamIconElem = doc.getElementById("dvRefreshParamIcon") || doc.querySelector("#dvRefreshParamIcon");
         const utilityContainer = doc.getElementById("iconsNewUtility") || doc.querySelector("#iconsNewUtility");
-        if (!utilityContainer) return {};
+        
+        const containers = [utilityContainer, searchElem, refreshElem, refreshParamElem, refreshParamIconElem].filter(Boolean);
+        if (containers.length === 0) return {};
 
-        const links = Array.from(utilityContainer.querySelectorAll("a, button, [onclick]"));
+        const links = [];
+        containers.forEach((container) => {
+            if (container.matches("a, button, [onclick], [title]")) {
+                links.push(container);
+            }
+            const children = Array.from(container.querySelectorAll("a, button, [onclick]"));
+            children.forEach(child => {
+                if (!links.includes(child)) links.push(child);
+            });
+        });
+
         if (links.length === 0) return {};
 
         const result = {};
         links.forEach((link) => {
-            const title = link.getAttribute("title") || "";
+            const title = link.getAttribute("title") || link.parentElement?.getAttribute("title") || "";
             let label = title.trim();
             if (!label) {
                 const nameSpan = link.querySelector(".dropdownIconName");
@@ -9201,22 +9249,27 @@
             if (!label) return;
 
             const id = link.id || link.getAttribute("id") || `utility_${label.toLowerCase().replace(/\s+/g, '_')}`;
+            if (result[id]) return;
 
             result[id] = {
                 id,
                 label,
                 element: link,
                 click: () => {
-                    if (link.href && link.href.startsWith("javascript:")) {
+                    const btnInside = link.querySelector("button, a, [onclick]") || link;
+                    if (btnInside.href && btnInside.href.startsWith("javascript:")) {
                         try {
-                            const jsCode = decodeURIComponent(link.href.replace(/^javascript:/i, ''));
+                            const jsCode = decodeURIComponent(btnInside.href.replace(/^javascript:/i, ''));
                             iframe.contentWindow.eval(jsCode);
                         } catch (e) {
                             console.error("Failed to execute javascript: href for utility link", e);
-                            link.click();
+                            btnInside.click();
                         }
                     } else {
-                        link.click();
+                        btnInside.click();
+                        if (btnInside !== link) {
+                            try { link.click(); } catch(e) {}
+                        }
                     }
                 }
             };
@@ -9719,7 +9772,7 @@
         buttons.forEach((btn, index) => {
             // if (!hasAction(btn)) return;
 
-            if (btn.classList.contains("d-none") || btn.classList.contains("disabled")) return;
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.classList.contains("disabled") || btn.closest(".disabled") || btn.closest("[hidden]")) return;
 
 
             if (btn.getAttribute("data-kt-menu-attach") === "parent") return;
@@ -9732,17 +9785,29 @@
 
             const label = extractButtonLabel(btn);
             if (!label) return;
-            if (label.toLowerCase() === "plugin custom code") return;
-            if (label.toLowerCase() === "export" || label.toLowerCase() === "theme" || label.toLowerCase() === "field captions" || label.toLowerCase() === "view" || label.toLowerCase() === "pattern") return;
+            const labelLower = label.toLowerCase();
+            if (labelLower === "plugin custom code" || labelLower === "export" || labelLower === "theme" || labelLower === "field captions" || labelLower === "view" || labelLower === "pattern") return;
+
+            const dataElement = (btn.getAttribute("data-kt-element") || "").toLowerCase();
+            const dataTarget = (btn.getAttribute("data-target") || "").toLowerCase();
+            const btnId = (btn.id || btn.getAttribute("data-id") || "").toLowerCase();
 
             if (getStructType() === "e") {
-                const dataElement = btn.getAttribute("data-kt-element");
-                const dataTarget = btn.getAttribute("data-target");
                 const isThemeMode = dataElement === "mode" ||
-                                    dataTarget === "lightTheme" ||
-                                    dataTarget === "blackTheme" ||
-                                    dataTarget === "gradTheme" ||
-                                    dataTarget === "compactTheme";
+                                    labelLower === "light" ||
+                                    labelLower === "dark" ||
+                                    labelLower === "gradient" ||
+                                    labelLower === "system" ||
+                                    labelLower === "compact" ||
+                                    labelLower.includes("light theme") ||
+                                    labelLower.includes("dark theme") ||
+                                    labelLower.includes("gradient theme") ||
+                                    dataTarget.includes("lighttheme") ||
+                                    dataTarget.includes("blacktheme") ||
+                                    dataTarget.includes("gradtheme") ||
+                                    dataTarget.includes("compacttheme") ||
+                                    btnId.includes("theme_mode");
+
                 if (isThemeMode) return;
             }
 
@@ -9904,7 +9969,7 @@
 
             elements.forEach((el, index) => {
                 // skip hidden
-                if (el.classList.contains("d-none")) return;
+                if (el.classList.contains("d-none") || el.closest(".d-none") || el.classList.contains("disabled") || el.closest(".disabled") || el.closest("[hidden]")) return;
 
                 // must be actionable
                 // if (!hasAction(el)) return;
@@ -12417,7 +12482,7 @@
         const result = {};
 
         buttons.forEach((btn, index) => {
-            if (btn.classList.contains("d-none")) return;
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.classList.contains("disabled") || btn.closest(".disabled") || btn.closest("[hidden]")) return;
 
             const id =
                 btn.id ||
@@ -12922,8 +12987,9 @@
 
 
     function executeFavorite(favObj) {
-
-
+        if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
+            return;
+        }
 
         const cmdText = favObj?.originalCommandText || favObj?.originalcommandtext || favObj?.commandText || favObj?.commandtext || "";
         input.value = cmdText + " ";
