@@ -23,6 +23,7 @@
     let isDeleting = false;
     let isEditing = false;
     let isProgrammaticExecution = false;
+    let suppressFocusSuggestions = false;
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
@@ -5015,7 +5016,7 @@
             "editprompt": "edit",
             "analyze": "analytics",
             "help": "help_outline",
-            "version": "info_outline"
+            "version": "info"
         };
 
 
@@ -5140,12 +5141,12 @@
                 li.textContent = displayText;
 
             } else if (isInitialCommandStage && getCommandConfig(text)) {
-                const iconName = commandIcons[text.toLowerCase()] || "chevron_right";
+                const iconName = (commandIcons && commandIcons[text.toLowerCase()]) ? commandIcons[text.toLowerCase()] : "info";
 
                 li.innerHTML = `
                
                 <div class="d-flex align-items-center">
-                        <div class="symbol symbol-35px me-2 mainIcon">
+                        <div class="symbol symbol-25px mainIcon">
                             <div class="symbol-label cardbg-inverse-1">
                                 <div class="items-icon">
                                     <span class="material-icons material-icons-style material-icons-2">${iconName}</span>
@@ -6143,6 +6144,10 @@
         }
 
         input.addEventListener("focus", () => {
+            if (suppressFocusSuggestions) {
+                suppressFocusSuggestions = false;
+                return;
+            }
             if (input.value.trim() === "") {
                 handleInput();
             }
@@ -6398,9 +6403,21 @@
 
             // ---------------------------------------------------
             if (list.style.display === "none" || items.length === 0) return;
-            const isInitialGrid = (list.querySelector(".axi-verbs-grid") !== null);
+            const gridEl = list.querySelector(".axi-verbs-grid");
+            const isInitialGrid = (gridEl !== null);
             const verbsCount = isInitialGrid ? list.querySelectorAll(".axi-verbs-grid .axi-suggestion").length : 0;
-            const cols = 3;
+            let cols = 3;
+            if (isInitialGrid && gridEl && verbsCount > 0) {
+                try {
+                    const gridStyle = window.getComputedStyle(gridEl);
+                    const computedCols = gridStyle.getPropertyValue("grid-template-columns").split(" ").filter(Boolean).length;
+                    if (computedCols > 0) {
+                        cols = computedCols;
+                    }
+                } catch (err) {
+                    cols = 3;
+                }
+            }
 
             if (e.key === "ArrowDown") {
                 e.preventDefault();
@@ -6496,15 +6513,57 @@
             }
         });
 
+        document.addEventListener("keydown", e => {
+            if (e.key !== "Escape") return;
+
+            const favModalOverlay = document.getElementById("axiFavModalOverlay");
+            const isFavModalOpen = favModalOverlay && (favModalOverlay.style.display === "flex" || (window.getComputedStyle && window.getComputedStyle(favModalOverlay).display !== "none"));
+            
+            const deleteModalOverlay = document.getElementById("axiFavDeleteModalOverlay");
+            const isDeleteModalOpen = deleteModalOverlay && (deleteModalOverlay.style.display === "flex" || (window.getComputedStyle && window.getComputedStyle(deleteModalOverlay).display !== "none"));
+
+            const isFavCardOpen = favouritesCard && (favouritesCard.style.display === "flex" || (megaDropdown && megaDropdown.style.display === "flex" && window.getComputedStyle && window.getComputedStyle(favouritesCard).display !== "none"));
+
+            const isSuggestionsOpen = (list && list.style.display !== "none") || (megaDropdown && megaDropdown.style.display === "flex");
+
+            if (isFavModalOpen) {
+                e.preventDefault();
+                e.stopPropagation();
+                hideFavoriteModal();
+                return;
+            }
+
+            if (isDeleteModalOpen) {
+                e.preventDefault();
+                e.stopPropagation();
+                hideDeleteFavoriteModal();
+                return;
+            }
+
+            if (isFavCardOpen || isSuggestionsOpen) {
+                e.preventDefault();
+                e.stopPropagation();
+                suppressFocusSuggestions = true;
+                hide();
+                if (input) {
+                    input.focus();
+                }
+                return;
+            }
+        }, true);
+
         document.addEventListener("click", e => {
-            if (list && list.style.display !== "none") {
+            const isDropdownVisible = megaDropdown && megaDropdown.style.display !== "none";
+            if (isDropdownVisible || (list && list.style.display !== "none")) {
                 const insideSearchWrapper = searchWrapper && searchWrapper.contains(e.target);
                 const insideDropdown = megaDropdown && megaDropdown.contains(e.target);
-                if (!insideSearchWrapper && !insideDropdown && e.target !== input) {
+                const insideFavModal = (document.getElementById("axiFavModalOverlay") && document.getElementById("axiFavModalOverlay").contains(e.target));
+                const insideDeleteModal = (document.getElementById("axiFavDeleteModalOverlay") && document.getElementById("axiFavDeleteModalOverlay").contains(e.target));
+                if (!insideSearchWrapper && !insideDropdown && !insideFavModal && !insideDeleteModal && e.target !== input) {
                     hide();
                 }
             }
-        })
+        });
 
 
 
