@@ -317,7 +317,8 @@ public partial class iview : System.Web.UI.Page
                     iName = Request.QueryString["ivname"];
                 if (iName != string.Empty)
                 {
-                    if (IsPostBack && hdnparamValues.Value != "" && Session["xmlPrivateKey-" + iName] != null)
+                    string _instanceId = hdnInstanceId.Value;
+                    if (IsPostBack && hdnparamValues.Value != "" && Session["xmlPrivateKey-" + iName + _instanceId] != null)
                     {
                         try
                         {
@@ -327,7 +328,7 @@ public partial class iview : System.Web.UI.Page
 
                             using (RSA rsa = RSA.Create())
                             {
-                                rsa.FromXmlString(Session["xmlPrivateKey-" + iName].ToString());
+                                rsa.FromXmlString(Session["xmlPrivateKey-" + iName + _instanceId].ToString());
                                 byte[] encryptedKeyBytes = Convert.FromBase64String(encryptedAesKey);
                                 byte[] decryptedKeyBytes = rsa.Decrypt(encryptedKeyBytes, RSAEncryptionPadding.Pkcs1);
                                 string aesKeyBase64 = Encoding.UTF8.GetString(decryptedKeyBytes);
@@ -346,10 +347,16 @@ public partial class iview : System.Web.UI.Page
                     }
                     else
                     {
-                        //var rsa = new RSACryptoServiceProvider(2048);
+                        string instanceId = string.Empty;
+                        if (Request.QueryString["isDupTab"] != null || Request.Form["isDupTab"] != null)
+                        {
+                            instanceId = Request.Form["isDupTab"] == null ? Request.QueryString["isDupTab"].ToString() : Request.Form["isDupTab"];
+                            instanceId = "-" + instanceId;
+                            hdnInstanceId.Value = instanceId;
+                        }
                         var rsa = new RSACryptoServiceProvider(4096);
                         string xmlPublicKey = rsa.ToXmlString(false);
-                        Session["xmlPrivateKey-" + iName] = rsa.ToXmlString(true);
+                        Session["xmlPrivateKey-" + iName + instanceId] = rsa.ToXmlString(true);
                         rsaPublicKey = ConvertXmlPublicKeyToPem(xmlPublicKey).Replace("\r", "").Replace("\n", "\\n");
                     }
                 }
@@ -3003,14 +3010,14 @@ public partial class iview : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static object GetIViewData(string iName, string ivKey, int pageno = 0, int recsPerPage = 0, string paramX = "", string lvXml = "", string lvStructure = "")
+    public static object GetIViewData(string iName, string ivKey, string instanceId, int pageno = 0, int recsPerPage = 0, string paramX = "", string lvXml = "", string lvStructure = "")
     {
         string result = string.Empty, status = string.Empty;
         Util.Util util = new Util.Util();
         IviewData objIview = (IviewData)HttpContext.Current.Session[ivKey];
         if (objIview == null)
             return new { status = "failure", result = Constants.ERAUTHENTICATION };
-        if (paramX != "" && HttpContext.Current.Session["xmlPrivateKey-" + iName] != null)
+        if (paramX != "" && HttpContext.Current.Session["xmlPrivateKey-" + iName + instanceId] != null)
         {
             string encrypted = paramX;
             try
@@ -3021,7 +3028,7 @@ public partial class iview : System.Web.UI.Page
 
                 using (RSA rsa = RSA.Create())
                 {
-                    rsa.FromXmlString(HttpContext.Current.Session["xmlPrivateKey-" + iName].ToString());
+                    rsa.FromXmlString(HttpContext.Current.Session["xmlPrivateKey-" + iName + instanceId].ToString());
                     byte[] encryptedKeyBytes = Convert.FromBase64String(encryptedAesKey);
                     byte[] decryptedKeyBytes = rsa.Decrypt(encryptedKeyBytes, RSAEncryptionPadding.Pkcs1);
                     string aesKeyBase64 = Encoding.UTF8.GetString(decryptedKeyBytes);

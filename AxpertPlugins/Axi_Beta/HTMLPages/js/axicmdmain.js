@@ -22,6 +22,8 @@
     let commandRoutes = [];
     let isDeleting = false;
     let isEditing = false;
+    let isProgrammaticExecution = false;
+    let suppressFocusSuggestions = false;
 
     const goOption = {
         displaydata: "Go [Ctrl + Enter]",
@@ -95,6 +97,9 @@
 
 
 
+        },
+        Source: {
+            default: handleSourceCommand,
         },
         Configure: {
             peg: handleConfigurePeg,
@@ -530,22 +535,22 @@
             return;
         }
 
-        const cached = localStorage.getItem("axi_commands_raw_v1");
-        let commandsFromDb = null;
-        if (cached && !isForced) {
-            try {
-                commandsFromDb = JSON.parse(cached);
-            } catch (e) {
-                console.error("Failed to parse cached raw commands", e);
+        try {
+            isCommandsLoading = true;
+            input.disabled = false;
+            input.placeholder = "Axpert AI";
+
+            const cached = localStorage.getItem("axi_commands_raw_v1");
+            let commandsFromDb = null;
+            if (cached && !isForced) {
+                try {
+                    commandsFromDb = JSON.parse(cached);
+                } catch (e) {
+                    console.error("Failed to parse cached raw commands", e);
+                }
             }
-        }
 
-        if (!commandsFromDb) {
-            try {
-                isCommandsLoading = true;
-                input.disabled = isCommandsLoading;
-                input.placeholder = "Initializing commands, Please wait....";
-
+            if (!commandsFromDb) {
                 const res = await fetch(`${apiMetadataUrl}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
 
                 if (!res.ok) {
@@ -562,43 +567,43 @@
                 const data = await res.json();
                 commandsFromDb = data.commands;
                 localStorage.setItem("axi_commands_raw_v1", JSON.stringify(commandsFromDb));
-
-            } catch (err) {
-                console.error("Critical: Could not load commands", err);
-            } finally {
-                isCommandsLoading = false;
-                input.disabled = isCommandsLoading;
-                input.placeholder = "Axpert AI";
             }
-        }
 
-        if (commandsFromDb) {
-            const message = isForced ? "Refreshed Successfully!" : "Commands Loaded Successfully!.";
-            const accessPermissions = getAccessPermissions();
-            // Clone to avoid mutating the cached object stored in memory
-            commands = buildCommandsByAccessPermissions(JSON.parse(JSON.stringify(commandsFromDb)), accessPermissions);
-            // Append Help command to initial suggestions list
-            commands["Help"] = {
-                cmdToken: 11,
-                command: "",
-                commandGroup: "Help",
-                prompts: []
-            };
-            // Append Version command to initial suggestions list
-            commands["Version"] = {
-                cmdToken: 12,
-                command: "",
-                commandGroup: "Version",
-                prompts: []
-            };
-            console.log(JSON.stringify(commands));
-            
-            // Load target entities (tstructs, iview, ads and pages) from metadata on startup
-            const metadataParams = getStructParam();
-            loadList("axi_structmetalist", metadataParams);
-            // if (isForced) {
-                showToast(message, 3000, true);
-            // }
+            if (commandsFromDb) {
+                const message = isForced ? "Refreshed Successfully!" : "Commands Loaded Successfully!.";
+                const accessPermissions = getAccessPermissions();
+                // Clone to avoid mutating the cached object stored in memory
+                commands = buildCommandsByAccessPermissions(JSON.parse(JSON.stringify(commandsFromDb)), accessPermissions);
+                // Append Help command to initial suggestions list
+                commands["Help"] = {
+                    cmdToken: 11,
+                    command: "",
+                    commandGroup: "Help",
+                    prompts: []
+                };
+                // Append Version command to initial suggestions list
+                commands["Version"] = {
+                    cmdToken: 12,
+                    command: "",
+                    commandGroup: "Version",
+                    prompts: []
+                };
+
+                console.log(JSON.stringify(commands));
+                
+                // Load target entities (tstructs, iview, ads and pages) from metadata on startup asynchronously
+                const metadataParams = getStructParam();
+                loadList("axi_structmetalist", metadataParams);
+                // if (isForced) {
+                    showToast(message, 3000, true);
+                // }
+            }
+        } catch (err) {
+            console.error("Critical: Could not load commands", err);
+        } finally {
+            isCommandsLoading = false;
+            input.disabled = false;
+            input.placeholder = "Axpert AI";
         }
     }
 
@@ -1865,18 +1870,42 @@
         top.window.LoadIframe(targetUrl);
     }
 
+    // function redirectToIView(iViewName, iViewCaption = "") {
+    //     console.log("Redirecting to Iview: " + iViewName + "..............");
+
+
+    //     if (popUpOption) {
+    //      let targetUrl = `../aspx/ivtoivload.aspx?ivname=${iViewName}`;
+    //     // setCommandRoutes(input.value.trim(), targetUrl);
+
+
+    //         targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
+    //         targetUrl += "&AxIsPop=true";
+    //         openPopOption(targetUrl)
+    //     }
+    //     else {
+    //     let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
+    //     setCommandRoutes(input.value.trim(), targetUrl);
+    //         window.LoadIframe(targetUrl);
+    //     }
+
+
+    // }
+
     function redirectToIView(iViewName, iViewCaption = "") {
         console.log("Redirecting to Iview: " + iViewName + "..............");
-        let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
 
-        setCommandRoutes(input.value.trim(), targetUrl);
 
         if (popUpOption) {
+         let targetUrl = `../aspx/ivtoivload.aspx?ivname=${iViewName}`;
+        // setCommandRoutes(input.value.trim(), targetUrl);
             targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
-            targetUrl += "&AxPop=true";
+            targetUrl += "&AxIsPop=true&isDupTab=true-";
             openPopOption(targetUrl)
         }
         else {
+        let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
+        setCommandRoutes(input.value.trim(), targetUrl);
             window.LoadIframe(targetUrl);
         }
 
@@ -1924,10 +1953,10 @@
     function getInitialCommandsList() {
         if (!commands) return [];
         const structType = getStructType();
-        const isRunnable = structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage();
+        const isRunnable = structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage() && !isViewDesignerModalOpen();
         return Object.keys(commands).filter(key => {
             const lowerKey = key.toLowerCase();
-            if (lowerKey === "create" || lowerKey === "view" || lowerKey === "edit") {
+            if (lowerKey === "create" || lowerKey === "view" || lowerKey === "edit" || lowerKey === "source") {
                 return false;
             }
             if (lowerKey === "run") {
@@ -1954,7 +1983,10 @@
                 input.setSelectionRange(newPos, newPos);
             }
         }
-        if (isCommandsLoading) {
+        const initialTokens = getTokens(input.value.trim());
+        const isInitialCommandStage = initialTokens.length === 0 || (initialTokens.length === 1 && !input.value.endsWith(" "));
+
+        if (isCommandsLoading && !isInitialCommandStage) {
             items = ["Loading Commands...."];
             hintDiv.textContent = "Please wait...";
             render();
@@ -1970,7 +2002,15 @@
                 axiClearBtn.style.display = "none";
             }
         }
-        if (!commands) return;
+        if (!commands) {
+            if (isInitialCommandStage) {
+                items = getInitialSuggestions();
+                hintDiv.textContent = "";
+                render();
+                return;
+            }
+            return;
+        }
 
         if (!text.trim()) {
 
@@ -2083,6 +2123,17 @@
         }
         const grpKey = tokens[0]?.toLowerCase();
 
+        if (grpKey === "edit" && (text.toLowerCase().includes(" with") || tokens.some(t => cleanString(t).toLowerCase() === "with"))) {
+            const entityObj = getTargetEntityObj(tokens[1], "edit");
+            if (entityObj && (entityObj.keyfieldforedit === "F" || entityObj.keyfieldforedit === false)) {
+                showToast("Key field is not configured for this form.", 3000, false);
+                items = [];
+                render();
+                hide();
+                return;
+            }
+        }
+
         if (
             grpKey === "view" &&
             tokens.length > 1 &&
@@ -2136,6 +2187,25 @@
                     input.value = "Help ";
                     handleInput();
                     return;
+                }
+
+                // Second-token verb auto-resolve: when the user fully types an
+                // action verb (e.g., "edit") after a target entity, resolve to
+                // proper case and advance to next-level suggestions.
+                if (indexToApply === -1) {
+                    const rawCheckTokens = getTokens(text, false);
+                    if (rawCheckTokens.length === 2) {
+                        const entityToken = rawCheckTokens[0];
+                        const verbClean = cleanString(rawCheckTokens[1]).toLowerCase();
+                        const verbsToAutoResolve = ["create", "edit", "view", "source"];
+                        if (verbClean.length >= 2 && verbsToAutoResolve.includes(verbClean) && isTargetEntity(entityToken)) {
+                            const properVerb = verbClean.charAt(0).toUpperCase() + verbClean.slice(1).toLowerCase();
+                            input.value = entityToken + " " + properVerb + " ";
+                            lastTypedTokens = getTokens(input.value, false);
+                            setTimeout(() => { handleInput(); }, 50);
+                            return;
+                        }
+                    }
                 }
 
                 if (indexToApply !== -1) {
@@ -2201,52 +2271,121 @@
         ) || null;
     }
 
-    function isTargetEntity(token) {
-        if (!token) return false;
+    function getCleanCaption(item) {
+        if (!item || typeof item !== "object") return "";
+        if (item._cleanCaption !== undefined) return item._cleanCaption;
+        const displaydata = item.displaydata || item.DISPLAYDATA || "";
+        if (typeof displaydata === "string" && displaydata !== "") {
+            item._cleanCaption = displaydata
+                .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
+                .replace(/\s*\[[^\]]+\]\s*$/, "")
+                .trim()
+                .toLowerCase();
+        } else {
+            item._cleanCaption = "";
+        }
+        return item._cleanCaption;
+    }
+
+    let targetEntitiesCache = {
+        sourceList: null,
+        matchesMap: null
+    };
+
+    function getTargetEntityMatches(token) {
+        if (!token) return [];
         const cleanTok = token.replace(/"/g, "").toLowerCase();
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
         const list = axDatasourceObj[key] || [];
-        return list.some(d => {
-            const name = d.name || d.NAME || "";
-            const caption = d.caption || d.CAPTION || "";
-            const displaydata = d.displaydata || d.DISPLAYDATA || "";
-            
-            const nameMatch = name && name.toLowerCase() === cleanTok;
-            const displayMatch = displaydata && displaydata.toLowerCase() === cleanTok;
-            const captionMatch = typeof displaydata === "string" && 
-                displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
-            const captionDirect = caption && caption.toLowerCase() === cleanTok;
-            return nameMatch || displayMatch || captionMatch || captionDirect;
-        });
+
+        if (targetEntitiesCache.sourceList !== list || !targetEntitiesCache.matchesMap) {
+            const map = new Map();
+            for (let i = 0; i < list.length; i++) {
+                const d = list[i];
+                const namesSet = new Set();
+                
+                const name = d.name || d.NAME;
+                if (name) namesSet.add(name.toLowerCase());
+
+                const caption = d.caption || d.CAPTION;
+                if (caption) namesSet.add(caption.toLowerCase());
+
+                const displaydata = d.displaydata || d.DISPLAYDATA;
+                if (displaydata) {
+                    namesSet.add(displaydata.toLowerCase());
+                    const cleanCaption = getCleanCaption(d);
+                    if (cleanCaption) namesSet.add(cleanCaption);
+                }
+
+                namesSet.forEach(val => {
+                    let itemsArray = map.get(val);
+                    if (!itemsArray) {
+                        itemsArray = [];
+                        map.set(val, itemsArray);
+                    }
+                    itemsArray.push(d);
+                });
+            }
+            targetEntitiesCache.sourceList = list;
+            targetEntitiesCache.matchesMap = map;
+        }
+
+        return targetEntitiesCache.matchesMap.get(cleanTok) || [];
+    }
+
+    function isTargetEntity(token) {
+        return getTargetEntityMatches(token).length > 0;
+    }
+
+    function areTypesMatching(type1, type2) {
+        if (!type1 || !type2) return false;
+        const t1 = String(type1).trim().toLowerCase();
+        const t2 = String(type2).trim().toLowerCase();
+        if (t1 === t2) return true;
+        if ((t1 === "t" || t1 === "tstruct") && (t2 === "t" || t2 === "tstruct")) return true;
+        if ((t1 === "i" || t1 === "iview") && (t2 === "i" || t2 === "iview")) return true;
+        if ((t1 === "p" || t1 === "page") && (t2 === "p" || t2 === "page")) return true;
+        if ((t1 === "a" || t1 === "ads") && (t2 === "a" || t2 === "ads")) return true;
+        return false;
     }
 
     function getTargetEntityObj(token, action) {
         if (!token) return null;
-        const cleanTok = token.replace(/"/g, "").toLowerCase();
-        const key = "axi_structmetalist_" + getStructParam().toLowerCase();
-        const list = axDatasourceObj[key] || [];
-        const matches = list.filter(d => {
-            const name = d.name || d.NAME || "";
-            const caption = d.caption || d.CAPTION || "";
-            const displaydata = d.displaydata || d.DISPLAYDATA || "";
-
-            const nameMatch = name && name.toLowerCase() === cleanTok;
-            const displayMatch = displaydata && displaydata.toLowerCase() === cleanTok;
-            const captionMatch = typeof displaydata === "string" && 
-                displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
-            const captionDirect = caption && caption.toLowerCase() === cleanTok;
-            return nameMatch || displayMatch || captionMatch || captionDirect;
-        });
+        const matches = getTargetEntityMatches(token);
 
         if (matches.length === 0) return null;
         if (matches.length === 1) return matches[0];
 
-        const rawIndex = 0;
-        if (resolvedParams[rawIndex]) {
-            const resolvedVal = resolvedParams[rawIndex].toLowerCase();
-            const matched = matches.find(d => (d.name || d.NAME || "").toLowerCase() === resolvedVal);
-            if (matched) return matched;
+        let matched = null;
+        const lowerToken = token.toLowerCase();
+        for (const idx in resolvedParams) {
+            if (resolvedParams[idx]) {
+                const resolvedVal = resolvedParams[idx].toLowerCase();
+                const preferredType = resolvedParamType[idx];
+
+                const found = matches.find(d => {
+                    const name = (d.name || d.NAME || d.sqlname || "").toLowerCase();
+                    const caption = (d.caption || d.CAPTION || "").toLowerCase();
+                    const displaydata = (d.displaydata || d.DISPLAYDATA || "").toLowerCase();
+                    const cleanCaption = getCleanCaption(d);
+
+                    const nameMatch = name === resolvedVal || caption === resolvedVal || displaydata === resolvedVal || cleanCaption === resolvedVal;
+                    if (!nameMatch) return false;
+
+                    if (preferredType) {
+                        return areTypesMatching(d.stype || d.STYPE, preferredType);
+                    }
+                    return true;
+                });
+
+                if (found) {
+                    matched = found;
+                    break;
+                }
+            }
         }
+
+        if (matched) return matched;
 
         if (action) {
             const lowAction = action.toLowerCase();
@@ -2262,6 +2401,12 @@
                     return type !== "t" && type !== "tstruct";
                 });
                 if (nonTstructMatch) return nonTstructMatch;
+            } else if (lowAction === "source") {
+                const sourceMatch = matches.find(d => {
+                    const type = (d.stype || d.STYPE || "").toLowerCase();
+                    return ["t", "tstruct", "i", "iview", "ads"].includes(type);
+                });
+                if (sourceMatch) return sourceMatch;
             }
         }
 
@@ -2313,7 +2458,8 @@
         }
         const hasView = item.viewallowed !== undefined;
         const hasCreate = item.createallowed !== undefined;
-        if (!hasView && !hasCreate) {
+        const hasEditKey = item.keyfieldforedit !== undefined;
+        if (!hasView && !hasCreate && !hasEditKey) {
             return true;
         }
         if (act === "view") {
@@ -2332,18 +2478,29 @@
         let actions = [];
         if (entityObj) {
             const type = (entityObj.stype || entityObj.STYPE || "").toLowerCase().trim();
+            const accessPermissions = getAccessPermissions();
+            const canBuild = accessPermissions && accessPermissions.buildAccess;
+
             if (type === "t" || type === "tstruct") {
                 if (isActionAllowed(entityObj, "view")) actions.push("View");
                 if (isActionAllowed(entityObj, "create")) {
                     actions.push("Create");
                     actions.push("Edit");
                 }
+                if (canBuild) actions.push("Source");
             } else if (isInboxStructure(entityObj)) {
                 actions.push("Go");
             } else if (type === "ads") {
                 if (isAdsVisible(entityObj)) actions.push("View");
+                if (canBuild) actions.push("Source");
+            } else if (type === "i" || type === "iview") {
+                if (isActionAllowed(entityObj, "view")) actions.push("View");
+                if (canBuild) actions.push("Source");
             } else {
                 if (type === "p" || type === "page" || isActionAllowed(entityObj, "view")) actions.push("View");
+                if ((type === "i" || type === "iview" || type === "t" || type === "tstruct" || type === "ads") && canBuild) {
+                    actions.push("Source");
+                }
             }
         }
         return actions.map(act => act.toLowerCase()).includes(lowAction);
@@ -2384,11 +2541,25 @@
         return (hasView && item.viewallowed === "T") || (hasCreate && item.createallowed === "T");
     }
 
+    let initialSuggestionsCache = null;
+    let initialSuggestionsSourceList = null;
+    let initialSuggestionsRunnable = null;
+
     function getInitialSuggestions() {
-        const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view"].includes(k.toLowerCase()));
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
-        const targets = (axDatasourceObj[key] || []).filter(item => isStructureVisible(item));
-        return [...targets, ...verbs];
+        const currentList = axDatasourceObj[key] || [];
+        const structType = getStructType();
+        const isRunnable = !!(structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage() && !isViewDesignerModalOpen());
+
+        if (initialSuggestionsCache && initialSuggestionsSourceList === currentList && initialSuggestionsRunnable === isRunnable) {
+            return initialSuggestionsCache;
+        }
+        const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view", "source"].includes(k.toLowerCase()));
+        const targets = currentList.filter(item => isStructureVisible(item));
+        initialSuggestionsCache = [...verbs, ...targets];
+        initialSuggestionsSourceList = currentList;
+        initialSuggestionsRunnable = isRunnable;
+        return initialSuggestionsCache;
     }
 
     function normalizeGlobalState() {
@@ -2400,7 +2571,7 @@
             if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
                 const val0 = (resolvedParams[0] || "").toLowerCase();
                 const val1 = (resolvedParams[1] || "").toLowerCase();
-                if (val0 && !["create", "edit", "view"].includes(val0) && val1 && ["create", "edit", "view"].includes(val1)) {
+                if (val0 && !["create", "edit", "view", "source"].includes(val0) && val1 && ["create", "edit", "view", "source"].includes(val1)) {
                     const tempVal = resolvedParams[0];
                     resolvedParams[0] = resolvedParams[1];
                     resolvedParams[1] = tempVal;
@@ -2413,7 +2584,7 @@
             } else {
                 const val0 = (resolvedParams[0] || "").toLowerCase();
                 const val1 = (resolvedParams[1] || "").toLowerCase();
-                if (val0 && ["create", "edit", "view"].includes(val0) && val1 && !["create", "edit", "view"].includes(val1)) {
+                if (val0 && ["create", "edit", "view", "source"].includes(val0) && val1 && !["create", "edit", "view", "source"].includes(val1)) {
                     const tempVal = resolvedParams[0];
                     resolvedParams[0] = resolvedParams[1];
                     resolvedParams[1] = tempVal;
@@ -2426,7 +2597,7 @@
             }
         } else {
             const val0 = (resolvedParams[0] || "").toLowerCase();
-            if (val0 && ["create", "edit", "view"].includes(val0)) {
+            if (val0 && ["create", "edit", "view", "source"].includes(val0)) {
                 const tempVal = resolvedParams[0];
                 resolvedParams[0] = resolvedParams[1];
                 resolvedParams[1] = tempVal;
@@ -3230,7 +3401,12 @@
                     bottomToolbarButtons = getBottomToolbarButtons();
                     topToolbarButtons = getTopToolbarButtons();
                     allButtons = { ...bottomToolbarButtons, ...topToolbarButtons };
-
+                    
+                    if (structType === "i") {
+                        const utilityButtons = getIViewUtilityButtons();
+                        const actionButtons = getIViewActionDropdownButtons();
+                        allButtons = { ...allButtons, ...utilityButtons, ...actionButtons };
+                    }
                 }
 
 
@@ -3266,11 +3442,33 @@
                 break;
         }
 
-        buttonsList = Object.values(allButtons).map(btn => ({
-            name: btn.id,
-            onclick: btn.element.getAttribute("onclick"),
-            displaydata: `${btn.label} (${btn.id})`
-        })).filter(btn => !((structType === "e" || structType === "ef") && btn.name === "deleteSelectedButton"));
+        buttonsList = Object.values(allButtons).map(btn => {
+            const element = btn.element;
+            let displayLabel = "";
+            if (element) {
+                const titleAttr = element.getAttribute("title");
+                if (titleAttr && titleAttr.trim()) {
+                    displayLabel = titleAttr.trim();
+                } else {
+                    const cloned = element.cloneNode(true);
+                    cloned.querySelectorAll(".material-icons, .material-icons-style").forEach(node => node.remove());
+                    displayLabel = (cloned.textContent || "").trim();
+                }
+            }
+            if (!displayLabel) {
+                displayLabel = (btn.label || "").trim();
+            }
+            // Normalize whitespaces and newlines
+            displayLabel = displayLabel.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+            // Remove trailing brackets containing icon names
+            displayLabel = displayLabel.replace(/\s*\[[^\]]+\]\s*$/, '').trim();
+            return {
+                name: btn.id,
+                onclick: btn.element ? btn.element.getAttribute("onclick") : null,
+                displaydata: displayLabel
+            };
+        })
+        .filter(btn => !((structType === "e" || structType === "ef") && btn.name === "deleteSelectedButton"));
 
         const uniqueButtonsMap = new Map();
         buttonsList.forEach(btn => {
@@ -3328,6 +3526,14 @@
         let ignoreExtraParams = false;
         let detectedType = "";
         const rawTokens = getTokens(inputText, false);
+        if (rawTokens.length > 0) {
+            const firstToken = cleanString(rawTokens[0]).toLowerCase();
+            if (["create", "view", "edit", "source"].includes(firstToken)) {
+                filteredObjects = [];
+                hintDiv.textContent = "";
+                return [];
+            }
+        }
         const endsWithSpace = inputText.endsWith(" ");
 
 
@@ -3357,20 +3563,41 @@
                 if (typeof item === "string") {
                     return item.toLowerCase().startsWith(prefix);
                 } else {
-                    const nameMatch = item.name && item.name.toLowerCase().startsWith(prefix);
-                    const displayMatch = item.displaydata && item.displaydata.toLowerCase().startsWith(prefix);
-                    const captionMatch = typeof item.displaydata === "string" && 
-                        item.displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase().startsWith(prefix);
-                    return nameMatch || displayMatch || captionMatch;
+                    const nameMatch = item.name && item.name.toLowerCase().includes(prefix);
+                    const displayMatch = item.displaydata && item.displaydata.toLowerCase().includes(prefix);
+                    const cleanCaptionMatch = typeof item.displaydata === "string" && 
+                        getCleanCaption(item).includes(prefix);
+                    const captionMatch = item.caption && item.caption.toLowerCase().includes(prefix);
+                    return nameMatch || displayMatch || cleanCaptionMatch || captionMatch;
                 }
             });
-            filteredObjects = filtered.map(item => {
+
+            // Rank startsWith matches higher than includes matches to keep better matching.
+            const startsWithPrefix = [];
+            const containsPrefix = [];
+            filtered.forEach(item => {
+                if (typeof item === "string") {
+                    startsWithPrefix.push(item);
+                } else {
+                    const starts = (item.name && item.name.toLowerCase().startsWith(prefix)) ||
+                                   (item.displaydata && item.displaydata.toLowerCase().startsWith(prefix)) ||
+                                   (typeof item.displaydata === "string" && getCleanCaption(item).startsWith(prefix)) ||
+                                   (item.caption && item.caption.toLowerCase().startsWith(prefix));
+                    if (starts) {
+                        startsWithPrefix.push(item);
+                    } else {
+                        containsPrefix.push(item);
+                    }
+                }
+            });
+            const rankedFiltered = [...startsWithPrefix, ...containsPrefix];
+             filteredObjects = rankedFiltered.map(item => {
                 if (typeof item === "string") {
                     return { name: item, displaydata: item };
                 }
                 return item;
-            });
-            return filtered.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
+             });
+             return rankedFiltered.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
         }
 
         if (rawTokens.length === 2 && isTargetEntity(rawTokens[0])) {
@@ -3392,6 +3619,9 @@
                 targetType = (entityObj.stype || entityObj.STYPE || "").toLowerCase();
             }
 
+            const accessPermissions = getAccessPermissions();
+            const canBuild = accessPermissions && accessPermissions.buildAccess;
+
             if (targetType === "t" || targetType === "tstruct") {
                 const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
                 if (!hasPerms) {
@@ -3403,30 +3633,30 @@
                         actions.push("Edit");
                     }
                 }
+                if (canBuild) {
+                    actions.push("Source");
+                }
             } else if (targetType === "p" || targetType === "page") {
                 actions.push("View");
             } else if (targetType === "ads") {
                 if (isAdsVisible(entityObj)) actions.push("View");
+                if (canBuild) {
+                    actions.push("Source");
+                }
+            } else if (targetType === "i" || targetType === "iview") {
+                const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
+                if (!hasPerms || entityObj.viewallowed === "T") actions.push("View");
+                if (canBuild) {
+                    actions.push("Source");
+                }
             } else if (targetType) {
                 const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
                 if (!hasPerms || entityObj.viewallowed === "T") actions.push("View");
+                if ((targetType === "i" || targetType === "iview" || targetType === "t" || targetType === "tstruct" || targetType === "ads") && canBuild) {
+                    actions.push("Source");
+                }
             } else {
-                const cleanTok = rawTokens[0].replace(/"/g, "").toLowerCase();
-                const key = "axi_structmetalist_" + getStructParam().toLowerCase();
-                const list = axDatasourceObj[key] || [];
-                
-                const matches = list.filter(d => {
-                    const name = d.name || d.NAME || "";
-                    const caption = d.caption || d.CAPTION || "";
-                    const displaydata = d.displaydata || d.DISPLAYDATA || "";
-
-                    const nameMatch = name && name.toLowerCase() === cleanTok;
-                    const displayMatch = displaydata && displaydata.toLowerCase() === cleanTok;
-                    const captionMatch = typeof displaydata === "string" && 
-                        displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
-                    const captionDirect = caption && caption.toLowerCase() === cleanTok;
-                    return nameMatch || displayMatch || captionMatch || captionDirect;
-                });
+                const matches = getTargetEntityMatches(rawTokens[0]);
 
                 let hasView = false;
                 let hasCreate = false;
@@ -3434,6 +3664,7 @@
                 let hasTstruct = false;
                 let matchesAnyTstructWithoutPerms = false;
                 let matchesAnyIviewWithoutPerms = false;
+                let hasSource = false;
                 for (let i = 0; i < matches.length; i++) {
                     const m = matches[i];
                     const type = (m.stype || m.STYPE || "").toLowerCase().trim();
@@ -3448,15 +3679,27 @@
                             if (m.viewallowed === "T") hasView = true;
                             if (m.createallowed === "T") hasCreate = true;
                         }
+                        if (canBuild) hasSource = true;
                     } else if (type === "ads") {
                         if (isAdsVisible(m)) hasView = true;
+                        if (canBuild) hasSource = true;
                     } else if (type === "p" || type === "page") {
                         hasView = true;
+                    } else if (type === "i" || type === "iview") {
+                        if (!hasPerms) {
+                            matchesAnyIviewWithoutPerms = true;
+                        } else {
+                            if (m.viewallowed === "T") hasView = true;
+                        }
+                        if (canBuild) hasSource = true;
                     } else {
                         if (!hasPerms) {
                             matchesAnyIviewWithoutPerms = true;
                         } else {
                             if (m.viewallowed === "T") hasView = true;
+                        }
+                        if ((type === "i" || type === "iview" || type === "t" || type === "tstruct" || type === "ads") && canBuild) {
+                            hasSource = true;
                         }
                     }
                 }
@@ -3466,12 +3709,17 @@
                     actions.push("Create");
                     actions.push("Edit");
                 }
+                if (hasSource) actions.push("Source");
             }
 
             const specialTypes = ["iview", "i", "ads", "p", "page"];
             if (targetType && specialTypes.includes(targetType)) {
                 const viewAction = { name: "View", displaydata: "View" };
-                const allOptions = [viewAction, goOption, popOption];
+                const allOptions = [viewAction];
+                if (["iview", "i", "ads"].includes(targetType) && canBuild) {
+                    allOptions.push({ name: "Source", displaydata: "Source" });
+                }
+                allOptions.push(goOption, popOption);
                 const filtered = allOptions.filter(opt => {
                     const displayText = opt.displaydata || opt.name;
                     return displayText.toLowerCase().startsWith(partial);
@@ -3486,6 +3734,10 @@
             }
 
             if (actions.map(act => act.toLowerCase()).includes(partial)) {
+                if (partial === "source") {
+                    filteredObjects = [goOption];
+                    return [goOption];
+                }
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
             }
@@ -3518,6 +3770,11 @@
         }
 
         if (groupKey.toLowerCase() === "version") {
+            return [goOption];
+        }
+
+        if (groupKey.toLowerCase() === "source" && tokens.length >= 2 && isTargetEntity(tokens[1])) {
+            filteredObjects = [goOption];
             return [goOption];
         }
 
@@ -3594,8 +3851,8 @@
         if (groupKey.toLowerCase() === "run") {
             const structType = getStructType();
 
-            if (!structType || structType === "o" || isPreviewModalOpen() || isRunDisabledForPage()) {
-                if (isPreviewModalOpen() || isRunDisabledForPage()) {
+            if (!structType || structType === "o" || isPreviewModalOpen() || isRunDisabledForPage() || isViewDesignerModalOpen()) {
+                if (isPreviewModalOpen() || isRunDisabledForPage() || isViewDesignerModalOpen()) {
                     return [];
                 }
                 showToast("Warning: CommandGroup Invalid: Please open Tstruct or Any other page");
@@ -3667,6 +3924,11 @@
                 }
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
+            }
+
+            else if (groupKey.toLowerCase() === "source" && tokens.length >= 3) {
+                filteredObjects = [goOption];
+                return [goOption];
             }
 
             else if (groupKey.toLowerCase() === "sdk" && tokens.length > 2) {
@@ -4024,13 +4286,17 @@
 
             const key = groupKey?.toLowerCase();
             const validItems = filtered.filter(item => {
-                const hasPerms = item?.viewallowed !== undefined || item?.createallowed !== undefined;
+                const hasPerms = item?.viewallowed !== undefined || item?.createallowed !== undefined || item?.keyfieldforedit !== undefined;
                 if (!hasPerms) return true;
                 if (key === "create" || key === "edit") {
                     return isActionAllowed(item, key);
                 }
                 if (key === "view") {
                     return isViewAllowed(item);
+                }
+                if (key === "source") {
+                    const stype = (item.stype || item.STYPE || "").toLowerCase().trim();
+                    return ["t", "tstruct", "i", "iview", "ads"].includes(stype);
                 }
                 if (isEmpty(item?.displaydata) && isEmpty(item?.caption) && isEmpty(item?.name)) return false;
                 return true;
@@ -4508,7 +4774,7 @@
         if (resolvedParams[rawIndex] && !forceResolve) {
             const val = resolvedParams[rawIndex];
             const lowerVal = val.toLowerCase();
-            const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version"].includes(lowerVal);
+            const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(lowerVal);
             if (!(tokenIndex === 1 && isVerb)) {
                 return {
                     value: val,
@@ -4518,18 +4784,7 @@
         }
 
         if (tokenIndex === 1 && !forceResolve) {
-            const key = "axi_structmetalist_" + getStructParam().toLowerCase();
-            const list = axDatasourceObj[key] || [];
-            const cleanTok = tokenText.toLowerCase();
-
-            const matches = list.filter(d => {
-                const nameMatch = d.name && d.name.toLowerCase() === cleanTok;
-                const displayMatch = d.displaydata && d.displaydata.toLowerCase() === cleanTok;
-                const captionMatch = typeof d.displaydata === "string" && 
-                    d.displaydata.replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim().toLowerCase() === cleanTok;
-                const captionDirect = d.caption && d.caption.toLowerCase() === cleanTok;
-                return nameMatch || displayMatch || captionMatch || captionDirect;
-            });
+            const matches = getTargetEntityMatches(tokenText);
 
             if (matches.length > 0) {
                 let found = matches[0];
@@ -4551,11 +4806,15 @@
                     }
                 }
 
+                let foundStype = found.stype || "";
+                if (!foundStype && isInboxStructure(found)) {
+                    foundStype = "inbox";
+                }
                 resolvedParams[rawIndex] = found.name;
-                if (found.stype) resolvedParamType[rawIndex] = found.stype;
+                if (foundStype) resolvedParamType[rawIndex] = foundStype;
                 return {
                     value: found.name,
-                    type: found.stype || ""
+                    type: foundStype
                 };
             }
         }
@@ -4769,7 +5028,7 @@
             "editprompt": "edit",
             "analyze": "analytics",
             "help": "help_outline",
-            "version": "info_outline"
+            "version": "info"
         };
 
 
@@ -4806,12 +5065,6 @@
             // activeIndex = 0;
             //           if (isUserTyping) {
             //     const firstNonActionIndex = validItems.findIndex(
-            //         item => typeof item !== 'object' || !item.isExecutable || item === "source"
-            //     );
-            //     activeIndex = firstNonActionIndex !== -1 ? firstNonActionIndex : 0;
-            // } else {
-            //     activeIndex = 0;
-            // }
 
             if (isUserTyping) {
                 const lastToken = cleanString(
@@ -4834,31 +5087,48 @@
 
         }
 
-        // if (items.length > 0 && isSystemMessage(items[0])) {
-        //     activeIndex = -1;
-        // } else {
-        //     const currentToken = cleanString(currentInputTokens[currentInputTokens.length - 1]).toLowerCase();
+        const metadataParams = getStructParam();
+        const structKey = "axi_structmetalist_" + metadataParams.toLowerCase();
+        const isCmdsLoading = isCommandsLoading || !commands;
+        const isStructsLoading = activeFetches.has(structKey) || !axDatasourceObj[structKey];
 
-        //     const exactMatchIndex = validItems.findIndex(item => {
-        //         const text = typeof item === "string" ? item : item.displaydata;
-        //         return text.toLowerCase() === currentToken;
-        //     });
+        const isAnyLoadingItem = items.some(item => {
+            const text = typeof item === "string" ? item : (item?.displaydata || "");
+            return typeof text === "string" && text.startsWith("Loading");
+        });
+        const isAnyFetchActive = activeFetches.size > 0 || isCmdsLoading || isStructsLoading || isAnyLoadingItem;
 
-        //     activeIndex = exactMatchIndex !== -1 ? exactMatchIndex : 0;
-        // }
+        const showInitialWrapper = isInitialCommandStage && (validItems.length > 0 || isCmdsLoading || isStructsLoading) && !isSystemMessage(validItems[0]);
 
-        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
+        if (showInitialWrapper) {
             list.classList.add("My-Command-Wrapper");
             if (favouritesCard) favouritesCard.style.display = "none";
             if (commandHeader) commandHeader.style.display = "flex";
-
         } else {
             list.classList.remove("My-Command-Wrapper");
             if (favouritesCard) favouritesCard.style.display = "none";
             if (commandHeader) commandHeader.style.display = "none";
         }
 
-        if (validItems.length === 0) {
+        if (validItems.length === 0 && isAnyFetchActive) {
+            if (!showInitialWrapper) {
+                list.innerHTML = "";
+                const li = document.createElement("li");
+                li.className = "axi-suggestion-loading d-flex align-items-center justify-content-center py-3 px-4 text-muted gap-2";
+                li.style.fontSize = "13px";
+                li.style.textAlign = "center";
+                li.innerHTML = `
+                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-right: 6px;"></span>
+                    <span>Loading options...</span>
+                `;
+                list.appendChild(li);
+                list.style.display = "block";
+                return;
+            }
+        }
+
+        const showNoData = validItems.length === 0 && !isAnyFetchActive;
+        if (showNoData) {
             const li = document.createElement("li");
             li.textContent = "No Data";
             li.className = "no-data-axi-suggestion";
@@ -4871,18 +5141,7 @@
             return;
         }
 
-        if (isInitialCommandStage && validItems.length > 0 && !isSystemMessage(validItems[0])) {
-            list.classList.add("My-Command-Wrapper");
-            if (favouritesCard) favouritesCard.style.display = "none";
-            if (commandHeader) commandHeader.style.display = "flex";
-
-        } else {
-            list.classList.remove("My-Command-Wrapper");
-            if (favouritesCard) favouritesCard.style.display = "none";
-            if (commandHeader) commandHeader.style.display = "none";
-        }
-
-        validItems.forEach((item, i) => {
+        function createSuggestionLi(item, i) {
             const li = document.createElement("li");
             const text = typeof item === "string" ? item : item.displaydata;
             li.className = "axi-suggestion";
@@ -4898,12 +5157,12 @@
                 li.textContent = displayText;
 
             } else if (isInitialCommandStage && getCommandConfig(text)) {
-                const iconName = commandIcons[text.toLowerCase()] || "chevron_right";
+                const iconName = (commandIcons && commandIcons[text.toLowerCase()]) ? commandIcons[text.toLowerCase()] : "info";
 
                 li.innerHTML = `
                
                 <div class="d-flex align-items-center">
-                        <div class="symbol symbol-35px me-2 mainIcon">
+                        <div class="symbol symbol-25px mainIcon">
                             <div class="symbol-label cardbg-inverse-1">
                                 <div class="items-icon">
                                     <span class="material-icons material-icons-style material-icons-2">${iconName}</span>
@@ -4914,7 +5173,6 @@
                     </div>`;
             } else {
                 li.textContent = displayText;
-
             }
 
             if (i === activeIndex) {
@@ -4923,13 +5181,97 @@
 
             li.addEventListener("mousedown", e => {
                 e.preventDefault();
-                // Find the index of the selected item in the original filteredObjects array
-                const objectIndex = filteredObjects.indexOf(item);
+                let objectIndex = validItems.findIndex(obj => {
+                    if (obj === item) return true;
+                    const itemText = typeof item === "string" ? item : (item?.displaydata || item?.name || "");
+                    const objText = typeof obj === "string" ? obj : (obj?.displaydata || obj?.name || "");
+                    return itemText && objText && itemText.toLowerCase() === objText.toLowerCase();
+                });
                 apply(objectIndex !== -1 ? objectIndex : i);
             });
 
-            list.appendChild(li);
-        });
+            return li;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        if (isInitialCommandStage && (validItems.length > 0 || isCmdsLoading || isStructsLoading) && !isSystemMessage(validItems[0])) {
+            const verbs = [];
+            const structures = [];
+            validItems.forEach((item, i) => {
+                const text = typeof item === "string" ? item : item.displaydata;
+                if (getCommandConfig(text)) {
+                    verbs.push({ item, index: i });
+                } else {
+                    structures.push({ item, index: i });
+                }
+            });
+
+            const createLoadingElement = (text) => {
+                const div = document.createElement("div");
+                div.className = "d-flex align-items-center justify-content-center py-2 px-5 text-muted gap-2";
+                div.style.fontSize = "13px";
+                div.innerHTML = `
+                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-right: 6px;"></span>
+                    <span>${text}</span>
+                `;
+                return div;
+            };
+
+            if (verbs.length > 0 || isCmdsLoading) {
+                const gridContainer = document.createElement("div");
+                gridContainer.className = "axi-verbs-grid-container";
+                
+                const header = document.createElement("div");
+                header.className = "axi-grid-header";
+                header.textContent = "Commands";
+                gridContainer.appendChild(header);
+
+                if (isCmdsLoading) {
+                    gridContainer.appendChild(createLoadingElement("Loading commands..."));
+                } else {
+                    const grid = document.createElement("div");
+                    grid.className = "axi-verbs-grid";
+
+                    verbs.forEach(({ item, index }) => {
+                        const li = createSuggestionLi(item, index);
+                        grid.appendChild(li);
+                    });
+
+                    gridContainer.appendChild(grid);
+                }
+
+                fragment.appendChild(gridContainer);
+            }
+
+            if (structures.length > 0 || isStructsLoading) {
+                const listContainer = document.createElement("div");
+                listContainer.className = "axi-structures-list-container";
+
+                const header = document.createElement("div");
+                header.className = "axi-grid-header";
+                header.textContent = "Structures";
+                listContainer.appendChild(header);
+
+                if (isStructsLoading) {
+                    listContainer.appendChild(createLoadingElement("Loading structures..."));
+                } else {
+                    structures.forEach(({ item, index }) => {
+                        const li = createSuggestionLi(item, index);
+                        listContainer.appendChild(li);
+                    });
+                }
+
+                fragment.appendChild(listContainer);
+            }
+        } else {
+            validItems.forEach((item, i) => {
+                const li = createSuggestionLi(item, i);
+                fragment.appendChild(li);
+            });
+        }
+
+        list.appendChild(fragment);
 
         if (list.classList.contains("axi-grid-layout")) {
             list.style.display = "flex";
@@ -4977,10 +5319,26 @@
     }
 
     function apply(index) {
+        if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
+            return;
+        }
 
-        if (!items[index] || isSystemMessage(items[index])) return;
+        const validItems = items.filter(item => {
+            if (!item) return false;
+            if (typeof item === "string") {
+                return (!item.startsWith("Loading") && item !== "No Data" && item.trim() !== "");
+            }
+            if (typeof item === "object") {
+                const text = item.displaydata || item.name || "";
+                return (typeof text === "string" && !text.startsWith("Loading") && text !== "No Data" && text.trim() !== "");
+            }
+            return false;
+        });
 
-        const selectedItem = items[index];
+        const targetList = (validItems && validItems.length > 0 && index >= 0 && index < validItems.length) ? validItems : items;
+        const selectedItem = targetList[index];
+
+        if (!selectedItem || isSystemMessage(selectedItem)) return;
 
 
         const currentInput = input.value;
@@ -5015,7 +5373,12 @@
                 input.value = "view " + rawInput + " ";
             }
             hide();
-            executeCommandsV2();
+            isProgrammaticExecution = true;
+            try {
+                executeCommandsV2();
+            } finally {
+                isProgrammaticExecution = false;
+            }
             if (shouldRestoreInput) {
                 input.value = rawInput + " ";
             }
@@ -5055,7 +5418,12 @@
                 if (executeTokens.length >= 2) {
                     hide();
                     popUpOption = true;
-                    executeCommandsV2();
+                    isProgrammaticExecution = true;
+                    try {
+                        executeCommandsV2();
+                    } finally {
+                        isProgrammaticExecution = false;
+                    }
                     if (shouldRestoreInput) {
                         input.value = rawInput + " ";
                     }
@@ -5092,7 +5460,7 @@
             tokens.push("");
         }
 
-        let suggestion = typeof items[index] === "string" ? items[index] : items[index].displaydata;
+        let suggestion = typeof selectedItem === "string" ? selectedItem : (selectedItem.displaydata || selectedItem.name || "");
         let displayName = suggestion;
         let realValue = "";
         let realType = "";
@@ -5167,12 +5535,31 @@
 
 
         // Get Real Value logic
-        // Fix: Select the exact object from filteredObjects using the index to avoid selecting an incorrect type when two items have the same name/caption/displaydata (e.g. slord tstruct vs slord iview).
         let foundObj = null;
         if (filteredObjects && index >= 0 && index < filteredObjects.length) {
-            foundObj = filteredObjects[index];
-        } else {
-            foundObj = filteredObjects.find(item => item.displaydata === suggestion);
+            const cand = filteredObjects[index];
+            const candText = typeof cand === "string" ? cand : (cand?.displaydata || cand?.name || "");
+            if (candText && suggestion && candText.toLowerCase() === suggestion.toLowerCase()) {
+                foundObj = cand;
+            }
+        }
+        if (!foundObj && filteredObjects) {
+            foundObj = filteredObjects.find(itemObj => {
+                if (itemObj === selectedItem) return true;
+                const objText = typeof itemObj === "string" ? itemObj : (itemObj?.displaydata || itemObj?.name || "");
+                return objText && suggestion && objText.toLowerCase() === suggestion.toLowerCase();
+            });
+        }
+
+        const checkEditObj = (checkTokens[0]?.toLowerCase() === "edit" && checkTokens[1]) ? getTargetEntityObj(checkTokens[1], "edit") : null;
+        if (checkEditObj && (checkEditObj.keyfieldforedit === "F" || checkEditObj.keyfieldforedit === false)) {
+            const suggText = (typeof selectedItem === "string" ? selectedItem : (selectedItem?.displaydata || selectedItem?.name || "")).toLowerCase().trim();
+            const hasWithInTokens = checkTokens.some(t => cleanString(t).toLowerCase() === "with") || currentInput.toLowerCase().includes(" with");
+            if (targetIndex === 1 || suggText === "with" || hasWithInTokens) {
+                showToast("Key field is not configured for this form.", 3000, false);
+                hide();
+                return;
+            }
         }
 
         if (foundObj && isViewCommand) {
@@ -5224,7 +5611,7 @@
 
         displayName = displayName.replace(/[\r\n]+/g, " ").trim();
 
-        if (["create", "view", "edit"].includes(displayName.toLowerCase())) {
+        if (["create", "view", "edit", "source"].includes(displayName.toLowerCase())) {
             displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1).toLowerCase();
         }
 
@@ -5441,6 +5828,7 @@
                     font-size: 13.5px;
                     line-height: 1.4;
                     color: #ffffff;
+                    white-space: pre-line;
                 }
                 @media (max-width: 576px) {
                     #axi-toast-container {
@@ -5582,7 +5970,7 @@
             }
 
             if (axiVersion && axpertVersion) {
-                showToast(`Axpert Version: ${axpertVersion} | Axi CMD Version: ${axiVersion}`, 5000, true);
+                showToast(`Axpert Version: ${axpertVersion}\nAxi CMD Version: ${axiVersion}`, 5000, true);
             } else if (axiVersion) {
                 showToast(`Axi CMD Version: ${axiVersion}`, 5000, true);
             } else if (axpertVersion) {
@@ -5758,6 +6146,12 @@
                     resolvedParams = {};
                     createfieldnamevaluesList = {};
                     resetSetCommandState();
+                    cachedAccessPermissions = null;
+                    initialSuggestionsCache = null;
+                    initialSuggestionsSourceList = null;
+                    initialSuggestionsRunnable = null;
+                    targetEntitiesCache.sourceList = null;
+                    targetEntitiesCache.matchesMap = null;
 
                     await initCommands(true);
 
@@ -5806,6 +6200,10 @@
         }
 
         input.addEventListener("focus", () => {
+            if (suppressFocusSuggestions) {
+                suppressFocusSuggestions = false;
+                return;
+            }
             if (input.value.trim() === "") {
                 handleInput();
             }
@@ -6061,19 +6459,87 @@
 
             // ---------------------------------------------------
             if (list.style.display === "none" || items.length === 0) return;
-            if (e.key === "ArrowDown") { e.preventDefault(); activeIndex = (activeIndex + 1) % items.length; highlight(); }
-            if (e.key === "ArrowUp") { e.preventDefault(); activeIndex = (activeIndex - 1 + items.length) % items.length; highlight(); }
-            if (list.classList.contains("axi-grid-layout")) {
-                if (e.key === "ArrowRight") {
-                    e.preventDefault();
+            const gridEl = list.querySelector(".axi-verbs-grid");
+            const isInitialGrid = (gridEl !== null);
+            const verbsCount = isInitialGrid ? list.querySelectorAll(".axi-verbs-grid .axi-suggestion").length : 0;
+            let cols = 3;
+            if (isInitialGrid && gridEl && verbsCount > 0) {
+                try {
+                    const gridStyle = window.getComputedStyle(gridEl);
+                    const computedCols = gridStyle.getPropertyValue("grid-template-columns").split(" ").filter(Boolean).length;
+                    if (computedCols > 0) {
+                        cols = computedCols;
+                    }
+                } catch (err) {
+                    cols = 3;
+                }
+            }
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (isInitialGrid) {
+                    if (activeIndex < verbsCount) {
+                        const nextRowIndex = activeIndex + cols;
+                        if (nextRowIndex < verbsCount) {
+                            activeIndex = nextRowIndex;
+                        } else {
+                            if (items.length > verbsCount) {
+                                activeIndex = verbsCount;
+                            } else {
+                                activeIndex = (activeIndex + 1) % verbsCount;
+                            }
+                        }
+                    } else {
+                        activeIndex = (activeIndex + 1) % items.length;
+                    }
+                } else {
                     activeIndex = (activeIndex + 1) % items.length;
-                    highlight();
                 }
-                if (e.key === "ArrowLeft") {
-                    e.preventDefault();
+                highlight();
+            }
+            else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                if (isInitialGrid) {
+                    if (activeIndex >= verbsCount) {
+                        if (activeIndex === verbsCount) {
+                            const lastRowStart = Math.floor((verbsCount - 1) / cols) * cols;
+                            activeIndex = lastRowStart + (cols - 1);
+                            if (activeIndex >= verbsCount) {
+                                activeIndex = verbsCount - 1;
+                            }
+                        } else {
+                            activeIndex = activeIndex - 1;
+                        }
+                    } else {
+                        const prevRowIndex = activeIndex - cols;
+                        if (prevRowIndex >= 0) {
+                            activeIndex = prevRowIndex;
+                        } else {
+                            activeIndex = items.length - 1;
+                        }
+                    }
+                } else {
                     activeIndex = (activeIndex - 1 + items.length) % items.length;
-                    highlight();
                 }
+                highlight();
+            }
+            else if (e.key === "ArrowRight") {
+                e.preventDefault();
+                if (isInitialGrid && activeIndex < verbsCount) {
+                    activeIndex = (activeIndex + 1) % verbsCount;
+                } else {
+                    activeIndex = (activeIndex + 1) % items.length;
+                }
+                highlight();
+            }
+            else if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                if (isInitialGrid && activeIndex < verbsCount) {
+                    activeIndex = (activeIndex - 1 + verbsCount) % verbsCount;
+                } else {
+                    activeIndex = (activeIndex - 1 + items.length) % items.length;
+                }
+                highlight();
             }
             if (e.key === "Tab") { e.preventDefault(); if (activeIndex === -1) activeIndex = 0; apply(activeIndex); }
             // if (e.key === "Enter" && activeIndex >= 0) {
@@ -6103,37 +6569,101 @@
             }
         });
 
+        document.addEventListener("keydown", e => {
+            if (e.key !== "Escape") return;
+
+            const favModalOverlay = document.getElementById("axiFavModalOverlay");
+            const isFavModalOpen = favModalOverlay && (favModalOverlay.style.display === "flex" || (window.getComputedStyle && window.getComputedStyle(favModalOverlay).display !== "none"));
+            
+            const deleteModalOverlay = document.getElementById("axiFavDeleteModalOverlay");
+            const isDeleteModalOpen = deleteModalOverlay && (deleteModalOverlay.style.display === "flex" || (window.getComputedStyle && window.getComputedStyle(deleteModalOverlay).display !== "none"));
+
+            const isFavCardOpen = favouritesCard && (favouritesCard.style.display === "flex" || (megaDropdown && megaDropdown.style.display === "flex" && window.getComputedStyle && window.getComputedStyle(favouritesCard).display !== "none"));
+
+            const isSuggestionsOpen = (list && list.style.display !== "none") || (megaDropdown && megaDropdown.style.display === "flex");
+
+            if (isFavModalOpen) {
+                e.preventDefault();
+                e.stopPropagation();
+                hideFavoriteModal();
+                return;
+            }
+
+            if (isDeleteModalOpen) {
+                e.preventDefault();
+                e.stopPropagation();
+                hideDeleteFavoriteModal();
+                return;
+            }
+
+            if (isFavCardOpen || isSuggestionsOpen) {
+                e.preventDefault();
+                e.stopPropagation();
+                suppressFocusSuggestions = true;
+                hide();
+                if (input) {
+                    input.focus();
+                }
+                return;
+            }
+        }, true);
+
         document.addEventListener("click", e => {
-            if (list && list.style.display !== "none") {
+            const isDropdownVisible = megaDropdown && megaDropdown.style.display !== "none";
+            if (isDropdownVisible || (list && list.style.display !== "none")) {
                 const insideSearchWrapper = searchWrapper && searchWrapper.contains(e.target);
                 const insideDropdown = megaDropdown && megaDropdown.contains(e.target);
-                if (!insideSearchWrapper && !insideDropdown && e.target !== input) {
+                const insideFavModal = (document.getElementById("axiFavModalOverlay") && document.getElementById("axiFavModalOverlay").contains(e.target));
+                const insideDeleteModal = (document.getElementById("axiFavDeleteModalOverlay") && document.getElementById("axiFavDeleteModalOverlay").contains(e.target));
+                if (!insideSearchWrapper && !insideDropdown && !insideFavModal && !insideDeleteModal && e.target !== input) {
                     hide();
                 }
             }
-        })
+        });
 
 
 
 
         const iframe = document.getElementById("middle1");
         if (iframe) {
+            const attachClickToDoc = (doc) => {
+                if (!doc) return;
+                if (doc._axiClickAttached) return;
+                doc._axiClickAttached = true;
+
+                doc.addEventListener("click", () => {
+                    hide();
+                });
+
+                try {
+                    const iframes = doc.getElementsByTagName("iframe");
+                    for (let i = 0; i < iframes.length; i++) {
+                        const subIframe = iframes[i];
+                        try {
+                            const subDoc = subIframe.contentDocument || subIframe.contentWindow?.document;
+                            if (subDoc) attachClickToDoc(subDoc);
+                        } catch (e) {}
+
+                        subIframe.addEventListener("load", () => {
+                            try {
+                                const subDoc = subIframe.contentDocument || subIframe.contentWindow?.document;
+                                if (subDoc) attachClickToDoc(subDoc);
+                            } catch (e) {}
+                        });
+                    }
+                } catch (e) {}
+            };
+
             const attachIframeClick = () => {
                 try {
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-
-                    iframeDoc.removeEventListener("click", () => hide());
-                    iframeDoc.addEventListener("click", () => {
-                        hide();
-                    });
+                    attachClickToDoc(iframeDoc);
                 } catch (err) {
                     console.warn("Could not attach click listener to iframe (likely CORS restriction):", err);
                 }
             };
 
-
             attachIframeClick();
-
 
             iframe.addEventListener("load", attachIframeClick);
         }
@@ -6156,10 +6686,11 @@
     }
 
     function highlight() {
-        if (list.children.length > 0) {
-            [...list.children].forEach((li, i) => li.classList.toggle("active", i === activeIndex));
+        const suggestionElements = Array.from(list.querySelectorAll(".axi-suggestion"));
+        if (suggestionElements.length > 0) {
+            suggestionElements.forEach((li, i) => li.classList.toggle("active", i === activeIndex));
 
-            const activeItem = list.children[activeIndex];
+            const activeItem = suggestionElements[activeIndex];
             if (activeItem) {
                 const itemTop = activeItem.offsetTop;
                 const itemBottom = itemTop + activeItem.clientHeight;
@@ -6185,6 +6716,9 @@
      * @returns 
      */
     function executeCommandsV2(isNavigating = false) {
+        if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
+            return;
+        }
         if (input.value === "") {
             showToast("Invalid Command!");
             return;
@@ -6218,7 +6752,17 @@
             return;
         }
 
+        const rawTokens = getTokens(text, false);
+        if (rawTokens.length > 0) {
+            const firstToken = cleanString(rawTokens[0]).toLowerCase();
+            const secondToken = rawTokens[1] ? cleanString(rawTokens[1].toLowerCase()) : ""; 
 
+            
+            if (!isProgrammaticExecution && ["create", "view", "edit", "source"].includes(firstToken) && secondToken !== "inbox") {
+                showToast("Invalid Command!");
+                return;
+            }
+        }
 
         const tokens = getTokens(text);
         if (tokens.length === 1 && isTargetEntity(tokens[0])) {
@@ -6256,6 +6800,10 @@
             if (targetToken && targetToken.toLowerCase() !== "inbox") {
                 const entityObj = getTargetEntityObj(targetToken, groupNameNormalized);
                 if (entityObj) {
+                    // if (groupNameNormalized === "edit" && (entityObj.keyfieldforedit === "F" || entityObj.keyfieldforedit === false)) {
+                    //     showToast("Key field is not configured for this form.", 3000, false);
+                    //     return;
+                    // }
                     if (!isActionAllowed(entityObj, groupNameNormalized)) {
                         showToast("You do not have permission to execute this command.", 3000, false);
                         return;
@@ -6264,11 +6812,16 @@
             }
         }
 
-        if (groupNameNormalized === "run" && (isPreviewModalOpen() || isRunDisabledForPage())) {
-            showToast("Execution of run command is not allowed when the active page or preview modal is not runnable");
+        if (groupNameNormalized === "run" && (isPreviewModalOpen() || isRunDisabledForPage() || isViewDesignerModalOpen())) {
+            showToast("Execution of run command is not allowed when the active page, preview modal or view designer is not runnable");
             return;
         }
         const accessPermissions = getAccessPermissions();
+
+        if (groupNameNormalized === "source" && !accessPermissions.buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
 
         if (groupNameNormalized === "configure" && !accessPermissions.appMgrAccess) {
             showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
@@ -6427,8 +6980,11 @@
 
     function handleViewInbox() {
         // LoadIframe('processflow.aspx?activelist=t')
-        window.LoadIframe('../aspx/processflow.aspx?activelist=t');
-
+        if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
+            top.window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+        } else {
+            window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+        }
     }
 
 
@@ -7166,6 +7722,41 @@
 
     }
 
+    function handleSourceCommand({ tokens, commandConfig }) {
+        const accessPermissions = getAccessPermissions();
+        if (!accessPermissions?.buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${input.value.trim()}`);
+            return;
+        }
+
+        let rawName = cleanCommandToken(tokens[1]);
+        const entityObj = getTargetEntityObj(rawName, "source");
+        if (!entityObj) {
+            showToast("Invalid structure name: " + rawName);
+            return;
+        }
+
+        const type = (entityObj.stype || entityObj.STYPE || "").toLowerCase().trim();
+        const name = entityObj.name || entityObj.NAME || "";
+
+        let targetUrl = "";
+        if (type === "t" || type === "tstruct") {
+            targetUrl = "developerstudio:tstruct:" + name;
+            window.openDeveloperStudio("tstreact", name, true);
+        } else if (type === "i" || type === "iview") {
+            targetUrl = "developerstudio:iview:" + name;
+            window.openDeveloperStudio("ivreact", name, true);
+        } else if (type === "ads") {
+            targetUrl = `../aspx/tstruct.aspx?transid=b_sql&sqlname=${encodeURIComponent(name)}&act=load&dummyload=false?`;
+            handleViewSourceAds(name);
+        } else {
+            showToast("Unknown source type: " + name);
+            return;
+        }
+
+        setCommandRoutes(input.value.trim(), targetUrl);
+    }
+
     function handleViewCommand({ tokens, commandConfig }) {
 
         let transId = "";
@@ -7660,6 +8251,7 @@
 
         const VALID_TYPES = new Set(paramList);
         VALID_TYPES.add("inbox");
+        VALID_TYPES.add("page");
 
         let paramValue;
 
@@ -7723,9 +8315,13 @@
         // -----------------------------------
         const stypeMap = {
             t: "tstruct",
+            tstruct: "tstruct",
             i: "iview",
+            iview: "iview",
             ads: "ads",
-            p: "page"
+            p: "page",
+            page: "page",
+            inbox: "inbox"
         };
 
         // -----------------------------------
@@ -7734,10 +8330,14 @@
         // i -> iview
         // t -> tstruct
         // -----------------------------------
-        const normalizedResolvedType =
+        let normalizedResolvedType =
             stypeMap[
             resolvedType
             ] || resolvedType;
+
+        if (!normalizedResolvedType && normalizedText === "inbox") {
+            normalizedResolvedType = "inbox";
+        }
 
         // ===================================
         // STRICT TYPE MODE
@@ -8042,14 +8642,19 @@
         //     return pureCaption === normalizedText;
         // });
 
-        bestMatch = viewList.find(d => typeof d.displaydata === "string" && d.displaydata.toLowerCase() === rawTokenText.toLowerCase());
-
-        // if (!bestMatch) {
-        //     bestMatch = viewList.find(d => d.name && d.name.toLowerCase() === normalizedText);
-        // }
+        bestMatch = viewList.find(d => {
+            const isPageType = ['p', 'page'].includes((d.stype || "").toLowerCase());
+            return isPageType && typeof d.displaydata === "string" && d.displaydata.toLowerCase() === rawTokenText.toLowerCase();
+        });
 
         if (!bestMatch) {
             bestMatch = viewList.find(d => {
+                const isPageType = ['p', 'page'].includes((d.stype || "").toLowerCase());
+                if (!isPageType) return false;
+
+                if (d.name && d.name.toLowerCase() === rawTokenText.toLowerCase()) {
+                    return true;
+                }
                 if (typeof d.displaydata !== "string") return false;
 
                 const pureCaption = d.displaydata
@@ -8058,7 +8663,7 @@
                     .trim()
                     .toLowerCase();
 
-                return (pureCaption === normalizedText || pureCaption === rawTokenText) && d.stype.toLowerCase() === 'p';
+                return (pureCaption === normalizedText || pureCaption === rawTokenText);
             });
         }
 
@@ -8338,8 +8943,12 @@
                     if (!topToolbarButtons) topToolbarButtons = getTopToolbarButtons();
                     allButtons = [...Object.values(bottomToolbarButtons),
                     ...Object.values(topToolbarButtons)];
-
-
+                    
+                    if (structType === "i") {
+                        const utilityButtons = getIViewUtilityButtons();
+                        const actionButtons = getIViewActionDropdownButtons();
+                        allButtons = [...allButtons, ...Object.values(utilityButtons), ...Object.values(actionButtons)];
+                    }
                 }
 
 
@@ -8393,15 +9002,22 @@
 
         if (!targetBtn) {
             targetBtn = allButtons.find(btn => {
-                const rawLabel = btn.label || "";
-
-                const normalizedBtnLabel = rawLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
-
                 const normalizedInputLabel = buttonLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
 
-                return normalizedBtnLabel === normalizedInputLabel;
+                const rawLabel = btn.label || "";
+                const normalizedBtnLabel = rawLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+                if (normalizedBtnLabel === normalizedInputLabel) return true;
 
+                const element = btn.element;
+                if (element) {
+                    const titleAttr = (element.getAttribute("title") || "").toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+                    if (titleAttr === normalizedInputLabel) return true;
 
+                    const textContentVal = (element.textContent || "").toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+                    if (textContentVal === normalizedInputLabel) return true;
+                }
+
+                return false;
             });
 
         }
@@ -8608,6 +9224,135 @@
 
 
 
+    function getIViewUtilityButtons() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        let doc = null;
+        try {
+            doc = iframe.contentDocument || iframe.contentWindow?.document;
+        } catch (e) {
+            console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
+        }
+        if (!doc) return {};
+
+        const searchElem = doc.getElementById("iconsNewSearch") || doc.querySelector("#iconsNewSearch");
+        const refreshElem = doc.getElementById("iconsNewRefresh") || doc.querySelector("#iconsNewRefresh") || doc.getElementById("iviewRefresh") || doc.querySelector(".iviewRefresh");
+        const refreshParamElem = doc.getElementById("dvRefreshParam") || doc.querySelector("#dvRefreshParam");
+        const refreshParamIconElem = doc.getElementById("dvRefreshParamIcon") || doc.querySelector("#dvRefreshParamIcon");
+        const utilityContainer = doc.getElementById("iconsNewUtility") || doc.querySelector("#iconsNewUtility");
+        
+        const containers = [utilityContainer, searchElem, refreshElem, refreshParamElem, refreshParamIconElem].filter(Boolean);
+        if (containers.length === 0) return {};
+
+        const links = [];
+        containers.forEach((container) => {
+            if (container.matches("a, button, [onclick], [title]")) {
+                links.push(container);
+            }
+            const children = Array.from(container.querySelectorAll("a, button, [onclick]"));
+            children.forEach(child => {
+                if (!links.includes(child)) links.push(child);
+            });
+        });
+
+        if (links.length === 0) return {};
+
+        const result = {};
+        links.forEach((link) => {
+            const title = link.getAttribute("title") || link.parentElement?.getAttribute("title") || "";
+            let label = title.trim();
+            if (!label) {
+                const nameSpan = link.querySelector(".dropdownIconName");
+                if (nameSpan) {
+                    label = nameSpan.textContent.trim();
+                } else {
+                    const cloned = link.cloneNode(true);
+                    cloned.querySelectorAll(".material-icons, .material-icons-style").forEach(node => node.remove());
+                    label = (cloned.textContent || "").trim();
+                }
+            }
+            label = label.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+            if (!label) return;
+
+            const id = link.id || link.getAttribute("id") || `utility_${label.toLowerCase().replace(/\s+/g, '_')}`;
+            if (result[id]) return;
+
+            result[id] = {
+                id,
+                label,
+                element: link,
+                click: () => {
+                    const btnInside = link.querySelector("button, a, [onclick]") || link;
+                    if (btnInside.href && btnInside.href.startsWith("javascript:")) {
+                        try {
+                            const jsCode = decodeURIComponent(btnInside.href.replace(/^javascript:/i, ''));
+                            iframe.contentWindow.eval(jsCode);
+                        } catch (e) {
+                            console.error("Failed to execute javascript: href for utility link", e);
+                            btnInside.click();
+                        }
+                    } else {
+                        btnInside.click();
+                        if (btnInside !== link) {
+                            try { link.click(); } catch(e) {}
+                        }
+                    }
+                }
+            };
+        });
+
+        return result;
+    }
+
+    function getIViewActionDropdownButtons() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        let doc = null;
+        try {
+            doc = iframe.contentDocument || iframe.contentWindow?.document;
+        } catch (e) {
+            console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
+        }
+        if (!doc) return {};
+
+        const items = Array.from(doc.querySelectorAll(".dropDownButton__list li.dropDownButton__item, li.dropDownButton__item"));
+        if (items.length === 0) return {};
+
+        const result = {};
+        items.forEach((item) => {
+            const dropdownVal = item.getAttribute("data-dropdown-value") || "";
+            if (dropdownVal !== "chart" && dropdownVal !== "saveAs") return;
+
+            const link = item.querySelector("a") || item;
+            
+            let title = item.getAttribute("title") || link.getAttribute("title") || "";
+            let label = title.trim();
+            if (!label) {
+                const tempNode = link.cloneNode(true);
+                const icons = tempNode.querySelectorAll("span, i, .material-icons");
+                icons.forEach(node => node.remove());
+                label = tempNode.textContent.trim();
+            }
+            label = label.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+            if (!label) return;
+
+            const id = item.id || link.id || `action_${dropdownVal}`;
+
+            result[id] = {
+                id,
+                label,
+                element: item,
+                click: () => {
+                    item.click();
+                }
+            };
+        });
+
+        return result;
+    }
+
     function getBottomToolbarButtons() {
         const iframe = document.getElementById("middle1");
         if (!iframe) return {};
@@ -8630,6 +9375,8 @@
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
             if (!id) return;
+            if (id === "ivirActionButton") return;
+
             const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
             if (label.toLowerCase() === "plugin custom code") return;
@@ -8751,6 +9498,25 @@
         return result;
     }
 
+    function isViewDesignerModalOpen() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return false;
+
+        let doc = null;
+        try {
+            doc = iframe.contentDocument || iframe.contentWindow?.document;
+        } catch (e) {
+            // Ignore cross-origin error
+        }
+        if (!doc) return false;
+
+        const modal = doc.getElementById("newViewTabId") || doc.querySelector("#newViewTabId");
+        if (modal) {
+            return modal.offsetWidth > 0 || modal.offsetHeight > 0 || modal.style.display === "block" || modal.classList.contains("show");
+        }
+        return false;
+    }
+
     function isRunDisabledForPage(src) {
         if (!src) {
             const iframe = document.getElementById("middle1");
@@ -8795,6 +9561,8 @@
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
             if (!id) return;
+            if (id === "ivirActionButton") return;
+
             const label = extractButtonLabel(btn);
             if (!label) console.log("There is no label for Element: " + btn);
             if (label.toLowerCase() === "plugin custom code") return;
@@ -8964,7 +9732,10 @@
             return text;
         }
 
-        const title = btn.getAttribute("title");
+        const title = btn.getAttribute("title") || 
+                      btn.getAttribute("data-bs-original-title") || 
+                      btn.getAttribute("data-original-title") ||
+                      btn.getAttribute("data-bs-title");
         if (title) return title.trim();
 
         const menuTitle = btn.querySelector(".menu-title");
@@ -8974,7 +9745,9 @@
 
 
 
-        return btn.innerText.trim();
+        const cloned = btn.cloneNode(true);
+        cloned.querySelectorAll(".material-icons, .material-icons-style").forEach(node => node.remove());
+        return cloned.innerText.trim();
 
     }
 
@@ -9026,7 +9799,7 @@
         buttons.forEach((btn, index) => {
             // if (!hasAction(btn)) return;
 
-            if (btn.classList.contains("d-none") || btn.classList.contains("disabled")) return;
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.classList.contains("disabled") || btn.closest(".disabled") || btn.closest("[hidden]")) return;
 
 
             if (btn.getAttribute("data-kt-menu-attach") === "parent") return;
@@ -9039,8 +9812,31 @@
 
             const label = extractButtonLabel(btn);
             if (!label) return;
-            if (label.toLowerCase() === "plugin custom code") return;
-            if (label.toLowerCase() === "export" || label.toLowerCase() === "theme" || label.toLowerCase() === "field captions" || label.toLowerCase() === "view" || label.toLowerCase() === "pattern") return;
+            const labelLower = label.toLowerCase();
+            if (labelLower === "plugin custom code" || labelLower === "export" || labelLower === "theme" || labelLower === "field captions" || labelLower === "view" || labelLower === "pattern") return;
+
+            const dataElement = (btn.getAttribute("data-kt-element") || "").toLowerCase();
+            const dataTarget = (btn.getAttribute("data-target") || "").toLowerCase();
+            const btnId = (btn.id || btn.getAttribute("data-id") || "").toLowerCase();
+
+            if (getStructType() === "e") {
+                const isThemeMode = dataElement === "mode" ||
+                                    labelLower === "light" ||
+                                    labelLower === "dark" ||
+                                    labelLower === "gradient" ||
+                                    labelLower === "system" ||
+                                    labelLower === "compact" ||
+                                    labelLower.includes("light theme") ||
+                                    labelLower.includes("dark theme") ||
+                                    labelLower.includes("gradient theme") ||
+                                    dataTarget.includes("lighttheme") ||
+                                    dataTarget.includes("blacktheme") ||
+                                    dataTarget.includes("gradtheme") ||
+                                    dataTarget.includes("compacttheme") ||
+                                    btnId.includes("theme_mode");
+
+                if (isThemeMode) return;
+            }
 
             result[id] = {
                 id,
@@ -9200,7 +9996,7 @@
 
             elements.forEach((el, index) => {
                 // skip hidden
-                if (el.classList.contains("d-none")) return;
+                if (el.classList.contains("d-none") || el.closest(".d-none") || el.classList.contains("disabled") || el.closest(".disabled") || el.closest("[hidden]")) return;
 
                 // must be actionable
                 // if (!hasAction(el)) return;
@@ -11563,17 +12359,16 @@
                     const item = saveListWithFieldNamendValueswithTransId[i];
                     if (!item) continue;
 
-                    const parts = item.split("=");
-                    if (parts.length !== 2) continue;
+                    const sep = item.includes("=") ? "=" : " ";
+                    const parts = item.split(sep);
+                    if (parts.length < 2) continue;
 
                     const left = parts[0];
-                    const value = parts[1];
+                    const value = parts.slice(1).join(sep).trim();
 
                     const leftParts = left.split("~");
-                    if (leftParts.length !== 2) continue;
-
                     const fieldName = leftParts[0];
-                    const rowNo = leftParts[1];
+                    const rowNo = leftParts.length > 1 ? leftParts[1] : "1";
 
                     const columnMetadata = colList.find(c =>
                         c.name?.toLowerCase() === fieldName.toLowerCase()
@@ -11602,8 +12397,7 @@
                     }
 
                     rowObj.columns[fieldName] = value;
-                    rowObj.columns[keyfield] = keyvalue;
-                    
+                    if (fieldName !== keyfield) rowObj.columns[keyfield] = keyvalue;
                 }
 
                 const recdata = Object.keys(dcMap).map(recKey => ({
@@ -11634,7 +12428,7 @@
                         changedrows: {},
                         trace: "true",
                         forpaybooks: "true",
-                        dataupdate: iscreate ? "false" : "true",
+                        dataupdate: "false",
                         primarykey: keyfield,
                         recordid: recordid,
                         keyfield: keyfield,
@@ -11713,7 +12507,7 @@
         const result = {};
 
         buttons.forEach((btn, index) => {
-            if (btn.classList.contains("d-none")) return;
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.classList.contains("disabled") || btn.closest(".disabled") || btn.closest("[hidden]")) return;
 
             const id =
                 btn.id ||
@@ -11896,8 +12690,8 @@
             fetch(`${axiFavoritesUrl}?username=${window.mainUserName}&appname=${appname}`)
                 .then(res => {
                     isCommandsLoading = true;
-                    input.disabled = isCommandsLoading;
-                    input.placeholder = "Initializing commands, Please wait....";
+                    input.disabled = false;
+                    input.placeholder = "Axpert AI";
 
 
                     return res.json()
@@ -11928,7 +12722,7 @@
 
                 }).finally(() => {
                     isCommandsLoading = false;
-                    input.disabled = isCommandsLoading;
+                    input.disabled = false;
                     input.placeholder = "Axpert AI"
 
                 });
@@ -11946,6 +12740,11 @@
 
         const groupKey = tokens[0];
         const commandVerb = tokens[1];
+
+        if (groupKey?.toLowerCase() === "help" || groupKey?.toLowerCase() === "version") {
+            showToast("You cannot add this command to Favorites!");
+            return;
+        }
 
         if (groupKey?.toLowerCase() === "run") {
             showToast("You cannot add 'run' commands to favorites");
@@ -12213,8 +13012,9 @@
 
 
     function executeFavorite(favObj) {
-
-
+        if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
+            return;
+        }
 
         const cmdText = favObj?.originalCommandText || favObj?.originalcommandtext || favObj?.commandText || favObj?.commandtext || "";
         input.value = cmdText + " ";
@@ -12254,7 +13054,7 @@
                         break;
 
                     case 'buildAccess':
-                        if (tokens[0].toLowerCase() === "sdk") {
+                        if (tokens[0].toLowerCase() === "sdk" || tokens[0].toLowerCase() === "source") {
                             showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
                             return;
 
@@ -12331,17 +13131,23 @@
 
     }
 
+    let cachedAccessPermissions = null;
+
     function getAccessPermissions() {
         // AppMgrAccess(Config)
         // ImportAccess(Upload)
         // ExportAccess(Download)
         // Build(Open/sdk)
-        return {
+        if (cachedAccessPermissions) {
+            return cachedAccessPermissions;
+        }
+        cachedAccessPermissions = {
             appMgrAccess: strToBool(window.getSessionValue("AppMgrAccess")),
             importAccess: strToBool(window.getSessionValue("ImportAccess")),
             exportAccess: strToBool(window.getSessionValue("ExportAccess")),
             buildAccess: strToBool(window.getSessionValue("Build")),
         };
+        return cachedAccessPermissions;
     }
 
     function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions) {
@@ -12365,6 +13171,7 @@
 
                     case 'buildAccess':
                         delete commandsFromDb['SDK'];
+                        delete commandsFromDb['Source'];
                         break;
 
                     default:
@@ -12511,6 +13318,17 @@
         }
 
         const aliasTokens = getTokens(alias);
+        if (aliasTokens[0]?.toLowerCase() === "help" || aliasTokens[0]?.toLowerCase() === "version") {
+            showToast("You cannot add this command to Favorites!");
+            return;
+        }
+
+        const origTokens = getTokens(originalCmdText);
+        if (origTokens[0]?.toLowerCase() === "help" || origTokens[0]?.toLowerCase() === "version") {
+            showToast("You cannot add this command to Favorites!");
+            return;
+        }
+
         if (aliasTokens[0]?.toLowerCase() === "run") {
             showToast("You cannot save 'run' commands in favorites");
             return;
@@ -12936,6 +13754,11 @@
                 font-weight: 600 !important;
                 transition: background 0.2s ease;
                 padding: 6px 12px !important;
+            }
+            .introjs-tooltipbuttons {
+                display: flex !important;
+                gap: 8px !important;
+                justify-content: flex-end !important;
             }
             .introjs-button:hover {
                 background: #c34dff !important;

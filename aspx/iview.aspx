@@ -639,6 +639,7 @@
                                             <div id="paramCont" runat="server" class="wBdr Pagebody">
                                                 <asp:HiddenField ID="hdnbElapsTimeGo" runat="server" Value="" />
                                                 <asp:HiddenField ID="hdnparamValues" runat="server" />
+                                                <asp:HiddenField ID="hdnInstanceId" runat="server" />
                                                 <asp:HiddenField ID="rXml" runat="server" />
                                                 <asp:HiddenField ID="param" runat="server" Value="" />
                                                 <asp:HiddenField ID="paramxml" runat="server" Value="" />
