@@ -622,7 +622,7 @@ ads as(
     END IF;
 
     RETURN;
-END
+END;
 
 >>
 
