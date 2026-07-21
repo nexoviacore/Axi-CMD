@@ -1967,6 +1967,7 @@
     }
 
     function handleInput() {
+        // validateSessionActive();
         if (favouritesCard) {
             favouritesCard.style.display = "none";
         }
@@ -6739,6 +6740,7 @@
             showToast("Execution is not Allowed while executing");
             return;
         }
+        validateSessionActive(); 
 
 
 
@@ -12749,7 +12751,9 @@
 
     }
 
-    function toggleFavorite(cmdText, isAdding = false) {
+    async function toggleFavorite(cmdText, isAdding = false) {
+        const isActive = await validateSessionActive();
+        if (!isActive) return;
         loadFavorites();
         let cmdIndex;
         const tokens = getTokens(cmdText.trim());
@@ -13028,10 +13032,12 @@
     // }
 
 
-    function executeFavorite(favObj) {
+    async function executeFavorite(favObj) {
         if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
             return;
         }
+        const isActive = await validateSessionActive();
+        if (!isActive) return;
 
         const cmdText = favObj?.originalCommandText || favObj?.originalcommandtext || favObj?.commandText || favObj?.commandtext || "";
         input.value = cmdText + " ";
@@ -13960,6 +13966,32 @@
         });
 
         tour.start();
+    }
+
+    async function validateSessionActive() {
+        if (typeof mainSessionId === "undefined" || !mainSessionId) {
+            const baseUrl = getAppBaseUrl();
+            top.window.location.href = `${baseUrl}/aspx/sess.aspx`;
+            return false;
+        }
+        try {
+            const res = await fetch(webUrl + "/WebService.asmx/GetSession", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ key: "nsessionid" })
+            });
+            const data = await res.json();
+            const serverSessionId = data?.d;
+            if (!serverSessionId || serverSessionId === "Session does not exist" || serverSessionId !== mainSessionId) {
+                const baseUrl = getAppBaseUrl();
+                top.window.location.href = `${baseUrl}/aspx/sess.aspx`;
+                return false;
+            }
+            return true;
+        } catch (err) {
+            console.error("Session validation check failed:", err);
+            return true;
+        }
     }
 
 })();
