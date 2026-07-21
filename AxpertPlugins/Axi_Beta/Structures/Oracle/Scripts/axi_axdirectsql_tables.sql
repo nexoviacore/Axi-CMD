@@ -513,18 +513,19 @@ VALUES
     NULL,
     'Metadata',
     5,
-    'SELECT caption || '' ('' || fname || '')'' displaydata,
-            caption,
-            fname name,
-            tstruct,
-            SUBSTR(modeofentry, 1, 1) moe,
-            datatype,
-            fldsql,
-            dcname,
-            asgrid,
-            listvalues fromlist,
-            srckey normalized,
-            modeofentry
+    'SELECT
+        caption || '' ('' || fname || '')'' displaydata,
+        caption,
+        fname name,
+        tstruct,
+        SUBSTR(modeofentry, 1, 1) moe,
+        datatype,
+        fldsql,
+        dcname,
+        asgrid,
+        listvalues fromlist,
+        srckey normalized,
+        modeofentry
      FROM axpflds
      WHERE tstruct = :param1
        AND asgrid = ''F''

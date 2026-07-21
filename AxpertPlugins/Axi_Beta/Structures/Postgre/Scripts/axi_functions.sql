@@ -1078,7 +1078,6 @@ $function$
 
 --fn_axi_getstructures_meta with userpermission meta data
 <<
-
 CREATE OR REPLACE FUNCTION fn_axi_getstructures_meta(pusername character varying, puserrole character varying, presponsiblity character varying, pmode character varying, pstype character varying)
  RETURNS TABLE(displaydata character varying, caption character varying, name character varying, stype character varying, dimension character varying, permission character varying, createallowed character varying, viewallowed character varying, keyfield character varying, primarytable character varying,keyfieldforedit varchar)
  LANGUAGE plpgsql

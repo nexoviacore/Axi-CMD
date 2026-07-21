@@ -25,6 +25,11 @@ DROP TYPE axi_getstructs_obj
 >>
 
 <<
+DROP TYPE AXI_GETSTRUCTURES_META;
+>>
+
+
+<<
 CREATE OR REPLACE TYPE axi_getstructs_obj AS OBJECT (
     displaydata   CLOB,
     id            CLOB,
@@ -48,7 +53,8 @@ CREATE OR REPLACE TYPE AXI_GETSTRUCTURES_META AS OBJECT (
     createallowed  VARCHAR2(4000),
     viewallowed    VARCHAR2(4000),
     keyfield       VARCHAR2(4000),
-    primarytable   VARCHAR2(4000)
+    primarytable   VARCHAR2(4000),
+    keyfieldforedit varchar2(10)
 )
 >>
 
@@ -459,12 +465,13 @@ AS
     v_viewallowed   VARCHAR2(4000);
     v_keyfield      VARCHAR2(4000);
     v_primarytable  VARCHAR2(4000);
+    v_keyfieldforedit varchar2(10);
 BEGIN
 
    
         OPEN v_cursor FOR
         WITH ts AS(SELECT DISTINCT
-               CAST((a.caption || ' (' || a.name || ') [tstruct]') AS VARCHAR2(4000)) AS displaydata,
+               CAST((a.caption || ' (' || a.name || ') [form]') AS VARCHAR2(4000)) AS displaydata,
                a.caption AS tcaption,
                a.name AS transid,
                CAST('t' AS VARCHAR2(4000)) AS stype,
@@ -473,18 +480,18 @@ BEGIN
                CAST(COALESCE(p.newrecord, 'T') AS VARCHAR2(4000)) AS createallowed,
                CAST(COALESCE(p.viewctrl, 'T') AS VARCHAR2(4000)) AS viewallowed,
                kf.kfld,
-               d.tablename
+               d.tablename,kf.kfldforedit
         FROM tstructs a
         JOIN axpdc d ON a.name = d.tstruct AND d.dname = 'dc1'
         LEFT JOIN axpages b ON b.pagetype = 't' || a.name
         LEFT JOIN axuseraccess ua ON ua.sname = a.name
         LEFT JOIN (
-            SELECT name AS tstruct, kfld 
+            SELECT name AS tstruct, kfld ,kfldforedit
             FROM (
-                SELECT combined_results.name, combined_results.kfld,
+                SELECT combined_results.name, combined_results.kfld,kfldforedit,
                        ROW_NUMBER() OVER (PARTITION BY combined_results.name ORDER BY combined_results.ord ASC) as rn
                 FROM (
-                    SELECT a.name, a.keyfield AS kfld, 1 AS ord       
+                    SELECT a.name, a.keyfield AS kfld, 1 AS ord,'T' kfldforedit          
                     FROM axp_tstructprops a 
                     UNION ALL
                     SELECT tstruct AS name, fname AS kfld,
@@ -493,7 +500,12 @@ BEGIN
                             WHEN LOWER(allowduplicate) = 'f' AND LOWER(allowempty) = 'f' AND datatype = 'c' AND LOWER(hidden) = 'f' THEN 3
                             WHEN LOWER(hidden) = 'f' AND datatype = 'c' THEN 4
                             ELSE 5
-                        END AS ord       
+                        END AS ord  ,
+                          CASE 
+                            WHEN modeofentry = 'autogenerate' THEN 'T'
+                            WHEN LOWER(allowduplicate) = 'f' AND LOWER(allowempty) = 'f' AND datatype = 'c' AND LOWER(hidden) = 'f' THEN 'T'
+                            ELSE 'F'
+                        END AS kfldforedit 
                     FROM axpflds
                     WHERE dcname = 'dc1'
                 ) combined_results
@@ -521,13 +533,15 @@ BEGIN
                 REGEXP_LIKE(',' || presponsiblity || ',', ',default,')
                 OR (ua.stype = 't' AND REGEXP_LIKE(',' || presponsiblity || ',', ',' || ua.rname || ','))
               )),
-        iv as(
+  iv as(
         SELECT DISTINCT
-               CAST((a.caption || ' (' || a.name || ') [iview]') AS VARCHAR2(4000)) AS displaydata,
+               CAST((a.caption || ' (' || a.name || ') [report]') AS VARCHAR2(4000)) AS displaydata,
                a.caption,
                a.name,
                CAST('i' AS VARCHAR2(4000)) AS stype,
-               CAST('NA' AS VARCHAR2(4000)) dimensions, CAST('NA' AS VARCHAR2(4000)) permissions, CAST('NA' AS VARCHAR2(4000)) createallowed, CAST('NA' AS VARCHAR2(4000)) viewallowed, CAST('NA' AS VARCHAR2(4000)) kfld, CAST('NA' AS VARCHAR2(4000))
+               CAST('NA' AS VARCHAR2(4000)) dimensions, CAST('NA' AS VARCHAR2(4000)) permissions, 
+               CAST('NA' AS VARCHAR2(4000)) createallowed, CAST('NA' AS VARCHAR2(4000)) viewallowed, 
+               CAST('NA' AS VARCHAR2(4000)) kfld, CAST('NA' AS VARCHAR2(4000)),CAST('NA' AS VARCHAR2(10))
         FROM iviews a
         LEFT JOIN axpages b ON b.pagetype = 'i' || a.name
         LEFT JOIN axuseraccess ua ON ua.sname = a.name     
@@ -542,7 +556,9 @@ pg as(
                b.caption,
                CAST(b.props AS VARCHAR2(4000)) AS name,
                CAST('p' AS VARCHAR2(4000)) AS stype,
-               CAST('NA' AS VARCHAR2(4000)) dimensions, CAST('NA' AS VARCHAR2(4000)) permissions, CAST('NA' AS VARCHAR2(4000)) createallowed, CAST('NA' AS VARCHAR2(4000)) viewallowed,CAST('NA' AS VARCHAR2(4000)) kfld, CAST('NA' AS VARCHAR2(4000)) tablename
+               CAST('NA' AS VARCHAR2(4000)) dimensions, CAST('NA' AS VARCHAR2(4000)) permissions, 
+               CAST('NA' AS VARCHAR2(4000)) createallowed, CAST('NA' AS VARCHAR2(4000)) viewallowed,
+               CAST('NA' AS VARCHAR2(4000)) kfld, CAST('NA' AS VARCHAR2(4000)) tablename,CAST('NA' AS VARCHAR2(10))
         FROM axpages b 
         LEFT JOIN axuseraccess ua ON ua.sname = b.name     
         WHERE b.pagetype = 'web'
@@ -552,7 +568,7 @@ pg as(
                 OR REGEXP_LIKE(',' || presponsiblity || ',', ',' || ua.rname || ',')
               )),
 ads as(
-        SELECT CAST((a.sqlname || ' (' || a.sqlsrc || ') [ads]') AS VARCHAR2(4000)) AS displaydata,
+        SELECT CAST((a.sqlname || ' (' || a.sqlsrc || ') [datasource]') AS VARCHAR2(4000)) AS displaydata,
                a.sqlname AS caption,
                a.sqlname AS name,
                CAST('ads' AS VARCHAR2(4000)) AS stype,
@@ -561,17 +577,19 @@ ads as(
                CAST('NA' AS VARCHAR2(4000)) AS createallowed,
                CAST(CASE WHEN a2.axpermissionsid > 0 OR a.createdby = pusername OR REGEXP_LIKE(',' || puserrole || ',', ',default,') THEN 'T' else 'NA' END AS VARCHAR2(4000)) AS viewallowed,
                CAST('NA' AS VARCHAR2(4000)) AS keyfield,
-               CAST('NA' AS VARCHAR2(4000)) AS primarytable
+               CAST('NA' AS VARCHAR2(4000)) AS primarytable,CAST('NA' AS VARCHAR2(10))
         FROM axdirectsql a
         LEFT JOIN axpermissions a2 ON a.sqlname = a2.formcap AND (a2.axusername = pusername OR REGEXP_LIKE(',' || puserrole || ',', ',' || a2.axuserrole || ','))
-        WHERE a.sqlsrc != 'Metadata'),
+        WHERE a.sqlsrccnd != 1),
    inbox as(
             SELECT
                    CAST('Inbox' AS VARCHAR2(4000)) AS displaydata,
                    CAST('Inbox' AS VARCHAR2(4000)) AS caption,
                    CAST('Inbox' AS VARCHAR2(4000)) AS name,
                    CAST('Inbox' AS VARCHAR2(4000)) AS stype,
-                   CAST('NA' AS VARCHAR2(4000)) dimensions, CAST('NA' AS VARCHAR2(4000)) permissions, CAST('NA' AS VARCHAR2(4000)) createallowed, CAST('NA' AS VARCHAR2(4000)) viewallowed, CAST('NA' AS VARCHAR2(4000)) kfld, CAST('NA' AS VARCHAR2(4000)) tablenae
+                   CAST('NA' AS VARCHAR2(4000)) dimensions, CAST('NA' AS VARCHAR2(4000)) permissions, 
+                   CAST('NA' AS VARCHAR2(4000)) createallowed, CAST('NA' AS VARCHAR2(4000)) viewallowed, 
+                   CAST('NA' AS VARCHAR2(4000)) kfld, CAST('NA' AS VARCHAR2(4000)) tablenae,CAST('NA' AS VARCHAR2(10))
             FROM DUAL
         )
  SELECT * FROM (
@@ -592,19 +610,19 @@ ads as(
         LOOP
             FETCH v_cursor INTO 
                 v_displaydata, v_caption, v_name, v_stype, v_dimension, 
-                v_permission, v_createallowed, v_viewallowed, v_keyfield, v_primarytable;
+                v_permission, v_createallowed, v_viewallowed, v_keyfield, v_primarytable,v_keyfieldforedit;
             EXIT WHEN v_cursor%NOTFOUND;
             
             PIPE ROW(AXI_GETSTRUCTURES_META(
                 v_displaydata, v_caption, v_name, v_stype, v_dimension, 
-                v_permission, v_createallowed, v_viewallowed, v_keyfield, v_primarytable
+                v_permission, v_createallowed, v_viewallowed, v_keyfield, v_primarytable,v_keyfieldforedit
             ));
         END LOOP;
         CLOSE v_cursor;
     END IF;
 
     RETURN;
-END;
+END
 
 >>
 
