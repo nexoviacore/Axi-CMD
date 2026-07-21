@@ -2123,6 +2123,17 @@
         }
         const grpKey = tokens[0]?.toLowerCase();
 
+        if (grpKey === "edit" && (text.toLowerCase().includes(" with") || tokens.some(t => cleanString(t).toLowerCase() === "with"))) {
+            const entityObj = getTargetEntityObj(tokens[1], "edit");
+            if (entityObj && (entityObj.keyfieldforedit === "F" || entityObj.keyfieldforedit === false)) {
+                showToast("Key field is not configured for this form.", 3000, false);
+                items = [];
+                render();
+                hide();
+                return;
+            }
+        }
+
         if (
             grpKey === "view" &&
             tokens.length > 1 &&
@@ -2447,7 +2458,8 @@
         }
         const hasView = item.viewallowed !== undefined;
         const hasCreate = item.createallowed !== undefined;
-        if (!hasView && !hasCreate) {
+        const hasEditKey = item.keyfieldforedit !== undefined;
+        if (!hasView && !hasCreate && !hasEditKey) {
             return true;
         }
         if (act === "view") {
@@ -4274,7 +4286,7 @@
 
             const key = groupKey?.toLowerCase();
             const validItems = filtered.filter(item => {
-                const hasPerms = item?.viewallowed !== undefined || item?.createallowed !== undefined;
+                const hasPerms = item?.viewallowed !== undefined || item?.createallowed !== undefined || item?.keyfieldforedit !== undefined;
                 if (!hasPerms) return true;
                 if (key === "create" || key === "edit") {
                     return isActionAllowed(item, key);
@@ -5539,6 +5551,17 @@
             });
         }
 
+        const checkEditObj = (checkTokens[0]?.toLowerCase() === "edit" && checkTokens[1]) ? getTargetEntityObj(checkTokens[1], "edit") : null;
+        if (checkEditObj && (checkEditObj.keyfieldforedit === "F" || checkEditObj.keyfieldforedit === false)) {
+            const suggText = (typeof selectedItem === "string" ? selectedItem : (selectedItem?.displaydata || selectedItem?.name || "")).toLowerCase().trim();
+            const hasWithInTokens = checkTokens.some(t => cleanString(t).toLowerCase() === "with") || currentInput.toLowerCase().includes(" with");
+            if (targetIndex === 1 || suggText === "with" || hasWithInTokens) {
+                showToast("Key field is not configured for this form.", 3000, false);
+                hide();
+                return;
+            }
+        }
+
         if (foundObj && isViewCommand) {
             const caption = foundObj?.caption ? foundObj?.caption : foundObj?.displaydata;
 
@@ -6777,6 +6800,10 @@
             if (targetToken && targetToken.toLowerCase() !== "inbox") {
                 const entityObj = getTargetEntityObj(targetToken, groupNameNormalized);
                 if (entityObj) {
+                    // if (groupNameNormalized === "edit" && (entityObj.keyfieldforedit === "F" || entityObj.keyfieldforedit === false)) {
+                    //     showToast("Key field is not configured for this form.", 3000, false);
+                    //     return;
+                    // }
                     if (!isActionAllowed(entityObj, groupNameNormalized)) {
                         showToast("You do not have permission to execute this command.", 3000, false);
                         return;
@@ -12332,17 +12359,16 @@
                     const item = saveListWithFieldNamendValueswithTransId[i];
                     if (!item) continue;
 
-                    const parts = item.split("=");
-                    if (parts.length !== 2) continue;
+                    const sep = item.includes("=") ? "=" : " ";
+                    const parts = item.split(sep);
+                    if (parts.length < 2) continue;
 
                     const left = parts[0];
-                    const value = parts[1];
+                    const value = parts.slice(1).join(sep).trim();
 
                     const leftParts = left.split("~");
-                    if (leftParts.length !== 2) continue;
-
                     const fieldName = leftParts[0];
-                    const rowNo = leftParts[1];
+                    const rowNo = leftParts.length > 1 ? leftParts[1] : "1";
 
                     const columnMetadata = colList.find(c =>
                         c.name?.toLowerCase() === fieldName.toLowerCase()
@@ -12371,8 +12397,7 @@
                     }
 
                     rowObj.columns[fieldName] = value;
-                    rowObj.columns[keyfield] = keyvalue;
-                    
+                    if (fieldName !== keyfield) rowObj.columns[keyfield] = keyvalue;
                 }
 
                 const recdata = Object.keys(dcMap).map(recKey => ({
