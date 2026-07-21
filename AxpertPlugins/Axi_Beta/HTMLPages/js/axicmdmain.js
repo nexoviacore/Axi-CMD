@@ -12428,7 +12428,7 @@
                         changedrows: {},
                         trace: "true",
                         forpaybooks: "true",
-                        dataupdate: iscreate ? "false" : "true",
+                        dataupdate: "false",
                         primarykey: keyfield,
                         recordid: recordid,
                         keyfield: keyfield,
