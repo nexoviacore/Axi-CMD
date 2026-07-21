@@ -3468,7 +3468,14 @@
                 displaydata: displayLabel
             };
         })
-        .filter(btn => !((structType === "e" || structType === "ef") && btn.name === "deleteSelectedButton"));
+        .filter(btn => {
+            const isEntity = structType === "e" || structType === "ef";
+            const btnNameLower = (btn.name || "").toLowerCase();
+            const btnDisplayLower = (btn.displaydata || "").toLowerCase();
+            const isDelete = btnNameLower === "deleteselectedbutton" || btnDisplayLower === "delete";
+            if (isEntity && isDelete) return false;
+            return true;
+        });
 
         const uniqueButtonsMap = new Map();
         buttonsList.forEach(btn => {
@@ -9818,8 +9825,18 @@
             const dataElement = (btn.getAttribute("data-kt-element") || "").toLowerCase();
             const dataTarget = (btn.getAttribute("data-target") || "").toLowerCase();
             const btnId = (btn.id || btn.getAttribute("data-id") || "").toLowerCase();
+            const btnTitle = (btn.getAttribute("title") || "").toLowerCase().trim();
+            const btnOnclick = (btn.getAttribute("onclick") || "").toLowerCase();
+            const isEntityPage = getStructType() === "e" || (doc && doc.location && doc.location.href.toLowerCase().includes("smartview"));
 
-            if (getStructType() === "e") {
+            if (isEntityPage || getStructType() === "e") {
+                const isDeleteBtn = btnId === "deleteselectedbutton" ||
+                                    labelLower === "delete" ||
+                                    btnTitle === "delete" ||
+                                    btnOnclick.includes("deleteselectedrecords");
+
+                if (isDeleteBtn) return;
+
                 const isThemeMode = dataElement === "mode" ||
                                     labelLower === "light" ||
                                     labelLower === "dark" ||
