@@ -43,7 +43,7 @@ drop function axi_fn_getaxobjectlist
 >>
 
 <<
-drop function fn_axi_getstructures_meta
+DROP FUNCTION fn_axi_getstructures_meta(varchar, varchar, varchar, varchar, varchar)
 >>
 
 <<
@@ -1078,7 +1078,6 @@ $function$
 
 --fn_axi_getstructures_meta with userpermission meta data
 <<
-DROP FUNCTION fn_axi_getstructures_meta(varchar, varchar, varchar, varchar, varchar);
 
 CREATE OR REPLACE FUNCTION fn_axi_getstructures_meta(pusername character varying, puserrole character varying, presponsiblity character varying, pmode character varying, pstype character varying)
  RETURNS TABLE(displaydata character varying, caption character varying, name character varying, stype character varying, dimension character varying, permission character varying, createallowed character varying, viewallowed character varying, keyfield character varying, primarytable character varying,keyfieldforedit varchar)
@@ -1200,7 +1199,6 @@ ORDER BY displaydata;
  
 END;
 $function$
-
 >>
 
 -- fn_axi_getstructs_obj | replace for primaryfieldvalue+fieldnames and selected fieldvalue with primary fieldvalue suffix
