@@ -592,7 +592,7 @@ Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIED
 >>
 
 <<
-Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990032,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_structmetalist',null,'Metadata',1,'SELECT * from fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5)','param1,param2,param3,param4,param5','param1~Character~,param2~Character~,param3~Character~,param4~Character~,param5~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990032,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_structmetalist',null,'Metadata',1,'SELECT * from TABLE(fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5))','param1,param2,param3,param4,param5','param1~Character~,param2~Character~,param3~Character~,param4~Character~,param5~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
 >>
 
 <<

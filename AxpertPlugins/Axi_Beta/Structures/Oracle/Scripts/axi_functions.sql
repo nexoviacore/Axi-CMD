@@ -13,10 +13,6 @@ DROP TYPE AXI_GETSTRUCTURES_META_tbl
 >>
 
 <<
-DROP TYPE AXI_GETSTRUCTURES_META
->>
-
-<<
 DROP TYPE axi_getstructs_obj_tbl
 >>
 
