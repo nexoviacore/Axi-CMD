@@ -1264,7 +1264,9 @@ if ppermission = 'T' then
             WHERE tstruct = %L
          and dcname='dc1'
             AND hidden = 'F'
-            AND savevalue = 'T'       
+            AND savevalue = 'T'
+         and datatype not in('t','i')
+         and (lower(fname) not like 'axpfile%%' or lower(fname) not like 'dc__image%%')           
          $sql$,
          ptransid);
  elsif coalesce(v_fullcontrol,'F') = 'F' and v_viewctrl = '1' then
@@ -1278,7 +1280,9 @@ if ppermission = 'T' then
          and dcname='dc1'
             AND hidden = 'F'
             AND savevalue = 'T' 
-         and lower(fname) = ANY(string_to_array(%L,','))       
+         and datatype not in('t','i')
+         and (lower(fname) not like 'axpfile%%' or lower(fname) not like 'dc__image%%') 
+         and lower(fname) = ANY(string_to_array(%L,','))                 
          $sql$,
          ptransid,
          lower(v_includedcomps));
@@ -1292,7 +1296,9 @@ if ppermission = 'T' then
              WHERE tstruct = %L
           and dcname='dc1'
              AND hidden = 'F'
-             AND savevalue = 'T' 
+             AND savevalue = 'T'
+          and datatype not in('t','i')
+          and (lower(fname) not like 'axpfile%%' or lower(fname) not like 'dc__image%%')           
           and lower(fname) != ALL(string_to_array(%L,','))         
           $sql$,
           ptransid,
@@ -1309,7 +1315,9 @@ else
       WHERE tstruct = %L
       and dcname='dc1'
       AND hidden = 'F'
-      AND savevalue = 'T'          
+      AND savevalue = 'T'
+      and datatype not in('t','i')
+      and (lower(fname) not like 'axpfile%%' or lower(fname) not like 'dc__image%%')           
       $sql$,
       ptransid);
 
