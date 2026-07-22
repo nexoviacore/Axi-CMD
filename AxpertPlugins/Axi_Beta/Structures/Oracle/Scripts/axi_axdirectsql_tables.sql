@@ -613,30 +613,64 @@ Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIED
 
 
 <<
-Insert into AXDIRECTSQL (
-    AXDIRECTSQLID, CANCEL, SOURCEID, MAPNAME, USERNAME, MODIFIEDON, CREATEDBY, CREATEDON, 
-    WKID, APP_LEVEL, APP_DESC, APP_SLEVEL, CANCELREMARKS, WFROLES, SQLNAME, DDLDATATYPE, 
-    SQLSRC, SQLSRCCND, SQLTEXT, PARAMCAL, SQLPARAMS, ACCESSSTRING, GROUPNAME, SQLQUERYCOLS, 
+INSERT INTO AXDIRECTSQL (
+    AXDIRECTSQLID, CANCEL, SOURCEID, MAPNAME, USERNAME, MODIFIEDON, CREATEDBY, CREATEDON,
+    WKID, APP_LEVEL, APP_DESC, APP_SLEVEL, CANCELREMARKS, WFROLES, SQLNAME, DDLDATATYPE,
+    SQLSRC, SQLSRCCND, SQLTEXT, PARAMCAL, SQLPARAMS, ACCESSSTRING, GROUPNAME, SQLQUERYCOLS,
     CACHEDATA, CACHEINTERVAL, ENCRYPTEDFLDS, ADSDESC, SMARTLISTCND, PAGINATION, APPLYDIMENSIONS
-) values (
-    99999999990037, 'F', 0, null, 'rekhancia', to_date('20-05-26','DD-MM-RR'), 'rekhancia', to_date('20-05-26','DD-MM-RR'), 
-    null, 1, 1, null, null, null, 'axi_adscolumnlist', null, 'Metadata', 1, 
+) VALUES (
+    99999999990037,
+    'F',
+    0,
+    NULL,
+    'rekhancia',
+    TO_DATE('20-05-26','DD-MM-RR'),
+    'rekhancia',
+    TO_DATE('20-05-26','DD-MM-RR'),
+    NULL,
+    1,
+    1,
+    NULL,
+    NULL,
+    NULL,
+    'axi_adscolumnlist',
+    NULL,
+    'Metadata',
+    1,
     'select b.fldcaption || ''('' || b.fldname || '')'' displaydata,
-           b.fldname name,
-           b.fldcaption caption,
-           b.normalized,
-           b.fdatatype,
-           b.sourcetable,
-           b.sourcefld,
-           CASE
-               WHEN lower(sqltext) LIKE ''%--axp_filter%'' THEN ''T''
-               ELSE ''F''
-           END AS filters
-    from axdirectsql a
-    left join axdirectsql_metadata b on a.axdirectsqlid = b.axdirectsqlid
-    where a.sqlname = :param1
-    AND b.axdirectsqlid IS NOT NULL',
-    'param1', 'param1~Character~', 'ALL', null, null, 'F', '6 Hr', null, null, null, null, null
+        b.fldname name,
+        b.fldcaption caption,
+        b.normalized,
+        b.fdatatype,
+        f.tablename sourcetable,
+        f.fname sourcefld,
+        CASE
+            WHEN lower(sqltext) LIKE ''%--axp_filter%''
+            THEN ''T''
+            ELSE ''F''
+        END AS filters
+   from axdirectsql a
+   left join axpdef_smartlist c
+          on a.sqlname = c.adsname
+   left join axpdef_smartlist_mdata b
+          on b.axpdef_smartlistid = c.axpdef_smartlistid
+   left join axpflds f
+          on b.srctransid = f.tstruct
+         and b.srcfldname = f.fname
+  where a.sqlname = :param1
+    and b.hide = ''No''',
+    'param1',
+    'param1~Character~',
+    'ALL',
+    NULL,
+    NULL,
+    'F',
+    '6 Hr',
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
 )
 >>
 

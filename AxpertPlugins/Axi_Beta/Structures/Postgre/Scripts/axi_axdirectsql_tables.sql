@@ -506,9 +506,31 @@ VALUES(99999999990027, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin'
 
 
 <<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990028, 'F', 0, NULL, 'admin', '2026-01-30 00:00:00.000', 'admin', '2026-01-30 00:00:00.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_adscolumnlist', NULL, 'Metadata', 0, 'select b.fldcaption || ''('' || b.fldname || '')'' displaydata,
+INSERT INTO AXDIRECTSQL (
+    AXDIRECTSQLID, CANCEL, SOURCEID, MAPNAME, USERNAME, MODIFIEDON, CREATEDBY, CREATEDON,
+    WKID, APP_LEVEL, APP_DESC, APP_SLEVEL, CANCELREMARKS, WFROLES, SQLNAME, DDLDATATYPE,
+    SQLSRC, SQLSRCCND, SQLTEXT, PARAMCAL, SQLPARAMS, ACCESSSTRING, GROUPNAME, SQLQUERYCOLS,
+    CACHEDATA, CACHEINTERVAL, ENCRYPTEDFLDS, ADSDESC, SMARTLISTCND, PAGINATION, APPLYDIMENSIONS
+) VALUES (
+    99999999990037,
+    'F',
+    0,
+    NULL,
+    'rekhancia',
+    TO_DATE('20-05-26','DD-MM-RR'),
+    'rekhancia',
+    TO_DATE('20-05-26','DD-MM-RR'),
+    NULL,
+    1,
+    1,
+    NULL,
+    NULL,
+    NULL,
+    'axi_adscolumnlist',
+    NULL,
+    'Metadata',
+    1,
+    'select b.fldcaption || ''('' || b.fldname || '')'' displaydata,
         b.fldname name,
         b.fldcaption caption,
         b.normalized,
@@ -528,7 +550,21 @@ VALUES(99999999990028, 'F', 0, NULL, 'admin', '2026-01-30 00:00:00.000', 'admin'
    left join axpflds f
           on b.srctransid = f.tstruct
          and b.srcfldname = f.fname
-  where a.sqlname = :param1', 'param1', 'param1~Character~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+  where a.sqlname = :param1
+    and b.hide = ''No''',
+    'param1',
+    'param1~Character~',
+    'ALL',
+    NULL,
+    NULL,
+    'F',
+    '6 Hr',
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+)
 >>
 
 <<
