@@ -2094,7 +2094,8 @@
         }
 
         if (!text.trim()) {
-
+            resolvedParams = {};
+            resolvedParamType = {};
             items = getInitialSuggestions();
             hintDiv.textContent = "";
             render();
@@ -2166,25 +2167,35 @@
             const cleanToken = token.replace(/"/g, "");
             const lastToken = lastTypedTokens[idx] ? lastTypedTokens[idx].replace(/"/g, "") : null;
 
-            if (lastToken && cleanToken !== lastToken && resolvedParams[idx]) {
-                console.log(`Token changed at position ${idx}: "${lastToken}" ? "${cleanToken}"`);
-                delete resolvedParams[idx];
-                delete resolvedParamType[idx];
-                Object.keys(resolvedParams).forEach(key => {
-                    if (parseInt(key) > idx) {
-                        delete resolvedParams[key];
-                        console.log(`Cleared dependent resolution at index ${key}`);
-                    }
-                });
+            if (lastToken && cleanToken !== lastToken) {
+                console.log(`Token changed at position ${idx}: "${lastToken}" -> "${cleanToken}"`);
+
+                const lowerLast = lastToken.toLowerCase();
+                const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(lowerLast);
+                if (!isVerb) {
+                    delete resolvedParams[idx];
+                    delete resolvedParamType[idx];
+                    Object.keys(resolvedParams).forEach(key => {
+                        if (parseInt(key) > idx) {
+                            delete resolvedParams[key];
+                            delete resolvedParamType[key];
+                            console.log(`Cleared dependent resolution at index ${key}`);
+                        }
+                    });
+                }
             }
         });
 
         if (currentTokens.length < lastTypedTokens.length) {
             for (let i = currentTokens.length; i < lastTypedTokens.length; i++) {
-                if (resolvedParams[i]) {
-                    delete resolvedParams[i];
-                    delete resolvedParamType[i];
-                    console.log(`Cleared deleted token resolution at index ${i}`);
+                const deletedToken = (lastTypedTokens[i] || "").toLowerCase().trim();
+                const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(deletedToken);
+                if (!isVerb) {
+                    if (resolvedParams[i]) {
+                        delete resolvedParams[i];
+                        delete resolvedParamType[i];
+                        console.log(`Cleared deleted token resolution at index ${i}`);
+                    }
                 }
             }
         }
@@ -2426,7 +2437,7 @@
         if ((t1 === "t" || t1 === "tstruct") && (t2 === "t" || t2 === "tstruct")) return true;
         if ((t1 === "i" || t1 === "iview") && (t2 === "i" || t2 === "iview")) return true;
         if ((t1 === "p" || t1 === "page") && (t2 === "p" || t2 === "page")) return true;
-        if ((t1 === "a" || t1 === "ads") && (t2 === "a" || t2 === "ads")) return true;
+        if ((t1 === "a" || t1 === "ads" || t1 === "v") && (t2 === "a" || t2 === "ads" || t2 === "v")) return true;
         return false;
     }
 
@@ -2439,56 +2450,63 @@
 
         let matched = null;
         const lowerToken = token.toLowerCase();
-        for (const idx in resolvedParams) {
-            if (resolvedParams[idx]) {
-                const resolvedVal = resolvedParams[idx].toLowerCase();
-                const preferredType = resolvedParamType[idx];
+        const allKeys = new Set([...Object.keys(resolvedParams), ...Object.keys(resolvedParamType)]);
+        for (const idx of allKeys) {
+            const resolvedVal = (resolvedParams[idx] || "").toLowerCase();
+            const preferredType = resolvedParamType[idx];
 
-                const found = matches.find(d => {
-                    const name = (d.name || d.NAME || d.sqlname || "").toLowerCase();
-                    const caption = (d.caption || d.CAPTION || "").toLowerCase();
-                    const displaydata = (d.displaydata || d.DISPLAYDATA || "").toLowerCase();
-                    const cleanCaption = getCleanCaption(d);
+            const found = matches.find(d => {
+                const name = (d.name || d.NAME || d.sqlname || "").toLowerCase();
+                const caption = (d.caption || d.CAPTION || "").toLowerCase();
+                const displaydata = (d.displaydata || d.DISPLAYDATA || "").toLowerCase();
+                const cleanCaption = getCleanCaption(d);
 
-                    const nameMatch = name === resolvedVal || caption === resolvedVal || displaydata === resolvedVal || cleanCaption === resolvedVal;
-                    if (!nameMatch) return false;
+                const nameMatch = !resolvedVal || name === resolvedVal || caption === resolvedVal || displaydata === resolvedVal || cleanCaption === resolvedVal;
+                if (!nameMatch) return false;
 
-                    if (preferredType) {
-                        return areTypesMatching(d.stype || d.STYPE, preferredType);
-                    }
-                    return true;
-                });
-
-                if (found) {
-                    matched = found;
-                    break;
+                if (preferredType) {
+                    return areTypesMatching(d.stype || d.STYPE, preferredType);
                 }
+                return true;
+            });
+
+            if (found) {
+                matched = found;
+                break;
             }
         }
 
         if (matched) return matched;
 
         if (action) {
-            const lowAction = action.toLowerCase();
+            const lowAction = action.toLowerCase().trim();
             if (lowAction === "create" || lowAction === "edit") {
                 const tstructMatch = matches.find(d => {
                     const type = (d.stype || d.STYPE || "").toLowerCase();
                     return type === "t" || type === "tstruct";
                 });
                 if (tstructMatch) return tstructMatch;
-            } else if (lowAction === "view") {
-                const nonTstructMatch = matches.find(d => {
+            } else if (lowAction === "view" || lowAction.startsWith("v")) {
+                const iviewOrAdsMatch = matches.find(d => {
                     const type = (d.stype || d.STYPE || "").toLowerCase();
-                    return type !== "t" && type !== "tstruct";
+                    return type === "i" || type === "iview" || type === "ads" || type === "a" || type === "v";
                 });
-                if (nonTstructMatch) return nonTstructMatch;
-            } else if (lowAction === "source") {
+                if (iviewOrAdsMatch) return iviewOrAdsMatch;
+            } else if (lowAction === "source" || lowAction.startsWith("s")) {
                 const sourceMatch = matches.find(d => {
                     const type = (d.stype || d.STYPE || "").toLowerCase();
                     return ["t", "tstruct", "i", "iview", "ads"].includes(type);
                 });
                 if (sourceMatch) return sourceMatch;
             }
+        }
+
+        if (matches.length > 1) {
+            const nonTstructMatch = matches.find(d => {
+                const type = (d.stype || d.STYPE || "").toLowerCase();
+                return type === "i" || type === "iview" || type === "ads" || type === "a" || type === "v" || type === "p" || type === "page";
+            });
+            if (nonTstructMatch) return nonTstructMatch;
         }
 
         return matches[0];
@@ -2518,7 +2536,8 @@
         if (!item) return false;
         const stype = item.stype || item.STYPE;
         if (stype === undefined || stype === null) return false;
-        return String(stype).trim().toLowerCase() === "ads";
+        const s = String(stype).trim().toLowerCase();
+        return s === "ads" || s === "a" || s === "v";
     }
 
     function isAdsVisible(item) {
@@ -3610,6 +3629,8 @@
     }
 
     function suggestLocal(inputText) {
+      console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
         normalizeGlobalState();
         let ignoreExtraParams = false;
         let detectedType = "";
@@ -3907,6 +3928,8 @@
             const viewValues = commandConfig.prompts?.[0]?.promptValues;
             const firstToken = cleanString(tokens[1] || "");
             const { value: actualFirstToken, type } = tryResolveToken(1, firstToken, commandConfig, false);
+            console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
             detectedType = getType(viewSource.toLowerCase(), { value: actualFirstToken, type: type }, viewValues, tokens, commandConfig);
             // detectedType = getType(viewSource.toLowerCase(), {value: act}, viewValues, tokens, commandConfig);
 
@@ -3952,6 +3975,8 @@
             return processRunCommands(tokens, targetIndex, structType);
         }
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
+          console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
 
 
         ///KeyValue based edit handling.
@@ -4859,38 +4884,78 @@
 
         const rawIndex = getUnswappedIndex(tokenIndex);
 
-        if (resolvedParams[rawIndex] && !forceResolve) {
-            const val = resolvedParams[rawIndex];
-            const lowerVal = val.toLowerCase();
+        let lookupIndex = tokenIndex;
+        if (resolvedParams[lookupIndex] === undefined && resolvedParams[0] !== undefined) {
+            lookupIndex = 0;
+        }
+
+        if (resolvedParams[lookupIndex] && !forceResolve) {
+            const val = resolvedParams[lookupIndex];
+            const lowerVal = val?.toLowerCase();
             const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(lowerVal);
             if (!(tokenIndex === 1 && isVerb)) {
                 return {
                     value: val,
-                    type: resolvedParamType?.[rawIndex] || ""
+                    type: resolvedParamType?.[lookupIndex] || ""
                 };
             }
         }
 
         if (tokenIndex === 1 && !forceResolve) {
-            const matches = getTargetEntityMatches(tokenText);
+            let preferredType = resolvedParamType?.[lookupIndex] || resolvedParamType?.[tokenIndex];
+            if (tokenText.includes("[") && tokenText.includes("]")) {
+                const badgeMatch = tokenText.match(/\[(.*?)\]/);
+                if (badgeMatch) {
+                    const badgeStr = badgeMatch[1].toLowerCase().trim();
+                    if (["form", "tstruct", "t"].includes(badgeStr)) preferredType = "t";
+                    else if (["iview", "i"].includes(badgeStr)) preferredType = "i";
+                    else if (["ads", "a", "v"].includes(badgeStr)) preferredType = "ads";
+                    else if (["page", "p"].includes(badgeStr)) preferredType = "p";
+                }
+            }
+
+            const cleanTokName = tokenText.replace(/\s*\[[^\]]*\]$/, "").trim();
+            const matches = getTargetEntityMatches(cleanTokName.length > 0 ? cleanTokName : tokenText);
 
             if (matches.length > 0) {
                 let found = matches[0];
                 if (matches.length > 1) {
                     const currentTokens = getTokens(input.value);
                     const cmdGroup = currentTokens[0]?.toLowerCase();
-                    if (cmdGroup === "create" || cmdGroup === "edit") {
-                        const typeMatched = matches.find(item => {
-                            const type = (item.stype || "").toLowerCase();
-                            return type === "t" || type === "tstruct";
-                        });
+
+                    // 1. Explicit preferredType or badge type match
+                    if (preferredType) {
+                        const typeMatched = matches.find(item => areTypesMatching(item.stype || item.STYPE, preferredType));
                         if (typeMatched) found = typeMatched;
-                    } else if (cmdGroup === "view") {
-                        const typeMatched = matches.find(item => {
-                            const type = (item.stype || "").toLowerCase();
-                            return type !== "t" && type !== "tstruct";
-                        });
-                        if (typeMatched) found = typeMatched;
+                    }
+
+                    // 2. Exact internal name match (e.g. 'ads1', 'tst1', 'iv1')
+                    if (!preferredType) {
+                        const exactNameMatch = matches.find(item => 
+                            (item.name || item.NAME || item.sqlname || "").toLowerCase() === cleanTokName.toLowerCase()
+                        );
+                        if (exactNameMatch) {
+                            found = exactNameMatch;
+                        } else if (cmdGroup === "create" || cmdGroup === "edit") {
+                            const typeMatched = matches.find(item => {
+                                const type = (item.stype || "").toLowerCase();
+                                return type === "t" || type === "tstruct";
+                            });
+                            if (typeMatched) found = typeMatched;
+                        } else if (cmdGroup === "view") {
+                            const fullDisplayMatch = matches.find(item => 
+                                (item.displaydata || item.DISPLAYDATA || "").toLowerCase() === tokenText.toLowerCase()
+                            );
+                            if (fullDisplayMatch) {
+                                found = fullDisplayMatch;
+                            } else {
+                                const iviewMatch = matches.find(item => {
+                                    const type = (item.stype || "").toLowerCase();
+                                    return type === "i" || type === "iview";
+                                });
+                                if (iviewMatch) found = iviewMatch;
+                            }
+                        }
                     }
                 }
 
@@ -4898,8 +4963,8 @@
                 if (!foundStype && isInboxStructure(found)) {
                     foundStype = "inbox";
                 }
-                resolvedParams[rawIndex] = found.name;
-                if (foundStype) resolvedParamType[rawIndex] = foundStype;
+                resolvedParams[lookupIndex] = found.name;
+                if (foundStype) resolvedParamType[lookupIndex] = foundStype;
                 return {
                     value: found.name,
                     type: foundStype
@@ -5028,21 +5093,47 @@
                 if (matches.length > 0) {
                     let found = matches[0];
                     let preferredType = resolvedParamType?.[tokenIndex];
+                    if (tokenText.includes("[") && tokenText.includes("]")) {
+                        const badgeMatch = tokenText.match(/\[(.*?)\]/);
+                        if (badgeMatch) {
+                            const badgeStr = badgeMatch[1].toLowerCase().trim();
+                            if (["form", "tstruct", "t"].includes(badgeStr)) preferredType = "t";
+                            else if (["iview", "i"].includes(badgeStr)) preferredType = "i";
+                            else if (["ads", "a", "v"].includes(badgeStr)) preferredType = "ads";
+                            else if (["page", "p"].includes(badgeStr)) preferredType = "p";
+                        }
+                    }
+
                     const cmdGroup = currentTokens[0]?.toLowerCase();
-                    if ((cmdGroup === "edit" || cmdGroup === "create") && tokenIndex === 1) {
+                    if ((cmdGroup === "edit" || cmdGroup === "create") && tokenIndex === 1 && !preferredType) {
                         preferredType = "t";
                     }
-                    if (cmdGroup === "view" && tokenIndex === 1 && !preferredType) {
-                        const typeMatched = matches.find(item => {
-                            const type = (item.stype || "").toLowerCase();
-                            return type !== "t" && type !== "tstruct";
-                        });
-                        if (typeMatched) found = typeMatched;
-                    }
+
                     if (preferredType && matches.length > 1) {
-                        const typeMatched = matches.find(item => (item.stype || "").toLowerCase() === preferredType.toLowerCase());
+                        const typeMatched = matches.find(item => areTypesMatching(item.stype || item.STYPE, preferredType));
                         if (typeMatched) {
                             found = typeMatched;
+                        }
+                    } else if (matches.length > 1) {
+                        const cleanTokName = tokenText.replace(/\s*\[[^\]]*\]$/, "").trim();
+                        const exactNameMatch = matches.find(item => 
+                            (item.name || item.NAME || item.sqlname || "").toLowerCase() === cleanTokName.toLowerCase()
+                        );
+                        if (exactNameMatch) {
+                            found = exactNameMatch;
+                        } else if (cmdGroup === "view" && tokenIndex === 1) {
+                            const fullDisplayMatch = matches.find(item => 
+                                (item.displaydata || item.DISPLAYDATA || "").toLowerCase() === tokenText.toLowerCase()
+                            );
+                            if (fullDisplayMatch) {
+                                found = fullDisplayMatch;
+                            } else {
+                                const iviewMatch = matches.find(item => {
+                                    const type = (item.stype || "").toLowerCase();
+                                    return type === "i" || type === "iview";
+                                });
+                                if (iviewMatch) found = iviewMatch;
+                            }
                         }
                     }
 
@@ -5055,8 +5146,8 @@
 
                     }
 
-                    resolvedParams[rawIndex] = real;
-                    if (found?.stype) resolvedParamType[rawIndex] = found?.stype;
+                    resolvedParams[lookupIndex] = real;
+                    if (found?.stype) resolvedParamType[lookupIndex] = found?.stype;
                     // return real;
                     return {
                         value: real,
@@ -5624,16 +5715,13 @@
 
         // Get Real Value logic
         let foundObj = null;
-        if (filteredObjects && index >= 0 && index < filteredObjects.length) {
-            const cand = filteredObjects[index];
-            const candText = typeof cand === "string" ? cand : (cand?.displaydata || cand?.name || "");
-            if (candText && suggestion && candText.toLowerCase() === suggestion.toLowerCase()) {
-                foundObj = cand;
-            }
+        if (filteredObjects && index >= 0 && index < filteredObjects.length && typeof filteredObjects[index] !== "string") {
+            foundObj = filteredObjects[index];
+        } else if (selectedItem && typeof selectedItem === "object") {
+            foundObj = selectedItem;
         }
         if (!foundObj && filteredObjects) {
             foundObj = filteredObjects.find(itemObj => {
-                if (itemObj === selectedItem) return true;
                 const objText = typeof itemObj === "string" ? itemObj : (itemObj?.displaydata || itemObj?.name || "");
                 return objText && suggestion && objText.toLowerCase() === suggestion.toLowerCase();
             });
@@ -6232,6 +6320,7 @@
                     adsList = null;
                     axDatasourceObj = {};
                     resolvedParams = {};
+                    resolvedParamType = {};
                     createfieldnamevaluesList = {};
                     resetSetCommandState();
                     cachedAccessPermissions = null;
@@ -6262,6 +6351,8 @@
         if (axiClearBtn) {
             axiClearBtn.addEventListener("click", () => {
                 input.value = "";
+                resolvedParams = {};
+                resolvedParamType = {};
                 createfieldnamevaluesList = {};
                 setCommandTransid = null;
                 dateControlBoolean = false;
@@ -6856,7 +6947,7 @@
         if (tokens.length === 1 && isTargetEntity(tokens[0])) {
             const entityObj = getTargetEntityObj(tokens[0]);
             const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
-            if (["i", "iview", "ads", "page", "p", "t", "tstruct"].includes(stype) || isInboxStructure(entityObj)) {
+            if (["i", "iview", "ads", "a", "v", "page", "p", "t", "tstruct"].includes(stype) || isInboxStructure(entityObj)) {
                 tokens.unshift("view");
             }
         }
@@ -6945,6 +7036,8 @@
         };
 
         dispatchCommand(context);
+        // resolvedParams = {};
+        // resolvedParamType = {};
         hide();
         if (!isNavigating) {
             saveToHistory(text);
@@ -8407,6 +8500,8 @@
             i: "iview",
             iview: "iview",
             ads: "ads",
+            a: "ads",
+            v: "ads",
             p: "page",
             page: "page",
             inbox: "inbox"
