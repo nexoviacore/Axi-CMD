@@ -12876,7 +12876,8 @@
         }
 
         if (isAdding) {
-            if (isDuplicateFavorite(cmdText)) {
+            const targetUrl = commandRoute?.targetUrl || "";
+            if (targetUrl && isDuplicateFavorite(targetUrl)) {
                 showToast("This command is already in your Favorites.");
                 return;
             }
@@ -13115,7 +13116,6 @@
         }
 
         const cmdText = favObj?.originalCommandText || favObj?.originalcommandtext || favObj?.commandText || favObj?.commandtext || "";
-        input.value = cmdText + " ";
         const tokens = getTokens(cmdText);
 
         const accessPermissions = getAccessPermissions();
@@ -13351,13 +13351,33 @@
         return cmd.trim().toLowerCase().replace(/\s+/g, " ");
     }
 
-    function isDuplicateFavorite(cmd) {
-        if (!cmd) return false;
-        const normalizedNew = normalizeCommandForCompare(cmd);
+    function normalizeUrlForCompare(url) {
+        if (!url) return "";
+        try {
+            return String(url).trim().toLowerCase().replace(/\/+$/, "");
+        } catch (e) {
+            return "";
+        }
+    }
+
+    function isDuplicateFavorite(targetUrl, excludeCmdText = "") {
+        if (!targetUrl) return false;
+        const normalizedTarget = normalizeUrlForCompare(targetUrl);
+        if (!normalizedTarget) return false;
+
+        const normalizedExclude = normalizeCommandForCompare(excludeCmdText);
+
         return commandFavorites.some(fav => {
-            const normalizedOrig = normalizeCommandForCompare(fav.originalCommandText);
-            const normalizedText = normalizeCommandForCompare(fav.commandText);
-            return normalizedOrig === normalizedNew || normalizedText === normalizedNew;
+            if (normalizedExclude) {
+                const favCmd = normalizeCommandForCompare(fav?.commandText);
+                const favOrig = normalizeCommandForCompare(fav?.originalCommandText);
+                if (favCmd === normalizedExclude || favOrig === normalizedExclude) {
+                    return false;
+                }
+            }
+            const favUrl = fav?.targetUrl || fav?.targetURL || fav?.targeturl || "";
+            const normalizedFavUrl = normalizeUrlForCompare(favUrl);
+            return normalizedFavUrl && normalizedFavUrl === normalizedTarget;
         });
     }
 
@@ -13433,19 +13453,12 @@
         }
 
         if (!isEdit) {
-            if (isDuplicateFavorite(alias) || isDuplicateFavorite(originalCmdText)) {
+            if (isDuplicateFavorite(targetUrl)) {
                 showToast("This command is already in your Favorites.");
                 return;
             }
         } else {
-            const isDuplicate = commandFavorites.some(fav => {
-                if (fav.commandText.toLowerCase() === originalCmdText.toLowerCase()) return false;
-                const normalizedText = normalizeCommandForCompare(fav.commandText);
-                const normalizedOrig = normalizeCommandForCompare(fav.originalCommandText);
-                const normalizedAlias = normalizeCommandForCompare(alias);
-                return normalizedText === normalizedAlias || normalizedOrig === normalizedAlias;
-            });
-            if (isDuplicate) {
+            if (isDuplicateFavorite(targetUrl, originalCmdText)) {
                 showToast("This command is already in your Favorites.");
                 return;
             }
