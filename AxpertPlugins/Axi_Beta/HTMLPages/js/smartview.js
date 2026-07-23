@@ -2191,12 +2191,23 @@
     } catch (e) {}
   }
 
+  function smartviewEnsureResizableTableLayout(tableEl) {
+    if (!tableEl) return;
+    try {
+      tableEl.style.tableLayout = 'fixed';
+      if (!tableEl.style.width || tableEl.style.width === 'auto') {
+        tableEl.style.width = '100%';
+      }
+    } catch (e) {}
+  }
+
   function smartviewApplyColumnWidthToTable(tableEl, colIndex, widthPx) {
     if (!tableEl) return;
     const idx = Number(colIndex);
     if (!Number.isFinite(idx) || idx <= 0) return;
     const w = Math.max(80, Math.round(Number(widthPx) || 0));
     if (!w) return;
+    smartviewEnsureResizableTableLayout(tableEl);
     const selector = `thead th:nth-child(${idx}), tbody td:nth-child(${idx})`;
     tableEl.querySelectorAll(selector).forEach(cell => {
       cell.style.width = `${w}px`;
@@ -2210,6 +2221,7 @@
     const ads = smartviewGetCurrentAdsForViews();
     const widths = smartviewLoadColumnWidthsFromStorage(ads);
     if (!widths || typeof widths !== 'object') return;
+    smartviewEnsureResizableTableLayout(tableEl);
 
     const headers = tableEl.querySelectorAll('thead th[data-field]');
     headers.forEach((th) => {
@@ -3655,14 +3667,18 @@
         cursor: col-resize !important;
       }
       .sv-header-menu {
-        position: absolute;
+        position: fixed;
         background: #fff;
         border: 1px solid #ddd;
         border-radius: 8px;
         min-width: 180px;
+        max-width: calc(100vw - 16px);
+        max-height: calc(100vh - 16px);
+        overflow: auto;
         box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
         padding: 4px 0;
         z-index: 12000;
+        box-sizing: border-box;
       }
       .sv-header-menu-item {
         display: block;
@@ -3739,9 +3755,67 @@
     if (m && m.parentElement) m.parentElement.removeChild(m);
   }
 
+  function smartviewEnsureHeaderMenuDismissHandler() {
+    if (window._smartviewHeaderMenuDismissBound) return;
+
+    const dismiss = function (ev) {
+      const menu = document.getElementById('svHeaderMenu');
+      if (!menu) return;
+
+      const target = ev && ev.target ? ev.target : null;
+      if (target && menu.contains(target)) return;
+      if (target && target.closest && target.closest('.sv-header-menu-btn')) return;
+
+      closeSmartviewHeaderMenu();
+    };
+
+    const dismissOnScrollOrResize = function (ev) {
+      const menu = document.getElementById('svHeaderMenu');
+      if (!menu) return;
+
+      const target = ev && ev.target ? ev.target : null;
+      if (target && menu.contains(target)) return;
+
+      closeSmartviewHeaderMenu();
+    };
+
+    try {
+      document.addEventListener('pointerdown', dismiss, true);
+    } catch (e) {
+      document.addEventListener('mousedown', dismiss, true);
+    }
+    window.addEventListener('scroll', dismissOnScrollOrResize, true);
+    window.addEventListener('resize', dismissOnScrollOrResize);
+
+    window._smartviewHeaderMenuDismissBound = true;
+  }
+
+  function smartviewPositionHeaderMenu(menu, anchorBtn) {
+    if (!menu || !anchorBtn) return;
+
+    const rect = anchorBtn.getBoundingClientRect();
+    const margin = 8;
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    const menuWidth = Math.max(180, Math.round(menu.offsetWidth || 0));
+    const menuHeight = Math.max(40, Math.round(menu.offsetHeight || 0));
+
+    let left = rect.left;
+    let top = rect.bottom + 4;
+
+    left = Math.max(margin, Math.min(viewportWidth - menuWidth - margin, left));
+    if (top + menuHeight + margin > viewportHeight) {
+      top = Math.max(margin, rect.top - menuHeight - 4);
+    }
+
+    menu.style.left = `${Math.max(margin, left)}px`;
+    menu.style.top = `${Math.max(margin, top)}px`;
+  }
+
   function showSmartviewHeaderMenu(anchorBtn, fieldName) {
     if (!anchorBtn || !fieldName) return;
     closeSmartviewHeaderMenu();
+    smartviewEnsureHeaderMenuDismissHandler();
 
     const ctrl = window.smartTableController || null;
     const groupedCols = (typeof smartviewGetEffectiveGroupbyColumns === 'function')
@@ -3753,6 +3827,7 @@
     const menu = document.createElement('div');
     menu.id = 'svHeaderMenu';
     menu.className = 'sv-header-menu';
+    menu.style.visibility = 'hidden';
     menu.innerHTML = `
       <button type="button" class="sv-header-menu-item" data-action="sort_asc" data-field="${escapeHtml(fieldName)}">Sort Ascending</button>
       <button type="button" class="sv-header-menu-item" data-action="sort_desc" data-field="${escapeHtml(fieldName)}">Sort Descending</button>
@@ -3760,21 +3835,8 @@
       ${hasAnyGrouping && groupedCols.length > 1 ? `<button type="button" class="sv-header-menu-item" data-action="group_clear" data-field="${escapeHtml(fieldName)}">Clear All Grouping</button>` : ''}
     `;
     document.body.appendChild(menu);
-
-    const r = anchorBtn.getBoundingClientRect();
-    const left = Math.max(8, Math.min(window.innerWidth - menu.offsetWidth - 8, r.left));
-    const top = Math.max(8, Math.min(window.innerHeight - menu.offsetHeight - 8, r.bottom + 4));
-    menu.style.left = `${left}px`;
-    menu.style.top = `${top}px`;
-
-    setTimeout(() => {
-      document.addEventListener('click', function _close(ev) {
-        if (!menu.contains(ev.target) && ev.target !== anchorBtn) {
-          closeSmartviewHeaderMenu();
-          document.removeEventListener('click', _close);
-        }
-      });
-    }, 0);
+    smartviewPositionHeaderMenu(menu, anchorBtn);
+    menu.style.visibility = 'visible';
   }
 
   function attachSmartviewHeaderMenuHandlers() {
@@ -12633,6 +12695,28 @@
     }
   }
 
+  function smartviewHasActiveExcelUploadRows() {
+    try {
+      const uploadRows = window._smartviewExcelUploadState && Array.isArray(window._smartviewExcelUploadState.rows)
+        ? window._smartviewExcelUploadState.rows
+        : null;
+      const committedRows = window._smartviewCommittedExcelUploadState && Array.isArray(window._smartviewCommittedExcelUploadState.rows)
+        ? window._smartviewCommittedExcelUploadState.rows
+        : null;
+      const entityUploadRows = window._entity && window._entity.excelUploadJson && Array.isArray(window._entity.excelUploadJson.rows)
+        ? window._entity.excelUploadJson.rows
+        : null;
+
+      return !!(
+        (uploadRows && uploadRows.length) ||
+        (committedRows && committedRows.length) ||
+        (entityUploadRows && entityUploadRows.length)
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
   function smartviewCloseExcelTemplateMenu() {
     try {
       const existing = document.getElementById("smartviewExcelTemplateMenu");
@@ -14637,6 +14721,35 @@
       if (!field) return;
       const order = (String(sortOrder || '').toLowerCase() === 'desc') ? 'desc' : 'asc';
       this.sorting = [{ fldname: field, sort_order: order }];
+
+      // When the data came from Excel upload, keep sorting client-side so we do not
+      // drop the in-memory upload snapshot and temporarily lose the rendered rows.
+      if (typeof smartviewHasActiveExcelUploadRows === 'function' && smartviewHasActiveExcelUploadRows() && Array.isArray(window._smartviewFullData)) {
+        try {
+          const metaForSort = (Array.isArray(this.lastAdsMeta) && this.lastAdsMeta.length)
+            ? this.lastAdsMeta
+            : (window._entity && Array.isArray(window._entity.metaData) ? window._entity.metaData : []);
+          const sortedRows = (typeof smartviewApplyClientSortingFallback === 'function')
+            ? smartviewApplyClientSortingFallback(window._smartviewFullData.slice(), this.sorting, metaForSort)
+            : window._smartviewFullData.slice();
+          window._smartviewFullData = Array.isArray(sortedRows) ? sortedRows.slice() : [];
+          window._entity = window._entity || {};
+          window._entity.filteredListJson = window._smartviewFullData.slice();
+          this._filteredCache = window._smartviewFullData.slice();
+          this._allDataFetchedOnce = true;
+          this.totalCount = window._smartviewFullData.length;
+          this.visibleRowRangeStart = 1;
+          this.visibleRowRangeEnd = Math.min(this.frontendChunkSize, window._smartviewFullData.length);
+          this.frontendRenderedCount = this.visibleRowRangeEnd;
+          this.pageno = 1;
+          this._lastPageReached = window._smartviewFullData.length <= this.frontendChunkSize;
+          this._renderCurrentDataWindow();
+          return;
+        } catch (e) {
+          console.warn('applyHeaderSort local upload sort failed, falling back to paging reload', e);
+        }
+      }
+
       this.resetPaging();
       this.loadNextPage();
     }
