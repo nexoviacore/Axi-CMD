@@ -13165,8 +13165,6 @@
             }
         }
 
-        axiClearBtn.style.display = "flex";
-
         if (favObj.targetUrl && favObj.targetUrl.trim() !== "" && !favObj.targetUrl.startsWith("developerstudio:")) {
             console.log("Executing Favorite directly via Target URL:", favObj.targetUrl);
             const params = new URLSearchParams(favObj.targetUrl.split("?")[1]);
