@@ -163,6 +163,9 @@ public partial class AxpertAdmin : System.Web.UI.Page
 
             axpDevOptions.DataSource = lst;
             axpDevOptions.DataBind();
+
+            selCaptchaConn.DataSource = lst;
+            selCaptchaConn.DataBind();
         }
     }
 
@@ -2558,6 +2561,100 @@ public partial class AxpertAdmin : System.Web.UI.Page
             };
             var propData = new Dictionary<string, object> {
                 { "AxpDevOptsMenu", propertiesDict }
+            };
+            var appDict = new Dictionary<string, object>
+            {
+                { project, propData }
+            };
+            var mainDict = new Dictionary<string, object>
+            {
+                { "appsettings", appDict }
+            };
+            string jsonString = JsonConvert.SerializeObject(mainDict);
+            string _ScriptsPath = HttpContext.Current.Application["ScriptsPath"].ToString() + "AppSettings.ini";
+            string filePath = @" " + _ScriptsPath + "";
+            string directoryPath = Path.GetDirectoryName(filePath);
+            FileInfo Filefi = new FileInfo(_ScriptsPath);
+            if (!Filefi.Exists)
+            {
+                File.WriteAllText(_ScriptsPath, jsonString);
+            }
+            else
+            {
+                string existingJson = File.ReadAllText(filePath);
+                if (existingJson != "")
+                {
+                    JObject json = JObject.Parse(existingJson);
+                    JObject newData = JObject.Parse(jsonString);
+                    json.Merge(newData, new JsonMergeSettings
+                    {
+                        MergeArrayHandling = MergeArrayHandling.Union
+                    });
+                    File.WriteAllText(filePath, json.ToString());
+                }
+            }
+
+            Util.Util uti = new Util.Util();
+            string _appsettings = uti.GetAxAppSettings();
+            if (!string.IsNullOrEmpty(_appsettings))
+            {
+                HttpContext.Current.Application["AppSettingsIni"] = _appsettings;
+            }
+        }
+        catch (Exception ex)
+        {
+        }
+
+        try
+        {
+            FDW fdwObj = new FDW(proj);
+            fdwObj.HashDeleteAllkey(Constants.AX_COMMON_APPSETTING_KEY, proj);
+            HttpContext.Current.Session.Remove("AppAllSettingsKey-" + proj);
+        }
+        catch (Exception ex) { }
+        string ScriptsPath = HttpContext.Current.Application["ScriptsPath"].ToString() + "AppSettings.ini";
+        string SaveddevOpt = @" " + ScriptsPath + "";
+        FileInfo Filefiarm = new FileInfo(ScriptsPath);
+        try
+        {
+            if (Filefiarm.Exists)
+            {
+                string existingJson = File.ReadAllText(SaveddevOpt);
+                existingJson = JsonConvert.SerializeObject(existingJson);
+                result = existingJson;
+            }
+
+        }
+        catch (Exception ex) { }
+        return result;
+    }
+
+    [WebMethod(EnableSession = true)]
+    public static string SaveCaptchaSettingsWs(string proj, string captchaEnabled, string captchLength, string captchStyle, string csrfToken)
+    {
+        var session = HttpContext.Current.Session;
+        if (session == null || session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null || csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+        {
+            throw new SecurityException("CSRF Attack Detected!");
+        }
+        if (Util.Util.CheckCrossScriptingInString(proj) || Util.Util.CheckCrossScriptingInString(captchaEnabled) || Util.Util.CheckCrossScriptingInString(captchLength) || Util.Util.CheckCrossScriptingInString(captchStyle))
+            throw new SecurityException("Invalid format.");
+
+        string result = "";
+        try
+        {
+            string project = proj;
+            var propertiesDict = new Dictionary<string, object>
+            {
+                { "CaptchaEnabled", captchaEnabled },
+                { "CaptchaLength", captchLength },
+                { "CaptchaStyle", captchStyle }
+            };
+            var propData = new Dictionary<string, object> {
+                { "AxpCaptcha", propertiesDict }
             };
             var appDict = new Dictionary<string, object>
             {

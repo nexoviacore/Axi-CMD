@@ -82,7 +82,7 @@
             }
         })();
     </script>
-    <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
+    <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <link href="../ThirdParty/jquery-confirm-master/jquery-confirm.min.css?v=1" rel="stylesheet" />
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <%--custom alerts end--%>
@@ -90,7 +90,7 @@
 
     <script src="../Js/WF.min.js?v=5" type="text/javascript"></script>
 
-    <script src="../Js/helper.min.js?v=175" type="text/javascript"></script>
+    <script src="../Js/helper.min.js?v=177" type="text/javascript"></script>
 
     <script src="../Js/dimmingdiv.min.js?v=2" type="text/javascript"></script>
 
@@ -116,7 +116,7 @@
 
     </script>
     <script src="../Js/Workflowdelegation.min.js?v=1"></script>
-    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
     <link href="../Css/WorkflowDelegation.min.css" rel="stylesheet" />
 
 </head>

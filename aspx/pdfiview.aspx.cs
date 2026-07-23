@@ -59,6 +59,7 @@ public partial class pdfiview : System.Web.UI.Page
     ArrayList hdrFooterAlign = new ArrayList();
     ArrayList hdrFooterFont = new ArrayList();
     ArrayList axhiddencols = new ArrayList();
+    public string smartViewSettings = string.Empty;
     protected void Page_Load(object sender, System.EventArgs e)
     {
         if (Session["project"].ToString() == "")
@@ -94,6 +95,11 @@ public partial class pdfiview : System.Web.UI.Page
                     if (ivtype == null & !util.IsChar(ivtype))
                         Response.Redirect(Constants.PARAMERR);
                 }
+
+                if (Request.QueryString["smartViewSettings"] != null)
+                    smartViewSettings = Request.QueryString["smartViewSettings"].ToString();
+                else
+                    smartViewSettings = "";
 
                 if (Request.QueryString["axpCache"] != null)
                 {
@@ -277,6 +283,12 @@ public partial class pdfiview : System.Web.UI.Page
             isList = "false";
 
         GetParam(paramVal);
+
+        HashSet<string> hiddenColumnSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrEmpty(smartViewSettings))
+        {
+            hiddenColumnSet = new HashSet<string>(smartViewSettings.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries), StringComparer.OrdinalIgnoreCase);
+        }
 
         string sortCol = string.Empty;
         string sortOrd = string.Empty;
@@ -476,7 +488,9 @@ public partial class pdfiview : System.Web.UI.Page
 
                         if (baseDataNode.Attributes["hide"] != null)
                         {
-                            if (baseDataNode.Name.StartsWith("hide_"))
+                            if (hiddenColumnSet.Contains(baseDataNode.Name))
+                                colHide.Add("true");
+                            else if (baseDataNode.Name.StartsWith("hide_"))
                                 colHide.Add("true");
                             else
                                 colHide.Add(baseDataNode.Attributes["hide"].Value);
@@ -786,7 +800,7 @@ public partial class pdfiview : System.Web.UI.Page
                     string fontPath = GetFontPathBasedOnLanguage(hn);
                     BaseFont baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
                     iTextSharp.text.Font universalFont = new iTextSharp.text.Font(baseFont, 10, iTextSharp.text.Font.BOLD, new GrayColor(0.1f));
-                    
+
                     hn = util.ReplaceTextAreaChars(hn, "pdf");
                     hn = StripHtmlTagsMobile(hn);
 
@@ -1289,7 +1303,7 @@ public partial class pdfiview : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static string GeneratePDFMobile(string ivKey, string ivname, string ivtype, string axpCache, string _params, string _typeIvOrLv, string _curRecord, string _ivParamCaption)
+    public static string GeneratePDFMobile(string ivKey, string ivname, string ivtype, string axpCache, string _params, string _typeIvOrLv, string _curRecord, string _ivParamCaption, string smartViewSettings)
     {
         if (HttpContext.Current.Session["project"].ToString() == "")
         {
@@ -1344,7 +1358,7 @@ public partial class pdfiview : System.Web.UI.Page
 
             string curRecord = _curRecord.ToString();
 
-            string str = GetPDFMobile(ivKey, ivname, ivtype, axpCache, paramVal, _typeIvOrLv, _curRecord, objIview, _ivParamCaption);
+            string str = GetPDFMobile(ivKey, ivname, ivtype, axpCache, paramVal, _typeIvOrLv, _curRecord, objIview, _ivParamCaption, smartViewSettings);
             //HttpContext.Current.Response.Buffer = true;
             //HttpContext.Current.Response.Clear();
             //HttpContext.Current.Response.ClearContent();
@@ -1358,7 +1372,7 @@ public partial class pdfiview : System.Web.UI.Page
         }
     }
 
-    private static string GetPDFMobile(string ivKey, string ivname, string ivtype, string axpCache, string paramVal, string _typeIvOrLv, string _curRecord, IviewData objIview, string _ivParamCaption)
+    private static string GetPDFMobile(string ivKey, string ivname, string ivtype, string axpCache, string paramVal, string _typeIvOrLv, string _curRecord, IviewData objIview, string _ivParamCaption, string smartViewSettings)
     {
         string isList;
         if (ivtype == "listview" | ivtype == "lview")
@@ -1421,6 +1435,12 @@ public partial class pdfiview : System.Web.UI.Page
         string filterColVal = string.Empty;
         string filterValue1 = string.Empty;
         string filterOpr = string.Empty;
+
+        HashSet<string> hiddenColumnSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrEmpty(smartViewSettings))
+        {
+            hiddenColumnSet = new HashSet<string>(smartViewSettings.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries), StringComparer.OrdinalIgnoreCase);
+        }
 
         if (HttpContext.Current.Session["sOrder"] != null/* TODO Change to default(_) if this is not a reference type */ )
         {
@@ -1611,7 +1631,9 @@ public partial class pdfiview : System.Web.UI.Page
 
                         if (baseDataNode.Attributes["hide"] != null)
                         {
-                            if (baseDataNode.Name.StartsWith("hide_"))
+                            if (hiddenColumnSet.Contains(baseDataNode.Name))
+                                colHide.Add("true");
+                            else if (baseDataNode.Name.StartsWith("hide_"))
                                 colHide.Add("true");
                             else
                                 colHide.Add(baseDataNode.Attributes["hide"].Value);

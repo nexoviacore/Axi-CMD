@@ -946,7 +946,7 @@ class AxProcessFlow {
         files.js.push("/../ThirdParty/Highcharts/highcharts.js");
         files.js.push("/../ThirdParty/Highcharts/highcharts-exporting.js");
         files.js.push("/../Js/high-charts-functions.min.js?v=20");
-        files.js.push("/../Js/AxInterface.min.js?v=20");
+        files.js.push("/../Js/AxInterface.min.js?v=21");
 
         files.js.push("/../ThirdParty/DataTables-1.10.13/media/js/jquery.dataTables.js");
         files.js.push("/../ThirdParty/DataTables-1.10.13/media/js/dataTables.bootstrap.js");

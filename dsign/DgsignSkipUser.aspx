@@ -10,7 +10,7 @@
     <%--custom alerts start--%>
     <link href="../Css/animate.css" rel="stylesheet" />
     <link href="../Css/alerts.css" rel="stylesheet" />
-    <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
+    <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <%--custom alerts end--%>
     <script src="../Js/jquery.msgBox.min.js?v=2" type="text/javascript"></script>
     <script type="text/javascript">

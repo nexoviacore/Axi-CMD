@@ -14,9 +14,9 @@
     <link href="../css/datatables.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/Entity.min.css?v=13" />
     <script type="text/javascript">
-        var entityPageLoadData = `<%= HttpUtility.JavaScriptStringEncode(PageLoadData) %>`;
+        var entityPageLoadData = `<%= HttpUtility.JavaScriptStringEncode(PageLoadData).Replace("`", @"\`") %>`;
         var entityPageVarsData = `<%= HttpUtility.JavaScriptStringEncode(PageVarsData) %>`;
-</script>
+    </script>
 
 </head>
 
@@ -726,7 +726,7 @@
     <script type="text/javascript" src="../UI/axpertUI/plugins.bundle.js"></script>
     <script type="text/javascript" src="../UI/axpertUI/scripts.bundle.js"></script>
     <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
-    <script type="text/javascript" src="../Js/common.min.js?v=164"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=165"></script>
     <script type="text/javascript" src="../Js/alerts.min.js"></script>
     <script type="text/javascript" src="../Js/xmlToJson.js"></script>
     <script type="text/javascript" src="../Js/handlebars.min.js"></script>
@@ -734,8 +734,8 @@
 
     <script src="../js/datatables.min.js"></script>
     <script src="../js/Entity-Filter.min.js?v=9"></script>
-    <script src="../js/Entity-common.min.js?v=17"></script>
-    <script src="../js/Entity.min.js?v=36"></script>
+    <script src="../js/Entity-common.min.js?v=18"></script>
+    <script src="../js/Entity.min.js?v=37"></script>
 
     <script type="text/javascript">
         /* Variables from mainpage */

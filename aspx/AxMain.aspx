@@ -25,15 +25,15 @@
 
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <script type="text/javascript" src="../Js/iFrameHandler.min.js"></script>
-    <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
+    <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <script src="../Js/thirdparty/jquery-resizable.min.js?v=2" type="text/javascript"></script>
     <title><%=appTitle%></title>
     <link rel="shortcut icon" href="../images/favicon.ico" />
     <script src="../Js/xmlToJson.js?v=2"></script>
-    <script src="../Js/helper.min.js?v=175"></script>
+    <script src="../Js/helper.min.js?v=177"></script>
     <script src="../assets/js/loadingoverlay.min.js?v=3" type="text/javascript"></script>
-    <script type="text/javascript" src="../Js/common.min.js?v=164"></script>
-    <script src="../Js/process.min.js?v=357"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=165"></script>
+    <script src="../Js/process.min.js?v=358"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
     <script type="text/javascript">
         history.go(1); // disable the browser's back button

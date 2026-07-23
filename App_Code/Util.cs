@@ -8458,7 +8458,7 @@ namespace Util
             return jsoncontents;
         }
 
-        public void GetAxIniFileKeys(string strProj)
+        public void GetAxIniFileKeys(string strProj, string iniRead = "")
         {
             string jsoncontents = string.Empty;
             if (strProj != string.Empty)
@@ -8486,7 +8486,7 @@ namespace Util
                             fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.CONFIGAPP_JSON_KEY, readconfigFile, strProj);
                         }
 
-                        string readIniFile = ReadIniFile(strProj, "ini");
+                        string readIniFile = ReadIniFile(strProj, "ini", iniRead);
                         //logobj.CreateLog("start after file in read - util.cs- ini:" + readIniFile + " axapps:" + readaxappsFile + " config:" + readconfigFile, HttpContext.Current.Session.SessionID, "GetAxARMConnection", "", "true");
                         if (readIniFile != string.Empty)
                         {
@@ -8561,6 +8561,16 @@ namespace Util
                                 fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXPDEVOPTION_CONN_KEY, "nooptions", strProj);
                             }
 
+                            if (jsonARM != null && jsonARM["AxpCaptcha"] != null)
+                            {
+                                jsoncontents = jsonARM["AxpCaptcha"].ToString();
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXPCAPTCHA_CONN_KEY, jsoncontents, strProj);
+                            }
+                            else
+                            {
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXPCAPTCHA_CONN_KEY, "nooptions", strProj);
+                            }
+
                             Dictionary<string, string> savedSettings = fdrObj.HashGetAllKey(Constants.AX_COMMON_APPSETTING_KEY, strProj);
                             //logobj.CreateLog("start before session - util.cs-" + savedSettings.Count(), HttpContext.Current.Session.SessionID, "GetAxARMConnection", "", "true");
                             if (HttpContext.Current != null && HttpContext.Current.Session != null)
@@ -8590,14 +8600,14 @@ namespace Util
             }
         }
 
-        public string ReadIniFile(string strProj, string fileType)
+        public string ReadIniFile(string strProj, string fileType, string iniRead = "")
         {
             string ReadIniFileValue = string.Empty;
             try
             {
                 if (fileType == "ini")
                 {
-                    if (HttpContext.Current.Session["ReadIniFile-" + strProj] == null)
+                    if (iniRead == "true" || HttpContext.Current.Session["ReadIniFile-" + strProj] == null)
                     {
                         FileInfo fi = new FileInfo(ScriptsPath + "\\AppSettings.ini");
                         if (fi.Exists)

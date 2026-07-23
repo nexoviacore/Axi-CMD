@@ -242,7 +242,7 @@ Home Cunfiguration Page Templete
                             </div>
                             <!--end::Aside Toggle-->
                             <!--begin::Aside toggler-->
-                            <div id="impopen"  class="btn btn-icon w-auto ps-0 btn-active-color-primary d-none d-lg-inline-flex me-2 me-lg-5 active---" data-kt-toggle="true" data-kt-toggle-state="active" data-kt-toggle-target="body" data-kt-toggle-name="aside-minimize">
+                            <div id="impopen" class="btn btn-icon w-auto ps-0 btn-active-color-primary d-none d-lg-inline-flex me-2 me-lg-5 active---" data-kt-toggle="true" data-kt-toggle-state="active" data-kt-toggle-target="body" data-kt-toggle-name="aside-minimize">
                                 <span class="material-icons material-icons-style material-icons-2 rotate-180">
                                     menu
                                 </span>
@@ -838,7 +838,7 @@ Home Cunfiguration Page Templete
                                 <!--begin::User-->
                                 <div class="d-flex align-items-center ms-2 ms-lg-3">
                                     <!--begin::Menu wrapper-->
-                                    <div id="mainProfileIcon" class="btn btn-icon profile-menu btn-dark w-30px h-30px w-md-40px h-md-40px position-relative" data-kt-menu-trigger="click" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end" data-kt-menu-backdrop="true">
+                                    <div id="mainProfileIcon" class="btn btn-icon profile-menu btn-dark w-30px h-30px w-md-40px h-md-40px position-relative" data-kt-menu-trigger="click" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end" data-kt-menu-backdrop="true" aria-label="User profile" aria-haspopup="menu" aria-expanded="false" role="button" tabindex="0">
 
                                         <svg id="userNameIconMain" role="presentation" stroke-width="2" focusable="false" class="icon icon-account" viewBox="0 0 22 22" height="24" width="24">
                                             <circle cx="11" cy="7" r="4" fill="none" stroke="currentColor"></circle>
@@ -1256,12 +1256,12 @@ Home Cunfiguration Page Templete
     files.js.push("/Js/handlebars.min.js?v=2");
     files.js.push("/Js/handleBarsHelpers.min.js");
     if (homePageType == "cards") {
-        files.js.push("/Js/AxInterface.min.js?v=20");//min
+        files.js.push("/Js/AxInterface.min.js?v=21");//min
         files.js.push("/ThirdParty/Highcharts/highcharts.js");
         files.js.push("/ThirdParty/Highcharts/highcharts-3d.js");
         files.js.push("/ThirdParty/Highcharts/highcharts-more.js");
         files.js.push("/ThirdParty/Highcharts/highcharts-exporting.js");
-        files.js.push("/Js/high-charts-functions.min.js?v=23");//min
+        files.js.push("/Js/high-charts-functions.min.js?v=24");//min
 
         files.js.push("/ThirdParty/DataTables-1.10.13/media/js/jquery.dataTables.js");
         files.js.push("/ThirdParty/DataTables-1.10.13/media/js/dataTables.bootstrap.js");
@@ -1293,7 +1293,7 @@ Home Cunfiguration Page Templete
     files.js.push("/Js/axpertUI_homecards.min.js?v=29");
     files.js.push("/Js/AxNotifications.min.js?v=16");
     files.js.push("/Js/HomeConfigPageCards.min.js?v=15");
-    files.js.push("/Js/Entity-common.min.js?v=17");
+    files.js.push("/Js/Entity-common.min.js?v=18");
     var dirLeft = true;
 
     if ($("body").hasClass("btextDir-rtl")) {

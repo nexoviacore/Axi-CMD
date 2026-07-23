@@ -24,30 +24,6 @@
     <script src="../Js/noConflict.min.js?v=1" type="text/javascript"></script>
     <link href="../Css/thirdparty/jquery-ui/1.12.1/jquery-ui.min.css" rel="stylesheet" />
     <link href="../Css/globalStyles.min.css?v=36" rel="stylesheet" />
-    <%--<script>
-        if (typeof localStorage != "undefined") {
-            var projUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-            var lsTimeStamp = localStorage["customGlobalStylesExist-" + projUrl]
-            if (lsTimeStamp && lsTimeStamp != "false") {
-                var appProjName = localStorage["projInfo-" + projUrl] || "";
-                var customGS = "<link id=\"customGlobalStyles\" data-proj=\"" + appProjName + "\" href=\"../" + appProjName + "/customGlobalStyles.css?v=" + lsTimeStamp + "\" rel=\"stylesheet\" />";
-                document.write(customGS);
-            }
-        }
-    </script>
-     <script>
-         try {
-             if (typeof localStorage != "undefined") {
-                 var projUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-                 var lsTimeStamp = localStorage["axGlobalThemeStyle-" + projUrl]
-                 if (lsTimeStamp && lsTimeStamp != "false") {
-                     var axThemeFldr = localStorage["axThemeFldr-" + projUrl] || "";
-                     var axCustomStyle = "<link id=\"axGlobalThemeStyle\" data-themfld=\"" + axThemeFldr + "\" href=\"../" + axThemeFldr + "/axGlobalThemeStyle.css?v=" + lsTimeStamp + "\" rel=\"stylesheet\" />";
-                     document.write(axCustomStyle);
-                 }
-             }
-         } catch (ex) { }
-     </script>--%>
     <script>
         (function () {
             if (typeof localStorage !== "undefined") {
@@ -84,7 +60,7 @@
             }
         })();
     </script>
-    <script src="../Js/common.min.js?v=164"></script>
+    <script src="../Js/common.min.js?v=165"></script>
     <link href="../Css/aboutus.min.css?v=3" rel="stylesheet" />
     <script>
         $(document).ready(function () {
@@ -92,75 +68,166 @@
             modalHeader.innerText = eval(callParent('lcm[387]'));
             $("#btnClose").prop("title", eval(callParent('lcm[249]')));
             $(this).parent("#btnClose").focus();
-        }
+        });
 
-        )
+        $(document).on("keydown", function (e) {
+            if (e.key !== "Escape")
+                return;
+            e.preventDefault();
+            parent.closeModalDialog();
+        });
     </script>
     <style>
         .btextDir-rtl .modal-header button#btnModalClose {
             float: left !important;
         }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .versionInfo {
+            padding: 15px 20px;
+        }
+
+            .versionInfo dl {
+                margin: 0;
+            }
+
+            .versionInfo dt,
+            .versionInfo dd {
+                display: inline;
+                margin: 0;
+                padding: 0;
+                vertical-align: top;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+
+            .versionInfo dt {
+                font-weight: 600;
+                margin-right: 6px;
+            }
+
+            .versionInfo dd {
+                font-weight: 400;
+                word-break: break-word;
+                overflow-wrap: break-word;
+            }
+
+                .versionInfo dd::after {
+                    content: "";
+                    display: block;
+                    margin-bottom: 6px;
+                }
+
+        .castLbl {
+            font-weight: 600;
+        }
+
+        .fontclass {
+            font-weight: 400;
+        }
     </style>
+
 </head>
-
 <body class="btextDir-<%=direction%>" dir="<%=direction%>" id="dvaboutus">
-
     <div class="container versionInfo">
-        <div class="about-us ">
-            <div class=" versionclass">
-                <asp:Label ID="lblVer" runat="server" meta:resourcekey="lblVer" class="control-label  castLbl " for="version">Version: </asp:Label>
-                <asp:Label Text="" ID="Labelvers" runat="server" />
-                <asp:Label class="fontclass" Text="" ID="lblVersion" runat="server" />
-                <asp:Label class="fontclass" Text="" ID="lblSubversion" runat="server" />
-            </div>
-        </div>
-        <div id="divproject" runat="server">
-            <asp:Label ID="lblproj" runat="server" meta:resourcekey="lblproj" class="control-label castLbl" for="version">Project: </asp:Label>
-            <asp:Label class="fontclass" Text="" ID="divprojcontent" runat="server" />
-        </div>
-        <div runat="server">
-            <asp:Label ID="lblappsrvr" runat="server" meta:resourcekey="lblappsrvr" class="control-label castLbl" for="version">Application Server:</asp:Label>
-            <asp:Label class="fontclass" Text="IIS" ID="Label13" runat="server" />
-        </div>
-        <div runat="server">
-            <asp:Label ID="lbldb" runat="server" meta:resourcekey="lbldb" class="control-label castLbl" for="version">Database: </asp:Label>
-            <asp:Label class="fontclass" Text="" ID="divdbconent" runat="server" />
-        </div>
-        <div runat="server">
-            <asp:Label ID="lbldc" runat="server" meta:resourcekey="lbldc" class="control-label castLbl" for="version">Data Caching: </asp:Label>
-            <asp:Label class="fontclass" Text="" ID="divdatacontent" runat="server" />
-        </div>
-        <div class="relclass" id="divRelDate" runat="server" visible="false">
-            <asp:Label ID="lblrd" runat="server" meta:resourcekey="lblrd" class="control-label castLbl" for="version">Release Date:</asp:Label>
-            <asp:Label class="fontclass" Text="" ID="lblRelDate" runat="server" />
-        </div>
-        <div id="divDesc" runat="server" visible="false">
-            <asp:Label ID="lbldes" runat="server" meta:resourcekey="lbldes" class="control-label castLbl" for="version">Description: </asp:Label>
-            <div class="col-lg-4">
-                <div class="fontclass" id="divDescContent" runat="server" />
-            </div>
-        </div>
-        <div id="divFeat" runat="server" visible="false">
-            <asp:Label ID="lblfeat" runat="server" meta:resourcekey="lblfeat" class="control-label castLbl" for="version">Features: </asp:Label>
-            <div class="col-lg-4">
-                <div class="fontclass" id="divFeaturesContent" runat="server" />
-            </div>
-        </div>
-        <div id="divEnhan" runat="server" visible="false">
-            <asp:Label ID="lblenhan" runat="server" meta:resourcekey="lblenhan" class="control-label castLbl" for="version">Enhancements: </asp:Label>
-            <div class="col-lg-4">
-                <div class="fontclass" id="divEnhanContent" runat="server" />
-            </div>
-        </div>
-        <%--   <div id="divBug" runat="server" visible="false">
-            <asp:Label ID="lblbf" runat="server" meta:resourcekey="lblbf" class="control-label castLbl" for="version">Bugs Fixed: </asp:Label>
-        </div>
-        <div class="col-lg-4">
-            <div class="fontclass" id="divBugContent" runat="server" />
-        </div>--%>
+        <dl>
+            <dt>
+                <asp:Label ID="lblVer" runat="server" meta:resourcekey="lblVer" CssClass="castLbl">
+                    Version:
+                </asp:Label>
+            </dt>
+            <dd>
+                <asp:Label ID="Labelvers" runat="server" />
+                <asp:Label ID="lblVersion" runat="server" CssClass="fontclass" />
+                <asp:Label ID="lblSubversion" runat="server" CssClass="fontclass" />
+            </dd>
+            <dt id="divproject" runat="server">
+                <asp:Label ID="lblproj" runat="server" meta:resourcekey="lblproj" CssClass="castLbl">
+                    Project:
+                </asp:Label>
+            </dt>
+            <dd>
+                <asp:Label ID="divprojcontent" runat="server" CssClass="fontclass" />
+            </dd>
 
-        <button type="button" id="btnClose" class="btn" onclick="parent.closeModalDialog()" title=""></button>
+            <dt>
+                <asp:Label ID="lblappsrvr" runat="server" meta:resourcekey="lblappsrvr" CssClass="castLbl">
+                    Application Server:
+                </asp:Label>
+            </dt>
+            <dd>
+                <asp:Label ID="Label13" runat="server" Text="IIS" CssClass="fontclass" />
+            </dd>
 
+            <dt>
+                <asp:Label ID="lbldb" runat="server" meta:resourcekey="lbldb" CssClass="castLbl">
+                    Database:
+                </asp:Label>
+            </dt>
+            <dd>
+                <asp:Label ID="divdbconent" runat="server" CssClass="fontclass" />
+            </dd>
+
+            <dt>
+                <asp:Label ID="lbldc" runat="server" meta:resourcekey="lbldc" CssClass="castLbl">
+                    Data Caching:
+                </asp:Label>
+            </dt>
+            <dd>
+                <asp:Label ID="divdatacontent" runat="server" CssClass="fontclass" />
+            </dd>
+
+            <dt id="divRelDate" runat="server" visible="false">
+                <asp:Label ID="lblrd" runat="server" meta:resourcekey="lblrd" CssClass="castLbl">
+                    Release Date:
+                </asp:Label>
+            </dt>
+            <dd runat="server" visible="false">
+                <asp:Label ID="lblRelDate" runat="server" CssClass="fontclass" />
+            </dd>
+
+            <dt id="divDesc" runat="server" visible="false">
+                <asp:Label ID="lbldes" runat="server" meta:resourcekey="lbldes" CssClass="castLbl">
+                    Description:
+                </asp:Label>
+            </dt>
+            <dd runat="server" visible="false">
+                <div id="divDescContent" runat="server" class="fontclass"></div>
+            </dd>
+
+            <dt id="divFeat" runat="server" visible="false">
+                <asp:Label ID="lblfeat" runat="server" meta:resourcekey="lblfeat" CssClass="castLbl">
+                    Features:
+                </asp:Label>
+            </dt>
+            <dd runat="server" visible="false">
+                <div id="divFeaturesContent" runat="server" class="fontclass"></div>
+            </dd>
+
+            <dt id="divEnhan" runat="server" visible="false">
+                <asp:Label ID="lblenhan" runat="server" meta:resourcekey="lblenhan" CssClass="castLbl">
+                    Enhancements:
+                </asp:Label>
+            </dt>
+            <dd runat="server" visible="false">
+                <div id="divEnhanContent" runat="server" class="fontclass"></div>
+            </dd>
+        </dl>
+        <div class="text-right">
+            <button type="button" id="btnClose" class="btn btn-default" onclick="parent.closeModalDialog()">
+                Close
+            </button>
+        </div>
     </div>
 </body>
 </html>

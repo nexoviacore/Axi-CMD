@@ -17,7 +17,7 @@ using System.Xml;
 using System.Xml.Linq;
 public class IviewDataExport
 {
-    public string GetExcelFast(string _ivName, string _ivKey, string _params, string ivCaption, string dateformat)
+    public string GetExcelFast(string _ivName, string _ivKey, string _params, string ivCaption, string dateformat, string smartViewSettings)
     {
         LogFile.Log logobj = new LogFile.Log();
         if (HttpContext.Current.Session["username"] == null)
@@ -97,6 +97,13 @@ public class IviewDataExport
                     return "Invalid XML structure";
                 var columns = new List<ColDef>();
                 var htmlCols = new HashSet<string>();
+
+                HashSet<string> hiddenColumnSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (!string.IsNullOrEmpty(smartViewSettings))
+                {
+                    hiddenColumnSet = new HashSet<string>(smartViewSettings.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries), StringComparer.OrdinalIgnoreCase);
+                }
+
                 foreach (XmlNode col in headRow.ChildNodes)
                 {
                     if (col.Name == "axrowtype" || col.Name == "axp__font" || col.Name == "axp__color" || col.Name == "axrowoptions" || col.Name == "rowno" || col.Name == "pivotghead")
@@ -114,6 +121,7 @@ public class IviewDataExport
                     {
                         colType = col.Attributes["type"].Value;
                     }
+                    hidden = hidden || hiddenColumnSet.Contains(col.Name);
                     columns.Add(new ColDef
                     {
                         Name = col.Name,

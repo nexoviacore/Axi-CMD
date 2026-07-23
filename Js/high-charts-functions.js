@@ -247,7 +247,7 @@ function createAgileChart(initObj) {
                 if (type === "scatter-plot")
                     finalDataObj.push({ name: name, data: tempDataObj[index] })
                 else
-                    finalDataObj.push({ name: name, colorByPoint: true, data: tempDataObj[index] })
+                    finalDataObj.push({ name: name, data: tempDataObj[index] })
             }
 
             var chartInitObj = {
@@ -396,8 +396,6 @@ function AgileCharts(mode) {
         var colorsToShow = this.getDetails("colors", presObjAttrs);        
         if (initalObj.isCompressed) {
             title = "";
-            xAxisL = "";
-            yAxisL = "";
         }
         var chartData = {
             colors: colorsToShow,
@@ -784,7 +782,35 @@ function AgileCharts(mode) {
             }
         };
         chrtOptions.plotOptions.series.dataLabels.align = 'left';
-        chrtOptions.series = chartInitObj.data;
+        var areaSeriesOrder = (chartInitObj.data || []).map(function(series, index) {
+            var numericPoints = (series.data || []).map(function(point) {
+                if (typeof point === "number") {
+                    return point;
+                }
+                if (point && typeof point.y === "number") {
+                    return point.y;
+                }
+                return 0;
+            });
+            return {
+                index: index,
+                maxValue: numericPoints.length ? Math.max.apply(null, numericPoints) : 0
+            };
+        }).sort(function(left, right) {
+            if (right.maxValue === left.maxValue) {
+                return left.index - right.index;
+            }
+            return right.maxValue - left.maxValue;
+        });
+        var areaSeriesZIndex = {};
+        areaSeriesOrder.forEach(function(seriesInfo, zIndex) {
+            areaSeriesZIndex[seriesInfo.index] = zIndex;
+        });
+        chrtOptions.series = (chartInitObj.data || []).map(function(series, index) {
+            return $.extend(true, {}, series, {
+                zIndex: areaSeriesZIndex[index]
+            });
+        });
         chrtOptions.plotOptions.series.dataLabels.formatter = function () {
             try {
                 if (chrtOptions.isNumSymbols) {                    
@@ -1027,7 +1053,6 @@ function AgileCharts(mode) {
                 title: {
                     text: yAxisL
                 },
-                title: null,
                 labels:{
                     enabled: !enableSlick,
                     format: '{value}',

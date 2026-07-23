@@ -471,7 +471,7 @@
     <script type="text/javascript" src="../Js/xmlToJson.js"></script>
     <script type="text/javascript" src="../ThirdParty/DataTables-1.10.13/extensions/Extras/moment.min.js"></script>
     <script src="../js/Entity-Filter.min.js?v=9"></script>
-    <script src="../js/Entity-common.min.js?v=17"></script>
+    <script src="../js/Entity-common.min.js?v=18"></script>
     <script src="../js/Analytics.min.js?v=12"></script>
 
 

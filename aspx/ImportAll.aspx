@@ -635,6 +635,7 @@
                                     <asp:HiddenField ID="hdnIgnoredColumns" runat="server" Value="" />
                                     <asp:HiddenField ID="colheader" runat="server" Value="" />
                                     <asp:HiddenField ID="hdnCOLheaders" runat="server" Value="" />
+                                    <asp:HiddenField ID="hdnAutoGenFlds" runat="server" Value="" />
                                 </section>
                             </div>
                         </div>
@@ -803,13 +804,13 @@
         <script type="text/javascript" src="../Js/noConflict.min.js?v=1"></script>
         <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2"></script>
         <script type="text/javascript" src="../Js/jquery.multi-select.min.js"></script>
-        <script type="text/javascript" src="../Js/alerts.min.js?v=32"></script>
+        <script type="text/javascript" src="../Js/alerts.min.js?v=33"></script>
         <script type="text/javascript" src="../Js/helper.min.js?v=158"></script>
         <%--<script type="text/javascript" src="../Js/jsclient.min.js?v=103"></script>--%>
-        <script type="text/javascript" src="../Js/common.min.js?v=164"></script>
-<%--        <script type="text/javascript" src="../Js/AxInterface.min.js?v=11"></script>
+        <script type="text/javascript" src="../Js/common.min.js?v=165"></script>
+        <%--        <script type="text/javascript" src="../Js/AxInterface.min.js?v=11"></script>
         <script type="text/javascript" src="../Js/multiselect.min.js"></script>--%>
-        <script type="text/javascript" src="../Js/importall.min.js?v=18"></script>
+        <script type="text/javascript" src="../Js/importall.min.js?v=21"></script>
         <script type="text/javascript">
             var proj = '<%=proj%>';
             var sid = '<%=sid%>';

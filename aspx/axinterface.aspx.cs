@@ -1066,7 +1066,10 @@ public partial class axinterface : System.Web.UI.Page
             }
             //var saveDetails = "{\"queuename\":\"CachedSaveQueue\",\"queuedata\":" + jsonData + "}";
             //string DATA = finalObj.ToString(Newtonsoft.Json.Formatting.None);
-            string saveDetails = "{\"queuename\":\"CachedSaveQueue\",\"queuedata\":" + JsonConvert.SerializeObject(jsonData) + "}";
+            bool Trace = HttpContext.Current.Session["AxTrace"].ToString() == "true" ? true : false;
+            string saveDetails = "{\"queuename\":\"CachedSaveQueue\",\"trace\":" + Trace.ToString().ToLower() + ",\"queuedata\":" + JsonConvert.SerializeObject(jsonData) + "}";
+            //LogFile.Log logObj = new LogFile.Log();
+            //logObj.CreateLog("CachedSaveQueue from axinterface URL:" + URL + " payloadL-" + saveDetails, HttpContext.Current.Session.SessionID, "CallPushtoQueueAPI-payload", "new", "true");
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
             request.Method = "POST";
             request.ContentType = "application/json";
@@ -1079,6 +1082,7 @@ public partial class axinterface : System.Web.UI.Page
             {
                 json = reader.ReadToEnd();
             }
+            //logObj.CreateLog("CachedSaveQueue from axinterface response json:" + json, HttpContext.Current.Session.SessionID, "CallPushtoQueueAPI-payload", "", "true");
         }
         catch (Exception ex)
         {

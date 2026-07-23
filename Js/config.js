@@ -12,6 +12,7 @@ $j(document).ready(function () {
     $("#ddldbversion").select2();
     $("#lstStudioRconnection").select2();
     $('#axpDevOptions').select2();
+    $('#selCaptchaConn').select2();
     /*    $("#lstconnection").val(selProj).trigger('change');*/
 
     $("#btnaddcon").click(function () {
@@ -279,7 +280,7 @@ $j(document).ready(function () {
         if (typeof axpDevOptions != "undefined") {
             $("#axpDevOptions").val(axpDevOptions);//.focus();
             $('#axpDevOptions').trigger('change');
-            let _proj = extResValuearm;
+            let _proj = axpDevOptions;
             if (_proj.indexOf("\\") != -1)
                 _proj = _proj.split("\\")[0];
             $("#hdnaxpDevOptions").val(_proj);
@@ -334,6 +335,34 @@ $j(document).ready(function () {
                     document.getElementById("ddlAttachmentSize").value = projData.FileConfig.AxAttachmentSize || "1";
 
                     $('#ddlAttachmentSize').trigger('change');
+                }
+            }
+        }
+    }
+
+    if (applstJson != "") {
+        var selCaptchaConn = $("#selCaptchaConn option:first").val();
+        if (typeof selCaptchaConn != "undefined") {
+            $("#selCaptchaConn").val(selCaptchaConn);//.focus();
+            $('#selCaptchaConn').trigger('change');
+            let _proj = selCaptchaConn;
+            if (_proj.indexOf("\\") != -1)
+                _proj = _proj.split("\\")[0];
+            $("#hdnCaptchConn").val(_proj);
+            if (appSettingList && typeof appSettingList === "string") {
+                appSettingList = JSON.parse(appSettingList);
+            }
+            if (appSettingList && appSettingList.appsettings) {
+                if (appSettingList.appsettings.hasOwnProperty(_proj) && typeof appSettingList.appsettings[_proj].AxpCaptcha != "undefined") {
+                    let projData = appSettingList.appsettings[_proj];
+                    if (projData.AxpCaptcha.CaptchaEnabled == "true")
+                        $("#chkbEnableCaptch").prop("checked", true);
+                    else 
+                        $("#chkbEnableCaptch").prop("checked", false);
+                    document.getElementById("selCaptchLength").value = projData.AxpCaptcha.CaptchaLength || "";
+                    document.getElementById("selCaptchStyle").value = projData.AxpCaptcha.CaptchaStyle || "";
+
+                    $('#selCaptchaConn').trigger('change');
                 }
             }
         }
@@ -561,6 +590,8 @@ $j(document).on("change", "#lstconnection", function (e) {
         $('#armExtResource').val(lvalue).trigger('change');
 
         $('#axpDevOptions').val(lvalue).trigger('change');        
+
+        $('#selCaptchaConn').val(lvalue).trigger('change');        
     }
 });
 
@@ -2424,6 +2455,96 @@ function SaveAxpertDevOptions() {
         success: function (data) {
             if (data.d != "") {
                 showAlertDialog("success", "Axpert Developer Options Menu saved successfully");
+                appSettingList = JSON.parse(data.d)
+            }
+        }, error: function (error) {
+            if (typeof error?.responseJSON?.Message != "undefined" && error?.responseJSON?.Message != "")
+                showAlertDialog("error", error?.responseJSON?.Message);
+            else
+                showAlertDialog("error", error);
+        }
+    });
+}
+
+$j(document).on("change", "#selCaptchaConn", function () {
+    var lvalue = $(this).val();
+    if (applstJson != "") {
+        var projCaptch = lvalue;
+        if (projCaptch.indexOf("\\") != -1)
+            projCaptch = projCaptch.split("\\")[0];
+        $("#hdnCaptchConn").val(projCaptch);
+        try {
+            if (appSettingList && typeof appSettingList === "string")
+                appSettingList = JSON.parse(appSettingList);
+            if (appSettingList && appSettingList.appsettings && projCaptch != null) {
+                if (appSettingList.appsettings.hasOwnProperty(projCaptch) && typeof appSettingList.appsettings[projCaptch].AxpCaptcha != "undefined") {
+                    let projData = appSettingList.appsettings[projCaptch];
+                    if (projData.AxpCaptcha.CaptchaEnabled == "true")
+                        $("#chkbEnableCaptch").prop("checked", true);
+                    else
+                        $("#chkbEnableCaptch").prop("checked", false);
+                    document.getElementById("selCaptchLength").value = projData.AxpCaptcha.CaptchaLength || "";
+                    document.getElementById("selCaptchStyle").value = projData.AxpCaptcha.CaptchaStyle || "";
+
+                    $('#selCaptchLength').trigger('change');
+                    $('#selCaptchStyle').trigger('change');
+                } else {
+                    $("#chkbEnableCaptch").prop("checked", false);
+                    $("#selCaptchLength").val("");
+                    $("#selCaptchStyle").val("");
+
+                    $('#selCaptchLength').trigger('change');
+                    $('#selCaptchStyle').trigger('change');
+                }
+            } else {
+                $("#chkbEnableCaptch").prop("checked", false);
+                $("#selCaptchLength").val("");
+                $("#selCaptchStyle").val("");
+
+                $('#selCaptchLength').trigger('change');
+                $('#selCaptchStyle').trigger('change');
+            }
+        }
+        catch (ex) {
+        }
+    }
+});
+
+
+function SaveCaptchaSettings() {
+    var proj = $("#hdnCaptchConn").val();
+    if (proj.indexOf("\\") != -1)
+        proj = proj.split("\\")[0];
+    if ($.trim(proj) === '')
+        return showAlertDialog("error", "Project cannot be left empty");
+    const selCaptchLength = $("#selCaptchLength").val();
+    if (!selCaptchLength || selCaptchLength.length === 0) {
+        return showAlertDialog("error", "Captcha Length cannot be left empty");
+    }
+    const selCaptchStyle = $("#selCaptchStyle").val();
+    if (!selCaptchStyle || selCaptchStyle.length === 0) {
+        return showAlertDialog("error", "Captcha Style cannot be left empty");
+    }
+    let captchaEnabled = "false";
+    if ($("#chkbEnableCaptch").is(':checked'))
+        captchaEnabled = "true";
+    $.ajax({
+        url: 'AxpertAdmin.aspx/SaveCaptchaSettingsWs',
+        type: 'POST',
+        cache: false,
+        async: true,
+        data: JSON.stringify({
+            proj: proj,
+            captchaEnabled: captchaEnabled,
+            captchLength: selCaptchLength,
+            captchStyle: selCaptchStyle,
+            csrfToken: $("#_antiforgery").val()
+        }),
+        dataType: 'json',
+        contentType: "application/json",
+        success: function (data) {
+            if (data.d != "") {
+                showAlertDialog("success", "Axpert Captchs settings saved successfully");
                 appSettingList = JSON.parse(data.d)
             }
         }, error: function (error) {

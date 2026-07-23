@@ -86,7 +86,7 @@
     <%--custom alerts start--%>
     <link href="../Css/animate.min.css" rel="stylesheet" />
     <link href="../ThirdParty/jquery-confirm-master/jquery-confirm.min.css?v=1" rel="stylesheet" />
-    <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
+    <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <%--custom alerts end--%>
     <script src="../Js/thirdparty/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
@@ -101,7 +101,7 @@
     <link id="themecss" type="text/css" rel="Stylesheet" href="" />
     <script src="../Js/Resetpassword.min.js?v=3" type="text/javascript"></script>
 
-    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
     <title>Reset Password</title>
 </head>
 <body class="dc" dir="<%=direction%>">

@@ -197,17 +197,17 @@
     <script src="../Js/thirdparty/jquery/3.1.1/jquery.min.js" type="text/javascript"></script>
     <script src="../Js/gen.min.js?v=14" type="text/javascript"></script>
     <script src="../Js/noConflict.min.js?v=1" type="text/javascript"></script>
-    <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
+    <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/thirdparty/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
     <script src="../ThirdParty/materialize/js/materialize.min.js?v=10"></script>
-    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
     <script src="../ThirdParty/Highcharts/highcharts.js"></script>
     <script src="../ThirdParty/Highcharts/highcharts-3d.js"></script>
     <script src="../ThirdParty/Highcharts/highcharts-more.js"></script>
     <script src="../ThirdParty/Highcharts/highcharts-exporting.js"></script>
 
-    <script src="../Js/high-charts-functions.min.js?v=23"></script>
+    <script src="../Js/high-charts-functions.min.js?v=24"></script>
     <script src="../Js/dashboardchart.min.js?v=20" type="text/javascript"></script>
     <script src="../Js/dashBoard.min.js?v=29" type="text/javascript"></script>
     <script src="../assets/js/loadingoverlay.min.js?v=3"></script>

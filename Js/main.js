@@ -3091,6 +3091,18 @@ $(document).on('click', '#GSclearBtn', function () {
     $(appGlobalVarsObject._CONSTANTS.search.staging.div).val("");
     $("#GSclearBtn").hide();
 });
+$(document).on("keydown", function (e) {
+    if (e.key !== "Escape")
+        return;
+    // Close search popup
+    var $search = $("#kt_header_search");
+    if ($search.hasClass("show")) {
+        $search.removeClass("show");
+        $search.find("[data-kt-search-element='content']").removeClass("show");
+        $("#globalSearchinp").focus();
+        return;
+    }
+});
 
 var tblSearchData = []
 //getSearchData();
@@ -4191,30 +4203,31 @@ function checkIfAnyActionPerformed() {
 }
 //function for about us page
 function showAbout() {
+    lastFocusedElement = document.activeElement;
     var modalExists = $('.modal').filter(".in").attr("data-confirm-leave") === "true";
     if (modalExists) {
         actionsClicked = "okay";
         iFrameId = $('.modal').filter(".in").attr("data-iframe-id");
         if (iFrameId != undefined)
             window.frames[iFrameId].contentWindow.ConfirmLeave();
-    } else {
-        // displayBootstrapModalDialog('About Axpert Web', 'md', '300px', true, '../aspx/aboutUs.aspx', undefined, function () {
-        let myModal = new BSModal("AboutAxpertWeb", "About Axpert Web", "<iframe src='../aspx/aboutUs.aspx'></iframe>", () => {
-            //shown callback
-            $(".btn-close").focus();
-            $("#btnClose").hide()
-        }, () => {
-            //hide callback
-        });
-
-        // myModal.changeSize("300px");
+    }
+    else {
+        let myModal = new BSModal("AboutAxpertWeb", "About Axpert Web", "<iframe src='../aspx/aboutUs.aspx'></iframe>",
+            () => {
+                $(".btn-close").focus();
+                $("#btnClose").hide();
+            },
+            () => {
+                if (lastFocusedElement) {
+                    lastFocusedElement.focus();
+                }
+            });
         myModal.hideFooter();
         myModal.close();
-
-        //$("#iFrameAboutAxpertWeb").contents().find("#btnClose").focus();
-
     }
-    setTimeout(function () { removeUnclickableMenuCssClass() }, 100)
+    setTimeout(function () {
+        removeUnclickableMenuCssClass();
+    }, 100);
 }
 //function for user manual
 function showUserManual() {

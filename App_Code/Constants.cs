@@ -271,6 +271,7 @@ public class Constants
     public const string AXPASSWORDPOL_CONN_KEY = "AxPwdPolicy";
     public const string AXPMOBSETTING_CONN_KEY = "AxMobSetting";
     public const string AXPDEVOPTION_CONN_KEY = "AxDevOption";
+    public const string AXPCAPTCHA_CONN_KEY = "AxCaptcha";
 
     public const string AX_COMMON_APPSETTING_KEY = "AxAccessCodeSettings";
 

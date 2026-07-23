@@ -34,11 +34,11 @@
     <script src="../Js/noConflict.min.js" type="text/javascript"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
 
-    <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
+    <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
 
-    <script type="text/javascript" src="../Js/login.min.js?v=114"></script>
+    <script type="text/javascript" src="../Js/login.min.js?v=116"></script>
     <script src="../Js/ForgotPassword.min.js?v=16" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
 
     <%--<script>
         if(typeof localStorage != "undefined"){
@@ -195,7 +195,7 @@
                 </div>
             </div>
 
-            <%if (ConfigurationManager.AppSettings["enableCaptcha"] != null && ConfigurationManager.AppSettings["enableCaptcha"].ToString() == "true")
+            <%--  <%if (ConfigurationManager.AppSettings["enableCaptcha"] != null && ConfigurationManager.AppSettings["enableCaptcha"].ToString() == "true")
                 { %>
             <div class="control-group">
                 <div class="fv-row mb-8 fv-plugins-icon-container">
@@ -208,7 +208,20 @@
                     <asp:TextBox ID="CaptchaCodeTextBox" runat="server" CssClass="m-wrap placeholder-no-fix form-control form-control-solid"></asp:TextBox>
                 </div>
             </div>
-            <%  } %>
+            <%  } %>--%>
+            <asp:Panel ID="pnlCaptcha" runat="server" Visible="false">
+                <div class="control-group">
+                    <div class="fv-row mb-8 fv-plugins-icon-container">
+                        <div class="d-flex flex-stack">
+                            <asp:Label ID="lblcaptcha" class="form-label fs-6 fw-boldest text-dark" runat="server" meta:resourcekey="lblcaptcha">
+                         Captcha
+                            </asp:Label>
+                        </div>
+                        <BotDetect:WebFormsCaptcha runat="server" ID="DynamicCaptcha" UserInputID="CaptchaCodeTextBox" CodeStyle="Alphanumeric" SoundEnabled="false" CodeLength="7" AutoReloadExpiredCaptchas="true" AutoReloadTimeout="7200" />
+                        <asp:TextBox ID="CaptchaCodeTextBox" runat="server" CssClass="m-wrap placeholder-no-fix form-control form-control-solid"></asp:TextBox>
+                    </div>
+                </div>
+            </asp:Panel>
 
             <div class="d-flex flex-row flex-column-fluid">
                 <div class="d-flex flex-row-fluid">
