@@ -12978,16 +12978,7 @@
     function loadFavorites() {
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
-        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
-        try {
-            const localData = JSON.parse(localStorage.getItem(favKey)) || [];
-            commandFavorites = localData.map(fav =>
-                typeof fav === 'string' ? { commandText: fav, targetURL: "" } : fav
-            );
-
-        } catch (ex) {
-            commandFavorites = [];
-        }
+        commandFavorites = AxiFavoritesManager.loadLocalFavorites(appUrl, window.mainUserName);
 
         renderFavoritesUI();
 
