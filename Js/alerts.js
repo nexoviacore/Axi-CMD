@@ -49,7 +49,7 @@ function showAlertDialog(title, message, messageType, messageVars, functionality
             } else {
                 shMessage += '<div class="alert agc-alert-wrapper alert-success agc-alert-success">';
                 if (hold == true || hold == "True")
-                    shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="close"  onclick="hideAlertDialog(\'' + functionality + '\');">&times;</a>';
+                    shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="Close"  onclick="hideAlertDialog(\'' + functionality + '\');">&times;</a>';
                 shMessage += '<span class="fa fa-check agc-alert-icon-wrapper"></span>';
             }
             break;
@@ -60,7 +60,7 @@ function showAlertDialog(title, message, messageType, messageVars, functionality
             }
             shMessage += '<div class="alert agc-alert-wrapper alert-warning agc-alert-warning">';
             if (hold == true || hold == "True")
-                shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="close"  onclick="hideAlertDialog(\'' + functionality + '\');">&times;</a>';
+                shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="Close"  onclick="hideAlertDialog(\'' + functionality + '\');">&times;</a>';
             shMessage += '<span class="fa fa-exclamation-triangle agc-alert-icon-wrapper"></span>';
             break;
         default:
@@ -71,7 +71,7 @@ function showAlertDialog(title, message, messageType, messageVars, functionality
                 $("#icons,#btnSaveTst,.BottomToolbarBar a,.wizardNextPrevWrapper").css({ "pointer-events": "auto" });
             }
             shMessage += '<div class="alert agc-alert-wrapper alert-danger agc-alert-error">';
-            shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="close"  onclick="hideAlertDialog(\'' + functionality + '\',\'Error\');">&times;</a>';
+            shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="Close"  onclick="hideAlertDialog(\'' + functionality + '\',\'Error\');">&times;</a>';
             shMessage += '<span class="fa fa-remove agc-alert-icon-wrapper"></span>';
             if (hold == undefined) {
                 hold = true;
@@ -82,7 +82,7 @@ function showAlertDialog(title, message, messageType, messageVars, functionality
                 customAlertTranSaveSuccess('info', message);
             } else {
                 shMessage += '<div class="alert agc-alert-wrapper alert-info agc-alert-info">';
-                shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="close"  onclick="hideAlertDialog(\'' + functionality + '\');">&times;</a>';
+                shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="Close"  onclick="hideAlertDialog(\'' + functionality + '\');">&times;</a>';
                 shMessage += '<span class="fa fa-info agc-alert-icon-wrapper"></span>';
             }
             break;
@@ -164,6 +164,14 @@ function showAlertDialog(title, message, messageType, messageVars, functionality
                     }
                 }
             );
+            setTimeout(function () {
+                setTimeout(function () {
+                    $(".toast-close-button").attr({
+                        "aria-label": "Close",
+                        "title": "Close"
+                    });
+                }, 0);
+            }, 100);
             return;
         } catch (ex) {}
 

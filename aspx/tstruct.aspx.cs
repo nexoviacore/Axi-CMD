@@ -50,6 +50,7 @@ public partial class Tstruct : System.Web.UI.Page
     ArrayList clientParamValues = new ArrayList();
     ArrayList headNames = new ArrayList();
     ArrayList customBtnHtml = new ArrayList();
+    StringBuilder ActBtnHTML = new StringBuilder();
     string AxOnApproveDisable = "false";
     string AxOnRejectDisable = "false";
     string AxOnReturnSave = "false";
@@ -335,7 +336,16 @@ public partial class Tstruct : System.Web.UI.Page
                 util.TempAttaServerFiles();
                 util.DeleteKeyOnRefreshSave();
                 if (Session["project"] != null)
+                {
+                    string _isDupTab = string.Empty;
+                    if (Request.QueryString["isDupTab"] != null)
+                        _isDupTab = Request.QueryString["isDupTab"].ToString();
+                    if (_isDupTab != "" && _isDupTab.StartsWith("true-"))
+                        HttpContext.Current.Session["isDupTab"] = _isDupTab;
+                    else
+                        HttpContext.Current.Session["isDupTab"] = "false";
                     hdnTstSInfo.Value = Session["project"].ToString() + "~" + Session["user"].ToString() + "~" + _thistrId + "~" + Session["nsessionid"].ToString() + "~" + Session["AxRole"].ToString() + "~" + Session["AxTrace"].ToString();
+                }
                 ScriptManager.RegisterStartupScript(this, this.GetType(), "dummyload", "tstDummyLoad('" + _thistrId + "');", true);
                 return;
             }
@@ -2771,10 +2781,34 @@ public partial class Tstruct : System.Web.UI.Page
             buttonList = new ArrayList(strObj.btns);
             buttonClass = " dwbBtn ";
         }
-        for (int i = 0; i < buttonList.Count; i++)
+        //for (int i = 0; i < buttonList.Count; i++)
+        for (int i = buttonList.Count - 1; i >= 0; i--)
         {
             TStructDef.ButtonStruct btn = (TStructDef.ButtonStruct)buttonList[i];
             string id = btn.ID;
+
+            string[] arrLeft = null;
+            string tlhw = string.Empty;
+            tlhw = btn.dimension;
+            if (parentID == "")
+            {
+                if (!string.IsNullOrEmpty(tlhw))
+                {
+                    arrLeft = tlhw.Split(',');
+                    if ((arrLeft.Length > 0 & arrLeft[1] != string.Empty))
+                    {
+                        if (leftBtns.IndexOf(arrLeft[1].ToString()) != -1)
+                            arrLeft[1] = Convert.ToString(Convert.ToInt32(arrLeft[1], 10) + 1);
+                        leftBtns.Add(arrLeft[1]);
+                        tmpLeftBtns.Add(arrLeft[1]);
+                    }
+                    else
+                    {
+                        logobj.CreateLog("    Button left value is missing:  " + btn.caption, sid, fileName, "");
+                    }
+                }
+            }
+
             string caption = btn.caption;
             string hint = btn.hint;
             string task = btn.task.ToLower();
@@ -2812,7 +2846,7 @@ public partial class Tstruct : System.Web.UI.Page
                             btnFunction = " onclick='javascript:NewTstruct();' ";
                             btnStyle = "handCur";
                             //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
-                            BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='add' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                            toolBarBtns.Add("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='add' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
                         }
 
                     }
@@ -2829,7 +2863,7 @@ public partial class Tstruct : System.Web.UI.Page
                             btnFunction = " onclick='javascript:FormSubmit();' ";
                             btnStyle = "handCur";
                             //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
-                            BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                            toolBarBtns.Add("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
                         }
                     }
                     break;
@@ -2841,7 +2875,7 @@ public partial class Tstruct : System.Web.UI.Page
                         btnFunction = " onclick=\"javascript:OpenSearch('" + transId + "');\" ";
                         btnStyle = "handCur";
                         //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
-                        BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                        toolBarBtns.Add("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
                     }
                     break;
 
@@ -2856,7 +2890,7 @@ public partial class Tstruct : System.Web.UI.Page
                             btnFunction = " onclick='javascript:DeleteTstruct();' ";
                             btnStyle = "handCur";
                             //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='delete' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
-                            BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                            toolBarBtns.Add("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
                         }
                     }
                     break;
@@ -2869,7 +2903,7 @@ public partial class Tstruct : System.Web.UI.Page
                         if (strObj.tstPform == "yes")
                         {
                             //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + "  alt='" + caption + "' title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
-                            BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                            toolBarBtns.Add("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
                         }
                     }
                     break;
@@ -2886,7 +2920,7 @@ public partial class Tstruct : System.Web.UI.Page
                         btnFunction = " onclick='javascript:OpenPdfDocList();'";
                         btnStyle = "handCur";
                         //BtnHtml.Append("<li" + buttonClass.ToString() + hideStyle.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
-                        BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                        toolBarBtns.Add("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
                     }
                     break;
 
@@ -2897,7 +2931,7 @@ public partial class Tstruct : System.Web.UI.Page
                         btnFunction = " onclick=\"javascript:OpenHistory('" + transId + "');\" ";
                         btnStyle = "handCur";
                         //BtnHtml.Append("<li" + buttonClass.ToString() + " ><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + "  alt='" + caption + "' title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
-                        BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                        toolBarBtns.Add("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
                     }
                     break;
 
@@ -2917,7 +2951,7 @@ public partial class Tstruct : System.Web.UI.Page
                                 btnFunction = " onclick=\"javascript:CallListView('" + transId + "');\" ";
                                 btnStyle = "handCur";
                                 //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' src=\"../AxpImages/toolicons/view2.png\" " + btnFunction.ToString() + " title='List View' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
-                                BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                                toolBarBtns.Add("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
                             }
                         }
                         else
@@ -2932,7 +2966,7 @@ public partial class Tstruct : System.Web.UI.Page
                                 btnFunction = " onclick=\"javascript:CallEntityList('" + transId + "');\" ";
                                 btnStyle = "handCur";
                                 //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' src=\"../AxpImages/toolicons/view2.png\" " + btnFunction.ToString() + " title='List View' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
-                                BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                                toolBarBtns.Add("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
                             }
                         }
                     }
@@ -2945,7 +2979,7 @@ public partial class Tstruct : System.Web.UI.Page
                         btnFunction = " onclick='javascript:AttachFiles();' ";
                         btnStyle = "handCur";
                         //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
-                        BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                        toolBarBtns.Add("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
                     }
                     break;
 
@@ -2979,7 +3013,7 @@ public partial class Tstruct : System.Web.UI.Page
                         if (strObj.tstPform == "yes")
                         {
                             //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
-                            BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                            toolBarBtns.Add("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
                         }
                     }
                     break;
@@ -3009,7 +3043,7 @@ public partial class Tstruct : System.Web.UI.Page
                             if (btn.fileupload == "y")
                             {
                                 btnFunction = " onclick=\"javascript:CallFileUploadAction('" + btn.action + "','" + btn.fileupload + "');\" ";
-                                BtnHtml.Append("<input type=hidden id='cb_sactbu' name='cb_sactbu'>");
+                                toolBarBtns.Add("<input type=hidden id='cb_sactbu' name='cb_sactbu'>");
                             }
                             else if (btn.fileupload == "a")
                             {
@@ -3035,11 +3069,11 @@ public partial class Tstruct : System.Web.UI.Page
                             //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='actbtn_" + id + "' " + btnFunction.ToString() + " alt=\"" + caption + "\" class=\"action " + btnStyle + "\" title=\"" + caption + "\" >" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
                             string _hint = string.IsNullOrEmpty(hint) ? caption : hint;
                             if (parentID == "")
-                                BtnHtml.Append("<a href=\"javascript:void(0)\" id='actbtn_" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' data-extra='" + _hint + "' class=\"" + buttonClass + " caption btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                                toolBarBtns.Add("<a href=\"javascript:void(0)\" id='actbtn_" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' data-extra='" + _hint + "' class=\"" + buttonClass + " caption btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
                             else
                             {
                                 iconStyle = iconStyle.Replace(" material-icons-2", " material-icons-2 text-gray-500");
-                                BtnHtml.Append("<a href=\"javascript:void(0)\" id='actbtn_" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' data-extra='" + _hint + "' class=\"" + buttonClass + " caption menu-item px-3\"><span class='tbCaption menu-link px-3'>" + iconStyle + "<span class=\"text-truncate d-inline-block\">" + caption + "</span></span></a>");
+                                ActBtnHTML.Append("<a href=\"javascript:void(0)\" id='actbtn_" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' data-extra='" + _hint + "' class=\"" + buttonClass + " caption menu-item px-3\"><span class='tbCaption menu-link px-3'>" + iconStyle + "<span class=\"text-truncate d-inline-block\">" + caption + "</span></span></a>");
                             }
                         }
                     }
@@ -3047,19 +3081,21 @@ public partial class Tstruct : System.Web.UI.Page
                     {
                         if (parentID == "")
                             //BtnHtml.Append("<li class='dwbBtn dropdown'><a href=\"javascript:void(0)\" id='" + id + "' alt='" + caption + "' title='" + caption + "' class='dropdown-toggle' data-toggle='dropdown' >" + iconStyle + "<span class='tbCaption'>" + caption + "</span><span class='icon-arrows-down'></span></a> <ul class=\"dropdown-menu\">");
-                            BtnHtml.Append("<div class=\"dwbBtn dropdown menu menu-dropdown menu-item btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2 p-0\" data-kt-menu-trigger=\"click\" data-kt-menu-placement=\"bottom-start\"><a href=\"javascript: void(0)\" id='" + id + "' alt='" + caption + "' title='" + caption + "' class=\"menu-link text-gray-600 text-hover-white\"><span class=\"menu-title\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></span><span class=\"menu-arrow text-gray-600 text-hover-white\"></span></a><div class=\"menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-bold w-200px py-3\" data-kt-menu=\"true\" data-popper-placement=\"top-end\">");
+                            ActBtnHTML.Append("<div class=\"dwbBtn dropdown menu menu-dropdown menu-item btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2 p-0\" data-kt-menu-trigger=\"click\" data-kt-menu-placement=\"bottom-start\"><a href=\"javascript: void(0)\" id='" + id + "' alt='" + caption + "' title='" + caption + "' class=\"menu-link text-gray-600 text-hover-white\"><span class=\"menu-title\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></span><span class=\"menu-arrow text-gray-600 text-hover-white\"></span></a><div class=\"menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-bold w-200px py-3\" data-kt-menu=\"true\" data-popper-placement=\"top-end\">");
                         else
                             //BtnHtml.Append("<li class='dwbBtn dropdown dropdown-submenu'><a href=\"javascript:void(0)\" id='" + id + "' alt='" + caption + "' title='" + caption + "' class='dropdown-toggle' data-toggle='dropdown' >" + iconStyle + "<span class='tbCaption'>" + caption + "</span><span class='icon-arrows-down'></span></a> <ul class=\"dropdown-menu\">");
-                            BtnHtml.Append("<div class=\"menu-item px-3\" data-kt-menu-trigger=\"hover\" data-kt-menu-placement=\"left-start\" data-kt-menu-flip=\"center, top\"><a href=\"javascript:void(0)\" id='" + id + "' alt='" + caption + "' title='" + caption + "' class=\"menu-link px-3\"><span class=\"menu-title\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></span><span class=\"menu-arrow\"></span></a><div class=\"menu-sub menu-sub-dropdown w-175px py-4\">");
+                            ActBtnHTML.Append("<div class=\"menu-item px-3\" data-kt-menu-trigger=\"hover\" data-kt-menu-placement=\"left-start\" data-kt-menu-flip=\"center, top\"><a href=\"javascript:void(0)\" id='" + id + "' alt='" + caption + "' title='" + caption + "' class=\"menu-link px-3\"><span class=\"menu-title\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></span><span class=\"menu-arrow\"></span></a><div class=\"menu-sub menu-sub-dropdown w-175px py-4\">");
                         if (btn.childBtns.Count > 0)
-                            BtnHtml.Append(createDwbToolbarButtons(strObj, new ArrayList(btn.childBtns), id));
-                        BtnHtml.Append("</div></div>");
+                            createDwbToolbarButtons(strObj, new ArrayList(btn.childBtns), id);
+                        ActBtnHTML.Append("</div></div>");
+                        toolBarBtns.Add(ActBtnHTML.ToString());
+                        ActBtnHTML = new StringBuilder();
                     }
                     else
                     {
                         string _hint = string.IsNullOrEmpty(hint) ? caption : hint;
                         //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "'  alt='" + caption + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
-                        BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "'  alt='" + caption + "' data-extra='" + _hint + "' title='" + caption + "' class=\"" + buttonClass + " caption btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                        toolBarBtns.Add("<a href=\"javascript:void(0)\" id='" + id + "'  alt='" + caption + "' data-extra='" + _hint + "' title='" + caption + "' class=\"" + buttonClass + " caption btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
                     }
                     break;
 
@@ -3067,10 +3103,15 @@ public partial class Tstruct : System.Web.UI.Page
         }
         if (footerbuttonList.Count > 0)
             btnfooteropenlist += string.Join(",", footerbuttonList.ToArray()) + ",";
-        return BtnHtml;
+        if (parentID == "")
+        {
+            leftBtns.Sort(new Util.CustomComparer());
+            AlignToolbarBtnsDwb(strObj);
+        }
+        //return BtnHtml;
+        return toolbarBtnHtml;
 
     }
-
     private StringBuilder createModernToolbarButtons(TStructDef strObj, ArrayList buttons, string parentID = "")
     {
         StringBuilder BtnHtml = new StringBuilder();
@@ -4093,7 +4134,43 @@ public partial class Tstruct : System.Web.UI.Page
                 toolbarBtnHtml.Append("<a href=\"javascript:void(0)\" onclick=\"javascript:AxCustomExportToXml();\" id=\"covcxtally\" alt=\"Export Tally XML\" title=\"Export Tally XML\" class=\"action singleaction btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">Export Tally XML</a>");
         }
     }
-
+    private void AlignToolbarBtnsDwb(TStructDef strObj)
+    {
+        int tempLftCnt = 0;
+        int BtnLftCnt = 0;
+        for (BtnLftCnt = 0; BtnLftCnt < leftBtns.Count; BtnLftCnt++)
+        {
+            for (tempLftCnt = 0; tempLftCnt < tmpLeftBtns.Count; tempLftCnt++)
+            {
+                if (leftBtns[BtnLftCnt].ToString() == tmpLeftBtns[tempLftCnt].ToString())
+                {
+                    if (toolBarBtns.Count > tempLftCnt)
+                        sortedBtns.Add(toolBarBtns[tempLftCnt]);
+                    break;
+                }
+            }
+        }
+        if (HttpContext.Current.Session["language"].ToString() == "ARABIC")
+        {
+            for (int j = 0; j <= sortedBtns.Count - 1; j++)
+            {
+                if ((!string.IsNullOrEmpty(sortedBtns[j].ToString())))
+                {
+                    toolbarBtnHtml.Append(sortedBtns[j]);
+                }
+            }
+        }
+        else
+        {
+            for (int j = 0; j <= sortedBtns.Count - 1; j++)
+            {
+                if ((!string.IsNullOrEmpty(sortedBtns[j].ToString())))
+                {
+                    toolbarBtnHtml.Append(sortedBtns[j]);
+                }
+            }
+        }
+    }
     private string AlignToolbarBtnsModern(TStructDef strObj, string btnType)
     {
         StringBuilder grooupBtnsModern = new StringBuilder();

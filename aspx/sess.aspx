@@ -85,8 +85,8 @@
         })();
     </script>
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=164"></script>
-    <script type="text/javascript" src="../Js/alerts.min.js?v=32"></script>
+    <script src="../Js/common.min.js?v=165"></script>
+    <script type="text/javascript" src="../Js/alerts.min.js?v=33"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
     <script>
         var isMobile = isMobileDevice();

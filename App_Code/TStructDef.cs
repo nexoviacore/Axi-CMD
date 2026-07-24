@@ -4671,6 +4671,11 @@ public class TStructDef
                     else
                         btn.visible = "true";
 
+                    if (btnNode.Attributes["tlhw"] != null)
+                        btn.dimension = btnNode.Attributes["tlhw"].Value;
+                    else
+                        btn.dimension = string.Empty;
+
                     if (btnNode.Attributes["task"] != null)
                     {
                         btn.task = btnNode.Attributes["task"].Value;

@@ -2621,12 +2621,13 @@ function SuccSetExportParams(obj, eventArgs) {
             if (!isHtmlIv) {
                 fixUnloadOnWindowSelfDownloads(window);
             }
+            let _smartViewSettings = GetSmartViewSettings();
             if (ivCurrentRows != "" && obj.url.indexOf('wordview.aspx') > -1) {
                 let _thisivCurrentRows = ivCurrentRows;
                 ivCurrentRows = "";
                 let _ivParamCaption = processParamStringForExport();
                 _ivParamCaption = CheckUrlSpecialChars(_ivParamCaption);
-                obj.url = obj.url + "&ivParamCaption=" + _ivParamCaption;
+                obj.url = obj.url + "&ivParamCaption=" + _ivParamCaption + "&smartViewSettings=" + _smartViewSettings;
                 if (isMobile) {
                     let _queryString = obj.url.split('?')[1];
                     let _qurparams = new URLSearchParams(_queryString);
@@ -2637,7 +2638,7 @@ function SuccSetExportParams(obj, eventArgs) {
                         url: "WordView.aspx/ExportToWordMobile",
                         dataType: 'json',
                         contentType: "application/json",
-                        data: JSON.stringify({ ivKey: _qurparams.get("ivKey"), ivname: _qurparams.get("ivname"), ivtype: _qurparams.get("ivtype"), axpCache: 'true', _params: _qurparams.get("params"), _typeIvOrLv: _qurparams.get("typeIvOrLv"), _curRecord: _thisivCurrentRows, _ivParamCaption: _qurparams.get("ivParamCaption") }),
+                        data: JSON.stringify({ ivKey: _qurparams.get("ivKey"), ivname: _qurparams.get("ivname"), ivtype: _qurparams.get("ivtype"), axpCache: 'true', _params: _qurparams.get("params"), _typeIvOrLv: _qurparams.get("typeIvOrLv"), _curRecord: _thisivCurrentRows, _ivParamCaption: _qurparams.get("ivParamCaption"), smartViewSettings: _smartViewSettings }),
                         success: function (data) {
                             if (data.d != '') {
                                 OpenPdfFile(data.d, "", "", "", false);
@@ -2656,7 +2657,7 @@ function SuccSetExportParams(obj, eventArgs) {
             } else if (ivCurrentRows == "" && obj.url.indexOf('wordview.aspx') > -1) {
                 let _ivParamCaption = processParamStringForExport();
                 _ivParamCaption = CheckUrlSpecialChars(_ivParamCaption);
-                obj.url = obj.url + "&ivParamCaption=" + _ivParamCaption;
+                obj.url = obj.url + "&ivParamCaption=" + _ivParamCaption + "&smartViewSettings=" + _smartViewSettings;
                 if (isMobile) {
                     let _queryString = obj.url.split('?')[1];
                     let _qurparams = new URLSearchParams(_queryString);
@@ -2667,7 +2668,7 @@ function SuccSetExportParams(obj, eventArgs) {
                         url: "WordView.aspx/ExportToWordMobile",
                         dataType: 'json',
                         contentType: "application/json",
-                        data: JSON.stringify({ ivKey: _qurparams.get("ivKey"), ivname: _qurparams.get("ivname"), ivtype: _qurparams.get("ivtype"), axpCache: 'true', _params: _qurparams.get("params"), _typeIvOrLv: _qurparams.get("typeIvOrLv"), _curRecord: '', _ivParamCaption: _qurparams.get("ivParamCaption") }),
+                        data: JSON.stringify({ ivKey: _qurparams.get("ivKey"), ivname: _qurparams.get("ivname"), ivtype: _qurparams.get("ivtype"), axpCache: 'true', _params: _qurparams.get("params"), _typeIvOrLv: _qurparams.get("typeIvOrLv"), _curRecord: '', _ivParamCaption: _qurparams.get("ivParamCaption"), smartViewSettings: _smartViewSettings }),
                         success: function (data) {
                             if (data.d != '') {
                                 OpenPdfFile(data.d, "", "", "", false);
@@ -2685,10 +2686,10 @@ function SuccSetExportParams(obj, eventArgs) {
                     curWin = window.open(obj.url + (obj.url.indexOf("?") > -1 ? "&axpCache=true" : ""), (isHtmlIv ? "toHTML" : "_self"), "width=" + $(window).width() + ",height=" + $(window).width() + ",scrollbars=yes,top=" + 0 + ",left=" + 0 + "");
             } else if (ivCurrentRows != "" && obj.url.indexOf('pdfiview.aspx') > -1) {
                 let _thisivCurrentRows = ivCurrentRows;
-                ivCurrentRows = "";
+                ivCurrentRows = "";                
                 let _ivParamCaption = processParamStringForExport();
                 _ivParamCaption = CheckUrlSpecialChars(_ivParamCaption);
-                obj.url = obj.url + "&ivParamCaption=" + _ivParamCaption;
+                obj.url = obj.url + "&ivParamCaption=" + _ivParamCaption + "&smartViewSettings=" + _smartViewSettings;
                 if (isMobile) {
                     let _queryString = obj.url.split('?')[1];
                     let _qurparams = new URLSearchParams(_queryString);
@@ -2699,7 +2700,7 @@ function SuccSetExportParams(obj, eventArgs) {
                         url: "pdfiview.aspx/GeneratePDFMobile",
                         dataType: 'json',
                         contentType: "application/json",
-                        data: JSON.stringify({ ivKey: _qurparams.get("ivKey"), ivname: _qurparams.get("ivname"), ivtype: _qurparams.get("ivtype"), axpCache: 'true', _params: _qurparams.get("params"), _typeIvOrLv: _qurparams.get("typeIvOrLv"), _curRecord: _thisivCurrentRows, _ivParamCaption: _qurparams.get("ivParamCaption") }),
+                        data: JSON.stringify({ ivKey: _qurparams.get("ivKey"), ivname: _qurparams.get("ivname"), ivtype: _qurparams.get("ivtype"), axpCache: 'true', _params: _qurparams.get("params"), _typeIvOrLv: _qurparams.get("typeIvOrLv"), _curRecord: _thisivCurrentRows, _ivParamCaption: _qurparams.get("ivParamCaption"), smartViewSettings: _smartViewSettings }),
                         success: function (data) {
                             if (data.d != '') {
                                 OpenPdfFile(data.d, "", "", "", false);
@@ -2719,7 +2720,7 @@ function SuccSetExportParams(obj, eventArgs) {
             } else if (ivCurrentRows == "" && obj.url.indexOf('pdfiview.aspx') > -1) {
                 let _ivParamCaption = processParamStringForExport();
                 _ivParamCaption = CheckUrlSpecialChars(_ivParamCaption);
-                obj.url = obj.url + "&ivParamCaption=" + _ivParamCaption;
+                obj.url = obj.url + "&ivParamCaption=" + _ivParamCaption + "&smartViewSettings=" + _smartViewSettings;
                 if (isMobile) {
                     let _queryString = obj.url.split('?')[1];
                     let _qurparams = new URLSearchParams(_queryString);
@@ -2730,7 +2731,7 @@ function SuccSetExportParams(obj, eventArgs) {
                         url: "pdfiview.aspx/GeneratePDFMobile",
                         dataType: 'json',
                         contentType: "application/json; charset=utf-8",
-                        data: JSON.stringify({ ivKey: _qurparams.get("ivKey"), ivname: _qurparams.get("ivname"), ivtype: _qurparams.get("ivtype"), axpCache: 'true', _params: _qurparams.get("params"), _typeIvOrLv: _qurparams.get("typeIvOrLv"), _curRecord: '', _ivParamCaption: _qurparams.get("ivParamCaption") }),
+                        data: JSON.stringify({ ivKey: _qurparams.get("ivKey"), ivname: _qurparams.get("ivname"), ivtype: _qurparams.get("ivtype"), axpCache: 'true', _params: _qurparams.get("params"), _typeIvOrLv: _qurparams.get("typeIvOrLv"), _curRecord: '', _ivParamCaption: _qurparams.get("ivParamCaption"), smartViewSettings: _smartViewSettings }),
                         success: function (data) {
                             if (data.d != '') {
                                 OpenPdfFile(data.d, "", "", "", false);
@@ -2914,7 +2915,6 @@ function toPDF(a, c) {
     if ($j("#hdnKey").length > 0 && $j("#hdnKey").val() != "") {
         ivKey = "&ivKey=" + $j("#hdnKey").val();
     }
-    //SetExport("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + "&params=", pa, a);
     if (typeof advMultilingualPdf != "undefined" && advMultilingualPdf == true)
         SetExport("../aspx/htmliv.aspx?ivname=" + a + "&ivtype=" + c + ivKey + "&params=&isPrint=true", pa, a);
     else
@@ -2929,6 +2929,10 @@ function toPDFMobile(a, c, crtype = '') {
     }
     var typeIvOrLv = "&typeIvOrLv=" + isListView;
     var typeIvOrLv = "&typeIvOrLv=" + isListView;
+    let _smartViewSettings = GetSmartViewSettings();
+    let smartIvSetting = "";
+    if (_smartViewSettings != "")
+        smartIvSetting = "&smartViewSettings=" + _smartViewSettings;
     if (crtype != "") {
         var glType = callParentNew('gllangType');
         var isRTL = glType == "ar" ? true : false;
@@ -2953,7 +2957,7 @@ function toPDFMobile(a, c, crtype = '') {
                         setTimeout(function () {
                             setTimeout(() => {
                                 ivCurrentRows = "";
-                                SetExportWord("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + typeIvOrLv + "&params=", pa, a);
+                                SetExportWord("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + typeIvOrLv + smartIvSetting + "&params=", pa, a);
                             }, 0);
                         }, 100);
                     }
@@ -2964,7 +2968,7 @@ function toPDFMobile(a, c, crtype = '') {
                     action: function () {
                         ConfirmDeleteCB.close();
                         ivCurrentRows = dtDbTotalRecords;
-                        SetExportWord("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + typeIvOrLv + "&params=", pa, a);
+                        SetExportWord("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + typeIvOrLv + smartIvSetting + "&params=", pa, a);
                         return;
                     }
                 },
@@ -2983,7 +2987,7 @@ function toPDFMobile(a, c, crtype = '') {
     }
     else {
         ivCurrentRows = "";
-        SetExportWord("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + typeIvOrLv + "&params=", pa, a);
+        SetExportWord("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + typeIvOrLv + smartIvSetting + "&params=", pa, a);
     }
 }
 
@@ -2995,6 +2999,10 @@ function toPDFWebServer(a, c, crtype = '') {
     }
     var typeIvOrLv = "&typeIvOrLv=" + isListView;
     var typeIvOrLv = "&typeIvOrLv=" + isListView;
+    let _smartViewSettings = GetSmartViewSettings();
+    let smartIvSetting = "";
+    if (_smartViewSettings != "")
+        smartIvSetting = "&smartViewSettings=" + _smartViewSettings;
     if (crtype != "") {
         var glType = callParentNew('gllangType');
         var isRTL = glType == "ar" ? true : false;
@@ -3019,7 +3027,7 @@ function toPDFWebServer(a, c, crtype = '') {
                         setTimeout(function () {
                             setTimeout(() => {
                                 ivCurrentRows = "";
-                                SetExportWord("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + typeIvOrLv + "&params=", pa, a);
+                                SetExportWord("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + typeIvOrLv + smartIvSetting + "&params=", pa, a);
                             }, 0);
                         }, 100);
                     }
@@ -3030,7 +3038,7 @@ function toPDFWebServer(a, c, crtype = '') {
                     action: function () {
                         ConfirmDeleteCB.close();
                         ivCurrentRows = dtDbTotalRecords;
-                        SetExportWord("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + typeIvOrLv + "&params=", pa, a);
+                        SetExportWord("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + typeIvOrLv + smartIvSetting + "&params=", pa, a);
                         return;
                     }
                 },
@@ -3049,7 +3057,7 @@ function toPDFWebServer(a, c, crtype = '') {
     }
     else {
         ivCurrentRows = "";
-        SetExportWord("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + typeIvOrLv + "&params=", pa, a);
+        SetExportWord("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + typeIvOrLv + smartIvSetting + "&params=", pa, a);
     }
 }
 function toWord(a, c, crtype = '') {
@@ -10030,7 +10038,8 @@ function getAllRecords() {
 }
 function exportExcelAllRows(_exportType) {
     if (_exportType) {
-        ShowDimmer(true);
+        ShowDimmer(true);        
+        const _smartViewSettings = GetSmartViewSettings();
         var ivParamCaption = processParamStringForExport();
         let _glCulture = eval(callParent('glCulture'));
         let _dtFormat = "dd/MM/yyyy";
@@ -10044,7 +10053,7 @@ function exportExcelAllRows(_exportType) {
             async: false,
             contentType: "application/json;charset=utf-8",
             data: JSON.stringify({
-                ivName: iName, ivKey: ivKey, ivParamCaption: ivParamCaption, IVIRCaption: IVIRCaption, _dtFormat: _dtFormat,
+                ivName: iName, ivKey: ivKey, ivParamCaption: ivParamCaption, IVIRCaption: IVIRCaption, _dtFormat: _dtFormat, smartViewSettings: _smartViewSettings,
             }),
             dataType: "json",
             success: function (data) {
@@ -10135,7 +10144,8 @@ function showExportConfirmforARM() {
     let _dtFormat = "dd/MM/yyyy";
     if (_glCulture == "en-us")
         _dtFormat = "MM/dd/yyyy";
-    ASB.WebService.ExportARMPushToQueue(iName, pa, ivParamCaption, isListView, IVIRCaption, _dtFormat, SuccessCallbackARMQueue);
+    const _smartViewSettings = GetSmartViewSettings();
+    ASB.WebService.ExportARMPushToQueue(iName, pa, ivParamCaption, isListView, IVIRCaption, _dtFormat, _smartViewSettings, SuccessCallbackARMQueue);
 }
 function SuccessCallbackARMQueue(result, eventArgs) {
     if (CheckSessionTimeout(result))
@@ -12850,4 +12860,18 @@ function axDeveloperStudioToolbar() {
         $("#ivInSearch").css({ "padding-right": "175px" });
     else if ($("#ivInSearch .toolbarRightMenu").children(":visible").length > 3)
         $("#ivInSearch").css({ "padding-right": "210px" });
+}
+
+function GetSmartViewSettings() {
+    let _smartViewSettings = "";
+    try {
+        if (typeof ivSmartViewSettings != "undefined" && ivSmartViewSettings) {
+            let _SmartIvewName = $("#dvViewtabs #viewTabs li a.active").attr("id");
+            if (typeof _SmartIvewName != "undefined" && _SmartIvewName != "" && _SmartIvewName != "main")
+                _smartViewSettings = ivSmartViewSettings?.[callParentNew("mainUserName")]?.views?.[_SmartIvewName]?.hiddenColumns?.filter(x => x.toLowerCase() !== "rowno").join(",") || "";
+            else
+                _smartViewSettings = "";
+        }
+    } catch (ex) { }
+    return _smartViewSettings;
 }

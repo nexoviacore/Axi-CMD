@@ -7368,7 +7368,7 @@ public partial class iview : System.Web.UI.Page
     }
 
     [WebMethod(EnableSession = true)]
-    public static string ExportIviewData(string ivName, string ivKey, string ivParamCaption, string IVIRCaption, string _dtFormat)
+    public static string ExportIviewData(string ivName, string ivKey, string ivParamCaption, string IVIRCaption, string _dtFormat, string smartViewSettings)
     {
         Util.Util utilObj = new Util.Util();
         string response = string.Empty;
@@ -7377,7 +7377,7 @@ public partial class iview : System.Web.UI.Page
         try
         {
             IviewDataExport ivdataEx = new IviewDataExport();
-            response = ivdataEx.GetExcelFast(ivName, ivKey, ivParamCaption, IVIRCaption, _dtFormat);
+            response = ivdataEx.GetExcelFast(ivName, ivKey, ivParamCaption, IVIRCaption, _dtFormat, smartViewSettings);
         }
         catch (Exception ex)
         {

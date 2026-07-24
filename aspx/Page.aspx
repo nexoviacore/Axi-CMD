@@ -131,18 +131,18 @@
     </div>
     <script type="text/javascript" src="../Js/thirdparty/jquery/3.1.1/jquery.min.js"></script>
     <script src="../Js/noConflict.min.js?v=1"></script>
-    <script type="text/javascript" src="../Js/common.min.js?v=164"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=165"></script>
     <script src="../ThirdParty/jquery-mousewheel/jquery-mousewheel.min.js"></script>
     <script src="../ThirdParty/scrollbar-plugin-master/jquery.mCustomScrollbar.js"></script>
     <script src="../ThirdParty/materialize/js/materialize.min.js?v=11"></script>
     <script src="../Js/jquery.browser.min.js" type="text/javascript"></script>
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2"></script>
-    <script src="../Js/alerts.min.js?v=32"></script>
+    <script src="../Js/alerts.min.js?v=33"></script>
     <script src="../ThirdParty/Highcharts/highcharts.js"></script>
     <script src="../ThirdParty/Highcharts/highcharts-3d.js"></script>
     <script src="../ThirdParty/Highcharts/highcharts-more.js"></script>
     <script src="../ThirdParty/Highcharts/highcharts-exporting.js"></script>
-    <script src="../Js/high-charts-functions.min.js?v=23"></script>
+    <script src="../Js/high-charts-functions.min.js?v=24"></script>
     <script src="../ThirdParty/DataTables-1.10.13/extensions/Extras/moment.min.js"></script>
     <script src="../ThirdParty/DataTables-1.10.13/media/js/jquery.dataTables.min.js"></script>
     <script src="../ThirdParty/DataTables-1.10.13/extensions/Extras/datetime-moment.js"></script>

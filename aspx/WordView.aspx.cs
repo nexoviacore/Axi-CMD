@@ -56,6 +56,7 @@ public partial class aspx_WordView : System.Web.UI.Page
     bool hideProjeName = false;
     string headerText = string.Empty;
     ArrayList axhiddencols = new ArrayList();
+    public string smartViewSettings = string.Empty;
     protected void Page_Load(object sender, EventArgs e)
     {
         util.IsValidSession();
@@ -942,7 +943,10 @@ public partial class aspx_WordView : System.Web.UI.Page
         objIview = (IviewData)Session[Ikey];
         objIview.ShowHiddengridCols = new ArrayList();
         objIview.ReportHdrs = new ArrayList();
-
+        if (Request.QueryString["smartViewSettings"] != null)
+            smartViewSettings = Request.QueryString["smartViewSettings"].ToString();
+        else
+            smartViewSettings = "";
         string sid = HttpContext.Current.Session["nsessionid"].ToString();
 
         DataTable dt = new DataTable();
@@ -1213,6 +1217,11 @@ public partial class aspx_WordView : System.Web.UI.Page
 
     public DataSet ConvertToDataSet(dynamic jsonObject)
     {
+        HashSet<string> hiddenColumnSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrEmpty(smartViewSettings))
+        {
+            hiddenColumnSet = new HashSet<string>(smartViewSettings.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries), StringComparer.OrdinalIgnoreCase);
+        }
         DataSet dataSet = new DataSet();
         JObject jsonObjectNew = jsonObject.data.headrow;
         foreach (var property in jsonObjectNew.Properties())
@@ -1232,7 +1241,10 @@ public partial class aspx_WordView : System.Web.UI.Page
             }
             else if (propertyName != "pivotghead")
             {
-                colHide.Add(hideValue);
+                if (hiddenColumnSet.Contains(propertyName))
+                    colHide.Add("true");
+                else
+                    colHide.Add(hideValue);
                 colHead.Add(textValue);
                 colType.Add(typeValue);
             }
@@ -1339,7 +1351,11 @@ public partial class aspx_WordView : System.Web.UI.Page
 
         xmlDoc.LoadXml(sXml);
         baseDataNodes = xmlDoc.SelectNodes("//headrow");
-
+        HashSet<string> hiddenColumnSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrEmpty(smartViewSettings))
+        {
+            hiddenColumnSet = new HashSet<string>(smartViewSettings.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries), StringComparer.OrdinalIgnoreCase);
+        }
         foreach (XmlNode baseDataNode in baseDataNodes)
         {
             baseChildList = baseDataNode.ChildNodes;
@@ -1364,8 +1380,10 @@ public partial class aspx_WordView : System.Web.UI.Page
                 {
                     if (baseChildNode.Name != "pivotghead")
                     {
-
-                        colHide.Add(baseChildNode.Attributes["hide"].Value);
+                        if (hiddenColumnSet.Contains(baseChildNode.Name))
+                            colHide.Add("true");
+                        else
+                            colHide.Add(baseChildNode.Attributes["hide"].Value);
                         colHead.Add(baseChildNode.InnerText);
                         colType.Add(baseChildNode.Attributes["type"].Value);
                     }
@@ -1449,7 +1467,7 @@ public partial class aspx_WordView : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static string ExportToWordMobile(string ivKey, string ivname, string ivtype, string axpCache, string _params, string _typeIvOrLv, string _curRecord, string _ivParamCaption)
+    public static string ExportToWordMobile(string ivKey, string ivname, string ivtype, string axpCache, string _params, string _typeIvOrLv, string _curRecord, string _ivParamCaption, string smartViewSettings)
     {
         string _fileName = string.Empty;
         IviewData objIview = new IviewData();
@@ -1484,6 +1502,12 @@ public partial class aspx_WordView : System.Web.UI.Page
         if (HttpContext.Current.Session["AxWordConfigs"] == null)
         {
             util.GetAxExportConfig();
+        }
+
+        HashSet<string> hiddenColumnSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrEmpty(smartViewSettings))
+        {
+            hiddenColumnSet = new HashSet<string>(smartViewSettings.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries), StringComparer.OrdinalIgnoreCase);
         }
 
         DataTable dt = new DataTable();
@@ -1675,7 +1699,10 @@ public partial class aspx_WordView : System.Web.UI.Page
                     }
                     else if (propertyName != "pivotghead")
                     {
-                        colHide.Add(hideValue);
+                        if (hiddenColumnSet.Contains(propertyName))
+                            colHide.Add("true");
+                        else
+                            colHide.Add(hideValue);
                         colHead.Add(textValue);
                         colType.Add(typeValue);
                     }

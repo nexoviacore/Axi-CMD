@@ -7,6 +7,13 @@
     padding: 17px !important;
     border-radius: 4px;
 }
+#tstIcons {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+    #tstIcons .dropdown.menu-item .menu-link {
+        padding: 0.6rem 1rem !important;
+    }
 
 .rounded {
     border-radius: 4px !important;

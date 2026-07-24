@@ -8309,7 +8309,7 @@ namespace ASB
         }
 
         [WebMethod(EnableSession = true)]
-        public string ExportARMPushToQueue(string iviewName, string iviewParams, string ivParamCaption, string isListView, string IVIRCaption, string dtFormat)
+        public string ExportARMPushToQueue(string iviewName, string iviewParams, string ivParamCaption, string isListView, string IVIRCaption, string dtFormat, string _smartViewSettings)
         {
             string response = string.Empty;
             if (HttpContext.Current.Session["project"] == null || Session["nsessionid"] == null)
@@ -8401,7 +8401,7 @@ namespace ASB
             globalVars = globalVars.Replace(@"\", "\\\\");
             string _axapps = HttpContext.Current.Session["axApps"].ToString();
             _axapps = _axapps.Replace(@"\", "\\\\");
-            DATA = "{\"getreport\":{\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\"," + purpose + "\"metadata\":\"true\",\"fetchhidcol\":\"false\",\"_dateformat\":\"" + dtFormat + "\",\"ivcaption\":\"" + IVIRCaption + "\",\"sqlpagination\":\"false\",\"params\":" + iviewParamsJson + ",\"ivParamCaption\":" + iviewParamsJsonCap + ",\"project\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"name\":\"" + iviewName + "\",\"token\":\"d152232e23ff6523b8104196ff1b6015\",\"seed\":\"211269\",\"userauthkey\":\"" + Session["username"].ToString() + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"arm_url\":\"" + HttpContext.Current.Session["ARM_URL"].ToString() + "\",\"ARMScriptURL\":\"" + ArmScriptURL + "\",\"axConfigFilePath\":\"" + axConfigFilePath + "\",\"axConfigFileMapUser\":\"" + AxConfigFileMapUser + "\",\"axConfigFileMapPwd\":\"" + AxConfigFileMapPwd + "\"},\"axprops\":\"" + HttpContext.Current.Application["axProps"].ToString() + "\",\"axapps\":\"" + _axapps + "\",\"globalvars\":\"" + globalVars + "\",\"uservars\":\"" + HttpContext.Current.Session["axUserVars"].ToString() + "\"}";
+            DATA = "{\"getreport\":{\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\"," + purpose + "\"metadata\":\"true\",\"fetchhidcol\":\"false\",\"_dateformat\":\"" + dtFormat + "\",\"smartViewSettings\":\"" + _smartViewSettings + "\",\"ivcaption\":\"" + IVIRCaption + "\",\"sqlpagination\":\"false\",\"params\":" + iviewParamsJson + ",\"ivParamCaption\":" + iviewParamsJsonCap + ",\"project\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"name\":\"" + iviewName + "\",\"token\":\"d152232e23ff6523b8104196ff1b6015\",\"seed\":\"211269\",\"userauthkey\":\"" + Session["username"].ToString() + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"arm_url\":\"" + HttpContext.Current.Session["ARM_URL"].ToString() + "\",\"ARMScriptURL\":\"" + ArmScriptURL + "\",\"axConfigFilePath\":\"" + axConfigFilePath + "\",\"axConfigFileMapUser\":\"" + AxConfigFileMapUser + "\",\"axConfigFileMapPwd\":\"" + AxConfigFileMapPwd + "\"},\"axprops\":\"" + HttpContext.Current.Application["axProps"].ToString() + "\",\"axapps\":\"" + _axapps + "\",\"globalvars\":\"" + globalVars + "\",\"uservars\":\"" + HttpContext.Current.Session["axUserVars"].ToString() + "\"}";
             var saveDetails = "{\"queuename\":\"ARMExportQueue\",\"queuedata\":" + JsonConvert.SerializeObject(DATA) + ",\"timespandelay\":\"0\"}";
             request.ContentLength = saveDetails.Length;
 
@@ -8815,11 +8815,17 @@ namespace ASB
                 request.ContentType = "application/json";
                 string pwd = GetUserPasswordForPEG();
                 string[] _amdData = jsonData.Split('♦');
-                string globalvars = xmltojson(Session["axGlobalVars"].ToString());
-                string uservars = xmltojson(Session["axUserVars"].ToString());
+                //string globalvars = xmltojson(Session["axGlobalVars"].ToString());
+                //string uservars = xmltojson(Session["axUserVars"].ToString());
+                string globalvars = Session["axGlobalVars"].ToString();
+                globalvars = globalvars.Replace(@"\", "\\\\");
+                string uservars = Session["axUserVars"].ToString();
+                //axprops = xmltojson(axprops);
+                //string axapps = xmltojson(Session["AxApps"].ToString());
                 string axprops = HttpContext.Current.Application["axProps"].ToString();
-                axprops = xmltojson(axprops);
-                string axapps = xmltojson(Session["AxApps"].ToString());
+                string axapps = HttpContext.Current.Session["axApps"].ToString();
+                axapps = axapps.Replace(@"\", "\\\\");
+
                 string axappsProj = HttpContext.Current.Session["project"].ToString();
                 if (isAmendment == "true")
                 {
@@ -8828,7 +8834,8 @@ namespace ASB
                      ""axapprove"": {
                      ""axpapp"":""" + HttpContext.Current.Session["project"].ToString() + @""", 
 		             ""username"": """ + HttpContext.Current.Session["username"].ToString() + @""",
-		             ""password"": """ + pwd + @""",
+		             ""password"": """",
+                     ""s"":""" + HttpContext.Current.Session["nsessionid"].ToString() + @""",
 		             ""seed"": """",
 		             ""trace"": """ + HttpContext.Current.Session["AxTrace"] + @""",
 		             ""transid"": """ + _amdData[5] + @""",
@@ -8845,10 +8852,10 @@ namespace ASB
 		             ""statusreason"" : """ + reasons + @""",
                      ""userdata"": { }
                 },
-                     """ + axappsProj + @""":{" + axapps + @"},
-                     ""axprops"":{ " + axprops + @"},
-	                 ""globalvars"": { " + globalvars + @"},
-                     ""uservars"": { " + uservars + @"}
+                     """ + axappsProj + @""":""" + axapps + @""",
+                     ""axprops"":""" + axprops + @""",
+	                 ""globalvars"": """ + globalvars + @""",
+                     ""uservars"": """ + uservars + @"""
             }";
                 }
                 else
@@ -8857,7 +8864,8 @@ namespace ASB
                      ""axapprove"": {
                      ""axpapp"":""" + HttpContext.Current.Session["project"].ToString() + @""", 
 		             ""username"": """ + HttpContext.Current.Session["username"].ToString() + @""",
-		             ""password"": """ + pwd + @""",
+		             ""password"": """",
+                     ""s"":""" + HttpContext.Current.Session["nsessionid"].ToString() + @""",
 		             ""seed"": """",
 		             ""trace"": """ + HttpContext.Current.Session["AxTrace"] + @""",
 		             ""transid"": """ + _amdData[5] + @""",
@@ -8872,10 +8880,10 @@ namespace ASB
 		              ""statusreason"" : """ + reasons + @""",
 		             ""userdata"": {}
 	                 },
-                     """ + axappsProj + @""":{" + axapps + @"},
-                     ""axprops"":{ " + axprops + @"},
-	                 ""globalvars"": {" + globalvars + @"},
-                     ""uservars"": {" + uservars + @"}
+                     """ + axappsProj + @""":""" + axapps + @""",
+                     ""axprops"":""" + axprops + @""",
+	                 ""globalvars"": """ + globalvars + @""",
+                     ""uservars"": """ + uservars + @"""
                      }";
                 }
                 request.ContentLength = DATA.Length;
@@ -8919,11 +8927,17 @@ namespace ASB
                 request.ContentType = "application/json";
                 string pwd = GetUserPasswordForPEG();
                 string[] _amdData = jsonData.Split('♦');
-                string globalvars = xmltojson(Session["axGlobalVars"].ToString());
-                string uservars = xmltojson(Session["axUserVars"].ToString());
+                //string globalvars = xmltojson(Session["axGlobalVars"].ToString());
+                //string uservars = xmltojson(Session["axUserVars"].ToString());
+                string globalvars = Session["axGlobalVars"].ToString();
+                globalvars = globalvars.Replace(@"\", "\\\\");
+                string uservars = Session["axUserVars"].ToString();
+                //string axprops = HttpContext.Current.Application["axProps"].ToString();
+                //axprops = xmltojson(axprops);
+                //string axapps = xmltojson(Session["AxApps"].ToString());
                 string axprops = HttpContext.Current.Application["axProps"].ToString();
-                axprops = xmltojson(axprops);
-                string axapps = xmltojson(Session["AxApps"].ToString());
+                string axapps = HttpContext.Current.Session["axApps"].ToString();
+                axapps = axapps.Replace(@"\", "\\\\");
                 string axappsProj = HttpContext.Current.Session["project"].ToString();
                 if (isAmendment == "true")
                 {
@@ -8931,7 +8945,8 @@ namespace ASB
                      ""axreturn"": {
                      ""axpapp"":""" + HttpContext.Current.Session["project"].ToString() + @""", 
 		             ""username"": """ + HttpContext.Current.Session["username"].ToString() + @""",
-		             ""password"": """ + pwd + @""",
+		             ""password"": """",
+                     ""s"":""" + HttpContext.Current.Session["nsessionid"].ToString() + @""",
 		             ""seed"": """",
 		             ""trace"": """ + HttpContext.Current.Session["AxTrace"] + @""",
 		             ""transid"": """ + _amdData[5] + @""",
@@ -8947,10 +8962,10 @@ namespace ASB
 		             ""statusreason"" : """ + reasons + @""",
 		             ""userdata"": {}
 	                 },
-                     """ + axappsProj + @""":{" + axapps + @"},
-                     ""axprops"":{ " + axprops + @"},
-	                 ""globalvars"": {" + globalvars + @"},
-                     ""uservars"": {" + uservars + @"}
+                     """ + axappsProj + @""":""" + axapps + @""",
+                     ""axprops"":""" + axprops + @""",
+	                ""globalvars"": """ + globalvars + @""",
+                     ""uservars"": """ + uservars + @"""
                      }";
                 }
                 else
@@ -8959,7 +8974,8 @@ namespace ASB
                      ""axreturn"": {
                      ""axpapp"":""" + HttpContext.Current.Session["project"].ToString() + @""", 
 		             ""username"": """ + HttpContext.Current.Session["username"].ToString() + @""",
-		             ""password"": """ + pwd + @""",
+		             ""password"": """",
+                     ""s"":""" + HttpContext.Current.Session["nsessionid"].ToString() + @""",
 		             ""seed"": """",
 		             ""trace"": """ + HttpContext.Current.Session["AxTrace"] + @""",
 		             ""transid"": """ + _amdData[5] + @""",
@@ -8975,10 +8991,10 @@ namespace ASB
                      ""returnto"": """ + retLevel + @""",
 		             ""userdata"": {}
 	                 },
-                     """ + axappsProj + @""":{" + axapps + @"},
-                     ""axprops"":{ " + axprops + @"},
-	                 ""globalvars"": {" + globalvars + @"},
-                     ""uservars"": {" + uservars + @"}
+                    """ + axappsProj + @""":""" + axapps + @""",
+                     ""axprops"":""" + axprops + @""",
+	                ""globalvars"": """ + globalvars + @""",
+                     ""uservars"": """ + uservars + @"""
                      }";
                 }
                 request.ContentLength = DATA.Length;
@@ -9022,11 +9038,17 @@ namespace ASB
                 request.ContentType = "application/json";
                 string pwd = GetUserPasswordForPEG();
                 string[] _amdData = jsonData.Split('♦');
-                string globalvars = xmltojson(Session["axGlobalVars"].ToString());
-                string uservars = xmltojson(Session["axUserVars"].ToString());
+                //string globalvars = xmltojson(Session["axGlobalVars"].ToString());
+                //string uservars = xmltojson(Session["axUserVars"].ToString());
+                string globalvars = Session["axGlobalVars"].ToString();
+                globalvars = globalvars.Replace(@"\", "\\\\");
+                string uservars = Session["axUserVars"].ToString();
+                //string axprops = HttpContext.Current.Application["axProps"].ToString();
+                //axprops = xmltojson(axprops);
+                //string axapps = xmltojson(Session["AxApps"].ToString());
                 string axprops = HttpContext.Current.Application["axProps"].ToString();
-                axprops = xmltojson(axprops);
-                string axapps = xmltojson(Session["AxApps"].ToString());
+                string axapps = HttpContext.Current.Session["axApps"].ToString();
+                axapps = axapps.Replace(@"\", "\\\\");
                 string axappsProj = HttpContext.Current.Session["project"].ToString();
                 if (isAmendment == "true")
                 {
@@ -9034,7 +9056,8 @@ namespace ASB
                      ""axreject"": {
                      ""axpapp"":""" + HttpContext.Current.Session["project"].ToString() + @""", 
 		             ""username"": """ + HttpContext.Current.Session["username"].ToString() + @""",
-		             ""password"": """ + pwd + @""",
+		             ""password"": """",
+                     ""s"":""" + HttpContext.Current.Session["nsessionid"].ToString() + @""",
 		             ""seed"": """",
 		             ""trace"": """ + HttpContext.Current.Session["AxTrace"] + @""",
 		             ""transid"": """ + _amdData[5] + @""",
@@ -9050,10 +9073,10 @@ namespace ASB
 		             ""statusreason"" : """ + reasons + @""",
 		             ""userdata"": {}
 	                 },
-                    """ + axappsProj + @""":{" + axapps + @"},
-                     ""axprops"":{ " + axprops + @"},
-	                 ""globalvars"": {" + globalvars + @"},
-                     ""uservars"": {" + uservars + @"}
+                   """ + axappsProj + @""":""" + axapps + @""",
+                     ""axprops"":""" + axprops + @""",
+	                 ""globalvars"": """ + globalvars + @""",
+                     ""uservars"": """ + uservars + @"""
                      }";
                 }
                 else
@@ -9062,7 +9085,8 @@ namespace ASB
                      ""axreject"": {
                      ""axpapp"":""" + HttpContext.Current.Session["project"].ToString() + @""", 
 		             ""username"": """ + HttpContext.Current.Session["username"].ToString() + @""",
-		             ""password"": """ + pwd + @""",
+		             ""password"": """",
+                     ""s"":""" + HttpContext.Current.Session["nsessionid"].ToString() + @""",
 		             ""seed"": """",
 		             ""trace"": """ + HttpContext.Current.Session["AxTrace"] + @""",
 		             ""transid"": """ + _amdData[5] + @""",
@@ -9077,10 +9101,10 @@ namespace ASB
 		             ""statusreason"" : """ + reasons + @""",
 		             ""userdata"": {}
 	                 },
-                    """ + axappsProj + @""":{" + axapps + @"},
-                     ""axprops"":{ " + axprops + @"},
-	                 ""globalvars"": {" + globalvars + @"},
-                     ""uservars"": {" + uservars + @"}
+                  """ + axappsProj + @""":""" + axapps + @""",
+                     ""axprops"":""" + axprops + @""",
+	                ""globalvars"": """ + globalvars + @""",
+                     ""uservars"": """ + uservars + @"""
                      }";
                 }
                 request.ContentLength = DATA.Length;
@@ -9124,11 +9148,17 @@ namespace ASB
                 request.ContentType = "application/json";
                 string pwd = GetUserPasswordForPEG();
                 string[] _amdData = jsonData.Split('♦');
-                string globalvars = xmltojson(Session["axGlobalVars"].ToString());
-                string uservars = xmltojson(Session["axUserVars"].ToString());
+                //string globalvars = xmltojson(Session["axGlobalVars"].ToString());
+                //string uservars = xmltojson(Session["axUserVars"].ToString());
+                string globalvars = Session["axGlobalVars"].ToString();
+                globalvars = globalvars.Replace(@"\", "\\\\");
+                string uservars = Session["axUserVars"].ToString();
+                //string axprops = HttpContext.Current.Application["axProps"].ToString();
+                //axprops = xmltojson(axprops);
+                //string axapps = xmltojson(Session["AxApps"].ToString());
                 string axprops = HttpContext.Current.Application["axProps"].ToString();
-                axprops = xmltojson(axprops);
-                string axapps = xmltojson(Session["AxApps"].ToString());
+                string axapps = HttpContext.Current.Session["axApps"].ToString();
+                axapps = axapps.Replace(@"\", "\\\\");
                 string axappsProj = HttpContext.Current.Session["project"].ToString();
                 if (isAmendment == "true")
                 {
@@ -9136,7 +9166,8 @@ namespace ASB
                      ""axwithdraw"": {
                      ""axpapp"":""" + HttpContext.Current.Session["project"].ToString() + @""", 
 		             ""username"": """ + HttpContext.Current.Session["username"].ToString() + @""",
-		             ""password"": """ + pwd + @""",
+		             ""password"": """",
+                     ""s"":""" + HttpContext.Current.Session["nsessionid"].ToString() + @""",
 		             ""seed"": """",
 		             ""trace"": """ + HttpContext.Current.Session["AxTrace"] + @""",
 		             ""transid"": """ + _amdData[5] + @""",
@@ -9152,10 +9183,10 @@ namespace ASB
 		             ""statusreason"" : """ + reasons + @""",
 		             ""userdata"": {}
 	                 },
-                    """ + axappsProj + @""":{" + axapps + @"},
-                     ""axprops"":{ " + axprops + @"},
-	                 ""globalvars"": {" + globalvars + @"},
-                     ""uservars"": {" + uservars + @"}
+                   """ + axappsProj + @""":""" + axapps + @""",
+                     ""axprops"":""" + axprops + @""",
+	                 ""globalvars"": """ + globalvars + @""",
+                     ""uservars"": """ + uservars + @"""
                      }";
                 }
                 else
@@ -9164,7 +9195,8 @@ namespace ASB
                      ""axwithdraw"": {
                      ""axpapp"":""" + HttpContext.Current.Session["project"].ToString() + @""", 
 		             ""username"": """ + HttpContext.Current.Session["username"].ToString() + @""",
-		             ""password"": """ + pwd + @""",
+		             ""password"": """",
+                     ""s"":""" + HttpContext.Current.Session["nsessionid"].ToString() + @""",
 		             ""seed"": """",
 		             ""trace"": """ + HttpContext.Current.Session["AxTrace"] + @""",
 		             ""transid"": """ + _amdData[5] + @""",
@@ -9179,10 +9211,10 @@ namespace ASB
 		             ""statusreason"" : """ + reasons + @""",
 		             ""userdata"": {}
 	                 },
-                    """ + axappsProj + @""":{" + axapps + @"},
-                     ""axprops"":{ " + axprops + @"},
-	                 ""globalvars"": {" + globalvars + @"},
-                     ""uservars"": {" + uservars + @"}
+                    """ + axappsProj + @""":""" + axapps + @""",
+                     ""axprops"":""" + axprops + @""",
+	                 ""globalvars"": """ + globalvars + @""",
+                     ""uservars"": """ + uservars + @"""
                      }";
                 }
                 request.ContentLength = DATA.Length;
@@ -9226,17 +9258,24 @@ namespace ASB
                 request.ContentType = "application/json";
                 string pwd = GetUserPasswordForPEG();
                 string[] _amdData = jsonData.Split('♦');
-                string globalvars = xmltojson(Session["axGlobalVars"].ToString());
-                string uservars = xmltojson(Session["axUserVars"].ToString());
+                //string globalvars = xmltojson(Session["axGlobalVars"].ToString());
+                //string uservars = xmltojson(Session["axUserVars"].ToString());
+                string globalvars = Session["axGlobalVars"].ToString();
+                globalvars = globalvars.Replace(@"\", "\\\\");
+                string uservars = Session["axUserVars"].ToString();
+                //string axprops = HttpContext.Current.Application["axProps"].ToString();
+                //axprops = xmltojson(axprops);
+                //string axapps = xmltojson(Session["AxApps"].ToString());
                 string axprops = HttpContext.Current.Application["axProps"].ToString();
-                axprops = xmltojson(axprops);
-                string axapps = xmltojson(Session["AxApps"].ToString());
+                string axapps = HttpContext.Current.Session["axApps"].ToString();
+                axapps = axapps.Replace(@"\", "\\\\");
                 string axappsProj = HttpContext.Current.Session["project"].ToString();
                 DATA = @"{
                      ""axcheck"": {
                      ""axpapp"":""" + HttpContext.Current.Session["project"].ToString() + @""", 
 		             ""username"": """ + HttpContext.Current.Session["username"].ToString() + @""",
-		             ""password"": """ + pwd + @""",
+		             ""password"": """",
+                     ""s"":""" + HttpContext.Current.Session["nsessionid"].ToString() + @""",
 		             ""seed"": """",
 		             ""trace"": """ + HttpContext.Current.Session["AxTrace"] + @""",
 		             ""transid"": """ + _amdData[5] + @""",
@@ -9251,10 +9290,10 @@ namespace ASB
 		              ""statusreason"" : """ + reasons + @""",
 		             ""userdata"": {}
 	                 },
-                     """ + axappsProj + @""":{" + axapps + @"},
-                     ""axprops"":{ " + axprops + @"},
-	                 ""globalvars"": {" + globalvars + @"},
-                     ""uservars"": {" + uservars + @"}
+                     """ + axappsProj + @""":""" + axapps + @""",
+                     ""axprops"":""" + axprops + @""",
+	                 ""globalvars"": """ + globalvars + @""",
+                     ""uservars"": """ + uservars + @"""
                      }";
 
                 request.ContentLength = DATA.Length;
@@ -9298,11 +9337,17 @@ namespace ASB
                 request.ContentType = "application/json";
                 string pwd = GetUserPasswordForPEG();
                 string[] _amdData = jsonData.Split('♦');
-                string globalvars = xmltojson(Session["axGlobalVars"].ToString());
-                string uservars = xmltojson(Session["axUserVars"].ToString());
+                //string globalvars = xmltojson(Session["axGlobalVars"].ToString());
+                //string uservars = xmltojson(Session["axUserVars"].ToString());
+                string globalvars = Session["axGlobalVars"].ToString();
+                globalvars = globalvars.Replace(@"\", "\\\\");
+                string uservars = Session["axUserVars"].ToString();
+                //string axprops = HttpContext.Current.Application["axProps"].ToString();
+                //axprops = xmltojson(axprops);
+                //string axapps = xmltojson(Session["AxApps"].ToString());
                 string axprops = HttpContext.Current.Application["axProps"].ToString();
-                axprops = xmltojson(axprops);
-                string axapps = xmltojson(Session["AxApps"].ToString());
+                string axapps = HttpContext.Current.Session["axApps"].ToString();
+                axapps = axapps.Replace(@"\", "\\\\");
                 string axappsProj = HttpContext.Current.Session["project"].ToString();
                 if (isAmendment == "true")
                 {
@@ -9310,7 +9355,8 @@ namespace ASB
                      ""axrecall"": {
                      ""axpapp"":""" + HttpContext.Current.Session["project"].ToString() + @""", 
 		             ""username"": """ + HttpContext.Current.Session["username"].ToString() + @""",
-		             ""password"": """ + pwd + @""",
+		             ""password"": """",
+                     ""s"":""" + HttpContext.Current.Session["nsessionid"].ToString() + @""",
 		             ""seed"": """",
 		             ""trace"": """ + HttpContext.Current.Session["AxTrace"] + @""",
 		             ""transid"": """ + _amdData[5] + @""",
@@ -9326,10 +9372,10 @@ namespace ASB
 		             ""statusreason"" : """ + reasons + @""",
 		             ""userdata"": {}
 	                 },
-                    """ + axappsProj + @""":{" + axapps + @"},
-                     ""axprops"":{ " + axprops + @"},
-	                 ""globalvars"": {" + globalvars + @"},
-                     ""uservars"": {" + uservars + @"}
+                   """ + axappsProj + @""":""" + axapps + @""",
+                     ""axprops"":""" + axprops + @""",
+	                 ""globalvars"": """ + globalvars + @""",
+                     ""uservars"": """ + uservars + @"""
                      }";
                 }
                 else
@@ -9338,7 +9384,8 @@ namespace ASB
                      ""axrecall"": {
                      ""axpapp"":""" + HttpContext.Current.Session["project"].ToString() + @""", 
 		             ""username"": """ + HttpContext.Current.Session["username"].ToString() + @""",
-		             ""password"": """ + pwd + @""",
+		             ""password"": """",
+                     ""s"":""" + HttpContext.Current.Session["nsessionid"].ToString() + @""",
 		             ""seed"": """",
 		             ""trace"": """ + HttpContext.Current.Session["AxTrace"] + @""",
 		             ""transid"": """ + _amdData[5] + @""",
@@ -9353,10 +9400,10 @@ namespace ASB
 		             ""statusreason"" : """ + reasons + @""",
 		             ""userdata"": {}
 	                 },
-                     """ + axappsProj + @""":{" + axapps + @"},
-                     ""axprops"":{ " + axprops + @"},
-	                 ""globalvars"": {" + globalvars + @"},
-                     ""uservars"": {" + uservars + @"}
+                    """ + axappsProj + @""":""" + axapps + @""",
+                     ""axprops"":""" + axprops + @""",
+	                 ""globalvars"": """ + globalvars + @""",
+                     ""uservars"": """ + uservars + @"""
                      }";
                 }
                 request.ContentLength = DATA.Length;

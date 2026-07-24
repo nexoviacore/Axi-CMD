@@ -10031,7 +10031,7 @@ public class TStructData
                         }
                         if (stFldValue != string.Empty)
                             stFldValue = stFldValue.Remove(stFldValue.Length - 1);
-                        sqlParamsXML += "<" + strFld + ">" + stFldValue + "</" + strFld + ">";
+                        sqlParamsXML += "<" + strFld + ">" + util.CheckSpecialChars(stFldValue) + "</" + strFld + ">";
                         parentFldVals += strFld + ":" + stFldValue + "~";
                         parentFldNames.Append(strFld + "*~");
                     }
@@ -10234,7 +10234,7 @@ public class TStructData
                     }
                     if (stFldValue != string.Empty)
                         stFldValue = stFldValue.Remove(stFldValue.Length - 1);
-                    sqlParamsXML.Append("<" + strFld + ">" + stFldValue + "</" + strFld + ">");
+                    sqlParamsXML.Append("<" + strFld + ">" + util.CheckSpecialChars(stFldValue) + "</" + strFld + ">");
                     parentFldVals.Append(strFld + ":" + stFldValue + "~");
                 }
                 else

@@ -2,14 +2,126 @@
 (() => {
     // Released On: 11/06/2026
     // /AxPlugins/Axi/HTMLPages/js/axicmdmain.js
-    
+
+    /* ==========================================================================
+       AXI DOMAIN MODULES
+       ========================================================================== */
+
+    const AxiCmdConfig = {
+        MAX_HISTORY: 10,
+        MAX_FAVORITES: 20,
+        SHORTCUT_OPTIONS: {
+            GO: { displaydata: "Go [Ctrl + Enter]", name: "GO_ACTION", isExecutable: true },
+            SAVE: { displaydata: "Save [Ctrl + S]", name: "Save_ACTION", isExecutable: true },
+            POPUP: { displaydata: "Pop-Up [Ctrl + Shift + Enter]", name: "Pop_ACTION", isExecutable: true },
+            SOURCE: { displaydata: "Source [Ctrl + Alt + Enter]", name: "Source_ACTION", isExecutable: true }
+        },
+        COMMAND_ICONS: {
+            "create": "add_circle_outline",
+            "edit": "edit_note",
+            "view": "visibility",
+            "configure": "settings_suggest",
+            "sdk": "open_in_new",
+            "upload": "upload_file",
+            "download": "download",
+            "run": "play_arrow",
+            "analyse": "bar_chart",
+            "ai": "smart_toy",
+            "connect": "link",
+            "ask": "question_answer",
+            "end": "stop",
+            "editprompt": "edit",
+            "analyze": "analytics",
+            "help": "help_outline",
+            "version": "info"
+        }
+    };
+
+    // 2. Pure Stateless Command Parser
+    const AxiCommandParser = {
+        tokenize(inputStr) {
+            if (!inputStr || typeof inputStr !== "string") return [];
+            const regex = new RegExp(`"[^"]*"?|[^\\s]+`, "g");
+            return inputStr.match(regex) || [];
+        },
+        parseCommand(inputStr) {
+            const tokens = this.tokenize(inputStr);
+            if (tokens.length === 0) return { verb: "", target: "", args: [] };
+            return {
+                verb: tokens[0].toLowerCase(),
+                target: tokens[1] ? tokens[1].toLowerCase() : "",
+                args: tokens.slice(2),
+                raw: inputStr
+            };
+        },
+        capitalizeFirstLetter(str) {
+            if (!str) return "";
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+    };
+
+    // 3. API Service Seam
+    const AxiApiService = {
+        async fetchSessionStatus(webUrl, mainSessionId) {
+            if (typeof mainSessionId === "undefined" || !mainSessionId) {
+                return { valid: false, redirectUrl: `${getAppBaseUrl()}/aspx/sess.aspx` };
+            }
+            try {
+                const res = await fetch(webUrl + "/WebService.asmx/GetSession", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ key: "nsessionid" })
+                });
+                const data = await res.json();
+                const serverSessionId = data?.d;
+                if (!serverSessionId || serverSessionId === "Session does not exist" || serverSessionId !== mainSessionId) {
+                    return { valid: false, redirectUrl: `${getAppBaseUrl()}/aspx/sess.aspx` };
+                }
+                return { valid: true };
+            } catch (err) {
+                console.error("[AxiApiService] Session check error:", err);
+                return { valid: true };
+            }
+        }
+    };
+
+    // 4. Favorites State & LocalStorage Manager
+    const AxiFavoritesManager = {
+        getStorageKey(appUrl, username) {
+            return `axi_favourites_${appUrl}_${username}`;
+        },
+        loadLocalFavorites(appUrl, username) {
+            const key = this.getStorageKey(appUrl, username);
+            try {
+                const data = JSON.parse(localStorage.getItem(key)) || [];
+                return data.map(fav => typeof fav === "string" ? { commandText: fav, targetURL: "" } : fav);
+            } catch (ex) {
+                return [];
+            }
+        },
+        saveLocalFavorites(appUrl, username, favoritesList) {
+            const key = this.getStorageKey(appUrl, username);
+            localStorage.setItem(key, JSON.stringify(favoritesList));
+        },
+        isFavAllowed(cmdText) {
+            if (!cmdText) return false;
+            const tokens = AxiCommandParser.tokenize(cmdText);
+            const verb = tokens[0]?.toLowerCase();
+            const verb2 = tokens[1]?.toLowerCase();
+            if (verb === "help" || verb === "version" || verb === "run" || verb2 === "keyfield") {
+                return false;
+            }
+            return true;
+        }
+    };
+
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
     let apiMetadataConfigError = "";
     let settingsPageButtons = null;
     let importExportButtons = null;
     let commandHistory = [];
-    const MAX_HISTORY = 10;
+    const MAX_HISTORY = AxiCmdConfig.MAX_HISTORY;
     let historyIndex = -1;
     let megaDropdown;
     let favouritesCard;
@@ -18,36 +130,17 @@
     let favouriteBtn;
     let commandFavorites = [];
     let axiFavoritesUrl = "";
-    const MAX_FAVORITES = 20;
+    const MAX_FAVORITES = AxiCmdConfig.MAX_FAVORITES;
     let commandRoutes = [];
     let isDeleting = false;
     let isEditing = false;
     let isProgrammaticExecution = false;
     let suppressFocusSuggestions = false;
 
-    const goOption = {
-        displaydata: "Go [Ctrl + Enter]",
-        name: "GO_ACTION",
-        isExecutable: true
-    };
-
-    const saveOption = {
-        displaydata: "Save [Ctrl + S]",
-        name: "Save_ACTION",
-        isExecutable: true
-    };
-
-    const popOption = {
-        displaydata: "Pop-Up [Ctrl + Shift + Enter]",
-        name: "Pop_ACTION",
-        isExecutable: true
-    };
-
-    const sourceOption = {
-        displaydata: "Source [Ctrl + Alt + Enter",
-        name: "Source_ACTION",
-        isExecutable: true
-    }
+    const goOption = AxiCmdConfig.SHORTCUT_OPTIONS.GO;
+    const saveOption = AxiCmdConfig.SHORTCUT_OPTIONS.SAVE;
+    const popOption = AxiCmdConfig.SHORTCUT_OPTIONS.POPUP;
+    const sourceOption = AxiCmdConfig.SHORTCUT_OPTIONS.SOURCE;
 
 
 
@@ -317,7 +410,7 @@
             if (!parentArmUrl && typeof armUrl !== "undefined") {
                 parentArmUrl = armUrl || "";
             }
-        } catch (e) {}
+        } catch (e) { }
 
         if (typeof window.mainUserName === "undefined" || !window.mainUserName) {
             window.mainUserName = parentUserName || "";
@@ -488,7 +581,7 @@
     function startInit() {
         const proj = window.mainProject || (typeof callParentNew === "function" && callParentNew("mainProject"));
         const user = window.mainUserName || (typeof callParentNew === "function" && callParentNew("mainUserName"));
-        
+
         if ((!proj || !user) && initRetries < 20) {
             initRetries++;
             setTimeout(startInit, 100);
@@ -509,11 +602,11 @@
         // console.log(appname);
         // return appname;
 
-        return window.mainProject || 
-               (typeof callParentNew === "function" && callParentNew("mainProject")) || 
-               (typeof parent !== "undefined" && parent.mainProject) || 
-               (typeof top !== "undefined" && top.mainProject) || 
-               "";
+        return window.mainProject ||
+            (typeof callParentNew === "function" && callParentNew("mainProject")) ||
+            (typeof parent !== "undefined" && parent.mainProject) ||
+            (typeof top !== "undefined" && top.mainProject) ||
+            "";
     }
 
     /* ===============================
@@ -590,12 +683,12 @@
                 };
 
                 console.log(JSON.stringify(commands));
-                
+
                 // Load target entities (tstructs, iview, ads and pages) from metadata on startup asynchronously
                 const metadataParams = getStructParam();
                 loadList("axi_structmetalist", metadataParams);
                 // if (isForced) {
-                    showToast(message, 3000, true);
+                showToast(message, 3000, true);
                 // }
             }
         } catch (err) {
@@ -1317,7 +1410,7 @@
 
     function handleConfigureSmartViewAttributes({ tokens, commandConfig }) {
 
-        
+
         let transId = "a__sl";
         let fieldname = "adsname";
         let rawParamName;
@@ -1343,7 +1436,7 @@
 
         // targetUrl += `&fromsource=U`;
         // targetUrl += `&openerIV=${transId}`;
-        
+
         // targetUrl += `&isDupTab=false`;
         // targetUrl += `&dummyload=false?`;
 
@@ -1797,14 +1890,70 @@
 
 
 
+    // function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "") {
+    //     console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
+
+
+
+    //     if (!transId) {
+    //         alert("There is no Tstruct name provided!");
+    //         return;
+    //     }
+
+    //     let targetUrl;
+
+    //     targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+
+    //     if (isEdit) {
+    //         if (fieldName && fieldValue) {
+    //             targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+    //         }
+    //         targetUrl += `&hltype=load`;
+    //         targetUrl += `&torecid=false`;
+    //         targetUrl += `&openerIV=${transId}`;
+    //         targetUrl += `&isIV=false`;
+    //         targetUrl += `&isDupTab=false`;
+
+    //         targetUrl += `&dummyload=false?`;
+
+    //     }
+    //     else {
+    //         if (fieldName && fieldValue) {
+    //             targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+    //         }
+    //         targetUrl += `&hltype=open`;
+
+    //         targetUrl += `&createaxiflag=true`;
+    //         targetUrl += `&dummyload=false?`;
+    //     }
+
+
+
+    //     if (popUpOption) {
+    //         targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+    //         targetUrl += "&AxPop=true";
+
+    //         openPopOption(targetUrl)
+    //     }
+    //     else {
+    //         setCommandRoutes(input.value.trim(), targetUrl);
+    //         top.window.LoadIframe(targetUrl);
+    //     }
+    // }
+
+
+
     function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "") {
+
         console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
 
 
-
         if (!transId) {
+
             alert("There is no Tstruct name provided!");
+
             return;
+
         }
 
         let targetUrl;
@@ -1812,41 +1961,66 @@
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (isEdit) {
+
             if (fieldName && fieldValue) {
+
                 targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+
             }
+
             targetUrl += `&hltype=load`;
+
             targetUrl += `&torecid=false`;
+
             targetUrl += `&openerIV=${transId}`;
+
             targetUrl += `&isIV=false`;
-            targetUrl += `&isDupTab=false`;
+
+            targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
 
             targetUrl += `&dummyload=false?`;
 
         }
+
         else {
+
             if (fieldName && fieldValue) {
+
                 targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+
             }
+
             targetUrl += `&hltype=open`;
 
             targetUrl += `&createaxiflag=true`;
-            targetUrl += `&dummyload=false?`;
-        }
 
+            targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
+
+            targetUrl += `&dummyload=false?`;
+
+        }
 
 
         if (popUpOption) {
+
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+
             targetUrl += "&AxPop=true";
 
             openPopOption(targetUrl)
+
         }
+
         else {
+
             setCommandRoutes(input.value.trim(), targetUrl);
+
             top.window.LoadIframe(targetUrl);
+
         }
+
     }
+
 
 
     function redirectToResponsibilitiesPage(fieldValue = "") {
@@ -1897,15 +2071,15 @@
 
 
         if (popUpOption) {
-         let targetUrl = `../aspx/ivtoivload.aspx?ivname=${iViewName}`;
-        // setCommandRoutes(input.value.trim(), targetUrl);
+            let targetUrl = `../aspx/ivtoivload.aspx?ivname=${iViewName}`;
+            // setCommandRoutes(input.value.trim(), targetUrl);
             targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
             targetUrl += "&AxIsPop=true&isDupTab=true-";
             openPopOption(targetUrl)
         }
         else {
-        let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
-        setCommandRoutes(input.value.trim(), targetUrl);
+            let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
+            setCommandRoutes(input.value.trim(), targetUrl);
             window.LoadIframe(targetUrl);
         }
 
@@ -2013,7 +2187,8 @@
         }
 
         if (!text.trim()) {
-
+            resolvedParams = {};
+            resolvedParamType = {};
             items = getInitialSuggestions();
             hintDiv.textContent = "";
             render();
@@ -2085,25 +2260,35 @@
             const cleanToken = token.replace(/"/g, "");
             const lastToken = lastTypedTokens[idx] ? lastTypedTokens[idx].replace(/"/g, "") : null;
 
-            if (lastToken && cleanToken !== lastToken && resolvedParams[idx]) {
-                console.log(`Token changed at position ${idx}: "${lastToken}" ? "${cleanToken}"`);
-                delete resolvedParams[idx];
-                delete resolvedParamType[idx];
-                Object.keys(resolvedParams).forEach(key => {
-                    if (parseInt(key) > idx) {
-                        delete resolvedParams[key];
-                        console.log(`Cleared dependent resolution at index ${key}`);
-                    }
-                });
+            if (lastToken && cleanToken !== lastToken) {
+                console.log(`Token changed at position ${idx}: "${lastToken}" -> "${cleanToken}"`);
+
+                const lowerLast = lastToken.toLowerCase();
+                const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(lowerLast);
+                if (!isVerb) {
+                    delete resolvedParams[idx];
+                    delete resolvedParamType[idx];
+                    Object.keys(resolvedParams).forEach(key => {
+                        if (parseInt(key) > idx) {
+                            delete resolvedParams[key];
+                            delete resolvedParamType[key];
+                            console.log(`Cleared dependent resolution at index ${key}`);
+                        }
+                    });
+                }
             }
         });
 
         if (currentTokens.length < lastTypedTokens.length) {
             for (let i = currentTokens.length; i < lastTypedTokens.length; i++) {
-                if (resolvedParams[i]) {
-                    delete resolvedParams[i];
-                    delete resolvedParamType[i];
-                    console.log(`Cleared deleted token resolution at index ${i}`);
+                const deletedToken = (lastTypedTokens[i] || "").toLowerCase().trim();
+                const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(deletedToken);
+                if (!isVerb) {
+                    if (resolvedParams[i]) {
+                        delete resolvedParams[i];
+                        delete resolvedParamType[i];
+                        console.log(`Cleared deleted token resolution at index ${i}`);
+                    }
                 }
             }
         }
@@ -2223,12 +2408,7 @@
 
 
     function getTokens(str, shouldNormalize = true) {
-
-
-        //const regex = new RegExp(`"[^"]*"?|${OPERATOR_REGEX_PART}|[^\\s=<>!]+`, "g");
-        // const regex = new RegExp(`"[^"]*"|[^\\s]+`, "g");
-        const regex = new RegExp(`"[^"]*"?|[^\\s]+`, "g");
-        let tokens = str.match(regex) || [];
+        let tokens = AxiCommandParser.tokenize(str);
         if (shouldNormalize && tokens.length >= 2) {
             const first = cleanString(tokens[0]).toLowerCase();
             const second = cleanString(tokens[1]).toLowerCase();
@@ -2264,7 +2444,7 @@
             }
         }
         const cleanToken = cleanString(tokenText).toLowerCase();
-        return list.find(item => 
+        return list.find(item =>
             (item.name && item.name.toLowerCase() === cleanToken) ||
             (item.caption && item.caption.toLowerCase() === cleanToken) ||
             (item.displaydata && item.displaydata.toLowerCase() === cleanToken)
@@ -2303,7 +2483,7 @@
             for (let i = 0; i < list.length; i++) {
                 const d = list[i];
                 const namesSet = new Set();
-                
+
                 const name = d.name || d.NAME;
                 if (name) namesSet.add(name.toLowerCase());
 
@@ -2345,7 +2525,7 @@
         if ((t1 === "t" || t1 === "tstruct") && (t2 === "t" || t2 === "tstruct")) return true;
         if ((t1 === "i" || t1 === "iview") && (t2 === "i" || t2 === "iview")) return true;
         if ((t1 === "p" || t1 === "page") && (t2 === "p" || t2 === "page")) return true;
-        if ((t1 === "a" || t1 === "ads") && (t2 === "a" || t2 === "ads")) return true;
+        if ((t1 === "a" || t1 === "ads" || t1 === "v") && (t2 === "a" || t2 === "ads" || t2 === "v")) return true;
         return false;
     }
 
@@ -2358,56 +2538,63 @@
 
         let matched = null;
         const lowerToken = token.toLowerCase();
-        for (const idx in resolvedParams) {
-            if (resolvedParams[idx]) {
-                const resolvedVal = resolvedParams[idx].toLowerCase();
-                const preferredType = resolvedParamType[idx];
+        const allKeys = new Set([...Object.keys(resolvedParams), ...Object.keys(resolvedParamType)]);
+        for (const idx of allKeys) {
+            const resolvedVal = (resolvedParams[idx] || "").toLowerCase();
+            const preferredType = resolvedParamType[idx];
 
-                const found = matches.find(d => {
-                    const name = (d.name || d.NAME || d.sqlname || "").toLowerCase();
-                    const caption = (d.caption || d.CAPTION || "").toLowerCase();
-                    const displaydata = (d.displaydata || d.DISPLAYDATA || "").toLowerCase();
-                    const cleanCaption = getCleanCaption(d);
+            const found = matches.find(d => {
+                const name = (d.name || d.NAME || d.sqlname || "").toLowerCase();
+                const caption = (d.caption || d.CAPTION || "").toLowerCase();
+                const displaydata = (d.displaydata || d.DISPLAYDATA || "").toLowerCase();
+                const cleanCaption = getCleanCaption(d);
 
-                    const nameMatch = name === resolvedVal || caption === resolvedVal || displaydata === resolvedVal || cleanCaption === resolvedVal;
-                    if (!nameMatch) return false;
+                const nameMatch = !resolvedVal || name === resolvedVal || caption === resolvedVal || displaydata === resolvedVal || cleanCaption === resolvedVal;
+                if (!nameMatch) return false;
 
-                    if (preferredType) {
-                        return areTypesMatching(d.stype || d.STYPE, preferredType);
-                    }
-                    return true;
-                });
-
-                if (found) {
-                    matched = found;
-                    break;
+                if (preferredType) {
+                    return areTypesMatching(d.stype || d.STYPE, preferredType);
                 }
+                return true;
+            });
+
+            if (found) {
+                matched = found;
+                break;
             }
         }
 
         if (matched) return matched;
 
         if (action) {
-            const lowAction = action.toLowerCase();
+            const lowAction = action.toLowerCase().trim();
             if (lowAction === "create" || lowAction === "edit") {
                 const tstructMatch = matches.find(d => {
                     const type = (d.stype || d.STYPE || "").toLowerCase();
                     return type === "t" || type === "tstruct";
                 });
                 if (tstructMatch) return tstructMatch;
-            } else if (lowAction === "view") {
-                const nonTstructMatch = matches.find(d => {
+            } else if (lowAction === "view" || lowAction.startsWith("v")) {
+                const iviewOrAdsMatch = matches.find(d => {
                     const type = (d.stype || d.STYPE || "").toLowerCase();
-                    return type !== "t" && type !== "tstruct";
+                    return type === "i" || type === "iview" || type === "ads" || type === "a" || type === "v";
                 });
-                if (nonTstructMatch) return nonTstructMatch;
-            } else if (lowAction === "source") {
+                if (iviewOrAdsMatch) return iviewOrAdsMatch;
+            } else if (lowAction === "source" || lowAction.startsWith("s")) {
                 const sourceMatch = matches.find(d => {
                     const type = (d.stype || d.STYPE || "").toLowerCase();
                     return ["t", "tstruct", "i", "iview", "ads"].includes(type);
                 });
                 if (sourceMatch) return sourceMatch;
             }
+        }
+
+        if (matches.length > 1) {
+            const nonTstructMatch = matches.find(d => {
+                const type = (d.stype || d.STYPE || "").toLowerCase();
+                return type === "i" || type === "iview" || type === "ads" || type === "a" || type === "v" || type === "p" || type === "page";
+            });
+            if (nonTstructMatch) return nonTstructMatch;
         }
 
         return matches[0];
@@ -2417,19 +2604,19 @@
         if (!item) return false;
         const stype = item.stype !== undefined ? item.stype : item.STYPE;
         const name = (item.name || item.NAME || item.displaydata || item.DISPLAYDATA || "").toLowerCase().trim();
-        
+
         if (stype !== undefined && stype !== null) {
             const stypeStr = String(stype).trim().toLowerCase();
             if (stypeStr === "inbox") {
                 return true;
             }
         }
-        
+
         const isStypeEmpty = stype === undefined || stype === null || String(stype).trim() === "";
         if (isStypeEmpty && name === "inbox") {
             return true;
         }
-        
+
         return false;
     }
 
@@ -2437,7 +2624,8 @@
         if (!item) return false;
         const stype = item.stype || item.STYPE;
         if (stype === undefined || stype === null) return false;
-        return String(stype).trim().toLowerCase() === "ads";
+        const s = String(stype).trim().toLowerCase();
+        return s === "ads" || s === "a" || s === "v";
     }
 
     function isAdsVisible(item) {
@@ -3401,7 +3589,7 @@
                     bottomToolbarButtons = getBottomToolbarButtons();
                     topToolbarButtons = getTopToolbarButtons();
                     allButtons = { ...bottomToolbarButtons, ...topToolbarButtons };
-                    
+
                     if (structType === "i") {
                         const utilityButtons = getIViewUtilityButtons();
                         const actionButtons = getIViewActionDropdownButtons();
@@ -3468,7 +3656,14 @@
                 displaydata: displayLabel
             };
         })
-        .filter(btn => !((structType === "e" || structType === "ef") && btn.name === "deleteSelectedButton"));
+            .filter(btn => {
+                const isEntity = structType === "e" || structType === "ef";
+                const btnNameLower = (btn.name || "").toLowerCase();
+                const btnDisplayLower = (btn.displaydata || "").toLowerCase();
+                const isDelete = btnNameLower === "deleteselectedbutton" || btnDisplayLower === "delete";
+                if (isEntity && isDelete) return false;
+                return true;
+            });
 
         const uniqueButtonsMap = new Map();
         buttonsList.forEach(btn => {
@@ -3514,7 +3709,7 @@
             }
         }
         const cleanToken = cleanString(tokenText).toLowerCase();
-        return list.find(item => 
+        return list.find(item =>
             (item.name && item.name.toLowerCase() === cleanToken) ||
             (item.caption && item.caption.toLowerCase() === cleanToken) ||
             (item.displaydata && item.displaydata.toLowerCase() === cleanToken)
@@ -3522,6 +3717,8 @@
     }
 
     function suggestLocal(inputText) {
+      console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
         normalizeGlobalState();
         let ignoreExtraParams = false;
         let detectedType = "";
@@ -3565,7 +3762,7 @@
                 } else {
                     const nameMatch = item.name && item.name.toLowerCase().includes(prefix);
                     const displayMatch = item.displaydata && item.displaydata.toLowerCase().includes(prefix);
-                    const cleanCaptionMatch = typeof item.displaydata === "string" && 
+                    const cleanCaptionMatch = typeof item.displaydata === "string" &&
                         getCleanCaption(item).includes(prefix);
                     const captionMatch = item.caption && item.caption.toLowerCase().includes(prefix);
                     return nameMatch || displayMatch || cleanCaptionMatch || captionMatch;
@@ -3580,9 +3777,9 @@
                     startsWithPrefix.push(item);
                 } else {
                     const starts = (item.name && item.name.toLowerCase().startsWith(prefix)) ||
-                                   (item.displaydata && item.displaydata.toLowerCase().startsWith(prefix)) ||
-                                   (typeof item.displaydata === "string" && getCleanCaption(item).startsWith(prefix)) ||
-                                   (item.caption && item.caption.toLowerCase().startsWith(prefix));
+                        (item.displaydata && item.displaydata.toLowerCase().startsWith(prefix)) ||
+                        (typeof item.displaydata === "string" && getCleanCaption(item).startsWith(prefix)) ||
+                        (item.caption && item.caption.toLowerCase().startsWith(prefix));
                     if (starts) {
                         startsWithPrefix.push(item);
                     } else {
@@ -3591,13 +3788,13 @@
                 }
             });
             const rankedFiltered = [...startsWithPrefix, ...containsPrefix];
-             filteredObjects = rankedFiltered.map(item => {
+            filteredObjects = rankedFiltered.map(item => {
                 if (typeof item === "string") {
                     return { name: item, displaydata: item };
                 }
                 return item;
-             });
-             return rankedFiltered.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
+            });
+            return rankedFiltered.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
         }
 
         if (rawTokens.length === 2 && isTargetEntity(rawTokens[0])) {
@@ -3819,6 +4016,8 @@
             const viewValues = commandConfig.prompts?.[0]?.promptValues;
             const firstToken = cleanString(tokens[1] || "");
             const { value: actualFirstToken, type } = tryResolveToken(1, firstToken, commandConfig, false);
+            console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
             detectedType = getType(viewSource.toLowerCase(), { value: actualFirstToken, type: type }, viewValues, tokens, commandConfig);
             // detectedType = getType(viewSource.toLowerCase(), {value: act}, viewValues, tokens, commandConfig);
 
@@ -3864,6 +4063,8 @@
             return processRunCommands(tokens, targetIndex, structType);
         }
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
+          console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
 
 
         ///KeyValue based edit handling.
@@ -4437,8 +4638,8 @@
             if (preferredType === "iview") preferredType = "i";
         }
 
-        const struct_row = struct_dataList.find(r => 
-            r.name === struct_name && 
+        const struct_row = struct_dataList.find(r =>
+            r.name === struct_name &&
             (!preferredType || (r.stype || "").toLowerCase() === preferredType)
         ) || struct_dataList.find(r => r.name === struct_name);
 
@@ -4771,38 +4972,78 @@
 
         const rawIndex = getUnswappedIndex(tokenIndex);
 
-        if (resolvedParams[rawIndex] && !forceResolve) {
-            const val = resolvedParams[rawIndex];
-            const lowerVal = val.toLowerCase();
+        let lookupIndex = tokenIndex;
+        if (resolvedParams[lookupIndex] === undefined && resolvedParams[0] !== undefined) {
+            lookupIndex = 0;
+        }
+
+        if (resolvedParams[lookupIndex] && !forceResolve) {
+            const val = resolvedParams[lookupIndex];
+            const lowerVal = val?.toLowerCase();
             const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(lowerVal);
             if (!(tokenIndex === 1 && isVerb)) {
                 return {
                     value: val,
-                    type: resolvedParamType?.[rawIndex] || ""
+                    type: resolvedParamType?.[lookupIndex] || ""
                 };
             }
         }
 
         if (tokenIndex === 1 && !forceResolve) {
-            const matches = getTargetEntityMatches(tokenText);
+            let preferredType = resolvedParamType?.[lookupIndex] || resolvedParamType?.[tokenIndex];
+            if (tokenText.includes("[") && tokenText.includes("]")) {
+                const badgeMatch = tokenText.match(/\[(.*?)\]/);
+                if (badgeMatch) {
+                    const badgeStr = badgeMatch[1].toLowerCase().trim();
+                    if (["form", "tstruct", "t"].includes(badgeStr)) preferredType = "t";
+                    else if (["iview", "i"].includes(badgeStr)) preferredType = "i";
+                    else if (["ads", "a", "v"].includes(badgeStr)) preferredType = "ads";
+                    else if (["page", "p"].includes(badgeStr)) preferredType = "p";
+                }
+            }
+
+            const cleanTokName = tokenText.replace(/\s*\[[^\]]*\]$/, "").trim();
+            const matches = getTargetEntityMatches(cleanTokName.length > 0 ? cleanTokName : tokenText);
 
             if (matches.length > 0) {
                 let found = matches[0];
                 if (matches.length > 1) {
                     const currentTokens = getTokens(input.value);
                     const cmdGroup = currentTokens[0]?.toLowerCase();
-                    if (cmdGroup === "create" || cmdGroup === "edit") {
-                        const typeMatched = matches.find(item => {
-                            const type = (item.stype || "").toLowerCase();
-                            return type === "t" || type === "tstruct";
-                        });
+
+                    // 1. Explicit preferredType or badge type match
+                    if (preferredType) {
+                        const typeMatched = matches.find(item => areTypesMatching(item.stype || item.STYPE, preferredType));
                         if (typeMatched) found = typeMatched;
-                    } else if (cmdGroup === "view") {
-                        const typeMatched = matches.find(item => {
-                            const type = (item.stype || "").toLowerCase();
-                            return type !== "t" && type !== "tstruct";
-                        });
-                        if (typeMatched) found = typeMatched;
+                    }
+
+                    // 2. Exact internal name match (e.g. 'ads1', 'tst1', 'iv1')
+                    if (!preferredType) {
+                        const exactNameMatch = matches.find(item => 
+                            (item.name || item.NAME || item.sqlname || "").toLowerCase() === cleanTokName.toLowerCase()
+                        );
+                        if (exactNameMatch) {
+                            found = exactNameMatch;
+                        } else if (cmdGroup === "create" || cmdGroup === "edit") {
+                            const typeMatched = matches.find(item => {
+                                const type = (item.stype || "").toLowerCase();
+                                return type === "t" || type === "tstruct";
+                            });
+                            if (typeMatched) found = typeMatched;
+                        } else if (cmdGroup === "view") {
+                            const fullDisplayMatch = matches.find(item => 
+                                (item.displaydata || item.DISPLAYDATA || "").toLowerCase() === tokenText.toLowerCase()
+                            );
+                            if (fullDisplayMatch) {
+                                found = fullDisplayMatch;
+                            } else {
+                                const iviewMatch = matches.find(item => {
+                                    const type = (item.stype || "").toLowerCase();
+                                    return type === "i" || type === "iview";
+                                });
+                                if (iviewMatch) found = iviewMatch;
+                            }
+                        }
                     }
                 }
 
@@ -4810,8 +5051,8 @@
                 if (!foundStype && isInboxStructure(found)) {
                     foundStype = "inbox";
                 }
-                resolvedParams[rawIndex] = found.name;
-                if (foundStype) resolvedParamType[rawIndex] = foundStype;
+                resolvedParams[lookupIndex] = found.name;
+                if (foundStype) resolvedParamType[lookupIndex] = foundStype;
                 return {
                     value: found.name,
                     type: foundStype
@@ -4940,21 +5181,47 @@
                 if (matches.length > 0) {
                     let found = matches[0];
                     let preferredType = resolvedParamType?.[tokenIndex];
+                    if (tokenText.includes("[") && tokenText.includes("]")) {
+                        const badgeMatch = tokenText.match(/\[(.*?)\]/);
+                        if (badgeMatch) {
+                            const badgeStr = badgeMatch[1].toLowerCase().trim();
+                            if (["form", "tstruct", "t"].includes(badgeStr)) preferredType = "t";
+                            else if (["iview", "i"].includes(badgeStr)) preferredType = "i";
+                            else if (["ads", "a", "v"].includes(badgeStr)) preferredType = "ads";
+                            else if (["page", "p"].includes(badgeStr)) preferredType = "p";
+                        }
+                    }
+
                     const cmdGroup = currentTokens[0]?.toLowerCase();
-                    if ((cmdGroup === "edit" || cmdGroup === "create") && tokenIndex === 1) {
+                    if ((cmdGroup === "edit" || cmdGroup === "create") && tokenIndex === 1 && !preferredType) {
                         preferredType = "t";
                     }
-                    if (cmdGroup === "view" && tokenIndex === 1 && !preferredType) {
-                        const typeMatched = matches.find(item => {
-                            const type = (item.stype || "").toLowerCase();
-                            return type !== "t" && type !== "tstruct";
-                        });
-                        if (typeMatched) found = typeMatched;
-                    }
+
                     if (preferredType && matches.length > 1) {
-                        const typeMatched = matches.find(item => (item.stype || "").toLowerCase() === preferredType.toLowerCase());
+                        const typeMatched = matches.find(item => areTypesMatching(item.stype || item.STYPE, preferredType));
                         if (typeMatched) {
                             found = typeMatched;
+                        }
+                    } else if (matches.length > 1) {
+                        const cleanTokName = tokenText.replace(/\s*\[[^\]]*\]$/, "").trim();
+                        const exactNameMatch = matches.find(item => 
+                            (item.name || item.NAME || item.sqlname || "").toLowerCase() === cleanTokName.toLowerCase()
+                        );
+                        if (exactNameMatch) {
+                            found = exactNameMatch;
+                        } else if (cmdGroup === "view" && tokenIndex === 1) {
+                            const fullDisplayMatch = matches.find(item => 
+                                (item.displaydata || item.DISPLAYDATA || "").toLowerCase() === tokenText.toLowerCase()
+                            );
+                            if (fullDisplayMatch) {
+                                found = fullDisplayMatch;
+                            } else {
+                                const iviewMatch = matches.find(item => {
+                                    const type = (item.stype || "").toLowerCase();
+                                    return type === "i" || type === "iview";
+                                });
+                                if (iviewMatch) found = iviewMatch;
+                            }
                         }
                     }
 
@@ -4967,8 +5234,8 @@
 
                     }
 
-                    resolvedParams[rawIndex] = real;
-                    if (found?.stype) resolvedParamType[rawIndex] = found?.stype;
+                    resolvedParams[lookupIndex] = real;
+                    if (found?.stype) resolvedParamType[lookupIndex] = found?.stype;
                     // return real;
                     return {
                         value: real,
@@ -5011,25 +5278,7 @@
 
         const isInitialCommandStage = currentInputTokens.length === 0 || (currentInputTokens.length === 1 && !currentInput.endsWith(" "));
 
-        const commandIcons = {
-            "create": "add_circle_outline",
-            "edit": "edit_note",
-            "view": "visibility",
-            "configure": "settings_suggest",
-            "sdk": "open_in_new",
-            "upload": "upload_file",
-            "download": "download",
-            "run": "play_arrow",
-            "analyse": "bar_chart",
-            "ai": "smart_toy",
-            "connect": "link",
-            "ask": "question_answer",
-            "end": "stop",
-            "editprompt": "edit",
-            "analyze": "analytics",
-            "help": "help_outline",
-            "version": "info"
-        };
+        const commandIcons = AxiCmdConfig.COMMAND_ICONS;
 
 
 
@@ -5146,8 +5395,8 @@
             const text = typeof item === "string" ? item : item.displaydata;
             li.className = "axi-suggestion";
 
-            const displayText = (shouldCapitalize && !(typeof item === 'object' && item.isExecutable)) 
-                ? capitalizeFirstLetter(text) 
+            const displayText = (shouldCapitalize && !(typeof item === 'object' && item.isExecutable))
+                ? capitalizeFirstLetter(text)
                 : text;
 
             if (typeof item === 'object' && item.isExecutable) {
@@ -5158,6 +5407,7 @@
 
             } else if (isInitialCommandStage && getCommandConfig(text)) {
                 const iconName = (commandIcons && commandIcons[text.toLowerCase()]) ? commandIcons[text.toLowerCase()] : "info";
+                li.setAttribute("data-cmd", text.toLowerCase());
 
                 li.innerHTML = `
                
@@ -5221,7 +5471,7 @@
             if (verbs.length > 0 || isCmdsLoading) {
                 const gridContainer = document.createElement("div");
                 gridContainer.className = "axi-verbs-grid-container";
-                
+
                 const header = document.createElement("div");
                 header.className = "axi-grid-header";
                 header.textContent = "Commands";
@@ -5536,16 +5786,13 @@
 
         // Get Real Value logic
         let foundObj = null;
-        if (filteredObjects && index >= 0 && index < filteredObjects.length) {
-            const cand = filteredObjects[index];
-            const candText = typeof cand === "string" ? cand : (cand?.displaydata || cand?.name || "");
-            if (candText && suggestion && candText.toLowerCase() === suggestion.toLowerCase()) {
-                foundObj = cand;
-            }
+        if (filteredObjects && index >= 0 && index < filteredObjects.length && typeof filteredObjects[index] !== "string") {
+            foundObj = filteredObjects[index];
+        } else if (selectedItem && typeof selectedItem === "object") {
+            foundObj = selectedItem;
         }
         if (!foundObj && filteredObjects) {
             foundObj = filteredObjects.find(itemObj => {
-                if (itemObj === selectedItem) return true;
                 const objText = typeof itemObj === "string" ? itemObj : (itemObj?.displaydata || itemObj?.name || "");
                 return objText && suggestion && objText.toLowerCase() === suggestion.toLowerCase();
             });
@@ -5748,10 +5995,10 @@
 
             if (res) {
                 const resStr = (typeof res === "string" ? res : JSON.stringify(res)).toLowerCase();
-                if (resStr.includes("sessionid is not valid") || 
-                    resStr.includes("session is not valid") || 
-                    resStr.includes("session expired") || 
-                    resStr.includes("sessionid is invalid") || 
+                if (resStr.includes("sessionid is not valid") ||
+                    resStr.includes("session is not valid") ||
+                    resStr.includes("session expired") ||
+                    resStr.includes("sessionid is invalid") ||
                     resStr.includes("session is invalid")) {
                     const baseUrl = getAppBaseUrl();
                     top.window.location.href = `${baseUrl}/aspx/sess.aspx`;
@@ -6103,7 +6350,7 @@
         if (favFilterInput) {
             favFilterInput.addEventListener("input", (e) => {
                 const query = e.target.value.toLowerCase().trim();
-                const filtered = commandFavorites.filter(fav => 
+                const filtered = commandFavorites.filter(fav =>
                     (fav.commandText || "").toLowerCase().includes(query)
                 );
                 renderFavoritesUI(filtered);
@@ -6144,6 +6391,7 @@
                     adsList = null;
                     axDatasourceObj = {};
                     resolvedParams = {};
+                    resolvedParamType = {};
                     createfieldnamevaluesList = {};
                     resetSetCommandState();
                     cachedAccessPermissions = null;
@@ -6174,6 +6422,8 @@
         if (axiClearBtn) {
             axiClearBtn.addEventListener("click", () => {
                 input.value = "";
+                resolvedParams = {};
+                resolvedParamType = {};
                 createfieldnamevaluesList = {};
                 setCommandTransid = null;
                 dateControlBoolean = false;
@@ -6574,7 +6824,7 @@
 
             const favModalOverlay = document.getElementById("axiFavModalOverlay");
             const isFavModalOpen = favModalOverlay && (favModalOverlay.style.display === "flex" || (window.getComputedStyle && window.getComputedStyle(favModalOverlay).display !== "none"));
-            
+
             const deleteModalOverlay = document.getElementById("axiFavDeleteModalOverlay");
             const isDeleteModalOpen = deleteModalOverlay && (deleteModalOverlay.style.display === "flex" || (window.getComputedStyle && window.getComputedStyle(deleteModalOverlay).display !== "none"));
 
@@ -6642,16 +6892,16 @@
                         try {
                             const subDoc = subIframe.contentDocument || subIframe.contentWindow?.document;
                             if (subDoc) attachClickToDoc(subDoc);
-                        } catch (e) {}
+                        } catch (e) { }
 
                         subIframe.addEventListener("load", () => {
                             try {
                                 const subDoc = subIframe.contentDocument || subIframe.contentWindow?.document;
                                 if (subDoc) attachClickToDoc(subDoc);
-                            } catch (e) {}
+                            } catch (e) { }
                         });
                     }
-                } catch (e) {}
+                } catch (e) { }
             };
 
             const attachIframeClick = () => {
@@ -6755,9 +7005,9 @@
         const rawTokens = getTokens(text, false);
         if (rawTokens.length > 0) {
             const firstToken = cleanString(rawTokens[0]).toLowerCase();
-            const secondToken = rawTokens[1] ? cleanString(rawTokens[1].toLowerCase()) : ""; 
+            const secondToken = rawTokens[1] ? cleanString(rawTokens[1].toLowerCase()) : "";
 
-            
+
             if (!isProgrammaticExecution && ["create", "view", "edit", "source"].includes(firstToken) && secondToken !== "inbox") {
                 showToast("Invalid Command!");
                 return;
@@ -6768,7 +7018,7 @@
         if (tokens.length === 1 && isTargetEntity(tokens[0])) {
             const entityObj = getTargetEntityObj(tokens[0]);
             const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
-            if (["i", "iview", "ads", "page", "p", "t", "tstruct"].includes(stype) || isInboxStructure(entityObj)) {
+            if (["i", "iview", "ads", "a", "v", "page", "p", "t", "tstruct"].includes(stype) || isInboxStructure(entityObj)) {
                 tokens.unshift("view");
             }
         }
@@ -6857,6 +7107,8 @@
         };
 
         dispatchCommand(context);
+        // resolvedParams = {};
+        // resolvedParamType = {};
         hide();
         if (!isNavigating) {
             saveToHistory(text);
@@ -7061,8 +7313,8 @@
             if (preferredType === "iview") preferredType = "i";
         }
 
-        const struct_row = struct_dataList.find(r => 
-            r.name === transId && 
+        const struct_row = struct_dataList.find(r =>
+            r.name === transId &&
             (!preferredType || (r.stype || "").toLowerCase() === preferredType)
         ) || struct_dataList.find(r => r.name === transId);
 
@@ -7880,8 +8132,8 @@
         }
 
         const struct_rowList = axDatasourceObj[viewDataSourceKey];
-        const struct_row = struct_rowList.find(r => 
-            r.name === transId && 
+        const struct_row = struct_rowList.find(r =>
+            r.name === transId &&
             (!preferredType || (r.stype || "").toLowerCase() === preferredType)
         ) || struct_rowList.find(r => r.name === transId);
 
@@ -8319,6 +8571,8 @@
             i: "iview",
             iview: "iview",
             ads: "ads",
+            a: "ads",
+            v: "ads",
             p: "page",
             page: "page",
             inbox: "inbox"
@@ -8943,7 +9197,7 @@
                     if (!topToolbarButtons) topToolbarButtons = getTopToolbarButtons();
                     allButtons = [...Object.values(bottomToolbarButtons),
                     ...Object.values(topToolbarButtons)];
-                    
+
                     if (structType === "i") {
                         const utilityButtons = getIViewUtilityButtons();
                         const actionButtons = getIViewActionDropdownButtons();
@@ -9241,7 +9495,7 @@
         const refreshParamElem = doc.getElementById("dvRefreshParam") || doc.querySelector("#dvRefreshParam");
         const refreshParamIconElem = doc.getElementById("dvRefreshParamIcon") || doc.querySelector("#dvRefreshParamIcon");
         const utilityContainer = doc.getElementById("iconsNewUtility") || doc.querySelector("#iconsNewUtility");
-        
+
         const containers = [utilityContainer, searchElem, refreshElem, refreshParamElem, refreshParamIconElem].filter(Boolean);
         if (containers.length === 0) return {};
 
@@ -9295,7 +9549,7 @@
                     } else {
                         btnInside.click();
                         if (btnInside !== link) {
-                            try { link.click(); } catch(e) {}
+                            try { link.click(); } catch (e) { }
                         }
                     }
                 }
@@ -9326,7 +9580,7 @@
             if (dropdownVal !== "chart" && dropdownVal !== "saveAs") return;
 
             const link = item.querySelector("a") || item;
-            
+
             let title = item.getAttribute("title") || link.getAttribute("title") || "";
             let label = title.trim();
             if (!label) {
@@ -9732,10 +9986,10 @@
             return text;
         }
 
-        const title = btn.getAttribute("title") || 
-                      btn.getAttribute("data-bs-original-title") || 
-                      btn.getAttribute("data-original-title") ||
-                      btn.getAttribute("data-bs-title");
+        const title = btn.getAttribute("title") ||
+            btn.getAttribute("data-bs-original-title") ||
+            btn.getAttribute("data-original-title") ||
+            btn.getAttribute("data-bs-title");
         if (title) return title.trim();
 
         const menuTitle = btn.querySelector(".menu-title");
@@ -9818,22 +10072,32 @@
             const dataElement = (btn.getAttribute("data-kt-element") || "").toLowerCase();
             const dataTarget = (btn.getAttribute("data-target") || "").toLowerCase();
             const btnId = (btn.id || btn.getAttribute("data-id") || "").toLowerCase();
+            const btnTitle = (btn.getAttribute("title") || "").toLowerCase().trim();
+            const btnOnclick = (btn.getAttribute("onclick") || "").toLowerCase();
+            const isEntityPage = getStructType() === "e" || (doc && doc.location && doc.location.href.toLowerCase().includes("smartview"));
 
-            if (getStructType() === "e") {
+            if (isEntityPage || getStructType() === "e") {
+                const isDeleteBtn = btnId === "deleteselectedbutton" ||
+                    labelLower === "delete" ||
+                    btnTitle === "delete" ||
+                    btnOnclick.includes("deleteselectedrecords");
+
+                if (isDeleteBtn) return;
+
                 const isThemeMode = dataElement === "mode" ||
-                                    labelLower === "light" ||
-                                    labelLower === "dark" ||
-                                    labelLower === "gradient" ||
-                                    labelLower === "system" ||
-                                    labelLower === "compact" ||
-                                    labelLower.includes("light theme") ||
-                                    labelLower.includes("dark theme") ||
-                                    labelLower.includes("gradient theme") ||
-                                    dataTarget.includes("lighttheme") ||
-                                    dataTarget.includes("blacktheme") ||
-                                    dataTarget.includes("gradtheme") ||
-                                    dataTarget.includes("compacttheme") ||
-                                    btnId.includes("theme_mode");
+                    labelLower === "light" ||
+                    labelLower === "dark" ||
+                    labelLower === "gradient" ||
+                    labelLower === "system" ||
+                    labelLower === "compact" ||
+                    labelLower.includes("light theme") ||
+                    labelLower.includes("dark theme") ||
+                    labelLower.includes("gradient theme") ||
+                    dataTarget.includes("lighttheme") ||
+                    dataTarget.includes("blacktheme") ||
+                    dataTarget.includes("gradtheme") ||
+                    dataTarget.includes("compacttheme") ||
+                    btnId.includes("theme_mode");
 
                 if (isThemeMode) return;
             }
@@ -12673,16 +12937,7 @@
     function loadFavorites() {
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
-        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
-        try {
-            const localData = JSON.parse(localStorage.getItem(favKey)) || [];
-            commandFavorites = localData.map(fav =>
-                typeof fav === 'string' ? { commandText: fav, targetURL: "" } : fav
-            );
-
-        } catch (ex) {
-            commandFavorites = [];
-        }
+        commandFavorites = AxiFavoritesManager.loadLocalFavorites(appUrl, window.mainUserName);
 
         renderFavoritesUI();
 
@@ -12711,8 +12966,7 @@
                             targetUrl: item.targetUrl || item.targetURL || item.targeturl,
                             createdOn: item.createdOn
                         }));
-                        console.log("favKey");
-                        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                        AxiFavoritesManager.saveLocalFavorites(appUrl, window.mainUserName, commandFavorites);
                         renderFavoritesUI();
                     }
                 })
@@ -12735,29 +12989,13 @@
     function toggleFavorite(cmdText, isAdding = false) {
         loadFavorites();
         let cmdIndex;
-        const tokens = getTokens(cmdText.trim());
-
-
-        const groupKey = tokens[0];
-        const commandVerb = tokens[1];
-
-        if (groupKey?.toLowerCase() === "help" || groupKey?.toLowerCase() === "version") {
-            showToast("You cannot add this command to Favorites!");
-            return;
-        }
-
-        if (groupKey?.toLowerCase() === "run") {
-            showToast("You cannot add 'run' commands to favorites");
-            return;
-        }
-
-        if (commandVerb?.toLowerCase() === "keyfield") {
+        if (!AxiFavoritesManager.isFavAllowed(cmdText)) {
             showToast("You cannot add this command to Favorites!");
             return;
         }
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
-        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
+        const favKey = AxiFavoritesManager.getStorageKey(appUrl, window.mainUserName);
 
         if (isAdding) {
             cmdIndex = commandFavorites.findIndex(fav => fav?.originalCommandText?.toLowerCase() === cmdText.toLowerCase());
@@ -12778,7 +13016,8 @@
         }
 
         if (isAdding) {
-            if (isDuplicateFavorite(cmdText)) {
+            const targetUrl = commandRoute?.targetUrl || "";
+            if (targetUrl && isDuplicateFavorite(targetUrl)) {
                 showToast("This command is already in your Favorites.");
                 return;
             }
@@ -13017,7 +13256,6 @@
         }
 
         const cmdText = favObj?.originalCommandText || favObj?.originalcommandtext || favObj?.commandText || favObj?.commandtext || "";
-        input.value = cmdText + " ";
         const tokens = getTokens(cmdText);
 
         const accessPermissions = getAccessPermissions();
@@ -13066,8 +13304,6 @@
                 }
             }
         }
-
-        axiClearBtn.style.display = "flex";
 
         if (favObj.targetUrl && favObj.targetUrl.trim() !== "" && !favObj.targetUrl.startsWith("developerstudio:")) {
             console.log("Executing Favorite directly via Target URL:", favObj.targetUrl);
@@ -13253,13 +13489,33 @@
         return cmd.trim().toLowerCase().replace(/\s+/g, " ");
     }
 
-    function isDuplicateFavorite(cmd) {
-        if (!cmd) return false;
-        const normalizedNew = normalizeCommandForCompare(cmd);
+    function normalizeUrlForCompare(url) {
+        if (!url) return "";
+        try {
+            return String(url).trim().toLowerCase().replace(/\/+$/, "");
+        } catch (e) {
+            return "";
+        }
+    }
+
+    function isDuplicateFavorite(targetUrl, excludeCmdText = "") {
+        if (!targetUrl) return false;
+        const normalizedTarget = normalizeUrlForCompare(targetUrl);
+        if (!normalizedTarget) return false;
+
+        const normalizedExclude = normalizeCommandForCompare(excludeCmdText);
+
         return commandFavorites.some(fav => {
-            const normalizedOrig = normalizeCommandForCompare(fav.originalCommandText);
-            const normalizedText = normalizeCommandForCompare(fav.commandText);
-            return normalizedOrig === normalizedNew || normalizedText === normalizedNew;
+            if (normalizedExclude) {
+                const favCmd = normalizeCommandForCompare(fav?.commandText);
+                const favOrig = normalizeCommandForCompare(fav?.originalCommandText);
+                if (favCmd === normalizedExclude || favOrig === normalizedExclude) {
+                    return false;
+                }
+            }
+            const favUrl = fav?.targetUrl || fav?.targetURL || fav?.targeturl || "";
+            const normalizedFavUrl = normalizeUrlForCompare(favUrl);
+            return normalizedFavUrl && normalizedFavUrl === normalizedTarget;
         });
     }
 
@@ -13310,7 +13566,7 @@
         const originalCmdText = document.getElementById("axiFavOriginalCmd").value.trim();
         const targetUrl = document.getElementById("axiFavTargetUrl").value.trim();
         const isEdit = document.getElementById("axiFavIsEdit").value === "true";
-        const favCancelBtn = document.getElementById("axiFavCancelBtn"); 
+        const favCancelBtn = document.getElementById("axiFavCancelBtn");
 
         if (!alias) {
             showToast("Favorite name cannot be empty");
@@ -13335,19 +13591,12 @@
         }
 
         if (!isEdit) {
-            if (isDuplicateFavorite(alias) || isDuplicateFavorite(originalCmdText)) {
+            if (isDuplicateFavorite(targetUrl)) {
                 showToast("This command is already in your Favorites.");
                 return;
             }
         } else {
-            const isDuplicate = commandFavorites.some(fav => {
-                if (fav.commandText.toLowerCase() === originalCmdText.toLowerCase()) return false;
-                const normalizedText = normalizeCommandForCompare(fav.commandText);
-                const normalizedOrig = normalizeCommandForCompare(fav.originalCommandText);
-                const normalizedAlias = normalizeCommandForCompare(alias);
-                return normalizedText === normalizedAlias || normalizedOrig === normalizedAlias;
-            });
-            if (isDuplicate) {
+            if (isDuplicateFavorite(targetUrl, originalCmdText)) {
                 showToast("This command is already in your Favorites.");
                 return;
             }
@@ -13355,11 +13604,11 @@
 
         // Start loading
         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", true);
-        favCancelBtn.disabled = true; 
+        favCancelBtn.disabled = true;
 
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
-        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
+        const favKey = AxiFavoritesManager.getStorageKey(appUrl, window.mainUserName);
 
         if (isEdit) {
             const cmdIndex = commandFavorites.findIndex(fav => fav.commandText.toLowerCase() === originalCmdText.toLowerCase());
@@ -13379,14 +13628,14 @@
                 }
                 ).then(response => {
                     if (response?.ok) {
-                        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                        AxiFavoritesManager.saveLocalFavorites(appUrl, window.mainUserName, commandFavorites);
                         renderFavoritesUI();
                         render();
                         hideFavoriteModal();
                         showToast(`Renamed '${originalCmdText}' to '${alias}'`, 3000, true);
                     } else {
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-                        favCancelBtn.disabled = false; 
+                        favCancelBtn.disabled = false;
                         showToast("Failed to edit favourite");
                     }
                 })
@@ -13394,7 +13643,7 @@
                         console.error("Backend edit failed", error);
                         showToast("An Error occured while editing favourite");
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-                        favCancelBtn.disabled = false; 
+                        favCancelBtn.disabled = false;
 
                     });
             } else {
@@ -13435,7 +13684,7 @@
                         createdOn: favObj.createdOn
                     });
 
-                    localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                    AxiFavoritesManager.saveLocalFavorites(appUrl, window.mainUserName, commandFavorites);
                     renderFavoritesUI();
                     render();
                     hideFavoriteModal();
@@ -13446,12 +13695,12 @@
                         showToast("Axi: Failed to update favorite on backend");
                         console.error("Backend sync failed", err);
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-                        favCancelBtn.disabled = false; 
+                        favCancelBtn.disabled = false;
 
                     });
             } else {
                 setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
-                        favCancelBtn.disabled = false; 
+                favCancelBtn.disabled = false;
 
             }
         }
@@ -13500,7 +13749,7 @@
     function executeDeleteFavorite(cmdText) {
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
-        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
+        const favKey = AxiFavoritesManager.getStorageKey(appUrl, window.mainUserName);
         const deleteFavCancelBtn = document.getElementById("axiFavDeleteCancelBtn");
 
         const cmdIndex = commandFavorites.findIndex(fav =>
@@ -13513,7 +13762,7 @@
 
             // Start loading
             setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", true);
-            deleteFavCancelBtn.disabled = true; 
+            deleteFavCancelBtn.disabled = true;
 
             if (axiFavoritesUrl) {
                 fetch(`${axiFavoritesUrl}?appname=${appname}`, {
@@ -13532,14 +13781,14 @@
                         commandFavorites.splice(cmdIndex, 1);
                         showToast(`Removed '${removedFav.commandText}' from Favorites`);
 
-                        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                        AxiFavoritesManager.saveLocalFavorites(appUrl, window.mainUserName, commandFavorites);
                         renderFavoritesUI();
                         render();
 
                         hideDeleteFavoriteModal();
                     } else {
                         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
-            deleteFavCancelBtn.disabled = false; 
+                        deleteFavCancelBtn.disabled = false;
 
                         showToast("Failed to delete favorite on backend");
                     }
@@ -13547,13 +13796,13 @@
                     .catch(err => {
                         console.error("Axi: Failed to delete on backend", err);
                         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
-            deleteFavCancelBtn.disabled = false; 
+                        deleteFavCancelBtn.disabled = false;
 
                         showToast("Error deleting favorite");
                     });
             } else {
                 setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
-            deleteFavCancelBtn.disabled = false; 
+                deleteFavCancelBtn.disabled = false;
 
                 showToast("Backend API URL is not configured. Cannot delete.");
             }
@@ -13655,8 +13904,8 @@
     }
 
     function startWalkthrough() {
-        render(); 
-        renderFavoritesUI(); 
+        render();
+        renderFavoritesUI();
         if (typeof introJs !== "undefined") {
             injectTourStyles();
             runTour();
@@ -13835,7 +14084,7 @@
         const oldVal = input.value;
         input.value = "Help";
         input.readOnly = true;
-        
+
         const tour = introJs();
         tour.setOptions({
             steps: [
@@ -13914,7 +14163,7 @@
                     if (tour) {
                         tour.refresh();
                     }
-                } catch (e) {}
+                } catch (e) { }
             }, 100);
         };
         window.addEventListener("resize", handleResize);

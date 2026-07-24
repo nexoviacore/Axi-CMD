@@ -2167,7 +2167,7 @@ function ShowDialog(title, message, messageType, messageVars, functionality, hol
             } else {
                 shMessage += '<div class="alert agc-alert-wrapper alert-success agc-alert-success">';
                 if (hold == true || hold == "True")
-                    shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="close"  onclick="HideDialog();">&times;</a>';
+                    shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="Close"  onclick="HideDialog();">&times;</a>';
                 shMessage += '<span class="fa fa-check agc-alert-icon-wrapper"></span>';
             }
             break;
@@ -2180,7 +2180,7 @@ function ShowDialog(title, message, messageType, messageVars, functionality, hol
             }
             shMessage += '<div class="alert agc-alert-wrapper alert-warning agc-alert-warning">';
             if (hold == true || hold == "True")
-                shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="close"  onclick="HideDialog();">&times;</a>';
+                shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="Close"  onclick="HideDialog();">&times;</a>';
             shMessage += '<span class="fa fa-exclamation-triangle agc-alert-icon-wrapper"></span>';
             break;
         default:
@@ -2193,7 +2193,7 @@ function ShowDialog(title, message, messageType, messageVars, functionality, hol
                 });
             }
             shMessage += '<div class="alert agc-alert-wrapper alert-danger agc-alert-error">';
-            shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="close"  onclick="HideDialog();">&times;</a>';
+            shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="Close"  onclick="HideDialog();">&times;</a>';
             shMessage += '<span class="fa fa-remove agc-alert-icon-wrapper"></span>';
             if (hold == undefined) {
                 hold = true;
@@ -2201,7 +2201,7 @@ function ShowDialog(title, message, messageType, messageVars, functionality, hol
             break;
         case "info":
             shMessage += '<div class="alert agc-alert-wrapper alert-info agc-alert-info">';
-            shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="close"  onclick="HideDialog();">&times;</a>';
+            shMessage += '<a href="javascript:void(0)" id="btnMsgClose" class="close agc-close-btn" data-dismiss="alert" aria-label="Close"  onclick="HideDialog();">&times;</a>';
             shMessage += '<span class="fa fa-info agc-alert-icon-wrapper"></span>';
             break;
     }
@@ -2270,6 +2270,14 @@ function ShowDialog(title, message, messageType, messageVars, functionality, hol
             }
         }
         );
+        setTimeout(function () {
+            setTimeout(function () {
+            $(".toast-close-button").attr({
+                "aria-label": "Close",
+                "title": "Close"
+            });
+            }, 0);
+        }, 100);
         return;
     } catch (ex) { }
     $j("body").append(shMessage);
@@ -3987,7 +3995,7 @@ function tsddlRefreshSelect() {
 
         if (tmpSelText != "") {
             let appSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-            callParentNew("clearKeysByFormat(tstDDFVal♠" + parent.transid + "♦" + axpRefSelectID + "♦♣♦" + appSUrl + "♥)", "function");
+            callParentNew("clearKeysByFormat(tstDDFVal♠" + parent.proj + "♦" + parent.transid + "♦" + axpRefSelectID + "♦♣♦" + appSUrl + "♥)", "function");
             var tmpSelFld = $j("#" + tmpRefSelId, window.parent.document);
 
             if (tmpSelFld.length > 0) {

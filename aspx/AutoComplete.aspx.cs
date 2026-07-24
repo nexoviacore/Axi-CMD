@@ -890,7 +890,9 @@ public partial class aspx_AutoComplete : System.Web.UI.Page
                         }
                     }
                 }
-                if (selFildValues.Count > 0 && (selFildValues.IndexOf(e.Row.Cells[0].Text) > -1 || selFildValues.IndexOf(e.Row.Cells[1].Text) > -1))
+                string cell0 = HttpUtility.HtmlDecode(e.Row.Cells[0].Text);
+                string cell1 = HttpUtility.HtmlDecode(e.Row.Cells[1].Text);
+                if (selFildValues.Count > 0 && (selFildValues.IndexOf(cell0) > -1 || selFildValues.IndexOf(cell1) > -1))
                 {
                     e.Row.CssClass = "tableStripedFix bg-secondary";
                 }
@@ -919,7 +921,7 @@ public partial class aspx_AutoComplete : System.Web.UI.Page
                         }
                         if (e.Row.Cells[m].Text != string.Empty && e.Row.Cells[m].Text.EndsWith("*"))
                         {
-                            e.Row.Cells[m].Text = e.Row.Cells[m].Text.Remove(e.Row.Cells[m].Text.ToString().Length-1);
+                            e.Row.Cells[m].Text = e.Row.Cells[m].Text.Remove(e.Row.Cells[m].Text.ToString().Length - 1);
                             e.Row.Cells[m].Text = "<nobr class=\"required\">" + e.Row.Cells[m].Text + "</nobr>";
                         }
                         else

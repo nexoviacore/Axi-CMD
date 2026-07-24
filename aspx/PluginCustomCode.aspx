@@ -94,6 +94,12 @@
                                                     <span class="menu-title">Add HTML Plugins</span>
                                                 </a>
                                             </div>
+                                            <div class="menu-item px-3 my-0">
+                                                <a href="#" class="menu-link px-3 py-2" data-target="report" onclick="_customPlugins.loadAddFilesFields('landingpagehtmltemplates')">
+                                                    <span class="material-icons material-icons-style material-icons-2">description</span>
+                                                    <span class="menu-title">Add Landing Page HTML Templates</span>
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -199,25 +205,22 @@
                                             <!-- Tabs -->
                                             <ul class="nav nav-tabs nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-5 fw-bold dv_EntityContainer" id="fileManagerTabs" role="tablist">
                                                 <li class="nav-item" data-bs-toggle="tab" data-bs-target="#files"
-                                                         role="tab" aria-controls="files" aria-selected="true">
+                                                    role="tab" aria-controls="files" aria-selected="true">
                                                     <a class="nav-link active" id="files-tab" data-bs-toggle="tab" data-bs-target="#files"
-                                                         role="tab" aria-controls="files" aria-selected="true">
-                                                        Files
+                                                        role="tab" aria-controls="files" aria-selected="true">Files
                                                     </a>
                                                 </li>
 
                                                 <li class="nav-item" data-bs-toggle="tab" data-bs-target="#new-folder"
-                                                         role="tab" aria-controls="new-folder" aria-selected="false">
+                                                    role="tab" aria-controls="new-folder" aria-selected="false">
                                                     <a class="nav-link" id="new-folder-tab" data-bs-toggle="tab" data-bs-target="#new-folder"
-                                                         role="tab" aria-controls="new-folder" aria-selected="false">
-                                                        Create New Folder
+                                                        role="tab" aria-controls="new-folder" aria-selected="false">Create New Folder
                                                     </a>
                                                 </li>
                                                 <li class="nav-item" data-bs-toggle="tab" data-bs-target="#upload"
-                                                        role="tab" aria-controls="upload" aria-selected="false">
+                                                    role="tab" aria-controls="upload" aria-selected="false">
                                                     <a class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload"
-                                                        role="tab" aria-controls="upload" aria-selected="false">
-                                                        Upload File
+                                                        role="tab" aria-controls="upload" aria-selected="false">Upload File
                                                     </a>
                                                 </li>
                                             </ul>
@@ -377,8 +380,8 @@
     <script type="text/javascript" src="../ThirdParty/codemirror/addon/search/match-highlighter.js"></script>
     <script type="text/javascript" src="../ThirdParty/codemirror/addon/search/jump-to-line.js"></script>
 
-    <script src="../js/Entity-common.min.js?v=17"></script>
-    <script type="text/javascript" src="../Js/PluginCustomCode.min.js?v=5"></script>
+    <script src="../js/Entity-common.min.js?v=18"></script>
+    <script type="text/javascript" src="../Js/PluginCustomCode.min.js?v=6"></script>
 
 
 </body>

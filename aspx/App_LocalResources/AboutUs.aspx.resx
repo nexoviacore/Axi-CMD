@@ -136,7 +136,7 @@
     <value>Version:</value>
   </data>
   <data name="lblVer.Text" xml:space="preserve">
-    <value>Version</value>
+    <value>Version:</value>
   </data>
   <data name="lblappsrvr.Text" xml:space="preserve">
     <value>Application Server:</value>

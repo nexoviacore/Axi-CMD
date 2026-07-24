@@ -491,8 +491,8 @@
     </asp:PlaceHolder>
 
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
-    <script src="../Js/helper.min.js?v=175" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
+    <script src="../Js/helper.min.js?v=177" type="text/javascript"></script>
     <script src="../js/configurationStudio.min.js?v=11" type="text/javascript"></script>
     <script type="text/javascript">
         $(callParentNew("appBackBtn", "class")).hide();

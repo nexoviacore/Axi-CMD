@@ -90,11 +90,11 @@
     <script src="../Js/noConflict.min.js?v=1" type="text/javascript"></script>
     <%--custom alerts start--%>
     <link href="../Css/animate.min.css" rel="stylesheet" />
-    <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
+    <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <%--custom alerts end--%>
     <script src="../Js/AxManager.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/gen.min.js?v=14" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
 
 </head>
 <body dir='<%=direction%>'>

@@ -119,27 +119,31 @@ BEGIN
     WHERE tstruct = ptransid
       AND LOWER(fname) = LOWER(pkeyfield);
 
-    v_selectedfld_normalized := 'F';
-    v_selectedfld_srctbl := NULL;
-    v_selectedfld_srcfld := NULL;
-    FOR rec IN (
+    BEGIN
+
         SELECT srckey,
-               LOWER(srctf) AS srctf,
-               LOWER(srcfld) AS srcfld
+               LOWER(srctf),
+               LOWER(srcfld)
+        INTO v_selectedfld_normalized,
+             v_selectedfld_srctbl,
+             v_selectedfld_srcfld
         FROM axpflds
         WHERE tstruct = ptransid
-          AND LOWER(fname) = LOWER(pselectedfield)
-    ) LOOP
-        v_selectedfld_normalized := rec.srckey;
-        v_selectedfld_srctbl := rec.srctf;
-        v_selectedfld_srcfld := rec.srcfld;
-    END LOOP;
+          AND LOWER(fname) = LOWER(pselectedfield);
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            v_selectedfld_normalized := 'F';
+            v_selectedfld_srctbl := NULL;
+            v_selectedfld_srcfld := NULL;
+    END;
 
     IF pdimension = 'T' THEN
 
-        v_dimension_filter := NULL;
-        FOR rec IN (
+        BEGIN
+
             SELECT filtercnd
+            INTO v_dimension_filter
             FROM TABLE(
                 fn_permissions_getpermission(
                     'axi',
@@ -149,35 +153,41 @@ BEGIN
                     pglobalvars
                 )
             )
-            WHERE ROWNUM = 1
-        ) LOOP
-            v_dimension_filter := rec.filtercnd;
-        END LOOP;
+            WHERE ROWNUM = 1;
 
-        IF LENGTH(v_dimension_filter) > 2 THEN
+            IF LENGTH(v_dimension_filter) > 2 THEN
 
-            v_dimension_filter :=
-                ' AND ' ||
-                REPLACE(
-                    v_dimension_filter,
-                    '{primarytable.}',
-                    'p.'
-                );
+                v_dimension_filter :=
+                    ' AND ' ||
+                    REPLACE(
+                        v_dimension_filter,
+                        '{primarytable.}',
+                        'p.'
+                    );
 
-        END IF;
+            END IF;
+
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                v_dimension_filter := NULL;
+        END;
 
     END IF;
 
     IF ppermission = 'T' THEN
 
-        v_viewctrl := '0';
-        v_fullcontrol := 'T';
-        FOR rec IN (
-            SELECT LOWER(view_includedc || view_includeflds) AS inc,
-                   LOWER(view_excludedc || view_excludeflds) AS exc,
+        BEGIN
+
+            SELECT LOWER(view_includedc || view_includeflds),
+                   LOWER(view_excludedc || view_excludeflds),
                    viewctrl,
                    editctrl,
                    fullcontrol
+            INTO v_includedcomps,
+                 v_excludedcomps,
+                 v_viewctrl,
+                 v_editctrl,
+                 v_fullcontrol
             FROM TABLE(
                 fn_permissions_getpermission(
                     'axi',
@@ -187,14 +197,13 @@ BEGIN
                     pglobalvars
                 )
             )
-            WHERE ROWNUM = 1
-        ) LOOP
-            v_includedcomps := rec.inc;
-            v_excludedcomps := rec.exc;
-            v_viewctrl      := rec.viewctrl;
-            v_editctrl      := rec.editctrl;
-            v_fullcontrol   := rec.fullcontrol;
-        END LOOP;
+            WHERE ROWNUM = 1;
+
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                v_viewctrl := '0';
+                v_fullcontrol := 'T';
+        END;
 
         IF v_fullcontrol = 'T'
            OR v_viewctrl = '0' THEN
@@ -210,8 +219,9 @@ BEGIN
                 || ptransid || ''' '
                 || 'AND dcname = ''dc1'' '
                 || 'AND hidden = ''F'' '
-                || 'AND savevalue = ''T''';
-
+                || 'AND savevalue = ''T'''
+                || 'AND datatype not in(''t'',''i'')'
+    || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
         ELSIF NVL(v_fullcontrol,'F') = 'F'
               AND v_viewctrl = '1' THEN
 
@@ -228,9 +238,9 @@ BEGIN
                 || 'AND hidden = ''F'' '
                 || 'AND savevalue = ''T'' '
                 || 'AND LOWER(fname) IN ('''
-                || REPLACE(v_includedcomps, ',', ''',''')
-                || ''')';
-
+                || REPLACE(v_includedcomps, ',', ''',''')|| ''')'
+                || 'AND datatype not in(''t'',''i'')'
+    || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
         ELSIF NVL(v_fullcontrol,'F') = 'F'
               AND v_viewctrl = '2' THEN
 
@@ -247,9 +257,9 @@ BEGIN
                 || 'AND hidden = ''F'' '
                 || 'AND savevalue = ''T'' '
                 || 'AND LOWER(fname) NOT IN ('''
-                || REPLACE(v_excludedcomps, ',', ''',''')
-                || ''')';
-
+                || REPLACE(v_excludedcomps, ',', ''',''')|| ''')'
+                || 'AND datatype not in(''t'',''i'')'
+    || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
         END IF;
 
     ELSE
@@ -261,11 +271,12 @@ BEGIN
             || 'caption, '
             || '''t'' isfield '
             || 'FROM axpflds '
-            || 'WHERE tstruct = '''
-            || ptransid || ''' '
+            || 'WHERE tstruct = '''||ptransid||''''
             || 'AND dcname = ''dc1'' '
             || 'AND hidden = ''F'' '
-            || 'AND savevalue = ''T''';
+            || 'AND savevalue = ''T'''
+   || 'AND datatype not in(''t'',''i'')'
+   || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
 
     END IF;
 

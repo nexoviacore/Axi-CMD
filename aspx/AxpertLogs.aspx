@@ -92,7 +92,7 @@
     <link href="../Css/thirdparty/jquery-ui/1.12.1/jquery-ui.min.css" rel="stylesheet" />
     <%--custom alerts start--%>
     <link href="../Css/animate.min.css" rel="stylesheet" />
-    <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
+    <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <script src="../ThirdParty/DataTables-1.10.13/media/js/jquery.dataTables.min.js"></script>
     <%--custom alerts end--%>
 
@@ -105,7 +105,7 @@
     <link href="../Css/Config_style.min.css?v=16" rel="stylesheet" type="text/css" />
     <link href="../App_Themes/Gray/Stylesheet.min.css?v=23" rel="stylesheet" />
 
-    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
     <script src="../Js/AxpertLogs.min.js?v=10" type="text/javascript"></script>
     <link href="../ThirdParty/Linearicons/Font/library/linearIcons.css" rel="stylesheet" />
 

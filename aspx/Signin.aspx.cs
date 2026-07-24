@@ -142,7 +142,24 @@ public partial class Signin : System.Web.UI.Page
             multipleAccessCode = "true";
         else
             multipleAccessCode = "false";
-
+        if (Session["CaptchaEnabled"] != null && Session["CaptchaEnabled"].ToString() == "true")
+        {
+            pnlCaptcha.Visible = Convert.ToBoolean(Session["CaptchaEnabled"].ToString());
+            DynamicCaptcha.CodeLength = Convert.ToInt32(Session["CaptchaLength"].ToString());
+            DynamicCaptcha.CodeStyle = (BotDetect.CodeStyle)Enum.Parse(typeof(BotDetect.CodeStyle), Session["CaptchaStyle"].ToString(), true);
+            Session["captchaenabledFlag"] = "true";
+            Session.Remove("CaptchaEnabled");
+            Session.Remove("CaptchaLength");
+            Session.Remove("CaptchaStyle");
+        }
+        else if (!IsPostBack || Session["captchaenabledFlag"] == null || Session["captchaenabledFlag"].ToString() == "false")
+        {
+            Session["captchaenabledFlag"] = "false";
+            pnlCaptcha.Visible = false;
+            Session.Remove("CaptchaEnabled");
+            Session.Remove("CaptchaLength");
+            Session.Remove("CaptchaStyle");
+        }
 
         if (IsPostBack)
         {
@@ -376,6 +393,7 @@ public partial class Signin : System.Web.UI.Page
                     hdnAxProjs.Value = proj;
                     selectProj.Style.Add("display", "none");
                     axSelectProj.Value = proj;
+                    EnableCaptcha(proj);
                 }
                 else
                 {
@@ -399,6 +417,7 @@ public partial class Signin : System.Web.UI.Page
                         GetWebSiteProjectDetails(dProj);
                         util.GetAxIniFileKeys(dProj);
                         hdnKeepMeSigninFlag.Value = util.GetConfigAttrValue(dProj, "AxStaySignIn");
+                        EnableCaptcha(dProj);
                     }
                     else
                         GetProjectDetails();
@@ -594,6 +613,45 @@ public partial class Signin : System.Web.UI.Page
         AddCustomLinks();
     }
 
+    protected void EnableCaptcha(string _proj)
+    {
+        try
+        {
+            if (Session["captchaenabledFlag"] != null && Session["captchaenabledFlag"].ToString() == "false")
+            {
+                util.GetAxIniFileKeys(_proj);
+                string captcha = util.GetAllSettings(_proj, Constants.AXPCAPTCHA_CONN_KEY);
+                if (captcha != "" && captcha != "nooptions")
+                {
+                    JObject captchaJson = JObject.Parse(captcha);
+                    if (captchaJson["CaptchaEnabled"] != null && captchaJson["CaptchaEnabled"].ToString() == "true")
+                    {
+                        HttpContext.Current.Session["captchaenabledFlag"] = "true";
+                        pnlCaptcha.Visible = true;
+                        DynamicCaptcha.CodeLength = Convert.ToInt32(captchaJson["CaptchaLength"].ToString());
+                        DynamicCaptcha.CodeStyle = (BotDetect.CodeStyle)Enum.Parse(typeof(BotDetect.CodeStyle), captchaJson["CaptchaStyle"].ToString(), true);
+                    }
+                    else
+                    {
+                        pnlCaptcha.Visible = false;
+                        HttpContext.Current.Session["captchaenabledFlag"] = "false";
+                        HttpContext.Current.Session.Remove("CaptchaEnabled");
+                        HttpContext.Current.Session.Remove("CaptchaLength");
+                        HttpContext.Current.Session.Remove("CaptchaStyle");
+                    }
+                }
+                else
+                {
+                    pnlCaptcha.Visible = false;
+                    HttpContext.Current.Session["captchaenabledFlag"] = "false";
+                    HttpContext.Current.Session.Remove("CaptchaEnabled");
+                    HttpContext.Current.Session.Remove("CaptchaLength");
+                    HttpContext.Current.Session.Remove("CaptchaStyle");
+                }
+            }
+        }
+        catch (Exception ex) { }
+    }
     public string ConvertXmlPublicKeyToPem(string xml)
     {
         var rsa = new RSACryptoServiceProvider();
@@ -1076,6 +1134,18 @@ public partial class Signin : System.Web.UI.Page
                 catch (ThreadAbortException)
                 {
                     ​​Thread.ResetAbort();
+                }
+            }
+            else
+            {
+                string _tProj = axProjs;
+                _tProj = _tProj.Replace("Select Project,", "");
+                if (_tProj != "" && _tProj.IndexOf(',') == -1)
+                {
+                    GetWebSiteProjectDetails(_tProj);
+                    util.GetAxIniFileKeys(_tProj);
+                    hdnKeepMeSigninFlag.Value = util.GetConfigAttrValue(_tProj, "AxStaySignIn");
+                    EnableCaptcha(_tProj);
                 }
             }
         }
@@ -1870,15 +1940,15 @@ public partial class Signin : System.Web.UI.Page
                     panelUser.Visible = false;
                     StringBuilder sb = new StringBuilder();
                     sb.Append("<div class=\"control-group\">");
-                    sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><asp:Label ID=\"lblotp\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\" meta:resourcekey=\"lblotp\">Enter OTP</asp:Label></div><input id=\"axOTPpwd\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"1\" type=\"text\" autocomplete=\"off\" placeholder=\"\" maxlength=\"" + axOTPAuthCahrs + "\" name=\"axOTPpwd\" title=\"Enter OTP\" required /></div></div>");
-                    sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><asp:Label ID=\"lblotpexpiry\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\"></asp:Label></div></div></div>");
+                    sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><label ID=\"lblotp\" for=\"axOTPpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\">Enter OTP</label></div><input id=\"axOTPpwd\" aria-describedby=\"lblotpexpiry\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"0\" type=\"text\" autocomplete=\"off\" placeholder=\"\" maxlength=\"" + axOTPAuthCahrs + "\" name=\"axOTPpwd\" aria-describedby=\"lblotpexpiry\" title=\"Enter OTP\" required /></div></div>");
+                    sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><label ID=\"lblotpexpiry\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\"></label></div></div></div>");
 
                     if (staySignInOtp == "true")
                     {
-                        sb.Append("<div class=\"control-group\"><div class=\"agform form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4\" id=\"axstaysignin\" runat=\"server\" visible=\"false\"><div class=\"controls my-2\"><div class=\"input-icon left\"><input type=\"checkbox\" id=\"signedin\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-check-input h-25px w-45px\" tabindex=\"5\" title=\"Keep me sign in?\" /><asp:Label runat=\"server\" ID=\"lblstaysin\" meta:resourcekey=\"lblstaysin\" class=\"form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0\" for=\"signedin\">Keep me sign in?</asp:Label></div></div></div></div>");
+                        sb.Append("<div class=\"control-group\"><div class=\"agform form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4\" id=\"axstaysignin\" runat=\"server\" visible=\"false\"><div class=\"controls my-2\"><div class=\"input-icon left\"><input type=\"checkbox\" id=\"signedin\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-check-input h-25px w-45px\" tabindex=\"0\" title=\"Keep me sign in?\" /><asp:Label runat=\"server\" ID=\"lblstaysin\" meta:resourcekey=\"lblstaysin\" class=\"form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0\" for=\"signedin\">Keep me sign in?</asp:Label></div></div></div></div>");
                     }
 
-                    sb.Append("<div class=\"form-actions d-flex flex-row flex-column-fluid\"><div class=\"d-flex flex-row-fluid justify-content-between\"><a href=\"javascript:void(0)\" tabindex=\"4\" id=\"btnBackLink\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4\" onclick=\"backToMainDiv()\"><span class=\"material-icons material-icons-style\">chevron_left</span>Back</a><a href=\"javascript:void(0)\" tabindex=\"3\" id=\"btnResendotp\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4 d-none\" onclick=\"btnResendOTP();\">Resend OTP</a><input type=\"button\" value=\"Sign In\" title=\"Sign In\" TabIndex=\"2\" ID=\"btnOtpAuth\" data-type=\"otp\" class=\"btn btn-lg btn-primary mb-5 w-50\" onclick=\"return chkoptauth();\" /></div></div>");
+                    sb.Append("<div class=\"form-actions d-flex flex-row flex-column-fluid\"><div class=\"d-flex flex-row-fluid justify-content-between\"><a href=\"javascript:void(0)\" tabindex=\"0\" id=\"btnBackLink\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4\" onclick=\"backToMainDiv()\"><span class=\"material-icons material-icons-style\">chevron_left</span>Back</a><a href=\"javascript:void(0)\" tabindex=\"0\" id=\"btnResendotp\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4 d-none\" onclick=\"btnResendOTP();\">Resend OTP</a><input type=\"button\" value=\"Sign In\" title=\"Sign In\" TabIndex=\"0\" ID=\"btnOtpAuth\" data-type=\"otp\" class=\"btn btn-lg btn-primary mb-5 w-50\" onclick=\"return chkoptauth();\" /></div></div>");
                     sb.Append("</div>");
                     panelSignin.Visible = true;
                     panelUser.Visible = false;
@@ -1932,15 +2002,15 @@ public partial class Signin : System.Web.UI.Page
                 panelUser.Visible = false;
                 StringBuilder sb = new StringBuilder();
                 sb.Append("<div class=\"control-group\">");
-                sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><asp:Label ID=\"lblotp\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\" meta:resourcekey=\"lblotp\">Enter OTP</asp:Label></div><input id=\"axOTPpwd\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"1\" type=\"text\" autocomplete=\"off\" placeholder=\"\" maxlength=\"" + axOTPAuthCahrs + "\" name=\"axOTPpwd\" title=\"Enter OTP\" required /></div></div>");
-                sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><asp:Label ID=\"lblotpexpiry\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\"></asp:Label></div></div></div>");
+                sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><label ID=\"lblotp\" for=\"axOTPpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\">Enter OTP</label></div><input id=\"axOTPpwd\" aria-describedby=\"lblotpexpiry\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"0\" type=\"text\" autocomplete=\"off\" placeholder=\"\" maxlength=\"" + axOTPAuthCahrs + "\" name=\"axOTPpwd\" aria-describedby=\"lblotpexpiry\" title=\"Enter OTP\" required /></div></div>");
+                sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><label ID=\"lblotpexpiry\" class=\"form-label fw-boldest text-dark fs-6 mb-0\"></label></div></div></div>");
 
                 if (staySignInOtp == "true")
                 {
-                    sb.Append("<div class=\"control-group\"><div class=\"agform form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4\" id=\"axstaysignin\" runat=\"server\" visible=\"false\"><div class=\"controls my-2\"><div class=\"input-icon left\"><input type=\"checkbox\" id=\"signedin\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-check-input h-25px w-45px\" tabindex=\"5\" title=\"Keep me sign in?\" /><asp:Label runat=\"server\" ID=\"lblstaysin\" meta:resourcekey=\"lblstaysin\" class=\"form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0\" for=\"signedin\">Keep me sign in?</asp:Label></div></div></div></div>");
+                    sb.Append("<div class=\"control-group\"><div class=\"agform form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4\" id=\"axstaysignin\" runat=\"server\" visible=\"false\"><div class=\"controls my-2\"><div class=\"input-icon left\"><input type=\"checkbox\" id=\"signedin\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-check-input h-25px w-45px\" tabindex=\"0\" title=\"Keep me sign in?\" /><asp:Label runat=\"server\" ID=\"lblstaysin\" meta:resourcekey=\"lblstaysin\" class=\"form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0\" for=\"signedin\">Keep me sign in?</asp:Label></div></div></div></div>");
                 }
 
-                sb.Append("<div class=\"form-actions d-flex flex-row flex-column-fluid\"><div class=\"d-flex flex-row-fluid justify-content-between\"><a href=\"javascript:void(0)\" tabindex=\"4\" id=\"btnBackLink\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4\" onclick=\"backToMainDiv()\"><span class=\"material-icons material-icons-style\">chevron_left</span>Back</a><a href=\"javascript:void(0)\" tabindex=\"3\" id=\"btnResendotp\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4 d-none\" onclick=\"btnResendOTP();\">Resend OTP</a><input type=\"button\" value=\"Sign In\" title=\"Sign In\" TabIndex=\"2\" ID=\"btnOtpAuth\" data-type=\"otp\" class=\"btn btn-lg btn-primary mb-5 w-50\" onclick=\"return chkoptauth();\" /></div></div>");
+                sb.Append("<div class=\"form-actions d-flex flex-row flex-column-fluid\"><div class=\"d-flex flex-row-fluid justify-content-between\"><a href=\"javascript:void(0)\" tabindex=\"0\" id=\"btnBackLink\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4\" onclick=\"backToMainDiv()\"><span class=\"material-icons material-icons-style\">chevron_left</span>Back</a><a href=\"javascript:void(0)\" tabindex=\"0\" id=\"btnResendotp\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4 d-none\" onclick=\"btnResendOTP();\">Resend OTP</a><input type=\"button\" value=\"Sign In\" title=\"Sign In\" TabIndex=\"0\" ID=\"btnOtpAuth\" data-type=\"otp\" class=\"btn btn-lg btn-primary mb-5 w-50\" onclick=\"return chkoptauth();\" /></div></div>");
                 sb.Append("</div>");
                 panelSignin.Visible = true;
                 panelUser.Visible = false;
@@ -2169,11 +2239,48 @@ public partial class Signin : System.Web.UI.Page
     public static string GetCurrLang(string name)
     {
         Util.Util utilObj = new Util.Util();
-        utilObj.GetAxIniFileKeys(name);
+        utilObj.GetAxIniFileKeys(name, "true");
         string AxStaySignIn = utilObj.GetConfigAttrValue(name, "AxStaySignIn");
         //return utilObj.GetConfigLangInfo(name);
         string uLang = utilObj.GetConfigLangInfo(name);
-        return uLang + "♣" + AxStaySignIn;
+        string isCaptchaEnabled = "false";
+        try
+        {
+            string captcha = utilObj.GetAllSettings(name, Constants.AXPCAPTCHA_CONN_KEY);
+            if (captcha != "" && captcha != "nooptions")
+            {
+                JObject captchaJson = JObject.Parse(captcha);
+                if (captchaJson["CaptchaEnabled"] != null && captchaJson["CaptchaEnabled"].ToString() == "true")
+                {
+                    isCaptchaEnabled = "true";
+                    HttpContext.Current.Session["captchaenabledFlag"] = "true";
+                    HttpContext.Current.Session["CaptchaEnabled"] = captchaJson["CaptchaEnabled"].ToString();
+                    HttpContext.Current.Session["CaptchaLength"] = captchaJson["CaptchaLength"].ToString();
+                    HttpContext.Current.Session["CaptchaStyle"] = captchaJson["CaptchaStyle"].ToString();
+                }
+                else
+                {
+                    isCaptchaEnabled = "false";
+                    HttpContext.Current.Session["captchaenabledFlag"] = "false";
+                    HttpContext.Current.Session.Remove("CaptchaEnabled");
+                    HttpContext.Current.Session.Remove("CaptchaLength");
+                    HttpContext.Current.Session.Remove("CaptchaStyle");
+                }
+            }
+            else
+            {
+                isCaptchaEnabled = "false";
+                HttpContext.Current.Session["captchaenabledFlag"] = "false";
+                HttpContext.Current.Session.Remove("CaptchaEnabled");
+                HttpContext.Current.Session.Remove("CaptchaLength");
+                HttpContext.Current.Session.Remove("CaptchaStyle");
+            }
+        }
+        catch (Exception ex)
+        {
+            isCaptchaEnabled = "false";
+        }
+        return uLang + "♣" + AxStaySignIn + "♥" + isCaptchaEnabled;
     }
 
     [WebMethod]
@@ -2669,7 +2776,8 @@ public partial class Signin : System.Web.UI.Page
 
         axOTPAuthCahrs = string.Empty;
         axOTPAuthExpiry = string.Empty;
-        if (IsPostBack && ConfigurationManager.AppSettings["enableCaptcha"] != null && ConfigurationManager.AppSettings["enableCaptcha"].ToString() == "true")
+        //if (IsPostBack && ConfigurationManager.AppSettings["enableCaptcha"] != null && ConfigurationManager.AppSettings["enableCaptcha"].ToString() == "true")
+        if (IsPostBack && Session["captchaenabledFlag"] != null && Session["captchaenabledFlag"].ToString() == "true")
         {
             allowLogin = DynamicCaptcha.Validate();
         }
@@ -2769,12 +2877,12 @@ public partial class Signin : System.Web.UI.Page
                                 {
                                     panelUser.Visible = false;
                                     StringBuilder sb = new StringBuilder();
-                                    sb.Append("<div class=\"control-group\"><div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><asp:Label ID=\"lblpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\" meta:resourcekey=\"lblpwd\">Password</asp:Label></div><input id=\"axPassword\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"1\" type=\"password\" autocomplete=\"off\" placeholder=\"\" name=\"axPassword\" title=\"Password\" required /><div class=\"fv-plugins-message-container invalid-feedback\"></div></div></div></div>");
-                                    sb.Append("<div class=\"control-group my-8 mb-12\"><a href=\"javascript:void(0)\" class=\"link-primary fs-6 fw-boldest\" tabindex=\"5\" onclick=\"OpenForgotPwdNew()\"><asp:label id=\"lblForgot\" runat=\"server\" meta:resourcekey=\"lblForgot\">Forgot password?</asp:label></a></div>");
+                                    sb.Append("<div class=\"control-group\"><div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><asp:Label ID=\"lblpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\" meta:resourcekey=\"lblpwd\">Password</asp:Label></div><input id=\"axPassword\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"0\" type=\"password\" autocomplete=\"off\" placeholder=\"\" name=\"axPassword\" title=\"Password\" required /><div class=\"fv-plugins-message-container invalid-feedback\"></div></div></div></div>");
+                                    sb.Append("<div class=\"control-group my-8 mb-12\"><a href=\"javascript:void(0)\" class=\"link-primary fs-6 fw-boldest\" tabindex=\"0\" onclick=\"OpenForgotPwdNew()\"><asp:label id=\"lblForgot\" runat=\"server\" meta:resourcekey=\"lblForgot\">Forgot password?</asp:label></a></div>");
                                     if (_keepMeSignin == "T" && AxStaySignIn == "true")
-                                        sb.Append("<div class=\"control-group\"><div class=\"agform form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4\" id=\"axstaysignin\" runat=\"server\" visible=\"false\"><div class=\"controls my-2\"><div class=\"input-icon left\"><input type=\"checkbox\" id=\"signedin\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-check-input h-25px w-45px\" tabindex=\"5\" title=\"Keep me sign in?\" /><asp:Label runat=\"server\" ID=\"lblstaysin\" meta:resourcekey=\"lblstaysin\" class=\"form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0\" for=\"signedin\">Keep me sign in?</asp:Label></div></div></div></div>");
+                                        sb.Append("<div class=\"control-group\"><div class=\"agform form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4\" id=\"axstaysignin\" runat=\"server\" visible=\"false\"><div class=\"controls my-2\"><div class=\"input-icon left\"><input type=\"checkbox\" id=\"signedin\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-check-input h-25px w-45px\" tabindex=\"0\" title=\"Keep me sign in?\" /><asp:Label runat=\"server\" ID=\"lblstaysin\" meta:resourcekey=\"lblstaysin\" class=\"form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0\" for=\"signedin\">Keep me sign in?</asp:Label></div></div></div></div>");
 
-                                    sb.Append("<div class=\"form-actions d-flex flex-row flex-column-fluid\"><div class=\"d-flex flex-row-fluid justify-content-between\"><a href=\"javascript:void(0)\" tabindex=\"4\" id=\"btnBackLink\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4\" onclick=\"backToMainDiv()\"><span class=\"material-icons material-icons-style\">chevron_left</span>Back</a><input type=\"button\" value=\"Sign In\" title=\"Sign In\" TabIndex=\"2\" ID=\"btnSubmitNew\" class=\"btn btn-lg btn-primary mb-5 w-50\" onclick=\"return chkLoginFormHiden();\" /></div></div>");
+                                    sb.Append("<div class=\"form-actions d-flex flex-row flex-column-fluid\"><div class=\"d-flex flex-row-fluid justify-content-between\"><a href=\"javascript:void(0)\" tabindex=\"0\" id=\"btnBackLink\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4\" onclick=\"backToMainDiv()\"><span class=\"material-icons material-icons-style\">chevron_left</span>Back</a><input type=\"button\" value=\"Sign In\" title=\"Sign In\" TabIndex=\"0\" ID=\"btnSubmitNew\" class=\"btn btn-lg btn-primary mb-5 w-50\" onclick=\"return chkLoginFormHiden();\" /></div></div>");
                                     panelSignin.Visible = true;
                                     panelUser.Visible = false;
                                     panelPwd.Text = sb.ToString();
@@ -2812,13 +2920,13 @@ public partial class Signin : System.Web.UI.Page
                                     {
                                         panelUser.Visible = false;
                                         StringBuilder sb = new StringBuilder();
-                                        sb.Append("<div class=\"control-group\"><div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><asp:Label ID=\"lblpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\" meta:resourcekey=\"lblpwd\">Password</asp:Label></div><input id=\"axPassword\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"1\" type=\"password\" autocomplete=\"off\" placeholder=\"\" name=\"axPassword\" title=\"Password\" required /><div class=\"fv-plugins-message-container invalid-feedback\"></div></div></div></div>");
-                                        sb.Append("<div class=\"control-group my-8 mb-12\"><a href=\"javascript:void(0)\" class=\"link-primary fs-6 fw-boldest\" tabindex=\"5\" onclick=\"OpenForgotPwdNew()\"><asp:label id=\"lblForgot\" runat=\"server\" meta:resourcekey=\"lblForgot\">Forgot password?</asp:label></a></div>");
+                                        sb.Append("<div class=\"control-group\"><div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><asp:Label ID=\"lblpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\" meta:resourcekey=\"lblpwd\">Password</asp:Label></div><input id=\"axPassword\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"0\" type=\"password\" autocomplete=\"off\" placeholder=\"\" name=\"axPassword\" title=\"Password\" required /><div class=\"fv-plugins-message-container invalid-feedback\"></div></div></div></div>");
+                                        sb.Append("<div class=\"control-group my-8 mb-12\"><a href=\"javascript:void(0)\" class=\"link-primary fs-6 fw-boldest\" tabindex=\"0\" onclick=\"OpenForgotPwdNew()\"><asp:label id=\"lblForgot\" runat=\"server\" meta:resourcekey=\"lblForgot\">Forgot password?</asp:label></a></div>");
 
                                         if (_keepMeSignin == "T" && AxStaySignIn == "true")
-                                            sb.Append("<div class=\"control-group\"><div class=\"agform form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4\" id=\"axstaysignin\" runat=\"server\" visible=\"false\"><div class=\"controls my-2\"><div class=\"input-icon left\"><input type=\"checkbox\" id=\"signedin\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-check-input h-25px w-45px\" tabindex=\"5\" title=\"Keep me sign in?\" /><asp:Label runat=\"server\" ID=\"lblstaysin\" meta:resourcekey=\"lblstaysin\" class=\"form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0\" for=\"signedin\">Keep me sign in?</asp:Label></div></div></div></div>");
+                                            sb.Append("<div class=\"control-group\"><div class=\"agform form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4\" id=\"axstaysignin\" runat=\"server\" visible=\"false\"><div class=\"controls my-2\"><div class=\"input-icon left\"><input type=\"checkbox\" id=\"signedin\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-check-input h-25px w-45px\" tabindex=\"0\" title=\"Keep me sign in?\" /><asp:Label runat=\"server\" ID=\"lblstaysin\" meta:resourcekey=\"lblstaysin\" class=\"form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0\" for=\"signedin\">Keep me sign in?</asp:Label></div></div></div></div>");
 
-                                        sb.Append("<div class=\"form-actions d-flex flex-row flex-column-fluid\"><div class=\"d-flex flex-row-fluid justify-content-between\"><a href=\"javascript:void(0)\" tabindex=\"4\" id=\"btnBackLink\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4\" onclick=\"backToMainDiv()\"><span class=\"material-icons material-icons-style\">chevron_left</span>Back</a><input type=\"button\" value=\"Sign In\" title=\"Sign In\" TabIndex=\"2\" ID=\"btnSubmitNew\" class=\"btn btn-lg btn-primary mb-5 w-50\" onclick=\"return chkLoginFormHiden();\" /></div></div>");
+                                        sb.Append("<div class=\"form-actions d-flex flex-row flex-column-fluid\"><div class=\"d-flex flex-row-fluid justify-content-between\"><a href=\"javascript:void(0)\" tabindex=\"0\" id=\"btnBackLink\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4\" onclick=\"backToMainDiv()\"><span class=\"material-icons material-icons-style\">chevron_left</span>Back</a><input type=\"button\" value=\"Sign In\" title=\"Sign In\" TabIndex=\"0\" ID=\"btnSubmitNew\" class=\"btn btn-lg btn-primary mb-5 w-50\" onclick=\"return chkLoginFormHiden();\" /></div></div>");
                                         panelSignin.Visible = true;
                                         panelUser.Visible = false;
                                         panelPwd.Text = sb.ToString();
@@ -2846,13 +2954,13 @@ public partial class Signin : System.Web.UI.Page
                                     string _keepMeSignin = _pwdotpdetails.Split('♣')[6];
                                     panelUser.Visible = false;
                                     StringBuilder sb = new StringBuilder();
-                                    sb.Append("<div class=\"control-group\"><div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><asp:Label ID=\"lblpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\" meta:resourcekey=\"lblpwd\">Password</asp:Label></div><input id=\"axPassword\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"1\" type=\"password\" autocomplete=\"off\" placeholder=\"\" name=\"axPassword\" title=\"Password\" required /><div class=\"fv-plugins-message-container invalid-feedback\"></div></div></div></div>");
-                                    sb.Append("<div class=\"control-group my-8 mb-12\"><a href=\"javascript:void(0)\" class=\"link-primary fs-6 fw-boldest\" tabindex=\"5\" onclick=\"OpenForgotPwdNew()\"><asp:label id=\"lblForgot\" runat=\"server\" meta:resourcekey=\"lblForgot\">Forgot password?</asp:label></a></div>");
+                                    sb.Append("<div class=\"control-group\"><div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><asp:Label ID=\"lblpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\" meta:resourcekey=\"lblpwd\">Password</asp:Label></div><input id=\"axPassword\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"0\" type=\"password\" autocomplete=\"off\" placeholder=\"\" name=\"axPassword\" title=\"Password\" required /><div class=\"fv-plugins-message-container invalid-feedback\"></div></div></div></div>");
+                                    sb.Append("<div class=\"control-group my-8 mb-12\"><a href=\"javascript:void(0)\" class=\"link-primary fs-6 fw-boldest\" tabindex=\"0\" onclick=\"OpenForgotPwdNew()\"><asp:label id=\"lblForgot\" runat=\"server\" meta:resourcekey=\"lblForgot\">Forgot password?</asp:label></a></div>");
 
                                     if (_keepMeSignin == "T" && AxStaySignIn == "true")
-                                        sb.Append("<div class=\"control-group\"><div class=\"agform form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4\" id=\"axstaysignin\" runat=\"server\" visible=\"false\"><div class=\"controls my-2\"><div class=\"input-icon left\"><input type=\"checkbox\" id=\"signedin\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-check-input h-25px w-45px\" tabindex=\"5\" title=\"Keep me sign in?\" /><asp:Label runat=\"server\" ID=\"lblstaysin\" meta:resourcekey=\"lblstaysin\" class=\"form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0\" for=\"signedin\">Keep me sign in?</asp:Label></div></div></div></div>");
+                                        sb.Append("<div class=\"control-group\"><div class=\"agform form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4\" id=\"axstaysignin\" runat=\"server\" visible=\"false\"><div class=\"controls my-2\"><div class=\"input-icon left\"><input type=\"checkbox\" id=\"signedin\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-check-input h-25px w-45px\" tabindex=\"0\" title=\"Keep me sign in?\" /><asp:Label runat=\"server\" ID=\"lblstaysin\" meta:resourcekey=\"lblstaysin\" class=\"form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0\" for=\"signedin\">Keep me sign in?</asp:Label></div></div></div></div>");
 
-                                    sb.Append("<div class=\"form-actions d-flex flex-row flex-column-fluid\"><div class=\"d-flex flex-row-fluid justify-content-between\"><a href=\"javascript:void(0)\" tabindex=\"4\" id=\"btnBackLink\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4\" onclick=\"backToMainDiv()\"><span class=\"material-icons material-icons-style\">chevron_left</span>Back</a><input type=\"button\" value=\"Sign In\" title=\"Sign In\" TabIndex=\"2\" ID=\"btnSubmitNew\" class=\"btn btn-lg btn-primary mb-5 w-50\" onclick=\"return chkLoginFormHiden();\" /></div></div>");
+                                    sb.Append("<div class=\"form-actions d-flex flex-row flex-column-fluid\"><div class=\"d-flex flex-row-fluid justify-content-between\"><a href=\"javascript:void(0)\" tabindex=\"0\" id=\"btnBackLink\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4\" onclick=\"backToMainDiv()\"><span class=\"material-icons material-icons-style\">chevron_left</span>Back</a><input type=\"button\" value=\"Sign In\" title=\"Sign In\" TabIndex=\"0\" ID=\"btnSubmitNew\" class=\"btn btn-lg btn-primary mb-5 w-50\" onclick=\"return chkLoginFormHiden();\" /></div></div>");
                                     panelSignin.Visible = true;
                                     panelUser.Visible = false;
                                     panelPwd.Text = sb.ToString();
@@ -2908,15 +3016,15 @@ public partial class Signin : System.Web.UI.Page
 
                             panelUser.Visible = false;
                             StringBuilder sb = new StringBuilder();
-                            sb.Append("<div class=\"control-group\"><div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><asp:Label ID=\"lblpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\" meta:resourcekey=\"lblpwd\">Password</asp:Label></div><input id=\"axPassword\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"1\" type=\"password\" autocomplete=\"off\" placeholder=\"\" name=\"axPassword\" title=\"Password\" required /><div class=\"fv-plugins-message-container invalid-feedback\"></div></div></div></div>");
-                            //sb.Append("<div class=\"hide control-group\" id=\"axLangFld\" runat=\"server\"><div class=\"fv-row my-8 mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-1\"><asp:Label ID=\"lblslctlang\" class=\"form-label fs-6 fw-boldest text-dark\" runat=\"server\" meta:resourcekey=\"lblslctlang\">Select Language</asp:Label></div><select class=\"form-select form-select-solid\" data-control=\"select2\" data-placeholder=\"Select Language\" data-allow-clear=\"true\" tabindex=\"3\" id=\"axLanguage\" name=\"axLanguage\" runat=\"server\" value=''></select><div class=\"fv-plugins-message-container invalid-feedback\"></div></div></div></div>");
+                            sb.Append("<div class=\"control-group\"><div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><asp:Label ID=\"lblpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\" meta:resourcekey=\"lblpwd\">Password</asp:Label></div><input id=\"axPassword\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"0\" type=\"password\" autocomplete=\"off\" placeholder=\"\" name=\"axPassword\" title=\"Password\" required /><div class=\"fv-plugins-message-container invalid-feedback\"></div></div></div></div>");
+                            //sb.Append("<div class=\"hide control-group\" id=\"axLangFld\" runat=\"server\"><div class=\"fv-row my-8 mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-1\"><asp:Label ID=\"lblslctlang\" class=\"form-label fs-6 fw-boldest text-dark\" runat=\"server\" meta:resourcekey=\"lblslctlang\">Select Language</asp:Label></div><select class=\"form-select form-select-solid\" data-control=\"select2\" data-placeholder=\"Select Language\" data-allow-clear=\"true\" tabindex=\"0\" id=\"axLanguage\" name=\"axLanguage\" runat=\"server\" value=''></select><div class=\"fv-plugins-message-container invalid-feedback\"></div></div></div></div>");
 
-                            sb.Append("<div class=\"control-group my-8 mb-12\"><a href=\"javascript:void(0)\" class=\"link-primary fs-6 fw-boldest\" tabindex=\"5\" onclick=\"OpenForgotPwdNew()\"><asp:label id=\"lblForgot\" runat=\"server\" meta:resourcekey=\"lblForgot\">Forgot password?</asp:label></a></div>");
+                            sb.Append("<div class=\"control-group my-8 mb-12\"><a href=\"javascript:void(0)\" class=\"link-primary fs-6 fw-boldest\" tabindex=\"0\" onclick=\"OpenForgotPwdNew()\"><asp:label id=\"lblForgot\" runat=\"server\" meta:resourcekey=\"lblForgot\">Forgot password?</asp:label></a></div>");
 
                             if (_keepMeSignin == "T" && AxStaySignIn == "true")
-                                sb.Append("<div class=\"control-group\"><div class=\"agform form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4\" id=\"axstaysignin\" runat=\"server\" visible=\"false\"><div class=\"controls my-2\"><div class=\"input-icon left\"><input type=\"checkbox\" id=\"signedin\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-check-input h-25px w-45px\" tabindex=\"5\" title=\"Keep me sign in?\" /><asp:Label runat=\"server\" ID=\"lblstaysin\" meta:resourcekey=\"lblstaysin\" class=\"form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0\" for=\"signedin\">Keep me sign in?</asp:Label></div></div></div></div>");
+                                sb.Append("<div class=\"control-group\"><div class=\"agform form-check form-switch form-check-custom form-check-solid px-1 align-self-end mb-4\" id=\"axstaysignin\" runat=\"server\" visible=\"false\"><div class=\"controls my-2\"><div class=\"input-icon left\"><input type=\"checkbox\" id=\"signedin\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-check-input h-25px w-45px\" tabindex=\"0\" title=\"Keep me sign in?\" /><asp:Label runat=\"server\" ID=\"lblstaysin\" meta:resourcekey=\"lblstaysin\" class=\"form-check-label form-label col-form-label pb-1 fw-boldest text-dark fs-6 mb-0\" for=\"signedin\">Keep me sign in?</asp:Label></div></div></div></div>");
 
-                            sb.Append("<div class=\"form-actions d-flex flex-row flex-column-fluid\"><div class=\"d-flex flex-row-fluid justify-content-between\"><a href=\"javascript:void(0)\" tabindex=\"4\" id=\"btnBackLink\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4\" onclick=\"backToMainDiv()\"><span class=\"material-icons material-icons-style\">chevron_left</span>Back</a><input type=\"button\" value=\"Sign In\" title=\"Sign In\" TabIndex=\"2\" ID=\"btnSubmitNew\" class=\"btn btn-lg btn-primary mb-5 w-50\" onclick=\"return chkLoginFormHiden();\" /></div></div>");
+                            sb.Append("<div class=\"form-actions d-flex flex-row flex-column-fluid\"><div class=\"d-flex flex-row-fluid justify-content-between\"><a href=\"javascript:void(0)\" tabindex=\"0\" id=\"btnBackLink\" class=\"text-gray-600 d-flex my-auto fs-4 mt-4\" onclick=\"backToMainDiv()\"><span class=\"material-icons material-icons-style\">chevron_left</span>Back</a><input type=\"button\" value=\"Sign In\" title=\"Sign In\" TabIndex=\"0\" ID=\"btnSubmitNew\" class=\"btn btn-lg btn-primary mb-5 w-50\" onclick=\"return chkLoginFormHiden();\" /></div></div>");
                             panelSignin.Visible = true;
                             panelUser.Visible = false;
                             panelPwd.Text = sb.ToString();

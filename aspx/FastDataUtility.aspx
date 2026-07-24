@@ -23,7 +23,7 @@
     <script src="../Js/noConflict.min.js?v=1" type="text/javascript"></script>
     <%--custom alerts start--%>
     <link href="../Css/animate.min.css" rel="stylesheet" />
-    <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
+    <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <%--custom alerts end--%>
     <script src="../Js/thirdparty/bootstrap/3.3.6/bootstrap.min.js" type="text/javascript"></script>
     <link href="../Css/globalStyles.min.css?v=36" rel="stylesheet" />
@@ -101,7 +101,7 @@
     <link href="../Css/thirdparty/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" />
     <link href="../ThirdParty/DataTables-1.10.13/media/css/jquery.dataTables.min.css" rel="stylesheet" />
 
-    <script type="text/javascript" src="../Js/common.min.js?v=164"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=165"></script>
     <script src="../Js/utility.min.js?v=23"></script>
 
     <link id="themecss" type="text/css" href="" rel="stylesheet" />

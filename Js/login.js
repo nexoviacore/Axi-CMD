@@ -488,10 +488,11 @@ $j(document).ready(function () {
     });
 
     $('#axSelectProj').on('change', function (e) {
-
-        GetProjLang();
-    }
-    )
+        if (sessionStorage.getItem("CaptchaLoaded") === "true")
+            sessionStorage.removeItem("CaptchaLoaded");
+        else
+            GetProjLang();
+    });
 
     $('#axSelectProj').css("background-color", "#e8f0fe");
 
@@ -775,6 +776,7 @@ function GetProjLangsr() {
 }
 
 function OnSuccess(response) {
+    var isCaptcha = "false";
     var result = "";
     _langSettingEnabled = "false";
     if (response.d != "") {
@@ -782,6 +784,8 @@ function OnSuccess(response) {
             showAlertDialog("error", response.d.split(":")[1]);
             return;
         }
+        isCaptcha = response.d.split('♥')[1];
+        response.d = response.d.split('♥')[0];
         result = response.d.split('♣')[0];
         $j("#hdnLangs").val(result);
         let _chklangflag = response.d.split('♣')[1];
@@ -797,7 +801,16 @@ function OnSuccess(response) {
         $j("#axLangFld").hide();
         $j("#axLangFld").addClass("hide");
     }
-
+    if (isCaptcha == "true") {
+        if (sessionStorage.getItem("CaptchaLoaded") === "true") {
+            sessionStorage.removeItem("CaptchaLoaded");
+        } else {
+            sessionStorage.setItem("CaptchaLoaded", "true");
+            location.reload();
+        }
+    } else {
+        $("#pnlCaptcha").hide();
+    }
     AddLanguages();
 }
 
@@ -1077,7 +1090,7 @@ function CheckIsUserLogged() {
                     });
                     $j("#mobDevice").val(isMobileDevice() == true ? "True" : "False");
                     $j("#duplicateUser").val("true");
-                    $j("#hbtforDupLogin").val(bst);                   
+                    $j("#hbtforDupLogin").val(bst);
                     $j("#btnSubmitUser").click();
                 }
             },
@@ -1477,7 +1490,7 @@ function loginKeepSigninUser(selectedUser) {
                         $("#hdnPuser").val(_thisEncpVal);
                         $j("#hdnLastOpenpage").val(jVal.hdnLastOpenpage);
                         /*$("#signedin").prop("checked", jVal.signedin);*/
-                        $j("#hdnKeepMeSignin").val(jVal.signedin.toString());                        
+                        $j("#hdnKeepMeSignin").val(jVal.signedin.toString());
                         $("#hdnbtforLogin").val(bst);
                         if (jVal.ssotype == "") {
                             isStaySignin = "true";
@@ -2034,7 +2047,7 @@ function SetNextExecTime(_serverprocesstime, _requestProcess_logtime) {
 }
 
 //Access Code Code
-function ShowAccessCode(localstrProj='') {
+function ShowAccessCode(localstrProj = '') {
     const panelUser = document.getElementById("panelUser");
     const selectElement = document.getElementById("axSelectProj");
     if (!panelUser || !selectElement) {

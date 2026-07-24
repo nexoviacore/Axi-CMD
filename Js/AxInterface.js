@@ -573,13 +573,13 @@ function AxAsyncGetApiData(apiNames = "", apiType = "axpert", cacheInfo = [], su
  * @references
  *      Following files are required to be referred in custom html along with AxInterface.js:
             <script src="../../Js/Jquery-2.2.2.min.js" type="text/javascript"></script>
-            <script src="../../Js/common.min.js?v=164" type="text/javascript"></script>
+            <script src="../../Js/common.min.js?v=165" type="text/javascript"></script>
             <script src="../../Js/AxInterface.min.js?v=15" type="text/javascript"></script>
             <script src="../../ThirdParty/Highcharts/highcharts.js"></script>
             <script src="../../ThirdParty/Highcharts/highcharts-3d.js"></script>
             <script src="../../ThirdParty/Highcharts/highcharts-more.js"></script>
             <script src="../../ThirdParty/Highcharts/highcharts-exporting.js"></script>
-            <script src="../../Js/high-charts-functions.min.js?v=23"></script>
+            <script src="../../Js/high-charts-functions.min.js?v=24"></script>
  */
 function AxPlotHighChartWidgets(widgetType, widgetJqObj, data, sqlmetaData, attributes = {}, enableSlick = true) {
     if (typeof $ == "undefined" || typeof Highcharts == "undefined" || typeof callParentNew == "undefined") {
@@ -738,7 +738,7 @@ function customizeData(plotName) {
  * @Files
  *  Following files are required to be referred in custom html along with AxInterface.js:
  *      <script src="../../Js/Jquery-2.2.2.min.js" type="text/javascript"></script>
- *      <script src="../../Js/common.min.js?v=164" type="text/javascript"></script>
+ *      <script src="../../Js/common.min.js?v=165" type="text/javascript"></script>
  * 
  */
 function AxLoadUrl(url) {
@@ -763,7 +763,7 @@ function AxLoadUrl(url) {
  *  Following files are required to be referred in custom html along with AxInterface.js:
  *      <script src="../../ThirdParty/lodash.min.js" type="text/javascript"></script>
  *      <script src="../../ThirdParty/deepdash.min.js" type="text/javascript"></script>
- *      <script src="../../Js/common.min.js?v=164" type="text/javascript"></script>
+ *      <script src="../../Js/common.min.js?v=165" type="text/javascript"></script>
  * 
  */
  function AxGetMenus(pages) {
@@ -1153,7 +1153,7 @@ function GetDataFromAxList(data, successCB = () => { }, errorCB = () => { }) {
  * @param {*} recordid : Recordid in case of tstruct based script
  * @param {*} apiParams={} : key value pairs of API params to be passed from client side. Value should have data type mentioned delimited by a ~.
  * @Example
- * AxCallScriptAPIAsync("sendtask", "report", "taskslst", "0", { "param1" : "value1~c", "param2" : "value2_d" }, function(data){ successlogics()}, function(data){ errorlogics()});
+ * AxCallScriptAPIAsync("sendtask", "report", "taskslst", "0", { "param1" : "value1~c", "param2" : "value2~d" }, function(data){ successlogics()}, function(data){ errorlogics()});
  */
 function AxCallScriptAPIAsync(script, type, name, recordid = "0", apiParams = {}, successCB = () => { }, errorCB = () => { }) {
     if (typeof apiParams == "undefined" || apiParams == "")

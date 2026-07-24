@@ -1082,6 +1082,90 @@
                                         </div>
                                     </div>
 
+                                    <div class="redicConnectionWrapper my-6" id="dvCaptchSettings">
+                                        <div class="panel-body card login-inner w-lg-1000px m-auto" style="border: 1px solid rgba(210,215,221,0.8);">
+                                            <div class="card-header align-items-center">
+                                                <div class="configLeftForm card-title align-items-start flex-column">
+                                                    <div>
+                                                        <h3>
+                                                            <asp:Label ID="Label3" runat="server">Axpert Captch Settings</asp:Label>
+                                                        </h3>
+                                                    </div>
+                                                </div>
+                                                <div class="card-header-toolbar">
+                                                </div>
+                                            </div>
+                                            <div class=" card-body row w-lg-1000px p-8 p-lg-12 mx-auto">
+                                                <div class="">
+                                                    <div class="configRightForm">
+                                                        <div class="configRightFormFields row g-3 align-items-center">
+                                                            <div class="col-md-4 col-sm-12">
+                                                                <asp:Label ID="Label36" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Connection Name</asp:Label>
+                                                            </div>
+                                                            <div class="configConList col-md-8 col-sm-12 d-flex flex-row">
+                                                                <select id="selCaptchaConn" data-control="select2" data-placeholder="Select Project" runat="server" class="multiselect form-select" size="10">
+                                                                </select>
+                                                            </div>
+                                                            <asp:HiddenField ID="hdnCaptchConn" runat="server" Value="" />
+                                                            <div class="clearfix"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="postgresodbc configRightFormFields row g-3 align-items-center">
+                                                        <div class="col-md-4 col-sm-12">
+                                                            <asp:Label ID="Label37" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Enabled Captcha</asp:Label>
+                                                        </div>
+                                                        <div class="col-md-8 col-sm-12">
+                                                            <div class="form-check form-switch form-check-custom px-1 ">
+                                                                <input type="checkbox" id="chkbEnableCaptch" runat="server" autocomplete="off" class="form-check-input h-25px w-45px opacity-100" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="clearfix"></div>
+                                                    </div>
+                                                    <div class="configRightFormFields row g-3 align-items-center">
+                                                        <div class="col-md-4 col-sm-12">
+                                                            <asp:Label ID="Label38" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Captcha Length</asp:Label>
+                                                        </div>
+                                                        <div class="col-md-8 col-sm-12">
+                                                            <select class="form-select" runat="server" id="selCaptchLength" data-control="select2" data-placeholder="Select Options" data-allow-clear="true">
+                                                                <option value="" selected>Select Captch Length</option>
+                                                                <option value="4">4</option>
+                                                                <option value="5">5</option>
+                                                                <option value="6">6</option>
+                                                                <option value="7">7</option>
+                                                                <option value="8">8</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="clearfix"></div>
+                                                    </div>
+                                                    <div class="configRightFormFields row g-3 align-items-center">
+                                                        <div class="col-md-4 col-sm-12">
+                                                            <asp:Label ID="Label39" class="form-label fw-boldest text-dark fs-6 mb-0" runat="server">Captcha Style</asp:Label>
+                                                        </div>
+                                                        <div class="col-md-8 col-sm-12">
+                                                            <select class="form-select" runat="server" id="selCaptchStyle" data-control="select2" data-placeholder="Select Options" data-allow-clear="true">
+                                                                <option value="" selected>Select Captch Style</option>
+                                                                <option value="Alphanumeric">Alphanumeric</option>
+                                                                <option value="Alpha">Alpha</option>
+                                                                <option value="Numeric">Numeric</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="clearfix"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card-footer">
+                                                <div class="configRightFormFields">
+                                                    <div class="col-sm-12">
+                                                        <div class="configRightFormFooterButton pull-right">
+                                                            <input type="button" class="btn btn-active-primary shadow-sm me-2 mx-2" title="Save" id="btnSaveCaptch" value="Save" onclick="SaveCaptchaSettings();" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="clearfix"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="panel-body licActivationWrapper card login-inner w-lg-1000px m-auto my-6 d-none">
                                         <div class="card-header align-items-center py-6">
                                             <div class="col-md-4 col-sm-12">
@@ -1399,10 +1483,10 @@
     </asp:PlaceHolder>
     <script src="../Js/noConflict.min.js?v=1" type="text/javascript"></script>
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
-    <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
+    <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <script src="../Js/xmlToJson.min.js?v=2"></script>
-    <script src="../Js/config.min.js?v=30" type="text/javascript"></script>
+    <script src="../Js/config.min.js?v=31" type="text/javascript"></script>
     <script src="../Js/lang/content-<%=langType%>.js?v=64" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
 </body>
 </html>

@@ -27,11 +27,11 @@
     <link href="../ThirdParty/Linearicons/Font/library/linearIcons.css" rel="stylesheet" />
 
     <%--custom alerts start--%>
-    <script src="../Js/alerts.min.js?v=32" type="text/javascript"></script>
+    <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <%--custom alerts end--%>
     <script src="../Js/gen.min.js?v=14" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=164" type="text/javascript"></script>
-    <script src="../Js/tstruct.min.js?v=692" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
+    <script src="../Js/tstruct.min.js?v=696" type="text/javascript"></script>
 
     <script src="../Js/axpFileUpload.min.js?v=9" type="text/javascript"></script>
 

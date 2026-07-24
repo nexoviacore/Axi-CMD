@@ -2344,7 +2344,19 @@ function OnTstructLoad() {
                     }
                     SetFormDirty(false);
                 });
-            }           
+            } else {
+                for (i = 0; i < TabDCs.length; i++) {
+                    if (TabDCStatus[i] == "0") {
+                        let _tabdcNo = TabDCs[i];
+                        let _dcIdx = $j.inArray(_tabdcNo.toString(), DCFrameNo);
+                        let _curDcRCnt = $("#gridHd" + _tabdcNo + " tbody tr").length;
+                        if (IsDcGrid(_tabdcNo) && DCHasDataRows[_dcIdx] == "True" && _curDcRCnt == 0) {
+                            DCHasDataRows[_dcIdx] = "False";
+                        }
+                    }
+                }
+            }     
+            
             try {
                 if (typeof isCopyTrans != "undefined" && isCopyTrans)
                     isCopyTrans = false;
@@ -5586,7 +5598,7 @@ function GetTabData(tabNo) {
 
     if ($("#myTab li#li" + tabNo).hasClass('active'))
         return false;
-
+    GetCurrentTime("Tstruct GetTabData click (" + tabNo + ")");
     $("#myTab li").removeClass("bg-white");
     $("#myTab li").find(".form-check").addClass("d-none");
     $("#myTab li#li" + tabNo).addClass("bg-white"); 
@@ -5640,6 +5652,7 @@ function GetTabData(tabNo) {
     var i = 0;
     var status = 0;
     var indx = 0;
+    AdditionalRunTimeMsg(" Before Status check status:" + status + " TabDCStatus:" + TabDCStatus + " tabNo:" + tabNo);
     for (i = 0; i < TabDCs.length; i++) {
 
         if (TabDCs[i] == tabNo) {
@@ -5656,6 +5669,7 @@ function GetTabData(tabNo) {
     }
     var isTabHtml = false;
     TabDcActive = false;
+    AdditionalRunTimeMsg(" Before Status and tab html check status:" + status + " tabhtmlexist:" + ($j("#tab-" + tabNo).html() != "" ? "true" : "false"));
     if (status == 0 && $j("#tab-" + tabNo).html() != "") {
         isTabHtml = true;
         status = 1;
@@ -5678,7 +5692,7 @@ function GetTabData(tabNo) {
         FldListParents = new Array();
         FldListData = new Array();
     } catch (ex) { }
-
+    AdditionalRunTimeMsg(" Before WS call status check, status:" + status + " TabDCStatus:" + TabDCStatus + " tabNo:" + tabNo);
     if (status == 0) {
         TabDcActive = true;
         TabDCStatus[indx] = "1";
@@ -5686,13 +5700,23 @@ function GetTabData(tabNo) {
 
         try {
             callBackFunDtls = "GetTabData♠" + tabNo;
+            AdditionalRunTimeMsg("Before CallLoadDcData WS call ");
+            GetProcessTime();
             ASB.WebService.CallLoadDcData(ChangedFields, ChangedFieldDbRowNo, ChangedFieldValues, DeletedDCRows, ArrActionLog, updtxt, tabNo, IsFillGrid, IsTabDisabled, tstDataId, resTstHtmlLS, SuccessGetTabData, OnException);
         } catch (exp) {
             AxWaitCursor(false);
             ShowDimmer(false);
             showAlertDialog("error", ServerErrMsg);
+            UpdateExceptionMessageInET("CallLoadDcData exception : " + exp.message);
+
+            GetProcessTime();
+            GetTotalElapsTime();
         }
     } else {
+        UpdateExceptionMessageInET("CallLoadDcData Not called, status: " + status);
+        GetProcessTime();
+        GetTotalElapsTime();
+
         gridFreezeCols(CurrTabNo);
         isFill = 0;
         try {
@@ -5790,6 +5814,9 @@ function SuccessGetTabData(result, eventArgs) {
         tstDataId = result.split("♠*♠")[0];
         result = result.split("♠*♠")[1];
     }
+    UpdateExceptionMessageInET("SuccessGetTabData completed ");
+    GetProcessTime();
+    GetTotalElapsTime();
     if (result.toLowerCase().indexOf("access violation") === -1) {
         var stTime = new Date();
         ArrActionLog = "";
@@ -5989,6 +6016,9 @@ function AssignTabDcHtmlPerf(result) {
         var curDcRCnt = $("#gridHd" + tabDcNo + " tbody tr").length;
         if (IsDcGrid(tabDcNo) && DCHasDataRows[dcIdx] == "True" && curDcRCnt > 0) {
             changeEditLayoutIds('', tabDcNo, 'tabListView');
+        }
+        if (IsDcGrid(tabDcNo) && DCHasDataRows[dcIdx] == "True" && curDcRCnt == 0) {
+            DCHasDataRows[dcIdx] = "False";
         }
         makeFieldInitCap(tabDcNo);
         SetDynamicDcCaptions(tabDcNo);
@@ -7460,16 +7490,22 @@ function CallEvaluateOnAddPerf(dcNo, rowNo, fields, calldepField) {
             if (fldIndx != -1 && FMoe[fldIndx].toString().toLowerCase() == "accept" && FldIsSql[fldIndx].toString().toLowerCase() == "true") {
                 var isBound = false;
                 isBound = ISBoundPerf(fields[i], rowNo);
-                depNotBoundFld = ""
+                if (depNotBoundFld != "")
+                    AdditionalRunTimeMsg(depNotBoundFld + " parent not bound for the field " + fields[i] + " in AddRow Accept + Sql");
+                depNotBoundFld = "";
                 if (isBound) {
+                    AdditionalRunTimeMsg(" AddRow calling from: " + fields[i] + " in AddRow Accept + Sql");
                     callService = true;
                     $("#" + fldName).addClass("addServiceCallMade");
                 }
             } else if (fldIndx != -1 && FMoe[fldIndx].toString().toLowerCase() == "select" && FldAutoSelect[fldIndx].toString().toLowerCase() == "true" && typeof AxFillAutoSelectFlds != "undefined" && AxFillAutoSelectFlds == "true") {
                 var isBound = false;
                 isBound = ISBoundPerf(fields[i], rowNo);
+                if (depNotBoundFld != "")
+                    AdditionalRunTimeMsg(depNotBoundFld + " parent not bound for the field " + fields[i] + " in AddRow Select + Autoselect");
                 depNotBoundFld = ""
                 if (isBound) {
+                    AdditionalRunTimeMsg(" AddRow calling from: " + fields[i] + " in AddRow Select + Autoselect");
                     callService = true;
                     $("#" + fldName).addClass("addServiceCallMade");
                 }
@@ -7479,15 +7515,25 @@ function CallEvaluateOnAddPerf(dcNo, rowNo, fields, calldepField) {
         if (callService == false && (calldepField == "newRow" || calldepField == "AddRow" || calldepField == "ToCheckAddRow")) {
             var fldIndx = GetFieldIndex(fldIdnName);
             if (fldIndx != -1 && FMoe[fldIndx].toString().toLowerCase() == "select" && GetFldNamesIndx(fldIdnName) > -1) {
-                callService = true;
+                var isBound = false;
+                isBound = ISBoundPerf(fields[i], rowNo);
+                if (depNotBoundFld != "")
+                    AdditionalRunTimeMsg(depNotBoundFld + " parent not bound for the field " + fields[i] + " in AddRow Select + Expression");
+                depNotBoundFld = ""
+                if (isBound) {
+                    AdditionalRunTimeMsg(" AddRow calling from: " + fields[i] + " in AddRow Select + Expression");
+                    callService = true;
+                }
             }
         }
 
         if (callService == false && (calldepField == "newRow" || calldepField == "AddRow" || calldepField == "ToCheckAddRow")) {
             if (typeof AxFldExpOnAddRow != "undefined" && AxFldExpOnAddRow != "") {
                 var AxExpDepField = AxFldExpOnAddRow.split(",");
-                if (AxExpDepField.indexOf(fldIdnName) > -1)
+                if (AxExpDepField.indexOf(fldIdnName) > -1) {
+                    AdditionalRunTimeMsg("Force AddRow call AxFldExpOnAddRow:" + AxFldExpOnAddRow + " from: " + fldIdnName);
                     callService = true;
+                }
             }
         }
     }
@@ -9920,18 +9966,20 @@ function GetTstHtmlLS(_TstlocalStorage, _permissionVars="") {
                 ClearFieldsInDC(dcID);
         });
         try {
-            $.ajax({
-                url: 'tstruct.aspx/DeleteTstGridAtt',
-                type: 'POST',
-                cache: false,
-                async: true,
-                dataType: 'json',
-                contentType: "application/json",
-                success: function (data) {
-                },
-                error: function (error) {
-                }
-            });
+            if (typeof tstGrdAttDdlAutoSelect != "undefined" && tstGrdAttDdlAutoSelect == "true") {
+                $.ajax({
+                    url: 'tstruct.aspx/DeleteTstGridAtt',
+                    type: 'POST',
+                    cache: false,
+                    async: true,
+                    dataType: 'json',
+                    contentType: "application/json",
+                    success: function (data) {
+                    },
+                    error: function (error) {
+                    }
+                });
+            }
         } catch (ex) { }
         ExprPosArray.forEach(function (vals, ind) {
             if (vals != "")
@@ -11303,9 +11351,12 @@ function SearchOpenNew(fldAdvSrcId) {
         _thisFldVal = fldPk.val();
     }
     var objKey = tstDataId;
+    x = CheckUrlSpecialChars(x);
+    if (typeof _thisFldVal != "undefined" && _thisFldVal != null)
+        _thisFldVal = CheckUrlSpecialChars(_thisFldVal);
     var na = "./AutoComplete.aspx?search=" + x + "&fldname=" + fname + "&transid=" + tst + "&activeRow=" + AxActiveRowNo + "&frameno=" + fldFrameNo + "&key=" + objKey + "&parStr=" + parStr + "&subStr=" + subStr + "&isFldddl=" + _isDropfld + "&selFldVal=" + _thisFldVal + "&isMultSel=" + _isMultSel + "&AxPop=true";
     // createPopup(na, "73vw");
-    let myModal = new BSModal("loadPopUpPage", "", "<iframe id='loadPopUpPage' name='loadPopUpPage' class='col-12 h-100' src='" + na + "'></iframe>", () => {
+    let myModal = new BSModal("loadPopUpPage", "", "<iframe id='loadPopUpPage' name='loadPopUpPage' class='col-12 h-100' src=\"" + na + "\"></iframe>", () => {
         //shown callback
     }, (closing, modal) => {
         //hide callback
@@ -18158,7 +18209,9 @@ $j(document).off("click", ".amendmentOptions").on("click", ".amendmentOptions", 
                     }
                 } else {
                     let _oldVal = ele.oldvalue == "" ? "Nil" : ele.oldvalue;
+                    _oldVal = _oldVal.replace(/\^\^dq/g, "\"");
                     let _newVal = ele.newvalue == "" ? "Nil" : ele.newvalue
+                    _newVal = _newVal.replace(/\^\^dq/g, "\"");
                     let _dcNo = ele.dcname;
                     _dcNo = _dcNo.substr(2);
                     if (IsDcGrid(_dcNo)) {
@@ -19659,7 +19712,7 @@ function clearCacheReloadForm(_thisTrId) {
     let appSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
     try {
         ShowDimmer(true);
-        callParentNew("clearKeysByFormat(tstDDFVal♠" + _thisTrId + "♦♣♦" + appSUrl + "♥)", "function");
+        callParentNew("clearKeysByFormat(tstDDFVal♠" + proj + "♦" + _thisTrId + "♦♣♦" + appSUrl + "♥)", "function");
         let _thisKey = callParentNew("getKeysWithPrefix(tstHtml♠" + _thisTrId + "-" + appSUrl + "♥)", "function");
         if (_thisKey.length > 0) {
             for (const val of _thisKey) {
@@ -21387,7 +21440,7 @@ function ClearRefreshOnSaveListLS() {
     try {
         const appUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
         const escapedUrl = appUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const pattern = new RegExp("^tstDDFVal♠" + transid + "♦[^♦]+♦true♦.*♦" + escapedUrl + "♥");
+        const pattern = new RegExp("^tstDDFVal♠" + proj + "♦" + transid + "♦[^♦]+♦true♦.*♦" + escapedUrl + "♥");
         Object.keys(localStorage).forEach(function (key) {
             if (pattern.test(key)) {
                 localStorage.removeItem(key);

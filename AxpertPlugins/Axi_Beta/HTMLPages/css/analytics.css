@@ -2764,6 +2764,12 @@ g text {
   border: 1px solid #edf0f4;
 }
 
+#table-body_Container .table-responsive > table.table,
+#table-body_Container .table-responsive > table.sv-grouped-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
 .row-arrow.material-icons.sv-hyperlinktemp {
   cursor: pointer;
   vertical-align: middle;
