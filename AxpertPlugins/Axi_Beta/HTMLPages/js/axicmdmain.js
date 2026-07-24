@@ -5337,6 +5337,7 @@
 
             } else if (isInitialCommandStage && getCommandConfig(text)) {
                 const iconName = (commandIcons && commandIcons[text.toLowerCase()]) ? commandIcons[text.toLowerCase()] : "info";
+                li.setAttribute("data-cmd", text.toLowerCase());
 
                 li.innerHTML = `
                
