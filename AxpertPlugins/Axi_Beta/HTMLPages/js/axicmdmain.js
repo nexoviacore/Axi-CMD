@@ -59,6 +59,31 @@
         }
     };
 
+    // 3. API Service Seam
+    const AxiApiService = {
+        async fetchSessionStatus(webUrl, mainSessionId) {
+            if (typeof mainSessionId === "undefined" || !mainSessionId) {
+                return { valid: false, redirectUrl: `${getAppBaseUrl()}/aspx/sess.aspx` };
+            }
+            try {
+                const res = await fetch(webUrl + "/WebService.asmx/GetSession", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ key: "nsessionid" })
+                });
+                const data = await res.json();
+                const serverSessionId = data?.d;
+                if (!serverSessionId || serverSessionId === "Session does not exist" || serverSessionId !== mainSessionId) {
+                    return { valid: false, redirectUrl: `${getAppBaseUrl()}/aspx/sess.aspx` };
+                }
+                return { valid: true };
+            } catch (err) {
+                console.error("[AxiApiService] Session check error:", err);
+                return { valid: true };
+            }
+        }
+    };
+
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
     let apiMetadataConfigError = "";
