@@ -10,6 +10,25 @@
   --accent: #f59e0b;
   --sidebar-bg: #f8fafc;
   --danger: #ef4444;
+
+  /* Command Icon Colors */
+  --axi-cmd-color-create: green;
+  --axi-cmd-color-edit: #e80f0c;
+  --axi-cmd-color-view: #ff6c00;
+  --axi-cmd-color-configure: #8f26dc;
+  --axi-cmd-color-sdk: #d62fd6;
+  --axi-cmd-color-upload: brown;
+  --axi-cmd-color-download: #6868d6;
+  --axi-cmd-color-run: #15b8a7;
+  --axi-cmd-color-analyse: #74a20f;
+  --axi-cmd-color-ai: green;
+  --axi-cmd-color-connect: #8f26dc;
+  --axi-cmd-color-ask: #ff6c00;
+  --axi-cmd-color-end: #e80f0c;
+  --axi-cmd-color-editprompt: #d62fd6;
+  --axi-cmd-color-help: #6868d6;
+  --axi-cmd-color-version: #15b8a7;
+  --axi-cmd-color-default: #22c55e;
 }
 
 /* #Homepage_CardsList_Wrapper .row:last-child .widgetWrapper {
@@ -543,53 +562,27 @@
   line-height: 5px;
 }
 
-.My-Command-Wrapper li:nth-child(12n+1) .symbol-label {
-  background: green !important;
+.My-Command-Wrapper li .symbol-label {
+  background: var(--axi-cmd-color-default) !important;
 }
 
-.My-Command-Wrapper li:nth-child(12n+2) .symbol-label {
-  background: #e80f0c !important;
-}
-
-.My-Command-Wrapper li:nth-child(12n+3) .symbol-label {
-  background: #ff6c00 !important;
-}
-
-.My-Command-Wrapper li:nth-child(12n+4) .symbol-label {
-  background: #8f26dc !important;
-}
-
-.My-Command-Wrapper li:nth-child(12n+5) .symbol-label {
-  background: #d62fd6 !important;
-}
-
-.My-Command-Wrapper li:nth-child(12n+6) .symbol-label {
-  background: brown !important;
-}
-
-.My-Command-Wrapper li:nth-child(12n+7) .symbol-label {
-  background: #6868d6 !important;
-}
-
-.My-Command-Wrapper li:nth-child(12n+8) .symbol-label {
-  background: #15b8a7 !important;
-}
-
-.My-Command-Wrapper li:nth-child(12n+9) .symbol-label {
-  background: #74a20f !important;
-}
-
-.My-Command-Wrapper li:nth-child(12n+10) .symbol-label {
-  background: green !important;
-}
-
-.My-Command-Wrapper li:nth-child(12n+11) .symbol-label {
-  background: green !important;
-}
-
-.My-Command-Wrapper li:nth-child(12n+12) .symbol-label {
-  background: green !important;
-}
+.My-Command-Wrapper li[data-cmd="create"] .symbol-label { background: var(--axi-cmd-color-create) !important; }
+.My-Command-Wrapper li[data-cmd="edit"] .symbol-label { background: var(--axi-cmd-color-edit) !important; }
+.My-Command-Wrapper li[data-cmd="view"] .symbol-label { background: var(--axi-cmd-color-view) !important; }
+.My-Command-Wrapper li[data-cmd="configure"] .symbol-label { background: var(--axi-cmd-color-configure) !important; }
+.My-Command-Wrapper li[data-cmd="sdk"] .symbol-label { background: var(--axi-cmd-color-sdk) !important; }
+.My-Command-Wrapper li[data-cmd="upload"] .symbol-label { background: var(--axi-cmd-color-upload) !important; }
+.My-Command-Wrapper li[data-cmd="download"] .symbol-label { background: var(--axi-cmd-color-download) !important; }
+.My-Command-Wrapper li[data-cmd="run"] .symbol-label { background: var(--axi-cmd-color-run) !important; }
+.My-Command-Wrapper li[data-cmd="analyse"] .symbol-label { background: var(--axi-cmd-color-analyse) !important; }
+.My-Command-Wrapper li[data-cmd="analyze"] .symbol-label { background: var(--axi-cmd-color-analyse) !important; }
+.My-Command-Wrapper li[data-cmd="ai"] .symbol-label { background: var(--axi-cmd-color-ai) !important; }
+.My-Command-Wrapper li[data-cmd="connect"] .symbol-label { background: var(--axi-cmd-color-connect) !important; }
+.My-Command-Wrapper li[data-cmd="ask"] .symbol-label { background: var(--axi-cmd-color-ask) !important; }
+.My-Command-Wrapper li[data-cmd="end"] .symbol-label { background: var(--axi-cmd-color-end) !important; }
+.My-Command-Wrapper li[data-cmd="editprompt"] .symbol-label { background: var(--axi-cmd-color-editprompt) !important; }
+.My-Command-Wrapper li[data-cmd="help"] .symbol-label { background: var(--axi-cmd-color-help) !important; }
+.My-Command-Wrapper li[data-cmd="version"] .symbol-label { background: var(--axi-cmd-color-version) !important; }
 
 .My-Command-Wrapper li .symbol-label .material-icons.material-icons-style.material-icons-2 {
   color: white !important;
