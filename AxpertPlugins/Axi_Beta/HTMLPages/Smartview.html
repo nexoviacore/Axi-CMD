@@ -10,7 +10,7 @@
     <link href="../../../Css/datatables.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../../../Css/Entity.css" />
 
-    <link rel="stylesheet" href="css/analytics.css?v=1" />
+    <link rel="stylesheet" href="css/analytics.css?v=2" />
    <style>
          .row-arrow {
   cursor: pointer;
@@ -374,13 +374,14 @@
     <script src="../../../ThirdParty/Highcharts/highcharts-3d.js"></script>
     <script src="../../../ThirdParty/Highcharts/highcharts-more.js"></script>
     <script src="../../../ThirdParty/Highcharts/highcharts-exporting.js"></script>
-    <script type="text/javascript" src="js/smartview.js?v=1"></script>
+    <script type="text/javascript" src="js/smartview.js?v=3"></script>
     
     <script>
 function setupToggle(buttonId, wrapperId) {
 
     const btn = document.getElementById(buttonId);
     const wrapper = document.getElementById(wrapperId);
+    if (!btn || !wrapper) return;
 
     btn.addEventListener("click", () => {
 

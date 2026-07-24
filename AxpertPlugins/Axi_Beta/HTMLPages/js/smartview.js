@@ -2186,7 +2186,25 @@
         return sum + Math.max(0, Math.round(cell.getBoundingClientRect().width || cell.offsetWidth || 0));
       }, 0);
       if (totalWidth > 0) {
-        tableEl.style.minWidth = `${Math.max(totalWidth, tableEl.parentElement ? tableEl.parentElement.clientWidth : 0)}px`;
+        const parentWidth = tableEl.parentElement ? Math.max(0, Math.round(tableEl.parentElement.clientWidth || 0)) : 0;
+        const finalWidth = Math.max(totalWidth, parentWidth);
+        tableEl.style.minWidth = `${finalWidth}px`;
+        tableEl.style.width = `${finalWidth}px`;
+      }
+    } catch (e) {}
+  }
+
+  function smartviewEnsureResizableTableLayout(tableEl) {
+    if (!tableEl) return;
+    try {
+      tableEl.style.tableLayout = 'auto';
+      tableEl.style.maxWidth = 'none';
+      if (!tableEl.style.width || tableEl.style.width === 'auto' || tableEl.style.width === '100%') {
+        tableEl.style.width = 'max-content';
+      }
+      if (!tableEl.style.minWidth || tableEl.style.minWidth === '0px') {
+        const parentWidth = tableEl.parentElement ? Math.max(0, Math.round(tableEl.parentElement.clientWidth || 0)) : 0;
+        if (parentWidth > 0) tableEl.style.minWidth = `${parentWidth}px`;
       }
     } catch (e) {}
   }
@@ -2197,10 +2215,13 @@
     if (!Number.isFinite(idx) || idx <= 0) return;
     const w = Math.max(80, Math.round(Number(widthPx) || 0));
     if (!w) return;
+    smartviewEnsureResizableTableLayout(tableEl);
     const selector = `thead th:nth-child(${idx}), tbody td:nth-child(${idx})`;
     tableEl.querySelectorAll(selector).forEach(cell => {
       cell.style.width = `${w}px`;
       cell.style.minWidth = `${w}px`;
+      cell.style.maxWidth = `${w}px`;
+      cell.style.boxSizing = 'border-box';
     });
     smartviewSyncTableMinWidth(tableEl);
   }
@@ -2210,6 +2231,7 @@
     const ads = smartviewGetCurrentAdsForViews();
     const widths = smartviewLoadColumnWidthsFromStorage(ads);
     if (!widths || typeof widths !== 'object') return;
+    smartviewEnsureResizableTableLayout(tableEl);
 
     const headers = tableEl.querySelectorAll('thead th[data-field]');
     headers.forEach((th) => {
@@ -3655,14 +3677,18 @@
         cursor: col-resize !important;
       }
       .sv-header-menu {
-        position: absolute;
+        position: fixed;
         background: #fff;
         border: 1px solid #ddd;
         border-radius: 8px;
         min-width: 180px;
+        max-width: calc(100vw - 16px);
+        max-height: calc(100vh - 16px);
+        overflow: auto;
         box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
         padding: 4px 0;
         z-index: 12000;
+        box-sizing: border-box;
       }
       .sv-header-menu-item {
         display: block;
@@ -3739,9 +3765,67 @@
     if (m && m.parentElement) m.parentElement.removeChild(m);
   }
 
+  function smartviewEnsureHeaderMenuDismissHandler() {
+    if (window._smartviewHeaderMenuDismissBound) return;
+
+    const dismiss = function (ev) {
+      const menu = document.getElementById('svHeaderMenu');
+      if (!menu) return;
+
+      const target = ev && ev.target ? ev.target : null;
+      if (target && menu.contains(target)) return;
+      if (target && target.closest && target.closest('.sv-header-menu-btn')) return;
+
+      closeSmartviewHeaderMenu();
+    };
+
+    const dismissOnScrollOrResize = function (ev) {
+      const menu = document.getElementById('svHeaderMenu');
+      if (!menu) return;
+
+      const target = ev && ev.target ? ev.target : null;
+      if (target && menu.contains(target)) return;
+
+      closeSmartviewHeaderMenu();
+    };
+
+    try {
+      document.addEventListener('pointerdown', dismiss, true);
+    } catch (e) {
+      document.addEventListener('mousedown', dismiss, true);
+    }
+    window.addEventListener('scroll', dismissOnScrollOrResize, true);
+    window.addEventListener('resize', dismissOnScrollOrResize);
+
+    window._smartviewHeaderMenuDismissBound = true;
+  }
+
+  function smartviewPositionHeaderMenu(menu, anchorBtn) {
+    if (!menu || !anchorBtn) return;
+
+    const rect = anchorBtn.getBoundingClientRect();
+    const margin = 8;
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    const menuWidth = Math.max(180, Math.round(menu.offsetWidth || 0));
+    const menuHeight = Math.max(40, Math.round(menu.offsetHeight || 0));
+
+    let left = rect.left;
+    let top = rect.bottom + 4;
+
+    left = Math.max(margin, Math.min(viewportWidth - menuWidth - margin, left));
+    if (top + menuHeight + margin > viewportHeight) {
+      top = Math.max(margin, rect.top - menuHeight - 4);
+    }
+
+    menu.style.left = `${Math.max(margin, left)}px`;
+    menu.style.top = `${Math.max(margin, top)}px`;
+  }
+
   function showSmartviewHeaderMenu(anchorBtn, fieldName) {
     if (!anchorBtn || !fieldName) return;
     closeSmartviewHeaderMenu();
+    smartviewEnsureHeaderMenuDismissHandler();
 
     const ctrl = window.smartTableController || null;
     const groupedCols = (typeof smartviewGetEffectiveGroupbyColumns === 'function')
@@ -3753,6 +3837,7 @@
     const menu = document.createElement('div');
     menu.id = 'svHeaderMenu';
     menu.className = 'sv-header-menu';
+    menu.style.visibility = 'hidden';
     menu.innerHTML = `
       <button type="button" class="sv-header-menu-item" data-action="sort_asc" data-field="${escapeHtml(fieldName)}">Sort Ascending</button>
       <button type="button" class="sv-header-menu-item" data-action="sort_desc" data-field="${escapeHtml(fieldName)}">Sort Descending</button>
@@ -3760,21 +3845,8 @@
       ${hasAnyGrouping && groupedCols.length > 1 ? `<button type="button" class="sv-header-menu-item" data-action="group_clear" data-field="${escapeHtml(fieldName)}">Clear All Grouping</button>` : ''}
     `;
     document.body.appendChild(menu);
-
-    const r = anchorBtn.getBoundingClientRect();
-    const left = Math.max(8, Math.min(window.innerWidth - menu.offsetWidth - 8, r.left));
-    const top = Math.max(8, Math.min(window.innerHeight - menu.offsetHeight - 8, r.bottom + 4));
-    menu.style.left = `${left}px`;
-    menu.style.top = `${top}px`;
-
-    setTimeout(() => {
-      document.addEventListener('click', function _close(ev) {
-        if (!menu.contains(ev.target) && ev.target !== anchorBtn) {
-          closeSmartviewHeaderMenu();
-          document.removeEventListener('click', _close);
-        }
-      });
-    }, 0);
+    smartviewPositionHeaderMenu(menu, anchorBtn);
+    menu.style.visibility = 'visible';
   }
 
   function attachSmartviewHeaderMenuHandlers() {
@@ -12042,6 +12114,63 @@
     return false;
   }
 
+  function smartviewGetXlsxLibrary() {
+    const scopes = [];
+    try { scopes.push(window); } catch (e) {}
+    try { if (window.parent && window.parent !== window) scopes.push(window.parent); } catch (e) {}
+    try { if (window.top && window.top !== window) scopes.push(window.top); } catch (e) {}
+
+    for (let i = 0; i < scopes.length; i++) {
+      const scope = scopes[i];
+      if (scope && scope.XLSX && scope.XLSX.utils) return scope.XLSX;
+    }
+
+    return null;
+  }
+
+  function smartviewDownloadBlob(blob, fileName) {
+    const tryDownloadInDocument = function (doc) {
+      if (!doc || !doc.body) return false;
+      const url = URL.createObjectURL(blob);
+      const a = doc.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.style.display = "none";
+      doc.body.appendChild(a);
+      a.click();
+      setTimeout(function () {
+        URL.revokeObjectURL(url);
+        if (a.parentNode) a.parentNode.removeChild(a);
+      }, 0);
+      return true;
+    };
+
+    try {
+      if (window.navigator && typeof window.navigator.msSaveOrOpenBlob === "function") {
+        window.navigator.msSaveOrOpenBlob(blob, fileName);
+        return true;
+      }
+    } catch (e) {}
+
+    try {
+      if (window.top && window.top !== window && window.top.document) {
+        return tryDownloadInDocument(window.top.document);
+      }
+    } catch (e) {}
+
+    try {
+      if (window.parent && window.parent !== window && window.parent.document) {
+        return tryDownloadInDocument(window.parent.document);
+      }
+    } catch (e) {}
+
+    try {
+      return tryDownloadInDocument(document);
+    } catch (e) {}
+
+    return false;
+  }
+
   function smartviewIsDateMetaField(meta) {
     if (!meta || typeof meta !== "object") return false;
     const ft = String(meta.fdatatype || "").trim().toLowerCase();
@@ -12087,6 +12216,15 @@
 
     if (!fields.length && ctrl) {
       fields = smartviewGetVisibleSelectedFieldColumns(ctrl);
+    }
+
+    if (!fields.length) {
+      const cachedColumns = smartviewGetUploadedTemplateColumnsSnapshot();
+      if (cachedColumns.length) {
+        fields = cachedColumns
+          .map(function (item) { return String((item && (item.field || item.fldname)) || "").trim(); })
+          .filter(Boolean);
+      }
     }
 
     if (!fields.length) {
@@ -12136,14 +12274,67 @@
     return out;
   }
 
-  function smartviewGetExcelTemplateSourceRows(ctrl) {
-    if (ctrl && typeof ctrl._getAllRowsData === "function") {
-      const rows = ctrl._getAllRowsData();
-      if (Array.isArray(rows) && rows.length) return rows;
+  function smartviewGetUploadedTemplateColumnsSnapshot() {
+    const snapshots = [
+      window._smartviewExcelUploadState,
+      window._smartviewCommittedExcelUploadState,
+      window._entity && window._entity.excelUploadJson
+    ];
+
+    for (let i = 0; i < snapshots.length; i++) {
+      const cols = snapshots[i] && Array.isArray(snapshots[i].columns) ? snapshots[i].columns : null;
+      if (cols && cols.length) return smartviewCloneJsonSafe(cols);
     }
-    if (Array.isArray(window._smartviewFullData) && window._smartviewFullData.length) return window._smartviewFullData;
-    if (Array.isArray(window._entity && window._entity.listJson) && window._entity.listJson.length) return window._entity.listJson;
+
     return [];
+  }
+
+  function smartviewGetUploadedRowsSnapshot() {
+    const snapshots = [
+      window._smartviewExcelUploadState,
+      window._smartviewCommittedExcelUploadState,
+      window._entity && window._entity.excelUploadJson
+    ];
+
+    for (let i = 0; i < snapshots.length; i++) {
+      const rows = snapshots[i] && Array.isArray(snapshots[i].rows) ? snapshots[i].rows : null;
+      if (rows && rows.length) return smartviewCloneJsonSafe(rows);
+    }
+
+    return [];
+  }
+
+  function smartviewGetPreferredSmartviewRowsSnapshot(ctrl) {
+    try {
+      if (ctrl && typeof ctrl._getAllRowsData === "function") {
+        const ctrlRows = ctrl._getAllRowsData();
+        if (Array.isArray(ctrlRows) && ctrlRows.length) return smartviewCloneJsonSafe(ctrlRows);
+      }
+    } catch (e) {}
+
+    if (Array.isArray(window._smartviewFullData) && window._smartviewFullData.length) {
+      return smartviewCloneJsonSafe(window._smartviewFullData);
+    }
+
+    const uploadedRows = smartviewGetUploadedRowsSnapshot();
+    if (uploadedRows.length) return uploadedRows;
+
+    const committedRows = smartviewGetCommittedFullRowsSnapshot();
+    if (committedRows.length) return committedRows;
+
+    if (Array.isArray(window._entity && window._entity.filteredListJson) && window._entity.filteredListJson.length) {
+      return smartviewCloneJsonSafe(window._entity.filteredListJson);
+    }
+
+    if (Array.isArray(window._entity && window._entity.listJson) && window._entity.listJson.length) {
+      return smartviewCloneJsonSafe(window._entity.listJson);
+    }
+
+    return [];
+  }
+
+  function smartviewGetExcelTemplateSourceRows(ctrl) {
+    return smartviewGetPreferredSmartviewRowsSnapshot(ctrl);
   }
 
   function smartviewPrepareExcelTemplateCellValue(row, column) {
@@ -12464,7 +12655,7 @@
   }
 
   function smartviewGetCurrentFullRowsSnapshot() {
-    return smartviewCloneJsonSafe(Array.isArray(window._smartviewFullData) ? window._smartviewFullData : []);
+    return smartviewGetPreferredSmartviewRowsSnapshot(getSmartviewControllerInstance());
   }
 
   function smartviewResetOpenFrameDirtyFlags() {
@@ -12633,6 +12824,28 @@
     }
   }
 
+  function smartviewHasActiveExcelUploadRows() {
+    try {
+      const uploadRows = window._smartviewExcelUploadState && Array.isArray(window._smartviewExcelUploadState.rows)
+        ? window._smartviewExcelUploadState.rows
+        : null;
+      const committedRows = window._smartviewCommittedExcelUploadState && Array.isArray(window._smartviewCommittedExcelUploadState.rows)
+        ? window._smartviewCommittedExcelUploadState.rows
+        : null;
+      const entityUploadRows = window._entity && window._entity.excelUploadJson && Array.isArray(window._entity.excelUploadJson.rows)
+        ? window._entity.excelUploadJson.rows
+        : null;
+
+      return !!(
+        (uploadRows && uploadRows.length) ||
+        (committedRows && committedRows.length) ||
+        (entityUploadRows && entityUploadRows.length)
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
   function smartviewCloseExcelTemplateMenu() {
     try {
       const existing = document.getElementById("smartviewExcelTemplateMenu");
@@ -12660,16 +12873,40 @@
     document.body.appendChild(menu);
 
     const rect = button.getBoundingClientRect();
-    menu.style.left = Math.min(window.innerWidth - menu.offsetWidth - 10, rect.left) + "px";
-    menu.style.top = (rect.bottom + 6) + "px";
+    const margin = 8;
+    const gap = 6;
+    const menuWidth = Math.max(180, Math.round(menu.offsetWidth || 0));
+    const menuHeight = Math.max(40, Math.round(menu.offsetHeight || 0));
+    const viewportWidth = Math.max(0, Math.round(window.innerWidth || document.documentElement.clientWidth || 0));
+    const viewportHeight = Math.max(0, Math.round(window.innerHeight || document.documentElement.clientHeight || 0));
 
-    menu.addEventListener("click", function (ev) {
+    let left = Math.round(rect.left);
+    if (left + menuWidth + margin > viewportWidth) {
+      left = Math.max(margin, viewportWidth - menuWidth - margin);
+    }
+    left = Math.max(margin, left);
+
+    const spaceBelow = viewportHeight - rect.bottom - gap - margin;
+    const spaceAbove = rect.top - gap - margin;
+    const openAbove = spaceBelow < menuHeight && spaceAbove >= menuHeight;
+    const top = openAbove
+      ? Math.max(margin, Math.round(rect.top - menuHeight - gap))
+      : Math.max(margin, Math.round(rect.bottom + gap));
+
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+
+    const handleTemplateChoice = function (ev) {
       const item = ev.target && ev.target.closest ? ev.target.closest("[data-include-data]") : null;
       if (!item) return;
+      if (typeof ev.preventDefault === "function") ev.preventDefault();
+      if (typeof ev.stopPropagation === "function") ev.stopPropagation();
       const includeData = String(item.getAttribute("data-include-data") || "").toLowerCase() === "true";
       smartviewCloseExcelTemplateMenu();
       downloadTemplate(includeData);
-    });
+    };
+    menu.addEventListener("pointerdown", handleTemplateChoice);
+    menu.addEventListener("click", handleTemplateChoice);
 
     setTimeout(function () {
       document.addEventListener("click", function _close(ev) {
@@ -12684,36 +12921,58 @@
   }
 
   function downloadTemplate(includeData) {
-    if (typeof XLSX === "undefined" || !XLSX || !XLSX.utils) {
-      smartviewEnsureXlsxLoaded(function (ok) {
-        if (ok) downloadTemplate(includeData);
-        else alert("Excel library is not available on this page.");
-      });
+    try {
+      const xlsxLib = smartviewGetXlsxLibrary();
+      if (!xlsxLib) {
+        smartviewEnsureXlsxLoaded(function (ok) {
+          if (ok) downloadTemplate(includeData);
+          else alert("Excel library is not available on this page.");
+        });
+        return false;
+      }
+
+      const ctrl = getSmartviewControllerInstance();
+      const columns = smartviewBuildExcelTemplateColumns(ctrl);
+      if (!columns.length) {
+        alert("No table columns available for template download.");
+        return false;
+      }
+
+      const data = [columns.map(function (item) { return item.label; })];
+      if (includeData) {
+        const rows = smartviewGetExcelTemplateSourceRows(ctrl);
+        rows.forEach(function (row) {
+          data.push(columns.map(function (column) {
+            return smartviewPrepareExcelTemplateCellValue(row, column);
+          }));
+        });
+      }
+
+      const ws = xlsxLib.utils.aoa_to_sheet(data);
+      const wb = xlsxLib.utils.book_new();
+      xlsxLib.utils.book_append_sheet(wb, ws, "Template");
+      const fileName = smartviewGetTemplateFileBaseName() + "_Template.xlsx";
+
+      try {
+        const wbout = xlsxLib.write(wb, { bookType: "xlsx", type: "array" });
+        const blob = new Blob([wbout], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+        if (!smartviewDownloadBlob(blob, fileName)) {
+          throw new Error("DOWNLOAD_BLOCKED");
+        }
+      } catch (blobErr) {
+        console.warn("[SmartView] blob download failed, falling back to writeFile:", blobErr);
+        if (typeof xlsxLib.writeFile === "function") {
+          xlsxLib.writeFile(wb, fileName);
+        } else {
+          throw blobErr;
+        }
+      }
+      return false;
+    } catch (err) {
+      console.error("[SmartView] downloadTemplate failed:", err);
+      alert("Template download failed. Please check the console for details.");
       return false;
     }
-
-    const ctrl = getSmartviewControllerInstance();
-    const columns = smartviewBuildExcelTemplateColumns(ctrl);
-    if (!columns.length) {
-      alert("No table columns available for template download.");
-      return false;
-    }
-
-    const data = [columns.map(function (item) { return item.label; })];
-    if (includeData) {
-      const rows = smartviewGetExcelTemplateSourceRows(ctrl);
-      rows.forEach(function (row) {
-        data.push(columns.map(function (column) {
-          return smartviewPrepareExcelTemplateCellValue(row, column);
-        }));
-      });
-    }
-
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template");
-    XLSX.writeFile(wb, smartviewGetTemplateFileBaseName() + "_Template.xlsx");
-    return false;
   }
 
   function triggerSmartviewUploadExcel() {
@@ -12742,7 +13001,7 @@
     const input = e && e.target ? e.target : null;
     const file = input && input.files ? input.files[0] : null;
     if (!file) return false;
-    if (typeof XLSX === "undefined" || !XLSX || !XLSX.utils) {
+    if (!smartviewGetXlsxLibrary()) {
       smartviewEnsureXlsxLoaded(function (ok) {
         if (ok) handleUploadExcel(e);
         else {
@@ -12785,13 +13044,15 @@
 
     reader.onload = function (evt) {
       try {
+        const xlsxLib = smartviewGetXlsxLibrary();
+        if (!xlsxLib) throw new Error("XLSX_NOT_AVAILABLE");
         const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, { type: "array", cellDates: true });
+        const workbook = xlsxLib.read(data, { type: "array", cellDates: true });
         const firstSheet = workbook && workbook.SheetNames && workbook.SheetNames.length ? workbook.SheetNames[0] : "";
         if (!firstSheet) throw new Error("EMPTY_WORKBOOK");
 
         const sheet = workbook.Sheets[firstSheet];
-        const uploadedRows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        const uploadedRows = xlsxLib.utils.sheet_to_json(sheet, { defval: "" });
         if (!uploadedRows.length) {
           alert("No data rows found in the uploaded Excel file.");
           return;
@@ -14420,6 +14681,34 @@
 
       this._loadingAllRows = true;
 
+      if (!this.refreshCache && typeof smartviewHasActiveExcelUploadRows === "function" && smartviewHasActiveExcelUploadRows()) {
+        try {
+          const localRows = smartviewGetPreferredSmartviewRowsSnapshot(this);
+          if (localRows.length) {
+            const activeFilters = stripSmartviewFilterTransId(this.filters || []);
+            const metaForSort = (Array.isArray(this.lastAdsMeta) && this.lastAdsMeta.length)
+              ? this.lastAdsMeta
+              : (window._entity && Array.isArray(window._entity.metaData) ? window._entity.metaData : []);
+
+            let displayRows = activeFilters.length
+              ? smartviewApplyClientFilterFallback(localRows, activeFilters)
+              : localRows.slice();
+
+            if (Array.isArray(this.sorting) && this.sorting.length) {
+              displayRows = smartviewApplyClientSortingFallback(displayRows, this.sorting, metaForSort);
+            }
+
+            this.totalCount = displayRows.length;
+            this._initializeFrontendWindow(displayRows);
+            this.refreshCache = false;
+            finish();
+            return;
+          }
+        } catch (e) {
+          console.warn("[SmartView] local upload rows restore failed, falling back to API", e);
+        }
+      }
+
       if (this.refreshCache) {
         smartviewDbDeleteFullDataRecord(cacheKey)
           .catch(function () { return false; })
@@ -14637,6 +14926,41 @@
       if (!field) return;
       const order = (String(sortOrder || '').toLowerCase() === 'desc') ? 'desc' : 'asc';
       this.sorting = [{ fldname: field, sort_order: order }];
+
+      // When the data came from Excel upload, keep sorting client-side so we do not
+      // drop the in-memory upload snapshot and temporarily lose the rendered rows.
+      if (typeof smartviewHasActiveExcelUploadRows === 'function' && smartviewHasActiveExcelUploadRows()) {
+        try {
+          const baseRows = smartviewGetPreferredSmartviewRowsSnapshot(this);
+          if (!baseRows.length) {
+            this.resetPaging();
+            this.loadNextPage();
+            return;
+          }
+          const metaForSort = (Array.isArray(this.lastAdsMeta) && this.lastAdsMeta.length)
+            ? this.lastAdsMeta
+            : (window._entity && Array.isArray(window._entity.metaData) ? window._entity.metaData : []);
+          const sortedRows = (typeof smartviewApplyClientSortingFallback === 'function')
+            ? smartviewApplyClientSortingFallback(baseRows.slice(), this.sorting, metaForSort)
+            : baseRows.slice();
+          window._smartviewFullData = Array.isArray(sortedRows) ? sortedRows.slice() : [];
+          window._entity = window._entity || {};
+          window._entity.filteredListJson = window._smartviewFullData.slice();
+          this._filteredCache = window._smartviewFullData.slice();
+          this._allDataFetchedOnce = true;
+          this.totalCount = window._smartviewFullData.length;
+          this.visibleRowRangeStart = 1;
+          this.visibleRowRangeEnd = Math.min(this.frontendChunkSize, window._smartviewFullData.length);
+          this.frontendRenderedCount = this.visibleRowRangeEnd;
+          this.pageno = 1;
+          this._lastPageReached = window._smartviewFullData.length <= this.frontendChunkSize;
+          this._renderCurrentDataWindow();
+          return;
+        } catch (e) {
+          console.warn('applyHeaderSort local upload sort failed, falling back to paging reload', e);
+        }
+      }
+
       this.resetPaging();
       this.loadNextPage();
     }
