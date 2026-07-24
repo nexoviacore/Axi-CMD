@@ -3,13 +3,47 @@
     // Released On: 11/06/2026
     // /AxPlugins/Axi/HTMLPages/js/axicmdmain.js
 
+    /* ==========================================================================
+       AXI DOMAIN MODULES
+       ========================================================================== */
+
+    const AxiCmdConfig = {
+        MAX_HISTORY: 10,
+        MAX_FAVORITES: 20,
+        SHORTCUT_OPTIONS: {
+            GO: { displaydata: "Go [Ctrl + Enter]", name: "GO_ACTION", isExecutable: true },
+            SAVE: { displaydata: "Save [Ctrl + S]", name: "Save_ACTION", isExecutable: true },
+            POPUP: { displaydata: "Pop-Up [Ctrl + Shift + Enter]", name: "Pop_ACTION", isExecutable: true },
+            SOURCE: { displaydata: "Source [Ctrl + Alt + Enter]", name: "Source_ACTION", isExecutable: true }
+        },
+        COMMAND_ICONS: {
+            "create": "add_circle_outline",
+            "edit": "edit_note",
+            "view": "visibility",
+            "configure": "settings_suggest",
+            "sdk": "open_in_new",
+            "upload": "upload_file",
+            "download": "download",
+            "run": "play_arrow",
+            "analyse": "bar_chart",
+            "ai": "smart_toy",
+            "connect": "link",
+            "ask": "question_answer",
+            "end": "stop",
+            "editprompt": "edit",
+            "analyze": "analytics",
+            "help": "help_outline",
+            "version": "info"
+        }
+    };
+
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
     let apiMetadataConfigError = "";
     let settingsPageButtons = null;
     let importExportButtons = null;
     let commandHistory = [];
-    const MAX_HISTORY = 10;
+    const MAX_HISTORY = AxiCmdConfig.MAX_HISTORY;
     let historyIndex = -1;
     let megaDropdown;
     let favouritesCard;
@@ -18,7 +52,7 @@
     let favouriteBtn;
     let commandFavorites = [];
     let axiFavoritesUrl = "";
-    const MAX_FAVORITES = 20;
+    const MAX_FAVORITES = AxiCmdConfig.MAX_FAVORITES;
     let commandRoutes = [];
     let isDeleting = false;
     let isEditing = false;
