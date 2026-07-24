@@ -37,6 +37,28 @@
         }
     };
 
+    // 2. Pure Stateless Command Parser
+    const AxiCommandParser = {
+        tokenize(inputStr) {
+            if (!inputStr || typeof inputStr !== "string") return [];
+            return inputStr.trim().split(/\s+/);
+        },
+        parseCommand(inputStr) {
+            const tokens = this.tokenize(inputStr);
+            if (tokens.length === 0) return { verb: "", target: "", args: [] };
+            return {
+                verb: tokens[0].toLowerCase(),
+                target: tokens[1] ? tokens[1].toLowerCase() : "",
+                args: tokens.slice(2),
+                raw: inputStr
+            };
+        },
+        capitalizeFirstLetter(str) {
+            if (!str) return "";
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+    };
+
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
     let apiMetadataConfigError = "";
