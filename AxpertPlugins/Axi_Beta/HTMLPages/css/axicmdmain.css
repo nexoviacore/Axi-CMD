@@ -11,24 +11,24 @@
   --sidebar-bg: #f8fafc;
   --danger: #ef4444;
 
-  /* Command Icon Colors */
-  --axi-cmd-color-create: green;
-  --axi-cmd-color-edit: #e80f0c;
-  --axi-cmd-color-view: #ff6c00;
-  --axi-cmd-color-configure: #8f26dc;
-  --axi-cmd-color-sdk: #d62fd6;
-  --axi-cmd-color-upload: brown;
-  --axi-cmd-color-download: #6868d6;
-  --axi-cmd-color-run: #15b8a7;
-  --axi-cmd-color-analyse: #74a20f;
-  --axi-cmd-color-ai: green;
-  --axi-cmd-color-connect: #8f26dc;
-  --axi-cmd-color-ask: #ff6c00;
-  --axi-cmd-color-end: #e80f0c;
-  --axi-cmd-color-editprompt: #d62fd6;
-  --axi-cmd-color-help: #6868d6;
-  --axi-cmd-color-version: #15b8a7;
-  --axi-cmd-color-default: #22c55e;
+  /* Unique Command Icon Colors */
+  --axi-cmd-color-create: #16a34a;
+  --axi-cmd-color-edit: #dc2626;
+  --axi-cmd-color-view: #ea580c;
+  --axi-cmd-color-configure: #7c3aed;
+  --axi-cmd-color-sdk: #c026d3;
+  --axi-cmd-color-upload: #854d0e;
+  --axi-cmd-color-download: #4338ca;
+  --axi-cmd-color-run: #0d9488;
+  --axi-cmd-color-analyse: #65a30d;
+  --axi-cmd-color-ai: #059669;
+  --axi-cmd-color-connect: #6b21a8;
+  --axi-cmd-color-ask: #d97706;
+  --axi-cmd-color-end: #e11d48;
+  --axi-cmd-color-editprompt: #db2777;
+  --axi-cmd-color-help: #2563eb;
+  --axi-cmd-color-version: #0284c7;
+  --axi-cmd-color-default: #475569;
 }
 
 /* #Homepage_CardsList_Wrapper .row:last-child .widgetWrapper {

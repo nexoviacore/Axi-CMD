@@ -41,7 +41,8 @@
     const AxiCommandParser = {
         tokenize(inputStr) {
             if (!inputStr || typeof inputStr !== "string") return [];
-            return inputStr.trim().split(/\s+/);
+            const regex = new RegExp(`"[^"]*"?|[^\\s]+`, "g");
+            return inputStr.match(regex) || [];
         },
         parseCommand(inputStr) {
             const tokens = this.tokenize(inputStr);
@@ -12965,8 +12966,7 @@
                             targetUrl: item.targetUrl || item.targetURL || item.targeturl,
                             createdOn: item.createdOn
                         }));
-                        console.log("favKey");
-                        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                        AxiFavoritesManager.saveLocalFavorites(appUrl, window.mainUserName, commandFavorites);
                         renderFavoritesUI();
                     }
                 })
@@ -13608,7 +13608,7 @@
 
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
-        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
+        const favKey = AxiFavoritesManager.getStorageKey(appUrl, window.mainUserName);
 
         if (isEdit) {
             const cmdIndex = commandFavorites.findIndex(fav => fav.commandText.toLowerCase() === originalCmdText.toLowerCase());
@@ -13628,7 +13628,7 @@
                 }
                 ).then(response => {
                     if (response?.ok) {
-                        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                        AxiFavoritesManager.saveLocalFavorites(appUrl, window.mainUserName, commandFavorites);
                         renderFavoritesUI();
                         render();
                         hideFavoriteModal();
@@ -13684,7 +13684,7 @@
                         createdOn: favObj.createdOn
                     });
 
-                    localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                    AxiFavoritesManager.saveLocalFavorites(appUrl, window.mainUserName, commandFavorites);
                     renderFavoritesUI();
                     render();
                     hideFavoriteModal();
@@ -13749,7 +13749,7 @@
     function executeDeleteFavorite(cmdText) {
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
-        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
+        const favKey = AxiFavoritesManager.getStorageKey(appUrl, window.mainUserName);
         const deleteFavCancelBtn = document.getElementById("axiFavDeleteCancelBtn");
 
         const cmdIndex = commandFavorites.findIndex(fav =>
@@ -13781,7 +13781,7 @@
                         commandFavorites.splice(cmdIndex, 1);
                         showToast(`Removed '${removedFav.commandText}' from Favorites`);
 
-                        localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+                        AxiFavoritesManager.saveLocalFavorites(appUrl, window.mainUserName, commandFavorites);
                         renderFavoritesUI();
                         render();
 
