@@ -136,29 +136,10 @@
     let isProgrammaticExecution = false;
     let suppressFocusSuggestions = false;
 
-    const goOption = {
-        displaydata: "Go [Ctrl + Enter]",
-        name: "GO_ACTION",
-        isExecutable: true
-    };
-
-    const saveOption = {
-        displaydata: "Save [Ctrl + S]",
-        name: "Save_ACTION",
-        isExecutable: true
-    };
-
-    const popOption = {
-        displaydata: "Pop-Up [Ctrl + Shift + Enter]",
-        name: "Pop_ACTION",
-        isExecutable: true
-    };
-
-    const sourceOption = {
-        displaydata: "Source [Ctrl + Alt + Enter",
-        name: "Source_ACTION",
-        isExecutable: true
-    }
+    const goOption = AxiCmdConfig.SHORTCUT_OPTIONS.GO;
+    const saveOption = AxiCmdConfig.SHORTCUT_OPTIONS.SAVE;
+    const popOption = AxiCmdConfig.SHORTCUT_OPTIONS.POPUP;
+    const sourceOption = AxiCmdConfig.SHORTCUT_OPTIONS.SOURCE;
 
 
 
@@ -2426,12 +2407,7 @@
 
 
     function getTokens(str, shouldNormalize = true) {
-
-
-        //const regex = new RegExp(`"[^"]*"?|${OPERATOR_REGEX_PART}|[^\\s=<>!]+`, "g");
-        // const regex = new RegExp(`"[^"]*"|[^\\s]+`, "g");
-        const regex = new RegExp(`"[^"]*"?|[^\\s]+`, "g");
-        let tokens = str.match(regex) || [];
+        let tokens = AxiCommandParser.tokenize(str);
         if (shouldNormalize && tokens.length >= 2) {
             const first = cleanString(tokens[0]).toLowerCase();
             const second = cleanString(tokens[1]).toLowerCase();
@@ -5301,25 +5277,7 @@
 
         const isInitialCommandStage = currentInputTokens.length === 0 || (currentInputTokens.length === 1 && !currentInput.endsWith(" "));
 
-        const commandIcons = {
-            "create": "add_circle_outline",
-            "edit": "edit_note",
-            "view": "visibility",
-            "configure": "settings_suggest",
-            "sdk": "open_in_new",
-            "upload": "upload_file",
-            "download": "download",
-            "run": "play_arrow",
-            "analyse": "bar_chart",
-            "ai": "smart_toy",
-            "connect": "link",
-            "ask": "question_answer",
-            "end": "stop",
-            "editprompt": "edit",
-            "analyze": "analytics",
-            "help": "help_outline",
-            "version": "info"
-        };
+        const commandIcons = AxiCmdConfig.COMMAND_ICONS;
 
 
 
@@ -13031,29 +12989,13 @@
     function toggleFavorite(cmdText, isAdding = false) {
         loadFavorites();
         let cmdIndex;
-        const tokens = getTokens(cmdText.trim());
-
-
-        const groupKey = tokens[0];
-        const commandVerb = tokens[1];
-
-        if (groupKey?.toLowerCase() === "help" || groupKey?.toLowerCase() === "version") {
-            showToast("You cannot add this command to Favorites!");
-            return;
-        }
-
-        if (groupKey?.toLowerCase() === "run") {
-            showToast("You cannot add 'run' commands to favorites");
-            return;
-        }
-
-        if (commandVerb?.toLowerCase() === "keyfield") {
+        if (!AxiFavoritesManager.isFavAllowed(cmdText)) {
             showToast("You cannot add this command to Favorites!");
             return;
         }
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
-        const favKey = `axi_favourites_${appUrl}_${window.mainUserName}`;
+        const favKey = AxiFavoritesManager.getStorageKey(appUrl, window.mainUserName);
 
         if (isAdding) {
             cmdIndex = commandFavorites.findIndex(fav => fav?.originalCommandText?.toLowerCase() === cmdText.toLowerCase());
