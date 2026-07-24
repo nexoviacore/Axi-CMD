@@ -84,6 +84,36 @@
         }
     };
 
+    // 4. Favorites State & LocalStorage Manager
+    const AxiFavoritesManager = {
+        getStorageKey(appUrl, username) {
+            return `axi_favourites_${appUrl}_${username}`;
+        },
+        loadLocalFavorites(appUrl, username) {
+            const key = this.getStorageKey(appUrl, username);
+            try {
+                const data = JSON.parse(localStorage.getItem(key)) || [];
+                return data.map(fav => typeof fav === "string" ? { commandText: fav, targetURL: "" } : fav);
+            } catch (ex) {
+                return [];
+            }
+        },
+        saveLocalFavorites(appUrl, username, favoritesList) {
+            const key = this.getStorageKey(appUrl, username);
+            localStorage.setItem(key, JSON.stringify(favoritesList));
+        },
+        isFavAllowed(cmdText) {
+            if (!cmdText) return false;
+            const tokens = AxiCommandParser.tokenize(cmdText);
+            const verb = tokens[0]?.toLowerCase();
+            const verb2 = tokens[1]?.toLowerCase();
+            if (verb === "help" || verb === "version" || verb === "run" || verb2 === "keyfield") {
+                return false;
+            }
+            return true;
+        }
+    };
+
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
     let apiMetadataConfigError = "";
