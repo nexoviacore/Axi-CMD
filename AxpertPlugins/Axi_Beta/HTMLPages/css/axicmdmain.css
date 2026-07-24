@@ -533,6 +533,25 @@
   background: transparent !important;
 }
 
+.axi-suggestions.axi-grid-layout.My-Command-Wrapper,
+.My-Command-Wrapper {
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.axi-suggestions.axi-grid-layout.My-Command-Wrapper::-webkit-scrollbar,
+.My-Command-Wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.axi-suggestions.axi-grid-layout.My-Command-Wrapper li.axi-suggestion,
+.My-Command-Wrapper li {
+  flex-shrink: 0 !important;
+}
+
 .axi-suggestions.axi-grid-layout li.axi-suggestion {
   display: flex !important;
   width: 136px;
