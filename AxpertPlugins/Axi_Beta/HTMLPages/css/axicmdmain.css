@@ -110,7 +110,6 @@
 
   position: relative;
   max-width: 800px;
-
 }
 
 #mainNewPageBody.active .AXI-Sec {
@@ -554,7 +553,8 @@
 
 .axi-suggestions.axi-grid-layout li.axi-suggestion {
   display: flex !important;
-  width: 136px;
+  width: 105px !important;
+  padding: 4px !important;
   align-items: center;
   justify-content: center;
   position: relative;
@@ -574,7 +574,7 @@
 }
 
 #axiSuggestions .symbol.symbol-35px .symbol-label {
-  border-radius: 10px !important;
+  border-radius: 8px !important;
 }
 
 .items-icon {
@@ -583,6 +583,11 @@
 
 .My-Command-Wrapper li .symbol-label {
   background: var(--axi-cmd-color-default) !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  border-radius: 8px !important;
 }
 
 .My-Command-Wrapper li[data-cmd="create"] .symbol-label { background: var(--axi-cmd-color-create) !important; }
@@ -603,7 +608,9 @@
 .My-Command-Wrapper li[data-cmd="help"] .symbol-label { background: var(--axi-cmd-color-help) !important; }
 .My-Command-Wrapper li[data-cmd="version"] .symbol-label { background: var(--axi-cmd-color-version) !important; }
 
-.My-Command-Wrapper li .symbol-label .material-icons.material-icons-style.material-icons-2 {
+.My-Command-Wrapper li .symbol-label .material-icons,
+.My-Command-Wrapper li .symbol-label .material-icons-style {
+  font-size: 14px !important;
   color: white !important;
 }
 
@@ -813,6 +820,11 @@
 }
 
 
+
+#axiMegaDropdown {
+  width: 950px !important;
+  max-width: calc(100vw - 120px) !important;
+}
 
 /*salman*/
 #axiMegaDropdown .axi-suggestions {
@@ -1158,8 +1170,8 @@
 
 .axi-verbs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+  gap: 4px !important;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -1170,13 +1182,13 @@
   flex-direction: row !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  padding: 6px 10px !important;
+  padding: 3px 6px !important;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border-radius: 5px;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-height: 36px !important;
+  min-height: 28px !important;
   min-width: 0 !important;
   text-align: left;
   white-space: nowrap !important;
@@ -1186,14 +1198,19 @@
 .axi-verbs-grid li.axi-suggestion:hover,
 .axi-verbs-grid li.axi-suggestion.active {
   background-color: aliceblue !important;
-  border-color: #6993ff;
+  border-color: #6993ff !important;
+  padding: 3px 6px !important;
 }
 
 .axi-verbs-grid li.axi-suggestion .d-flex.align-items-center {
+  display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 8px !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
   width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
   white-space: nowrap !important;
 }
 
@@ -1204,14 +1221,14 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 24px !important;
-  height: 24px !important;
+  width: 20px !important;
+  height: 20px !important;
 }
 
 .axi-verbs-grid li.axi-suggestion .symbol-label {
-  width: 24px !important;
-  height: 24px !important;
-  border-radius: 5px !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 4px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -1233,10 +1250,10 @@
 
 .axi-verbs-grid li.axi-suggestion .symbol-label .material-icons,
 .axi-verbs-grid li.axi-suggestion .items-icon .material-icons {
-  font-size: 14px !important;
-  width: 14px !important;
-  height: 14px !important;
-  line-height: 14px !important;
+  font-size: 12px !important;
+  width: 12px !important;
+  height: 12px !important;
+  line-height: 12px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -1253,6 +1270,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .axi-structures-list-container {
