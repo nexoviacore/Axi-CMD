@@ -13955,6 +13955,20 @@
             .AXI-Sec.axi-tour-active {
                 z-index: 9999999 !important;
             }
+            .AXI-Sec.axi-tour-active #Axi-Searchinp,
+            .AXI-Sec.axi-tour-active .btn,
+            .AXI-Sec.axi-tour-active #runBtn,
+            .AXI-Sec.axi-tour-active #btnHistoryPrev,
+            .AXI-Sec.axi-tour-active #History_pages,
+            .AXI-Sec.axi-tour-active #axiFavouriteBtn,
+            .AXI-Sec.axi-tour-active #axiAddFavoriteBtn,
+            .AXI-Sec.axi-tour-active #axiViewFavoritesBtn,
+            .AXI-Sec.axi-tour-active #btnRefresh,
+            .AXI-Sec.axi-tour-active .clearbtn {
+                pointer-events: none !important;
+                opacity: 0.5 !important;
+                cursor: not-allowed !important;
+            }
             .introjs-overlay {
                 background: rgba(10, 10, 18, 0.75) !important;
                 backdrop-filter: blur(4px);
@@ -14003,6 +14017,8 @@
                 font-weight: 600 !important;
                 transition: background 0.2s ease;
                 padding: 6px 12px !important;
+                pointer-events: auto !important;
+                cursor: pointer !important;
             }
             .introjs-tooltipbuttons {
                 display: flex !important;
@@ -14020,17 +14036,6 @@
             }
             .introjs-bullets ul li a.active {
                 background: #a100ff !important;
-            }
-            .AXI-Sec.axi-tour-active .btn,
-            .AXI-Sec.axi-tour-active #runBtn,
-            .AXI-Sec.axi-tour-active #btnHistoryPrev,
-            .AXI-Sec.axi-tour-active #History_pages,
-            .AXI-Sec.axi-tour-active #axiFavouriteBtn,
-            .AXI-Sec.axi-tour-active #btnRefresh,
-            .AXI-Sec.axi-tour-active .clearbtn {
-                pointer-events: none !important;
-                opacity: 0.5 !important;
-                cursor: not-allowed !important;
             }
             .AXI-Sec.axi-tour-active .btn.introjs-showElement,
             .AXI-Sec.axi-tour-active #btnRefresh.introjs-showElement {
@@ -14084,6 +14089,8 @@
         const oldVal = input.value;
         input.value = "Help";
         input.readOnly = true;
+        input.disabled = true;
+        document.querySelector(".AXI-Sec")?.classList.add("axi-tour-active");
 
         const tour = introJs();
         tour.setOptions({
@@ -14173,22 +14180,24 @@
             if (resizeTimeout) clearTimeout(resizeTimeout);
             input.value = oldVal;
             input.readOnly = false;
-            handleInput();
+            input.disabled = false;
             document.querySelector(".AXI-Sec")?.classList.remove("axi-tour-active");
             if (megaDropdown) {
                 megaDropdown.style.zIndex = "";
             }
+            handleInput();
         });
         tour.oncomplete(() => {
             window.removeEventListener("resize", handleResize);
             if (resizeTimeout) clearTimeout(resizeTimeout);
             input.value = oldVal;
             input.readOnly = false;
-            handleInput();
+            input.disabled = false;
             document.querySelector(".AXI-Sec")?.classList.remove("axi-tour-active");
             if (megaDropdown) {
                 megaDropdown.style.zIndex = "";
             }
+            handleInput();
         });
 
         tour.start();
