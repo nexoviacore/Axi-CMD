@@ -1,0 +1,4 @@
+Manual download required for ZIP file:
+Download and extract the following file manually:
+https://raw.githubusercontent.com/Agileaxpert/AxpertPlugins/main/Axi_Beta/Structures/Postgre/Scripts/axi_smartview.zip
+--------------------------------------------------
