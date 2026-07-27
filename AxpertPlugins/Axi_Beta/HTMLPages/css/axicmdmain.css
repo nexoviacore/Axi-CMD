@@ -536,14 +536,32 @@
 .My-Command-Wrapper {
   flex-wrap: nowrap !important;
   overflow-x: auto !important;
-  overflow-y: hidden !important;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow-y: auto !important;
+  max-height: 380px !important;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
 .axi-suggestions.axi-grid-layout.My-Command-Wrapper::-webkit-scrollbar,
-.My-Command-Wrapper::-webkit-scrollbar {
-  display: none;
+.My-Command-Wrapper::-webkit-scrollbar,
+.axi-suggestions::-webkit-scrollbar,
+#axiMegaDropdown .axi-suggestions::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  display: block !important;
+}
+
+.My-Command-Wrapper::-webkit-scrollbar-thumb,
+.axi-suggestions::-webkit-scrollbar-thumb,
+#axiMegaDropdown .axi-suggestions::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+
+.My-Command-Wrapper::-webkit-scrollbar-thumb:hover,
+.axi-suggestions::-webkit-scrollbar-thumb:hover,
+#axiMegaDropdown .axi-suggestions::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
 }
 
 .axi-suggestions.axi-grid-layout.My-Command-Wrapper li.axi-suggestion,
@@ -834,6 +852,8 @@
   width: 100% !important;
   box-shadow: none !important;
   margin: 0 !important;
+  max-height: 380px !important;
+  overflow-y: auto !important;
 }
 
 #hiddenLoader {
