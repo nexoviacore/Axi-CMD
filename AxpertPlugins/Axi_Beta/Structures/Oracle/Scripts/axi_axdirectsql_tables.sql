@@ -495,13 +495,13 @@ INSERT INTO axdirectsql
 )
 VALUES
 (
-    99999999990037,
+    99999999990023,
     'F',
     0,
     NULL,
-    'admin',
+    'rekhancia',
     TO_TIMESTAMP('2025-12-23 13:35:16', 'YYYY-MM-DD HH24:MI:SS'),
-    'admin',
+    'rekhancia',
     TO_TIMESTAMP('2025-12-22 16:01:14', 'YYYY-MM-DD HH24:MI:SS'),
     NULL,
     1,
