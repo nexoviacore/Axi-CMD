@@ -4579,6 +4579,17 @@
                 // filteredObjects.unshift(goOption);
             }
 
+            if (groupKey.toLowerCase() === "sdk" && accessPermissions?.buildAccess && tokens.length >= 2) {
+                const targetToken = cleanCommandToken(tokens[1])?.toLowerCase().trim();
+                if (["tstruct", "iview", "page", "axpert data sources", "ads"].includes(targetToken)) {
+                    const createObj = { displaydata: "Create New", name: "Create New", isCreateNew: true };
+                    resultList = resultList.filter(item => typeof item === "string" ? item.toLowerCase() !== "create new" : true);
+                    filteredObjects = filteredObjects.filter(item => typeof item === "object" ? item?.name?.toLowerCase() !== "create new" : true);
+                    resultList.unshift("Create New");
+                    filteredObjects.unshift(createObj);
+                }
+            }
+
             return resultList;
         }
 
@@ -8981,9 +8992,18 @@
 
     function handleOpenSource({ tokens, commandConfig }) {
 
-
         const type = cleanCommandToken(tokens[1]);
         let rawName = cleanCommandToken(tokens[2]);
+
+        if (!rawName || rawName.toLowerCase() === "create new") {
+            if (type.toLowerCase() === "tstruct") {
+                window.openDeveloperStudio("tstreact", "", true);
+                return;
+            } else if (type.toLowerCase() === "iview") {
+                window.openDeveloperStudio("ivreact", "", true);
+                return;
+            }
+        }
 
         let { value: resolvedName } = tryResolveToken(2, rawName, commandConfig, false);
 
@@ -9037,7 +9057,7 @@
 
 
 
-        if (rawName) {
+        if (rawName && rawName.toLowerCase() !== "create new") {
             // paramName = tryResolveToken(2, rawName, commandConfig, false);
             const { value } = tryResolveToken(2, rawName, commandConfig, false);
             paramName = value;
@@ -9052,11 +9072,10 @@
 
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
-        if (!paramName) {
+        if (!paramName || (rawName && rawName.toLowerCase() === "create new")) {
             setCommandRoutes(input.value.trim(), targetUrl);
 
-            redirectToIView(iviewName);
-
+            window.LoadIframe(targetUrl);
 
         } else {
             targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
@@ -9125,7 +9144,7 @@
 
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
-        if (!rawName) {
+        if (!rawName || rawName.toLowerCase() === "create new") {
             setCommandRoutes(input.value.trim(), targetUrl);
             window.LoadIframe(targetUrl);
 
