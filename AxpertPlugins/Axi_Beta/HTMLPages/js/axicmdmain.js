@@ -8009,7 +8009,7 @@
         setCommandRoutes(input.value.trim(), targetUrl);
     }
 
-    function handleViewCommand({ tokens, commandConfig }) {
+    async function handleViewCommand({ tokens, commandConfig }) {
 
         let transId = "";
         let type = "";
@@ -8075,13 +8075,46 @@
 
         if (type === "ads") {
 
-
             const adsName = cleanCommandToken(tokens[1]);
             const filters = extractAdsFilters(tokens);
 
+            if (filters && filters.length > 0) {
+                const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
+                let colList = axDatasourceObj[colSourceKey];
+                if (!colList) {
+                    try {
+                        colList = await getList("axi_adscolumnlist", adsName);
+                        if (colList) axDatasourceObj[colSourceKey] = colList;
+                    } catch (err) {
+                        console.error("Failed to fetch column list for validation", err);
+                    }
+                }
+
+                if (colList && Array.isArray(colList)) {
+                    for (let f of filters) {
+                        const rawField = f.field || "";
+                        if (!rawField) continue;
+
+                        const fieldNames = rawField.split(",").map(s => s.trim().toLowerCase());
+                        for (let colName of fieldNames) {
+                            if (!colName) continue;
+                            const matched = colList.find(c => {
+                                const cName = (c.name || "").toLowerCase().trim();
+                                const cDisplay = (c.displaydata || "").toLowerCase().replace(/\s*\(.*?\)/g, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim();
+                                const isHidden = c.hide === "T" || c.hidden === "T" || c.hide === true || c.hidden === true;
+                                return (cName === colName || cDisplay === colName) && !isHidden;
+                            });
+
+                            if (!matched) {
+                                showToast(`Column '${colName}' is invalid or hidden.`, 4000, false);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
             console.log("Ads Filters: ", filters);
-
-
 
             redirectToSmartView({
                 adsName: adsName,
