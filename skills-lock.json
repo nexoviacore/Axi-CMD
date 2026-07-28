@@ -55,6 +55,12 @@
       "skillPath": "skills/personal/edit-article/SKILL.md",
       "computedHash": "db56e5af37c1d91ca8516c40ceb0f108332e7290ab1b65bdae5a089a64271431"
     },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "b146008599c31057cef1c145774cea5d5afb30e8f43fa802e47a4b461419aaaf"
+    },
     "git-commit": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -120,6 +126,12 @@
       "sourceType": "github",
       "skillPath": "skills/personal/obsidian-vault/SKILL.md",
       "computedHash": "6c8409ce9dd8419abc38f2a665e862e2a22758fe98e1cdd42e16ecab4f562e23"
+    },
+    "prompt-engineer": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/prompt-engineer/SKILL.md",
+      "computedHash": "1a7329788b65328b898834b89b3893624c824bffaebd9ce46e742981359d7d9b"
     },
     "prototype": {
       "source": "mattpocock/skills",

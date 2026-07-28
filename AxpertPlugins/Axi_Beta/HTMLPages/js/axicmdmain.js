@@ -4438,7 +4438,15 @@
             }
 
             // Filter Cache
-            const dataList = axDatasourceObj[sourceKey];
+            let dataList = axDatasourceObj[sourceKey] || [];
+            const currentAccessPerms = getAccessPermissions();
+            if (groupKey.toLowerCase() === "sdk" && currentAccessPerms?.buildAccess && tokens.length >= 2) {
+                const targetToken = cleanCommandToken(tokens[1])?.toLowerCase().trim();
+                if (["tstruct", "iview", "page", "axpert data sources", "ads"].includes(targetToken)) {
+                    dataList = [{ displaydata: "Create New", name: "Create New", isCreateNew: true }, ...dataList];
+                }
+            }
+
             let filtered = dataList.filter(item => {
                 const display = item.displaydata || item.caption || item.name || "";
                 return display.toLowerCase().includes(partialTyped.toLowerCase());
@@ -5410,7 +5418,14 @@
                 ? capitalizeFirstLetter(text)
                 : text;
 
-            if (typeof item === 'object' && item.isExecutable) {
+            const isCreateNewItem = (typeof item === 'string' && item.toLowerCase() === 'create new') || (typeof item === 'object' && (item.isCreateNew || item?.name?.toLowerCase() === 'create new'));
+
+            if (isCreateNewItem) {
+                li.classList.add("axi-create-new-item");
+                li.style.color = "#10b981";
+                li.style.fontWeight = "600";
+                li.textContent = displayText;
+            } else if (typeof item === 'object' && item.isExecutable) {
                 li.style.fontWeight = "bold";
                 li.style.color = "#22c55e";
                 li.style.borderBottom = "1px solid #eee";
