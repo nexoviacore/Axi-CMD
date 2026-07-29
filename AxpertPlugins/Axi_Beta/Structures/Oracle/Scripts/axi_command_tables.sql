@@ -136,7 +136,7 @@ INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PR
 >>
 
 <<
-INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('B141E931BB7144788EC8B60253361FFB', 4, 2, 'object type', NULL, NULL, 'PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,KeyField,User,Users,User Permission,User Permissions,User Activation,User Group,Role,Roles,Role Permissions,Actor,Actors,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibilities,Dimension,Dimension Listing, Application Properties,Settings,Smart View Attributes,Smart View Listing', NULL, NULL, NULL)
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('B141E931BB7144788EC8B60253361FFB', 4, 2, 'object type', NULL, NULL, 'PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,KeyField,User,User Listing,User Permission Setup,User Permissions,User Activation,User Group,Role,Role Listing,Role Permissions,Actor,Actor Listing,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibility Listing,Dimension,Dimension Listing, Application Properties,Settings,Smart View Attributes,Smart View Listing', NULL, NULL, NULL)
 >>
 
 <<
