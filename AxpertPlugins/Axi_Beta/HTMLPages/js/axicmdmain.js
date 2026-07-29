@@ -225,6 +225,7 @@
             responsibilities: handleConfigureResponsibilities,
             "user group": handleConfigureUserGroup,
             dimension: handleConfigureDimensions,
+            "dimension listing": handleConfigureDimensionListing,
             actors: handleConfigureActorListing,
             actor: handleConfigureActor,
             // useractivation: handleUserActivation,
@@ -1227,6 +1228,40 @@
         }
         else {
             redirectToTstruct(transId, cleanCommandToken(tokens[1]));
+        }
+    }
+
+    function handleConfigureDimensionListing({ tokens, commandConfig }) {
+
+        // callParentNew(&quot;loadFrame();&quot;,&quot;function&quot;);LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;);callParentNew(&quot;closeFrame();&quot;,&quot;function&quot;);
+        let transId = "ad___upg";
+        //let fieldname = "prole";
+
+        const rawParamName = cleanCommandToken(tokens[2]);
+
+        let targetUrl = `../aspx/ivtoivload.aspx?ivname=${transId}`;
+
+
+        if (rawParamName) {
+            targetUrl += `&prole=${encodeURIComponent(rawParamName)}`;
+        }
+
+
+        targetUrl += `&AxOpenAct=true`;
+        targetUrl += `&isDupTab=false`;
+
+
+
+        setEditSessionState(transId);
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
+            targetUrl += "&AxIsPop=true";
+
+            openPopOption(targetUrl)
+        }
+        else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            window.LoadIframe(targetUrl);
         }
     }
     function handleConfigureUserGroup({ tokens, commandConfig }) {
