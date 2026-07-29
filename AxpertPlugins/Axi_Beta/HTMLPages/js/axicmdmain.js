@@ -10,6 +10,7 @@
     const AxiCmdConfig = {
         MAX_HISTORY: 10,
         MAX_FAVORITES: 20,
+        SDK_CREATE_NEW_TARGETS: ["tstruct", "iview", "page", "axpert data sources", "ads"],
         SHORTCUT_OPTIONS: {
             GO: { displaydata: "Go [Ctrl + Enter]", name: "GO_ACTION", isExecutable: true },
             SAVE: { displaydata: "Save [Ctrl + S]", name: "Save_ACTION", isExecutable: true },
@@ -4516,7 +4517,7 @@
             const currentAccessPerms = getAccessPermissions();
             if (groupKey.toLowerCase() === "sdk" && currentAccessPerms?.buildAccess && tokens.length >= 2) {
                 const targetToken = cleanCommandToken(tokens[1])?.toLowerCase().trim();
-                if (["tstruct", "iview", "page", "axpert data sources", "ads"].includes(targetToken)) {
+                if (AxiCmdConfig.SDK_CREATE_NEW_TARGETS.includes(targetToken)) {
                     dataList = [{ displaydata: "Create New", name: "Create New", isCreateNew: true }, ...dataList];
                 }
             }
@@ -4663,7 +4664,7 @@
 
             if (groupKey.toLowerCase() === "sdk" && accessPermissions?.buildAccess && tokens.length >= 2) {
                 const targetToken = cleanCommandToken(tokens[1])?.toLowerCase().trim();
-                if (["tstruct", "iview", "page", "axpert data sources", "ads"].includes(targetToken)) {
+                if (AxiCmdConfig.SDK_CREATE_NEW_TARGETS.includes(targetToken)) {
                     const createObj = { displaydata: "Create New", name: "Create New", isCreateNew: true };
                     resultList = resultList.filter(item => typeof item === "string" ? item.toLowerCase() !== "create new" : true);
                     filteredObjects = filteredObjects.filter(item => typeof item === "object" ? item?.name?.toLowerCase() !== "create new" : true);
@@ -5496,8 +5497,6 @@
 
             if (isCreateNewItem) {
                 li.classList.add("axi-create-new-item");
-                li.style.color = "#10b981";
-                li.style.fontWeight = "600";
                 li.textContent = displayText;
             } else if (typeof item === 'object' && item.isExecutable) {
                 li.style.fontWeight = "bold";
@@ -9086,7 +9085,7 @@
         const type = cleanCommandToken(tokens[1]);
         let rawName = cleanCommandToken(tokens[2]);
 
-        if (!rawName || rawName.toLowerCase() === "create new") {
+        if (rawName && rawName.toLowerCase() === "create new") {
             if (type.toLowerCase() === "tstruct") {
                 window.openDeveloperStudio("tstreact", "", true);
                 return;
