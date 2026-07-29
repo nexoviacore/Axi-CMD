@@ -209,7 +209,7 @@
             //access: handleConfigureAccess,
             "scheduled notification": handleConfigureScheduledNotification,
             keyfield: handleKeyfield,
-            "news and announcement": handleConfigureNewsAndAnnouncement,
+            // "news and announcement": handleConfigureNewsAndAnnouncement,
             settings: handleConfigureSettings,
 
             "user listing": handleConfigureUsers,
@@ -234,7 +234,9 @@
             "user permission setup": handleConfigureUserPermission,
             "role permissions": handleConfigureRolePermissionListing,
             //"role permission": handleRolePermission
-            "smart view attributes": handleConfigureSmartViewAttributes
+            "smart view attributes": handleConfigureSmartViewAttributes,
+            "smart view listing": handleConfigureSmartViewListing
+
         },
         //Open: {
         SDK: {
@@ -1234,6 +1236,43 @@
     function handleConfigureDimensionListing({ tokens, commandConfig }) {
 
         // callParentNew(&quot;loadFrame();&quot;,&quot;function&quot;);LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;);callParentNew(&quot;closeFrame();&quot;,&quot;function&quot;);
+        let transId = "ad___upg";
+        //let fieldname = "prole";
+
+        const rawParamName = cleanCommandToken(tokens[2]);
+
+        let targetUrl = `../aspx/ivtoivload.aspx?ivname=${transId}`;
+
+
+        if (rawParamName) {
+            targetUrl += `&prole=${encodeURIComponent(rawParamName)}`;
+        }
+
+
+        targetUrl += `&AxOpenAct=true`;
+        targetUrl += `&isDupTab=false`;
+
+
+
+        setEditSessionState(transId);
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
+            targetUrl += "&AxIsPop=true";
+
+            openPopOption(targetUrl)
+        }
+        else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            window.LoadIframe(targetUrl);
+        }
+    }
+
+     function handleConfigureSmartViewListing({ tokens, commandConfig }) {
+
+        // callParentNew(&quot;loadFrame();&quot;,&quot;function&quot;);LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;);callParentNew(&quot;closeFrame();&quot;,&quot;function&quot;);
+
+        showToast("Not Yet implemented"); 
+        return; 
         let transId = "ad___upg";
         //let fieldname = "prole";
 
@@ -7229,6 +7268,8 @@
         const handler = groupHandlers[handlerKey] || groupHandlers['default'];
 
         if (!handler) {
+            showToast(`Dispatch Error: No handler function found for '${group}' -> '${handlerKey}'`);
+
             console.error(`Dispatch Error: No handler function found for '${group}' -> '${handlerKey}'`);
             return;
         }
