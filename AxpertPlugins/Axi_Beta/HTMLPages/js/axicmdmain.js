@@ -157,7 +157,7 @@
 
         ads: ({ transId, fieldName, fieldValue }) => redirectToEntity(transId, "", fieldName, fieldValue),
 
-        inbox: () => handleViewInbox()
+        // inbox: () => handleViewInbox()
     };
 
 
@@ -2678,20 +2678,12 @@
     function isInboxStructure(item) {
         if (!item) return false;
         const stype = item.stype !== undefined ? item.stype : item.STYPE;
-        const name = (item.name || item.NAME || item.displaydata || item.DISPLAYDATA || "").toLowerCase().trim();
-
         if (stype !== undefined && stype !== null) {
             const stypeStr = String(stype).trim().toLowerCase();
             if (stypeStr === "inbox") {
                 return true;
             }
         }
-
-        const isStypeEmpty = stype === undefined || stype === null || String(stype).trim() === "";
-        if (isStypeEmpty && name === "inbox") {
-            return true;
-        }
-
         return false;
     }
 
@@ -8238,10 +8230,7 @@
             redirectToIView(transId, rawStruct);
             return;
 
-        } else if (type === "inbox") {
-            handleViewInbox();
-            return;
-        }
+        } 
 
 
         //const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
@@ -9087,10 +9076,10 @@
 
         if (rawName && rawName.toLowerCase() === "create new") {
             if (type.toLowerCase() === "tstruct") {
-                window.openDeveloperStudio("tstreact", "", true);
+                window.openDeveloperStudio("tstreact", "new_tstruct", true);
                 return;
             } else if (type.toLowerCase() === "iview") {
-                window.openDeveloperStudio("ivreact", "", true);
+                window.openDeveloperStudio("ivreact", "new_iview", true);
                 return;
             }
         }
