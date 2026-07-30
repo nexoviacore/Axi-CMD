@@ -1272,9 +1272,9 @@
 
         // callParentNew(&quot;loadFrame();&quot;,&quot;function&quot;);LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;);callParentNew(&quot;closeFrame();&quot;,&quot;function&quot;);
 
-        showToast("Not Yet implemented"); 
-        return; 
-        let transId = "ad___upg";
+        // showToast("Not Yet implemented"); 
+        // return; 
+        let transId ="a___smtl";
         //let fieldname = "prole";
 
         const rawParamName = cleanCommandToken(tokens[2]);
