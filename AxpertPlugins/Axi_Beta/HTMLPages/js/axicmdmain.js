@@ -289,8 +289,9 @@
         ask: { default: handleAiAsk, },
         end: { default: handleAiEnd, },
         editprompt: { default: () => handleAiButtons("openSystemPrompt") },
-        analyze: { default: () => handleAiButtons("axiLoad"), },
+        
         // upload: { default: () => handleAiButtons("openUpload") }
+       
     };
 
 
@@ -7324,11 +7325,14 @@
     }
 
     function handleViewInbox() {
-        // LoadIframe('processflow.aspx?activelist=t')
+        
+        // LoadIframe('htmlpages.aspx?inbox=t')
         if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
-            top.window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+            // top.window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+            top.window.LoadIframe('htmlpages.aspx?inbox=t');
         } else {
-            window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+            // window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+            window.LoadIframe('htmlpages.aspx?inbox=t');
         }
     }
 
