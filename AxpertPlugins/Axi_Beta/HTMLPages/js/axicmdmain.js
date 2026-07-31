@@ -3791,14 +3791,7 @@
         let ignoreExtraParams = false;
         let detectedType = "";
         const rawTokens = getTokens(inputText, false);
-        if (rawTokens.length > 0) {
-            const firstToken = cleanString(rawTokens[0]).toLowerCase();
-            if (["create", "view", "edit", "source"].includes(firstToken)) {
-                filteredObjects = [];
-                hintDiv.textContent = "";
-                return [];
-            }
-        }
+
         const endsWithSpace = inputText.endsWith(" ");
 
 
@@ -4046,7 +4039,7 @@
         //const commandConfig = commands[groupKey];
 
 
-        let commandConfig = getCommandConfig(groupKey);
+        let commandConfig = getCommandConfig(groupKey, tokens);
 
 
         /** Begin: Note: This must be removed when releasing */
@@ -5044,9 +5037,14 @@
         return resolvedParamType?.[rawIndex];
     }
 
-    function getCommandConfig(groupKey) {
+    function getCommandConfig(groupKey, currentTokens) {
         if (!groupKey || !commands) return null;
         const lowKey = groupKey.toLowerCase();
+        if (["create", "view", "edit", "source"].includes(lowKey)) {
+            if (!currentTokens || currentTokens.length <= 1 || (currentTokens.length === 2 && cleanString(currentTokens[1]) === "")) {
+                return null;
+            }
+        }
         if (commands[groupKey]) return commands[groupKey];
         const matchedKey = Object.keys(commands).find(k => k.toLowerCase() === lowKey);
         return matchedKey ? commands[matchedKey] : null;
@@ -7100,10 +7098,7 @@
             const secondToken = rawTokens[1] ? cleanString(rawTokens[1].toLowerCase()) : "";
 
 
-            if (!isProgrammaticExecution && ["create", "view", "edit", "source"].includes(firstToken) && secondToken !== "inbox") {
-                showToast("Invalid Command!");
-                return;
-            }
+
         }
 
         const tokens = getTokens(text);
