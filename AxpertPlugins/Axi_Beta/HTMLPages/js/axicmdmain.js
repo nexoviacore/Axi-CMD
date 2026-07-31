@@ -10,6 +10,7 @@
     const AxiCmdConfig = {
         MAX_HISTORY: 10,
         MAX_FAVORITES: 20,
+        SDK_CREATE_NEW_TARGETS: ["tstruct", "iview", "page", "axpert data sources", "ads"],
         SHORTCUT_OPTIONS: {
             GO: { displaydata: "Go [Ctrl + Enter]", name: "GO_ACTION", isExecutable: true },
             SAVE: { displaydata: "Save [Ctrl + S]", name: "Save_ACTION", isExecutable: true },
@@ -156,7 +157,7 @@
 
         ads: ({ transId, fieldName, fieldValue }) => redirectToEntity(transId, "", fieldName, fieldValue),
 
-        inbox: () => handleViewInbox()
+        // inbox: () => handleViewInbox()
     };
 
 
@@ -209,12 +210,12 @@
             //access: handleConfigureAccess,
             "scheduled notification": handleConfigureScheduledNotification,
             keyfield: handleKeyfield,
-            "news and announcement": handleConfigureNewsAndAnnouncement,
+            // "news and announcement": handleConfigureNewsAndAnnouncement,
             settings: handleConfigureSettings,
 
-            users: handleConfigureUsers,
+            "user listing": handleConfigureUsers,
             user: handleConfigureUser,
-            roles: handleConfigureRoles,
+            "role listing": handleConfigureRoles,
             role: handleConfigureRole,
             "publish axpert api": handleConfigurePublishAxpertApi,
             //"publish api listing": handleApiList,
@@ -222,18 +223,21 @@
             card: handleConfigureCards,
             //forms: handleForms,
             responsibility: handleConfigureResponsibility,
-            responsibilities: handleConfigureResponsibilities,
+            "responsibility listing": handleConfigureResponsibilities,
             "user group": handleConfigureUserGroup,
             dimension: handleConfigureDimensions,
-            actors: handleConfigureActorListing,
+            "dimension listing": handleConfigureDimensionListing,
+            "actor listing": handleConfigureActorListing,
             actor: handleConfigureActor,
             // useractivation: handleUserActivation,
             "user activation": handleConfigureUserActivation,
             "user permissions": handleConfigureUserPermissionListing,
-            "user permission": handleConfigureUserPermission,
+            "user permission setup": handleConfigureUserPermission,
             "role permissions": handleConfigureRolePermissionListing,
             //"role permission": handleRolePermission
-            "smart view attributes": handleConfigureSmartViewAttributes
+            "smart view attributes": handleConfigureSmartViewAttributes,
+            "smart view listing": handleConfigureSmartViewListing
+
         },
         //Open: {
         SDK: {
@@ -285,8 +289,9 @@
         ask: { default: handleAiAsk, },
         end: { default: handleAiEnd, },
         editprompt: { default: () => handleAiButtons("openSystemPrompt") },
-        analyze: { default: () => handleAiButtons("axiLoad"), },
+        
         // upload: { default: () => handleAiButtons("openUpload") }
+       
     };
 
 
@@ -1227,6 +1232,77 @@
         }
         else {
             redirectToTstruct(transId, cleanCommandToken(tokens[1]));
+        }
+    }
+
+    function handleConfigureDimensionListing({ tokens, commandConfig }) {
+
+        // callParentNew(&quot;loadFrame();&quot;,&quot;function&quot;);LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;);callParentNew(&quot;closeFrame();&quot;,&quot;function&quot;);
+        let transId = "ad___upg";
+        //let fieldname = "prole";
+
+        const rawParamName = cleanCommandToken(tokens[2]);
+
+        let targetUrl = `../aspx/ivtoivload.aspx?ivname=${transId}`;
+
+
+        if (rawParamName) {
+            targetUrl += `&prole=${encodeURIComponent(rawParamName)}`;
+        }
+
+
+        targetUrl += `&AxOpenAct=true`;
+        targetUrl += `&isDupTab=false`;
+
+
+
+        setEditSessionState(transId);
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
+            targetUrl += "&AxIsPop=true";
+
+            openPopOption(targetUrl)
+        }
+        else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            window.LoadIframe(targetUrl);
+        }
+    }
+
+     function handleConfigureSmartViewListing({ tokens, commandConfig }) {
+
+        // callParentNew(&quot;loadFrame();&quot;,&quot;function&quot;);LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;);callParentNew(&quot;closeFrame();&quot;,&quot;function&quot;);
+
+        // showToast("Not Yet implemented"); 
+        // return; 
+        let transId ="a___smtl";
+        //let fieldname = "prole";
+
+        const rawParamName = cleanCommandToken(tokens[2]);
+
+        let targetUrl = `../aspx/ivtoivload.aspx?ivname=${transId}`;
+
+
+        if (rawParamName) {
+            targetUrl += `&prole=${encodeURIComponent(rawParamName)}`;
+        }
+
+
+        targetUrl += `&AxOpenAct=true`;
+        targetUrl += `&isDupTab=false`;
+
+
+
+        setEditSessionState(transId);
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
+            targetUrl += "&AxIsPop=true";
+
+            openPopOption(targetUrl)
+        }
+        else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            window.LoadIframe(targetUrl);
         }
     }
     function handleConfigureUserGroup({ tokens, commandConfig }) {
@@ -2603,20 +2679,12 @@
     function isInboxStructure(item) {
         if (!item) return false;
         const stype = item.stype !== undefined ? item.stype : item.STYPE;
-        const name = (item.name || item.NAME || item.displaydata || item.DISPLAYDATA || "").toLowerCase().trim();
-
         if (stype !== undefined && stype !== null) {
             const stypeStr = String(stype).trim().toLowerCase();
             if (stypeStr === "inbox") {
                 return true;
             }
         }
-
-        const isStypeEmpty = stype === undefined || stype === null || String(stype).trim() === "";
-        if (isStypeEmpty && name === "inbox") {
-            return true;
-        }
-
         return false;
     }
 
@@ -4438,7 +4506,15 @@
             }
 
             // Filter Cache
-            const dataList = axDatasourceObj[sourceKey];
+            let dataList = axDatasourceObj[sourceKey] || [];
+            const currentAccessPerms = getAccessPermissions();
+            if (groupKey.toLowerCase() === "sdk" && currentAccessPerms?.buildAccess && tokens.length >= 2) {
+                const targetToken = cleanCommandToken(tokens[1])?.toLowerCase().trim();
+                if (AxiCmdConfig.SDK_CREATE_NEW_TARGETS.includes(targetToken)) {
+                    dataList = [{ displaydata: "Create New", name: "Create New", isCreateNew: true }, ...dataList];
+                }
+            }
+
             let filtered = dataList.filter(item => {
                 const display = item.displaydata || item.caption || item.name || "";
                 return display.toLowerCase().includes(partialTyped.toLowerCase());
@@ -4577,6 +4653,17 @@
                 filteredObjects.unshift("Source");
                 updateDynamicHintFromPrompt({ prompt: "Ready to Run" });
                 // filteredObjects.unshift(goOption);
+            }
+
+            if (groupKey.toLowerCase() === "sdk" && accessPermissions?.buildAccess && tokens.length >= 2) {
+                const targetToken = cleanCommandToken(tokens[1])?.toLowerCase().trim();
+                if (AxiCmdConfig.SDK_CREATE_NEW_TARGETS.includes(targetToken)) {
+                    const createObj = { displaydata: "Create New", name: "Create New", isCreateNew: true };
+                    resultList = resultList.filter(item => typeof item === "string" ? item.toLowerCase() !== "create new" : true);
+                    filteredObjects = filteredObjects.filter(item => typeof item === "object" ? item?.name?.toLowerCase() !== "create new" : true);
+                    resultList.unshift("Create New");
+                    filteredObjects.unshift(createObj);
+                }
             }
 
             return resultList;
@@ -5399,7 +5486,12 @@
                 ? capitalizeFirstLetter(text)
                 : text;
 
-            if (typeof item === 'object' && item.isExecutable) {
+            const isCreateNewItem = (typeof item === 'string' && item.toLowerCase() === 'create new') || (typeof item === 'object' && (item.isCreateNew || item?.name?.toLowerCase() === 'create new'));
+
+            if (isCreateNewItem) {
+                li.classList.add("axi-create-new-item");
+                li.textContent = displayText;
+            } else if (typeof item === 'object' && item.isExecutable) {
                 li.style.fontWeight = "bold";
                 li.style.color = "#22c55e";
                 li.style.borderBottom = "1px solid #eee";
@@ -7168,6 +7260,8 @@
         const handler = groupHandlers[handlerKey] || groupHandlers['default'];
 
         if (!handler) {
+            showToast(`Dispatch Error: No handler function found for '${group}' -> '${handlerKey}'`);
+
             console.error(`Dispatch Error: No handler function found for '${group}' -> '${handlerKey}'`);
             return;
         }
@@ -7231,11 +7325,14 @@
     }
 
     function handleViewInbox() {
-        // LoadIframe('processflow.aspx?activelist=t')
+        
+        // LoadIframe('htmlpages.aspx?inbox=t')
         if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
-            top.window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+            // top.window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+            top.window.LoadIframe('htmlpages.aspx?inbox=t');
         } else {
-            window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+            // window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+            window.LoadIframe('htmlpages.aspx?inbox=t');
         }
     }
 
@@ -8009,7 +8106,7 @@
         setCommandRoutes(input.value.trim(), targetUrl);
     }
 
-    function handleViewCommand({ tokens, commandConfig }) {
+    async function handleViewCommand({ tokens, commandConfig }) {
 
         let transId = "";
         let type = "";
@@ -8075,13 +8172,46 @@
 
         if (type === "ads") {
 
-
             const adsName = cleanCommandToken(tokens[1]);
             const filters = extractAdsFilters(tokens);
 
+            if (filters && filters.length > 0) {
+                const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
+                let colList = axDatasourceObj[colSourceKey];
+                if (!colList) {
+                    try {
+                        colList = await getList("axi_adscolumnlist", adsName);
+                        if (colList) axDatasourceObj[colSourceKey] = colList;
+                    } catch (err) {
+                        console.error("Failed to fetch column list for validation", err);
+                    }
+                }
+
+                if (colList && Array.isArray(colList)) {
+                    for (let f of filters) {
+                        const rawField = f.field || "";
+                        if (!rawField) continue;
+
+                        const fieldNames = rawField.split(",").map(s => s.trim().toLowerCase());
+                        for (let colName of fieldNames) {
+                            if (!colName) continue;
+                            const matched = colList.find(c => {
+                                const cName = (c.name || "").toLowerCase().trim();
+                                const cDisplay = (c.displaydata || "").toLowerCase().replace(/\s*\(.*?\)/g, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim();
+                                const isHidden = c.hide === "T" || c.hidden === "T" || c.hide === true || c.hidden === true;
+                                return (cName === colName || cDisplay === colName) && !isHidden;
+                            });
+
+                            if (!matched) {
+                                showToast(`Column '${colName}' is invalid or hidden.`, 4000, false);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
             console.log("Ads Filters: ", filters);
-
-
 
             redirectToSmartView({
                 adsName: adsName,
@@ -8104,10 +8234,7 @@
             redirectToIView(transId, rawStruct);
             return;
 
-        } else if (type === "inbox") {
-            handleViewInbox();
-            return;
-        }
+        } 
 
 
         //const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
@@ -8948,9 +9075,18 @@
 
     function handleOpenSource({ tokens, commandConfig }) {
 
-
         const type = cleanCommandToken(tokens[1]);
         let rawName = cleanCommandToken(tokens[2]);
+
+        if (rawName && rawName.toLowerCase() === "create new") {
+            if (type.toLowerCase() === "tstruct") {
+                window.openDeveloperStudio("tstreact", "new_tstruct", true);
+                return;
+            } else if (type.toLowerCase() === "iview") {
+                window.openDeveloperStudio("ivreact", "new_iview", true);
+                return;
+            }
+        }
 
         let { value: resolvedName } = tryResolveToken(2, rawName, commandConfig, false);
 
@@ -9004,7 +9140,7 @@
 
 
 
-        if (rawName) {
+        if (rawName && rawName.toLowerCase() !== "create new") {
             // paramName = tryResolveToken(2, rawName, commandConfig, false);
             const { value } = tryResolveToken(2, rawName, commandConfig, false);
             paramName = value;
@@ -9019,11 +9155,10 @@
 
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
-        if (!paramName) {
+        if (!paramName || (rawName && rawName.toLowerCase() === "create new")) {
             setCommandRoutes(input.value.trim(), targetUrl);
 
-            redirectToIView(iviewName);
-
+            window.LoadIframe(targetUrl);
 
         } else {
             targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
@@ -9092,7 +9227,7 @@
 
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
-        if (!rawName) {
+        if (!rawName || rawName.toLowerCase() === "create new") {
             setCommandRoutes(input.value.trim(), targetUrl);
             window.LoadIframe(targetUrl);
 

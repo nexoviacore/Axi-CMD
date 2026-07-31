@@ -1305,3 +1305,14 @@
 .axi-structures-list-container li.axi-suggestion {
   list-style: none;
 }
+
+.axi-suggestions li.axi-create-new-item {
+  color: #10b981 !important;
+  font-weight: 600 !important;
+}
+
+.axi-suggestions li.axi-create-new-item.active,
+.axi-suggestions li.axi-create-new-item:hover {
+  color: #059669 !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+}
