@@ -5696,7 +5696,7 @@
         }
 
         const saveGroupKeyCheck = cleanString(checkTokens[0]);
-        const saveCommandConfig = getCommandConfig(saveGroupKeyCheck);
+        const saveCommandConfig = getCommandConfig(saveGroupKeyCheck, checkTokens);
 
         if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "GO_ACTION") {
             console.log("Action item selected. Executing command...");
@@ -5819,7 +5819,7 @@
         let isAdsValue = false;
 
         const groupKey = cleanString(checkTokens[0]);
-        const commandConfig = getCommandConfig(groupKey);
+        const commandConfig = getCommandConfig(groupKey, checkTokens);
         /**
          * ==== Robust Type checking for View command ===
          */
@@ -6132,6 +6132,34 @@
        TOAST HELPER
     =============================== */
     function showToast(message, duration = 5000, isSuccess = false) {
+        let alertType = "error";
+        if (isSuccess === true || isSuccess === "success") {
+            alertType = "success";
+        } else if (isSuccess === "warning") {
+            alertType = "warning";
+        } else if (isSuccess === "info" || isSuccess === "information") {
+            alertType = "info";
+        } else if (isSuccess === false || isSuccess === "error" || isSuccess === "danger" || isSuccess === "failure") {
+            alertType = "error";
+        } else if (typeof message === "string") {
+            const lowerMsg = message.toLowerCase();
+            if (lowerMsg.startsWith("warning")) alertType = "warning";
+            else if (lowerMsg.startsWith("info")) alertType = "info";
+        }
+
+        const alertFn = (typeof top !== "undefined" && typeof top.showAlertDialog === "function" && top.showAlertDialog) ||
+                        (typeof parent !== "undefined" && typeof parent.showAlertDialog === "function" && parent.showAlertDialog) ||
+                        (typeof window !== "undefined" && typeof window.showAlertDialog === "function" && window.showAlertDialog);
+
+        if (alertFn) {
+            try {
+                alertFn(alertType, message);
+                return;
+            } catch (e) {
+                console.warn("showAlertDialog call failed, falling back to axi toast:", e);
+            }
+        }
+
         let styleTag = document.getElementById("axi-toast-styles");
         if (!styleTag) {
             styleTag = document.createElement("style");
@@ -6580,7 +6608,7 @@
 
             let saveCommandConfig;
             if (grpKey)
-                saveCommandConfig = getCommandConfig(grpKey);
+                saveCommandConfig = getCommandConfig(grpKey, normalizedTokens);
 
             if (e.key === 'Backspace' && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit")) {
                 let transIDcheck = setCommandTransid;
@@ -7177,7 +7205,7 @@
             return;
         }
 
-        const groupConfig = getCommandConfig(groupKey);
+        const groupConfig = getCommandConfig(groupKey, tokens);
 
         if (!groupConfig) {
             console.warn(`Unknown command group: ${groupKey}`);
@@ -8125,7 +8153,7 @@
 
         const promptValues = commandConfig?.prompts?.[0].promptValues;
         const viewDataSource = commandConfig?.prompts?.[0].promptSource;
-        if (viewDataSource.toLowerCase() === "axi_structmetalist") {
+        if (viewDataSource?.toLowerCase() === "axi_structmetalist") {
             paramValue = processExtraParams(tokens, commandConfig);
         }
         // const extraDataSource = commandConfig?.prompts?.[1].extraParams;
@@ -8198,7 +8226,7 @@
                             });
 
                             if (!matched) {
-                                showToast(`Column '${colName}' is invalid or hidden.`, 4000, false);
+                                showToast(`Column '${colName}' is invalid or hidden.`, 4000, "info");
                                 return;
                             }
                         }
