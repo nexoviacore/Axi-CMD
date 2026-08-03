@@ -6129,6 +6129,49 @@
 
 
     /* ===============================
+       SHOW DIMMER / LOADER HELPER
+    =============================== */
+    function toggleShowDimmer(status) {
+        try {
+            if (typeof ShowDimmer === "function") {
+                ShowDimmer(status);
+            } else if (typeof parent !== "undefined" && typeof parent.ShowDimmer === "function") {
+                parent.ShowDimmer(status);
+            } else if (typeof top !== "undefined" && typeof top.ShowDimmer === "function") {
+                top.ShowDimmer(status);
+            } else if (typeof callParentNew === "function") {
+                callParentNew(`ShowDimmer(${status})`, "function");
+            }
+        } catch (e) {
+            console.warn("Failed to invoke ShowDimmer:", e);
+        }
+    }
+
+    function safeOpenDeveloperStudio(page, name = "", callFromAxi = true) {
+        toggleShowDimmer(true);
+
+        const openFn = (typeof window !== "undefined" && typeof window.openDeveloperStudio === "function" && window.openDeveloperStudio) ||
+                       (typeof parent !== "undefined" && typeof parent.openDeveloperStudio === "function" && parent.openDeveloperStudio) ||
+                       (typeof top !== "undefined" && typeof top.openDeveloperStudio === "function" && top.openDeveloperStudio);
+
+        if (openFn) {
+            try {
+                openFn(page, name, callFromAxi);
+            } catch (err) {
+                console.error("openDeveloperStudio call failed:", err);
+                toggleShowDimmer(false);
+            }
+        } else {
+            console.warn("openDeveloperStudio is not available");
+            toggleShowDimmer(false);
+        }
+
+        setTimeout(() => {
+            toggleShowDimmer(false);
+        }, 10000);
+    }
+
+    /* ===============================
        TOAST HELPER
     =============================== */
     function showToast(message, duration = 5000, isSuccess = false) {
@@ -6139,12 +6182,17 @@
             alertType = "warning";
         } else if (isSuccess === "info" || isSuccess === "information") {
             alertType = "info";
-        } else if (isSuccess === false || isSuccess === "error" || isSuccess === "danger" || isSuccess === "failure") {
+        } else if (isSuccess === "error" || isSuccess === "danger" || isSuccess === "failure") {
             alertType = "error";
         } else if (typeof message === "string") {
             const lowerMsg = message.toLowerCase();
-            if (lowerMsg.startsWith("warning")) alertType = "warning";
-            else if (lowerMsg.startsWith("info")) alertType = "info";
+            if (lowerMsg.includes("warning") || lowerMsg.startsWith("please ")) {
+                alertType = "warning";
+            } else if (lowerMsg.includes("version") || lowerMsg.includes("info:") || lowerMsg.includes("success")) {
+                alertType = "info";
+            } else {
+                alertType = "error";
+            }
         }
 
         const alertFn = (typeof top !== "undefined" && typeof top.showAlertDialog === "function" && top.showAlertDialog) ||
@@ -6335,11 +6383,11 @@
             }
 
             if (axiVersion && axpertVersion) {
-                showToast(`Axpert Version: ${axpertVersion}\nAxi CMD Version: ${axiVersion}`, 5000, true);
+                showToast(`Axpert Version: ${axpertVersion}\nAxi CMD Version: ${axiVersion}`, 5000, "info");
             } else if (axiVersion) {
-                showToast(`Axi CMD Version: ${axiVersion}`, 5000, true);
+                showToast(`Axi CMD Version: ${axiVersion}`, 5000, "info");
             } else if (axpertVersion) {
-                showToast(`Axpert Version: ${axpertVersion}`, 5000, true);
+                showToast(`Axpert Version: ${axpertVersion}`, 5000, "info");
             } else {
                 showToast("Version information is not available.");
             }
@@ -7342,7 +7390,7 @@
 
 
     function handleViewDbConsole() {
-        window.openDeveloperStudio("AxDBScript.aspx");
+        safeOpenDeveloperStudio("AxDBScript.aspx");
         // window.LoadIframe("AxDBScript.aspx");
 
     }
@@ -8070,10 +8118,10 @@
 
         switch (structName.type.toLowerCase()) {
             case "entity":
-                window.openDeveloperStudio("tstreact", structName.name, true);
+                safeOpenDeveloperStudio("tstreact", structName.name, true);
                 break;
             case "iview":
-                window.openDeveloperStudio("ivreact", structName.name, true);
+                safeOpenDeveloperStudio("ivreact", structName.name, true);
                 break;
             case "ads":
                 handleViewSourceAds(structName.name);
@@ -8114,10 +8162,10 @@
         let targetUrl = "";
         if (type === "t" || type === "tstruct") {
             targetUrl = "developerstudio:tstruct:" + name;
-            window.openDeveloperStudio("tstreact", name, true);
+            safeOpenDeveloperStudio("tstreact", name, true);
         } else if (type === "i" || type === "iview") {
             targetUrl = "developerstudio:iview:" + name;
-            window.openDeveloperStudio("ivreact", name, true);
+            safeOpenDeveloperStudio("ivreact", name, true);
         } else if (type === "ads") {
             targetUrl = `../aspx/tstruct.aspx?transid=b_sql&sqlname=${encodeURIComponent(name)}&act=load&dummyload=false?`;
             handleViewSourceAds(name);
@@ -9103,10 +9151,10 @@
 
         if (rawName && rawName.toLowerCase() === "create new") {
             if (type.toLowerCase() === "tstruct") {
-                window.openDeveloperStudio("tstreact", "new_tstruct", true);
+                safeOpenDeveloperStudio("tstreact", "new_tstruct", true);
                 return;
             } else if (type.toLowerCase() === "iview") {
-                window.openDeveloperStudio("ivreact", "new_iview", true);
+                safeOpenDeveloperStudio("ivreact", "new_iview", true);
                 return;
             }
         }
@@ -9144,9 +9192,9 @@
         setCommandRoutes(input.value.trim(), targetUrl);
 
         if (type.toLowerCase() === "tstruct") {
-            window.openDeveloperStudio("tstreact", resolvedName, true);
+            safeOpenDeveloperStudio("tstreact", resolvedName, true);
         } else if (type.toLowerCase() === "iview") {
-            window.openDeveloperStudio("ivreact", resolvedName, true);
+            safeOpenDeveloperStudio("ivreact", resolvedName, true);
         } else {
             alert("Unknown source type: " + type);
         }
@@ -13477,9 +13525,9 @@
             const type = parts[1]; // tstruct or iview
             const name = parts[2]; // the resolved name
             if (type === "tstruct") {
-                window.openDeveloperStudio("tstreact", name, true);
+                safeOpenDeveloperStudio("tstreact", name, true);
             } else if (type === "iview") {
-                window.openDeveloperStudio("ivreact", name, true);
+                safeOpenDeveloperStudio("ivreact", name, true);
             }
         } else {
             const firstToken = tokens[0];
@@ -13487,9 +13535,9 @@
             const nameToken = tokens[2]; // Resolved name / third token
 
             if (firstToken.toLowerCase() === "sdk" && secondToken.toLowerCase() === "tstruct") {
-                window.openDeveloperStudio("tstreact", nameToken, true);
+                safeOpenDeveloperStudio("tstreact", nameToken, true);
             } else {
-                window.openDeveloperStudio("ivreact", nameToken, true);
+                safeOpenDeveloperStudio("ivreact", nameToken, true);
             }
         }
 
