@@ -6148,7 +6148,33 @@
     }
 
     function safeOpenDeveloperStudio(page, name = "", callFromAxi = true) {
+        const topWin = (typeof top !== "undefined" ? top : (typeof parent !== "undefined" ? parent : window));
+
+        // 1. Activate Axpert Web product loader immediately
         toggleShowDimmer(true);
+
+        // 2. Intercept premature ShowDimmer(false) calls (e.g. from SuccOpenDevStudioRedis in main.js)
+        let originalShowDimmer = topWin.ShowDimmer;
+        let isStudioLoading = true;
+
+        if (typeof originalShowDimmer === "function") {
+            topWin.ShowDimmer = function(status) {
+                if (status === false && isStudioLoading) {
+                    return;
+                }
+                return originalShowDimmer.apply(this, arguments);
+            };
+        }
+
+        const restoreShowDimmer = () => {
+            if (isStudioLoading) {
+                isStudioLoading = false;
+                if (typeof originalShowDimmer === "function" && topWin.ShowDimmer !== originalShowDimmer) {
+                    topWin.ShowDimmer = originalShowDimmer;
+                }
+                toggleShowDimmer(false);
+            }
+        };
 
         const openFn = (typeof window !== "undefined" && typeof window.openDeveloperStudio === "function" && window.openDeveloperStudio) ||
                        (typeof parent !== "undefined" && typeof parent.openDeveloperStudio === "function" && parent.openDeveloperStudio) ||
@@ -6159,16 +6185,34 @@
                 openFn(page, name, callFromAxi);
             } catch (err) {
                 console.error("openDeveloperStudio call failed:", err);
-                toggleShowDimmer(false);
+                restoreShowDimmer();
+                return;
             }
         } else {
             console.warn("openDeveloperStudio is not available");
-            toggleShowDimmer(false);
+            restoreShowDimmer();
+            return;
         }
 
+        // 3. Keep Axpert Web product loader active until Developer Studio iframe (#middle1) finishes loading
+        try {
+            const topDoc = topWin.document || document;
+            const middle1Iframe = topDoc.getElementById("middle1");
+            if (middle1Iframe) {
+                const hideDimmerOnLoad = () => {
+                    setTimeout(() => {
+                        restoreShowDimmer();
+                    }, 800);
+                    middle1Iframe.removeEventListener("load", hideDimmerOnLoad);
+                };
+                middle1Iframe.addEventListener("load", hideDimmerOnLoad, { once: true });
+            }
+        } catch (e) { }
+
+        // Safety fallback timer to restore dimmer if iframe load is delayed
         setTimeout(() => {
-            toggleShowDimmer(false);
-        }, 10000);
+            restoreShowDimmer();
+        }, 12000);
     }
 
     /* ===============================
