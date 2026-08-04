@@ -80,7 +80,7 @@
                 }
                 return { valid: true };
             } catch (err) {
-                console.error("[AxiApiService] Session check error:", err);
+                // // console.error("[AxiApiService] Session check error:", err);
                 return { valid: true };
             }
         }
@@ -271,17 +271,11 @@
         },
         Download: {
             default: handleDownload
-        },
-        Set: {
-            default: () => console.log("set command!")
-        },
+        },       
         Run: {
             default: handleRunCommand,
         },
-        // Analyse: {
-        //     default: handleAnalyse
-        // },
-        Ai: {
+         Ai: {
             start: handleAiStart,
 
         },
@@ -381,7 +375,7 @@
                 parentArmUrl = callParentNew("armUrl") || "";
             }
         } catch (e) {
-            console.warn("callParentNew failed", e);
+            // // console.warn("callParentNew failed", e);
         }
 
         // 2. Try parent window
@@ -394,7 +388,7 @@
                 if (!parentArmUrl) parentArmUrl = parent.armUrl || "";
             }
         } catch (e) {
-            console.warn("parent access failed", e);
+            // // console.warn("parent access failed", e);
         }
 
         // 3. Try top window
@@ -407,7 +401,7 @@
                 if (!parentArmUrl) parentArmUrl = top.armUrl || "";
             }
         } catch (e) {
-            console.warn("top access failed", e);
+            // // console.warn("top access failed", e);
         }
 
         // 4. Try local variable scope fallback
@@ -451,36 +445,36 @@
                     AxiArmUrl = config.axiarmurl || config.armUrl || config.axiArmUrl || "";
                 }
             } catch (err) {
-                console.error("Failed to load AxiArmUrl from config file:", err);
+                // // console.error("Failed to load AxiArmUrl from config file:", err);
             }
         }
 
-        console.log("AxiArmUrl = " + AxiArmUrl);
+        // // console.log("AxiArmUrl = " + AxiArmUrl);
         apiMetadataUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/axi_get`;
-        console.log("ApiMetadataUrl = " + apiMetadataUrl);
+        // // console.log("ApiMetadataUrl = " + apiMetadataUrl);
 
         axiFavoritesUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/user-favourites`;
         // axiFavoritesUrl = `http://localhost:5057/api/v1/Axi/user-favourites`; 
-        console.log("AxiFavoritesUrl = " + axiFavoritesUrl);
+        // // console.log("AxiFavoritesUrl = " + axiFavoritesUrl);
 
 
         input = document.getElementById("Axi-Searchinp");
 
 
         if (!input) {
-            console.log("Axi Input not ready yet... waiting.");
+            // // console.log("Axi Input not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
 
-        console.log("Axi Input Found!", input);
+        // // console.log("Axi Input Found!", input);
 
         axiLogo = document.getElementById("axiLogo");
 
 
 
         if (!axiLogo) {
-            console.log("Axi Logo not ready yet... waiting.");
+            // // console.log("Axi Logo not ready yet... waiting.");
             setTimeout(init, 200);
             return;
 
@@ -489,7 +483,7 @@
         searchWrapper = document.querySelector(".searchwrap-AXI");
 
         if (!searchWrapper) {
-            console.log("Axi search wrapper not ready yet... waiting.");
+            // // console.log("Axi search wrapper not ready yet... waiting.");
             setTimeout(init, 200);
             return;
 
@@ -497,44 +491,44 @@
 
         hintDiv = document.getElementById("axiHint");
         if (!hintDiv) {
-            console.log("Axi HintDiv not ready yet... waiting.");
+            // // console.log("Axi HintDiv not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
 
-        console.log("Axi HintDiv Found!", hintDiv);
+        // // console.log("Axi HintDiv Found!", hintDiv);
 
         list = document.getElementById("axiSuggestions");
         if (!list) {
-            console.log("Axi AxiSuggestion not ready yet... waiting.");
+            // // console.log("Axi AxiSuggestion not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
 
-        console.log("Axi AxiSuggestionList found Found!", list);
+        // console.log("Axi AxiSuggestionList found Found!", list);
 
         btnRefresh = document.getElementById("btnRefresh");
         if (!btnRefresh) {
-            console.log("Axi btnRefresh not ready yet... waiting.");
+            // console.log("Axi btnRefresh not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
 
-        console.log("Axi btnRefresh Found!", btnRefresh);
+        // console.log("Axi btnRefresh Found!", btnRefresh);
 
         runBtn = document.getElementById("runBtn");
         if (!runBtn) {
-            console.log("Axi Run btn not ready yet... waiting.");
+            // console.log("Axi Run btn not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
 
-        console.log("Axi Runbtn Found!", runBtn);
+        // console.log("Axi Runbtn Found!", runBtn);
 
         axiClearBtn = document.getElementById("axiClearBtn");
 
         if (!axiClearBtn) {
-            console.log("Axi Clear button not ready yet... waiting.");
+            // console.log("Axi Clear button not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
@@ -543,7 +537,7 @@
 
 
 
-        console.log("Axi Clear button found!", axiClearBtn);
+        // console.log("Axi Clear button found!", axiClearBtn);
 
         megaDropdown = document.getElementById("axiMegaDropdown");
 
@@ -553,21 +547,21 @@
 
 
 
-        console.log("Axi Clear button found!", megaDropdown);
+        // console.log("Axi Clear button found!", megaDropdown);
 
         favouritesCard = document.getElementById("axiFavouritesCard");
-        console.log("Axi Clear favouritesCard Found!", favouritesCard);
+        // console.log("Axi Clear favouritesCard Found!", favouritesCard);
 
         commandHeader = document.getElementById("axiCommandsHeader");
-        console.log("Axi Command Header found!", commandHeader);
+        // console.log("Axi Command Header found!", commandHeader);
 
         hiddenLoader = document.getElementById("hiddenLoader");
-        console.log("Axi hidden Loader found!", hiddenLoader);
+        // console.log("Axi hidden Loader found!", hiddenLoader);
 
 
         favouriteBtn = document.getElementById("axiFavouriteBtn");
 
-        console.log("Axi Favourite Button found!", favouriteBtn);
+        // console.log("Axi Favourite Button found!", favouriteBtn);
 
 
 
@@ -599,12 +593,12 @@
 
     function getProjectName() {
         // let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-        // console.log("Origin: " + appSessUrl);
+        // // console.log("Origin: " + appSessUrl);
         // const projInfoKey = `projInfo-${appSessUrl}`;
 
         // const appname = localStorage.getItem(projInfoKey);
 
-        // console.log(appname);
+        // // console.log(appname);
         // return appname;
 
         return window.mainProject ||
@@ -625,10 +619,10 @@
         }
 
         const appname = getProjectName();
-        console.log(appname);
+        // console.log(appname);
 
         if (!apiMetadataUrl) {
-            console.error("Metadata API URL is not configured.", apiMetadataConfigError);
+            // console.error("Metadata API URL is not configured.", apiMetadataConfigError);
             showToast("Metadata API URL is not configured.");
             return;
         }
@@ -644,7 +638,7 @@
                 try {
                     commandsFromDb = JSON.parse(cached);
                 } catch (e) {
-                    console.error("Failed to parse cached raw commands", e);
+                    // console.error("Failed to parse cached raw commands", e);
                 }
             }
 
@@ -653,7 +647,7 @@
 
                 if (!res.ok) {
                     showToast("Metadata fetch failed. Please contact Administrator");
-                    console.error("Metadata fetch failed");
+                    // console.error("Metadata fetch failed");
                     return;
                 }
 
@@ -687,7 +681,7 @@
                     prompts: []
                 };
 
-                console.log(JSON.stringify(commands));
+                // console.log(JSON.stringify(commands));
 
                 // Load target entities (tstructs, iview, ads and pages) from metadata on startup asynchronously
                 const metadataParams = getStructParam();
@@ -697,7 +691,7 @@
                 // }
             }
         } catch (err) {
-            console.error("Critical: Could not load commands", err);
+            // console.error("Critical: Could not load commands", err);
         } finally {
             isCommandsLoading = false;
             input.disabled = false;
@@ -744,7 +738,7 @@
     //         apiMetadataUrl = "";
     //         apiMetadataConfigError = (error && error.message) ? error.message : String(error);
     //         showToast("Failed to load API metadata configuration.");
-    //         console.error(`Failed to resolve API_METADATA from ${configUrl || "app base URL"}`, error);
+    //         // console.error(`Failed to resolve API_METADATA from ${configUrl || "app base URL"}`, error);
     //     }
     // }
 
@@ -813,7 +807,7 @@
                     }
 
                     if (foundItem && foundItem.isfield === 'f') {
-                        console.log("Short Circuit: Previous item is not a field. Stopping prompts.");
+                        // console.log("Short Circuit: Previous item is not a field. Stopping prompts.");
                         return null;
                     }
                 }
@@ -860,8 +854,8 @@
                     activeSource = sources[valueIndex] ? sources[valueIndex].trim() : "";
                 }
 
-                console.log("Value Index: " + valueIndex);
-                console.log("Active Source: " + activeSource);
+                // console.log("Value Index: " + valueIndex);
+                // console.log("Active Source: " + activeSource);
             }
         }
 
@@ -874,25 +868,25 @@
 
     async function loadList(sourceName, paramValue = "") {
         if (sourceName === "axi_dummy") {
-            console.error("Axi Dummy source should not trigger loadList");
+            // console.error("Axi Dummy source should not trigger loadList");
             return;
         }
         const key = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
         if (activeFetches.has(key)) return;
         activeFetches.add(key);
 
-        console.log(`Fetching list: ${sourceName} params: ${paramValue}`);
+        // console.log(`Fetching list: ${sourceName} params: ${paramValue}`);
 
         try {
             const data = await getList(sourceName, paramValue);
             axDatasourceObj[key] = data;
-            console.log(JSON.stringify(axDatasourceObj));
+            // console.log(JSON.stringify(axDatasourceObj));
             if (document.activeElement === input) {
                 handleInput();
             }
 
         } catch (error) {
-            console.error("loadlist failed", error);
+            // console.error("loadlist failed", error);
         } finally {
             activeFetches.delete(key);
 
@@ -902,28 +896,28 @@
     }
 
     //function openPopOption(targetURL) {
-    //    console.log("PopOption is clicked");
+    //    // console.log("PopOption is clicked");
 
 
     //    if (targetURL) {
     //        let popUpContainerUrl = `../AxpertPlugins/Axi/HTMLPages/PopUpContainer.html`;
 
     //        //if (targetURL && targetURL.toLowerCase().includes("/aspx")) {
-    //        //    console.log("Before removing : " + targetURL);
+    //        //    // console.log("Before removing : " + targetURL);
     //        //    targetURL = targetURL.replace("/aspx", "");
-    //        //    console.log("After removing : " + targetURL);
+    //        //    // console.log("After removing : " + targetURL);
     //        //}
 
     //        //if (targetURL && targetURL.toLowerCase().includes("/aspx/")) {
-    //        //    console.log("Before removing : " + targetURL)
+    //        //    // console.log("Before removing : " + targetURL)
     //        //    targetURL = targetURL.split("/aspx/")[1];
-    //        //    console.log("After removing : " + targetURL);
+    //        //    // console.log("After removing : " + targetURL);
     //        //}
     //        if (targetURL && targetURL.toLowerCase().includes("../")) {
-    //            console.log("Before removing : " + targetURL)
+    //            // console.log("Before removing : " + targetURL)
     //            targetURL = targetURL.replace("../", "");
     //            //targetURL = targetURL.split("/")[1];
-    //            console.log("After removing : " + targetURL);
+    //            // console.log("After removing : " + targetURL);
     //        }
 
 
@@ -932,11 +926,11 @@
 
 
     //        popUpOption = false;
-    //        console.log("PopUp Option is set to :" + popUpOption);
+    //        // console.log("PopUp Option is set to :" + popUpOption);
 
 
     //        let hiddenVar = document.getElementById("hiddenLoader");
-    //        console.log(hiddenVar);
+    //        // console.log(hiddenVar);
     //        hiddenVar.src = finalUrl;
     //        //hiddenVar.style.display = "block";
     //        hiddenVar.style.display = "flex";
@@ -946,7 +940,7 @@
     //    }
     //    else {
     //        popUpOption = false;
-    //        console.log("Error in Popup: TargetURL is empty");
+    //        // console.log("Error in Popup: TargetURL is empty");
     //        showToast("Something went wrong. Please try again later");
     //    }
     //}
@@ -1154,7 +1148,7 @@
         setEditSessionState(transId);
         redirectToIView(transId, cleanCommandToken(tokens[1]));
 
-        //   console.log("Redirecting to Iview: " + transId + "..............");
+        //   // console.log("Redirecting to Iview: " + transId + "..............");
         // let targetUrl = `../aspx/iview.aspx?ivname=${transId}`;
 
         // setCommandRoutes(input.value.trim(), targetUrl);
@@ -1804,7 +1798,7 @@
 
 
     function openPopOption(targetURL) {
-        console.log("PopOption is clicked");
+        // console.log("PopOption is clicked");
 
         if (targetURL) {
 
@@ -1817,10 +1811,10 @@
             //let popUpContainerUrl = `../CustomPages/Axi/HTMLPages/PopUpContainer.html`;
 
             if (targetURL && targetURL.toLowerCase().includes("../")) {
-                console.log("Before removing : " + targetURL);
+                // console.log("Before removing : " + targetURL);
                 targetURL = targetURL.replace("../", "");
                 //targetURL = targetURL.split("/")[1];
-                console.log("After removing : " + targetURL);
+                // console.log("After removing : " + targetURL);
             }
 
             let hiddenVar = document.getElementById("hiddenLoader");
@@ -1836,12 +1830,12 @@
                 hiddenVar.style.display = "flex";
             }
             popUpOption = false;
-            console.log("Final Url: " + targetURL);
-            console.log("PopUp Option is set to :" + popUpOption);
+            // console.log("Final Url: " + targetURL);
+            // console.log("PopUp Option is set to :" + popUpOption);
 
         } else {
             popUpOption = false;
-            console.log("Error in Popup: TargetURL is empty");
+            // console.log("Error in Popup: TargetURL is empty");
             showToast("Something went wrong. Please try again later");
         }
     }
@@ -1883,7 +1877,7 @@
             targetUrl += `&filter=${encodedFilterQuery}`;
         }
 
-        console.log("Target Url for SmartViewTable:  " + targetUrl);
+        // console.log("Target Url for SmartViewTable:  " + targetUrl);
         setCommandRoutes(input.value.trim(), targetUrl);
         /**====================================================================================
          * NOTE: This is Debug code remove it before deploying  to the  production environment 
@@ -1892,13 +1886,13 @@
         if (typeof encodedFilterQuery !== "undefined") {
             try {
                 const decodedForDebug = JSON.parse(atob(encodedFilterQuery));
-                console.group("AXI SmartView Redirect Debug");
-                console.log("Final URL:", targetUrl);
-                console.log("Encoded q:", encodedFilterQuery);
-                console.log("Decoded payload:", JSON.stringify(decodedForDebug));
-                console.groupEnd();
+                // console.group("AXI SmartView Redirect Debug");
+                // console.log("Final URL:", targetUrl);
+                // console.log("Encoded q:", encodedFilterQuery);
+                // console.log("Decoded payload:", JSON.stringify(decodedForDebug));
+                // console.groupEnd();
             } catch (e) {
-                console.error("AXI SmartView payload decode failed", e);
+                // console.error("AXI SmartView payload decode failed", e);
             }
         }
 
@@ -1956,7 +1950,7 @@
         targetUrl += "&dummyload=false";
 
         setEditSessionState(transId);
-        console.log(`LoadIframe called with Url: ${targetUrl}`);
+        // console.log(`LoadIframe called with Url: ${targetUrl}`);
         setCommandRoutes(input.value.trim(), targetUrl);
 
 
@@ -1967,7 +1961,7 @@
 
 
     // function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "") {
-    //     console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
+    //     // console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
 
 
 
@@ -2021,7 +2015,7 @@
 
     function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "") {
 
-        console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
+        // console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
 
 
         if (!transId) {
@@ -2121,7 +2115,7 @@
     }
 
     // function redirectToIView(iViewName, iViewCaption = "") {
-    //     console.log("Redirecting to Iview: " + iViewName + "..............");
+    //     // console.log("Redirecting to Iview: " + iViewName + "..............");
 
 
     //     if (popUpOption) {
@@ -2143,7 +2137,7 @@
     // }
 
     function redirectToIView(iViewName, iViewCaption = "") {
-        console.log("Redirecting to Iview: " + iViewName + "..............");
+        // console.log("Redirecting to Iview: " + iViewName + "..............");
 
 
         if (popUpOption) {
@@ -2164,7 +2158,7 @@
 
 
     function redirectToProcessFlow(caption, tstructCaption) {
-        console.log(`Redirecting to Process flow for caption:  ${caption}`);
+        // console.log(`Redirecting to Process flow for caption:  ${caption}`);
 
 
 
@@ -2313,7 +2307,7 @@
 
             if (!numericRegex.test(lastToken)) {
 
-                console.error("Type only numeric value");
+                // console.error("Type only numeric value");
 
                 if (grpKey.toLowerCase() === "view")
                     showToast("Please enter a valid number. You may use comparison operators (>, <, >=, <=, !=, =).");
@@ -2337,7 +2331,7 @@
             const lastToken = lastTypedTokens[idx] ? lastTypedTokens[idx].replace(/"/g, "") : null;
 
             if (lastToken && cleanToken !== lastToken) {
-                console.log(`Token changed at position ${idx}: "${lastToken}" -> "${cleanToken}"`);
+                // console.log(`Token changed at position ${idx}: "${lastToken}" -> "${cleanToken}"`);
 
                 const lowerLast = lastToken.toLowerCase();
                 const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(lowerLast);
@@ -2348,7 +2342,7 @@
                         if (parseInt(key) > idx) {
                             delete resolvedParams[key];
                             delete resolvedParamType[key];
-                            console.log(`Cleared dependent resolution at index ${key}`);
+                            // console.log(`Cleared dependent resolution at index ${key}`);
                         }
                     });
                 }
@@ -2363,7 +2357,7 @@
                     if (resolvedParams[i]) {
                         delete resolvedParams[i];
                         delete resolvedParamType[i];
-                        console.log(`Cleared deleted token resolution at index ${i}`);
+                        // console.log(`Cleared deleted token resolution at index ${i}`);
                     }
                 }
             }
@@ -2835,7 +2829,7 @@
                     const tempType = resolvedParamType[0];
                     resolvedParamType[0] = resolvedParamType[1];
                     resolvedParamType[1] = tempType;
-                    console.log("Global state: Swapped to normalized order");
+                    // console.log("Global state: Swapped to normalized order");
                 }
             } else {
                 const val0 = (resolvedParams[0] || "").toLowerCase();
@@ -2848,7 +2842,7 @@
                     const tempType = resolvedParamType[0];
                     resolvedParamType[0] = resolvedParamType[1];
                     resolvedParamType[1] = tempType;
-                    console.log("Global state: Swapped back to user order");
+                    // console.log("Global state: Swapped back to user order");
                 }
             }
         } else {
@@ -2861,7 +2855,7 @@
                 const tempType = resolvedParamType[0];
                 resolvedParamType[0] = resolvedParamType[1];
                 resolvedParamType[1] = tempType;
-                console.log("Global state: Swapped back to user order (length < 2)");
+                // console.log("Global state: Swapped back to user order (length < 2)");
             }
         }
     }
@@ -2917,7 +2911,7 @@
                         ///We need to use System Date Format
                         date = formatDate(date, dateString);
 
-                        console.log("Final date:", date);
+                        // console.log("Final date:", date);
 
                         settokens[lastIndex] = date;
 
@@ -2963,7 +2957,7 @@
                             ///We need to use System Date Format
                             const formattedDate = formatDate(partialDate, dateString);
                             date = formattedDate;
-                            console.log("Final date:", date);
+                            // console.log("Final date:", date);
                             SET_COMMAND_STATE.currentFieldValue = date;
                             SET_COMMAND_STATE.currentFieldType = null;
                             SET_COMMAND_STATE.isNextField = true;
@@ -3016,7 +3010,7 @@
 
 
                 if (acceptedValue && filtered.length === 0) {
-                    console.log("User given value which is not in the date list");
+                    // console.log("User given value which is not in the date list");
                     showToast("Please select a valid Option from the list", 5000, true);
 
                     let lastIndex = tokens.length - 1;
@@ -3184,7 +3178,7 @@
                 const colList = axDatasourceObj[colSourceKey];
 
                 if (!colList) {
-                    console.log("In processAds " + "axi_adscolumnlist" + " is empty");
+                    // console.log("In processAds " + "axi_adscolumnlist" + " is empty");
                     showToast("Please Try Again Later.");
                     return [];
                 }
@@ -3196,11 +3190,11 @@
                 ) || null;
 
                 if (!columnMetadata) {
-                    //console.log("Selected Field Name is Not in the List " + prevColumnName);
+                    //// console.log("Selected Field Name is Not in the List " + prevColumnName);
                     //showToast("Please Select Field from the list", 5000, true);
                     //return [];
 
-                    console.log("Selected Field Name is Not in the List " + prevColumnName);
+                    // console.log("Selected Field Name is Not in the List " + prevColumnName);
                     showToast("Please Select Field from the list", 5000, true);
 
                     let settokens = [...tokens]
@@ -3321,7 +3315,7 @@
                     } else {
                         SET_COMMAND_STATE.isDropDown = true;
                         if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
-                            console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
+                            // console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
                             showToast("Please Try Again Later.");
                             return [];
                         }
@@ -3360,7 +3354,7 @@
                         });
 
                         if (acceptedValue && filtered.length === 0) {
-                            console.log("User given value is not in the dropdown");
+                            // console.log("User given value is not in the dropdown");
                             showToast("Please select a valid value from the dropdown", 5000, true);
 
                             let lastIndex = tokens.length - 1;
@@ -3575,7 +3569,7 @@
     //        else {
 
     //            if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
-    //                console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
+    //                // console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
     //                return [];
     //            }
 
@@ -3694,7 +3688,7 @@
 
 
             default:
-                console.error("Invalid StructType")
+                // console.error("Invalid StructType")
                 break;
         }
 
@@ -3785,8 +3779,8 @@
     }
 
     function suggestLocal(inputText) {
-      console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
-        console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
+      // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
         normalizeGlobalState();
         let ignoreExtraParams = false;
         let detectedType = "";
@@ -4081,8 +4075,8 @@
             const viewValues = commandConfig.prompts?.[0]?.promptValues;
             const firstToken = cleanString(tokens[1] || "");
             const { value: actualFirstToken, type } = tryResolveToken(1, firstToken, commandConfig, false);
-            console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
-        console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
+            // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
             detectedType = getType(viewSource.toLowerCase(), { value: actualFirstToken, type: type }, viewValues, tokens, commandConfig);
             // detectedType = getType(viewSource.toLowerCase(), {value: act}, viewValues, tokens, commandConfig);
 
@@ -4094,7 +4088,7 @@
 
                 }
 
-                console.log("ResolutionContext: ignoreExtraParams = true (ADS)")
+                // console.log("ResolutionContext: ignoreExtraParams = true (ADS)")
             }
         }
 
@@ -4128,8 +4122,8 @@
             return processRunCommands(tokens, targetIndex, structType);
         }
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
-          console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
-        console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
+          // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
 
 
         ///KeyValue based edit handling.
@@ -4261,7 +4255,7 @@
 
             //  if (staticValues.length > 0 && result.length === 0 && partialTyped.length > 0) {
 
-            //     console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
+            //     // console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
             //     showToast("Please select a valid option from the list.");
 
             //     let dummyTokens = [...tokens];
@@ -4334,7 +4328,7 @@
 
 
                 if (!paramValue || paramValue.trim() === "") {
-                    console.log("Skipping extraParams � dependency not resolved yet");
+                    // console.log("Skipping extraParams � dependency not resolved yet");
 
                 } else {
                     const extraSource = activePrompt.extraParams.toLowerCase();
@@ -4344,7 +4338,7 @@
 
                     if (!axDatasourceObj[extraKey]) {
 
-                        console.log(`Fetching Hidden Param Source: ${extraSource}`);
+                        // console.log(`Fetching Hidden Param Source: ${extraSource}`);
                         if (tokens[1].toLowerCase() === "inbox") {
                             return [goOption];
                         }
@@ -4356,7 +4350,7 @@
                     const extraList = axDatasourceObj[extraKey];
                     if (extraList && extraList.length > 0) {
                         const hiddenValue = extraList[0].name || extraList[0].displaydata || extraList[0].fname || extraList[0].keyfield;
-                        console.log(`Hidden Param Found (Index 0): ${hiddenValue}`);
+                        // console.log(`Hidden Param Found (Index 0): ${hiddenValue}`);
 
                         // Append hidden value to params for the MAIN list
                         if (paramValue) paramValue += "$#$" + hiddenValue;
@@ -4493,7 +4487,7 @@
                         return [goOption];
                     }
                     loadList(apiSourceName, paramValue);
-                    console.log(axDatasourceObj);
+                    // console.log(axDatasourceObj);
                     // if (realSource.toLowerCase() === "axi_dummy") {
                     //     if (groupKey.toLowerCase() === "open" && tokens.length > 2) {
                     //         filteredObjects = [goOption];
@@ -4527,7 +4521,7 @@
             ///added to restrict user by typing only the listed values from the list(if they type other than that we prompt them again with the default list added - 18-3-2026(t))
             if (dataList.length > 0 && filtered.length === 0) {
 
-                console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
+                // console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
                 showToast("Please select a valid option from the list.");
 
                 let dummyTokens = [...tokens];
@@ -4741,7 +4735,7 @@
         ) || struct_dataList.find(r => r.name === struct_name);
 
         if (!struct_row) {
-            console.log("The give Form is not in the ads " + struct_source + " list");
+            // console.log("The give Form is not in the ads " + struct_source + " list");
             showToast("The Given Transid is not in the list");
             return [];
         }
@@ -4942,7 +4936,7 @@
     //         });
 
     //     } catch (err) {
-    //         console.log("Error in processExtraParams:", err);
+    //         // console.log("Error in processExtraParams:", err);
     //     }
 
     //     return paramValue;
@@ -5028,7 +5022,7 @@
                 }
             });
         } catch (err) {
-            console.log("Error in processExtraParams:", err);
+            // console.log("Error in processExtraParams:", err);
         }
 
         return paramValue;
@@ -5360,7 +5354,7 @@
     =============================== */
     function render() {
 
-        console.log("Render called");
+        // console.log("Render called");
         list.innerHTML = "";
 
         const currentInput = input.value;
@@ -5396,7 +5390,7 @@
             return false;
         });
 
-        console.log(`Valid Items: ${validItems.length}`);
+        // console.log(`Valid Items: ${validItems.length}`);
 
         if (items.length > 0 && isSystemMessage(items[0])) {
             activeIndex = -1;
@@ -5716,7 +5710,7 @@
         const saveCommandConfig = getCommandConfig(saveGroupKeyCheck, checkTokens);
 
         if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "GO_ACTION") {
-            console.log("Action item selected. Executing command...");
+            // console.log("Action item selected. Executing command...");
             const rawInput = input.value.trim();
             const rawTokens = getTokens(rawInput, false);
             const firstToken = rawTokens.length > 0 ? cleanString(rawTokens[0]).toLowerCase() : "";
@@ -5742,21 +5736,21 @@
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "create") {
-            console.log("Save Option Selected...Submitting Data...");
+            // console.log("Save Option Selected...Submitting Data...");
             hide();
             AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, checkTokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "edit") {
-            console.log("Save Option Selected...Submitting Data...");
+            // console.log("Save Option Selected...Submitting Data...");
             hide();
             AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, checkTokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Pop_ACTION") {
-            console.log("Pop Option Selected......");
+            // console.log("Pop Option Selected......");
             try {
                 let executeTokens = tokens;
                 const rawInput = input.value.trim();
@@ -5791,7 +5785,7 @@
             catch (err) {
                 popUpOption = false;
 
-                console.log("Error in Popup:", err);
+                // console.log("Error in Popup:", err);
 
                 showToast("Something went wrong. Please try again later");
 
@@ -5923,7 +5917,7 @@
 
             if ((!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) && type?.toLowerCase() === "page") {
                 showToast("Redirection link is not available for this page.");
-                console.error("No Redirection link!");
+                // console.error("No Redirection link!");
                 return;
             }
         }
@@ -6098,7 +6092,7 @@
 
             const res = await getAxListAsync(requestBody);
 
-            console.log("Get List data: " + JSON.stringify(res));
+            // console.log("Get List data: " + JSON.stringify(res));
 
             if (res) {
                 const resStr = (typeof res === "string" ? res : JSON.stringify(res)).toLowerCase();
@@ -6118,23 +6112,23 @@
                 dataObj = typeof dataObj.d === "string" ? JSON.parse(dataObj.d) : dataObj.d;
             }
 
-            console.log("DATA obj is : " + dataObj);
-            console.log("Type of DATA OBJ: " + typeof dataObj);
+            // console.log("DATA obj is : " + dataObj);
+            // console.log("Type of DATA OBJ: " + typeof dataObj);
             const list = dataObj?.result?.data?.[0]?.data ?? [];
 
             if (dataObj?.result?.data?.[0]?.error) {
                 showToast(`Error: ${dataObj?.result?.data?.[0]?.error}`);
-                console.log(`Error: ${dataObj?.result?.data?.[0]?.error}`);
+                // console.log(`Error: ${dataObj?.result?.data?.[0]?.error}`);
                 return;
             }
 
 
             if (list.length > 0) {
-                console.log("Get List Cache Key: " + cacheKey);
+                // console.log("Get List Cache Key: " + cacheKey);
                 localStorage.setItem(cacheKey, JSON.stringify(list));
-
-            } else console.log(`List Data for Ads name ${axDatasourceName} is Empty`);
-
+            } else {
+                // console.log(`List Data for Ads name ${axDatasourceName} is Empty`);
+            }
 
             return list;
 
@@ -6162,7 +6156,7 @@
                 callParentNew(`ShowDimmer(${status})`, "function");
             }
         } catch (e) {
-            console.warn("Failed to invoke ShowDimmer:", e);
+            // console.warn("Failed to invoke ShowDimmer:", e);
         }
     }
 
@@ -6209,14 +6203,14 @@
                 } , 0); 
 
             } catch (err) {
-                console.error("openDeveloperStudio call failed:", err);
+                // console.error("openDeveloperStudio call failed:", err);
                 toggleShowDimmer(false);
 
                 // restoreShowDimmer();
                 return;
             }
         } else {
-            console.warn("openDeveloperStudio is not available");
+            // console.warn("openDeveloperStudio is not available");
             toggleShowDimmer(false);
 
             // restoreShowDimmer();
@@ -6278,7 +6272,7 @@
                 alertFn(alertType, message);
                 return;
             } catch (e) {
-                console.warn("showAlertDialog call failed, falling back to axi toast:", e);
+                // console.warn("showAlertDialog call failed, falling back to axi toast:", e);
             }
         }
 
@@ -6466,7 +6460,7 @@
                 showToast("Version information is not available.");
             }
         } catch (err) {
-            console.error("Failed to load version info", err);
+            // console.error("Failed to load version info", err);
             showToast("Failed to load version information.");
         }
     }
@@ -6618,7 +6612,7 @@
         }
         if (btnRefresh) {
             btnRefresh.addEventListener("click", async () => {
-                console.log("Refresh Logic......");
+                // console.log("Refresh Logic......");
                 const refreshIcon = btnRefresh.querySelector(".axi-refresh-icon");
                 if (refreshIcon) {
                     refreshIcon.classList.add("rotating");
@@ -6646,7 +6640,7 @@
                     input.focus();
 
                 } catch (error) {
-                    console.log("Refresh Failed: " + error);
+                    // console.log("Refresh Failed: " + error);
                     alert("Error refreshing: " + error);
 
                 } finally {
@@ -6713,7 +6707,7 @@
                 return;
             }
             isDeleting = (e.key === "Backspace" || e.key === "Delete");
-            console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
+            // console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
 
             const tokens = getTokens(input.value.trim(), false);
             let normalizedTokens = [...tokens];
@@ -6751,8 +6745,8 @@
                 if (input.value[cursorPos - 1] === " " && !SET_COMMAND_STATE.currentField?.trim()) {
 
 
-                    console.log("Deleted a space using Backspace");
-                    console.log(SET_COMMAND_STATE);
+                    // console.log("Deleted a space using Backspace");
+                    // console.log(SET_COMMAND_STATE);
                 }
                 else {
                     //if (createfieldnamevaluesList?.[transIDcheck]?.length > 0 && !SET_COMMAND_STATE.currentField) {
@@ -6774,12 +6768,12 @@
 
                             if (listValue === actualLastTokenValue) {
 
-                                console.log("Removing last matching field:", lastListItem);
+                                // console.log("Removing last matching field:", lastListItem);
                                 createfieldnamevaluesList[transIDcheck].pop();
 
                             } else {
 
-                                console.log("Last token does not match last list value. No pop.");
+                                // console.log("Last token does not match last list value. No pop.");
                             }
                         }
                     }
@@ -6793,8 +6787,8 @@
 
                 input.value = tokens.join(" ");
 
-                console.log("After backspace our list : ");
-                console.log(createfieldnamevaluesList[transIDcheck]);
+                // console.log("After backspace our list : ");
+                // console.log(createfieldnamevaluesList[transIDcheck]);
 
                 dateControlBoolean = false;
                 resetSetCommandState();
@@ -6817,8 +6811,8 @@
 
                 if (input.value[cursorPos - 1] === " " && !SET_COMMAND_STATE.currentField?.trim()) {
 
-                    console.log("Deleted a space using Backspace");
-                    console.log(SET_COMMAND_STATE);
+                    // console.log("Deleted a space using Backspace");
+                    // console.log(SET_COMMAND_STATE);
                 }
 
                 //tokens.pop();
@@ -6874,7 +6868,7 @@
                 catch (err) {
                     popUpOption = false;
 
-                    console.log("Error in Popup:", err);
+                    // console.log("Error in Popup:", err);
 
                     showToast("Something went wrong. Please try again later");
 
@@ -7048,7 +7042,7 @@
 
             if (e.ctrlKey && e.key.toLowerCase() === "s") {
                 e.preventDefault();
-                console.log("Save Option Selected...Submitting Data...");
+                // console.log("Save Option Selected...Submitting Data...");
                 hide();
                 if (grpKey.toLowerCase() === "create")
                     AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
@@ -7149,7 +7143,7 @@
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                     attachClickToDoc(iframeDoc);
                 } catch (err) {
-                    console.warn("Could not attach click listener to iframe (likely CORS restriction):", err);
+                    // console.warn("Could not attach click listener to iframe (likely CORS restriction):", err);
                 }
             };
 
@@ -7171,7 +7165,7 @@
 
         keysToRemove.forEach(key => localStorage.removeItem(key));
 
-        console.log(`Cleared ${keysToRemove.length} keys starting with ${prefix}`);
+        // console.log(`Cleared ${keysToRemove.length} keys starting with ${prefix}`);
 
     }
 
@@ -7330,7 +7324,7 @@
         const groupConfig = getCommandConfig(groupKey, tokens);
 
         if (!groupConfig) {
-            console.warn(`Unknown command group: ${groupKey}`);
+            // console.warn(`Unknown command group: ${groupKey}`);
 
         }
 
@@ -7397,7 +7391,7 @@
         const groupHandlers = getGroupHandlers(group);
 
         if (!groupHandlers) {
-            console.error(`System Error: No handlers object defined for command group '${group}'`);
+            // console.error(`System Error: No handlers object defined for command group '${group}'`);
             return;
         }
 
@@ -7407,11 +7401,11 @@
         if (!handler) {
             showToast(`Dispatch Error: No handler function found for '${group}' -> '${handlerKey}'`);
 
-            console.error(`Dispatch Error: No handler function found for '${group}' -> '${handlerKey}'`);
+            // console.error(`Dispatch Error: No handler function found for '${group}' -> '${handlerKey}'`);
             return;
         }
 
-        console.log(`Dispatching to: ${group}.${handlerKey}`);
+        // console.log(`Dispatching to: ${group}.${handlerKey}`);
 
 
         try {
@@ -7421,7 +7415,7 @@
                 resolvedParams: resolvedParams
             });
         } catch (err) {
-            console.error(`Error executing handler for ${group}.${handlerKey}:`, err);
+            // console.error(`Error executing handler for ${group}.${handlerKey}:`, err);
         }
     }
 
@@ -7443,7 +7437,7 @@
             );
             if (found) transId = found.name
             else {
-                console.error("Invalid Tstruct name");
+                // console.error("Invalid Tstruct name");
                 return;
             }
         }
@@ -7563,7 +7557,7 @@
         const primaryField = struct_row?.keyfield;
 
         if (!primaryField) {
-            console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
+            // console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
             showToast("Please try again later...");
             return [];
         }
@@ -7656,7 +7650,7 @@
     //             x => x.caption?.toLowerCase() === rawStruct
     //         );
     //         if (!found || !found.name) {
-    //             console.error("TStruct not found:", rawStruct);
+    //             // console.error("TStruct not found:", rawStruct);
     //             return;
     //         }
     //         transId = found.name;
@@ -7669,12 +7663,12 @@
 
 
     //         if (!Array.isArray(extraList)) {
-    //             console.warn("Hidden field list is missing or invalid", extraList);
+    //             // console.warn("Hidden field list is missing or invalid", extraList);
     //             actualFieldName = null;
     //             return;
 
     //         } else if (extraList.length === 0) {
-    //             console.log("hidden field List is Empty!");
+    //             // console.log("hidden field List is Empty!");
     //             actualFieldName = null;
     //             return;
 
@@ -7684,11 +7678,11 @@
     //             fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
 
     //             if (actualFieldName === null) {
-    //                 console.error("Field name resolution failed: ", fieldName)
+    //                 // console.error("Field name resolution failed: ", fieldName)
     //             }
     //         }
     //         if (!fieldName) {
-    //             console.error("Field resolution failed:", rawFieldName);
+    //             // console.error("Field resolution failed:", rawFieldName);
     //             return;
     //         }
 
@@ -7697,7 +7691,7 @@
     //         fieldUniqueId = getUniqueId(fieldValue);
 
     //         const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${actualFieldName}`.toLowerCase()];
-    //         console.log(`Edit Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
+    //         // console.log(`Edit Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
 
     //         setEditSessionState(transId);
 
@@ -7729,12 +7723,12 @@
     //         fieldValuePromptSource = commandConfig.prompts[1].promptSource.toLowerCase()
 
     //         if (!Array.isArray(extraList)) {
-    //             console.warn("Hidden field list is missing or invalid", extraList);
+    //             // console.warn("Hidden field list is missing or invalid", extraList);
     //             fieldName = null;
     //             return;
 
     //         } else if (extraList.length === 0) {
-    //             console.log("hidden field List is Empty!");
+    //             // console.log("hidden field List is Empty!");
     //             fieldName = null;
     //             return;
 
@@ -7744,7 +7738,7 @@
     //             fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
 
     //             if (fieldName === null) {
-    //                 console.error("Field name resolution failed: ", fieldName)
+    //                 // console.error("Field name resolution failed: ", fieldName)
     //             }
 
     //             rawValue = cleanCommandToken(tokens[2]);
@@ -7752,7 +7746,7 @@
     //             fieldUniqueId = getUniqueId(fieldValue);
 
     //             if (fieldValue === null) {
-    //                 console.error("Field value resolution failed:", rawValue);
+    //                 // console.error("Field value resolution failed:", rawValue);
     //                 return;
     //             }
 
@@ -7761,7 +7755,7 @@
     //         }
 
     //         const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${fieldName}`.toLowerCase()];
-    //         console.log(`Edit Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
+    //         // console.log(`Edit Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
 
     //         setEditSessionState(transId);
 
@@ -7847,7 +7841,7 @@
 
 
     function handleOpenApi({ tokens, commandConfig }) {
-        console.log("commandConfig: " + JSON.stringify(commandConfig));
+        // console.log("commandConfig: " + JSON.stringify(commandConfig));
         let fieldname = "ExecAPIDefName";
         let transId = "apidg";
         let param1Position = commandConfig.prompts[1].wordPos - 1;
@@ -8077,7 +8071,7 @@
         const aspxIndex = href.indexOf("/aspx/");
 
         if (aspxIndex === -1) {
-            console.warn("setEditSessionState: '/aspx/' not found in URL", href);
+            // console.warn("setEditSessionState: '/aspx/' not found in URL", href);
             return;
         }
 
@@ -8089,7 +8083,7 @@
         );
 
         if (!Array.isArray(transIdArray)) {
-            console.warn("setEditSessionState: invalid stored value", transIdArray);
+            // console.warn("setEditSessionState: invalid stored value", transIdArray);
             return;
         }
 
@@ -8099,7 +8093,7 @@
             const updated = transIdArray.filter(
                 x => x.toLowerCase() !== normalizedTransId
             );
-            console.log("SetEditSessioncachekey: " + storageKey);
+            // console.log("SetEditSessioncachekey: " + storageKey);
             localStorage.setItem(storageKey, JSON.stringify(updated));
         }
     }
@@ -8184,7 +8178,7 @@
 
         if (!structName) {
             showToast("Unable to determine current structure");
-            console.error("handleViewSource: getCurrentStructName() returned null or undefined");
+            // console.error("handleViewSource: getCurrentStructName() returned null or undefined");
             return;
         }
 
@@ -8266,12 +8260,12 @@
 
 
         if (tokens.length < 2) {
-            console.warn("View Command required atleast two tokens");
+            // console.warn("View Command required atleast two tokens");
             showToast("view command requires atleast two tokens");
             return;
         }
 
-        console.log(JSON.stringify(commandConfig));
+        // console.log(JSON.stringify(commandConfig));
 
 
         const promptValues = commandConfig?.prompts?.[0].promptValues;
@@ -8310,7 +8304,7 @@
 
 
         if (!handler) {
-            console.log("Error: Unsupported View Type");
+            // console.log("Error: Unsupported View Type");
             showToast("Error: Unsupported View Type");
             return;
         }
@@ -8329,7 +8323,7 @@
                         colList = await getList("axi_adscolumnlist", adsName);
                         if (colList) axDatasourceObj[colSourceKey] = colList;
                     } catch (err) {
-                        console.error("Failed to fetch column list for validation", err);
+                        // console.error("Failed to fetch column list for validation", err);
                     }
                 }
 
@@ -8357,7 +8351,7 @@
                 }
             }
 
-            console.log("Ads Filters: ", filters);
+            // console.log("Ads Filters: ", filters);
 
             redirectToSmartView({
                 adsName: adsName,
@@ -8413,7 +8407,7 @@
         const primaryField = struct_row?.keyfield;
 
         if (!primaryField) {
-            console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
+            // console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
             showToast("Please try again later...");
             return [];
         }
@@ -8426,7 +8420,7 @@
         //if (extraList && extraList.length > 0) {
         //    fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
         //} else {
-        //    console.warn("Hidden field name not found in cache");
+        //    // console.warn("Hidden field name not found in cache");
         //}
 
         rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
@@ -8438,9 +8432,9 @@
         fieldUniqueId = getUniqueId(fieldValue);
 
 
-        console.log(
-            `view Data ? TStruct=${transId}, Field=${primaryField}, Value=${fieldValue}`
-        );
+        // console.log(
+        //     `view Data ? TStruct=${transId}, Field=${primaryField}, Value=${fieldValue}`
+        // );
 
         handler({
             transId,
@@ -8466,12 +8460,12 @@
 
 
     //     if (tokens.length < 2) {
-    //         console.warn("View Command required atleast two tokens");
+    //         // console.warn("View Command required atleast two tokens");
     //         showToast("view command requires atleast two tokens");
     //         return;
     //     }
 
-    //     console.log(JSON.stringify(commandConfig));
+    //     // console.log(JSON.stringify(commandConfig));
 
 
     //     const promptValues = commandConfig?.prompts?.[0].promptValues;
@@ -8492,7 +8486,7 @@
 
 
     //     if (!handler) {
-    //         console.log("Error: Unsupported View Type");
+    //         // console.log("Error: Unsupported View Type");
     //         showToast("Error: Unsupported View Type");
     //         return;
     //     }
@@ -8504,7 +8498,7 @@
     //         const adsName = cleanCommandToken(tokens[1]);
     //         const filters = extractAdsFilters(tokens);
 
-    //         console.log("Ads Filters: ", filters);
+    //         // console.log("Ads Filters: ", filters);
 
 
 
@@ -8549,7 +8543,7 @@
     //     if (extraList && extraList.length > 0) {
     //         fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
     //     } else {
-    //         console.warn("Hidden field name not found in cache");
+    //         // console.warn("Hidden field name not found in cache");
     //     }
 
     //     rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
@@ -8557,7 +8551,7 @@
     //     fieldUniqueId = getUniqueId(fieldValue);
 
 
-    //     console.log(
+    //     // console.log(
     //         `view Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
     //     );
 
@@ -8579,7 +8573,7 @@
         const { value: transId } = tryResolveToken(2, tstructName, commandConfig, false);
         if (!tstructName || !keyField) {
             showToast("TStruct and Key Field are required")
-            console.log("TStruct and Key Field are required");
+            // console.log("TStruct and Key Field are required");
             return;
         }
 
@@ -8602,7 +8596,7 @@
             dataObj = typeof dataObj.d === "string" ? JSON.parse(dataObj.d) : dataObj.d;
         }
 
-        console.log("DATA obj is :", dataObj);
+        // // console.log("DATA obj is :", dataObj);
 
         const dataArray = dataObj?.result?.data;
         const resultBlock = Array.isArray(dataArray) ? dataArray[0] : null;
@@ -8611,13 +8605,13 @@
 
         if (errorMessage) {
             showToast(`Error: ${errorMessage}`);
-            console.error(`handleKeyfield Error: ${errorMessage}`);
+            // // console.error(`handleKeyfield Error: ${errorMessage}`);
             return;
         }
 
         if (dataObj?.result?.success && dataObj?.result?.message?.toLowerCase() === "success") {
             showToast(`Key field-${keyField} has been set for the form ${tstructName}`, 5000, true);
-            console.log(`Key field-${keyField} has been set for the form ${tstructName}`);
+            // // console.log(`Key field-${keyField} has been set for the form ${tstructName}`);
             return;
         }
     }
@@ -8640,7 +8634,7 @@
 
     //     if (!data || !Array.isArray(data)) return null;
 
-    //     console.log(JSON.stringify(data));
+    //     // console.log(JSON.stringify(data));
 
     //     const resolvedText = typeof text === 'object' ? (text?.value || "") : (text || "");
 
@@ -8806,7 +8800,7 @@
         if (!Array.isArray(data))
             return "";
 
-        console.log(JSON.stringify(data));
+        // console.log(JSON.stringify(data));
 
         // -----------------------------------
         // text may be:
@@ -9203,7 +9197,7 @@
         }
 
         const requestUrl = bestMatch.name;
-        console.log(requestUrl);
+        // console.log(requestUrl);
 
         setCommandRoutes(input.value.trim(), requestUrl);
 
@@ -9265,7 +9259,7 @@
             );
 
             if (!found || !found.name) {
-                console.error(`Source not found: ${rawName}`);
+                // console.error(`Source not found: ${rawName}`);
                 return;
             }
 
@@ -9461,7 +9455,7 @@
 
 
         if (structType === "o") {
-            console.error("Invalid Struct type");
+            // console.error("Invalid Struct type");
             showToast("Invalid Struct type");
             return;
         }
@@ -9523,15 +9517,15 @@
 
 
             default:
-                console.error("Invalid StructType")
+                // console.error("Invalid StructType")
                 break;
         }
 
-        console.log("All Buttons: " + JSON.stringify(allButtons));
+        // console.log("All Buttons: " + JSON.stringify(allButtons));
 
         let { value: resolvedBtnId, type } = tryResolveToken(1, buttonLabel, commandConfig, false);
 
-        console.log(`Run Command Debug: Label="${buttonLabel}", ResolvedID="${resolvedBtnId}"`);
+        // console.log(`Run Command Debug: Label="${buttonLabel}", ResolvedID="${resolvedBtnId}"`);
 
         let targetBtn = null;
 
@@ -9568,12 +9562,12 @@
 
 
         if (!targetBtn) {
-            console.error(`Button not found for label: ${buttonLabel}`);
+            // console.error(`Button not found for label: ${buttonLabel}`);
             showToast(`Button '${buttonLabel}' not found`, 3000);
             return;
         }
 
-        console.log(`Clicking button: ${targetBtn.label} (${targetBtn.id})`);
+        // console.log(`Clicking button: ${targetBtn.label} (${targetBtn.id})`);
 
         targetBtn.click();
 
@@ -9776,7 +9770,7 @@
         try {
             doc = iframe.contentDocument || iframe.contentWindow?.document;
         } catch (e) {
-            console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
+            // console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
         }
         if (!doc) return {};
 
@@ -9833,7 +9827,7 @@
                             const jsCode = decodeURIComponent(btnInside.href.replace(/^javascript:/i, ''));
                             iframe.contentWindow.eval(jsCode);
                         } catch (e) {
-                            console.error("Failed to execute javascript: href for utility link", e);
+                            // console.error("Failed to execute javascript: href for utility link", e);
                             btnInside.click();
                         }
                     } else {
@@ -9857,7 +9851,7 @@
         try {
             doc = iframe.contentDocument || iframe.contentWindow?.document;
         } catch (e) {
-            console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
+            // console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
         }
         if (!doc) return {};
 
@@ -9922,7 +9916,7 @@
             if (id === "ivirActionButton") return;
 
             const label = extractButtonLabel(btn);
-            if (!label) console.log("There is no label for Element: " + btn);
+            if (!label) // console.log("There is no label for Element: " + btn);
             if (label.toLowerCase() === "plugin custom code") return;
             if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
 
@@ -9945,12 +9939,12 @@
             if (window.frameElement) {
                 const el = window.frameElement;
                 if (el.id === "loadPopUpPage" || el.name === "loadPopUpPage" || el.id === "middle1" || el.name === "middle1" || el.classList.contains("middle") || el.classList.contains("middle1")) {
-                    console.log("Axi: running inside loadPopUpPage or middle1 iframe");
+                    // console.log("Axi: running inside loadPopUpPage or middle1 iframe");
                     return true;
                 }
             }
             if (window.name === "loadPopUpPage" || window.name === "middle" || window.name === "middle1") {
-                console.log("Axi: running inside frame with name loadPopUpPage, middle or middle1");
+                // console.log("Axi: running inside frame with name loadPopUpPage, middle or middle1");
                 return true;
             }
         } catch (e) {
@@ -9963,7 +9957,7 @@
                 rootWin = window.top;
             }
         } catch (e) {
-            console.warn("Axi: Failed to access window.top due to cross-origin boundary.");
+            // console.warn("Axi: Failed to access window.top due to cross-origin boundary.");
         }
 
         function checkWindow(win) {
@@ -9974,7 +9968,7 @@
                 const loadPopUpPageModal = win.document.getElementById("loadPopUpPage");
                 if (loadPopUpPageModal) {
                     if (loadPopUpPageModal.offsetWidth > 0 || loadPopUpPageModal.offsetHeight > 0 || loadPopUpPageModal.style.display === "block" || loadPopUpPageModal.classList.contains("show")) {
-                        console.log("Axi: found active preview modal via loadPopUpPage");
+                        // console.log("Axi: found active preview modal via loadPopUpPage");
                         return true;
                     }
                 }
@@ -9987,7 +9981,7 @@
                         const innerModal = middleDoc.getElementById("loadPopUpPage");
                         if (innerModal) {
                             if (innerModal.offsetWidth > 0 || innerModal.offsetHeight > 0 || innerModal.style.display === "block" || innerModal.classList.contains("show")) {
-                                console.log("Axi: found active preview modal inside middle1 iframe");
+                                // console.log("Axi: found active preview modal inside middle1 iframe");
                                 return true;
                             }
                         }
@@ -9997,14 +9991,14 @@
                 // 1. Check for remodal wrapper containing the popupIframeRemodal
                 const openedModal = win.document.querySelector(".remodal-wrapper.remodal-is-opened #popupIframeRemodal");
                 if (openedModal) {
-                    console.log("Axi: found active preview modal via remodal selector");
+                    // console.log("Axi: found active preview modal via remodal selector");
                     return true;
                 }
 
                 // 2. Check for remodal wrapper containing any htmlPages.aspx iframe
                 const htmlPagesModal = win.document.querySelector(".remodal-wrapper.remodal-is-opened iframe[src*='htmlPages.aspx']");
                 if (htmlPagesModal) {
-                    console.log("Axi: found active preview modal via htmlPages src selector");
+                    // console.log("Axi: found active preview modal via htmlPages src selector");
                     return true;
                 }
 
@@ -10014,11 +10008,11 @@
                     const wrapper = win.document.getElementById("axpertPopupWrapper") || win.document.querySelector("[data-remodal-id=axpertPopupModal]");
                     if (wrapper) {
                         if (wrapper.offsetWidth > 0 || wrapper.offsetHeight > 0 || wrapper.classList.contains("remodal-is-opened")) {
-                            console.log("Axi: found active preview modal via wrapper visibility/class");
+                            // console.log("Axi: found active preview modal via wrapper visibility/class");
                             return true;
                         }
                     } else if (modal.offsetWidth > 0 || modal.offsetHeight > 0) {
-                        console.log("Axi: found active preview modal via modal direct visibility");
+                        // console.log("Axi: found active preview modal via modal direct visibility");
                         return true;
                     }
                 }
@@ -10038,7 +10032,7 @@
         }
 
         const result = checkWindow(rootWin);
-        console.log("Axi: isPreviewModalOpen returning:", result);
+        // console.log("Axi: isPreviewModalOpen returning:", result);
         return result;
     }
 
@@ -10108,7 +10102,7 @@
             if (id === "ivirActionButton") return;
 
             const label = extractButtonLabel(btn);
-            if (!label) console.log("There is no label for Element: " + btn);
+            if (!label) // console.log("There is no label for Element: " + btn);
             if (label.toLowerCase() === "plugin custom code") return;
             if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
 
@@ -10143,7 +10137,7 @@
             const id = btn.id || btn.getAttribute("data-id");
             if (!id) return;
             const label = btn.innerText.trim();
-            if (!label) console.log("There is no label for Element: " + btn);
+            if (!label) // console.log("There is no label for Element: " + btn);
             if (label.toLowerCase() === "plugin custom code") return;
 
 
@@ -10167,7 +10161,7 @@
         try {
             iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
         } catch (e) {
-            console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
+            // console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
         }
 
         const src = iframe.getAttribute("src");
@@ -10429,7 +10423,7 @@
             if (!id) return;
             // const label = btn.innerText.trim();
             const label = extractButtonLabel(btn);
-            if (!label) console.log("There is no label for Element: " + btn);
+            if (!label) // console.log("There is no label for Element: " + btn);
             if (label.toLowerCase() === "plugin custom code") return;
 
 
@@ -10608,7 +10602,7 @@
 
         if (tokens < 1) {
             showToast("Error:Invalid Tokens, Analyze command requires atleast 2 tokens");
-            console.error("Error:Invalid Tokens, Analyze command requires atleast 2 tokens");
+            // console.error("Error:Invalid Tokens, Analyze command requires atleast 2 tokens");
             return;
         }
 
@@ -10652,7 +10646,7 @@
         // }
 
         setCommandRoutes(input.value.trim(), targetUrl);
-        console.log("Target URL from analyse command : " + targetUrl);
+        // console.log("Target URL from analyse command : " + targetUrl);
         window.LoadIframe(targetUrl);
     }
 
@@ -10719,7 +10713,7 @@
                         ///We need to use System Date Format
                         date = formatDate(date, dateString);
 
-                        console.log("Final date:", date);
+                        // console.log("Final date:", date);
 
                         settokens[lastIndex] = date;
 
@@ -10758,7 +10752,7 @@
                             ///We need to use System Date Format
                             const formattedDate = formatDate(partialDate, dateString);
                             date = formattedDate;
-                            console.log("Final date:", date);
+                            // console.log("Final date:", date);
                             SET_COMMAND_STATE.currentFieldValue = date;
                             SET_COMMAND_STATE.currentFieldType = null;
                             SET_COMMAND_STATE.isNextField = true;
@@ -10804,7 +10798,7 @@
 
 
                 if (acceptedValue && filtered.length === 0) {
-                    console.log("User given value which is not in the date list");
+                    // console.log("User given value which is not in the date list");
                     showToast("Please select a valid Option from the list", 5000, true);
 
                     let lastIndex = tokens.length - 1;
@@ -10943,7 +10937,7 @@
                 const colList = axDatasourceObj[colSourceKey];
 
                 if (!colList) {
-                    console.log("In processCreateCommand " + createCommandSourceObj + " is empty");
+                    // console.log("In processCreateCommand " + createCommandSourceObj + " is empty");
                     showToast("Please Try Again Later.");
                     return [];
                 }
@@ -10956,10 +10950,10 @@
 
                 if (!columnMetadata) {
 
-                    //console.log("In processEditCommond " + createCommandSourceObj + " is empty");
+                    //// console.log("In processEditCommond " + createCommandSourceObj + " is empty");
                     //showToast("Please Try Again Later.");
 
-                    console.log("Selected Field Name is Not in the List " + prevColumnName);
+                    // console.log("Selected Field Name is Not in the List " + prevColumnName);
                     showToast("Please Select Field from the list", 5000, true);
 
                     let settokens = [...tokens]
@@ -11069,13 +11063,13 @@
 
                         var params1 = columnMetadata.fldsql;
                         var params2 = prepareKeyValueString(allGloblVars);
-                        console.log(params2);
+                        // console.log(params2);
                         var params3 = columnMetadata.normalized;
                         var params4 = columnMetadata.fromlist;
 
                         params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList[setCommandTransid], commandConfig);
 
-                        console.log(params2);
+                        // console.log(params2);
 
 
 
@@ -11101,7 +11095,7 @@
                         });
 
                         if (acceptedValue && filtered.length === 0) {
-                            console.log("User given value is not in the dropdown");
+                            // console.log("User given value is not in the dropdown");
                             showToast("Please select a valid value from the dropdown", 5000, true);
 
                             let lastIndex = tokens.length - 1;
@@ -11213,7 +11207,7 @@
                         ///We need to use System Date Format
                         date = formatDate(date, dateString);
 
-                        console.log("Final date:", date);
+                        // console.log("Final date:", date);
 
                         settokens[lastIndex] = date;
 
@@ -11252,7 +11246,7 @@
                             ///We need to use System Date Format
                             const formattedDate = formatDate(partialDate, dateString);
                             date = formattedDate;
-                            console.log("Final date:", date);
+                            // console.log("Final date:", date);
                             SET_COMMAND_STATE.currentFieldValue = date;
                             SET_COMMAND_STATE.currentFieldType = null;
                             SET_COMMAND_STATE.isNextField = true;
@@ -11298,7 +11292,7 @@
 
 
                 if (acceptedValue && filtered.length === 0) {
-                    console.log("User given value which is not in the date list");
+                    // console.log("User given value which is not in the date list");
                     showToast("Please select a valid Option from the list", 5000, true);
 
                     let lastIndex = tokens.length - 1;
@@ -11461,7 +11455,7 @@
                 const colList = axDatasourceObj[colSourceKey];
 
                 if (!colList) {
-                    console.log("In processEditCommond " + createCommandSourceObj + " is empty");
+                    // console.log("In processEditCommond " + createCommandSourceObj + " is empty");
                     showToast("Please Try Again Later.");
                     return [];
                 }
@@ -11473,10 +11467,10 @@
                 ) || null;
 
                 if (!columnMetadata) {
-                    //console.log("In processEditCommond " + createCommandSourceObj + " is empty");
+                    //// console.log("In processEditCommond " + createCommandSourceObj + " is empty");
                     //showToast("Please Try Again Later.");
 
-                    console.log("Selected Field Name is Not in the List " + prevColumnName);
+                    // console.log("Selected Field Name is Not in the List " + prevColumnName);
                     showToast("Please Select Field only from the list", 5000, true);
 
                     let settokens = [...tokens]
@@ -11582,14 +11576,14 @@
 
                         var params1 = columnMetadata.fldsql;
                         var params2 = prepareKeyValueString(allGloblVars);
-                        console.log(params2);
+                        // console.log(params2);
                         var params3 = columnMetadata.normalized;
                         var params4 = columnMetadata.fromlist;
 
 
                         params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList[setCommandTransid], commandConfig);
 
-                        console.log(params2);
+                        // console.log(params2);
 
 
 
@@ -11615,7 +11609,7 @@
                         });
 
                         if (acceptedValue && filtered.length === 0) {
-                            console.log("User given value which is not in the dropdown");
+                            // console.log("User given value which is not in the dropdown");
                             showToast("Please select a valid value from the dropdown", 5000, true);
 
                             let lastIndex = tokens.length - 1;
@@ -11717,7 +11711,7 @@
 
         // const iframes = document.querySelectorAll("iframe");
 
-        // console.log(iframes);
+        // // console.log(iframes);
 
         const currentIframe = document.getElementById("middle1");
 
@@ -11729,12 +11723,12 @@
 
             //const key = fetchTransidfromUrl ? fetchTransidfromUrl[1] : null;
             //const value = fetchTransidfromUrl ? fetchTransidfromUrl[2] : null;
-            //console.log(key, value);
+            //// console.log(key, value);
             //transID = value;
             transID = currentIframe.contentWindow.transid;
 
             if (transID) {
-                //console.log("iFrame Found");
+                //// console.log("iFrame Found");
                 return transID;
             }
             else
@@ -11928,7 +11922,7 @@
             return false;
 
         } catch (ex) {
-            console.error("AxisetFieldValue error:", ex);
+            // console.error("AxisetFieldValue error:", ex);
             return false;
         }
     }
@@ -11936,7 +11930,7 @@
     function handleCreate({ tokens, commandConfig }) {
 
         if (tokens.length < 2) {
-            console.warn("create command requires <tstructname> <fieldname> <fieldvalue>");
+            // console.warn("create command requires <tstructname> <fieldname> <fieldvalue>");
             showToast("create command requires <tstructname> <fieldname> <fieldvalue>");
             return;
         }
@@ -11954,7 +11948,7 @@
             //     );
             //     if (found) transId = found.name
             //     else {
-            //         console.error("Invalid Tstruct name");
+            //         // console.error("Invalid Tstruct name");
             //         showToast("Invalid Tstruct name please select the valid tstruct");
             //         return;
             //     }
@@ -11979,7 +11973,7 @@
                     );
 
                     if (!isValidField) {
-                        console.error("Execution blocked: Invalid field name - " + rawField);
+                        // console.error("Execution blocked: Invalid field name - " + rawField);
                         showToast(`'${rawField}' is not a valid field. Please select from the list.`, 5000, false);
                         return;
                     }
@@ -11995,13 +11989,13 @@
         let { value: transId, type } = tryResolveToken(1, rawName, commandConfig, false);
 
         //if (!transId ) {
-        //    console.log("Missing transaction ID or field values.");
+        //    // console.log("Missing transaction ID or field values.");
         //    showToast("Some required information is missing. Please re-enter the command and try again.");
         //    return;
         //}
 
         if (!transId || !createfieldnamevaluesList || !createfieldnamevaluesList[transId] || createfieldnamevaluesList[transId].length === 0) {
-            console.log("Missing transaction ID or field values. Tstructid : " + transId);
+            // console.log("Missing transaction ID or field values. Tstructid : " + transId);
             showToast("Incomplete command detected. Please clear the entire command and try again.");
             return [];
         }
@@ -12037,7 +12031,7 @@
         //        //const rowNo = "1";
 
         //        if (!fieldname || value == null || value === "") {
-        //            console.log(`SET FAILED ? ${fieldname} = ${value}`);
+        //            // console.log(`SET FAILED ? ${fieldname} = ${value}`);
         //            continue;
         //        }
 
@@ -12045,19 +12039,19 @@
         //        let resultOfSetFieldValue = AxisetFieldValue(actualFieldName, value, rowNo);
 
         //        if (resultOfSetFieldValue) {
-        //            console.log(`SET SUCCESS ? ${fieldname} = ${value}`);
+        //            // console.log(`SET SUCCESS ? ${fieldname} = ${value}`);
         //            continue;
 
         //        }
         //        else {
-        //            console.log(`SET FAILED ? ${fieldname} = ${value}`);
+        //            // console.log(`SET FAILED ? ${fieldname} = ${value}`);
         //        }
         //    }
         //    createfieldnamevaluesList = []
         //}
         //else 
         //{
-        console.log("Form not loaded. Attaching onload and redirecting...");
+        // console.log("Form not loaded. Attaching onload and redirecting...");
 
         let iframe = null;
 
@@ -12066,19 +12060,19 @@
             iframe = document.getElementById("middle1");
 
             if (!iframe) {
-                console.log("Iframe not found");
+                // console.log("Iframe not found");
                 return;
             }
 
 
             iframe.onload = function () {
                 //we can also try: 0 (minimum delay),50,100,200 (if needed)
-                console.log("Iframe loaded. Setting all fields now...");
+                // console.log("Iframe loaded. Setting all fields now...");
                 setTimeout(function () {
                     try {
 
 
-                        console.log(createfieldnamevaluesList[transId]);
+                        // console.log(createfieldnamevaluesList[transId]);
                         // for (let j = 2; j < tokens.length; j += 2) {
                         for (let j = 0; j < createfieldnamevaluesList[transId].length; j++) {
 
@@ -12102,23 +12096,23 @@
                             //let rowNo = "1";
 
                             if (!actualFName || val == null || val === "") {
-                                console.log(`SET FAILED ? ${fname} = ${val}`);
+                                // console.log(`SET FAILED ? ${fname} = ${val}`);
                                 continue;
                             }
 
                             let resultOfSetFieldValue = AxisetFieldValue(actualFName, val, rowNo);
 
                             if (resultOfSetFieldValue) {
-                                console.log(`SET SUCCESS ? ${actualFName} = ${val}`);
+                                // console.log(`SET SUCCESS ? ${actualFName} = ${val}`);
                             }
                             else {
-                                console.log(`SET FAILED ? ${actualFName} = ${val}`);
+                                // console.log(`SET FAILED ? ${actualFName} = ${val}`);
                             }
                         }
 
                     }
                     catch (ex) {
-                        console.error("Error while setting fields after iframe load:", ex);
+                        // console.error("Error while setting fields after iframe load:", ex);
                     }
                     finally {
                         iframe.onload = null;
@@ -12135,7 +12129,7 @@
 
         }
         catch (ex) {
-            console.log("Error in handleCreate: " + ex);
+            // console.log("Error in handleCreate: " + ex);
             showToast("Incomplete command detected. Please clear the entire command and try again.");
             //createfieldnamevaluesList = [];
         }
@@ -12546,7 +12540,7 @@
     //    let sessionId;
     //    getARMSessionId().then(sessionIdFetch => {
     //        sessionId = sessionIdFetch;
-    //        console.log(sessionIdFetch);
+    //        // console.log(sessionIdFetch);
     //    });
 
     //    if (!sessionId) return ["Session expired"]
@@ -12614,7 +12608,7 @@
     //        ]
     //    };
 
-    //    console.log("AxPut Payload created : " + payload);
+    //    // console.log("AxPut Payload created : " + payload);
     //    //If EDIT ? attach keyfield & keyvalue at root level
     //    if (!isCreate) {
     //        payload.data[0]["keyfield"] = "recordid";
@@ -12636,7 +12630,7 @@
     //        //const result = await response.json();
 
     //    } catch (error) {
-    //        console.log("Error from Axput : "+ error);
+    //        // console.log("Error from Axput : "+ error);
     //    }
 
 
@@ -12648,11 +12642,11 @@
     //    var result = preparePayload(createfieldnamevaluesList, transid, sourcename, iscreate = true);
 
     //    if (result.isSuccess) {
-    //        console.log("Payload Ready");
-    //        console.log(result.payload);
+    //        // console.log("Payload Ready");
+    //        // console.log(result.payload);
     //        payload = result.payload;
     //    } else {
-    //        console.log("Payload is empty");
+    //        // console.log("Payload is empty");
     //        payload = {};
     //    }
 
@@ -12671,12 +12665,12 @@
     //            //const result = await response.json();
     //            if (response.isSuccess) {
     //                showToast("Your Data is submitted Successfully!!");
-    //                console.log("Data is submitted Successfully!!");
+    //                // console.log("Data is submitted Successfully!!");
     //            }
 
     //        } catch (error) {
     //            showToast("Your Data is not Submitted..Please Submit it Manually!!");
-    //            console.log("Error from Axput : "+ error);
+    //            // console.log("Error from Axput : "+ error);
     //        }
 
 
@@ -12692,13 +12686,13 @@
         //            return;
         //        }
 
-        //        console.log("Fetched Session ID: " + sessionId);
+        //        // console.log("Fetched Session ID: " + sessionId);
 
         // ?? Call preparePayload AFTER session is ready
 
         //if (!transid || saveListWithFieldNamendValues.length == 0) {
         if (!transid || !saveListWithFieldNamendValues || !saveListWithFieldNamendValues[transid] || saveListWithFieldNamendValues[transid].length === 0) {
-            console.log("Missing transaction ID or field values.");
+            // console.log("Missing transaction ID or field values.");
             showToast("Incomplete command detected. Please clear the entire command and try again.");
 
             return [];
@@ -12759,15 +12753,15 @@
                 throw new Error("Payload is empty or invalid");
             }
 
-            console.log("Payload is Created successfully " + "\n");
-            console.log(result.payload);
+            // console.log("Payload is Created successfully " + "\n");
+            // console.log(result.payload);
 
             var payload = result.payload;
 
 
             var SaveDataapiUrl = mainArmRestDllPath + "ASBTStructrest.dll/datasnap/rest/TASBTstruct/savedata";
 
-            console.log("SaveDataapi URL : " + SaveDataapiUrl);
+            // console.log("SaveDataapi URL : " + SaveDataapiUrl);
 
             showToast("Saving Data is in progress....", 5000, true);
 
@@ -12804,8 +12798,8 @@
 
                     if (firstResult.error) {
                         showToast(`Save Failed : ${firstResult.error.msg}`);
-                        console.log(`Save Failed : ${firstResult.error.msg}`);
-                        console.log(data);
+                        // console.log(`Save Failed : ${firstResult.error.msg}`);
+                        // console.log(data);
                         return [];
                     }
 
@@ -12816,15 +12810,15 @@
                         const recordId = msgObj.recordid || "";
                         const sid = msgObj.SID || "";
                         showToast(`${msg}`, 5000, true);
-                        console.log("Data submitted successfully,Record-ID : " + recordId);
-                        console.log(data);
+                        // console.log("Data submitted successfully,Record-ID : " + recordId);
+                        // console.log(data);
 
                         //saveListWithFieldNamendValues = [];
                         //createfieldnamevaluesList = [];
                         return [];
                     }
 
-                    console.log(data);
+                    // console.log(data);
                     throw new Error("Unexpected API response structure");
 
                 })
@@ -12833,7 +12827,7 @@
                     //showToast("Your Data is not Submitted,Please Submit it Manually using(Ctrl + Enter)!");
                     // showToast("Save failed.Please retry with Ctrl + Enter.");
                     showToast("Save failed.Please try again later.");
-                    console.log("Error from AxiSaveDataFn :" + error);
+                    // console.log("Error from AxiSaveDataFn :" + error);
                     return [];
 
                 });
@@ -12872,7 +12866,7 @@
         let payloadUsername = mainUserName;
 
         if (!payloadUsername || payloadUsername.trim() === "") {
-            console.log("Username not found or invalid.");
+            // console.log("Username not found or invalid.");
             return Promise.resolve({
                 isSuccess: false,
                 payload: {}
@@ -12889,7 +12883,7 @@
             const colList = axDatasourceObj[colSourceKey];
 
             if (!colList) {
-                console.warn("Column metadata not found for:", colSourceKey);
+                // console.warn("Column metadata not found for:", colSourceKey);
                 return {
                     isSuccess: false,
                     payload: {}
@@ -12994,12 +12988,12 @@
                     }
                 };
 
-                console.log("PreparedPayload : Payload is created successfully with isCreate :", iscreate);
+                // console.log("PreparedPayload : Payload is created successfully with isCreate :", iscreate);
 
             }
             catch (ex) {
                 isSuccess = false;
-                console.log("Error in preparePayload Payload creation :" + ex);
+                // console.log("Error in preparePayload Payload creation :" + ex);
             }
 
             if (payload && Object.keys(payload).length > 0 && isSuccess) {
@@ -13033,7 +13027,7 @@
 
 
 
-        console.log("Target Url for AxiBot:  " + targetUrl);
+        // console.log("Target Url for AxiBot:  " + targetUrl);
 
 
         setCommandRoutes(input.value.trim(), targetUrl);
@@ -13096,7 +13090,7 @@
 
     function handleAiButtons(btnId) {
         const axiButtons = getAxiBotActionButtons();
-        console.log(axiButtons);
+        // console.log(axiButtons);
 
 
         if (axiButtons) {
@@ -13104,7 +13098,7 @@
 
 
         } else {
-            console.error("Cannot get Axi bot action buttons");
+            // console.error("Cannot get Axi bot action buttons");
             showToast("Error: Cannot get Axi bot action buttons")
         }
 
@@ -13115,22 +13109,22 @@
         const iframe = document.getElementById("middle1");
 
         if (!iframe) {
-            console.error("Axi bot: Iframe middle1 not found.");
+            // console.error("Axi bot: Iframe middle1 not found.");
             return;
         }
 
         const iframeWindow = iframe.contentWindow;
 
         if (!iframeWindow) {
-            console.error("Axi Bot: Cannot access iframe window.");
+            // console.error("Axi Bot: Cannot access iframe window.");
             return;
         }
 
         if (typeof iframeWindow.sendAxiMessageToAxibot === "function") {
-            console.log(`Sending to AxiBot: "${text}"`);
+            // console.log(`Sending to AxiBot: "${text}"`);
             iframeWindow.sendAxiMessageToAxibot(text);
         } else {
-            console.warn("Axi Bot: Script not fully loaded in iframe yet.");
+            // console.warn("Axi Bot: Script not fully loaded in iframe yet.");
             if (typeof showToast === 'function') showToast("Chatbot is loading...");
         }
 
@@ -13160,7 +13154,7 @@
         cachedCommands = localStorage.getItem("axi_commands_v1");
         initCommands();
         window.LoadIframe("loadhomepage");
-        console.log(JSON.stringify(commands));
+        // console.log(JSON.stringify(commands));
     }
 
     function saveToHistory(text) {
@@ -13242,8 +13236,8 @@
                     return res.json()
                 })
                 .then(data => {
-                    console.log("Fetched favorites from backend: ", data);
-                    console.log("type : ", typeof data);
+                    // console.log("Fetched favorites from backend: ", data);
+                    // console.log("type : ", typeof data);
                     if (data && Array.isArray(data)) {
                         commandFavorites = data.map(item => ({
                             favouritesId: item?.favouritesId,
@@ -13261,7 +13255,7 @@
                     }
                 })
                 .catch(err => {
-                    console.error("Axi: Failed to sync favorites from backend", err);
+                    // console.error("Axi: Failed to sync favorites from backend", err);
                     showToast("Axi: Axi: Failed to sync favorites from backend");
 
                 }).finally(() => {
@@ -13354,7 +13348,7 @@
             //             favOrder: 0,
             //             targetURL: removedFav?.targetUrl || removedFav?.targetURL || removedFav?.targeturl
             //         })
-            //     }).catch(err => console.error("Axi: Failed to update on backend", err));
+            //     }).catch(err => // console.error("Axi: Failed to update on backend", err));
             // }
 
             showDeleteFavoriteModal(cmdText);
@@ -13393,7 +13387,7 @@
         //         })
         //     }).catch(err => {
         //         showToast("Axi: Failed to update favorite on backend, Please check AxiApi Configuration");
-        //         console.error("Axi: Failed to update favorite on backend", err)
+        //         // console.error("Axi: Failed to update favorite on backend", err)
         //     });
         // }
 
@@ -13615,7 +13609,7 @@
         }
 
         if (favObj.targetUrl && favObj.targetUrl.trim() !== "" && !favObj.targetUrl.startsWith("developerstudio:")) {
-            console.log("Executing Favorite directly via Target URL:", favObj.targetUrl);
+            // console.log("Executing Favorite directly via Target URL:", favObj.targetUrl);
             const params = new URLSearchParams(favObj.targetUrl.split("?")[1]);
             const transId = params.get("transid");
             if (transId) {
@@ -13623,7 +13617,7 @@
             }
             top.window.LoadIframe(favObj.targetUrl);
         } else if (favObj.targetUrl && favObj.targetUrl.startsWith("developerstudio:")) {
-            console.log("Executing Favorite via Developer Studio custom target URL:", favObj.targetUrl);
+            // console.log("Executing Favorite via Developer Studio custom target URL:", favObj.targetUrl);
             const parts = favObj.targetUrl.split(":");
             const type = parts[1]; // tstruct or iview
             const name = parts[2]; // the resolved name
@@ -13669,7 +13663,7 @@
         const existingCommandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
 
         if (existingCommandRoute) {
-            console.log("Command route for ", cmdText, " already exists");
+            // console.log("Command route for ", cmdText, " already exists");
             return;
         }
 
@@ -13678,7 +13672,7 @@
             targetUrl: targetUrl
         })
 
-        console.log("Command Routes: " + JSON.stringify(commandRoutes));
+        // console.log("Command Routes: " + JSON.stringify(commandRoutes));
     }
 
     function generateLocalStorageKey(name, params) {
@@ -13962,7 +13956,7 @@
                     }
                 })
                     .catch(error => {
-                        console.error("Backend edit failed", error);
+                        // console.error("Backend edit failed", error);
                         showToast("An Error occured while editing favourite");
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
                         favCancelBtn.disabled = false;
@@ -13993,7 +13987,7 @@
                         }
                     }
                 ).then(data => {
-                    console.log("Response from backend after adding favorite: ", data);
+                    // console.log("Response from backend after adding favorite: ", data);
                     const favObj = data[0];
 
                     commandFavorites.unshift({
@@ -14015,7 +14009,7 @@
                 })
                     .catch(err => {
                         showToast("Axi: Failed to update favorite on backend");
-                        console.error("Backend sync failed", err);
+                        // console.error("Backend sync failed", err);
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
                         favCancelBtn.disabled = false;
 
@@ -14116,7 +14110,7 @@
                     }
                 })
                     .catch(err => {
-                        console.error("Axi: Failed to delete on backend", err);
+                        // console.error("Axi: Failed to delete on backend", err);
                         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
                         deleteFavCancelBtn.disabled = false;
 
@@ -14169,7 +14163,7 @@
                 // return params.get("tstid"); 
                 return { name: decodeURIComponent(structNameRaw), type: "entity" };
             } catch (error) {
-                console.error("Error parsing struct name from URL: ", error);
+                // console.error("Error parsing struct name from URL: ", error);
                 return null;
             }
 
@@ -14184,7 +14178,7 @@
                 // return params.get("tstid"); 
                 return { name: decodeURIComponent(structNameRaw), type: "entity" };
             } catch (error) {
-                console.error("Error parsing struct name from URL: ", error);
+                // console.error("Error parsing struct name from URL: ", error);
                 return null;
             }
 
@@ -14196,7 +14190,7 @@
                 // return params.get("ivname"); 
                 return { name: decodeURIComponent(structNameRaw), type: "iview" };
             } catch (error) {
-                console.error("Error parsing struct name from URL: ", error);
+                // console.error("Error parsing struct name from URL: ", error);
                 return null;
             }
         } else if (src.includes("Smartview_table.html")) {
@@ -14206,7 +14200,7 @@
                 const structNameRaw = params.get("ads");
                 return { name: decodeURIComponent(structNameRaw), type: "ads" };
             } catch (error) {
-                console.error("Error parsing struct name from URL: ", error);
+                // console.error("Error parsing struct name from URL: ", error);
                 return null;
 
             }
