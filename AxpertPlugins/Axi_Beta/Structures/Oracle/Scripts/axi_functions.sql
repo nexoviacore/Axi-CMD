@@ -1373,7 +1373,7 @@ BEGIN
         EXECUTE IMMEDIATE V_SQL;
     END IF;
 
-    COMMIT; -- Mandatory for Autonomous Transaction
+    COMMIT; 
     RETURN 'SUCCESS';
 
 EXCEPTION
