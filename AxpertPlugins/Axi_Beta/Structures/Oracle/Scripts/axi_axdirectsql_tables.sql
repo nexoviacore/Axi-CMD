@@ -202,6 +202,10 @@ DELETE FROM axdirectsql where axdirectsqlid = 99999999990049
 DELETE FROM axdirectsql where axdirectsqlid = 99999999990050
 >>
 
+<<
+DELETE FROM axdirectsql where sqlname = 'axi_tstructprops_insupd'
+>>
+
 
 DELETE FROM axdirectsql where sqlname = 'axi_smartviewlist'
 
@@ -550,13 +554,6 @@ VALUES
 )
 >>
 
-
-Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990023,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_nongridfieldlist',null,'Metadata',1,'select caption||'' (''||fname||'')'' displaydata, caption, fname name, 
-tstruct,SUBSTR(modeofentry, 1, 1) AS moe, axpflds.datatype ,fldsql,dcname,asgrid,listvalues fromlist,srckey normalized
- from axpflds where tstruct = :param1 and asgrid = ''F'' and hidden = ''F'' and modeofentry in (''accept'',''select'') 
- and savevalue = ''T'' and axpflds.datatype <> ''i'' order by ordno ASC','param1','param1~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
-
-
 <<
 Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990024,'F',0,null,'rekhancia',to_date('20-05-26','DD-MM-RR'),'rekhancia',to_date('20-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_peglist',null,'Metadata',1,'select caption as displaydata from axpdef_peg_processmaster',null,null,'ALL',null,null,'F','6 Hr',null,null,null,'T','F')
 >>
@@ -694,4 +691,76 @@ INSERT INTO axdirectsql (axdirectsqlid, cancel, sourceid, mapname, username, mod
 
 <<
 Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990052,'F',0,null,'admin',TO_DATE('2025-12-23 13:22:07', 'YYYY-MM-DD HH24:MI:SS'),'admin',TO_DATE('2025-12-19 16:06:57', 'YYYY-MM-DD HH24:MI:SS'),null,1,1,null,null,null,'axi_userpwd',null,'Metadata',1,'select password  from axusers where username = :param1','param1','param1~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
+>>
+
+
+<<
+INSERT INTO AXDIRECTSQL
+(
+    AXDIRECTSQLID,
+    CANCEL,
+    SOURCEID,
+    MAPNAME,
+    USERNAME,
+    MODIFIEDON,
+    CREATEDBY,
+    CREATEDON,
+    WKID,
+    APP_LEVEL,
+    APP_DESC,
+    APP_SLEVEL,
+    CANCELREMARKS,
+    WFROLES,
+    SQLNAME,
+    DDLDATATYPE,
+    SQLSRC,
+    SQLSRCCND,
+    SQLTEXT,
+    PARAMCAL,
+    SQLPARAMS,
+    ACCESSSTRING,
+    GROUPNAME,
+    SQLQUERYCOLS,
+    CACHEDATA,
+    CACHEINTERVAL,
+    ENCRYPTEDFLDS,
+    SMARTLISTCND,
+    PAGINATION,
+    APPLYDIMENSIONS,
+    ADSDESC
+)
+VALUES
+(
+    99999999990054,
+    'F',
+    0,
+    NULL,
+    'admin',
+    TO_TIMESTAMP('2025-12-23 13:22:07','YYYY-MM-DD HH24:MI:SS'),
+    'admin',
+    TO_TIMESTAMP('2025-12-19 16:06:57','YYYY-MM-DD HH24:MI:SS'),
+    NULL,
+    1,
+    1,
+    NULL,
+    NULL,
+    NULL,
+    'axi_tstructprops_insupd',
+    NULL,
+    'Metadata',
+    5,
+    'SELECT FN_UPSERT_CONFIG_BY_CONDITION(:param1,:param2,:param3,:param4) FROM DUAL', 
+    'param1,param2,param3,param4',
+    'param1~~,param2~~,param3~~,param4~~',
+    'ALL',
+    NULL,
+    NULL,
+    'F',
+    '6 Hr',
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+)
 >>

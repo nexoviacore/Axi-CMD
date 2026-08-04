@@ -21,7 +21,11 @@ DROP TYPE axi_getstructs_obj
 >>
 
 <<
-DROP TYPE AXI_GETSTRUCTURES_META;
+DROP TYPE AXI_GETSTRUCTURES_META
+>>
+
+<<
+DROP FUNCTION FN_UPSERT_CONFIG_BY_CONDITION
 >>
 
 
@@ -1296,6 +1300,88 @@ END;
 
 >>
 
+<<
+CREATE OR REPLACE FUNCTION FN_UPSERT_CONFIG_BY_CONDITION
+(
+    P_TABLENAME     IN VARCHAR2,
+    P_FIELDNAMES    IN VARCHAR2,
+    P_FIELDVALUES   IN VARCHAR2,
+    P_WHERE_CLAUSE  IN VARCHAR2
+) RETURN VARCHAR2
+AS
+    PRAGMA AUTONOMOUS_TRANSACTION; 
+    
+    V_EXISTS      NUMBER;
+    V_SET_CLAUSE  CLOB := '';
+    V_SQL         CLOB;
+
+    TYPE T_ARRAY IS TABLE OF VARCHAR2(4000) INDEX BY PLS_INTEGER;
+    V_COLS T_ARRAY;
+    V_VALS T_ARRAY;
+
+    FUNCTION SPLIT
+    (
+        P_STR   VARCHAR2,
+        P_DELIM VARCHAR2
+    ) RETURN T_ARRAY
+    IS
+        L_ARRAY T_ARRAY;
+        L_POS   NUMBER := 1;
+        L_IDX   NUMBER := 1;
+        L_NEXT  NUMBER;
+    BEGIN
+        LOOP
+            L_NEXT := INSTR(P_STR, P_DELIM, L_POS);
+
+            IF L_NEXT = 0 THEN
+                L_ARRAY(L_IDX) := TRIM(SUBSTR(P_STR, L_POS));
+                EXIT;
+            END IF;
+
+            L_ARRAY(L_IDX) := TRIM(SUBSTR(P_STR, L_POS, L_NEXT - L_POS));
+            L_POS := L_NEXT + LENGTH(P_DELIM);
+            L_IDX := L_IDX + 1;
+        END LOOP;
+
+        RETURN L_ARRAY;
+    END;
+
+BEGIN
+
+    V_COLS := SPLIT(P_FIELDNAMES, ',');
+    V_VALS := SPLIT(P_FIELDVALUES, ',');
+
+    IF V_COLS.COUNT <> V_VALS.COUNT THEN
+        RETURN 'ERROR: Field names and values count mismatch.';
+    END IF;
+
+    FOR I IN 1 .. V_COLS.COUNT LOOP
+        IF I > 1 THEN
+            V_SET_CLAUSE := V_SET_CLAUSE || ', ';
+        END IF;
+        V_SET_CLAUSE := V_SET_CLAUSE || TRIM(V_COLS(I)) || '=' || TRIM(V_VALS(I));
+    END LOOP;
+
+    V_SQL := 'SELECT COUNT(*) FROM ' || UPPER(P_TABLENAME) || ' WHERE ' || P_WHERE_CLAUSE;
+    EXECUTE IMMEDIATE V_SQL INTO V_EXISTS;
+
+    IF V_EXISTS > 0 THEN
+        V_SQL := 'UPDATE ' || UPPER(P_TABLENAME) || ' SET ' || V_SET_CLAUSE || ' WHERE ' || P_WHERE_CLAUSE;
+        EXECUTE IMMEDIATE V_SQL;
+    ELSE
+        V_SQL := 'INSERT INTO ' || UPPER(P_TABLENAME) || ' (' || P_FIELDNAMES || ') VALUES (' || P_FIELDVALUES || ')';
+        EXECUTE IMMEDIATE V_SQL;
+    END IF;
+
+    COMMIT; -- Mandatory for Autonomous Transaction
+    RETURN 'SUCCESS';
+
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RETURN 'ERROR: ' || SQLERRM;
+END FN_UPSERT_CONFIG_BY_CONDITION;
+>>
 
 -- Recompile the fn_axi_getstructs_obj function explicitly to validate it post-creation
 ALTER FUNCTION FN_AXI_GETSTRUCTS_OBJ COMPILE

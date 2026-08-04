@@ -94,12 +94,6 @@ INSERT INTO axi_commands
 VALUES(9, 'Run', '', 'T')
 >>
 
-
-INSERT INTO axi_commands
-(cmdtoken, command_group, command, active)
-VALUES(10, 'Analyse', '', 'T')
-
-
 --axi_command_prompts starts here
 <<
 INSERT INTO axi_command_prompts

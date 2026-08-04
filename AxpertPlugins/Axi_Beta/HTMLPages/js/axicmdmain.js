@@ -2387,7 +2387,7 @@
         if (grpKey === "edit" && (text.toLowerCase().includes(" with") || tokens.some(t => cleanString(t).toLowerCase() === "with"))) {
             const entityObj = getTargetEntityObj(tokens[1], "edit");
             if (entityObj && (entityObj.keyfieldforedit === "F" || entityObj.keyfieldforedit === false)) {
-                showToast("Key field is not configured for this form.", 3000, false);
+                showToast("Key field is not configured for this form. Please configure the key field using the Configure Key Field command.", 3000, false);
                 items = [];
                 render();
                 hide();
@@ -5910,7 +5910,7 @@
             const suggText = (typeof selectedItem === "string" ? selectedItem : (selectedItem?.displaydata || selectedItem?.name || "")).toLowerCase().trim();
             const hasWithInTokens = checkTokens.some(t => cleanString(t).toLowerCase() === "with") || currentInput.toLowerCase().includes(" with");
             if (targetIndex === 1 || suggText === "with" || hasWithInTokens) {
-                showToast("Key field is not configured for this form.", 3000, false);
+                showToast("Key field is not configured for this form. Please configure the key field using the Configure Key Field command.", 3000, false);
                 hide();
                 return;
             }
@@ -6113,17 +6113,19 @@
                 }
             }
 
-            const dataObj = typeof res === "string" ? JSON.parse(res) : res;
+            let dataObj = typeof res === "string" ? JSON.parse(res) : res;
+            if (dataObj && dataObj.d) {
+                dataObj = typeof dataObj.d === "string" ? JSON.parse(dataObj.d) : dataObj.d;
+            }
 
             console.log("DATA obj is : " + dataObj);
             console.log("Type of DATA OBJ: " + typeof dataObj);
             const list = dataObj?.result?.data?.[0]?.data ?? [];
 
-            if (dataObj?.result?.data?.[0].error) {
-                showToast(`Error: ${dataObj?.result?.data?.[0].error}`);
-                console.log(`Error: ${list[0].error}`);
+            if (dataObj?.result?.data?.[0]?.error) {
+                showToast(`Error: ${dataObj?.result?.data?.[0]?.error}`);
+                console.log(`Error: ${dataObj?.result?.data?.[0]?.error}`);
                 return;
-
             }
 
 
@@ -8190,6 +8192,7 @@
 
         switch (structName.type.toLowerCase()) {
             case "entity":
+            case "tstruct":
                 safeOpenDeveloperStudio("tstreact", structName.name, true);
                 break;
             case "iview":
@@ -8594,23 +8597,27 @@
 
         const res = await getAxListAsync(requestBody);
 
-        const dataObj = typeof res === "string" ? JSON.parse(res) : res;
+        let dataObj = typeof res === "string" ? JSON.parse(res) : res;
+        if (dataObj && dataObj.d) {
+            dataObj = typeof dataObj.d === "string" ? JSON.parse(dataObj.d) : dataObj.d;
+        }
 
         console.log("DATA obj is :", dataObj);
-        console.log("Type of DATA OBJ:", typeof dataObj);
 
-        const resultBlock = dataObj?.result?.data?.[0];
+        const dataArray = dataObj?.result?.data;
+        const resultBlock = Array.isArray(dataArray) ? dataArray[0] : null;
+        const foundErrorObj = Array.isArray(dataArray) ? dataArray.find(item => item && item.error) : null;
+        const errorMessage = resultBlock?.error || foundErrorObj?.error || (dataObj?.result?.success === false ? (dataObj?.result?.message || "Operation failed") : null);
+
+        if (errorMessage) {
+            showToast(`Error: ${errorMessage}`);
+            console.error(`handleKeyfield Error: ${errorMessage}`);
+            return;
+        }
 
         if (dataObj?.result?.success && dataObj?.result?.message?.toLowerCase() === "success") {
             showToast(`Key field-${keyField} has been set for the form ${tstructName}`, 5000, true);
             console.log(`Key field-${keyField} has been set for the form ${tstructName}`);
-            return;
-        }
-
-
-        if (resultBlock?.error) {
-            showToast(`Error: ${resultBlock.error}`);
-            console.log(`Error: ${resultBlock.error}`);
             return;
         }
     }
