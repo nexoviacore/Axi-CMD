@@ -4018,7 +4018,11 @@
 
         const groupKey = cleanString(tokens[0]);
 
-        if (groupKey.toLowerCase() === "configure" && tokens[1] && cleanString(tokens[1]).toLowerCase() === "responsibilities") {
+        const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
+        const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
+        const isResponsibilityCmd = subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities";
+
+        if (groupKey.toLowerCase() === "configure" && isResponsibilityCmd) {
             filteredObjects = [goOption];
             return [goOption];
         }
@@ -4461,7 +4465,11 @@
                     }
 
                     if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
-                        if (tokens[1] && cleanString(tokens[1]).toLowerCase() === "responsibilities") {
+                        const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
+                        const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
+                        const isResponsibilityCmd = subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities";
+
+                        if (isResponsibilityCmd) {
                             filteredObjects = [goOption];
                             return [goOption];
                         }
@@ -4593,10 +4601,19 @@
                 }
             }
 
-            //otherthan keyfield and userpermissionlisting it will work for all tokens which length is eqaul to 3(ex : peg)
-            else if ((groupKey.toLowerCase() === "configure") && tokens.length === 3 && tokens[1].toLowerCase() !== "keyfield" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "user permissions" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "role permissions" && tokens[1].replace(/"/g, '').toLowerCase().trim() !== "responsibilities") {
-                resultList.unshift(goOption, popOption);
-                filteredObjects.unshift(goOption, popOption);
+            //otherthan keyfield, userpermissionlisting, and responsibility listing it will work for all tokens which length is eqaul to 3(ex : peg)
+            else if ((groupKey.toLowerCase() === "configure") && tokens.length >= 2) {
+                const subCmdFull = tokens.slice(1).map(t => cleanString(t).replace(/"/g, '')).join(" ").toLowerCase().trim();
+                const subCmdFirst = tokens[1] ? cleanString(tokens[1]).replace(/"/g, '').toLowerCase().trim() : "";
+                const isResp = (subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities");
+                const isKeyfield = (subCmdFirst === "keyfield");
+                const isUserPerm = (subCmdFull === "user permissions" || subCmdFirst === "user permissions");
+                const isRolePerm = (subCmdFull === "role permissions" || subCmdFirst === "role permissions");
+
+                if (!isKeyfield && !isUserPerm && !isRolePerm && !isResp) {
+                    resultList.unshift(goOption, popOption);
+                    filteredObjects.unshift(goOption, popOption);
+                }
             }
 
             else if ((groupKey.toLowerCase() === "analyse") && tokens.length === 3) {
