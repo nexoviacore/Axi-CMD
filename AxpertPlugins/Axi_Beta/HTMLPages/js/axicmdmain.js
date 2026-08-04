@@ -9205,6 +9205,11 @@
         let rawName = cleanCommandToken(tokens[2]);
 
         if (rawName && rawName.toLowerCase() === "create new") {
+            const targetUrl = type.toLowerCase() === "tstruct"
+                ? "developerstudio:tstruct:new_tstruct"
+                : "developerstudio:iview:new_iview";
+            setCommandRoutes(input.value.trim(), targetUrl);
+
             if (type.toLowerCase() === "tstruct") {
                 safeOpenDeveloperStudio("tstreact", "new_tstruct", true);
                 return;
@@ -13273,6 +13278,25 @@
             if (cmdTokens.length === 1 && isTargetEntity(cmdTokens[0])) {
                 const viewCmd = "view " + cmdText;
                 commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === viewCmd.toLowerCase());
+            } else if (cmdTokens.length >= 2 && cmdTokens[0].toLowerCase() === "sdk") {
+                const subType = cmdTokens[1].toLowerCase();
+                const lastToken = cmdTokens.slice(2).join(" ").replace(/^["']|["']$/g, "").toLowerCase();
+                let targetUrl = "";
+                if (lastToken === "create new") {
+                    if (subType === "tstruct") {
+                        targetUrl = "developerstudio:tstruct:new_tstruct";
+                    } else if (subType === "iview") {
+                        targetUrl = "developerstudio:iview:new_iview";
+                    } else if (subType === "page") {
+                        targetUrl = "../aspx/tstruct.aspx?transid=sect";
+                    } else if (subType === "ads" || subType === "axpert data sources") {
+                        targetUrl = "../aspx/tstruct.aspx?transid=b_sql";
+                    }
+                }
+                if (targetUrl) {
+                    commandRoute = { commandText: cmdText, targetUrl };
+                    setCommandRoutes(cmdText, targetUrl);
+                }
             }
         }
 
@@ -13585,14 +13609,27 @@
                 safeOpenDeveloperStudio("ivreact", name, true);
             }
         } else {
-            const firstToken = tokens[0];
-            const secondToken = tokens[1];
-            const nameToken = tokens[2]; // Resolved name / third token
+            const firstToken = tokens[0] ? tokens[0].toLowerCase() : "";
+            const secondToken = tokens[1] ? tokens[1].toLowerCase() : "";
+            let nameToken = tokens[2] ? tokens[2].trim() : "";
+            if (tokens.length > 3) {
+                nameToken = tokens.slice(2).join(" ").replace(/^["']|["']$/g, "").trim();
+            }
 
-            if (firstToken.toLowerCase() === "sdk" && secondToken.toLowerCase() === "tstruct") {
-                safeOpenDeveloperStudio("tstreact", nameToken, true);
-            } else {
-                safeOpenDeveloperStudio("ivreact", nameToken, true);
+            if (firstToken === "sdk") {
+                const resolvedName = (nameToken.toLowerCase() === "create new")
+                    ? (secondToken === "tstruct" ? "new_tstruct" : "new_iview")
+                    : nameToken;
+
+                if (secondToken === "tstruct") {
+                    safeOpenDeveloperStudio("tstreact", resolvedName, true);
+                } else if (secondToken === "iview") {
+                    safeOpenDeveloperStudio("ivreact", resolvedName, true);
+                } else if (secondToken === "page") {
+                    top.window.LoadIframe("../aspx/tstruct.aspx?transid=sect");
+                } else if (secondToken === "ads" || (secondToken === "axpert" && tokens[1].toLowerCase() === "axpert data sources")) {
+                    top.window.LoadIframe("../aspx/tstruct.aspx?transid=b_sql");
+                }
             }
         }
 
