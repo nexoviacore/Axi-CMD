@@ -340,6 +340,7 @@
     // DATA CACHES
     let axDatasourceObj = {};
     let activeFetches = new Set();
+    let failedFetches = new Set();
     let filteredObjects = [];
     let adsfieldvalueanddt = {};
     let createfieldnamevaluesList = {};
@@ -873,13 +874,15 @@
             return;
         }
         const key = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
-        if (activeFetches.has(key)) return;
+        if (activeFetches.has(key) || failedFetches.has(key)) return;
         activeFetches.add(key);
 
         try {
             const data = await getList(sourceName, paramValue);
-            axDatasourceObj[key] = data;
+            axDatasourceObj[key] = Array.isArray(data) ? data : (data ? [data] : []);
         } catch (error) {
+            failedFetches.add(key);
+            axDatasourceObj[key] = [];
             // console.error("loadlist failed", error);
         } finally {
             activeFetches.delete(key);
@@ -6618,6 +6621,8 @@
                     tstructList = null;
                     adsList = null;
                     axDatasourceObj = {};
+                    activeFetches.clear();
+                    failedFetches.clear();
                     resolvedParams = {};
                     resolvedParamType = {};
                     createfieldnamevaluesList = {};
