@@ -5,3 +5,4 @@
 
 ## In Progress 
 1. TKT-0840 - In the orclbase114 schema, when executing a specific TStruct using the Edit command, an error is thrown on the first attempt. conveyed to Abinash
+2. TKT-0776 - AXI CMD line-Edit with auto suggestions issue
