@@ -9775,31 +9775,45 @@
         }
         if (!doc) return {};
 
-        const searchElem = doc.getElementById("iconsNewSearch") || doc.querySelector("#iconsNewSearch");
-        const refreshElem = doc.getElementById("iconsNewRefresh") || doc.querySelector("#iconsNewRefresh") || doc.getElementById("iviewRefresh") || doc.querySelector(".iviewRefresh");
-        const refreshParamElem = doc.getElementById("dvRefreshParam") || doc.querySelector("#dvRefreshParam");
-        const refreshParamIconElem = doc.getElementById("dvRefreshParamIcon") || doc.querySelector("#dvRefreshParamIcon");
-        const utilityContainer = doc.getElementById("iconsNewUtility") || doc.querySelector("#iconsNewUtility");
-
-        const containers = [utilityContainer, searchElem, refreshElem, refreshParamElem, refreshParamIconElem].filter(Boolean);
+        const rawContainers = Array.from(doc.querySelectorAll(".newRequestJson, [id^='iconsNew'], [id^='dvRefresh'], .iviewRefresh, #iconsNewSearch, #iconsNewRefresh, #iconsNewNew, #iconsNewRemove, #iconsNewUtility, #iconsNewOption, #dvRefreshParam, #dvRefreshParamIcon"));
+        const containers = Array.from(new Set(rawContainers));
         if (containers.length === 0) return {};
 
         const links = [];
         containers.forEach((container) => {
-            if (container.matches("a, button, [onclick], [title]")) {
-                links.push(container);
+            const dropdownLinks = Array.from(container.querySelectorAll(".menu-sub-dropdown a, .dropdown-menu a, ul a, li a"));
+            if (dropdownLinks.length > 0) {
+                dropdownLinks.forEach(child => {
+                    if (!links.includes(child)) links.push(child);
+                });
+            } else {
+                if (container.matches("a, button, [onclick], [title], [data-bs-original-title]")) {
+                    links.push(container);
+                }
+                const children = Array.from(container.querySelectorAll("a, button, [onclick]"));
+                children.forEach(child => {
+                    if (!links.includes(child)) links.push(child);
+                });
             }
-            const children = Array.from(container.querySelectorAll("a, button, [onclick]"));
-            children.forEach(child => {
-                if (!links.includes(child)) links.push(child);
-            });
         });
 
         if (links.length === 0) return {};
 
         const result = {};
         links.forEach((link) => {
-            const title = link.getAttribute("title") || link.parentElement?.getAttribute("title") || "";
+            const isDropdownItem = link.closest(".menu-sub-dropdown, .dropdown-menu, ul.menu, li.menu-item") !== null;
+
+            if (!isDropdownItem) {
+                if (link.offsetParent === null && link.parentElement?.offsetParent === null) return;
+                if (link.classList.contains("d-none") || link.parentElement?.classList.contains("d-none")) return;
+            }
+
+            const title = link.getAttribute("title") ||
+                          link.getAttribute("data-bs-original-title") ||
+                          link.getAttribute("data-original-title") ||
+                          link.parentElement?.getAttribute("title") ||
+                          link.parentElement?.getAttribute("data-bs-original-title") ||
+                          link.parentElement?.getAttribute("data-original-title") || "";
             let label = title.trim();
             if (!label) {
                 const nameSpan = link.querySelector(".dropdownIconName");
@@ -9807,15 +9821,18 @@
                     label = nameSpan.textContent.trim();
                 } else {
                     const cloned = link.cloneNode(true);
-                    cloned.querySelectorAll(".material-icons, .material-icons-style").forEach(node => node.remove());
+                    cloned.querySelectorAll(".material-icons, .material-icons-style, .symbol").forEach(node => node.remove());
                     label = (cloned.textContent || "").trim();
                 }
             }
             label = label.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
             if (!label) return;
+            if (label.toLowerCase() === "utility" || label.toLowerCase() === "options") return;
 
-            const id = link.id || link.getAttribute("id") || `utility_${label.toLowerCase().replace(/\s+/g, '_')}`;
-            if (result[id]) return;
+            const normLabel = label.toLowerCase();
+            if (Object.values(result).some(item => item.label.toLowerCase() === normLabel)) return;
+
+            const id = link.id || link.getAttribute("id") || `utility_${normLabel.replace(/\s+/g, '_')}`;
 
             result[id] = {
                 id,
