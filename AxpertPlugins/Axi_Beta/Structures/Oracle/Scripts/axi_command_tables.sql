@@ -92,12 +92,6 @@ VALUES(9, 'Run', ' ', 'T')
 >>
 
 
-INSERT INTO axi_commands
-(cmdtoken, command_group, command, active)
-VALUES(10, 'Analyse', ' ', 'T')
-
-
-
 <<
 INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('BF3CDB0564C24FA7A120D431E79DAD9F', 1, 2, 'tstruct name', 'axi_structmetalist', NULL, NULL, NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
 >>
