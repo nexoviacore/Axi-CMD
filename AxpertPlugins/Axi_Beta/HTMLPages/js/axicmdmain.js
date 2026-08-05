@@ -137,6 +137,7 @@
     let isEditing = false;
     let isProgrammaticExecution = false;
     let suppressFocusSuggestions = false;
+    let isInitialLoad = true;
 
     const goOption = AxiCmdConfig.SHORTCUT_OPTIONS.GO;
     const saveOption = AxiCmdConfig.SHORTCUT_OPTIONS.SAVE;
@@ -694,6 +695,7 @@
             // console.error("Critical: Could not load commands", err);
         } finally {
             isCommandsLoading = false;
+            suppressFocusSuggestions = true;
             input.disabled = false;
             input.placeholder = "Axpert AI";
         }
@@ -868,31 +870,23 @@
 
     async function loadList(sourceName, paramValue = "") {
         if (sourceName === "axi_dummy") {
-            // console.error("Axi Dummy source should not trigger loadList");
             return;
         }
         const key = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
         if (activeFetches.has(key)) return;
         activeFetches.add(key);
 
-        // console.log(`Fetching list: ${sourceName} params: ${paramValue}`);
-
         try {
             const data = await getList(sourceName, paramValue);
             axDatasourceObj[key] = data;
-            // console.log(JSON.stringify(axDatasourceObj));
-            if (document.activeElement === input) {
-                handleInput();
-            }
-
         } catch (error) {
             // console.error("loadlist failed", error);
         } finally {
             activeFetches.delete(key);
-
-
+            if (!isInitialLoad && document.activeElement === input) {
+                handleInput();
+            }
         }
-
     }
 
     //function openPopOption(targetURL) {
@@ -6688,18 +6682,20 @@
                 suppressFocusSuggestions = false;
                 return;
             }
-            if (input.value.trim() === "") {
-                handleInput();
-            }
+            isInitialLoad = false;
+            handleInput();
         });
 
         input.addEventListener("click", () => {
-            if (input.value.trim() === "" && list.style.display === "none") {
-                handleInput();
-            }
-        })
+            isInitialLoad = false;
+            suppressFocusSuggestions = false;
+            handleInput();
+        });
 
-        input.addEventListener("input", handleInput);
+        input.addEventListener("input", () => {
+            isInitialLoad = false;
+            handleInput();
+        });
         input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
         input.addEventListener("keydown", e => {
             if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
