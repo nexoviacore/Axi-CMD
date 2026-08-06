@@ -13428,7 +13428,7 @@
         }
 
         if (itemsToRender.length === 0) {
-            wrapper.innerHTML = `<div style="padding: 15px; color: #999; text-align: center; width: 100%;">No favourites yet. Pin commands to see them here.</div>`;
+            wrapper.innerHTML = `<div style="padding: 15px; color: #999; text-align: center; width: 100%;">No favorites yet. Pin commands to see them here.</div>`;
             return;
 
         }
@@ -13860,7 +13860,7 @@
         const favEditStateInput = document.getElementById("axiFavIsEdit");
         const titleEl = document.querySelector(".axi-modal-title");
 
-        if (titleEl) titleEl.innerText = isEdit ? "Rename Favourites" : "Save to Favourites"
+        if (titleEl) titleEl.innerText = isEdit ? "Rename Favorites" : "Save to Favorites"
 
         favEditStateInput.value = isEdit ? "true" : "false";
 
@@ -13970,12 +13970,12 @@
                     } else {
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
                         favCancelBtn.disabled = false;
-                        showToast("Failed to edit favourite");
+                        showToast("Failed to edit favorite");
                     }
                 })
                     .catch(error => {
                         // console.error("Backend edit failed", error);
-                        showToast("An Error occured while editing favourite");
+                        showToast("An Error occured while editing favorite");
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
                         favCancelBtn.disabled = false;
 
@@ -14049,7 +14049,7 @@
 
         favDeleteCmdText.value = cmdText;
         const deleteModalParagraph = document.getElementById("axiDeleteModalParagraph");
-        deleteModalParagraph.textContent = `Are you sure you want to remove '${cmdText}' from your favourites?`;
+        deleteModalParagraph.textContent = `Are you sure you want to remove '${cmdText}' from your favorites?`;
 
         // Reset loading state on open
         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
