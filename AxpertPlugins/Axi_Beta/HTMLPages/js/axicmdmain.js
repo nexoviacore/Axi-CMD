@@ -3700,7 +3700,7 @@
                     displayLabel = titleAttr.trim();
                 } else {
                     const cloned = element.cloneNode(true);
-                    cloned.querySelectorAll(".material-icons, .material-icons-style").forEach(node => node.remove());
+                    cloned.querySelectorAll(".material-icons, .material-icons-style, .symbol, i, span.material-icons").forEach(node => node.remove());
                     displayLabel = (cloned.textContent || "").trim();
                 }
             }
@@ -3718,23 +3718,41 @@
             };
         })
             .filter(btn => {
+                if (!btn.displaydata) return false;
                 const isEntity = structType === "e" || structType === "ef";
                 const btnNameLower = (btn.name || "").toLowerCase();
-                const btnDisplayLower = (btn.displaydata || "").toLowerCase();
+                const btnDisplayLower = (btn.displaydata || "").toLowerCase().trim();
                 const isDelete = btnNameLower === "deleteselectedbutton" || btnDisplayLower === "delete";
                 if (isEntity && isDelete) return false;
+
+                if (structType === "i") {
+                    if (btnDisplayLower.includes("chart view") || btnDisplayLower.includes("grid view") ||
+                        btnNameLower.includes("chartview") || btnNameLower.includes("gridview")) {
+                        return false;
+                    }
+                }
                 return true;
             });
 
         const uniqueButtonsMap = new Map();
+        const seenOnclicks = new Set();
+        const seenNames = new Set();
+
         buttonsList.forEach(btn => {
-            if (btn.onclick) {
-                if (!uniqueButtonsMap.has(btn.onclick)) {
-                    uniqueButtonsMap.set(btn.onclick, btn);
-                }
-            } else {
-                uniqueButtonsMap.set(btn.name, btn);
-            }
+            const labelKey = (btn.displaydata || "").toLowerCase().trim();
+            if (!labelKey) return;
+
+            const onclickKey = btn.onclick ? btn.onclick.trim() : null;
+            const nameKey = btn.name ? btn.name.trim() : null;
+
+            // Prevent duplicate buttons with identical display labels
+            if (uniqueButtonsMap.has(labelKey)) return;
+            if (onclickKey && seenOnclicks.has(onclickKey)) return;
+            if (nameKey && seenNames.has(nameKey)) return;
+
+            uniqueButtonsMap.set(labelKey, btn);
+            if (onclickKey) seenOnclicks.add(onclickKey);
+            if (nameKey) seenNames.add(nameKey);
         });
 
         const filtered = Array.from(uniqueButtonsMap.values()).filter(item =>
@@ -9804,6 +9822,12 @@
 
         const result = {};
         links.forEach((link) => {
+            const dropDownItem = link.closest(".dropDownButton__item, .dropDownButton__list");
+            if (dropDownItem) {
+                const val = dropDownItem.getAttribute("data-dropdown-value") || link.getAttribute("data-dropdown-value");
+                if (val !== "chart" && val !== "saveAs") return;
+            }
+
             const isDropdownItem = link.closest(".menu-sub-dropdown, .dropdown-menu, ul.menu, li.menu-item") !== null;
 
             if (!isDropdownItem) {
@@ -9864,16 +9888,98 @@
         return result;
     }
 
-    function getIViewActionDropdownButtons() {
-        const iframe = document.getElementById("middle1");
-        if (!iframe) return {};
+    function getIViewDocumentAndWindow() {
+        let topIframe = document.getElementById("middle1");
+        let mainWin = window;
+        let mainDoc = document;
 
-        let doc = null;
-        try {
-            doc = iframe.contentDocument || iframe.contentWindow?.document;
-        } catch (e) {
-            // console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
+        if (topIframe) {
+            try {
+                mainWin = topIframe.contentWindow || mainWin;
+                mainDoc = topIframe.contentDocument || mainWin.document || mainDoc;
+            } catch (e) { }
         }
+
+        try {
+            if (mainDoc) {
+                const innerFrame = mainDoc.querySelector("#rightIframe, #newrightIframe, iframe[src*='iview.aspx'], iframe[src*='ivtoivload.aspx']");
+                if (innerFrame) {
+                    const innerWin = innerFrame.contentWindow;
+                    const innerDoc = innerFrame.contentDocument || innerWin?.document;
+                    if (innerDoc && innerDoc.body) {
+                        return { doc: innerDoc, win: innerWin, iframe: innerFrame };
+                    }
+                }
+            }
+        } catch (e) { }
+
+        return { doc: mainDoc, win: mainWin, iframe: topIframe };
+    }
+
+    function executeIViewAction(val, item, link) {
+        const { doc, win } = getIViewDocumentAndWindow();
+        const targetEl = link || item || (doc ? doc.querySelector(`[data-dropdown-value="${val}"]`) : null);
+        const parentItem = item || (targetEl ? targetEl.closest(".dropDownButton__item, .dropDownButton__list, li") : null);
+
+        try {
+            if (targetEl) {
+                const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win });
+                targetEl.dispatchEvent(evt);
+                if (parentItem && parentItem !== targetEl) parentItem.dispatchEvent(evt);
+            }
+        } catch (e) {
+            try { if (targetEl) targetEl.click(); } catch (err) { }
+        }
+
+        try {
+            if (win && win.$) {
+                if (targetEl) win.$(targetEl).trigger('click');
+                if (parentItem && parentItem !== targetEl) win.$(parentItem).trigger('click');
+
+                if (val) {
+                    const $input = win.$('#IvirActions, .js-dropdown__input');
+                    if ($input.length) {
+                        $input.val("").val(val).trigger('change');
+                    }
+                }
+            }
+        } catch (e) { }
+
+        try {
+            if (win && val === "chart") {
+                const chartModal = win.document ? (win.document.getElementById("ivirCreateChart") || win.document.getElementById("dvCharts")) : null;
+                const isVisible = chartModal && (chartModal.offsetWidth > 0 || chartModal.offsetHeight > 0 || chartModal.style.display === "block");
+                if (!isVisible) {
+                    if (typeof win.ShowCharts === "function") {
+                        try { win.ShowCharts(); } catch (err) { }
+                    }
+                    if (typeof win.getChartHtml === "function" && typeof win.ivirActionDialog === "function") {
+                        const chartHtml = win.getChartHtml();
+                        if (chartHtml) {
+                            const title = (win.callParentNew && typeof win.callParentNew === "function" && win.callParentNew('lcm')) ? win.callParentNew('lcm')[410] : "Chart";
+                            win.ivirActionDialog(title, "chart", chartHtml, "ivirCreateChart");
+                        }
+                    }
+                }
+            } else if (win && val === "saveAs") {
+                const saveAsModal = win.document ? (win.document.getElementById("ivirSaveAsView") || win.document.getElementById("divFilterView")) : null;
+                const isVisible = saveAsModal && (saveAsModal.offsetWidth > 0 || saveAsModal.offsetHeight > 0 || saveAsModal.style.display === "block");
+                if (!isVisible) {
+                    if (typeof win.ShowViewPopup === "function") {
+                        try { win.ShowViewPopup(); } catch (err) { }
+                    }
+                    if (typeof win.getAddViewHtml === "function" && typeof win.ivirActionDialog === "function") {
+                        const addViewHtml = win.getAddViewHtml();
+                        const title = (win.callParentNew && typeof win.callParentNew === "function" && win.callParentNew('lcm')) ? win.callParentNew('lcm')[442] : "Add View";
+                        win.ivirActionDialog(title, "saveAs", addViewHtml, "ivirSaveAsView");
+                    }
+                }
+            }
+        } catch (e) { }
+    }
+
+    function getIViewActionDropdownButtons() {
+        const { doc } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
         const items = Array.from(doc.querySelectorAll(".dropDownButton__list li.dropDownButton__item, li.dropDownButton__item"));
@@ -9903,9 +10009,7 @@
                 id,
                 label,
                 element: item,
-                click: () => {
-                    item.click();
-                }
+                click: () => executeIViewAction(dropdownVal, item, link)
             };
         });
 
@@ -9928,6 +10032,12 @@
         const result = {};
 
         buttons.forEach((btn) => {
+            const dropDownItem = btn.closest(".dropDownButton__item, .dropDownButton__list");
+            if (dropDownItem) {
+                const val = dropDownItem.getAttribute("data-dropdown-value") || btn.getAttribute("data-dropdown-value");
+                if (val !== "chart" && val !== "saveAs") return;
+            }
+
             // Check if element or its parent is hidden
             if (btn.offsetParent === null) return;
             if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[style*='display: none']")) return;
@@ -10100,10 +10210,7 @@
     }
 
     function getTopToolbarButtons() {
-        const iframe = document.getElementById("middle1");
-        if (!iframe) return {};
-
-        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
         const toolbar = doc.querySelector(".toolbarRightMenu");
@@ -10115,6 +10222,12 @@
         const result = {};
 
         buttons.forEach((btn) => {
+            const dropDownItem = btn.closest(".dropDownButton__item, .dropDownButton__list");
+            if (dropDownItem) {
+                const val = dropDownItem.getAttribute("data-dropdown-value") || btn.getAttribute("data-dropdown-value");
+                if (val !== "chart" && val !== "saveAs") return;
+            }
+
             const isDropdownItem = !!btn.closest(".menu-sub-dropdown, .menu-sub, .dropdown-menu");
 
             // Check if element or its parent is hidden (exempt collapsed dropdown items from offsetParent === null check)
@@ -10134,7 +10247,18 @@
                 id,
                 label,
                 element: btn,
-                click: () => btn.click()
+                click: () => {
+                    if (val === "chart" || val === "saveAs") {
+                        executeIViewAction(val, dropDownItem, btn);
+                    } else {
+                        try {
+                            const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win });
+                            btn.dispatchEvent(evt);
+                        } catch (e) {
+                            try { btn.click(); } catch (err) { }
+                        }
+                    }
+                }
             };
         });
 
