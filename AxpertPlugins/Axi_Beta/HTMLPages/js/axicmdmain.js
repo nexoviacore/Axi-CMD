@@ -3669,7 +3669,8 @@
 
             case "pf":
                 pfToolbarButtons = getPFToolbarButtons();
-                allButtons = { ...pfToolbarButtons }
+                topToolbarButtons = getTopToolbarButtons();
+                allButtons = { ...pfToolbarButtons, ...topToolbarButtons };
                 break;
 
             case "s":
@@ -9503,7 +9504,8 @@
 
             case "pf":
                 if (!pfToolbarButtons) pfToolbarButtons = getPFToolbarButtons();
-                allButtons = [...Object.values(pfToolbarButtons)]
+                if (!topToolbarButtons) topToolbarButtons = getTopToolbarButtons();
+                allButtons = [...Object.values(pfToolbarButtons), ...Object.values(topToolbarButtons)];
                 break;
 
             case "s":
@@ -10254,7 +10256,6 @@
 
         if ((page.endsWith("/processflow.aspx") || page.includes("processflow.aspx")) && isCardContainerHidden) {
             return "pf"; // Process flow page
-
         }
 
         if (src.includes("/aspx/Configuration.aspx/LoadUserAppSettings") && isCardContainerHidden) {
@@ -10543,37 +10544,54 @@
         const doc = iframe.contentDocument || iframe.contentWindow?.document;
         if (!doc) return {};
 
+        let docsToSearch = [doc];
+
+        // Check if processflow page contains an inner iframe (like #rightIframe or #newrightIframe or tstruct.aspx iframe)
+        try {
+            const innerIframe = doc.getElementById("rightIframe") || doc.getElementById("newrightIframe") || doc.querySelector("iframe.displayBlock") || doc.querySelector("iframe[src*='tstruct.aspx']");
+            if (innerIframe) {
+                const innerDoc = innerIframe.contentDocument || innerIframe.contentWindow?.document;
+                if (innerDoc) {
+                    docsToSearch = [innerDoc, doc];
+                }
+            }
+        } catch (e) {
+            // Ignore cross-origin errors
+        }
+
         const result = {};
 
         // Process Flow toolbar zones
         const containers = [
             ".Page-Title-Bar",
             ".Tkts-toolbar-Left",
-            ".Tkts-toolbar-Right"
+            ".Tkts-toolbar-Right",
+            ".toolbarRightMenu",
+            ".card-toolbar",
+            ".card-header",
+            ".header-toolbar",
+            ".BottomToolbarBar"
         ];
 
-        containers.forEach(selector => {
-            const root = doc.querySelector(selector);
-            if (!root) return;
+        docsToSearch.forEach(targetDoc => {
+            let foundElements = [];
 
-            const elements = root.querySelectorAll(
-                "button, a, div.btn"
-            );
+            containers.forEach(selector => {
+                const root = targetDoc.querySelector(selector);
+                if (!root) return;
 
-            elements.forEach((el, index) => {
-                // skip hidden
+                const elements = Array.from(root.querySelectorAll("button, a, input[type='button'], input[type='submit'], div.btn, div[data-kt-menu-trigger]"));
+                foundElements.push(...elements);
+            });
+
+            if (foundElements.length === 0) {
+                foundElements = Array.from(targetDoc.querySelectorAll(".Page-Title-Bar button, .Page-Title-Bar a, .toolbarRightMenu a, .toolbarRightMenu button, div.menu-sub-dropdown a, div.menu-sub-dropdown button, a.btn, button.btn"));
+            }
+
+            foundElements.forEach((el, index) => {
+                const isDropdownItem = !!el.closest(".menu-sub-dropdown, .menu-sub, .dropdown-menu");
+                if (!isDropdownItem && el.offsetParent === null) return;
                 if (el.classList.contains("d-none") || el.closest(".d-none") || el.classList.contains("disabled") || el.closest(".disabled") || el.closest("[hidden]")) return;
-
-                // must be actionable
-                // if (!hasAction(el)) return;
-
-                const isActionable =
-                    hasAction?.(el) ||
-                    el.hasAttribute("data-kt-menu-trigger") ||
-                    el.classList.contains("tb-btn") ||
-                    el.classList.contains("btn-icon");
-
-                if (!isActionable) return;
 
                 const label = extractButtonLabel(el);
                 if (!label) return;
