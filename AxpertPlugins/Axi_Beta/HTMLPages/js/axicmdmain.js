@@ -3668,9 +3668,15 @@
                 break;
 
             case "pf":
-                pfToolbarButtons = getPFToolbarButtons();
-                topToolbarButtons = getTopToolbarButtons();
-                allButtons = { ...pfToolbarButtons, ...topToolbarButtons };
+                const isPfDesign = isTstructDesignMode();
+                if (isPfDesign) {
+                    designModeToolbarButtons = getDesignModeToolbarButtons();
+                    allButtons = { ...designModeToolbarButtons };
+                } else {
+                    pfToolbarButtons = getPFToolbarButtons();
+                    topToolbarButtons = getTopToolbarButtons();
+                    allButtons = { ...pfToolbarButtons, ...topToolbarButtons };
+                }
                 break;
 
             case "s":
@@ -9503,9 +9509,17 @@
                 break;
 
             case "pf":
-                if (!pfToolbarButtons) pfToolbarButtons = getPFToolbarButtons();
-                if (!topToolbarButtons) topToolbarButtons = getTopToolbarButtons();
-                allButtons = [...Object.values(pfToolbarButtons), ...Object.values(topToolbarButtons)];
+                const isPfDesignExec = isTstructDesignMode();
+                if (isPfDesignExec) {
+                    if (!designModeToolbarButtons) {
+                        designModeToolbarButtons = getDesignModeToolbarButtons();
+                    }
+                    allButtons = [...Object.values(designModeToolbarButtons)];
+                } else {
+                    if (!pfToolbarButtons) pfToolbarButtons = getPFToolbarButtons();
+                    if (!topToolbarButtons) topToolbarButtons = getTopToolbarButtons();
+                    allButtons = [...Object.values(pfToolbarButtons), ...Object.values(topToolbarButtons)];
+                }
                 break;
 
             case "s":
@@ -10094,7 +10108,7 @@
         if (srcLower.includes("axdbscript.aspx")) return true;
         if (srcLower.includes("tstruct.aspx") && srcLower.includes("transid=ad_lg")) return true;
         if (srcLower.includes("iview.aspx") && srcLower.includes("ivname=inmemdb")) return true;
-        if (srcLower.includes("processflow.aspx") && (srcLower.includes("dashboard=t") || srcLower.includes("calendar=t"))) return true;
+        if ((srcLower.includes("processflow.aspx") || srcLower.includes("axprocessbuilder.html")) && (srcLower.includes("dashboard=t") || srcLower.includes("calendar=t"))) return true;
 
         return false;
     }
@@ -10254,7 +10268,7 @@
         // ../aspx/processflow.aspx?activelist=t&hdnbElapsTime=0
 
 
-        if ((page.endsWith("/processflow.aspx") || page.includes("processflow.aspx")) && isCardContainerHidden) {
+        if ((page.endsWith("/processflow.aspx") || page.includes("processflow.aspx") || page.endsWith("axprocessbuilder.html") || page.includes("axprocessbuilder.html")) && isCardContainerHidden) {
             return "pf"; // Process flow page
         }
 
@@ -10496,15 +10510,34 @@
         const doc = iframe.contentDocument || iframe.contentWindow?.document;
         if (!doc) return {};
 
-        const toolbar = doc.querySelector("#designModeToolbar");
+        let docsToSearch = [doc];
+        try {
+            const innerIframe = doc.getElementById("rightIframe") || doc.getElementById("newrightIframe") || doc.querySelector("iframe.displayBlock") || doc.querySelector("iframe[src*='tstruct.aspx']");
+            if (innerIframe) {
+                const innerDoc = innerIframe.contentDocument || innerIframe.contentWindow?.document;
+                if (innerDoc) {
+                    docsToSearch = [innerDoc, doc];
+                }
+            }
+        } catch (e) {
+            // Ignore cross-origin errors
+        }
+
+        let toolbar = null;
+        for (const targetDoc of docsToSearch) {
+            const t = targetDoc.querySelector("#designModeToolbar");
+            if (t && !t.classList.contains("d-none")) {
+                toolbar = t;
+                break;
+            }
+        }
+
         if (!toolbar) return {};
 
         const buttons = toolbar.querySelectorAll("a, button");
         const result = {};
 
         buttons.forEach((btn, index) => {
-            // if (!hasAction(btn)) return;
-
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
             if (!id) return;
 
@@ -10531,10 +10564,28 @@
         const doc = iframe.contentDocument || iframe.contentWindow?.document;
         if (!doc) return false;
 
-        const root = doc.querySelector("#divDc1");
-        if (!root) return false;
+        let docsToSearch = [doc];
+        try {
+            const innerIframe = doc.getElementById("rightIframe") || doc.getElementById("newrightIframe") || doc.querySelector("iframe.displayBlock") || doc.querySelector("iframe[src*='tstruct.aspx']");
+            if (innerIframe) {
+                const innerDoc = innerIframe.contentDocument || innerIframe.contentWindow?.document;
+                if (innerDoc) {
+                    docsToSearch = [innerDoc, doc];
+                }
+            }
+        } catch (e) {
+            // Ignore cross-origin errors
+        }
 
-        return root.classList.contains("tstructDesignMode");
+        for (const targetDoc of docsToSearch) {
+            const root = targetDoc.querySelector("#divDc1");
+            if (root && root.classList.contains("tstructDesignMode")) return true;
+
+            const toolbar = targetDoc.querySelector("#designModeToolbar");
+            if (toolbar && !toolbar.classList.contains("d-none") && toolbar.offsetParent !== null) return true;
+        }
+
+        return false;
     }
 
     function getPFToolbarButtons() {
