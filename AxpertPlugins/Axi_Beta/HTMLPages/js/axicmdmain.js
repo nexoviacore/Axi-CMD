@@ -1087,6 +1087,7 @@
         redirectToIView(transId, "");
     }
     function handleConfigureResponsibility({ tokens, commandConfig }) {
+        popUpOption = false;
 
         //new - aspx/AddEditResponsibility.aspx?action=add
         //edit - aspx/AddEditResponsibility.aspx?status=true&action=edit&name=demorole
@@ -1135,6 +1136,7 @@
         }
     }
     function handleConfigureResponsibilities({ tokens, commandConfig }) {
+        popUpOption = false;
 
         let transId = "response";
         //let fieldname = "servername";
@@ -4031,7 +4033,7 @@
 
         const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
         const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
-        const isResponsibilityCmd = subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities";
+        const isResponsibilityCmd = subCmdFirst === "responsibility" || subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities" || subCmdFull.startsWith("responsibility");
 
         if (groupKey.toLowerCase() === "configure" && isResponsibilityCmd) {
             filteredObjects = [goOption];
@@ -4478,7 +4480,7 @@
                     if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
                         const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
                         const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
-                        const isResponsibilityCmd = subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities";
+                        const isResponsibilityCmd = subCmdFirst === "responsibility" || subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities" || subCmdFull.startsWith("responsibility");
 
                         if (isResponsibilityCmd) {
                             filteredObjects = [goOption];
@@ -6873,9 +6875,18 @@
             const isSingleTarget = tokens.length === 1 && isTargetEntity(tokens[0]);
 
             if ((e.ctrlKey && e.shiftKey && e.key?.toLowerCase() === "enter") && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit" || grpKey?.toLowerCase() === "view" || grpKey?.toLowerCase() === "configure" || isSingleTarget)) {
-
                 e.preventDefault();
 
+                const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
+                const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
+                const isResponsibilityCmd = subCmdFirst === "responsibility" || subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities" || subCmdFull.startsWith("responsibility");
+
+                if (isResponsibilityCmd) {
+                    popUpOption = false;
+                    hide();
+                    executeCommandsV2();
+                    return;
+                }
 
                 try {
                     if (tokens.length >= 1) {
@@ -7267,6 +7278,14 @@
         }
 
         const tokens = getTokens(text);
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            const isResponsibility = second === "responsibility" || second === "responsibilities" || second === "responsibility listing";
+            if (first === "configure" && isResponsibility) {
+                popUpOption = false;
+            }
+        }
         if (tokens.length === 1 && isTargetEntity(tokens[0])) {
             const entityObj = getTargetEntityObj(tokens[0]);
             const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
