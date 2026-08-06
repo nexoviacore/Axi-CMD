@@ -2168,7 +2168,8 @@
             targetUrl += `&processname=${encodeURIComponent(caption)}`;
         }
         else {
-            targetUrl = `../aspx/tstruct.aspx?transid=ad_pm`;
+            redirectToTstruct("ad_pm", tstructCaption);
+            return;
         }
 
 
@@ -10104,27 +10105,28 @@
         if (!doc) return {};
 
         const toolbar = doc.querySelector(".toolbarRightMenu");
-        if (!toolbar) return {};
 
-        const buttons = toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn");
+        const toolbarButtons = toolbar ? Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn")) : [];
+        const dropdownButtons = Array.from(doc.querySelectorAll(".menu-sub-dropdown a, .menu-sub-dropdown button, .menu-sub-dropdown .menu-link, .dropdown-menu a, .dropdown-menu button"));
 
+        const buttons = [...toolbarButtons, ...dropdownButtons];
         const result = {};
 
         buttons.forEach((btn) => {
-            // Check if element or its parent is hidden
-            if (btn.offsetParent === null) return;
-            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[style*='display: none']") || btn.closest(".hidden") || btn.closest("[style*='display:none']")) return;
+            const isDropdownItem = !!btn.closest(".menu-sub-dropdown, .menu-sub, .dropdown-menu");
+
+            // Check if element or its parent is hidden (exempt collapsed dropdown items from offsetParent === null check)
+            if (!isDropdownItem && btn.offsetParent === null) return;
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest(".hidden")) return;
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
             if (!id) return;
             if (id === "ivirActionButton") return;
 
             const label = extractButtonLabel(btn);
-            if (!label) // console.log("There is no label for Element: " + btn);
+            if (!label) return;
             if (label.toLowerCase() === "plugin custom code") return;
             if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
-
-
 
             result[id] = {
                 id,
@@ -10273,9 +10275,16 @@
             return "Filter";
         }
 
-
         const dataExtra = btn.getAttribute("data-extra");
         if (dataExtra) return dataExtra.trim();
+
+        const dropdownIconName = btn.querySelector(".dropdownIconName");
+        if (dropdownIconName && dropdownIconName.textContent.trim()) {
+            return dropdownIconName.textContent.trim();
+        }
+
+        const menuTitle = btn.querySelector(".menu-title");
+        if (menuTitle && menuTitle.textContent.trim()) return menuTitle.textContent.trim();
 
         const text = Array.from(btn.childNodes)
             .filter(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
@@ -10284,7 +10293,6 @@
             .trim();
 
         if (text) {
-
             return text;
         }
 
@@ -10294,17 +10302,9 @@
             btn.getAttribute("data-bs-title");
         if (title) return title.trim();
 
-        const menuTitle = btn.querySelector(".menu-title");
-
-        if (menuTitle) return menuTitle.textContent.trim();
-
-
-
-
         const cloned = btn.cloneNode(true);
-        cloned.querySelectorAll(".material-icons, .material-icons-style").forEach(node => node.remove());
+        cloned.querySelectorAll(".material-icons, .material-icons-style, .symbol").forEach(node => node.remove());
         return cloned.innerText.trim();
-
     }
 
     function hasAction(btn) {
