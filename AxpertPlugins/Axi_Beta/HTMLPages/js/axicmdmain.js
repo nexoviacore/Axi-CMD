@@ -4616,7 +4616,7 @@
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "axpert job" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "language"
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "custom data type" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "email definition"
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "table field descriptor" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "out bound queue"
-                || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "in bound queue" || cleanCommandToken(tokens[1])?.toLowerCase() === "axpert data sources")) {
+                || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "in bound queue")) {
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
