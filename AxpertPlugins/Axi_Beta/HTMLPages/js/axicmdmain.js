@@ -1,6 +1,6 @@
 // Stable Branch: main
 (() => {
-    // Released On: 11/06/2026
+    // Released On: 07/08/2026
     // /AxPlugins/Axi/HTMLPages/js/axicmdmain.js
 
     /* ==========================================================================
@@ -1087,6 +1087,7 @@
         redirectToIView(transId, "");
     }
     function handleConfigureResponsibility({ tokens, commandConfig }) {
+        popUpOption = false;
 
         //new - aspx/AddEditResponsibility.aspx?action=add
         //edit - aspx/AddEditResponsibility.aspx?status=true&action=edit&name=demorole
@@ -1135,6 +1136,7 @@
         }
     }
     function handleConfigureResponsibilities({ tokens, commandConfig }) {
+        popUpOption = false;
 
         let transId = "response";
         //let fieldname = "servername";
@@ -2168,7 +2170,8 @@
             targetUrl += `&processname=${encodeURIComponent(caption)}`;
         }
         else {
-            targetUrl = `../aspx/tstruct.aspx?transid=ad_pm`;
+            redirectToTstruct("ad_pm", tstructCaption);
+            return;
         }
 
 
@@ -3640,22 +3643,14 @@
                 const isDesign = isTstructDesignMode();
                 if (isDesign) {
                     designModeToolbarButtons = getDesignModeToolbarButtons();
-
-                    allButtons = { ...designModeToolbarButtons }
-
-
+                    allButtons = { ...designModeToolbarButtons };
                 } else {
                     bottomToolbarButtons = getBottomToolbarButtons();
                     topToolbarButtons = getTopToolbarButtons();
-                    allButtons = { ...bottomToolbarButtons, ...topToolbarButtons };
-
-                    if (structType === "i") {
-                        const utilityButtons = getIViewUtilityButtons();
-                        const actionButtons = getIViewActionDropdownButtons();
-                        allButtons = { ...allButtons, ...utilityButtons, ...actionButtons };
-                    }
+                    utilityButtons = getIViewUtilityButtons();
+                    actionButtons = getIViewActionDropdownButtons();
+                    allButtons = { ...bottomToolbarButtons, ...topToolbarButtons, ...utilityButtons, ...actionButtons };
                 }
-
 
                 break;
 
@@ -3668,7 +3663,8 @@
 
             case "pf":
                 pfToolbarButtons = getPFToolbarButtons();
-                allButtons = { ...pfToolbarButtons }
+                topToolbarButtons = getTopToolbarButtons();
+                allButtons = { ...pfToolbarButtons, ...topToolbarButtons };
                 break;
 
             case "s":
@@ -3698,7 +3694,7 @@
                     displayLabel = titleAttr.trim();
                 } else {
                     const cloned = element.cloneNode(true);
-                    cloned.querySelectorAll(".material-icons, .material-icons-style").forEach(node => node.remove());
+                    cloned.querySelectorAll(".material-icons, .material-icons-style, .symbol, i, span.material-icons").forEach(node => node.remove());
                     displayLabel = (cloned.textContent || "").trim();
                 }
             }
@@ -3716,23 +3712,41 @@
             };
         })
             .filter(btn => {
+                if (!btn.displaydata) return false;
                 const isEntity = structType === "e" || structType === "ef";
                 const btnNameLower = (btn.name || "").toLowerCase();
-                const btnDisplayLower = (btn.displaydata || "").toLowerCase();
+                const btnDisplayLower = (btn.displaydata || "").toLowerCase().trim();
                 const isDelete = btnNameLower === "deleteselectedbutton" || btnDisplayLower === "delete";
                 if (isEntity && isDelete) return false;
+
+                if (structType === "i") {
+                    if (btnDisplayLower.includes("chart view") || btnDisplayLower.includes("grid view") ||
+                        btnNameLower.includes("chartview") || btnNameLower.includes("gridview")) {
+                        return false;
+                    }
+                }
                 return true;
             });
 
         const uniqueButtonsMap = new Map();
+        const seenOnclicks = new Set();
+        const seenNames = new Set();
+
         buttonsList.forEach(btn => {
-            if (btn.onclick) {
-                if (!uniqueButtonsMap.has(btn.onclick)) {
-                    uniqueButtonsMap.set(btn.onclick, btn);
-                }
-            } else {
-                uniqueButtonsMap.set(btn.name, btn);
-            }
+            const labelKey = (btn.displaydata || "").toLowerCase().trim();
+            if (!labelKey) return;
+
+            const onclickKey = btn.onclick ? btn.onclick.trim() : null;
+            const nameKey = btn.name ? btn.name.trim() : null;
+
+            // Prevent duplicate buttons with identical display labels
+            if (uniqueButtonsMap.has(labelKey)) return;
+            if (onclickKey && seenOnclicks.has(onclickKey)) return;
+            if (nameKey && seenNames.has(nameKey)) return;
+
+            uniqueButtonsMap.set(labelKey, btn);
+            if (onclickKey) seenOnclicks.add(onclickKey);
+            if (nameKey) seenNames.add(nameKey);
         });
 
         const filtered = Array.from(uniqueButtonsMap.values()).filter(item =>
@@ -4011,7 +4025,7 @@
 
         const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
         const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
-        const isResponsibilityCmd = subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities";
+        const isResponsibilityCmd = subCmdFirst === "responsibility" || subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities" || subCmdFull.startsWith("responsibility");
 
         if (groupKey.toLowerCase() === "configure" && isResponsibilityCmd) {
             filteredObjects = [goOption];
@@ -4458,7 +4472,7 @@
                     if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
                         const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
                         const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
-                        const isResponsibilityCmd = subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities";
+                        const isResponsibilityCmd = subCmdFirst === "responsibility" || subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities" || subCmdFull.startsWith("responsibility");
 
                         if (isResponsibilityCmd) {
                             filteredObjects = [goOption];
@@ -4616,7 +4630,7 @@
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "axpert job" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "language"
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "custom data type" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "email definition"
                 || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "table field descriptor" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "out bound queue"
-                || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "in bound queue" || cleanCommandToken(tokens[1])?.toLowerCase() === "axpert data sources")) {
+                || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "in bound queue")) {
                 resultList.unshift(goOption);
                 filteredObjects.unshift(goOption);
             }
@@ -6853,9 +6867,18 @@
             const isSingleTarget = tokens.length === 1 && isTargetEntity(tokens[0]);
 
             if ((e.ctrlKey && e.shiftKey && e.key?.toLowerCase() === "enter") && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit" || grpKey?.toLowerCase() === "view" || grpKey?.toLowerCase() === "configure" || isSingleTarget)) {
-
                 e.preventDefault();
 
+                const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
+                const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
+                const isResponsibilityCmd = subCmdFirst === "responsibility" || subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities" || subCmdFull.startsWith("responsibility");
+
+                if (isResponsibilityCmd) {
+                    popUpOption = false;
+                    hide();
+                    executeCommandsV2();
+                    return;
+                }
 
                 try {
                     if (tokens.length >= 1) {
@@ -7247,6 +7270,14 @@
         }
 
         const tokens = getTokens(text);
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            const isResponsibility = second === "responsibility" || second === "responsibilities" || second === "responsibility listing";
+            if (first === "configure" && isResponsibility) {
+                popUpOption = false;
+            }
+        }
         if (tokens.length === 1 && isTargetEntity(tokens[0])) {
             const entityObj = getTargetEntityObj(tokens[0]);
             const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
@@ -9461,65 +9492,66 @@
             return;
         }
 
-
         switch (structType) {
             case "t":
             case "i":
 
                 const isDesign = isTstructDesignMode();
                 if (isDesign) {
-                    if (!designModeToolbarButtons) {
-                        designModeToolbarButtons = getDesignModeToolbarButtons();
-
-
-                    }
-
-                    allButtons = [...Object.values(designModeToolbarButtons)]
-
-
+                    designModeToolbarButtons = getDesignModeToolbarButtons();
+                    allButtons = [...Object.values(designModeToolbarButtons)];
                 } else {
-                    if (!bottomToolbarButtons) bottomToolbarButtons = getBottomToolbarButtons();
-                    if (!topToolbarButtons) topToolbarButtons = getTopToolbarButtons();
+                    bottomToolbarButtons = getBottomToolbarButtons();
+                    topToolbarButtons = getTopToolbarButtons();
+                    utilityButtons = getIViewUtilityButtons();
+                    actionButtons = getIViewActionDropdownButtons();
                     allButtons = [...Object.values(bottomToolbarButtons),
-                    ...Object.values(topToolbarButtons)];
-
-                    if (structType === "i") {
-                        const utilityButtons = getIViewUtilityButtons();
-                        const actionButtons = getIViewActionDropdownButtons();
-                        allButtons = [...allButtons, ...Object.values(utilityButtons), ...Object.values(actionButtons)];
-                    }
+                    ...Object.values(topToolbarButtons),
+                    ...Object.values(utilityButtons),
+                    ...Object.values(actionButtons)];
                 }
-
 
                 break;
 
             case "e":
             case "ef":
             case "c":
-                if (!entityToolbarButtons) entityToolbarButtons = getEntityToolbarButtons();
-                allButtons = [...Object.values(entityToolbarButtons)];
+                entityToolbarButtons = getEntityToolbarButtons();
+                utilityButtons = getIViewUtilityButtons();
+                topToolbarButtons = getTopToolbarButtons();
+                allButtons = [...Object.values(entityToolbarButtons), ...Object.values(utilityButtons), ...Object.values(topToolbarButtons)];
                 break;
 
             case "pf":
-                if (!pfToolbarButtons) pfToolbarButtons = getPFToolbarButtons();
-                allButtons = [...Object.values(pfToolbarButtons)]
+                pfToolbarButtons = getPFToolbarButtons();
+                topToolbarButtons = getTopToolbarButtons();
+                allButtons = [...Object.values(pfToolbarButtons), ...Object.values(topToolbarButtons)];
                 break;
 
             case "s":
-                if (!settingsPageButtons) settingsPageButtons = getButtons(".Config-cont");
-                allButtons = [...Object.values(settingsPageButtons)]
+                settingsPageButtons = getButtons(".Config-cont");
+                allButtons = [...Object.values(settingsPageButtons)];
                 break;
 
             case "im":
             case "ex":
-                if (!importExportButtons) importExportButtons = getButtons(".card-footer");
+                importExportButtons = getButtons(".card-footer");
                 allButtons = [...Object.values(importExportButtons)];
                 break;
 
-
             default:
-                // console.error("Invalid StructType")
                 break;
+        }
+
+        if (allButtons && Array.isArray(allButtons)) {
+            const seenKeys = new Set();
+            allButtons = allButtons.filter(btn => {
+                if (!btn) return false;
+                const key = (btn.id || "") + "_" + (btn.label || "").toLowerCase();
+                if (seenKeys.has(key)) return false;
+                seenKeys.add(key);
+                return true;
+            });
         }
 
         // console.log("All Buttons: " + JSON.stringify(allButtons));
@@ -9545,20 +9577,22 @@
 
                 const rawLabel = btn.label || "";
                 const normalizedBtnLabel = rawLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
-                if (normalizedBtnLabel === normalizedInputLabel) return true;
+                if (normalizedBtnLabel === normalizedInputLabel || normalizedBtnLabel.includes(normalizedInputLabel) || normalizedInputLabel.includes(normalizedBtnLabel)) return true;
 
                 const element = btn.element;
                 if (element) {
                     const titleAttr = (element.getAttribute("title") || "").toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
-                    if (titleAttr === normalizedInputLabel) return true;
+                    if (titleAttr === normalizedInputLabel || titleAttr.includes(normalizedInputLabel)) return true;
 
                     const textContentVal = (element.textContent || "").toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
-                    if (textContentVal === normalizedInputLabel) return true;
+                    if (textContentVal === normalizedInputLabel || textContentVal.includes(normalizedInputLabel)) return true;
+
+                    const btnId = (btn.id || element.id || "").toLowerCase();
+                    if (btnId && (btnId.includes(normalizedInputLabel) || normalizedInputLabel.includes(btnId))) return true;
                 }
 
                 return false;
             });
-
         }
 
 
@@ -9764,18 +9798,10 @@
 
 
     function getIViewUtilityButtons() {
-        const iframe = document.getElementById("middle1");
-        if (!iframe) return {};
-
-        let doc = null;
-        try {
-            doc = iframe.contentDocument || iframe.contentWindow?.document;
-        } catch (e) {
-            // console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
-        }
+        const { doc, win, iframe } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
-        const rawContainers = Array.from(doc.querySelectorAll(".newRequestJson, [id^='iconsNew'], [id^='dvRefresh'], .iviewRefresh, #iconsNewSearch, #iconsNewRefresh, #iconsNewNew, #iconsNewRemove, #iconsNewUtility, #iconsNewOption, #dvRefreshParam, #dvRefreshParamIcon"));
+        const rawContainers = Array.from(doc.querySelectorAll(".newRequestJson, [id^='iconsNew'], [id^='dvRefresh'], .iviewRefresh, #iconsNewSearch, #iconsNewRefresh, #iconsNewNew, #iconsNewRemove, #iconsNewUtility, #iconsNewOption, #dvRefreshParam, #dvRefreshParamIcon, #dvRefreshFromLoad"));
         const containers = Array.from(new Set(rawContainers));
         if (containers.length === 0) return {};
 
@@ -9800,7 +9826,15 @@
         if (links.length === 0) return {};
 
         const result = {};
+        const structType = getStructType();
+
         links.forEach((link) => {
+            const dropDownItem = link.closest(".dropDownButton__item, .dropDownButton__list");
+            if (structType === "i" && dropDownItem) {
+                const val = dropDownItem.getAttribute("data-dropdown-value") || link.getAttribute("data-dropdown-value");
+                if (val !== "chart" && val !== "saveAs") return;
+            }
+
             const isDropdownItem = link.closest(".menu-sub-dropdown, .dropdown-menu, ul.menu, li.menu-item") !== null;
 
             if (!isDropdownItem) {
@@ -9840,20 +9874,7 @@
                 element: link,
                 click: () => {
                     const btnInside = link.querySelector("button, a, [onclick]") || link;
-                    if (btnInside.href && btnInside.href.startsWith("javascript:")) {
-                        try {
-                            const jsCode = decodeURIComponent(btnInside.href.replace(/^javascript:/i, ''));
-                            iframe.contentWindow.eval(jsCode);
-                        } catch (e) {
-                            // console.error("Failed to execute javascript: href for utility link", e);
-                            btnInside.click();
-                        }
-                    } else {
-                        btnInside.click();
-                        if (btnInside !== link) {
-                            try { link.click(); } catch (e) { }
-                        }
-                    }
+                    safeExecuteButtonClick(btnInside, win);
                 }
             };
         });
@@ -9861,16 +9882,98 @@
         return result;
     }
 
-    function getIViewActionDropdownButtons() {
-        const iframe = document.getElementById("middle1");
-        if (!iframe) return {};
+    function getIViewDocumentAndWindow() {
+        let topIframe = document.getElementById("middle1");
+        let mainWin = window;
+        let mainDoc = document;
 
-        let doc = null;
-        try {
-            doc = iframe.contentDocument || iframe.contentWindow?.document;
-        } catch (e) {
-            // console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
+        if (topIframe) {
+            try {
+                mainWin = topIframe.contentWindow || mainWin;
+                mainDoc = topIframe.contentDocument || mainWin.document || mainDoc;
+            } catch (e) { }
         }
+
+        try {
+            if (mainDoc) {
+                const innerFrame = mainDoc.querySelector("#rightIframe, #newrightIframe, iframe[src*='iview.aspx'], iframe[src*='ivtoivload.aspx']");
+                if (innerFrame) {
+                    const innerWin = innerFrame.contentWindow;
+                    const innerDoc = innerFrame.contentDocument || innerWin?.document;
+                    if (innerDoc && innerDoc.body) {
+                        return { doc: innerDoc, win: innerWin, iframe: innerFrame };
+                    }
+                }
+            }
+        } catch (e) { }
+
+        return { doc: mainDoc, win: mainWin, iframe: topIframe };
+    }
+
+    function executeIViewAction(val, item, link) {
+        const { doc, win } = getIViewDocumentAndWindow();
+        const targetEl = link || item || (doc ? doc.querySelector(`[data-dropdown-value="${val}"]`) : null);
+        const parentItem = item || (targetEl ? targetEl.closest(".dropDownButton__item, .dropDownButton__list, li") : null);
+
+        try {
+            if (targetEl) {
+                const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win });
+                targetEl.dispatchEvent(evt);
+                if (parentItem && parentItem !== targetEl) parentItem.dispatchEvent(evt);
+            }
+        } catch (e) {
+            try { if (targetEl) targetEl.click(); } catch (err) { }
+        }
+
+        try {
+            if (win && win.$) {
+                if (targetEl) win.$(targetEl).trigger('click');
+                if (parentItem && parentItem !== targetEl) win.$(parentItem).trigger('click');
+
+                if (val) {
+                    const $input = win.$('#IvirActions, .js-dropdown__input');
+                    if ($input.length) {
+                        $input.val("").val(val).trigger('change');
+                    }
+                }
+            }
+        } catch (e) { }
+
+        try {
+            if (win && val === "chart") {
+                const chartModal = win.document ? (win.document.getElementById("ivirCreateChart") || win.document.getElementById("dvCharts")) : null;
+                const isVisible = chartModal && (chartModal.offsetWidth > 0 || chartModal.offsetHeight > 0 || chartModal.style.display === "block");
+                if (!isVisible) {
+                    if (typeof win.ShowCharts === "function") {
+                        try { win.ShowCharts(); } catch (err) { }
+                    }
+                    if (typeof win.getChartHtml === "function" && typeof win.ivirActionDialog === "function") {
+                        const chartHtml = win.getChartHtml();
+                        if (chartHtml) {
+                            const title = (win.callParentNew && typeof win.callParentNew === "function" && win.callParentNew('lcm')) ? win.callParentNew('lcm')[410] : "Chart";
+                            win.ivirActionDialog(title, "chart", chartHtml, "ivirCreateChart");
+                        }
+                    }
+                }
+            } else if (win && val === "saveAs") {
+                const saveAsModal = win.document ? (win.document.getElementById("ivirSaveAsView") || win.document.getElementById("divFilterView")) : null;
+                const isVisible = saveAsModal && (saveAsModal.offsetWidth > 0 || saveAsModal.offsetHeight > 0 || saveAsModal.style.display === "block");
+                if (!isVisible) {
+                    if (typeof win.ShowViewPopup === "function") {
+                        try { win.ShowViewPopup(); } catch (err) { }
+                    }
+                    if (typeof win.getAddViewHtml === "function" && typeof win.ivirActionDialog === "function") {
+                        const addViewHtml = win.getAddViewHtml();
+                        const title = (win.callParentNew && typeof win.callParentNew === "function" && win.callParentNew('lcm')) ? win.callParentNew('lcm')[442] : "Add View";
+                        win.ivirActionDialog(title, "saveAs", addViewHtml, "ivirSaveAsView");
+                    }
+                }
+            }
+        } catch (e) { }
+    }
+
+    function getIViewActionDropdownButtons() {
+        const { doc } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
         const items = Array.from(doc.querySelectorAll(".dropDownButton__list li.dropDownButton__item, li.dropDownButton__item"));
@@ -9900,9 +10003,7 @@
                 id,
                 label,
                 element: item,
-                click: () => {
-                    item.click();
-                }
+                click: () => executeIViewAction(dropdownVal, item, link)
             };
         });
 
@@ -9910,21 +10011,25 @@
     }
 
     function getBottomToolbarButtons() {
-        const iframe = document.getElementById("middle1");
-        if (!iframe) return {};
-
-        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
-        const toolbar = doc.querySelector(".BottomToolbarBar");
+        const toolbar = doc.querySelector(".BottomToolbarBar, #icons, [id^='iconsNew'], .toolbarRightMenu, .toolbarIcons");
         if (!toolbar) return {};
 
         const buttons = Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn"));
         if (buttons.length === 0) return {};
 
         const result = {};
+        const structType = getStructType();
 
         buttons.forEach((btn) => {
+            const dropDownItem = btn.closest(".dropDownButton__item, .dropDownButton__list");
+            if (structType === "i" && dropDownItem) {
+                const val = dropDownItem.getAttribute("data-dropdown-value") || btn.getAttribute("data-dropdown-value");
+                if (val !== "chart" && val !== "saveAs") return;
+            }
+
             // Check if element or its parent is hidden
             if (btn.offsetParent === null) return;
             if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[style*='display: none']")) return;
@@ -9934,17 +10039,15 @@
             if (id === "ivirActionButton") return;
 
             const label = extractButtonLabel(btn);
-            if (!label) // console.log("There is no label for Element: " + btn);
+            if (!label) return;
             if (label.toLowerCase() === "plugin custom code") return;
             if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
-
-
 
             result[id] = {
                 id,
                 label,
                 element: btn,
-                click: () => btn.click()
+                click: () => safeExecuteButtonClick(btn, win)
             };
         });
 
@@ -10097,40 +10200,52 @@
     }
 
     function getTopToolbarButtons() {
-        const iframe = document.getElementById("middle1");
-        if (!iframe) return {};
-
-        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
         const toolbar = doc.querySelector(".toolbarRightMenu");
-        if (!toolbar) return {};
 
-        const buttons = toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn");
+        const toolbarButtons = toolbar ? Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn")) : [];
+        const dropdownButtons = Array.from(doc.querySelectorAll(".menu-sub-dropdown a, .menu-sub-dropdown button, .menu-sub-dropdown .menu-link, .dropdown-menu a, .dropdown-menu button"));
 
+        const buttons = [...toolbarButtons, ...dropdownButtons];
         const result = {};
 
         buttons.forEach((btn) => {
-            // Check if element or its parent is hidden
-            if (btn.offsetParent === null) return;
-            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[style*='display: none']") || btn.closest(".hidden") || btn.closest("[style*='display:none']")) return;
+            const structType = getStructType();
+            const dropDownItem = btn.closest(".dropDownButton__item, .dropDownButton__list");
+            const val = dropDownItem ? (dropDownItem.getAttribute("data-dropdown-value") || btn.getAttribute("data-dropdown-value")) : btn.getAttribute("data-dropdown-value");
+
+            if (structType === "i" && dropDownItem) {
+                if (val !== "chart" && val !== "saveAs") return;
+            }
+
+            const isDropdownItem = !!btn.closest(".menu-sub-dropdown, .menu-sub, .dropdown-menu");
+
+            // Check if element or its parent is hidden (exempt collapsed dropdown items from offsetParent === null check)
+            if (!isDropdownItem && btn.offsetParent === null) return;
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest(".hidden")) return;
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
             if (!id) return;
             if (id === "ivirActionButton") return;
 
             const label = extractButtonLabel(btn);
-            if (!label) // console.log("There is no label for Element: " + btn);
+            if (!label) return;
             if (label.toLowerCase() === "plugin custom code") return;
             if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
-
-
 
             result[id] = {
                 id,
                 label,
                 element: btn,
-                click: () => btn.click()
+                click: () => {
+                    if (val === "chart" || val === "saveAs") {
+                        executeIViewAction(val, dropDownItem, btn);
+                    } else {
+                        safeExecuteButtonClick(btn, win);
+                    }
+                }
             };
         });
 
@@ -10172,100 +10287,91 @@
     }
 
     function getStructType() {
-        const iframe = document.getElementById("middle1");
-        if (!iframe) return null;
-
-        let iframeDoc = null;
+        const { doc: iframeDoc, win: iframeWin, iframe } = getIViewDocumentAndWindow();
+        
+        let src = iframe ? (iframe.getAttribute("src") || "") : "";
+        let docHref = "";
         try {
-            iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-        } catch (e) {
-            // console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
-        }
+            docHref = iframeDoc?.location?.href || iframeWin?.location?.href || "";
+        } catch (e) { }
 
-        const src = iframe.getAttribute("src");
-        if (!src) return null;
+        const combinedUrl = (src + " " + docHref).toLowerCase();
 
-        if (isRunDisabledForPage(src)) {
+        if (isRunDisabledForPage(src) || isRunDisabledForPage(docHref)) {
             return "o";
         }
 
-        const page = src.split("?")[0].toLowerCase();
-
-        if (!page) {
-            return null;
-        }
+        const cardContainer = document.querySelector(".cardsPageWrapper");
+        const isCardContainerHidden = cardContainer ? cardContainer.classList.contains("d-none") : true;
 
         let bodyId = "";
         if (iframeDoc) {
             try {
                 bodyId = iframeDoc.body?.id || "";
-            } catch (e) {
-                // Ignore body ID access failure
-            }
+            } catch (e) { }
         }
 
-        const cardContainer = document.querySelector(".cardsPageWrapper");
-
-        const isCardContainerHidden = cardContainer ? cardContainer.classList.contains("d-none") : true;
-
-        if ((page.endsWith("/tstruct.aspx") || page.includes("tstruct.aspx")) && bodyId !== "Entitymanagement_Body" && isCardContainerHidden) {
-            return "t" // tstruct page
+        // Tstruct page
+        if ((combinedUrl.includes("tstruct.aspx") || combinedUrl.includes("transid=")) && bodyId !== "Entitymanagement_Body" && isCardContainerHidden) {
+            return "t";
         }
 
+        // IView page (iview.aspx, ivtoivload.aspx, ivname=, or live iview DOM markers)
+        const isIViewDom = !!(iframeDoc && (
+            iframeDoc.getElementById("IvirActions") ||
+            iframeDoc.getElementById("txtViewName") ||
+            iframeDoc.querySelector(".iviewTableWrapperNew, #chartActionLi, .dropDownButton__list, .iviewRefresh, #ivirMainChartWrapper, #dvRefresh")
+        ));
 
-
-        if ((page.endsWith("/iview.aspx") || page.includes("iview.aspx")) && isCardContainerHidden) {
-            return "i";  // IView page
+        if ((combinedUrl.includes("iview.aspx") || combinedUrl.includes("ivtoivload.aspx") || combinedUrl.includes("ivname=") || isIViewDom) && isCardContainerHidden) {
+            return "i";
         }
 
-
-
-        if ((page.endsWith("/entity.aspx") || page.includes("entity.aspx")) && bodyId === "Entitymanagement_Body" && isCardContainerHidden) {
-            return "e";  // Entity page
+        // Entity page
+        if (combinedUrl.includes("entity.aspx") && bodyId === "Entitymanagement_Body" && isCardContainerHidden) {
+            return "e";
         }
 
-
-
-        if ((page.endsWith("/entityform.aspx") || page.includes("entityform.aspx") || bodyId === "Entitymanagement_Body") && isCardContainerHidden) {
-            return "ef";  // Entity Data page
+        // Entity Form page
+        if ((combinedUrl.includes("entityform.aspx") || bodyId === "Entitymanagement_Body") && isCardContainerHidden) {
+            return "ef";
         }
 
-        if ((src.includes("/CustomPages") || src.includes("/axidev") || src.includes("/HTMLPages")) && isCardContainerHidden) {
-            return "c"; // Custom page
-
+        // Custom page
+        if ((combinedUrl.includes("/custompages") || combinedUrl.includes("/axidev") || combinedUrl.includes("/htmlpages")) && isCardContainerHidden) {
+            return "c";
         }
 
-        if (src.includes("../aspx/ImportAll.aspx") && isCardContainerHidden) {
-            return "im"; // Import page
-
+        // Import page
+        if (combinedUrl.includes("importall.aspx") && isCardContainerHidden) {
+            return "im";
         }
 
-        if (src.includes("../aspx/ExportNew.aspx") && isCardContainerHidden) {
-            return "ex"; // Export page
-
+        // Export page
+        if (combinedUrl.includes("exportnew.aspx") && isCardContainerHidden) {
+            return "ex";
         }
 
-
-
-        // ../aspx/processflow.aspx?activelist=t&hdnbElapsTime=0
-
-
-        if ((page.endsWith("/processflow.aspx") || page.includes("processflow.aspx")) && isCardContainerHidden) {
-            return "pf"; // Process flow page
-
+        // Process flow page
+        if (combinedUrl.includes("processflow.aspx") && isCardContainerHidden) {
+            return "pf";
         }
 
-        if (src.includes("/aspx/Configuration.aspx/LoadUserAppSettings") && isCardContainerHidden) {
-            return "s"; // Settings page
+        // Settings page
+        if (combinedUrl.includes("configuration.aspx") && isCardContainerHidden) {
+            return "s";
         }
 
-        if (page.endsWith("/axibot.html") || page.includes("/axibot.html")) {
-            return "b"; // Axibot page
+        // Axibot page
+        if (combinedUrl.includes("axibot.html")) {
+            return "b";
         }
 
+        if (isIViewDom && isCardContainerHidden) {
+            return "i";
+        }
 
-        return "o"; // Others 
-
+        return "o";
     }
 
     function extractButtonLabel(btn) {
@@ -10273,9 +10379,16 @@
             return "Filter";
         }
 
-
         const dataExtra = btn.getAttribute("data-extra");
         if (dataExtra) return dataExtra.trim();
+
+        const dropdownIconName = btn.querySelector(".dropdownIconName");
+        if (dropdownIconName && dropdownIconName.textContent.trim()) {
+            return dropdownIconName.textContent.trim();
+        }
+
+        const menuTitle = btn.querySelector(".menu-title");
+        if (menuTitle && menuTitle.textContent.trim()) return menuTitle.textContent.trim();
 
         const text = Array.from(btn.childNodes)
             .filter(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
@@ -10284,7 +10397,6 @@
             .trim();
 
         if (text) {
-
             return text;
         }
 
@@ -10294,17 +10406,9 @@
             btn.getAttribute("data-bs-title");
         if (title) return title.trim();
 
-        const menuTitle = btn.querySelector(".menu-title");
-
-        if (menuTitle) return menuTitle.textContent.trim();
-
-
-
-
         const cloned = btn.cloneNode(true);
-        cloned.querySelectorAll(".material-icons, .material-icons-style").forEach(node => node.remove());
+        cloned.querySelectorAll(".material-icons, .material-icons-style, .symbol").forEach(node => node.remove());
         return cloned.innerText.trim();
-
     }
 
     function hasAction(btn) {
@@ -10328,19 +10432,60 @@
     }
 
 
+    function safeExecuteButtonClick(btn, win) {
+        if (!btn) return;
+        const targetWin = win || window;
+
+        // 1. Native .click() execution
+        try {
+            if (typeof btn.click === "function") {
+                btn.click();
+                return;
+            }
+        } catch (e) {}
+
+        // 2. MouseEvent fallback if .click() failed
+        try {
+            const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: targetWin });
+            btn.dispatchEvent(evt);
+            return;
+        } catch (e) {}
+
+        // 3. jQuery trigger fallback
+        if (targetWin && targetWin.$) {
+            try {
+                targetWin.$(btn).trigger('click');
+                return;
+            } catch (e) {}
+        }
+
+        // 4. Inline onclick fallback
+        try {
+            const onclickAttr = btn.getAttribute("onclick");
+            if (onclickAttr && targetWin) {
+                targetWin.eval(onclickAttr);
+                return;
+            }
+        } catch (e) {}
+
+        // 5. javascript: href fallback
+        try {
+            const hrefAttr = btn.getAttribute("href") || "";
+            if (hrefAttr && hrefAttr.startsWith("javascript:") && targetWin) {
+                targetWin.eval(decodeURIComponent(hrefAttr.replace(/^javascript:/i, '')));
+                return;
+            }
+        } catch (e) {}
+    }
 
     function getEntityToolbarButtons() {
-        const iframe = document.getElementById("middle1");
-
-        if (!iframe) return {};
-
-        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
-        const toolbar = doc.querySelector(".card-toolbar");
+        const toolbar = doc.querySelector(".card-toolbar, #icons, .toolbarRightMenu, .toolbar");
         const buttons = [];
         if (toolbar) {
-            buttons.push(...Array.from(toolbar.querySelectorAll("a, button")));
+            buttons.push(...Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit']")));
         }
 
         const filterBtn = doc.querySelector("#smartviewFilterToolbarBtn");
@@ -10353,15 +10498,9 @@
         const result = {};
 
         buttons.forEach((btn, index) => {
-            // if (!hasAction(btn)) return;
-
             if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.classList.contains("disabled") || btn.closest(".disabled") || btn.closest("[hidden]")) return;
-
-
             if (btn.getAttribute("data-kt-menu-attach") === "parent") return;
-
             if (btn.querySelector(".menu-title") && btn.hasAttribute("data-kt-menu-trigger")) return;
-
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
             if (!id) return;
@@ -10408,12 +10547,11 @@
                 id,
                 label: label.toLowerCase(),
                 element: btn,
-                click: () => btn.click()
+                click: () => safeExecuteButtonClick(btn, win)
             };
         });
 
         return result;
-
     }
 
     function getButtons(querySelector) {
@@ -10488,22 +10626,16 @@
 
 
     function getDesignModeToolbarButtons() {
-        const iframe = document.getElementById("middle1");
-
-        if (!iframe) return {};
-
-        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
-        const toolbar = doc.querySelector("#designModeToolbar");
+        const toolbar = doc.querySelector("#designModeToolbar, .designModeToolbar");
         if (!toolbar) return {};
 
         const buttons = toolbar.querySelectorAll("a, button");
         const result = {};
 
         buttons.forEach((btn, index) => {
-            // if (!hasAction(btn)) return;
-
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
             if (!id) return;
 
@@ -10515,7 +10647,25 @@
                 id,
                 label: label.toLowerCase(),
                 element: btn,
-                click: () => btn.click()
+                click: () => {
+                    try {
+                        const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win || window });
+                        btn.dispatchEvent(evt);
+                    } catch (e) {
+                        try { btn.click(); } catch (err) { }
+                    }
+                    try {
+                        if (win && win.$) {
+                            win.$(btn).trigger('click');
+                        }
+                    } catch (e) { }
+                    try {
+                        const onclickAttr = btn.getAttribute("onclick");
+                        if (onclickAttr && win) {
+                            win.eval(onclickAttr);
+                        }
+                    } catch (e) { }
+                }
             };
         });
 
@@ -10543,37 +10693,54 @@
         const doc = iframe.contentDocument || iframe.contentWindow?.document;
         if (!doc) return {};
 
+        let docsToSearch = [doc];
+
+        // Check if processflow page contains an inner iframe (like #rightIframe or #newrightIframe or tstruct.aspx iframe)
+        try {
+            const innerIframe = doc.getElementById("rightIframe") || doc.getElementById("newrightIframe") || doc.querySelector("iframe.displayBlock") || doc.querySelector("iframe[src*='tstruct.aspx']");
+            if (innerIframe) {
+                const innerDoc = innerIframe.contentDocument || innerIframe.contentWindow?.document;
+                if (innerDoc) {
+                    docsToSearch = [innerDoc, doc];
+                }
+            }
+        } catch (e) {
+            // Ignore cross-origin errors
+        }
+
         const result = {};
 
         // Process Flow toolbar zones
         const containers = [
             ".Page-Title-Bar",
             ".Tkts-toolbar-Left",
-            ".Tkts-toolbar-Right"
+            ".Tkts-toolbar-Right",
+            ".toolbarRightMenu",
+            ".card-toolbar",
+            ".card-header",
+            ".header-toolbar",
+            ".BottomToolbarBar"
         ];
 
-        containers.forEach(selector => {
-            const root = doc.querySelector(selector);
-            if (!root) return;
+        docsToSearch.forEach(targetDoc => {
+            let foundElements = [];
 
-            const elements = root.querySelectorAll(
-                "button, a, div.btn"
-            );
+            containers.forEach(selector => {
+                const root = targetDoc.querySelector(selector);
+                if (!root) return;
 
-            elements.forEach((el, index) => {
-                // skip hidden
+                const elements = Array.from(root.querySelectorAll("button, a, input[type='button'], input[type='submit'], div.btn, div[data-kt-menu-trigger]"));
+                foundElements.push(...elements);
+            });
+
+            if (foundElements.length === 0) {
+                foundElements = Array.from(targetDoc.querySelectorAll(".Page-Title-Bar button, .Page-Title-Bar a, .toolbarRightMenu a, .toolbarRightMenu button, div.menu-sub-dropdown a, div.menu-sub-dropdown button, a.btn, button.btn"));
+            }
+
+            foundElements.forEach((el, index) => {
+                const isDropdownItem = !!el.closest(".menu-sub-dropdown, .menu-sub, .dropdown-menu");
+                if (!isDropdownItem && el.offsetParent === null) return;
                 if (el.classList.contains("d-none") || el.closest(".d-none") || el.classList.contains("disabled") || el.closest(".disabled") || el.closest("[hidden]")) return;
-
-                // must be actionable
-                // if (!hasAction(el)) return;
-
-                const isActionable =
-                    hasAction?.(el) ||
-                    el.hasAttribute("data-kt-menu-trigger") ||
-                    el.classList.contains("tb-btn") ||
-                    el.classList.contains("btn-icon");
-
-                if (!isActionable) return;
 
                 const label = extractButtonLabel(el);
                 if (!label) return;
@@ -13428,7 +13595,7 @@
         }
 
         if (itemsToRender.length === 0) {
-            wrapper.innerHTML = `<div style="padding: 15px; color: #999; text-align: center; width: 100%;">No favourites yet. Pin commands to see them here.</div>`;
+            wrapper.innerHTML = `<div style="padding: 15px; color: #999; text-align: center; width: 100%;">No favorites yet. Pin commands to see them here.</div>`;
             return;
 
         }
@@ -13860,7 +14027,7 @@
         const favEditStateInput = document.getElementById("axiFavIsEdit");
         const titleEl = document.querySelector(".axi-modal-title");
 
-        if (titleEl) titleEl.innerText = isEdit ? "Rename Favourites" : "Save to Favourites"
+        if (titleEl) titleEl.innerText = isEdit ? "Rename Favorites" : "Save to Favorites"
 
         favEditStateInput.value = isEdit ? "true" : "false";
 
@@ -13970,12 +14137,12 @@
                     } else {
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
                         favCancelBtn.disabled = false;
-                        showToast("Failed to edit favourite");
+                        showToast("Failed to edit favorite");
                     }
                 })
                     .catch(error => {
                         // console.error("Backend edit failed", error);
-                        showToast("An Error occured while editing favourite");
+                        showToast("An Error occured while editing favorite");
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
                         favCancelBtn.disabled = false;
 
@@ -14049,7 +14216,7 @@
 
         favDeleteCmdText.value = cmdText;
         const deleteModalParagraph = document.getElementById("axiDeleteModalParagraph");
-        deleteModalParagraph.textContent = `Are you sure you want to remove '${cmdText}' from your favourites?`;
+        deleteModalParagraph.textContent = `Are you sure you want to remove '${cmdText}' from your favorites?`;
 
         // Reset loading state on open
         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
