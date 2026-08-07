@@ -95,29 +95,21 @@
             const key = this.getStorageKey(appUrl, username);
             try {
                 const data = JSON.parse(localStorage.getItem(key)) || [];
-                const list = data.map(fav => typeof fav === "string" ? { commandText: fav, targetURL: "" } : fav);
-                return list.slice(0, AxiCmdConfig.MAX_FAVORITES);
+                return data.map(fav => typeof fav === "string" ? { commandText: fav, targetURL: "" } : fav);
             } catch (ex) {
                 return [];
             }
         },
         saveLocalFavorites(appUrl, username, favoritesList) {
             const key = this.getStorageKey(appUrl, username);
-            const capped = Array.isArray(favoritesList) ? favoritesList.slice(0, AxiCmdConfig.MAX_FAVORITES) : [];
-            localStorage.setItem(key, JSON.stringify(capped));
+            localStorage.setItem(key, JSON.stringify(favoritesList));
         },
         isFavAllowed(cmdText) {
             if (!cmdText) return false;
-            const rawTokens = AxiCommandParser.tokenize(cmdText);
-            const tokens = rawTokens.map(t => cleanString(t).toLowerCase());
-            const verb = tokens[0] || "";
-            const verb2 = tokens[1] || "";
+            const tokens = AxiCommandParser.tokenize(cmdText);
+            const verb = tokens[0]?.toLowerCase();
+            const verb2 = tokens[1]?.toLowerCase();
             if (verb === "help" || verb === "version" || verb === "run" || verb2 === "keyfield") {
-                return false;
-            }
-            const isEditCommand = verb === "edit" || verb2 === "edit";
-            const hasWithKeyword = tokens[3] === "with" || (isEditCommand && tokens.some((t, idx) => idx >= 2 && t === "with"));
-            if (hasWithKeyword) {
                 return false;
             }
             return true;
@@ -13432,7 +13424,7 @@
                     // console.log("Fetched favorites from backend: ", data);
                     // console.log("type : ", typeof data);
                     if (data && Array.isArray(data)) {
-                        commandFavorites = data.slice(0, MAX_FAVORITES).map(item => ({
+                        commandFavorites = data.map(item => ({
                             favouritesId: item?.favouritesId,
                             username: item?.username,
 
@@ -14029,15 +14021,6 @@
     }
 
     function showFavoriteModel(cmdText, targetUrl, isEdit = false) {
-        if (!isEdit && !AxiFavoritesManager.isFavAllowed(cmdText)) {
-            showToast("You cannot add this command to Favorites!");
-            return;
-        }
-        if (!isEdit && commandFavorites.length >= MAX_FAVORITES) {
-            showToast(`Maximum of ${MAX_FAVORITES} favorites allowed. Please remove some favorites before adding new ones.`);
-            return;
-        }
-
         const originalCmdTextInput = document.getElementById("axiFavOriginalCmd");
         const favNameInput = document.getElementById("axiFavNameInput");
         const favTargetUrlInput = document.getElementById("axiFavTargetUrl");
@@ -14091,11 +14074,6 @@
             return;
         }
 
-        if (!AxiFavoritesManager.isFavAllowed(alias) || !AxiFavoritesManager.isFavAllowed(originalCmdText)) {
-            showToast("You cannot add this command to Favorites!");
-            return;
-        }
-
         const aliasTokens = getTokens(alias);
         if (aliasTokens[0]?.toLowerCase() === "help" || aliasTokens[0]?.toLowerCase() === "version") {
             showToast("You cannot add this command to Favorites!");
@@ -14114,11 +14092,6 @@
         }
 
         if (!isEdit) {
-            if (commandFavorites.length >= MAX_FAVORITES) {
-                showToast(`Maximum of ${MAX_FAVORITES} favorites allowed. Please remove some favorites before adding new ones.`);
-                hideFavoriteModal();
-                return;
-            }
             if (isDuplicateFavorite(targetUrl)) {
                 showToast("This command is already in your Favorites.");
                 return;
