@@ -3643,22 +3643,14 @@
                 const isDesign = isTstructDesignMode();
                 if (isDesign) {
                     designModeToolbarButtons = getDesignModeToolbarButtons();
-
-                    allButtons = { ...designModeToolbarButtons }
-
-
+                    allButtons = { ...designModeToolbarButtons };
                 } else {
                     bottomToolbarButtons = getBottomToolbarButtons();
                     topToolbarButtons = getTopToolbarButtons();
-                    allButtons = { ...bottomToolbarButtons, ...topToolbarButtons };
-
-                    if (structType === "i") {
-                        const utilityButtons = getIViewUtilityButtons();
-                        const actionButtons = getIViewActionDropdownButtons();
-                        allButtons = { ...allButtons, ...utilityButtons, ...actionButtons };
-                    }
+                    utilityButtons = getIViewUtilityButtons();
+                    actionButtons = getIViewActionDropdownButtons();
+                    allButtons = { ...bottomToolbarButtons, ...topToolbarButtons, ...utilityButtons, ...actionButtons };
                 }
-
 
                 break;
 
@@ -9500,35 +9492,24 @@
             return;
         }
 
-
         switch (structType) {
             case "t":
             case "i":
 
                 const isDesign = isTstructDesignMode();
                 if (isDesign) {
-                    if (!designModeToolbarButtons) {
-                        designModeToolbarButtons = getDesignModeToolbarButtons();
-
-
-                    }
-
-                    allButtons = [...Object.values(designModeToolbarButtons)]
-
-
+                    designModeToolbarButtons = getDesignModeToolbarButtons();
+                    allButtons = [...Object.values(designModeToolbarButtons)];
                 } else {
-                    if (!bottomToolbarButtons) bottomToolbarButtons = getBottomToolbarButtons();
-                    if (!topToolbarButtons) topToolbarButtons = getTopToolbarButtons();
+                    bottomToolbarButtons = getBottomToolbarButtons();
+                    topToolbarButtons = getTopToolbarButtons();
+                    utilityButtons = getIViewUtilityButtons();
+                    actionButtons = getIViewActionDropdownButtons();
                     allButtons = [...Object.values(bottomToolbarButtons),
-                    ...Object.values(topToolbarButtons)];
-
-                    if (structType === "i") {
-                        const utilityButtons = getIViewUtilityButtons();
-                        const actionButtons = getIViewActionDropdownButtons();
-                        allButtons = [...allButtons, ...Object.values(utilityButtons), ...Object.values(actionButtons)];
-                    }
+                    ...Object.values(topToolbarButtons),
+                    ...Object.values(utilityButtons),
+                    ...Object.values(actionButtons)];
                 }
-
 
                 break;
 
@@ -9585,20 +9566,22 @@
 
                 const rawLabel = btn.label || "";
                 const normalizedBtnLabel = rawLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
-                if (normalizedBtnLabel === normalizedInputLabel) return true;
+                if (normalizedBtnLabel === normalizedInputLabel || normalizedBtnLabel.includes(normalizedInputLabel) || normalizedInputLabel.includes(normalizedBtnLabel)) return true;
 
                 const element = btn.element;
                 if (element) {
                     const titleAttr = (element.getAttribute("title") || "").toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
-                    if (titleAttr === normalizedInputLabel) return true;
+                    if (titleAttr === normalizedInputLabel || titleAttr.includes(normalizedInputLabel)) return true;
 
                     const textContentVal = (element.textContent || "").toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
-                    if (textContentVal === normalizedInputLabel) return true;
+                    if (textContentVal === normalizedInputLabel || textContentVal.includes(normalizedInputLabel)) return true;
+
+                    const btnId = (btn.id || element.id || "").toLowerCase();
+                    if (btnId && (btnId.includes(normalizedInputLabel) || normalizedInputLabel.includes(btnId))) return true;
                 }
 
                 return false;
             });
-
         }
 
 
@@ -9804,18 +9787,10 @@
 
 
     function getIViewUtilityButtons() {
-        const iframe = document.getElementById("middle1");
-        if (!iframe) return {};
-
-        let doc = null;
-        try {
-            doc = iframe.contentDocument || iframe.contentWindow?.document;
-        } catch (e) {
-            // console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
-        }
+        const { doc, win, iframe } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
-        const rawContainers = Array.from(doc.querySelectorAll(".newRequestJson, [id^='iconsNew'], [id^='dvRefresh'], .iviewRefresh, #iconsNewSearch, #iconsNewRefresh, #iconsNewNew, #iconsNewRemove, #iconsNewUtility, #iconsNewOption, #dvRefreshParam, #dvRefreshParamIcon"));
+        const rawContainers = Array.from(doc.querySelectorAll(".newRequestJson, [id^='iconsNew'], [id^='dvRefresh'], .iviewRefresh, #iconsNewSearch, #iconsNewRefresh, #iconsNewNew, #iconsNewRemove, #iconsNewUtility, #iconsNewOption, #dvRefreshParam, #dvRefreshParamIcon, #dvRefreshFromLoad"));
         const containers = Array.from(new Set(rawContainers));
         if (containers.length === 0) return {};
 
@@ -9840,9 +9815,11 @@
         if (links.length === 0) return {};
 
         const result = {};
+        const structType = getStructType();
+
         links.forEach((link) => {
             const dropDownItem = link.closest(".dropDownButton__item, .dropDownButton__list");
-            if (dropDownItem) {
+            if (structType === "i" && dropDownItem) {
                 const val = dropDownItem.getAttribute("data-dropdown-value") || link.getAttribute("data-dropdown-value");
                 if (val !== "chart" && val !== "saveAs") return;
             }
@@ -9886,20 +9863,48 @@
                 element: link,
                 click: () => {
                     const btnInside = link.querySelector("button, a, [onclick]") || link;
-                    if (btnInside.href && btnInside.href.startsWith("javascript:")) {
-                        try {
-                            const jsCode = decodeURIComponent(btnInside.href.replace(/^javascript:/i, ''));
-                            iframe.contentWindow.eval(jsCode);
-                        } catch (e) {
-                            // console.error("Failed to execute javascript: href for utility link", e);
-                            btnInside.click();
-                        }
-                    } else {
-                        btnInside.click();
-                        if (btnInside !== link) {
-                            try { link.click(); } catch (e) { }
-                        }
+                    try {
+                        const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win || window });
+                        btnInside.dispatchEvent(evt);
+                        if (btnInside !== link) link.dispatchEvent(evt);
+                    } catch (e) {
+                        try { btnInside.click(); } catch (err) { }
                     }
+                    try {
+                        if (win && win.$) {
+                            win.$(btnInside).trigger('click');
+                            if (btnInside !== link) win.$(link).trigger('click');
+                        }
+                    } catch (e) { }
+                    try {
+                        const onclickAttr = btnInside.getAttribute("onclick") || link.getAttribute("onclick");
+                        if (onclickAttr && win) {
+                            win.eval(onclickAttr);
+                        }
+                    } catch (e) { }
+                    try {
+                        const hrefAttr = (btnInside.href || link.href || "");
+                        if (hrefAttr && hrefAttr.startsWith("javascript:") && win) {
+                            const jsCode = decodeURIComponent(hrefAttr.replace(/^javascript:/i, ''));
+                            win.eval(jsCode);
+                        }
+                    } catch (e) { }
+                    try {
+                        const idLower = (link.id || btnInside.id || "").toLowerCase();
+                        const labelLower = (extractButtonLabel(link) || "").toLowerCase();
+
+                        if (win) {
+                            if (idLower === "runmode" || labelLower.includes("design") || idLower.includes("design")) {
+                                if (typeof win.goToRenderMode === "function") win.goToRenderMode();
+                            }
+                            if (idLower.includes("pdf") || labelLower.includes("pdf") || labelLower.includes("preview") || labelLower.includes("print")) {
+                                if (typeof win.PrintHTMLtoPDF === "function") win.PrintHTMLtoPDF();
+                            }
+                            if (idLower === "dvrefreshfromload" || labelLower.includes("refresh formload") || labelLower.includes("formload")) {
+                                if (typeof win.ResetFormLoadCache === "function") win.ResetFormLoadCache();
+                            }
+                        }
+                    } catch (e) { }
                 }
             };
         });
@@ -10036,23 +10041,21 @@
     }
 
     function getBottomToolbarButtons() {
-        const iframe = document.getElementById("middle1");
-        if (!iframe) return {};
-
-        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
-        const toolbar = doc.querySelector(".BottomToolbarBar");
+        const toolbar = doc.querySelector(".BottomToolbarBar, #icons, [id^='iconsNew'], .toolbarRightMenu, .toolbarIcons");
         if (!toolbar) return {};
 
         const buttons = Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn"));
         if (buttons.length === 0) return {};
 
         const result = {};
+        const structType = getStructType();
 
         buttons.forEach((btn) => {
             const dropDownItem = btn.closest(".dropDownButton__item, .dropDownButton__list");
-            if (dropDownItem) {
+            if (structType === "i" && dropDownItem) {
                 const val = dropDownItem.getAttribute("data-dropdown-value") || btn.getAttribute("data-dropdown-value");
                 if (val !== "chart" && val !== "saveAs") return;
             }
@@ -10066,17 +10069,55 @@
             if (id === "ivirActionButton") return;
 
             const label = extractButtonLabel(btn);
-            if (!label) // console.log("There is no label for Element: " + btn);
+            if (!label) return;
             if (label.toLowerCase() === "plugin custom code") return;
             if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
-
-
 
             result[id] = {
                 id,
                 label,
                 element: btn,
-                click: () => btn.click()
+                click: () => {
+                    try {
+                        const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win || window });
+                        btn.dispatchEvent(evt);
+                    } catch (e) {
+                        try { btn.click(); } catch (err) { }
+                    }
+                    try {
+                        if (win && win.$) {
+                            win.$(btn).trigger('click');
+                        }
+                    } catch (e) { }
+                    try {
+                        const onclickAttr = btn.getAttribute("onclick");
+                        if (onclickAttr && win) {
+                            win.eval(onclickAttr);
+                        }
+                    } catch (e) { }
+                    try {
+                        const hrefAttr = btn.getAttribute("href") || "";
+                        if (hrefAttr && hrefAttr.startsWith("javascript:") && win) {
+                            win.eval(decodeURIComponent(hrefAttr.replace(/^javascript:/i, '')));
+                        }
+                    } catch (e) { }
+                    try {
+                        const idLower = (btn.id || "").toLowerCase();
+                        const labelLower = (extractButtonLabel(btn) || "").toLowerCase();
+
+                        if (win) {
+                            if (idLower === "runmode" || labelLower.includes("design") || idLower.includes("design")) {
+                                if (typeof win.goToRenderMode === "function") win.goToRenderMode();
+                            }
+                            if (idLower.includes("pdf") || labelLower.includes("pdf") || labelLower.includes("preview") || labelLower.includes("print")) {
+                                if (typeof win.PrintHTMLtoPDF === "function") win.PrintHTMLtoPDF();
+                            }
+                            if (idLower === "dvrefreshfromload" || labelLower.includes("refresh formload") || labelLower.includes("formload")) {
+                                if (typeof win.ResetFormLoadCache === "function") win.ResetFormLoadCache();
+                            }
+                        }
+                    } catch (e) { }
+                }
             };
         });
 
@@ -10241,9 +10282,11 @@
         const result = {};
 
         buttons.forEach((btn) => {
+            const structType = getStructType();
             const dropDownItem = btn.closest(".dropDownButton__item, .dropDownButton__list");
-            if (dropDownItem) {
-                const val = dropDownItem.getAttribute("data-dropdown-value") || btn.getAttribute("data-dropdown-value");
+            const val = dropDownItem ? (dropDownItem.getAttribute("data-dropdown-value") || btn.getAttribute("data-dropdown-value")) : btn.getAttribute("data-dropdown-value");
+
+            if (structType === "i" && dropDownItem) {
                 if (val !== "chart" && val !== "saveAs") return;
             }
 
@@ -10271,11 +10314,46 @@
                         executeIViewAction(val, dropDownItem, btn);
                     } else {
                         try {
-                            const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win });
+                            const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win || window });
                             btn.dispatchEvent(evt);
+                            if (dropDownItem && dropDownItem !== btn) dropDownItem.dispatchEvent(evt);
                         } catch (e) {
                             try { btn.click(); } catch (err) { }
                         }
+                        try {
+                            if (win && win.$) {
+                                win.$(btn).trigger('click');
+                                if (dropDownItem && dropDownItem !== btn) win.$(dropDownItem).trigger('click');
+                            }
+                        } catch (e) { }
+                        try {
+                            const onclickAttr = btn.getAttribute("onclick");
+                            if (onclickAttr && win) {
+                                win.eval(onclickAttr);
+                            }
+                        } catch (e) { }
+                        try {
+                            const hrefAttr = btn.getAttribute("href") || "";
+                            if (hrefAttr && hrefAttr.startsWith("javascript:") && win) {
+                                win.eval(decodeURIComponent(hrefAttr.replace(/^javascript:/i, '')));
+                            }
+                        } catch (e) { }
+                        try {
+                            const idLower = (btn.id || "").toLowerCase();
+                            const labelLower = (extractButtonLabel(btn) || "").toLowerCase();
+
+                            if (win) {
+                                if (idLower === "runmode" || labelLower.includes("design") || idLower.includes("design")) {
+                                    if (typeof win.goToRenderMode === "function") win.goToRenderMode();
+                                }
+                                if (idLower.includes("pdf") || labelLower.includes("pdf") || labelLower.includes("preview") || labelLower.includes("print")) {
+                                    if (typeof win.PrintHTMLtoPDF === "function") win.PrintHTMLtoPDF();
+                                }
+                                if (idLower === "dvrefreshfromload" || labelLower.includes("refresh formload") || labelLower.includes("formload")) {
+                                    if (typeof win.ResetFormLoadCache === "function") win.ResetFormLoadCache();
+                                }
+                            }
+                        } catch (e) { }
                     }
                 }
             };
@@ -10319,99 +10397,91 @@
     }
 
     function getStructType() {
-        const iframe = document.getElementById("middle1");
-        if (!iframe) return null;
-
-        let iframeDoc = null;
+        const { doc: iframeDoc, win: iframeWin, iframe } = getIViewDocumentAndWindow();
+        
+        let src = iframe ? (iframe.getAttribute("src") || "") : "";
+        let docHref = "";
         try {
-            iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-        } catch (e) {
-            // console.warn("Axi: Blocked from accessing iframe content due to cross-origin restriction:", e);
-        }
+            docHref = iframeDoc?.location?.href || iframeWin?.location?.href || "";
+        } catch (e) { }
 
-        const src = iframe.getAttribute("src");
-        if (!src) return null;
+        const combinedUrl = (src + " " + docHref).toLowerCase();
 
-        if (isRunDisabledForPage(src)) {
+        if (isRunDisabledForPage(src) || isRunDisabledForPage(docHref)) {
             return "o";
         }
 
-        const page = src.split("?")[0].toLowerCase();
-
-        if (!page) {
-            return null;
-        }
+        const cardContainer = document.querySelector(".cardsPageWrapper");
+        const isCardContainerHidden = cardContainer ? cardContainer.classList.contains("d-none") : true;
 
         let bodyId = "";
         if (iframeDoc) {
             try {
                 bodyId = iframeDoc.body?.id || "";
-            } catch (e) {
-                // Ignore body ID access failure
-            }
+            } catch (e) { }
         }
 
-        const cardContainer = document.querySelector(".cardsPageWrapper");
-
-        const isCardContainerHidden = cardContainer ? cardContainer.classList.contains("d-none") : true;
-
-        if ((page.endsWith("/tstruct.aspx") || page.includes("tstruct.aspx")) && bodyId !== "Entitymanagement_Body" && isCardContainerHidden) {
-            return "t" // tstruct page
+        // Tstruct page
+        if ((combinedUrl.includes("tstruct.aspx") || combinedUrl.includes("transid=")) && bodyId !== "Entitymanagement_Body" && isCardContainerHidden) {
+            return "t";
         }
 
+        // IView page (iview.aspx, ivtoivload.aspx, ivname=, or live iview DOM markers)
+        const isIViewDom = !!(iframeDoc && (
+            iframeDoc.getElementById("IvirActions") ||
+            iframeDoc.getElementById("txtViewName") ||
+            iframeDoc.querySelector(".iviewTableWrapperNew, #chartActionLi, .dropDownButton__list, .iviewRefresh, #ivirMainChartWrapper, #dvRefresh")
+        ));
 
-
-        if ((page.endsWith("/iview.aspx") || page.includes("iview.aspx")) && isCardContainerHidden) {
-            return "i";  // IView page
+        if ((combinedUrl.includes("iview.aspx") || combinedUrl.includes("ivtoivload.aspx") || combinedUrl.includes("ivname=") || isIViewDom) && isCardContainerHidden) {
+            return "i";
         }
 
-
-
-        if ((page.endsWith("/entity.aspx") || page.includes("entity.aspx")) && bodyId === "Entitymanagement_Body" && isCardContainerHidden) {
-            return "e";  // Entity page
+        // Entity page
+        if (combinedUrl.includes("entity.aspx") && bodyId === "Entitymanagement_Body" && isCardContainerHidden) {
+            return "e";
         }
 
-
-
-        if ((page.endsWith("/entityform.aspx") || page.includes("entityform.aspx") || bodyId === "Entitymanagement_Body") && isCardContainerHidden) {
-            return "ef";  // Entity Data page
+        // Entity Form page
+        if ((combinedUrl.includes("entityform.aspx") || bodyId === "Entitymanagement_Body") && isCardContainerHidden) {
+            return "ef";
         }
 
-        if ((src.includes("/CustomPages") || src.includes("/axidev") || src.includes("/HTMLPages")) && isCardContainerHidden) {
-            return "c"; // Custom page
-
+        // Custom page
+        if ((combinedUrl.includes("/custompages") || combinedUrl.includes("/axidev") || combinedUrl.includes("/htmlpages")) && isCardContainerHidden) {
+            return "c";
         }
 
-        if (src.includes("../aspx/ImportAll.aspx") && isCardContainerHidden) {
-            return "im"; // Import page
-
+        // Import page
+        if (combinedUrl.includes("importall.aspx") && isCardContainerHidden) {
+            return "im";
         }
 
-        if (src.includes("../aspx/ExportNew.aspx") && isCardContainerHidden) {
-            return "ex"; // Export page
-
+        // Export page
+        if (combinedUrl.includes("exportnew.aspx") && isCardContainerHidden) {
+            return "ex";
         }
 
-
-
-        // ../aspx/processflow.aspx?activelist=t&hdnbElapsTime=0
-
-
-        if ((page.endsWith("/processflow.aspx") || page.includes("processflow.aspx")) && isCardContainerHidden) {
-            return "pf"; // Process flow page
+        // Process flow page
+        if (combinedUrl.includes("processflow.aspx") && isCardContainerHidden) {
+            return "pf";
         }
 
-        if (src.includes("/aspx/Configuration.aspx/LoadUserAppSettings") && isCardContainerHidden) {
-            return "s"; // Settings page
+        // Settings page
+        if (combinedUrl.includes("configuration.aspx") && isCardContainerHidden) {
+            return "s";
         }
 
-        if (page.endsWith("/axibot.html") || page.includes("/axibot.html")) {
-            return "b"; // Axibot page
+        // Axibot page
+        if (combinedUrl.includes("axibot.html")) {
+            return "b";
         }
 
+        if (isIViewDom && isCardContainerHidden) {
+            return "i";
+        }
 
-        return "o"; // Others 
-
+        return "o";
     }
 
     function extractButtonLabel(btn) {
@@ -10632,22 +10702,16 @@
 
 
     function getDesignModeToolbarButtons() {
-        const iframe = document.getElementById("middle1");
-
-        if (!iframe) return {};
-
-        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
-        const toolbar = doc.querySelector("#designModeToolbar");
+        const toolbar = doc.querySelector("#designModeToolbar, .designModeToolbar");
         if (!toolbar) return {};
 
         const buttons = toolbar.querySelectorAll("a, button");
         const result = {};
 
         buttons.forEach((btn, index) => {
-            // if (!hasAction(btn)) return;
-
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
             if (!id) return;
 
@@ -10659,7 +10723,25 @@
                 id,
                 label: label.toLowerCase(),
                 element: btn,
-                click: () => btn.click()
+                click: () => {
+                    try {
+                        const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win || window });
+                        btn.dispatchEvent(evt);
+                    } catch (e) {
+                        try { btn.click(); } catch (err) { }
+                    }
+                    try {
+                        if (win && win.$) {
+                            win.$(btn).trigger('click');
+                        }
+                    } catch (e) { }
+                    try {
+                        const onclickAttr = btn.getAttribute("onclick");
+                        if (onclickAttr && win) {
+                            win.eval(onclickAttr);
+                        }
+                    } catch (e) { }
+                }
             };
         });
 
