@@ -3641,6 +3641,18 @@
         if (targetIndex !== 1) return [goOption];
         let allButtons
 
+        const isCsqlistPage = () => {
+            try {
+                const { doc } = getIViewDocumentAndWindow();
+                if (doc && doc.location) {
+                    const url = doc.location.href.toLowerCase();
+                    if ((url.includes("iview.aspx") || url.includes("ivtoivload.aspx")) && url.includes("ivname=csqlist")) {
+                        return true;
+                    }
+                }
+            } catch (e) {}
+            return false;
+        };
 
         const partialTyped = cleanString(tokens[targetIndex]);
 
@@ -3728,6 +3740,12 @@
                 if (isEntity && isDelete) return false;
 
                 if (structType === "i") {
+                    if (isCsqlistPage()) {
+                        const isSearchBtn = btnDisplayLower.includes("search") || btnNameLower.includes("search");
+                        const isNewBtn = btnDisplayLower.includes("add new") || btnDisplayLower === "new" || btnNameLower.includes("new") || btnNameLower.includes("addnew") || btnDisplayLower.includes("create");
+                        if (!isSearchBtn && !isNewBtn) return false;
+                    }
+
                     if (btnDisplayLower.includes("chart view") || btnDisplayLower.includes("grid view") ||
                         btnNameLower.includes("chartview") || btnNameLower.includes("gridview")) {
                         return false;
@@ -9552,12 +9570,34 @@
         }
 
         if (allButtons && Array.isArray(allButtons)) {
+            const isCsqlistPage = () => {
+                try {
+                    const { doc } = getIViewDocumentAndWindow();
+                    if (doc && doc.location) {
+                        const url = doc.location.href.toLowerCase();
+                        if ((url.includes("iview.aspx") || url.includes("ivtoivload.aspx")) && url.includes("ivname=csqlist")) {
+                            return true;
+                        }
+                    }
+                } catch (e) {}
+                return false;
+            };
+
             const seenKeys = new Set();
             allButtons = allButtons.filter(btn => {
                 if (!btn) return false;
                 const key = (btn.id || "") + "_" + (btn.label || "").toLowerCase();
                 if (seenKeys.has(key)) return false;
                 seenKeys.add(key);
+
+                if (isCsqlistPage() && structType === "i") {
+                    const btnDisplayLower = (btn.label || "").toLowerCase().trim();
+                    const btnNameLower = (btn.id || "").toLowerCase();
+                    const isSearchBtn = btnDisplayLower.includes("search") || btnNameLower.includes("search");
+                    const isNewBtn = btnDisplayLower.includes("add new") || btnDisplayLower === "new" || btnNameLower.includes("new") || btnNameLower.includes("addnew") || btnDisplayLower.includes("create");
+                    if (!isSearchBtn && !isNewBtn) return false;
+                }
+
                 return true;
             });
         }
