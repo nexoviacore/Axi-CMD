@@ -9516,31 +9516,42 @@
             case "e":
             case "ef":
             case "c":
-                if (!entityToolbarButtons) entityToolbarButtons = getEntityToolbarButtons();
-                allButtons = [...Object.values(entityToolbarButtons)];
+                entityToolbarButtons = getEntityToolbarButtons();
+                utilityButtons = getIViewUtilityButtons();
+                topToolbarButtons = getTopToolbarButtons();
+                allButtons = [...Object.values(entityToolbarButtons), ...Object.values(utilityButtons), ...Object.values(topToolbarButtons)];
                 break;
 
             case "pf":
-                if (!pfToolbarButtons) pfToolbarButtons = getPFToolbarButtons();
-                if (!topToolbarButtons) topToolbarButtons = getTopToolbarButtons();
+                pfToolbarButtons = getPFToolbarButtons();
+                topToolbarButtons = getTopToolbarButtons();
                 allButtons = [...Object.values(pfToolbarButtons), ...Object.values(topToolbarButtons)];
                 break;
 
             case "s":
-                if (!settingsPageButtons) settingsPageButtons = getButtons(".Config-cont");
-                allButtons = [...Object.values(settingsPageButtons)]
+                settingsPageButtons = getButtons(".Config-cont");
+                allButtons = [...Object.values(settingsPageButtons)];
                 break;
 
             case "im":
             case "ex":
-                if (!importExportButtons) importExportButtons = getButtons(".card-footer");
+                importExportButtons = getButtons(".card-footer");
                 allButtons = [...Object.values(importExportButtons)];
                 break;
 
-
             default:
-                // console.error("Invalid StructType")
                 break;
+        }
+
+        if (allButtons && Array.isArray(allButtons)) {
+            const seenKeys = new Set();
+            allButtons = allButtons.filter(btn => {
+                if (!btn) return false;
+                const key = (btn.id || "") + "_" + (btn.label || "").toLowerCase();
+                if (seenKeys.has(key)) return false;
+                seenKeys.add(key);
+                return true;
+            });
         }
 
         // console.log("All Buttons: " + JSON.stringify(allButtons));
@@ -9863,48 +9874,7 @@
                 element: link,
                 click: () => {
                     const btnInside = link.querySelector("button, a, [onclick]") || link;
-                    try {
-                        const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win || window });
-                        btnInside.dispatchEvent(evt);
-                        if (btnInside !== link) link.dispatchEvent(evt);
-                    } catch (e) {
-                        try { btnInside.click(); } catch (err) { }
-                    }
-                    try {
-                        if (win && win.$) {
-                            win.$(btnInside).trigger('click');
-                            if (btnInside !== link) win.$(link).trigger('click');
-                        }
-                    } catch (e) { }
-                    try {
-                        const onclickAttr = btnInside.getAttribute("onclick") || link.getAttribute("onclick");
-                        if (onclickAttr && win) {
-                            win.eval(onclickAttr);
-                        }
-                    } catch (e) { }
-                    try {
-                        const hrefAttr = (btnInside.href || link.href || "");
-                        if (hrefAttr && hrefAttr.startsWith("javascript:") && win) {
-                            const jsCode = decodeURIComponent(hrefAttr.replace(/^javascript:/i, ''));
-                            win.eval(jsCode);
-                        }
-                    } catch (e) { }
-                    try {
-                        const idLower = (link.id || btnInside.id || "").toLowerCase();
-                        const labelLower = (extractButtonLabel(link) || "").toLowerCase();
-
-                        if (win) {
-                            if (idLower === "runmode" || labelLower.includes("design") || idLower.includes("design")) {
-                                if (typeof win.goToRenderMode === "function") win.goToRenderMode();
-                            }
-                            if (idLower.includes("pdf") || labelLower.includes("pdf") || labelLower.includes("preview") || labelLower.includes("print")) {
-                                if (typeof win.PrintHTMLtoPDF === "function") win.PrintHTMLtoPDF();
-                            }
-                            if (idLower === "dvrefreshfromload" || labelLower.includes("refresh formload") || labelLower.includes("formload")) {
-                                if (typeof win.ResetFormLoadCache === "function") win.ResetFormLoadCache();
-                            }
-                        }
-                    } catch (e) { }
+                    safeExecuteButtonClick(btnInside, win);
                 }
             };
         });
@@ -10077,47 +10047,7 @@
                 id,
                 label,
                 element: btn,
-                click: () => {
-                    try {
-                        const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win || window });
-                        btn.dispatchEvent(evt);
-                    } catch (e) {
-                        try { btn.click(); } catch (err) { }
-                    }
-                    try {
-                        if (win && win.$) {
-                            win.$(btn).trigger('click');
-                        }
-                    } catch (e) { }
-                    try {
-                        const onclickAttr = btn.getAttribute("onclick");
-                        if (onclickAttr && win) {
-                            win.eval(onclickAttr);
-                        }
-                    } catch (e) { }
-                    try {
-                        const hrefAttr = btn.getAttribute("href") || "";
-                        if (hrefAttr && hrefAttr.startsWith("javascript:") && win) {
-                            win.eval(decodeURIComponent(hrefAttr.replace(/^javascript:/i, '')));
-                        }
-                    } catch (e) { }
-                    try {
-                        const idLower = (btn.id || "").toLowerCase();
-                        const labelLower = (extractButtonLabel(btn) || "").toLowerCase();
-
-                        if (win) {
-                            if (idLower === "runmode" || labelLower.includes("design") || idLower.includes("design")) {
-                                if (typeof win.goToRenderMode === "function") win.goToRenderMode();
-                            }
-                            if (idLower.includes("pdf") || labelLower.includes("pdf") || labelLower.includes("preview") || labelLower.includes("print")) {
-                                if (typeof win.PrintHTMLtoPDF === "function") win.PrintHTMLtoPDF();
-                            }
-                            if (idLower === "dvrefreshfromload" || labelLower.includes("refresh formload") || labelLower.includes("formload")) {
-                                if (typeof win.ResetFormLoadCache === "function") win.ResetFormLoadCache();
-                            }
-                        }
-                    } catch (e) { }
-                }
+                click: () => safeExecuteButtonClick(btn, win)
             };
         });
 
@@ -10313,47 +10243,7 @@
                     if (val === "chart" || val === "saveAs") {
                         executeIViewAction(val, dropDownItem, btn);
                     } else {
-                        try {
-                            const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win || window });
-                            btn.dispatchEvent(evt);
-                            if (dropDownItem && dropDownItem !== btn) dropDownItem.dispatchEvent(evt);
-                        } catch (e) {
-                            try { btn.click(); } catch (err) { }
-                        }
-                        try {
-                            if (win && win.$) {
-                                win.$(btn).trigger('click');
-                                if (dropDownItem && dropDownItem !== btn) win.$(dropDownItem).trigger('click');
-                            }
-                        } catch (e) { }
-                        try {
-                            const onclickAttr = btn.getAttribute("onclick");
-                            if (onclickAttr && win) {
-                                win.eval(onclickAttr);
-                            }
-                        } catch (e) { }
-                        try {
-                            const hrefAttr = btn.getAttribute("href") || "";
-                            if (hrefAttr && hrefAttr.startsWith("javascript:") && win) {
-                                win.eval(decodeURIComponent(hrefAttr.replace(/^javascript:/i, '')));
-                            }
-                        } catch (e) { }
-                        try {
-                            const idLower = (btn.id || "").toLowerCase();
-                            const labelLower = (extractButtonLabel(btn) || "").toLowerCase();
-
-                            if (win) {
-                                if (idLower === "runmode" || labelLower.includes("design") || idLower.includes("design")) {
-                                    if (typeof win.goToRenderMode === "function") win.goToRenderMode();
-                                }
-                                if (idLower.includes("pdf") || labelLower.includes("pdf") || labelLower.includes("preview") || labelLower.includes("print")) {
-                                    if (typeof win.PrintHTMLtoPDF === "function") win.PrintHTMLtoPDF();
-                                }
-                                if (idLower === "dvrefreshfromload" || labelLower.includes("refresh formload") || labelLower.includes("formload")) {
-                                    if (typeof win.ResetFormLoadCache === "function") win.ResetFormLoadCache();
-                                }
-                            }
-                        } catch (e) { }
+                        safeExecuteButtonClick(btn, win);
                     }
                 }
             };
@@ -10542,19 +10432,60 @@
     }
 
 
+    function safeExecuteButtonClick(btn, win) {
+        if (!btn) return;
+        const targetWin = win || window;
+
+        // 1. Native .click() execution
+        try {
+            if (typeof btn.click === "function") {
+                btn.click();
+                return;
+            }
+        } catch (e) {}
+
+        // 2. MouseEvent fallback if .click() failed
+        try {
+            const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: targetWin });
+            btn.dispatchEvent(evt);
+            return;
+        } catch (e) {}
+
+        // 3. jQuery trigger fallback
+        if (targetWin && targetWin.$) {
+            try {
+                targetWin.$(btn).trigger('click');
+                return;
+            } catch (e) {}
+        }
+
+        // 4. Inline onclick fallback
+        try {
+            const onclickAttr = btn.getAttribute("onclick");
+            if (onclickAttr && targetWin) {
+                targetWin.eval(onclickAttr);
+                return;
+            }
+        } catch (e) {}
+
+        // 5. javascript: href fallback
+        try {
+            const hrefAttr = btn.getAttribute("href") || "";
+            if (hrefAttr && hrefAttr.startsWith("javascript:") && targetWin) {
+                targetWin.eval(decodeURIComponent(hrefAttr.replace(/^javascript:/i, '')));
+                return;
+            }
+        } catch (e) {}
+    }
 
     function getEntityToolbarButtons() {
-        const iframe = document.getElementById("middle1");
-
-        if (!iframe) return {};
-
-        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
-        const toolbar = doc.querySelector(".card-toolbar");
+        const toolbar = doc.querySelector(".card-toolbar, #icons, .toolbarRightMenu, .toolbar");
         const buttons = [];
         if (toolbar) {
-            buttons.push(...Array.from(toolbar.querySelectorAll("a, button")));
+            buttons.push(...Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit']")));
         }
 
         const filterBtn = doc.querySelector("#smartviewFilterToolbarBtn");
@@ -10567,15 +10498,9 @@
         const result = {};
 
         buttons.forEach((btn, index) => {
-            // if (!hasAction(btn)) return;
-
             if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.classList.contains("disabled") || btn.closest(".disabled") || btn.closest("[hidden]")) return;
-
-
             if (btn.getAttribute("data-kt-menu-attach") === "parent") return;
-
             if (btn.querySelector(".menu-title") && btn.hasAttribute("data-kt-menu-trigger")) return;
-
 
             const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
             if (!id) return;
@@ -10622,12 +10547,11 @@
                 id,
                 label: label.toLowerCase(),
                 element: btn,
-                click: () => btn.click()
+                click: () => safeExecuteButtonClick(btn, win)
             };
         });
 
         return result;
-
     }
 
     function getButtons(querySelector) {
