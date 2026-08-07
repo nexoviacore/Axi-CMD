@@ -9886,8 +9886,7 @@
             const isDropdownItem = link.closest(".menu-sub-dropdown, .dropdown-menu, ul.menu, li.menu-item") !== null;
 
             if (!isDropdownItem) {
-                if (link.offsetParent === null && link.parentElement?.offsetParent === null) return;
-                if (link.classList.contains("d-none") || link.parentElement?.classList.contains("d-none")) return;
+                if (link.classList.contains("d-none") || link.closest(".d-none") || link.closest("[hidden]")) return;
             }
 
             const title = link.getAttribute("title") ||
@@ -10062,10 +10061,14 @@
         const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
-        const toolbar = doc.querySelector(".BottomToolbarBar, #icons, [id^='iconsNew'], .toolbarRightMenu, .toolbarIcons");
-        if (!toolbar) return {};
-
-        const buttons = Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn"));
+        const toolbar = doc.querySelector(".BottomToolbarBar, .tstructMainBottomFooter, #icons, [id^='iconsNew'], .toolbarRightMenu, .toolbarIcons, .card-toolbar, .toolbar");
+        let buttons = [];
+        if (toolbar) {
+            buttons = Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn"));
+        }
+        if (buttons.length === 0) {
+            buttons = Array.from(doc.querySelectorAll(".BottomToolbarBar a, .BottomToolbarBar button, .tstructMainBottomFooter a, .tstructMainBottomFooter button, #icons a, #icons button, .card-toolbar a, .card-toolbar button, .toolbar a, .toolbar button, input[type='button'], input[type='submit']"));
+        }
         if (buttons.length === 0) return {};
 
         const result = {};
@@ -10079,10 +10082,9 @@
             }
 
             // Check if element or its parent is hidden
-            if (btn.offsetParent === null) return;
-            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[style*='display: none']")) return;
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[hidden]") || btn.closest("[style*='display: none']")) return;
 
-            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
+            const id = btn.id || (btn.getAttribute("data-id") && btn.getAttribute("data-id").trim()) || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
             if (!id) return;
             if (id === "ivirActionButton") return;
 
@@ -10232,8 +10234,13 @@
         }
         const srcLower = src.toLowerCase();
 
+        // Always allow tstruct pages with transid=sect
+        if (srcLower.includes("transid=sect")) {
+            return false;
+        }
+
         // 1. Dev Studio check
-        if (srcLower.includes("qadev") || srcLower.includes("adinfo=") || srcLower.includes("adinfo%3d") || srcLower.includes("axidev")) {
+        if (srcLower.includes("qadev.aspx") || srcLower.includes("adinfo=") || srcLower.includes("adinfo%3d") || srcLower.includes("/axidev/")) {
             return true;
         }
 
@@ -10251,9 +10258,9 @@
         const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
 
-        const toolbar = doc.querySelector(".toolbarRightMenu");
+        const toolbar = doc.querySelector(".toolbarRightMenu, .card-toolbar, #icons, .toolbar, .BottomToolbarBar, .tstructMainBottomFooter");
 
-        const toolbarButtons = toolbar ? Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn")) : [];
+        const toolbarButtons = toolbar ? Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn")) : Array.from(doc.querySelectorAll(".toolbarRightMenu a, .card-toolbar a, #icons a, .toolbar a, .BottomToolbarBar a, .tstructMainBottomFooter a"));
         const dropdownButtons = Array.from(doc.querySelectorAll(".menu-sub-dropdown a, .menu-sub-dropdown button, .menu-sub-dropdown .menu-link, .dropdown-menu a, .dropdown-menu button"));
 
         const buttons = [...toolbarButtons, ...dropdownButtons];
@@ -10270,11 +10277,10 @@
 
             const isDropdownItem = !!btn.closest(".menu-sub-dropdown, .menu-sub, .dropdown-menu");
 
-            // Check if element or its parent is hidden (exempt collapsed dropdown items from offsetParent === null check)
-            if (!isDropdownItem && btn.offsetParent === null) return;
-            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest(".hidden")) return;
+            // Check if element or its parent is hidden
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[hidden]") || btn.closest(".hidden")) return;
 
-            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
+            const id = btn.id || (btn.getAttribute("data-id") && btn.getAttribute("data-id").trim()) || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
             if (!id) return;
             if (id === "ivirActionButton") return;
 
@@ -10429,6 +10435,9 @@
 
         const dataExtra = btn.getAttribute("data-extra");
         if (dataExtra) return dataExtra.trim();
+
+        const hpText = btn.querySelector(".hpCustBtnsText");
+        if (hpText && hpText.textContent.trim()) return hpText.textContent.trim();
 
         const dropdownIconName = btn.querySelector(".dropdownIconName");
         if (dropdownIconName && dropdownIconName.textContent.trim()) {
