@@ -1044,34 +1044,6 @@
   height: 100% !important;
 }
 
-@media(max-width:768px) {
-
-  .axi-suggestions.axi-grid-layout li.axi-suggestion {
-    width: fit-content;
-    min-width: 120px;
-  }
-
-  #My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown {
-    width: 100% !important;
-    left: 0 !important;
-  }
-
-  .AXI-Sec {
-    width: calc(100vw - 0px);
-  }
-
-  #btnHistoryPrev,
-  .btn.btn-icon:has(span[data-bs-original-title="Next Page"]),
-  #History_pages {
-    display: none;
-  }
-
-  .Application_Parameter-Section {
-    display: none !important;
-  }
-
-}
-
 /* =========================================
    AXI FAVOURITES LOADERS
    ========================================= */
@@ -1316,3 +1288,162 @@
   color: #059669 !important;
   background: rgba(16, 185, 129, 0.1) !important;
 }
+
+
+
+/*Vj logo resize*/
+
+.Axpert_logo {
+	margin: 7px 5px 10px !important;
+}
+.Axpert_logo img {
+	max-height: 30px !important;
+}
+#mobileAxAppLogo img.mh-40px {
+	max-height: 25px !important;
+	position: relative !important;
+	top: 0 !important;
+}
+
+.welcome-card {
+	background-image: url(https://admin.pixelstrap.net/crocs/assets/images/dashboard/bg.png);
+}
+.HomePageMenuOptionCards .row.d-flex {
+	gap: 10px !important;
+}
+.dasboard-cards .HomePageMenuOptionCards .Home-cards-list {
+	width: 31% !important;
+	margin-bottom: 0 !important;
+}
+.DashSliser-img {
+	width: 250px !important;
+	right: -6px !important;
+	transform: scaleX(-1);
+}
+.dasboard-cards .card .card-body:has(.HomePageMenuOptionCards) {
+	padding-top: 10px !important;
+}
+
+
+.menu-card-icon .img-fluid.w-60px.cardsIcons {
+	display: none;
+}
+.avatar {
+	width: 32px;
+	height: 32px;
+	background: #384698;
+	color: #fff;
+	border-radius: 50px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.menu-card-icon.Hp-card-icon {
+	display: flex;
+	justify-content: center;
+}
+
+  --axi-cmd-color-create: #16a34a;
+  --axi-cmd-color-edit: #dc2626;
+  --axi-cmd-color-view: #ea580c;
+  --axi-cmd-color-configure: #7c3aed;
+  --axi-cmd-color-sdk: #c026d3;
+  --axi-cmd-color-upload: #854d0e;
+  --axi-cmd-color-download: #4338ca;
+  --axi-cmd-color-run: #0d9488;
+  --axi-cmd-color-analyse: #65a30d;
+  --axi-cmd-color-ai: #059669;
+  --axi-cmd-color-connect: #6b21a8;
+  --axi-cmd-color-ask: #d97706;
+  --axi-cmd-color-end: #e11d48;
+  --axi-cmd-color-editprompt: #db2777;
+  --axi-cmd-color-help: #2563eb;
+  --axi-cmd-color-version: #0284c7;
+  --axi-cmd-color-default: #475569;
+}
+
+
+.HomePageMenuOptionCards .Home-cards-list:nth-child(12n+1) .avatar{
+  background: #16a34a !important; 
+/*  color: #b11414;*/
+}
+
+.HomePageMenuOptionCards .Home-cards-list:nth-child(12n+2) .avatar {
+  background: #dc2626 !important; 
+/*  color: #3c39ab;*/
+}
+.HomePageMenuOptionCards .Home-cards-list:nth-child(12n+3) .avatar{
+  background: #ea580c !important; 
+/*  color: #801488 !important;*/
+}
+.HomePageMenuOptionCards .Home-cards-list:nth-child(12n+4) .avatar{
+      background: #c026d3; 
+/*      color: #8e6416 !important;*/
+}
+.HomePageMenuOptionCards .Home-cards-list:nth-child(12n+5) .avatar{
+  background: #854d0e; 
+/*  color: green !important;*/
+}
+.HomePageMenuOptionCards .Home-cards-list:nth-child(12n+6) .avatar{
+  background: #4338ca; 
+/*  color: #800080 !important;*/
+}
+.HomePageMenuOptionCards .Home-cards-list:nth-child(12n+7) .avatar{
+  background: #0d9488; 
+/*  color: #ae390e !important;*/
+}
+.HomePageMenuOptionCards .Home-cards-list:nth-child(12n+8) .avatar{
+  background: #6b21a8; 
+/*  color: #4f6f0d !important;*/
+}
+.HomePageMenuOptionCards .Home-cards-list:nth-child(12n+9) .avatar{
+  background: #d97706; 
+/*  color: #128175 !important;*/
+}
+.HomePageMenuOptionCards .Home-cards-list:nth-child(12n+10) .avatar{
+  background: #e11d48; 
+/*  color: #364b11;*/
+}
+
+.HomePageMenuOptionCards .Home-cards-list:nth-child(12n+11) .avatar{
+  background: #db2777; 
+/*  color: #b21111 !important;*/
+}
+.HomePageMenuOptionCards .Home-cards-list:nth-child(12n+12) .avatar{
+  background: #2563eb; 
+/*  color: #294969 !important;*/
+}
+.HomePageMenuOptionCards .Home-cards-list .avatar{
+    color: #fff !important;
+}
+
+
+
+ @media(max-width:768px) {
+
+.axi-suggestions.axi-grid-layout li.axi-suggestion {
+	width: fit-content;
+	min-width: 120px;
+}
+#My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown {
+	width: 100% !important;
+	left: 0 !important;
+}
+.AXI-Sec {
+	width: calc(100vw - 0px);
+}
+#btnHistoryPrev,.btn.btn-icon:has(span[data-bs-original-title="Next Page"]),
+        #History_pages,#My_Fav_Bookmarks,#btnRefresh{
+  display: none;
+}
+     .Application_Parameter-Section {
+	display: none !important;
+}
+     .content:has(#New-Landing-layout) {
+	background: #f1f4f9 !important;
+	height: calc(100vh - 105px) !important;
+	 max-height: calc(100vh - 105px) !important; 
+}
+
+}
+
