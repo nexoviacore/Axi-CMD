@@ -1244,6 +1244,7 @@
 
         const rawParamName = cleanCommandToken(tokens[2]);
 
+        // let targetUrl = `../aspx/iview.aspx?ivname=${transId}`;
         let targetUrl = `../aspx/ivtoivload.aspx?ivname=${transId}`;
 
 
