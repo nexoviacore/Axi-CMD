@@ -197,12 +197,6 @@ INSERT INTO axi_command_prompts
 VALUES('8fbbe05b-af25-4be7-b97c-de71825267f6'::uuid, 8, 2, 'field name', 'Axi_SetFieldList', NULL, NULL, NULL, ':transid', NULL)
 >>
 
-
-INSERT INTO axi_command_prompts
-(id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('8fbbe05b-af25-4be7-b97c-de71825267f7'::uuid, 10, 2, 'entity name', 'axi_structmetalist', NULL, NULL, NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
->>
-
 <<
 CREATE TABLE IF NOT EXISTS axi_command_config (
 	config_id varchar(50) NOT NULL,
