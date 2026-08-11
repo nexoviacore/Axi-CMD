@@ -10,3 +10,4 @@
 - **IView Builder**: Developer Studio builder interface for interactive report views (`ivreact`).
 - **Page Designer Form**: Configuration interface for system pages (`tstruct.aspx?transid=sect`).
 - **ADS Builder Form**: Axpert Data Source SQL configuration interface (`tstruct.aspx?transid=b_sql`).
+- **Dynamic Command Configuration**: Database-driven handler and navigation metadata table (`axi_command_config`) that maps command verbs (e.g. `configure`, `sdk`, `upload`, `download`) and prompt options to structure IDs, target URLs, and parameter fields, eliminating hardcoded client-side routing.

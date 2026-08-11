@@ -163,5 +163,218 @@ INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PR
 
 
 INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('494F14790B6B406BB2E0D227907BB724', 10, 2, 'entity name', 'axi_structmetalist', NULL, NULL, NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
+>>
+
+<<
+CREATE TABLE AXI_COMMAND_CONFIG 
+   (	"CONFIG_ID" VARCHAR2(50) NOT NULL ENABLE, 
+	"COMMAND" VARCHAR2(50) NOT NULL ENABLE, 
+	"PROMPT_OPTIONS" VARCHAR2(200) NOT NULL ENABLE, 
+	"PROMPT_ID" VARCHAR2(50) NOT NULL ENABLE, 
+	"PROMPT_OPTION_TYPE" VARCHAR2(20) NOT NULL ENABLE, 
+	"PARAM_FIELD" VARCHAR2(100), 
+	"TARGET_URL" VARCHAR2(500), 
+	"EXTRA_PARAMS" VARCHAR2(500), 
+	"ACTIVE" VARCHAR2(1) DEFAULT 'T', 
+	 CONSTRAINT "PK_AXI_COMMAND_CONFIG" PRIMARY KEY ("CONFIG_ID"))
+>>
+
+<<
+CREATE INDEX "IDX_AXI_CMD_CONFIG_CMD" ON AXI_COMMAND_CONFIG ("COMMAND")
+>>
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_users', 'Configure', 'user listing', 'axusers', 'iview', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_user', 'Configure', 'user', 'axusr', 'tstruct', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_roles', 'Configure', 'role listing', 'ad___url', 'iview', NULL, '../aspx/iview.aspx?ivname=ad___url', NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_role', 'Configure', 'role', 'ad_ur', 'tstruct', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_responsibilities', 'Configure', 'responsibility listing', 'response', 'iview', NULL, '../aspx/iview.aspx?ivname=response', NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_responsibility', 'Configure', 'responsibility', 'axrol', 'url', 'name', '../aspx/AddEditResponsibility.aspx', NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_actor_listing', 'Configure', 'actor listing', 'ad__act', 'iview', NULL, '../aspx/iview.aspx?ivname=ad__act', NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_actor', 'Configure', 'actor', 'ad_am', 'tstruct', 'actorname', NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_dimension_listing', 'Configure', 'dimension listing', 'ad___upg', 'ivtoivload', 'prole', '../aspx/ivtoivload.aspx?ivname=ad___upg', 'AxOpenAct=true&isDupTab=false', 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_dimension', 'Configure', 'dimension', 'a_pgm', 'tstruct', 'grpname', NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_smartview_listing', 'Configure', 'smart view listing', 'a___smtl', 'ivtoivload', 'prole', '../aspx/ivtoivload.aspx?ivname=a___smtl', 'AxOpenAct=true&isDupTab=false', 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_smartview_attrs', 'Configure', 'smart view attributes', 'a__sl', 'tstruct', 'adsname', NULL, 'act=load&dummyload=false', 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_user_group', 'Configure', 'user group', 'a__ug', 'tstruct', 'users_group_name', NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_user_activation', 'Configure', 'user activation', 'axurg', 'tstruct', 'pusername', NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_user_permissions', 'Configure', 'user permissions', 'ad___upm', 'ivtoivload', 'pusername', '../aspx/ivtoivload.aspx?ivname=ad___upm', 'AxOpenAct=true&isDupTab=false', 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_user_perm_setup', 'Configure', 'user permission setup', 'a__up', 'tstruct', 'axusername', NULL, 'fromsource=U&openerIV=a__up&isIV=true&isDupTab=false&dummyload=false?', 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_role_permissions', 'Configure', 'role permissions', 'ad___ups', 'ivtoivload', 'prole', '../aspx/ivtoivload.aspx?ivname=ad___ups', 'AxOpenAct=true&isDupTab=false', 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_publish_api', 'Configure', 'publish axpert api', 'ad_pa', 'tstruct', 'publickey', NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_publish_listing', 'Configure', 'publish config studio', 'ad_pbcs', 'iview', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_card', 'Configure', 'card', 'a__cd', 'tstruct', 'cardname', NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_peg', 'Configure', 'peg', 'ad_pg', 'tstruct', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_rule', 'Configure', 'rule', 'axrul', 'tstruct', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_form_notif', 'Configure', 'form notification', 'axnot', 'tstruct', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_peg_form_notif', 'Configure', 'peg form notification', 'axpnt', 'tstruct', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_sched_notif', 'Configure', 'scheduled notification', 'ax_sn', 'tstruct', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_keyfield', 'Configure', 'keyfield', 'ad_kf', 'tstruct', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_app_props', 'Configure', 'application properties', 'ad_pm', 'tstruct', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_settings', 'Configure', 'settings', 'configuration.aspx', 'url', NULL, '../aspx/configuration.aspx', NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_ads', 'SDK', 'axpert data sources', 'b_sql', 'tstruct', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_page', 'SDK', 'page', 'sect', 'tstruct', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_app_var', 'SDK', 'app variables', 'axpvr', 'tstruct', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_dev_option', 'SDK', 'dev option', 'qadev.aspx', 'url', NULL, '../aspx/qadev.aspx', NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_db_explorer', 'SDK', 'db explorer', 'htmlpages/dbconsole.html', 'url', NULL, '../htmlpages/dbconsole.html', NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_arrange_menu', 'SDK', 'arrange menu', 'ax_am', 'tstruct', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_api_plugin', 'SDK', 'api plugin', 'axapi', 'tstruct', 'apiname', NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_job', 'SDK', 'axpert job', 'job_s', 'tstruct', 'jobid', NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_language', 'SDK', 'language', 'ad_lg', 'tstruct', 'language', NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_publish', 'SDK', 'publish', 'axpubls', 'iview', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_custom_data_type', 'SDK', 'custom data type', 'ctype', 'tstruct', 'typename', NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_email_def', 'SDK', 'email definition', 'axeml', 'tstruct', 'emaildefname', NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_table_desc', 'SDK', 'table field descriptor', 'a__td', 'tstruct', 'dname', NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_memdb_console', 'SDK', 'mem db console', 'inmemdb', 'iview', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_custom_plugin', 'SDK', 'custom plugin', 'PluginCustomCode.aspx', 'url', NULL, '../aspx/PluginCustomCode.aspx', NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_queue_listing', 'SDK', 'queue listing', 'ad__qls', 'iview', NULL, NULL, NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_outbound_queue', 'SDK', 'out bound queue', 'a__qm', 'tstruct', 'axqueuename', NULL, 'AxPop=true', 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_inbound_queue', 'SDK', 'in bound queue', 'a__iq', 'tstruct', 'axqueuename', NULL, 'AxPop=true', 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_upload_default', 'Upload', 'default', 'importall.aspx', 'url', NULL, '../aspx/importall.aspx', NULL, 'T')
+>>
+
+<<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_download_default', 'Download', 'default', 'exportnew.aspx', 'url', NULL, '../aspx/exportnew.aspx', NULL, 'T')
+>>
+
 
 

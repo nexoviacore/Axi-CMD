@@ -197,81 +197,62 @@
             default: handleSourceCommand,
         },
         Configure: {
-            peg: handleConfigurePeg,
-
-            //api: handleConfigureApi,
-
-            "application properties": handleConfigureProperties,
-            //job: handleConfigureJob,
-            rule: handleConfigureRule,
-            //server: handleConfigureServer,
-            "form notification": handleConfigureFormNotification,
-            "peg form notification": handleCofigurePegFormNotification,
-            //permission: handleConfigurePermissions,
-            //access: handleConfigureAccess,
-            "scheduled notification": handleConfigureScheduledNotification,
-            keyfield: handleKeyfield,
-            // "news and announcement": handleConfigureNewsAndAnnouncement,
-            settings: handleConfigureSettings,
-
-            "user listing": handleConfigureUsers,
-            user: handleConfigureUser,
-            "role listing": handleConfigureRoles,
-            role: handleConfigureRole,
-            "publish axpert api": handleConfigurePublishAxpertApi,
-            //"publish api listing": handleApiList,
-            "publish config studio": handleConfigurePublishListing,
-            card: handleConfigureCards,
-            //forms: handleForms,
-            responsibility: handleConfigureResponsibility,
-            "responsibility listing": handleConfigureResponsibilities,
-            "user group": handleConfigureUserGroup,
-            dimension: handleConfigureDimensions,
-            "dimension listing": handleConfigureDimensionListing,
-            "actor listing": handleConfigureActorListing,
-            actor: handleConfigureActor,
-            // useractivation: handleUserActivation,
-            "user activation": handleConfigureUserActivation,
-            "user permissions": handleConfigureUserPermissionListing,
-            "user permission setup": handleConfigureUserPermission,
-            "role permissions": handleConfigureRolePermissionListing,
-            //"role permission": handleRolePermission
-            "smart view attributes": handleConfigureSmartViewAttributes,
-            "smart view listing": handleConfigureSmartViewListing
-
+            peg: handleDynamicCommand,
+            "application properties": handleDynamicCommand,
+            rule: handleDynamicCommand,
+            "form notification": handleDynamicCommand,
+            "peg form notification": handleDynamicCommand,
+            "scheduled notification": handleDynamicCommand,
+            keyfield: handleDynamicCommand,
+            settings: handleDynamicCommand,
+            "user listing": handleDynamicCommand,
+            user: handleDynamicCommand,
+            "role listing": handleDynamicCommand,
+            role: handleDynamicCommand,
+            "publish axpert api": handleDynamicCommand,
+            "publish config studio": handleDynamicCommand,
+            card: handleDynamicCommand,
+            responsibility: handleDynamicCommand,
+            "responsibility listing": handleDynamicCommand,
+            "user group": handleDynamicCommand,
+            dimension: handleDynamicCommand,
+            "dimension listing": handleDynamicCommand,
+            "actor listing": handleDynamicCommand,
+            actor: handleDynamicCommand,
+            "user activation": handleDynamicCommand,
+            "user permissions": handleDynamicCommand,
+            "user permission setup": handleDynamicCommand,
+            "role permissions": handleDynamicCommand,
+            "smart view attributes": handleDynamicCommand,
+            "smart view listing": handleDynamicCommand,
+            default: handleDynamicCommand
         },
-        //Open: {
         SDK: {
             default: handleOpenSource,
-            "axpert data sources": handleOpenAds,
-            //card: handleOpenCard,
-            page: handleOpenPage,
-            "app variables": handleOpenAppVar,
-            "dev option": handleOpenDevOptions,
-            "db explorer": handleOpenDbConsole,
-            "arrange menu": handleOpenArrangeMenu,
-
-            "api plugin": handleOpenApi,
-            "axpert job": handleOpenJob,
-            language: handleOpenLanguage,
-            publish: handleOpenPublish,
-            "custom data type": handleOpenCustomDataType,
-            "email definition": handleOpenEmailDef,
-            "table field descriptor": handleOpenTableFieldDescriptor,
-            "mem db console": handleOpenMemDBConsole,
-            "custom plugin": handleOpenCustomPlugin,
-            "queue listing": handleQueueListing,
-            //"outbound queue mapping":handleOpenOutBoundQueueM,
-            "out bound queue": handleOpenOutBoundQueue,
-            "in bound queue": handleOpenInboundBoundQueue
-
-
+            "axpert data sources": handleDynamicCommand,
+            page: handleDynamicCommand,
+            "app variables": handleDynamicCommand,
+            "dev option": handleDynamicCommand,
+            "db explorer": handleDynamicCommand,
+            "arrange menu": handleDynamicCommand,
+            "api plugin": handleDynamicCommand,
+            "axpert job": handleDynamicCommand,
+            language: handleDynamicCommand,
+            publish: handleDynamicCommand,
+            "custom data type": handleDynamicCommand,
+            "email definition": handleDynamicCommand,
+            "table field descriptor": handleDynamicCommand,
+            "mem db console": handleDynamicCommand,
+            "custom plugin": handleDynamicCommand,
+            "queue listing": handleDynamicCommand,
+            "out bound queue": handleDynamicCommand,
+            "in bound queue": handleDynamicCommand
         },
         Upload: {
-            default: handleUpload
+            default: handleDynamicCommand
         },
         Download: {
-            default: handleDownload
+            default: handleDynamicCommand
         },       
         Run: {
             default: handleRunCommand,
@@ -345,6 +326,9 @@
     let adsfieldvalueanddt = {};
     let createfieldnamevaluesList = {};
     let AxiArmUrl;
+    let axiCommandConfigUrl;
+    let axiCommandConfigList = [];
+    let axiCommandConfigMap = {};
     let isConfigLoaded = false;
     let mode = "";
     let isCommandsLoading = false;
@@ -451,13 +435,14 @@
             }
         }
 
-        // // console.log("AxiArmUrl = " + AxiArmUrl);
         apiMetadataUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/axi_get`;
         // // console.log("ApiMetadataUrl = " + apiMetadataUrl);
 
         axiFavoritesUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/user-favourites`;
         // axiFavoritesUrl = `http://localhost:5057/api/v1/Axi/user-favourites`; 
         // // console.log("AxiFavoritesUrl = " + axiFavoritesUrl);
+
+        axiCommandConfigUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/command-config`;
 
 
         input = document.getElementById("Axi-Searchinp");
@@ -633,6 +618,8 @@
             isCommandsLoading = true;
             input.disabled = false;
             input.placeholder = "Axpert AI";
+
+            await initCommandConfigs(isForced, appname);
 
             const cached = localStorage.getItem("axi_commands_raw_v1");
             let commandsFromDb = null;
@@ -942,58 +929,197 @@
     //    }
     //}
 
+    async function initCommandConfigs(isForced = false, appname) {
+        if (!axiCommandConfigUrl || !appname) return;
+        try {
+            const cached = localStorage.getItem("axi_command_config_v1");
+            let configs = null;
+            if (cached && !isForced) {
+                try {
+                    configs = JSON.parse(cached);
+                } catch (e) {}
+            }
+            if (!configs) {
+                const res = await fetch(`${axiCommandConfigUrl}?appname=${encodeURIComponent(appname)}&forceRefresh=${isForced}`);
+                if (res.ok) {
+                    configs = await res.json();
+                    if (configs && Array.isArray(configs)) {
+                        localStorage.setItem("axi_command_config_v1", JSON.stringify(configs));
+                    }
+                }
+            }
+            if (configs && Array.isArray(configs)) {
+                axiCommandConfigList = configs;
+                window.axiCommandConfigStore = configs;
+                axiCommandConfigMap = {};
+                configs.forEach(row => {
+                    const activeVal = (row.active || row.Active || "").toString().toUpperCase();
+                    if (activeVal === "T" || activeVal === "TRUE") {
+                        const cmd = (row.command || row.Command || "").trim().toLowerCase();
+                        const opt = (row.promptOptions || row.prompt_options || row.PromptOptions || "").trim().toLowerCase();
+                        const key = `${cmd}:${opt}`;
+                        axiCommandConfigMap[key] = row;
+                    }
+                });
+            }
+        } catch (err) {
+            // console.warn("Failed to load axi_command_config:", err);
+        }
+    }
+
+    function getCommandConfigRow(command, promptOption) {
+        if (!command || !promptOption) return null;
+        const cmdKey = command.trim().toLowerCase();
+        const optKey = promptOption.trim().toLowerCase();
+        const fullKey = `${cmdKey}:${optKey}`;
+        if (axiCommandConfigMap[fullKey]) {
+            return axiCommandConfigMap[fullKey];
+        }
+        return axiCommandConfigList.find(r => {
+            const rCmd = (r.command || r.Command || "").trim().toLowerCase();
+            const rOpt = (r.promptOptions || r.prompt_options || r.PromptOptions || "").trim().toLowerCase();
+            const rActive = (r.active || r.Active || "").toString().toUpperCase();
+            return rCmd === cmdKey && rOpt === optKey && (rActive === "T" || rActive === "TRUE");
+        }) || null;
+    }
+
+    function executeDynamicNavigation({ tokens, commandConfig, configRow }) {
+        if (!configRow) return false;
+
+        const optType = (configRow.promptOptionType || configRow.prompt_option_type || configRow.PromptOptionType || "").toLowerCase();
+        const promptId = configRow.promptId || configRow.prompt_id || configRow.PromptId || "";
+        const paramField = configRow.paramField || configRow.param_field || configRow.ParamField || "";
+        const rawTargetUrl = configRow.targetUrl || configRow.target_url || configRow.TargetUrl || "";
+        const extraParams = configRow.extraParams || configRow.extra_params || configRow.ExtraParams || "";
+
+        const caption = tokens.length > 1 ? cleanCommandToken(tokens[1]) : "";
+        let rawParamName = "";
+        let paramValue = "";
+
+        if (tokens.length > 2) {
+            rawParamName = cleanCommandToken(tokens[2]);
+            const resolved = tryResolveToken(2, rawParamName, commandConfig, false);
+            paramValue = resolved?.value ?? rawParamName;
+        }
+
+        setEditSessionState(promptId);
+
+        if (optType === "tstruct") {
+            if (paramValue && paramField) {
+                redirectToTstruct(promptId, caption, true, paramField, paramValue);
+            } else {
+                redirectToTstruct(promptId, caption);
+            }
+            return true;
+        }
+
+        if (optType === "iview") {
+            redirectToIView(promptId, caption);
+            return true;
+        }
+
+        if (optType === "ivtoivload") {
+            let url = rawTargetUrl || `../aspx/ivtoivload.aspx?ivname=${promptId}`;
+            if (!url.includes("?")) {
+                url += `?ivname=${promptId}`;
+            }
+            if (rawParamName && paramField && !url.includes(`${paramField}=`)) {
+                url += `&${paramField}=${encodeURIComponent(rawParamName)}`;
+            }
+            if (extraParams) {
+                const separator = url.includes("?") ? "&" : "?";
+                url += `${separator}${extraParams}`;
+            }
+            if (popUpOption) {
+                url += `&tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                openPopOption(url);
+            } else {
+                setCommandRoutes(input.value.trim(), url);
+                window.LoadIframe(url);
+            }
+            return true;
+        }
+
+        if (optType === "url") {
+            let url = rawTargetUrl || (promptId.startsWith("http") || promptId.startsWith("../") ? promptId : `../aspx/${promptId}`);
+            if (paramValue && paramField) {
+                const separator = url.includes("?") ? "&" : "?";
+                url += `${separator}status=true&action=edit&${paramField}=${encodeURIComponent(paramValue)}`;
+            } else if (url.includes("AddEditResponsibility.aspx")) {
+                const separator = url.includes("?") ? "&" : "?";
+                url += `${separator}action=add`;
+            }
+            if (extraParams) {
+                const separator = url.includes("?") ? "&" : "?";
+                url += `${separator}${extraParams}`;
+            }
+            if (popUpOption) {
+                url += `&tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                openPopOption(url);
+            } else {
+                setCommandRoutes(input.value.trim(), url);
+                window.LoadIframe(url);
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    function handleDynamicCommand({ tokens, commandConfig }) {
+        const group = cleanString(tokens[0]);
+        const option = tokens.length > 1 ? cleanString(tokens[1]) : "default";
+        const configRow = getCommandConfigRow(group, option) || getCommandConfigRow(group, "default");
+        if (configRow) {
+            executeDynamicNavigation({ tokens, commandConfig, configRow });
+        } else {
+            showToast(`Configuration not found for '${group}' -> '${option}'`);
+        }
+    }
+
     //******************** Configure Newer introduced commands(31032026)********************//
     //********************Starts here*******************************************************//
     function handleConfigureUsers({ tokens, commandConfig }) {
-
+        const configRow = getCommandConfigRow("Configure", "user listing");
+        if (configRow && executeDynamicNavigation({ tokens, commandConfig, configRow })) {
+            return;
+        }
         let transId = "axusers";
-        //let fieldname = "servername";
-
-        const rawParamName = cleanCommandToken(tokens[2]);
-
-
         setEditSessionState(transId);
-
         redirectToIView(transId, cleanCommandToken(tokens[1]));
-        //redirectToTstruct(transId, "", true, fieldname, rawParamName);
     }
     function handleConfigureUser({ tokens, commandConfig }) {
-
+        const configRow = getCommandConfigRow("Configure", "user");
+        if (configRow && executeDynamicNavigation({ tokens, commandConfig, configRow })) {
+            return;
+        }
         let transId = "axusr";
-        //let fieldname = "servername";
-
-        //const rawParamName = cleanCommandToken(tokens[2]);
-
-
         setEditSessionState(transId);
         redirectToTstruct(transId, cleanCommandToken(tokens[1]));
     }
     function handleConfigureRoles({ tokens, commandConfig }) {
-
+        const configRow = getCommandConfigRow("Configure", "role listing");
+        if (configRow && executeDynamicNavigation({ tokens, commandConfig, configRow })) {
+            return;
+        }
         let transId = "ad___url";
-
-        //let fieldname = "servername";
-
-        //const rawParamName = cleanCommandToken(tokens[2]);
-
-
         setEditSessionState(transId);
         redirectToIView(transId, cleanCommandToken(tokens[1]));
-        //redirectToTstruct(transId, "", true, fieldname, rawParamName);
     }
     function handleConfigureRole({ tokens, commandConfig }) {
-
+        const configRow = getCommandConfigRow("Configure", "role");
+        if (configRow && executeDynamicNavigation({ tokens, commandConfig, configRow })) {
+            return;
+        }
         let transId = "ad_ur";
-        //let fieldname = "servername";
-
-        //const rawParamName = cleanCommandToken(tokens[2]);
-
-
         setEditSessionState(transId);
         redirectToTstruct(transId, cleanCommandToken(tokens[1]));
     }
     function handleConfigurePublishAxpertApi({ tokens, commandConfig }) {
-
+        const configRow = getCommandConfigRow("Configure", "publish axpert api");
+        if (configRow && executeDynamicNavigation({ tokens, commandConfig, configRow })) {
+            return;
+        }
         let transId = "ad_pa";
         let fieldname = "publickey";
         let actualParamvalue;
@@ -1002,7 +1128,6 @@
         setEditSessionState(transId);
         if (tokens.length > 2) {
             rawParamName = cleanCommandToken(tokens[2]);
-            // actualParamvalue = tryResolveToken(2, rawParamName, commandConfig, false);
             const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
             actualParamvalue = value;
             redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, actualParamvalue);
@@ -1011,38 +1136,31 @@
             redirectToTstruct(transId, cleanCommandToken(tokens[1]));
     }
     function handleConfigureApiList({ tokens, commandConfig }) {
-
+        const configRow = getCommandConfigRow("Configure", "api list");
+        if (configRow && executeDynamicNavigation({ tokens, commandConfig, configRow })) {
+            return;
+        }
         let transId = "ad__papi";
-        //let fieldname = "servername";
-
-        //const rawParamName = cleanCommandToken(tokens[2]);
-
-
         setEditSessionState(transId);
         redirectToIView(transId, "");
     }
     function handleConfigurePublishListing({ tokens, commandConfig }) {
-
+        const configRow = getCommandConfigRow("Configure", "publish config studio");
+        if (configRow && executeDynamicNavigation({ tokens, commandConfig, configRow })) {
+            return;
+        }
         let transId = "ad_pbcs";
 
         if (tokens.length > 2) {
             let transId = "axpub";
             let fieldname = "servername";
-
             const rawParamName = cleanCommandToken(tokens[2]);
-
-
             setEditSessionState(transId);
             redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, rawParamName);
-
-
         } else {
             setEditSessionState(transId);
             redirectToIView(transId, cleanCommandToken(tokens[1]));
         }
-
-
-
     }
     function handleConfigureCards({ tokens, commandConfig }) {
 
@@ -7501,6 +7619,16 @@
             if (firstParamValue) {
                 handlerKey = firstParamValue?.toLowerCase();
             }
+        }
+
+        const dynamicRow = getCommandConfigRow(group, handlerKey) || (handlerKey !== 'default' ? getCommandConfigRow(group, firstParamValue) : null) || getCommandConfigRow(group, 'default');
+        if (dynamicRow) {
+            executeDynamicNavigation({
+                tokens: tokens,
+                commandConfig: config,
+                configRow: dynamicRow
+            });
+            return;
         }
 
         // Locate the handler function in the mapping
