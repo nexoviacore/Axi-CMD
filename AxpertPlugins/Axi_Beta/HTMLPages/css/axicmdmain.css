@@ -29,6 +29,7 @@
   --axi-cmd-color-help: #2563eb;
   --axi-cmd-color-version: #0284c7;
   --axi-cmd-color-default: #475569;
+  
 }
 
 /* #Homepage_CardsList_Wrapper .row:last-child .widgetWrapper {
@@ -1343,24 +1344,8 @@
 	justify-content: center;
 }
 
-  --axi-cmd-color-create: #16a34a;
-  --axi-cmd-color-edit: #dc2626;
-  --axi-cmd-color-view: #ea580c;
-  --axi-cmd-color-configure: #7c3aed;
-  --axi-cmd-color-sdk: #c026d3;
-  --axi-cmd-color-upload: #854d0e;
-  --axi-cmd-color-download: #4338ca;
-  --axi-cmd-color-run: #0d9488;
-  --axi-cmd-color-analyse: #65a30d;
-  --axi-cmd-color-ai: #059669;
-  --axi-cmd-color-connect: #6b21a8;
-  --axi-cmd-color-ask: #d97706;
-  --axi-cmd-color-end: #e11d48;
-  --axi-cmd-color-editprompt: #db2777;
-  --axi-cmd-color-help: #2563eb;
-  --axi-cmd-color-version: #0284c7;
-  --axi-cmd-color-default: #475569;
-}
+ 
+
 
 
 .HomePageMenuOptionCards .Home-cards-list:nth-child(12n+1) .avatar{
