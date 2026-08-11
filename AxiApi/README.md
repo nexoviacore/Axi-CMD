@@ -1,998 +1,228 @@
+# AxiApi
+
+Backend service layer powering the **AXI (Axpert Command Line Interface)** engine. AxiApi provides dynamic command resolution, command grammar bootstrapping, customizable user favorites, multi-tenant database connectivity, and distributed Redis caching for the Axpert web shell.
+
+---
+
+## Architecture Overview
+
+AxiApi is built on **ASP.NET Core (.NET 8)** adhering to a clean, decoupled layered architecture:
+
+```
+┌────────────────────────────────────────────────────────┐
+│               AxiController (API Endpoints)            │
+└───────────────────────────┬────────────────────────────┘
+                            │
+┌───────────────────────────▼────────────────────────────┐
+│      Service Layer (Business Logic & Redis Caching)    │
+│  - CommandConfigService       - UserFavouritesService  │
+│  - GrammarBootstrapService    - GrammarService         │
+└───────────────────────────┬────────────────────────────┘
+                            │
+┌───────────────────────────▼────────────────────────────┐
+│    Repository Layer (Data Access via AxExtend & SQL)   │
+│  - CommandConfigRepository    - UserFavouritesRepo     │
+│  - GrammarRepository          - SqlQueries             │
+└───────────────────────────┬────────────────────────────┘
+                            │
+┌───────────────────────────▼────────────────────────────┐
+│       Database & Cache (PostgreSQL / Oracle / Redis)   │
+└────────────────────────────────────────────────────────┘
+```
+
+### Key Capabilities
+
+- **Dynamic Command Configuration**: Eliminates hardcoded transaction routing by querying and caching the `axi_command_config` table for `Configure`, `SDK`, `Upload`, and `Download` actions.
+- **Grammar Metadata Bootstrapping**: Generates and parses command trees, prompt sources, parameter positions, and autocompletion tokens.
+- **User Favorites Management**: Supports creating, listing, renaming, and removing custom command aliases with deep link target URLs.
+- **Multi-Tenant Connection Pooling**: Utilizes `AxExtend` and `ARMCommon` for dynamic database connection resolution across distinct Axpert application instances (`appname`).
+- **Resilient Redis Caching**: Automatic fallback to direct database queries if the distributed cache is unavailable, with force-refresh cache invalidation.
+
+---
+
+## API Reference
+
+All endpoints are versioned under the `/api/v1/Axi` route prefix.
+
+### 1. Dynamic Command Configuration
+
+Retrieves the active mapping of command verbs, prompt options, target transaction IDs, and navigation URLs.
+
+```http
+GET /api/v1/Axi/command-config?appname={appname}&forceRefresh={forceRefresh}
+```
+
+#### Query Parameters
+
+| Parameter | Type | Required | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `appname` | string | Yes | — | Axpert application database identifier |
+| `forceRefresh` | boolean | No | `false` | When `true`, invalidates the Redis cache and queries the database directly |
+
+#### Response (`200 OK`)
+
+```json
+[
+  {
+    "configId": "cfg_configure_users",
+    "command": "Configure",
+    "promptOptions": "user listing",
+    "promptId": "axusers",
+    "promptOptionType": "iview",
+    "paramField": null,
+    "targetUrl": null,
+    "extraParams": null,
+    "active": "T"
+  },
+  {
+    "configId": "cfg_configure_user",
+    "command": "Configure",
+    "promptOptions": "user",
+    "promptId": "axusr",
+    "promptOptionType": "tstruct",
+    "paramField": null,
+    "targetUrl": null,
+    "extraParams": null,
+    "active": "T"
+  }
+]
+```
+
+---
+
+### 2. Command Grammar Metadata
+
+Fetches the complete grammar syntax tree for autocomplete suggestion parsing.
+
+```http
+GET /api/v1/Axi/axi_get?view={view}&forceRefresh={forceRefresh}&appname={appname}
+```
+
+#### Query Parameters
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `view` | string | Yes | View identifier (e.g. `Metadata`) |
+| `appname` | string | Yes | Application database identifier |
+| `forceRefresh` | boolean | No | Bypass and refresh cached grammar |
+
+---
+
+### 3. User Favorites
+
+#### Get User Favorites
+
+```http
+GET /api/v1/Axi/user-favourites?username={username}&appname={appname}
+```
+
+#### Add or Toggle Favorite
+
+```http
+POST /api/v1/Axi/user-favourites?appname={appname}
+Content-Type: application/json
+```
+
 ```json
 {
-  "create": {
-    "create new <form caption>": {
-      "cmdToken": 1,
-      "command": "create new <form caption>",
-      "commandGroup": "create",
-      "action": "opens tstruct/form in new mode to enter data.",
-      "prompts": [
-        {
-          "cmdToken": 1,
-          "wordPos": 3,
-          "prompt": "tstruct name",
-          "promptSource": "TStructList",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "create tstruct <transid> <form caption>": {
-      "cmdToken": 2,
-      "command": "create tstruct <transid> <form caption>",
-      "commandGroup": "create",
-      "action": "open the tstruct definition interface in new mode.",
-      "prompts": [
-        {
-          "cmdToken": 2,
-          "wordPos": 3,
-          "prompt": "tstruct name",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "create ads <adsname>": {
-      "cmdToken": 3,
-      "command": "create ads <adsname>",
-      "commandGroup": "create",
-      "action": "open ads definition form in new mode",
-      "prompts": [
-        {
-          "cmdToken": 3,
-          "wordPos": 3,
-          "prompt": "ads name",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "create page <pagename>": {
-      "cmdToken": 4,
-      "command": "create page <pagename>",
-      "commandGroup": "create",
-      "action": "popups page definition window",
-      "prompts": [
-        {
-          "cmdToken": 4,
-          "wordPos": 3,
-          "prompt": "page name",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "create script <tstruct/iview> <name>": {
-      "cmdToken": 5,
-      "command": "create script <tstruct/iview> <name>",
-      "commandGroup": "create",
-      "action": "popups script definition window",
-      "prompts": [
-        {
-          "cmdToken": 5,
-          "wordPos": 3,
-          "prompt": "object type",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": "tstruct,iview"
-        },
-        {
-          "cmdToken": 5,
-          "wordPos": 4,
-          "prompt": "name",
-          "promptSource": "AllObjectList",
-          "promptParams": 3,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 5,
-          "wordPos": 5,
-          "prompt": "script name",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "create card <cardname>": {
-      "cmdToken": 6,
-      "command": "create card <cardname>",
-      "commandGroup": "create",
-      "action": "popup card definition window",
-      "prompts": [
-        {
-          "cmdToken": 6,
-          "wordPos": 3,
-          "prompt": "card name",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "create user <username>": {
-      "cmdToken": 7,
-      "command": "create user <username>",
-      "commandGroup": "create",
-      "action": "popup user creation form",
-      "prompts": [
-        {
-          "cmdToken": 7,
-          "wordPos": 3,
-          "prompt": "user name",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "create role <rolename>": {
-      "cmdToken": 8,
-      "command": "create role <rolename>",
-      "commandGroup": "create",
-      "action": "popup role creation form",
-      "prompts": [
-        {
-          "cmdToken": 8,
-          "wordPos": 3,
-          "prompt": "role name",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "create dimension <dimensionname> <value>": {
-      "cmdToken": 9,
-      "command": "create dimension <dimensionname> <value>",
-      "commandGroup": "create",
-      "action": "popup dimension creation form",
-      "prompts": [
-        {
-          "cmdToken": 9,
-          "wordPos": 3,
-          "prompt": "dimension name",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 9,
-          "wordPos": 4,
-          "prompt": "dimension value",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "create usergroup <groupname> <usernames>": {
-      "cmdToken": 10,
-      "command": "create usergroup <groupname> <usernames>",
-      "commandGroup": "create",
-      "action": "popup user group creation form if user names are not provided",
-      "prompts": [
-        {
-          "cmdToken": 10,
-          "wordPos": 3,
-          "prompt": "group name",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 10,
-          "wordPos": 4,
-          "prompt": "user names",
-          "promptSource": "UserList",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "create actor <actorname>": {
-      "cmdToken": 11,
-      "command": "create actor <actorname>",
-      "commandGroup": "create",
-      "action": "popup actor creation form",
-      "prompts": [
-        {
-          "cmdToken": 11,
-          "wordPos": 3,
-          "prompt": "actor name",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    }
-  },
-  "edit": {
-    "edit data <transid> <keyfield> <keyvalue>": {
-      "cmdToken": 12,
-      "command": "edit data <transid> <keyfield> <keyvalue>",
-      "commandGroup": "edit",
-      "action": "popup tstruct form with given data.",
-      "prompts": [
-        {
-          "cmdToken": 12,
-          "wordPos": 3,
-          "prompt": "form name",
-          "promptSource": "TStructList",
-          "promptParams": null,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 12,
-          "wordPos": 4,
-          "prompt": "search field",
-          "promptSource": "FieldList",
-          "promptParams": 3,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 12,
-          "wordPos": 5,
-          "prompt": "search value",
-          "promptSource": "FieldValueList",
-          "promptParams": 4,
-          "promptValues": null
-        }
-      ]
-    },
-    "edit <tstruct/iview/ads/page/card> <name>": {
-      "cmdToken": 13,
-      "command": "edit <tstruct/iview/ads/page/card> <name>",
-      "commandGroup": "edit",
-      "action": "popup relevant definition form",
-      "prompts": [
-        {
-          "cmdToken": 13,
-          "wordPos": 3,
-          "prompt": "type",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": "tstruct,iview,ads,page,card"
-        },
-        {
-          "cmdToken": 13,
-          "wordPos": 4,
-          "prompt": "name",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "edit user <username>": {
-      "cmdToken": 14,
-      "command": "edit user <username>",
-      "commandGroup": "edit",
-      "action": "popup user definition form with given user",
-      "prompts": [
-        {
-          "cmdToken": 14,
-          "wordPos": 3,
-          "prompt": "name",
-          "promptSource": "UserList",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "edit role <rolename>": {
-      "cmdToken": 15,
-      "command": "edit role <rolename>",
-      "commandGroup": "edit",
-      "action": "popup role definition form with given role",
-      "prompts": [
-        {
-          "cmdToken": 15,
-          "wordPos": 3,
-          "prompt": "name",
-          "promptSource": "Rolelist",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "edit usergroup <usergroupname>": {
-      "cmdToken": 16,
-      "command": "edit usergroup <usergroupname>",
-      "commandGroup": "edit",
-      "action": "popup user group creation form in edit mode",
-      "prompts": [
-        {
-          "cmdToken": 16,
-          "wordPos": 3,
-          "prompt": "name",
-          "promptSource": "UserGroupList",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "edit <actorname>": {
-      "cmdToken": 17,
-      "command": "edit <actorname>",
-      "commandGroup": "edit",
-      "action": "popup actor form if actorname given else show actor listing",
-      "prompts": [
-        {
-          "cmdToken": 17,
-          "wordPos": 3,
-          "prompt": "name",
-          "promptSource": "ActorList",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "edit <dimensionname>": {
-      "cmdToken": 18,
-      "command": "edit <dimensionname>",
-      "commandGroup": "edit",
-      "action": "popup dimension value list of given dimension.",
-      "prompts": [
-        {
-          "cmdToken": 18,
-          "wordPos": 3,
-          "prompt": "name",
-          "promptSource": "DimensionList",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    }
-  },
-  "view": {
-    "view data <transid> <keyfield> <keyvalue>": {
-      "cmdToken": 19,
-      "command": "view data <transid> <keyfield> <keyvalue>",
-      "commandGroup": "view",
-      "action": "popup datapage with given data. If keyfield & value not provided, show the data listing page.",
-      "prompts": [
-        {
-          "cmdToken": 19,
-          "wordPos": 3,
-          "prompt": "form name",
-          "promptSource": "TStructList",
-          "promptParams": null,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 19,
-          "wordPos": 4,
-          "prompt": "search field",
-          "promptSource": "FieldList",
-          "promptParams": 3,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 19,
-          "wordPos": 5,
-          "prompt": "search value",
-          "promptSource": "FieldValueList",
-          "promptParams": 4,
-          "promptValues": null
-        }
-      ]
-    },
-    "view report <iviewname>": {
-      "cmdToken": 20,
-      "command": "view report <iviewname>",
-      "commandGroup": "view",
-      "action": "popup iview page with given iview result",
-      "prompts": [
-        {
-          "cmdToken": 20,
-          "wordPos": 3,
-          "prompt": "name",
-          "promptSource": "IViewList",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "view list <adsname>": {
-      "cmdToken": 21,
-      "command": "view list <adsname>",
-      "commandGroup": "view",
-      "action": "popup smart view page with given ads resullt",
-      "prompts": [
-        {
-          "cmdToken": 21,
-          "wordPos": 3,
-          "prompt": "name",
-          "promptSource": "AdsList",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "view inbox": {
-      "cmdToken": 22,
-      "command": "view inbox",
-      "commandGroup": "view",
-      "action": "popup inbox page",
-      "prompts": [
-        {
-          "cmdToken": 22,
-          "wordPos": null,
-          "prompt": null,
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "view source <tstruct/iview/field/genmap/mdmap/fillgrid/column/dc/script> <name>": {
-      "cmdToken": 23,
-      "command": "view source <tstruct/iview/field/genmap/mdmap/fillgrid/column/dc/script> <name>",
-      "commandGroup": "view",
-      "action": "popup the defintion of the object as a name-value pair",
-      "prompts": [
-        {
-          "cmdToken": 23,
-          "wordPos": 3,
-          "prompt": "type",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": "tstruct,iview,ads,page,card"
-        },
-        {
-          "cmdToken": 23,
-          "wordPos": 4,
-          "prompt": "name",
-          "promptSource": "AllObjectList",
-          "promptParams": 3,
-          "promptValues": null
-        }
-      ]
-    },
-    "view user <username>": {
-      "cmdToken": 24,
-      "command": "view user <username>",
-      "commandGroup": "view",
-      "action": "display the user details along with permissions",
-      "prompts": [
-        {
-          "cmdToken": 24,
-          "wordPos": 3,
-          "prompt": "name",
-          "promptSource": "UserList",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "view role <rolename>": {
-      "cmdToken": 25,
-      "command": "view role <rolename>",
-      "commandGroup": "view",
-      "action": "display the role details along with permissions",
-      "prompts": [
-        {
-          "cmdToken": 25,
-          "wordPos": 3,
-          "prompt": "name",
-          "promptSource": "Rolelist",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "view actor <actorname>": {
-      "cmdToken": 26,
-      "command": "view actor <actorname>",
-      "commandGroup": "view",
-      "action": null,
-      "prompts": [
-        {
-          "cmdToken": 26,
-          "wordPos": 3,
-          "prompt": "name",
-          "promptSource": "ActorList",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "view usergroup <usergroupname>": {
-      "cmdToken": 27,
-      "command": "view usergroup <usergroupname>",
-      "commandGroup": "view",
-      "action": null,
-      "prompts": [
-        {
-          "cmdToken": 27,
-          "wordPos": 3,
-          "prompt": "name",
-          "promptSource": "UserGroupList",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "view dimensions <dimensionname>": {
-      "cmdToken": 28,
-      "command": "view dimensions <dimensionname>",
-      "commandGroup": "view",
-      "action": "list the dimensions & its values",
-      "prompts": [
-        {
-          "cmdToken": 28,
-          "wordPos": 3,
-          "prompt": "name",
-          "promptSource": "DimensionList",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "view dbconsole": {
-      "cmdToken": 29,
-      "command": "view dbconsole",
-      "commandGroup": "view",
-      "action": "opens the db console",
-      "prompts": [
-        {
-          "cmdToken": 29,
-          "wordPos": null,
-          "prompt": null,
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    }
-  },
-  "send": {
-    "send message <touser> <text>": {
-      "cmdToken": 30,
-      "command": "send message <touser> <text>",
-      "commandGroup": "send",
-      "action": "sends message to the given user",
-      "prompts": [
-        {
-          "cmdToken": 30,
-          "wordPos": 3,
-          "prompt": "user name",
-          "promptSource": "UserList",
-          "promptParams": null,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 30,
-          "wordPos": 4,
-          "prompt": "message text",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "send data <touser> <keyfield> <keyvalue> <printformname>": {
-      "cmdToken": 31,
-      "command": "send data <touser> <keyfield> <keyvalue> <printformname>",
-      "commandGroup": "send",
-      "action": "sends data as pdf to user",
-      "prompts": [
-        {
-          "cmdToken": 31,
-          "wordPos": 3,
-          "prompt": "user name",
-          "promptSource": "UserList",
-          "promptParams": null,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 31,
-          "wordPos": 4,
-          "prompt": "transid",
-          "promptSource": "TStructList",
-          "promptParams": null,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 31,
-          "wordPos": 5,
-          "prompt": "search field",
-          "promptSource": "FieldList",
-          "promptParams": null,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 31,
-          "wordPos": 6,
-          "prompt": "search value",
-          "promptSource": "FieldValueList",
-          "promptParams": null,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 31,
-          "wordPos": 7,
-          "prompt": "print form name",
-          "promptSource": "printformlist",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "send ads <touser> <adsname> <excel/pdf>": {
-      "cmdToken": 32,
-      "command": "send ads <touser> <adsname> <excel/pdf>",
-      "commandGroup": "send",
-      "action": "sends a pdf or excel of the ads result",
-      "prompts": [
-        {
-          "cmdToken": 32,
-          "wordPos": 3,
-          "prompt": "user name",
-          "promptSource": "UserList",
-          "promptParams": null,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 32,
-          "wordPos": 4,
-          "prompt": "ads name",
-          "promptSource": "AdsList",
-          "promptParams": null,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 32,
-          "wordPos": 5,
-          "prompt": "file type",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": "excel,pdf"
-        }
-      ]
-    },
-    "send iview <touser> <iviewname> <excel/pdf>": {
-      "cmdToken": 33,
-      "command": "send iview <touser> <iviewname> <excel/pdf>",
-      "commandGroup": "send",
-      "action": "accepts param values and sends iview result as excel or pdf",
-      "prompts": [
-        {
-          "cmdToken": 33,
-          "wordPos": 3,
-          "prompt": "touser",
-          "promptSource": "UserList",
-          "promptParams": null,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 33,
-          "wordPos": 4,
-          "prompt": "ivew name",
-          "promptSource": "IViewList",
-          "promptParams": null,
-          "promptValues": null
-        },
-        {
-          "cmdToken": 33,
-          "wordPos": 5,
-          "prompt": "file type",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": "excel,pdf"
-        }
-      ]
-    }
-  },
-  "configure": {
-    "configure peg <pegname>": {
-      "cmdToken": 34,
-      "command": "configure peg <pegname>",
-      "commandGroup": "configure",
-      "action": "opens peg definition in new or edit mode",
-      "prompts": [
-        {
-          "cmdToken": 34,
-          "wordPos": 3,
-          "prompt": "peg name",
-          "promptSource": "PegList",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "configure notification <form/periodic> <name>": {
-      "cmdToken": 35,
-      "command": "configure notification <form/periodic> <name>",
-      "commandGroup": "configure",
-      "action": "opens the relevant notification defintion window",
-      "prompts": [
-        {
-          "cmdToken": 35,
-          "wordPos": 3,
-          "prompt": "notification type",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": "form,scheduled"
-        },
-        {
-          "cmdToken": 35,
-          "wordPos": 4,
-          "prompt": "name",
-          "promptSource": "NotificatonNameList",
-          "promptParams": 3,
-          "promptValues": null
-        }
-      ]
-    },
-    "configure job <jobname>": {
-      "cmdToken": 36,
-      "command": "configure job <jobname>",
-      "commandGroup": "configure",
-      "action": "opens the job definition form in edit or new mode",
-      "prompts": [
-        {
-          "cmdToken": 36,
-          "wordPos": 3,
-          "prompt": "job name",
-          "promptSource": "Jobnameslist",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "configure printform <printformname>": {
-      "cmdToken": 37,
-      "command": "configure printform <printformname>",
-      "commandGroup": "configure",
-      "action": "opens the print form defintion for in new/edit mode",
-      "prompts": [
-        {
-          "cmdToken": 37,
-          "wordPos": 3,
-          "prompt": "print form name",
-          "promptSource": "printformlist",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "configure api <apiname>": {
-      "cmdToken": 38,
-      "command": "configure api <apiname>",
-      "commandGroup": "configure",
-      "action": "opens the api configuration window",
-      "prompts": [
-        {
-          "cmdToken": 38,
-          "wordPos": 3,
-          "prompt": "api name",
-          "promptSource": "apinameslist",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "configure rule <rulename>": {
-      "cmdToken": 39,
-      "command": "configure rule <rulename>",
-      "commandGroup": "configure",
-      "action": "opens the rule definition form in new or edit mode",
-      "prompts": [
-        {
-          "cmdToken": 39,
-          "wordPos": 3,
-          "prompt": "rule name",
-          "promptSource": "rulenameslist",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "configure appvar <varname> <const/dbvar/variable>": {
-      "cmdToken": 40,
-      "command": "configure appvar <varname> <const/dbvar/variable>",
-      "commandGroup": "configure",
-      "action": "opens the variable definition window",
-      "prompts": [
-        {
-          "cmdToken": 40,
-          "wordPos": null,
-          "prompt": null,
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "configure properties": {
-      "cmdToken": 41,
-      "command": "configure properties",
-      "commandGroup": "configure",
-      "action": "opens the settings window",
-      "prompts": [
-        {
-          "cmdToken": 41,
-          "wordPos": null,
-          "prompt": null,
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "configure devoptions": {
-      "cmdToken": 42,
-      "command": "configure devoptions",
-      "commandGroup": "configure",
-      "action": "lists all the devoptions and lets user create new options",
-      "prompts": [
-        {
-          "cmdToken": 42,
-          "wordPos": null,
-          "prompt": null,
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "configure permission <role/user> <name> <tstruct/iview/page/ads> <name>": {
-      "cmdToken": 43,
-      "command": "configure permission <role/user> <name> <tstruct/iview/page/ads> <name>",
-      "commandGroup": "configure",
-      "action": "open the permission tstruct for given user/role & object",
-      "prompts": [
-        {
-          "cmdToken": 43,
-          "wordPos": 3,
-          "prompt": "role or user",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": "role/user"
-        },
-        {
-          "cmdToken": 43,
-          "wordPos": 4,
-          "prompt": "name",
-          "promptSource": "roleanduserlist",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "configure access <role/user> <name>": {
-      "cmdToken": 44,
-      "command": "configure access <role/user> <name>",
-      "commandGroup": "configure",
-      "action": "open the iview that lists the access for given user/role",
-      "prompts": [
-        {
-          "cmdToken": 44,
-          "wordPos": 3,
-          "prompt": "role or user",
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": "role/user"
-        },
-        {
-          "cmdToken": 44,
-          "wordPos": 4,
-          "prompt": "name",
-          "promptSource": "roleanduserlist",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    },
-    "configure server <name>": {
-      "cmdToken": 45,
-      "command": "configure server <name>",
-      "commandGroup": "configure",
-      "action": "open the server confiuration form",
-      "prompts": [
-        {
-          "cmdToken": 45,
-          "wordPos": 3,
-          "prompt": "server name",
-          "promptSource": "servernamelist",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    }
-  },
-  "upload": {
-    "upload data": {
-      "cmdToken": 46,
-      "command": "upload data",
-      "commandGroup": "upload",
-      "action": "open the import wizard",
-      "prompts": [
-        {
-          "cmdToken": 46,
-          "wordPos": null,
-          "prompt": null,
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    }
-  },
-  "download": {
-    "download data": {
-      "cmdToken": 47,
-      "command": "download data",
-      "commandGroup": "download",
-      "action": "open a form that will export data into an excel",
-      "prompts": [
-        {
-          "cmdToken": 47,
-          "wordPos": null,
-          "prompt": null,
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    }
-  },
-  "publish": {
-    "publish structure <tstruct/iview/ads/page/peg/notification/rule> <name>": {
-      "cmdToken": 48,
-      "command": "publish structure <tstruct/iview/ads/page/peg/notification/rule> <name>",
-      "commandGroup": "publish",
-      "action": "publish the tstruct to run time",
-      "prompts": [
-        {
-          "cmdToken": 48,
-          "wordPos": 3,
-          "prompt": null,
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": "tstruct,iview,ads,page,card,peg,notification,rule"
-        },
-        {
-          "cmdToken": 48,
-          "wordPos": 4,
-          "prompt": "name",
-          "promptSource": "objectnameslist",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    }
-  },
-  "promote": {
-    "promote object <toserver> <tstruct/iview/ads/peg/notification/job/printform/page/api/rule/appvar/props/devoptions/user/role/permission/access> <name>": {
-      "cmdToken": 49,
-      "command": "promote object <toserver> <tstruct/iview/ads/peg/notification/job/printform/page/api/rule/appvar/props/devoptions/user/role/permission/access> <name>",
-      "commandGroup": "promote",
-      "action": "promotes the given object to the given server",
-      "prompts": [
-        {
-          "cmdToken": 49,
-          "wordPos": 3,
-          "prompt": null,
-          "promptSource": null,
-          "promptParams": null,
-          "promptValues": "tstruct,iview,ads,page,card,peg,notification,rule"
-        },
-        {
-          "cmdToken": 49,
-          "wordPos": 4,
-          "prompt": "name",
-          "promptSource": "objectnameslist",
-          "promptParams": null,
-          "promptValues": null
-        }
-      ]
-    }
-  }
+  "username": "admin",
+  "commandText": "My User List",
+  "originalCommandText": "configure user listing",
+  "action": "add",
+  "favOrder": 0,
+  "targetURL": "../aspx/iview.aspx?ivname=axusers"
 }
 ```
+
+#### Update / Rename Favorite Alias
+
+```http
+PATCH /api/v1/Axi/user-favourites/{favouritesId}?username={username}&appname={appname}
+Content-Type: application/json
+```
+
+```json
+{
+  "commandText": "Renamed Favorite Name"
+}
+```
+
+---
+
+## Database Schema
+
+AxiApi interacts with the following core tables (located in `AxpertPlugins/Axi_Beta/Structures/` for both PostgreSQL and Oracle):
+
+### `axi_command_config`
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `config_id` | `VARCHAR(50)` | Primary Key | Unique configuration identifier (e.g. `cfg_configure_user`) |
+| `command` | `VARCHAR(50)` | Not Null, Indexed | Command group verb (`Configure`, `SDK`, `Upload`, `Download`) |
+| `prompt_options` | `VARCHAR(200)` | Not Null | Command prompt sub-action (e.g. `user listing`, `smart view`) |
+| `prompt_id` | `VARCHAR(50)` | Not Null | Target identifier (`transid`, `ivname`, or script name) |
+| `prompt_option_type`| `VARCHAR(20)` | Not Null | Navigation mode (`tstruct`, `iview`, `ivtoivload`, `url`) |
+| `param_field` | `VARCHAR(100)` | Nullable | Parameter field name used for record loading |
+| `target_url` | `VARCHAR(500)` | Nullable | Explicit redirection URL override |
+| `extra_params` | `VARCHAR(500)` | Nullable | Additional query parameters (e.g. `AxOpenAct=true&isDupTab=false`) |
+| `active` | `VARCHAR(1)` | Default `'T'` | Status flag (`T` / `F`) |
+
+### `axi_userfavourites`
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `VARCHAR/UUID` | Primary Key |
+| `username` | `VARCHAR(100)` | Target user login |
+| `commandtext` | `VARCHAR(500)` | Display alias or custom label |
+| `originalcommandtext` | `VARCHAR(500)`| Original unaliased CLI command |
+| `favorder` | `INTEGER` | Display order index |
+| `targeturl` | `VARCHAR(1000)` | Target iframe navigation URL |
+| `createdon` | `TIMESTAMP` | Record creation timestamp |
+
+---
+
+## Distributed Caching Strategy
+
+AxiApi utilizes distributed Redis caching for high-throughput command resolution:
+
+> [!TIP]
+> Redis keys are generated deterministically using the format:
+> `{appname}-command_config-`
+> When `forceRefresh=true` is supplied, the cache key is deleted via `KeysDeleteAsync` and repopulated directly from the database.
+
+If the Redis connection fails, the service gracefully degrades to querying the underlying database directly without interrupting end-user navigation.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- Axpert runtime dependencies (`ARMCommon.dll`, `AxExtend.dll`) located at `../../ARMMICRO/AxPlugins/AxExtend`
+- Redis server instance (optional, for caching)
+
+### Build & Run
+
+1. **Restore and Build**:
+   ```bash
+   dotnet build AxiApi.csproj
+   ```
+
+2. **Run Locally**:
+   ```bash
+   dotnet run
+   ```
+
+3. **Verify Health**:
+   Navigate to `http://localhost:5057/swagger` (or configured development port) to explore the OpenAPI / Swagger interactive documentation.
+
+---
+
+## Error Handling
+
+AxiApi implements centralized exception handling via `GlobalExceptionHandler` and RFC 7807 Problem Details:
+
+- `DatabaseException`: Thrown when SQL execution fails; maps to HTTP `500 Internal Server Error` with contextual query details in server logs.
+- `NotFoundException`: Thrown on missing resource lookups; maps to HTTP `404 Not Found`.
+- `RedisCacheConnectionException`: Handled internally with database fallback logging.
