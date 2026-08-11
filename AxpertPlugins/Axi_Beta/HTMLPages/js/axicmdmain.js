@@ -3630,6 +3630,50 @@
     //    }
     //}
 
+    function isTargetListingPageForParamsRestriction() {
+        try {
+            const { doc, win, iframe } = getIViewDocumentAndWindow();
+            let src = iframe ? (iframe.getAttribute("src") || "") : "";
+            let docHref = "";
+            try {
+                docHref = doc?.location?.href || win?.location?.href || "";
+            } catch (e) {}
+
+            const combinedUrl = (src + " " + docHref).toLowerCase();
+
+            // Target ivnames for the 5 listing screens:
+            // 1. Responsibility Listing: response
+            // 2. Role Listing: ad___url
+            // 3. Actor Listing: ad__act
+            // 4. Dimension Listing: ad___upg
+            // 5. Smart view listing: a___smtl
+            const targetIvnames = [
+                "ivname=response",
+                "ivname=ad___url",
+                "ivname=ad__act",
+                "ivname=ad___upg",
+                "ivname=a___smtl"
+            ];
+
+            return targetIvnames.some(name => combinedUrl.includes(name));
+        } catch (e) {}
+        return false;
+    }
+
+    function isResponsibilityListingPage() {
+        try {
+            const { doc, win, iframe } = getIViewDocumentAndWindow();
+            let src = iframe ? (iframe.getAttribute("src") || "") : "";
+            let docHref = "";
+            try {
+                docHref = doc?.location?.href || win?.location?.href || "";
+            } catch (e) {}
+            const combinedUrl = (src + " " + docHref).toLowerCase();
+            return combinedUrl.includes("ivname=response");
+        } catch (e) {}
+        return false;
+    }
+
     function processRunCommands(tokens, targetIndex, structType) {
         if (targetIndex !== 1) return [goOption];
         let allButtons
@@ -3731,6 +3775,27 @@
                 const btnDisplayLower = (btn.displaydata || "").toLowerCase().trim();
                 const isDelete = btnNameLower === "deleteselectedbutton" || btnDisplayLower === "delete";
                 if (isEntity && isDelete) return false;
+
+                if (isTargetListingPageForParamsRestriction()) {
+                    const isParamsBtn = (btnDisplayLower === "params" ||
+                                        btnDisplayLower === "param" ||
+                                        btnDisplayLower === "parameters" ||
+                                        btnDisplayLower === "parameter" ||
+                                        btnNameLower === "params" ||
+                                        btnNameLower === "param" ||
+                                        btnNameLower === "ivirparams" ||
+                                        btnNameLower === "iconsnewparams" ||
+                                        btnNameLower === "btnparams") &&
+                                        !btnDisplayLower.includes("refresh") &&
+                                        !btnNameLower.includes("refresh");
+                    if (isParamsBtn) return false;
+                }
+
+                if (isResponsibilityListingPage()) {
+                    const restrictedList = ["print", "pdf", "excel", "csv", "html", "json", "copy", "word"];
+                    const isRestricted = restrictedList.some(r => btnDisplayLower === r || btnDisplayLower.includes(r) || btnNameLower === r || btnNameLower.includes(r));
+                    if (isRestricted) return false;
+                }
 
                 if (structType === "i") {
                     if (isCsqlistPage()) {
@@ -9583,6 +9648,31 @@
                 if (seenKeys.has(key)) return false;
                 seenKeys.add(key);
 
+                if (isTargetListingPageForParamsRestriction()) {
+                    const btnDisplayLower = (btn.label || "").toLowerCase().trim();
+                    const btnNameLower = (btn.id || "").toLowerCase();
+                    const isParamsBtn = (btnDisplayLower === "params" ||
+                                        btnDisplayLower === "param" ||
+                                        btnDisplayLower === "parameters" ||
+                                        btnDisplayLower === "parameter" ||
+                                        btnNameLower === "params" ||
+                                        btnNameLower === "param" ||
+                                        btnNameLower === "ivirparams" ||
+                                        btnNameLower === "iconsnewparams" ||
+                                        btnNameLower === "btnparams") &&
+                                        !btnDisplayLower.includes("refresh") &&
+                                        !btnNameLower.includes("refresh");
+                    if (isParamsBtn) return false;
+                }
+
+                if (isResponsibilityListingPage()) {
+                    const btnDisplayLower = (btn.label || "").toLowerCase().trim();
+                    const btnNameLower = (btn.id || "").toLowerCase();
+                    const restrictedList = ["print", "pdf", "excel", "csv", "html", "json", "copy", "word"];
+                    const isRestricted = restrictedList.some(r => btnDisplayLower === r || btnDisplayLower.includes(r) || btnNameLower === r || btnNameLower.includes(r));
+                    if (isRestricted) return false;
+                }
+
                 if (isCsqlistPage() && structType === "i") {
                     const btnDisplayLower = (btn.label || "").toLowerCase().trim();
                     const btnNameLower = (btn.id || "").toLowerCase();
@@ -9879,8 +9969,7 @@
             const isDropdownItem = link.closest(".menu-sub-dropdown, .dropdown-menu, ul.menu, li.menu-item") !== null;
 
             if (!isDropdownItem) {
-                if (link.offsetParent === null && link.parentElement?.offsetParent === null) return;
-                if (link.classList.contains("d-none") || link.parentElement?.classList.contains("d-none")) return;
+                if (link.classList.contains("d-none") || link.closest(".d-none") || link.closest("[hidden]")) return;
             }
 
             const title = link.getAttribute("title") ||
@@ -9888,7 +9977,9 @@
                           link.getAttribute("data-original-title") ||
                           link.parentElement?.getAttribute("title") ||
                           link.parentElement?.getAttribute("data-bs-original-title") ||
-                          link.parentElement?.getAttribute("data-original-title") || "";
+                          link.parentElement?.getAttribute("data-original-title") ||
+                          link.closest("[title]")?.getAttribute("title") ||
+                          link.closest("[data-bs-original-title]")?.getAttribute("data-bs-original-title") || "";
             let label = title.trim();
             if (!label) {
                 const nameSpan = link.querySelector(".dropdownIconName");
@@ -10054,11 +10145,14 @@
     function getBottomToolbarButtons() {
         const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
-
-        const toolbar = doc.querySelector(".BottomToolbarBar, #icons, [id^='iconsNew'], .toolbarRightMenu, .toolbarIcons");
-        if (!toolbar) return {};
-
-        const buttons = Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn"));
+        const toolbar = doc.querySelector(".BottomToolbarBar, .tstructMainBottomFooter, #icons, [id^='iconsNew'], [id^='dvRefresh'], .newRequestJson, .toolbarRightMenu, .toolbarIcons, .card-toolbar, .toolbar");
+        let buttons = [];
+        if (toolbar) {
+            buttons = Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn"));
+        }
+        if (buttons.length === 0) {
+            buttons = Array.from(doc.querySelectorAll(".BottomToolbarBar a, .BottomToolbarBar button, .tstructMainBottomFooter a, .tstructMainBottomFooter button, #icons a, #icons button, [id^='dvRefresh'] button, .card-toolbar a, .card-toolbar button, .toolbar a, .toolbar button, input[type='button'], input[type='submit']"));
+        }
         if (buttons.length === 0) return {};
 
         const result = {};
