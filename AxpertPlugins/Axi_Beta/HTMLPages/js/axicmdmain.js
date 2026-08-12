@@ -196,6 +196,9 @@
         Source: {
             default: handleSourceCommand,
         },
+        SDK: {
+            default: handleOpenSource,
+        },
         Run: {
             default: handleRunCommand,
         },

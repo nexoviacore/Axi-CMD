@@ -263,11 +263,11 @@ VALUES
 ('cfg_sdk_inbound_queue', 'SDK', 'in bound queue', 'a__iq', 'tstruct', 'axqueuename', NULL, 'AxPop=true', 'T'),
 ('cfg_upload_default', 'Upload', 'default', 'importall.aspx', 'url', NULL, '../aspx/importall.aspx', NULL, 'T'),
 ('cfg_download_default', 'Download', 'default', 'exportnew.aspx', 'url', NULL, '../aspx/exportnew.aspx', NULL, 'T')
-ON CONFLICT (config_id) DO NOTHING;
+ON CONFLICT (config_id) DO NOTHING
 >>
 
 <<
-CREATE INDEX IF NOT EXISTS idx_axi_cmd_config_cmd ON axi_command_config(command);
+CREATE INDEX IF NOT EXISTS idx_axi_cmd_config_cmd ON axi_command_config(command)
 >>
 
 
