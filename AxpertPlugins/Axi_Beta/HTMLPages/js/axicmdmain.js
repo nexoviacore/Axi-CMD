@@ -171,6 +171,9 @@
             toast: () => showToast(input.value)
 
         },
+        Configure: {
+            keyfield: handleKeyfield,
+        },
         Edit: {
             default: handleEditData,
             data: handleEditData,
@@ -877,7 +880,7 @@
     async function initCommandConfigs(isForced = false, appname) {
         if (!axiCommandConfigUrl || !appname) return;
         try {
-            const cached = localStorage.getItem("axi_command_config_v1");
+            const cached = localStorage.getItem("axi_command_config_v2");
             let configs = null;
             if (cached && !isForced) {
                 try {
@@ -889,7 +892,7 @@
                 if (res.ok) {
                     configs = await res.json();
                     if (configs && Array.isArray(configs)) {
-                        localStorage.setItem("axi_command_config_v1", JSON.stringify(configs));
+                        localStorage.setItem("axi_command_config_v2", JSON.stringify(configs));
                     }
                 }
             }
@@ -943,13 +946,60 @@
 
         if (tokens.length > 2) {
             rawParamName = cleanCommandToken(tokens[2]);
-            const resolved = tryResolveToken(2, rawParamName, commandConfig, false);
-            paramValue = resolved?.value ?? rawParamName;
+            if (rawParamName.toLowerCase() !== "create new") {
+                if (paramField && paramField.toLowerCase() === "caption") {
+                    paramValue = rawParamName.replace(/\s*\[[^\]]*\]$/, "").trim();
+                } else {
+                    const resolved = tryResolveToken(2, rawParamName, commandConfig, false);
+                    paramValue = resolved?.value ?? rawParamName;
+                }
+            }
         }
 
         setEditSessionState(promptId);
 
+        const cmdOpt = `${(configRow.command || configRow.Command || "").trim().toLowerCase()}:${(configRow.promptOptions || configRow.prompt_options || configRow.PromptOptions || "").trim().toLowerCase()}`;
+        if (cmdOpt === "configure:peg") {
+            redirectToProcessFlow(paramValue, caption);
+            return true;
+        }
+
+        if (cmdOpt === "configure:keyfield") {
+            handleKeyfield({ tokens, commandConfig });
+            return true;
+        }
+
         if (optType === "tstruct") {
+            if (extraParams || rawTargetUrl) {
+                let url;
+                if (!paramValue && !rawTargetUrl) {
+                    url = `../aspx/tstruct.aspx?transid=${promptId}`;
+                } else {
+                    url = rawTargetUrl || `../aspx/tstruct.aspx?transid=${promptId}`;
+                    if (!url.includes("transid=")) {
+                        const separator = url.includes("?") ? "&" : "?";
+                        url += `${separator}transid=${promptId}`;
+                    }
+                    if (paramValue && paramField && !url.includes(`${paramField}=`)) {
+                        const separator = url.includes("?") ? "&" : "?";
+                        url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
+                    }
+                    if (extraParams) {
+                        const separator = url.includes("?") ? "&" : "?";
+                        url += `${separator}${extraParams}`;
+                    }
+                }
+                if (popUpOption) {
+                    const sep = url.includes("?") ? "&" : "?";
+                    url += `${sep}tname=${encodeURIComponent(caption)}&AxPop=true`;
+                    openPopOption(url);
+                } else {
+                    setCommandRoutes(input.value.trim(), url);
+                    top.window.LoadIframe(url);
+                }
+                return true;
+            }
+
             if (paramValue && paramField) {
                 redirectToTstruct(promptId, caption, true, paramField, paramValue);
             } else {
@@ -976,7 +1026,8 @@
                 url += `${separator}${extraParams}`;
             }
             if (popUpOption) {
-                url += `&tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                const sep = url.includes("?") ? "&" : "?";
+                url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
                 openPopOption(url);
             } else {
                 setCommandRoutes(input.value.trim(), url);
@@ -1003,7 +1054,8 @@
                 url += `${separator}${extraParams}`;
             }
             if (popUpOption) {
-                url += `&tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                const sep = url.includes("?") ? "&" : "?";
+                url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
                 openPopOption(url);
             } else {
                 setCommandRoutes(input.value.trim(), url);
@@ -1025,31 +1077,38 @@
                 targetURL = "../aspx/" + targetURL;
             }
 
-            let popUpContainerUrl = `../AxpertPlugins/Axi_Beta/HTMLPages/PopupContainer.html`
-            //let popUpContainerUrl = `../CustomPages/Axi/HTMLPages/PopUpContainer.html`;
+            let popUpContainerUrl = `../AxpertPlugins/Axi_Beta/HTMLPages/PopupContainer.html`;
+            if (window.location.pathname.toLowerCase().includes("/axpertplugins/axi_beta/htmlpages/")) {
+                popUpContainerUrl = `PopupContainer.html`;
+            }
 
             if (targetURL && targetURL.toLowerCase().includes("../")) {
-                // console.log("Before removing : " + targetURL);
                 targetURL = targetURL.replace("../", "");
-                //targetURL = targetURL.split("/")[1];
-                // console.log("After removing : " + targetURL);
             }
 
             let hiddenVar = document.getElementById("hiddenLoader");
+            if (!hiddenVar) {
+                hiddenVar = document.createElement("iframe");
+                hiddenVar.id = "hiddenLoader";
+                hiddenVar.style.display = "none";
+                document.body.appendChild(hiddenVar);
+            }
 
             // Check if the PopupManager already exists in the iframe
-            if (hiddenVar.contentWindow && hiddenVar.contentWindow.PopupManager) {
-                // ADD AS NEW TAB: Call the internal manager
-                hiddenVar.contentWindow.PopupManager.openForm("Loading...", targetURL);
-            } else {
-                // INITIAL LOAD: Set src for the first time
-                let finalUrl = `${popUpContainerUrl}?contenturl=${targetURL}`;
-                hiddenVar.src = finalUrl;
-                hiddenVar.style.display = "flex";
-            }
+            try {
+                if (hiddenVar.contentWindow && hiddenVar.contentWindow.PopupManager) {
+                    // ADD AS NEW TAB: Call the internal manager
+                    hiddenVar.contentWindow.PopupManager.openForm("Loading...", targetURL);
+                    popUpOption = false;
+                    return;
+                }
+            } catch (e) {}
+
+            // INITIAL LOAD: Set src for the first time
+            let finalUrl = `${popUpContainerUrl}?contenturl=${targetURL}`;
+            hiddenVar.src = finalUrl;
+            hiddenVar.style.display = "flex";
             popUpOption = false;
-            // console.log("Final Url: " + targetURL);
-            // console.log("PopUp Option is set to :" + popUpOption);
 
         } else {
             popUpOption = false;
@@ -1362,7 +1421,7 @@
             let targetUrl = `../aspx/ivtoivload.aspx?ivname=${iViewName}`;
             // setCommandRoutes(input.value.trim(), targetUrl);
             targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
-            targetUrl += "&AxIsPop=true&isDupTab=true-";
+            targetUrl += "&AxIsPop=true&isDupTab=true";
             openPopOption(targetUrl)
         }
         else {
