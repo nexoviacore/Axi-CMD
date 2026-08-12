@@ -235,7 +235,7 @@ VALUES
 ('cfg_configure_publish_api', 'Configure', 'publish axpert api', 'ad_pa', 'tstruct', 'publickey', NULL, NULL, 'T'),
 ('cfg_configure_publish_listing', 'Configure', 'publish config studio', 'ad_pbcs', 'iview', NULL, NULL, NULL, 'T'),
 ('cfg_configure_card', 'Configure', 'card', 'a__cd', 'tstruct', 'cardname', NULL, NULL, 'T'),
-('cfg_configure_peg', 'Configure', 'peg', 'ad_pg', 'tstruct', NULL, NULL, NULL, 'T'),
+('cfg_configure_peg', 'Configure', 'peg', 'ad_pm', 'url', 'processname', '../aspx/processflow.aspx?loadcaption=AxProcessBuilder', NULL, 'T'),
 ('cfg_configure_rule', 'Configure', 'rule', 'axrul', 'tstruct', NULL, NULL, NULL, 'T'),
 ('cfg_configure_form_notif', 'Configure', 'form notification', 'axnot', 'tstruct', NULL, NULL, NULL, 'T'),
 ('cfg_configure_peg_form_notif', 'Configure', 'peg form notification', 'axpnt', 'tstruct', NULL, NULL, NULL, 'T'),

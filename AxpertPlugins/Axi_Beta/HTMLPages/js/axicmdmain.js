@@ -989,7 +989,11 @@
             let url = rawTargetUrl || (promptId.startsWith("http") || promptId.startsWith("../") ? promptId : `../aspx/${promptId}`);
             if (paramValue && paramField) {
                 const separator = url.includes("?") ? "&" : "?";
-                url += `${separator}status=true&action=edit&${paramField}=${encodeURIComponent(paramValue)}`;
+                if (url.includes("AddEditResponsibility.aspx")) {
+                    url += `${separator}status=true&action=edit&${paramField}=${encodeURIComponent(paramValue)}`;
+                } else {
+                    url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
+                }
             } else if (url.includes("AddEditResponsibility.aspx")) {
                 const separator = url.includes("?") ? "&" : "?";
                 url += `${separator}action=add`;
