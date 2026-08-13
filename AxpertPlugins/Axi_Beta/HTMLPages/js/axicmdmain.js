@@ -951,7 +951,7 @@
                     paramValue = rawParamName.replace(/\s*\[[^\]]*\]$/, "").trim();
                 } else {
                     const resolved = tryResolveToken(2, rawParamName, commandConfig, false);
-                    paramValue = resolved?.value ?? rawParamName;
+                    paramValue = (resolved && resolved.value) ? resolved.value : rawParamName;
                 }
             }
         }
