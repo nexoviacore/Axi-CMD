@@ -958,14 +958,29 @@
 
         setEditSessionState(promptId);
 
-        const cmdOpt = `${(configRow.command || configRow.Command || "").trim().toLowerCase()}:${(configRow.promptOptions || configRow.prompt_options || configRow.PromptOptions || "").trim().toLowerCase()}`;
-        if (cmdOpt === "configure:peg") {
+        if (optType === "processflow") {
             redirectToProcessFlow(paramValue, caption);
             return true;
         }
 
-        if (cmdOpt === "configure:keyfield") {
+        if (optType === "action") {
             handleKeyfield({ tokens, commandConfig });
+            return true;
+        }
+
+        if (optType === "tstruct/iview" || optType === "iview/tstruct") {
+            const types = optType.split("/");
+            const ids = promptId.split("/");
+            const tstructId = types[0] === "tstruct" ? ids[0] : ids[1];
+            const iviewId = types[0] === "iview" ? ids[0] : ids[1];
+
+            if (paramValue && paramField) {
+                setEditSessionState(tstructId);
+                redirectToTstruct(tstructId, caption, true, paramField, paramValue);
+            } else {
+                setEditSessionState(iviewId);
+                redirectToIView(iviewId, caption);
+            }
             return true;
         }
 

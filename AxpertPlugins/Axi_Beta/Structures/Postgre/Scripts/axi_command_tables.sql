@@ -286,7 +286,7 @@ INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, p
 >>
 
 <<
-INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_configure_publish_listing', 'Configure', 'publish config studio', 'ad_pbcs', 'iview', NULL, NULL, NULL, 'T') ON CONFLICT (config_id) DO NOTHING
+INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_configure_publish_listing', 'Configure', 'publish config studio', 'axpub/ad_pbcs', 'tstruct/iview', 'servername', NULL, NULL, 'T') ON CONFLICT (config_id) DO NOTHING
 >>
 
 <<
@@ -294,7 +294,7 @@ INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, p
 >>
 
 <<
-INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_configure_peg', 'Configure', 'peg', 'ad_pm', 'url', 'processname', '../aspx/processflow.aspx?loadcaption=AxProcessBuilder', NULL, 'T') ON CONFLICT (config_id) DO NOTHING
+INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_configure_peg', 'Configure', 'peg', 'ad_pm', 'processflow', 'processname', NULL, NULL, 'T') ON CONFLICT (config_id) DO NOTHING
 >>
 
 <<
@@ -314,7 +314,7 @@ INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, p
 >>
 
 <<
-INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_configure_keyfield', 'Configure', 'keyfield', 'ad_kf', 'tstruct', NULL, NULL, NULL, 'T') ON CONFLICT (config_id) DO NOTHING
+INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_configure_keyfield', 'Configure', 'keyfield', 'axi_tstructprops_insupd', 'action', NULL, NULL, NULL, 'T') ON CONFLICT (config_id) DO NOTHING
 >>
 
 <<
