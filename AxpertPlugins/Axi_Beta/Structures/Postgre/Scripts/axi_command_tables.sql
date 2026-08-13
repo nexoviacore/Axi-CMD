@@ -7,6 +7,10 @@ DROP TABLE axi_command_prompts
 >>
 
 <<
+DROP TABLE axi_command_config
+>>
+
+<<
 CREATE TABLE axi_commands (
 	cmdtoken int4 NOT NULL,
 	command_group varchar(50) NOT NULL,
@@ -402,7 +406,7 @@ INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, p
 >>
 
 <<
-INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_download_default', 'Download', 'default', 'exportnew.aspx', 'url', NULL, '../aspx/exportnew.aspx', NULL, 'T') ON CONFLICT (config_id) DO NOTHING
+INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_download_default', 'Download', 'default', 'ExportNew.aspx', 'url', NULL, '../aspx/ExportNew.aspx', 'action=export', 'T') ON CONFLICT (config_id) DO NOTHING
 >>
 >>
 

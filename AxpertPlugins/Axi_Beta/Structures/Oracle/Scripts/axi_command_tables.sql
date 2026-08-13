@@ -7,6 +7,10 @@ DROP TABLE axi_command_prompts
 >>
 
 <<
+DROP TABLE axi_command_config
+>>
+
+<<
 CREATE TABLE AXI_COMMANDS 
    (	"CMDTOKEN" NUMBER(10,0) NOT NULL ENABLE, 
 	"COMMAND_GROUP" VARCHAR2(50) NOT NULL ENABLE, 
@@ -368,7 +372,7 @@ INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, P
 >>
 
 <<
-INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_download_default', 'Download', 'default', 'exportnew.aspx', 'url', NULL, '../aspx/exportnew.aspx', NULL, 'T')
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_download_default', 'Download', 'default', 'ExportNew.aspx', 'url', NULL, '../aspx/ExportNew.aspx', 'action=export', 'T')
 >>
 
 
