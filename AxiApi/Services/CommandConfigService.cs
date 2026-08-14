@@ -28,17 +28,17 @@ namespace AxiApi.Services
             _logger = logger;
         }
 
-        public async Task<List<CommandConfigDTO>> GetCommandConfigsAsync(string appname, bool forceRefresh = false)
+        public async Task<List<CommandConfigDTO>> GetCommandConfigsAsync(string appname, string username, bool forceRefresh = false)
         {
-            if (string.IsNullOrWhiteSpace(appname))
+            if (string.IsNullOrWhiteSpace(appname) || string.IsNullOrWhiteSpace(username))
             {
-                _logger.LogWarning("GetCommandConfigsAsync called with empty appname");
+                _logger.LogWarning("GetCommandConfigsAsync called with empty appname or username");
                 return new List<CommandConfigDTO>();
             }
 
-            _logger.LogInformation("CommandConfigService: Starting load sequence for app: {AppName}, ForceRefresh: {ForceRefresh}", appname, forceRefresh);
+            _logger.LogInformation("CommandConfigService: Starting load sequence for app: {AppName}, User: {Username}, ForceRefresh: {ForceRefresh}", appname, username, forceRefresh);
 
-            string cacheKey = Keygenerator.GenerateCacheKey(appname, "command_config", "");
+            string cacheKey = Keygenerator.GenerateCacheKey(appname, "command_config", username);
             IRedisCacheHelper? redisCache = null;
             var isRedisConnected = await _axExtend.OpenRedisConnectionAsync(appname);
 

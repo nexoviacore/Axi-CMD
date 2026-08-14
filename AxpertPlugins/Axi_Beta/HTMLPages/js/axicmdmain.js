@@ -880,6 +880,7 @@
     async function initCommandConfigs(isForced = false, appname) {
         if (!axiCommandConfigUrl || !appname) return;
         try {
+            const userName = window.mainUserName || "";
             const cached = localStorage.getItem("axi_command_config_v2");
             let configs = null;
             if (cached && !isForced) {
@@ -888,7 +889,7 @@
                 } catch (e) {}
             }
             if (!configs) {
-                const res = await fetch(`${axiCommandConfigUrl}?appname=${encodeURIComponent(appname)}&forceRefresh=${isForced}`);
+                const res = await fetch(`${axiCommandConfigUrl}?appname=${encodeURIComponent(appname)}&username=${encodeURIComponent(userName)}&forceRefresh=${isForced}`);
                 if (res.ok) {
                     configs = await res.json();
                     if (configs && Array.isArray(configs)) {
@@ -958,8 +959,30 @@
 
         setEditSessionState(promptId);
 
-        if (optType === "processflow") {
-            redirectToProcessFlow(paramValue, caption);
+        if (optType === "processflow" || optType === "url/tstruct") {
+            if (paramValue) {
+                let url = rawTargetUrl || `../aspx/processflow.aspx?loadcaption=AxProcessBuilder`;
+                if (paramField && !url.includes(`${paramField}=`)) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
+                }
+                if (extraParams) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${extraParams}`;
+                }
+                setEditSessionState(promptId || "ad_pm");
+                if (popUpOption) {
+                    const sep = url.includes("?") ? "&" : "?";
+                    url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                    openPopOption(url);
+                } else {
+                    setCommandRoutes(input.value.trim(), url);
+                    top.window.LoadIframe(url);
+                }
+            } else {
+                setEditSessionState(promptId || "ad_pm");
+                redirectToTstruct(promptId || "ad_pm", caption);
+            }
             return true;
         }
 

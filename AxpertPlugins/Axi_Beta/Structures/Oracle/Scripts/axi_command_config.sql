@@ -101,7 +101,7 @@ INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, P
 >>
 
 <<
-INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_peg', 'Configure', 'peg', 'ad_pm', 'processflow', 'processname', NULL, NULL, 'T')
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_peg', 'Configure', 'peg', 'ad_pm', 'processflow', 'processname', '../aspx/processflow.aspx?loadcaption=AxProcessBuilder', NULL, 'T')
 >>
 
 <<

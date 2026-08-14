@@ -37,12 +37,14 @@ namespace AxiApi.Controllers
         }
 
         [HttpGet("command-config")]
-        public async Task<ActionResult<List<CommandConfigDTO>>> GetCommandConfigs([FromQuery] string appname, [FromQuery] bool forceRefresh = false)
+        public async Task<ActionResult<List<CommandConfigDTO>>> GetCommandConfigs([FromQuery] string appname, [FromQuery] string username, [FromQuery] bool forceRefresh = false)
         {
             if (string.IsNullOrWhiteSpace(appname))
                 return BadRequest("appname query parameter is required.");
+            if (string.IsNullOrWhiteSpace(username))
+                return BadRequest("username query parameter is required.");
 
-            var configs = await _commandConfigService.GetCommandConfigsAsync(appname, forceRefresh);
+            var configs = await _commandConfigService.GetCommandConfigsAsync(appname, username, forceRefresh);
             return Ok(configs);
         }
 
