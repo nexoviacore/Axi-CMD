@@ -75,8 +75,8 @@ The following tables define the command structure and properties:
 | Table Name | Description | Key Columns |
 | :--- | :--- | :--- |
 | `axi_commands` | Stores root command words and their groupings. | `cmdtoken` (PK), `command_group`, `command`, `active` |
-| `axi_command_prompts` | Stores prompt inputs, order, dynamic sources, and URL parameters for each token position. | `id` (PK), `cmdtoken`, `wordpos`, `prompt`, `promptsource`, `promptvalues`, `extraparams` |
-| `axi_command_config` | Stores dynamic command navigation mappings, target URLs, and parameter field definitions. | `config_id` (PK), `command`, `prompt_options`, `prompt_id`, `prompt_option_type`, `param_field`, `target_url`, `extra_params`, `active` |
+| `axi_command_prompts` | Stores prompt inputs, token positions, dynamic sources, and URL parameters for auto-complete suggestions and traditional commands (`Create`, `Edit`, `View`, `SDK TStruct`, `SDK IView`). | `id` (PK), `cmdtoken`, `wordpos`, `prompt`, `promptsource`, `promptvalues`, `extraparams` |
+| `axi_command_config` | Stores dynamic command navigation mappings, target URLs, and parameter field definitions for `Configure`, standard `SDK` options, `Upload`, and `Download`. | `config_id` (PK), `command`, `prompt_options`, `prompt_id`, `prompt_option_type`, `param_field`, `target_url`, `extra_params`, `active` |
 | `axp_tstructprops` | Manages additional properties for Tstruct definitions (e.g., custom primary key fields). | `name`, `caption`, `keyfield`, `userconfigured` |
 | `axdirectsql_metadata` | Caches column names and metadata details for direct SQL queries (`ADS`). | `axdirectsql_metadataid` (PK), `axdirectsqlid`, `fldname`, `fldcaption` |
 
@@ -329,6 +329,22 @@ To specify what parameter recommendations are shown when the command is typed, i
 *   `promptsource`: The name of the database table, database function, or static list values to load suggestions from.
 *   `extraparams`: Parameter mapping bindings (e.g., passing `:username`, `:userrole`, `:transid`).
 
+### Command Configuration Architecture Matrix
+
+Axi uses a dual-table architecture to balance dynamic database-driven navigation with specialized prompt tokenization:
+
+| Command Category / Family | Target Configuration Table | Runtime Execution Mechanism | Notes |
+| :--- | :--- | :--- | :--- |
+| `Configure` (e.g. `User`, `Role`, `Publish`, `PEG`, `Keyfield`) | `axi_command_config` | Dynamic Dispatcher (`executeDynamicNavigation`) | Driven purely by database rows in `axi_command_config`. |
+| Standard `SDK` (e.g. `DB Explorer`, `App Variables`, `Arrange Menu`) | `axi_command_config` | Dynamic Dispatcher (`executeDynamicNavigation`) | Driven purely by database rows in `axi_command_config`. |
+| `Upload` & `Download` | `axi_command_config` | Dynamic Dispatcher (`executeDynamicNavigation`) | Driven purely by database rows in `axi_command_config`. |
+| **`SDK TStruct` & `SDK IView`** | **`axi_command_prompts`** | Studio Bridge (`handleOpenSource` / `safeOpenDeveloperStudio`) | **Architectural Exception:** Bypasses `axi_command_config` because it launches the embedded React Developer Studio modal rather than an iFrame URL. |
+| `Create`, `Edit`, `View`, `Run` | `axi_command_prompts` | Token Resolver & Subsystem Handlers | Driven by `axi_command_prompts` for multi-token auto-complete suggestions. |
+
+> [!IMPORTANT]
+> **Architectural Exception — SDK TStruct & SDK IView:**
+> `SDK TStruct` and `SDK IView` are explicitly **not** configured in `axi_command_config`. Because they launch the embedded React Developer Studio builder (`safeOpenDeveloperStudio("tstreact")` / `safeOpenDeveloperStudio("ivreact")`) with special "create new" template state rather than navigating to an iFrame URL, they continue to be maintained via `axi_command_prompts` and `handleOpenSource`.
+
 ### Configuring Dynamic Commands (`axi_command_config`)
 
 Commands (such as `Configure`, `SDK`, `Upload`, `Download`) can be configured dynamically without writing frontend JavaScript handler code by adding entries to `axi_command_config`:
@@ -369,7 +385,8 @@ VALUES
 ## 🚀 Release Notes & Recent Bug Fixes (August 14, 2026)
 
 ### 1. Dynamic Command Navigation Engine (`axi_command_config`)
-*   **Database-Driven Navigation:** Transitioned hardcoded JavaScript command handlers (`Configure`, `SDK`, `Upload`, `Download`) to a fully dynamic database table `axi_command_config`.
+*   **Database-Driven Navigation:** Transitioned hardcoded JavaScript command handlers (`Configure`, standard `SDK`, `Upload`, `Download`) to a fully dynamic database table `axi_command_config`.
+*   **Dual-Table Command Architecture:** Clarified execution division where `Configure`, standard `SDK` tools, `Upload`, and `Download` are driven dynamically by `axi_command_config`, while prompt tokenization (`Create`, `Edit`, `View`) and studio launchers (`SDK TStruct`, `SDK IView`) are maintained via `axi_command_prompts`.
 *   **Composite Dual Mode (`tstruct/iview`):** Added support for dual navigation where commands like `Configure "Publish Config Studio"` open a listing page (`ad_pbcs`) when executed without parameters, and open an edit form (`axpub` with `servername`) when executed with parameters.
 *   **Generic Process Flow (`processflow`):** Made Process Builder navigation (`processflow.aspx?loadcaption=AxProcessBuilder`) fully generic and database-configurable without command-specific JS branches.
 *   **Background Action Execution (`action`):** Added support for non-navigational background actions (e.g., `Configure keyfield` executing `axi_tstructprops_insupd`).
