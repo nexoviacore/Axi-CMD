@@ -932,6 +932,49 @@
         }) || null;
     }
 
+    function resolveCommandUrlPlaceholders(urlStr, context = {}) {
+        if (!urlStr || typeof urlStr !== "string") return urlStr || "";
+
+        const currentUserName = context.userName ?? window.mainUserName ?? "";
+        const currentUserRoles = context.userRoles ?? window.AxUserRoles ?? "";
+        const currentUserResp = context.userResp ?? window.userResp ?? "";
+        const currentApp = context.appname ?? window.mainProject ?? "";
+        const currentCaption = context.caption ?? "";
+        const currentParamValue = context.paramValue ?? "";
+        const currentRawParamName = context.rawParamName ?? "";
+        const currentPromptId = context.promptId ?? "";
+        const currentName = currentParamValue || currentRawParamName || currentCaption || currentPromptId;
+
+        const replacements = [
+            { regex: /:username\b/gi, val: currentUserName },
+            { regex: /:user\b/gi, val: currentUserName },
+            { regex: /:userroles\b/gi, val: currentUserRoles },
+            { regex: /:userrole\b/gi, val: currentUserRoles },
+            { regex: /:roles\b/gi, val: currentUserRoles },
+            { regex: /:role\b/gi, val: currentUserRoles },
+            { regex: /:userresp\b/gi, val: currentUserResp },
+            { regex: /:responsibility\b/gi, val: currentUserResp },
+            { regex: /:responsibilities\b/gi, val: currentUserResp },
+            { regex: /:caption\b/gi, val: currentCaption },
+            { regex: /:name\b/gi, val: currentName },
+            { regex: /:paramvalue\b/gi, val: currentParamValue || currentRawParamName },
+            { regex: /:param\b/gi, val: currentParamValue || currentRawParamName },
+            { regex: /:value\b/gi, val: currentParamValue || currentRawParamName },
+            { regex: /:transid\b/gi, val: currentPromptId },
+            { regex: /:promptid\b/gi, val: currentPromptId },
+            { regex: /:appname\b/gi, val: currentApp },
+            { regex: /:project\b/gi, val: currentApp },
+            { regex: /:proj\b/gi, val: currentApp }
+        ];
+
+        let result = urlStr;
+        replacements.forEach(({ regex, val }) => {
+            result = result.replace(regex, encodeURIComponent(val));
+        });
+
+        return result;
+    }
+
     function executeDynamicNavigation({ tokens, commandConfig, configRow }) {
         if (!configRow) return false;
 
@@ -957,12 +1000,25 @@
             }
         }
 
+        const context = {
+            caption: caption,
+            rawParamName: rawParamName,
+            paramValue: paramValue,
+            promptId: promptId,
+            userName: window.mainUserName || "",
+            userRoles: window.AxUserRoles || "",
+            userResp: window.userResp || "",
+            appname: (typeof appname !== "undefined" ? appname : (window.mainProject || ""))
+        };
+
+        const loadIframeFn = (top && top.window && top.window.LoadIframe) || window.LoadIframe;
+
         setEditSessionState(promptId);
 
         if (optType === "processflow" || optType === "url/tstruct") {
-            if (paramValue) {
+            if (paramValue || rawTargetUrl) {
                 let url = rawTargetUrl || `../aspx/processflow.aspx?loadcaption=AxProcessBuilder`;
-                if (paramField && !url.includes(`${paramField}=`)) {
+                if (paramField && paramValue && !url.includes(`${paramField}=`)) {
                     const separator = url.includes("?") ? "&" : "?";
                     url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
                 }
@@ -970,6 +1026,7 @@
                     const separator = url.includes("?") ? "&" : "?";
                     url += `${separator}${extraParams}`;
                 }
+                url = resolveCommandUrlPlaceholders(url, context);
                 setEditSessionState(promptId || "ad_pm");
                 if (popUpOption) {
                     const sep = url.includes("?") ? "&" : "?";
@@ -977,7 +1034,7 @@
                     openPopOption(url);
                 } else {
                     setCommandRoutes(input.value.trim(), url);
-                    top.window.LoadIframe(url);
+                    loadIframeFn(url);
                 }
             } else {
                 setEditSessionState(promptId || "ad_pm");
@@ -1027,13 +1084,14 @@
                         url += `${separator}${extraParams}`;
                     }
                 }
+                url = resolveCommandUrlPlaceholders(url, context);
                 if (popUpOption) {
                     const sep = url.includes("?") ? "&" : "?";
                     url += `${sep}tname=${encodeURIComponent(caption)}&AxPop=true`;
                     openPopOption(url);
                 } else {
                     setCommandRoutes(input.value.trim(), url);
-                    top.window.LoadIframe(url);
+                    loadIframeFn(url);
                 }
                 return true;
             }
@@ -1047,6 +1105,31 @@
         }
 
         if (optType === "iview") {
+            if (extraParams || rawTargetUrl) {
+                let url = rawTargetUrl || `../aspx/iview.aspx?ivname=${promptId}`;
+                if (!url.includes("ivname=")) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}ivname=${promptId}`;
+                }
+                if (paramValue && paramField && !url.includes(`${paramField}=`)) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
+                }
+                if (extraParams) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${extraParams}`;
+                }
+                url = resolveCommandUrlPlaceholders(url, context);
+                if (popUpOption) {
+                    const sep = url.includes("?") ? "&" : "?";
+                    url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                    openPopOption(url);
+                } else {
+                    setCommandRoutes(input.value.trim(), url);
+                    loadIframeFn(url);
+                }
+                return true;
+            }
             redirectToIView(promptId, caption);
             return true;
         }
@@ -1057,19 +1140,21 @@
                 url += `?ivname=${promptId}`;
             }
             if (rawParamName && paramField && !url.includes(`${paramField}=`)) {
-                url += `&${paramField}=${encodeURIComponent(rawParamName)}`;
+                const separator = url.includes("?") ? "&" : "?";
+                url += `${separator}${paramField}=${encodeURIComponent(rawParamName)}`;
             }
             if (extraParams) {
                 const separator = url.includes("?") ? "&" : "?";
                 url += `${separator}${extraParams}`;
             }
+            url = resolveCommandUrlPlaceholders(url, context);
             if (popUpOption) {
                 const sep = url.includes("?") ? "&" : "?";
                 url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
                 openPopOption(url);
             } else {
                 setCommandRoutes(input.value.trim(), url);
-                window.LoadIframe(url);
+                loadIframeFn(url);
             }
             return true;
         }
@@ -1091,13 +1176,14 @@
                 const separator = url.includes("?") ? "&" : "?";
                 url += `${separator}${extraParams}`;
             }
+            url = resolveCommandUrlPlaceholders(url, context);
             if (popUpOption) {
                 const sep = url.includes("?") ? "&" : "?";
                 url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
                 openPopOption(url);
             } else {
                 setCommandRoutes(input.value.trim(), url);
-                window.LoadIframe(url);
+                loadIframeFn(url);
             }
             return true;
         }
