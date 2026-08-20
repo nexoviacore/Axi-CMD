@@ -1016,9 +1016,9 @@
         setEditSessionState(promptId);
 
         if (optType === "processflow" || optType === "url/tstruct") {
-            if (paramValue || rawTargetUrl) {
+            if (paramValue) {
                 let url = rawTargetUrl || `../aspx/processflow.aspx?loadcaption=AxProcessBuilder`;
-                if (paramField && paramValue && !url.includes(`${paramField}=`)) {
+                if (paramField && !url.includes(`${paramField}=`)) {
                     const separator = url.includes("?") ? "&" : "?";
                     url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
                 }
@@ -1056,7 +1056,8 @@
 
             if (paramValue && paramField) {
                 setEditSessionState(tstructId);
-                redirectToTstruct(tstructId, caption, true, paramField, paramValue);
+                const resolvedExtra = resolveCommandUrlPlaceholders(extraParams, context);
+                redirectToTstruct(tstructId, caption, true, paramField, paramValue, resolvedExtra);
             } else {
                 setEditSessionState(iviewId);
                 redirectToIView(iviewId, caption);
@@ -1065,71 +1066,13 @@
         }
 
         if (optType === "tstruct") {
-            if (extraParams || rawTargetUrl) {
-                let url;
-                if (!paramValue && !rawTargetUrl) {
-                    url = `../aspx/tstruct.aspx?transid=${promptId}`;
-                } else {
-                    url = rawTargetUrl || `../aspx/tstruct.aspx?transid=${promptId}`;
-                    if (!url.includes("transid=")) {
-                        const separator = url.includes("?") ? "&" : "?";
-                        url += `${separator}transid=${promptId}`;
-                    }
-                    if (paramValue && paramField && !url.includes(`${paramField}=`)) {
-                        const separator = url.includes("?") ? "&" : "?";
-                        url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
-                    }
-                    if (extraParams) {
-                        const separator = url.includes("?") ? "&" : "?";
-                        url += `${separator}${extraParams}`;
-                    }
-                }
-                url = resolveCommandUrlPlaceholders(url, context);
-                if (popUpOption) {
-                    const sep = url.includes("?") ? "&" : "?";
-                    url += `${sep}tname=${encodeURIComponent(caption)}&AxPop=true`;
-                    openPopOption(url);
-                } else {
-                    setCommandRoutes(input.value.trim(), url);
-                    loadIframeFn(url);
-                }
-                return true;
-            }
-
-            if (paramValue && paramField) {
-                redirectToTstruct(promptId, caption, true, paramField, paramValue);
-            } else {
-                redirectToTstruct(promptId, caption);
-            }
+            const isEdit = !!(paramValue && paramField);
+            const resolvedExtra = resolveCommandUrlPlaceholders(extraParams, context);
+            redirectToTstruct(promptId, caption, isEdit, paramField, paramValue, resolvedExtra);
             return true;
         }
 
         if (optType === "iview") {
-            if (extraParams || rawTargetUrl) {
-                let url = rawTargetUrl || `../aspx/iview.aspx?ivname=${promptId}`;
-                if (!url.includes("ivname=")) {
-                    const separator = url.includes("?") ? "&" : "?";
-                    url += `${separator}ivname=${promptId}`;
-                }
-                if (paramValue && paramField && !url.includes(`${paramField}=`)) {
-                    const separator = url.includes("?") ? "&" : "?";
-                    url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
-                }
-                if (extraParams) {
-                    const separator = url.includes("?") ? "&" : "?";
-                    url += `${separator}${extraParams}`;
-                }
-                url = resolveCommandUrlPlaceholders(url, context);
-                if (popUpOption) {
-                    const sep = url.includes("?") ? "&" : "?";
-                    url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
-                    openPopOption(url);
-                } else {
-                    setCommandRoutes(input.value.trim(), url);
-                    loadIframeFn(url);
-                }
-                return true;
-            }
             redirectToIView(promptId, caption);
             return true;
         }
@@ -1414,82 +1357,50 @@
 
 
 
-    function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "") {
-
-        // console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
-
-
+    function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "", extraParams = "") {
         if (!transId) {
-
             alert("There is no Tstruct name provided!");
-
             return;
-
         }
 
         let targetUrl;
-
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (isEdit) {
-
             if (fieldName && fieldValue) {
-
                 targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
-
             }
-
             targetUrl += `&hltype=load`;
-
             targetUrl += `&torecid=false`;
-
             targetUrl += `&openerIV=${transId}`;
-
             targetUrl += `&isIV=false`;
-
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-
             targetUrl += `&dummyload=false?`;
-
         }
-
         else {
-
             if (fieldName && fieldValue) {
-
                 targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
-
             }
-
             targetUrl += `&hltype=open`;
-
             targetUrl += `&createaxiflag=true`;
-
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-
             targetUrl += `&dummyload=false?`;
-
         }
 
+        if (extraParams) {
+            const separator = targetUrl.includes("?") ? "&" : "?";
+            targetUrl += `${separator}${extraParams}`;
+        }
 
         if (popUpOption) {
-
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
-
             targetUrl += "&AxPop=true";
-
-            openPopOption(targetUrl)
-
+            openPopOption(targetUrl);
         }
-
         else {
-
             setCommandRoutes(input.value.trim(), targetUrl);
-
             top.window.LoadIframe(targetUrl);
-
         }
-
     }
 
 
