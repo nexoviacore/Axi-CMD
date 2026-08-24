@@ -634,7 +634,7 @@
             suppressFocusSuggestions = true;
             input.disabled = false;
             input.placeholder = "Axpert AI";
-            console.log("commands: ", JSON.stringify(commands)); 
+            // console.log("commands: ", JSON.stringify(commands)); 
         }
     }
 
