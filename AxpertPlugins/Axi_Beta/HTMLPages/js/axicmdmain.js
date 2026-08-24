@@ -634,6 +634,7 @@
             suppressFocusSuggestions = true;
             input.disabled = false;
             input.placeholder = "Axpert AI";
+            console.log("commands: ", JSON.stringify(commands)); 
         }
     }
 
@@ -977,6 +978,7 @@
 
     function executeDynamicNavigation({ tokens, commandConfig, configRow }) {
         if (!configRow) return false;
+        hide();
 
         const optType = (configRow.promptOptionType || configRow.prompt_option_type || configRow.PromptOptionType || "").toLowerCase();
         const promptId = configRow.promptId || configRow.prompt_id || configRow.PromptId || "";
@@ -1014,6 +1016,13 @@
         const loadIframeFn = (top && top.window && top.window.LoadIframe) || window.LoadIframe;
 
         setEditSessionState(promptId);
+
+        if ((commandConfig?.commandGroup?.toLowerCase() === "sdk" || (tokens[0] && cleanCommandToken(tokens[0]).toLowerCase() === "sdk")) && caption) {
+            if (!isDevOptionAllowed(caption)) {
+                showToast(`User '${window.mainUserName}' has no access for SDK option: ${caption}`);
+                return true;
+            }
+        }
 
         if (optType === "processflow" || optType === "url/tstruct") {
             if (paramValue) {
@@ -1135,6 +1144,7 @@
     }
 
     function openPopOption(targetURL) {
+        hide();
         // console.log("PopOption is clicked");
 
         if (targetURL) {
@@ -1362,6 +1372,7 @@
             alert("There is no Tstruct name provided!");
             return;
         }
+        hide();
 
         let targetUrl;
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
@@ -1406,7 +1417,7 @@
 
 
     function redirectToResponsibilitiesPage(fieldValue = "") {
-
+        hide();
 
         let targetUrl = "../aspx/AddEditResponsibility.aspx";
 
@@ -1426,29 +1437,8 @@
         top.window.LoadIframe(targetUrl);
     }
 
-    // function redirectToIView(iViewName, iViewCaption = "") {
-    //     // console.log("Redirecting to Iview: " + iViewName + "..............");
-
-
-    //     if (popUpOption) {
-    //      let targetUrl = `../aspx/ivtoivload.aspx?ivname=${iViewName}`;
-    //     // setCommandRoutes(input.value.trim(), targetUrl);
-
-
-    //         targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
-    //         targetUrl += "&AxIsPop=true";
-    //         openPopOption(targetUrl)
-    //     }
-    //     else {
-    //     let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
-    //     setCommandRoutes(input.value.trim(), targetUrl);
-    //         window.LoadIframe(targetUrl);
-    //     }
-
-
-    // }
-
     function redirectToIView(iViewName, iViewCaption = "") {
+        hide();
         // console.log("Redirecting to Iview: " + iViewName + "..............");
 
 
@@ -2050,19 +2040,22 @@
                     actions.push("Create");
                     actions.push("Edit");
                 }
-                if (canBuild) actions.push("Source");
+                if (canBuild && isDevOptionAllowed("tstruct")) actions.push("Source");
             } else if (isInboxStructure(entityObj)) {
                 actions.push("Go");
             } else if (type === "ads") {
                 if (isAdsVisible(entityObj)) actions.push("View");
-                if (canBuild) actions.push("Source");
+                if (canBuild && isDevOptionAllowed("ads")) actions.push("Source");
             } else if (type === "i" || type === "iview") {
                 if (isActionAllowed(entityObj, "view")) actions.push("View");
-                if (canBuild) actions.push("Source");
+                if (canBuild && isDevOptionAllowed("iview")) actions.push("Source");
             } else {
                 if (type === "p" || type === "page" || isActionAllowed(entityObj, "view")) actions.push("View");
                 if ((type === "i" || type === "iview" || type === "t" || type === "tstruct" || type === "ads") && canBuild) {
-                    actions.push("Source");
+                    const devKey = (type === "t" || type === "tstruct") ? "tstruct" : (type === "ads" ? "ads" : "iview");
+                    if (isDevOptionAllowed(devKey)) {
+                        actions.push("Source");
+                    }
                 }
             }
         }
@@ -3292,27 +3285,30 @@
                         actions.push("Edit");
                     }
                 }
-                if (canBuild) {
+                if (canBuild && isDevOptionAllowed("tstruct")) {
                     actions.push("Source");
                 }
             } else if (targetType === "p" || targetType === "page") {
                 actions.push("View");
             } else if (targetType === "ads") {
                 if (isAdsVisible(entityObj)) actions.push("View");
-                if (canBuild) {
+                if (canBuild && isDevOptionAllowed("ads")) {
                     actions.push("Source");
                 }
             } else if (targetType === "i" || targetType === "iview") {
                 const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
                 if (!hasPerms || entityObj.viewallowed === "T") actions.push("View");
-                if (canBuild) {
+                if (canBuild && isDevOptionAllowed("iview")) {
                     actions.push("Source");
                 }
             } else if (targetType) {
                 const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
                 if (!hasPerms || entityObj.viewallowed === "T") actions.push("View");
                 if ((targetType === "i" || targetType === "iview" || targetType === "t" || targetType === "tstruct" || targetType === "ads") && canBuild) {
-                    actions.push("Source");
+                    const devKey = (targetType === "t" || targetType === "tstruct") ? "tstruct" : (targetType === "ads" ? "ads" : "iview");
+                    if (isDevOptionAllowed(devKey)) {
+                        actions.push("Source");
+                    }
                 }
             } else {
                 const matches = getTargetEntityMatches(rawTokens[0]);
@@ -3338,10 +3334,10 @@
                             if (m.viewallowed === "T") hasView = true;
                             if (m.createallowed === "T") hasCreate = true;
                         }
-                        if (canBuild) hasSource = true;
+                        if (canBuild && isDevOptionAllowed("tstruct")) hasSource = true;
                     } else if (type === "ads") {
                         if (isAdsVisible(m)) hasView = true;
-                        if (canBuild) hasSource = true;
+                        if (canBuild && isDevOptionAllowed("ads")) hasSource = true;
                     } else if (type === "p" || type === "page") {
                         hasView = true;
                     } else if (type === "i" || type === "iview") {
@@ -3350,7 +3346,7 @@
                         } else {
                             if (m.viewallowed === "T") hasView = true;
                         }
-                        if (canBuild) hasSource = true;
+                        if (canBuild && isDevOptionAllowed("iview")) hasSource = true;
                     } else {
                         if (!hasPerms) {
                             matchesAnyIviewWithoutPerms = true;
@@ -3358,7 +3354,10 @@
                             if (m.viewallowed === "T") hasView = true;
                         }
                         if ((type === "i" || type === "iview" || type === "t" || type === "tstruct" || type === "ads") && canBuild) {
-                            hasSource = true;
+                            const devKey = (type === "t" || type === "tstruct") ? "tstruct" : (type === "ads" ? "ads" : "iview");
+                            if (isDevOptionAllowed(devKey)) {
+                                hasSource = true;
+                            }
                         }
                     }
                 }
@@ -3376,7 +3375,10 @@
                 const viewAction = { name: "View", displaydata: "View" };
                 const allOptions = [viewAction];
                 if (["iview", "i", "ads"].includes(targetType) && canBuild) {
-                    allOptions.push({ name: "Source", displaydata: "Source" });
+                    const devKey = targetType === "ads" ? "ads" : "iview";
+                    if (isDevOptionAllowed(devKey)) {
+                        allOptions.push({ name: "Source", displaydata: "Source" });
+                    }
                 }
                 allOptions.push(goOption, popOption);
                 const filtered = allOptions.filter(opt => {
@@ -3860,12 +3862,12 @@
                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
 
                 if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
-                    if (groupKey.toLowerCase() === "sdk" && tokens.length > 2) {
-                        filteredObjects = [goOption];
-                        return [goOption]
+                    if (groupKey.toLowerCase() === "sdk" && tokens.length >= 2) {
+                        filteredObjects = [goOption, popOption];
+                        return [goOption, popOption];
                     }
 
-                    if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
+                    if (groupKey.toLowerCase() === "configure" && tokens.length >= 2) {
                         const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
                         const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
                         const isResponsibilityCmd = subCmdFirst === "responsibility" || subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities" || subCmdFull.startsWith("responsibility");
@@ -3878,12 +3880,17 @@
                         return [goOption, popOption];
                     }
 
-                    if ((groupKey.toLowerCase() === "view" || groupKey.toLowerCase() === "go") && tokens.length == 3) {
+                    if ((groupKey.toLowerCase() === "upload" || groupKey.toLowerCase() === "download") && tokens.length >= 2) {
+                        filteredObjects = [goOption, popOption];
+                        return [goOption, popOption];
+                    }
+
+                    if ((groupKey.toLowerCase() === "view" || groupKey.toLowerCase() === "go") && tokens.length >= 2) {
                         if (tokens[1] && tokens[1].toLowerCase() === "inbox") {
                             filteredObjects = [goOption];
                             return [goOption];
                         }
-                        filteredObjects = [goOption, popOption]
+                        filteredObjects = [goOption, popOption];
                         return [goOption, popOption];
                     }
                     return [];
@@ -4059,11 +4066,15 @@
             const accessPermissions = getAccessPermissions();
 
             if ((groupKey.toLowerCase() === "view") && tokens.length <= 2 && structName !== null && accessPermissions?.buildAccess) {
-                resultList.unshift("Source");
-                // resultList.unshift(goOption);
-                filteredObjects.unshift("Source");
-                updateDynamicHintFromPrompt({ prompt: "Ready to Run" });
-                // filteredObjects.unshift(goOption);
+                const structType = (getStructType() || "").toLowerCase();
+                const devKey = (structType === "t" || structType === "tstruct") ? "tstruct" : (structType === "ads" ? "ads" : "iview");
+                if (isDevOptionAllowed(devKey)) {
+                    resultList.unshift("Source");
+                    // resultList.unshift(goOption);
+                    filteredObjects.unshift("Source");
+                    updateDynamicHintFromPrompt({ prompt: "Ready to Run" });
+                    // filteredObjects.unshift(goOption);
+                }
             }
 
             if (groupKey.toLowerCase() === "sdk" && accessPermissions?.buildAccess && tokens.length >= 2) {
@@ -5051,21 +5062,27 @@
 
     function hide() {
         if (megaDropdown) {
-            megaDropdown.style.display = "none";
+            megaDropdown.style.setProperty("display", "none", "important");
+            megaDropdown.classList.remove("show", "menu-dropdown");
         }
-        list.style.display = "none";
-        list.classList.remove("My-Command-Wrapper");
+        if (list) {
+            list.style.setProperty("display", "none", "important");
+            list.classList.remove("My-Command-Wrapper");
+            list.innerHTML = "";
+        }
 
         if (favouritesCard) {
-            favouritesCard.style.display = "none";
-        }
-        const suggCard = list.closest(".card");
-        if (suggCard) {
-            suggCard.style.display = "flex";
+            favouritesCard.style.setProperty("display", "none", "important");
         }
 
         items = [];
         activeIndex = -1;
+        suppressFocusSuggestions = true;
+        try {
+            if (input && document.activeElement === input) {
+                input.blur();
+            }
+        } catch (e) {}
     }
 
     function GetObjectName(selectedValue) {
@@ -5568,6 +5585,7 @@
     }
 
     function safeOpenDeveloperStudio(page, name = "", callFromAxi = true) {
+        hide();
         const topWin = (typeof top !== "undefined" ? top : (typeof parent !== "undefined" ? parent : window));
 
         // 1. Activate Axpert Web product loader immediately
@@ -7330,6 +7348,7 @@
     }
 
     function handleViewSource({ tokens, commandConfig }) {
+        hide();
         const accessPermissions = getAccessPermissions();
         if (!accessPermissions?.buildAccess) {
             showToast(`User '${window.mainUserName}' has no access for command: ${input.value.trim()}`);
@@ -7349,31 +7368,43 @@
         switch (structName.type.toLowerCase()) {
             case "entity":
             case "tstruct":
+                if (!isDevOptionAllowed("tstruct")) {
+                    showToast(`User '${window.mainUserName}' has no access for TStruct source`);
+                    return;
+                }
                 safeOpenDeveloperStudio("tstreact", structName.name, true);
                 break;
             case "iview":
+                if (!isDevOptionAllowed("iview")) {
+                    showToast(`User '${window.mainUserName}' has no access for IView source`);
+                    return;
+                }
                 safeOpenDeveloperStudio("ivreact", structName.name, true);
                 break;
             case "ads":
+                if (!isDevOptionAllowed("ads")) {
+                    showToast(`User '${window.mainUserName}' has no access for ADS source`);
+                    return;
+                }
                 handleViewSourceAds(structName.name);
-
                 break;
+            case "p":
             case "page":
+                if (!isDevOptionAllowed("page")) {
+                    showToast(`User '${window.mainUserName}' has no access for Page source`);
+                    return;
+                }
+                top.window.LoadIframe(`../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(structName.name)}&act=load&dummyload=false?`);
                 break;
 
             default:
                 showToast("Unknown source type: " + structName.name);
                 break;
-
-
         }
-
-
-
-
     }
 
     function handleSourceCommand({ tokens, commandConfig }) {
+        hide();
         const accessPermissions = getAccessPermissions();
         if (!accessPermissions?.buildAccess) {
             showToast(`User '${window.mainUserName}' has no access for command: ${input.value.trim()}`);
@@ -7392,14 +7423,33 @@
 
         let targetUrl = "";
         if (type === "t" || type === "tstruct") {
+            if (!isDevOptionAllowed("tstruct")) {
+                showToast(`User '${window.mainUserName}' has no access for TStruct source`);
+                return;
+            }
             targetUrl = "developerstudio:tstruct:" + name;
             safeOpenDeveloperStudio("tstreact", name, true);
         } else if (type === "i" || type === "iview") {
+            if (!isDevOptionAllowed("iview")) {
+                showToast(`User '${window.mainUserName}' has no access for IView source`);
+                return;
+            }
             targetUrl = "developerstudio:iview:" + name;
             safeOpenDeveloperStudio("ivreact", name, true);
         } else if (type === "ads") {
+            if (!isDevOptionAllowed("ads")) {
+                showToast(`User '${window.mainUserName}' has no access for ADS source`);
+                return;
+            }
             targetUrl = `../aspx/tstruct.aspx?transid=b_sql&sqlname=${encodeURIComponent(name)}&act=load&dummyload=false?`;
             handleViewSourceAds(name);
+        } else if (type === "p" || type === "page") {
+            if (!isDevOptionAllowed("page")) {
+                showToast(`User '${window.mainUserName}' has no access for Page source`);
+                return;
+            }
+            targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(name)}&act=load&dummyload=false?`;
+            top.window.LoadIframe(targetUrl);
         } else {
             showToast("Unknown source type: " + name);
             return;
@@ -8380,9 +8430,30 @@
 */
 
     function handleOpenSource({ tokens, commandConfig }) {
+        hide();
 
         const type = cleanCommandToken(tokens[1]);
         let rawName = cleanCommandToken(tokens[2]);
+
+        const devKey = (type.toLowerCase() === "tstruct" || type.toLowerCase() === "t") ? "tstruct" : ((type.toLowerCase() === "iview" || type.toLowerCase() === "i") ? "iview" : ((type.toLowerCase() === "page" || type.toLowerCase() === "p") ? "page" : type.toLowerCase()));
+        if (!isDevOptionAllowed(devKey)) {
+            showToast(`User '${window.mainUserName}' has no access for SDK option: ${type}`);
+            return;
+        }
+
+        if (type.toLowerCase() === "page" || type.toLowerCase() === "p") {
+            if (rawName && rawName.toLowerCase() === "create new") {
+                const targetUrl = `../aspx/tstruct.aspx?transid=sect&hltype=open&createaxiflag=true&isDupTab=false&dummyload=false?`;
+                setCommandRoutes(input.value.trim(), targetUrl);
+                top.window.LoadIframe(targetUrl);
+                return;
+            }
+            let { value: resolvedName } = tryResolveToken(2, rawName, commandConfig, false);
+            const targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(resolvedName || rawName)}&act=load&dummyload=false?`;
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+            return;
+        }
 
         if (rawName && rawName.toLowerCase() === "create new") {
             const targetUrl = type.toLowerCase() === "tstruct"
@@ -12893,8 +12964,86 @@
         const prefixKey = "axi";
 
         return `${prefixKey}_${name}_${params}`;
+    }
 
+    function getAxpertDevOpt() {
+        let devOpt = "";
+        try {
+            if (typeof axpertDevOpt !== "undefined" && axpertDevOpt) {
+                devOpt = axpertDevOpt;
+            } else if (typeof window !== "undefined" && typeof window.axpertDevOpt !== "undefined" && window.axpertDevOpt) {
+                devOpt = window.axpertDevOpt;
+            } else if (typeof parent !== "undefined" && parent && typeof parent.axpertDevOpt !== "undefined" && parent.axpertDevOpt) {
+                devOpt = parent.axpertDevOpt;
+            } else if (typeof top !== "undefined" && top && typeof top.axpertDevOpt !== "undefined" && top.axpertDevOpt) {
+                devOpt = top.axpertDevOpt;
+            } else if (typeof callParentNew === "function") {
+                devOpt = callParentNew("axpertDevOpt") || "";
+            }
+        } catch (e) {}
+        return (devOpt || "").toString().trim();
+    }
 
+    const SDK_DEV_OPT_MAP = {
+        "tstruct": ["tstruct"],
+        "t": ["tstruct"],
+        "iview": ["iview"],
+        "i": ["iview"],
+        "axpert data sources": ["ads", "axpertdatasources"],
+        "ads": ["ads", "axpertdatasources"],
+        "page": ["custompages", "page", "pages"],
+        "p": ["custompages", "page", "pages"],
+        "custompages": ["custompages", "page", "pages"],
+        "arrange menu": ["arrangemenu", "arrange menu"],
+        "arrangemenu": ["arrangemenu", "arrange menu"],
+        "dev option": ["devoptions", "devoption", "dev option", "developeroptions"],
+        "devoptions": ["devoptions", "devoption", "dev option", "developeroptions"],
+        "app variables": ["appvariables", "app variables", "applicationvariables"],
+        "appvariables": ["appvariables", "app variables", "applicationvariables"],
+        "db explorer": ["devexplorer", "dbexplorer", "db explorer", "databaseexplorer"],
+        "devexplorer": ["devexplorer", "dbexplorer", "db explorer", "databaseexplorer"],
+        "api plugin": ["apiplugins", "apiplugin", "api plugin"],
+        "apiplugins": ["apiplugins", "apiplugin", "api plugin"],
+        "axpert job": ["axpertjobs", "axpertjob", "axpert job"],
+        "axpertjobs": ["axpertjobs", "axpertjob", "axpert job"],
+        "language": ["devlanguages", "languages", "language", "devlanguage"],
+        "devlanguages": ["devlanguages", "languages", "language", "devlanguage"],
+        "publish": ["devpublish", "publish"],
+        "devpublish": ["devpublish", "publish"],
+        "custom data type": ["customdatatype", "custom data type"],
+        "customdatatype": ["customdatatype", "custom data type"],
+        "email definition": ["emaildefinitions", "emaildefinition", "email definition"],
+        "emaildefinitions": ["emaildefinitions", "emaildefinition", "email definition"],
+        "table field descriptor": ["tabledescriptor", "table descriptor", "tablefielddescriptor", "table field descriptor"],
+        "tabledescriptor": ["tabledescriptor", "table descriptor", "tablefielddescriptor", "table field descriptor"],
+        "custom plugin": ["plugincustomcode", "customplugin", "custom plugin", "customplugins"],
+        "plugincustomcode": ["plugincustomcode", "customplugin", "custom plugin", "customplugins"],
+        "queue listing": ["queuelisting", "queue listing"],
+        "queuelisting": ["queuelisting", "queue listing"],
+        "out bound queue": ["queuelisting", "queue listing", "outboundqueue", "out bound queue"],
+        "outboundqueue": ["queuelisting", "queue listing", "outboundqueue", "out bound queue"],
+        "in bound queue": ["queuelisting", "queue listing", "inboundqueue", "in bound queue"],
+        "inboundqueue": ["queuelisting", "queue listing", "inboundqueue", "in bound queue"],
+        "mem db console": ["memdbconsole", "mem db console", "inmemdb"],
+        "memdbconsole": ["memdbconsole", "mem db console", "inmemdb"]
+    };
+
+    function isDevOptionAllowed(sdkOptionName) {
+        const accessPermissions = getAccessPermissions();
+        if (!accessPermissions || accessPermissions.buildAccess === false) {
+            return false;
+        }
+        const rawDevOpt = getAxpertDevOpt();
+        if (!rawDevOpt || rawDevOpt.toLowerCase() === "all" || rawDevOpt.toLowerCase() === "nooptions") {
+            return true;
+        }
+        const allowedOpts = rawDevOpt.split(",").map(o => o.trim().toLowerCase()).filter(Boolean);
+        if (allowedOpts.length === 0) {
+            return true;
+        }
+        const cleanOpt = (sdkOptionName || "").toString().trim().toLowerCase();
+        const mappedKeys = SDK_DEV_OPT_MAP[cleanOpt] || [cleanOpt];
+        return mappedKeys.some(k => allowedOpts.includes(k));
     }
 
     let cachedAccessPermissions = null;
@@ -12907,11 +13056,15 @@
         if (cachedAccessPermissions) {
             return cachedAccessPermissions;
         }
+        const getSess = (typeof getSessionValue === "function")
+            ? getSessionValue
+            : (window.getSessionValue || (top && top.getSessionValue) || (parent && parent.getSessionValue) || (() => ""));
+
         cachedAccessPermissions = {
-            appMgrAccess: strToBool(window.getSessionValue("AppMgrAccess")),
-            importAccess: strToBool(window.getSessionValue("ImportAccess")),
-            exportAccess: strToBool(window.getSessionValue("ExportAccess")),
-            buildAccess: strToBool(window.getSessionValue("Build")),
+            appMgrAccess: strToBool(getSess("AppMgrAccess")),
+            importAccess: strToBool(getSess("ImportAccess")),
+            exportAccess: strToBool(getSess("ExportAccess")),
+            buildAccess: strToBool(getSess("Build")),
         };
         return cachedAccessPermissions;
     }
@@ -12942,6 +13095,44 @@
 
                     default:
                         break;
+                }
+            }
+        }
+
+        // Apply axpertDevOpt filtering for SDK and Source only when build = true
+        if (accessPermissions && accessPermissions.buildAccess !== false && commandsFromDb["SDK"]) {
+            const rawDevOpt = getAxpertDevOpt();
+            if (rawDevOpt && rawDevOpt.toLowerCase() !== "all" && rawDevOpt.toLowerCase() !== "nooptions") {
+                const allowedOpts = rawDevOpt.split(",").map(o => o.trim().toLowerCase()).filter(Boolean);
+                if (allowedOpts.length > 0) {
+                    const sdkPrompts = commandsFromDb["SDK"].prompts;
+                    const typePrompt = sdkPrompts?.find(p => p.prompt === "type" || p.wordPos === 2);
+                    const namePrompt = sdkPrompts?.find(p => p.prompt === "name" || p.wordPos === 3);
+
+                    if (typePrompt && typePrompt.promptValues) {
+                        const types = typePrompt.promptValues.split(",");
+                        const sources = (namePrompt && namePrompt.promptSource) ? namePrompt.promptSource.split(",") : [];
+
+                        const filteredTypes = [];
+                        const filteredSources = [];
+
+                        for (let i = 0; i < types.length; i++) {
+                            const rawType = types[i].trim();
+                            if (isDevOptionAllowed(rawType)) {
+                                filteredTypes.push(rawType);
+                                filteredSources.push(sources[i] ? sources[i].trim() : "Axi_Dummy");
+                            }
+                        }
+
+                        if (filteredTypes.length > 0) {
+                            typePrompt.promptValues = filteredTypes.join(",");
+                            if (namePrompt) {
+                                namePrompt.promptSource = filteredSources.join(",");
+                            }
+                        } else {
+                            delete commandsFromDb["SDK"];
+                        }
+                    }
                 }
             }
         }
