@@ -2500,7 +2500,9 @@ Home Cunfiguration Page Templete
                     appGlobalVarsObject._CONSTANTS.history = tempaxpertUIObj.history;
 
                     appGlobalVarsObject.methods.toggleCompressModeUI($("body"));
-
+            try {
+    axpertDevOptAccess();
+             } catch (ex) { }
                 } catch (ex) { }
                 //end AxpertUI Init
 
