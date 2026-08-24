@@ -205,7 +205,7 @@
         Run: {
             default: handleRunCommand,
         },
-         Ai: {
+        Ai: {
             start: handleAiStart,
 
         },
@@ -213,9 +213,9 @@
         ask: { default: handleAiAsk, },
         end: { default: handleAiEnd, },
         editprompt: { default: () => handleAiButtons("openSystemPrompt") },
-        
+
         // upload: { default: () => handleAiButtons("openUpload") }
-       
+
     };
 
 
@@ -634,7 +634,7 @@
             suppressFocusSuggestions = true;
             input.disabled = false;
             input.placeholder = "Axpert AI";
-            // console.log("commands: ", JSON.stringify(commands)); 
+            console.log("commands: ", JSON.stringify(commands)); 
         }
     }
 
@@ -887,7 +887,7 @@
             if (cached && !isForced) {
                 try {
                     configs = JSON.parse(cached);
-                } catch (e) {}
+                } catch (e) { }
             }
             if (!configs) {
                 const res = await fetch(`${axiCommandConfigUrl}?appname=${encodeURIComponent(appname)}&username=${encodeURIComponent(userName)}&forceRefresh=${isForced}`);
@@ -1179,7 +1179,7 @@
                     popUpOption = false;
                     return;
                 }
-            } catch (e) {}
+            } catch (e) { }
 
             // INITIAL LOAD: Set src for the first time
             let finalUrl = `${popUpContainerUrl}?contenturl=${targetURL}`;
@@ -2942,7 +2942,7 @@
             let docHref = "";
             try {
                 docHref = doc?.location?.href || win?.location?.href || "";
-            } catch (e) {}
+            } catch (e) { }
 
             const combinedUrl = (src + " " + docHref).toLowerCase();
 
@@ -2961,7 +2961,7 @@
             ];
 
             return targetIvnames.some(name => combinedUrl.includes(name));
-        } catch (e) {}
+        } catch (e) { }
         return false;
     }
 
@@ -2972,10 +2972,10 @@
             let docHref = "";
             try {
                 docHref = doc?.location?.href || win?.location?.href || "";
-            } catch (e) {}
+            } catch (e) { }
             const combinedUrl = (src + " " + docHref).toLowerCase();
             return combinedUrl.includes("ivname=response");
-        } catch (e) {}
+        } catch (e) { }
         return false;
     }
 
@@ -2992,7 +2992,7 @@
                         return true;
                     }
                 }
-            } catch (e) {}
+            } catch (e) { }
             return false;
         };
 
@@ -3083,16 +3083,16 @@
 
                 if (isTargetListingPageForParamsRestriction()) {
                     const isParamsBtn = (btnDisplayLower === "params" ||
-                                        btnDisplayLower === "param" ||
-                                        btnDisplayLower === "parameters" ||
-                                        btnDisplayLower === "parameter" ||
-                                        btnNameLower === "params" ||
-                                        btnNameLower === "param" ||
-                                        btnNameLower === "ivirparams" ||
-                                        btnNameLower === "iconsnewparams" ||
-                                        btnNameLower === "btnparams") &&
-                                        !btnDisplayLower.includes("refresh") &&
-                                        !btnNameLower.includes("refresh");
+                        btnDisplayLower === "param" ||
+                        btnDisplayLower === "parameters" ||
+                        btnDisplayLower === "parameter" ||
+                        btnNameLower === "params" ||
+                        btnNameLower === "param" ||
+                        btnNameLower === "ivirparams" ||
+                        btnNameLower === "iconsnewparams" ||
+                        btnNameLower === "btnparams") &&
+                        !btnDisplayLower.includes("refresh") &&
+                        !btnNameLower.includes("refresh");
                     if (isParamsBtn) return false;
                 }
 
@@ -3179,7 +3179,7 @@
     }
 
     function suggestLocal(inputText) {
-      // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
         // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
         normalizeGlobalState();
         let ignoreExtraParams = false;
@@ -3485,7 +3485,7 @@
             const firstToken = cleanString(tokens[1] || "");
             const { value: actualFirstToken, type } = tryResolveToken(1, firstToken, commandConfig, false);
             // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
-        // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
+            // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
             detectedType = getType(viewSource.toLowerCase(), { value: actualFirstToken, type: type }, viewValues, tokens, commandConfig);
             // detectedType = getType(viewSource.toLowerCase(), {value: act}, viewValues, tokens, commandConfig);
 
@@ -3531,7 +3531,7 @@
             return processRunCommands(tokens, targetIndex, structType);
         }
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
-          // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
         // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
 
 
@@ -4533,7 +4533,7 @@
 
                     // 2. Exact internal name match (e.g. 'ads1', 'tst1', 'iv1')
                     if (!preferredType) {
-                        const exactNameMatch = matches.find(item => 
+                        const exactNameMatch = matches.find(item =>
                             (item.name || item.NAME || item.sqlname || "").toLowerCase() === cleanTokName.toLowerCase()
                         );
                         if (exactNameMatch) {
@@ -4545,7 +4545,7 @@
                             });
                             if (typeMatched) found = typeMatched;
                         } else if (cmdGroup === "view") {
-                            const fullDisplayMatch = matches.find(item => 
+                            const fullDisplayMatch = matches.find(item =>
                                 (item.displaydata || item.DISPLAYDATA || "").toLowerCase() === tokenText.toLowerCase()
                             );
                             if (fullDisplayMatch) {
@@ -4718,13 +4718,13 @@
                         }
                     } else if (matches.length > 1) {
                         const cleanTokName = tokenText.replace(/\s*\[[^\]]*\]$/, "").trim();
-                        const exactNameMatch = matches.find(item => 
+                        const exactNameMatch = matches.find(item =>
                             (item.name || item.NAME || item.sqlname || "").toLowerCase() === cleanTokName.toLowerCase()
                         );
                         if (exactNameMatch) {
                             found = exactNameMatch;
                         } else if (cmdGroup === "view" && tokenIndex === 1) {
-                            const fullDisplayMatch = matches.find(item => 
+                            const fullDisplayMatch = matches.find(item =>
                                 (item.displaydata || item.DISPLAYDATA || "").toLowerCase() === tokenText.toLowerCase()
                             );
                             if (fullDisplayMatch) {
@@ -5082,7 +5082,7 @@
             if (input && document.activeElement === input) {
                 input.blur();
             }
-        } catch (e) {}
+        } catch (e) { }
     }
 
     function GetObjectName(selectedValue) {
@@ -5615,17 +5615,17 @@
         // };
 
         const openFn = (typeof window !== "undefined" && typeof window.openDeveloperStudio === "function" && window.openDeveloperStudio) ||
-                       (typeof parent !== "undefined" && typeof parent.openDeveloperStudio === "function" && parent.openDeveloperStudio) ||
-                       (typeof top !== "undefined" && typeof top.openDeveloperStudio === "function" && top.openDeveloperStudio);
+            (typeof parent !== "undefined" && typeof parent.openDeveloperStudio === "function" && parent.openDeveloperStudio) ||
+            (typeof top !== "undefined" && typeof top.openDeveloperStudio === "function" && top.openDeveloperStudio);
 
         if (openFn) {
             try {
                 openFn(page, name, callFromAxi);
 
-                
-                setTimeout(() => { 
-                    toggleShowDimmer(false) 
-                } , 0); 
+
+                setTimeout(() => {
+                    toggleShowDimmer(false)
+                }, 0);
 
             } catch (err) {
                 // console.error("openDeveloperStudio call failed:", err);
@@ -5689,8 +5689,8 @@
         }
 
         const alertFn = (typeof top !== "undefined" && typeof top.showAlertDialog === "function" && top.showAlertDialog) ||
-                        (typeof parent !== "undefined" && typeof parent.showAlertDialog === "function" && parent.showAlertDialog) ||
-                        (typeof window !== "undefined" && typeof window.showAlertDialog === "function" && window.showAlertDialog);
+            (typeof parent !== "undefined" && typeof parent.showAlertDialog === "function" && parent.showAlertDialog) ||
+            (typeof window !== "undefined" && typeof window.showAlertDialog === "function" && window.showAlertDialog);
 
         if (alertFn) {
             try {
@@ -6924,7 +6924,7 @@
     }
 
     function handleViewInbox() {
-        
+
         // LoadIframe('htmlpages.aspx?inbox=t')
         if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
             // top.window.LoadIframe('../aspx/processflow.aspx?activelist=t');
@@ -7586,7 +7586,7 @@
             redirectToIView(transId, rawStruct);
             return;
 
-        } 
+        }
 
 
         //const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
@@ -8602,7 +8602,7 @@
                             return true;
                         }
                     }
-                } catch (e) {}
+                } catch (e) { }
                 return false;
             };
 
@@ -8617,16 +8617,16 @@
                     const btnDisplayLower = (btn.label || "").toLowerCase().trim();
                     const btnNameLower = (btn.id || "").toLowerCase();
                     const isParamsBtn = (btnDisplayLower === "params" ||
-                                        btnDisplayLower === "param" ||
-                                        btnDisplayLower === "parameters" ||
-                                        btnDisplayLower === "parameter" ||
-                                        btnNameLower === "params" ||
-                                        btnNameLower === "param" ||
-                                        btnNameLower === "ivirparams" ||
-                                        btnNameLower === "iconsnewparams" ||
-                                        btnNameLower === "btnparams") &&
-                                        !btnDisplayLower.includes("refresh") &&
-                                        !btnNameLower.includes("refresh");
+                        btnDisplayLower === "param" ||
+                        btnDisplayLower === "parameters" ||
+                        btnDisplayLower === "parameter" ||
+                        btnNameLower === "params" ||
+                        btnNameLower === "param" ||
+                        btnNameLower === "ivirparams" ||
+                        btnNameLower === "iconsnewparams" ||
+                        btnNameLower === "btnparams") &&
+                        !btnDisplayLower.includes("refresh") &&
+                        !btnNameLower.includes("refresh");
                     if (isParamsBtn) return false;
                 }
 
@@ -8938,13 +8938,13 @@
             }
 
             const title = link.getAttribute("title") ||
-                          link.getAttribute("data-bs-original-title") ||
-                          link.getAttribute("data-original-title") ||
-                          link.parentElement?.getAttribute("title") ||
-                          link.parentElement?.getAttribute("data-bs-original-title") ||
-                          link.parentElement?.getAttribute("data-original-title") ||
-                          link.closest("[title]")?.getAttribute("title") ||
-                          link.closest("[data-bs-original-title]")?.getAttribute("data-bs-original-title") || "";
+                link.getAttribute("data-bs-original-title") ||
+                link.getAttribute("data-original-title") ||
+                link.parentElement?.getAttribute("title") ||
+                link.parentElement?.getAttribute("data-bs-original-title") ||
+                link.parentElement?.getAttribute("data-original-title") ||
+                link.closest("[title]")?.getAttribute("title") ||
+                link.closest("[data-bs-original-title]")?.getAttribute("data-bs-original-title") || "";
             let label = title.trim();
             if (!label) {
                 const nameSpan = link.querySelector(".dropdownIconName");
@@ -9371,7 +9371,7 @@
             if (!id) return;
             const label = btn.innerText.trim();
             if (!label) // console.log("There is no label for Element: " + btn);
-            if (label.toLowerCase() === "plugin custom code") return;
+                if (label.toLowerCase() === "plugin custom code") return;
 
 
 
@@ -9388,7 +9388,7 @@
 
     function getStructType() {
         const { doc: iframeDoc, win: iframeWin, iframe } = getIViewDocumentAndWindow();
-        
+
         let src = iframe ? (iframe.getAttribute("src") || "") : "";
         let docHref = "";
         try {
@@ -9542,21 +9542,21 @@
                 btn.click();
                 return;
             }
-        } catch (e) {}
+        } catch (e) { }
 
         // 2. MouseEvent fallback if .click() failed
         try {
             const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: targetWin });
             btn.dispatchEvent(evt);
             return;
-        } catch (e) {}
+        } catch (e) { }
 
         // 3. jQuery trigger fallback
         if (targetWin && targetWin.$) {
             try {
                 targetWin.$(btn).trigger('click');
                 return;
-            } catch (e) {}
+            } catch (e) { }
         }
 
         // 4. Inline onclick fallback
@@ -9566,7 +9566,7 @@
                 targetWin.eval(onclickAttr);
                 return;
             }
-        } catch (e) {}
+        } catch (e) { }
 
         // 5. javascript: href fallback
         try {
@@ -9575,7 +9575,7 @@
                 targetWin.eval(decodeURIComponent(hrefAttr.replace(/^javascript:/i, '')));
                 return;
             }
-        } catch (e) {}
+        } catch (e) { }
     }
 
     function getEntityToolbarButtons() {
@@ -9680,7 +9680,7 @@
             // const label = btn.innerText.trim();
             const label = extractButtonLabel(btn);
             if (!label) // console.log("There is no label for Element: " + btn);
-            if (label.toLowerCase() === "plugin custom code") return;
+                if (label.toLowerCase() === "plugin custom code") return;
 
 
 
@@ -12980,52 +12980,31 @@
             } else if (typeof callParentNew === "function") {
                 devOpt = callParentNew("axpertDevOpt") || "";
             }
-        } catch (e) {}
+        } catch (e) { }
         return (devOpt || "").toString().trim();
     }
 
     const SDK_DEV_OPT_MAP = {
-        "tstruct": ["tstruct"],
-        "t": ["tstruct"],
-        "iview": ["iview"],
-        "i": ["iview"],
-        "axpert data sources": ["ads", "axpertdatasources"],
-        "ads": ["ads", "axpertdatasources"],
-        "page": ["custompages", "page", "pages"],
-        "p": ["custompages", "page", "pages"],
-        "custompages": ["custompages", "page", "pages"],
-        "arrange menu": ["arrangemenu", "arrange menu"],
-        "arrangemenu": ["arrangemenu", "arrange menu"],
-        "dev option": ["devoptions", "devoption", "dev option", "developeroptions"],
-        "devoptions": ["devoptions", "devoption", "dev option", "developeroptions"],
-        "app variables": ["appvariables", "app variables", "applicationvariables"],
-        "appvariables": ["appvariables", "app variables", "applicationvariables"],
-        "db explorer": ["devexplorer", "dbexplorer", "db explorer", "databaseexplorer"],
-        "devexplorer": ["devexplorer", "dbexplorer", "db explorer", "databaseexplorer"],
-        "api plugin": ["apiplugins", "apiplugin", "api plugin"],
-        "apiplugins": ["apiplugins", "apiplugin", "api plugin"],
-        "axpert job": ["axpertjobs", "axpertjob", "axpert job"],
-        "axpertjobs": ["axpertjobs", "axpertjob", "axpert job"],
-        "language": ["devlanguages", "languages", "language", "devlanguage"],
-        "devlanguages": ["devlanguages", "languages", "language", "devlanguage"],
-        "publish": ["devpublish", "publish"],
-        "devpublish": ["devpublish", "publish"],
-        "custom data type": ["customdatatype", "custom data type"],
-        "customdatatype": ["customdatatype", "custom data type"],
-        "email definition": ["emaildefinitions", "emaildefinition", "email definition"],
-        "emaildefinitions": ["emaildefinitions", "emaildefinition", "email definition"],
-        "table field descriptor": ["tabledescriptor", "table descriptor", "tablefielddescriptor", "table field descriptor"],
-        "tabledescriptor": ["tabledescriptor", "table descriptor", "tablefielddescriptor", "table field descriptor"],
-        "custom plugin": ["plugincustomcode", "customplugin", "custom plugin", "customplugins"],
-        "plugincustomcode": ["plugincustomcode", "customplugin", "custom plugin", "customplugins"],
-        "queue listing": ["queuelisting", "queue listing"],
-        "queuelisting": ["queuelisting", "queue listing"],
-        "out bound queue": ["queuelisting", "queue listing", "outboundqueue", "out bound queue"],
-        "outboundqueue": ["queuelisting", "queue listing", "outboundqueue", "out bound queue"],
-        "in bound queue": ["queuelisting", "queue listing", "inboundqueue", "in bound queue"],
-        "inboundqueue": ["queuelisting", "queue listing", "inboundqueue", "in bound queue"],
-        "mem db console": ["memdbconsole", "mem db console", "inmemdb"],
-        "memdbconsole": ["memdbconsole", "mem db console", "inmemdb"]
+        "tstruct": "tstruct",
+        "iview": "iview",
+        "axpert data sources": "ads",
+        "page": "custompages",
+        "arrange menu": "arrangemenu",
+        "dev option": "devoptions",
+        "app variables": "appvariables",
+        "db explorer": "devexplorer",
+        "api plugin": "apiplugins",
+        "axpert job": "axpertjobs",
+        "language": "devlanguages",
+        "publish": "devpublish",
+        "custom data type": "customdatatype",
+        "email definition": "emaildefinitions",
+        "table field descriptor": "tabledescriptor",
+        "custom plugin": "plugincustomcode",
+        "queue listing": "queuelisting",
+        "out bound queue": "queuelisting",
+        "in bound queue": "queuelisting",
+        "mem db console": "memdbconsole"
     };
 
     function isDevOptionAllowed(sdkOptionName) {
@@ -13042,8 +13021,8 @@
             return true;
         }
         const cleanOpt = (sdkOptionName || "").toString().trim().toLowerCase();
-        const mappedKeys = SDK_DEV_OPT_MAP[cleanOpt] || [cleanOpt];
-        return mappedKeys.some(k => allowedOpts.includes(k));
+        const devOptKey = SDK_DEV_OPT_MAP[cleanOpt] || cleanOpt;
+        return allowedOpts.includes(devOptKey);
     }
 
     let cachedAccessPermissions = null;
