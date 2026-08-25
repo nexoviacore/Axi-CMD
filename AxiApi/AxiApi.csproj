@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Npgsql" Version="8.0.8" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="Serilog.Expressions" Version="5.0.0" />
+    <PackageReference Include="Serilog.Filters.Expressions" Version="2.1.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="StackExchange.Redis" Version="2.10.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="NewFolder\" />
+  </ItemGroup>
+
+  <ItemGroup>
+	  <Reference Include="ARMCommon">
+      <HintPath>..\..\ARMMICRO\AxPlugins\AxExtend\ARMCommon.dll</HintPath>
+    </Reference>
+    <Reference Include="AxExtend">
+      <HintPath>..\..\ARMMICRO\AxPlugins\AxExtend\AxExtend.dll</HintPath>
+    </Reference>
+    
+  </ItemGroup>
+	<ItemGroup>
+		 <Content Update="appsettings.json" CopyToPublishDirectory="PreserveNewest" />
+  <Content Update="appsettings.Development.json" CopyToPublishDirectory="PreserveNewest" />
+	</ItemGroup>
+	
+	<Target Name="RemoveDuplicateAppsettingsFromReferences" AfterTargets="ComputeFilesToPublish">
+  <ItemGroup>
+
+    <!-- Remove ARMCommon appsettings.json -->
+    <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="&#xD;&#xA;        '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'appsettings.json'&#xD;&#xA;        AND $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Contains('ARMCommon'))&#xD;&#xA;      " />
+
+    <!-- Remove ARMCommon appsettings.Development.json -->
+    <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="&#xD;&#xA;        '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'appsettings.Development.json'&#xD;&#xA;        AND $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Contains('ARMCommon'))&#xD;&#xA;      " />
+
+  </ItemGroup>
+</Target>
+
+	
+
+</Project>

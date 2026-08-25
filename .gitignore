@@ -5,3 +5,8 @@
 /Agents.md
 *.zip
 *.rar
+AxiApi/bin/
+AxiApi/obj/
+AxiApi/logs/
+*.user
+*.lscache

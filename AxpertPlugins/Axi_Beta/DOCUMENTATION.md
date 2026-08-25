@@ -75,7 +75,8 @@ The following tables define the command structure and properties:
 | Table Name | Description | Key Columns |
 | :--- | :--- | :--- |
 | `axi_commands` | Stores root command words and their groupings. | `cmdtoken` (PK), `command_group`, `command`, `active` |
-| `axi_command_prompts` | Stores prompt inputs, order, dynamic sources, and URL parameters for each token position. | `id` (PK), `cmdtoken`, `wordpos`, `prompt`, `promptsource`, `promptvalues`, `extraparams` |
+| `axi_command_prompts` | Stores prompt inputs, token positions, dynamic sources, and URL parameters for auto-complete suggestions and traditional commands (`Create`, `Edit`, `View`, `SDK TStruct`, `SDK IView`). | `id` (PK), `cmdtoken`, `wordpos`, `prompt`, `promptsource`, `promptvalues`, `extraparams` |
+| `axi_command_config` | Stores dynamic command navigation mappings, target URLs, and parameter field definitions for `Configure`, standard `SDK` options, `Upload`, and `Download`. | `config_id` (PK), `command`, `prompt_options`, `prompt_id`, `prompt_option_type`, `param_field`, `target_url`, `extra_params`, `active` |
 | `axp_tstructprops` | Manages additional properties for Tstruct definitions (e.g., custom primary key fields). | `name`, `caption`, `keyfield`, `userconfigured` |
 | `axdirectsql_metadata` | Caches column names and metadata details for direct SQL queries (`ADS`). | `axdirectsql_metadataid` (PK), `axdirectsqlid`, `fldname`, `fldcaption` |
 
@@ -111,7 +112,7 @@ Depending on the database engine, the structures differ slightly to accommodate 
 
 ## 🔌 Backend API Specifications (AxiApi_Beta)
 
-The .NET 8 backend API acts as the bridge. It provides two key endpoints consumed by the frontend javascript client.
+The .NET 8 backend API acts as the bridge. It provides three key endpoints consumed by the frontend javascript client.
 
 ### 1. Retrieve Configured Objects & Permissions
 *   **Route:** `/api/v1/Axi/axi_get`
@@ -122,6 +123,16 @@ The .NET 8 backend API acts as the bridge. It provides two key endpoints consume
 ### 2. Manage Favorites / Recents
 *   **Route:** `/api/v1/Axi/user-favourites`
 *   **Method:** `GET` / `POST` / `DELETE`
+
+### 3. Retrieve Dynamic Command Navigation Configuration
+*   **Route:** `/api/v1/Axi/command-config`
+*   **Method:** `GET`
+*   **Query Parameters:**
+    *   `appname` (string, required): Target application name.
+    *   `username` (string, required): Logged-in username.
+    *   `forceRefresh` (boolean, optional): Set `true` to bypass Redis cache and reload directly from database.
+*   **Response:** A JSON array of `CommandConfigDTO` objects defining dynamic navigation targets (`tstruct`, `iview`, `url`, `tstruct/iview`, `processflow`, `action`).
+*   **Caching Strategy:** Cached in Redis under user-isolated key `axi_<appname>_command_config_<username>`.
 
 
 ---
@@ -232,14 +243,16 @@ Execute the appropriate scripts based on your target database:
 *   **PostgreSQL:** Run the scripts inside [Structures/Postgre/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/Postgre/Scripts/):
     1.  `axi_axdirectsql_tables.sql`
     2.  `axi_command_tables.sql`
-    3.  `axi_dependent_tables.sql`
-    4.  `axi_functions.sql`
+    3.  `axi_command_config.sql`
+    4.  `axi_dependent_tables.sql`
+    5.  `axi_functions.sql`
 
 *   **Oracle:** Run the scripts inside [Structures/Oracle/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/Oracle/Scripts/):
     1.  `axi_axdirectsql_tables.sql`
     2.  `axi_command_tables.sql`
-    3.  `axi_dependent_tables.sql`
-    4.  `axi_functions.sql`
+    3.  `axi_command_config.sql`
+    4.  `axi_dependent_tables.sql`
+    5.  `axi_functions.sql`
 
 ---
 
@@ -316,11 +329,43 @@ To specify what parameter recommendations are shown when the command is typed, i
 *   `promptsource`: The name of the database table, database function, or static list values to load suggestions from.
 *   `extraparams`: Parameter mapping bindings (e.g., passing `:username`, `:userrole`, `:transid`).
 
-Example for adding a prompt parameter at position 2:
+### Command Configuration Architecture Matrix
+
+Axi uses a dual-table architecture to balance dynamic database-driven navigation with specialized prompt tokenization:
+
+| Command Category / Family | Target Configuration Table | Runtime Execution Mechanism | Notes |
+| :--- | :--- | :--- | :--- |
+| `Configure` (e.g. `User`, `Role`, `Publish`, `PEG`, `Keyfield`) | `axi_command_config` | Dynamic Dispatcher (`executeDynamicNavigation`) | Driven purely by database rows in `axi_command_config`. |
+| Standard `SDK` (e.g. `DB Explorer`, `App Variables`, `Arrange Menu`) | `axi_command_config` | Dynamic Dispatcher (`executeDynamicNavigation`) | Driven purely by database rows in `axi_command_config`. |
+| `Upload` & `Download` | `axi_command_config` | Dynamic Dispatcher (`executeDynamicNavigation`) | Driven purely by database rows in `axi_command_config`. |
+| **`SDK TStruct` & `SDK IView`** | **`axi_command_prompts`** | Studio Bridge (`handleOpenSource` / `safeOpenDeveloperStudio`) | **Architectural Exception:** Bypasses `axi_command_config` because it launches the embedded React Developer Studio modal rather than an iFrame URL. |
+| `Create`, `Edit`, `View`, `Run` | `axi_command_prompts` | Token Resolver & Subsystem Handlers | Driven by `axi_command_prompts` for multi-token auto-complete suggestions. |
+
+> [!IMPORTANT]
+> **Architectural Exception — SDK TStruct & SDK IView:**
+> `SDK TStruct` and `SDK IView` are explicitly **not** configured in `axi_command_config`. Because they launch the embedded React Developer Studio builder (`safeOpenDeveloperStudio("tstreact")` / `safeOpenDeveloperStudio("ivreact")`) with special "create new" template state rather than navigating to an iFrame URL, they continue to be maintained via `axi_command_prompts` and `handleOpenSource`.
+
+### Configuring Dynamic Commands (`axi_command_config`)
+
+Commands (such as `Configure`, `SDK`, `Upload`, `Download`) can be configured dynamically without writing frontend JavaScript handler code by adding entries to `axi_command_config`:
+
 ```sql
-INSERT INTO axi_command_prompts (id, cmdtoken, wordpos, prompt, promptsource, extraparams)
-VALUES (gen_random_uuid(), 12, 2, 'API Name', 'axi_publishapi', ':username');
+INSERT INTO axi_command_config 
+(config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active)
+VALUES 
+('cfg_configure_publish_listing', 'Configure', 'publish config studio', 'axpub/ad_pbcs', 'tstruct/iview', 'servername', NULL, NULL, 'T');
 ```
+
+#### Supported `prompt_option_type` Values:
+| `prompt_option_type` | Description & Behavior |
+| :--- | :--- |
+| `tstruct` | Navigates to a TStruct transaction form (`tstruct.aspx`). Appends `param_field` if parameter is provided. |
+| `iview` | Navigates to an IView report/listing (`iview.aspx`). |
+| `ivtoivload` | Navigates to an IView-to-IView detail loader (`ivtoivload.aspx`). |
+| `url` | Navigates to a custom target ASPX page or web URL. |
+| `tstruct/iview` / `iview/tstruct` | **Dual Composite Mode:** Opens TStruct edit form when a parameter is provided; opens IView listing when no parameter is provided. |
+| `processflow` | **Process Builder Mode:** Opens Process Flow builder (`processflow.aspx?loadcaption=AxProcessBuilder`). Opens blank `ad_pm` form if no parameter is provided. |
+| `action` | **Background Action Mode:** Executes non-navigational background API/ADS routines (e.g. `keyfield` via `axi_tstructprops_insupd`). |
 
 
 ---
@@ -333,9 +378,28 @@ VALUES (gen_random_uuid(), 12, 2, 'API Name', 'axi_publishapi', ':username');
 *   **Search suggestions are empty:**
     *   Verify the backend API is running. Open the IIS application URL in your browser (e.g., `http://<server>/AxiApi_Beta/api/v1/Axi/axi_get`) and verify it responds.
     *   Check the API's log file located in `AxiApi_Beta/logs/log.txt` for database connection errors.
-    *   Verify that you executed the database scripts (specifically `axi_commands` and `axi_command_prompts`) and the tables are populated.
+    *   Verify that you executed the database scripts (specifically `axi_commands`, `axi_command_prompts`, and `axi_command_config`) and the tables are populated.
 *   **Data permissions / Row filtering issue:**
     *   Axi evaluates permissions via `fn_permissions_getpermission`. Verify that the user's role responsibilities are correctly assigned in Axpert's standard user settings pages.
+
+## 🚀 Release Notes & Recent Bug Fixes (August 14, 2026)
+
+### 1. Dynamic Command Navigation Engine (`axi_command_config`)
+*   **Database-Driven Navigation:** Transitioned hardcoded JavaScript command handlers (`Configure`, standard `SDK`, `Upload`, `Download`) to a fully dynamic database table `axi_command_config`.
+*   **Dual-Table Command Architecture:** Clarified execution division where `Configure`, standard `SDK` tools, `Upload`, and `Download` are driven dynamically by `axi_command_config`, while prompt tokenization (`Create`, `Edit`, `View`) and studio launchers (`SDK TStruct`, `SDK IView`) are maintained via `axi_command_prompts`.
+*   **Composite Dual Mode (`tstruct/iview`):** Added support for dual navigation where commands like `Configure "Publish Config Studio"` open a listing page (`ad_pbcs`) when executed without parameters, and open an edit form (`axpub` with `servername`) when executed with parameters.
+*   **Generic Process Flow (`processflow`):** Made Process Builder navigation (`processflow.aspx?loadcaption=AxProcessBuilder`) fully generic and database-configurable without command-specific JS branches.
+*   **Background Action Execution (`action`):** Added support for non-navigational background actions (e.g., `Configure keyfield` executing `axi_tstructprops_insupd`).
+
+### 2. Mandatory Username Parameter & Redis Caching
+*   **User Isolation:** Updated `GET /api/v1/Axi/command-config` endpoint and `CommandConfigService` to enforce `username` as a mandatory parameter.
+*   **Isolated Cache Keys:** Redis cache keys are now isolated per user: `axi_<appname>_command_config_<username>`.
+
+### 3. Dedicated Database Structure Scripts
+*   **Modular DDL Migration:** Separated `axi_command_config.sql` into dedicated structure scripts for both PostgreSQL and Oracle environments.
+*   **Idempotent Patch Deployments:** Added `DROP TABLE axi_command_config` at the top of setup scripts to ensure clean table re-creation and baseline seed updates on patch re-runs.
+
+---
 
 ## 🚀 Release Notes & Recent Bug Fixes (July 13, 2026)
 
