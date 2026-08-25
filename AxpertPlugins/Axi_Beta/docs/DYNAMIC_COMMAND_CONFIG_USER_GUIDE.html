@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Command Configuration Engine (axi_command_config) - User & Administrator Guide</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 18mm 18mm 18mm 18mm;
+            @bottom-right {
+                content: counter(page);
+            }
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: #24292f;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 24px;
+        }
+
+        h1, h2, h3, h4 {
+            color: #0f172a;
+            font-weight: 600;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            page-break-after: avoid;
+        }
+
+        h1 {
+            font-size: 24px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-top: 0;
+            color: #1e3a8a;
+        }
+
+        h2 {
+            font-size: 17px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
+            margin-top: 28px;
+            color: #1e40af;
+        }
+
+        h3 {
+            font-size: 14.5px;
+            margin-top: 18px;
+            color: #334155;
+        }
+
+        p, ul, ol {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        ul, ol {
+            padding-left: 22px;
+        }
+
+        li {
+            margin-bottom: 4px;
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: #e2e8f0;
+            margin: 20px 0;
+        }
+
+        .meta-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 12.5px;
+        }
+
+        .meta-box p {
+            margin: 2px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0;
+            font-size: 12px;
+            page-break-inside: avoid;
+        }
+
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 7px 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 11.5px;
+            background-color: #f1f5f9;
+            color: #b91c1c;
+            padding: 2px 5px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+        }
+
+        pre {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 12px 14px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 11.5px;
+            line-height: 1.45;
+            margin: 12px 0;
+            page-break-inside: avoid;
+        }
+
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            border: none;
+        }
+
+        .sql-keyword { color: #f43f5e; font-weight: 600; }
+        .sql-string { color: #34d399; }
+        .sql-function { color: #38bdf8; }
+
+        .diagram-box {
+            background-color: #f8fafc;
+            border: 1px dashed #94a3b8;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 14px 0;
+            text-align: center;
+            font-family: Consolas, monospace;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #334155;
+            page-break-inside: avoid;
+        }
+
+        .highlight-card {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 10px 14px;
+            margin: 12px 0;
+            border-radius: 0 6px 6px 0;
+            font-size: 12.5px;
+        }
+
+        .highlight-card strong {
+            color: #1d4ed8;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>User &amp; Administrator Guide: Dynamic Command Configuration Engine (<code>axi_command_config</code>)</h1>
+
+    <div class="meta-box">
+        <p><strong>Document Version:</strong> 1.0.0</p>
+        <p><strong>Target Audience:</strong> Axpert Developers, System Administrators, Technical QA Engineers</p>
+        <p><strong>Applies To:</strong> Axi Command Palette (<code>Axi_Beta</code>) v0.4.0+ / Axpert Web 11.4+</p>
+    </div>
+
+    <h2>📖 1. Overview &amp; Purpose</h2>
+    <p>The <strong>Dynamic Command Configuration Engine</strong> is a metadata-driven navigation architecture in the Axi Command Palette. Historically, adding or modifying command navigation routes required editing JavaScript source code (<code>axicmdmain.js</code>).</p>
+    <p>With the introduction of the <code>axi_command_config</code> table and REST API, <strong>100% of command navigation is managed directly in the database</strong>. System administrators and developers can register new commands, link them to forms, reports, or custom pages, and configure contextual parameters <strong>without changing a single line of JavaScript</strong>.</p>
+
+    <div class="diagram-box">
+        [User Types Command] ➔ [Command Palette Autocomplete] ➔ [Matcher: command + prompt_options]<br>
+        ➔ [Query: axi_command_config] ➔ [Placeholder Resolver: :username, :userroles, :appname]<br>
+        ➔ [Execution Dispatcher: tstruct | iview | tstruct/iview | url | processflow | ivtoivload]
+    </div>
+
+    <h2>🗄 2. Database Schema Reference (<code>axi_command_config</code>)</h2>
+    <p>The table <code>axi_command_config</code> is stored in the application database (PostgreSQL or Oracle).</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Column Name</th>
+                <th>Data Type</th>
+                <th>Nullable</th>
+                <th>Description &amp; Purpose</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong><code>config_id</code></strong></td>
+                <td>VARCHAR(50)</td>
+                <td>No</td>
+                <td>Primary Key. Unique identifier for the configuration rule (e.g. <code>cfg_configure_user</code>).</td>
+            </tr>
+            <tr>
+                <td><strong><code>command</code></strong></td>
+                <td>VARCHAR(50)</td>
+                <td>No</td>
+                <td>Root command verb (e.g. <code>Configure</code>, <code>SDK</code>, <code>Upload</code>, <code>Download</code>, <code>View</code>).</td>
+            </tr>
+            <tr>
+                <td><strong><code>prompt_options</code></strong></td>
+                <td>VARCHAR(200)</td>
+                <td>No</td>
+                <td>Sub-prompt option to match (e.g. <code>user</code>, <code>role listing</code>, <code>app</code>, <code>default</code>). Case-insensitive.</td>
+            </tr>
+            <tr>
+                <td><strong><code>prompt_id</code></strong></td>
+                <td>VARCHAR(50)</td>
+                <td>No</td>
+                <td>Target identifier: <code>TransID</code> for Tstructs, <code>IViewName</code> for Iviews, or filename for custom pages.</td>
+            </tr>
+            <tr>
+                <td><strong><code>prompt_option_type</code></strong></td>
+                <td>VARCHAR(20)</td>
+                <td>No</td>
+                <td>Execution mode determining how the client shell handles the navigation.</td>
+            </tr>
+            <tr>
+                <td><strong><code>param_field</code></strong></td>
+                <td>VARCHAR(100)</td>
+                <td>Yes</td>
+                <td>Query parameter key to bind the user's input parameter to (e.g. <code>name</code>, <code>type</code>, <code>actorname</code>).</td>
+            </tr>
+            <tr>
+                <td><strong><code>target_url</code></strong></td>
+                <td>VARCHAR(500)</td>
+                <td>Yes</td>
+                <td>Explicit target URL template override. If omitted, constructed dynamically based on <code>prompt_option_type</code>.</td>
+            </tr>
+            <tr>
+                <td><strong><code>extra_params</code></strong></td>
+                <td>VARCHAR(500)</td>
+                <td>Yes</td>
+                <td>Additional query string parameters or dynamic tokens to append (e.g. <code>&amp;status=true&amp;user=:username</code>).</td>
+            </tr>
+            <tr>
+                <td><strong><code>active</code></strong></td>
+                <td>VARCHAR(1)</td>
+                <td>Yes</td>
+                <td>Status flag (<code>'T'</code> for Active, <code>'F'</code> for Disabled). Default: <code>'T'</code>.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <h2>⚙️ 3. Supported Navigation Modes (<code>prompt_option_type</code>)</h2>
+    <p>The engine provides specialized execution handlers tailored to Axpert structure types:</p>
+
+    <h3>1. <code>tstruct</code> (Transaction Forms)</h3>
+    <ul>
+        <li><strong>Use Case:</strong> Opens an Axpert Tstruct form for creating a new record or editing an existing record.</li>
+        <li><strong>Behavior:</strong> If user provides a search value and <code>param_field</code> is specified, it opens in edit mode (<code>hltype=load</code>); otherwise opens in create mode (<code>hltype=open</code>).</li>
+    </ul>
+    <pre><code><span class="sql-keyword">INSERT INTO</span> axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, active)
+<span class="sql-keyword">VALUES</span> (<span class="sql-string">'cfg_configure_user'</span>, <span class="sql-string">'Configure'</span>, <span class="sql-string">'user'</span>, <span class="sql-string">'axusr'</span>, <span class="sql-string">'tstruct'</span>, <span class="sql-string">'uname'</span>, <span class="sql-string">'T'</span>);</code></pre>
+
+    <h3>2. <code>iview</code> (Interactive Views / Reports)</h3>
+    <ul>
+        <li><strong>Use Case:</strong> Opens an Axpert interactive view report.</li>
+        <li><strong>Behavior:</strong> Routes directly to <code>iview.aspx?ivname=&lt;prompt_id&gt;</code>.</li>
+    </ul>
+    <pre><code><span class="sql-keyword">INSERT INTO</span> axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, active)
+<span class="sql-keyword">VALUES</span> (<span class="sql-string">'cfg_configure_users'</span>, <span class="sql-string">'Configure'</span>, <span class="sql-string">'user listing'</span>, <span class="sql-string">'axusers'</span>, <span class="sql-string">'iview'</span>, <span class="sql-string">'T'</span>);</code></pre>
+
+    <h3>3. <code>tstruct/iview</code> or <code>iview/tstruct</code> (Dual-Mode Conditional Routing)</h3>
+    <ul>
+        <li><strong>Use Case:</strong> Single command that opens a listing report by default, but directly opens a specific record form if an entity name/ID is supplied.</li>
+        <li><strong>Syntax for <code>prompt_id</code>:</strong> <code>&lt;TstructID&gt;/&lt;IviewName&gt;</code> (e.g. <code>ad_ur/ad___url</code>).</li>
+        <li><strong>Behavior:</strong>
+            <ul>
+                <li>If user types <code>Configure Role</code> ➔ Opens IView report <code>ad___url</code>.</li>
+                <li>If user types <code>Configure Role "Admin"</code> ➔ Opens Tstruct form <code>ad_ur</code> with record <code>Admin</code>.</li>
+            </ul>
+        </li>
+    </ul>
+    <pre><code><span class="sql-keyword">INSERT INTO</span> axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, active)
+<span class="sql-keyword">VALUES</span> (<span class="sql-string">'cfg_role_dual'</span>, <span class="sql-string">'Configure'</span>, <span class="sql-string">'role'</span>, <span class="sql-string">'ad_ur/ad___url'</span>, <span class="sql-string">'tstruct/iview'</span>, <span class="sql-string">'rname'</span>, <span class="sql-string">'T'</span>);</code></pre>
+
+    <h3>4. <code>url</code> (Standard Custom ASPX / HTML Pages)</h3>
+    <ul>
+        <li><strong>Use Case:</strong> Redirects to custom Axpert web pages, tools, or configuration dashboards.</li>
+        <li><strong>Behavior:</strong> Resolves relative URLs to <code>../aspx/&lt;prompt_id&gt;</code> or uses explicit <code>target_url</code>.</li>
+    </ul>
+    <pre><code><span class="sql-keyword">INSERT INTO</span> axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, active)
+<span class="sql-keyword">VALUES</span> (<span class="sql-string">'cfg_config_app'</span>, <span class="sql-string">'Configure'</span>, <span class="sql-string">'app'</span>, <span class="sql-string">'appconfig.aspx'</span>, <span class="sql-string">'url'</span>, <span class="sql-keyword">NULL</span>, <span class="sql-string">'../aspx/appconfig.aspx'</span>, <span class="sql-string">'T'</span>);</code></pre>
+
+    <h3>5. <code>processflow</code> or <code>url/tstruct</code> (Process Builder Flow)</h3>
+    <ul>
+        <li><strong>Use Case:</strong> Opens visual workflow builder diagrams.</li>
+        <li><strong>Behavior:</strong> Routes to <code>processflow.aspx?loadcaption=AxProcessBuilder&amp;processname=&lt;paramValue&gt;</code>. If no parameter is passed, falls back to <code>ad_pm</code> Tstruct.</li>
+    </ul>
+    <pre><code><span class="sql-keyword">INSERT INTO</span> axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, active)
+<span class="sql-keyword">VALUES</span> (<span class="sql-string">'cfg_configure_peg'</span>, <span class="sql-string">'Configure'</span>, <span class="sql-string">'peg'</span>, <span class="sql-string">'ad_pm'</span>, <span class="sql-string">'processflow'</span>, <span class="sql-string">'processname'</span>, <span class="sql-string">'../aspx/processflow.aspx?loadcaption=AxProcessBuilder'</span>, <span class="sql-string">'T'</span>);</code></pre>
+
+    <h3>6. <code>ivtoivload</code> (IView-to-IView Parameterized Navigation)</h3>
+    <ul>
+        <li><strong>Use Case:</strong> Navigates to parameterized summary Iviews with preset filter bindings.</li>
+    </ul>
+    <pre><code><span class="sql-keyword">INSERT INTO</span> axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active)
+<span class="sql-keyword">VALUES</span> (<span class="sql-string">'cfg_configure_dim_list'</span>, <span class="sql-string">'Configure'</span>, <span class="sql-string">'dimension listing'</span>, <span class="sql-string">'ad___upg'</span>, <span class="sql-string">'ivtoivload'</span>, <span class="sql-string">'prole'</span>, <span class="sql-string">'../aspx/ivtoivload.aspx?ivname=ad___upg'</span>, <span class="sql-string">'AxOpenAct=true&amp;isDupTab=false'</span>, <span class="sql-string">'T'</span>);</code></pre>
+
+    <div class="page-break"></div>
+
+    <h2>🔤 4. Dynamic URL Placeholders</h2>
+    <p>You can include contextual placeholders in <code>target_url</code> and <code>extra_params</code>. The client engine resolves these dynamically from the logged-in session before launching the target:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Placeholder Token</th>
+                <th>Resolved Runtime Value</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong><code>:username</code></strong></td>
+                <td><code>window.mainUserName</code></td>
+                <td>The login username of the current user.</td>
+            </tr>
+            <tr>
+                <td><strong><code>:userroles</code></strong></td>
+                <td><code>window.AxUserRoles</code></td>
+                <td>Comma-separated list of active user roles.</td>
+            </tr>
+            <tr>
+                <td><strong><code>:userresp</code></strong></td>
+                <td><code>window.userResp</code></td>
+                <td>Active responsibility of the logged-in user.</td>
+            </tr>
+            <tr>
+                <td><strong><code>:appname</code></strong></td>
+                <td><code>appname</code> / <code>window.mainProject</code></td>
+                <td>Current application project schema name.</td>
+            </tr>
+            <tr>
+                <td><strong><code>:param</code></strong></td>
+                <td><code>paramValue</code></td>
+                <td>The parameter value typed or selected by the user.</td>
+            </tr>
+            <tr>
+                <td><strong><code>:paramField</code></strong></td>
+                <td><code>paramField</code></td>
+                <td>The field name configured for the target.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="highlight-card">
+        <strong>Placeholder Usage Example:</strong><br>
+        <code>target_url: "../aspx/customdashboard.aspx?user=:username&amp;role=:userroles&amp;proj=:appname"</code>
+    </div>
+
+    <h2>🛠 5. Step-by-Step Tutorial: Configuring a New Command</h2>
+
+    <h3>Scenario</h3>
+    <p>You want to add a new command: <strong><code>Configure SLA "Gold Policy"</code></strong> that opens custom page <code>SlaConfig.aspx</code> with the selected policy name and current user's role.</p>
+
+    <h3>Step 1: Insert the Configuration Row</h3>
+    <pre><code><span class="sql-keyword">INSERT INTO</span> axi_command_config (
+    config_id, command, prompt_options, prompt_id,
+    prompt_option_type, param_field, target_url, extra_params, active
+) <span class="sql-keyword">VALUES</span> (
+    <span class="sql-string">'cfg_configure_sla'</span>, <span class="sql-string">'Configure'</span>, <span class="sql-string">'sla'</span>, <span class="sql-string">'SlaConfig.aspx'</span>,
+    <span class="sql-string">'url'</span>, <span class="sql-string">'policyname'</span>, <span class="sql-string">'../aspx/SlaConfig.aspx'</span>, <span class="sql-string">'role=:userroles&amp;user=:username'</span>, <span class="sql-string">'T'</span>
+);</code></pre>
+
+    <h3>Step 2: Register Autocomplete Prompt (Optional)</h3>
+    <pre><code><span class="sql-keyword">UPDATE</span> axi_command_prompts 
+<span class="sql-keyword">SET</span> prompt_values = prompt_values || <span class="sql-string">',SLA'</span>
+<span class="sql-keyword">WHERE</span> command_id = (<span class="sql-keyword">SELECT</span> command_id <span class="sql-keyword">FROM</span> axi_commands <span class="sql-keyword">WHERE</span> command_name = <span class="sql-string">'Configure'</span>)
+  <span class="sql-keyword">AND</span> prompt_position = 2;</code></pre>
+
+    <h3>Step 3: Test in the Command Palette</h3>
+    <ol>
+        <li>Open Axpert Web Shell and press <code>Ctrl + Space</code> to activate Axi Command Palette.</li>
+        <li>Type: <code>Configure SLA "Gold Policy"</code></li>
+        <li>Press <code>Enter</code> or click <strong>Go</strong>.</li>
+        <li>The system executes: <code>../aspx/SlaConfig.aspx?policyname=Gold%20Policy&amp;role=Developer&amp;user=admin</code></li>
+        <li>Click <strong>Pop</strong> to test tabbed execution in <code>PopupContainer.html</code>.</li>
+    </ol>
+
+    <h2>🔍 6. Troubleshooting &amp; FAQs</h2>
+    <ul>
+        <li><strong>Q: I added a row in <code>axi_command_config</code>, but the command palette says "Unknown command".</strong><br>
+        <em>A:</em> The configuration is loaded on shell initialization. Refresh the browser (<code>Ctrl + F5</code>) or click the <strong>Refresh</strong> button on the Axi toolbar. Verify that <code>command</code> matches the root verb exactly and <code>prompt_options</code> is lowercase.</li>
+        <li><strong>Q: How do I create a fallback route for an entire command group?</strong><br>
+        <em>A:</em> Set <code>prompt_options</code> to <code>'default'</code>. If no exact sub-option matches, the engine falls back to this rule.</li>
+        <li><strong>Q: My custom page opens in the main window, but I want it to open in a popup tab.</strong><br>
+        <em>A:</em> Users can press <code>Ctrl + Shift + Enter</code> or select the <strong>Pop</strong> action button. The engine automatically appends <code>&amp;AxIsPop=true</code> and loads the page within <code>PopupContainer.html</code>.</li>
+        <li><strong>Q: Can I temporarily disable a command without deleting the row?</strong><br>
+        <em>A:</em> Yes. Update the status flag: <code>UPDATE axi_command_config SET active = 'F' WHERE config_id = 'cfg_configure_sla';</code>.</li>
+    </ul>
+
+</body>
+</html>
