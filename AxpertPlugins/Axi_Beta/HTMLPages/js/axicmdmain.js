@@ -13013,12 +13013,20 @@
             return false;
         }
         const rawDevOpt = getAxpertDevOpt();
-        if (!rawDevOpt || rawDevOpt.toLowerCase() === "all" || rawDevOpt.toLowerCase() === "nooptions") {
+        const lowerDevOpt = (rawDevOpt || "").toLowerCase();
+
+        // "nooptions" or "all" -> show/allow all SDK options
+        if (lowerDevOpt === "nooptions" || lowerDevOpt === "all") {
             return true;
         }
+        // Empty string -> all developer options were removed, block SDK
+        if (!rawDevOpt) {
+            return false;
+        }
+
         const allowedOpts = rawDevOpt.split(",").map(o => o.trim().toLowerCase()).filter(Boolean);
         if (allowedOpts.length === 0) {
-            return true;
+            return false;
         }
         const cleanOpt = (sdkOptionName || "").toString().trim().toLowerCase();
         const devOptKey = SDK_DEV_OPT_MAP[cleanOpt] || cleanOpt;
@@ -13081,7 +13089,15 @@
         // Apply axpertDevOpt filtering for SDK and Source only when build = true
         if (accessPermissions && accessPermissions.buildAccess !== false && commandsFromDb["SDK"]) {
             const rawDevOpt = getAxpertDevOpt();
-            if (rawDevOpt && rawDevOpt.toLowerCase() !== "all" && rawDevOpt.toLowerCase() !== "nooptions") {
+            const lowerDevOpt = (rawDevOpt || "").toLowerCase();
+
+            if (lowerDevOpt === "nooptions" || lowerDevOpt === "all") {
+                // "nooptions" or "all" -> retain all SDK options
+            } else if (!rawDevOpt) {
+                // Empty string -> all developer options were removed, delete SDK from command metadata
+                delete commandsFromDb["SDK"];
+                delete commandsFromDb["Source"];
+            } else {
                 const allowedOpts = rawDevOpt.split(",").map(o => o.trim().toLowerCase()).filter(Boolean);
                 if (allowedOpts.length > 0) {
                     const sdkPrompts = commandsFromDb["SDK"].prompts;
@@ -13110,8 +13126,12 @@
                             }
                         } else {
                             delete commandsFromDb["SDK"];
+                            delete commandsFromDb["Source"];
                         }
                     }
+                } else {
+                    delete commandsFromDb["SDK"];
+                    delete commandsFromDb["Source"];
                 }
             }
         }
