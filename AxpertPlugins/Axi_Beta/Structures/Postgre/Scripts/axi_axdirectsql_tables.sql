@@ -491,10 +491,6 @@ INSERT INTO axdirectsql
 VALUES(99999999990027, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_adsfilteroperators', NULL, 'Metadata', 5, 'SELECT ''='' AS displaydata, ''='' AS name UNION ALL SELECT ''<'',''<'' UNION ALL SELECT ''>'',''>'' UNION ALL SELECT ''<='',''<='' UNION ALL SELECT ''>='',''>='' UNION ALL SELECT ''between'',''between''', NULL, NULL, 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
 >>
 
-
-
-
-
 <<
 INSERT INTO AXDIRECTSQL (
     AXDIRECTSQLID, CANCEL, SOURCEID, MAPNAME, USERNAME, MODIFIEDON, CREATEDBY, CREATEDON,
@@ -507,9 +503,9 @@ INSERT INTO AXDIRECTSQL (
     0,
     NULL,
     'admin',
-    TO_DATE('20-05-26','DD-MM-RR'),
+    '2025-12-23 13:22:07.000',
     'admin',
-    TO_DATE('20-05-26','DD-MM-RR'),
+    '2025-12-19 16:06:57.000',
     NULL,
     1,
     1,
