@@ -136,7 +136,24 @@ target_url: "../aspx/customdashboard.aspx?user=:username&role=:userroles&proj=:a
 ### Scenario
 You want to add a new command: **`Configure SLA "Gold Policy"`** that opens custom page `SlaConfig.aspx` with the selected policy name and current user's role.
 
-### Step 1: Insert the Configuration Row
+
+
+### Step 1: Register Autocomplete Prompt 
+If `Sla` is a new sub-option under `Configure`, ensure it is listed in `axi_command_prompts` so users receive auto-complete suggestions when typing `Configure`:
+
+```sql
+-- 1. Append option name to Position 2 (Object Type values)
+UPDATE axi_command_prompts 
+SET promptvalues = promptvalues || ',SLA'
+WHERE cmdtoken = 4 AND wordpos = 2;
+
+-- 2. Append matching data source to Position 3 (Object Name data source)
+UPDATE axi_command_prompts
+SET promptsource = promptsource || ',Axi_Dummy'
+WHERE cmdtoken = 4 AND wordpos = 3;
+```
+
+### Step 2: Insert the Configuration Row
 Execute the following SQL statement in your database:
 
 ```sql
@@ -161,16 +178,6 @@ INSERT INTO axi_command_config (
     'role=:userroles&user=:username',
     'T'
 );
-```
-
-### Step 2: Register Autocomplete Prompt (Optional)
-If `Sla` is a new sub-option under `Configure`, ensure it is listed in `axi_command_prompts` so users receive auto-complete suggestions when typing `Configure`:
-
-```sql
-UPDATE axi_command_prompts 
-SET prompt_values = prompt_values || ',SLA'
-WHERE command_id = (SELECT command_id FROM axi_commands WHERE command_name = 'Configure')
-  AND prompt_position = 2;
 ```
 
 ### Step 3: Test in the Command Palette

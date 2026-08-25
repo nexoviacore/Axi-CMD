@@ -3863,8 +3863,8 @@
 
                 if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
                     if (groupKey.toLowerCase() === "sdk" && tokens.length >= 2) {
-                        filteredObjects = [goOption, popOption];
-                        return [goOption, popOption];
+                        filteredObjects = [goOption];
+                        return [goOption];
                     }
 
                     if (groupKey.toLowerCase() === "configure" && tokens.length >= 2) {

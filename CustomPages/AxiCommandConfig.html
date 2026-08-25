@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axi Command Configuration - Demo</title>
+    <link rel="stylesheet" href="../UI/axpertUI/style.bundle.css" />
+    <link rel="stylesheet" href="../UI/axpertUI/plugins.bundle.css" />
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: #f4f6f9;
+            color: #181c32;
+            padding: 30px;
+            margin: 0;
+        }
+
+        .container-box {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            padding: 28px;
+        }
+
+        .header-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-sub {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+
+        .info-card {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .info-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            margin: 0 0 10px 0;
+        }
+
+        .info-item {
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .info-item strong {
+            color: #0f172a;
+            width: 140px;
+            display: inline-block;
+        }
+
+        .highlight-badge {
+            background-color: #dbeafe;
+            color: #1e40af;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .success-box {
+            background-color: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 12px 16px;
+            border-radius: 0 6px 6px 0;
+            font-size: 13px;
+            color: #065f46;
+            margin-bottom: 20px;
+        }
+
+        .btn-close-tab {
+            background-color: #2563eb;
+            color: #ffffff;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-close-tab:hover {
+            background-color: #1d4ed8;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container-box">
+        <div class="header-title">
+            <span class="material-icons" style="font-size: 24px;">settings_suggest</span>
+            Axi Command Configuration &mdash; Demo Page
+        </div>
+        <div class="header-sub">
+            Dynamic Navigation Engine &bull; <code>axi_command_config</code> Verification
+        </div>
+
+        <div class="success-box">
+            <strong>Navigation Success!</strong> You have successfully navigated to this custom page dynamically through the <code>axi_command_config</code> engine.
+        </div>
+
+        <div class="info-card">
+            <h3>Active Session Context</h3>
+            <div class="info-item">
+                <strong>Logged-in User:</strong> <span id="lblUser">Loading...</span>
+            </div>
+            <div class="info-item">
+                <strong>User Role(s):</strong> <span id="lblRole">Loading...</span>
+            </div>
+            <div class="info-item">
+                <strong>Responsibility:</strong> <span id="lblResp">Loading...</span>
+            </div>
+            <div class="info-item">
+                <strong>Current Schema:</strong> <span id="lblApp">Loading...</span>
+            </div>
+            <div class="info-item">
+                <strong>Route Source:</strong> <span class="highlight-badge">axi_command_config</span>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h3>How This Navigation Works</h3>
+            <p style="font-size: 13px; color: #475569; margin: 0 0 8px 0;">
+                1. You typed <code>Configure "Command Config"</code> in the Axi Command Palette.<br>
+                2. The client parser matched the command against the <code>axi_command_config</code> table row.<br>
+                3. The dynamic navigation dispatcher evaluated the target URL and loaded this page seamlessly without hardcoded client routing.
+            </p>
+        </div>
+
+        <div style="text-align: right; margin-top: 10px;">
+            <button class="btn-close-tab" onclick="history.back()">Back</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const userName = window.mainUserName || (window.parent && window.parent.mainUserName) || "admin";
+            const userRoles = window.AxUserRoles || (window.parent && window.parent.AxUserRoles) || "default";
+            const userResp = window.userResp || (window.parent && window.parent.userResp) || "General";
+            const appName = window.mainProject || (window.parent && window.parent.mainProject) || "AxpertApp";
+
+            document.getElementById("lblUser").textContent = userName;
+            document.getElementById("lblRole").textContent = userRoles;
+            document.getElementById("lblResp").textContent = userResp;
+            document.getElementById("lblApp").textContent = appName;
+        });
+    </script>
+</body>
+</html>
