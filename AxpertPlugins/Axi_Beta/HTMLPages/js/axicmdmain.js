@@ -933,6 +933,18 @@
         }) || null;
     }
 
+    function getDisabledCommandConfigRow(command, promptOption) {
+        if (!command || !promptOption) return null;
+        const cmdKey = command.trim().toLowerCase();
+        const optKey = promptOption.trim().toLowerCase();
+        return axiCommandConfigList.find(r => {
+            const rCmd = (r.command || r.Command || "").trim().toLowerCase();
+            const rOpt = (r.promptOptions || r.prompt_options || r.PromptOptions || "").trim().toLowerCase();
+            const rActive = (r.active ?? r.Active ?? "").toString().trim().toUpperCase();
+            return rCmd === cmdKey && rOpt === optKey && rActive !== "T" && rActive !== "TRUE";
+        }) || null;
+    }
+
     function resolveCommandUrlPlaceholders(urlStr, context = {}) {
         if (!urlStr || typeof urlStr !== "string") return urlStr || "";
 
@@ -6833,6 +6845,16 @@
             }
         }
 
+        // Check if command configuration is disabled (active = 'F' or not active)
+        const disabledRow = (firstParamValue ? getDisabledCommandConfigRow(group, firstParamValue) : null)
+            || (handlerKey !== 'default' ? getDisabledCommandConfigRow(group, handlerKey) : null);
+
+        if (disabledRow) {
+            const optName = disabledRow.promptOptions || disabledRow.prompt_options || disabledRow.PromptOptions || firstParamValue;
+            showToast(`The command '${group} ${optName}' is disabled or invalid.`);
+            return;
+        }
+
         // Dynamically resolve against backend axi_command_config without touching JS code
         const dynamicRow = (firstParamValue ? getCommandConfigRow(group, firstParamValue) : null)
             || (handlerKey !== 'default' ? getCommandConfigRow(group, handlerKey) : null)
@@ -6851,17 +6873,14 @@
         const groupHandlers = getGroupHandlers(group);
 
         if (!groupHandlers) {
-            // console.error(`System Error: No handlers object defined for command group '${group}'`);
+            showToast(`The command '${tokens.join(" ")}' is disabled or invalid.`);
             return;
         }
-
 
         const handler = groupHandlers[handlerKey] || groupHandlers['default'];
 
         if (!handler) {
-            showToast(`Dispatch Error: No handler function found for '${group}' -> '${handlerKey}'`);
-
-            // console.error(`Dispatch Error: No handler function found for '${group}' -> '${handlerKey}'`);
+            showToast(`The command '${tokens.join(" ")}' is disabled or invalid.`);
             return;
         }
 
