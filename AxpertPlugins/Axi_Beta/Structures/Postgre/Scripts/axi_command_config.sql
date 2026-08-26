@@ -132,6 +132,10 @@ INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, p
 >>
 
 <<
+INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_configure_axi_cmd', 'Configure', 'axi_cmd', 'AxiCMDConfig.html', 'url', NULL, '../AxpertPlugins/Axi_Beta/HTMLPages/AxiCMDConfig.html', NULL, 'T') ON CONFLICT (config_id) DO NOTHING
+>>
+
+<<
 INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_sdk_ads', 'SDK', 'axpert data sources', 'b_sql', 'tstruct', 'sqlname', NULL, 'act=load&dummyload=false?', 'T') ON CONFLICT (config_id) DO NOTHING
 >>
 

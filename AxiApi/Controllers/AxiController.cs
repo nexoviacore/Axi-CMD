@@ -48,6 +48,62 @@ namespace AxiApi.Controllers
             return Ok(configs);
         }
 
+        [HttpGet("command-config/all")]
+        public async Task<ActionResult<List<CommandConfigDTO>>> GetAllCommandConfigs([FromQuery] string appname)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+
+            var configs = await _commandConfigService.GetAllCommandConfigsAsync(appname);
+            return Ok(configs);
+        }
+
+        [HttpPost("command-config/save")]
+        public async Task<ActionResult<bool>> SaveCommandConfig([FromBody] CommandConfigDTO config, [FromQuery] string appname)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+            if (config == null || string.IsNullOrWhiteSpace(config.ConfigId))
+                return BadRequest("Valid config payload with ConfigId is required.");
+
+            var success = await _commandConfigService.SaveCommandConfigAsync(config, appname);
+            return Ok(new { success = success, message = "Command configuration saved successfully." });
+        }
+
+        [HttpPost("command-config/delete")]
+        public async Task<ActionResult<bool>> DeleteCommandConfig([FromQuery] string configId, [FromQuery] string appname)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+            if (string.IsNullOrWhiteSpace(configId))
+                return BadRequest("configId query parameter is required.");
+
+            var success = await _commandConfigService.DeleteCommandConfigAsync(configId, appname);
+            return Ok(new { success = success, message = "Command configuration deleted successfully." });
+        }
+
+        [HttpGet("command-prompts/all")]
+        public async Task<ActionResult<List<CommandPromptDTO>>> GetCommandPrompts([FromQuery] string appname)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+
+            var prompts = await _commandConfigService.GetCommandPromptsAsync(appname);
+            return Ok(prompts);
+        }
+
+        [HttpPost("command-prompts/save")]
+        public async Task<ActionResult<bool>> SaveCommandPrompt([FromBody] SavePromptRequestDTO request, [FromQuery] string appname)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+            if (request == null || request.CmdToken <= 0 || request.WordPos <= 0)
+                return BadRequest("Valid prompt payload with CmdToken and WordPos is required.");
+
+            var success = await _commandConfigService.SaveCommandPromptAsync(request, appname);
+            return Ok(new { success = success, message = "Command prompt saved successfully." });
+        }
+
         [HttpGet("axi_get")]
 
         public async Task<IActionResult> AxiGet([FromQuery] string view, [FromQuery] bool forceRefresh, [FromQuery] string appname)

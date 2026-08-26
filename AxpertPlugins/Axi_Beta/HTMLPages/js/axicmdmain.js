@@ -13920,7 +13920,17 @@
             handleInput();
         });
 
-        tour.start();
+        window.addEventListener("message", function (event) {
+            if (event.data && event.data.type === "AXI_REFRESH_CONFIG") {
+                try {
+                    cachedAccessPermissions = null;
+                    if (typeof fetchCommands === "function") {
+                        fetchCommands(true);
+                    }
+                } catch (e) { }
+            }
+        });
+
     }
 
 })();

@@ -133,6 +133,10 @@ INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, P
 >>
 
 <<
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_axi_cmd', 'Configure', 'axi_cmd', 'AxiCMDConfig.html', 'url', NULL, '../AxpertPlugins/Axi_Beta/HTMLPages/AxiCMDConfig.html', NULL, 'T')
+>>
+
+<<
 INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_sdk_ads', 'SDK', 'axpert data sources', 'b_sql', 'tstruct', 'sqlname', NULL, 'act=load&dummyload=false?', 'T')
 >>
 
