@@ -10,3 +10,4 @@ AxiApi/obj/
 AxiApi/logs/
 *.user
 *.lscache
+/AxpertPlugins/Axi_Beta/docs/.obsidian

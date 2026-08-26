@@ -12,20 +12,6 @@ The **Dynamic Command Configuration Engine** is a metadata-driven navigation arc
 
 With the introduction of the `axi_command_config` table and REST API, **100% of command navigation is managed directly in the database**. System administrators and developers can register new commands, link them to forms, reports, or custom pages, and configure contextual parameters **without changing a single line of JavaScript**.
 
-```mermaid
-graph TD
-    User([User Types Command]) --> Autocomplete[Command Palette Autocomplete]
-    Autocomplete --> Matcher[Config Matcher: command + prompt_options]
-    Matcher --> DBConfig[(axi_command_config)]
-    DBConfig --> Resolver[URL & Placeholder Resolver: :username, :userroles, :appname]
-    Resolver --> Dispatcher{prompt_option_type}
-    Dispatcher -->|tstruct| TstructNav[Redirect to Tstruct Form]
-    Dispatcher -->|iview| IviewNav[Redirect to IView Report]
-    Dispatcher -->|tstruct/iview| DualNav[Conditional Tstruct / Iview]
-    Dispatcher -->|url| UrlNav[Custom ASPX Page]
-    Dispatcher -->|processflow| FlowNav[Process Builder Flow]
-    Dispatcher -->|ivtoivload| Iv2IvNav[IView-to-IView Load]
-```
 
 ---
 
