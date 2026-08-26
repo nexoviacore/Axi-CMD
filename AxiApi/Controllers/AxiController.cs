@@ -58,6 +58,21 @@ namespace AxiApi.Controllers
             return Ok(configs);
         }
 
+        [HttpGet("command-config/paged")]
+        public async Task<ActionResult<PagedResultDTO<CommandConfigDTO>>> GetPagedCommandConfigs(
+            [FromQuery] string appname,
+            [FromQuery] int pageIndex = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null,
+            [FromQuery] string? command = null)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+
+            var result = await _commandConfigService.GetPagedCommandConfigsAsync(appname, pageIndex, pageSize, search, command);
+            return Ok(result);
+        }
+
         [HttpPost("command-config/save")]
         public async Task<ActionResult<bool>> SaveCommandConfig([FromBody] CommandConfigDTO config, [FromQuery] string appname)
         {

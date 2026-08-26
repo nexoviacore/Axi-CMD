@@ -14,7 +14,7 @@ namespace AxiApi.Lib
             "ORDER BY command, prompt_options";
 
         public const string SelectCommandPrompts = 
-            "SELECT p.id, p.cmdtoken, c.command, c.command_group, p.wordpos, p.prompt, p.promptsource, p.promptparams, p.promptvalues, p.extraparams, p.requesturl " +
+            "SELECT p.id, p.cmdtoken, COALESCE(NULLIF(c.command, ''), c.command_group, '') AS command, c.command_group, p.wordpos, p.prompt, p.promptsource, p.promptparams, p.promptvalues, p.extraparams, p.requesturl " +
             "FROM axi_command_prompts p " +
             "LEFT JOIN axi_commands c ON p.cmdtoken = c.cmdtoken " +
             "ORDER BY p.cmdtoken, p.wordpos";

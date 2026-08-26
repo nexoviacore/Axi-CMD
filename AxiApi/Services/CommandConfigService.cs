@@ -102,6 +102,17 @@ namespace AxiApi.Services
             return await _repository.GetAllCommandConfigsAsync(appname);
         }
 
+        public async Task<PagedResultDTO<CommandConfigDTO>> GetPagedCommandConfigsAsync(string appname, int pageIndex, int pageSize, string? search = null, string? command = null)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+            {
+                _logger.LogWarning("GetPagedCommandConfigsAsync called with empty appname");
+                return new PagedResultDTO<CommandConfigDTO>();
+            }
+
+            return await _repository.GetPagedCommandConfigsAsync(appname, pageIndex, pageSize, search, command);
+        }
+
         public async Task<bool> SaveCommandConfigAsync(CommandConfigDTO config, string appname)
         {
             if (string.IsNullOrWhiteSpace(appname) || config == null)

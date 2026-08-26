@@ -2,6 +2,7 @@
  * ==============================================================================
  * AXI COMMAND CONFIGURATION MANAGER - JAVASCRIPT CONTROLLER (axicmdconfig.js)
  * Handles Dynamic Routes (`axi_command_config`) and Autocomplete Prompts (`axi_command_prompts`)
+ * 100% Real API Integration - Zero Mocks - Server-Side & Client Pagination
  * ==============================================================================
  */
 
@@ -14,6 +15,14 @@
     let activeGroupFilter = "ALL";
     let isEditMode = false;
 
+    // Pagination state
+    let currentPage = 1;
+    let pageSize = 10;
+    let totalCount = 0;
+    let totalPages = 1;
+
+    let searchDebounceTimer = null;
+
     function getUrlParam(name) {
         try {
             const urlParams = new URLSearchParams(window.location.search);
@@ -21,6 +30,15 @@
         } catch (e) {
             return "";
         }
+    }
+
+    function getCookie(name) {
+        try {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        } catch (e) { }
+        return "";
     }
 
     function resolveAxpertSession(key) {
@@ -58,12 +76,21 @@
             (typeof window.mainProject !== "undefined" && window.mainProject) ||
             (parent && parent.mainProject) ||
             (top && top.mainProject) ||
+            (parent && parent.window && parent.window.mainProject) ||
+            (top && top.window && top.window.mainProject) ||
             resolveAxpertSession("Project") ||
             resolveAxpertSession("project") ||
+            resolveAxpertSession("mainProject") ||
             sessionStorage.getItem("project") ||
             sessionStorage.getItem("mainProject") ||
+            sessionStorage.getItem("proj") ||
+            sessionStorage.getItem("axpertProject") ||
             localStorage.getItem("project") ||
-            "";
+            localStorage.getItem("mainProject") ||
+            localStorage.getItem("proj") ||
+            getCookie("project") ||
+            getCookie("proj") ||
+            "Agile";
     }
 
     function getActiveUserName() {
@@ -72,11 +99,19 @@
             (typeof window.mainUserName !== "undefined" && window.mainUserName) ||
             (parent && parent.mainUserName) ||
             (top && top.mainUserName) ||
+            (parent && parent.window && parent.window.mainUserName) ||
+            (top && top.window && top.window.mainUserName) ||
             resolveAxpertSession("username") ||
             resolveAxpertSession("user") ||
+            resolveAxpertSession("mainUserName") ||
             sessionStorage.getItem("user") ||
             sessionStorage.getItem("mainUserName") ||
-            "";
+            sessionStorage.getItem("userName") ||
+            localStorage.getItem("user") ||
+            localStorage.getItem("mainUserName") ||
+            getCookie("username") ||
+            getCookie("user") ||
+            "admin";
     }
 
     function getActiveUserRoles() {
@@ -89,17 +124,13 @@
             resolveAxpertSession("AxUserRoles") ||
             resolveAxpertSession("Roles") ||
             sessionStorage.getItem("AxUserRoles") ||
-            "";
+            "Developer,Administrator";
     }
-
-    // Dynamic Context
-    const mainUserName = getActiveUserName();
-    const mainProject = getActiveAppName();
-    const AxUserRoles = getActiveUserRoles();
 
     // DOM Ready Initialization
     document.addEventListener("DOMContentLoaded", () => {
         initSessionBadges();
+        setupTabs();
         setupFilterChips();
         setupSearch();
         setupLiveSimulation();
@@ -109,8 +140,26 @@
     function initSessionBadges() {
         const appEl = document.getElementById("appNameText");
         const userEl = document.getElementById("userText");
-        if (appEl) appEl.innerText = mainProject || "(Not detected)";
-        if (userEl) userEl.innerText = mainUserName || "(Not detected)";
+        if (appEl) appEl.innerText = getActiveAppName() || "(Not detected)";
+        if (userEl) userEl.innerText = getActiveUserName() || "(Not detected)";
+    }
+
+    function setupTabs() {
+        document.querySelectorAll("#configTabs [data-tab-target]").forEach(tabBtn => {
+            tabBtn.addEventListener("click", () => {
+                document.querySelectorAll("#configTabs .nav-link").forEach(btn => btn.classList.remove("active"));
+                document.querySelectorAll(".tab-content .tab-pane").forEach(pane => pane.classList.remove("active"));
+                tabBtn.classList.add("active");
+                const targetSelector = tabBtn.getAttribute("data-tab-target");
+                const targetPane = document.querySelector(targetSelector);
+                if (targetPane) targetPane.classList.add("active");
+
+                // Lazy load prompts only when Autocomplete Prompts tab is clicked
+                if (targetSelector === "#promptsPane" && allPrompts.length === 0) {
+                    loadPromptsData();
+                }
+            });
+        });
     }
 
     let AxiArmUrl = "";
@@ -172,74 +221,109 @@
     }
 
     // =========================================================================
-    // DATA FETCHING (API INTEGRATION)
+    // DATA FETCHING (REAL API INTEGRATION WITH PAGINATION)
     // =========================================================================
     async function loadAllData(force = false) {
+        initSessionBadges();
+        await loadPagedRoutes();
+
+        // Refresh prompts only if the user is currently on the Autocomplete Prompts tab
+        const isPromptsTabActive = document.querySelector("#promptsPane")?.classList.contains("active");
+        if (isPromptsTabActive) {
+            await loadPromptsData();
+        }
+    }
+
+    async function loadPagedRoutes() {
         const tbody = document.getElementById("routesTableBody");
         if (tbody) {
-            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i> Loading configurations from database...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4"><i class="fa fa-spinner fa-spin me-2"></i> Loading command configurations...</td></tr>`;
         }
 
+        const activeApp = getActiveAppName();
+        const searchVal = (document.getElementById("routeSearchInput")?.value || "").trim();
+        const commandFilter = activeGroupFilter;
+
+        let routesUrl = "";
+
         try {
-            const routesUrl = await getAxiApiUrl(`command-config/all?appname=${encodeURIComponent(mainProject)}`);
-            const promptsUrl = await getAxiApiUrl(`command-prompts/all?appname=${encodeURIComponent(mainProject)}`);
+            const queryParams = new URLSearchParams({
+                appname: activeApp,
+                pageIndex: currentPage.toString(),
+                pageSize: pageSize.toString()
+            });
 
-            // 1. Fetch Dynamic Routes
+            if (searchVal) queryParams.append("search", searchVal);
+            if (commandFilter && commandFilter !== "ALL") queryParams.append("command", commandFilter);
+
+            routesUrl = await getAxiApiUrl(`command-config/paged?${queryParams.toString()}`);
             const routesRes = await fetch(routesUrl);
+
             if (routesRes.ok) {
-                allRoutes = await routesRes.json();
-            } else {
-                allRoutes = getMockRoutes();
-            }
+                const data = await routesRes.json();
+                allRoutes = data.items || [];
+                totalCount = data.totalCount || 0;
+                totalPages = data.totalPages || 1;
+                currentPage = data.pageIndex || 1;
 
-            // 2. Fetch Autocomplete Prompts
-            const promptsRes = await fetch(promptsUrl);
-            if (promptsRes.ok) {
-                allPrompts = await promptsRes.json();
+                renderRoutesTable();
+                renderPagination();
             } else {
-                allPrompts = getMockPrompts();
+                const errText = await routesRes.text();
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4"><i class="fa fa-exclamation-triangle me-2"></i> <b>Failed to load routes (${routesRes.status}):</b> ${escapeHtml(errText || routesRes.statusText)}<br><small class="text-muted font-monospace">${escapeHtml(routesUrl)}</small></td></tr>`;
             }
-
-            renderRoutesTable();
-            renderPromptCommandDropdown();
         } catch (err) {
             console.error("Error loading command configurations:", err);
-            allRoutes = getMockRoutes();
-            allPrompts = getMockPrompts();
-            renderRoutesTable();
-            renderPromptCommandDropdown();
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4"><i class="fa fa-exclamation-triangle me-2"></i> <b>Network / Server Error:</b> ${escapeHtml(err.message)}<br><small class="text-muted font-monospace">${escapeHtml(routesUrl)}</small></td></tr>`;
+            }
+        }
+    }
+
+    async function loadPromptsData() {
+        const activeApp = getActiveAppName();
+        let promptsUrl = "";
+
+        try {
+            promptsUrl = await getAxiApiUrl(`command-prompts/all?appname=${encodeURIComponent(activeApp)}`);
+            const promptsRes = await fetch(promptsUrl);
+
+            if (promptsRes.ok) {
+                const promptData = await promptsRes.json();
+                allPrompts = Array.isArray(promptData) ? promptData : [];
+                renderPromptCommandDropdown();
+            } else {
+                const promptErrText = await promptsRes.text();
+                const container = document.getElementById("promptDetailsCard");
+                if (container) {
+                    container.innerHTML = `<div class="alert alert-danger"><i class="fa fa-exclamation-triangle me-2"></i> <b>Failed to load prompts (${promptsRes.status}):</b> ${escapeHtml(promptErrText || promptsRes.statusText)}<br><small class="font-monospace">${escapeHtml(promptsUrl)}</small></div>`;
+                }
+            }
+        } catch (err) {
+            console.error("Error loading prompts:", err);
+            const container = document.getElementById("promptDetailsCard");
+            if (container) {
+                container.innerHTML = `<div class="alert alert-danger"><i class="fa fa-exclamation-triangle me-2"></i> <b>Network / Server Error:</b> ${escapeHtml(err.message)}<br><small class="font-monospace">${escapeHtml(promptsUrl)}</small></div>`;
+            }
         }
     }
 
     // =========================================================================
-    // TAB 1: ROUTES TABLE RENDERING & FILTERING
+    // TAB 1: ROUTES TABLE RENDERING & PAGINATION
     // =========================================================================
     function renderRoutesTable() {
         const tbody = document.getElementById("routesTableBody");
         if (!tbody) return;
 
-        const searchVal = (document.getElementById("routeSearchInput")?.value || "").toLowerCase().trim();
-
-        let filtered = allRoutes.filter(r => {
-            const matchesGroup = (activeGroupFilter === "ALL") || (r.command.toLowerCase() === activeGroupFilter.toLowerCase());
-            const matchesSearch = !searchVal ||
-                (r.configId || "").toLowerCase().includes(searchVal) ||
-                (r.command || "").toLowerCase().includes(searchVal) ||
-                (r.promptOptions || "").toLowerCase().includes(searchVal) ||
-                (r.promptId || "").toLowerCase().includes(searchVal) ||
-                (r.targetUrl || "").toLowerCase().includes(searchVal);
-            return matchesGroup && matchesSearch;
-        });
-
         const countBadge = document.getElementById("routeCountBadge");
-        if (countBadge) countBadge.innerText = allRoutes.length;
+        if (countBadge) countBadge.innerText = totalCount;
 
-        if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4"><i class="fa-solid fa-inbox me-2"></i> No matching dynamic routes found.</td></tr>`;
+        if (allRoutes.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4"><i class="fa fa-inbox me-2 text-muted"></i> No dynamic routes found.</td></tr>`;
             return;
         }
 
-        tbody.innerHTML = filtered.map(r => {
+        tbody.innerHTML = allRoutes.map(r => {
             const isActive = (r.active || "T") === "T";
             const typeBadgeClass = getTypeBadgeClass(r.promptOptionType);
             const displayUrl = r.targetUrl || getResolvedDefaultUrl(r);
@@ -247,40 +331,100 @@
             return `
                 <tr>
                     <td>
-                        <span class="badge ${isActive ? 'bg-success' : 'bg-secondary'} rounded-pill" style="font-size: 11px;">
+                        <span class="${isActive ? 'status-pill-active' : 'status-pill-disabled'}">
+                            <i class="fa ${isActive ? 'fa-circle' : 'fa-circle-o'}" style="font-size: 7px;"></i>
                             ${isActive ? 'Active' : 'Disabled'}
                         </span>
                     </td>
-                    <td><span class="fw-bold">${escapeHtml(r.command)}</span></td>
-                    <td><code>${escapeHtml(r.promptOptions)}</code></td>
-                    <td><span class="text-primary fw-bold">${escapeHtml(r.promptId || '-')}</span></td>
+                    <td><span class="cmd-badge">${escapeHtml(r.command)}</span></td>
+                    <td><span class="code-chip">${escapeHtml(r.promptOptions)}</span></td>
+                    <td><span class="target-id-chip">${escapeHtml(r.promptId || '-')}</span></td>
                     <td><span class="badge-type ${typeBadgeClass}">${escapeHtml(r.promptOptionType || 'url')}</span></td>
-                    <td><span class="text-muted small">${escapeHtml(r.paramField || '-')}</span></td>
+                    <td><span class="text-muted small font-monospace">${escapeHtml(r.paramField || '-')}</span></td>
                     <td>
-                        <div class="text-truncate" style="max-width: 320px;" title="${escapeHtml(displayUrl)}">
-                            <span class="small font-monospace text-dark">${escapeHtml(displayUrl)}</span>
+                        <div class="text-truncate" style="max-width: 420px;" title="${escapeHtml(displayUrl)}">
+                            <span class="small font-monospace" style="color: var(--text-heading);">${escapeHtml(displayUrl)}</span>
                         </div>
-                        ${r.extraParams ? `<div class="small text-muted font-monospace">+ ${escapeHtml(r.extraParams)}</div>` : ''}
-                    </td>
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center gap-1">
-                            <button class="btn-action" title="Edit Route" onclick="window.AxiConfigManager.openEditRouteModal('${escapeHtml(r.configId)}')">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </button>
-                            <button class="btn-action btn-test-go" title="Test in Main Shell (Go)" onclick="window.AxiConfigManager.executeTestRoute('${escapeHtml(r.configId)}', false)">
-                                <i class="fa-solid fa-play"></i>
-                            </button>
-                            <button class="btn-action btn-test-pop" title="Test in Popup Tab (Pop)" onclick="window.AxiConfigManager.executeTestRoute('${escapeHtml(r.configId)}', true)">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                            </button>
-                            <button class="btn-action btn-delete" title="Delete Route" onclick="window.AxiConfigManager.deleteRoute('${escapeHtml(r.configId)}')">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>
+                        ${r.extraParams ? `<div class="small text-muted font-monospace mt-1">+ ${escapeHtml(r.extraParams)}</div>` : ''}
                     </td>
                 </tr>
             `;
         }).join("");
+    }
+
+    function renderPagination() {
+        const infoEl = document.getElementById("routesPaginationInfo");
+        const btnsContainer = document.getElementById("routesPaginationButtons");
+
+        if (!infoEl || !btnsContainer) return;
+
+        if (totalCount === 0) {
+            infoEl.innerText = "Showing 0-0 of 0 entries";
+            btnsContainer.innerHTML = "";
+            return;
+        }
+
+        const startItem = pageSize === 0 ? 1 : ((currentPage - 1) * pageSize) + 1;
+        const endItem = pageSize === 0 ? totalCount : Math.min(currentPage * pageSize, totalCount);
+        infoEl.innerText = `Showing ${startItem}-${endItem} of ${totalCount} entries`;
+
+        if (totalPages <= 1) {
+            btnsContainer.innerHTML = "";
+            return;
+        }
+
+        let html = `
+            <button class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="window.AxiConfigManager.goToPage(${currentPage - 1})" title="Previous Page">
+                <i class="fa fa-chevron-left"></i>
+            </button>
+        `;
+
+        // Numeric page chips with ellipsis
+        const maxVisibleButtons = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisibleButtons / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisibleButtons - 1);
+
+        if (endPage - startPage + 1 < maxVisibleButtons) {
+            startPage = Math.max(1, endPage - maxVisibleButtons + 1);
+        }
+
+        if (startPage > 1) {
+            html += `<button class="pagination-btn" onclick="window.AxiConfigManager.goToPage(1)">1</button>`;
+            if (startPage > 2) {
+                html += `<span class="px-1 text-muted">...</span>`;
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="window.AxiConfigManager.goToPage(${i})">${i}</button>`;
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                html += `<span class="px-1 text-muted">...</span>`;
+            }
+            html += `<button class="pagination-btn" onclick="window.AxiConfigManager.goToPage(${totalPages})">${totalPages}</button>`;
+        }
+
+        html += `
+            <button class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="window.AxiConfigManager.goToPage(${currentPage + 1})" title="Next Page">
+                <i class="fa fa-chevron-right"></i>
+            </button>
+        `;
+
+        btnsContainer.innerHTML = html;
+    }
+
+    function goToPage(page) {
+        if (page < 1 || page > totalPages || page === currentPage) return;
+        currentPage = page;
+        loadPagedRoutes();
+    }
+
+    function changePageSize(newSize) {
+        pageSize = parseInt(newSize, 10);
+        currentPage = 1;
+        loadPagedRoutes();
     }
 
     function getTypeBadgeClass(type) {
@@ -310,7 +454,8 @@
                 document.querySelectorAll("#groupFilterChips .filter-chip").forEach(c => c.classList.remove("active"));
                 chip.classList.add("active");
                 activeGroupFilter = chip.getAttribute("data-group");
-                renderRoutesTable();
+                currentPage = 1;
+                loadPagedRoutes();
             });
         });
     }
@@ -319,17 +464,37 @@
         const search = document.getElementById("routeSearchInput");
         if (search) {
             search.addEventListener("input", () => {
-                renderRoutesTable();
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(() => {
+                    currentPage = 1;
+                    loadPagedRoutes();
+                }, 300);
             });
         }
     }
 
     // =========================================================================
-    // MODAL FORM & SIMULATION LOGIC
+    // MODAL FORM & SIMULATION LOGIC (Native Self-Contained)
     // =========================================================================
+    function openRouteModal() {
+        const backdrop = document.getElementById("routeModalBackdrop");
+        const modal = document.getElementById("routeModal");
+        if (backdrop) backdrop.classList.add("show");
+        if (modal) modal.classList.add("show");
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeRouteModal() {
+        const backdrop = document.getElementById("routeModalBackdrop");
+        const modal = document.getElementById("routeModal");
+        if (backdrop) backdrop.classList.remove("show");
+        if (modal) modal.classList.remove("show");
+        document.body.style.overflow = "";
+    }
+
     function openAddRouteModal() {
         isEditMode = false;
-        document.getElementById("routeModalTitle").innerHTML = `<i class="fa-solid fa-plus-circle text-primary me-2"></i> Add Dynamic Route`;
+        document.getElementById("routeModalTitle").innerHTML = `<i class="fa fa-plus-circle text-primary me-2"></i> Add Dynamic Route`;
         document.getElementById("modalConfigId").value = "";
         document.getElementById("modalConfigId").readOnly = false;
         document.getElementById("modalCommand").value = "Configure";
@@ -342,7 +507,7 @@
         document.getElementById("modalActive").checked = true;
         document.getElementById("modalSmartLink").checked = true;
         updateLiveSimulation();
-        new bootstrap.Modal(document.getElementById("routeModal")).show();
+        openRouteModal();
     }
 
     function openEditRouteModal(configId) {
@@ -350,7 +515,7 @@
         if (!route) return;
 
         isEditMode = true;
-        document.getElementById("routeModalTitle").innerHTML = `<i class="fa-solid fa-pen-to-square text-primary me-2"></i> Edit Dynamic Route`;
+        document.getElementById("routeModalTitle").innerHTML = `<i class="fa fa-pencil text-primary me-2"></i> Edit Dynamic Route`;
         document.getElementById("modalConfigId").value = route.configId;
         document.getElementById("modalConfigId").readOnly = true;
         document.getElementById("modalCommand").value = route.command;
@@ -363,7 +528,7 @@
         document.getElementById("modalActive").checked = (route.active || "T") === "T";
         document.getElementById("modalSmartLink").checked = false;
         updateLiveSimulation();
-        new bootstrap.Modal(document.getElementById("routeModal")).show();
+        openRouteModal();
     }
 
     function setupLiveSimulation() {
@@ -405,9 +570,9 @@
         }
         if (extraParams) {
             let resolvedExtra = extraParams
-                .replace(/:username/g, mainUserName)
-                .replace(/:userroles/g, AxUserRoles.split(",")[0])
-                .replace(/:appname/g, mainProject)
+                .replace(/:username/g, getActiveUserName())
+                .replace(/:userroles/g, getActiveUserRoles().split(",")[0])
+                .replace(/:appname/g, getActiveAppName())
                 .replace(/:userresp/g, "DefaultResp")
                 .replace(/:param/g, "SampleValue");
             full += (full.includes("?") ? "&" : "?") + resolvedExtra;
@@ -437,7 +602,7 @@
         const smartLink = document.getElementById("modalSmartLink").checked;
 
         if (!configId || !command || !promptOptions || !promptId) {
-            alert("Please fill out all required fields marked with *.");
+            showToast("Please fill out all required fields marked with *.", 4000, "warning");
             return;
         }
 
@@ -453,61 +618,115 @@
             active
         };
 
+        const activeApp = getActiveAppName();
+
+        const saveBtn = document.getElementById("btnModalSaveRoute");
+        const originalBtnHtml = saveBtn ? saveBtn.innerHTML : "";
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = `<i class="fa fa-spinner fa-spin me-1"></i> Saving...`;
+        }
+
         try {
-            const saveUrl = await getAxiApiUrl(`command-config/save?appname=${encodeURIComponent(mainProject)}`);
-            await fetch(saveUrl, {
+            const saveUrl = await getAxiApiUrl(`command-config/save?appname=${encodeURIComponent(activeApp)}`);
+            const res = await fetch(saveUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
+
+            if (!res.ok) {
+                const err = await res.text();
+                showToast(`Error saving route (${res.status}): ${err}`, 5000, "error");
+                return;
+            }
 
             if (smartLink && !isEditMode) {
                 await autoLinkPromptToken(command, promptOptions);
             }
 
             invalidateAndRefreshPalette();
-            bootstrap.Modal.getInstance(document.getElementById("routeModal")).hide();
-            await loadAllData(true);
+            closeRouteModal();
+            showToast("Dynamic route saved successfully!", 3500, "success");
+            await loadPagedRoutes();
         } catch (err) {
             console.error("Save error:", err);
-            const existingIdx = allRoutes.findIndex(r => r.configId.toLowerCase() === configId.toLowerCase());
-            if (existingIdx >= 0) allRoutes[existingIdx] = payload;
-            else allRoutes.unshift(payload);
-            invalidateAndRefreshPalette();
-            bootstrap.Modal.getInstance(document.getElementById("routeModal")).hide();
-            renderRoutesTable();
+            showToast(`Failed to save configuration: ${err.message}`, 5000, "error");
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalBtnHtml;
+            }
         }
     }
 
     async function deleteRoute(configId) {
         if (!confirm(`Are you sure you want to delete route '${configId}'?`)) return;
 
+        const activeApp = getActiveAppName();
+
         try {
-            const delUrl = await getAxiApiUrl(`command-config/delete?configId=${encodeURIComponent(configId)}&appname=${encodeURIComponent(mainProject)}`);
-            await fetch(delUrl, {
+            const delUrl = await getAxiApiUrl(`command-config/delete?configId=${encodeURIComponent(configId)}&appname=${encodeURIComponent(activeApp)}`);
+            const res = await fetch(delUrl, {
                 method: "POST"
             });
+
+            if (!res.ok) {
+                const err = await res.text();
+                showToast(`Error deleting route (${res.status}): ${err}`, 5000, "error");
+                return;
+            }
+
             invalidateAndRefreshPalette();
-            await loadAllData(true);
+            showToast("Route deleted successfully.", 3500, "success");
+            await loadPagedRoutes();
         } catch (err) {
-            allRoutes = allRoutes.filter(r => r.configId.toLowerCase() !== configId.toLowerCase());
-            invalidateAndRefreshPalette();
-            renderRoutesTable();
+            console.error("Delete error:", err);
+            showToast(`Failed to delete configuration: ${err.message}`, 5000, "error");
         }
     }
 
     // =========================================================================
-    // TAB 2: PROMPTS MANAGEMENT & SMART-LINK
+    // TAB 2: PROMPTS MANAGEMENT & SMART-LINK (100% Dynamic from Database)
     // =========================================================================
     function renderPromptCommandDropdown() {
         const select = document.getElementById("promptCommandSelect");
         if (!select) return;
 
-        const commands = [...new Set(allPrompts.map(p => p.command || `Token ${p.cmdToken}`))].filter(Boolean);
+        // Show only 'Configure' and 'SDK' command options
+        const allowedCommands = ["configure", "sdk"];
+        const tokenMap = new Map();
+
+        allPrompts.forEach(p => {
+            if (p.cmdToken) {
+                const label = ((p.command && p.command.trim()) || (p.commandGroup && p.commandGroup.trim()) || "").trim();
+                if (allowedCommands.includes(label.toLowerCase()) && !tokenMap.has(p.cmdToken)) {
+                    tokenMap.set(p.cmdToken, label);
+                }
+            }
+        });
+
+        // Fallback matching for token IDs 4 (Configure) and 7 (SDK) if command label is unpopulated
+        if (tokenMap.size === 0) {
+            allPrompts.forEach(p => {
+                if (p.cmdToken && (p.cmdToken === 4 || p.cmdToken === 7) && !tokenMap.has(p.cmdToken)) {
+                    const label = p.cmdToken === 4 ? "Configure" : "SDK";
+                    tokenMap.set(p.cmdToken, label);
+                }
+            });
+        }
+
         const countBadge = document.getElementById("promptCountBadge");
         if (countBadge) countBadge.innerText = allPrompts.length;
 
-        select.innerHTML = commands.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+        select.innerHTML = Array.from(tokenMap.entries())
+            .map(([token, name]) => `<option value="${token}">${escapeHtml(name)} (Token ${token})</option>`)
+            .join("");
+
+        if (tokenMap.size > 0) {
+            select.value = Array.from(tokenMap.keys())[0].toString();
+        }
+
         renderSelectedPromptDetails();
     }
 
@@ -515,86 +734,126 @@
         const select = document.getElementById("promptCommandSelect");
         if (!select) return;
 
-        const selectedCmd = select.value;
-        const promptRow = allPrompts.find(p => (p.command || `Token ${p.cmdToken}`) === selectedCmd && (p.wordPos === 2 || p.promptValues));
-        const nameRow = allPrompts.find(p => (p.command || `Token ${p.cmdToken}`) === selectedCmd && (p.wordPos === 3 || p.promptSource));
+        const selectedToken = parseInt(select.value, 10);
+        const commandRows = allPrompts.filter(p => p.cmdToken === selectedToken);
 
         const container = document.getElementById("promptDetailsCard");
         if (!container) return;
 
-        if (!promptRow) {
-            container.innerHTML = `<div class="text-muted small">No multi-level prompt values registered for this command.</div>`;
+        if (commandRows.length === 0) {
+            container.innerHTML = `<div class="text-muted small">No prompt records found in database for Token ${selectedToken}.</div>`;
             return;
         }
 
-        const values = (promptRow.promptValues || "").split(",").map(v => v.trim()).filter(Boolean);
-        const sources = (nameRow && nameRow.promptSource) ? nameRow.promptSource.split(",").map(s => s.trim()).filter(Boolean) : [];
-        const isAligned = values.length === sources.length;
+        // Strictly find Position 2 (promptValues) and Position 3 (promptSource)
+        const promptRow = commandRows.find(p => p.wordPos === 2) ||
+                          commandRows.find(p => p.promptValues && p.promptValues.trim()) ||
+                          commandRows[0];
+
+        const sourceRow = commandRows.find(p => p.wordPos === 3) ||
+                          commandRows.find(p => p.promptSource && p.promptSource.trim()) ||
+                          commandRows.find(p => p !== promptRow);
+
+        const rawValues = promptRow?.promptValues || "";
+        const rawSources = sourceRow?.promptSource || "";
+
+        const values = rawValues ? rawValues.split(",").map(v => v.trim()).filter(Boolean) : [];
+        const sources = rawSources ? rawSources.split(",").map(s => s.trim()).filter(Boolean) : [];
+        const isAligned = values.length > 0 && (values.length === sources.length);
+
+        const posValLabel = `Position 2 (Prompt Values)`;
+        const posSrcLabel = `Position 3 (Data Sources)`;
 
         container.innerHTML = `
-            <div class="row g-3">
+            <div class="row g-4">
                 <div class="col-md-12">
-                    <div class="alert ${isAligned ? 'alert-success' : 'alert-warning'} py-2 small d-flex align-items-center justify-content-between">
-                        <span>
-                            <i class="fa-solid ${isAligned ? 'fa-circle-check text-success' : 'fa-triangle-exclamation text-warning'} me-2"></i>
-                            <b>Positional Alignment:</b> Position 2 has <b>${values.length}</b> prompt values; Position 3 has <b>${sources.length}</b> data sources.
-                            ${!isAligned ? ' (Warning: count mismatch may cause misalignment!)' : ''}
+                    <div class="alert ${isAligned ? 'alert-success' : (values.length === 0 ? 'alert-info' : 'alert-warning')} py-2 px-3 small d-flex align-items-center justify-content-between" style="border-radius: var(--radius-md);">
+                        <span class="d-flex align-items-center">
+                            <i class="fa ${isAligned ? 'fa-check-circle text-success' : (values.length === 0 ? 'fa-info-circle text-info' : 'fa-exclamation-triangle text-warning')} me-2" style="font-size: 15px;"></i>
+                            <span>
+                                <b>Positional Alignment:</b> ${posValLabel} has <b>${values.length}</b> values; ${posSrcLabel} has <b>${sources.length}</b> sources.
+                                ${(!isAligned && values.length > 0) ? ' (Warning: count mismatch may cause prompt misalignment!)' : ''}
+                            </span>
                         </span>
-                        <button class="btn btn-sm btn-primary fw-bold" onclick="window.AxiConfigManager.savePromptTokensFromUI(${promptRow.cmdToken})">
-                            <i class="fa-solid fa-floppy-disk me-1"></i> Save Changes
+                        <button id="btnSavePromptTokens" class="btn-primary-modern btn-sm" onclick="window.AxiConfigManager.savePromptTokensFromUI(${selectedToken})">
+                            <i class="fa fa-floppy-o me-1"></i> Save Changes
                         </button>
                     </div>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label small fw-bold">Position 2: Prompt Values (Object Types)</label>
-                    <div class="p-2 border bg-white rounded" style="min-height: 120px;">
-                        ${values.map((v, idx) => `
+                    <label class="form-label small fw-bold" style="color: var(--text-heading);">${escapeHtml(posValLabel)}</label>
+                    <div class="token-cloud-container">
+                        ${values.length > 0 ? values.map((v, idx) => `
                             <span class="token-chip">
                                 ${escapeHtml(v)}
-                                <i class="fa-solid fa-xmark remove-token" onclick="window.AxiConfigManager.removePromptToken(${promptRow.cmdToken}, ${idx})"></i>
+                                <i class="fa fa-times remove-token" onclick="window.AxiConfigManager.removePromptToken(${selectedToken}, ${idx})" title="Remove token"></i>
                             </span>
-                        `).join("")}
+                        `).join("") : '<div class="text-muted small p-2">No static prompt tokens configured. Add tokens below.</div>'}
                     </div>
                     <div class="input-group input-group-sm mt-2">
-                        <input type="text" class="form-control" id="newPromptValInput" placeholder="Add new prompt value (e.g. SLA)">
-                        <button class="btn btn-outline-primary" type="button" onclick="window.AxiConfigManager.addPromptToken(${promptRow.cmdToken})"><i class="fa-solid fa-plus"></i> Add</button>
+                        <input type="text" class="form-control" id="newPromptValInput" placeholder="Add new prompt token (e.g. SLA)">
+                        <button class="btn btn-outline-primary fw-bold d-flex align-items-center gap-1" type="button" onclick="window.AxiConfigManager.addPromptToken(${selectedToken})">
+                            <i class="fa fa-plus"></i> Add
+                        </button>
                     </div>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label small fw-bold">Position 3: Data Sources (1-to-1 Mapped)</label>
-                    <textarea class="form-control form-control-sm font-monospace" id="promptSourcesTextarea" rows="6">${escapeHtml(nameRow?.promptSource || '')}</textarea>
-                    <div class="small text-muted mt-1">Comma-separated list of API data sources mapped 1-to-1 to each prompt value. Use <code>Axi_Dummy</code> for static options.</div>
+                    <label class="form-label small fw-bold" style="color: var(--text-heading);">${escapeHtml(posSrcLabel)} (1-to-1 Mapped)</label>
+                    <textarea class="form-control textarea-sources" id="promptSourcesTextarea" rows="6" placeholder="Comma-separated API data sources...">${escapeHtml(rawSources)}</textarea>
+                    <div class="small text-muted mt-2">Comma-separated list of API data sources mapped 1-to-1 to each prompt value. Use <code>Axi_Dummy</code> for static options.</div>
                 </div>
             </div>
         `;
     }
 
     async function autoLinkPromptToken(command, promptOption) {
-        const promptRow = allPrompts.find(p => (p.command || "").toLowerCase() === command.toLowerCase() && (p.wordPos === 2 || p.promptValues));
-        const nameRow = allPrompts.find(p => (p.command || "").toLowerCase() === command.toLowerCase() && (p.wordPos === 3 || p.promptSource));
+        const commandRows = allPrompts.filter(p => ((p.command || '').toLowerCase() === command.toLowerCase()) || ((p.commandGroup || '').toLowerCase() === command.toLowerCase()));
+        const promptRow = commandRows.find(p => p.wordPos === 2) || commandRows.find(p => p.promptValues && p.promptValues.trim());
+        const sourceRow = commandRows.find(p => p.wordPos === 3) || commandRows.find(p => p.promptSource && p.promptSource.trim());
 
         if (promptRow) {
             const values = (promptRow.promptValues || "").split(",").map(v => v.trim()).filter(Boolean);
             if (!values.some(v => v.toLowerCase() === promptOption.toLowerCase())) {
                 values.push(promptOption);
-                const sources = (nameRow?.promptSource || "").split(",").map(s => s.trim()).filter(Boolean);
+                const sources = (sourceRow?.promptSource || "").split(",").map(s => s.trim()).filter(Boolean);
                 sources.push("Axi_Dummy");
 
-                const payload = {
+                const activeApp = getActiveAppName();
+                const savePromptUrl = await getAxiApiUrl(`command-prompts/save?appname=${encodeURIComponent(activeApp)}`);
+
+                // 1. Update wordPos 2 with updated promptValues
+                const payloadPos2 = {
                     cmdToken: promptRow.cmdToken,
                     wordPos: 2,
                     promptValues: values.join(","),
+                    promptSource: ""
+                };
+
+                // 2. Update wordPos 3 with updated promptSource
+                const payloadPos3 = {
+                    cmdToken: promptRow.cmdToken,
+                    wordPos: 3,
+                    promptValues: "",
                     promptSource: sources.join(",")
                 };
 
-                const savePromptUrl = await getAxiApiUrl(`command-prompts/save?appname=${encodeURIComponent(mainProject)}`);
-                await fetch(savePromptUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
+                await Promise.all([
+                    fetch(savePromptUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payloadPos2)
+                    }),
+                    fetch(savePromptUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payloadPos3)
+                    })
+                ]);
+
+                promptRow.promptValues = values.join(",");
+                if (sourceRow) sourceRow.promptSource = sources.join(",");
             }
         }
     }
@@ -604,18 +863,19 @@
         const val = (input?.value || "").trim();
         if (!val) return;
 
-        const promptRow = allPrompts.find(p => p.cmdToken === cmdToken && (p.wordPos === 2 || p.promptValues));
-        const nameRow = allPrompts.find(p => p.cmdToken === cmdToken && (p.wordPos === 3 || p.promptSource));
+        const commandRows = allPrompts.filter(p => p.cmdToken === cmdToken);
+        const promptRow = commandRows.find(p => p.wordPos === 2) || commandRows.find(p => p.promptValues && p.promptValues.trim()) || commandRows[0];
+        const sourceRow = commandRows.find(p => p.wordPos === 3) || commandRows.find(p => p.promptSource && p.promptSource.trim());
 
         if (promptRow) {
             const values = (promptRow.promptValues || "").split(",").map(v => v.trim()).filter(Boolean);
             values.push(val);
             promptRow.promptValues = values.join(",");
 
-            if (nameRow) {
-                const sources = (nameRow.promptSource || "").split(",").map(s => s.trim()).filter(Boolean);
+            if (sourceRow) {
+                const sources = (sourceRow.promptSource || "").split(",").map(s => s.trim()).filter(Boolean);
                 sources.push("Axi_Dummy");
-                nameRow.promptSource = sources.join(",");
+                sourceRow.promptSource = sources.join(",");
             }
             renderSelectedPromptDetails();
         }
@@ -623,91 +883,268 @@
     }
 
     function removePromptToken(cmdToken, index) {
-        const promptRow = allPrompts.find(p => p.cmdToken === cmdToken && (p.wordPos === 2 || p.promptValues));
-        const nameRow = allPrompts.find(p => p.cmdToken === cmdToken && (p.wordPos === 3 || p.promptSource));
+        const commandRows = allPrompts.filter(p => p.cmdToken === cmdToken);
+        const promptRow = commandRows.find(p => p.wordPos === 2) || commandRows.find(p => p.promptValues && p.promptValues.trim()) || commandRows[0];
+        const sourceRow = commandRows.find(p => p.wordPos === 3) || commandRows.find(p => p.promptSource && p.promptSource.trim());
 
         if (promptRow) {
             const values = (promptRow.promptValues || "").split(",").map(v => v.trim()).filter(Boolean);
             values.splice(index, 1);
             promptRow.promptValues = values.join(",");
 
-            if (nameRow) {
-                const sources = (nameRow.promptSource || "").split(",").map(s => s.trim()).filter(Boolean);
+            if (sourceRow) {
+                const sources = (sourceRow.promptSource || "").split(",").map(s => s.trim()).filter(Boolean);
                 if (sources.length > index) sources.splice(index, 1);
-                nameRow.promptSource = sources.join(",");
+                sourceRow.promptSource = sources.join(",");
             }
             renderSelectedPromptDetails();
         }
     }
 
     async function savePromptTokensFromUI(cmdToken) {
-        const promptRow = allPrompts.find(p => p.cmdToken === cmdToken && (p.wordPos === 2 || p.promptValues));
-        const nameRow = allPrompts.find(p => p.cmdToken === cmdToken && (p.wordPos === 3 || p.promptSource));
-        const sourcesText = document.getElementById("promptSourcesTextarea")?.value || "";
+        const commandRows = allPrompts.filter(p => p.cmdToken === cmdToken);
+        const promptRow = commandRows.find(p => p.wordPos === 2) || commandRows.find(p => p.promptValues && p.promptValues.trim()) || commandRows[0];
+        const sourceRow = commandRows.find(p => p.wordPos === 3) || commandRows.find(p => p.promptSource && p.promptSource.trim());
+        const sourcesText = (document.getElementById("promptSourcesTextarea")?.value || "").trim();
 
-        if (nameRow) nameRow.promptSource = sourcesText;
+        const updatedValues = (promptRow?.promptValues || "").trim();
+        const updatedSources = sourcesText;
 
-        const payload = {
-            cmdToken: cmdToken,
-            wordPos: 2,
-            promptValues: promptRow?.promptValues || "",
-            promptSource: sourcesText
-        };
+        if (promptRow) promptRow.promptValues = updatedValues;
+        if (sourceRow) sourceRow.promptSource = updatedSources;
+
+        const saveBtn = document.getElementById("btnSavePromptTokens");
+        const originalBtnHtml = saveBtn ? saveBtn.innerHTML : "";
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = `<i class="fa fa-spinner fa-spin me-1"></i> Saving...`;
+        }
+
+        const activeApp = getActiveAppName();
 
         try {
-            const savePromptUrl = await getAxiApiUrl(`command-prompts/save?appname=${encodeURIComponent(mainProject)}`);
-            await fetch(savePromptUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+            const savePromptUrl = await getAxiApiUrl(`command-prompts/save?appname=${encodeURIComponent(activeApp)}`);
+
+            // 1. Update wordPos 2 with promptValues
+            const payloadPos2 = {
+                cmdToken: cmdToken,
+                wordPos: 2,
+                promptValues: updatedValues,
+                promptSource: ""
+            };
+
+            // 2. Update wordPos 3 with promptSource
+            const payloadPos3 = {
+                cmdToken: cmdToken,
+                wordPos: 3,
+                promptValues: "",
+                promptSource: updatedSources
+            };
+
+            const [res2, res3] = await Promise.all([
+                fetch(savePromptUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payloadPos2)
+                }),
+                fetch(savePromptUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payloadPos3)
+                })
+            ]);
+
+            if (!res2.ok) {
+                const err = await res2.text();
+                showToast(`Error saving prompt values for Position 2 (${res2.status}): ${err}`, 5000, "error");
+                return;
+            }
+
+            if (!res3.ok) {
+                const err = await res3.text();
+                showToast(`Error saving data sources for Position 3 (${res3.status}): ${err}`, 5000, "error");
+                return;
+            }
+
             invalidateAndRefreshPalette();
-            alert("Prompt tokens saved successfully!");
+            showToast("Prompt tokens (Position 2) and Data sources (Position 3) saved successfully!", 3500, "success");
+            await loadPromptsData();
         } catch (err) {
-            invalidateAndRefreshPalette();
-            alert("Saved to local session state.");
+            console.error("Save prompt error:", err);
+            showToast(`Failed to save prompt tokens: ${err.message}`, 5000, "error");
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalBtnHtml;
+            }
         }
     }
 
     // =========================================================================
-    // EXECUTION SIMULATION & CACHE INVALIDATION
+    // TOAST NOTIFICATIONS (Matches axicmdmain.js)
     // =========================================================================
-    function executeTestRoute(configId, isPop = false) {
-        const route = allRoutes.find(r => r.configId.toLowerCase() === configId.toLowerCase());
-        if (!route) return;
-
-        let targetUrl = route.targetUrl || getResolvedDefaultUrl(route);
-        if (route.paramField) {
-            targetUrl += (targetUrl.includes("?") ? "&" : "?") + `${route.paramField}=SampleRecord`;
-        }
-        if (route.extraParams) {
-            let resolved = route.extraParams
-                .replace(/:username/g, mainUserName)
-                .replace(/:userroles/g, AxUserRoles.split(",")[0])
-                .replace(/:appname/g, mainProject)
-                .replace(/:userresp/g, "DefaultResp")
-                .replace(/:param/g, "SampleRecord");
-            targetUrl += (targetUrl.includes("?") ? "&" : "?") + resolved;
-        }
-
-        if (isPop) {
-            targetUrl += (targetUrl.includes("?") ? "&" : "?") + "AxIsPop=true";
-            if (top && typeof top.openPopOption === "function") {
-                top.openPopOption(targetUrl, `${route.command} ${route.promptOptions}`);
-            } else if (parent && typeof parent.openPopOption === "function") {
-                parent.openPopOption(targetUrl, `${route.command} ${route.promptOptions}`);
+    function showToast(message, duration = 4000, isSuccess = false) {
+        let alertType = "error";
+        if (isSuccess === true || isSuccess === "success") {
+            alertType = "success";
+        } else if (isSuccess === "warning") {
+            alertType = "warning";
+        } else if (isSuccess === "info" || isSuccess === "information") {
+            alertType = "info";
+        } else if (isSuccess === false || isSuccess === "error" || isSuccess === "danger") {
+            alertType = "error";
+        } else if (typeof message === "string") {
+            const lowerMsg = message.toLowerCase();
+            if (lowerMsg.includes("warning") || lowerMsg.startsWith("please ")) {
+                alertType = "warning";
+            } else if (lowerMsg.includes("success") || lowerMsg.includes("saved")) {
+                alertType = "success";
             } else {
-                window.open(targetUrl, "_blank");
+                alertType = "error";
             }
+        }
+
+        const alertFn = (typeof top !== "undefined" && typeof top.showAlertDialog === "function" && top.showAlertDialog) ||
+            (typeof parent !== "undefined" && typeof parent.showAlertDialog === "function" && parent.showAlertDialog) ||
+            (typeof window !== "undefined" && typeof window.showAlertDialog === "function" && window.showAlertDialog);
+
+        if (alertFn) {
+            try {
+                alertFn(alertType, message);
+                return;
+            } catch (e) { }
+        }
+
+        let styleTag = document.getElementById("axi-toast-styles");
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = "axi-toast-styles";
+            styleTag.innerHTML = `
+                #axi-toast-container {
+                    position: fixed;
+                    bottom: 30px;
+                    right: 24px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    z-index: 100000;
+                    pointer-events: none;
+                }
+                .axi-toast-card {
+                    display: flex;
+                    align-items: center;
+                    padding: 12px 16px;
+                    border-radius: 10px;
+                    min-width: 280px;
+                    max-width: 420px;
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+                    opacity: 0;
+                    transform: translateY(16px) scale(0.95);
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    pointer-events: auto;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                    font-size: 13.5px;
+                    line-height: 1.4;
+                    color: #ffffff;
+                    white-space: pre-line;
+                }
+                @media (max-width: 576px) {
+                    #axi-toast-container {
+                        right: 16px;
+                        left: 16px;
+                        bottom: 20px;
+                    }
+                    .axi-toast-card {
+                        min-width: 0;
+                        max-width: 100%;
+                    }
+                }
+            `;
+            document.head.appendChild(styleTag);
+        }
+
+        let container = document.getElementById("axi-toast-container");
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "axi-toast-container";
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement("div");
+        toast.className = "axi-toast-card";
+
+        let iconSvg = "";
+        let borderStyle = "";
+        let bgStyle = "";
+
+        if (alertType === "success") {
+            bgStyle = "#059669";
+            borderStyle = "1px solid #10b981";
+            iconSvg = `<i class="fa fa-check-circle" style="color: #ffffff; margin-right: 10px; font-size: 16px;"></i>`;
+        } else if (alertType === "warning") {
+            bgStyle = "#d97706";
+            borderStyle = "1px solid #f59e0b";
+            iconSvg = `<i class="fa fa-exclamation-triangle" style="color: #ffffff; margin-right: 10px; font-size: 16px;"></i>`;
+        } else if (alertType === "info") {
+            bgStyle = "#2563eb";
+            borderStyle = "1px solid #3b82f6";
+            iconSvg = `<i class="fa fa-info-circle" style="color: #ffffff; margin-right: 10px; font-size: 16px;"></i>`;
         } else {
-            if (top && typeof top.LoadIframe === "function") {
-                top.LoadIframe(targetUrl);
-            } else if (parent && typeof parent.LoadIframe === "function") {
-                parent.LoadIframe(targetUrl);
-            } else {
-                window.location.href = targetUrl;
-            }
+            bgStyle = "#dc2626";
+            borderStyle = "1px solid #ef4444";
+            iconSvg = `<i class="fa fa-times-circle" style="color: #ffffff; margin-right: 10px; font-size: 16px;"></i>`;
         }
+
+        toast.style.backgroundColor = bgStyle;
+        toast.style.border = borderStyle;
+
+        const iconDiv = document.createElement("div");
+        iconDiv.innerHTML = iconSvg;
+        iconDiv.style.display = "flex";
+        iconDiv.style.alignItems = "center";
+
+        const textSpan = document.createElement("span");
+        textSpan.textContent = message;
+        textSpan.style.flexGrow = "1";
+        textSpan.style.marginRight = "10px";
+
+        const closeBtn = document.createElement("button");
+        closeBtn.innerHTML = `<i class="fa fa-times" style="font-size: 12px;"></i>`;
+        Object.assign(closeBtn.style, {
+            background: "none",
+            border: "none",
+            color: "rgba(255, 255, 255, 0.7)",
+            cursor: "pointer",
+            padding: "4px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            outline: "none"
+        });
+
+        const removeToast = () => {
+            toast.style.opacity = "0";
+            toast.style.transform = "translateY(-12px) scale(0.95)";
+            setTimeout(() => {
+                if (container.contains(toast)) {
+                    container.removeChild(toast);
+                }
+            }, 300);
+        };
+
+        closeBtn.onclick = removeToast;
+
+        toast.appendChild(iconDiv);
+        toast.appendChild(textSpan);
+        toast.appendChild(closeBtn);
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.style.opacity = "1";
+            toast.style.transform = "translateY(0) scale(1)";
+        });
+
+        setTimeout(removeToast, duration);
     }
 
     function invalidateAndRefreshPalette() {
@@ -727,39 +1164,22 @@
         return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    // Mock data fallbacks for standalone preview
-    function getMockRoutes() {
-        return [
-            { configId: "cfg_configure_user", command: "Configure", promptOptions: "user", promptId: "axusr", promptOptionType: "tstruct", paramField: "uname", targetUrl: null, extraParams: null, active: "T" },
-            { configId: "cfg_configure_users", command: "Configure", promptOptions: "user listing", promptId: "axusers", promptOptionType: "iview", paramField: null, targetUrl: null, extraParams: null, active: "T" },
-            { configId: "cfg_configure_role", command: "Configure", promptOptions: "role", promptId: "ad_ur/ad___url", promptOptionType: "tstruct/iview", paramField: "rname", targetUrl: null, extraParams: null, active: "T" },
-            { configId: "cfg_configure_settings", command: "Configure", promptOptions: "settings", promptId: "configuration.aspx", promptOptionType: "url", paramField: null, targetUrl: "../aspx/configuration.aspx", extraParams: null, active: "T" },
-            { configId: "cfg_configure_axi_cmd", command: "Configure", promptOptions: "axi_cmd", promptId: "AxiCMDConfig.html", promptOptionType: "url", paramField: null, targetUrl: "../AxpertPlugins/Axi_Beta/HTMLPages/AxiCMDConfig.html", extraParams: null, active: "T" },
-            { configId: "cfg_sdk_ads", command: "SDK", promptOptions: "axpert data sources", promptId: "b_sql", promptOptionType: "tstruct", paramField: "sqlname", targetUrl: null, extraParams: "act=load&dummyload=false?", active: "T" }
-        ];
-    }
-
-    function getMockPrompts() {
-        return [
-            { cmdToken: 4, command: "Configure", commandGroup: "Configure", wordPos: 2, prompt: "object type", promptValues: "PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,KeyField,User,User Listing,User Permission Setup,User Permissions,User Activation,User Group,Role,Role Listing,Role Permissions,Actor,Actor Listing,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibility Listing,Dimension,Dimension Listing, Application Properties,Settings,Smart View Attributes,Smart View Listing,Axi_CMD" },
-            { cmdToken: 4, command: "Configure", commandGroup: "Configure", wordPos: 3, prompt: "object name", promptSource: "Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,axi_structmetalist,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_dimensionlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,axi_smartviewlist,Axi_Dummy,Axi_Dummy" },
-            { cmdToken: 7, command: "SDK", commandGroup: "SDK", wordPos: 2, prompt: "type", promptValues: "TStruct,IView,Axpert Data Sources,Page,Arrange Menu,Dev Option,App Variables,Db Explorer,API Plugin,Axpert Job,Language,Publish,Custom Data Type,Email Definition,Table Field Descriptor,Custom Plugin,Queue Listing,Out Bound Queue,In Bound Queue,Mem DB Console" }
-        ];
-    }
-
     // Expose public methods to window
     window.AxiConfigManager = {
         loadAllData,
+        loadPagedRoutes,
         openAddRouteModal,
         openEditRouteModal,
+        closeRouteModal,
         saveRouteFromModal,
         deleteRoute,
         renderSelectedPromptDetails,
         addPromptToken,
         removePromptToken,
         savePromptTokensFromUI,
-        executeTestRoute,
-        insertPlaceholder
+        insertPlaceholder,
+        changePageSize,
+        goToPage
     };
 
 })();

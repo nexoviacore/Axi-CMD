@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AxiApi.Repositories
@@ -21,6 +22,39 @@ namespace AxiApi.Repositories
         {
             _axExtend = axExtend;
             _logger = logger;
+        }
+
+        private static object? GetValue(DataRow row, string colName)
+        {
+            if (row.Table.Columns.Contains(colName))
+                return row[colName];
+            if (row.Table.Columns.Contains(colName.ToUpperInvariant()))
+                return row[colName.ToUpperInvariant()];
+            if (row.Table.Columns.Contains(colName.ToLowerInvariant()))
+                return row[colName.ToLowerInvariant()];
+            return null;
+        }
+
+        private static string? GetString(DataRow row, string colName)
+        {
+            var val = GetValue(row, colName);
+            return (val != null && val != DBNull.Value) ? val.ToString() : null;
+        }
+
+        private static CommandConfigDTO MapCommandConfig(DataRow row)
+        {
+            return new CommandConfigDTO
+            {
+                ConfigId = GetString(row, "config_id") ?? string.Empty,
+                Command = GetString(row, "command") ?? string.Empty,
+                PromptOptions = GetString(row, "prompt_options") ?? string.Empty,
+                PromptId = GetString(row, "prompt_id") ?? string.Empty,
+                PromptOptionType = GetString(row, "prompt_option_type") ?? string.Empty,
+                ParamField = GetString(row, "param_field"),
+                TargetUrl = GetString(row, "target_url"),
+                ExtraParams = GetString(row, "extra_params"),
+                Active = GetString(row, "active") ?? "T"
+            };
         }
 
         public async Task<List<CommandConfigDTO>> GetCommandConfigsAsync(string appname)
@@ -50,24 +84,14 @@ namespace AxiApi.Repositories
             {
                 foreach (DataRow row in sqlResult.data.Rows)
                 {
-                    configs.Add(new CommandConfigDTO
-                    {
-                        ConfigId = row["config_id"]?.ToString() ?? string.Empty,
-                        Command = row["command"]?.ToString() ?? string.Empty,
-                        PromptOptions = row["prompt_options"]?.ToString() ?? string.Empty,
-                        PromptId = row["prompt_id"]?.ToString() ?? string.Empty,
-                        PromptOptionType = row["prompt_option_type"]?.ToString() ?? string.Empty,
-                        ParamField = row["param_field"] != DBNull.Value ? row["param_field"]?.ToString() : null,
-                        TargetUrl = row["target_url"] != DBNull.Value ? row["target_url"]?.ToString() : null,
-                        ExtraParams = row["extra_params"] != DBNull.Value ? row["extra_params"]?.ToString() : null,
-                        Active = row["active"]?.ToString() ?? "T"
-                    });
+                    configs.Add(MapCommandConfig(row));
                 }
             }
 
             _logger.LogInformation("Loaded {Count} command configs for appname: {AppName}", configs.Count, appname);
             return configs;
         }
+
         public async Task<List<CommandConfigDTO>> GetAllCommandConfigsAsync(string appname)
         {
             _logger.LogInformation("GetAllCommandConfigsAsync called for appname: {AppName}", appname);
@@ -95,23 +119,101 @@ namespace AxiApi.Repositories
             {
                 foreach (DataRow row in sqlResult.data.Rows)
                 {
-                    configs.Add(new CommandConfigDTO
-                    {
-                        ConfigId = row["config_id"]?.ToString() ?? string.Empty,
-                        Command = row["command"]?.ToString() ?? string.Empty,
-                        PromptOptions = row["prompt_options"]?.ToString() ?? string.Empty,
-                        PromptId = row["prompt_id"]?.ToString() ?? string.Empty,
-                        PromptOptionType = row["prompt_option_type"]?.ToString() ?? string.Empty,
-                        ParamField = row["param_field"] != DBNull.Value ? row["param_field"]?.ToString() : null,
-                        TargetUrl = row["target_url"] != DBNull.Value ? row["target_url"]?.ToString() : null,
-                        ExtraParams = row["extra_params"] != DBNull.Value ? row["extra_params"]?.ToString() : null,
-                        Active = row["active"]?.ToString() ?? "T"
-                    });
+                    configs.Add(MapCommandConfig(row));
                 }
             }
 
             _logger.LogInformation("Loaded {Count} total command configs for appname: {AppName}", configs.Count, appname);
             return configs;
+        }
+
+        public async Task<PagedResultDTO<CommandConfigDTO>> GetPagedCommandConfigsAsync(string appname, int pageIndex, int pageSize, string? search = null, string? command = null)
+        {
+            _logger.LogInformation("GetPagedCommandConfigsAsync called for appname: {AppName}, pageIndex: {PageIndex}, pageSize: {PageSize}, search: {Search}, command: {Command}", appname, pageIndex, pageSize, search, command);
+
+            if (pageIndex < 1) pageIndex = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var result = new PagedResultDTO<CommandConfigDTO>
+            {
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+
+            var isDbConnected = await _axExtend.OpenDBConnectionAsync(appname);
+            if (!isDbConnected)
+            {
+                _logger.LogError("Failed to open DB connection for appname: {AppName}", appname);
+                throw new DatabaseException($"Failed to connect to database for application: {appname}", "CONNECT");
+            }
+
+            var db = await _axExtend.GetDB();
+
+            // Build dynamic filters
+            var whereClauses = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(command) && !command.Equals("ALL", StringComparison.OrdinalIgnoreCase))
+            {
+                whereClauses.Add($"LOWER(command) = '{command.Replace("'", "''").ToLower()}'");
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                string cleanSearch = search.Replace("'", "''").ToLower();
+                whereClauses.Add($"(LOWER(config_id) LIKE '%{cleanSearch}%' OR LOWER(command) LIKE '%{cleanSearch}%' OR LOWER(prompt_options) LIKE '%{cleanSearch}%' OR LOWER(prompt_id) LIKE '%{cleanSearch}%' OR LOWER(target_url) LIKE '%{cleanSearch}%')");
+            }
+
+            string whereSql = whereClauses.Count > 0 ? " WHERE " + string.Join(" AND ", whereClauses) : "";
+
+            // 1. Get Total Count
+            string countSql = $"SELECT COUNT(1) FROM axi_command_config{whereSql}";
+            SQLResult countResult = await db.ExecuteSQLAsync(countSql);
+            if (countResult?.data != null && countResult.data.Rows.Count > 0)
+            {
+                int.TryParse(countResult.data.Rows[0][0]?.ToString(), out int totalCount);
+                result.TotalCount = totalCount;
+            }
+
+            // 2. Query Page Rows
+            int offset = (pageIndex - 1) * pageSize;
+            string pageSql = $"SELECT config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active " +
+                             $"FROM axi_command_config{whereSql} " +
+                             $"ORDER BY command, prompt_options " +
+                             $"OFFSET {offset} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+
+            SQLResult sqlResult = await db.ExecuteSQLAsync(pageSql);
+
+            // Fallback for older database versions without OFFSET FETCH
+            if (!string.IsNullOrEmpty(sqlResult?.error) || sqlResult?.data == null)
+            {
+                string fallbackSql = $"SELECT config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active FROM axi_command_config{whereSql} ORDER BY command, prompt_options";
+                sqlResult = await db.ExecuteSQLAsync(fallbackSql);
+
+                if (!string.IsNullOrEmpty(sqlResult?.error))
+                {
+                    _logger.LogError("Database error in GetPagedCommandConfigsAsync: {Error}", sqlResult.error);
+                    throw new DatabaseException(sqlResult.error, "SELECT");
+                }
+
+                if (sqlResult?.data != null && sqlResult.data.Rows.Count > 0)
+                {
+                    result.TotalCount = sqlResult.data.Rows.Count;
+                    var rows = sqlResult.data.Rows.Cast<DataRow>().Skip(offset).Take(pageSize);
+                    foreach (DataRow row in rows)
+                    {
+                        result.Items.Add(MapCommandConfig(row));
+                    }
+                }
+            }
+            else
+            {
+                foreach (DataRow row in sqlResult.data.Rows)
+                {
+                    result.Items.Add(MapCommandConfig(row));
+                }
+            }
+
+            return result;
         }
 
         public async Task<bool> SaveCommandConfigAsync(CommandConfigDTO config, string appname)
@@ -127,7 +229,7 @@ namespace AxiApi.Repositories
 
             var db = await _axExtend.GetDB();
 
-            // Check if config exists
+            // Check if config exists (case-insensitive)
             string checkSql = $"SELECT COUNT(1) FROM axi_command_config WHERE LOWER(config_id) = '{config.ConfigId.Replace("'", "''").ToLower()}'";
             SQLResult checkResult = await db.ExecuteSQLAsync(checkSql);
             int count = 0;
@@ -228,27 +330,32 @@ namespace AxiApi.Repositories
                 foreach (DataRow row in sqlResult.data.Rows)
                 {
                     int cmdToken = 0;
-                    int.TryParse(row["cmdtoken"]?.ToString(), out cmdToken);
+                    var tokenStr = GetString(row, "cmdtoken");
+                    if (!string.IsNullOrEmpty(tokenStr))
+                    {
+                        int.TryParse(tokenStr, out cmdToken);
+                    }
 
                     int? wordPos = null;
-                    if (row["wordpos"] != DBNull.Value && int.TryParse(row["wordpos"]?.ToString(), out int parsedWordPos))
+                    var wordPosStr = GetString(row, "wordpos");
+                    if (!string.IsNullOrEmpty(wordPosStr) && int.TryParse(wordPosStr, out int parsedWordPos))
                     {
                         wordPos = parsedWordPos;
                     }
 
                     prompts.Add(new CommandPromptDTO
                     {
-                        Id = row["id"]?.ToString(),
+                        Id = GetString(row, "id"),
                         CmdToken = cmdToken,
-                        Command = row["command"] != DBNull.Value ? row["command"]?.ToString() : null,
-                        CommandGroup = row["command_group"] != DBNull.Value ? row["command_group"]?.ToString() : null,
+                        Command = GetString(row, "command"),
+                        CommandGroup = GetString(row, "command_group"),
                         WordPos = wordPos,
-                        Prompt = row["prompt"] != DBNull.Value ? row["prompt"]?.ToString() : null,
-                        PromptSource = row["promptsource"] != DBNull.Value ? row["promptsource"]?.ToString() : null,
-                        PromptParams = row["promptparams"] != DBNull.Value ? row["promptparams"]?.ToString() : null,
-                        PromptValues = row["promptvalues"] != DBNull.Value ? row["promptvalues"]?.ToString() : null,
-                        ExtraParams = row["extraparams"] != DBNull.Value ? row["extraparams"]?.ToString() : null,
-                        RequestUrl = row["requesturl"] != DBNull.Value ? row["requesturl"]?.ToString() : null
+                        Prompt = GetString(row, "prompt"),
+                        PromptSource = GetString(row, "promptsource"),
+                        PromptParams = GetString(row, "promptparams"),
+                        PromptValues = GetString(row, "promptvalues"),
+                        ExtraParams = GetString(row, "extraparams"),
+                        RequestUrl = GetString(row, "requesturl")
                     });
                 }
             }
@@ -270,8 +377,8 @@ namespace AxiApi.Repositories
 
             var db = await _axExtend.GetDB();
 
-            string cleanValues = request.PromptValues.Replace("'", "''");
-            string cleanSource = request.PromptSource.Replace("'", "''");
+            string cleanValues = (request.PromptValues ?? "").Replace("'", "''");
+            string cleanSource = (request.PromptSource ?? "").Replace("'", "''");
 
             string sql = $"UPDATE axi_command_prompts SET promptvalues = '{cleanValues}', promptsource = '{cleanSource}' " +
                          $"WHERE cmdtoken = {request.CmdToken} AND wordpos = {request.WordPos}";
