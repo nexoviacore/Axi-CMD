@@ -1014,6 +1014,13 @@
             }
         }
 
+        if (tokens.length > 2 && rawParamName && rawParamName.toLowerCase() !== "create new") {
+            if (!paramField) {
+                showToast(`Parameter field is not configured for '${caption}'. Cannot filter with search value '${rawParamName}'.`);
+                return true;
+            }
+        }
+
         const context = {
             caption: caption,
             rawParamName: rawParamName,
@@ -1094,6 +1101,30 @@
         }
 
         if (optType === "iview") {
+            if (paramValue && paramField) {
+                let url = rawTargetUrl || `../aspx/iview.aspx?ivname=${promptId}`;
+                if (!url.includes("?")) {
+                    url += `?ivname=${promptId}`;
+                }
+                if (!url.includes(`${paramField}=`)) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
+                }
+                if (extraParams) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${extraParams}`;
+                }
+                url = resolveCommandUrlPlaceholders(url, context);
+                if (popUpOption) {
+                    const sep = url.includes("?") ? "&" : "?";
+                    url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                    openPopOption(url);
+                } else {
+                    setCommandRoutes(input.value.trim(), url);
+                    loadIframeFn(url);
+                }
+                return true;
+            }
             redirectToIView(promptId, caption);
             return true;
         }

@@ -161,11 +161,16 @@ WHERE cmdtoken = 7 AND wordpos = 3;
 -- UPDATE axi_command_prompts SET promptsource = promptsource || ',axi_custom_ds' WHERE cmdtoken = 7 AND wordpos = 3;
 ```
 
-> [!TIP]
-> **Dynamic Suggestions via `axdirectsql` (Custom ADS)**:
-> If your sub-option requires dynamic auto-complete suggestions for Position 3 (e.g., listing all SLA policies or custom tools from database):
-> 1. Create a data source entry in the **`axdirectsql`** table (e.g., `axi_custom_ds`) returning `name` and `displaydata`.
-> 2. Append that data source name into Position 3 (`wordpos = 3`) of `axi_command_prompts` as `promptsource = promptsource || ',axi_custom_ds'` instead of `Axi_Dummy`.
+> [!IMPORTANT]
+> **Rules for using `param_field` (ADS Requirement)**:
+> - **If you are using `param_field`**: You should first configure an Axpert Data Source (ADS) in `axdirectsql` (for example, `mycustomds`). Then, you need to add `mycustomds` to `promptsource` like this:
+>   ```sql
+>   UPDATE axi_command_prompts
+>   SET promptsource = promptsource || ',mycustomds'
+>   WHERE cmdtoken = 4 AND wordpos = 3;
+>   ```
+> - **If you are not using an ADS**: You should **not** use `param_field` (leave `param_field` as `NULL`).
+> - Passing a search value at runtime when `param_field` is `NULL` will trigger a validation alert informing the user that no parameter field is configured for the command.
 
 ### Step 2: Insert the Configuration Row
 Execute the following SQL statement in your database:
