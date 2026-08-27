@@ -13079,8 +13079,15 @@
             return false;
         }
         const cleanOpt = (sdkOptionName || "").toString().trim().toLowerCase();
-        const devOptKey = SDK_DEV_OPT_MAP[cleanOpt] || cleanOpt;
-        return allowedOpts.includes(devOptKey);
+        
+        // If it is a built-in Axpert studio tool, check specific permission
+        if (SDK_DEV_OPT_MAP[cleanOpt]) {
+            const devOptKey = SDK_DEV_OPT_MAP[cleanOpt];
+            return allowedOpts.includes(devOptKey);
+        }
+
+        // Custom / Dynamic SDK options configured via axi_command_config are allowed for users with buildAccess
+        return true;
     }
 
     let cachedAccessPermissions = null;
