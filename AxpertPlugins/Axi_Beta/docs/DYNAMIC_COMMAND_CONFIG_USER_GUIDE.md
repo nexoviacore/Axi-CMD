@@ -229,3 +229,12 @@ INSERT INTO axi_command_config (
 
 ### Q4: Can I temporarily disable a command without deleting the row?
 - Yes. Update the status flag: `UPDATE axi_command_config SET active = 'F' WHERE config_id = 'cfg_configure_sla';`.
+
+### Q5: Why do I get "Access violation in ASBTStruct.dll" when passing a search value in TStruct / Dual Mode navigation?
+- **Behavior of Dual-Mode Navigation (`tstruct/iview` or `iview/tstruct`)**:
+  - **No parameter supplied** (e.g. `Configure SM56C`): Directly opens the **IView** listing.
+  - **Parameter supplied** (e.g. `Configure SM56C "RecordName"`): Directly opens the **TStruct** form in edit mode using `param_field`.
+- **Root Cause & Resolution**:
+  - When passing a parameter to edit a TStruct, `param_field` must receive a valid, existing record key.
+  - If `param_field` is configured without defining an ADS in `axdirectsql` (or if a non-existent key is typed), the backend TStruct loader (`ASBTStruct.dll`) cannot locate the record in the database, resulting in an access violation.
+  - **Solution**: Always configure an Axpert Data Source (ADS) in `axdirectsql` for Position 3 so users select verified record keys from the auto-complete dropdown before opening the TStruct.
