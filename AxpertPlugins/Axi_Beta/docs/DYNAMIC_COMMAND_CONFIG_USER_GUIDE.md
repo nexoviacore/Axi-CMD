@@ -125,19 +125,47 @@ You want to add a new command: **`Configure SLA "Gold Policy"`** that opens cust
 
 
 ### Step 1: Register Autocomplete Prompt 
-If `Sla` is a new sub-option under `Configure`, ensure it is listed in `axi_command_prompts` so users receive auto-complete suggestions when typing `Configure`:
+If your new option is under **Configure** (`cmdtoken = 4`) or **SDK** (`cmdtoken = 7`), ensure it is registered in `axi_command_prompts` so users receive auto-complete suggestions:
 
+#### Option A: For `Configure` Commands (`cmdtoken = 4`)
 ```sql
--- 1. Append option name to Position 2 (Object Type values)
+-- 1. Append sub-option name to Position 2 (Object Type prompt values)
 UPDATE axi_command_prompts 
 SET promptvalues = promptvalues || ',SLA'
 WHERE cmdtoken = 4 AND wordpos = 2;
 
 -- 2. Append matching data source to Position 3 (Object Name data source)
+-- Use 'Axi_Dummy' if the sub-option is static (no 3rd token suggestion required)
 UPDATE axi_command_prompts
 SET promptsource = promptsource || ',Axi_Dummy'
 WHERE cmdtoken = 4 AND wordpos = 3;
+
+-- OR if dynamic: specify your custom Axpert Data Source (e.g., ',axi_custom_ds')
+-- UPDATE axi_command_prompts SET promptsource = promptsource || ',axi_custom_ds' WHERE cmdtoken = 4 AND wordpos = 3;
 ```
+
+#### Option B: For `SDK` Commands (`cmdtoken = 7`)
+```sql
+-- 1. Append sub-option name to Position 2 (SDK Type prompt values)
+UPDATE axi_command_prompts 
+SET promptvalues = promptvalues || ',My Custom Tool'
+WHERE cmdtoken = 7 AND wordpos = 2;
+
+-- 2. Append matching data source to Position 3 (SDK Name data source)
+-- Use 'Axi_Dummy' if static
+UPDATE axi_command_prompts
+SET promptsource = promptsource || ',Axi_Dummy'
+WHERE cmdtoken = 7 AND wordpos = 3;
+
+-- OR if dynamic: specify your custom Axpert Data Source (e.g., ',axi_custom_ds')
+-- UPDATE axi_command_prompts SET promptsource = promptsource || ',axi_custom_ds' WHERE cmdtoken = 7 AND wordpos = 3;
+```
+
+> [!TIP]
+> **Dynamic Suggestions via `axdirectsql` (Custom ADS)**:
+> If your sub-option requires dynamic auto-complete suggestions for Position 3 (e.g., listing all SLA policies or custom tools from database):
+> 1. Create a data source entry in the **`axdirectsql`** table (e.g., `axi_custom_ds`) returning `name` and `displaydata`.
+> 2. Append that data source name into Position 3 (`wordpos = 3`) of `axi_command_prompts` as `promptsource = promptsource || ',axi_custom_ds'` instead of `Axi_Dummy`.
 
 ### Step 2: Insert the Configuration Row
 Execute the following SQL statement in your database:
