@@ -2,9 +2,9 @@
 2. The same command created in SDK and Configure.But in runtime only for Configure the option is reflecting,for SDK it is not reflecting.
 Cmd name:SM56 in SDK and SM56C in Configure. Fixed 
 3. For Tstruct Navigation/dual mode navigation,when Search value with param_field is given,in runtime it is giving error "Access violation at address 0000000000DED346 in module 'ASBTStruct.dll'. Read of address 0000000000000000"
-Cmd name: SM56C or dualmode in Configure. Not an Issue 
+Cmd name: SM56C or dualmode in Configure. Not an Issue - configuration issue
 4. For URL/Page Navigation,whatever Search value with param_field is given,in runtime it is passing the random value to that field.
-Cmd name: SHT_NN in Configure Not an Issue
+Cmd name: SHT_NN in Configure.          Not an Issue - configuration 
 5. For Iview navigation,param_field is not given but in runtime passing Search value.Observed that no error is thrown.
 Cmd name: testiview in Configure Fixed 
 6. Updated the status flag from 'T' to 'F' for a command.In Runtime,user is able to select the cmd and execute it.

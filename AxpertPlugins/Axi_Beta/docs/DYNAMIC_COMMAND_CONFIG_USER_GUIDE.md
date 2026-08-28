@@ -196,7 +196,7 @@ INSERT INTO axi_command_config (
     '../aspx/SlaConfig.aspx',
     'role=:userroles&user=:username',
     'T'
-);
+); 
 ```
 
 ### Step 3: Test in the Command Palette
