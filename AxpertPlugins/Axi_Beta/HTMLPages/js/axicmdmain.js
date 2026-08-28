@@ -3694,7 +3694,21 @@
         ///Skipping PromptValue "With" token for edit
         if (!realSource && activePrompt.promptValues && groupKey.toLowerCase() !== "edit") {
 
-            const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
+            let staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
+
+            if (groupKey.toLowerCase() === "configure" || groupKey.toLowerCase() === "sdk") {
+                if (axiCommandConfigList && axiCommandConfigList.length > 0) {
+                    staticValues = staticValues.filter(val => {
+                        const lowVal = val.toLowerCase().trim();
+                        if (groupKey.toLowerCase() === "sdk" && (lowVal === "tstruct" || lowVal === "iview")) {
+                            return true;
+                        }
+                        const activeRow = getCommandConfigRow(groupKey, val);
+                        return !!activeRow;
+                    });
+                }
+            }
+
             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
 
@@ -13170,7 +13184,10 @@
 
                         for (let i = 0; i < types.length; i++) {
                             const rawType = types[i].trim();
-                            if (isDevOptionAllowed(rawType)) {
+                            const lowType = rawType.toLowerCase();
+                            const isExempt = lowType === "tstruct" || lowType === "iview";
+                            const isActive = isExempt || ((axiCommandConfigList && axiCommandConfigList.length > 0) ? !!getCommandConfigRow("SDK", rawType) : true);
+                            if (isActive && isDevOptionAllowed(rawType)) {
                                 filteredTypes.push(rawType);
                                 filteredSources.push(sources[i] ? sources[i].trim() : "Axi_Dummy");
                             }
@@ -13197,41 +13214,35 @@
 
         const roles = (currentUserRole || "").split(",").map(r => r.trim().toLowerCase());
         const isAdmin = currentUserName === "admin" && roles.includes("default");
-        // const isAdmin = false;
 
-        if (!isAdmin) {
-            const configurePrompts = commandsFromDb["Configure"].prompts;
+        const configurePrompts = commandsFromDb["Configure"].prompts;
+        const objectTypePrompt = configurePrompts?.find(p => p.prompt === "object type" || p.wordPos === 2);
+        const objectNamePrompt = configurePrompts?.find(p => p.prompt === "object name" || p.wordPos === 3);
 
-            // configurePrompts.forEach(prompt => {
-            //     if (prompt.prompt === "object type" && prompt.promptValues) {
-            //         let values = prompt.promptValues.split(",");
+        if (objectTypePrompt && objectTypePrompt.promptValues) {
+            const types = objectTypePrompt.promptValues.split(",");
+            const sources = (objectNamePrompt && objectNamePrompt.promptSource) ? objectNamePrompt.promptSource.split(",") : [];
 
-            //         values = values.filter(v => v.trim() !== "User Activation");
+            const filteredTypes = [];
+            const filteredSources = [];
 
-            //         prompt.promptValues = values.join(",");
-            //     }
-            // });
+            for (let i = 0; i < types.length; i++) {
+                const rawType = types[i].trim();
+                const isActive = (axiCommandConfigList && axiCommandConfigList.length > 0) ? !!getCommandConfigRow("Configure", rawType) : true;
 
-            const objectTypePrompt = configurePrompts.find(p => p.prompt === "object type");
-
-            const objectNamePrompt = configurePrompts.find(p => p.prompt === "object name");
-
-            if (objectTypePrompt && objectNamePrompt) {
-                const types = objectTypePrompt.promptValues.split(",");
-                const sources = objectNamePrompt.promptSource.split(",");
-
-                const index = types.findIndex(
-                    t => t.trim() === "User Activation"
-                );
-
-                if (index !== -1) {
-                    types.splice(index, 1);
-                    sources.splice(index, 1);
-
-                    objectTypePrompt.promptValues = types.join(",");
-                    objectNamePrompt.promptSource = sources.join(",");
+                if (!isAdmin && rawType.toLowerCase() === "user activation") {
+                    continue;
                 }
 
+                if (isActive) {
+                    filteredTypes.push(rawType);
+                    filteredSources.push(sources[i] ? sources[i].trim() : "Axi_Dummy");
+                }
+            }
+
+            objectTypePrompt.promptValues = filteredTypes.join(",");
+            if (objectNamePrompt) {
+                objectNamePrompt.promptSource = filteredSources.join(",");
             }
         }
 
