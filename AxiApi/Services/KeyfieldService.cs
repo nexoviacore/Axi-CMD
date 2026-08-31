@@ -17,10 +17,10 @@ namespace AxiApi.Services
             _logger = logger;
         }
 
-        public async Task<ApiResponseDTO> SetKeyfieldAsync(string appname, SetKeyfieldRequestDTO requestDTO)
+        public async Task<ApiResponseDTO> SetKeyfieldAsync(SetKeyfieldRequestDTO requestDTO)
         {
-            if (string.IsNullOrWhiteSpace(appname))
-                throw new ArgumentException("appname is required.");
+            if (string.IsNullOrWhiteSpace(requestDTO.AppName))
+                throw new ArgumentException("AppName is required.");
             if (string.IsNullOrWhiteSpace(requestDTO.TransId))
                 throw new ArgumentException("TransId is required.");
             if (string.IsNullOrWhiteSpace(requestDTO.KeyField))
@@ -29,9 +29,9 @@ namespace AxiApi.Services
                 throw new ArgumentException("Username is required.");
 
             _logger.LogInformation("KeyfieldService: Setting keyfield for TransId: {TransId}, KeyField: {KeyField}, App: {AppName}",
-                requestDTO.TransId, requestDTO.KeyField, appname);
+                requestDTO.TransId, requestDTO.KeyField, requestDTO.AppName);
 
-            bool result = await _repository.SetKeyfieldAsync(appname, requestDTO);
+            bool result = await _repository.SetKeyfieldAsync(requestDTO);
 
             return new ApiResponseDTO
             {

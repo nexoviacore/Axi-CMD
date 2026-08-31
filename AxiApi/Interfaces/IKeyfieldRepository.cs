@@ -5,6 +5,6 @@ namespace AxiApi.Interfaces
 {
     public interface IKeyfieldRepository
     {
-        Task<bool> SetKeyfieldAsync(string appname, SetKeyfieldRequestDTO requestDTO);
+        Task<bool> SetKeyfieldAsync(SetKeyfieldRequestDTO requestDTO);
     }
 }

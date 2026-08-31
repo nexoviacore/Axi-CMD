@@ -90,13 +90,13 @@ namespace AxiApi.Controllers
             return Ok(response); 
         }
 
-        [HttpPost("keyfield")]
-        public async Task<ActionResult<ApiResponseDTO>> SetKeyfield([FromBody] SetKeyfieldRequestDTO requestDTO, [FromQuery] string appname)
+        [HttpPost("setkeyfield")]
+        public async Task<ActionResult<ApiResponseDTO>> SetKeyfield([FromBody] SetKeyfieldRequestDTO requestDTO)
         {
-            if (string.IsNullOrWhiteSpace(appname))
-                return BadRequest("appname query parameter is required.");
+            if (string.IsNullOrWhiteSpace(requestDTO.AppName))
+                return BadRequest("AppName is required in payload.");
 
-            var response = await _keyfieldService.SetKeyfieldAsync(appname, requestDTO);
+            var response = await _keyfieldService.SetKeyfieldAsync(requestDTO);
             return Ok(response);
         }
     }

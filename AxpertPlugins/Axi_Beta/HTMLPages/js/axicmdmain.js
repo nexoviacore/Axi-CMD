@@ -392,7 +392,7 @@
         // // console.log("AxiFavoritesUrl = " + axiFavoritesUrl);
 
         axiCommandConfigUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/command-config`;
-        axiKeyfieldUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/keyfield`;
+        axiKeyfieldUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/setkeyfield`;
 
 
         input = document.getElementById("Axi-Searchinp");
@@ -7863,19 +7863,24 @@
             (typeof top !== "undefined" && top.mainUserName) || 
             "";
 
+        if (!appname) {
+            showToast("Application session is not available. App name is required.");
+            return;
+        }
+
         if (!username) {
             showToast("User session is not available. Username is required.");
             return;
         }
 
         try {
-            const url = `${axiKeyfieldUrl}?appname=${encodeURIComponent(appname)}`;
-            const res = await fetch(url, {
+            const res = await fetch(axiKeyfieldUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
+                    appName: appname,
                     transId: transId,
                     keyField: actualFieldName,
                     username: username

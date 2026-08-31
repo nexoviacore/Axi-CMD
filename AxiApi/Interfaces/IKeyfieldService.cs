@@ -5,6 +5,6 @@ namespace AxiApi.Interfaces
 {
     public interface IKeyfieldService
     {
-        Task<ApiResponseDTO> SetKeyfieldAsync(string appname, SetKeyfieldRequestDTO requestDTO);
+        Task<ApiResponseDTO> SetKeyfieldAsync(SetKeyfieldRequestDTO requestDTO);
     }
 }

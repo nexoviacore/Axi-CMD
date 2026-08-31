@@ -5,6 +5,9 @@ namespace AxiApi.DTOs
     public class SetKeyfieldRequestDTO
     {
         [Required]
+        public string AppName { get; set; } = string.Empty;
+
+        [Required]
         public string TransId { get; set; } = string.Empty;
 
         [Required]
