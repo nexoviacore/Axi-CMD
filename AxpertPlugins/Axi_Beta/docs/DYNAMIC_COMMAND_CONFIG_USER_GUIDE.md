@@ -170,7 +170,7 @@ WHERE cmdtoken = 7 AND wordpos = 3;
 >   WHERE cmdtoken = 4 AND wordpos = 3;
 >   ```
 > - **If you are not using an ADS**: You should **not** use `param_field` (leave `param_field` as `NULL`).
-> - Passing a search value at runtime when `param_field` is `NULL` will trigger a validation alert informing the user that no parameter field is configured for the command.
+> 
 
 ### Step 2: Insert the Configuration Row
 Execute the following SQL statement in your database:
