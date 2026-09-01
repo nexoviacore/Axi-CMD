@@ -96,10 +96,6 @@ DELETE FROM axdirectsql where sqlname = 'axi_keyvalueswithfieldnameslist'
 >>
 
 <<
-DELETE FROM axdirectsql where sqlname = 'axi_tstructprops_insupd'
->>
-
-<<
 DELETE FROM axdirectsql where sqlname = 'axi_adsfilteroperators'
 >>
 
@@ -477,12 +473,6 @@ VALUES(99999999990024, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin'
 INSERT INTO axdirectsql
 (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
 VALUES(99999999990025, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_keyvalueswithfieldnameslist', NULL, 'Metadata', 5, 'select * from fn_axi_getkeyvalueswithfieldnameslist(:param1, :param2)', 'param1,param2', 'param1~~,param2~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
->>
-
-<<
-INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990026, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_tstructprops_insupd', NULL, 'Metadata', 5, 'select * from fn_upsert_config_by_condition(:param1,:param2,:param3,:param4)', 'param1,param2,param3,param4', 'param1~~,param2~~,param3~~,param4~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
 >>
 
 <<
