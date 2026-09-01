@@ -1,6 +1,6 @@
 # AxiApi
 
-Backend service layer powering the **AXI (Axpert Command Line Interface)** engine. AxiApi provides dynamic command resolution, command grammar bootstrapping, customizable user favorites, multi-tenant database connectivity, and distributed Redis caching for the Axpert web shell.
+Backend service layer powering the **AXI (Axpert Command Line Interface)** engine. AxiApi provides dynamic command resolution, command grammar bootstrapping, customizable user favorites, form keyfield configuration, multi-tenant database connectivity, and distributed Redis caching for the Axpert web shell.
 
 ---
 
@@ -14,15 +14,17 @@ AxiApi is built on **ASP.NET Core (.NET 8)** adhering to a clean, decoupled laye
 └───────────────────────────┬────────────────────────────┘
                             │
 ┌───────────────────────────▼────────────────────────────┐
-│      Service Layer (Business Logic & Redis Caching)    │
+│      Service Layer (Business Logic & Validation)       │
 │  - CommandConfigService       - UserFavouritesService  │
-│  - GrammarBootstrapService    - GrammarService         │
+│  - KeyfieldService            - GrammarService         │
+│  - GrammarBootstrapService                             │
 └───────────────────────────┬────────────────────────────┘
                             │
 ┌───────────────────────────▼────────────────────────────┐
 │    Repository Layer (Data Access via AxExtend & SQL)   │
 │  - CommandConfigRepository    - UserFavouritesRepo     │
-│  - GrammarRepository          - SqlQueries             │
+│  - KeyfieldRepository         - GrammarRepository      │
+│  - SqlQueries (Centralized Queries & DB Functions)     │
 └───────────────────────────┬────────────────────────────┘
                             │
 ┌───────────────────────────▼────────────────────────────┐
@@ -33,9 +35,10 @@ AxiApi is built on **ASP.NET Core (.NET 8)** adhering to a clean, decoupled laye
 ### Key Capabilities
 
 - **Dynamic Command Configuration**: Eliminates hardcoded transaction routing by querying and caching the `axi_command_config` table for `Configure`, `SDK`, `Upload`, and `Download` actions.
+- **Form Keyfield Configuration (`setkeyfield`)**: Directly configures and updates primary keyfields for TStruct forms (`axp_tstructprops`) via parameterized database operations and database-level timestamp functions.
 - **Grammar Metadata Bootstrapping**: Generates and parses command trees, prompt sources, parameter positions, and autocompletion tokens.
 - **User Favorites Management**: Supports creating, listing, renaming, and removing custom command aliases with deep link target URLs.
-- **Multi-Tenant Connection Pooling**: Utilizes `AxExtend` and `ARMCommon` for dynamic database connection resolution across distinct Axpert application instances (`appname`).
+- **Multi-Tenant Connection Resilience**: Utilizes `AxExtend` and `ARMCommon` with automated retry logic to handle transient connection pool stream disconnects.
 - **Resilient Redis Caching**: Automatic fallback to direct database queries if the distributed cache is unavailable, with force-refresh cache invalidation.
 
 ---
@@ -49,7 +52,7 @@ All endpoints are versioned under the `/api/v1/Axi` route prefix.
 Retrieves the active mapping of command verbs, prompt options, target transaction IDs, and navigation URLs.
 
 ```http
-GET /api/v1/Axi/command-config?appname={appname}&forceRefresh={forceRefresh}
+GET /api/v1/Axi/command-config?appname={appname}&username={username}&forceRefresh={forceRefresh}
 ```
 
 #### Query Parameters
@@ -57,6 +60,7 @@ GET /api/v1/Axi/command-config?appname={appname}&forceRefresh={forceRefresh}
 | Parameter | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `appname` | string | Yes | — | Axpert application database identifier |
+| `username` | string | Yes | — | Active logged-in username |
 | `forceRefresh` | boolean | No | `false` | When `true`, invalidates the Redis cache and queries the database directly |
 
 #### Response (`200 OK`)
@@ -90,7 +94,46 @@ GET /api/v1/Axi/command-config?appname={appname}&forceRefresh={forceRefresh}
 
 ---
 
-### 2. Command Grammar Metadata
+### 2. Form Keyfield Configuration
+
+Configures the primary search/key field for a specified TStruct form. Automatically performs an upsert into `axp_tstructprops` using database-level timestamp evaluation.
+
+```http
+POST /api/v1/Axi/setkeyfield
+Content-Type: application/json
+```
+
+#### Request Body
+
+```json
+{
+  "appName": "axpbase",
+  "transId": "axusr",
+  "keyField": "username",
+  "username": "admin"
+}
+```
+
+| Field | Type | Required | Description |
+| :--- | :--- | :---: | :--- |
+| `appName` | string | Yes | Axpert application database instance identifier |
+| `transId` | string | Yes | TStruct structure ID / form name |
+| `keyField` | string | Yes | Database column name to configure as keyfield |
+| `username` | string | Yes | Active user login performing the configuration |
+
+#### Response (`200 OK`)
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "statusCode": 200
+}
+```
+
+---
+
+### 3. Command Grammar Metadata
 
 Fetches the complete grammar syntax tree for autocomplete suggestion parsing.
 
@@ -108,7 +151,7 @@ GET /api/v1/Axi/axi_get?view={view}&forceRefresh={forceRefresh}&appname={appname
 
 ---
 
-### 3. User Favorites
+### 4. User Favorites
 
 #### Get User Favorites
 
@@ -161,11 +204,24 @@ AxiApi interacts with the following core tables (located in `AxpertPlugins/Axi_B
 | `command` | `VARCHAR(50)` | Not Null, Indexed | Command group verb (`Configure`, `SDK`, `Upload`, `Download`) |
 | `prompt_options` | `VARCHAR(200)` | Not Null | Command prompt sub-action (e.g. `user listing`, `smart view`) |
 | `prompt_id` | `VARCHAR(50)` | Not Null | Target identifier (`transid`, `ivname`, or script name) |
-| `prompt_option_type`| `VARCHAR(20)` | Not Null | Navigation mode (`tstruct`, `iview`, `ivtoivload`, `url`) |
+| `prompt_option_type`| `VARCHAR(20)` | Not Null | Navigation/Execution mode (`tstruct`, `iview`, `action`, `url`) |
 | `param_field` | `VARCHAR(100)` | Nullable | Parameter field name used for record loading |
 | `target_url` | `VARCHAR(500)` | Nullable | Explicit redirection URL override |
 | `extra_params` | `VARCHAR(500)` | Nullable | Additional query parameters (e.g. `AxOpenAct=true&isDupTab=false`) |
 | `active` | `VARCHAR(1)` | Default `'T'` | Status flag (`T` / `F`) |
+
+### `axp_tstructprops`
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `name` | `VARCHAR(50)` | Primary Key / TStruct identifier (e.g. `axusr`) |
+| `caption` | `VARCHAR(500)` | TStruct form display caption |
+| `keyfield` | `VARCHAR(200)` | Primary search key field configured for the form |
+| `userconfigured` | `CHAR(1)` | Flag `'t'` indicating user-configured keyfield |
+| `createdon` | `VARCHAR(30)` | Timestamp string populated via `TO_CHAR(CURRENT_TIMESTAMP, ...)` |
+| `createdby` | `VARCHAR(100)` | Username who created the record |
+| `updatedon` | `VARCHAR(30)` | Timestamp string of last update |
+| `updatedby` | `VARCHAR(100)` | Username who updated the record |
 
 ### `axi_userfavourites`
 
@@ -181,16 +237,17 @@ AxiApi interacts with the following core tables (located in `AxpertPlugins/Axi_B
 
 ---
 
-## Distributed Caching Strategy
+## Connection Resilience & Caching
 
-AxiApi utilizes distributed Redis caching for high-throughput command resolution:
+### Database Retry Resilience
+> [!NOTE]
+> Database repositories incorporate automated retry loops with exponential backoff. If an idle pooled TCP socket is reset by the database server (e.g. `Exception while reading from stream`), the repository automatically catches the transient error and retries with a fresh physical connection.
 
+### Distributed Redis Caching
 > [!TIP]
 > Redis keys are generated deterministically using the format:
 > `{appname}-command_config-`
-> When `forceRefresh=true` is supplied, the cache key is deleted via `KeysDeleteAsync` and repopulated directly from the database.
-
-If the Redis connection fails, the service gracefully degrades to querying the underlying database directly without interrupting end-user navigation.
+> When `forceRefresh=true` is supplied, the cache key is evicted and repopulated directly from the database.
 
 ---
 
@@ -200,7 +257,7 @@ If the Redis connection fails, the service gracefully degrades to querying the u
 
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - Axpert runtime dependencies (`ARMCommon.dll`, `AxExtend.dll`) located at `../../ARMMICRO/AxPlugins/AxExtend`
-- Redis server instance (optional, for caching)
+- Redis server instance (optional, for distributed caching)
 
 ### Build & Run
 
@@ -223,6 +280,7 @@ If the Redis connection fails, the service gracefully degrades to querying the u
 
 AxiApi implements centralized exception handling via `GlobalExceptionHandler` and RFC 7807 Problem Details:
 
-- `DatabaseException`: Thrown when SQL execution fails; maps to HTTP `500 Internal Server Error` with contextual query details in server logs.
-- `NotFoundException`: Thrown on missing resource lookups; maps to HTTP `404 Not Found`.
-- `RedisCacheConnectionException`: Handled internally with database fallback logging.
+- `ArgumentException`: Thrown on invalid or missing request parameters; maps to HTTP `400 Bad Request`.
+- `DatabaseException`: Thrown when SQL execution fails; maps to HTTP `400 Bad Request` with contextual query details logged on the server.
+- `KeyNotFoundException`: Thrown on missing resource lookups; maps to HTTP `404 Not Found`.
+- `RedisCacheConnectionException`: Handled internally with transparent database fallback.

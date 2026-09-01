@@ -131,6 +131,7 @@
     let favouriteBtn;
     let commandFavorites = [];
     let axiFavoritesUrl = "";
+    let axiKeyfieldUrl = "";
     const MAX_FAVORITES = AxiCmdConfig.MAX_FAVORITES;
     let commandRoutes = [];
     let isDeleting = false;
@@ -391,6 +392,7 @@
         // // console.log("AxiFavoritesUrl = " + axiFavoritesUrl);
 
         axiCommandConfigUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/command-config`;
+        axiKeyfieldUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/setkeyfield`;
 
 
         input = document.getElementById("Axi-Searchinp");
@@ -999,6 +1001,12 @@
         const extraParams = configRow.extraParams || configRow.extra_params || configRow.ExtraParams || "";
 
         const caption = tokens.length > 1 ? cleanCommandToken(tokens[1]) : "";
+
+        if (optType === "action") {
+            handleKeyfield({ tokens, commandConfig });
+            return true;
+        }
+
         let rawParamName = "";
         let paramValue = "";
 
@@ -1068,11 +1076,6 @@
                 setEditSessionState(promptId || "ad_pm");
                 redirectToTstruct(promptId || "ad_pm", caption);
             }
-            return true;
-        }
-
-        if (optType === "action") {
-            handleKeyfield({ tokens, commandConfig });
             return true;
         }
 
@@ -7848,47 +7851,59 @@
         const { value: actualFieldName } = tryResolveToken(3, keyField, commandConfig, false);
         const { value: transId } = tryResolveToken(2, tstructName, commandConfig, false);
         if (!tstructName || !keyField) {
-            showToast("TStruct and Key Field are required")
+            showToast("TStruct and Key Field are required");
             // console.log("TStruct and Key Field are required");
             return;
         }
 
+        const appname = getProjectName() || "";
+        const username = window.mainUserName || 
+            (typeof callParentNew === "function" && callParentNew("mainUserName")) || 
+            (typeof parent !== "undefined" && parent.mainUserName) || 
+            (typeof top !== "undefined" && top.mainUserName) || 
+            "";
 
-        const requestBody = {
-            action: "view",   ///edit
-            adsNames: ["axi_tstructprops_insupd"],
-            sqlParams: {
-                param1: "axp_tstructprops",
-                param2: "name,keyfield,userconfigured",
-                param3: `'${transId}','${actualFieldName}','t'`,
-                param4: `name = '${transId}'`
+        if (!appname) {
+            showToast("Application session is not available. App name is required.");
+            return;
+        }
+
+        if (!username) {
+            showToast("User session is not available. Username is required.");
+            return;
+        }
+
+        try {
+            const res = await fetch(axiKeyfieldUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    appName: appname,
+                    transId: transId,
+                    keyField: actualFieldName,
+                    username: username
+                })
+            });
+
+            let dataObj = null;
+            try {
+                dataObj = await res.json();
+            } catch (e) { }
+
+            if (!res.ok || (dataObj && dataObj.success === false)) {
+                const errorMessage = dataObj?.message || (dataObj?.result?.message) || "Failed to set key field";
+                showToast(`Error: ${errorMessage}`);
+                return;
             }
-        };
 
-        const res = await getAxListAsync(requestBody);
-
-        let dataObj = typeof res === "string" ? JSON.parse(res) : res;
-        if (dataObj && dataObj.d) {
-            dataObj = typeof dataObj.d === "string" ? JSON.parse(dataObj.d) : dataObj.d;
-        }
-
-        // // console.log("DATA obj is :", dataObj);
-
-        const dataArray = dataObj?.result?.data;
-        const resultBlock = Array.isArray(dataArray) ? dataArray[0] : null;
-        const foundErrorObj = Array.isArray(dataArray) ? dataArray.find(item => item && item.error) : null;
-        const errorMessage = resultBlock?.error || foundErrorObj?.error || (dataObj?.result?.success === false ? (dataObj?.result?.message || "Operation failed") : null);
-
-        if (errorMessage) {
-            showToast(`Error: ${errorMessage}`);
-            // // console.error(`handleKeyfield Error: ${errorMessage}`);
-            return;
-        }
-
-        if (dataObj?.result?.success && dataObj?.result?.message?.toLowerCase() === "success") {
-            showToast(`Key field-${keyField} has been set for the form ${tstructName}`, 5000, true);
-            // // console.log(`Key field-${keyField} has been set for the form ${tstructName}`);
-            return;
+            if (dataObj && (dataObj.success === true || dataObj.message?.toLowerCase() === "success")) {
+                showToast(`Key field-${keyField} has been set for the form ${tstructName}`, 5000, true);
+                return;
+            }
+        } catch (err) {
+            showToast(`Error: ${err.message || err}`);
         }
     }
 

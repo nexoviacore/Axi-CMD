@@ -24,16 +24,19 @@ namespace AxiApi.Controllers
         private readonly IGrammarService _grammarService;
         private readonly IUserFavouriteService _userFavouriteService;
         private readonly ICommandConfigService _commandConfigService;
+        private readonly IKeyfieldService _keyfieldService;
 
         public AxiController(
             IGrammarService grammarService,
             IUserFavouriteService userFavouriteService,
-            ICommandConfigService commandConfigService
+            ICommandConfigService commandConfigService,
+            IKeyfieldService keyfieldService
         )
         {
             _grammarService = grammarService;
             _userFavouriteService = userFavouriteService;
             _commandConfigService = commandConfigService;
+            _keyfieldService = keyfieldService;
         }
 
         [HttpGet("command-config")]
@@ -86,9 +89,15 @@ namespace AxiApi.Controllers
             NonQueryResult response = await _userFavouriteService.UpdateCommandText(favouritesId, requestDTO, appname, username);
             return Ok(response); 
         }
-       
-        
 
+        [HttpPost("setkeyfield")]
+        public async Task<ActionResult<ApiResponseDTO>> SetKeyfield([FromBody] SetKeyfieldRequestDTO requestDTO)
+        {
+            if (string.IsNullOrWhiteSpace(requestDTO.AppName))
+                return BadRequest("AppName is required in payload.");
 
+            var response = await _keyfieldService.SetKeyfieldAsync(requestDTO);
+            return Ok(response);
+        }
     }
 }
