@@ -1312,7 +1312,7 @@ if pselectedfield!='0' then
          format(
             $sql$
             SELECT --distinct on (p.%I,s.%I) 
-           (s.%I || '[' || p.%I || ']')::text AS displaydata,
+           (s.%I || ' [' || p.%I || ']')::text AS displaydata,
                    '0'::text AS id,
                    (s.%I)::text AS caption,
                    'f'::text AS isfield
@@ -1338,7 +1338,7 @@ if pselectedfield!='0' then
         format(
             $sql$
             SELECT --distinct on (s.%I,k.%I) 
-           (s.%I || '[' || k.%I || ']')::text AS displaydata,
+           (s.%I || ' [' || k.%I || ']')::text AS displaydata,
                    '0'::text AS id,
                    (s.%I)::text AS caption,
                    'f'::text AS isfield
@@ -1369,7 +1369,7 @@ end;
   v_selectedfld_sql := case when v_keyfield_normalized='F' then 
         format(
            $sql$
-           SELECT  (p.%I || '[' || p.%I || ']')::text AS displaydata,
+           SELECT  (p.%I || ' [' || p.%I || ']')::text AS displaydata,
                   '0'::text AS id,
                   p.%I::text AS caption,
                   'f'::text AS isfield
@@ -1389,7 +1389,7 @@ end;
        when v_keyfield_normalized='T' then 
         format(
            $sql$
-           SELECT (p.%I || '[' || s.%I || ']')::text AS displaydata,
+           SELECT (p.%I || ' [' || s.%I || ']')::text AS displaydata,
                   '0'::text AS id,
                   p.%I::text AS caption,
                   'f'::text AS isfield

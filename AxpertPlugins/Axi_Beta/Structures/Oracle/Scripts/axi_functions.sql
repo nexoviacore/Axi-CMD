@@ -319,7 +319,7 @@ BEGIN
                 v_selectedfld_sql :=
                        'SELECT '
                     || '(s.' || v_selectedfld_srcfld
-                    || ' || ''['' || p.' || LOWER(pkeyfield)
+                    || ' || '' ['' || p.' || LOWER(pkeyfield)
                     || ' || '']'') displaydata, '
                     || '''0'' id, '
                     || 's.' || v_selectedfld_srcfld || ' caption, '
@@ -338,7 +338,7 @@ BEGIN
                 v_selectedfld_sql :=
                        'SELECT '
                     || '(s.' || v_selectedfld_srcfld
-                    || ' || ''['' || k.' || v_keyfield_srcfld
+                    || ' || '' ['' || k.' || v_keyfield_srcfld
                     || ' || '']'') displaydata, '
                     || '''0'' id, '
                     || 's.' || v_selectedfld_srcfld || ' caption, '
@@ -364,7 +364,7 @@ BEGIN
                 v_selectedfld_sql :=
                        'SELECT '
                     || '(p.' || LOWER(pselectedfield)
-                    || ' || ''['' || p.' || LOWER(pkeyfield)
+                    || ' || '' ['' || p.' || LOWER(pkeyfield)
                     || ' || '']'') displaydata, '
                     || '''0'' id, '
                     || 'p.' || LOWER(pselectedfield) || ' caption, '
@@ -382,7 +382,7 @@ BEGIN
                 v_selectedfld_sql :=
                        'SELECT '
                     || '(p.' || LOWER(pselectedfield)
-                    || ' || ''['' || s.' || v_keyfield_srcfld
+                    || ' || '' ['' || s.' || v_keyfield_srcfld
                     || ' || '']'') displaydata, '
                     || '''0'' id, '
                     || 'p.' || LOWER(pselectedfield) || ' caption, '
