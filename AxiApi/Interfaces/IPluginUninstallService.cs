@@ -5,6 +5,6 @@ namespace AxiApi.Interfaces
     public interface IPluginUninstallService
     {
         IReadOnlyList<PluginDTO> GetInstalledPlugins();
-        Task<ApiResponseDTO> UninstallAxiCmdAsync();
+        Task<ApiResponseDTO> UninstallAxiCmdAsync(string appname);
     }
 }

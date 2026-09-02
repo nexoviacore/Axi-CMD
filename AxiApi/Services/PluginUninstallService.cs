@@ -1,5 +1,6 @@
 using AxiApi.DTOs;
 using AxiApi.Interfaces;
+using AxExtend.Interface;
 
 namespace AxiApi.Services
 {
@@ -9,14 +10,18 @@ namespace AxiApi.Services
         private const string AxiCmdPluginName = "Axi CMD";
         private const string AxiCmdPageRelativePath = "CustomPages/AxiCMDMainPage2.html";
         private const string AxiCmdPluginRelativePath = "AxpertPlugins/Axi_Beta_2";
+        private const long AxiCmdAdsFirstId = 99999999990001;
+        private const long AxiCmdAdsLastId = 99999999990052;
 
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<PluginUninstallService> _logger;
+        private readonly IAxExtend _axExtend;
 
-        public PluginUninstallService(IWebHostEnvironment environment, ILogger<PluginUninstallService> logger)
+        public PluginUninstallService(IWebHostEnvironment environment, ILogger<PluginUninstallService> logger, IAxExtend axExtend)
         {
             _environment = environment;
             _logger = logger;
+            _axExtend = axExtend;
         }
 
         public IReadOnlyList<PluginDTO> GetInstalledPlugins()
@@ -40,7 +45,7 @@ namespace AxiApi.Services
             };
         }
 
-        public Task<ApiResponseDTO> UninstallAxiCmdAsync()
+        public async Task<ApiResponseDTO> UninstallAxiCmdAsync(string appname)
         {
             var webRoot = GetAxpertWebRoot();
             var pluginPath = GetPathWithinWebRoot(webRoot, AxiCmdPluginRelativePath);
@@ -60,6 +65,7 @@ namespace AxiApi.Services
             var stagedPluginPath = Path.Combine(operationPath, AxiCmdPluginId);
             var stagedPagePath = Path.Combine(operationPath, "AxiCMDMainPage2.html");
             var pageWasMoved = false;
+            var databaseArtifactsRemoved = false;
 
             try
             {
@@ -69,20 +75,78 @@ namespace AxiApi.Services
                 File.Move(pagePath, stagedPagePath);
                 pageWasMoved = true;
 
-                Directory.Delete(operationPath, true);
-                _logger.LogInformation("Axi CMD plugin and AxiCMDMainPage2.html were uninstalled.");
+                await RemoveDatabaseArtifactsAsync(appname);
+                databaseArtifactsRemoved = true;
 
-                return Task.FromResult(new ApiResponseDTO
+                try
+                {
+                    Directory.Delete(operationPath, true);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Axi CMD database artifacts were removed, but staged plugin files could not be deleted from {OperationPath}.", operationPath);
+                    throw;
+                }
+
+                _logger.LogInformation("Axi CMD database artifacts, plugin, and AxiCMDMainPage2.html were uninstalled.");
+
+                return new ApiResponseDTO
                 {
                     Success = true,
                     Message = "Axi CMD was uninstalled.",
                     StatusCode = StatusCodes.Status200OK
-                });
+                };
             }
             catch
             {
-                RestoreTargets(pluginPath, pagePath, stagedPluginPath, stagedPagePath, pageWasMoved);
+                if (!databaseArtifactsRemoved)
+                {
+                    RestoreTargets(pluginPath, pagePath, stagedPluginPath, stagedPagePath, pageWasMoved);
+                }
                 throw;
+            }
+        }
+
+        private async Task RemoveDatabaseArtifactsAsync(string appname)
+        {
+            if (!await _axExtend.OpenDBConnectionAsync(appname))
+            {
+                throw new InvalidOperationException($"Unable to connect to the database for application '{appname}'.");
+            }
+
+            var db = await _axExtend.GetDB();
+            var postgresProbe = await db.ExecuteSQLAsync("SELECT version()");
+            var isPostgreSql = string.IsNullOrWhiteSpace(postgresProbe?.error);
+
+            if (!isPostgreSql)
+            {
+                var oracleProbe = await db.ExecuteSQLAsync("SELECT 1 FROM dual");
+                if (!string.IsNullOrWhiteSpace(oracleProbe?.error))
+                {
+                    throw new InvalidOperationException("Axi CMD uninstall supports only PostgreSQL and Oracle databases.");
+                }
+            }
+
+            await ExecuteCleanupSqlAsync(db, $"DELETE FROM axdirectsql_metadata WHERE axdirectsqlid BETWEEN {AxiCmdAdsFirstId} AND {AxiCmdAdsLastId}");
+            await ExecuteCleanupSqlAsync(db, $"DELETE FROM axdirectsql WHERE axdirectsqlid BETWEEN {AxiCmdAdsFirstId} AND {AxiCmdAdsLastId}");
+
+            foreach (var tableName in new[] { "axi_command_prompts", "axi_commands", "axi_command_config", "axp_tstructprops" })
+            {
+                var dropSql = isPostgreSql
+                    ? $"DROP TABLE IF EXISTS {tableName} CASCADE"
+                    : $"BEGIN EXECUTE IMMEDIATE 'DROP TABLE {tableName.ToUpperInvariant()} CASCADE CONSTRAINTS'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE; END IF; END;";
+
+                await ExecuteCleanupSqlAsync(db, dropSql);
+            }
+        }
+
+        private static async Task ExecuteCleanupSqlAsync(dynamic db, string sql)
+        {
+            var result = await db.ExecuteNonQueryAsync(sql);
+            var error = result?.error?.ToString();
+            if (!string.IsNullOrWhiteSpace(error))
+            {
+                throw new InvalidOperationException($"Axi CMD database cleanup failed: {error}");
             }
         }
 
