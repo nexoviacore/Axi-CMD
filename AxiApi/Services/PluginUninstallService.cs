@@ -16,17 +16,19 @@ namespace AxiApi.Services
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<PluginUninstallService> _logger;
         private readonly IAxExtend _axExtend;
+        private readonly IConfiguration _configuration;
 
-        public PluginUninstallService(IWebHostEnvironment environment, ILogger<PluginUninstallService> logger, IAxExtend axExtend)
+        public PluginUninstallService(IWebHostEnvironment environment, ILogger<PluginUninstallService> logger, IAxExtend axExtend, IConfiguration configuration)
         {
             _environment = environment;
             _logger = logger;
             _axExtend = axExtend;
+            _configuration = configuration;
         }
 
         public IReadOnlyList<PluginDTO> GetInstalledPlugins()
         {
-            var webRoot = GetAxpertWebRoot();
+            var webRoot = GetConfiguredAxpertWebRoot();
             var pluginPath = GetPathWithinWebRoot(webRoot, AxiCmdPluginRelativePath);
 
             if (!Directory.Exists(pluginPath))
@@ -47,7 +49,7 @@ namespace AxiApi.Services
 
         public async Task<ApiResponseDTO> UninstallAxiCmdAsync(string appname)
         {
-            var webRoot = GetAxpertWebRoot();
+            var webRoot = GetConfiguredAxpertWebRoot();
             var pluginPath = GetPathWithinWebRoot(webRoot, AxiCmdPluginRelativePath);
             var pagePath = GetPathWithinWebRoot(webRoot, AxiCmdPageRelativePath);
 
@@ -150,31 +152,26 @@ namespace AxiApi.Services
             }
         }
 
-        private string GetAxpertWebRoot()
+        private string GetConfiguredAxpertWebRoot()
         {
-            var candidateRoots = new[]
+            var configuredRoot = _configuration["AxpertWebRoot"];
+            if (string.IsNullOrWhiteSpace(configuredRoot))
             {
-                _environment.ContentRootPath,
-                Directory.GetCurrentDirectory(),
-                AppContext.BaseDirectory
-            };
-
-            foreach (var candidateRoot in candidateRoots)
-            {
-                var directory = new DirectoryInfo(Path.GetFullPath(candidateRoot));
-                while (directory != null)
-                {
-                    if (Directory.Exists(Path.Combine(directory.FullName, "AxpertPlugins")) &&
-                        Directory.Exists(Path.Combine(directory.FullName, "CustomPages")))
-                    {
-                        return directory.FullName;
-                    }
-
-                    directory = directory.Parent;
-                }
+                throw new InvalidOperationException("AxpertWebRoot must be configured in appsettings.json.");
             }
 
-            throw new InvalidOperationException("Unable to locate the Axpert web root for plugin uninstall.");
+            var webRoot = Path.IsPathRooted(configuredRoot)
+                ? configuredRoot
+                : Path.Combine(_environment.ContentRootPath, configuredRoot);
+            webRoot = Path.GetFullPath(webRoot);
+
+            if (!Directory.Exists(Path.Combine(webRoot, "AxpertPlugins")) ||
+                !Directory.Exists(Path.Combine(webRoot, "CustomPages")))
+            {
+                throw new InvalidOperationException("Configured AxpertWebRoot does not contain AxpertPlugins and CustomPages directories.");
+            }
+
+            return webRoot;
         }
 
         private static string GetPathWithinWebRoot(string webRoot, string relativePath)
