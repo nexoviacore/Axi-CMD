@@ -125,7 +125,7 @@ namespace AxiApi.Controllers
             if (!configureAccess)
                 return StatusCode(StatusCodes.Status403Forbidden, new ApiResponseDTO { Success = false, Message = "Configure administration access is required to uninstall Axi CMD.", StatusCode = StatusCodes.Status403Forbidden });
 
-            var response = await _pluginUninstallService.UninstallAxiCmdAsync(appname);
+            var response = await _pluginUninstallService.UninstallAxiCmdAsync();
             return Ok(response);
         }
     }
