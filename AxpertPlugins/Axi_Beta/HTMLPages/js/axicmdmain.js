@@ -5983,11 +5983,44 @@
         return activeIndex >= 0 && activeIndex < items.length;
     }
 
+    function ensurePluginUninstallModals() {
+        if (document.getElementById("axiPluginUninstallModalOverlay")) {
+            return;
+        }
+
+        const confirmationOverlay = document.createElement("div");
+        confirmationOverlay.id = "axiPluginUninstallModalOverlay";
+        confirmationOverlay.className = "axi-modal-overlay";
+        confirmationOverlay.innerHTML =
+            '<div class="axi-modal-container">' +
+                '<h4 class="axi-modal-title">Uninstall Plugin</h4>' +
+                '<p id="axiPluginUninstallMessage" class="axi-plugin-uninstall-message"></p>' +
+                '<div class="axi-modal-actions">' +
+                    '<button id="axiPluginUninstallCancelBtn" type="button" class="axi-btn axi-btn-cancel">Cancel</button>' +
+                    '<button id="axiPluginUninstallConfirmBtn" type="button" class="axi-btn axi-btn-danger">Uninstall</button>' +
+                '</div>' +
+            '</div>';
+
+        const progressOverlay = document.createElement("div");
+        progressOverlay.id = "axiPluginUninstallProgressOverlay";
+        progressOverlay.className = "axi-modal-overlay axi-progress-overlay";
+        progressOverlay.innerHTML =
+            '<div class="axi-modal-container axi-progress-modal">' +
+                '<span class="axi-spinner"></span>' +
+                '<h4 class="axi-modal-title">Uninstalling Plugin</h4>' +
+                '<p class="axi-plugin-uninstall-message">Removing plugin files. Do not close this page.</p>' +
+            '</div>';
+
+        document.body.appendChild(confirmationOverlay);
+        document.body.appendChild(progressOverlay);
+    }
+
 
     /* ===============================
        SETUP LISTENERS
     =============================== */
     function setupEventListeners() {
+        ensurePluginUninstallModals();
 
         const pluginUninstallCancelBtn = document.getElementById("axiPluginUninstallCancelBtn");
         if (pluginUninstallCancelBtn) {
