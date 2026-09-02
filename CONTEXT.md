@@ -11,3 +11,6 @@
 - **Page Designer Form**: Configuration interface for system pages (`tstruct.aspx?transid=sect`).
 - **ADS Builder Form**: Axpert Data Source SQL configuration interface (`tstruct.aspx?transid=b_sql`).
 - **Dynamic Command Configuration**: Database-driven handler and navigation metadata table (`axi_command_config`) that maps command verbs (e.g. `configure`, `sdk`, `upload`, `download`) and prompt options to structure IDs, target URLs, and parameter fields, eliminating hardcoded client-side routing.
+- **Plugin**: A server-deployed Axpert extension identified by its canonical AxiApi plugin ID and displayed by its human-readable name in Axi CMD.
+- **Plugin Uninstall**: An administrator-initiated, irreversible removal of a deployed Plugin and its Axi CMD registration, executed by AxiApi after confirmation in Axi CMD.
+- **Self-uninstall**: Plugin Uninstall where the selected Plugin is Axi CMD itself. The active command page remains usable only until its current browser session is refreshed or navigated away.

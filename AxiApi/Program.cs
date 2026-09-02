@@ -54,6 +54,7 @@ builder.Services.AddScoped<IGrammarBootstrapService, GrammarBootstrapService>();
 builder.Services.AddScoped<IUserFavouriteService, UserFavouritesService>();
 builder.Services.AddScoped<ICommandConfigService, CommandConfigService>();
 builder.Services.AddScoped<IKeyfieldService, KeyfieldService>();
+builder.Services.AddScoped<IPluginUninstallService, PluginUninstallService>();
 
 builder.Services.AddScoped<IAxExtend, AxExtend.AxExtend>();
 /* Repositories */

@@ -25,18 +25,21 @@ namespace AxiApi.Controllers
         private readonly IUserFavouriteService _userFavouriteService;
         private readonly ICommandConfigService _commandConfigService;
         private readonly IKeyfieldService _keyfieldService;
+        private readonly IPluginUninstallService _pluginUninstallService;
 
         public AxiController(
             IGrammarService grammarService,
             IUserFavouriteService userFavouriteService,
             ICommandConfigService commandConfigService,
-            IKeyfieldService keyfieldService
+            IKeyfieldService keyfieldService,
+            IPluginUninstallService pluginUninstallService
         )
         {
             _grammarService = grammarService;
             _userFavouriteService = userFavouriteService;
             _commandConfigService = commandConfigService;
             _keyfieldService = keyfieldService;
+            _pluginUninstallService = pluginUninstallService;
         }
 
         [HttpGet("command-config")]
@@ -97,6 +100,32 @@ namespace AxiApi.Controllers
                 return BadRequest("AppName is required in payload.");
 
             var response = await _keyfieldService.SetKeyfieldAsync(requestDTO);
+            return Ok(response);
+        }
+
+        [HttpGet("plugins")]
+        public ActionResult<IReadOnlyList<PluginDTO>> GetInstalledPlugins([FromQuery] string appname, [FromQuery] bool configureAccess)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+
+            if (!configureAccess)
+                return StatusCode(StatusCodes.Status403Forbidden, "Configure administration access is required to uninstall Axi CMD.");
+
+            return Ok(_pluginUninstallService.GetInstalledPlugins());
+        }
+
+        [HttpDelete("plugins/{pluginId}")]
+        public async Task<ActionResult<ApiResponseDTO>> UninstallPlugin([FromRoute] string pluginId, [FromQuery] string appname, [FromQuery] bool configureAccess)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+            if (!pluginId.Equals("Axi_Beta_2", StringComparison.OrdinalIgnoreCase))
+                return NotFound(new ApiResponseDTO { Success = false, Message = "Plugin not found.", StatusCode = StatusCodes.Status404NotFound });
+            if (!configureAccess)
+                return StatusCode(StatusCodes.Status403Forbidden, new ApiResponseDTO { Success = false, Message = "Configure administration access is required to uninstall Axi CMD.", StatusCode = StatusCodes.Status403Forbidden });
+
+            var response = await _pluginUninstallService.UninstallAxiCmdAsync();
             return Ok(response);
         }
     }

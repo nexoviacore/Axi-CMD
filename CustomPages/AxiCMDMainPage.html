@@ -1331,6 +1331,26 @@ Home Cunfiguration Page Templete
                 </div>
                 <!-- end: Axi Favourites Delete Alert  Modal -->
 
+                <!-- begin: Axi Plugin Uninstall Modal -->
+                <div id="axiPluginUninstallModalOverlay" class="axi-modal-overlay">
+                    <div class="axi-modal-container">
+                        <h4 class="axi-modal-title" style="color: #ef4444;">Uninstall Plugin</h4>
+                        <p id="axiPluginUninstallMessage" class="axi-plugin-uninstall-message"></p>
+                        <div class="axi-modal-actions">
+                            <button id="axiPluginUninstallCancelBtn" class="axi-btn axi-btn-cancel">Cancel</button>
+                            <button id="axiPluginUninstallConfirmBtn" class="axi-btn axi-btn-danger">Uninstall</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="axiPluginUninstallProgressOverlay" class="axi-modal-overlay axi-progress-overlay">
+                    <div class="axi-modal-container axi-progress-modal">
+                        <span class="axi-spinner"></span>
+                        <h4 class="axi-modal-title">Uninstalling Plugin</h4>
+                        <p class="axi-plugin-uninstall-message">Removing Plugin files. Do not close this window.</p>
+                    </div>
+                </div>
+                <!-- end: Axi Plugin Uninstall Modal -->
+
 
 
                 <!--begin: Axi Command Pallete-->
@@ -1770,12 +1790,12 @@ Home Cunfiguration Page Templete
     // files.js.push("/AxpertPlugins/Axi/HTMLPages/js/axi-autocomplete.js?v=67");
     // files.js.push("/AxpertPlugins/Axi/HTMLPages/js/axi-autocomplete_with_custom_fav.js?v=1");
 
-    files.js.push("/AxpertPlugins/Axi_Beta/HTMLPages/js/axicmdmain.js?v=271");
+    files.js.push("/AxpertPlugins/Axi_Beta/HTMLPages/js/axicmdmain.js?v=272");
     // files.js.push("/AxpertPlugins/Axi/HTMLPages/js/axi-autocomplete_with_custom_fav.js");
 
     // files.js.push("/AxpertPlugins/Axi/HTMLPages/js/axi-autocomplete_bkp_30_03_2026_qa.js?v=2");
 
-    files.css.push("/AxpertPlugins/Axi_Beta/HTMLPages/css/axicmdmain.css?v=32");
+    files.css.push("/AxpertPlugins/Axi_Beta/HTMLPages/css/axicmdmain.css?v=33");
 
     var dirLeft = true;
 

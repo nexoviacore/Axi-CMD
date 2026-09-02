@@ -955,6 +955,24 @@
   gap: 10px;
 }
 
+.axi-plugin-uninstall-message {
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.axi-progress-modal {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.axi-progress-overlay {
+  pointer-events: all;
+}
+
 .axi-btn {
   padding: 8px 16px;
   border-radius: 6px;

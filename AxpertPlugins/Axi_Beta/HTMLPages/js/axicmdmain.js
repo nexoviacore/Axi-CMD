@@ -214,6 +214,7 @@
         ask: { default: handleAiAsk, },
         end: { default: handleAiEnd, },
         editprompt: { default: () => handleAiButtons("openSystemPrompt") },
+        Uninstall: { default: handlePluginUninstallCommand },
 
         // upload: { default: () => handleAiButtons("openUpload") }
 
@@ -276,11 +277,17 @@
     let createfieldnamevaluesList = {};
     let AxiArmUrl;
     let axiCommandConfigUrl;
+    let axiPluginsUrl = "";
     let axiCommandConfigList = [];
     let axiCommandConfigMap = {};
     let isConfigLoaded = false;
     let mode = "";
     let isCommandsLoading = false;
+    let installedPlugins = [];
+    let areInstalledPluginsLoaded = false;
+    let isLoadingInstalledPlugins = false;
+    let selectedPluginForUninstall = null;
+    let isPluginUninstalling = false;
     const aiModeCommands = {
         "connect": { "cmdToken": 11, "command": "", "commandGroup": "connect", "prompts": [] },
         "ask": { "cmdToken": 11, "command": "", "commandGroup": "ask", "prompts": [{ "cmdToken": 11, "wordPos": 2, "prompt": "Chat", "promptSource": "", "promptParams": "", "promptValues": "", "extraParams": "" }] },
@@ -393,6 +400,7 @@
 
         axiCommandConfigUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/command-config`;
         axiKeyfieldUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/setkeyfield`;
+        axiPluginsUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/plugins`;
 
 
         input = document.getElementById("Axi-Searchinp");
@@ -619,6 +627,14 @@
                     commandGroup: "Version",
                     prompts: []
                 };
+                if (accessPermissions.appMgrAccess) {
+                    commands["Uninstall"] = {
+                        cmdToken: 13,
+                        command: "",
+                        commandGroup: "Uninstall",
+                        prompts: []
+                    };
+                }
 
                 // console.log(JSON.stringify(commands));
 
@@ -1713,6 +1729,9 @@
         }
 
         lastTypedTokens = [...currentTokens];
+        if (handlePluginUninstallInput(currentTokens)) {
+            return;
+        }
         items = suggestLocal(text);
 
         const tokens = getTokens(text);
@@ -5970,6 +5989,22 @@
     =============================== */
     function setupEventListeners() {
 
+        const pluginUninstallCancelBtn = document.getElementById("axiPluginUninstallCancelBtn");
+        if (pluginUninstallCancelBtn) {
+            pluginUninstallCancelBtn.addEventListener("click", event => {
+                event.preventDefault();
+                hidePluginUninstallModal();
+            });
+        }
+
+        const pluginUninstallConfirmBtn = document.getElementById("axiPluginUninstallConfirmBtn");
+        if (pluginUninstallConfirmBtn) {
+            pluginUninstallConfirmBtn.addEventListener("click", event => {
+                event.preventDefault();
+                executePluginUninstall();
+            });
+        }
+
         const favDeleteCancelBtn = document.getElementById("axiFavDeleteCancelBtn");
 
         if (favDeleteCancelBtn) {
@@ -6814,6 +6849,10 @@
             showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
             return;
         }
+        if (groupNameNormalized === "uninstall" && !accessPermissions.appMgrAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
         if (groupNameNormalized === "upload" && !accessPermissions.importAccess) {
             showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
             return;
@@ -6866,6 +6905,69 @@
 
     function cleanCommandToken(val = "") {
         return val.replace(/["]/g, "").trim();
+    }
+
+    function handlePluginUninstallInput(tokens) {
+        if (cleanString(tokens[0] || "").toLowerCase() !== "uninstall") return false;
+
+        if (!getAccessPermissions().appMgrAccess) {
+            items = [];
+            hintDiv.textContent = "Configure administration access is required.";
+            render();
+            return true;
+        }
+
+        if (tokens.length === 1 || cleanString(tokens[1]).toLowerCase() !== "plugin") {
+            items = [{ displaydata: "Plugin", name: "Plugin" }];
+            hintDiv.textContent = tokens.length === 1 ? "Select Plugin" : "Type Plugin";
+            render();
+            return true;
+        }
+
+        if (!areInstalledPluginsLoaded) {
+            items = ["Loading Plugins..."];
+            hintDiv.textContent = "Loading installed Plugins";
+            render();
+            loadInstalledPlugins().then(() => {
+                if (cleanString(getTokens(input.value)[0]).toLowerCase() === "uninstall") handleInput();
+            });
+            return true;
+        }
+
+        const query = cleanString(tokens.slice(2).join(" ")).toLowerCase();
+        items = installedPlugins
+            .filter(plugin => !query || plugin.name.toLowerCase().includes(query))
+            .map(plugin => ({ displaydata: plugin.name, name: plugin.name, pluginId: plugin.id, isAxiCmd: plugin.isAxiCmd }));
+        hintDiv.textContent = items.length ? "Select Plugin to uninstall" : "No installed Plugins found.";
+        render();
+        return true;
+    }
+
+    async function loadInstalledPlugins() {
+        if (areInstalledPluginsLoaded || isLoadingInstalledPlugins || !axiPluginsUrl) return;
+
+        isLoadingInstalledPlugins = true;
+        try {
+            const armSessionId = await getARMSessionId();
+            const appname = getProjectName();
+            const configureAccess = getAccessPermissions().appMgrAccess;
+            const url = `${axiPluginsUrl}?appname=${encodeURIComponent(appname)}&configureAccess=${configureAccess}&armSessionId=${encodeURIComponent(armSessionId || "")}`;
+            const response = await fetch(url, { headers: { "X-ARM-Session-ID": armSessionId || "" } });
+            if (!response.ok) throw new Error("Unable to load installed Plugins.");
+
+            const data = await response.json();
+            installedPlugins = Array.isArray(data) ? data.map(plugin => ({
+                id: plugin.id || plugin.Id || "",
+                name: plugin.name || plugin.Name || "",
+                isAxiCmd: plugin.isAxiCmd || plugin.IsAxiCmd || false
+            })).filter(plugin => plugin.id && plugin.name) : [];
+            areInstalledPluginsLoaded = true;
+        } catch (error) {
+            installedPlugins = [];
+            showToast("Unable to load installed Plugins. Please contact Administrator.");
+        } finally {
+            isLoadingInstalledPlugins = false;
+        }
     }
 
     function getGroupHandlers(group) {
@@ -13298,6 +13400,100 @@
             return String(url).trim().toLowerCase().replace(/\/+$/, "");
         } catch (e) {
             return "";
+        }
+    }
+
+    async function handlePluginUninstallCommand({ tokens }) {
+        if (cleanString(tokens[1]).toLowerCase() !== "plugin" || tokens.length < 3) {
+            showToast("Use: uninstall plugin <name>");
+            return;
+        }
+
+        await loadInstalledPlugins();
+        const pluginName = cleanString(tokens.slice(2).join(" "));
+        selectedPluginForUninstall = installedPlugins.find(plugin => plugin.name.toLowerCase() === pluginName.toLowerCase());
+
+        if (!selectedPluginForUninstall) {
+            showToast("Select an installed Plugin before uninstalling.");
+            return;
+        }
+
+        showPluginUninstallModal();
+    }
+
+    function showPluginUninstallModal() {
+        const modal = document.getElementById("axiPluginUninstallModalOverlay");
+        const message = document.getElementById("axiPluginUninstallMessage");
+        if (!modal || !message || !selectedPluginForUninstall) return;
+
+        message.textContent = `Uninstall '${selectedPluginForUninstall.name}'? This deletes its Plugin files and cannot be undone.`;
+        modal.style.display = "flex";
+        modal.offsetHeight;
+        modal.classList.add("open");
+    }
+
+    function hidePluginUninstallModal() {
+        if (isPluginUninstalling) return;
+        const modal = document.getElementById("axiPluginUninstallModalOverlay");
+        if (!modal) return;
+
+        modal.classList.remove("open");
+        setTimeout(() => {
+            if (!modal.classList.contains("open")) modal.style.display = "none";
+        }, 200);
+    }
+
+    function showPluginUninstallProgress() {
+        const modal = document.getElementById("axiPluginUninstallProgressOverlay");
+        if (!modal) return;
+
+        modal.style.display = "flex";
+        modal.offsetHeight;
+        modal.classList.add("open");
+    }
+
+    function hidePluginUninstallProgress() {
+        const modal = document.getElementById("axiPluginUninstallProgressOverlay");
+        if (!modal) return;
+
+        modal.classList.remove("open");
+        setTimeout(() => {
+            if (!modal.classList.contains("open")) modal.style.display = "none";
+        }, 200);
+    }
+
+    async function executePluginUninstall() {
+        if (isPluginUninstalling || !selectedPluginForUninstall || !axiPluginsUrl) return;
+
+        hidePluginUninstallModal();
+        isPluginUninstalling = true;
+        showPluginUninstallProgress();
+
+        try {
+            const armSessionId = await getARMSessionId();
+            const appname = getProjectName();
+            const configureAccess = getAccessPermissions().appMgrAccess;
+            const url = `${axiPluginsUrl}/${encodeURIComponent(selectedPluginForUninstall.id)}?appname=${encodeURIComponent(appname)}&configureAccess=${configureAccess}&armSessionId=${encodeURIComponent(armSessionId || "")}`;
+            const response = await fetch(url, {
+                method: "DELETE",
+                headers: { "X-ARM-Session-ID": armSessionId || "" }
+            });
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || "Plugin uninstall failed.");
+            }
+
+            showToast(result.message || "Plugin uninstalled.", 3000, true);
+            input.value = "";
+            installedPlugins = [];
+            areInstalledPluginsLoaded = false;
+            setTimeout(() => top.window.location.reload(), 1200);
+        } catch (error) {
+            showToast(error.message || "Plugin uninstall failed.");
+        } finally {
+            isPluginUninstalling = false;
+            hidePluginUninstallProgress();
         }
     }
 
