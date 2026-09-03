@@ -6225,7 +6225,6 @@
                     return;
                 }
                 e.preventDefault();
-                hide();
 
                 const cursorPos = input.selectionStart;
 
@@ -6276,11 +6275,20 @@
 
                 input.value = tokens.join(" ");
 
+                if (tokens.length <= 2) {
+                    setCommandTransid = null;
+                    if (transIDcheck) {
+                        createfieldnamevaluesList[transIDcheck] = [];
+                    }
+                }
+
                 // console.log("After backspace our list : ");
                 // console.log(createfieldnamevaluesList[transIDcheck]);
 
                 dateControlBoolean = false;
                 resetSetCommandState();
+                input.focus();
+                input.setSelectionRange(input.value.length, input.value.length);
                 handleInput();
 
 
@@ -6293,7 +6301,6 @@
                     return;
                 }
                 e.preventDefault();
-                hide();
 
                 const cursorPos = input.selectionStart;
 
@@ -6318,8 +6325,14 @@
 
                 input.value = tokens.join(" ");
 
+                if (tokens.length <= 2) {
+                    setCommandTransid = null;
+                }
+
                 dateControlBoolean = false;
                 resetSetCommandState();
+                input.focus();
+                input.setSelectionRange(input.value.length, input.value.length);
                 handleInput();
             }
 
