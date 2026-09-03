@@ -636,7 +636,7 @@
             suppressFocusSuggestions = true;
             input.disabled = false;
             input.placeholder = "Axpert AI";
-            console.log("commands: ", JSON.stringify(commands)); 
+            console.log("commands: ", JSON.stringify(commands));
         }
     }
 
@@ -7857,10 +7857,10 @@
         }
 
         const appname = getProjectName() || "";
-        const username = window.mainUserName || 
-            (typeof callParentNew === "function" && callParentNew("mainUserName")) || 
-            (typeof parent !== "undefined" && parent.mainUserName) || 
-            (typeof top !== "undefined" && top.mainUserName) || 
+        const username = window.mainUserName ||
+            (typeof callParentNew === "function" && callParentNew("mainUserName")) ||
+            (typeof parent !== "undefined" && parent.mainUserName) ||
+            (typeof top !== "undefined" && top.mainUserName) ||
             "";
 
         if (!appname) {
@@ -13108,7 +13108,7 @@
             return false;
         }
         const cleanOpt = (sdkOptionName || "").toString().trim().toLowerCase();
-        
+
         // If it is a built-in Axpert studio tool, check specific permission
         if (SDK_DEV_OPT_MAP[cleanOpt]) {
             const devOptKey = SDK_DEV_OPT_MAP[cleanOpt];
