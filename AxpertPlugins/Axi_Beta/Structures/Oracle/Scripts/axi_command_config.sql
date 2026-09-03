@@ -125,7 +125,7 @@ INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, P
 >>
 
 <<
-INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_app_props', 'Configure', 'application properties', 'tstruct.aspx', 'url', NULL, '../aspx/tstruct.aspx', 'act=load&transid=ad_pr&axpdef_axpertpropsid=1&dummyload=false', 'T')
+INSERT INTO AXI_COMMAND_CONFIG (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE) VALUES ('cfg_configure_app_props', 'Configure', 'application properties', 'ad_pr', 'url', NULL, '../aspx/tstruct.aspx', 'act=load&transid=ad_pr&axpdef_axpertpropsid=1&dummyload=false', 'T')
 >>
 
 <<
