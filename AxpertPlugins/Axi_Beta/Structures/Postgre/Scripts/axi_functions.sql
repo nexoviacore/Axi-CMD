@@ -7,10 +7,6 @@ drop function fn_axi_getkeyvalueswithfieldnameslist
 >>
 
 <<
-drop function fn_upsert_config_by_condition
->>
-
-<<
 drop function get_ads_dropdown_data
 >>
 
@@ -274,63 +270,6 @@ ELSE
 );
 END IF;
   RETURN QUERY EXECUTE v_sql;
-END;
-$function$
->>
-
-<<
-CREATE OR REPLACE FUNCTION fn_upsert_config_by_condition(
-    p_tablename      text,
-    p_fieldnames     text,
-    p_fieldvalues    text,
-    p_where_clause   text
-)
-RETURNS TABLE(status text)
-LANGUAGE plpgsql
-AS $function$
-DECLARE
-    v_exists     boolean;
-    v_set_clause text;
-    v_cols_arr   text[];
-    v_vals_arr   text[];
-BEGIN
-    v_cols_arr := string_to_array(p_fieldnames, ',');
-    v_vals_arr := string_to_array(p_fieldvalues, ',');
-    IF array_length(v_cols_arr, 1)
-       IS DISTINCT FROM
-       array_length(v_vals_arr, 1) THEN
-        RAISE EXCEPTION
-            'Field names and values count mismatch';
-    END IF;
-    SELECT string_agg(
-               format('%I=%s', trim(col), trim(val)),
-               ', '
-           )
-    INTO v_set_clause
-    FROM unnest(v_cols_arr, v_vals_arr) AS t(col, val)
-    WHERE col IS NOT NULL
-      AND trim(col) <> '';
-    EXECUTE format(
-        'SELECT EXISTS (SELECT 1 FROM %I WHERE %s)',
-        p_tablename,
-        p_where_clause
-    )
-    INTO v_exists;
-    IF v_exists THEN
-        EXECUTE format(
-            'UPDATE %I SET %s WHERE %s',
-            p_tablename,
-            v_set_clause,
-            p_where_clause
-        );
-    ELSE
-        EXECUTE format(
-            'INSERT INTO %I (%s) VALUES (%s)',
-            p_tablename,
-            p_fieldnames,
-            p_fieldvalues
-        );
-    END IF;
 END;
 $function$
 >>
@@ -1373,7 +1312,7 @@ if pselectedfield!='0' then
          format(
             $sql$
             SELECT --distinct on (p.%I,s.%I) 
-           (s.%I || '[' || p.%I || ']')::text AS displaydata,
+           (s.%I || ' [' || p.%I || ']')::text AS displaydata,
                    '0'::text AS id,
                    (s.%I)::text AS caption,
                    'f'::text AS isfield
@@ -1399,7 +1338,7 @@ if pselectedfield!='0' then
         format(
             $sql$
             SELECT --distinct on (s.%I,k.%I) 
-           (s.%I || '[' || k.%I || ']')::text AS displaydata,
+           (s.%I || ' [' || k.%I || ']')::text AS displaydata,
                    '0'::text AS id,
                    (s.%I)::text AS caption,
                    'f'::text AS isfield
@@ -1430,7 +1369,7 @@ end;
   v_selectedfld_sql := case when v_keyfield_normalized='F' then 
         format(
            $sql$
-           SELECT  (p.%I || '[' || p.%I || ']')::text AS displaydata,
+           SELECT  (p.%I || ' [' || p.%I || ']')::text AS displaydata,
                   '0'::text AS id,
                   p.%I::text AS caption,
                   'f'::text AS isfield
@@ -1450,7 +1389,7 @@ end;
        when v_keyfield_normalized='T' then 
         format(
            $sql$
-           SELECT (p.%I || '[' || s.%I || ']')::text AS displaydata,
+           SELECT (p.%I || ' [' || s.%I || ']')::text AS displaydata,
                   '0'::text AS id,
                   p.%I::text AS caption,
                   'f'::text AS isfield

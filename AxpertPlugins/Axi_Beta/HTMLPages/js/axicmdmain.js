@@ -131,6 +131,7 @@
     let favouriteBtn;
     let commandFavorites = [];
     let axiFavoritesUrl = "";
+    let axiKeyfieldUrl = "";
     const MAX_FAVORITES = AxiCmdConfig.MAX_FAVORITES;
     let commandRoutes = [];
     let isDeleting = false;
@@ -171,6 +172,9 @@
             toast: () => showToast(input.value)
 
         },
+        Configure: {
+            keyfield: handleKeyfield,
+        },
         Edit: {
             default: handleEditData,
             data: handleEditData,
@@ -196,87 +200,13 @@
         Source: {
             default: handleSourceCommand,
         },
-        Configure: {
-            peg: handleConfigurePeg,
-
-            //api: handleConfigureApi,
-
-            "application properties": handleConfigureProperties,
-            //job: handleConfigureJob,
-            rule: handleConfigureRule,
-            //server: handleConfigureServer,
-            "form notification": handleConfigureFormNotification,
-            "peg form notification": handleCofigurePegFormNotification,
-            //permission: handleConfigurePermissions,
-            //access: handleConfigureAccess,
-            "scheduled notification": handleConfigureScheduledNotification,
-            keyfield: handleKeyfield,
-            // "news and announcement": handleConfigureNewsAndAnnouncement,
-            settings: handleConfigureSettings,
-
-            "user listing": handleConfigureUsers,
-            user: handleConfigureUser,
-            "role listing": handleConfigureRoles,
-            role: handleConfigureRole,
-            "publish axpert api": handleConfigurePublishAxpertApi,
-            //"publish api listing": handleApiList,
-            "publish config studio": handleConfigurePublishListing,
-            card: handleConfigureCards,
-            //forms: handleForms,
-            responsibility: handleConfigureResponsibility,
-            "responsibility listing": handleConfigureResponsibilities,
-            "user group": handleConfigureUserGroup,
-            dimension: handleConfigureDimensions,
-            "dimension listing": handleConfigureDimensionListing,
-            "actor listing": handleConfigureActorListing,
-            actor: handleConfigureActor,
-            // useractivation: handleUserActivation,
-            "user activation": handleConfigureUserActivation,
-            "user permissions": handleConfigureUserPermissionListing,
-            "user permission setup": handleConfigureUserPermission,
-            "role permissions": handleConfigureRolePermissionListing,
-            //"role permission": handleRolePermission
-            "smart view attributes": handleConfigureSmartViewAttributes,
-            "smart view listing": handleConfigureSmartViewListing
-
-        },
-        //Open: {
         SDK: {
             default: handleOpenSource,
-            "axpert data sources": handleOpenAds,
-            //card: handleOpenCard,
-            page: handleOpenPage,
-            "app variables": handleOpenAppVar,
-            "dev option": handleOpenDevOptions,
-            "db explorer": handleOpenDbConsole,
-            "arrange menu": handleOpenArrangeMenu,
-
-            "api plugin": handleOpenApi,
-            "axpert job": handleOpenJob,
-            language: handleOpenLanguage,
-            publish: handleOpenPublish,
-            "custom data type": handleOpenCustomDataType,
-            "email definition": handleOpenEmailDef,
-            "table field descriptor": handleOpenTableFieldDescriptor,
-            "mem db console": handleOpenMemDBConsole,
-            "custom plugin": handleOpenCustomPlugin,
-            "queue listing": handleQueueListing,
-            //"outbound queue mapping":handleOpenOutBoundQueueM,
-            "out bound queue": handleOpenOutBoundQueue,
-            "in bound queue": handleOpenInboundBoundQueue
-
-
         },
-        Upload: {
-            default: handleUpload
-        },
-        Download: {
-            default: handleDownload
-        },       
         Run: {
             default: handleRunCommand,
         },
-         Ai: {
+        Ai: {
             start: handleAiStart,
 
         },
@@ -284,9 +214,9 @@
         ask: { default: handleAiAsk, },
         end: { default: handleAiEnd, },
         editprompt: { default: () => handleAiButtons("openSystemPrompt") },
-        
+
         // upload: { default: () => handleAiButtons("openUpload") }
-       
+
     };
 
 
@@ -345,6 +275,9 @@
     let adsfieldvalueanddt = {};
     let createfieldnamevaluesList = {};
     let AxiArmUrl;
+    let axiCommandConfigUrl;
+    let axiCommandConfigList = [];
+    let axiCommandConfigMap = {};
     let isConfigLoaded = false;
     let mode = "";
     let isCommandsLoading = false;
@@ -451,13 +384,15 @@
             }
         }
 
-        // // console.log("AxiArmUrl = " + AxiArmUrl);
         apiMetadataUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/axi_get`;
         // // console.log("ApiMetadataUrl = " + apiMetadataUrl);
 
         axiFavoritesUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/user-favourites`;
         // axiFavoritesUrl = `http://localhost:5057/api/v1/Axi/user-favourites`; 
         // // console.log("AxiFavoritesUrl = " + axiFavoritesUrl);
+
+        axiCommandConfigUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/command-config`;
+        axiKeyfieldUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/setkeyfield`;
 
 
         input = document.getElementById("Axi-Searchinp");
@@ -634,6 +569,8 @@
             input.disabled = false;
             input.placeholder = "Axpert AI";
 
+            await initCommandConfigs(isForced, appname);
+
             const cached = localStorage.getItem("axi_commands_raw_v1");
             let commandsFromDb = null;
             if (cached && !isForced) {
@@ -699,6 +636,7 @@
             suppressFocusSuggestions = true;
             input.disabled = false;
             input.placeholder = "Axpert AI";
+            console.log("commands: ", JSON.stringify(commands));
         }
     }
 
@@ -942,862 +880,317 @@
     //    }
     //}
 
-    //******************** Configure Newer introduced commands(31032026)********************//
-    //********************Starts here*******************************************************//
-    function handleConfigureUsers({ tokens, commandConfig }) {
-
-        let transId = "axusers";
-        //let fieldname = "servername";
-
-        const rawParamName = cleanCommandToken(tokens[2]);
-
-
-        setEditSessionState(transId);
-
-        redirectToIView(transId, cleanCommandToken(tokens[1]));
-        //redirectToTstruct(transId, "", true, fieldname, rawParamName);
-    }
-    function handleConfigureUser({ tokens, commandConfig }) {
-
-        let transId = "axusr";
-        //let fieldname = "servername";
-
-        //const rawParamName = cleanCommandToken(tokens[2]);
-
-
-        setEditSessionState(transId);
-        redirectToTstruct(transId, cleanCommandToken(tokens[1]));
-    }
-    function handleConfigureRoles({ tokens, commandConfig }) {
-
-        let transId = "ad___url";
-
-        //let fieldname = "servername";
-
-        //const rawParamName = cleanCommandToken(tokens[2]);
-
-
-        setEditSessionState(transId);
-        redirectToIView(transId, cleanCommandToken(tokens[1]));
-        //redirectToTstruct(transId, "", true, fieldname, rawParamName);
-    }
-    function handleConfigureRole({ tokens, commandConfig }) {
-
-        let transId = "ad_ur";
-        //let fieldname = "servername";
-
-        //const rawParamName = cleanCommandToken(tokens[2]);
-
-
-        setEditSessionState(transId);
-        redirectToTstruct(transId, cleanCommandToken(tokens[1]));
-    }
-    function handleConfigurePublishAxpertApi({ tokens, commandConfig }) {
-
-        let transId = "ad_pa";
-        let fieldname = "publickey";
-        let actualParamvalue;
-        let rawParamName;
-
-        setEditSessionState(transId);
-        if (tokens.length > 2) {
-            rawParamName = cleanCommandToken(tokens[2]);
-            // actualParamvalue = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-            actualParamvalue = value;
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, actualParamvalue);
-        }
-        else
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
-    }
-    function handleConfigureApiList({ tokens, commandConfig }) {
-
-        let transId = "ad__papi";
-        //let fieldname = "servername";
-
-        //const rawParamName = cleanCommandToken(tokens[2]);
-
-
-        setEditSessionState(transId);
-        redirectToIView(transId, "");
-    }
-    function handleConfigurePublishListing({ tokens, commandConfig }) {
-
-        let transId = "ad_pbcs";
-
-        if (tokens.length > 2) {
-            let transId = "axpub";
-            let fieldname = "servername";
-
-            const rawParamName = cleanCommandToken(tokens[2]);
-
-
-            setEditSessionState(transId);
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, rawParamName);
-
-
-        } else {
-            setEditSessionState(transId);
-            redirectToIView(transId, cleanCommandToken(tokens[1]));
-        }
-
-
-
-    }
-    function handleConfigureCards({ tokens, commandConfig }) {
-
-        //LISTVIEW
-        //let transId = "axpcards";
-        //setEditSessionState(transId);
-        //redirectToIView(transId, "");
-
-
-        //NEWMODE
-        ///aspx/tstruct.aspx?transid=a__cd&dummyload=false%E2%99%A0
-        //editmode
-        ///aspx/tstruct.aspx?act=load&transid=a__cd&recordid=1419550000009&recpos=8&curpage=2&pagetype=middle&openeriv=axpcards&isiv=true&isduptab=false&reqProc_logtime=&dummyload=false%e2%99%a0
-        let transId = "a__cd";
-        let fieldname = "cardname";
-        let paramValue;
-
-        const rawParamName = cleanCommandToken(tokens[2]);
-
-
-        setEditSessionState(transId);
-        if (rawParamName) {
-            // paramValue = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-            paramValue = value;
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, paramValue);
-        }
-        else {
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
-        }
-
-    }
-    function handleConfigureForms({ tokens, commandConfig }) {
-
-        let transId = "ad___rel";
-        //let fieldname = "servername";
-
-        //const rawParamName = cleanCommandToken(tokens[2]);
-
-
-        setEditSessionState(transId);
-        redirectToIView(transId, "");
-    }
-    function handleConfigureResponsibility({ tokens, commandConfig }) {
-        popUpOption = false;
-
-        //new - aspx/AddEditResponsibility.aspx?action=add
-        //edit - aspx/AddEditResponsibility.aspx?status=true&action=edit&name=demorole
-
-        //old(31-03)
-        //let transId = "axrol";
-        ////let fieldname = "servername";
-
-        ////const rawParamName = cleanCommandToken(tokens[2]);
-
-
-        //setEditSessionState(transId);
-        //redirectToTstruct(transId);
-
-        //new(31-03)
-        let transId = "axrol";
-
-        let targetUrl = `../aspx/AddEditResponsibility.aspx?`;
-
-
-        let fieldname = "name";
-
-        if (tokens.length > 2) {
-            const rawParamName = cleanCommandToken(tokens[2]);
-            // const actualName = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value: actualName, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-
-
-            targetUrl += `status=true`;
-            targetUrl += `&action=edit`;
-            targetUrl += `&${fieldname}=${actualName}`;
-        }
-        else {
-            targetUrl += `action=add`;
-        }
-
-        if (popUpOption) {
-            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
-            targetUrl += "&AxIsPop=true";
-
-            openPopOption(targetUrl)
-        }
-        else {
-            setCommandRoutes(input.value.trim(), targetUrl);
-            window.LoadIframe(targetUrl);
-        }
-    }
-    function handleConfigureResponsibilities({ tokens, commandConfig }) {
-        popUpOption = false;
-
-        let transId = "response";
-        //let fieldname = "servername";
-
-        // const rawParamName = cleanCommandToken(tokens[1]);
-
-
-        setEditSessionState(transId);
-        redirectToIView(transId, cleanCommandToken(tokens[1]));
-
-        //   // console.log("Redirecting to Iview: " + transId + "..............");
-        // let targetUrl = `../aspx/iview.aspx?ivname=${transId}`;
-
-        // setCommandRoutes(input.value.trim(), targetUrl);
-
-
-        //     window.LoadIframe(targetUrl);
-
-    }
-    function handleConfigureActor({ tokens, commandConfig }) {
-
-        //newmode
-        //javascript: callOpenAction('opentstruct', 'ad_am');
-        //editmode
-        //aspx/tstruct.aspx?act=load&transid=ad_at&recordid=1432770000001&recpos=2&curpage=1&pagetype=middle&openeriv=ad__act&isiv=true&isduptab=false&reqProc_logtime=&dummyload=false%e2%
-        let transId = "ad_am";
-        let paramvalue;
-        let rawParamname;
-        let fieldname = "actorname"
-        setEditSessionState(transId);
-
-        if (tokens.length > 2) {
-            rawParamname = cleanCommandToken(tokens[2]);
-
-            // paramvalue = tryResolveToken(2, rawParamname, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamname, commandConfig, false);
-            paramvalue = value;
-
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, paramvalue);
-
-        }
-        else {
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
-        }
-    }
-    function handleConfigureActorListing({ tokens, commandConfig }) {
-
-        //listview
-        let transId = "ad__act";
-        let fieldname = "servername";
-
-        const rawParamName = cleanCommandToken(tokens[2]);
-
-
-        setEditSessionState(transId);
-        redirectToIView(transId, cleanCommandToken(tokens[1]));
-
-    }
-    function handleConfigureDimensions({ tokens, commandConfig }) {
-        ////listview
-        //let transId = "ad___upg";
-        //setEditSessionState(transId);
-        //redirectToIView(transId, "");
-
-        //newmode
-        //javascript:callOpenAction('opentstruct','a__ag');(dimension and value)
-        //editmode
-        //aspx/tstruct.aspx?act=load&transid=a_pgm&recordid=1156990000009&recpos=5&curpage=2&pagetype=middle&openeriv=ad___upg&isiv=true&isduptab=false&reqProc_logtime=&dummyload=false%
-
-        let transId = "a_pgm";
-        let rawParamName;
-        let paramValue;
-        //let fieldname = "grpnamedb";
-        let fieldname = "grpname";
-
-
-        setEditSessionState(transId);
-        if (tokens.length > 2) {
-            rawParamName = cleanCommandToken(tokens[2]);
-
-            // paramValue = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-            paramValue = value;
-
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, paramValue);
-        }
-        else {
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
-        }
-    }
-
-    function handleConfigureDimensionListing({ tokens, commandConfig }) {
-
-        // callParentNew(&quot;loadFrame();&quot;,&quot;function&quot;);LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;);callParentNew(&quot;closeFrame();&quot;,&quot;function&quot;);
-        let transId = "ad___upg";
-        //let fieldname = "prole";
-
-        const rawParamName = cleanCommandToken(tokens[2]);
-
-        // let targetUrl = `../aspx/iview.aspx?ivname=${transId}`;
-        let targetUrl = `../aspx/ivtoivload.aspx?ivname=${transId}`;
-
-
-        if (rawParamName) {
-            targetUrl += `&prole=${encodeURIComponent(rawParamName)}`;
-        }
-
-
-        targetUrl += `&AxOpenAct=true`;
-        targetUrl += `&isDupTab=false`;
-
-
-
-        setEditSessionState(transId);
-        if (popUpOption) {
-            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
-            targetUrl += "&AxIsPop=true";
-
-            openPopOption(targetUrl)
-        }
-        else {
-            setCommandRoutes(input.value.trim(), targetUrl);
-            window.LoadIframe(targetUrl);
-        }
-    }
-
-     function handleConfigureSmartViewListing({ tokens, commandConfig }) {
-
-        // callParentNew(&quot;loadFrame();&quot;,&quot;function&quot;);LoadIframeac(&quot;ivtoivload.aspx?ivname=ad___upg&quot;);callParentNew(&quot;closeFrame();&quot;,&quot;function&quot;);
-
-        // showToast("Not Yet implemented"); 
-        // return; 
-        let transId ="a___smtl";
-        //let fieldname = "prole";
-
-        const rawParamName = cleanCommandToken(tokens[2]);
-
-        let targetUrl = `../aspx/ivtoivload.aspx?ivname=${transId}`;
-
-
-        if (rawParamName) {
-            targetUrl += `&prole=${encodeURIComponent(rawParamName)}`;
-        }
-
-
-        targetUrl += `&AxOpenAct=true`;
-        targetUrl += `&isDupTab=false`;
-
-
-
-        setEditSessionState(transId);
-        if (popUpOption) {
-            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
-            targetUrl += "&AxIsPop=true";
-
-            openPopOption(targetUrl)
-        }
-        else {
-            setCommandRoutes(input.value.trim(), targetUrl);
-            window.LoadIframe(targetUrl);
-        }
-    }
-    function handleConfigureUserGroup({ tokens, commandConfig }) {
-
-        //listview
-        //let transId = "ad___ugp";
-        //setEditSessionState(transId);
-        //redirectToIView(transId, "");
-
-
-
-        //newmode
-        //javascript: callOpenAction('opentstruct', 'a__ug');
-        //editmode
-        ///aspx/tstruct.aspx?act=load&transid=a__ug&recordid=1436220000012&recpos=1&curpage=1&pagetype=first&openeriv=ad___ugp
-        //& isiv=true & isduptab=false & AxPop=true & reqProc_logtime=Request % 20
-
-        let transId = "a__ug";
-        let paramValue;
-        let rawValue;
-
-        let fieldname = "users_group_name";
-
-
-        setEditSessionState(transId);
-        if (tokens.length > 2) {
-            rawValue = cleanCommandToken(tokens[2]);
-
-
-            if (rawValue) {
-                // paramValue = tryResolveToken(2, rawValue, commandConfig, false);
-                const { value, type } = tryResolveToken(2, rawValue, commandConfig, false);
-                paramValue = value;
+    async function initCommandConfigs(isForced = false, appname) {
+        if (!axiCommandConfigUrl || !appname) return;
+        try {
+            const userName = window.mainUserName || "";
+            const cached = localStorage.getItem("axi_command_config_v2");
+            let configs = null;
+            if (cached && !isForced) {
+                try {
+                    configs = JSON.parse(cached);
+                } catch (e) { }
             }
-
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, paramValue);
-        }
-        else {
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
-        }
-    }
-    function handleConfigureUserActivation({ tokens, commandConfig }) {
-
-        let transId = "axurg";
-        let paramValue;
-        let rawParamName;
-        let fieldname = "pusername";
-
-
-        setEditSessionState(transId);
-        if (tokens.length > 2) {
-            rawParamName = cleanCommandToken(tokens[2]);
-
-            // paramValue = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-            paramValue = value;
-
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, paramValue);
-        }
-        else {
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
+            if (!configs) {
+                const res = await fetch(`${axiCommandConfigUrl}?appname=${encodeURIComponent(appname)}&username=${encodeURIComponent(userName)}&forceRefresh=${isForced}`);
+                if (res.ok) {
+                    configs = await res.json();
+                    if (configs && Array.isArray(configs)) {
+                        localStorage.setItem("axi_command_config_v2", JSON.stringify(configs));
+                    }
+                }
+            }
+            if (configs && Array.isArray(configs)) {
+                axiCommandConfigList = configs;
+                window.axiCommandConfigStore = configs;
+                axiCommandConfigMap = {};
+                configs.forEach(row => {
+                    const activeVal = (row.active || row.Active || "").toString().toUpperCase();
+                    if (activeVal === "T" || activeVal === "TRUE") {
+                        const cmd = (row.command || row.Command || "").trim().toLowerCase();
+                        const opt = (row.promptOptions || row.prompt_options || row.PromptOptions || "").trim().toLowerCase();
+                        const key = `${cmd}:${opt}`;
+                        axiCommandConfigMap[key] = row;
+                    }
+                });
+            }
+        } catch (err) {
+            // console.warn("Failed to load axi_command_config:", err);
         }
     }
-    function handleConfigureUserPermissionListing({ tokens, commandConfig }) {
 
-        //ivtoivload.aspx ? ivname = ad___upm && pusername=admin & AxOpenAct=true & isDupTab=false
-        let transId = "ad___upm";
-        //let fieldname = "pusername";
-
-        const rawParamName = cleanCommandToken(tokens[2]);
-
-
-        setEditSessionState(transId);
-        // redirectToIView(transId,fieldname);
-        //let targetUrl = `../aspx/iview.aspx?ivname=${transId}`;
-        let targetUrl = `../aspx/ivtoivload.aspx?ivname=${transId}`;
-
-
-        if (rawParamName) {
-            targetUrl += `&pusername=${encodeURIComponent(rawParamName)}`;
+    function getCommandConfigRow(command, promptOption) {
+        if (!command || !promptOption) return null;
+        const cmdKey = command.trim().toLowerCase();
+        const optKey = promptOption.trim().toLowerCase();
+        const fullKey = `${cmdKey}:${optKey}`;
+        if (axiCommandConfigMap[fullKey]) {
+            return axiCommandConfigMap[fullKey];
         }
-
-
-        targetUrl += `&AxOpenAct=true`;
-        targetUrl += `&isDupTab=false`;
-
-
-
-        if (popUpOption) {
-            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
-            targetUrl += "&AxIsPop=true";
-
-            openPopOption(targetUrl)
-        }
-        else {
-            setCommandRoutes(input.value.trim(), targetUrl);
-            window.LoadIframe(targetUrl);
-        }
-        //setCommandRoutes(input.value.trim(), targetUrl);
-        //window.LoadIframe(targetUrl);
-    }
-    function handleConfigureRolePermissionListing({ tokens, commandConfig }) {
-
-        //ivtoivload.aspx ? ivname = ad___ups && prole=managerrole && AxOpenAct=true & isDupTab=false
-        let transId = "ad___ups";
-        //let fieldname = "prole";
-
-        const rawParamName = cleanCommandToken(tokens[2]);
-
-        let targetUrl = `../aspx/ivtoivload.aspx?ivname=${transId}`;
-
-
-        if (rawParamName) {
-            targetUrl += `&prole=${encodeURIComponent(rawParamName)}`;
-        }
-
-
-        targetUrl += `&AxOpenAct=true`;
-        targetUrl += `&isDupTab=false`;
-
-
-
-        setEditSessionState(transId);
-        if (popUpOption) {
-            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
-            targetUrl += "&AxIsPop=true";
-
-            openPopOption(targetUrl)
-        }
-        else {
-            setCommandRoutes(input.value.trim(), targetUrl);
-            window.LoadIframe(targetUrl);
-        }
-    }
-    function handleConfigureUserPermission({ tokens, commandConfig }) {
-
-        //tstruct.aspx ? act = open & transid=a__up & axusername=aarav & fromsource=U & openerIV=axusers & isIV=true & isDupTab=false & dummyload=false % E2 % 99 % A0
-        let transId = "a__up";
-        let fieldname = "axusername";
-        let rawParamName;
-        let actualParamName;
-
-
-
-        let targetUrl = `../aspx/tstruct.aspx?act=open`;
-
-        targetUrl += `&transid=${transId}`;
-
-
-
-        if (tokens.length > 2) {
-            rawParamName = cleanCommandToken(tokens[2]);
-            // actualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-            paramValue = value;
-            targetUrl += `&${fieldname}=${encodeURIComponent(rawParamName)}`;
-        }
-
-        targetUrl += `&fromsource=U`;
-        targetUrl += `&openerIV=${transId}`;
-        targetUrl += `&isIV=true`;
-        targetUrl += `&isDupTab=false`;
-        targetUrl += `&dummyload=false?`;
-
-        setEditSessionState(transId);
-
-        if (popUpOption) {
-            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
-            targetUrl += "&AxPop=true";
-
-            openPopOption(targetUrl)
-        }
-        else {
-            setCommandRoutes(input.value.trim(), targetUrl);
-            top.window.LoadIframe(targetUrl);
-        }
-        //setCommandRoutes(input.value.trim(), targetUrl);
-
-        //top.window.LoadIframe(targetUrl);
+        return axiCommandConfigList.find(r => {
+            const rCmd = (r.command || r.Command || "").trim().toLowerCase();
+            const rOpt = (r.promptOptions || r.prompt_options || r.PromptOptions || "").trim().toLowerCase();
+            const rActive = (r.active || r.Active || "").toString().toUpperCase();
+            return rCmd === cmdKey && rOpt === optKey && (rActive === "T" || rActive === "TRUE");
+        }) || null;
     }
 
-    function handleConfigureSmartViewAttributes({ tokens, commandConfig }) {
+    function getDisabledCommandConfigRow(command, promptOption) {
+        if (!command || !promptOption) return null;
+        const cmdKey = command.trim().toLowerCase();
+        const optKey = promptOption.trim().toLowerCase();
+        return axiCommandConfigList.find(r => {
+            const rCmd = (r.command || r.Command || "").trim().toLowerCase();
+            const rOpt = (r.promptOptions || r.prompt_options || r.PromptOptions || "").trim().toLowerCase();
+            const rActive = (r.active ?? r.Active ?? "").toString().trim().toUpperCase();
+            return rCmd === cmdKey && rOpt === optKey && rActive !== "T" && rActive !== "TRUE";
+        }) || null;
+    }
 
+    function resolveCommandUrlPlaceholders(urlStr, context = {}) {
+        if (!urlStr || typeof urlStr !== "string") return urlStr || "";
 
-        let transId = "a__sl";
-        let fieldname = "adsname";
-        let rawParamName;
-        let actualParamName;
+        const currentUserName = context.userName ?? window.mainUserName ?? "";
+        const currentUserRoles = context.userRoles ?? window.AxUserRoles ?? "";
+        const currentUserResp = context.userResp ?? window.userResp ?? "";
+        const currentApp = context.appname ?? window.mainProject ?? "";
+        const currentCaption = context.caption ?? "";
+        const currentParamValue = context.paramValue ?? "";
+        const currentRawParamName = context.rawParamName ?? "";
+        const currentPromptId = context.promptId ?? "";
+        const currentName = currentParamValue || currentRawParamName || currentCaption || currentPromptId;
 
+        const replacements = [
+            { regex: /:username\b/gi, val: currentUserName },
+            { regex: /:user\b/gi, val: currentUserName },
+            { regex: /:userroles\b/gi, val: currentUserRoles },
+            { regex: /:userrole\b/gi, val: currentUserRoles },
+            { regex: /:roles\b/gi, val: currentUserRoles },
+            { regex: /:role\b/gi, val: currentUserRoles },
+            { regex: /:userresp\b/gi, val: currentUserResp },
+            { regex: /:responsibility\b/gi, val: currentUserResp },
+            { regex: /:responsibilities\b/gi, val: currentUserResp },
+            { regex: /:caption\b/gi, val: currentCaption },
+            { regex: /:name\b/gi, val: currentName },
+            { regex: /:paramvalue\b/gi, val: currentParamValue || currentRawParamName },
+            { regex: /:param\b/gi, val: currentParamValue || currentRawParamName },
+            { regex: /:value\b/gi, val: currentParamValue || currentRawParamName },
+            { regex: /:transid\b/gi, val: currentPromptId },
+            { regex: /:promptid\b/gi, val: currentPromptId },
+            { regex: /:appname\b/gi, val: currentApp },
+            { regex: /:project\b/gi, val: currentApp },
+            { regex: /:proj\b/gi, val: currentApp }
+        ];
 
+        let result = urlStr;
+        replacements.forEach(({ regex, val }) => {
+            result = result.replace(regex, encodeURIComponent(val));
+        });
 
-        let targetUrl = `../aspx/tstruct.aspx`;
+        return result;
+    }
 
-        targetUrl += `?transid=${transId}`;
+    function executeDynamicNavigation({ tokens, commandConfig, configRow }) {
+        if (!configRow) return false;
+        hide();
 
+        const optType = (configRow.promptOptionType || configRow.prompt_option_type || configRow.PromptOptionType || "").toLowerCase();
+        const promptId = configRow.promptId || configRow.prompt_id || configRow.PromptId || "";
+        const paramField = configRow.paramField || configRow.param_field || configRow.ParamField || "";
+        const rawTargetUrl = configRow.targetUrl || configRow.target_url || configRow.TargetUrl || "";
+        const extraParams = configRow.extraParams || configRow.extra_params || configRow.ExtraParams || "";
 
+        const caption = tokens.length > 1 ? cleanCommandToken(tokens[1]) : "";
+
+        if (optType === "action") {
+            handleKeyfield({ tokens, commandConfig });
+            return true;
+        }
+
+        let rawParamName = "";
+        let paramValue = "";
 
         if (tokens.length > 2) {
             rawParamName = cleanCommandToken(tokens[2]);
-            // actualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-            paramValue = value;
-            targetUrl += `&${fieldname}=${encodeURIComponent(paramValue)}`;
-            targetUrl += "&act=load";
-            targetUrl += "&dummyload=false";
+            if (rawParamName.toLowerCase() !== "create new") {
+                if (paramField && paramField.toLowerCase() === "caption") {
+                    paramValue = rawParamName.replace(/\s*\[[^\]]*\]$/, "").trim();
+                } else {
+                    const resolved = tryResolveToken(2, rawParamName, commandConfig, false);
+                    paramValue = (resolved && resolved.value) ? resolved.value : rawParamName;
+                }
+            }
         }
 
-        // targetUrl += `&fromsource=U`;
-        // targetUrl += `&openerIV=${transId}`;
-
-        // targetUrl += `&isDupTab=false`;
-        // targetUrl += `&dummyload=false?`;
-
-        setEditSessionState(transId);
-
-        if (popUpOption) {
-            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
-            targetUrl += "&AxPop=true";
-
-            openPopOption(targetUrl)
+        if (tokens.length > 2 && rawParamName && rawParamName.toLowerCase() !== "create new") {
+            if (!paramField) {
+                showToast(`Parameter field is not configured for '${caption}'. Cannot filter with search value '${rawParamName}'.`);
+                return true;
+            }
         }
-        else {
-            setCommandRoutes(input.value.trim(), targetUrl);
-            top.window.LoadIframe(targetUrl);
-        }
-        //setCommandRoutes(input.value.trim(), targetUrl);
 
-        //top.window.LoadIframe(targetUrl);
+        const context = {
+            caption: caption,
+            rawParamName: rawParamName,
+            paramValue: paramValue,
+            promptId: promptId,
+            userName: window.mainUserName || "",
+            userRoles: window.AxUserRoles || "",
+            userResp: window.userResp || "",
+            appname: (typeof appname !== "undefined" ? appname : (window.mainProject || ""))
+        };
+
+        const loadIframeFn = (top && top.window && top.window.LoadIframe) || window.LoadIframe;
+
+        setEditSessionState(promptId);
+
+        if ((commandConfig?.commandGroup?.toLowerCase() === "sdk" || (tokens[0] && cleanCommandToken(tokens[0]).toLowerCase() === "sdk")) && caption) {
+            if (!isDevOptionAllowed(caption)) {
+                showToast(`User '${window.mainUserName}' has no access for SDK option: ${caption}`);
+                return true;
+            }
+        }
+
+        if (optType === "processflow" || optType === "url/tstruct") {
+            if (paramValue) {
+                let url = rawTargetUrl || `../aspx/processflow.aspx?loadcaption=AxProcessBuilder`;
+                if (paramField && !url.includes(`${paramField}=`)) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
+                }
+                if (extraParams) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${extraParams}`;
+                }
+                url = resolveCommandUrlPlaceholders(url, context);
+                setEditSessionState(promptId || "ad_pm");
+                if (popUpOption) {
+                    const sep = url.includes("?") ? "&" : "?";
+                    url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                    openPopOption(url);
+                } else {
+                    setCommandRoutes(input.value.trim(), url);
+                    loadIframeFn(url);
+                }
+            } else {
+                setEditSessionState(promptId || "ad_pm");
+                redirectToTstruct(promptId || "ad_pm", caption);
+            }
+            return true;
+        }
+
+        if (optType === "tstruct/iview" || optType === "iview/tstruct") {
+            const types = optType.split("/");
+            const ids = promptId.split("/");
+            const tstructId = types[0] === "tstruct" ? ids[0] : ids[1];
+            const iviewId = types[0] === "iview" ? ids[0] : ids[1];
+
+            if (paramValue && paramField) {
+                setEditSessionState(tstructId);
+                const resolvedExtra = resolveCommandUrlPlaceholders(extraParams, context);
+                redirectToTstruct(tstructId, caption, true, paramField, paramValue, resolvedExtra);
+            } else {
+                setEditSessionState(iviewId);
+                redirectToIView(iviewId, caption);
+            }
+            return true;
+        }
+
+        if (optType === "tstruct") {
+            const isEdit = !!(paramValue && paramField);
+            const resolvedExtra = resolveCommandUrlPlaceholders(extraParams, context);
+            redirectToTstruct(promptId, caption, isEdit, paramField, paramValue, resolvedExtra);
+            return true;
+        }
+
+        if (optType === "iview") {
+            if (paramValue && paramField) {
+                let url = rawTargetUrl || `../aspx/iview.aspx?ivname=${promptId}`;
+                if (!url.includes("?")) {
+                    url += `?ivname=${promptId}`;
+                }
+                if (!url.includes(`${paramField}=`)) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
+                }
+                if (extraParams) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${extraParams}`;
+                }
+                url = resolveCommandUrlPlaceholders(url, context);
+                if (popUpOption) {
+                    const sep = url.includes("?") ? "&" : "?";
+                    url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                    openPopOption(url);
+                } else {
+                    setCommandRoutes(input.value.trim(), url);
+                    loadIframeFn(url);
+                }
+                return true;
+            }
+            redirectToIView(promptId, caption);
+            return true;
+        }
+
+        if (optType === "ivtoivload") {
+            let url = rawTargetUrl || `../aspx/ivtoivload.aspx?ivname=${promptId}`;
+            if (!url.includes("?")) {
+                url += `?ivname=${promptId}`;
+            }
+            if (rawParamName && paramField && !url.includes(`${paramField}=`)) {
+                const separator = url.includes("?") ? "&" : "?";
+                url += `${separator}${paramField}=${encodeURIComponent(rawParamName)}`;
+            }
+            if (extraParams) {
+                const separator = url.includes("?") ? "&" : "?";
+                url += `${separator}${extraParams}`;
+            }
+            url = resolveCommandUrlPlaceholders(url, context);
+            if (popUpOption) {
+                const sep = url.includes("?") ? "&" : "?";
+                url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                openPopOption(url);
+            } else {
+                setCommandRoutes(input.value.trim(), url);
+                loadIframeFn(url);
+            }
+            return true;
+        }
+
+        if (optType === "url") {
+            let url = rawTargetUrl || (promptId.startsWith("http") || promptId.startsWith("../") ? promptId : `../aspx/${promptId}`);
+            if (paramValue && paramField) {
+                const separator = url.includes("?") ? "&" : "?";
+                if (url.includes("AddEditResponsibility.aspx")) {
+                    url += `${separator}status=true&action=edit&${paramField}=${encodeURIComponent(paramValue)}`;
+                } else {
+                    url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
+                }
+            } else if (url.includes("AddEditResponsibility.aspx")) {
+                const separator = url.includes("?") ? "&" : "?";
+                url += `${separator}action=add`;
+            }
+            if (extraParams) {
+                const separator = url.includes("?") ? "&" : "?";
+                url += `${separator}${extraParams}`;
+            }
+            url = resolveCommandUrlPlaceholders(url, context);
+            if (popUpOption) {
+                const sep = url.includes("?") ? "&" : "?";
+                url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                openPopOption(url);
+            } else {
+                setCommandRoutes(input.value.trim(), url);
+                loadIframeFn(url);
+            }
+            return true;
+        }
+
+        return false;
     }
-    //function handleRolePermission({ tokens, commandConfig }) {
-
-    //    //tstruct.aspx ? act = load & transid=ad_ur & recordid=1504010000001 & recpos=6 & curpage=1 & pagetype=middle & openeriv=ad___url & isiv=true & isduptab=false & reqProc_logtime=& dummyload=false % e2 % 99 % a0
-    //    let transId = "axurg";
-    //    //let fieldname = "recordid";
-
-    //    const rawParamName = cleanCommandToken(tokens[2]);
-    //    let recordId = tryResolveToken(2, rawParamName, commandConfig, false);
-
-
-    //    setEditSessionState(transId);
-    //    //redirectToTstruct(transId);
-
-    //    let targetUrl = `../aspx/tstruct.aspx?act=load`;
-
-    //    targetUrl += `&transid=${transId}`;
-
-    //    if (recordId) {
-    //        targetUrl += `&recordid=${encodeURIComponent(recordId)}`;
-    //    }
-
-    //    // static params
-    //    targetUrl += `&recpos=6`;
-    //    targetUrl += `&curpage=1`;
-    //    targetUrl += `&pagetype=middle`;
-    //    targetUrl += `&openeriv=${transId}`; // or exact: ad___url if needed
-    //    targetUrl += `&isiv=true`;
-    //    targetUrl += `&isduptab=false`;
-    //    targetUrl += `&reqProc_logtime=`;
-    //    targetUrl += `&dummyload=false?`;
-
-    //    // load iframe
-    //    top.window.LoadIframe(targetUrl);
-    //}
-
-    //*********************************Configure Newer introduced commands ends here******************************************//
-
-
-    //******************** Open Newer introduced commands(31032026)********************//
-    //********************Starts here**************************************************//
-    function handleOpenJob({ tokens, commandConfig }) {
-
-        let transId = "job_s";
-        //let fieldname = "jname";
-        let fieldname = "jobid";
-        let actualParamvalue;
-
-        setEditSessionState(transId);
-        if (tokens.length > 2) {
-            let rawParamName = cleanCommandToken(tokens[2]);
-            // actualParamvalue = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-            actualParamvalue = value;
-            redirectToTstruct(transId, "", true, fieldname, actualParamvalue);
-        }
-        else {
-            redirectToTstruct(transId);
-        }
-
-
-
-
-
-    }
-    function handleOpenLanguage({ tokens, commandConfig }) {
-        //tstruct.aspx?act=open&transid=ad_lg&openerIV=axlangs&isIV=true&isDupTab=false&dummyload=false%E2%99%A0
-        let transId = "ad_lg";
-        let fieldname = "language";
-        let rawParamName;
-        let ActualParamName;
-
-
-        setEditSessionState(transId);
-
-        if (tokens.length > 2) {
-            rawParamName = cleanCommandToken(tokens[2]);
-            // ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-            ActualParamName = value;
-
-            redirectToTstruct(transId, "", true, fieldname, ActualParamName);
-        }
-        else {
-            redirectToTstruct(transId);
-        }
-
-    }
-    function handleOpenPublish({ tokens, commandConfig }) {
-        //listview
-        //openDeveloperStudio(& quot; ipublist & quot;);
-        //iview.aspx ? ivname = axpubls
-
-        let transId = "axpubls";
-
-
-        setEditSessionState(transId);
-        redirectToIView(transId, "");
-
-
-
-
-        ////newmode
-        ////tstruct.aspx?act=open&transid=axpub&openerIV=publist&isIV=true&isDupTab=false&dummyload=false?
-        //let transId = "axpub";
-        ////let fieldname = "jname";
-
-        ////let rawParamName = cleanCommandToken(tokens[2]);
-
-
-        //setEditSessionState(transId);
-        //redirectToTstruct(transId, "", "", "", "","publist");
-
-    }
-    function handleOpenCustomDataType({ tokens, commandConfig }) {
-        //tstruct.aspx?act=open&transid=ctype&openerIV=cdlist&isIV=true&isDupTab=false&dummyload=false%E2%99%A0
-        let transId = "ctype";
-        let fieldname = "typename";
-        let rawParamName;
-        let ActualParamName;
-
-
-        setEditSessionState(transId);
-
-        if (tokens.length > 2) {
-            rawParamName = cleanCommandToken(tokens[2]);
-            // ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-            ActualParamName = value;
-
-            redirectToTstruct(transId, "", true, fieldname, ActualParamName);
-        }
-        else {
-            redirectToTstruct(transId);
-        }
-
-    }
-    function handleOpenEmailDef({ tokens, commandConfig }) {
-        //tstruct.aspx?act=open&transid=axeml&openerIV=emaildef&isIV=true&isDupTab=false&dummyload=false%E2%99%A0 
-        let transId = "axeml";
-        let fieldname = "emaildefname";
-        let rawParamName;
-        let ActualParamName;
-
-
-        setEditSessionState(transId);
-
-        if (tokens.length > 2) {
-            rawParamName = cleanCommandToken(tokens[2]);
-            // ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-            ActualParamName = value;
-
-            redirectToTstruct(transId, "", true, fieldname, ActualParamName);
-        }
-        else {
-            redirectToTstruct(transId);
-        }
-
-    }
-    function handleOpenTableFieldDescriptor({ tokens, commandConfig }) {
-        //tstruct.aspx?act=open&transid=a__td&openerIV=ad___tbd&isIV=true&isDupTab=false&dummyload=false%E2%99%A0
-        let transId = "a__td";
-        let fieldname = "dname";
-        let rawParamName;
-        let ActualParamName;
-
-
-        setEditSessionState(transId);
-
-        if (tokens.length > 2) {
-            rawParamName = cleanCommandToken(tokens[2]);
-            // ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-            ActualParamName = value;
-
-            redirectToTstruct(transId, "", true, fieldname, ActualParamName);
-        }
-        else {
-            redirectToTstruct(transId);
-        }
-
-    }
-    function handleOpenMemDBConsole({ tokens, commandConfig }) {
-        //iview.aspx?ivname=inmemdb
-        let transId = "inmemdb";
-        //let fieldname = "jname";
-
-        //let rawParamName = cleanCommandToken(tokens[2]);
-
-
-        setEditSessionState(transId);
-        //redirectToTstruct(transId, "", "", "", "","ad___tbd");
-        redirectToIView(transId);
-    }
-    function handleOpenCustomPlugin({ tokens, commandConfig }) {
-        //aspx/PluginCustomCode.aspx
-
-        const targetUrl = "../aspx/PluginCustomCode.aspx";
-        setCommandRoutes(input.value.trim(), targetUrl);
-        window.LoadIframe(targetUrl);
-
-    }
-    function handleQueueListing({ tokens, commandConfig }) {
-        //iview.aspx?ivname=ad__qls
-        let transId = "ad__qls";
-
-        setEditSessionState(transId);
-        redirectToIView(transId);
-    }
-
-    //function handleOpenOutBoundQueueM({ tokens, commandConfig }) {
-    //      //iview.aspx?ivname=inmemdb
-    //    let transId = "inmemdb";
-    //    //let fieldname = "jname";
-
-    //    //let rawParamName = cleanCommandToken(tokens[2]);
-
-
-    //    setEditSessionState(transId);
-    //    //redirectToTstruct(transId, "", "", "", "","ad___tbd");
-    //    redirectToIView(transId);
-    //}
-    function handleOpenOutBoundQueue({ tokens, commandConfig }) {
-        //aspx/tstruct.aspx?act=open&transid=a__qm&AxPop=true&openerIV=ad__qls&isIV=true&isDupTab=false
-        let transId = "a__qm";
-        let fieldname = "axqueuename";
-        let rawParamName;
-        let ActualParamName;
-
-
-        setEditSessionState(transId);
-
-        if (tokens.length > 2) {
-            rawParamName = cleanCommandToken(tokens[2]);
-            // ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-            ActualParamName = value;
-
-            redirectToTstruct(transId, "", true, fieldname, ActualParamName);
-        }
-        else {
-            redirectToTstruct(transId);
-        }
-    }
-    function handleOpenInboundBoundQueue({ tokens, commandConfig }) {
-        //aspx/tstruct.aspx?act=open&transid=a__iq&AxPop=true&openerIV=ad__qls&isIV=true&isDupTab=false
-        let transId = "a__iq";
-        let fieldname = "axqueuename";
-        let rawParamName;
-        let ActualParamName;
-
-
-        setEditSessionState(transId);
-
-        if (tokens.length > 2) {
-            rawParamName = cleanCommandToken(tokens[2]);
-            // ActualParamName = tryResolveToken(2, rawParamName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawParamName, commandConfig, false);
-            ActualParamName = value;
-
-            redirectToTstruct(transId, "", true, fieldname, ActualParamName);
-        }
-        else {
-            redirectToTstruct(transId);
-        }
-    }
-
-
-    //*********************************Open Newer introduced commands ends here******************************************//
-
 
     function openPopOption(targetURL) {
+        hide();
         // console.log("PopOption is clicked");
 
         if (targetURL) {
@@ -1807,31 +1200,38 @@
                 targetURL = "../aspx/" + targetURL;
             }
 
-            let popUpContainerUrl = `../AxpertPlugins/Axi_Beta/HTMLPages/PopupContainer.html`
-            //let popUpContainerUrl = `../CustomPages/Axi/HTMLPages/PopUpContainer.html`;
+            let popUpContainerUrl = `../AxpertPlugins/Axi_Beta/HTMLPages/PopupContainer.html`;
+            if (window.location.pathname.toLowerCase().includes("/axpertplugins/axi_beta/htmlpages/")) {
+                popUpContainerUrl = `PopupContainer.html`;
+            }
 
             if (targetURL && targetURL.toLowerCase().includes("../")) {
-                // console.log("Before removing : " + targetURL);
                 targetURL = targetURL.replace("../", "");
-                //targetURL = targetURL.split("/")[1];
-                // console.log("After removing : " + targetURL);
             }
 
             let hiddenVar = document.getElementById("hiddenLoader");
+            if (!hiddenVar) {
+                hiddenVar = document.createElement("iframe");
+                hiddenVar.id = "hiddenLoader";
+                hiddenVar.style.display = "none";
+                document.body.appendChild(hiddenVar);
+            }
 
             // Check if the PopupManager already exists in the iframe
-            if (hiddenVar.contentWindow && hiddenVar.contentWindow.PopupManager) {
-                // ADD AS NEW TAB: Call the internal manager
-                hiddenVar.contentWindow.PopupManager.openForm("Loading...", targetURL);
-            } else {
-                // INITIAL LOAD: Set src for the first time
-                let finalUrl = `${popUpContainerUrl}?contenturl=${targetURL}`;
-                hiddenVar.src = finalUrl;
-                hiddenVar.style.display = "flex";
-            }
+            try {
+                if (hiddenVar.contentWindow && hiddenVar.contentWindow.PopupManager) {
+                    // ADD AS NEW TAB: Call the internal manager
+                    hiddenVar.contentWindow.PopupManager.openForm("Loading...", targetURL);
+                    popUpOption = false;
+                    return;
+                }
+            } catch (e) { }
+
+            // INITIAL LOAD: Set src for the first time
+            let finalUrl = `${popUpContainerUrl}?contenturl=${targetURL}`;
+            hiddenVar.src = finalUrl;
+            hiddenVar.style.display = "flex";
             popUpOption = false;
-            // console.log("Final Url: " + targetURL);
-            // console.log("PopUp Option is set to :" + popUpOption);
 
         } else {
             popUpOption = false;
@@ -2013,88 +1413,57 @@
 
 
 
-    function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "") {
-
-        // console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
-
-
+    function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "", extraParams = "") {
         if (!transId) {
-
             alert("There is no Tstruct name provided!");
-
             return;
-
         }
+        hide();
 
         let targetUrl;
-
         targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
 
         if (isEdit) {
-
             if (fieldName && fieldValue) {
-
                 targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
-
             }
-
             targetUrl += `&hltype=load`;
-
             targetUrl += `&torecid=false`;
-
             targetUrl += `&openerIV=${transId}`;
-
             targetUrl += `&isIV=false`;
-
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-
             targetUrl += `&dummyload=false?`;
-
         }
-
         else {
-
             if (fieldName && fieldValue) {
-
                 targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
-
             }
-
             targetUrl += `&hltype=open`;
-
             targetUrl += `&createaxiflag=true`;
-
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-
             targetUrl += `&dummyload=false?`;
-
         }
 
+        if (extraParams) {
+            const separator = targetUrl.includes("?") ? "&" : "?";
+            targetUrl += `${separator}${extraParams}`;
+        }
 
         if (popUpOption) {
-
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
-
             targetUrl += "&AxPop=true";
-
-            openPopOption(targetUrl)
-
+            openPopOption(targetUrl);
         }
-
         else {
-
             setCommandRoutes(input.value.trim(), targetUrl);
-
             top.window.LoadIframe(targetUrl);
-
         }
-
     }
 
 
 
     function redirectToResponsibilitiesPage(fieldValue = "") {
-
+        hide();
 
         let targetUrl = "../aspx/AddEditResponsibility.aspx";
 
@@ -2114,29 +1483,8 @@
         top.window.LoadIframe(targetUrl);
     }
 
-    // function redirectToIView(iViewName, iViewCaption = "") {
-    //     // console.log("Redirecting to Iview: " + iViewName + "..............");
-
-
-    //     if (popUpOption) {
-    //      let targetUrl = `../aspx/ivtoivload.aspx?ivname=${iViewName}`;
-    //     // setCommandRoutes(input.value.trim(), targetUrl);
-
-
-    //         targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
-    //         targetUrl += "&AxIsPop=true";
-    //         openPopOption(targetUrl)
-    //     }
-    //     else {
-    //     let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
-    //     setCommandRoutes(input.value.trim(), targetUrl);
-    //         window.LoadIframe(targetUrl);
-    //     }
-
-
-    // }
-
     function redirectToIView(iViewName, iViewCaption = "") {
+        hide();
         // console.log("Redirecting to Iview: " + iViewName + "..............");
 
 
@@ -2144,7 +1492,7 @@
             let targetUrl = `../aspx/ivtoivload.aspx?ivname=${iViewName}`;
             // setCommandRoutes(input.value.trim(), targetUrl);
             targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
-            targetUrl += "&AxIsPop=true&isDupTab=true-";
+            targetUrl += "&AxIsPop=true&isDupTab=true";
             openPopOption(targetUrl)
         }
         else {
@@ -2738,19 +2086,22 @@
                     actions.push("Create");
                     actions.push("Edit");
                 }
-                if (canBuild) actions.push("Source");
+                if (canBuild && isDevOptionAllowed("tstruct")) actions.push("Source");
             } else if (isInboxStructure(entityObj)) {
                 actions.push("Go");
             } else if (type === "ads") {
                 if (isAdsVisible(entityObj)) actions.push("View");
-                if (canBuild) actions.push("Source");
+                if (canBuild && isDevOptionAllowed("ads")) actions.push("Source");
             } else if (type === "i" || type === "iview") {
                 if (isActionAllowed(entityObj, "view")) actions.push("View");
-                if (canBuild) actions.push("Source");
+                if (canBuild && isDevOptionAllowed("iview")) actions.push("Source");
             } else {
                 if (type === "p" || type === "page" || isActionAllowed(entityObj, "view")) actions.push("View");
                 if ((type === "i" || type === "iview" || type === "t" || type === "tstruct" || type === "ads") && canBuild) {
-                    actions.push("Source");
+                    const devKey = (type === "t" || type === "tstruct") ? "tstruct" : (type === "ads" ? "ads" : "iview");
+                    if (isDevOptionAllowed(devKey)) {
+                        actions.push("Source");
+                    }
                 }
             }
         }
@@ -3630,6 +2981,50 @@
     //    }
     //}
 
+    function isTargetListingPageForParamsRestriction() {
+        try {
+            const { doc, win, iframe } = getIViewDocumentAndWindow();
+            let src = iframe ? (iframe.getAttribute("src") || "") : "";
+            let docHref = "";
+            try {
+                docHref = doc?.location?.href || win?.location?.href || "";
+            } catch (e) { }
+
+            const combinedUrl = (src + " " + docHref).toLowerCase();
+
+            // Target ivnames for the 5 listing screens:
+            // 1. Responsibility Listing: response
+            // 2. Role Listing: ad___url
+            // 3. Actor Listing: ad__act
+            // 4. Dimension Listing: ad___upg
+            // 5. Smart view listing: a___smtl
+            const targetIvnames = [
+                "ivname=response",
+                "ivname=ad___url",
+                "ivname=ad__act",
+                "ivname=ad___upg",
+                "ivname=a___smtl"
+            ];
+
+            return targetIvnames.some(name => combinedUrl.includes(name));
+        } catch (e) { }
+        return false;
+    }
+
+    function isResponsibilityListingPage() {
+        try {
+            const { doc, win, iframe } = getIViewDocumentAndWindow();
+            let src = iframe ? (iframe.getAttribute("src") || "") : "";
+            let docHref = "";
+            try {
+                docHref = doc?.location?.href || win?.location?.href || "";
+            } catch (e) { }
+            const combinedUrl = (src + " " + docHref).toLowerCase();
+            return combinedUrl.includes("ivname=response");
+        } catch (e) { }
+        return false;
+    }
+
     function processRunCommands(tokens, targetIndex, structType) {
         if (targetIndex !== 1) return [goOption];
         let allButtons
@@ -3643,7 +3038,7 @@
                         return true;
                     }
                 }
-            } catch (e) {}
+            } catch (e) { }
             return false;
         };
 
@@ -3732,6 +3127,27 @@
                 const isDelete = btnNameLower === "deleteselectedbutton" || btnDisplayLower === "delete";
                 if (isEntity && isDelete) return false;
 
+                if (isTargetListingPageForParamsRestriction()) {
+                    const isParamsBtn = (btnDisplayLower === "params" ||
+                        btnDisplayLower === "param" ||
+                        btnDisplayLower === "parameters" ||
+                        btnDisplayLower === "parameter" ||
+                        btnNameLower === "params" ||
+                        btnNameLower === "param" ||
+                        btnNameLower === "ivirparams" ||
+                        btnNameLower === "iconsnewparams" ||
+                        btnNameLower === "btnparams") &&
+                        !btnDisplayLower.includes("refresh") &&
+                        !btnNameLower.includes("refresh");
+                    if (isParamsBtn) return false;
+                }
+
+                if (isResponsibilityListingPage()) {
+                    const restrictedList = ["print", "pdf", "excel", "csv", "html", "json", "copy", "word"];
+                    const isRestricted = restrictedList.some(r => btnDisplayLower === r || btnDisplayLower.includes(r) || btnNameLower === r || btnNameLower.includes(r));
+                    if (isRestricted) return false;
+                }
+
                 if (structType === "i") {
                     if (isCsqlistPage()) {
                         const isSearchBtn = btnDisplayLower.includes("search") || btnNameLower.includes("search");
@@ -3809,7 +3225,7 @@
     }
 
     function suggestLocal(inputText) {
-      // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
         // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
         normalizeGlobalState();
         let ignoreExtraParams = false;
@@ -3915,27 +3331,30 @@
                         actions.push("Edit");
                     }
                 }
-                if (canBuild) {
+                if (canBuild && isDevOptionAllowed("tstruct")) {
                     actions.push("Source");
                 }
             } else if (targetType === "p" || targetType === "page") {
                 actions.push("View");
             } else if (targetType === "ads") {
                 if (isAdsVisible(entityObj)) actions.push("View");
-                if (canBuild) {
+                if (canBuild && isDevOptionAllowed("ads")) {
                     actions.push("Source");
                 }
             } else if (targetType === "i" || targetType === "iview") {
                 const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
                 if (!hasPerms || entityObj.viewallowed === "T") actions.push("View");
-                if (canBuild) {
+                if (canBuild && isDevOptionAllowed("iview")) {
                     actions.push("Source");
                 }
             } else if (targetType) {
                 const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
                 if (!hasPerms || entityObj.viewallowed === "T") actions.push("View");
                 if ((targetType === "i" || targetType === "iview" || targetType === "t" || targetType === "tstruct" || targetType === "ads") && canBuild) {
-                    actions.push("Source");
+                    const devKey = (targetType === "t" || targetType === "tstruct") ? "tstruct" : (targetType === "ads" ? "ads" : "iview");
+                    if (isDevOptionAllowed(devKey)) {
+                        actions.push("Source");
+                    }
                 }
             } else {
                 const matches = getTargetEntityMatches(rawTokens[0]);
@@ -3961,10 +3380,10 @@
                             if (m.viewallowed === "T") hasView = true;
                             if (m.createallowed === "T") hasCreate = true;
                         }
-                        if (canBuild) hasSource = true;
+                        if (canBuild && isDevOptionAllowed("tstruct")) hasSource = true;
                     } else if (type === "ads") {
                         if (isAdsVisible(m)) hasView = true;
-                        if (canBuild) hasSource = true;
+                        if (canBuild && isDevOptionAllowed("ads")) hasSource = true;
                     } else if (type === "p" || type === "page") {
                         hasView = true;
                     } else if (type === "i" || type === "iview") {
@@ -3973,7 +3392,7 @@
                         } else {
                             if (m.viewallowed === "T") hasView = true;
                         }
-                        if (canBuild) hasSource = true;
+                        if (canBuild && isDevOptionAllowed("iview")) hasSource = true;
                     } else {
                         if (!hasPerms) {
                             matchesAnyIviewWithoutPerms = true;
@@ -3981,7 +3400,10 @@
                             if (m.viewallowed === "T") hasView = true;
                         }
                         if ((type === "i" || type === "iview" || type === "t" || type === "tstruct" || type === "ads") && canBuild) {
-                            hasSource = true;
+                            const devKey = (type === "t" || type === "tstruct") ? "tstruct" : (type === "ads" ? "ads" : "iview");
+                            if (isDevOptionAllowed(devKey)) {
+                                hasSource = true;
+                            }
                         }
                     }
                 }
@@ -3999,7 +3421,10 @@
                 const viewAction = { name: "View", displaydata: "View" };
                 const allOptions = [viewAction];
                 if (["iview", "i", "ads"].includes(targetType) && canBuild) {
-                    allOptions.push({ name: "Source", displaydata: "Source" });
+                    const devKey = targetType === "ads" ? "ads" : "iview";
+                    if (isDevOptionAllowed(devKey)) {
+                        allOptions.push({ name: "Source", displaydata: "Source" });
+                    }
                 }
                 allOptions.push(goOption, popOption);
                 const filtered = allOptions.filter(opt => {
@@ -4106,7 +3531,7 @@
             const firstToken = cleanString(tokens[1] || "");
             const { value: actualFirstToken, type } = tryResolveToken(1, firstToken, commandConfig, false);
             // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
-        // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
+            // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
             detectedType = getType(viewSource.toLowerCase(), { value: actualFirstToken, type: type }, viewValues, tokens, commandConfig);
             // detectedType = getType(viewSource.toLowerCase(), {value: act}, viewValues, tokens, commandConfig);
 
@@ -4152,7 +3577,7 @@
             return processRunCommands(tokens, targetIndex, structType);
         }
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
-          // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
         // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
 
 
@@ -4272,7 +3697,21 @@
         ///Skipping PromptValue "With" token for edit
         if (!realSource && activePrompt.promptValues && groupKey.toLowerCase() !== "edit") {
 
-            const staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
+            let staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
+
+            if (groupKey.toLowerCase() === "configure" || groupKey.toLowerCase() === "sdk") {
+                if (axiCommandConfigList && axiCommandConfigList.length > 0) {
+                    staticValues = staticValues.filter(val => {
+                        const lowVal = val.toLowerCase().trim();
+                        if (groupKey.toLowerCase() === "sdk" && (lowVal === "tstruct" || lowVal === "iview")) {
+                            return true;
+                        }
+                        const activeRow = getCommandConfigRow(groupKey, val);
+                        return !!activeRow;
+                    });
+                }
+            }
+
             const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
             filteredObjects = result.map(val => ({ name: val, displaydata: val }));
 
@@ -4483,12 +3922,12 @@
                 const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
 
                 if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
-                    if (groupKey.toLowerCase() === "sdk" && tokens.length > 2) {
+                    if (groupKey.toLowerCase() === "sdk" && tokens.length >= 2) {
                         filteredObjects = [goOption];
-                        return [goOption]
+                        return [goOption];
                     }
 
-                    if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
+                    if (groupKey.toLowerCase() === "configure" && tokens.length >= 2) {
                         const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
                         const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
                         const isResponsibilityCmd = subCmdFirst === "responsibility" || subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities" || subCmdFull.startsWith("responsibility");
@@ -4501,12 +3940,17 @@
                         return [goOption, popOption];
                     }
 
-                    if ((groupKey.toLowerCase() === "view" || groupKey.toLowerCase() === "go") && tokens.length == 3) {
+                    if ((groupKey.toLowerCase() === "upload" || groupKey.toLowerCase() === "download") && tokens.length >= 2) {
+                        filteredObjects = [goOption, popOption];
+                        return [goOption, popOption];
+                    }
+
+                    if ((groupKey.toLowerCase() === "view" || groupKey.toLowerCase() === "go") && tokens.length >= 2) {
                         if (tokens[1] && tokens[1].toLowerCase() === "inbox") {
                             filteredObjects = [goOption];
                             return [goOption];
                         }
-                        filteredObjects = [goOption, popOption]
+                        filteredObjects = [goOption, popOption];
                         return [goOption, popOption];
                     }
                     return [];
@@ -4682,11 +4126,15 @@
             const accessPermissions = getAccessPermissions();
 
             if ((groupKey.toLowerCase() === "view") && tokens.length <= 2 && structName !== null && accessPermissions?.buildAccess) {
-                resultList.unshift("Source");
-                // resultList.unshift(goOption);
-                filteredObjects.unshift("Source");
-                updateDynamicHintFromPrompt({ prompt: "Ready to Run" });
-                // filteredObjects.unshift(goOption);
+                const structType = (getStructType() || "").toLowerCase();
+                const devKey = (structType === "t" || structType === "tstruct") ? "tstruct" : (structType === "ads" ? "ads" : "iview");
+                if (isDevOptionAllowed(devKey)) {
+                    resultList.unshift("Source");
+                    // resultList.unshift(goOption);
+                    filteredObjects.unshift("Source");
+                    updateDynamicHintFromPrompt({ prompt: "Ready to Run" });
+                    // filteredObjects.unshift(goOption);
+                }
             }
 
             if (groupKey.toLowerCase() === "sdk" && accessPermissions?.buildAccess && tokens.length >= 2) {
@@ -5145,7 +4593,7 @@
 
                     // 2. Exact internal name match (e.g. 'ads1', 'tst1', 'iv1')
                     if (!preferredType) {
-                        const exactNameMatch = matches.find(item => 
+                        const exactNameMatch = matches.find(item =>
                             (item.name || item.NAME || item.sqlname || "").toLowerCase() === cleanTokName.toLowerCase()
                         );
                         if (exactNameMatch) {
@@ -5157,7 +4605,7 @@
                             });
                             if (typeMatched) found = typeMatched;
                         } else if (cmdGroup === "view") {
-                            const fullDisplayMatch = matches.find(item => 
+                            const fullDisplayMatch = matches.find(item =>
                                 (item.displaydata || item.DISPLAYDATA || "").toLowerCase() === tokenText.toLowerCase()
                             );
                             if (fullDisplayMatch) {
@@ -5330,13 +4778,13 @@
                         }
                     } else if (matches.length > 1) {
                         const cleanTokName = tokenText.replace(/\s*\[[^\]]*\]$/, "").trim();
-                        const exactNameMatch = matches.find(item => 
+                        const exactNameMatch = matches.find(item =>
                             (item.name || item.NAME || item.sqlname || "").toLowerCase() === cleanTokName.toLowerCase()
                         );
                         if (exactNameMatch) {
                             found = exactNameMatch;
                         } else if (cmdGroup === "view" && tokenIndex === 1) {
-                            const fullDisplayMatch = matches.find(item => 
+                            const fullDisplayMatch = matches.find(item =>
                                 (item.displaydata || item.DISPLAYDATA || "").toLowerCase() === tokenText.toLowerCase()
                             );
                             if (fullDisplayMatch) {
@@ -5674,21 +5122,27 @@
 
     function hide() {
         if (megaDropdown) {
-            megaDropdown.style.display = "none";
+            megaDropdown.style.setProperty("display", "none", "important");
+            megaDropdown.classList.remove("show", "menu-dropdown");
         }
-        list.style.display = "none";
-        list.classList.remove("My-Command-Wrapper");
+        if (list) {
+            list.style.setProperty("display", "none", "important");
+            list.classList.remove("My-Command-Wrapper");
+            list.innerHTML = "";
+        }
 
         if (favouritesCard) {
-            favouritesCard.style.display = "none";
-        }
-        const suggCard = list.closest(".card");
-        if (suggCard) {
-            suggCard.style.display = "flex";
+            favouritesCard.style.setProperty("display", "none", "important");
         }
 
         items = [];
         activeIndex = -1;
+        suppressFocusSuggestions = true;
+        try {
+            if (input && document.activeElement === input) {
+                input.blur();
+            }
+        } catch (e) { }
     }
 
     function GetObjectName(selectedValue) {
@@ -6191,6 +5645,7 @@
     }
 
     function safeOpenDeveloperStudio(page, name = "", callFromAxi = true) {
+        hide();
         const topWin = (typeof top !== "undefined" ? top : (typeof parent !== "undefined" ? parent : window));
 
         // 1. Activate Axpert Web product loader immediately
@@ -6220,17 +5675,17 @@
         // };
 
         const openFn = (typeof window !== "undefined" && typeof window.openDeveloperStudio === "function" && window.openDeveloperStudio) ||
-                       (typeof parent !== "undefined" && typeof parent.openDeveloperStudio === "function" && parent.openDeveloperStudio) ||
-                       (typeof top !== "undefined" && typeof top.openDeveloperStudio === "function" && top.openDeveloperStudio);
+            (typeof parent !== "undefined" && typeof parent.openDeveloperStudio === "function" && parent.openDeveloperStudio) ||
+            (typeof top !== "undefined" && typeof top.openDeveloperStudio === "function" && top.openDeveloperStudio);
 
         if (openFn) {
             try {
                 openFn(page, name, callFromAxi);
 
-                
-                setTimeout(() => { 
-                    toggleShowDimmer(false) 
-                } , 0); 
+
+                setTimeout(() => {
+                    toggleShowDimmer(false)
+                }, 0);
 
             } catch (err) {
                 // console.error("openDeveloperStudio call failed:", err);
@@ -6294,8 +5749,8 @@
         }
 
         const alertFn = (typeof top !== "undefined" && typeof top.showAlertDialog === "function" && top.showAlertDialog) ||
-                        (typeof parent !== "undefined" && typeof parent.showAlertDialog === "function" && parent.showAlertDialog) ||
-                        (typeof window !== "undefined" && typeof window.showAlertDialog === "function" && window.showAlertDialog);
+            (typeof parent !== "undefined" && typeof parent.showAlertDialog === "function" && parent.showAlertDialog) ||
+            (typeof window !== "undefined" && typeof window.showAlertDialog === "function" && window.showAlertDialog);
 
         if (alertFn) {
             try {
@@ -6770,7 +6225,6 @@
                     return;
                 }
                 e.preventDefault();
-                hide();
 
                 const cursorPos = input.selectionStart;
 
@@ -6821,11 +6275,20 @@
 
                 input.value = tokens.join(" ");
 
+                if (tokens.length <= 2) {
+                    setCommandTransid = null;
+                    if (transIDcheck) {
+                        createfieldnamevaluesList[transIDcheck] = [];
+                    }
+                }
+
                 // console.log("After backspace our list : ");
                 // console.log(createfieldnamevaluesList[transIDcheck]);
 
                 dateControlBoolean = false;
                 resetSetCommandState();
+                input.focus();
+                input.setSelectionRange(input.value.length, input.value.length);
                 handleInput();
 
 
@@ -6838,7 +6301,6 @@
                     return;
                 }
                 e.preventDefault();
-                hide();
 
                 const cursorPos = input.selectionStart;
 
@@ -6863,8 +6325,14 @@
 
                 input.value = tokens.join(" ");
 
+                if (tokens.length <= 2) {
+                    setCommandTransid = null;
+                }
+
                 dateControlBoolean = false;
                 resetSetCommandState();
+                input.focus();
+                input.setSelectionRange(input.value.length, input.value.length);
                 handleInput();
             }
 
@@ -7438,21 +6906,42 @@
             }
         }
 
+        // Check if command configuration is disabled (active = 'F' or not active)
+        const disabledRow = (firstParamValue ? getDisabledCommandConfigRow(group, firstParamValue) : null)
+            || (handlerKey !== 'default' ? getDisabledCommandConfigRow(group, handlerKey) : null);
+
+        if (disabledRow) {
+            const optName = disabledRow.promptOptions || disabledRow.prompt_options || disabledRow.PromptOptions || firstParamValue;
+            showToast(`The command '${group} ${optName}' is disabled or invalid.`);
+            return;
+        }
+
+        // Dynamically resolve against backend axi_command_config without touching JS code
+        const dynamicRow = (firstParamValue ? getCommandConfigRow(group, firstParamValue) : null)
+            || (handlerKey !== 'default' ? getCommandConfigRow(group, handlerKey) : null)
+            || getCommandConfigRow(group, 'default');
+
+        if (dynamicRow) {
+            executeDynamicNavigation({
+                tokens: tokens,
+                commandConfig: config,
+                configRow: dynamicRow
+            });
+            return;
+        }
+
         // Locate the handler function in the mapping
         const groupHandlers = getGroupHandlers(group);
 
         if (!groupHandlers) {
-            // console.error(`System Error: No handlers object defined for command group '${group}'`);
+            showToast(`The command '${tokens.join(" ")}' is disabled or invalid.`);
             return;
         }
-
 
         const handler = groupHandlers[handlerKey] || groupHandlers['default'];
 
         if (!handler) {
-            showToast(`Dispatch Error: No handler function found for '${group}' -> '${handlerKey}'`);
-
-            // console.error(`Dispatch Error: No handler function found for '${group}' -> '${handlerKey}'`);
+            showToast(`The command '${tokens.join(" ")}' is disabled or invalid.`);
             return;
         }
 
@@ -7515,7 +7004,7 @@
     }
 
     function handleViewInbox() {
-        
+
         // LoadIframe('htmlpages.aspx?inbox=t')
         if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
             // top.window.LoadIframe('../aspx/processflow.aspx?activelist=t');
@@ -7835,286 +7324,6 @@
 
     // }
 
-
-    function handleConfigurePermissions({ tokens, commandConfig }) {
-
-
-
-        let rawUserName = cleanCommandToken(tokens[2]);
-
-        let { value: resolvedUserName, type } = tryResolveToken(2, rawUserName, commandConfig, false);
-
-
-
-
-
-
-        redirectToPermissionScreeen(rawUserName);
-
-
-
-
-
-
-    }
-
-    function handleConfigureAccess({ tokens, commandConfig }) {
-
-        let fieldValue = cleanCommandToken(tokens[2]);
-
-
-
-
-        redirectToResponsibilitiesPage(fieldValue);
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-    /***************************************************
-    * End
-    * **************************************************
-   */
-
-    /***************************************************
-     * Configure Commands Functions
-     * *************************************************
-     */
-
-
-
-    function handleOpenApi({ tokens, commandConfig }) {
-        // console.log("commandConfig: " + JSON.stringify(commandConfig));
-        let fieldname = "ExecAPIDefName";
-        let transId = "apidg";
-        let param1Position = commandConfig.prompts[1].wordPos - 1;
-
-        let rawApiName = cleanCommandToken(tokens[param1Position]);
-
-
-
-        setEditSessionState(transId);
-        redirectToTstruct(transId, "", true, fieldname, rawApiName);
-
-
-
-
-
-    }
-
-    function handleConfigureRule({ tokens, commandConfig }) {
-
-        let transId = "ad_re";
-        let fieldname = "rulename";
-
-        let rawParamName = cleanCommandToken(tokens[2]);
-
-
-
-        setEditSessionState(transId);
-        redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, rawParamName);
-
-
-
-
-
-    }
-
-    function handleConfigureScheduledNotification({ tokens, commandConfig }) {
-
-        let transId = "a__pn";
-        let fieldname = "name";
-
-        let rawParamName = cleanCommandToken(tokens[2]);
-
-
-
-        setEditSessionState(transId);
-        redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, rawParamName);
-
-
-
-
-
-    }
-
-    //function handleConfigureServer({ tokens, commandConfig }) {
-
-    //    let transId = "axpub";
-    //    let fieldname = "servername";
-
-    //    const rawParamName = cleanCommandToken(tokens[2]);
-
-
-    //    setEditSessionState(transId);
-    //    redirectToTstruct(transId, "", true, fieldname, rawParamName);
-
-
-
-
-
-    //}
-
-    function handleCofigurePegFormNotification({ tokens, commandConfig }) {
-
-        let transId = "ad_pn";
-        let fieldname = "name";
-
-        const rawParamName = cleanCommandToken(tokens[2]);
-
-
-        setEditSessionState(transId);
-        redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, rawParamName);
-
-
-
-
-
-    }
-
-    function handleConfigurePeg({ tokens, commandConfig }) {
-
-        let rawParamName = cleanCommandToken(tokens[2]);
-
-        redirectToProcessFlow(rawParamName, cleanCommandToken(tokens[1]));
-
-
-
-    }
-
-    function handleConfigureFormNotification({ tokens, commandConfig }) {
-
-        let transId = "a__fn";
-        const fieldname = "stransid";
-
-
-
-        let rawParamValue = cleanCommandToken(tokens[2]);
-        const { value: fieldValue, type } = tryResolveToken(2, rawParamValue, commandConfig, false);
-
-
-        setEditSessionState(transId);
-        redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, fieldValue);
-
-
-
-    }
-
-    function handleConfigureNewsAndAnnouncement({ tokens, commandConfig }) {
-        let transId = "a__na";
-        const fieldname = "title";
-        let rawTitle;
-        let paramValue;
-
-
-        setEditSessionState(transId);
-
-        if (tokens.length > 2) {
-            rawTitle = cleanCommandToken(tokens[2]);
-            // paramValue = tryResolveToken(2, rawTitle, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawTitle, commandConfig, false);
-            paramValue = value;
-
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]), true, fieldname, paramValue)
-        }
-        else {
-            redirectToTstruct(transId, cleanCommandToken(tokens[1]));
-        }
-    }
-
-    function handleConfigureSettings({ tokens, commandConfig }) {
-        // const targetUrl = "../aspx/Configuration.aspx/LoadUserAppSettings"; 
-        let targetUrl = "../aspx/Configuration.aspx?";
-
-
-
-        if (popUpOption) {
-            targetUrl += `tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
-            targetUrl += "&AxPop=true";
-
-            openPopOption(targetUrl)
-        }
-        else {
-            setCommandRoutes(input.value.trim(), targetUrl);
-            window.LoadIframe(targetUrl);
-        }
-    }
-
-
-
-    function handleConfigureProperties({ tokens, commandConfig }) {
-        const transId = "ad_pr";
-        let targetUrl = `../aspx/tstruct.aspx?act=load&transid=${transId}&axpdef_axpertpropsid=1`;
-        //   const targetUrl = "../aspx/tstruct.aspx?act=load&transid=ad_pr&axpdef_axpertpropsid=1";
-        setEditSessionState(transId);
-
-        if (popUpOption) {
-            targetUrl += `&tname=${encodeURIComponent(cleanCommandToken(tokens[1]))}`;
-            targetUrl += "&AxPop=true";
-
-            openPopOption(targetUrl)
-        }
-        else {
-            setCommandRoutes(input.value.trim(), targetUrl);
-            top.window.LoadIframe(targetUrl);
-        }
-
-    }
-
-    //function handleConfigureJob({ tokens, commandConfig }) {
-
-    //    let transId = "job_s";
-    //    let fieldname = "jname";
-
-    //    let rawParamName = cleanCommandToken(tokens[2]);
-
-
-    //    setEditSessionState(transId);
-    //    redirectToTstruct(transId, "", true, fieldname, rawParamName);
-
-    //}
-
-    /*********************************************************
-      * End 
-      * ******************************************************
-      */
-
-    function handleUpload({ tokens, commandConfig }) {
-
-        if (mode === "ai") {
-            handleAiButtons("openUpload");
-
-        } else {
-            const targetUrl = "../aspx/ImportAll.aspx";
-            setCommandRoutes(input.value.trim(), targetUrl);
-            window.LoadIframe(targetUrl);
-
-
-        }
-
-
-
-
-    }
-
-    function handleDownload({ tokens, commandConfig }) {
-        let targetUrl = "../aspx/ExportNew.aspx";
-        targetUrl += "?action=export";
-        setCommandRoutes(input.value.trim(), targetUrl);
-        window.LoadIframe(targetUrl);
-
-    }
-
-
-
     function setEditSessionState(transId) {
         if (!transId) return;
 
@@ -8219,6 +7428,7 @@
     }
 
     function handleViewSource({ tokens, commandConfig }) {
+        hide();
         const accessPermissions = getAccessPermissions();
         if (!accessPermissions?.buildAccess) {
             showToast(`User '${window.mainUserName}' has no access for command: ${input.value.trim()}`);
@@ -8238,31 +7448,43 @@
         switch (structName.type.toLowerCase()) {
             case "entity":
             case "tstruct":
+                if (!isDevOptionAllowed("tstruct")) {
+                    showToast(`User '${window.mainUserName}' has no access for TStruct source`);
+                    return;
+                }
                 safeOpenDeveloperStudio("tstreact", structName.name, true);
                 break;
             case "iview":
+                if (!isDevOptionAllowed("iview")) {
+                    showToast(`User '${window.mainUserName}' has no access for IView source`);
+                    return;
+                }
                 safeOpenDeveloperStudio("ivreact", structName.name, true);
                 break;
             case "ads":
+                if (!isDevOptionAllowed("ads")) {
+                    showToast(`User '${window.mainUserName}' has no access for ADS source`);
+                    return;
+                }
                 handleViewSourceAds(structName.name);
-
                 break;
+            case "p":
             case "page":
+                if (!isDevOptionAllowed("page")) {
+                    showToast(`User '${window.mainUserName}' has no access for Page source`);
+                    return;
+                }
+                top.window.LoadIframe(`../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(structName.name)}&act=load&dummyload=false?`);
                 break;
 
             default:
                 showToast("Unknown source type: " + structName.name);
                 break;
-
-
         }
-
-
-
-
     }
 
     function handleSourceCommand({ tokens, commandConfig }) {
+        hide();
         const accessPermissions = getAccessPermissions();
         if (!accessPermissions?.buildAccess) {
             showToast(`User '${window.mainUserName}' has no access for command: ${input.value.trim()}`);
@@ -8281,14 +7503,33 @@
 
         let targetUrl = "";
         if (type === "t" || type === "tstruct") {
+            if (!isDevOptionAllowed("tstruct")) {
+                showToast(`User '${window.mainUserName}' has no access for TStruct source`);
+                return;
+            }
             targetUrl = "developerstudio:tstruct:" + name;
             safeOpenDeveloperStudio("tstreact", name, true);
         } else if (type === "i" || type === "iview") {
+            if (!isDevOptionAllowed("iview")) {
+                showToast(`User '${window.mainUserName}' has no access for IView source`);
+                return;
+            }
             targetUrl = "developerstudio:iview:" + name;
             safeOpenDeveloperStudio("ivreact", name, true);
         } else if (type === "ads") {
+            if (!isDevOptionAllowed("ads")) {
+                showToast(`User '${window.mainUserName}' has no access for ADS source`);
+                return;
+            }
             targetUrl = `../aspx/tstruct.aspx?transid=b_sql&sqlname=${encodeURIComponent(name)}&act=load&dummyload=false?`;
             handleViewSourceAds(name);
+        } else if (type === "p" || type === "page") {
+            if (!isDevOptionAllowed("page")) {
+                showToast(`User '${window.mainUserName}' has no access for Page source`);
+                return;
+            }
+            targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(name)}&act=load&dummyload=false?`;
+            top.window.LoadIframe(targetUrl);
         } else {
             showToast("Unknown source type: " + name);
             return;
@@ -8425,7 +7666,7 @@
             redirectToIView(transId, rawStruct);
             return;
 
-        } 
+        }
 
 
         //const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
@@ -8623,47 +7864,59 @@
         const { value: actualFieldName } = tryResolveToken(3, keyField, commandConfig, false);
         const { value: transId } = tryResolveToken(2, tstructName, commandConfig, false);
         if (!tstructName || !keyField) {
-            showToast("TStruct and Key Field are required")
+            showToast("TStruct and Key Field are required");
             // console.log("TStruct and Key Field are required");
             return;
         }
 
+        const appname = getProjectName() || "";
+        const username = window.mainUserName ||
+            (typeof callParentNew === "function" && callParentNew("mainUserName")) ||
+            (typeof parent !== "undefined" && parent.mainUserName) ||
+            (typeof top !== "undefined" && top.mainUserName) ||
+            "";
 
-        const requestBody = {
-            action: "view",   ///edit
-            adsNames: ["axi_tstructprops_insupd"],
-            sqlParams: {
-                param1: "axp_tstructprops",
-                param2: "name,keyfield,userconfigured",
-                param3: `'${transId}','${actualFieldName}','t'`,
-                param4: `name = '${transId}'`
+        if (!appname) {
+            showToast("Application session is not available. App name is required.");
+            return;
+        }
+
+        if (!username) {
+            showToast("User session is not available. Username is required.");
+            return;
+        }
+
+        try {
+            const res = await fetch(axiKeyfieldUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    appName: appname,
+                    transId: transId,
+                    keyField: actualFieldName,
+                    username: username
+                })
+            });
+
+            let dataObj = null;
+            try {
+                dataObj = await res.json();
+            } catch (e) { }
+
+            if (!res.ok || (dataObj && dataObj.success === false)) {
+                const errorMessage = dataObj?.message || (dataObj?.result?.message) || "Failed to set key field";
+                showToast(`Error: ${errorMessage}`);
+                return;
             }
-        };
 
-        const res = await getAxListAsync(requestBody);
-
-        let dataObj = typeof res === "string" ? JSON.parse(res) : res;
-        if (dataObj && dataObj.d) {
-            dataObj = typeof dataObj.d === "string" ? JSON.parse(dataObj.d) : dataObj.d;
-        }
-
-        // // console.log("DATA obj is :", dataObj);
-
-        const dataArray = dataObj?.result?.data;
-        const resultBlock = Array.isArray(dataArray) ? dataArray[0] : null;
-        const foundErrorObj = Array.isArray(dataArray) ? dataArray.find(item => item && item.error) : null;
-        const errorMessage = resultBlock?.error || foundErrorObj?.error || (dataObj?.result?.success === false ? (dataObj?.result?.message || "Operation failed") : null);
-
-        if (errorMessage) {
-            showToast(`Error: ${errorMessage}`);
-            // // console.error(`handleKeyfield Error: ${errorMessage}`);
-            return;
-        }
-
-        if (dataObj?.result?.success && dataObj?.result?.message?.toLowerCase() === "success") {
-            showToast(`Key field-${keyField} has been set for the form ${tstructName}`, 5000, true);
-            // // console.log(`Key field-${keyField} has been set for the form ${tstructName}`);
-            return;
+            if (dataObj && (dataObj.success === true || dataObj.message?.toLowerCase() === "success")) {
+                showToast(`Key field-${keyField} has been set for the form ${tstructName}`, 5000, true);
+                return;
+            }
+        } catch (err) {
+            showToast(`Error: ${err.message || err}`);
         }
     }
 
@@ -9269,9 +8522,30 @@
 */
 
     function handleOpenSource({ tokens, commandConfig }) {
+        hide();
 
         const type = cleanCommandToken(tokens[1]);
         let rawName = cleanCommandToken(tokens[2]);
+
+        const devKey = (type.toLowerCase() === "tstruct" || type.toLowerCase() === "t") ? "tstruct" : ((type.toLowerCase() === "iview" || type.toLowerCase() === "i") ? "iview" : ((type.toLowerCase() === "page" || type.toLowerCase() === "p") ? "page" : type.toLowerCase()));
+        if (!isDevOptionAllowed(devKey)) {
+            showToast(`User '${window.mainUserName}' has no access for SDK option: ${type}`);
+            return;
+        }
+
+        if (type.toLowerCase() === "page" || type.toLowerCase() === "p") {
+            if (rawName && rawName.toLowerCase() === "create new") {
+                const targetUrl = `../aspx/tstruct.aspx?transid=sect&hltype=open&createaxiflag=true&isDupTab=false&dummyload=false?`;
+                setCommandRoutes(input.value.trim(), targetUrl);
+                top.window.LoadIframe(targetUrl);
+                return;
+            }
+            let { value: resolvedName } = tryResolveToken(2, rawName, commandConfig, false);
+            const targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(resolvedName || rawName)}&act=load&dummyload=false?`;
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+            return;
+        }
 
         if (rawName && rawName.toLowerCase() === "create new") {
             const targetUrl = type.toLowerCase() === "tstruct"
@@ -9328,158 +8602,6 @@
             alert("Unknown source type: " + type);
         }
     }
-
-    function handleOpenAds({ tokens, commandConfig }) {
-        let targetUrl;
-        let paramName;
-        const iviewName = "csqlist"
-        const transId = "b_sql";
-        let fieldname = "sqlname";
-
-        let rawName = cleanCommandToken(tokens[2]);
-
-
-
-        if (rawName && rawName.toLowerCase() !== "create new") {
-            // paramName = tryResolveToken(2, rawName, commandConfig, false);
-            const { value } = tryResolveToken(2, rawName, commandConfig, false);
-            paramName = value;
-
-        }
-
-
-
-        setEditSessionState(transId);
-
-
-
-        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
-
-        if (!paramName || (rawName && rawName.toLowerCase() === "create new")) {
-            setCommandRoutes(input.value.trim(), targetUrl);
-
-            window.LoadIframe(targetUrl);
-
-        } else {
-            targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
-            targetUrl += "&act=load";
-            targetUrl += "&dummyload=false?";
-            setCommandRoutes(input.value.trim(), targetUrl);
-
-            window.LoadIframe(targetUrl);
-
-        }
-
-    }
-
-    function handleOpenCard({ tokens, commandConfig }) {
-
-        let targetUrl;
-        let paramName;
-        let transId = "a__cd";
-        let fieldname = "cardname";
-        let rawName = cleanCommandToken(tokens[2]);
-
-
-        if (rawName) {
-            // paramName = tryResolveToken(2, rawName, commandConfig, false);
-            const { value, type } = tryResolveToken(2, rawName, commandConfig, false);
-            paramName = value;
-
-        }
-
-
-        setEditSessionState(transId);
-        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
-
-        if (!paramName) {
-            setCommandRoutes(input.value.trim(), targetUrl);
-
-            window.LoadIframe(targetUrl);
-
-        } else {
-
-            targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
-            targetUrl += "&act=load";
-            targetUrl += "&dummyload=false?";
-            setCommandRoutes(input.value.trim(), targetUrl);
-
-            window.LoadIframe(targetUrl);
-
-        }
-    }
-
-    function handleOpenPage({ tokens, commandConfig }) {
-
-        let targetUrl;
-        let paramName;
-        let transId = "sect";
-        let fieldname = "caption";
-        let rawName = cleanCommandToken(tokens[2]);
-
-
-        // if (rawName) {
-        //     paramName = tryResolveToken(2, rawName, commandConfig, false);
-
-        // }
-
-        setEditSessionState(transId);
-
-        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
-
-        if (!rawName || rawName.toLowerCase() === "create new") {
-            setCommandRoutes(input.value.trim(), targetUrl);
-            window.LoadIframe(targetUrl);
-
-        } else {
-            targetUrl += `&${fieldname}=${encodeURIComponent(rawName)}`;
-            targetUrl += "&act=load";
-            targetUrl += "&dummyload=false?";
-            setCommandRoutes(input.value.trim(), targetUrl);
-
-            window.LoadIframe(targetUrl);
-
-        }
-
-
-
-    }
-
-    function handleOpenAppVar({ tokens, commandConfig }) {
-        const targetUrl = "../aspx/tstruct.aspx?transid=axvar";
-        setCommandRoutes(input.value.trim(), targetUrl);
-        window.LoadIframe(targetUrl);
-        //  window.openDeveloperStudio("tstreact", "axvar" , true);
-
-    }
-
-    function handleOpenDevOptions({ tokens, commandConfig }) {
-        const targetUrl = "../aspx/tstruct.aspx?transid=axstc";
-        setCommandRoutes(input.value.trim(), targetUrl);
-
-        window.LoadIframe(targetUrl);
-
-    }
-
-    function handleOpenDbConsole() {
-        // Task Axi-0034 completed
-        // window.openDeveloperStudio("AxDBScript.aspx");
-        const targetUrl = "../aspx/AxDBScript.aspx";
-        setCommandRoutes(input.value.trim(), targetUrl);
-        window.LoadIframe(targetUrl);
-
-    }
-
-    function handleOpenArrangeMenu() {
-        // ArrangeMenu.aspx
-        const targetUrl = "../aspx/ArrangeMenu.aspx";
-        setCommandRoutes(input.value.trim(), targetUrl);
-        window.LoadIframe(targetUrl);
-    }
-
-    /**
-     * ======================= End =============================
-     */
 
     /**
      * 
@@ -9572,7 +8694,7 @@
                             return true;
                         }
                     }
-                } catch (e) {}
+                } catch (e) { }
                 return false;
             };
 
@@ -9582,6 +8704,31 @@
                 const key = (btn.id || "") + "_" + (btn.label || "").toLowerCase();
                 if (seenKeys.has(key)) return false;
                 seenKeys.add(key);
+
+                if (isTargetListingPageForParamsRestriction()) {
+                    const btnDisplayLower = (btn.label || "").toLowerCase().trim();
+                    const btnNameLower = (btn.id || "").toLowerCase();
+                    const isParamsBtn = (btnDisplayLower === "params" ||
+                        btnDisplayLower === "param" ||
+                        btnDisplayLower === "parameters" ||
+                        btnDisplayLower === "parameter" ||
+                        btnNameLower === "params" ||
+                        btnNameLower === "param" ||
+                        btnNameLower === "ivirparams" ||
+                        btnNameLower === "iconsnewparams" ||
+                        btnNameLower === "btnparams") &&
+                        !btnDisplayLower.includes("refresh") &&
+                        !btnNameLower.includes("refresh");
+                    if (isParamsBtn) return false;
+                }
+
+                if (isResponsibilityListingPage()) {
+                    const btnDisplayLower = (btn.label || "").toLowerCase().trim();
+                    const btnNameLower = (btn.id || "").toLowerCase();
+                    const restrictedList = ["print", "pdf", "excel", "csv", "html", "json", "copy", "word"];
+                    const isRestricted = restrictedList.some(r => btnDisplayLower === r || btnDisplayLower.includes(r) || btnNameLower === r || btnNameLower.includes(r));
+                    if (isRestricted) return false;
+                }
 
                 if (isCsqlistPage() && structType === "i") {
                     const btnDisplayLower = (btn.label || "").toLowerCase().trim();
@@ -9879,16 +9026,17 @@
             const isDropdownItem = link.closest(".menu-sub-dropdown, .dropdown-menu, ul.menu, li.menu-item") !== null;
 
             if (!isDropdownItem) {
-                if (link.offsetParent === null && link.parentElement?.offsetParent === null) return;
-                if (link.classList.contains("d-none") || link.parentElement?.classList.contains("d-none")) return;
+                if (link.classList.contains("d-none") || link.closest(".d-none") || link.closest("[hidden]")) return;
             }
 
             const title = link.getAttribute("title") ||
-                          link.getAttribute("data-bs-original-title") ||
-                          link.getAttribute("data-original-title") ||
-                          link.parentElement?.getAttribute("title") ||
-                          link.parentElement?.getAttribute("data-bs-original-title") ||
-                          link.parentElement?.getAttribute("data-original-title") || "";
+                link.getAttribute("data-bs-original-title") ||
+                link.getAttribute("data-original-title") ||
+                link.parentElement?.getAttribute("title") ||
+                link.parentElement?.getAttribute("data-bs-original-title") ||
+                link.parentElement?.getAttribute("data-original-title") ||
+                link.closest("[title]")?.getAttribute("title") ||
+                link.closest("[data-bs-original-title]")?.getAttribute("data-bs-original-title") || "";
             let label = title.trim();
             if (!label) {
                 const nameSpan = link.querySelector(".dropdownIconName");
@@ -10054,11 +9202,14 @@
     function getBottomToolbarButtons() {
         const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
-
-        const toolbar = doc.querySelector(".BottomToolbarBar, #icons, [id^='iconsNew'], .toolbarRightMenu, .toolbarIcons");
-        if (!toolbar) return {};
-
-        const buttons = Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn"));
+        const toolbar = doc.querySelector(".BottomToolbarBar, .tstructMainBottomFooter, #icons, [id^='iconsNew'], [id^='dvRefresh'], .newRequestJson, .toolbarRightMenu, .toolbarIcons, .card-toolbar, .toolbar");
+        let buttons = [];
+        if (toolbar) {
+            buttons = Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn"));
+        }
+        if (buttons.length === 0) {
+            buttons = Array.from(doc.querySelectorAll(".BottomToolbarBar a, .BottomToolbarBar button, .tstructMainBottomFooter a, .tstructMainBottomFooter button, #icons a, #icons button, [id^='dvRefresh'] button, .card-toolbar a, .card-toolbar button, .toolbar a, .toolbar button, input[type='button'], input[type='submit']"));
+        }
         if (buttons.length === 0) return {};
 
         const result = {};
@@ -10312,7 +9463,7 @@
             if (!id) return;
             const label = btn.innerText.trim();
             if (!label) // console.log("There is no label for Element: " + btn);
-            if (label.toLowerCase() === "plugin custom code") return;
+                if (label.toLowerCase() === "plugin custom code") return;
 
 
 
@@ -10329,7 +9480,7 @@
 
     function getStructType() {
         const { doc: iframeDoc, win: iframeWin, iframe } = getIViewDocumentAndWindow();
-        
+
         let src = iframe ? (iframe.getAttribute("src") || "") : "";
         let docHref = "";
         try {
@@ -10483,21 +9634,21 @@
                 btn.click();
                 return;
             }
-        } catch (e) {}
+        } catch (e) { }
 
         // 2. MouseEvent fallback if .click() failed
         try {
             const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: targetWin });
             btn.dispatchEvent(evt);
             return;
-        } catch (e) {}
+        } catch (e) { }
 
         // 3. jQuery trigger fallback
         if (targetWin && targetWin.$) {
             try {
                 targetWin.$(btn).trigger('click');
                 return;
-            } catch (e) {}
+            } catch (e) { }
         }
 
         // 4. Inline onclick fallback
@@ -10507,7 +9658,7 @@
                 targetWin.eval(onclickAttr);
                 return;
             }
-        } catch (e) {}
+        } catch (e) { }
 
         // 5. javascript: href fallback
         try {
@@ -10516,7 +9667,7 @@
                 targetWin.eval(decodeURIComponent(hrefAttr.replace(/^javascript:/i, '')));
                 return;
             }
-        } catch (e) {}
+        } catch (e) { }
     }
 
     function getEntityToolbarButtons() {
@@ -10621,7 +9772,7 @@
             // const label = btn.innerText.trim();
             const label = extractButtonLabel(btn);
             if (!label) // console.log("There is no label for Element: " + btn);
-            if (label.toLowerCase() === "plugin custom code") return;
+                if (label.toLowerCase() === "plugin custom code") return;
 
 
 
@@ -13905,8 +13056,80 @@
         const prefixKey = "axi";
 
         return `${prefixKey}_${name}_${params}`;
+    }
 
+    function getAxpertDevOpt() {
+        let devOpt = "";
+        try {
+            if (typeof axpertDevOpt !== "undefined" && axpertDevOpt) {
+                devOpt = axpertDevOpt;
+            } else if (typeof window !== "undefined" && typeof window.axpertDevOpt !== "undefined" && window.axpertDevOpt) {
+                devOpt = window.axpertDevOpt;
+            } else if (typeof parent !== "undefined" && parent && typeof parent.axpertDevOpt !== "undefined" && parent.axpertDevOpt) {
+                devOpt = parent.axpertDevOpt;
+            } else if (typeof top !== "undefined" && top && typeof top.axpertDevOpt !== "undefined" && top.axpertDevOpt) {
+                devOpt = top.axpertDevOpt;
+            } else if (typeof callParentNew === "function") {
+                devOpt = callParentNew("axpertDevOpt") || "";
+            }
+        } catch (e) { }
+        return (devOpt || "").toString().trim();
+    }
 
+    const SDK_DEV_OPT_MAP = {
+        "tstruct": "tstruct",
+        "iview": "iview",
+        "axpert data sources": "ads",
+        "page": "custompages",
+        "arrange menu": "arrangemenu",
+        "dev option": "devoptions",
+        "app variables": "appvariables",
+        "db explorer": "devexplorer",
+        "api plugin": "apiplugins",
+        "axpert job": "axpertjobs",
+        "language": "devlanguages",
+        "publish": "devpublish",
+        "custom data type": "customdatatype",
+        "email definition": "emaildefinitions",
+        "table field descriptor": "tabledescriptor",
+        "custom plugin": "plugincustomcode",
+        "queue listing": "queuelisting",
+        "out bound queue": "queuelisting",
+        "in bound queue": "queuelisting",
+        "mem db console": "memdbconsole"
+    };
+
+    function isDevOptionAllowed(sdkOptionName) {
+        const accessPermissions = getAccessPermissions();
+        if (!accessPermissions || accessPermissions.buildAccess === false) {
+            return false;
+        }
+        const rawDevOpt = getAxpertDevOpt();
+        const lowerDevOpt = (rawDevOpt || "").toLowerCase();
+
+        // "nooptions" or "all" -> show/allow all SDK options
+        if (lowerDevOpt === "nooptions" || lowerDevOpt === "all") {
+            return true;
+        }
+        // Empty string -> all developer options were removed, block SDK
+        if (!rawDevOpt) {
+            return false;
+        }
+
+        const allowedOpts = rawDevOpt.split(",").map(o => o.trim().toLowerCase()).filter(Boolean);
+        if (allowedOpts.length === 0) {
+            return false;
+        }
+        const cleanOpt = (sdkOptionName || "").toString().trim().toLowerCase();
+
+        // If it is a built-in Axpert studio tool, check specific permission
+        if (SDK_DEV_OPT_MAP[cleanOpt]) {
+            const devOptKey = SDK_DEV_OPT_MAP[cleanOpt];
+            return allowedOpts.includes(devOptKey);
+        }
+
+        // Custom / Dynamic SDK options configured via axi_command_config are allowed for users with buildAccess
+        return true;
     }
 
     let cachedAccessPermissions = null;
@@ -13919,11 +13142,15 @@
         if (cachedAccessPermissions) {
             return cachedAccessPermissions;
         }
+        const getSess = (typeof getSessionValue === "function")
+            ? getSessionValue
+            : (window.getSessionValue || (top && top.getSessionValue) || (parent && parent.getSessionValue) || (() => ""));
+
         cachedAccessPermissions = {
-            appMgrAccess: strToBool(window.getSessionValue("AppMgrAccess")),
-            importAccess: strToBool(window.getSessionValue("ImportAccess")),
-            exportAccess: strToBool(window.getSessionValue("ExportAccess")),
-            buildAccess: strToBool(window.getSessionValue("Build")),
+            appMgrAccess: strToBool(getSess("AppMgrAccess")),
+            importAccess: strToBool(getSess("ImportAccess")),
+            exportAccess: strToBool(getSess("ExportAccess")),
+            buildAccess: strToBool(getSess("Build")),
         };
         return cachedAccessPermissions;
     }
@@ -13958,45 +13185,92 @@
             }
         }
 
+        // Apply axpertDevOpt filtering for SDK and Source only when build = true
+        if (accessPermissions && accessPermissions.buildAccess !== false && commandsFromDb["SDK"]) {
+            const rawDevOpt = getAxpertDevOpt();
+            const lowerDevOpt = (rawDevOpt || "").toLowerCase();
+
+            if (lowerDevOpt === "nooptions" || lowerDevOpt === "all") {
+                // "nooptions" or "all" -> retain all SDK options
+            } else if (!rawDevOpt) {
+                // Empty string -> all developer options were removed, delete SDK from command metadata
+                delete commandsFromDb["SDK"];
+                delete commandsFromDb["Source"];
+            } else {
+                const allowedOpts = rawDevOpt.split(",").map(o => o.trim().toLowerCase()).filter(Boolean);
+                if (allowedOpts.length > 0) {
+                    const sdkPrompts = commandsFromDb["SDK"].prompts;
+                    const typePrompt = sdkPrompts?.find(p => p.prompt === "type" || p.wordPos === 2);
+                    const namePrompt = sdkPrompts?.find(p => p.prompt === "name" || p.wordPos === 3);
+
+                    if (typePrompt && typePrompt.promptValues) {
+                        const types = typePrompt.promptValues.split(",");
+                        const sources = (namePrompt && namePrompt.promptSource) ? namePrompt.promptSource.split(",") : [];
+
+                        const filteredTypes = [];
+                        const filteredSources = [];
+
+                        for (let i = 0; i < types.length; i++) {
+                            const rawType = types[i].trim();
+                            const lowType = rawType.toLowerCase();
+                            const isExempt = lowType === "tstruct" || lowType === "iview";
+                            const isActive = isExempt || ((axiCommandConfigList && axiCommandConfigList.length > 0) ? !!getCommandConfigRow("SDK", rawType) : true);
+                            if (isActive && isDevOptionAllowed(rawType)) {
+                                filteredTypes.push(rawType);
+                                filteredSources.push(sources[i] ? sources[i].trim() : "Axi_Dummy");
+                            }
+                        }
+
+                        if (filteredTypes.length > 0) {
+                            typePrompt.promptValues = filteredTypes.join(",");
+                            if (namePrompt) {
+                                namePrompt.promptSource = filteredSources.join(",");
+                            }
+                        } else {
+                            delete commandsFromDb["SDK"];
+                            delete commandsFromDb["Source"];
+                        }
+                    }
+                } else {
+                    delete commandsFromDb["SDK"];
+                    delete commandsFromDb["Source"];
+                }
+            }
+        }
+
         if (!commandsFromDb["Configure"]) return commandsFromDb;
 
         const roles = (currentUserRole || "").split(",").map(r => r.trim().toLowerCase());
         const isAdmin = currentUserName === "admin" && roles.includes("default");
-        // const isAdmin = false;
 
-        if (!isAdmin) {
-            const configurePrompts = commandsFromDb["Configure"].prompts;
+        const configurePrompts = commandsFromDb["Configure"].prompts;
+        const objectTypePrompt = configurePrompts?.find(p => p.prompt === "object type" || p.wordPos === 2);
+        const objectNamePrompt = configurePrompts?.find(p => p.prompt === "object name" || p.wordPos === 3);
 
-            // configurePrompts.forEach(prompt => {
-            //     if (prompt.prompt === "object type" && prompt.promptValues) {
-            //         let values = prompt.promptValues.split(",");
+        if (objectTypePrompt && objectTypePrompt.promptValues) {
+            const types = objectTypePrompt.promptValues.split(",");
+            const sources = (objectNamePrompt && objectNamePrompt.promptSource) ? objectNamePrompt.promptSource.split(",") : [];
 
-            //         values = values.filter(v => v.trim() !== "User Activation");
+            const filteredTypes = [];
+            const filteredSources = [];
 
-            //         prompt.promptValues = values.join(",");
-            //     }
-            // });
+            for (let i = 0; i < types.length; i++) {
+                const rawType = types[i].trim();
+                const isActive = (axiCommandConfigList && axiCommandConfigList.length > 0) ? !!getCommandConfigRow("Configure", rawType) : true;
 
-            const objectTypePrompt = configurePrompts.find(p => p.prompt === "object type");
-
-            const objectNamePrompt = configurePrompts.find(p => p.prompt === "object name");
-
-            if (objectTypePrompt && objectNamePrompt) {
-                const types = objectTypePrompt.promptValues.split(",");
-                const sources = objectNamePrompt.promptSource.split(",");
-
-                const index = types.findIndex(
-                    t => t.trim() === "User Activation"
-                );
-
-                if (index !== -1) {
-                    types.splice(index, 1);
-                    sources.splice(index, 1);
-
-                    objectTypePrompt.promptValues = types.join(",");
-                    objectNamePrompt.promptSource = sources.join(",");
+                if (!isAdmin && rawType.toLowerCase() === "user activation") {
+                    continue;
                 }
 
+                if (isActive) {
+                    filteredTypes.push(rawType);
+                    filteredSources.push(sources[i] ? sources[i].trim() : "Axi_Dummy");
+                }
+            }
+
+            objectTypePrompt.promptValues = filteredTypes.join(",");
+            if (objectNamePrompt) {
+                objectNamePrompt.promptSource = filteredSources.join(",");
             }
         }
 
