@@ -576,19 +576,25 @@ function pageLoad(sender, args) {
         $("#idsearch").on("click.searchExpandCollapse", searchExpandCollapse);
     }
 
-    $("#ivInSearchInputButton").on("click", function(e){
-        e.preventDefault();
-        e.stopPropagation();
+    $("#ivInSearchInputButton").on("click", function (e) {
+        if (typeof checkNextShowAllRows != "undefined" && checkNextShowAllRows) {
+            e.preventDefault();
+            e.stopPropagation();
+            showAlertDialog("info", 'Data not loaded fully, Search with loading on demand');
+        } else {
+            e.preventDefault();
+            e.stopPropagation();
 
-        $("#ivInSearchInputButtonLoader").removeClass("d-none");
+            $("#ivInSearchInputButtonLoader").removeClass("d-none");
 
-        // ShowDimmer(true);
-        setTimeout(function () {
-            setTimeout(() => {
-                $("#ivInSearchInput").focus();
-                getNextDtRecords(0);
-            }, 0);
-        }, 100);
+            // ShowDimmer(true);
+            setTimeout(function () {
+                setTimeout(() => {
+                    $("#ivInSearchInput").focus();
+                    getNextDtRecords(0);
+                }, 0);
+            }, 100);
+        }
     });
 
     function searchExpandCollapse(e) {
@@ -9283,6 +9289,11 @@ function createIvir(jsonString) {
 
                 } catch (ex) { }
             }
+
+            if (jsonObject.msg?.msg) {
+                checkNextShowAllRows = false;
+                ShowHugeDataStatusDiv(jsonObject);
+            }
         } else if (jsonObject.message) {
             if (jsonObject.message == "webservice timeout") {
                 setIviewNotificationInfo(jsonObject);
@@ -10220,6 +10231,8 @@ function getNextDtRecords(pageNo) {
         
         defaultRecsPerPage = iviewDataWSRows = dtTotalRecords = [+originalRecsPerPage][0];
     }
+    if (typeof checkNextShowAllRows != "undefined" && checkNextShowAllRows)
+        defaultRecsPerPage = '500';
     if (paramX != "") {
         const aesKey = CryptoJS.lib.WordArray.random(16);
         const iv = CryptoJS.lib.WordArray.random(16);
@@ -10289,9 +10302,30 @@ function getNextDtRecords(pageNo) {
 
                             checkNextDBRowsExist = false;
                             $("#ivInSearchInputButton").addClass("d-none");
+
+                            pageScrollToEnd = true;
+                            scrollDataTableToBottom();
+
                             ivirDataTableApi.rows().remove();
                             ivirDataTableApi.page.len(-1).draw();
                             ivirDataTableApi.rows.add(ivDatas).draw();  //append next records to the datatable & redraw it
+
+                            setTimeout(function () {
+                                setTimeout(function () {
+                                    try {
+                                        if (ivirDataTableApi.scroller) {
+                                            ivirDataTableApi.scroller.measure();
+                                        }
+                                    }
+                                    catch (ex) {
+                                    }
+                                    requestAnimationFrame(function () {
+                                        scrollDataTableToTop();
+                                    });
+                                }, 0);
+                            }, 200);
+                            pageScrollToEnd = false;
+
                             $("#lnkShowAll, #requestNextRecords").remove();
                             if (showChartsWithAllRecords) {
                                 showChartsWithAllRecords = false;
@@ -10373,7 +10407,12 @@ function getNextDtRecords(pageNo) {
                                         $("#lnkShowAll").addClass('d-none');
                                     }
                                 } catch (ex) { }
-
+                                if (typeof parsedData.actualrows != "undefined" && parsedData.actualrows.actualrows != "0") {
+                                    if (typeof checkNextShowAllRows != "undefined" && checkNextShowAllRows && parseInt(parsedData.actualrows.actualrows) >= ivDatas.length) {
+                                        checkNextDBRowsExist = true;
+                                        $("#ivInSearchInputButton").addClass("d-none");
+                                    }
+                                }
                                 pageScrollToEnd = true;
                                 ivirDataTableApi.rows.add(ivDatas.slice(currRowSize, ivDatas.length)).draw(false);  //append next records to the datatable & redraw it
 
@@ -10402,6 +10441,7 @@ function getNextDtRecords(pageNo) {
                                 $("#lblNoOfRecs").text(dtDbTotalRecords);
                             }
                         }
+                        ShowHugeDataStatusDiv(parsedData);
                         clearAdvancedFiltersforNewData();
                         ExecuteDatatableExport();
                         applyCheckedPillsOnLoad()
@@ -10524,9 +10564,11 @@ function checkIfNextDBRowsExist(onPageLoad) {
                 5. last record came
         */
         if (isPivotReport || dtDbTotalRecords == 0 || allRecsCached || (dtDbTotalRecords % iviewDataWSRows != 0) && (axpertPageSize == undefined ? true : dtDbTotalRecords < axpertPageSize)) {
-            checkNextDBRowsExist = false;
-            $("#ivInSearchInputButton").addClass("d-none");
-            $("#lnkShowAll").addClass("d-none");
+            if (typeof checkNextShowAllRows != "undefined" && !checkNextShowAllRows) {
+                checkNextDBRowsExist = false;
+                $("#ivInSearchInputButton").addClass("d-none");
+                $("#lnkShowAll").addClass("d-none");
+            }
             return false;
         }
         else {
@@ -12874,4 +12916,125 @@ function GetSmartViewSettings() {
         }
     } catch (ex) { }
     return _smartViewSettings;
+}
+
+function ShowHugeDataStatusDiv(parsedData) {
+    if (typeof parsedData?.msg?.msg != "undefined" && parsedData?.msg?.msg != "" && !checkNextShowAllRows) {
+        $("#ivInSearchInputButton").removeClass("d-none");
+        $("#lnkShowAll").remove();
+        $("#ivInSearchInputButton").html($("#ivInSearchInputButtonLoader")[0].outerHTML + " Search in Loaded Records");
+        dtTotalRecords = parsedData.reccount.reccount;
+        defaultRecsPerPage = dtTotalRecords;
+        dtDbTotalRecords = getDtRecordCount();
+        $("#lblCurPage").text('Rows: 1-' + dtDbTotalRecords + ' of ');
+        totRowCount = iviewDataWSRows = parsedData.actualrows.actualrows;
+        $("#lblNoOfRecs").text(iviewDataWSRows);
+        checkNextDBRowsExist = true;
+        checkNextShowAllRows = true;
+        var glType = callParentNew('gllangType');
+        var isRTL = glType == "ar" ? true : false;
+        var ConfirmDeleteCB = $.confirm({
+            theme: 'modern',
+            title: appGlobalVarsObject.lcm[164],
+            onContentReady: function () {
+                disableBackDrop('bind');
+                var $buttons = this.$btnc.find('button');
+                $buttons.removeAttr('title');
+                $buttons.eq(0).attr('title', 'Continue with loading on demand');
+                $buttons.eq(1).attr('title', 'Download as Excel');
+                $buttons.eq(2).attr('title', 'Download as PDF');
+                $buttons.eq(3).attr('title', 'Download as Word');
+            },
+            backgroundDismiss: 'buttonA',
+            rtl: isRTL,
+            escapeKey: 'buttonA',
+            content: parsedData?.msg?.msg,
+            columnClass: 'medium',
+            buttons: {
+                buttonA: {
+                    text: `<div class="confirm-action-Exports"><img src="../images/IviewIcons/load-on-demand.png" alt="Continue with loading on demand"></div>`,
+                    //btnClass: 'btn btn-active-primary',
+                    action: function () {
+                        checkNextDBRowsExist = true;
+                        disableBackDrop('destroy');
+                        ConfirmDeleteCB.close();
+                        return;
+                    }
+                },
+                buttonB: {
+                    text: `<div class="confirm-action-Exports"><img src="../images/IviewIcons/excel-clear.png" alt="Download as Excel"></div>`,
+                    //btnClass: 'btn btn-active-primary',
+                    action: function () {
+                        ConfirmDeleteCB.close();
+                        setTimeout(function () {
+                            setTimeout(function () {
+                                exportType = '';
+                                showExportConfirmforARM();
+                            }, 0);
+                        }, 100);
+                    }
+                },
+                buttonC: {
+                    text: `<div class="confirm-action-Exports"><img src="../images/IviewIcons/pdf-clear.png" alt="Download as PDF"></div>`,
+                    //btnClass: 'btn btn-active-primary',
+                    action: function () {
+                        ConfirmDeleteCB.close();
+                        setTimeout(function () {
+                            setTimeout(function () {
+                                exportType = '';
+                                let pa = form1.param.value;
+                                let _ivKey = "";
+                                if ($j("#hdnKey").length > 0 && $j("#hdnKey").val() != "") {
+                                    _ivKey = "&ivKey=" + $j("#hdnKey").val();
+                                }
+                                let typeIvOrLv = "&typeIvOrLv=" + isListView;
+                                let _smartViewSettings = GetSmartViewSettings();
+                                let smartIvSetting = "";
+                                if (_smartViewSettings != "")
+                                    smartIvSetting = "&smartViewSettings=" + _smartViewSettings;
+                                SetExportWord("../aspx/pdfiview.aspx?ivname=" + iName + "&ivtype=Iview" + _ivKey + typeIvOrLv + smartIvSetting + "&params=", pa, iName);
+                            }, 0);
+                        }, 100);
+                    }
+                },
+                buttonD: {
+                    text: `<div class="confirm-action-Exports"><img src="../images/IviewIcons/word-clear.png" alt="Download as Word"></div>`,
+                    //btnClass: 'btn btn-active-primary',
+                    action: function () {
+                        ConfirmDeleteCB.close();
+                        setTimeout(function () {
+                            setTimeout(function () {
+                                exportType = '';
+                                let pa = form1.param.value;
+                                let _ivKey = "";
+                                if ($j("#hdnKey").length > 0 && $j("#hdnKey").val() != "") {
+                                    _ivKey = "&ivKey=" + $j("#hdnKey").val();
+                                }
+                                let typeIvOrLv = "&typeIvOrLv=" + isListView;
+                                SetExportWord("../aspx/wordview.aspx?ivname=" + iName + "&ivtype=Iview" + _ivKey + typeIvOrLv + "&params=", pa, iName);
+                            }, 0);
+                        }, 100);
+                    }
+                }
+            }
+        });
+    } else {
+        if (checkNextShowAllRows) {
+            checkNextDBRowsExist = true;
+            $("#ivInSearchInputButton").removeClass("d-none");
+        }
+    }
+}
+function scrollDataTableToBottom() {
+    var scrollBody = $(".dataTables_scrollBody")[0];
+    if (scrollBody) {
+        scrollBody.scrollTop = scrollBody.scrollHeight - scrollBody.clientHeight;
+    }
+}
+
+function scrollDataTableToTop() {
+    var scrollBody = $(".dataTables_scrollBody")[0];
+    if (scrollBody) {
+        scrollBody.scrollTop = 0;
+    }
 }

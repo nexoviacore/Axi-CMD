@@ -62,6 +62,15 @@ public partial class aspx_Configuration : System.Web.UI.Page
     }
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!IsPostBack)
+        {
+            string fetchDest = Request.Headers["Sec-Fetch-Dest"];
+            if (!string.IsNullOrEmpty(fetchDest) && !string.Equals(fetchDest, "iframe", StringComparison.OrdinalIgnoreCase))
+            {
+                SessionExpired();
+                return;
+            }
+        }
         bool bRestore = false;
         util.IsValidSession();
 

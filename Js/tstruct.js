@@ -5784,12 +5784,12 @@ function focusOnFirstInputOnTabClick(tabNo, reffreshEditor) {
                 if (v.split("~")[0] == tabNo && v.split("~")[1] == "001") isExitDummy = true;
             });
         }
-        if(isExitDummy){
+        if (isExitDummy) {
             forceRowedit = true;
             gridRowEditOnLoad = true;
             $("#gridHd" + tabNo + " tr#sp" + tabNo + "R001F" + tabNo + " td:eq(2)").click();
         }
-        SetPositionfldDisplayTot();  
+        SetPositionfldDisplayTot();
         if (typeof theModeDesign != "undefined" && theModeDesign == "true") {
             const _obj = $(".tstformbutton");
             _obj.prop("disabled", true);
@@ -5801,6 +5801,9 @@ function focusOnFirstInputOnTabClick(tabNo, reffreshEditor) {
         }
         try {
             if (typeof TabDcActive != "undefined" && TabDcActive && !isExitDummy && recordid != "0") {
+                DropzoneInit("#divDc" + tabNo);
+                DropzoneGridInit("#divDc" + tabNo);
+            } else if (typeof reffreshEditor == "undefined" && typeof TabDcActive != "undefined" && TabDcActive && !isExitDummy && recordid == "0" && $("#gridHd" + tabNo + " tbody tr").length > 0) {
                 DropzoneInit("#divDc" + tabNo);
                 DropzoneGridInit("#divDc" + tabNo);
             }
@@ -8818,7 +8821,7 @@ function SucceededCallback(resultJson, eventArgs) {
             GetFormLoadData("AxIsPop=true");
         else
             GetFormLoadData("");
-        ShowDialog('error', "Transaction save taking long time than expected.");
+        ShowDialog('info', "Transaction save taking long time than expected. You will get notified once save is completed.");
         return;
     }
 
@@ -19480,6 +19483,11 @@ function bindNotificationFldData(notifyData) {
                 _dataJson += `{"n":"axp_recid` + _ic + `","v":"0","r":"` + _rowN + `","t":"s"},`;
                 for (_key in _json[i]["axp_recid" + _ic][j].columns) {
                     let _val = _json[i]["axp_recid" + _ic][j].columns[_key];
+
+                    _val = _val.toString().replace(new RegExp("\\n", "g"), "");
+                    _val = _val.replace(new RegExp("\\t", "g"), "&#9;");
+                    _val = ReverseCheckSpecialChars(_val);
+
                     _dataJson += `{"n":"` + _key + `","v":"` + _val + `","r":"` + _rowN + `","t":"s"},`;
                 }
             }

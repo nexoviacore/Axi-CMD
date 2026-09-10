@@ -331,6 +331,7 @@ var isTstPostBackVal = "";
 var isMobileGridRowEdit = false;
 var SetCarryFlds = new Array();
 var isMobile = isMobileDevice();
+var currentDeviceType = getDeviceType();
 
 var multiSelectflds = new Array();
 var multiSelFldParents = new Array();
@@ -391,3 +392,4 @@ var tstDummyLoadParams = "";
 var isHtmlLsLoadData = "";
 var tstPermissions = "";
 var isTstRefreshParentOnClose = "";
+var tstGrdAttDdlAutoSelect = "false";

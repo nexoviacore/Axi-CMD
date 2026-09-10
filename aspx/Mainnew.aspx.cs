@@ -183,6 +183,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
     public string axpertDevOpt = string.Empty;
     JObject AxGeneralconfigs = new JObject();
     LoginHelper loginHelper = new LoginHelper();
+    private string mobileAuthKey = string.Empty;
     protected override void InitializeCulture()
     {
         if (Request.Form["hdnLanguage"] != null || Session["language"] != null)
@@ -222,11 +223,11 @@ public partial class aspx_Mainnew : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (Request.Form["hdnSSTime"] != null || (Request.Form["hdnSSTime"] == null && Session["etServerTime"] != null))
+        if ((Request.QueryString["authKey"] != null && Request.QueryString["authKey"] != "") || (Request.QueryString["encAuth"] != null && Request.QueryString["encAuth"] != ""))
         {
             try
             {
-                if (Util.Util.CheckCrossScriptingInString(Request.Form["hdnSSTime"]) || (Request.Form["hdnbrowserElapsTime"] != null && Util.Util.CheckCrossScriptingInString(Request.Form["hdnbrowserElapsTime"])))
+                if (Util.Util.CheckCrossScriptingInString(Request.QueryString["authKey"]) || Util.Util.CheckCrossScriptingInString(Request.QueryString["encAuth"]))
                 {
                     try
                     {
@@ -237,7 +238,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                         Thread.ResetAbort();
                     }
                 }
-                if (Util.Util.ContainsXSS(Request.Form["hdnSSTime"]) || (Request.Form["hdnbrowserElapsTime"] != null && Util.Util.ContainsXSS(Request.Form["hdnbrowserElapsTime"])))
+                if (Util.Util.ContainsXSS(Request.QueryString["authKey"]) || Util.Util.ContainsXSS(Request.QueryString["encAuth"]))
                 {
                     try
                     {
@@ -260,214 +261,256 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                     Thread.ResetAbort();
                 }
             }
-            string browserElapsTime = Request.Form["hdnbrowserElapsTime"] != null ? Request.Form["hdnbrowserElapsTime"] : "0";
-            hdnSSTime = Request.Form["hdnSSTime"] != null ? Request.Form["hdnSSTime"] : Session["etServerTime"].ToString();
-            requestProcess_logtime += ObjExecTr.WireElapsTime(browserElapsTime, hdnSSTime);
+            MobileMainPage();
         }
-
-        try
+        else
         {
-            if (HttpContext.Current.Session["AxInternalRefresh"] == null || (HttpContext.Current.Session["AxInternalRefresh"] != null && HttpContext.Current.Session["AxInternalRefresh"].ToString() != "true"))
-                AntiforgeryChecker.Check(this, _antiforgery);
-        }
-        catch (Exception ex)
-        {
-            Response.Redirect("~/CusError/AxCustomError.aspx");
-        }
-
-        try
-        {
-            if (Util.Util.CheckCrossScriptingInString(Request.Form["hdnAxGKey"]) || Util.Util.CheckCrossScriptingInString(Request.Form["hdnLanguage"]) || (Request.Form["hdnAxLoggedUser"] != null && Util.Util.CheckCrossScriptingInString(Request.Form["hdnAxLoggedUser"])))
+            if (Request.Form["hdnSSTime"] != null || (Request.Form["hdnSSTime"] == null && Session["etServerTime"] != null))
             {
                 try
                 {
-                    Response.Redirect(Constants.LOGINPAGE, true);
-                }
-                catch (ThreadAbortException ex)
-                {
-                    Thread.ResetAbort();
-                }
-            }
-            if (Util.Util.ContainsXSS(Request.Form["hdnAxGKey"]) || Util.Util.ContainsXSS(Request.Form["hdnLanguage"]) || (Request.Form["hdnAxLoggedUser"] != null && Util.Util.ContainsXSS(Request.Form["hdnAxLoggedUser"])))
-            {
-                try
-                {
-                    Response.Redirect(Constants.LOGINPAGE, true);
-                }
-                catch (ThreadAbortException ex)
-                {
-                    Thread.ResetAbort();
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            try
-            {
-                Response.Redirect(Constants.LOGINPAGE, true);
-            }
-            catch (ThreadAbortException tex)
-            {
-                Thread.ResetAbort();
-            }
-        }
-
-        try
-        {
-            if (Request.Form["hdnAxProjs"] != null && !string.IsNullOrEmpty(Request.Form["hdnAxProjs"].ToString()))
-            {
-                if (Util.Util.CheckCrossScriptingInString(Request.Form["hdnAxProjs"]))
-                {
-                    try
+                    if (Util.Util.CheckCrossScriptingInString(Request.Form["hdnSSTime"]) || (Request.Form["hdnbrowserElapsTime"] != null && Util.Util.CheckCrossScriptingInString(Request.Form["hdnbrowserElapsTime"])))
                     {
-                        Response.Redirect(Constants.LOGINPAGE, true);
-                    }
-                    catch (ThreadAbortException ex)
-                    {
-                        Thread.ResetAbort();
-                    }
-                }
-                if (Util.Util.ContainsXSS(Request.Form["hdnAxProjs"]))
-                {
-                    try
-                    {
-                        Response.Redirect(Constants.LOGINPAGE, true);
-                    }
-                    catch (ThreadAbortException ex)
-                    {
-                        Thread.ResetAbort();
-                    }
-                }
-                HttpContext.Current.Session["Project"] = Request.Form["hdnAxProjs"].ToString();
-            }
-
-            if (Request.Form["hdnCloudDb"] != null && !string.IsNullOrEmpty(Request.Form["hdnCloudDb"].ToString()))
-            {
-                if (Util.Util.CheckCrossScriptingInString(Request.Form["hdnCloudDb"]))
-                {
-                    try
-                    {
-                        Response.Redirect(Constants.LOGINPAGE, true);
-                    }
-                    catch (ThreadAbortException ex)
-                    {
-                        Thread.ResetAbort();
-                    }
-                }
-                if (Util.Util.ContainsXSS(Request.Form["hdnCloudDb"]))
-                {
-                    try
-                    {
-                        Response.Redirect(Constants.LOGINPAGE, true);
-                    }
-                    catch (ThreadAbortException ex)
-                    {
-                        Thread.ResetAbort();
-                    }
-                }
-                HttpContext.Current.Session["AxCloudDB"] = Request.Form["hdnCloudDb"].ToString();
-            }
-        }
-        catch (Exception ex)
-        {
-            try
-            {
-                Response.Redirect(Constants.LOGINPAGE, true);
-            }
-            catch (ThreadAbortException tex)
-            {
-                Thread.ResetAbort();
-            }
-        }
-
-        //To Determine if login has already been done from the new page.
-        if (Request.Form["hdnAxGKey"] != null || (Request.Form["hdnAxGKey"] == null && Session["AxInternalRefresh"] != null && Session["AxInternalRefresh"].ToString() == "true"))
-        {
-            if (Request.Form["hdnAxGKey"] != null)
-            {
-                string gid = Request.Form["hdnAxGKey"].ToString();
-                string helperString = string.Empty;
-                helperString = GetLoginObject(gid);
-                if (helperString != string.Empty)
-                {
-                    loginHelper = JsonConvert.DeserializeObject<LoginHelper>(helperString);
-                    if (loginHelper.sessions != null && loginHelper.sessions.Count > 0)
-                    {
-                        foreach (var item in loginHelper.sessions)
+                        try
                         {
-                            string key = item.Key;
-                            string value = item.Value;
-
-                            Session[item.Key] = loginHelper.sessions[item.Key];
+                            Response.Redirect(Constants.LOGINPAGE, true);
+                        }
+                        catch (ThreadAbortException ex)
+                        {
+                            Thread.ResetAbort();
                         }
                     }
-
-                    Session["project"] = signinProj = loginHelper.proj;
-
-
-                    //Session["user"] = loginHelper.user;
-                    //Session["username"] = loginHelper.user;
-                    //user = loginHelper.user;
-
-
-                    Session["pwd"] = loginHelper.password;
-                    Session["nsessionid"] = Session.SessionID;
-                    sid = Session.SessionID;
-                    Session["language"] = loginHelper.selectedLanguage;
-                    Session["axp_language"] = loginHelper.selectedLanguage.ToLower();
-                    Session["MobileView"] = loginHelper.isMobile;
-                    hybridGUID = loginHelper.hybridGUID;
-                    timeZone = loginHelper.timeZone;
-                    Session["hybridGUID"] = hybridGUID;
-                    hybridDeviceId = loginHelper.hybridDeviceId;
-                    Session["hybridDeviceId"] = hybridDeviceId;
-                    hybridDefaultPage = loginHelper.hybridDefaultPage;
-                    userDetails = loginHelper.userDetails;
-                    Session["userDetails"] = userDetails;
-                    Session["rnd_key"] = rnd_key = loginHelper.rnd_key == null ? "" : loginHelper.rnd_key;
-                    Session["isSSOLogin"] = loginHelper.isSSO;
-                    Session["SSOLoginType"] = loginHelper.SSOType;
-                    Session["staySignedId"] = loginHelper.staySignedId;
-                    if (loginHelper.staySignedId == "false" && Request.Form["hdnKeepMeSignin"] != null && Request.Form["hdnKeepMeSignin"] == "true")
+                    if (Util.Util.ContainsXSS(Request.Form["hdnSSTime"]) || (Request.Form["hdnbrowserElapsTime"] != null && Util.Util.ContainsXSS(Request.Form["hdnbrowserElapsTime"])))
                     {
-                        Session["staySignedId"] = "true";
+                        try
+                        {
+                            Response.Redirect(Constants.LOGINPAGE, true);
+                        }
+                        catch (ThreadAbortException ex)
+                        {
+                            Thread.ResetAbort();
+                        }
                     }
-                    Session["Svrlic_redis"] = loginHelper.lic_redis;
-                    lastOpenPage = loginHelper.lastOpenPage;
-                    Session["loggedBroserId"] = loginHelper.loggedBroserId;
-                    Session["dbotpauth"] = loginHelper.otpauthlogin == null ? "" : loginHelper.otpauthlogin;
-                    Session["AppAllSettingsKey-" + signinProj] = loginHelper.IniInfo;
-                    //Session["AxiProjectLogin"] = loginHelper.IsAxi;
-                    //Session["AxiPrimary"] = loginHelper.axiPrimary;
-                    if (loginHelper.IsAxi != string.Empty)
+                }
+                catch (Exception ex)
+                {
+                    try
                     {
-                        GetAxiLoginInfo(loginHelper.IsAxi, Session["project"].ToString());
+                        Response.Redirect(Constants.LOGINPAGE, true);
+                    }
+                    catch (ThreadAbortException tex)
+                    {
+                        Thread.ResetAbort();
+                    }
+                }
+                string browserElapsTime = Request.Form["hdnbrowserElapsTime"] != null ? Request.Form["hdnbrowserElapsTime"] : "0";
+                hdnSSTime = Request.Form["hdnSSTime"] != null ? Request.Form["hdnSSTime"] : Session["etServerTime"].ToString();
+                requestProcess_logtime += ObjExecTr.WireElapsTime(browserElapsTime, hdnSSTime);
+            }
+
+            try
+            {
+                if (HttpContext.Current.Session["AxInternalRefresh"] == null || (HttpContext.Current.Session["AxInternalRefresh"] != null && HttpContext.Current.Session["AxInternalRefresh"].ToString() != "true"))
+                    AntiforgeryChecker.Check(this, _antiforgery);
+            }
+            catch (Exception ex)
+            {
+                Response.Redirect("~/CusError/AxCustomError.aspx");
+            }
+
+            try
+            {
+                if (Util.Util.CheckCrossScriptingInString(Request.Form["hdnAxGKey"]) || Util.Util.CheckCrossScriptingInString(Request.Form["hdnLanguage"]) || (Request.Form["hdnAxLoggedUser"] != null && Util.Util.CheckCrossScriptingInString(Request.Form["hdnAxLoggedUser"])))
+                {
+                    try
+                    {
+                        Response.Redirect(Constants.LOGINPAGE, true);
+                    }
+                    catch (ThreadAbortException ex)
+                    {
+                        Thread.ResetAbort();
+                    }
+                }
+                if (Util.Util.ContainsXSS(Request.Form["hdnAxGKey"]) || Util.Util.ContainsXSS(Request.Form["hdnLanguage"]) || (Request.Form["hdnAxLoggedUser"] != null && Util.Util.ContainsXSS(Request.Form["hdnAxLoggedUser"])))
+                {
+                    try
+                    {
+                        Response.Redirect(Constants.LOGINPAGE, true);
+                    }
+                    catch (ThreadAbortException ex)
+                    {
+                        Thread.ResetAbort();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    Response.Redirect(Constants.LOGINPAGE, true);
+                }
+                catch (ThreadAbortException tex)
+                {
+                    Thread.ResetAbort();
+                }
+            }
+
+            try
+            {
+                if (Request.Form["hdnAxProjs"] != null && !string.IsNullOrEmpty(Request.Form["hdnAxProjs"].ToString()))
+                {
+                    if (Util.Util.CheckCrossScriptingInString(Request.Form["hdnAxProjs"]))
+                    {
+                        try
+                        {
+                            Response.Redirect(Constants.LOGINPAGE, true);
+                        }
+                        catch (ThreadAbortException ex)
+                        {
+                            Thread.ResetAbort();
+                        }
+                    }
+                    if (Util.Util.ContainsXSS(Request.Form["hdnAxProjs"]))
+                    {
+                        try
+                        {
+                            Response.Redirect(Constants.LOGINPAGE, true);
+                        }
+                        catch (ThreadAbortException ex)
+                        {
+                            Thread.ResetAbort();
+                        }
+                    }
+                    HttpContext.Current.Session["Project"] = Request.Form["hdnAxProjs"].ToString();
+                }
+
+                if (Request.Form["hdnCloudDb"] != null && !string.IsNullOrEmpty(Request.Form["hdnCloudDb"].ToString()))
+                {
+                    if (Util.Util.CheckCrossScriptingInString(Request.Form["hdnCloudDb"]))
+                    {
+                        try
+                        {
+                            Response.Redirect(Constants.LOGINPAGE, true);
+                        }
+                        catch (ThreadAbortException ex)
+                        {
+                            Thread.ResetAbort();
+                        }
+                    }
+                    if (Util.Util.ContainsXSS(Request.Form["hdnCloudDb"]))
+                    {
+                        try
+                        {
+                            Response.Redirect(Constants.LOGINPAGE, true);
+                        }
+                        catch (ThreadAbortException ex)
+                        {
+                            Thread.ResetAbort();
+                        }
+                    }
+                    HttpContext.Current.Session["AxCloudDB"] = Request.Form["hdnCloudDb"].ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    Response.Redirect(Constants.LOGINPAGE, true);
+                }
+                catch (ThreadAbortException tex)
+                {
+                    Thread.ResetAbort();
+                }
+            }
+
+            //To Determine if login has already been done from the new page.
+            if (Request.Form["hdnAxGKey"] != null || (Request.Form["hdnAxGKey"] == null && Session["AxInternalRefresh"] != null && Session["AxInternalRefresh"].ToString() == "true"))
+            {
+                if (Request.Form["hdnAxGKey"] != null)
+                {
+                    string gid = Request.Form["hdnAxGKey"].ToString();
+                    string helperString = string.Empty;
+                    helperString = GetLoginObject(gid);
+                    if (helperString != string.Empty)
+                    {
+                        loginHelper = JsonConvert.DeserializeObject<LoginHelper>(helperString);
+                        if (loginHelper.sessions != null && loginHelper.sessions.Count > 0)
+                        {
+                            foreach (var item in loginHelper.sessions)
+                            {
+                                string key = item.Key;
+                                string value = item.Value;
+
+                                Session[item.Key] = loginHelper.sessions[item.Key];
+                            }
+                        }
+
+                        Session["project"] = signinProj = loginHelper.proj;
+
+
+                        //Session["user"] = loginHelper.user;
+                        //Session["username"] = loginHelper.user;
+                        //user = loginHelper.user;
+
+
+                        Session["pwd"] = loginHelper.password;
+                        Session["nsessionid"] = Session.SessionID;
+                        sid = Session.SessionID;
+                        Session["language"] = loginHelper.selectedLanguage;
+                        Session["axp_language"] = loginHelper.selectedLanguage.ToLower();
+                        Session["MobileView"] = loginHelper.isMobile;
+                        hybridGUID = loginHelper.hybridGUID;
+                        timeZone = loginHelper.timeZone;
+                        Session["hybridGUID"] = hybridGUID;
+                        hybridDeviceId = loginHelper.hybridDeviceId;
+                        Session["hybridDeviceId"] = hybridDeviceId;
+                        hybridDefaultPage = loginHelper.hybridDefaultPage;
+                        userDetails = loginHelper.userDetails;
+                        Session["userDetails"] = userDetails;
+                        Session["rnd_key"] = rnd_key = loginHelper.rnd_key == null ? "" : loginHelper.rnd_key;
+                        Session["isSSOLogin"] = loginHelper.isSSO;
+                        Session["SSOLoginType"] = loginHelper.SSOType;
+                        Session["staySignedId"] = loginHelper.staySignedId;
+                        if (loginHelper.staySignedId == "false" && Request.Form["hdnKeepMeSignin"] != null && Request.Form["hdnKeepMeSignin"] == "true")
+                        {
+                            Session["staySignedId"] = "true";
+                        }
+                        Session["Svrlic_redis"] = loginHelper.lic_redis;
+                        lastOpenPage = loginHelper.lastOpenPage;
+                        Session["loggedBroserId"] = loginHelper.loggedBroserId;
+                        Session["dbotpauth"] = loginHelper.otpauthlogin == null ? "" : loginHelper.otpauthlogin;
+                        Session["AppAllSettingsKey-" + signinProj] = loginHelper.IniInfo;
+                        //Session["AxiProjectLogin"] = loginHelper.IsAxi;
+                        //Session["AxiPrimary"] = loginHelper.axiPrimary;
+                        if (loginHelper.IsAxi != string.Empty)
+                        {
+                            GetAxiLoginInfo(loginHelper.IsAxi, Session["project"].ToString());
+                        }
+                    }
+                    else
+                    {
+                        SessExpires();
+                        return;
                     }
                 }
                 else
                 {
-                    SessExpires();
-                    return;
+                    signinProj = Session["Project"].ToString();
+                    user = Session["username"].ToString();
+                    pwd = Session["pwd"].ToString();
+                    rnd_key = Session["rnd_key"].ToString();
+                    language = Session["language"].ToString();
+                    Session["AxInternalRefresh"] = null;
+                    if (Session["newHomeCards"] != null && Session["newHomeCards"].ToString() == "true")
+                        newHomeCards = "true";
                 }
             }
             else
             {
-                signinProj = Session["Project"].ToString();
-                user = Session["username"].ToString();
-                pwd = Session["pwd"].ToString();
-                rnd_key = Session["rnd_key"].ToString();
-                language = Session["language"].ToString();
-                Session["AxInternalRefresh"] = null;
-                if (Session["newHomeCards"] != null && Session["newHomeCards"].ToString() == "true")
-                    newHomeCards = "true";
+                SessExpires();
+                return;
             }
         }
-        else
-        {
-            SessExpires();
-            return;
-        }
-
         CheckCloudRequest();
         LoadAppConfiguration();
 
@@ -933,7 +976,13 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         //if (axUserOptions == string.Empty && (Session["axUserOptions"] != null && Session["axUserOptions"].ToString() != "cached"))
         //    axUserOptions = Session["axUserOptions"].ToString();
         if (Session["axUserOptions"] != null)
+        {
             axUserOptions = Session["axUserOptions"].ToString();
+            if (Session["axpertDevOpt"] != null && !string.IsNullOrEmpty(Session["axpertDevOpt"].ToString()))
+            {
+                axpertDevOpt = Session["axpertDevOpt"].ToString();
+            }
+        }
         else if (Session["axUserOptions"] == null)// || axUserOptions == string.Empty)// (Session["axUserOptions"] != null && Session["axUserOptions"].ToString() != "cached"))
         {
             if (GlobalParameterForm == "hide")
@@ -1087,6 +1136,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                     }
                     else
                         axpertDevOpt = "nooptions";
+                    Session["axpertDevOpt"] = axpertDevOpt;
                     //UserOptions.Add("pluginCustomCode", "\"display\":\"block\"♠\"onclick\":\"openPluginEditor()\"♠\"title\":\"Plugin Custom Code\"");
                 }
             }
@@ -1669,6 +1719,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         {
             if (userLandingPage != "" && userLandingPage == "2")
                 Navigationpage = "../aspx/processflow.aspx?activelist=t";
+            //Navigationpage = "../aspx/htmlpages.aspx?inbox=t";
             else if (userLandingPage != "" && userLandingPage == "3")
                 Navigationpage = "../aspx/processflow.aspx?dashboard=t";
             else if (userLandingPage != "" && userLandingPage == "4")
@@ -1690,6 +1741,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         {
             if (rolesLandingPage != "" && rolesLandingPage == "2")
                 Navigationpage = "../aspx/processflow.aspx?activelist=t";
+            //Navigationpage = "../aspx/htmlpages.aspx?inbox=t";
             else if (rolesLandingPage != "" && rolesLandingPage == "3")
                 Navigationpage = "../aspx/processflow.aspx?dashboard=t";
             else if (rolesLandingPage != "" && rolesLandingPage == "4")
@@ -1737,8 +1789,27 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                 Navigationpage = "../" + proj + "/aspx/" + landingValue[2];
                 hdHomeUrl.Value = Navigationpage;
             }
+            else if (landingValue[0].ToLower() == "html pages")
+            {
+                string _PageId = landingValue[1].Replace("HP", "");
+                Navigationpage = "htmlPages.aspx?load=" + _PageId;
+                hdHomeUrl.Value = Navigationpage;
+            }
+            //else if (landingValue[0].ToLower() == "html templates")
+            //{
+            //    Navigationpage = "htmlPages.aspx?loadtemplate=" + landingValue[2];
+            //    hdHomeUrl.Value = Navigationpage;
+            //}
         }
-
+        else
+        {
+            FileInfo _htmlFile = new FileInfo(HttpContext.Current.Server.MapPath("~/CustomPages/HomePageTemplate.HTML"));
+            if (_htmlFile.Exists)
+            {
+                Navigationpage = "htmlPages.aspx?loadtemplate=HomePageTemplate";
+                hdHomeUrl.Value = Navigationpage;
+            }
+        }
 
         if (lastOpenPage != string.Empty)
             hdKeepMeDefaultUrl.Value = lastOpenPage;
@@ -1771,12 +1842,12 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                 hdKeepMeDefaultUrl.Value = "htmlPages.aspx?" + parms;
             }
         }
-        if (Session["AxiProjectLogin"] != null && Session["AxiProjectLogin"].ToString() == "true" && Session["AxiPrimary"] != null && Session["AxiPrimary"].ToString() == "true")
-        {
-            Navigationpage = hdHomeUrl.Value = "htmlPages.aspx?load=AxiInstallPackages";
-        }
-        else
-            hdHomeUrl.Value = Navigationpage;
+        //if (Session["AxiProjectLogin"] != null && Session["AxiProjectLogin"].ToString() == "true" && Session["AxiPrimary"] != null && Session["AxiPrimary"].ToString() == "true")
+        //{
+        //    Navigationpage = hdHomeUrl.Value = "htmlPages.aspx?load=AxiInstallPackages";
+        //}
+        //else
+        hdHomeUrl.Value = Navigationpage;
         string serverprocesstime = ObjExecTr.TotalServerElapsTimeMethod();
         requestProcess_logtime += " ♦ SetLandingPage:" + serverprocesstime + " (This time is included in Response processed at server) ♦ ";
     }
@@ -5431,5 +5502,304 @@ public partial class aspx_Mainnew : System.Web.UI.Page
 
     #endregion
 
+    #region Open Session Service and Variables for Mobile
+    protected void MobileMainPage()
+    {
+        string userName = string.Empty;
+        string AxRoles = string.Empty;
+        string encAuth = string.Empty;
+        string pParams = string.Empty;
+        if (Request.QueryString["authKey"] != null)
+            mobileAuthKey = Request.QueryString["authKey"].ToString();
+        if (Request.QueryString["encAuth"] != null)
+            encAuth = util.encrtptDecryptAES(Request.QueryString["encAuth"].ToString(), false);
+
+        if (Request.QueryString["params"] != null)
+        {
+            pParams = Request.QueryString["params"].ToString();
+            pParams = "&" + pParams.Replace("~", "=").Replace("^", "&");
+        }
+        if (Request.QueryString["mailapproval"] != null && Request.QueryString["mailapproval"].ToString().ToLower() == "true")
+        {
+            Session.Remove("project");
+        }
+
+        if (encAuth != string.Empty)
+        {
+            dynamic dynJson = JsonConvert.DeserializeObject(encAuth);
+            proj = dynJson.project.Value;
+            userName = dynJson.username.Value;
+            language = dynJson.lang.Value;
+            AxRoles = dynJson.roles.Value;
+
+            if (Session["project"] == null)
+            {
+                OpenNewSession(AxRoles, proj, userName, language);
+            }
+        }
+        else if (Session["project"] == null)
+        {
+            if (mobileAuthKey != string.Empty)
+            {
+                proj = mobileAuthKey.Split('-')[2];
+                FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+                if (fObj == null)
+                {
+                    fObj = new FDR(proj);
+                }
+
+                string authKeyInof = fObj.ReadKeyStringValueNoSchema(mobileAuthKey);
+                if (Request.QueryString["mailapproval"] != null && Request.QueryString["mailapproval"].ToString().ToLower() == "true")
+                {
+                    FDW fdwObj = new FDW(proj);
+                    fdwObj.Deletekey(mobileAuthKey);
+                }
+
+                if (!string.IsNullOrEmpty(authKeyInof))
+                {
+                    dynamic dynJson = JsonConvert.DeserializeObject(authKeyInof);
+                    string privateKey = dynJson.privatekey.Value;
+                    string secret = dynJson.secret.Value;
+                    proj = dynJson.project.Value;
+                    userName = dynJson.username.Value;
+                    language = dynJson.lang.Value;
+                    AxRoles = dynJson.roles.Value;
+                    hybridGUID = dynJson.hguid.Value;
+                    hybridDeviceId = dynJson.hdeviceid.Value;
+
+
+                    if (proj != null && proj != "")
+                        util.GetAxARMConnection(proj);
+
+                    string agileconnect = "";
+                    if (Session["ARM_PrivateKey"] != null)
+                        agileconnect = Session["ARM_PrivateKey"].ToString();
+                    string hashKey = MD5Hash(agileconnect + secret);
+                    if (privateKey != hashKey)
+                    {
+                        logobj.CreateLog("AxMain authentication error. privateKey:" + privateKey + " hashKey:" + hashKey, Session.SessionID, "axmainauth", "", "true");
+                        Page.ClientScript.RegisterStartupScript(GetType(), "opensessionerror", "<script>authError('Authentication failed please try again.')</script>");
+                        return;
+                    }
+                }
+                else
+                {
+                    logobj.CreateLog("AxMain authentication error. authKeyInof from redis:" + authKeyInof, Session.SessionID, "axmainauth-authKeyInof", "", "true");
+                    Page.ClientScript.RegisterStartupScript(GetType(), "opensessionerror", "<script>authError('Authentication failed please try again.')</script>");
+                    return;
+                }
+            }
+            else
+            {
+                logobj.CreateLog("AxMain authentication error. authKey key should not be empty or null.", Session.SessionID, "axmainauth", "", "true");
+                //Page.ClientScript.RegisterStartupScript(GetType(), "opensessionerror", "<script>authError('Authentication failed please try again.')</script>");
+                string url = util.SESSEXPIRYPATH;
+                url = url + "?axmain=true";
+                Response.Write("<script language='javascript'>");
+                Response.Write("parent.parent.location.href='" + url + "';");
+                Response.Write("</script>");
+                return;
+            }
+            OpenNewSession(AxRoles, proj, userName, language);
+        }
+    }
+    protected void OpenNewSession(string AxRoles, string proj, string userName, string axlanguage)
+    {
+
+        string lang_at = "";
+        if (axlanguage != null && axlanguage.ToUpper() != "ENGLISH")
+            lang_at = " lang=\"" + axlanguage + "\"";
+        string ipaddress = util.GetIpAddress();
+        string browserDetails = GetBrowserDetailsMobile();
+        string scriptsPath = "";
+        if (ConfigurationManager.AppSettings["scriptsUrlPath"] != null)
+            scriptsPath = ConfigurationManager.AppSettings["scriptsUrlPath"].ToString();
+        string loginTrace = ConfigurationManager.AppSettings["LoginTrace"].ToString();
+
+        sid = Session.SessionID;
+        Random rand = new Random();
+        string rnd_key = rand.Next(1000, 9999).ToString();
+
+        util.GetAxApps(proj);
+        string axApps = HttpContext.Current.Session["axApps"].ToString();
+        string axProps = HttpContext.Current.Application["axProps"].ToString();
+
+        LogFile.Log logobj = new LogFile.Log();
+        string errlog = string.Empty;
+        if (loginTrace.ToLower() == "true")
+            errlog = logobj.CreateLog("Call to Login Web Service", sid, "OpenSession", "", "true");
+        else
+            errlog = logobj.CreateLog("Call to Login Web Service", sid, "OpenSession", "");
+
+        string loginXml = "<login userroles='" + AxRoles + "' " + lang_at + " clouddb='' ip='" + ipaddress + "' other='" + browserDetails + "' timediff='0' seed='" + rnd_key + "'  axpapp='" + proj + "' sessionid='" + sid + "' username='" + userName + "' password='' url='' direct='t' scriptpath='" + scriptsPath + "' trace='" + errlog + "'>" + axApps + axProps + "</login>";
+        ASBExt.WebServiceExt objWebServiceExt = new ASBExt.WebServiceExt();
+        string result = objWebServiceExt.CallOpenSessionWS(loginXml);
+        if (result == string.Empty || result.StartsWith(Constants.ERROR) || result.Contains(Constants.ERROR))
+        {
+            Page.ClientScript.RegisterStartupScript(GetType(), "opensessionerror", "<script></script>");
+            return;
+        }
+        else
+        {
+            Session["isAxMain"] = "true";
+            Session["project"] = proj;
+            Session["user"] = userName;
+            Session["username"] = userName;
+            user = userName;
+            Session["pwd"] = "";
+            Session["nsessionid"] = Session.SessionID;
+            sid = Session.SessionID;
+            Session["language"] = axlanguage;
+            Session["axp_language"] = axlanguage;
+            Session["MobileView"] = "True";
+            timeZone = "";
+            Session["hybridGUID"] = hybridGUID;
+            Session["hybridDeviceId"] = hybridDeviceId;
+            hybridDefaultPage = "";
+            Session["userDetails"] = "";
+            Session["isSSOLogin"] = "false";
+            Session["SSOLoginType"] = "";
+            Session["staySignedId"] = "false";
+            Session["Svrlic_redis"] = "";//lic_redis;
+            Session["loggedBroserId"] = "";
+            Session["validated"] = "True";
+            language = axlanguage;
+            LoadAppConfiguration();
+            ValidatePageMobile(result);
+
+            string dirLang = util.SetCulture(axlanguage.ToUpper());
+            if (!string.IsNullOrEmpty(dirLang))
+            {
+                direction = dirLang.Split('-')[0];
+                langType = dirLang.Split('-')[1];
+                Application["LangSess"] = axlanguage;
+            }
+            FileInfo filcustom = new FileInfo(HttpContext.Current.Server.MapPath("~/Js/lang/content-" + langType + ".js"));
+            if (!(filcustom.Exists))
+            {
+                langType = "en";
+                direction = "ltr";
+            }
+
+            string licType = "limited";
+            Session["lictype"] = "limited";
+            string newUser = user + "♦" + sid + "♣" + licType;
+            util.SetDupUserInfo(proj, user, newUser);
+        }
+    }
+    private string GetBrowserDetailsMobile()
+    {
+        System.Web.HttpBrowserCapabilities browser = HttpContext.Current.Request.Browser;
+        string browserDetails = string.Empty;
+        string lattitude = "", longitude = "";
+        if (hybridGUID != string.Empty)
+        {
+            string hybridInfo = string.Empty;
+            try
+            {
+                FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+                if (fObj == null)
+                {
+                    fObj = new FDR(proj);
+                }
+                hybridInfo = fObj.StringFromRedis(util.GetRedisServerkey(Constants.AXHYBRIDINFO, hybridGUID), "♠");
+
+            }
+            catch (Exception ex) { }
+
+            if (hybridInfo != string.Empty)
+            {
+                try
+                {
+                    JObject parsedHybridInfo = JObject.Parse(hybridInfo);
+                    lattitude = parsedHybridInfo["location"]["coords"]["latitude"].ToString();
+                    longitude = parsedHybridInfo["location"]["coords"]["longitude"].ToString();
+
+                }
+                catch (Exception ex) { }
+            }
+            browserDetails = "hyb" + "~" + hybridGUID + "~" + lattitude + "~" + longitude + "¿" + timeZone + "¿" + browser.Type + "¿" + browser.Browser + "¿"
+               + browser.Version + "¿" + browser.MajorVersion + "¿"
+               + browser.MinorVersion + "¿" + browser.Platform + "¿"
+               + HttpContext.Current.Request.ServerVariables["HTTP_ACCEPT_LANGUAGE"];
+        }
+        else
+        {
+            browserDetails = "hyb¿" + timeZone + "¿" + browser.Type + "¿" + browser.Browser + "¿"
+                + browser.Version + "¿" + browser.MajorVersion + "¿"
+                + browser.MinorVersion + "¿" + browser.Platform + "¿"
+                + HttpContext.Current.Request.ServerVariables["HTTP_ACCEPT_LANGUAGE"];
+        }
+
+        if (browserDetails.Length > 200)
+            browserDetails = browserDetails.Substring(0, 200);
+
+        return browserDetails;
+    }
+    public static string MD5Hash(string text)
+    {
+        MD5 md5 = new MD5CryptoServiceProvider();
+
+        //compute hash from the bytes of text  
+        md5.ComputeHash(ASCIIEncoding.ASCII.GetBytes(text));
+
+        //get hash result after compute it  
+        byte[] result = md5.Hash;
+
+        StringBuilder strBuilder = new StringBuilder();
+        for (int i = 0; i < result.Length; i++)
+        {
+            //change it into 2 hexadecimal digits  
+            //for each byte  
+            strBuilder.Append(result[i].ToString("x2"));
+        }
+
+        return strBuilder.ToString();
+    }
+    protected void ValidatePageMobile(string result)
+    {
+        bool IsProjSelected = false;
+        string errlog = string.Empty;
+        try
+        {
+            if (Session["FDR"] == null)
+            {
+                FDR fObj = new FDR(proj);
+                fObj.schemaNameKey = Session["dbuser"].ToString();
+                Session["FDR"] = fObj;
+            }
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        if (!string.IsNullOrEmpty(language))
+            Session["language"] = language;
+        else
+            Session["language"] = string.Empty;
+        CheckResultFormat(result);
+
+        if (isResultXml)
+        {
+            newHomeCards = "true";
+            Session["newHomeCards"] = "true";
+            ParseLoginResult(result);
+
+            if (manage == true || Session["AxRole"].ToString() == "default_")
+            {
+                traceStatus = "T";
+                Session["traceStatus"] = traceStatus;
+                util.sysErrorlog = true;
+                logobj.errorlog = "true";
+                errlog = "true";
+            }
+            else
+            {
+                Session["AxTrace"] = "false";
+            }
+        }
+    }
+    #endregion
 }
 

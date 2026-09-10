@@ -93,7 +93,7 @@
         <div>
             <asp:ScriptManager ID="ScriptManager1" runat="server">
                 <Scripts>
-                    <asp:ScriptReference Path="../Js/iview.min.js?v=420" />
+                    <asp:ScriptReference Path="../Js/iview.min.js?v=424" />
                 </Scripts>
                 <Services>
                     <asp:ServiceReference Path="../WebService.asmx" />
@@ -161,7 +161,7 @@
     <script type="text/javascript" src="../Js/noConflict.min.js?v=1"></script>
     <script type="text/javascript" src="../Js/alerts.min.js?v=33"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
-    <script type="text/javascript" src="../Js/common.min.js?v=165"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=166"></script>
     <script type="text/javascript" src="../Js/ivpicklist.min.js?v=13"></script>
     <script type="text/javascript" src="../Js/JDate.min.js?v=3"></script>
 </body>

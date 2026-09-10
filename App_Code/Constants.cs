@@ -154,6 +154,7 @@ public class Constants
     public const string AXRULESDEFBTNCONMSGUSERROLE = "AxRBtnConMsgUserRole";
 
     public const string HTMLPAGESQUERY = "HTMLPAGESQUERY";
+    public const string HTMLPAGESCONTENT = "HTMLPAGECONTENT";
 
     public const string CLOUD_HOME_API = "api/Session/IsValidSession/{0}/{1}";
     public const string REDISMENUDATA = "MenuData";
@@ -363,4 +364,6 @@ public class Constants
 
     public const string SQL_TSTPERMISSION = "select * from fn_permissions_apptstructs('$USERNAME$','$ROLES$')";
     public const string AX_PERMISSIONS = "AxTstPermissions";
+
+    public const string SQL_GET_AXUSERPWDPOLICY = "select pwdminchar, pwdmaxchar, pwdalphanum, pwdcapchar, pwdsmallchar, pwdnumchar, pwdsplchar, pwdencrypt from AXPDEF_AXPERTPROPS";
 }

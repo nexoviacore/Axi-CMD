@@ -1,0 +1,12 @@
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARMMICRO\AxTstructData\ManualActionRequired\Version 11.4\Release56\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\ARMMICRO\AxUtils\ManualActionRequired\Version 11.4\Release56\web.config
+ Manual actions required:
+Some files contain custom settings and were not automatically updated by the AxInstaller.
+Please review and apply the necessary changes manually as described in:
+D:\Axpert11.4\AxpertServices\ARMCachedSaveWorkerService\ManualActionRequired\Version 11.4\Release56\appsettings.json

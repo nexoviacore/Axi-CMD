@@ -3698,7 +3698,7 @@ public class TStructData
             catch (Exception ex) { }
         }
         //avoid special chars in result DURING notify
-        if (result != "This proces taking time is more than expected. You will get a notification once completed")
+        if (result != "This process taking long time than expected. You will get notified once process is completed.")
         {
             if (transid == "ad_pr")
                 CheckSave(result, delRows, tstData, changedRows, deletedFldArrayValues, (files != null ? files.ToString() : ""), xmlDoc);
@@ -4210,7 +4210,7 @@ public class TStructData
 
         try
         {
-            string _pwdminchar = string.Empty, _pwdmaxchar = string.Empty, _pwdalphanum = string.Empty, _pwdcapchar = string.Empty, _pwdsmallchar = string.Empty, _pwdnumchar = string.Empty, _pwdsplchar = string.Empty;
+            string _pwdminchar = string.Empty, _pwdmaxchar = string.Empty, _pwdalphanum = string.Empty, _pwdcapchar = string.Empty, _pwdsmallchar = string.Empty, _pwdnumchar = string.Empty, _pwdsplchar = string.Empty, _pwdaes = string.Empty;
             XmlNode pwdminchar = inputXml.SelectSingleNode("//root/varlist/row/pwdminchar");
             if (pwdminchar != null && pwdminchar.InnerText != "")
                 _pwdminchar = pwdminchar.InnerText;
@@ -4232,6 +4232,9 @@ public class TStructData
             XmlNode pwdsplchar = inputXml.SelectSingleNode("//root/varlist/row/pwdsplchar");
             if (pwdsplchar != null && pwdsplchar.InnerText != "")
                 _pwdsplchar = pwdsplchar.InnerText;
+            XmlNode pwdencrypt = inputXml.SelectSingleNode("//root/varlist/row/pwdencrypt");
+            if (pwdencrypt != null && pwdencrypt.InnerText != "")
+                _pwdaes = pwdencrypt.InnerText;
 
             string strProj = HttpContext.Current.Session["project"].ToString();
             var propertiesDict = new Dictionary<string, object>
@@ -4242,13 +4245,11 @@ public class TStructData
                 { "pwdcapchar", _pwdcapchar },
                 { "pwdsmallchar", _pwdsmallchar },
                 { "pwdnumchar",_pwdnumchar},
-                { "pwdsplchar",_pwdsplchar}
+                { "pwdsplchar",_pwdsplchar},
+                { "pwdaes",_pwdaes}
                  };
-            //var mainDict = new Dictionary<string, object>
-            //{
-            //    { strProj, propertiesDict }
-            //};
-
+            HttpContext.Current.Session["minPwdChars"] = _pwdminchar;
+            HttpContext.Current.Session["IsPwdAlphaNumeric"] = _pwdalphanum;
             string _jsonStringRedis = JsonConvert.SerializeObject(propertiesDict);
             FDW fdwObj = new FDW();
             fdwObj.SaveInRedisServer(Constants.AXPASSWORDPOL_CONN_KEY, _jsonStringRedis, Constants.AXPASSWORDPOL_CONN_KEY, strProj);

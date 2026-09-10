@@ -14,6 +14,8 @@ using Org.BouncyCastle.Ocsp;
 using Newtonsoft.Json.Linq;
 using System.Security;
 using System.Web.Services;
+using Newtonsoft.Json;
+using System.Data;
 
 public partial class aspx_cpwd : System.Web.UI.Page
 {
@@ -126,10 +128,40 @@ public partial class aspx_cpwd : System.Web.UI.Page
             //}
             FDR fdrObj = new FDR();
             string jsoncontents = fdrObj.StringFromRedis(Constants.AXPASSWORDPOL_CONN_KEY, Session["project"].ToString());
-            if (jsoncontents != string.Empty)
+            if (jsoncontents != string.Empty && jsoncontents != "NoPWDPolicy")
             {
                 hdnpwdPolicy.Value = jsoncontents.Trim();
                 btnSumit.Text = "Next";
+            }
+            else if (jsoncontents == string.Empty)
+            {
+                FDW fdwObj = new FDW();
+                DBContext objDbCont = new DBContext();
+                DataTable dt = new DataTable();
+                string sqlQuery = Constants.SQL_GET_AXUSERPWDPOLICY;
+                dt = objDbCont.GetDataTableInline(sqlQuery);
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    var propertiesDict = new Dictionary<string, object>
+                 {
+                { "pwdminchar", dt.Rows[0]["PWDMINCHAR"].ToString() },
+                { "pwdmaxchar", dt.Rows[0]["PWDMAXCHAR"].ToString() },
+                { "pwdalphanum", dt.Rows[0]["PWDALPHANUM"].ToString() },
+                { "pwdcapchar", dt.Rows[0]["PWDCAPCHAR"].ToString() },
+                { "pwdsmallchar", dt.Rows[0]["PWDSMALLCHAR"].ToString() },
+                { "pwdnumchar",dt.Rows[0]["PWDNUMCHAR"].ToString()},
+                { "pwdsplchar",dt.Rows[0]["PWDSPLCHAR"].ToString()},
+                { "pwdaes",dt.Rows[0]["PWDENCRYPT"].ToString()}
+                 };
+                    string _jsonStringRedis = JsonConvert.SerializeObject(propertiesDict);
+                    fdwObj.SaveInRedisServer(Constants.AXPASSWORDPOL_CONN_KEY, _jsonStringRedis, Constants.AXPASSWORDPOL_CONN_KEY, _proj);
+                    hdnpwdPolicy.Value = _jsonStringRedis.Trim();
+                    btnSumit.Text = "Next";
+                }
+                else
+                {
+                    fdwObj.SaveInRedisServer(Constants.AXPASSWORDPOL_CONN_KEY, "NoPWDPolicy", Constants.AXPASSWORDPOL_CONN_KEY, _proj);
+                }
             }
         }
         // End

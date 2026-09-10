@@ -365,7 +365,7 @@ function AxCallScript(scriptName, scriptType, sName, ivSelectedRows) {
  */
 function AxGetSqlData(sqlNames, sqlParams = []) {
     typeof sqlParams == "function" ? (sqlParams = []) : "";
-    sqlParams = typeof sqlParams == "string" ? sqlParams.split(",").filter(val=>val != "") : sqlParams;
+    sqlParams = typeof sqlParams == "string" ? sqlParams.split(",").filter(val => val != "") : sqlParams;
     var jsonVal = "";
     $.ajax({
         url: top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/") + 6) + 'axinterface.aspx/GetCustomSql',
@@ -401,7 +401,7 @@ function AxGetSqlData(sqlNames, sqlParams = []) {
  */
 function AxAsyncGetSqlData(sqlNames, sqlParams = [], successCB = () => { }, errorCB = () => { }) {
     typeof sqlParams == "function" ? (sqlParams = []) : "";
-    sqlParams = typeof sqlParams == "string" ? sqlParams.split(",").filter(val=>val != "") : sqlParams;
+    sqlParams = typeof sqlParams == "string" ? sqlParams.split(",").filter(val => val != "") : sqlParams;
     var jsonVal = "";
     $.ajax({
         url: top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/") + 6) + 'axinterface.aspx/GetCustomSql',
@@ -443,12 +443,12 @@ function AxAsyncGetSqlData(sqlNames, sqlParams = [], successCB = () => { }, erro
  * @Example
  *  returnedData = AxGetApiData("api1,api2", []);
  */
- function AxGetApiData(apiNames = "", apiType = "axpert", cacheInfo = []) {
+function AxGetApiData(apiNames = "", apiType = "axpert", cacheInfo = []) {
     typeof cacheInfo == "function" ? (cacheInfo = []) : "";
     // cacheInfo = typeof cacheInfo == "string" ? cacheInfo.split(",").filter(val=>val != "") : cacheInfo;
     var jsonVal = "";
     $.ajax({
-        url:  top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/") + 1) + 'WebService.asmx/CallApiDefinations',
+        url: top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/") + 1) + 'WebService.asmx/CallApiDefinations',
         type: 'POST',
         cache: false,
         async: false,
@@ -573,7 +573,7 @@ function AxAsyncGetApiData(apiNames = "", apiType = "axpert", cacheInfo = [], su
  * @references
  *      Following files are required to be referred in custom html along with AxInterface.js:
             <script src="../../Js/Jquery-2.2.2.min.js" type="text/javascript"></script>
-            <script src="../../Js/common.min.js?v=165" type="text/javascript"></script>
+            <script src="../../Js/common.min.js?v=166" type="text/javascript"></script>
             <script src="../../Js/AxInterface.min.js?v=15" type="text/javascript"></script>
             <script src="../../ThirdParty/Highcharts/highcharts.js"></script>
             <script src="../../ThirdParty/Highcharts/highcharts-3d.js"></script>
@@ -594,10 +594,10 @@ function AxPlotHighChartWidgets(widgetType, widgetJqObj, data, sqlmetaData, attr
     window.enableSlick = enableSlick;
 
     if (attributes) {
-        if(typeof attributes == "string"){
-            try{
+        if (typeof attributes == "string") {
+            try {
                 attributes = JSON.parse(attributes);
-            }catch(ex){
+            } catch (ex) {
                 attributes = {};
             }
         }
@@ -620,9 +620,9 @@ function AxPlotHighChartWidgets(widgetType, widgetJqObj, data, sqlmetaData, attr
         hyperLink: parsedHyperLink
     }
 
-    if(typeof objToSend.data.length != "undefined" && objToSend.data.length > 0){
+    if (typeof objToSend.data.length != "undefined" && objToSend.data.length > 0) {
         createAgileChart(objToSend);
-    }else{
+    } else {
         $(objToSend.target).html("No Data Found");
     }
 }
@@ -713,9 +713,9 @@ function getTheHyperLink(linkData, linkObj, cap, colIndex) {
             paramStr = linkData.substring(linkData.indexOf("(") + 1, linkData.lastIndexOf(")"));
             paramStr = paramStr.replace(/\^/g, "&");
         }
-        if(linkObjData.isPop){
+        if (linkObjData.isPop) {
             return "<a class='whiteLink' href='javascript:void(0);' onclick=\"javascript:createPopup('" + linkObjData.url + paramStr + "');\">" + cap + "</a>";
-        }else{
+        } else {
             return "<a class='whiteLink' href='javascript:void(0);' onclick=\"javascript:AxLoadUrl('" + linkObjData.url + paramStr + "');\">" + cap + "</a>";
         }
     } else {
@@ -738,7 +738,7 @@ function customizeData(plotName) {
  * @Files
  *  Following files are required to be referred in custom html along with AxInterface.js:
  *      <script src="../../Js/Jquery-2.2.2.min.js" type="text/javascript"></script>
- *      <script src="../../Js/common.min.js?v=165" type="text/javascript"></script>
+ *      <script src="../../Js/common.min.js?v=166" type="text/javascript"></script>
  * 
  */
 function AxLoadUrl(url) {
@@ -763,19 +763,19 @@ function AxLoadUrl(url) {
  *  Following files are required to be referred in custom html along with AxInterface.js:
  *      <script src="../../ThirdParty/lodash.min.js" type="text/javascript"></script>
  *      <script src="../../ThirdParty/deepdash.min.js" type="text/javascript"></script>
- *      <script src="../../Js/common.min.js?v=165" type="text/javascript"></script>
+ *      <script src="../../Js/common.min.js?v=166" type="text/javascript"></script>
  * 
  */
- function AxGetMenus(pages) {
+function AxGetMenus(pages) {
     if (typeof _ == "undefined" || typeof _.findDeep == "undefined") {
         throw "required files are not referred";
         return;
     }
 
     let finalMenuObj = {};
-    
+
     let menuJson = callParentNew("menuJson");
-    
+
     pages.split(",").map(pageName => pageName.trim()).forEach(pageName => {
         try {
             let menuArray = [];
@@ -816,7 +816,7 @@ function AxLoadUrl(url) {
     return finalMenuObj;
 }
 
-function AxDeleteRecord(TransId, RecordId){
+function AxDeleteRecord(TransId, RecordId) {
     var jsonVal = "";
     $.ajax({
         url: top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/") + 6) + 'axinterface.aspx/TstructDeleteRecord',
@@ -838,7 +838,7 @@ function AxDeleteRecord(TransId, RecordId){
     return jsonVal;
 }
 
-function AxGetRecordId(TransId, Datas = []){
+function AxGetRecordId(TransId, Datas = []) {
     var jsonVal = "";
     $.ajax({
         url: top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/") + 6) + 'axinterface.aspx/GetTstructRecordId',
@@ -905,20 +905,19 @@ function navigateToUrl(input) {
             _transidArray = _transidArray.filter(x => x.toLowerCase() !== struct.toLowerCase());
             localStorage.setItem(_thisstoredKey, JSON.stringify(_transidArray));
         }
-
-        url = `tstruct.aspx?transid=${struct}&${queryParams.toString()}&dummyload=false♠`;
+        url = `tstruct.aspx?transid=${struct}&${queryParams.toString()}&isDupTab=${callParentNew('isDuplicateTab')}&dummyload=false♠`;
     }
     else if (type === 'h') {
         if ((input[0] + input[1]).toLowerCase() == "hp" && (/^\d+$/.test(struct.slice(1))))
-            url =  `htmlpages.aspx?load=${struct.slice(1)}&${queryParams.toString()}`;
+            url = `htmlpages.aspx?load=${struct.slice(1)}&${queryParams.toString()}`;
         else
-            url =  `htmlpages.aspx?loadcaption=${struct}&${queryParams.toString()}`;
+            url = `htmlpages.aspx?loadcaption=${struct}&${queryParams.toString()}`;
     }
     else if (type === 'l') {
-        url =  `entity.aspx?tstid=${struct}&${queryParams.toString()}`;
+        url = `entity.aspx?tstid=${struct}&${queryParams.toString()}`;
     }
     else if (type === 'd') {
-        url =  `entityform.aspx?tstid=${struct}&${queryParams.toString()}`;
+        url = `entityform.aspx?tstid=${struct}&${queryParams.toString()}`;
     }
 
     if (url != "")
@@ -1257,6 +1256,46 @@ function AxRedisWriteAPI(AccessCode, InMemoryKey, InMemorySubKey, InMemoryValue,
             if (errorCB && typeof successCB == "function") {
                 errorCB(error);
             }
+        }
+    });
+}
+
+function AxRedisDeleteAPI(AccessCode, InMemoryKey, successCB = () => { }, errorCB = () => { }) {
+    $.ajax({
+        url: top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/") + 6) + 'axinterface.aspx/CallAxRedisDeleteAPI',
+        type: 'POST',
+        cache: false,
+        async: false,
+        data: JSON.stringify({
+            AccessCode,
+            InMemoryKey
+        }),
+        dataType: 'json',
+        contentType: "application/json",
+        success: function (data) {
+            if (successCB && typeof successCB == "function") {
+                successCB(data.d || data);
+            }
+        },
+        error: function (error) {
+            if (errorCB && typeof successCB == "function") {
+                errorCB(error);
+            }
+        }
+    });
+}
+
+function ClearAppRedisKeys() {
+    $.ajax({
+        url: top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/") + 6) + 'axinterface.aspx/CallClearRedisKeys',
+        type: 'POST',
+        cache: false,
+        async: false,
+        dataType: 'json',
+        contentType: "application/json",
+        success: function (data) {           
+        },
+        error: function (error) {          
         }
     });
 }

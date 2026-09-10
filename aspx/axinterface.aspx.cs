@@ -1184,4 +1184,72 @@ public partial class axinterface : System.Web.UI.Page
         }
         return json;
     }
+
+    [WebMethod(EnableSession = true)]
+    public static string CallAxRedisDeleteAPI(string AccessCode, string InMemoryKey)
+    {
+        if (HttpContext.Current.Session["project"] == null || Convert.ToString(HttpContext.Current.Session["project"]) == string.Empty)
+        {
+            return "error:" + Constants.SESSIONTIMEOUT;
+        }
+        string json = string.Empty;
+        try
+        {
+            string ARM_URL = string.Empty;
+            if (HttpContext.Current.Session["ARM_URL"] != null)
+                ARM_URL = HttpContext.Current.Session["ARM_URL"].ToString();
+            else
+                return "Error in ARM connection.";
+            string tasksUrl = ARM_URL + "/AxUtils/api/v1/AxRedisDelete";
+            string saveDetails = "{\"AccessCode\":\"" + AccessCode + "\",\"InMemoryKey\":\"" + InMemoryKey + "\"}";
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(tasksUrl);
+            request.Method = "POST";
+            request.ContentType = "application/json";
+            using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
+            {
+                writer.Write(saveDetails);
+            }
+            using (WebResponse webResponse = request.GetResponse())
+            using (StreamReader reader = new StreamReader(webResponse.GetResponseStream()))
+            {
+                json = reader.ReadToEnd();
+            }
+        }
+        catch (Exception ex)
+        {
+            json = "error:" + ex.Message;
+            LogFile.Log logObj = new LogFile.Log();
+            string sessID = Constants.GeneralLog;
+
+            if (HttpContext.Current.Session != null)
+                sessID = HttpContext.Current.Session.SessionID;
+
+            logObj.CreateLog("AxRedisDeleteAPI-" + ex.Message, sessID, "CallAxRedisDeleteAPI", "new");
+        }
+        return json;
+    }
+
+    [WebMethod(EnableSession = true)]
+    public static string CallClearRedisKeys()
+    {
+        if (HttpContext.Current.Session["project"] == null || Convert.ToString(HttpContext.Current.Session["project"]) == string.Empty)
+        {
+            return "error:" + Constants.SESSIONTIMEOUT;
+        }
+        try
+        {
+            ASB.WebService objws = new ASB.WebService();
+            objws.FlushAllKeys();
+        }
+        catch (Exception ex)
+        {
+            LogFile.Log logObj = new LogFile.Log();
+            string sessID = Constants.GeneralLog;
+
+            if (HttpContext.Current.Session != null)
+                sessID = HttpContext.Current.Session.SessionID;
+            logObj.CreateLog("Exception in CallClearRedisKeys -" + ex.Message, sessID, "CallClearRedisKeys", "new");
+        }
+        return "done";
+    }
 }

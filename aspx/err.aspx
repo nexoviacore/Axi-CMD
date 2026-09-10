@@ -96,7 +96,7 @@
     <%--custom alerts end--%>
 
     <script src="../Js/err.min.js?=4" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
     <script type="text/javascript">
         var serverprocesstime = '<%=serverprocesstime%>';
         var requestProcess_logtime = '<%=requestProcess_logtime%>';
@@ -110,7 +110,7 @@
         });
     </script>
     <script>
-        if(parent.ShowDimmer){
+        if (parent.ShowDimmer) {
             parent.ShowDimmer(false)
         }
     </script>
@@ -120,7 +120,7 @@
         <div class="d-flex justify-content-center align-items-center p-10 vh-100">
             <asp:ScriptManager ID="ScriptManager1" runat="server">
                 <Scripts>
-                    <asp:ScriptReference Path="../Js/helper.min.js?v=177" />
+                    <asp:ScriptReference Path="../Js/helper.min.js?v=178" />
                 </Scripts>
                 <Services>
                     <asp:ServiceReference Path="../WebService.asmx" />
@@ -142,12 +142,17 @@
             %>
 
             <h1 class="h1 me-3 my-0 align-top inline-block align-content-center">
-                <% If errMsg <> "Releasing soon." Then%>
+                <% If errMsg <> "Releasing soon." And errMsg <> "Smart View package needs to be installed to use this option." Then%>
                 <asp:Label ID="lblerror" runat="server" meta:resourcekey="lblerror">Oops!</asp:Label>
                 <%End If %>
             </h1>
 
             <% If errMsg <> String.Empty And errMsg = "Releasing soon." Then%>
+            <div class="inline-block align-middle ps-3 py-2 border-danger-- border-start--">
+                <script type="text/javascript"> callParentNew("closeFrame()", "function"); </script>
+                <h2 class="h1 me-3 my-0 align-top inline-block align-content-center lead--" id="desc"><%=errMsg%></h2>
+            </div>
+            <% elseIf errMsg <> String.Empty And errMsg = "Smart View package needs to be installed to use this option." Then%>
             <div class="inline-block align-middle ps-3 py-2 border-danger-- border-start--">
                 <script type="text/javascript"> callParentNew("closeFrame()", "function"); </script>
                 <h2 class="h1 me-3 my-0 align-top inline-block align-content-center lead--" id="desc"><%=errMsg%></h2>

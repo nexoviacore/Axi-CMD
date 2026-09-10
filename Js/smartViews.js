@@ -1611,6 +1611,7 @@ var dtDbTotalRecords = 0; //datatable total records
 var autoAppendRecords = false; //true - lazy binding, which will automatically append all records to datatable after datatable initilization
 var pageScrollToEnd = false; //flag used to check page is scrolled to end of div
 var scrollTopPosition = 0; //to get the scroll position of the div before datatable draw event & update the scroll position to same after draw event
+var checkNextShowAllRows = false; //fetch size info, true if webservice call is required
 /**
  * The main function will be called on load of the interactive report
  * Also have the configuration of data table grouping logics and more
@@ -2724,7 +2725,10 @@ function createIvirDataTable(task, index, totalArray, grandTotalArray) {
             console.clear();
             if (!checkNextDBRowsExist && typeof $o == 'undefined') {
                 setTimeout(function () {
-                    $("#lblCurPage").html('Rows: 1-' + dtDbTotalRecords + ' of ' + dtDbTotalRecords);
+                    if (typeof checkNextShowAllRows != "undefined" && checkNextShowAllRows)
+                        $("#lblCurPage").html('Rows: 1-' + dtDbTotalRecords + ' of ');
+                    else
+                        $("#lblCurPage").html('Rows: 1-' + dtDbTotalRecords + ' of ' + dtDbTotalRecords);
                     hideDataTableLoading();
                 }, 0);
                 lastScrollTop = st;
@@ -5888,7 +5892,7 @@ onContentReadyRef = (task, showValuesOnOpen, isEditPill) => {
                     "/Js/thirdparty/jquery/3.1.1/jquery.min.js",
                     "/Js/noConflict.min.js",
                     "/ThirdParty/lodash.min.js",
-                    "/Js/common.min.js?v=164",
+                    "/Js/common.min.js?v=166",
                     "/ThirdParty/DataTables-1.10.13/media/js/jquery.dataTables.min.js",
                     "/ThirdParty/DataTables-1.10.13/media/js/dataTables.bootstrap.min.js",
                     "/ThirdParty/DataTables-1.10.13/extensions/FixedHeader/js/dataTables.fixedHeader.min.js",
