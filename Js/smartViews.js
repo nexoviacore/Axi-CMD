@@ -2752,6 +2752,11 @@ function createIvirDataTable(task, index, totalArray, grandTotalArray) {
             }
 
         }
+        try {
+            if ($j("#chkall").prop("checked") === true) {
+                $j("input[name=chkItem]:checkbox").prop("checked", true);
+            }
+        } catch (ex) { }
         lastScrollTop = st;
     });
     function setupGroupedColumnSync(datatable, groupRowIndex = 0, detailRowIndex = 1) {

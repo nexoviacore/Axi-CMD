@@ -138,6 +138,9 @@ public class CloudService : System.Web.Services.WebService
         {
             string language = HttpContext.Current.Session["language"].ToString();
             strObj = cacheMgr.GetStructDef(proj, sid, user, tid, AxRole);
+            FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+            string thisStructXML = fObj.StringFromRedis(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, tid));
+            strObj.structRes = thisStructXML;
         }
         catch (Exception ex)
         {

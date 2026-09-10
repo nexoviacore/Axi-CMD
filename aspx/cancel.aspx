@@ -87,7 +87,7 @@
     <link href="../Css/alerts.min.css" rel="stylesheet" />
     <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <%--custom alerts end--%>
-    <script type="text/javascript" src="../Js/tstruct.min.js?v=698"></script>
+    <script type="text/javascript" src="../Js/tstruct.min.js?v=699"></script>
     <script type="text/javascript">
 
         var traceSplitChar = "♦";
@@ -104,7 +104,7 @@
         <div>
             <asp:ScriptManager ID="ScriptManager1" runat="server">
                 <Scripts>
-                    <asp:ScriptReference Path="../Js/tstruct.min.js?v=698" />
+                    <asp:ScriptReference Path="../Js/tstruct.min.js?v=699" />
                 </Scripts>
                 <Services>
                     <asp:ServiceReference Path="../WebService.asmx" />

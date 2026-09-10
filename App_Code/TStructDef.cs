@@ -209,7 +209,7 @@ public class TStructDef
     string defaultDateTimeStr = "dd/mm/yyyy hh:mm:ss";
     string defaultTimeStr = "HH:MM";
     string defaultColWidth = "50";
-    string res = string.Empty;
+    //string res = string.Empty;
     //If this property comes in Grid DC from xml, showZeroForNumeric variable should be updated.
     Boolean showZeroForNumeric = true;
     Boolean isFillGridCall = false;
@@ -279,7 +279,7 @@ public class TStructDef
             isMobile = true;
 
         ParseSearchAndGroups(customDS);
-        this.structRes = xml;
+        //this.structRes = xml;
         this.Create(xml);
         if (!string.IsNullOrEmpty(tstVersion) && Int64.Parse(tstVersion) > 10000)
         {
@@ -609,10 +609,14 @@ public class TStructDef
         set { actions = value; }
     }
 
+    //public string structRes
+    //{
+    //    get { return res; }
+    //    set { res = value; }
+    //}
     public string structRes
     {
-        get { return res; }
-        set { res = value; }
+        get; set;
     }
 
     public Boolean ShowZeroForNumeric
@@ -13066,7 +13070,7 @@ public class TStructDef
             try
             {
                 fDsign = curDc.fieldsDesign.FirstOrDefault(elm => elm.fld_id == fld.name);
-                if (transId == "sect" && (fld.name == "filename" || fld.name == "css_js_src"))
+                if ((transId == "sect" || transId == "a__rp") && (fld.name == "filename" || fld.name == "css_js_src"))
                     fDsign.width = 36;
             }
             catch (Exception ex)

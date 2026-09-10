@@ -1251,7 +1251,10 @@ public partial class aspx_ImportNew : System.Web.UI.Page
                 fdKey = Constants.REDISTSTRUCTMOB;
             string pgKey = Constants.AXPAGETITLE;
             ArrayList redisvalues = new ArrayList();
+            string _sXML = strObj.structRes;
+            strObj.structRes = "";
             cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transid), strObj, Constants.REDISTSTRUCT, schemaName);
+            cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transid), _sXML, Constants.REDISTSTRUCTXML, schemaName);
         }
         return strObj.dcs.Count;
 
@@ -1404,7 +1407,10 @@ public partial class aspx_ImportNew : System.Web.UI.Page
                 fdKey = Constants.REDISTSTRUCTMOB;
             string pgKey = Constants.AXPAGETITLE;
             ArrayList redisvalues = new ArrayList();
+            string _sXML = strObj.structRes;
+            strObj.structRes = "";
             cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transid), strObj, Constants.REDISTSTRUCT, schemaName);
+            cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transid), _sXML, Constants.REDISTSTRUCTXML, schemaName);
         }
 
         //Session["transid"] = temp;
@@ -2646,7 +2652,10 @@ public partial class aspx_ImportNew : System.Web.UI.Page
                 fdKey = Constants.REDISTSTRUCTMOB;
             string pgKey = Constants.AXPAGETITLE;
             ArrayList redisvalues = new ArrayList();
+            string _sXML = strObj.structRes;
+            strObj.structRes = "";
             cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transid), strObj, Constants.REDISTSTRUCT, schemaName);
+            cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transid), _sXML, Constants.REDISTSTRUCTXML, schemaName);
         }
         List<string> myCollection = new List<string>();
 

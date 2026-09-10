@@ -138,7 +138,7 @@ var ivCurrentRows = "";
 let ivParamBeforeEnc = "";
 let inmemClearTstId = [];
 var inmemClearAll = "";
-var axpertDevIVList = ["hplist", "csqlist", "exapidef", "dop_list", "jobtsk", "axlangs", "publist", "cdlist", "axvars", "ivconfdt", "axpubls", "pservers", "emaildef", "ad___tbd", "ad__qls", "inmemdb", "ad__qlog"];
+var axpertDevIVList = ["hplist", "csqlist", "exapidef", "dop_list", "jobtsk", "axlangs", "publist", "cdlist", "axvars", "ivconfdt", "axpubls", "pservers", "emaildef", "ad___tbd", "ad__qls", "inmemdb", "ad__qlog", "a__rplst"];
 //This function clears the cache files on unload and on opening another iview.
 function DeleteIviewCacheFiles() {
 
@@ -10321,10 +10321,13 @@ function getNextDtRecords(pageNo) {
                                     }
                                     requestAnimationFrame(function () {
                                         scrollDataTableToTop();
+                                        if ($j("#chkall").prop("checked") === true) {
+                                            $j("input[name=chkItem]:checkbox").prop("checked", true);
+                                        }
+                                        pageScrollToEnd = false;
                                     });
                                 }, 0);
-                            }, 200);
-                            pageScrollToEnd = false;
+                            }, 50);
 
                             $("#lnkShowAll, #requestNextRecords").remove();
                             if (showChartsWithAllRecords) {

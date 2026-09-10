@@ -1163,7 +1163,7 @@ function CallAction(actionName, fileup, confirmmsg, remarks, manRemarks, dsignac
                     }
                 }
                 let scriptRemark = EvaluateDirectScript(actScriptCancel[actInd].split("♠")[1]);
-                if (scriptRemark != "" && (scriptRemark.toLowerCase() == "y" || scriptRemark.toLowerCase() == "t"))
+                if (scriptRemark != "" && (scriptRemark.toLowerCase() == "y" || scriptRemark.toLowerCase() == "yes" || scriptRemark.toLowerCase() == "t" || scriptRemark.toLowerCase() == "true"))
                     remarks = "y";
                 if (typeof tstReadOnly != "undefined" && tstReadOnly) {
                     ShowDimmer(false);
@@ -1358,7 +1358,7 @@ function CallActionExt(actionName, fileup, remarks, dsignaction, isScript, ruleS
             axrulesFlds = "";
         callBackFunDtls = "CallActionExt♠" + actionName + "♠" + fileup + "♠" + remarks + "♠" + dsignaction;
         var source = "t";
-        if (typeof transid != "undefined" && transid == "sect")
+        if (typeof transid != "undefined" && (transid == "sect" || transid == "a__rp"))
             source = "t" + transid;
         let _isLoadFromDraft = "false";
         if (typeof isLoadFromDraft != "undefined")
@@ -4837,6 +4837,11 @@ function ExecCommand(cmdJsonObj, actnName, axpConfigNavType, calledFrom = "") {
                     if (typeof transid != "undefined" && transid == "sect") {
                         try {
                             htmlCustomSaveRedirect();
+                        } catch (ex) { }
+                    }
+                    if (typeof transid != "undefined" && transid == "a__rp") {
+                        try {
+                            htmlCustomSaveRedirectReact();
                         } catch (ex) { }
                     }
 

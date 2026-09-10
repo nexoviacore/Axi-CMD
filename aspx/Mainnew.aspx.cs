@@ -4669,6 +4669,9 @@ public partial class aspx_Mainnew : System.Web.UI.Page
             string schemaName = string.Empty;
             if (HttpContext.Current.Session["dbuser"] != null)
                 schemaName = HttpContext.Current.Session["dbuser"].ToString();
+            string _userName = string.Empty;
+            if (HttpContext.Current.Session["username"] != null)
+                _userName = HttpContext.Current.Session["username"].ToString();
             FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
             if (fObj == null)
                 fObj = new FDR();
@@ -4684,7 +4687,30 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                         strRes = string.Empty;
                 }
                 else
-                    strRes = string.Empty;
+                {
+                    if (Session["isSSOLogin"] != null && Session["isSSOLogin"].ToString().ToLower() == "true")
+                    {
+                        string ulLang = util.GetUserLevelLangFromDB(_userName);
+                        if (ulLang != string.Empty && !ulLang.StartsWith("error:"))
+                        {
+                            try
+                            {
+                                FDW fdwObj = new FDW();
+                                fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKeypwdOtpAuth, _userName), ulLang, fdKeypwdOtpAuth);
+                            }
+                            catch (Exception) { }
+                            strRes = ulLang.Split('♣')[8];
+                            if (strRes != string.Empty)
+                                strRes = String.Format("data:image/png;base64,{0}", strRes);
+                            else
+                                strRes = string.Empty;
+                        }
+                        else
+                            strRes = string.Empty;
+                    }
+                    else
+                        strRes = string.Empty;
+                }
             }
         }
         catch (Exception ex)

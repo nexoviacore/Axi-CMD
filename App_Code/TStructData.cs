@@ -241,7 +241,12 @@ public class TStructData
             if (Convert.ToString(HttpContext.Current.Session["AxLogging"]).ToLower() == "true")
                 logTimeTaken = true;
         }
-
+        if (strObj.structRes == string.Empty)
+        {
+            FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+            string thisStructXML = fObj.StringFromRedis(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transId));
+            strObj.structRes = thisStructXML;
+        }
         tstStrObj = strObj;
         CreateDataSets(strObj);
 
@@ -3794,6 +3799,18 @@ public class TStructData
                     var dbDsData = fObj.GetWildCardKeyNames(util.GetRedisServerkey(fddsData, sqlname.InnerText, "*"));
                     fdwObj.DeleteKeys(dbDsData);
                 }
+            }
+            catch (Exception ex) { }
+        }
+        else if ((transid == "sect" || transid == "a__rp") && AxActiveAction == "iSave")
+        {
+            try
+            {
+                FDW fdwObj = new FDW();
+                if (transid == "sect")
+                    fdwObj.Deletekey(util.GetRedisServerkey(Constants.HTMLPAGESDBXML, "HTML"));
+                else
+                    fdwObj.Deletekey(util.GetRedisServerkey(Constants.REACTPAGESDBXML, "REACT"));
             }
             catch (Exception ex) { }
         }
@@ -8070,7 +8087,7 @@ public class TStructData
         DateTime stTime = DateTime.Now;
         string news = GetTraceString(s);
         if (news != "") s = news;
-        if (transid == "sect")
+        if (transid == "sect" || transid == "a__rp")
         {
             string _thisProj = HttpContext.Current.Session["project"].ToString();
             s = s.Replace("<Transaction ", "<Transaction webaxpapp='" + _thisProj + "axdef' ");

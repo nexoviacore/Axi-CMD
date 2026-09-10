@@ -1,20 +1,15 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-using System.Data;
-using System.Web.Services;
-using Newtonsoft.Json;
-using System.Text;
-using System.Configuration;
-using System.Net;
 using System.Xml;
-using System.Collections;
 
-public partial class aspx_htmlPages : System.Web.UI.Page
+public partial class aspx_reactPages : System.Web.UI.Page
 {
     public string direction = "ltr";
     public string langType = "en";
@@ -97,15 +92,15 @@ public partial class aspx_htmlPages : System.Web.UI.Page
             string inputXML = "<sqlresultset axpapp='" + projectName + "' sessionid='" + sessionId + "' trace='" + errorLog + "' appsessionkey='" + HttpContext.Current.Session["AppSessionKey"].ToString() + "' username='" + userName + "' ><sql>";
             if (dbType.ToLower() == "oracle")
             {
-                sqlQuery = "select replace(caption, ' ', '_') || '_' || replace(name, 'HP', '') || '.html' as htmlfilename from axpages where name='HP" + pageId + "'";
+                sqlQuery = "select replace(caption, ' ', '_') || '_' || replace(name, 'RP', '') || '.html' as htmlfilename from axpages where name='RP" + pageId + "'";
             }
             else // DbType is "ms sql" OR "postgresql" OR "postgre" OR "mariadb" OR "mysql"
             {
-                sqlQuery = "select concat(replace(caption, ' ', '_'), '_', replace(name, 'HP', ''), '.html') as htmlfilename from axpages where name='HP" + pageId + "'";
+                sqlQuery = "select concat(replace(caption, ' ', '_'), '_', replace(name, 'RP', ''), '.html') as htmlfilename from axpages where name='RP" + pageId + "'";
             }
             sqlQuery = util.CheckSpecialChars(sqlQuery);
             inputXML += sqlQuery + " </sql>" + HttpContext.Current.Session["axApps"].ToString() + HttpContext.Current.Application["axProps"].ToString() + HttpContext.Current.Session["axGlobalVars"].ToString() + HttpContext.Current.Session["axUserVars"].ToString() + "</sqlresultset>";
-            logobj.CreateLog("Call Get HTML File Name Get Choices WS" + inputXML, sessionId, "CallGetFileName-HTMLPages-Ws", "");
+            logobj.CreateLog("Call Get HTML File Name Get Choices WS" + inputXML, sessionId, "CallGetFileName-ReactPages-Ws", "");
             sqlResult = asbExt.CallGetChoiceWS("", inputXML);
 
             if (sqlResult == string.Empty || (sqlResult.StartsWith("<error>")) || (sqlResult.Contains("error")))
@@ -141,17 +136,15 @@ public partial class aspx_htmlPages : System.Web.UI.Page
             string inputXML = "<sqlresultset axpapp='" + projectName + "' sessionid='" + sessionId + "' trace='" + errorLog + "' appsessionkey='" + HttpContext.Current.Session["AppSessionKey"].ToString() + "' username='" + userName + "' ><sql>";
             if (dbType.ToLower() == "oracle")
             {
-                //sqlQuery = "select replace(caption, ' ', '_') || '_' || replace(name, 'HP', '') || '.html' as htmlfilename from axpages where lower(caption) = lower('" + pageCaption + "') and name like 'HP%'";
-                sqlQuery = "select replace(caption, ' ', '_') || '_' || replace(name, 'HP', '') || '.html' as htmlfilename,replace(name, 'HP', '') as pageId  from axpages where lower(caption) = lower('" + pageCaption + "') and name like 'HP%'";
+                sqlQuery = "select replace(caption, ' ', '_') || '_' || replace(name, 'RP', '') || '.html' as htmlfilename,replace(name, 'RP', '') as pageId  from axpages where lower(caption) = lower('" + pageCaption + "') and name like 'RP%'";
             }
             else // DbType is "ms sql" OR "postgresql" OR "postgre" OR "mariadb" OR "mysql"
             {
-                //sqlQuery = "select concat(replace(caption, ' ', '_'), '_', replace(name, 'HP', ''), '.html') as htmlfilename from axpages where lower(caption) = lower('" + pageCaption + "') and name like 'HP%'";
-                sqlQuery = "select concat(replace(caption, ' ', '_'), '_', replace(name, 'HP', ''), '.html') as htmlfilename,replace(name, 'HP', '') as pageId from axpages where lower(caption) = lower('" + pageCaption + "') and name like 'HP%'";
+                sqlQuery = "select concat(replace(caption, ' ', '_'), '_', replace(name, 'RP', ''), '.html') as htmlfilename,replace(name, 'RP', '') as pageId from axpages where lower(caption) = lower('" + pageCaption + "') and name like 'RP%'";
             }
             sqlQuery = util.CheckSpecialChars(sqlQuery);
             inputXML += sqlQuery + " </sql>" + HttpContext.Current.Session["axApps"].ToString() + HttpContext.Current.Application["axProps"].ToString() + HttpContext.Current.Session["axGlobalVars"].ToString() + HttpContext.Current.Session["axUserVars"].ToString() + "</sqlresultset>";
-            logobj.CreateLog("Call Get HTML File Name Get Choices WS" + inputXML, sessionId, "CallGetFileName-HTMLPages-Ws", "");
+            logobj.CreateLog("Call Get React File Name Get Choices WS" + inputXML, sessionId, "CallGetFileName-ReactPages-Ws", "");
             sqlResult = asbExt.CallGetChoiceWS("", inputXML);
 
             if (sqlResult == string.Empty || (sqlResult.StartsWith("<error>")) || (sqlResult.Contains("error")))
@@ -190,17 +183,15 @@ public partial class aspx_htmlPages : System.Web.UI.Page
             string inputXML = "<sqlresultset axpapp='" + projectName + "' sessionid='" + sessionId + "' trace='" + errorLog + "' appsessionkey='" + HttpContext.Current.Session["AppSessionKey"].ToString() + "' username='" + userName + "' ><sql>";
             if (dbType.ToLower() == "oracle")
             {
-                //sqlQuery = "select replace(caption, ' ', '_') || '_' || replace(name, 'HP', '') || '.html' as htmlfilename from axpages where lower(caption) = lower('inbox') and name like 'HP%'";
-                sqlQuery = "select replace(caption, ' ', '_') || '_' || replace(name, 'HP', '') || '.html' as htmlfilename,replace(name, 'HP', '') as pageId  from axpages where lower(caption) = lower('inbox') and name like 'HP%'";
+                sqlQuery = "select replace(caption, ' ', '_') || '_' || replace(name, 'RP', '') || '.html' as htmlfilename,replace(name, 'RP', '') as pageId  from axpages where lower(caption) = lower('inbox') and name like 'RP%'";
             }
             else // DbType is "ms sql" OR "postgresql" OR "postgre" OR "mariadb" OR "mysql"
             {
-                //sqlQuery = "select concat(replace(caption, ' ', '_'), '_', replace(name, 'HP', ''), '.html') as htmlfilename from axpages where lower(caption) = lower('inbox') and name like 'HP%'";
-                sqlQuery = "select concat(replace(caption, ' ', '_'), '_', replace(name, 'HP', ''), '.html') as htmlfilename,replace(name, 'HP', '') as pageId from axpages where lower(caption) = lower('inbox') and name like 'HP%'";
+                sqlQuery = "select concat(replace(caption, ' ', '_'), '_', replace(name, 'RP', ''), '.html') as htmlfilename,replace(name, 'RP', '') as pageId from axpages where lower(caption) = lower('inbox') and name like 'RP%'";
             }
             sqlQuery = util.CheckSpecialChars(sqlQuery);
             inputXML += sqlQuery + " </sql>" + HttpContext.Current.Session["axApps"].ToString() + HttpContext.Current.Application["axProps"].ToString() + HttpContext.Current.Session["axGlobalVars"].ToString() + HttpContext.Current.Session["axUserVars"].ToString() + "</sqlresultset>";
-            logobj.CreateLog("Call Get HTML File Name Get Choices WS" + inputXML, sessionId, "CallGetFileName-HTMLPages-Ws", "");
+            logobj.CreateLog("Call Get React File Name Get Choices WS" + inputXML, sessionId, "CallGetFileName-ReactPages-Ws", "");
             sqlResult = asbExt.CallGetChoiceWS("", inputXML);
 
             if (sqlResult == string.Empty || (sqlResult.StartsWith("<error>")) || (sqlResult.Contains("error")))
@@ -235,7 +226,7 @@ public partial class aspx_htmlPages : System.Web.UI.Page
         }
         else
         {
-            errorLog = logobj.CreateLog("CallGetFileNames - Call Get HTML Page's received information doesn't exist.", sessionId, "HTMLPage", "");
+            errorLog = logobj.CreateLog("CallGetFileNames - Call Get React Page's received information doesn't exist.", sessionId, "ReactPage", "");
             Response.Redirect("err.aspx?errmsg=HTML Page's received information doesn't exist.");
         }
 
@@ -271,18 +262,9 @@ public partial class aspx_htmlPages : System.Web.UI.Page
                     }
                 }
                 catch (Exception ex) { }
+                path = axpertWebUrl.TrimEnd('/') + "/AxReact/" + projectName + "/" + htmlFileName + "?v=" + DateTime.Now.ToString("ddMMyyyyHHmmss") + "&load=" + pageId + extraParams;
 
-                //path = axpertWebUrl + projectName + "/HTMLPages/" + htmlFileName + "?v=" + DateTime.Now.ToString("ddMMyyyyHHmmss") + "&load=" + pageId + extraParams;
-                path = axpertWebUrl + projectName + "/HTMLPages/" + htmlFileName + "?v=" + DateTime.Now.ToString("ddMMyyyyHHmmss") + "&load=" + pageId + extraParams;
-
-
-                //HttpWebRequest request = WebRequest.Create(path) as HttpWebRequest;
-                ////request.Method = "HEAD";
-                //HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-                //HttpStatusCode status = response.StatusCode;
-
-                //if (status.ToString() == "OK")
-                FileInfo _htmlFile = new FileInfo(HttpContext.Current.Server.MapPath("~/" + projectName + "/HTMLPages/" + htmlFileName));
+                FileInfo _htmlFile = new FileInfo(HttpContext.Current.Server.MapPath("~/ReactPages/" + projectName + "/" + htmlFileName));
                 if (_htmlFile.Exists)
                 {
                     if (path != string.Empty)
@@ -294,11 +276,11 @@ public partial class aspx_htmlPages : System.Web.UI.Page
 
                             FDW fdwObj = new FDW();
 
-                            fdwObj.ClearRedisServerDataByKey(util.GetRedisServerkey(Constants.HTMLPAGESQUERY, htmlPageId, userName), "", false, schemaName);
+                            fdwObj.ClearRedisServerDataByKey(util.GetRedisServerkey(Constants.REACTPAGESQUERY, htmlPageId, userName), "", false, schemaName);
 
                             if (extraParams != string.Empty)
                             {
-                                fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.HTMLPAGESQUERY, htmlPageId, userName), extraParams, Constants.HTMLPAGESQUERY, schemaName);
+                                fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REACTPAGESQUERY, htmlPageId, userName), extraParams, Constants.REACTPAGESQUERY, schemaName);
                             }
                         }
                         catch (Exception ex)
@@ -307,6 +289,7 @@ public partial class aspx_htmlPages : System.Web.UI.Page
                         //redirect to file
                         try
                         {
+                            path = path.TrimStart('/');
                             Response.Write(@"<script language='javascript'> document.location.href='../" + path + "'; window.parent.callParentNew('closeFrame()','function');</script>");
                         }
                         catch (Exception ex)
@@ -318,9 +301,10 @@ public partial class aspx_htmlPages : System.Web.UI.Page
                 }
                 else
                 {
-                    if (GetHTMLPagesFromDB(htmlFileName, htmlPageId))
+                    if (GetReactPagesFromDB(htmlFileName, htmlPageId))
                     {
-                        _htmlFile = new FileInfo(HttpContext.Current.Server.MapPath("~/" + projectName + "/HTMLPages/" + htmlFileName));
+                        path = axpertWebUrl.TrimEnd('/') + "/AxReact/" + projectName + "/" + htmlFileName + "?v=" + DateTime.Now.ToString("ddMMyyyyHHmmss") + "&load=" + pageId + extraParams;
+                        _htmlFile = new FileInfo(HttpContext.Current.Server.MapPath("~/ReactPages/" + projectName + "/" + htmlFileName));
                         if (_htmlFile.Exists)
                         {
                             if (path != string.Empty)
@@ -331,23 +315,24 @@ public partial class aspx_htmlPages : System.Web.UI.Page
 
                                     FDW fdwObj = new FDW();
 
-                                    fdwObj.ClearRedisServerDataByKey(util.GetRedisServerkey(Constants.HTMLPAGESQUERY, htmlPageId, userName), "", false, schemaName);
+                                    fdwObj.ClearRedisServerDataByKey(util.GetRedisServerkey(Constants.REACTPAGESQUERY, htmlPageId, userName), "", false, schemaName);
 
                                     if (extraParams != string.Empty)
                                     {
-                                        fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.HTMLPAGESQUERY, htmlPageId, userName), extraParams, Constants.HTMLPAGESQUERY, schemaName);
+                                        fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REACTPAGESQUERY, htmlPageId, userName), extraParams, Constants.REACTPAGESQUERY, schemaName);
                                     }
                                 }
                                 catch (Exception ex)
                                 { }
                                 try
                                 {
+                                    path = path.TrimStart('/');
                                     Response.Write(@"<script language='javascript'> document.location.href='../" + path + "'; window.parent.callParentNew('closeFrame()','function');</script>");
                                 }
                                 catch (Exception ex)
                                 {
-                                    errorLog = logobj.CreateLog("CallGetFileNames - Call Get HTML File loading exception for available file => " + ex.Message, sessionId, "HTMLPage", "");
-                                    Response.Redirect("err.aspx?errmsg=HTML Page content not available. Please contact administrator.");
+                                    errorLog = logobj.CreateLog("CallGetFileNames - Call Get React File loading exception for available file => " + ex.Message, sessionId, "ReactsPage", "");
+                                    Response.Redirect("err.aspx?errmsg=React Page content not available. Please contact administrator.");
                                 }
                             }
                         }
@@ -402,7 +387,7 @@ public partial class aspx_htmlPages : System.Web.UI.Page
         }
     }
 
-    protected bool GetHTMLPagesFromDB(string htmlFileName, string pageNo)
+    protected bool GetReactPagesFromDB(string htmlFileName, string pageNo)
     {
         LogFile.Log logobj = new LogFile.Log();
         try
@@ -414,7 +399,7 @@ public partial class aspx_htmlPages : System.Web.UI.Page
             FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
             if (fObj != null)
             {
-                string nocontent = fObj.StringFromRedis(util.GetRedisServerkey(Constants.HTMLPAGESCONTENT, pageNo), schemaName);
+                string nocontent = fObj.StringFromRedis(util.GetRedisServerkey(Constants.REACTPAGESCONTENT, pageNo), schemaName);
                 if (!string.IsNullOrEmpty(nocontent) && nocontent == "contentnotavailable")
                     return false;
             }
@@ -424,10 +409,9 @@ public partial class aspx_htmlPages : System.Web.UI.Page
             string userName = HttpContext.Current.Session["username"].ToString();
             string sessionId = HttpContext.Current.Session.SessionID;
 
-            string errorLog = logobj.CreateLog("CallGetFileNames - Call Get HTML File Name Get Choices", sessionId, "HTMLPage", "new");
+            string errorLog = logobj.CreateLog("CallGetFileNames - Call Get React File Name Get Choices", sessionId, "ReactPage", "new", "true");
             string inputXML = "<sqlresultset axpapp='" + projectName + "' sessionid='" + sessionId + "' trace='" + errorLog + "' appsessionkey='" + HttpContext.Current.Session["AppSessionKey"].ToString() + "' username='" + userName + "' ><sql>";
-            //sqlQuery = "select a.html_editor_htmlsrc,b.filename,b.filetype,b.css_js_src from sect2 a, SECT4 b, HTMLSECTIONS c where a.htmlsectionsid=c.htmlsectionsid and b.htmlsectionsid =c.htmlsectionsid and c.pageno='" + pageNo + "'";
-            sqlQuery = "SELECT a.html_editor_htmlsrc, b.filename, b.filetype, b.css_js_src FROM sect2 a JOIN htmlsections c ON a.htmlsectionsid = c.htmlsectionsid LEFT JOIN sect4 b ON b.htmlsectionsid = c.htmlsectionsid WHERE c.pageno = '" + pageNo + "'";
+            sqlQuery = "SELECT a.html_editor_htmlsrc, b.filename, b.filetype, b.css_js_src FROM axpdef_react_html a JOIN axpdef_reacthdr c ON a.axpdef_reacthdrid = c.axpdef_reacthdrid LEFT JOIN axpdef_react_cssjs b ON b.axpdef_reacthdrid = c.axpdef_reacthdrid WHERE c.pageno = '" + pageNo + "'";
             sqlQuery = util.CheckSpecialChars(sqlQuery);
             inputXML += sqlQuery + " </sql>" + HttpContext.Current.Session["axApps"].ToString() + HttpContext.Current.Application["axProps"].ToString() + HttpContext.Current.Session["axGlobalVars"].ToString() + HttpContext.Current.Session["axUserVars"].ToString() + "</sqlresultset>";
             logobj.CreateLog("Call Get HTML File Name Get Choices WS" + inputXML, sessionId, "CallGetFileName-HTMLPages-Ws", "");
@@ -450,7 +434,7 @@ public partial class aspx_htmlPages : System.Web.UI.Page
                 {
                     fileContent = true;
                     string htmlresult = xml[0].InnerText;
-                    string folderPath = HttpContext.Current.Server.MapPath("~/" + projectName + "/HTMLPages");
+                    string folderPath = HttpContext.Current.Server.MapPath("~/ReactPages/" + projectName);
                     Directory.CreateDirectory(folderPath);
                     string filePath = Path.Combine(folderPath, htmlFileName);
                     File.WriteAllText(filePath, htmlresult, Encoding.UTF8);
@@ -458,9 +442,9 @@ public partial class aspx_htmlPages : System.Web.UI.Page
                 if (xml_css_js_src.Count > 0)
                 {
                     fileContent = true;
-                    string folderPath = HttpContext.Current.Server.MapPath("~/" + projectName + "/HTMLPages/js/");
+                    string folderPath = HttpContext.Current.Server.MapPath("~/ReactPages/" + projectName + "/js/");
                     Directory.CreateDirectory(folderPath);
-                    string cssfolderPath = HttpContext.Current.Server.MapPath("~/" + projectName + "/HTMLPages/css/");
+                    string cssfolderPath = HttpContext.Current.Server.MapPath("~/ReactPages/" + projectName + "/css/");
                     Directory.CreateDirectory(cssfolderPath);
                     for (int i = 0; i < xml_css_js_src.Count; i++)
                     {
@@ -487,7 +471,7 @@ public partial class aspx_htmlPages : System.Web.UI.Page
                     try
                     {
                         FDW fdwObj = new FDW();
-                        fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.HTMLPAGESCONTENT, pageNo), "contentnotavailable", Constants.HTMLPAGESCONTENT, schemaName);
+                        fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REACTPAGESCONTENT, pageNo), "contentnotavailable", Constants.REACTPAGESCONTENT, schemaName);
                     }
                     catch (Exception ex)
                     { }
@@ -498,7 +482,7 @@ public partial class aspx_htmlPages : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            logobj.CreateLog("GetHTMLPagesFromDB - Call Get HTML Page's received information doesn't exist.", Session.SessionID, "HTMLPage-GetHTMLPagesFromDB", "", "true");
+            logobj.CreateLog("GetReactPagesFromDB - Call Get React Page's received information doesn't exist.", Session.SessionID, "ReactPage-GetReactPagesFromDB", "", "true");
             return false;
         }
     }
