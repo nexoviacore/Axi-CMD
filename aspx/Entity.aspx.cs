@@ -891,8 +891,10 @@ public partial class aspx_Entity : System.Web.UI.Page
                         fdKey = Constants.REDISTSTRUCTMOB;
                     string pgKey = Constants.AXPAGETITLE;
                     ArrayList redisvalues = new ArrayList();
+                    string _sXML = strObj.structRes;
+                    strObj.structRes = "";
                     cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transId), strObj, Constants.REDISTSTRUCT, schemaName);
-
+                    cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transId), _sXML, Constants.REDISTSTRUCTXML, schemaName);
                     var redisvalues1 = fObj.ObjectJsonFromRedis(util.GetRedisServerkey(pgKey, ""));
                     if (redisvalues1 == null)
                         redisvalues.Add(Title + "♠" + strObj.tstCaption + "♠" + transId);

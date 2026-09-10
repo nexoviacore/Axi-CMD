@@ -993,12 +993,7 @@ td .rowOptionsExist {
 /*#ivirMainDataTableWrapper .gridData {
 	table-layout: fixed !important;
 }*/
-#ivirMainDataTableWrapper .gridData.dt-fixed-layout {
-	table-layout: fixed !important;
-}
-#ivirMainDataTableWrapper .gridData.dt-auto-layout {
-	table-layout: auto !important;
-}
+
 
 
 	#ivirMainDataTableWrapper .gridData th {
@@ -1009,4 +1004,51 @@ td .rowOptionsExist {
 
 .dataTables_scrollBody, .dataTables_scrollHead {
 	width: auto !important;
+}
+
+/*tkt 0717*/
+
+/*
+#ivirMainDataTableWrapper .gridData.dt-fixed-layout {
+	table-layout: fixed !important;
+}
+*/
+
+.dataTables_wrapper .dataTables_scroll div.dataTables_scrollBody > table > tbody > tr > td.d-flex[data-field-name="rowno"] {
+	display: table-cell !important;
+}
+#ivirMainDataTableWrapper .gridData.dt-auto-layout {
+	table-layout: auto !important;
+}
+
+.confirm-action-Exports {
+	width: 80px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+}
+
+	.confirm-action-Exports img {
+		width: 52px;
+		height: 52px;
+		object-fit: contain;
+		transition: transform 0.2s ease;
+	}
+
+	.confirm-action-Exports:hover img {
+		transform: scale(1.08);
+	}
+
+	.confirm-action-Exports span {
+		font-size: 12px;
+		font-weight: 500;
+		color: #4b4f5c;
+	}
+
+.btn-confirm-action-Exports {
+	border: 0 !important;
+	background: transparent !important;
+	padding: 5px 12px !important;
+	box-shadow: none !important;
 }

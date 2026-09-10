@@ -15,15 +15,17 @@ $(document).ready(function () {
     });
 
     if (typeof hdnencryptkey.value != "undefined" && hdnencryptkey.value == "true") {
-        if ($("#Label2").length > 0)
-            $("#Label2").append("<span class=\"material-icons material-icons-style align-middle material-icons-3 cursor-pointer\" title=\"Password should be Alphanumeric. Must contains one Upper Character, one Lower Character/Number with at least one special character.\">info</span>");
-        if ($("#lblnewpwd").length > 0)
-            $("#lblnewpwd").append("<span class=\"material-icons material-icons-style align-middle material-icons-3 cursor-pointer\" title=\"Password should be Alphanumeric. Must contains one Upper Character, one Lower Character/Number with at least one special character.\">info</span>");
+        //if ($("#Label2").length > 0)
+        //    $("#Label2").append("<span class=\"material-icons material-icons-style align-middle material-icons-3 cursor-pointer\" title=\"Password should be Alphanumeric. Must contains one Upper Character, one Lower Character/Number with at least one special character.\">info</span>");
+        //if ($("#lblnewpwd").length > 0)
+        //    $("#lblnewpwd").append("<span class=\"material-icons material-icons-style align-middle material-icons-3 cursor-pointer\" title=\"Password should be Alphanumeric. Must contains one Upper Character, one Lower Character/Number with at least one special character.\">info</span>");
+        setPasswordPolicyTooltip();
     } else if (typeof hdnalphanumeric.value != "undefined" && hdnalphanumeric.value == "True") {
-        if ($("#Label2").length > 0)
-            $("#Label2").append("<span class=\"material-icons material-icons-style align-middle material-icons-3 cursor-pointer\" title=\"Password should be Alphanumeric. Must contains one Upper Character, one Lower Character/Number with at least one special character.\">info</span>");
-        if ($("#lblnewpwd").length > 0)
-            $("#lblnewpwd").append("<span class=\"material-icons material-icons-style align-middle material-icons-3 cursor-pointer\" title=\"Password should be Alphanumeric. Must contains one Upper Character, one Lower Character/Number with at least one special character.\">info</span>");
+        //if ($("#Label2").length > 0)
+        //    $("#Label2").append("<span class=\"material-icons material-icons-style align-middle material-icons-3 cursor-pointer\" title=\"Password should be Alphanumeric. Must contains one Upper Character, one Lower Character/Number with at least one special character.\">info</span>");
+        //if ($("#lblnewpwd").length > 0)
+        //    $("#lblnewpwd").append("<span class=\"material-icons material-icons-style align-middle material-icons-3 cursor-pointer\" title=\"Password should be Alphanumeric. Must contains one Upper Character, one Lower Character/Number with at least one special character.\">info</span>");
+        setPasswordPolicyTooltip();
     }
     try {
         GetOtpErrorMsg();
@@ -395,4 +397,54 @@ function GetOtpErrorMsg() {
             showAlertDialog('error', lnmsg);
         }, 100);
     }
+}
+
+function setPasswordPolicyTooltip() {
+    if (typeof hdnpwdPolicy == "undefined" || !hdnpwdPolicy.value)
+        return;
+    let pwdPolicy;
+    try {
+        pwdPolicy = JSON.parse(hdnpwdPolicy.value);
+    }
+    catch (e) {
+        return;
+    }
+
+    let minChar = parseInt(pwdPolicy.pwdminchar, 10);
+    let maxChar = parseInt(pwdPolicy.pwdmaxchar, 10);
+    let requirements = [];
+    let capChar = parseInt(pwdPolicy.pwdcapchar, 10);
+    let smallChar = parseInt(pwdPolicy.pwdsmallchar, 10);
+    let numChar = parseInt(pwdPolicy.pwdnumchar, 10);
+    let splChar = parseInt(pwdPolicy.pwdsplchar, 10);
+    if (capChar > 0)
+        requirements.push("• At least " + capChar + " uppercase characters");
+    if (smallChar > 0)
+        requirements.push("• At least " + smallChar + " lowercase characters");
+    if (numChar > 0)
+        requirements.push("• At least " + numChar + " numeric characters");
+    if (splChar > 0)
+        requirements.push("• At least " + splChar + " special characters");
+    let pwdTooltip = "";
+    if (minChar > 0 && maxChar > 0)
+        pwdTooltip = "Password must be " + minChar + "–" + maxChar + " characters long";
+    else if (minChar > 0)
+        pwdTooltip = "Password must be at least " + minChar + " characters long";
+    else if (maxChar > 0)
+        pwdTooltip = "Password must be at most " + maxChar + " characters long";
+    else
+        pwdTooltip = "Password must satisfy the following requirements";
+
+    if (requirements.length > 0)
+        pwdTooltip += " and contain:\n" + requirements.join("\n");
+
+    let tooltipIcon =
+        '<span class="material-icons material-icons-style align-middle material-icons-3 cursor-pointer" ' +
+        'title="' + pwdTooltip + '">info</span>';
+
+    if ($("#Label2").length > 0)
+        $("#Label2").append(tooltipIcon);
+
+    if ($("#lblnewpwd").length > 0)
+        $("#lblnewpwd").append(tooltipIcon);
 }

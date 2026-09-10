@@ -10,14 +10,16 @@ using System.Linq;
 //using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Text;
 using System.Web;
 using System.Web.Script.Services;
 using System.Web.Services;
 using System.Xml;
+using System.Xml.Linq;
 
 public partial class PluginCustomCode : System.Web.UI.Page
 {
-    public static string[] allowedExtensions = { ".js", ".css", ".html", ".json", ".png", ".svg", ".jpeg", ".jpg" };
+    public static string[] allowedExtensions = { ".js", ".css", ".html", ".json", ".png", ".svg", ".jpeg", ".jpg", ".jsx" };
     public static long maxFileSize = 10 * 1024 * 1024; // 10MB
     Util.Util util;
     protected void Page_Load(object sender, EventArgs e)
@@ -147,6 +149,50 @@ public partial class PluginCustomCode : System.Web.UI.Page
 
             result = _aUtils.CallWebAPI(apiUrl, "POST", "application/json", JsonConvert.SerializeObject(inputJson));
             return result;
+        }
+        catch (Exception ex)
+        {
+            return "Error: " + ex.Message;
+        }
+    }
+
+    [WebMethod]
+    public static string AddorEditHTMLTemplate(string name, string htmlText, string filePath, string action)
+    {
+        string result = String.Empty;
+        try
+        {
+            if (HttpContext.Current.Session["project"] == null || Convert.ToString(HttpContext.Current.Session["project"]) == string.Empty)
+            {
+                return Constants.SESSIONTIMEOUT;
+            }
+
+            string applicationPath = HttpRuntime.AppDomainAppPath;
+            string fullFilePath = Path.Combine(applicationPath, filePath, name + ".html");
+
+            string validFile = validateFile(fullFilePath);
+            if (validFile == "Valid")
+            {
+
+                if (File.Exists(fullFilePath))
+                {
+                    return "File already exists.";
+                }
+
+                try
+                {
+                    string directory = Path.GetDirectoryName(fullFilePath);
+                    Directory.CreateDirectory(directory);
+                    File.WriteAllText(fullFilePath, htmlText);
+                    return "File created successfully.";
+                }
+                catch (Exception ex)
+                {
+                    return ex.Message;
+                }
+            }
+            else
+                return validFile;
         }
         catch (Exception ex)
         {
@@ -313,11 +359,17 @@ public partial class PluginCustomCode : System.Web.UI.Page
         }
 
         string applicationPath = HttpRuntime.AppDomainAppPath;
+        string applicationPath_Custome = HttpRuntime.AppDomainAppPath;
         string project = Convert.ToString(HttpContext.Current.Session["project"]);
         string[] folderPaths = {
             applicationPath + "\\AxpertPlugins",
-            applicationPath + "\\CustomPages",
-            applicationPath + "\\" + project
+            applicationPath + "\\CustomPages"
+        };
+
+
+        string[] folderPaths_Custom = {
+            applicationPath_Custome + "\\" + project+"\\HTMLPages\\",
+            applicationPath_Custome + "\\ReactPages\\" + project
         };
 
         List<FileDetails> fileList = new List<FileDetails>();
@@ -381,12 +433,214 @@ public partial class PluginCustomCode : System.Web.UI.Page
             }
         }
 
+        foreach (string folderPath in folderPaths_Custom)
+        {
+            if (Directory.Exists(folderPath))
+            {
+                DirectoryInfo parentDirInfo = new DirectoryInfo(folderPath);
+                folderList.Add(new FolderDetails
+                {
+                    FolderName = parentDirInfo.FullName.Replace(applicationPath, ""),
+                    FullPath = parentDirInfo.FullName.Replace(applicationPath, ""),
+                    CreatedOn = parentDirInfo.CreationTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                    ModifiedOn = parentDirInfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
+                });
+                foreach (string subFolder in Directory.GetDirectories(folderPath, "*", SearchOption.AllDirectories))
+                {
+                    DirectoryInfo dirInfo = new DirectoryInfo(subFolder);
+                    if (Array.Exists(skipFolders, folder => subFolder.ToLower().Contains(folder)))
+                    {
+                        continue;
+                    }
+                    folderList.Add(new FolderDetails
+                    {
+                        FolderName = dirInfo.FullName.Replace(applicationPath, ""),
+                        FullPath = dirInfo.FullName.Replace(applicationPath, ""),
+                        CreatedOn = dirInfo.CreationTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                        ModifiedOn = dirInfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
+                    });
+                }
+
+                string dbXML = string.Empty;
+                bool isReactPages = folderPath.IndexOf("\\ReactPages\\", StringComparison.OrdinalIgnoreCase) > -1;
+                if (isReactPages)
+                    dbXML = GetHTMLPagesListDB("false");
+                else
+                    dbXML = GetHTMLPagesListDB("true");
+                if (!string.IsNullOrEmpty(dbXML) && dbXML != "error")
+                {
+                    XDocument dbDoc = XDocument.Parse(dbXML);
+                    foreach (XElement row in dbDoc.Descendants("row"))
+                    {
+                        string htmlsectionsid = GetXmlValue(row, "htmlsectionsid", "axpdef_reacthdrid");
+                        string caption = GetXmlValue(row, "caption");
+                        string pageNo = GetXmlValue(row, "pageno");
+                        string htmlContent = GetXmlValue(row, "html_editor_htmlsrc");
+                        string fileName = GetXmlValue(row, "filename");
+                        string fileType = GetXmlValue(row, "filetype");
+                        string cssJsSrc = GetXmlValue(row, "css_js_src");
+                        if (string.IsNullOrWhiteSpace(caption) || string.IsNullOrWhiteSpace(pageNo))
+                        {
+                            continue;
+                        }
+                        string pageName = caption.Trim().Replace(" ", "_") + "_" + pageNo;
+                        string htmlFileName = pageName + ".html";
+                        string htmlFilePath = Path.Combine(folderPath, htmlFileName);
+                        if (!File.Exists(htmlFilePath))
+                        {
+                            File.WriteAllText(htmlFilePath, htmlContent ?? string.Empty, Encoding.UTF8);
+                        }
+                        if (!string.IsNullOrWhiteSpace(fileName) && !string.IsNullOrWhiteSpace(cssJsSrc))
+                        {
+                            string extension = fileType;
+                            if (string.IsNullOrWhiteSpace(extension))
+                            {
+                                extension = Path.GetExtension(fileName);
+                            }
+                            if (!extension.StartsWith("."))
+                            {
+                                extension = "." + extension;
+                            }
+                            if (isReactPages && extension.Equals(".js", StringComparison.OrdinalIgnoreCase))
+                            {
+                                extension = ".jsx";
+                            }
+                            string cssJsFileName = pageName + extension;
+                            string cssJsFilePath;
+                            if (extension.Equals(".css", StringComparison.OrdinalIgnoreCase))
+                            {
+                                cssJsFilePath = Path.Combine(folderPath, "Css", cssJsFileName);
+                            }
+                            else
+                            {
+                                cssJsFilePath = Path.Combine(folderPath, "Js", cssJsFileName);
+                            }
+                            string directory = Path.GetDirectoryName(cssJsFilePath);
+                            if (!Directory.Exists(directory))
+                            {
+                                Directory.CreateDirectory(directory);
+                            }
+                            if (!File.Exists(cssJsFilePath))
+                            {
+                                File.WriteAllText(cssJsFilePath, cssJsSrc, Encoding.UTF8);
+                            }
+                        }
+                        FileInfo htmlFileInfo = new FileInfo(htmlFilePath);
+                        fileList.Add(new FileDetails
+                        {
+                            FolderName = htmlFileInfo.Directory.FullName.Replace(applicationPath, ""),
+                            FileName = caption,
+                            FullFilePath = htmlFileInfo.FullName.Replace(applicationPath, ""),
+                            FileType = ".html",
+                            FileSize = Math.Round(htmlFileInfo.Length / 1024.0, 2),
+                            CreatedOn = htmlFileInfo.CreationTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                            ModifiedOn = htmlFileInfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                            RecId = htmlsectionsid,
+                            ReactPage = isReactPages == true ? "true" : "false"
+                        });
+                    }
+                }
+            }
+        }
         var result = new
         {
             files = fileList,
             folders = folderList
         };
         return JsonConvert.SerializeObject(result);
+    }
+
+    protected static string GetHTMLPagesListDB(string isHtmlPages)
+    {
+        LogFile.Log logobj = new LogFile.Log();
+        try
+        {
+            Util.Util util = new Util.Util();
+            string schemaName = string.Empty;
+            if (HttpContext.Current.Session["dbuser"] != null)
+                schemaName = HttpContext.Current.Session["dbuser"].ToString();
+            string projectName = HttpContext.Current.Session["Project"].ToString();
+            FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+            if (fObj != null)
+            {
+                if (isHtmlPages == "true")
+                {
+                    string nocontent = fObj.StringFromRedis(util.GetRedisServerkey(Constants.HTMLPAGESDBXML, "HTML"), schemaName);
+                    if (!string.IsNullOrEmpty(nocontent) && nocontent == "noxml")
+                        return "";
+                    else if (!string.IsNullOrEmpty(nocontent) && nocontent != "noxml")
+                        return nocontent;
+                }
+                else
+                {
+                    string nocontent = fObj.StringFromRedis(util.GetRedisServerkey(Constants.REACTPAGESDBXML, "REACT"), schemaName);
+                    if (!string.IsNullOrEmpty(nocontent) && nocontent == "noxml")
+                        return "";
+                    else if (!string.IsNullOrEmpty(nocontent) && nocontent != "noxml")
+                        return nocontent;
+                }
+            }
+
+            ASBExt.WebServiceExt asbExt = new ASBExt.WebServiceExt();
+            string sqlResult = string.Empty;
+            string sqlQuery = string.Empty;
+            string userName = HttpContext.Current.Session["username"].ToString();
+            string sessionId = HttpContext.Current.Session.SessionID;
+
+            string errorLog = logobj.CreateLog("CallGetFileNames - Call Get HTML File Name Get Choices", sessionId, "HTMLPage", "new");
+            string inputXML = "<sqlresultset axpapp='" + projectName + "' sessionid='" + sessionId + "' trace='" + errorLog + "' appsessionkey='" + HttpContext.Current.Session["AppSessionKey"].ToString() + "' username='" + userName + "' ><sql>";
+            if (isHtmlPages == "true")
+                sqlQuery = "SELECT c.htmlsectionsid,c.pageno,c.caption, a.html_editor_htmlsrc, b.filename, b.filetype, b.css_js_src FROM sect2 a JOIN htmlsections c ON a.htmlsectionsid = c.htmlsectionsid LEFT JOIN sect4 b ON b.htmlsectionsid = c.htmlsectionsid";
+            else
+                sqlQuery = "SELECT c.axpdef_reacthdrid,c.pageno,c.caption, a.html_editor_htmlsrc, b.filename, b.filetype, b.css_js_src FROM axpdef_react_html a JOIN axpdef_reacthdr c ON a.axpdef_reacthdrid = c.axpdef_reacthdrid LEFT JOIN axpdef_react_cssjs b ON b.axpdef_reacthdrid = c.axpdef_reacthdrid";
+            sqlQuery = util.CheckSpecialChars(sqlQuery);
+            inputXML += sqlQuery + " </sql>" + HttpContext.Current.Session["axApps"].ToString() + HttpContext.Current.Application["axProps"].ToString() + HttpContext.Current.Session["axGlobalVars"].ToString() + HttpContext.Current.Session["axUserVars"].ToString() + "</sqlresultset>";
+            logobj.CreateLog("Call Get HTML File Name Get Choices WS" + inputXML, sessionId, "CallGetFileName-HTMLPages-Ws", "");
+            sqlResult = asbExt.CallGetChoiceWS("", inputXML);
+
+            if (sqlResult == string.Empty)
+            {
+                try
+                {
+                    FDW fdwObj = new FDW();
+                    if (isHtmlPages == "true")
+                        fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.HTMLPAGESDBXML, "HTML"), "noxml", Constants.HTMLPAGESDBXML, schemaName);
+                    else
+                        fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REACTPAGESDBXML, "REACT"), "noxml", Constants.REACTPAGESDBXML, schemaName);
+                }
+                catch (Exception ex)
+                { }
+                return "";
+            }
+            else if (sqlResult.StartsWith("<error>") && sqlResult.EndsWith("</error>"))
+            {
+                return "error";
+            }
+            else
+            {
+                try
+                {
+                    FDW fdwObj = new FDW();
+                    if (isHtmlPages == "true")
+                        fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.HTMLPAGESDBXML, "HTML"), sqlResult, Constants.HTMLPAGESDBXML, schemaName);
+                    else
+                        fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REACTPAGESDBXML, "REACT"), sqlResult, Constants.REACTPAGESDBXML, schemaName);
+                }
+                catch (Exception ex)
+                { }
+                return sqlResult;
+            }
+        }
+        catch (Exception ex)
+        {
+            logobj.CreateLog("GetHTMLPagesFromDB - Call Get HTML Page's received information doesn't exist.", HttpContext.Current.Session.SessionID, "HTMLPage-GetHTMLPagesFromDB", "", "true");
+            return "error";
+        }
+    }
+    private static string GetXmlValue(XElement row, params string[] elementNames)
+    {
+        XElement element = row.Elements().FirstOrDefault(x => elementNames.Any(name => x.Name.LocalName.Equals(name, StringComparison.OrdinalIgnoreCase)));
+        return element != null ? element.Value : string.Empty;
     }
 
     [WebMethod]
@@ -431,7 +685,7 @@ public partial class PluginCustomCode : System.Web.UI.Page
                         default:
                             break;
                     }
-                }                       
+                }
 
                 if (tempFilePath != "" && File.Exists(tempFilePath))
                 {
@@ -560,10 +814,10 @@ public partial class PluginCustomCode : System.Web.UI.Page
         }
 
         string extension = Path.GetExtension(fullFilePath);
-        string[] allowedExtensions = { ".js", ".css", ".html", ".json", ".png", ".svg", ".jpeg", ".jpg" };
+        string[] allowedExtensions = { ".js", ".css", ".html", ".json", ".png", ".svg", ".jpeg", ".jpg", ".jsx" };
         if (string.IsNullOrWhiteSpace(extension) || !extension.StartsWith(".") || !Array.Exists(allowedExtensions, ext => ext.Equals(extension, StringComparison.OrdinalIgnoreCase)))
         {
-            return "Invalid file type. Allowed types are: .js, .css, .html, .json";
+            return "Invalid file type. Allowed types are: .js, .css, .html, .json, .jsx";
         }
 
         string fileName = Path.GetFileName(fullFilePath);
@@ -579,10 +833,11 @@ public partial class PluginCustomCode : System.Web.UI.Page
         string axpertPluginsPath = Path.Combine(applicationPath, "AxpertPlugins");
         string customPagesPath = Path.Combine(applicationPath, "CustomPages");
         string projectPath = Path.Combine(applicationPath, project);
+        string reactProjectPath = Path.Combine(applicationPath, "ReactPages", project);
         string backupPath = Path.Combine(applicationPath, "UI-Plugin-Backups" + "\\" + project);
 
         if (!fullFilePath.StartsWith(axpertPluginsPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(customPagesPath, StringComparison.OrdinalIgnoreCase) &&
-            !fullFilePath.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(backupPath, StringComparison.OrdinalIgnoreCase))
+            !fullFilePath.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(reactProjectPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(backupPath, StringComparison.OrdinalIgnoreCase))
         {
             return "Access denied. Folder is not accessible.";
         }
@@ -617,10 +872,11 @@ public partial class PluginCustomCode : System.Web.UI.Page
         string axpertPluginsPath = Path.Combine(applicationPath, "AxpertPlugins");
         string customPagesPath = Path.Combine(applicationPath, "CustomPages");
         string projectPath = Path.Combine(applicationPath, project);
+        string reactProjectPath = Path.Combine(applicationPath, "ReactPages", project);
         string backupPath = Path.Combine(applicationPath, "UI-Plugin-Backups" + "\\" + project);
 
         if (!fullFilePath.StartsWith(axpertPluginsPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(customPagesPath, StringComparison.OrdinalIgnoreCase) &&
-            !fullFilePath.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(backupPath, StringComparison.OrdinalIgnoreCase))
+            !fullFilePath.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(reactProjectPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(backupPath, StringComparison.OrdinalIgnoreCase))
         {
             return "Access denied. Folder is not accessible.";
         }
@@ -643,10 +899,11 @@ public partial class PluginCustomCode : System.Web.UI.Page
         string axpertPluginsPath = Path.Combine(applicationPath, "AxpertPlugins");
         string customPagesPath = Path.Combine(applicationPath, "CustomPages");
         string projectPath = Path.Combine(applicationPath, project);
+        string reactProjectPath = Path.Combine(applicationPath, "ReactPages", project);
         string backupPath = Path.Combine(applicationPath, "UI-Plugin-Backups" + "\\" + project);
 
         if (!fullFilePath.StartsWith(axpertPluginsPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(customPagesPath, StringComparison.OrdinalIgnoreCase) &&
-            !fullFilePath.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(backupPath, StringComparison.OrdinalIgnoreCase))
+            !fullFilePath.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(reactProjectPath, StringComparison.OrdinalIgnoreCase) && !fullFilePath.StartsWith(backupPath, StringComparison.OrdinalIgnoreCase))
         {
             return "Access denied. Folder is not accessible.";
         }
@@ -762,6 +1019,8 @@ public partial class PluginCustomCode : System.Web.UI.Page
         public double FileSize { get; set; }
         public string CreatedOn { get; set; }
         public string ModifiedOn { get; set; }
+        public string RecId { get; set; }
+        public string ReactPage { get; set; }
     }
     public class FolderDetails
     {

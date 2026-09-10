@@ -36,9 +36,9 @@
 
     <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
 
-    <script type="text/javascript" src="../Js/login.min.js?v=116"></script>
-    <script src="../Js/ForgotPassword.min.js?v=16" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
+    <script type="text/javascript" src="../Js/login.min.js?v=119"></script>
+    <script src="../Js/ForgotPassword.min.js?v=17" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
 
     <%--<script>
         if(typeof localStorage != "undefined"){
@@ -218,7 +218,7 @@
                             </asp:Label>
                         </div>
                         <BotDetect:WebFormsCaptcha runat="server" ID="DynamicCaptcha" UserInputID="CaptchaCodeTextBox" CodeStyle="Alphanumeric" SoundEnabled="false" CodeLength="7" AutoReloadExpiredCaptchas="true" AutoReloadTimeout="7200" />
-                        <asp:TextBox ID="CaptchaCodeTextBox" runat="server" CssClass="m-wrap placeholder-no-fix form-control form-control-solid"></asp:TextBox>
+                        <asp:TextBox ID="CaptchaCodeTextBox" runat="server" CssClass="m-wrap placeholder-no-fix form-control form-control-solid" placeholder="Enter captcha" aria-label="Enter captcha"></asp:TextBox>
                     </div>
                 </div>
             </asp:Panel>

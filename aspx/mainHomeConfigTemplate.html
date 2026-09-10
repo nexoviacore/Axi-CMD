@@ -692,12 +692,12 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <!--<div id="Cards" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("iaxpcards");' class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
-                                                        <img src="../images/devops/cards.png">
-                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Cards</span>
-                                                        <span class="divSubTitle fs-7 text-gray-400">Cards</span>
-                                                    </a>
-                                                </div>-->
+        <a href="javascript:void(0);" onclick='openDeveloperStudio("iaxpcards");' class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+            <img src="../images/devops/cards.png">
+            <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Cards</span>
+            <span class="divSubTitle fs-7 text-gray-400">Cards</span>
+        </a>
+    </div>-->
 
                                                 <div id="pluginCustomCode" class="col-md-3 col-sm-6 col-6">
                                                     <a href="javascript:void(0);" onclick="openPluginEditor();" title="Custom Plugins" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
@@ -707,13 +707,13 @@ Home Cunfiguration Page Templete
                                                     </a>
                                                 </div>
 
-                                                <div id="CustomPages" class="col-md-3 col-sm-6 col-6">
+                                                <!--<div id="CustomPages" class="col-md-3 col-sm-6 col-6">
                                                     <a href="javascript:void(0);" onclick='openDeveloperStudio("ihplist");' title="Custom Pages" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/custom-pages.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Custom Pages</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">HTML</span>
                                                     </a>
-                                                </div>
+                                                </div>-->
 
                                                 <div id="ADS" class="col-md-3 col-sm-6 col-6">
                                                     <a href="javascript:void(0);" onclick='openDeveloperStudio("icsqlist");' title="Axpert Data Sources" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
@@ -1256,7 +1256,7 @@ Home Cunfiguration Page Templete
     files.js.push("/Js/handlebars.min.js?v=2");
     files.js.push("/Js/handleBarsHelpers.min.js");
     if (homePageType == "cards") {
-        files.js.push("/Js/AxInterface.min.js?v=21");//min
+        files.js.push("/Js/AxInterface.min.js?v=23");//min
         files.js.push("/ThirdParty/Highcharts/highcharts.js");
         files.js.push("/ThirdParty/Highcharts/highcharts-3d.js");
         files.js.push("/ThirdParty/Highcharts/highcharts-more.js");
@@ -1290,7 +1290,7 @@ Home Cunfiguration Page Templete
     files.css.push("/Css/AxNotifications.min.css?v=2");
     files.css.push("/Css/HomeConfigPageCards.min.css?v=12");
     files.js.push("/Js/signalr.min.js");
-    files.js.push("/Js/axpertUI_homecards.min.js?v=29");
+    files.js.push("/Js/axpertUI_homecards.min.js?v=30");
     files.js.push("/Js/AxNotifications.min.js?v=16");
     files.js.push("/Js/HomeConfigPageCards.min.js?v=15");
     files.js.push("/Js/Entity-common.min.js?v=18");
@@ -1725,18 +1725,18 @@ Home Cunfiguration Page Templete
                                         title: lcm[398],
                                     },
 
-                                    CustomPages: {
-                                        div: "#CustomPages",
-                                        atitle: lcm[549].split(" ")[0] + " " + lcm[549].split(" ")[1],
-                                        title: {
-                                            div: ".divTitle",
-                                            title: lcm[549].split(" ")[0] + " " + lcm[549].split(" ")[1]
-                                        },
-                                        subTitle: {
-                                            div: ".divSubTitle",
-                                            title: lcm[549].split(" ")[2]
-                                        }
-                                    },
+                                    //CustomPages: {
+                                    //    div: "#CustomPages",
+                                    //    atitle: lcm[549].split(" ")[0] + " " + lcm[549].split(" ")[1],
+                                    //    title: {
+                                    //        div: ".divTitle",
+                                    //        title: lcm[549].split(" ")[0] + " " + lcm[549].split(" ")[1]
+                                    //    },
+                                    //    subTitle: {
+                                    //        div: ".divSubTitle",
+                                    //        title: lcm[549].split(" ")[2]
+                                    //    }
+                                    //},
 
                                     pluginCustomCode: {
                                         div: "#pluginCustomCode",

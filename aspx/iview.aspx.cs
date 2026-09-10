@@ -524,7 +524,7 @@ public partial class iview : System.Web.UI.Page
                     {
                         string _thisDupTab = HttpContext.Current.Session["isDupTab"].ToString();
                         _thisDupTab = _thisDupTab.Split('-')[1];
-                        HttpContext.Current.Session["isDupTab"] = "false";
+                        //HttpContext.Current.Session["isDupTab"] = "false";
                         if (Session["tstivobjkey-duptab-" + _thisDupTab] != null && Session["tstivobjkey-duptab-" + _thisDupTab].ToString() != string.Empty)
                             Session["tstivobjkey-duptab-" + _thisDupTab] = Session["tstivobjkey-duptab-" + _thisDupTab].ToString() + "," + Ivkey + "," + IvParamKey;
                         else
@@ -632,7 +632,8 @@ public partial class iview : System.Web.UI.Page
                     Session[Ivkey + "_param"] = objParams;
 
                 }
-                System.Web.UI.ScriptManager.RegisterClientScriptBlock(Page, GetType(), "ivDataVar", "<script>" + ivVarNode.ToString() + ";</script>", false);
+                //System.Web.UI.ScriptManager.RegisterClientScriptBlock(Page, GetType(), "ivDataVar", "<script>" + ivVarNode.ToString() + ";</script>", false);
+                System.Web.UI.ScriptManager.RegisterStartupScript(Page, GetType(), "ivDataVar", "<script>" + ivVarNode.ToString() + ";</script>", false);
                 if (objIview.requestJSON && !objIview.isObjFromCache && !objParams.ForceDisableCache)
                 {
                     if (flKey == null)
@@ -2009,8 +2010,10 @@ public partial class iview : System.Web.UI.Page
                         fdKey = Constants.REDISTSTRUCTMOB;
                     string pgKey = Constants.AXPAGETITLE;
                     ArrayList redisvalues = new ArrayList();
+                    string _sXML = strObj.structRes;
+                    strObj.structRes = "";
                     cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, iName), strObj, Constants.REDISTSTRUCT, schemaName);
-
+                    cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, iName), _sXML, Constants.REDISTSTRUCTXML, schemaName);
                     var redisvalues1 = fObj.ObjectJsonFromRedis(util.GetRedisServerkey(pgKey, ""));
                     if (redisvalues1 == null)
                         redisvalues.Add(Title + "♠" + tstCaption + "♠" + iName);
@@ -2781,6 +2784,10 @@ public partial class iview : System.Web.UI.Page
         if (!objIview.requestJSON || data.StartsWith(Constants.ERROR))
         {
             returnString = util.ParseXmlErrorNode(data);
+            if (iName == "a___smtl" && returnString == "List index out of bounds (0)")
+            {
+                returnString = "Smart View package needs to be installed to use this option.";
+            }
         }
         else
         {
@@ -4858,10 +4865,10 @@ public partial class iview : System.Web.UI.Page
             {
                 Session["isDupTab"] = Request.Form["isDupTab"] == null ? Request.QueryString["isDupTab"].ToString() : Request.Form["isDupTab"];
             }
-            else
-            {
-                Session["isDupTab"] = "false";
-            }
+            //else
+            //{
+            //    Session["isDupTab"] = "false";
+            //}
         }
         catch (Exception ex) { }
 

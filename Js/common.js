@@ -1374,9 +1374,37 @@ function findGetParameter(parameterName, locationData = location.search) {
         });
     return result;
 }
-    function isMobileDevice() {
-        return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('Mobile') !== -1) || isiOS;
+function isMobileDevice() {
+    return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('Mobile') !== -1) || isiOS;
+}
+function getDeviceType() {
+    const ua = navigator.userAgent || "";
+    // iPad / iPadOS
+    const isIPad = /iPad/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 0);
+    if (isIPad) {
+        return "TABLET";
     }
+    // iPhone / iPod
+    if (/iPhone|iPod/i.test(ua)) {
+        return "MOBILE";
+    }
+    // Android
+    if (/Android/i.test(ua)) {
+        return /Mobile/i.test(ua) ? "MOBILE" : "TABLET";
+    }
+    // Unknown device
+    const hasTouch = navigator.maxTouchPoints > 0;
+    const isCoarsePointer = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    const noHover = window.matchMedia && window.matchMedia("(hover: none)").matches;
+    if (hasTouch && isCoarsePointer && noHover) {
+        const screenWidth = Math.min(window.screen.width, window.screen.height);
+        if (screenWidth < 600) {
+            return "MOBILE";
+        }
+        return "TABLET";
+    }
+    return "DESKTOP";
+}
 
     function getCaseInSensitiveJsonProperty(obj, propertyName) {
         let reg = new RegExp(`^${propertyName}$`, "i");

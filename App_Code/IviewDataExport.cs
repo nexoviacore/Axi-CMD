@@ -6,11 +6,13 @@ using Newtonsoft.Json.Linq;
 using RabbitMQ.Client.Impl;
 using Saml;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
@@ -102,6 +104,43 @@ public class IviewDataExport
                 if (!string.IsNullOrEmpty(smartViewSettings))
                 {
                     hiddenColumnSet = new HashSet<string>(smartViewSettings.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries), StringComparer.OrdinalIgnoreCase);
+                }
+                ArrayList axhiddencols = new ArrayList();
+                string ivParams = string.Empty;
+                if (HttpContext.Current.Session["AxIvExportParams-" + _ivName] != null)
+                    ivParams = HttpContext.Current.Session["AxIvExportParams-" + _ivName].ToString();
+                if (ivParams != string.Empty)
+                {
+                    StringBuilder sbPVal = new StringBuilder();
+                    string[] pairs = ivParams.Split('~');
+                    foreach (var pair in pairs)
+                    {
+                        string[] keyValue = pair.Split('♠');
+                        string kyval = keyValue[1];
+                        kyval = kyval.Replace("&grave;", "~");
+                        kyval = kyval.Replace("&amp;", "&");
+                        XElement element = new XElement(keyValue[0], kyval);
+                        sbPVal.Append(element.ToString());
+                        if (keyValue[0] != "" && keyValue[0].ToLower().ToString() == "axhiddencolumn")
+                        {
+                            foreach (string _thiscolName in kyval.Split(','))
+                                axhiddencols.Add(_thiscolName);
+                        }
+                    }
+                    foreach (string column in axhiddencols)
+                    {
+                        hiddenColumnSet.Add(column);
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(objIview.ParamAndLvXml))
+                {
+                    string _xml = "<root>" + objIview.ParamAndLvXml + "</root>";
+                    XDocument docHideColumns = XDocument.Parse(_xml);
+                    var hiddenColumns = docHideColumns.Descendants().Where(x => x.Name.LocalName.Equals("axHiddenColumn", StringComparison.OrdinalIgnoreCase)).Select(x => x.Value.Trim()).Where(x => !string.IsNullOrEmpty(x));
+                    foreach (string column in hiddenColumns)
+                    {
+                        hiddenColumnSet.Add(column);
+                    }
                 }
 
                 foreach (XmlNode col in headRow.ChildNodes)
