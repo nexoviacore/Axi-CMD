@@ -741,7 +741,7 @@ body.axi-cmd-disabled .AXI-Sec {
   max-height: 30px !important;
 }
 
-/*
+
 @media (min-width: 992px) {}
 
 @media (min-width: 992px) {
@@ -762,13 +762,13 @@ body.axi-cmd-disabled .AXI-Sec {
 .menu-fit>.menu-item>.menu-link {
   padding-left: 6px !important;
 }
-*/
+
 
 .Axpert_logo {
   margin: 10px 3px !important;
 }
 
-/*
+
 #kt_aside_footer {
   padding-left: 0 !important;
 }
@@ -801,7 +801,7 @@ body.axi-cmd-disabled .AXI-Sec {
   border-bottom: 1px solid #dcdcdc;
   box-shadow: 0 -2px 15px #ccccccb2;
 }
-*/
+
 
 #mobileAxAppLogo img.mh-40px {
   max-height: 30px !important;
@@ -814,12 +814,12 @@ body.axi-cmd-disabled .AXI-Sec {
 
 }
 
-/* Commented out: Leaked sidebar styles that conflict with host page layout
+/* Commented out: Leaked sidebar styles that conflict with host page layout */
 .menu-fit>.menu-item>.menu-content,
 .menu-fit>.menu-item>.menu-link {
   padding-left: 10px !important;
 }
-*/
+
 
 .Axpert_logo {
   margin: 10px 6px !important;

@@ -1671,118 +1671,119 @@ if (typeof document !== "undefined") {
     }
 
     function handleInput() {
-        if (!axicmdenabled) return;
-        if (favouritesCard) {
-            favouritesCard.style.display = "none";
-        }
-        const suggCard = list.closest(".card");
-        if (suggCard) {
-            suggCard.style.display = "flex";
-        }
-
-        if (input.value && input.value.includes(" ,")) {
-            const cursorPos = input.selectionStart;
-            input.value = input.value.replace(/ ,/g, ",");
-            if (cursorPos !== null) {
-                const newPos = Math.max(0, cursorPos - 1);
-                input.setSelectionRange(newPos, newPos);
+        try {
+            if (!axicmdenabled) return;
+            if (favouritesCard) {
+                favouritesCard.style.display = "none";
             }
-        }
-        const initialTokens = getTokens(input.value.trim());
-        const isInitialCommandStage = initialTokens.length === 0 || (initialTokens.length === 1 && !input.value.endsWith(" "));
-
-        if (isCommandsLoading && !isInitialCommandStage) {
-            items = ["Loading Commands...."];
-            hintDiv.textContent = "Please wait...";
-            render();
-            return;
-        }
-        const text = input.value;
-
-        if (axiClearBtn) {
-            if (text.length > 0) {
-                axiClearBtn.style.display = "flex";
-
-            } else {
-                axiClearBtn.style.display = "none";
+            const suggCard = list.closest(".card");
+            if (suggCard) {
+                suggCard.style.display = "flex";
             }
-        }
-        if (!commands) {
-            if (isInitialCommandStage) {
+
+            if (input.value && input.value.includes(" ,")) {
+                const cursorPos = input.selectionStart;
+                input.value = input.value.replace(/ ,/g, ",");
+                if (cursorPos !== null) {
+                    const newPos = Math.max(0, cursorPos - 1);
+                    input.setSelectionRange(newPos, newPos);
+                }
+            }
+            const initialTokens = getTokens(input.value.trim());
+            const isInitialCommandStage = initialTokens.length === 0 || (initialTokens.length === 1 && !input.value.endsWith(" "));
+
+            if (isCommandsLoading && !isInitialCommandStage) {
+                items = ["Loading Commands...."];
+                hintDiv.textContent = "Please wait...";
+                render();
+                return;
+            }
+            const text = input.value;
+
+            if (axiClearBtn) {
+                if (text.length > 0) {
+                    axiClearBtn.style.display = "flex";
+
+                } else {
+                    axiClearBtn.style.display = "none";
+                }
+            }
+            if (!commands) {
+                if (isInitialCommandStage) {
+                    items = getInitialSuggestions();
+                    hintDiv.textContent = "";
+                    render();
+                    return;
+                }
+                return;
+            }
+
+            if (!text.trim()) {
+                resolvedParams = {};
+                resolvedParamType = {};
                 items = getInitialSuggestions();
                 hintDiv.textContent = "";
                 render();
                 return;
             }
-            return;
-        }
 
-        if (!text.trim()) {
-            resolvedParams = {};
-            resolvedParamType = {};
-            items = getInitialSuggestions();
-            hintDiv.textContent = "";
-            render();
-            return;
-        }
+            ///set command - numeric handling.
+            if (SET_COMMAND_STATE.currentFieldType === 'n') {
 
-        ///set command - numeric handling.
-        if (SET_COMMAND_STATE.currentFieldType === 'n') {
+                let tokens = getTokens(text);
 
-            let tokens = getTokens(text);
+                const grpKey = (tokens[0] || "").toLowerCase();
 
-            const grpKey = tokens[0];
-
-            let lastIndex = tokens.length - 1;
-            let lastToken = tokens[lastIndex];
+                let lastIndex = tokens.length - 1;
+                let lastToken = lastIndex >= 0 ? tokens[lastIndex] : "";
 
 
-            if (lastToken.toLowerCase() == SET_COMMAND_STATE.currentField) {
-                return;
-            }
+                if (lastToken && lastToken.toLowerCase() == (SET_COMMAND_STATE.currentField || "").toLowerCase()) {
+                    return;
+                }
 
-            //const numericRegex = /^-?\d*$/;
-            let numericRegex;
-            if (grpKey.toLowerCase() === "view") {
-                numericRegex = /^-?(?!.*\.\.)(?!.*'')(?!.*,,)[\d.,'-<>!=]*$/;
-                //numericRegex = /^(>=|<=|!=|>|<|=)?-?(?:\d+(?:,\d+)*(?:\.\d+)?|\.\d+)$/;
-            }
-            else
-                numericRegex = /^-?(?!.*\.\.)(?!.*'')(?!.*,,)[\d.,']*$/;
-
-
-            //const cursorPos = input.selectionStart
-            //if (input.value[cursorPos - 1] === " ") {
-            //    return;
-            //}
-
-
-            // If user pressed space ? don't validate previous token again
-            //let endsWithSpace = text.endsWith(" ");
-
-            //if (endsWithSpace) {
-            //    return; // just wait for next input
-            //}
-
-
-
-            if (!numericRegex.test(lastToken)) {
-
-                // console.error("Type only numeric value");
-
-                if (grpKey.toLowerCase() === "view")
-                    showToast("Please enter a valid number. You may use comparison operators (>, <, >=, <=, !=, =).");
+                //const numericRegex = /^-?\d*$/;
+                let numericRegex;
+                if (grpKey === "view") {
+                    numericRegex = /^-?(?!.*\.\.)(?!.*'')(?!.*,,)[\d.,'-<>!=]*$/;
+                    //numericRegex = /^(>=|<=|!=|>|<|=)?-?(?:\d+(?:,\d+)*(?:\.\d+)?|\.\d+)$/;
+                }
                 else
-                    showToast("Please enter a valid numeric value.");
+                    numericRegex = /^-?(?!.*\.\.)(?!.*'')(?!.*,,)[\d.,']*$/;
+
+
+                //const cursorPos = input.selectionStart
+                //if (input.value[cursorPos - 1] === " ") {
+                //    return;
+                //}
+
+
+                // If user pressed space ? don't validate previous token again
+                //let endsWithSpace = text.endsWith(" ");
+
+                //if (endsWithSpace) {
+                //    return; // just wait for next input
+                //}
 
 
 
-                tokens[lastIndex] = "";
+                if (lastToken && !numericRegex.test(lastToken)) {
 
-                input.value = tokens.join(" ");
-                return;
+                    // console.error("Type only numeric value");
+
+                    if (grpKey === "view")
+                        showToast("Please enter a valid number. You may use comparison operators (>, <, >=, <=, !=, =).");
+                    else
+                        showToast("Please enter a valid numeric value.");
+
+
+
+                    tokens[lastIndex] = "";
+
+                    input.value = tokens.join(" ");
+                    return;
+                }
             }
-        }
 
 
         // Clear stale resolutions when input changes
@@ -1931,7 +1932,10 @@ if (typeof document !== "undefined") {
                 }
             }
         }
+    } catch (inputErr) {
+        console.error("Error in handleInput:", inputErr);
     }
+}
 
     /* ===============================
        3. TOKENIZER
@@ -4031,7 +4035,8 @@ if (typeof document !== "undefined") {
             const sourceKey = (paramValue ? `${apiSourceName}_${paramValue}` : apiSourceName).toLowerCase();
 
             if (!axDatasourceObj[sourceKey]) {
-                const hasValidParams = !activePrompt.promptParams || (paramValue && paramValue.replace(/,/g, '').trim().length > 0);
+                const paramStr = typeof paramValue === "string" ? paramValue : (Array.isArray(paramValue) ? paramValue.join("$#$") : "");
+                const hasValidParams = !activePrompt.promptParams || (paramStr && paramStr.replace(/,/g, '').trim().length > 0);
 
                 if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
                     if (groupKey.toLowerCase() === "sdk" && tokens.length >= 2) {
@@ -4279,9 +4284,12 @@ if (typeof document !== "undefined") {
     }
 
     function processParamforEditndView(tokens, commandConfig, paramValue, position) {
-
+        if (!commandConfig || !commandConfig.prompts || !commandConfig.prompts[0]) {
+            return "";
+        }
         const struct_prompt = commandConfig.prompts[0];
         const struct_source = struct_prompt.promptSource;
+        if (!struct_source) return "";
 
         // extra params
         const struct_paramValue = processExtraParams(tokens, commandConfig);
@@ -4296,18 +4304,18 @@ if (typeof document !== "undefined") {
 
             if (struct_hasParams) {
                 loadList(struct_source, struct_paramValue);
-                return [`Loading ${struct_source}...`];
             }
+            return "";
         }
 
         const struct_dataList = axDatasourceObj[struct_sourceKey];
-        //if (!struct_dataList) return null;
+        if (!struct_dataList || !Array.isArray(struct_dataList)) return "";
 
         // find struct row
 
         let struct_name = paramValue;
 
-        if (paramValue && paramValue.includes("$#$")) {
+        if (paramValue && typeof paramValue === "string" && paramValue.includes("$#$")) {
             const struct_split = paramValue.split("$#$");
             struct_name = struct_split[0];
         }
@@ -4320,14 +4328,12 @@ if (typeof document !== "undefined") {
         }
 
         const struct_row = struct_dataList.find(r =>
-            r.name === struct_name &&
+            r && r.name === struct_name &&
             (!preferredType || (r.stype || "").toLowerCase() === preferredType)
-        ) || struct_dataList.find(r => r.name === struct_name);
+        ) || struct_dataList.find(r => r && r.name === struct_name);
 
         if (!struct_row) {
-            // console.log("The give Form is not in the ads " + struct_source + " list");
-            showToast("The Given Transid is not in the list");
-            return [];
+            return "";
         }
 
         // values from structmetalist
@@ -4342,7 +4348,7 @@ if (typeof document !== "undefined") {
         if (position === 3) {
             struct_selectedfield = "0";
         } else {
-            const struct_split = paramValue ? paramValue.split("$#$") : [];
+            const struct_split = (paramValue && typeof paramValue === "string") ? paramValue.split("$#$") : [];
             struct_selectedfield = struct_split.length > 1 ? struct_split[1] : "";
         }
 
@@ -4380,22 +4386,22 @@ if (typeof document !== "undefined") {
                 value = commandConfig.commandGroup;
             }
             else if (param === ":transid") {
-                value = struct_row.name;;
+                value = struct_row?.name || "";
             }
             else if (param === ":selectedfield") {
                 value = struct_selectedfield;
             }
             else if (param === ":dimension") {
-                value = struct_row.dimension;
+                value = struct_row?.dimension || "";
             }
             else if (param === ":permission") {
-                value = struct_row.permission;
+                value = struct_row?.permission || "";
             }
             else if (param === ":keyfield") {
-                value = struct_row.keyfield;
+                value = struct_row?.keyfield || "";
             }
             else if (param === ":primarytable") {
-                value = struct_row.primarytable;
+                value = struct_row?.primarytable || "";
             }
             else if (param === ":globalvars") {
                 value = "NA";
@@ -6284,7 +6290,31 @@ if (typeof document !== "undefined") {
             runBtn.addEventListener("click", executeCommandsV2);
         }
 
+        function releaseStuckDimmer() {
+            try {
+                if (document.onkeydown) {
+                    const fnStr = String(document.onkeydown).replace(/\s+/g, "");
+                    const isDimmerEatKey = document.onkeydown.name === "EatKeyPress"
+                        || fnStr.includes("EatKeyPress")
+                        || fnStr === "function(){return!1;}"
+                        || fnStr === "function(){return!1}"
+                        || fnStr === "function(){returnfalse;}"
+                        || fnStr === "function(){returnfalse}";
+                    if (isDimmerEatKey) {
+                        document.onkeydown = null;
+                    }
+                }
+                if (typeof ShowDimmer === "function") {
+                    ShowDimmer(false);
+                }
+                if (document.body) {
+                    document.body.classList.remove("page-loading");
+                }
+            } catch (e) { }
+        }
+
         input.addEventListener("focus", () => {
+            releaseStuckDimmer();
             if (suppressFocusSuggestions) {
                 suppressFocusSuggestions = false;
                 return;
@@ -6294,6 +6324,7 @@ if (typeof document !== "undefined") {
         });
 
         input.addEventListener("click", () => {
+            releaseStuckDimmer();
             isInitialLoad = false;
             suppressFocusSuggestions = false;
             handleInput();
@@ -6330,124 +6361,121 @@ if (typeof document !== "undefined") {
                 saveCommandConfig = getCommandConfig(grpKey, normalizedTokens);
 
             if (e.key === 'Backspace' && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit")) {
-                let transIDcheck = setCommandTransid;
-                if (input.selectionStart !== input.selectionEnd) {
-                    createfieldnamevaluesList[transIDcheck] = [];
-                    setCommandTransid = null;
-                    dateControlBoolean = false;
-                    resetSetCommandState();
-                    return;
-                }
-                e.preventDefault();
+                try {
+                    let transIDcheck = setCommandTransid;
+                    if (input.selectionStart !== input.selectionEnd) {
+                        if (transIDcheck) {
+                            createfieldnamevaluesList[transIDcheck] = [];
+                        }
+                        setCommandTransid = null;
+                        dateControlBoolean = false;
+                        resetSetCommandState();
+                        return;
+                    }
+                    if (tokens.length <= 1) {
+                        return;
+                    }
+                    const isTargetFirst = (tokens.length === 2 && isTargetEntity(tokens[0]) && isValidActionForTarget(tokens[0], tokens[1]));
+                    if (isTargetFirst) {
+                        return;
+                    }
+                    e.preventDefault();
 
-                const cursorPos = input.selectionStart;
+                    const cursorPos = input.selectionStart;
 
-                //tokens.pop();
+                    if (input.value[cursorPos - 1] === " " && !SET_COMMAND_STATE.currentField?.trim()) {
+                        // Deleted a space using Backspace
+                    }
+                    else {
+                        if (transIDcheck && createfieldnamevaluesList?.[transIDcheck]?.length > 0) {
+                            const list = createfieldnamevaluesList[transIDcheck];
+                            const lastListItem = list[list.length - 1];
 
-                if (input.value[cursorPos - 1] === " " && !SET_COMMAND_STATE.currentField?.trim()) {
+                            const lastTokenValue = cleanCommandToken(tokens[tokens.length - 1]);
+                            const { value: actualLastTokenValue } = tryResolveToken(tokens.length - 1, lastTokenValue, saveCommandConfig, false);
 
+                            if (lastListItem) {
+                                const parts = lastListItem.split("~");
+                                const listValue = parts[0];
 
-                    // console.log("Deleted a space using Backspace");
-                    // console.log(SET_COMMAND_STATE);
-                }
-                else {
-                    //if (createfieldnamevaluesList?.[transIDcheck]?.length > 0 && !SET_COMMAND_STATE.currentField) {
-                    //    createfieldnamevaluesList[transIDcheck].pop();
-                    //}
-                    if (createfieldnamevaluesList?.[transIDcheck]?.length > 0) {
-
-                        const list = createfieldnamevaluesList[transIDcheck];
-                        const lastListItem = list[list.length - 1];
-
-                        const lastTokenValue = cleanCommandToken(tokens[tokens.length - 1]);
-                        // const actualLastTokenValue = tryResolveToken(tokens.length - 1, lastTokenValue, saveCommandConfig, false);
-                        const { value: actualLastTokenValue, type } = tryResolveToken(tokens.length - 1, lastTokenValue, saveCommandConfig, false);
-
-                        if (lastListItem) {
-
-                            const parts = lastListItem.split("~");
-                            const listValue = parts[0];
-
-                            if (listValue === actualLastTokenValue) {
-
-                                // console.log("Removing last matching field:", lastListItem);
-                                createfieldnamevaluesList[transIDcheck].pop();
-
-                            } else {
-
-                                // console.log("Last token does not match last list value. No pop.");
+                                if (listValue === actualLastTokenValue) {
+                                    createfieldnamevaluesList[transIDcheck].pop();
+                                }
                             }
                         }
                     }
 
-                }
-                //tokens.pop();
-
-
-                let lastIndex = tokens.length - 1;
-                tokens[lastIndex] = "";
-
-                input.value = tokens.join(" ");
-
-                if (tokens.length <= 2) {
-                    setCommandTransid = null;
-                    if (transIDcheck) {
-                        createfieldnamevaluesList[transIDcheck] = [];
+                    let lastIndex = tokens.length - 1;
+                    if (lastIndex >= 0) {
+                        tokens[lastIndex] = "";
+                        input.value = tokens.join(" ");
                     }
-                }
 
-                // console.log("After backspace our list : ");
-                // console.log(createfieldnamevaluesList[transIDcheck]);
+                    if (tokens.length <= 2) {
+                        setCommandTransid = null;
+                        if (transIDcheck) {
+                            createfieldnamevaluesList[transIDcheck] = [];
+                        }
+                    }
 
-                dateControlBoolean = false;
-                resetSetCommandState();
-                input.focus();
-                input.setSelectionRange(input.value.length, input.value.length);
-                handleInput();
-
-
-            }
-            else if (e.key === 'Backspace' && grpKey?.toLowerCase() === "view") {
-                if (input.selectionStart !== input.selectionEnd) {
-                    setCommandTransid = null;
                     dateControlBoolean = false;
                     resetSetCommandState();
-                    return;
+                    input.focus();
+                    input.setSelectionRange(input.value.length, input.value.length);
+                    handleInput();
+                } catch (err) {
+                    console.error("Error in create/edit Backspace handler:", err);
                 }
-                e.preventDefault();
+            }
+            else if (e.key === 'Backspace' && grpKey?.toLowerCase() === "view") {
+                try {
+                    if (input.selectionStart !== input.selectionEnd) {
+                        setCommandTransid = null;
+                        dateControlBoolean = false;
+                        resetSetCommandState();
+                        return;
+                    }
+                    if (tokens.length <= 1) {
+                        return;
+                    }
+                    const isTargetFirst = (tokens.length === 2 && isTargetEntity(tokens[0]) && isValidActionForTarget(tokens[0], tokens[1]));
+                    if (isTargetFirst) {
+                        return;
+                    }
+                    e.preventDefault();
 
-                const cursorPos = input.selectionStart;
+                    const cursorPos = input.selectionStart;
 
+                    if (input.value[cursorPos - 1] === " " && !SET_COMMAND_STATE.currentField?.trim()) {
+                        // Deleted a space using Backspace
+                    }
 
-                if (input.value[cursorPos - 1] === " " && !SET_COMMAND_STATE.currentField?.trim()) {
+                    let lastIndex = tokens.length - 1;
+                    if (lastIndex >= 0) {
+                        const lastToken = tokens[lastIndex];
+                        if (lastToken && lastToken.includes(",")) {
+                            const parts = lastToken.split(",");
+                            parts.pop();
+                            tokens[lastIndex] = parts.join(",");
+                        } else {
+                            tokens[lastIndex] = "";
+                        }
 
-                    // console.log("Deleted a space using Backspace");
-                    // console.log(SET_COMMAND_STATE);
+                        input.value = tokens.join(" ");
+                    }
+
+                    if (tokens.length <= 2) {
+                        setCommandTransid = null;
+                    }
+
+                    dateControlBoolean = false;
+                    resetSetCommandState();
+                    input.focus();
+                    input.setSelectionRange(input.value.length, input.value.length);
+                    handleInput();
+                } catch (err) {
+                    console.error("Error in view Backspace handler:", err);
                 }
-
-                //tokens.pop();
-
-                let lastIndex = tokens.length - 1;
-                const lastToken = tokens[lastIndex];
-                if (lastToken && lastToken.includes(",")) {
-                    const parts = lastToken.split(",");
-                    parts.pop();
-                    tokens[lastIndex] = parts.join(",");
-                } else {
-                    tokens[lastIndex] = "";
-                }
-
-                input.value = tokens.join(" ");
-
-                if (tokens.length <= 2) {
-                    setCommandTransid = null;
-                }
-
-                dateControlBoolean = false;
-                resetSetCommandState();
-                input.focus();
-                input.setSelectionRange(input.value.length, input.value.length);
-                handleInput();
             }
 
             if (e.ctrlKey && e.code === "Space") {

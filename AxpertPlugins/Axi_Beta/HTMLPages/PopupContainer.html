@@ -230,6 +230,11 @@
                 const timer = setInterval(() => {
 
                     tries++;
+                    if (tries > 50) {
+                        clearInterval(timer);
+                        if (typeof window.ShowDimmer === "function") window.ShowDimmer(false);
+                        return;
+                    }
 
                     try {
 
@@ -238,6 +243,7 @@
                         if (childWin && childWin.transid) {
 
                             clearInterval(timer);
+                            if (typeof window.ShowDimmer === "function") window.ShowDimmer(false);
 
                             const formId = childWin.transid;
                             const dataId = childWin.tstDataId;
@@ -272,9 +278,6 @@
                         }
 
                     } catch (e) {}
-
-                    // safety stop
-                    if (tries > 50) clearInterval(timer);
 
                 }, 200);
 
@@ -490,8 +493,17 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
 
                 if (existingTabKey) {
                     // Update with clean URL
-                    this.tabs[existingTabKey].ifr.src = cleanUrl;
+                    const existingIfr = this.tabs[existingTabKey].ifr;
+                    const onExistingLoad = () => {
+                        try {
+                            existingIfr.removeEventListener("load", onExistingLoad);
+                            if (typeof window.ShowDimmer === "function") window.ShowDimmer(false);
+                        } catch (e) { }
+                    };
+                    existingIfr.addEventListener("load", onExistingLoad);
+                    existingIfr.src = cleanUrl;
                     this.activateTab(existingTabKey);
+                    this.waitForTstructReady(existingIfr);
                 } else {
                     // Create new tab with stored title and clean URL
                     this.createNewTab(title1, cleanUrl);
@@ -615,6 +627,17 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
 
                 scroller.appendChild(tab);
                 body.appendChild(ifr);
+
+                ifr.onload = () => {
+                    try {
+                        if (typeof window.ShowDimmer === "function") window.ShowDimmer(false);
+                    } catch (e) { }
+                };
+                ifr.onerror = () => {
+                    try {
+                        if (typeof window.ShowDimmer === "function") window.ShowDimmer(false);
+                    } catch (e) { }
+                };
 
                 this.tabs[title] = {
                     tab,
@@ -787,6 +810,7 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
                 });
                 p.querySelector(".btn-close").onclick = (e) => {
                     e.stopPropagation();
+                    if (typeof window.ShowDimmer === "function") window.ShowDimmer(false);
 
                     // 1. Remove the HTML
                     this.mainPopup.remove();
@@ -873,6 +897,7 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
             //  savelogic 
 
             forceDestroy() {
+                if (typeof window.ShowDimmer === "function") window.ShowDimmer(false);
                 if (this.mainPopup) this.mainPopup.remove();
                 this.mainPopup = null;
                 this.tabs = {};
@@ -886,8 +911,9 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
                 const iframe = this.tabs[title].ifr;
                 try {
                     const childWin = iframe.contentWindow;
-                    // Check if the form in the iframe has the save function
-                    if (childWin && typeof childWin.SaveMultiFrameDataJSON === "function") {
+                    // Skip saving only when the form explicitly reports clean state (both false)
+                    const isExplicitlyClean = childWin && childWin.IsFormDirty === false && childWin.globalChange === false;
+                    if (!isExplicitlyClean && childWin && typeof childWin.SaveMultiFrameDataJSON === "function") {
                         const result = childWin.SaveMultiFrameDataJSON();
                         if (result) {
                             const tstDataId = childWin.tstDataId;
@@ -930,6 +956,7 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
             }
             async closeTab(title) {
                 if (!this.tabs[title]) return;
+                if (typeof window.ShowDimmer === "function") window.ShowDimmer(false);
 
                 // 1. Save data before removing from DOM
                 await this.saveTabState(title);
@@ -990,9 +1017,65 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
 
         window.PopupManager = new TabPopupManager();
 
+        let dimmerSafetyTimer = null;
+
+        window.ShowDimmer = function (status) {
+            clearTimeout(dimmerSafetyTimer);
+            try {
+                const target = (window.parent && window.parent !== window && typeof window.parent.ShowDimmer === "function")
+                    ? window.parent
+                    : (typeof window.top !== "undefined" && window.top !== window && typeof window.top.ShowDimmer === "function" ? window.top : null);
+
+                if (status === true || status === "true" || status === 1) {
+                    if (target) {
+                        target.ShowDimmer(true);
+                    }
+                    // Auto-dismiss safety timer: ensures dimmer never remains stuck if a child page errors or hangs
+                    dimmerSafetyTimer = setTimeout(() => {
+                        window.ShowDimmer(false);
+                    }, 7000);
+                } else {
+                    if (target) {
+                        target.ShowDimmer(false);
+                        if (typeof target.closeFrame === "function") {
+                            target.closeFrame();
+                        }
+                        if (target.document) {
+                            if (target.document.onkeydown) {
+                                const fnStr = String(target.document.onkeydown).replace(/\s+/g, "");
+                                const isDimmerEatKey = target.document.onkeydown.name === "EatKeyPress"
+                                    || fnStr.includes("EatKeyPress")
+                                    || fnStr === "function(){return!1;}"
+                                    || fnStr === "function(){return!1}"
+                                    || fnStr === "function(){returnfalse;}"
+                                    || fnStr === "function(){returnfalse}";
+                                if (isDimmerEatKey) {
+                                    target.document.onkeydown = null;
+                                }
+                            }
+                            if (target.document.body) {
+                                target.document.body.classList.remove("page-loading");
+                            }
+                        }
+                    }
+                }
+            } catch (e) { }
+        };
+
+        window.loadFrame = function () {
+            window.ShowDimmer(true);
+        };
+
+        window.closeFrame = function () {
+            window.ShowDimmer(false);
+        };
+
         window.onload = function () {
             createPinnedArea();
             PopupManager.openFromParam();
+            try {
+                window.ShowDimmer(false);
+            } catch (e) { }
         }
     </script>
 </body>
