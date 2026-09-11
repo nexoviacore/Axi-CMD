@@ -1081,6 +1081,257 @@ Home Cunfiguration Page Templete
 
                 </div>
                 <!--end::Header-->
+
+                <!-- begin: Axi Popup IFrame-->
+                <iframe id="hiddenLoader" style="display:none;"></iframe>
+                <!-- end: Axi Popup IFrame-->
+
+                <!-- begin: Axi Favourites Add Modal -->
+                <div id="axiFavModalOverlay" class="axi-modal-overlay">
+                    <div class="axi-modal-container">
+                        <h4 class="axi-modal-title">Save to Favorites</h4>
+                        <label class="axi-modal-label">Name your favorite:</label>
+
+                        <input type="text" id="axiFavNameInput" class="axi-modal-input" autocomplete="off" />
+
+                        <input type="hidden" id="axiFavOriginalCmd" />
+                        <input type="hidden" id="axiFavTargetUrl" class="d-none" />
+                        <input type="hidden" id="axiFavIsEdit" value="false" />
+
+                        <div class="axi-modal-actions">
+                            <button id="axiFavCancelBtn" class="axi-btn axi-btn-cancel">Cancel</button>
+                            <button id="axiFavSaveBtn" class="axi-btn axi-btn-save d-flex align-items-center justify-content-center">
+                                <span class="axi-spinner d-none" id="axiFavSaveSpinner"></span>
+                                <span class="axi-btn-text">Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- end: Axi Favourites Add Modal -->
+                <!-- begin: Axi Favourites Delete Alert Modal -->
+                <div id="axiFavDeleteModalOverlay" class="axi-modal-overlay">
+                    <div class="axi-modal-container">
+                        <h4 class="axi-modal-title" style="color: #ef4444;">Delete Favourite</h4>
+                        <p id="axiDeleteModalParagraph" style="font-size: 14px; color: #4b5563; margin-bottom: 20px;">
+                        </p>
+
+                        <input type="hidden" id="axiFavDeleteCmd" />
+
+                        <div class="axi-modal-actions">
+                            <button id="axiFavDeleteCancelBtn" class="axi-btn axi-btn-cancel">Cancel</button>
+                            <button id="axiFavDeleteConfirmBtn" class="axi-btn axi-btn-danger d-flex align-items-center justify-content-center">
+                                <span class="axi-spinner d-none" id="axiFavDeleteSpinner"></span>
+                                <span class="axi-btn-text">Delete</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- end: Axi Favourites Delete Alert  Modal -->
+
+
+
+                <!--begin: Axi Command Pallete-->
+                <div class="AXI-Sec">
+                    <div class="searchwrap-AXI">
+                        <label id="axiLogo" class="AXI-Logo">
+                            <img src="https://cdn-icons-png.flaticon.com/128/12822/12822485.png" alt="axi logo">
+                            cmd
+
+                        </label>
+                        <input type="text" class="search-input form-control form-control-transparent ps-8" name="search"
+                            value="" data-kt-search-element="input" placeholder="Axpert AI" id="Axi-Searchinp"
+                            autocomplete="off">
+                        <div id="axiHint" class="axi-input-hint"></div>
+                        <div id="axiClearBtn" class="clearbtn" style="display: none; cursor: pointer;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+
+                        </div>
+
+
+                        <!-- <ul id="axiSuggestions" class="axi-suggestions"></ul> -->
+                    </div>
+                    <div class="Tkts-toolbar-Left">
+                        <div class="d-flex gap-1">
+                            <div class="d-flex-- align-items-stretch flex-shrink-0 gap-8">
+                                <!--Run/Send Button-->
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                    id="runBtn" data-kt-menu-placement="bottom" data-kt-menu-flip="top"
+                                    data-kt-menu-attach="parent" data-kt-menu-trigger="click">
+                                    <span class="material-icons material-icons-style material-icons-2"
+                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                        title="Run">send</span>
+                                </div>
+
+                                <!-- Add to Favorites Button -->
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                    id="axiAddFavoriteBtn" aria-label="Add to Favorites">
+                                    <span class="material-icons material-icons-style material-icons-2"
+                                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add to Favorites">bookmark_add</span>
+                                </div>
+
+                                <!-- View Favorites Button -->
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                    id="axiViewFavoritesBtn" aria-label="View Favorites">
+                                    <span class="material-icons material-icons-style material-icons-2"
+                                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="View Favorites">bookmarks</span>
+                                </div>
+
+
+                                <!--                                Previous Page Btn-->
+                                <div id="btnHistoryPrev"
+                                    class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn d-none">
+                                    <span data-bs-toggle="tooltip" data-bs-placement="bottom" title=""
+                                        class="material-icons material-icons-style material-icons-2 "
+                                        data-bs-original-title="Previous Page">keyboard_arrow_left</span>
+                                </div>
+                                <!--  Previous Page Btn-->
+
+                                <!--  Next Page Btn-->
+                                <div
+                                    class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn d-none">
+                                    <span data-bs-toggle="tooltip" data-bs-placement="bottom" title=""
+                                        class="material-icons material-icons-style material-icons-2 "
+                                        data-bs-original-title="Next Page">keyboard_arrow_right</span>
+                                </div>
+                                <!--  Next Page Btn-->
+
+                                <!--  History Pages Btn-->
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm d-none"
+                                    id="History_pages" data-kt-menu-placement="bottom" data-kt-menu-flip="top"
+                                    data-kt-menu-attach="parent">
+                                    <span class="material-icons material-icons-style material-icons-2 "
+                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                        title="History">restore</span>
+                                </div>
+                                <!--  History Pages Btn-->
+
+                                <!--begin::My Favourites-->
+                                <div class="d-flex align-items-center " id="My_Fav_Bookmarks">
+                                    <!--begin::Menu wrapper-->
+                                    <div id="axiFavouriteBtn"
+                                        class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm">
+
+                                        <span class="material-icons material-icons-style material-icons-2 "
+                                            data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                            data-bs-original-title="My Favourites" title="My Favourites">bookmark_star
+                                        </span>
+
+                                    </div>
+
+                                    <!--begin::My Favourite popout-->
+
+                                    <div id="axiMegaDropdown" data-kt-menu="true"
+                                        class="menu menu-sub menu-sub-dropdown menu-column z-3"
+                                        style="display: none; position: absolute; bottom: 100%; left: 100px; width: 950px !important; max-width: calc(100vw - 120px) !important;">
+                                        <!--begin::Card-->
+
+
+
+                                        <div id="axiFavouritesCard" class="card">
+                                            <!--begin::Card header-->
+                                            <div class="card-header">
+                                                <h3 class="card-title">
+                                                    My Favorites
+                                                    <span id="axiFavoriteCount"
+                                                        class="badge badge-light-success fs-7 fw-500 ms-3"></span>
+                                                </h3>
+                                                <!-- <a href="#">View All</a> -->
+                                            </div>
+                                            <!--end::Card header-->
+
+                                            <!--begin::Card body-->
+                                            <div class="card-body p-0">
+                                                <div class="axi-fav-search-container" id="axiFavFilterContainer">
+                                                    <div class="axi-fav-search-wrapper">
+                                                        <span class="axi-fav-search-icon material-icons">search</span>
+                                                        <input type="text" 
+                                                            id="axiFavFilterInput" 
+                                                            class="axi-fav-search-input" 
+                                                            placeholder="Search favorites..." 
+                                                            autocomplete="off">
+                                                    </div>
+                                                </div>
+                                                <!--begin::Notifications-->
+                                                <div class="scroll-y My-Fav-Items-Wrapper">
+
+
+
+
+
+
+
+
+
+
+                                                </div>
+                                                <!--end::Notifications-->
+                                            </div>
+                                            <!--end::Card header-->
+
+
+                                        </div>
+                                        <div class="card">
+                                            <div class="card-header" id="axiCommandsHeader">
+                                                <h3 class="card-title">Commands</h3>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <div class="My-Command-Wrapper">
+                                                    <ul id="axiSuggestions" class="axi-suggestions"></ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+
+                                    <!--end::My Favourite popout--> <!--end::Menu wrapper-->
+                                </div>
+                                <!--end::Favourites-->
+
+
+
+
+                                <!--Enhance Button-->
+
+                                <div
+                                    class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn d-none">
+                                    <span data-bs-toggle="tooltip" data-bs-placement="bottom" title="Enhance">✨</span>
+                                </div>
+
+
+                                <!--Refresh Button-->
+
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                    id="btnRefresh" data-kt-menu-placement="bottom" data-kt-menu-flip="top"
+                                    data-kt-menu-attach="parent">
+                                    <span class="material-icons material-icons-style material-icons-2 axi-refresh-icon"
+                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                        title="Refresh">refresh</span>
+                                </div>
+
+
+
+
+
+                                <!--Notification Button-->
+
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm selectbtn d-none"
+                                    data-kt-menu-placement="bottom" data-kt-menu-flip="top"
+                                    data-kt-menu-attach="parent">
+                                    <span class="material-icons material-icons-style material-icons-2 initialized"
+                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                        data-bs-original-title="Notify" title="Notify">notifications_active</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--end: Axi Command Pallete-->
                 <!--begin::Content-->
                 <div class="content fs-6 d-flex flex-column flex-column-fluid px-3 pt-5 pb-2">
                     <!-- <div class="btn btn-icon btn-sm position-absolute ms-n20 mt-2 fw-bolder z-index-2 transform-270 appBackBtn" onclick="prevbtn_click($(this))">
@@ -1294,6 +1545,9 @@ Home Cunfiguration Page Templete
     files.js.push("/Js/AxNotifications.min.js?v=16");
     files.js.push("/Js/HomeConfigPageCards.min.js?v=15");
     files.js.push("/Js/Entity-common.min.js?v=18");
+
+    files.js.push("/AxpertPlugins/Axi_Beta/HTMLPages/js/axicmdmain.js?v=276");
+    files.css.push("/AxpertPlugins/Axi_Beta/HTMLPages/css/axicmdmain.css?v=35");
     var dirLeft = true;
 
     if ($("body").hasClass("btextDir-rtl")) {

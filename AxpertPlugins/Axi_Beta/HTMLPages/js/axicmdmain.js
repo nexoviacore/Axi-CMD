@@ -1,4 +1,87 @@
-// Stable Branch: main
+var _axicmdenabled = (typeof window !== "undefined" && typeof window.axicmdenabled !== "undefined")
+    ? Boolean(window.axicmdenabled)
+    : true;
+
+function applyAxiCmdVisibility() {
+    const isEnabled = typeof axicmdenabled !== "undefined" ? Boolean(axicmdenabled) : Boolean(_axicmdenabled);
+
+    if (typeof document !== "undefined" && document.body) {
+        if (isEnabled) {
+            document.body.classList.add("axi-cmd-enabled");
+            document.body.classList.remove("axi-cmd-disabled");
+        } else {
+            document.body.classList.add("axi-cmd-disabled");
+            document.body.classList.remove("axi-cmd-enabled");
+        }
+    }
+
+    if (typeof document !== "undefined") {
+        const axiSecElem = document.querySelector(".AXI-Sec");
+        if (axiSecElem) {
+            if (isEnabled) {
+                axiSecElem.style.removeProperty("display");
+            } else {
+                axiSecElem.style.setProperty("display", "none", "important");
+            }
+        }
+
+        const searchBar = document.querySelector(".search-bar");
+        if (searchBar) {
+            if (isEnabled) {
+                searchBar.style.setProperty("display", "none", "important");
+            } else {
+                searchBar.style.removeProperty("display");
+            }
+        }
+
+        const globalSearchInp = document.getElementById("globalSearchinp");
+        if (globalSearchInp) {
+            if (isEnabled) {
+                globalSearchInp.style.setProperty("display", "none", "important");
+            } else {
+                globalSearchInp.style.removeProperty("display");
+            }
+        }
+
+        const headerTopbar = (searchBar && searchBar.parentElement) ||
+            document.querySelector(".d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.search-bar)");
+        if (headerTopbar) {
+            if (isEnabled) {
+                headerTopbar.style.setProperty("justify-content", "end", "important");
+            } else {
+                headerTopbar.style.removeProperty("justify-content");
+            }
+        }
+    }
+}
+
+try {
+    Object.defineProperty(typeof window !== "undefined" ? window : globalThis, "axicmdenabled", {
+        get() {
+            return _axicmdenabled;
+        },
+        set(val) {
+            _axicmdenabled = Boolean(val);
+            applyAxiCmdVisibility();
+            if (_axicmdenabled && typeof window !== "undefined" && typeof window.initAxiCmd === "function") {
+                window.initAxiCmd();
+            }
+        },
+        configurable: true,
+        enumerable: true
+    });
+} catch (e) {
+    var axicmdenabled = _axicmdenabled;
+}
+
+if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", applyAxiCmdVisibility);
+    } else {
+        applyAxiCmdVisibility();
+    }
+}
+
 (() => {
     // Released On: 07/08/2026
     // /AxPlugins/Axi/HTMLPages/js/axicmdmain.js
@@ -64,6 +147,7 @@
     // 3. API Service Seam
     const AxiApiService = {
         async fetchSessionStatus(webUrl, mainSessionId) {
+            if (!axicmdenabled) return { valid: true };
             if (typeof mainSessionId === "undefined" || !mainSessionId) {
                 return { valid: false, redirectUrl: `${getAppBaseUrl()}/aspx/sess.aspx` };
             }
@@ -240,6 +324,7 @@
     let axiClearBtn;
     let axiLogo;
     let searchWrapper;
+    let axiSec;
     let setCommandTransid = null;
     let dateControlBoolean = false;
     let popUpOption = false;
@@ -293,7 +378,16 @@
 
 
 
+    let isAxiInitialized = false;
+
     function init() {
+        applyAxiCmdVisibility();
+        if (!axicmdenabled) {
+            return;
+        }
+        if (isAxiInitialized) {
+            return;
+        }
         let parentUserName = "";
         let parentProject = "";
         let parentUserRoles = "";
@@ -365,7 +459,7 @@
             AxiArmUrl = globalArmUrl;
         }
 
-        if (!AxiArmUrl && !isConfigLoaded) {
+        if (axicmdenabled && !AxiArmUrl && !isConfigLoaded) {
             isConfigLoaded = true;
             let configUrl = "";
             try {
@@ -403,6 +497,9 @@
             setTimeout(init, 200);
             return;
         }
+
+        axiSec = document.querySelector(".AXI-Sec");
+        applyAxiCmdVisibility();
 
         // // console.log("Axi Input Found!", input);
 
@@ -509,12 +606,25 @@
 
 
 
-        initCommands(false);
-        loadFavorites();
+        if (axicmdenabled) {
+            initCommands(false);
+            loadFavorites();
+        }
+
+        applyAxiCmdVisibility();
+        isAxiInitialized = true;
+    }
+
+    if (typeof window !== "undefined") {
+        window.initAxiCmd = init;
     }
 
     let initRetries = 0;
     function startInit() {
+        applyAxiCmdVisibility();
+        if (!axicmdenabled) {
+            return;
+        }
         const proj = window.mainProject || (typeof callParentNew === "function" && callParentNew("mainProject"));
         const user = window.mainUserName || (typeof callParentNew === "function" && callParentNew("mainUserName"));
 
@@ -549,6 +659,7 @@
         INITIALIZATION
     =============================== */
     async function initCommands(isForced = false) {
+        if (!axicmdenabled) return;
         const structType = getStructType();
         if (mode === "ai") {
             commands = aiModeCommands;
@@ -808,7 +919,7 @@
 
 
     async function loadList(sourceName, paramValue = "") {
-        if (sourceName === "axi_dummy") {
+        if (!axicmdenabled || sourceName === "axi_dummy") {
             return;
         }
         const key = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
@@ -881,7 +992,7 @@
     //}
 
     async function initCommandConfigs(isForced = false, appname) {
-        if (!axiCommandConfigUrl || !appname) return;
+        if (!axicmdenabled || !axiCommandConfigUrl || !appname) return;
         try {
             const userName = window.mainUserName || "";
             const cached = localStorage.getItem("axi_command_config_v2");
@@ -1560,6 +1671,7 @@
     }
 
     function handleInput() {
+        if (!axicmdenabled) return;
         if (favouritesCard) {
             favouritesCard.style.display = "none";
         }
@@ -5513,6 +5625,7 @@
 
 
     async function getAxListAsync(data) {
+        if (!axicmdenabled) return null;
         return new Promise((resolve, reject) => {
             window.GetDataFromAxList(
                 data,
@@ -5525,6 +5638,7 @@
 
     /* Generic get List function */
     async function getList(axDatasourceName, paramValuesCsv = "") {
+        if (!axicmdenabled) return [];
         try {
             //await ensureSignedIn();
             if (!axDatasourceName) {
@@ -6565,6 +6679,7 @@
         });
 
         document.addEventListener("keydown", e => {
+            if (!axicmdenabled) return;
             if (e.key !== "Escape") return;
 
             const favModalOverlay = document.getElementById("axiFavModalOverlay");
@@ -6711,6 +6826,9 @@
      * @returns 
      */
     function executeCommandsV2(isNavigating = false) {
+        if (!axicmdenabled) {
+            return;
+        }
         if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
             return;
         }
@@ -12596,6 +12714,7 @@
     }
 
     function loadFavorites() {
+        if (!axicmdenabled) return;
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
         commandFavorites = AxiFavoritesManager.loadLocalFavorites(appUrl, window.mainUserName);
@@ -13902,6 +14021,7 @@
     }
 
     function runTour() {
+        if (!axicmdenabled) return;
         const oldVal = input.value;
         input.value = "Help";
         input.readOnly = true;

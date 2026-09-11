@@ -708,13 +708,32 @@
   font-size: 13px !important;
 }
 
-/*Layout header and menu changes*/
+/* Layout header and menu changes
+   NOTE: Commented out to prevent layout conflicts when AXI Command Palette is integrated into mainHomeConfigTemplate.html:
+   1. .search-bar { display: none !important; } forcefully hid the global search bar (#globalSearchinp).
+   2. Hiding .search-bar left only the toolbar wrapper in .d-flex.justify-content-between, which caused the
+      Configure dropdown button (#AllUserOptions) and Dev Studio dropdown button (#axpertstudio / #AllDevOptions)
+      to shift from the right to the left.
+   3. .header.initialized.h-60px shrunk the header height from 60px to 50px and added unwanted borders/shadows.
+   4. Aside and content padding overrides leaked global styles into the host template.
+*/
 
-.d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.Application_Parameter-Section) {
+/* When AXI command palette is enabled, hide global search bar and align toolbar items to the end */
+body.axi-cmd-enabled .d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.Application_Parameter-Section),
+body.axi-cmd-enabled .d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.search-bar) {
   justify-content: end !important;
 }
 
-.search-bar {
+body.axi-cmd-enabled .search-bar {
+  display: none !important;
+}
+
+/* When AXI command palette is disabled, show global search bar and hide AXI section */
+body.axi-cmd-disabled .search-bar {
+  display: flex !important;
+}
+
+body.axi-cmd-disabled .AXI-Sec {
   display: none !important;
 }
 
@@ -722,6 +741,7 @@
   max-height: 30px !important;
 }
 
+/*
 @media (min-width: 992px) {}
 
 @media (min-width: 992px) {
@@ -742,11 +762,13 @@
 .menu-fit>.menu-item>.menu-link {
   padding-left: 6px !important;
 }
+*/
 
 .Axpert_logo {
   margin: 10px 3px !important;
 }
 
+/*
 #kt_aside_footer {
   padding-left: 0 !important;
 }
@@ -764,11 +786,10 @@
   padding: 12px !important;
 }
 
-/*
 .aside.aside-default {
-	border-left: 0 !important;
+  border-left: 0 !important;
 }
-*/
+
 .menu-hover-bg-dark .menu-item .menu-link:hover:not(.disabled):not(.active),
 .menu-hover-bg-dark .menu-item.hover>.menu-link:not(.disabled):not(.active) {
   border-radius: 0 !important;
@@ -780,6 +801,7 @@
   border-bottom: 1px solid #dcdcdc;
   box-shadow: 0 -2px 15px #ccccccb2;
 }
+*/
 
 #mobileAxAppLogo img.mh-40px {
   max-height: 30px !important;
@@ -792,15 +814,18 @@
 
 }
 
+/* Commented out: Leaked sidebar styles that conflict with host page layout
 .menu-fit>.menu-item>.menu-content,
 .menu-fit>.menu-item>.menu-link {
   padding-left: 10px !important;
 }
+*/
 
 .Axpert_logo {
   margin: 10px 6px !important;
 }
 
+/*
 .aside.aside-default {
   background: #2b3934 !important;
   border-right: 1px solid #cccbcb7a !important;
@@ -808,6 +833,7 @@
   border-left: 6px solid #303a69;
   background: #fff !important;
 }
+*/
 
 
 /*fav length trimming*/
