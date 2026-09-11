@@ -27,6 +27,11 @@ ALTER TABLE axi_userfavourites ADD originalcommandtext varchar(500) NULL;
 DROP TABLE axiconfig; 
 >>
 
+-- TODO: Remove this on the next release
+<<
+DELETE FROM axpstructconfig WHERE propvalue1 = 'axicmdmainpage.html';
+>>
+
 -- <<
 -- CREATE TABLE axiconfig (axienabled varchar(1), mainpagetemplate varchar(255)); 
 -- >>
