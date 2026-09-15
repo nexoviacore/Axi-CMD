@@ -42,7 +42,7 @@ CREATE TABLE Axi_UserFavourites (
 ALTER TABLE AXI_USERFAVOURITES  ADD originalcommandtext VARCHAR2(4000) NULL
 >>
 
--- TODO: remove on the next release
+-- TODO: remove this in the next release
 <<
 DELETE FROM AXPSTRUCTCONFIG WHERE PROPVALUE1 = 'axicmdmainpage.html';
 >>
