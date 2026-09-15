@@ -1,6 +1,6 @@
 var _axicmdenabled = (typeof window !== "undefined" && typeof window.axicmdenabled !== "undefined")
     ? Boolean(window.axicmdenabled)
-    : false;
+    : true;
 
 function isAxiCmdEnabled() {
     if (typeof window !== "undefined" && typeof window.axicmdenabled !== "undefined") {
