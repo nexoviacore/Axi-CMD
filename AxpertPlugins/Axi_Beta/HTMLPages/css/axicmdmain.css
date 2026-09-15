@@ -710,8 +710,28 @@
 
 /*Layout header and menu changes*/
 
-.d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.Application_Parameter-Section) {
+/* When AXI command palette is enabled, hide global search bar and align toolbar items to the end */
+body.axi-cmd-enabled .d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.Application_Parameter-Section),
+body.axi-cmd-enabled .d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.search-bar) {
   justify-content: end !important;
+}
+
+body.axi-cmd-enabled .search-bar {
+  display: none !important;
+}
+
+/* When AXI command palette is disabled, show global search bar and hide AXI section & modals */
+body.axi-cmd-disabled .search-bar {
+  display: flex !important;
+}
+
+body.axi-cmd-disabled .AXI-Sec {
+  display: none !important;
+}
+
+body.axi-cmd-disabled #axiFavModalOverlay,
+body.axi-cmd-disabled #axiFavDeleteModalOverlay {
+  display: none !important;
 }
 
 .search-bar {

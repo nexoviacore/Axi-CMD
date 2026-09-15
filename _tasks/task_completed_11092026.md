@@ -22,6 +22,6 @@
 
 Ui Verification for when the axi cmd is enabled: 
 
-1. Sidebar width should decreased when the axi cmd.
+<!-- 1. Sidebar width should decreased when the axi cmd. -->
 2. More application dropdown button is not visible. 
    

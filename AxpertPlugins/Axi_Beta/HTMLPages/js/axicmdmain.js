@@ -1,9 +1,16 @@
 var _axicmdenabled = (typeof window !== "undefined" && typeof window.axicmdenabled !== "undefined")
     ? Boolean(window.axicmdenabled)
-    : true;
+    : false;
+
+function isAxiCmdEnabled() {
+    if (typeof window !== "undefined" && typeof window.axicmdenabled !== "undefined") {
+        return Boolean(window.axicmdenabled);
+    }
+    return Boolean(_axicmdenabled);
+}
 
 function applyAxiCmdVisibility() {
-    const isEnabled = typeof axicmdenabled !== "undefined" ? Boolean(axicmdenabled) : Boolean(_axicmdenabled);
+    const isEnabled = isAxiCmdEnabled();
 
     if (typeof document !== "undefined" && document.body) {
         if (isEnabled) {
@@ -16,14 +23,21 @@ function applyAxiCmdVisibility() {
     }
 
     if (typeof document !== "undefined") {
-        const axiSecElem = document.querySelector(".AXI-Sec");
-        if (axiSecElem) {
+        const axiSecElems = document.querySelectorAll(".AXI-Sec");
+        axiSecElems.forEach(elem => {
             if (isEnabled) {
-                axiSecElem.style.removeProperty("display");
+                elem.style.removeProperty("display");
             } else {
-                axiSecElem.style.setProperty("display", "none", "important");
+                elem.style.setProperty("display", "none", "important");
             }
-        }
+        });
+
+        const axiModals = document.querySelectorAll("#axiFavModalOverlay, #axiFavDeleteModalOverlay");
+        axiModals.forEach(m => {
+            if (!isEnabled) {
+                m.style.setProperty("display", "none", "important");
+            }
+        });
 
         const searchBar = document.querySelector(".search-bar");
         if (searchBar) {
@@ -31,6 +45,9 @@ function applyAxiCmdVisibility() {
                 searchBar.style.setProperty("display", "none", "important");
             } else {
                 searchBar.style.removeProperty("display");
+                if (searchBar.style.display === "none") {
+                    searchBar.style.display = "";
+                }
             }
         }
 
@@ -40,6 +57,9 @@ function applyAxiCmdVisibility() {
                 globalSearchInp.style.setProperty("display", "none", "important");
             } else {
                 globalSearchInp.style.removeProperty("display");
+                if (globalSearchInp.style.display === "none") {
+                    globalSearchInp.style.display = "";
+                }
             }
         }
 
@@ -55,29 +75,88 @@ function applyAxiCmdVisibility() {
     }
 }
 
-try {
-    Object.defineProperty(typeof window !== "undefined" ? window : globalThis, "axicmdenabled", {
-        get() {
-            return _axicmdenabled;
-        },
-        set(val) {
-            _axicmdenabled = Boolean(val);
+let axiSecObserver = null;
+function setupAxiSecObserver() {
+    if (typeof MutationObserver === "undefined" || typeof document === "undefined") return;
+    const target = document.body || document.documentElement;
+    if (!target || axiSecObserver) return;
+
+    try {
+        axiSecObserver = new MutationObserver(() => {
             applyAxiCmdVisibility();
-            if (_axicmdenabled && typeof window !== "undefined" && typeof window.initAxiCmd === "function") {
-                window.initAxiCmd();
+        });
+        axiSecObserver.observe(target, {
+            childList: true,
+            subtree: true
+        });
+    } catch (e) { }
+}
+
+const _globalScope = typeof window !== "undefined" ? window : (typeof globalThis !== "undefined" ? globalThis : this);
+
+try {
+    const desc = Object.getOwnPropertyDescriptor(_globalScope, "axicmdenabled");
+    if (!desc || desc.configurable) {
+        Object.defineProperty(_globalScope, "axicmdenabled", {
+            get() {
+                return _axicmdenabled;
+            },
+            set(val) {
+                const prev = _axicmdenabled;
+                _axicmdenabled = Boolean(val);
+                applyAxiCmdVisibility();
+                if (!prev && _axicmdenabled && typeof _globalScope.initAxiCmd === "function") {
+                    _globalScope.initAxiCmd();
+                }
+            },
+            configurable: true,
+            enumerable: true
+        });
+    } else {
+        if (typeof _globalScope.axicmdenabled !== "undefined") {
+            _axicmdenabled = Boolean(_globalScope.axicmdenabled);
+        }
+        setInterval(() => {
+            if (typeof _globalScope.axicmdenabled !== "undefined") {
+                const cur = Boolean(_globalScope.axicmdenabled);
+                if (cur !== _axicmdenabled) {
+                    _axicmdenabled = cur;
+                    applyAxiCmdVisibility();
+                    if (_axicmdenabled && typeof _globalScope.initAxiCmd === "function") {
+                        _globalScope.initAxiCmd();
+                    }
+                }
             }
-        },
-        configurable: true,
-        enumerable: true
-    });
+        }, 200);
+    }
 } catch (e) {
-    var axicmdenabled = _axicmdenabled;
+    if (typeof _globalScope !== "undefined") {
+        _globalScope.axicmdenabled = _axicmdenabled;
+    }
+}
+
+if (typeof _globalScope !== "undefined") {
+    _globalScope.setAxiCmdEnabled = function (enabled) {
+        _axicmdenabled = Boolean(enabled);
+        try {
+            _globalScope.axicmdenabled = Boolean(enabled);
+        } catch (e) { }
+        applyAxiCmdVisibility();
+        if (_axicmdenabled && typeof _globalScope.initAxiCmd === "function") {
+            _globalScope.initAxiCmd();
+        }
+    };
+    _globalScope.applyAxiCmdVisibility = applyAxiCmdVisibility;
 }
 
 if (typeof document !== "undefined") {
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", applyAxiCmdVisibility);
+        document.addEventListener("DOMContentLoaded", () => {
+            setupAxiSecObserver();
+            applyAxiCmdVisibility();
+        });
     } else {
+        setupAxiSecObserver();
         applyAxiCmdVisibility();
     }
 }
@@ -622,7 +701,11 @@ if (typeof document !== "undefined") {
     let initRetries = 0;
     function startInit() {
         applyAxiCmdVisibility();
-        if (!axicmdenabled) {
+        if (!isAxiCmdEnabled()) {
+            if (initRetries < 30 && !document.querySelector(".AXI-Sec")) {
+                initRetries++;
+                setTimeout(startInit, 100);
+            }
             return;
         }
         const proj = window.mainProject || (typeof callParentNew === "function" && callParentNew("mainProject"));
