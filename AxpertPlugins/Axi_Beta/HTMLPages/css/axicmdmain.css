@@ -709,12 +709,9 @@
 }
 
 /*Layout header and menu changes*/
-
-/* When AXI command palette is enabled, hide global search bar and align toolbar items to the end */
-body.axi-cmd-enabled .d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.Application_Parameter-Section),
-body.axi-cmd-enabled .d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.search-bar) {
+/* .d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.Application_Parameter-Section) {
   justify-content: end !important;
-}
+}  */
 
 body.axi-cmd-enabled .search-bar {
   display: none !important;
@@ -775,10 +772,12 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
   padding: 0 0px !important;
 }
 
-.Application_Parameter-Section {
+
+/* .Application_Parameter-Section {
   position: inherit !important;
   align-items: center;
-}
+} */
+
 
 .content {
   padding: 12px !important;
@@ -795,11 +794,13 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
   background: #303a69 !important;
 }
 
-.header.initialized.h-60px {
+
+/* .header.initialized.h-60px {
   height: 50px !important;
   border-bottom: 1px solid #dcdcdc;
   box-shadow: 0 -2px 15px #ccccccb2;
-}
+} */
+
 
 #mobileAxAppLogo img.mh-40px {
   max-height: 30px !important;
@@ -1441,9 +1442,9 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
         #History_pages,#My_Fav_Bookmarks,#btnRefresh{
   display: none;
 }
-     .Application_Parameter-Section {
+     /* .Application_Parameter-Section {
 	display: none !important;
-}
+} */
      .content:has(#New-Landing-layout) {
 	background: #f1f4f9 !important;
 	height: calc(100vh - 105px) !important;
