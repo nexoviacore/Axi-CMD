@@ -418,10 +418,27 @@ Home Cunfiguration Page Templete
                             <!--end::Search-->
 
 
-                           
-
                             <!--begin::Toolbar wrapper-->
                             <div class="d-flex align-items-stretch flex-shrink-0">
+                                <!--begin::Application Parameter Section-->
+                                <div class="Application_Parameter-Section d-flex align-items-center me-1">
+                                    <div class="Application_Parameter_Wrapper">
+                                    </div>
+                                    <button type="button"
+                                        class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary tb-btn btn-sm"
+                                        title="" onclick="" data-kt-menu-trigger="{default:'click', lg: 'hover'}"
+                                        data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+                                        <span class="material-icons material-icons-style material-icons-2">more_horiz</span>
+                                    </button>
+                                    <!--begin::Menu-->
+                                    <div id="AppGlobalParams"
+                                        class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-title-gray-700 menu-icon-gray-500 menu-active-bg menu-state-color fw-semibold py-4 fs-base w-150px"
+                                        data-kt-menu="true" data-kt-element="theme-mode-menu">
+
+                                    </div>
+                                    <!--end::Menu-->
+                                </div>
+                                <!--end::Application Parameter Section-->
                                 <!--begin::License Info-->
                                 <div id="LicInfo" class="d-flex align-items-center ms-1 ms-lg-2">
                                     <!--begin::Menu wrapper-->
@@ -1066,6 +1083,7 @@ Home Cunfiguration Page Templete
                         <!--end::Topbar-->
                     </div>
                     <!--end::Container-->
+  <!-- Commented out for Axi-cmd development after reviewing with Vijay Mohan 
                   <div class="Application_Parameter-Section">
                         <div class="Application_Parameter_Wrapper">
                         </div>
@@ -1075,13 +1093,14 @@ Home Cunfiguration Page Templete
                                 data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
                             <span class="material-icons material-icons-style material-icons-2">more_horiz</span>
                         </button>
-                        <!--begin::Menu-->
+                        
                         <div id="AppGlobalParams"
                              class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-title-gray-700 menu-icon-gray-500 menu-active-bg menu-state-color fw-semibold py-4 fs-base w-150px" data-kt-menu="true" data-kt-element="theme-mode-menu">
 
                         </div>
-                        <!--end::Menu-->
-                    </div>  
+                        
+                    </div> 
+                --> 
 
                 </div>
                 <!--end::Header-->
@@ -1541,7 +1560,7 @@ Home Cunfiguration Page Templete
         // files.css.push("/Css/axpertUI.min.css?v=50");
     }
 
-    files.css.push("/Css/LayoutTheme.min.css?v=10");
+    files.css.push("/Css/LayoutTheme.min.css?v=11");
     files.css.push("/Css/AxNotifications.min.css?v=2");
     files.css.push("/Css/HomeConfigPageCards.min.css?v=12");
     files.js.push("/Js/signalr.min.js");

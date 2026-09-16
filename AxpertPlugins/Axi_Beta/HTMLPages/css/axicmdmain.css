@@ -711,7 +711,7 @@
 /*Layout header and menu changes*/
 
 /* Align toolbar items to the end when search-bar is hidden */
-.d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.Application_Parameter-Section),
+/* .d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.Application_Parameter-Section), */
 .d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.search-bar),
 body.axi-cmd-enabled .d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1 {
   justify-content: end !important;
@@ -812,7 +812,7 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
 
 
 .header.initialized.h-60px {
-  /* height: 50px !important; */
+  height: 50px !important;
   border-bottom: 1px solid #dcdcdc;
   box-shadow: 0 -2px 15px #ccccccb2;
 }

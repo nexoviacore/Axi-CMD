@@ -1223,18 +1223,16 @@ div[data-kt-search-element] a.mb-5 {
 }
 
 .Application_Parameter-Section {
-	position: absolute;
-	top: 50px;
-	padding: 5px;
-	padding: 0 15px !important;
-	right: 15px;
+	/* changes where reviewed with vijay mohan */
+	position: relative;
+	align-items: center;
+	padding: 0 5px !important;
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
-	max-width: 400px;
-	width: 400px;
+	width: auto;
+	max-width: fit-content;
 	display: flex !important;
-	right: 0;
 	justify-content: end;
 }
 
