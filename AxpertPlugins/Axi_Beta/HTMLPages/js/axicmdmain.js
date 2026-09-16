@@ -2,6 +2,10 @@ var _axicmdenabled = (typeof window !== "undefined" && typeof window.axicmdenabl
     ? Boolean(window.axicmdenabled)
     : true;
 
+/**
+ * Checks whether the AXI Command Line Palette is enabled.
+ * @returns {boolean} True if AXI Command Palette is active, false otherwise.
+ */
 function isAxiCmdEnabled() {
     if (typeof window !== "undefined" && typeof window.axicmdenabled !== "undefined") {
         return Boolean(window.axicmdenabled);
@@ -9,6 +13,11 @@ function isAxiCmdEnabled() {
     return Boolean(_axicmdenabled);
 }
 
+/**
+ * Applies visibility styles and CSS classes to AxiCMD elements based on enabled status.
+ * Hides or shows .AXI-Sec, modals, and the global search bar.
+ * @returns {void}
+ */
 function applyAxiCmdVisibility() {
     const isEnabled = isAxiCmdEnabled();
 
@@ -63,19 +72,15 @@ function applyAxiCmdVisibility() {
             }
         }
 
-        const headerTopbar = (searchBar && searchBar.parentElement) ||
-            document.querySelector(".d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.search-bar)");
-        if (headerTopbar) {
-            if (isEnabled) {
-                headerTopbar.style.setProperty("justify-content", "end", "important");
-            } else {
-                headerTopbar.style.removeProperty("justify-content");
-            }
-        }
     }
 }
 
 let axiSecObserver = null;
+/**
+ * Sets up a MutationObserver on document body to reactively apply visibility
+ * styles whenever .AXI-Sec is injected into the DOM.
+ * @returns {void}
+ */
 function setupAxiSecObserver() {
     if (typeof MutationObserver === "undefined" || typeof document === "undefined") return;
     const target = document.body || document.documentElement;
@@ -98,9 +103,18 @@ try {
     const desc = Object.getOwnPropertyDescriptor(_globalScope, "axicmdenabled");
     if (!desc || desc.configurable) {
         Object.defineProperty(_globalScope, "axicmdenabled", {
+            /**
+             * Getter for the global axicmdenabled state.
+             * @returns {boolean} True if AXI Command Palette is active, false otherwise.
+             */
             get() {
                 return _axicmdenabled;
             },
+            /**
+             * Setter for the global axicmdenabled state; updates the internal flag and refreshes DOM visibility.
+             * @param {boolean} val - New enabled state.
+             * @returns {void}
+             */
             set(val) {
                 const prev = _axicmdenabled;
                 _axicmdenabled = Boolean(val);
@@ -136,6 +150,11 @@ try {
 }
 
 if (typeof _globalScope !== "undefined") {
+    /**
+     * Globally sets the AXI command palette enabled status and updates UI element visibility.
+     * @param {boolean} enabled - True to enable AxiCMD, false to disable.
+     * @returns {void}
+     */
     _globalScope.setAxiCmdEnabled = function (enabled) {
         _axicmdenabled = Boolean(enabled);
         try {
@@ -202,11 +221,21 @@ if (typeof document !== "undefined") {
 
     // 2. Pure Stateless Command Parser
     const AxiCommandParser = {
+        /**
+         * Tokenizes a command string into an array of words while preserving quoted strings.
+         * @param {string} commandStr - Raw command string entered by user.
+         * @returns {string[]} Array of token strings.
+         */
         tokenize(inputStr) {
             if (!inputStr || typeof inputStr !== "string") return [];
             const regex = new RegExp(`"[^"]*"?|[^\\s]+`, "g");
             return inputStr.match(regex) || [];
         },
+        /**
+         * Parses user input into a structured command object with verb, entity, and arguments.
+         * @param {string} rawCommand - Raw command line input string.
+         * @returns {{ verb: string, targetEntity: string, args: string[] }} Parsed command object.
+         */
         parseCommand(inputStr) {
             const tokens = this.tokenize(inputStr);
             if (tokens.length === 0) return { verb: "", target: "", args: [] };
@@ -217,6 +246,11 @@ if (typeof document !== "undefined") {
                 raw: inputStr
             };
         },
+        /**
+         * Capitalizes the first letter of a given string.
+         * @param {string} string - Input string to format.
+         * @returns {string} Formatted string with first letter capitalized.
+         */
         capitalizeFirstLetter(str) {
             if (!str) return "";
             return str.charAt(0).toUpperCase() + str.slice(1);
@@ -225,6 +259,11 @@ if (typeof document !== "undefined") {
 
     // 3. API Service Seam
     const AxiApiService = {
+        /**
+         * Fetches user session and authorization status from server.
+         * @async
+         * @returns {Promise<boolean>} True if session is valid, false otherwise.
+         */
         async fetchSessionStatus(webUrl, mainSessionId) {
             if (!axicmdenabled) return { valid: true };
             if (typeof mainSessionId === "undefined" || !mainSessionId) {
@@ -251,9 +290,21 @@ if (typeof document !== "undefined") {
 
     // 4. Favorites State & LocalStorage Manager
     const AxiFavoritesManager = {
+        /**
+         * Generates localStorage key for storing user favorites.
+         * @param {string} appUrl - Base application URL.
+         * @param {string} username - Current logged in username.
+         * @returns {string} Storage key string.
+         */
         getStorageKey(appUrl, username) {
             return `axi_favourites_${appUrl}_${username}`;
         },
+        /**
+         * Loads favorites list from localStorage for the active user.
+         * @param {string} appUrl - Base application URL.
+         * @param {string} username - Current logged in username.
+         * @returns {Array<object>} List of favorite command objects.
+         */
         loadLocalFavorites(appUrl, username) {
             const key = this.getStorageKey(appUrl, username);
             try {
@@ -263,10 +314,22 @@ if (typeof document !== "undefined") {
                 return [];
             }
         },
+        /**
+         * Persists favorites array to localStorage.
+         * @param {string} appUrl - Base application URL.
+         * @param {string} username - Current logged in username.
+         * @param {Array<object>} favorites - Array of favorite items to save.
+         * @returns {void}
+         */
         saveLocalFavorites(appUrl, username, favoritesList) {
             const key = this.getStorageKey(appUrl, username);
             localStorage.setItem(key, JSON.stringify(favoritesList));
         },
+        /**
+         * Determines whether a command text is eligible to be saved as a favorite.
+         * @param {string} cmdText - Command string to validate.
+         * @returns {boolean} True if favorite is allowed.
+         */
         isFavAllowed(cmdText) {
             if (!cmdText) return false;
             const tokens = AxiCommandParser.tokenize(cmdText);
@@ -459,6 +522,10 @@ if (typeof document !== "undefined") {
 
     let isAxiInitialized = false;
 
+    /**
+     * Initializes AxiCMD component, DOM references, event listeners, commands, and favorites.
+     * @returns {void}
+     */
     function init() {
         applyAxiCmdVisibility();
         if (!axicmdenabled) {
@@ -699,6 +766,10 @@ if (typeof document !== "undefined") {
     }
 
     let initRetries = 0;
+    /**
+     * Initiates startup sequence with retry polling until session prerequisites and DOM elements are ready.
+     * @returns {void}
+     */
     function startInit() {
         applyAxiCmdVisibility();
         if (!isAxiCmdEnabled()) {
@@ -721,6 +792,10 @@ if (typeof document !== "undefined") {
 
     startInit();
 
+    /**
+     * Resolves current Axpert project name from session or URL.
+     * @returns {string} Current project name.
+     */
     function getProjectName() {
         // let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
         // // console.log("Origin: " + appSessUrl);
@@ -741,6 +816,12 @@ if (typeof document !== "undefined") {
     /* ===============================
         INITIALIZATION
     =============================== */
+    /**
+     * Fetches command definitions from server API or cache and initializes command dictionary.
+     * @async
+     * @param {boolean} [isForced=false] - If true, bypasses cache and re-fetches from server.
+     * @returns {Promise<void>}
+     */
     async function initCommands(isForced = false) {
         if (!axicmdenabled) return;
         const structType = getStructType();
@@ -834,6 +915,10 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Computes base application URL from current window location.
+     * @returns {string} Application base URL.
+     */
     function getAppBaseUrl() {
         const href = top.window.location.href;
         const aspxIndex = href.toLowerCase().indexOf("/aspx/");
@@ -885,6 +970,13 @@ if (typeof document !== "undefined") {
     //     return apiMetadataConfigPromise;
     // }
 
+    /**
+     * Resolves the active prompt configuration object for the current token position.
+     * @param {object} commandConfig - Command definition schema.
+     * @param {string[]} tokens - Current token array.
+     * @param {number} targetIndex - Index of the target token.
+     * @returns {object|null} Matching prompt definition or null.
+     */
     function getActivePromptInfo(commandConfig, tokens, targetIndex) {
         // targetIndex is 0-based. WordPos is 1-based.
         // Since the user DOES NOT type the extraParam, the mapping is direct.
@@ -1001,6 +1093,13 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Asynchronously fetches dropdown list data from server for a given prompt data source.
+     * @async
+     * @param {string} sourceName - Source definition name.
+     * @param {string} [paramValue=""] - Optional parameter filter value.
+     * @returns {Promise<Array<object>>} List of suggestion items.
+     */
     async function loadList(sourceName, paramValue = "") {
         if (!axicmdenabled || sourceName === "axi_dummy") {
             return;
@@ -1074,6 +1173,13 @@ if (typeof document !== "undefined") {
     //    }
     //}
 
+    /**
+     * Loads dynamic command configuration from server and populates axiCommandConfigList.
+     * @async
+     * @param {boolean} [isForced=false] - Whether to force a reload from the server.
+     * @param {string} appname - Active project/application name.
+     * @returns {Promise<void>}
+     */
     async function initCommandConfigs(isForced = false, appname) {
         if (!axicmdenabled || !axiCommandConfigUrl || !appname) return;
         try {
@@ -1113,6 +1219,12 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Finds an active command configuration row matching command name and prompt option.
+     * @param {string} command - Command name (e.g. 'Configure', 'SDK').
+     * @param {string} promptOption - Prompt option value to match.
+     * @returns {object|null} Matching configuration row or null.
+     */
     function getCommandConfigRow(command, promptOption) {
         if (!command || !promptOption) return null;
         const cmdKey = command.trim().toLowerCase();
@@ -1129,6 +1241,12 @@ if (typeof document !== "undefined") {
         }) || null;
     }
 
+    /**
+     * Finds a disabled command configuration row matching command name and prompt option.
+     * @param {string} command - Command name.
+     * @param {string} promptOption - Prompt option value to match.
+     * @returns {object|null} Disabled configuration row or null.
+     */
     function getDisabledCommandConfigRow(command, promptOption) {
         if (!command || !promptOption) return null;
         const cmdKey = command.trim().toLowerCase();
@@ -1141,6 +1259,12 @@ if (typeof document !== "undefined") {
         }) || null;
     }
 
+    /**
+     * Replaces placeholders (e.g. {proj}, {user}) in a URL string with session values.
+     * @param {string} urlStr - URL template string containing placeholders.
+     * @param {object} [context={}] - Additional context values for replacement.
+     * @returns {string} Resolved URL string.
+     */
     function resolveCommandUrlPlaceholders(urlStr, context = {}) {
         if (!urlStr || typeof urlStr !== "string") return urlStr || "";
 
@@ -1184,6 +1308,14 @@ if (typeof document !== "undefined") {
         return result;
     }
 
+    /**
+     * Executes navigation for dynamically configured command routes.
+     * @param {object} params - Parameter object.
+     * @param {string[]} params.tokens - Command tokens.
+     * @param {object} params.commandConfig - Command schema configuration.
+     * @param {object} params.configRow - Matching command configuration row.
+     * @returns {void}
+     */
     function executeDynamicNavigation({ tokens, commandConfig, configRow }) {
         if (!configRow) return false;
         hide();
@@ -1383,6 +1515,11 @@ if (typeof document !== "undefined") {
         return false;
     }
 
+    /**
+     * Opens a target URL inside the modal popup container.
+     * @param {string} targetURL - URL to display in popup frame.
+     * @returns {void}
+     */
     function openPopOption(targetURL) {
         hide();
         // console.log("PopOption is clicked");
@@ -1434,6 +1571,13 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Navigates to SmartView / ADS view with specified filters.
+     * @param {object} params - Parameter object.
+     * @param {string} params.adsName - Name of the ADS / SmartView.
+     * @param {object} [params.filters] - Filter criteria object.
+     * @returns {void}
+     */
     function redirectToSmartView({ adsName, filters }) {
 
 
@@ -1509,6 +1653,12 @@ if (typeof document !== "undefined") {
     }
 
 
+    /**
+     * Navigates to user permissions, role management, or security configuration screen.
+     * @param {string} optType - Option type (e.g. 'user', 'role').
+     * @param {string[]} tokens - Command tokens.
+     * @returns {void}
+     */
     function redirectToPermissionScreeen(username) {
 
         const transId = "a__up";
@@ -1607,6 +1757,16 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Navigates main window or iframe to a Tstruct form, optionally in edit mode with keyfield filters.
+     * @param {string} transId - Transaction structure identifier.
+     * @param {string} [tstructCaption=""] - Form title caption.
+     * @param {boolean} [isEdit=false] - Whether to load the Tstruct in edit mode.
+     * @param {string} [fieldName=""] - Key field name for record filtering.
+     * @param {string} [fieldValue=""] - Key field value for record filtering.
+     * @param {string} [extraParams=""] - Additional query string parameters.
+     * @returns {void}
+     */
     function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "", extraParams = "") {
         if (!transId) {
             alert("There is no Tstruct name provided!");
@@ -1656,6 +1816,10 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Navigates to the Axpert Responsibilities configuration page.
+     * @returns {void}
+     */
     function redirectToResponsibilitiesPage(fieldValue = "") {
         hide();
 
@@ -1677,6 +1841,12 @@ if (typeof document !== "undefined") {
         top.window.LoadIframe(targetUrl);
     }
 
+    /**
+     * Navigates the main window or iframe to an IView report.
+     * @param {string[]} tokens - Command tokens.
+     * @param {string} target - Target IView name.
+     * @returns {void}
+     */
     function redirectToIView(iViewName, iViewCaption = "") {
         hide();
         // console.log("Redirecting to Iview: " + iViewName + "..............");
@@ -1699,6 +1869,11 @@ if (typeof document !== "undefined") {
     }
 
 
+    /**
+     * Navigates to the Process Flow viewer/designer page.
+     * @param {string[]} tokens - Command tokens.
+     * @returns {void}
+     */
     function redirectToProcessFlow(caption, tstructCaption) {
         // console.log(`Redirecting to Process flow for caption:  ${caption}`);
 
@@ -1737,6 +1912,10 @@ if (typeof document !== "undefined") {
     /* ===============================
        2. INPUT HANDLER
     =============================== */
+    /**
+     * Filters and returns initial list of available command verbs based on current context.
+     * @returns {string[]} List of command verb keys.
+     */
     function getInitialCommandsList() {
         if (!commands) return [];
         const structType = getStructType();
@@ -1753,6 +1932,10 @@ if (typeof document !== "undefined") {
         });
     }
 
+    /**
+     * Main input event handler; manages tokenization, suggestions popup, and dynamic hint rendering.
+     * @returns {void}
+     */
     function handleInput() {
         try {
             if (!axicmdenabled) return;
@@ -2025,6 +2208,12 @@ if (typeof document !== "undefined") {
     =============================== */
 
 
+    /**
+     * Tokenizes command string and optionally normalizes target-first commands (swapping entity and action).
+     * @param {string} str - Raw command input string.
+     * @param {boolean} [shouldNormalize=true] - Whether to normalize target-first command order.
+     * @returns {string[]} Array of processed token strings.
+     */
     function getTokens(str, shouldNormalize = true) {
         let tokens = AxiCommandParser.tokenize(str);
         if (shouldNormalize && tokens.length >= 2) {
@@ -2039,10 +2228,19 @@ if (typeof document !== "undefined") {
         return tokens;
     }
 
+    /**
+     * Sanitizes and cleans a string by stripping punctuation and special characters.
+     * @param {string} str - Raw input string.
+     * @returns {string} Sanitized string.
+     */
     function cleanString(val) {
         return (val || "").replace(/["]/g, "").trim();
     }
 
+    /**
+     * Extracts structure parameters from session or active frame context.
+     * @returns {string} Structure parameter string.
+     */
     function getStructParam() {
         const userName = window.mainUserName || "";
         const userRoles = window.AxUserRoles || "default";
@@ -2050,6 +2248,12 @@ if (typeof document !== "undefined") {
         return `${userName}$#$${userRoles}$#$${userResp}$#$all$#$all`;
     }
 
+    /**
+     * Matches user typed field token against form metadata fields for a transaction.
+     * @param {string} tokenText - Field name or caption entered by user.
+     * @param {string} transId - Transaction structure ID.
+     * @returns {object|null} Matched field metadata object or null.
+     */
     function getMatchedField(tokenText, transId) {
         if (!tokenText || !transId) return null;
         const searchStr = transId.toLowerCase();
@@ -2069,6 +2273,11 @@ if (typeof document !== "undefined") {
         ) || null;
     }
 
+    /**
+     * Sanitizes and extracts display caption from a metadata item.
+     * @param {object} item - Metadata item.
+     * @returns {string} Clean caption string.
+     */
     function getCleanCaption(item) {
         if (!item || typeof item !== "object") return "";
         if (item._cleanCaption !== undefined) return item._cleanCaption;
@@ -2090,6 +2299,11 @@ if (typeof document !== "undefined") {
         matchesMap: null
     };
 
+    /**
+     * Searches and returns matching entity structures (Tstructs, Iviews, Pages) for a token.
+     * @param {string} token - Search token text.
+     * @returns {Array<object>} Matching entity metadata objects.
+     */
     function getTargetEntityMatches(token) {
         if (!token) return [];
         const cleanTok = token.replace(/"/g, "").toLowerCase();
@@ -2131,10 +2345,21 @@ if (typeof document !== "undefined") {
         return targetEntitiesCache.matchesMap.get(cleanTok) || [];
     }
 
+    /**
+     * Checks whether a token represents a recognized target entity type or object.
+     * @param {string} token - Token text to validate.
+     * @returns {boolean} True if token is an entity.
+     */
     function isTargetEntity(token) {
         return getTargetEntityMatches(token).length > 0;
     }
 
+    /**
+     * Compares two entity type strings for equality (case-insensitive).
+     * @param {string} type1 - First entity type.
+     * @param {string} type2 - Second entity type.
+     * @returns {boolean} True if types match.
+     */
     function areTypesMatching(type1, type2) {
         if (!type1 || !type2) return false;
         const t1 = String(type1).trim().toLowerCase();
@@ -2147,6 +2372,12 @@ if (typeof document !== "undefined") {
         return false;
     }
 
+    /**
+     * Resolves full target entity metadata object given token and action.
+     * @param {string} token - Entity token text.
+     * @param {string} [action] - Optional action verb.
+     * @returns {object|null} Resolved entity object or null.
+     */
     function getTargetEntityObj(token, action) {
         if (!token) return null;
         const matches = getTargetEntityMatches(token);
@@ -2218,6 +2449,11 @@ if (typeof document !== "undefined") {
         return matches[0];
     }
 
+    /**
+     * Checks if a metadata item represents an Inbox structure.
+     * @param {object} item - Structure item to check.
+     * @returns {boolean} True if structure is Inbox.
+     */
     function isInboxStructure(item) {
         if (!item) return false;
         const stype = item.stype !== undefined ? item.stype : item.STYPE;
@@ -2230,6 +2466,11 @@ if (typeof document !== "undefined") {
         return false;
     }
 
+    /**
+     * Checks if a metadata item represents an Axpert Data Source (ADS).
+     * @param {object} item - Structure item to check.
+     * @returns {boolean} True if structure is ADS.
+     */
     function isAdsStructure(item) {
         if (!item) return false;
         const stype = item.stype || item.STYPE;
@@ -2238,6 +2479,11 @@ if (typeof document !== "undefined") {
         return s === "ads" || s === "a" || s === "v";
     }
 
+    /**
+     * Checks if an ADS structure should be visible to current user based on permissions.
+     * @param {object} item - ADS structure item.
+     * @returns {boolean} True if ADS is visible.
+     */
     function isAdsVisible(item) {
         if (!item) return false;
         const view = item.viewallowed;
@@ -2247,6 +2493,12 @@ if (typeof document !== "undefined") {
         return true;
     }
 
+    /**
+     * Verifies if an action verb (create, edit, view) is allowed on the given entity item.
+     * @param {object} item - Entity metadata item.
+     * @param {string} action - Action verb to check.
+     * @returns {boolean} True if action is permitted.
+     */
     function isActionAllowed(item, action) {
         if (!item) return true;
         const act = action.toLowerCase();
@@ -2269,6 +2521,12 @@ if (typeof document !== "undefined") {
         return true;
     }
 
+    /**
+     * Validates whether an action is compatible with the specified target entity.
+     * @param {string} target - Entity name or type.
+     * @param {string} action - Action verb.
+     * @returns {boolean} True if valid action for target.
+     */
     function isValidActionForTarget(target, action) {
         if (!target || !action) return false;
         const entityObj = getTargetEntityObj(target, action);
@@ -2307,6 +2565,11 @@ if (typeof document !== "undefined") {
         return actions.map(act => act.toLowerCase()).includes(lowAction);
     }
 
+    /**
+     * Checks if 'view' action is permitted on the specified metadata item.
+     * @param {object} item - Item to validate.
+     * @returns {boolean} True if view is allowed.
+     */
     function isViewAllowed(item) {
         if (!item) return false;
         if (isInboxStructure(item)) {
@@ -2322,6 +2585,11 @@ if (typeof document !== "undefined") {
         return isActionAllowed(item, "view");
     }
 
+    /**
+     * Checks if a structure satisfies user role visibility requirements.
+     * @param {object} item - Structure metadata item.
+     * @returns {boolean} True if structure is visible.
+     */
     function isStructureVisible(item) {
         if (!item) return false;
         if (isInboxStructure(item)) {
@@ -2346,6 +2614,10 @@ if (typeof document !== "undefined") {
     let initialSuggestionsSourceList = null;
     let initialSuggestionsRunnable = null;
 
+    /**
+     * Returns list of base command verbs for initial/empty input state.
+     * @returns {Array<object>} Initial suggestion objects.
+     */
     function getInitialSuggestions() {
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
         const currentList = axDatasourceObj[key] || [];
@@ -2363,6 +2635,10 @@ if (typeof document !== "undefined") {
         return initialSuggestionsCache;
     }
 
+    /**
+     * Resets internal command state flags and active suggestion properties.
+     * @returns {void}
+     */
     function normalizeGlobalState() {
         if (!input) return;
         const tokens = getTokens(input.value, false);
@@ -2414,6 +2690,12 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Resolves parameters, fields, and suggestions for 'View ADS' commands.
+     * @param {string[]} tokens - Current command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @returns {Array<object>} Suggestions for ADS command.
+     */
     function viewAdsCommandHandling(tokens, commandConfig) {
         //const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
         //const viewSource = createsourceObj;
@@ -2590,6 +2872,11 @@ if (typeof document !== "undefined") {
             return processAdsRepetitiveTokens(tokens, commandConfig);
     }
 
+    /**
+     * Validates if a suggestion item matches filter criteria and should be displayed.
+     * @param {object} item - Suggestion candidate item.
+     * @returns {boolean} True if valid suggestion.
+     */
     function isValidSuggestion(item) {
         return !!(
             item &&
@@ -2601,6 +2888,12 @@ if (typeof document !== "undefined") {
     }
 
 
+    /**
+     * Filters out already selected tokens in chained ADS command expressions.
+     * @param {string[]} tokens - Current command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @returns {Array<object>} Filtered suggestion list.
+     */
     function processAdsRepetitiveTokens(tokens, commandConfig) {
         let targetIndex = tokens.length - 1;
         let partialTyped = cleanString(tokens[targetIndex]);
@@ -3180,6 +3473,10 @@ if (typeof document !== "undefined") {
     //    }
     //}
 
+    /**
+     * Checks if the active iframe contains a page subject to parameter restrictions.
+     * @returns {boolean} True if page has param restrictions.
+     */
     function isTargetListingPageForParamsRestriction() {
         try {
             const { doc, win, iframe } = getIViewDocumentAndWindow();
@@ -3210,6 +3507,10 @@ if (typeof document !== "undefined") {
         return false;
     }
 
+    /**
+     * Checks if active iframe is displaying the Responsibilities listing page.
+     * @returns {boolean} True if on responsibility listing page.
+     */
     function isResponsibilityListingPage() {
         try {
             const { doc, win, iframe } = getIViewDocumentAndWindow();
@@ -3224,10 +3525,21 @@ if (typeof document !== "undefined") {
         return false;
     }
 
+    /**
+     * Processes suggestions and parameter options for the 'Run' command.
+     * @param {string[]} tokens - Command tokens.
+     * @param {number} targetIndex - Token index being processed.
+     * @param {string} structType - Structure type of current page.
+     * @returns {Array<object>} Run suggestions.
+     */
     function processRunCommands(tokens, targetIndex, structType) {
         if (targetIndex !== 1) return [goOption];
         let allButtons
 
+        /**
+         * Checks whether the currently active iframe or window is a CSQ list page.
+         * @returns {boolean} True if the current page is a CSQ list page, false otherwise.
+         */
         const isCsqlistPage = () => {
             try {
                 const { doc } = getIViewDocumentAndWindow();
@@ -3402,8 +3714,19 @@ if (typeof document !== "undefined") {
         Suggestion Logic
     =============================== */
 
+    /**
+     * Checks if a value is null, undefined, or an empty/whitespace string.
+     * @param {*} val - Value to check.
+     * @returns {boolean} True if empty, false otherwise.
+     */
     const isEmpty = val => typeof val === "string" ? val.trim() === "" : val === null || val === undefined;
 
+    /**
+     * Matches user typed field token against form metadata fields for a transaction.
+     * @param {string} tokenText - Field name or caption entered by user.
+     * @param {string} transId - Transaction structure ID.
+     * @returns {object|null} Matched field metadata object or null.
+     */
     function getMatchedField(tokenText, transId) {
         if (!tokenText || !transId) return null;
         const searchStr = transId.toLowerCase();
@@ -3423,6 +3746,11 @@ if (typeof document !== "undefined") {
         ) || null;
     }
 
+    /**
+     * Generates local keyword, entity, and action suggestions for current input text.
+     * @param {string} inputText - User typed input text.
+     * @returns {Array<object>} List of local suggestions.
+     */
     function suggestLocal(inputText) {
         // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
         // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
@@ -4366,6 +4694,14 @@ if (typeof document !== "undefined") {
         return [];
     }
 
+    /**
+     * Processes parameter options for 'Edit' and 'View' command chains.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @param {string} paramValue - Current parameter value.
+     * @param {number} position - Token position index.
+     * @returns {Array<object>} Parameter suggestions.
+     */
     function processParamforEditndView(tokens, commandConfig, paramValue, position) {
         if (!commandConfig || !commandConfig.prompts || !commandConfig.prompts[0]) {
             return "";
@@ -4518,6 +4854,12 @@ if (typeof document !== "undefined") {
         return struct_finalParams;
     }
 
+    /**
+     * Fetches a global variable value by name from global variables collection.
+     * @param {object} struct_allGlobalVars - Global variables object.
+     * @param {string} struct_keyName - Variable name to lookup.
+     * @returns {string} Variable value or empty string.
+     */
     function getGlobalVar(struct_allGlobalVars, struct_keyName) {
 
         if (!struct_allGlobalVars || !Array.isArray(struct_allGlobalVars.globalVars)) {
@@ -4622,6 +4964,12 @@ if (typeof document !== "undefined") {
     // }
 
 
+    /**
+     * Parses and validates additional key-value parameter pairs appended to commands.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @returns {object} Extracted parameter key-value pairs.
+     */
     function processExtraParams(tokens, commandConfig) {
         let paramValue = "";
 
@@ -4708,6 +5056,11 @@ if (typeof document !== "undefined") {
     }
 
 
+    /**
+     * Adjusts token index to account for target-first token position swapping.
+     * @param {number} tokenIndex - Raw token index.
+     * @returns {number} Adjusted token index.
+     */
     function getUnswappedIndex(tokenIndex) {
         if (!input) return tokenIndex;
         const tokens = getTokens(input.value, false);
@@ -4722,11 +5075,22 @@ if (typeof document !== "undefined") {
         return tokenIndex;
     }
 
+    /**
+     * Returns resolved parameter data type for the specified token position.
+     * @param {number} tokenIndex - Index of token.
+     * @returns {string} Parameter type string.
+     */
     function getResolvedParamType(tokenIndex) {
         const rawIndex = getUnswappedIndex(tokenIndex);
         return resolvedParamType?.[rawIndex];
     }
 
+    /**
+     * Retrieves the command definition schema for a given group key and tokens.
+     * @param {string} groupKey - Command verb or group name.
+     * @param {string[]} currentTokens - Current tokens array.
+     * @returns {object|null} Command configuration schema.
+     */
     function getCommandConfig(groupKey, currentTokens) {
         if (!groupKey || !commands) return null;
         const lowKey = groupKey.toLowerCase();
@@ -4740,6 +5104,14 @@ if (typeof document !== "undefined") {
         return matchedKey ? commands[matchedKey] : null;
     }
 
+    /**
+     * Attempts to resolve raw token text to a recognized metadata item or entity object.
+     * @param {number} tokenIndex - Position of token.
+     * @param {string} tokenText - Token string to resolve.
+     * @param {object} commandConfig - Command configuration schema.
+     * @param {boolean} [forceResolve=false] - If true, bypasses fuzzy matching.
+     * @returns {object|null} Resolved metadata object or null.
+     */
     function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
 
         tokenText = cleanString(tokenText);
@@ -5031,6 +5403,10 @@ if (typeof document !== "undefined") {
     /* ===============================
        RENDER & APPLY
     =============================== */
+    /**
+     * Renders suggestion dropdown list items in the DOM.
+     * @returns {void}
+     */
     function render() {
 
         // console.log("Render called");
@@ -5046,6 +5422,11 @@ if (typeof document !== "undefined") {
         }
         const shouldCapitalize = (suggestionTokenIndex <= 1);
 
+        /**
+         * Capitalizes the first letter of a given string.
+         * @param {string} string - Input string to format.
+         * @returns {string} Formatted string with first letter capitalized.
+         */
         const capitalizeFirstLetter = (str) => {
             if (!str) return str;
             return str.charAt(0).toUpperCase() + str.slice(1);
@@ -5165,6 +5546,12 @@ if (typeof document !== "undefined") {
             return;
         }
 
+        /**
+         * Creates an HTML <li> element representing a single suggestion item.
+         * @param {object} item - Suggestion data object.
+         * @param {number} i - Item index in suggestion list.
+         * @returns {HTMLElement} Created list item element.
+         */
         function createSuggestionLi(item, i) {
             const li = document.createElement("li");
             const text = typeof item === "string" ? item : item.displaydata;
@@ -5237,6 +5624,11 @@ if (typeof document !== "undefined") {
                 }
             });
 
+            /**
+             * Creates and returns a DOM loading indicator element with custom text.
+             * @param {string} text - Display text for loading indicator.
+             * @returns {HTMLElement} Loading element.
+             */
             const createLoadingElement = (text) => {
                 const div = document.createElement("div");
                 div.className = "d-flex align-items-center justify-content-center py-2 px-5 text-muted gap-2";
@@ -5321,6 +5713,10 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Hides and clears the suggestion dropdown menu.
+     * @returns {void}
+     */
     function hide() {
         if (megaDropdown) {
             megaDropdown.style.setProperty("display", "none", "important");
@@ -5346,6 +5742,11 @@ if (typeof document !== "undefined") {
         } catch (e) { }
     }
 
+    /**
+     * Resolves entity object name from selected dropdown item value.
+     * @param {string} selectedValue - Selected value string.
+     * @returns {string} Resolved entity name.
+     */
     function GetObjectName(selectedValue) {
         const foundObj = filteredObjects.find(item => item.displaydata === selectedValue);
         if (foundObj) {
@@ -5354,6 +5755,11 @@ if (typeof document !== "undefined") {
         return selectedValue;
     }
 
+    /**
+     * Applies selected suggestion item into command line input at active token position.
+     * @param {number} index - Index of suggestion item to apply.
+     * @returns {void}
+     */
     function apply(index) {
         if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
             return;
@@ -5672,6 +6078,11 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Updates ghost/hint text displayed in the search input based on prompt schema.
+     * @param {object} prompt - Active prompt definition.
+     * @returns {void}
+     */
     function updateDynamicHintFromPrompt(prompt) {
 
         if (prompt) {
@@ -5713,6 +6124,12 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Asynchronously calls Axpert server API to fetch list data.
+     * @async
+     * @param {object} data - Request payload data.
+     * @returns {Promise<object>} Server response data.
+     */
     async function getAxListAsync(data) {
         if (!axicmdenabled) return null;
         return new Promise((resolve, reject) => {
@@ -5725,7 +6142,13 @@ if (typeof document !== "undefined") {
 
     }
 
-    /* Generic get List function */
+    /**
+     * Fetches dataset for specified Axpert data source name and parameters.
+     * @async
+     * @param {string} axDatasourceName - Name of the Axpert data source.
+     * @param {string} [paramValuesCsv=""] - Comma-separated parameter values.
+     * @returns {Promise<Array<object>>} Dataset rows.
+     */
     async function getList(axDatasourceName, paramValuesCsv = "") {
         if (!axicmdenabled) return [];
         try {
@@ -5831,6 +6254,11 @@ if (typeof document !== "undefined") {
     /* ===============================
        SHOW DIMMER / LOADER HELPER
     =============================== */
+    /**
+     * Toggles the loading dimmer overlay on or off.
+     * @param {boolean} status - True to show dimmer, false to hide.
+     * @returns {void}
+     */
     function toggleShowDimmer(status) {
         try {
             if (typeof ShowDimmer === "function") {
@@ -5847,6 +6275,13 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Safely opens Axpert Developer Studio page in appropriate window/frame.
+     * @param {string} page - Developer Studio sub-page name.
+     * @param {string} [name=""] - Optional object name.
+     * @param {boolean} [callFromAxi=true] - Flag indicating call origin.
+     * @returns {void}
+     */
     function safeOpenDeveloperStudio(page, name = "", callFromAxi = true) {
         hide();
         const topWin = (typeof top !== "undefined" ? top : (typeof parent !== "undefined" ? parent : window));
@@ -5930,6 +6365,13 @@ if (typeof document !== "undefined") {
     /* ===============================
        TOAST HELPER
     =============================== */
+    /**
+     * Displays temporary toast notification message in the UI.
+     * @param {string} message - Message text to display.
+     * @param {number} [duration=5000] - Display duration in milliseconds.
+     * @param {boolean} [isSuccess=false] - True for success styling, false for error/info.
+     * @returns {void}
+     */
     function showToast(message, duration = 5000, isSuccess = false) {
         let alertType = "error";
         if (isSuccess === true || isSuccess === "success") {
@@ -6083,6 +6525,10 @@ if (typeof document !== "undefined") {
             closeBtn.style.backgroundColor = "transparent";
         };
 
+        /**
+         * Removes the active toast notification element from the DOM with an exit animation.
+         * @returns {void}
+         */
         const removeToast = () => {
             toast.style.opacity = "0";
             toast.style.transform = "translateY(-12px) scale(0.95)";
@@ -6108,6 +6554,11 @@ if (typeof document !== "undefined") {
         setTimeout(removeToast, duration);
     }
 
+    /**
+     * Fetches and displays version modal containing AxiCMD build details.
+     * @async
+     * @returns {Promise<void>}
+     */
     async function showVersionInfo() {
         try {
             const axiUrl = `${getAppBaseUrl()}/AxpertPlugins/Axi_Beta/AxiCMDVersioninfo.json`;
@@ -6156,6 +6607,10 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Checks if the suggestion dropdown list is currently visible in the DOM.
+     * @returns {boolean} True if suggestions are visible.
+     */
     function isSuggestionVisible() {
         if (megaDropdown) {
             return megaDropdown.style.display !== "none" && items.length > 0;
@@ -6163,6 +6618,10 @@ if (typeof document !== "undefined") {
         return list && list.style.display !== "none" && items.length > 0;
     }
 
+    /**
+     * Checks if any suggestion list item is currently highlighted or active.
+     * @returns {boolean} True if an item is active.
+     */
     function hasActiveSuggestion() {
         return activeIndex >= 0 && activeIndex < items.length;
     }
@@ -6171,6 +6630,10 @@ if (typeof document !== "undefined") {
     /* ===============================
        SETUP LISTENERS
     =============================== */
+    /**
+     * Binds keyboard, mouse, input, and focus event listeners to AxiCMD controls.
+     * @returns {void}
+     */
     function setupEventListeners() {
 
         const favDeleteCancelBtn = document.getElementById("axiFavDeleteCancelBtn");
@@ -6373,6 +6836,10 @@ if (typeof document !== "undefined") {
             runBtn.addEventListener("click", executeCommandsV2);
         }
 
+        /**
+         * Releases stuck loading dimmer overlays and cleans up EatKeyPress document listeners.
+         * @returns {void}
+         */
         function releaseStuckDimmer() {
             try {
                 if (document.onkeydown) {
@@ -6847,6 +7314,11 @@ if (typeof document !== "undefined") {
 
         const iframe = document.getElementById("middle1");
         if (iframe) {
+            /**
+             * Attaches click event listeners to a target document to auto-close AxiCMD suggestions.
+             * @param {Document} doc - Target DOM document.
+             * @returns {void}
+             */
             const attachClickToDoc = (doc) => {
                 if (!doc) return;
                 if (doc._axiClickAttached) return;
@@ -6875,6 +7347,10 @@ if (typeof document !== "undefined") {
                 } catch (e) { }
             };
 
+            /**
+             * Scans all child iframes and attaches document click handlers to dismiss suggestions.
+             * @returns {void}
+             */
             const attachIframeClick = () => {
                 try {
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
@@ -6890,6 +7366,11 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Removes cached AxiCMD storage entries from browser localStorage matching prefix.
+     * @param {string} prefix - Storage key prefix.
+     * @returns {void}
+     */
     function clearAxiLocalStorage(prefix) {
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -6906,6 +7387,10 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Highlights active suggestion list item based on keyboard selection index.
+     * @returns {void}
+     */
     function highlight() {
         const suggestionElements = Array.from(list.querySelectorAll(".axi-suggestion"));
         if (suggestionElements.length > 0) {
@@ -6933,8 +7418,9 @@ if (typeof document !== "undefined") {
 
 
     /**
-     * Execute the Commands 
-     * @returns 
+     * Main command execution dispatcher; evaluates input tokens and routes to command handler.
+     * @param {boolean} [isNavigating=false] - Indicates whether execution was triggered by navigation.
+     * @returns {void}
      */
     function executeCommandsV2(isNavigating = false) {
         if (!axicmdenabled) {
@@ -7106,10 +7592,20 @@ if (typeof document !== "undefined") {
     }
 
 
+    /**
+     * Normalizes and trims command token string for execution.
+     * @param {string} [val=""] - Token value.
+     * @returns {string} Sanitized token.
+     */
     function cleanCommandToken(val = "") {
         return val.replace(/["]/g, "").trim();
     }
 
+    /**
+     * Returns the registered execution handler function for a command group.
+     * @param {string} group - Command group name.
+     * @returns {Function|null} Handler function or null if unregistered.
+     */
     function getGroupHandlers(group) {
         if (!group || typeof COMMAND_HANDLERS === "undefined") return null;
         const lowGroup = group.toLowerCase();
@@ -7118,6 +7614,11 @@ if (typeof document !== "undefined") {
         return matchedKey ? COMMAND_HANDLERS[matchedKey] : null;
     }
 
+    /**
+     * Dispatches command context to registered group handler.
+     * @param {object} ctx - Command execution context.
+     * @returns {void}
+     */
     function dispatchCommand(ctx) {
         const { group, config, tokens } = ctx;
 
@@ -7193,6 +7694,13 @@ if (typeof document !== "undefined") {
      *  
      */
 
+    /**
+     * Handles execution of 'Create New' command to open creation form.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
     function handleCreateNew({ tokens, commandConfig }) {
         let rawName = cleanCommandToken(tokens[1]);
         // let transId = tryResolveToken(1, rawName, commandConfig, false);
@@ -7226,12 +7734,20 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Handles opening Database Console utility window.
+     * @returns {void}
+     */
     function handleViewDbConsole() {
         safeOpenDeveloperStudio("AxDBScript.aspx");
         // window.LoadIframe("AxDBScript.aspx");
 
     }
 
+    /**
+     * Handles opening user Inbox view.
+     * @returns {void}
+     */
     function handleViewInbox() {
 
         // LoadIframe('htmlpages.aspx?inbox=t')
@@ -7262,9 +7778,9 @@ if (typeof document !== "undefined") {
 
 
     /**
-     * Helper functions 
-     * @param {*} param0 
-     * @returns 
+     * Generates unique identifier string for entity instances.
+     * @param {string} str - Base seed string.
+     * @returns {string} Generated unique ID.
      */
 
     function getUniqueId(str) {
@@ -7277,6 +7793,14 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Handles execution of 'Edit' command to load record into edit form.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @param {object} [context.resolvedParams] - Resolved parameter map.
+     * @returns {void}
+     */
     function handleEditData({ tokens, commandConfig, resolvedParams }) {
 
         let rawStruct = cleanCommandToken(tokens[1]);
@@ -7553,6 +8077,11 @@ if (typeof document !== "undefined") {
 
     // }
 
+    /**
+     * Sets session state flags indicating form is in active edit mode.
+     * @param {string} transId - Transaction structure ID.
+     * @returns {void}
+     */
     function setEditSessionState(transId) {
         if (!transId) return;
 
@@ -7588,6 +8117,14 @@ if (typeof document !== "undefined") {
     }
 
 
+    /**
+     * Navigates main window or iframe to entity form with pre-filtered record fields.
+     * @param {string} transId - Transaction structure ID.
+     * @param {string} [formCaption=""] - Form title caption.
+     * @param {string} fieldName - Key field name.
+     * @param {string} fieldValue - Key field value.
+     * @returns {void}
+     */
     function redirectToEntity(transId, formCaption = "", fieldName, fieldValue) {
         let targetUrl;
         if (!fieldValue) {
@@ -7614,6 +8151,11 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Opens source definition for an Axpert Data Source (ADS).
+     * @param {string} paramName - Name of ADS structure.
+     * @returns {void}
+     */
     function handleViewSourceAds(paramName) {
         let targetUrl;
         // let paramName;
@@ -7656,6 +8198,13 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Handles viewing source code / definition of active form or report.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
     function handleViewSource({ tokens, commandConfig }) {
         hide();
         const accessPermissions = getAccessPermissions();
@@ -7712,6 +8261,13 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Dispatches source view command execution.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
     function handleSourceCommand({ tokens, commandConfig }) {
         hide();
         const accessPermissions = getAccessPermissions();
@@ -7767,6 +8323,14 @@ if (typeof document !== "undefined") {
         setCommandRoutes(input.value.trim(), targetUrl);
     }
 
+    /**
+     * Handles execution of 'View' command for forms, reports, and dashboards.
+     * @async
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {Promise<void>}
+     */
     async function handleViewCommand({ tokens, commandConfig }) {
 
         let transId = "";
@@ -8086,6 +8650,14 @@ if (typeof document !== "undefined") {
     // }
 
 
+    /**
+     * Handles setting keyfield values for entity records.
+     * @async
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {Promise<void>}
+     */
     async function handleKeyfield({ tokens, commandConfig }) {
 
         const tstructName = cleanString(tokens[2]);
@@ -8293,6 +8865,15 @@ if (typeof document !== "undefined") {
 
     // }
 
+    /**
+     * Determines navigation route and entity type from datasource metadata.
+     * @param {string} axDatasourceKey - Datasource key.
+     * @param {string} text - Command text.
+     * @param {string} paramValuesCsv - Parameter values CSV.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command configuration schema.
+     * @returns {object} Route type configuration.
+     */
     function getType(axDatasourceKey, text, paramValuesCsv, tokens, commandConfig) {
 
         // -----------------------------------
@@ -8667,6 +9248,13 @@ if (typeof document !== "undefined") {
     }
 
 
+    /**
+     * Navigates main window or iframe to a custom HTML page.
+     * @param {string} text - Page path or name.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command configuration schema.
+     * @returns {void}
+     */
     function redirectToHtmlPages(text, tokens, commandConfig) {
 
         let paramValue = processExtraParams(tokens, commandConfig);
@@ -8750,6 +9338,13 @@ if (typeof document !== "undefined") {
 * **************************************************
 */
 
+    /**
+     * Opens entity source configuration in Developer Studio.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
     function handleOpenSource({ tokens, commandConfig }) {
         hide();
 
@@ -8838,9 +9433,11 @@ if (typeof document !== "undefined") {
      */
 
     /**
-     * Handles the run command execution
-     *  @param {object} {tokens, commandConfig}
-     * 
+     * Handles execution of 'Run' command to trigger toolbar actions, scripts, or reports.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
      */
     function handleRunCommand({ tokens, commandConfig }) {
         if (tokens.length < 2) {
@@ -8914,6 +9511,10 @@ if (typeof document !== "undefined") {
         }
 
         if (allButtons && Array.isArray(allButtons)) {
+            /**
+             * Checks whether the currently active iframe or window is a CSQ list page.
+             * @returns {boolean} True if the current page is a CSQ list page, false otherwise.
+             */
             const isCsqlistPage = () => {
                 try {
                     const { doc } = getIViewDocumentAndWindow();
@@ -9027,6 +9628,11 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Parses and formats date string into standardized ISO date format.
+     * @param {string} val - Raw date string.
+     * @returns {string} Standardized date string.
+     */
     function normalizeDate(val) {
         if (!val.includes("/")) return val;
         const [d, m, y] = val.split("/");
@@ -9066,6 +9672,11 @@ if (typeof document !== "undefined") {
     //    return { operator: "equal", value: rawValue };
     //}
 
+    /**
+     * Extracts field-value filter pairs for ADS commands from tokens.
+     * @param {string[]} tokens - Command tokens.
+     * @returns {object} Filter key-value map.
+     */
     function extractAdsFilters(tokens) {
 
         const filters = [];
@@ -9214,6 +9825,10 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Collects utility buttons from active IView toolbar.
+     * @returns {Array<HTMLElement>} Array of toolbar button elements.
+     */
     function getIViewUtilityButtons() {
         const { doc, win, iframe } = getIViewDocumentAndWindow();
         if (!doc) return {};
@@ -9300,6 +9915,10 @@ if (typeof document !== "undefined") {
         return result;
     }
 
+    /**
+     * Resolves document and window objects of active IView iframe.
+     * @returns {{ doc: Document|null, win: Window|null }} Frame document and window.
+     */
     function getIViewDocumentAndWindow() {
         let topIframe = document.getElementById("middle1");
         let mainWin = window;
@@ -9328,6 +9947,13 @@ if (typeof document !== "undefined") {
         return { doc: mainDoc, win: mainWin, iframe: topIframe };
     }
 
+    /**
+     * Simulates click on action button or menu item inside active IView.
+     * @param {string} val - Action name.
+     * @param {HTMLElement} item - Button or item element.
+     * @param {string} link - Action target link.
+     * @returns {void}
+     */
     function executeIViewAction(val, item, link) {
         const { doc, win } = getIViewDocumentAndWindow();
         const targetEl = link || item || (doc ? doc.querySelector(`[data-dropdown-value="${val}"]`) : null);
@@ -9390,6 +10016,10 @@ if (typeof document !== "undefined") {
         } catch (e) { }
     }
 
+    /**
+     * Extracts action buttons from dropdown menus inside active IView.
+     * @returns {Array<HTMLElement>} List of action buttons.
+     */
     function getIViewActionDropdownButtons() {
         const { doc } = getIViewDocumentAndWindow();
         if (!doc) return {};
@@ -9428,6 +10058,10 @@ if (typeof document !== "undefined") {
         return result;
     }
 
+    /**
+     * Collects action buttons from bottom toolbar of active form.
+     * @returns {Array<HTMLElement>} Toolbar buttons.
+     */
     function getBottomToolbarButtons() {
         const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
@@ -9475,6 +10109,10 @@ if (typeof document !== "undefined") {
         return result;
     }
 
+    /**
+     * Checks if preview modal dialog is currently open.
+     * @returns {boolean} True if preview modal is open.
+     */
     function isPreviewModalOpen() {
         // Check if current window or frameElement indicates it is inside the loadPopUpPage modal or middle1 frame
         try {
@@ -9502,6 +10140,11 @@ if (typeof document !== "undefined") {
             // console.warn("Axi: Failed to access window.top due to cross-origin boundary.");
         }
 
+        /**
+         * Validates accessibility and permissions of a target window/iframe.
+         * @param {Window} win - Target window object.
+         * @returns {boolean} True if window is accessible.
+         */
         function checkWindow(win) {
             try {
                 if (!win || !win.document) return false;
@@ -9578,6 +10221,10 @@ if (typeof document !== "undefined") {
         return result;
     }
 
+    /**
+     * Checks if View Designer modal dialog is currently displayed.
+     * @returns {boolean} True if View Designer modal is open.
+     */
     function isViewDesignerModalOpen() {
         const iframe = document.getElementById("middle1");
         if (!iframe) return false;
@@ -9597,6 +10244,11 @@ if (typeof document !== "undefined") {
         return false;
     }
 
+    /**
+     * Checks whether the 'Run' command should be disabled on the active page URL.
+     * @param {string} src - Page URL.
+     * @returns {boolean} True if Run is disabled.
+     */
     function isRunDisabledForPage(src) {
         if (!src) {
             const iframe = document.getElementById("middle1");
@@ -9620,6 +10272,10 @@ if (typeof document !== "undefined") {
         return false;
     }
 
+    /**
+     * Collects action buttons from top toolbar of active form.
+     * @returns {Array<HTMLElement>} Top toolbar buttons.
+     */
     function getTopToolbarButtons() {
         const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
@@ -9673,6 +10329,11 @@ if (typeof document !== "undefined") {
         return result;
     }
 
+    /**
+     * Collects buttons with specific attribute from active Tstruct form.
+     * @param {string} attributeName - Attribute name to query.
+     * @returns {Array<HTMLElement>} Matching buttons.
+     */
     function getTStructButtons(attributeName) {
         const iframe = document.getElementById("middle1");
         if (!iframe) return {};
@@ -9707,6 +10368,10 @@ if (typeof document !== "undefined") {
         return result;
     }
 
+    /**
+     * Determines structure type (tstruct, iview, dashboard) loaded in active iframe.
+     * @returns {string} Structure type string.
+     */
     function getStructType() {
         const { doc: iframeDoc, win: iframeWin, iframe } = getIViewDocumentAndWindow();
 
@@ -9795,6 +10460,11 @@ if (typeof document !== "undefined") {
         return "o";
     }
 
+    /**
+     * Extracts human-readable caption/label from a button element.
+     * @param {HTMLElement} btn - Button element.
+     * @returns {string} Clean button label.
+     */
     function extractButtonLabel(btn) {
         if (btn && btn.id === "smartviewFilterToolbarBtn") {
             return "Filter";
@@ -9832,6 +10502,11 @@ if (typeof document !== "undefined") {
         return cloned.innerText.trim();
     }
 
+    /**
+     * Checks if a button element has an attached click action or onclick handler.
+     * @param {HTMLElement} btn - Button element to inspect.
+     * @returns {boolean} True if button has an action.
+     */
     function hasAction(btn) {
         const isDisabled = btn.classList.contains("disabled");
         if (btn.getAttribute("onclick") && !isDisabled) return true;
@@ -9853,6 +10528,12 @@ if (typeof document !== "undefined") {
     }
 
 
+    /**
+     * Safely simulates a user click event on a button inside an iframe.
+     * @param {HTMLElement} btn - Target button element.
+     * @param {Window} win - Frame window containing button.
+     * @returns {void}
+     */
     function safeExecuteButtonClick(btn, win) {
         if (!btn) return;
         const targetWin = win || window;
@@ -9899,6 +10580,10 @@ if (typeof document !== "undefined") {
         } catch (e) { }
     }
 
+    /**
+     * Gathers toolbar buttons from active entity iframe.
+     * @returns {Array<HTMLElement>} List of toolbar buttons.
+     */
     function getEntityToolbarButtons() {
         const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
@@ -9975,6 +10660,11 @@ if (typeof document !== "undefined") {
         return result;
     }
 
+    /**
+     * Queries buttons inside active frame matching given CSS selector.
+     * @param {string} querySelector - CSS selector string.
+     * @returns {Array<HTMLElement>} Matching button elements.
+     */
     function getButtons(querySelector) {
         const iframe = document.getElementById("middle1");
         if (!iframe) return {};
@@ -10016,6 +10706,11 @@ if (typeof document !== "undefined") {
         return result;
     }
 
+    /**
+     * Collects all clickable action buttons across the document.
+     * @param {Document} doc - Target document.
+     * @returns {Array<HTMLElement>} All action buttons.
+     */
     function getAllActionButtons(doc) {
         return doc.querySelectorAll(`
         a,
@@ -10025,6 +10720,11 @@ if (typeof document !== "undefined") {
     `);
     }
 
+    /**
+     * Sets up an observer to listen for changes to form design mode state.
+     * @param {Function} callback - Callback function on mode change.
+     * @returns {void}
+     */
     function watchDesignModeChange(callback) {
         const iframe = document.getElementById("middle1");
         if (!iframe) return;
@@ -10046,6 +10746,10 @@ if (typeof document !== "undefined") {
     }
 
 
+    /**
+     * Retrieves buttons available in design mode.
+     * @returns {Array<HTMLElement>} Design mode toolbar buttons.
+     */
     function getDesignModeToolbarButtons() {
         const { doc, win } = getIViewDocumentAndWindow();
         if (!doc) return {};
@@ -10094,6 +10798,10 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Checks if active Tstruct is currently in design mode.
+     * @returns {boolean} True if in design mode.
+     */
     function isTstructDesignMode() {
         const iframe = document.getElementById("middle1");
         if (!iframe) return false;
@@ -10107,6 +10815,10 @@ if (typeof document !== "undefined") {
         return root.classList.contains("tstructDesignMode");
     }
 
+    /**
+     * Collects toolbar buttons from active Process Flow viewer.
+     * @returns {Array<HTMLElement>} Process flow buttons.
+     */
     function getPFToolbarButtons() {
         const iframe = document.getElementById("middle1");
         if (!iframe) return {};
@@ -10187,6 +10899,11 @@ if (typeof document !== "undefined") {
         return result;
     }
 
+    /**
+     * Checks whether an item represents a system notification message.
+     * @param {object} item - Message item to check.
+     * @returns {boolean} True if system message.
+     */
     function isSystemMessage(item) {
         if (!item) return false;
 
@@ -10204,6 +10921,13 @@ if (typeof document !== "undefined") {
     }
 
 
+    /**
+     * Handles execution of 'Analyse' command for charts and analytics.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
     function handleAnalyse({ tokens, commandConfig }) {
 
         if (tokens < 1) {
@@ -10260,6 +10984,10 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Clears field-value staging state for Set/Create operations.
+     * @returns {void}
+     */
     function resetSetCommandState() {
         SET_COMMAND_STATE.isNextField = false;
         SET_COMMAND_STATE.currentField = null;
@@ -10271,6 +10999,13 @@ if (typeof document !== "undefined") {
         //createfieldnamevaluesList = [];
     }
 
+    /**
+     * Prepares suggestions for 'Create' command fields and values.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @param {object} createsourceObj - Source metadata object.
+     * @returns {Array<object>} Suggestions list.
+     */
     function createCommandHandling(tokens, commandConfig, createsourceObj) {
         //const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
         const viewSource = createsourceObj;
@@ -10427,6 +11162,13 @@ if (typeof document !== "undefined") {
             return processCreateCommand(tokens, commandConfig, viewSource);
     }
 
+    /**
+     * Processes field value pairs during Create command typing.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @param {object} createCommandSourceObj - Source metadata object.
+     * @returns {Array<object>} Suggestions list.
+     */
     function processCreateCommand(tokens, commandConfig, createCommandSourceObj) {
         let targetIndex = tokens.length - 1;
         const partialTyped = cleanString(tokens[targetIndex]);
@@ -10765,6 +11507,13 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Prepares suggestions for 'Edit' command field updates.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @param {object} createsourceObj - Source metadata object.
+     * @returns {Array<object>} Suggestions list.
+     */
     function editCommandHandling(tokens, commandConfig, createsourceObj) {
         //const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
         const viewSource = createsourceObj;
@@ -10921,6 +11670,13 @@ if (typeof document !== "undefined") {
             return processEditCommand(tokens, commandConfig, viewSource);
     }
 
+    /**
+     * Processes field value pairs during Edit command typing.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @param {object} createCommandSourceObj - Source metadata object.
+     * @returns {Array<object>} Suggestions list.
+     */
     function processEditCommand(tokens, commandConfig, createCommandSourceObj) {
         let targetIndex = tokens.length - 1;
         const partialTyped = cleanString(tokens[targetIndex]);
@@ -11286,6 +12042,14 @@ if (typeof document !== "undefined") {
             else return [];
         }
     }
+    /**
+     * Adds a field-value entry to save payload list.
+     * @param {string} fieldName - Field name.
+     * @param {number} rowNo - Row index number.
+     * @param {*} value - Field value.
+     * @param {string} transid - Transaction structure ID.
+     * @returns {void}
+     */
     function AddFieldstoList(fieldName, rowNo, value, transid) {
 
         if (!fieldName || !value || !transid) return;
@@ -11313,6 +12077,10 @@ if (typeof document !== "undefined") {
     }
 
 
+    /**
+     * Retrieves transaction ID from active form or session.
+     * @returns {string} Transaction ID.
+     */
     function getTransID() {
 
         // const iframes = document.querySelectorAll("iframe");
@@ -11392,6 +12160,13 @@ if (typeof document !== "undefined") {
     //     else return false;
     // }
 
+    /**
+     * Sets field value directly in active Tstruct form DOM elements.
+     * @param {string} actualFieldName - Form field name.
+     * @param {*} value - Value to set.
+     * @param {number} rowNo - Form row number.
+     * @returns {void}
+     */
     function AxisetFieldValue(actualFieldName, value, rowNo) {
 
         const fldid = actualFieldName + "000F" + rowNo;
@@ -11533,6 +12308,13 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Executes record creation via ARM save API.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
     function handleCreate({ tokens, commandConfig }) {
 
         if (tokens.length < 2) {
@@ -11749,6 +12531,11 @@ if (typeof document !== "undefined") {
         //}
     }
 
+    /**
+     * Converts field-value object into key-value formatted string.
+     * @param {object} data - Field-value data object.
+     * @returns {string} Formatted key-value string.
+     */
     function prepareKeyValueString(data) {
         if (!data || !Array.isArray(data.globalVars)) return "";
 
@@ -11760,6 +12547,12 @@ if (typeof document !== "undefined") {
             })
             .join(";");
     }
+    /**
+     * Maps raw tokens to form field names and values.
+     * @param {Array<object>} fieldValueList - List of field value objects.
+     * @param {object} commandConfig - Command definition schema.
+     * @returns {object} Mapped field-value pairs.
+     */
     function getFieldNameandItsValue(fieldValueList, commandConfig) {
 
         let fieldValue = "";
@@ -11793,6 +12586,11 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Validates whether input string represents a valid date format.
+     * @param {string} value - Date string to validate.
+     * @returns {boolean} True if valid date.
+     */
     function isValidDate(value) {
         if (!value || typeof value !== "string") return false;
 
@@ -11838,6 +12636,12 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Formats a Date object into specified string pattern.
+     * @param {Date} date - Date object.
+     * @param {string} format - Date format pattern.
+     * @returns {string} Formatted date string.
+     */
     function formatDate(date, format) {
         if (!date) return null;
 
@@ -11939,6 +12743,11 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Calculates date string for relative date tokens (today, yesterday, etc.).
+     * @param {string} type - Relative date token type.
+     * @returns {string} Computed date string.
+     */
     function getDateByFilter(type) {
         const baseDate = new Date();
         baseDate.setHours(0, 0, 0, 0);
@@ -12120,6 +12929,11 @@ if (typeof document !== "undefined") {
     //}
 
 
+    /**
+     * Retrieves active ARM session identifier token.
+     * @async
+     * @returns {Promise<string>} ARM session ID.
+     */
     async function getARMSessionId() {
         if (cachedSessionId) return cachedSessionId;
 
@@ -12282,6 +13096,16 @@ if (typeof document !== "undefined") {
 
     //}
 
+    /**
+     * Saves record data via Axpert ARM WebService or REST API.
+     * @param {Array<object>} saveListWithFieldNamendValues - Field value pairs.
+     * @param {string} transid - Transaction structure ID.
+     * @param {string} sourcename - Source name.
+     * @param {boolean} isCreate - True if create, false if update.
+     * @param {string[]} inputTokens - Command tokens.
+     * @param {object} inputCommandConfig - Command configuration schema.
+     * @returns {void}
+     */
     function AxisaveDataFn(saveListWithFieldNamendValues, transid, sourcename, isCreate, inputTokens, inputCommandConfig) {
 
         //getARMSessionId()
@@ -12449,6 +13273,11 @@ if (typeof document !== "undefined") {
     }
 
 
+    /**
+     * Retrieves cached user credentials for API calls if required.
+     * @param {string} username - User login name.
+     * @returns {string} Cached password or empty string.
+     */
     function getUserPassword(username) {
 
         const sourceName = "axi_userpwd";
@@ -12466,6 +13295,16 @@ if (typeof document !== "undefined") {
                 axDatasourceObj[sourceKey]?.[0]?.password || null
             );
     }
+    /**
+     * Builds JSON/XML payload for saving data through ARM API.
+     * @param {Array<object>} saveListWithFieldNamendValueswithTransId - Field values.
+     * @param {string} transid - Transaction ID.
+     * @param {string} sourcename - Source name.
+     * @param {boolean} iscreate - True if create, false if update.
+     * @param {string} inputKeyFieldValue - Key field value.
+     * @param {string} inputKeyFieldName - Key field name.
+     * @returns {object} Built payload object.
+     */
     function preparePayload(saveListWithFieldNamendValueswithTransId, transid, sourcename, iscreate, inputKeyFieldValue, inputKeyFieldName) {
 
         let isSuccess = true;
@@ -12482,6 +13321,11 @@ if (typeof document !== "undefined") {
         return getUserPassword(payloadUsername).then(password => {
 
             let payload;
+            /**
+             * Formats a row index number as a 3-digit zero-padded string (e.g., 001).
+             * @param {number|string} n - Number to format.
+             * @returns {string} Zero-padded string.
+             */
             const formatRowNo = (n) => String(n).padStart(3, "0");
             const dcMap = {};
 
@@ -12622,6 +13466,10 @@ if (typeof document !== "undefined") {
 
 
 
+    /**
+     * Opens AxiBot AI assistant panel.
+     * @returns {void}
+     */
     function redirectToAxibot() {
 
 
@@ -12642,6 +13490,10 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Initializes AxiBot conversation session.
+     * @returns {void}
+     */
     function handleAiStart() {
         mode = "ai";
         commands = aiModeCommands;
@@ -12650,6 +13502,10 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Retrieves action buttons from AxiBot interface.
+     * @returns {Array<HTMLElement>} AxiBot buttons.
+     */
     function getAxiBotActionButtons() {
         const iframe = document.getElementById("middle1");
         if (!iframe) return {};
@@ -12694,6 +13550,11 @@ if (typeof document !== "undefined") {
     }
 
 
+    /**
+     * Triggers action button in AxiBot interface.
+     * @param {string} btnId - Button identifier.
+     * @returns {void}
+     */
     function handleAiButtons(btnId) {
         const axiButtons = getAxiBotActionButtons();
         // console.log(axiButtons);
@@ -12710,6 +13571,11 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Sends message text to AxiBot chat.
+     * @param {string} text - Message text to send.
+     * @returns {void}
+     */
     function handleSendAxiMessageToAxiBot(text) {
 
         const iframe = document.getElementById("middle1");
@@ -12736,6 +13602,11 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Extracts prompt text for 'Ask' AI command.
+     * @param {string[]} tokens - Command tokens.
+     * @returns {string} Extracted question text.
+     */
     function getAskText(tokens) {
         const askIndex = tokens.findIndex(t => t.toLowerCase() === "ask");
 
@@ -12744,6 +13615,13 @@ if (typeof document !== "undefined") {
             : "";
     }
 
+    /**
+     * Handles execution of 'Ask' AI query.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
     function handleAiAsk({ tokens, commandConfig }) {
         const text = getAskText(tokens);
 
@@ -12752,6 +13630,10 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Ends current AxiBot session.
+     * @returns {void}
+     */
     function handleAiEnd() {
         if (mode === "") {
             return;
@@ -12763,6 +13645,11 @@ if (typeof document !== "undefined") {
         // console.log(JSON.stringify(commands));
     }
 
+    /**
+     * Saves executed command to local history stack.
+     * @param {string} text - Command text to save.
+     * @returns {void}
+     */
     function saveToHistory(text) {
         if (!text || text.trim() === "") return;
 
@@ -12779,6 +13666,10 @@ if (typeof document !== "undefined") {
         historyIndex = -1;
     }
 
+    /**
+     * Loads command history list from localStorage.
+     * @returns {string[]} List of command history strings.
+     */
     function loadCommandHistory() {
         try {
             commandHistory = JSON.parse(localStorage.getItem(`axi_command_history_${getAppBaseUrl()}_${window.mainUserName}`));
@@ -12787,6 +13678,11 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Navigates up/down through command history stack.
+     * @param {string} direction - Direction ('up' or 'down').
+     * @returns {void}
+     */
     function navigateHistory(direction) {
         if (commandHistory.length === 0) {
             showToast("No command History available");
@@ -12824,6 +13720,10 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Loads and populates favorites dropdown UI.
+     * @returns {void}
+     */
     function loadFavorites() {
         if (!axicmdenabled) return;
         const appUrl = getAppBaseUrl();
@@ -12877,6 +13777,12 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Adds or removes a command from favorites.
+     * @param {string} cmdText - Command text.
+     * @param {boolean} [isAdding=false] - True to add, false to remove.
+     * @returns {void}
+     */
     function toggleFavorite(cmdText, isAdding = false) {
         loadFavorites();
         let cmdIndex;
@@ -13000,6 +13906,11 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Renders favorites list in dropdown UI.
+     * @param {Array<object>} [itemsToRender] - Items to render.
+     * @returns {void}
+     */
     function renderFavoritesUI(itemsToRender = commandFavorites) {
         if (!favouritesCard) return;
 
@@ -13110,6 +14021,10 @@ if (typeof document !== "undefined") {
         });
     }
 
+    /**
+     * Displays favorites popup menu without triggering command input.
+     * @returns {void}
+     */
     function showFavoritesPopupOnly() {
         const filterInput = document.getElementById("axiFavFilterInput");
         if (filterInput) filterInput.value = "";
@@ -13160,6 +14075,11 @@ if (typeof document !== "undefined") {
     // }
 
 
+    /**
+     * Executes a saved favorite command.
+     * @param {object} favObj - Favorite item object.
+     * @returns {void}
+     */
     function executeFavorite(favObj) {
         if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
             return;
@@ -13266,6 +14186,12 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Registers route mapping for a command.
+     * @param {string} cmdText - Command text.
+     * @param {string} targetUrl - Target navigation URL.
+     * @returns {void}
+     */
     function setCommandRoutes(cmdText, targetUrl) {
         const existingCommandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
 
@@ -13282,12 +14208,22 @@ if (typeof document !== "undefined") {
         // console.log("Command Routes: " + JSON.stringify(commandRoutes));
     }
 
+    /**
+     * Generates standardized key for cache storage.
+     * @param {string} name - Cache category name.
+     * @param {string} params - Parameters string.
+     * @returns {string} Cache key string.
+     */
     function generateLocalStorageKey(name, params) {
         const prefixKey = "axi";
 
         return `${prefixKey}_${name}_${params}`;
     }
 
+    /**
+     * Fetches developer options configuration from server.
+     * @returns {object} Developer options.
+     */
     function getAxpertDevOpt() {
         let devOpt = "";
         try {
@@ -13329,6 +14265,11 @@ if (typeof document !== "undefined") {
         "mem db console": "memdbconsole"
     };
 
+    /**
+     * Checks if SDK option is allowed for current user role.
+     * @param {string} sdkOptionName - Option name.
+     * @returns {boolean} True if allowed.
+     */
     function isDevOptionAllowed(sdkOptionName) {
         const accessPermissions = getAccessPermissions();
         if (!accessPermissions || accessPermissions.buildAccess === false) {
@@ -13364,6 +14305,10 @@ if (typeof document !== "undefined") {
 
     let cachedAccessPermissions = null;
 
+    /**
+     * Fetches access permissions object for current user.
+     * @returns {object} Access permissions.
+     */
     function getAccessPermissions() {
         // AppMgrAccess(Config)
         // ImportAccess(Upload)
@@ -13385,6 +14330,12 @@ if (typeof document !== "undefined") {
         return cachedAccessPermissions;
     }
 
+    /**
+     * Filters command dictionary according to user permissions.
+     * @param {object} commandsFromDb - Raw commands from DB.
+     * @param {object} accessPermissions - User permissions object.
+     * @returns {object} Filtered commands dictionary.
+     */
     function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions) {
         const currentUserRole = window.AxUserRoles;
         const currentUserName = window.mainUserName;
@@ -13509,6 +14460,13 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Toggles loading spinner on modal buttons.
+     * @param {string} buttonId - Button element ID.
+     * @param {string} spinnerId - Spinner element ID.
+     * @param {boolean} isLoading - Loading status.
+     * @returns {void}
+     */
     function setButtonLoading(buttonId, spinnerId, isLoading) {
         const button = document.getElementById(buttonId);
         const spinner = document.getElementById(spinnerId);
@@ -13524,17 +14482,32 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Converts string representation to boolean value.
+     * @param {string} str - String to convert.
+     * @returns {boolean} Boolean result.
+     */
     function strToBool(str) {
         if (!str) return false;
         const s = String(str).toLowerCase().trim();
         return s === "t" || s === "true";
     }
 
+    /**
+     * Normalizes command string for deduplication comparison.
+     * @param {string} cmd - Command string.
+     * @returns {string} Normalized command string.
+     */
     function normalizeCommandForCompare(cmd) {
         if (!cmd) return "";
         return cmd.trim().toLowerCase().replace(/\s+/g, " ");
     }
 
+    /**
+     * Normalizes URL for duplicate detection.
+     * @param {string} url - URL string.
+     * @returns {string} Normalized URL.
+     */
     function normalizeUrlForCompare(url) {
         if (!url) return "";
         try {
@@ -13544,6 +14517,12 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Checks if favorite with same URL or command already exists.
+     * @param {string} targetUrl - Target URL.
+     * @param {string} [excludeCmdText=""] - Command text to exclude.
+     * @returns {boolean} True if duplicate.
+     */
     function isDuplicateFavorite(targetUrl, excludeCmdText = "") {
         if (!targetUrl) return false;
         const normalizedTarget = normalizeUrlForCompare(targetUrl);
@@ -13565,6 +14544,13 @@ if (typeof document !== "undefined") {
         });
     }
 
+    /**
+     * Opens Add/Edit Favorite modal dialog.
+     * @param {string} cmdText - Command text.
+     * @param {string} targetUrl - Target URL.
+     * @param {boolean} [isEdit=false] - True if editing existing favorite.
+     * @returns {void}
+     */
     function showFavoriteModel(cmdText, targetUrl, isEdit = false) {
         const originalCmdTextInput = document.getElementById("axiFavOriginalCmd");
         const favNameInput = document.getElementById("axiFavNameInput");
@@ -13594,6 +14580,10 @@ if (typeof document !== "undefined") {
         favNameInput.select();
     }
 
+    /**
+     * Hides Favorite modal dialog.
+     * @returns {void}
+     */
     function hideFavoriteModal() {
         const modal = document.getElementById("axiFavModalOverlay");
 
@@ -13607,6 +14597,10 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Handles Save button click in Add Favorite modal.
+     * @returns {void}
+     */
     function confirmAddFavorite() {
         const alias = document.getElementById("axiFavNameInput").value.trim();
         const originalCmdText = document.getElementById("axiFavOriginalCmd").value.trim();
@@ -13752,6 +14746,11 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Opens Delete Favorite confirmation dialog.
+     * @param {string} cmdText - Command text to delete.
+     * @returns {void}
+     */
     function showDeleteFavoriteModal(cmdText) {
         const modal = document.getElementById("axiFavDeleteModalOverlay");
 
@@ -13773,6 +14772,10 @@ if (typeof document !== "undefined") {
         modal.classList.add("open");
     }
 
+    /**
+     * Hides Delete Favorite modal dialog.
+     * @returns {void}
+     */
     function hideDeleteFavoriteModal() {
         const modal = document.getElementById("axiFavDeleteModalOverlay");
         if (modal) {
@@ -13785,6 +14788,10 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Confirms deletion of favorite.
+     * @returns {void}
+     */
     function confirmDeleteFavorite() {
         const cmdText = document.getElementById("axiFavDeleteCmd").value;
         if (!cmdText) return;
@@ -13792,6 +14799,11 @@ if (typeof document !== "undefined") {
         executeDeleteFavorite(cmdText);
     }
 
+    /**
+     * Deletes favorite item from storage and updates UI.
+     * @param {string} cmdText - Command text.
+     * @returns {void}
+     */
     function executeDeleteFavorite(cmdText) {
         const appUrl = getAppBaseUrl();
         const appname = getProjectName();
@@ -13855,6 +14867,10 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Resolves current structure name from active window/iframe.
+     * @returns {string} Structure name.
+     */
     function getCurrentStructName() {
         const iframe = document.getElementById("middle1");
 
@@ -13949,6 +14965,10 @@ if (typeof document !== "undefined") {
 
     }
 
+    /**
+     * Launches AxiCMD interactive feature tour walkthrough.
+     * @returns {void}
+     */
     function startWalkthrough() {
         render();
         renderFavoritesUI();
@@ -13993,6 +15013,10 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Injects CSS styles required for Intro.js walkthrough tour.
+     * @returns {void}
+     */
     function injectTourStyles() {
         if (document.getElementById("axiTourStyles")) return;
         const style = document.createElement("style");
@@ -14131,6 +15155,10 @@ if (typeof document !== "undefined") {
         document.head.appendChild(style);
     }
 
+    /**
+     * Configures and starts Intro.js tour steps.
+     * @returns {void}
+     */
     function runTour() {
         if (!axicmdenabled) return;
         const oldVal = input.value;
@@ -14210,6 +15238,10 @@ if (typeof document !== "undefined") {
         });
 
         let resizeTimeout;
+        /**
+         * Handles window resize events to adjust AxiCMD layout and suggestion positions.
+         * @returns {void}
+         */
         const handleResize = () => {
             if (resizeTimeout) clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
@@ -14253,6 +15285,11 @@ if (typeof document !== "undefined") {
 })();
 
 
+/**
+ * Shell wrapper to navigate main iframe to target URL.
+ * @param {string} src - Target URL string.
+ * @returns {void}
+ */
 function LoadIframeac(src) {
     try {
         if (typeof callParentNew("addFormRuntimeDcFlag") != "undefined" && callParentNew("addFormRuntimeDcFlag") != "") {
