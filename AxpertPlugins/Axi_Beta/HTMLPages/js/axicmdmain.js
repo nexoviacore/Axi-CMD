@@ -72,6 +72,16 @@ function applyAxiCmdVisibility() {
             }
         }
 
+        const headerTopbar = (searchBar && searchBar.parentElement) ||
+            document.querySelector(".d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.search-bar)") ||
+            document.querySelector(".d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1");
+        if (headerTopbar) {
+            if (isEnabled) {
+                headerTopbar.style.setProperty("justify-content", "end", "important");
+            } else {
+                headerTopbar.style.removeProperty("justify-content");
+            }
+        }
     }
 }
 
