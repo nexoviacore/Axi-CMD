@@ -2,7 +2,7 @@
 
 **Document Version:** `1.0.0`  
 **Target Audience:** Axpert Developers, System Administrators, Technical QA Engineers  
-**Applies To:** Axi Command Palette (`Axi_Beta`) v0.4.0+ / Axpert Web 11.4+  
+**Applies To:** Axi Command Palette (`AxiCMD`) v0.4.0+ / Axpert Web 11.4+  
 
 ---
 

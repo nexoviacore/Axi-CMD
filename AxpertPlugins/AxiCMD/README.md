@@ -1,10 +1,10 @@
-# Axi Command Palette (`Axi_Beta`)
+# Axi Command Palette (`AxiCMD`)
 
-[![Plugin Version](https://img.shields.io/badge/Axi--Plugin-v0.5.0--rc-orange.svg)](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta)
+[![Plugin Version](https://img.shields.io/badge/Axi--Plugin-v0.5.1--rc-orange.svg)](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD)
 [![Runtime](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/8.0)
-[![Database](https://img.shields.io/badge/Database-PostgreSQL%20%7C%20Oracle-green.svg)](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL%20%7C%20Oracle-green.svg)](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures)
 
-The **Axi Command Palette** (`Axi_Beta`) is an in-app developer and user command navigation engine designed for the Axpert Web Shell interface. It provides real-time token autocompletion, dynamic transaction routing, multi-entity structure execution (TStructs, IViews, Axpert Data Sources / ADS, Pages, and Inbox), form keyfield management, tabbed record popups, and user favorites.
+The **Axi Command Palette** (`AxiCMD`) is an in-app developer and user command navigation engine designed for the Axpert Web Shell interface. It provides real-time token autocompletion, dynamic transaction routing, multi-entity structure execution (TStructs, IViews, Axpert Data Sources / ADS, Pages, and Inbox), form keyfield management, tabbed record popups, and user favorites.
 
 ---
 
@@ -40,7 +40,7 @@ graph TD
 
 ### 3. Database Layer
 * Stores command catalog definitions, prompt sequences, user permission mappings, and TStruct property metadata across PostgreSQL and Oracle.
-* Scripts located under [`Structures/`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/).
+* Scripts located under [`Structures/`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/).
 
 ---
 
@@ -57,7 +57,7 @@ graph TD
 
 ## Database Objects Catalog
 
-The database setup scripts are organized by provider under [`Structures/Postgre/Scripts/`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/Postgre/Scripts/) and [`Structures/Oracle/Scripts/`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/Oracle/Scripts/).
+The database setup scripts are organized by provider under [`Structures/Postgre/Scripts/`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/) and [`Structures/Oracle/Scripts/`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Oracle/Scripts/).
 
 ### Core Tables
 
@@ -88,8 +88,8 @@ graph LR
 ```
 
 ### 1. Core Files Placement
-1. Install or copy the `Axi_Beta` plugin folder into `/AxpertPlugins/Axi_Beta/`.
-2. Copy `AxiCMDMainPage.html` from `AxpertPlugins/Axi_Beta/HTMLPages/` into `../CustomPages/AxiCMDMainPage.html`.
+1. Install or copy the `AxiCMD` plugin folder into `/AxpertPlugins/AxiCMD/`.
+2. Copy `AxiCMDMainPage.html` from `AxpertPlugins/AxiCMD/HTMLPages/` into `../CustomPages/AxiCMDMainPage.html`.
 
 > [!IMPORTANT]
 > Do not rename `AxiCMDMainPage.html`. The Axpert routing system relies on this exact filename.
@@ -99,10 +99,10 @@ graph LR
 2. Set **Application Template** property to `AxiCMDMainPage.html`.
 3. If `AxiCMDMainPage.html` is not visible in the dropdown, navigate to **Configuration Property List**, edit **Application Template**, and append `AxiCMDMainPage.html` to the Values collection.
 
-### 3. IIS Backend API (`AxiApi`) Hosting
-1. Publish and copy `AxiApi` into your target **Arm microservices** directory.
-2. In IIS Manager, create an Application Pool named `AxiApi_Beta` set to **No Managed Code**.
-3. Create a new IIS Application pointing to the `AxiApi` directory under the default website.
+### 3. IIS Backend API (`AxiCMDApi`) Hosting
+1. Publish and copy `AxiCMDApi` into your target **Arm microservices** directory.
+2. In IIS Manager, create an Application Pool named `AxiCMDApi` set to **No Managed Code**.
+3. Create a new IIS Application pointing to the `AxiCMDApi` directory under the default website.
 4. Ensure `appsettings.ini` is present in the parent microservices folder to supply database connection credentials.
 5. Grant **Read & Write** file permissions to the IIS Application Pool identity (`IIS_IUSRS`).
 
@@ -110,9 +110,9 @@ graph LR
 
 ## Key Files Reference
 
-* [`HTMLPages/js/axicmdmain.js`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/js/axicmdmain.js): Command palette core JavaScript engine.
-* [`AxiCMDVersioninfo.json`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/AxiCMDVersioninfo.json): Version tracker manifest.
+* [`HTMLPages/js/axicmdmain.js`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js): Command palette core JavaScript engine.
+* [`AxiCMDVersioninfo.json`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/AxiCMDVersioninfo.json): Version tracker manifest.
 * [`CustomPages/AxiCMDMainPage.html`](file:///D:/Axpert11.4/AxpertWebLatest/CustomPages/AxiCMDMainPage.html): Main application template.
-* [`HTMLPages/Smartview.html`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/Smartview.html): Dynamic list view engine for ADS and IViews.
-* [`HTMLPages/PopupContainer.html`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/PopupContainer.html): Multi-tab popup window manager.
-* [`DOCUMENTATION.md`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/DOCUMENTATION.md): Detailed technical & developer guide.
+* [`HTMLPages/Smartview.html`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/Smartview.html): Dynamic list view engine for ADS and IViews.
+* [`HTMLPages/PopupContainer.html`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/PopupContainer.html): Multi-tab popup window manager.
+* [`DOCUMENTATION.md`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/DOCUMENTATION.md): Detailed technical & developer guide.

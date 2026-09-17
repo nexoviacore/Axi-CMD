@@ -619,9 +619,9 @@ if (typeof document !== "undefined") {
             isConfigLoaded = true;
             let configUrl = "";
             try {
-                configUrl = `${getAppBaseUrl()}/AxpertPlugins/Axi_Beta/axicmd-config.json`;
+                configUrl = `${getAppBaseUrl()}/AxpertPlugins/AxiCMD/axicmd-config.json`;
             } catch (e) {
-                configUrl = `/AxpertPlugins/Axi_Beta/axicmd-config.json`;
+                configUrl = `/AxpertPlugins/AxiCMD/axicmd-config.json`;
             }
             try {
                 const res = fetch(configUrl);
@@ -634,15 +634,15 @@ if (typeof document !== "undefined") {
             }
         }
 
-        apiMetadataUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/axi_get`;
+        apiMetadataUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/axi_get`;
         // // console.log("ApiMetadataUrl = " + apiMetadataUrl);
 
-        axiFavoritesUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/user-favourites`;
+        axiFavoritesUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/user-favourites`;
         // axiFavoritesUrl = `http://localhost:5057/api/v1/Axi/user-favourites`; 
         // // console.log("AxiFavoritesUrl = " + axiFavoritesUrl);
 
-        axiCommandConfigUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/command-config`;
-        axiKeyfieldUrl = `${AxiArmUrl}/AxiApi_Beta/api/v1/Axi/setkeyfield`;
+        axiCommandConfigUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/command-config`;
+        axiKeyfieldUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/setkeyfield`;
 
 
         input = document.getElementById("Axi-Searchinp");
@@ -1541,8 +1541,8 @@ if (typeof document !== "undefined") {
                 targetURL = "../aspx/" + targetURL;
             }
 
-            let popUpContainerUrl = `../AxpertPlugins/Axi_Beta/HTMLPages/PopupContainer.html`;
-            if (window.location.pathname.toLowerCase().includes("/axpertplugins/axi_beta/htmlpages/")) {
+            let popUpContainerUrl = `../AxpertPlugins/AxiCMD/HTMLPages/PopupContainer.html`;
+            if (window.location.pathname.toLowerCase().includes("/axpertplugins/axicmd/htmlpages/")) {
                 popUpContainerUrl = `PopupContainer.html`;
             }
 
@@ -1595,7 +1595,7 @@ if (typeof document !== "undefined") {
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table_1769088257557.html`;
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table.html`;
         // let targetUrl = `${getAppBaseUrl()}/plugins/Axi/HTMLPages/Smartview_table.html`;
-        let targetUrl = `../AxpertPlugins/Axi_Beta/HTMLPages/Smartview.html`;
+        let targetUrl = `../AxpertPlugins/AxiCMD/HTMLPages/Smartview.html`;
 
         // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
 
@@ -6571,7 +6571,7 @@ if (typeof document !== "undefined") {
      */
     async function showVersionInfo() {
         try {
-            const axiUrl = `${getAppBaseUrl()}/AxpertPlugins/Axi_Beta/AxiCMDVersioninfo.json`;
+            const axiUrl = `${getAppBaseUrl()}/AxpertPlugins/AxiCMD/AxiCMDVersioninfo.json`;
             const axpertUrl = `${getAppBaseUrl()}/versionInfo.json`;
 
             const [axiRes, axpertRes] = await Promise.all([
@@ -10947,7 +10947,7 @@ if (typeof document !== "undefined") {
         }
 
 
-        let targetUrl = "../AxpertPlugins/Axi_Beta/HTMLPages/Analytics.html";
+        let targetUrl = "../AxpertPlugins/AxiCMD/HTMLPages/Analytics.html";
 
         // if (tokens.length === 1) {
         //     targetUrl += "?calendar=t";
@@ -13485,7 +13485,7 @@ if (typeof document !== "undefined") {
 
         // let targetUrl = "../CustomPages/axibot.html";
         // let targetUrl = `${getAppBaseUrl()}/CustomPages/axibot.html`;
-        let targetUrl = `${getAppBaseUrl()}/AxpertPlugins/Axi_Beta/HTMLPages/axibot.html`;
+        let targetUrl = `${getAppBaseUrl()}/AxpertPlugins/AxiCMD/HTMLPages/axibot.html`;
         // let targetUrl = "../axidev/HTMLPages/axibot_1770979038509.html";
 
 
@@ -14995,7 +14995,7 @@ if (typeof document !== "undefined") {
             const link = document.createElement("link");
             link.rel = "stylesheet";
             link.type = "text/css";
-            link.href = `${appUrl}/AxpertPlugins/Axi_Beta/HTMLPages/css/introjs.min.css`;
+            link.href = `${appUrl}/AxpertPlugins/AxiCMD/HTMLPages/css/introjs.min.css`;
             document.head.appendChild(link);
         }
 
@@ -15003,7 +15003,7 @@ if (typeof document !== "undefined") {
         if (!document.querySelector('script[src*="intro.min.js"]')) {
             const script = document.createElement("script");
             script.type = "text/javascript";
-            script.src = `${appUrl}/AxpertPlugins/Axi_Beta/HTMLPages/js/intro.min.js`;
+            script.src = `${appUrl}/AxpertPlugins/AxiCMD/HTMLPages/js/intro.min.js`;
             script.onload = () => {
                 injectTourStyles();
                 runTour();

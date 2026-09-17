@@ -1,6 +1,6 @@
-# Axi Command Palette (Axi_Beta) | Technical, Architectural & Usage Documentation
+# Axi Command Palette (AxiCMD) | Technical, Architectural & Usage Documentation
 
-Welcome to the comprehensive documentation for the **Axi Command Palette** plugin (`Axi_Beta`). This document provides system administrators, database administrators, developers, and end-users with a complete guide to the system's architecture, database schema, APIs, frontend layouts, keyboard shortcuts, installation procedures, and daily usage patterns.
+Welcome to the comprehensive documentation for the **Axi Command Palette** plugin (`AxiCMD`). This document provides system administrators, database administrators, developers, and end-users with a complete guide to the system's architecture, database schema, APIs, frontend layouts, keyboard shortcuts, installation procedures, and daily usage patterns.
 
 ---
 
@@ -9,7 +9,7 @@ Welcome to the comprehensive documentation for the **Axi Command Palette** plugi
 2. [Database Schema & Objects](#-database-schema--objects)
     * [Tables Catalog](#tables-catalog)
     * [Stored Procedures & Functions (PostgreSQL vs. Oracle)](#stored-procedures--functions-postgresql-vs-oracle)
-3. [Backend API Specifications (AxiApi_Beta)](#-backend-api-specifications-axiapi_beta)
+3. [Backend API Specifications (AxiCMDApi)](#-backend-api-specifications-axicmdapi)
 4. [Frontend Components & User Interface](#-frontend-components--user-interface)
 5. [Interactive Keyboard Shortcuts](#-interactive-keyboard-shortcuts)
 6. [Supported Command Catalog](#-supported-command-catalog)
@@ -36,7 +36,7 @@ The Axi Command Palette is designed as a modular, high-performance command-drive
 ```mermaid
 graph TD
     User([User in Axpert Shell]) <-->|Ctrl + Space / Shortcuts| Frontend[Frontend Shell UI: AxiCMDMainPage.html]
-    Frontend <-->|HTTP REST Requests| Backend[Backend Web API: AxiApi_Beta]
+    Frontend <-->|HTTP REST Requests| Backend[Backend Web API: AxiCMDApi]
     Backend <-->|ADO.NET / EF Core| DB[(Database: Oracle / PostgreSQL)]
     subgraph Frontend Components
         Frontend -->|Command Processing| JS[axicmdmain.js]
@@ -46,13 +46,13 @@ graph TD
 ```
 
 ### 1. Frontend Layer
-*   **AxiCMDMainPage.html** ([AxiCMDMainPage.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/AxiCMDMainPage.html)): Integrates directly within Axpert as the master template.
-*   **axicmdmain.js** ([axicmdmain.js](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/js/axicmdmain.js)): Contains the main autocomplete suggestion logic, command parser, state machine, and API client.
-*   **Smartview.html** ([Smartview.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/Smartview.html)): Handles interactive record list views, filtering, utility actions, and multi-select deletion.
-*   **PopupContainer.html** ([PopupContainer.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/PopupContainer.html)): Provides a tabbed interface to manage multiple open transactions in parallel.
+*   **AxiCMDMainPage.html** ([AxiCMDMainPage.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/AxiCMDMainPage.html)): Integrates directly within Axpert as the master template.
+*   **axicmdmain.js** ([axicmdmain.js](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js)): Contains the main autocomplete suggestion logic, command parser, state machine, and API client.
+*   **Smartview.html** ([Smartview.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/Smartview.html)): Handles interactive record list views, filtering, utility actions, and multi-select deletion.
+*   **PopupContainer.html** ([PopupContainer.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/PopupContainer.html)): Provides a tabbed interface to manage multiple open transactions in parallel.
 
 
-### 2. Backend API Layer (`AxiApi_Beta`)
+### 2. Backend API Layer (`AxiCMDApi`)
 *   Built on **.NET 8.0** for high performance and native async request processing.
 *   Acts as a microservice running under IIS (or stand-alone).
 *   Resolves database connection settings from the shared `appsettings.ini` file in the parent Arm microservices directory.
@@ -66,7 +66,7 @@ graph TD
 
 ## 🗄 Database Schema & Objects
 
-The database schema scripts are located under the [Structures](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/) directory.
+The database schema scripts are located under the [Structures](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/) directory.
 
 ### Tables Catalog
 
@@ -83,26 +83,26 @@ The following tables define the command structure and properties:
 ### Stored Procedures & Functions (PostgreSQL vs. Oracle)
 
 Depending on the database engine, the structures differ slightly to accommodate platform features:
-*   **PostgreSQL Scripts:** [Structures/Postgre/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/Postgre/Scripts/)
-*   **Oracle Scripts:** [Structures/Oracle/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/Oracle/Scripts/)
+*   **PostgreSQL Scripts:** [Structures/Postgre/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/)
+*   **Oracle Scripts:** [Structures/Oracle/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Oracle/Scripts/)
 
 #### Core Functions:
 1.  **`fn_axi_getstructures_meta`**
-    *   **PostgreSQL:** [fn_axi_getstructures_meta](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/Postgre/Scripts/axi_functions.sql#L1079-L1180)
+    *   **PostgreSQL:** [fn_axi_getstructures_meta](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/axi_functions.sql#L1079-L1180)
     *   **Oracle:** Returns a pipelined cursor table type `AXI_GETSTRUCTURES_META_tbl`.
     *   **Purpose:** Aggregates all accessible Tstructs, Iviews, Pages, and Axpert Data Sources (ADS) for the logged-in user. Filters by user responsibility permissions.
 2.  **`fn_axi_getstructs_obj`**
-    *   **PostgreSQL:** [fn_axi_getstructs_obj](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/Postgre/Scripts/axi_functions.sql#L1351)
+    *   **PostgreSQL:** [fn_axi_getstructs_obj](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/axi_functions.sql#L1351)
     *   **Oracle:** Returns a pipelined type `axi_getstructs_obj_tbl`.
     *   **Purpose:** Fetches records from a target Tstruct base table dynamically based on a search value. Evaluates row-level dimension filters and user read-write permissions.
 3.  **`fn_permissions_getpermission`**
-    *   **PostgreSQL:** [fn_permissions_getpermission](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/Postgre/Scripts/axi_functions.sql#L858)
+    *   **PostgreSQL:** [fn_permissions_getpermission](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/axi_functions.sql#L858)
     *   **Purpose:** Validates whether the logged-in user is authorized to perform Create, View, or Edit operations on a specific transaction (transid).
 4.  **`fn_axi_getkeyvalueswithfieldnameslist`**
-    *   **PostgreSQL:** [fn_axi_getkeyvalueswithfieldnameslist](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/Postgre/Scripts/axi_functions.sql#L154)
+    *   **PostgreSQL:** [fn_axi_getkeyvalueswithfieldnameslist](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/axi_functions.sql#L154)
     *   **Purpose:** Dynamically extracts the primary key values and available column descriptors for a given transaction structure.
 5.  **`axi_firesql_v2`**
-    *   **PostgreSQL:** [axi_firesql_v2](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/Postgre/Scripts/axi_functions.sql#L614)
+    *   **PostgreSQL:** [axi_firesql_v2](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/axi_functions.sql#L614)
     *   **Purpose:** A secure SQL executor that allows parametrized queries to prevent SQL injection vulnerabilities.
 
 > [!NOTE]
@@ -110,7 +110,7 @@ Depending on the database engine, the structures differ slightly to accommodate 
 
 ---
 
-## 🔌 Backend API Specifications (AxiApi_Beta)
+## 🔌 Backend API Specifications (AxiCMDApi)
 
 The .NET 8 backend API acts as the bridge. It provides three key endpoints consumed by the frontend javascript client.
 
@@ -140,13 +140,13 @@ The .NET 8 backend API acts as the bridge. It provides three key endpoints consu
 ## 🎨 Frontend Components & User Interface
 
 The frontend code leverages existing Axpert UI style libraries and custom CSS extensions:
-1.  **AxiCMDMainPage.html** ([AxiCMDMainPage.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/AxiCMDMainPage.html)):
+1.  **AxiCMDMainPage.html** ([AxiCMDMainPage.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/AxiCMDMainPage.html)):
     *   Hosts the search container `<div class="AXI-Sec">` which floats at the top of the interface.
     *   Defines modal overlays for confirming deletion of favorites, custom alerts, and dynamic loading states.
-2.  **axicmdmain.js** ([axicmdmain.js](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/js/axicmdmain.js)):
+2.  **axicmdmain.js** ([axicmdmain.js](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js)):
     *   Maintains autocomplete logic. It tokenizes user inputs and maps them to the matching command group (e.g., `Create`, `Edit`, `View`, `DevTools`).
     *   Appends dynamic parameter helpers in `axiHint` to instruct users on what parameters (like field values or search strings) are expected next.
-3.  **axicmdmain.css** ([axicmdmain.css](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/css/axicmdmain.css)):
+3.  **axicmdmain.css** ([axicmdmain.css](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/css/axicmdmain.css)):
     *   Provides clean aesthetics: rounded boundaries, transparent inputs, custom action overlays, and scrollable recommendation list containers.
 
 ---
@@ -213,11 +213,11 @@ Follow this step-by-step pipeline to host and configure the plugin:
 
 ### Step 1: Core Package Deployment
 1.  Open the **AxInstaller** tool.
-2.  Install the **Axi_Beta** plugin.
-3.  Ensure source files populate correctly under `D:\Axpert11.4\AxpertWebLatest\AxpertPlugins\Axi_Beta\`.
+2.  Install the **AxiCMD** plugin.
+3.  Ensure source files populate correctly under `D:\Axpert11.4\AxpertWebLatest\AxpertPlugins\AxiCMD\`.
 
 ### Step 2: Front-End Registration
-1.  Copy [AxiCMDMainPage.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/HTMLPages/AxiCMDMainPage.html) from `HTMLPages/` directory.
+1.  Copy [AxiCMDMainPage.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/AxiCMDMainPage.html) from `HTMLPages/` directory.
 2.  Paste it into the `D:\Axpert11.4\AxpertWebLatest\CustomPages\` folder.
 3.  **Warning:** Do not change the filename, as routing relies on `AxiCMDMainPage.html`.
 
@@ -227,27 +227,27 @@ Follow this step-by-step pipeline to host and configure the plugin:
 3.  Choose `AxiCMDMainPage.html` from the dropdown list.
 4.  *If missing from the dropdown:* Go to **Configuration Property List** -> edit **Application Template** -> add `AxiCMDMainPage.html` to the Values collection.
 
-### Step 4: IIS Backend Setup (`AxiApi_Beta`)
-1.  Copy the [AxiApi_Beta](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/PluginScripts/AxiApi_Beta) folder.
+### Step 4: IIS Backend Setup (`AxiCMDApi`)
+1.  Copy the [AxiCMDApi](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/PluginScripts/AxiCMDApi) folder.
 2.  Paste it into the **Arm microservices** publication directory on your target IIS server.
 3.  Configure a new Application Pool in IIS Manager:
-    *   **Name:** `AxiApi_Beta`
+    *   **Name:** `AxiCMDApi`
     *   **.NET CLR Version:** `No Managed Code` (since it uses .NET 8 runtime directly).
-4.  Create an application pointing to the `AxiApi_Beta` folder.
+4.  Create an application pointing to the `AxiCMDApi` folder.
 5.  Copy `appsettings.ini` from `../AxpertWebScript/` and place it in the **Arm microservices** parent directory so the API can read connection strings.
 6.  Assign **Read & Write** folder permissions to the App Pool Identity (e.g. `IIS_IUSRS`).
 
 ### Step 5: Database Scripts Execution
 Execute the appropriate scripts based on your target database:
 
-*   **PostgreSQL:** Run the scripts inside [Structures/Postgre/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/Postgre/Scripts/):
+*   **PostgreSQL:** Run the scripts inside [Structures/Postgre/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/):
     1.  `axi_axdirectsql_tables.sql`
     2.  `axi_command_tables.sql`
     3.  `axi_command_config.sql`
     4.  `axi_dependent_tables.sql`
     5.  `axi_functions.sql`
 
-*   **Oracle:** Run the scripts inside [Structures/Oracle/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/Axi_Beta/Structures/Oracle/Scripts/):
+*   **Oracle:** Run the scripts inside [Structures/Oracle/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Oracle/Scripts/):
     1.  `axi_axdirectsql_tables.sql`
     2.  `axi_command_tables.sql`
     3.  `axi_command_config.sql`
@@ -376,8 +376,8 @@ VALUES
     *   Ensure the web application has registered `AxiCMDMainPage.html` as the Application Template in Dev Options.
     *   Check if the console logs show `Axi Input not ready yet... waiting`. If so, ensure that the search input ID (`Axi-Searchinp`) is present in the rendered HTML.
 *   **Search suggestions are empty:**
-    *   Verify the backend API is running. Open the IIS application URL in your browser (e.g., `http://<server>/AxiApi_Beta/api/v1/Axi/axi_get`) and verify it responds.
-    *   Check the API's log file located in `AxiApi_Beta/logs/log.txt` for database connection errors.
+    *   Verify the backend API is running. Open the IIS application URL in your browser (e.g., `http://<server>/AxiCMDApi/api/v1/Axi/axi_get`) and verify it responds.
+    *   Check the API's log file located in `AxiCMDApi/logs/log.txt` for database connection errors.
     *   Verify that you executed the database scripts (specifically `axi_commands`, `axi_command_prompts`, and `axi_command_config`) and the tables are populated.
 *   **Data permissions / Row filtering issue:**
     *   Axi evaluates permissions via `fn_permissions_getpermission`. Verify that the user's role responsibilities are correctly assigned in Axpert's standard user settings pages.

@@ -48,7 +48,7 @@ Introduce a database-driven dynamic command configuration architecture:
 ## Implementation Decisions
 
 ### 1. Database Schema (`axi_command_config`)
-Create table `axi_command_config` across PostgreSQL and Oracle DDL scripts in `AxpertPlugins/Axi_Beta/Structures`:
+Create table `axi_command_config` across PostgreSQL and Oracle DDL scripts in `AxpertPlugins/AxiCMD/Structures`:
 - `config_id` (varchar(50), Primary Key)
 - `command` (varchar(50), Indexed command group verb, e.g. `Configure`, `SDK`, `Upload`, `Download`)
 - `prompt_options` (varchar(200), Prompt option key matching `COMMAND_HANDLERS`)
@@ -93,5 +93,5 @@ Create table `axi_command_config` across PostgreSQL and Oracle DDL scripts in `A
 
 ## Further Notes
 
-- SQL scripts in `AxpertPlugins/Axi_Beta/Structures` adhere to the existing `<< ... >>` statement delimiter format used by the Axpert deployment installer.
+- SQL scripts in `AxpertPlugins/AxiCMD/Structures` adhere to the existing `<< ... >>` statement delimiter format used by the Axpert deployment installer.
 - Cache version in `CustomPages/AxiCMDMainPage.html` should be bumped upon deploying the frontend script updates.

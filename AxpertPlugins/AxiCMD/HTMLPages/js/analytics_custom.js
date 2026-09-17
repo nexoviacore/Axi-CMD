@@ -1737,7 +1737,7 @@ class AnalyticsCharts {
                 files.js.push(toAssetUrl("/ThirdParty/Highcharts/highcharts-3d.js"));
                 files.js.push(toAssetUrl("/ThirdParty/Highcharts/highcharts-more.js"));
                 files.js.push(toAssetUrl("/ThirdParty/Highcharts/highcharts-exporting.js"));
-                files.js.push(toAssetUrl("/AxpertPlugins/Axi_Beta/HTMLPages/js/analytics-charts-functions.js"));
+                files.js.push(toAssetUrl("/AxpertPlugins/AxiCMD/HTMLPages/js/analytics-charts-functions.js"));
                 files.js.push(toAssetUrl("/Js/AxInterface.js?v=10"));
                 files.js.push(toAssetUrl("/ThirdParty/DataTables-1.10.13/media/js/jquery.dataTables.js"));
                 files.js.push(toAssetUrl("/ThirdParty/DataTables-1.10.13/media/js/dataTables.bootstrap.js"));
@@ -4153,7 +4153,7 @@ class AnalyticsCharts {
                 this.toAssetUrl("/ThirdParty/Highcharts/highcharts-3d.js", assetBaseUrl),
                 this.toAssetUrl("/ThirdParty/Highcharts/highcharts-more.js", assetBaseUrl),
                 this.toAssetUrl("/ThirdParty/Highcharts/highcharts-exporting.js", assetBaseUrl),
-                this.toAssetUrl("/AxpertPlugins/Axi_Beta/HTMLPages/js/analytics-charts-functions.js", assetBaseUrl)
+                this.toAssetUrl("/AxpertPlugins/AxiCMD/HTMLPages/js/analytics-charts-functions.js", assetBaseUrl)
             ]
         };
 
