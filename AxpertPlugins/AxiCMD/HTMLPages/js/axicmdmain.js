@@ -1,6 +1,6 @@
 var _axicmdenabled = (typeof window !== "undefined" && typeof window.axicmdenabled !== "undefined")
     ? Boolean(window.axicmdenabled)
-    : true;
+    : false;
 
 /**
  * Checks whether the AXI Command Line Palette is enabled.
