@@ -7858,6 +7858,9 @@ if (typeof document !== "undefined") {
         ) || struct_dataList.find(r => r.name === transId);
 
         const primaryField = struct_row?.keyfield;
+        // const id = struct_row?.id; 
+
+
 
         if (!primaryField) {
             // console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
@@ -7915,6 +7918,9 @@ if (typeof document !== "undefined") {
         let rawValue = cleanCommandToken(tokens[tokenIndex]);
         // fieldValue = tryResolveToken(tokenIndex, rawValue, commandConfig, tokenBasedBooleanCheck);
         const { value: resolvedFieldValue, type: resolvedFieldType } = tryResolveToken(tokenIndex, rawValue, commandConfig, tokenBasedBooleanCheck);
+        // if (id !== 0) {
+        //     fieldValue 
+        // }
         fieldValue = resolvedFieldValue;
 
         fieldUniqueId = getUniqueId(fieldValue);
