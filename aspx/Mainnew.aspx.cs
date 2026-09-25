@@ -181,6 +181,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
     public string axpertstudioReact = string.Empty;
     public string pwdExpiryAlert = string.Empty;
     public string axpertDevOpt = string.Empty;
+    public string axicmdEnabled = "false";
     JObject AxGeneralconfigs = new JObject();
     LoginHelper loginHelper = new LoginHelper();
     private string mobileAuthKey = string.Empty;
@@ -600,7 +601,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                     { }
                 }
 
-                util.ClearUserIviewData();
+                //util.ClearUserIviewData();
 
                 GetGlobalVariables();
                 createTopLinks();
@@ -1491,6 +1492,9 @@ public partial class aspx_Mainnew : System.Web.UI.Page
             Session["ClientLocale"] = DateFormat;
             glCulture = DateFormat;
         }
+        axicmdEnabled = util.GetAdvConfigs("Axi Command Line Enable");
+        if (axicmdEnabled == "")
+            axicmdEnabled = "false";
 
         googleMapsApiKey = util.GetAdvConfigs("Google Maps Api Key");
 

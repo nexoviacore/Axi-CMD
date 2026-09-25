@@ -1,16 +1,77 @@
-var _axicmdenabled = (typeof window !== "undefined" && typeof window.axicmdenabled !== "undefined")
-    ? Boolean(window.axicmdenabled)
-    : true;
+/**
+ * Safely parses boolean values from boolean, string ("true"/"false"), or number.
+ * Ensures string 'false' evaluates to false (unlike JavaScript's native Boolean('false')).
+ * @param {*} val - Value to parse.
+ * @returns {boolean} Parsed boolean.
+ */
+function parseBool(val) {
+    if (typeof val === "boolean") return val;
+    if (typeof val === "string") {
+        const trimmed = val.trim().toLowerCase();
+        if (trimmed === "true" || trimmed === "1" || trimmed === "t" || trimmed === "y" || trimmed === "yes") return true;
+        if (trimmed === "false" || trimmed === "0" || trimmed === "f" || trimmed === "n" || trimmed === "no" || trimmed === "") return false;
+    }
+    if (typeof val === "number") return val !== 0;
+    return Boolean(val);
+}
+
+/**
+ * Retrieves the raw axicmdEnabled flag from current window, parent/top frames, or callParentNew.
+ * @returns {*} The raw value or undefined.
+ */
+function getRawAxiCmdEnabled() {
+    if (typeof window !== "undefined") {
+        if (typeof window.axicmdEnabled !== "undefined") return window.axicmdEnabled;
+        if (typeof window.axicmdenabled !== "undefined") return window.axicmdenabled;
+        try {
+            if (window.parent && window.parent !== window) {
+                if (typeof window.parent.axicmdEnabled !== "undefined") return window.parent.axicmdEnabled;
+                if (typeof window.parent.axicmdenabled !== "undefined") return window.parent.axicmdenabled;
+            }
+        } catch (e) { }
+        try {
+            if (window.top && window.top !== window) {
+                if (typeof window.top.axicmdEnabled !== "undefined") return window.top.axicmdEnabled;
+                if (typeof window.top.axicmdenabled !== "undefined") return window.top.axicmdenabled;
+            }
+        } catch (e) { }
+    }
+    if (typeof callParentNew === "function") {
+        try {
+            const res = callParentNew("axicmdEnabled");
+            if (typeof res !== "undefined") return res;
+        } catch (e) { }
+    }
+    return undefined;
+}
+
+var _axicmdenabled = (function () {
+    const raw = getRawAxiCmdEnabled();
+    const parsed = typeof raw !== "undefined" ? parseBool(raw) : false;
+    try {
+        if (typeof window !== "undefined" && typeof window.axicmdEnabled !== "undefined") {
+            window.axicmdEnabled = parsed;
+        }
+    } catch (e) { }
+    return parsed;
+})();
 
 /**
  * Checks whether the AXI Command Line Palette is enabled.
  * @returns {boolean} True if AXI Command Palette is active, false otherwise.
  */
 function isAxiCmdEnabled() {
-    if (typeof window !== "undefined" && typeof window.axicmdenabled !== "undefined") {
-        return Boolean(window.axicmdenabled);
+    const raw = getRawAxiCmdEnabled();
+    if (typeof raw !== "undefined") {
+        const parsed = parseBool(raw);
+        try {
+            if (typeof window !== "undefined" && typeof window.axicmdEnabled !== "undefined" && window.axicmdEnabled !== parsed) {
+                window.axicmdEnabled = parsed;
+            }
+        } catch (e) { }
+        return parsed;
     }
-    return Boolean(_axicmdenabled);
+    return parseBool(_axicmdenabled);
 }
 
 /**
@@ -118,6 +179,10 @@ try {
              * @returns {boolean} True if AXI Command Palette is active, false otherwise.
              */
             get() {
+                const raw = getRawAxiCmdEnabled();
+                if (typeof raw !== "undefined") {
+                    _axicmdenabled = parseBool(raw);
+                }
                 return _axicmdenabled;
             },
             /**
@@ -127,7 +192,12 @@ try {
              */
             set(val) {
                 const prev = _axicmdenabled;
-                _axicmdenabled = Boolean(val);
+                _axicmdenabled = parseBool(val);
+                try {
+                    if (typeof window !== "undefined") {
+                        window.axicmdEnabled = _axicmdenabled;
+                    }
+                } catch (e) { }
                 applyAxiCmdVisibility();
                 if (!prev && _axicmdenabled && typeof _globalScope.initAxiCmd === "function") {
                     _globalScope.initAxiCmd();
@@ -138,11 +208,21 @@ try {
         });
     } else {
         if (typeof _globalScope.axicmdenabled !== "undefined") {
-            _axicmdenabled = Boolean(_globalScope.axicmdenabled);
+            _axicmdenabled = parseBool(_globalScope.axicmdenabled);
         }
         setInterval(() => {
-            if (typeof _globalScope.axicmdenabled !== "undefined") {
-                const cur = Boolean(_globalScope.axicmdenabled);
+            const raw = getRawAxiCmdEnabled();
+            if (typeof raw !== "undefined") {
+                const cur = parseBool(raw);
+                if (cur !== _axicmdenabled) {
+                    _axicmdenabled = cur;
+                    applyAxiCmdVisibility();
+                    if (_axicmdenabled && typeof _globalScope.initAxiCmd === "function") {
+                        _globalScope.initAxiCmd();
+                    }
+                }
+            } else if (typeof _globalScope.axicmdenabled !== "undefined") {
+                const cur = parseBool(_globalScope.axicmdenabled);
                 if (cur !== _axicmdenabled) {
                     _axicmdenabled = cur;
                     applyAxiCmdVisibility();
@@ -166,9 +246,10 @@ if (typeof _globalScope !== "undefined") {
      * @returns {void}
      */
     _globalScope.setAxiCmdEnabled = function (enabled) {
-        _axicmdenabled = Boolean(enabled);
+        _axicmdenabled = parseBool(enabled);
         try {
-            _globalScope.axicmdenabled = Boolean(enabled);
+            _globalScope.axicmdenabled = _axicmdenabled;
+            _globalScope.axicmdEnabled = _axicmdenabled;
         } catch (e) { }
         applyAxiCmdVisibility();
         if (_axicmdenabled && typeof _globalScope.initAxiCmd === "function") {
