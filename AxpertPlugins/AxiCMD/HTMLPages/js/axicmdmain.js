@@ -1905,6 +1905,57 @@ if (typeof document !== "undefined") {
         }
     }
 
+    /**
+     * Generic redirect function to load a Tstruct via ivtstload.aspx (for save-normalized fields).
+     * @param {string} transId - Transaction structure ID (tstname).
+     * @param {string} [tstructCaption=""] - Form caption for popup mode.
+     * @param {string} [fieldName=""] - Field name (e.g., field1).
+     * @param {string} [fieldId=""] - Normalized field ID / value.
+     * @param {string} [extraParams=""] - Additional query string parameters.
+     * @returns {void}
+     */
+    function redirectToIvtstload(transId, tstructCaption = "", fieldName = "", fieldId = "", extraParams = "") {
+        if (!transId) {
+            alert("There is no Tstruct name provided!");
+            return;
+        }
+        hide();
+
+        let targetUrl = `../aspx/ivtstload.aspx?tstname=${transId}`;
+
+        if (fieldName && fieldId !== undefined && fieldId !== null && fieldId !== "") {
+            targetUrl += `&${fieldName}=${encodeURIComponent(fieldId)}`;
+        }
+        targetUrl += `&hltype=load`;
+        targetUrl += `&torecid=false`;
+        targetUrl += `&openerIV=${transId}`;
+        targetUrl += `&isIV=false`;
+        let isDupTab = false;
+        try {
+            if (typeof callParentNew === "function") {
+                isDupTab = callParentNew("isDuplicateTab") || false;
+            }
+        } catch (e) {
+            isDupTab = false;
+        }
+        targetUrl += `&isDupTab=${isDupTab}`;
+        targetUrl += `&hdnbElapsTime=0`;
+
+        if (extraParams) {
+            const separator = targetUrl.includes("?") ? "&" : "?";
+            targetUrl += `${separator}${extraParams}`;
+        }
+
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+            targetUrl += "&AxPop=true";
+            openPopOption(targetUrl);
+        } else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+        }
+    }
+
 
 
     /**
@@ -7879,6 +7930,99 @@ if (typeof document !== "undefined") {
         return match ? match[1] : str;
     }
 
+    /**
+     * Retrieves cached struct data list for a transId and field from localStorage or axDatasourceObj.
+     * @param {string} transId - Transaction structure ID.
+     * @param {string} [fieldName=""] - Field name or keyfield.
+     * @returns {Array<object>} Cached data list.
+     */
+    function getStructDataListFromStorage(transId, fieldName = "") {
+        if (!transId) return [];
+        const lowTransId = transId.toLowerCase().trim();
+        const lowFieldName = (fieldName || "").toLowerCase().trim();
+
+        // 1. Search localStorage for matching axi_getstructsdata key
+        try {
+            // Priority 1: Key matching both transId (param4) and fieldName (param8)
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key) continue;
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata")) {
+                    const matchTrans = lowKey.includes(`param4:${lowTransId}|`) || lowKey.includes(`param4:${lowTransId}_`) || lowKey.includes(`:${lowTransId}|`) || lowKey.includes(`:${lowTransId}_`);
+                    const matchField = !lowFieldName || lowKey.includes(`param8:${lowFieldName}|`) || lowKey.includes(`param8:${lowFieldName}_`) || lowKey.includes(`:${lowFieldName}|`) || lowKey.includes(`:${lowFieldName}_`);
+                    if (matchTrans && matchField) {
+                        const raw = localStorage.getItem(key);
+                        if (raw) {
+                            const parsed = JSON.parse(raw);
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                return parsed;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Priority 2: Key matching transId in param4 or anywhere
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key) continue;
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && (lowKey.includes(`param4:${lowTransId}`) || lowKey.includes(`:${lowTransId}`))) {
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            return parsed;
+                        }
+                    }
+                }
+            }
+
+            // Priority 3: Any getstructsdata key containing transId
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key) continue;
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            return parsed;
+                        }
+                    }
+                }
+            }
+        } catch (e) { }
+
+        // 2. Fallback to in-memory axDatasourceObj
+        if (typeof axDatasourceObj === "object" && axDatasourceObj) {
+            for (const key in axDatasourceObj) {
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
+                    if (!lowFieldName || lowKey.includes(lowFieldName)) {
+                        const list = axDatasourceObj[key];
+                        if (Array.isArray(list) && list.length > 0) {
+                            return list;
+                        }
+                    }
+                }
+            }
+            for (const key in axDatasourceObj) {
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
+                    const list = axDatasourceObj[key];
+                    if (Array.isArray(list) && list.length > 0) {
+                        return list;
+                    }
+                }
+            }
+        }
+
+        return [];
+    }
+
 
 
 
@@ -7963,50 +8107,110 @@ if (typeof document !== "undefined") {
             }
         }
 
-        ///We need to optimize this(token index)(optimized one is below 17-03-26-T)
         let tokenIndex;
         let tokenBasedBooleanCheck;
+        let targetFieldName = primaryField;
+
         if (tokens.length > 3) {
             tokenIndex = 3;
             tokenBasedBooleanCheck = false;
+            const fieldToken = cleanCommandToken(tokens[2]);
+            const matchedFld = getMatchedField(fieldToken, transId);
+            if (matchedFld && matchedFld.name) {
+                targetFieldName = matchedFld.name;
+            } else if (matchedFld && matchedFld.displaydata) {
+                const fnameMatch = matchedFld.displaydata.match(/\((.*?)\)/);
+                targetFieldName = fnameMatch ? fnameMatch[1].trim() : (matchedFld.caption || fieldToken);
+            } else {
+                const resolvedFld = tryResolveToken(2, fieldToken, commandConfig, false);
+                targetFieldName = (resolvedFld && resolvedFld.value) ? resolvedFld.value : (fieldToken || primaryField);
+            }
         }
         else {
             tokenIndex = 2;
             tokenBasedBooleanCheck = true;
+            targetFieldName = primaryField;
         }
-        //if (tokens.length > 3) {
 
-        //    let rawFieldName = cleanCommandToken(tokens[2]);
-        //    fieldName = tryResolveToken(2, rawFieldName, commandConfig, false);
-
-        //    let rawValue = cleanCommandToken(tokens[3]);
-        //    fieldValue = tryResolveToken(3, rawValue, commandConfig, false);
-
-        //    fieldUniqueId = getUniqueId(fieldValue);
-
-        //    redirectToTstruct(transId, rawStruct, true, struct_row.keyfield, fieldUniqueId);
-        //}
-        //else {
-
-
-        //    let rawValue = cleanCommandToken(tokens[2]);
-        //    fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
-
-        //    fieldUniqueId = getUniqueId(fieldValue);
-
-        //    redirectToTstruct(transId, rawStruct, true, struct_row.keyfield, fieldUniqueId);
-        //}
         let rawValue = cleanCommandToken(tokens[tokenIndex]);
-        // fieldValue = tryResolveToken(tokenIndex, rawValue, commandConfig, tokenBasedBooleanCheck);
         const { value: resolvedFieldValue, type: resolvedFieldType } = tryResolveToken(tokenIndex, rawValue, commandConfig, tokenBasedBooleanCheck);
-        // if (id !== 0) {
-        //     fieldValue 
-        // }
         fieldValue = resolvedFieldValue;
 
         fieldUniqueId = getUniqueId(fieldValue);
 
-        redirectToTstruct(transId, rawStruct, true, struct_row.keyfield, fieldUniqueId);
+        // Fetch struct data list from localStorage (axi_axi_getstructsdata_...) to check save normalized field
+        const structDataList = getStructDataListFromStorage(transId, targetFieldName);
+        let matchedItem = null;
+
+        if (Array.isArray(structDataList) && structDataList.length > 0) {
+            const candidates = [fieldValue, fieldUniqueId, rawValue]
+                .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
+                .map(v => String(v).trim());
+
+            // 1. Match by id directly
+            for (const val of candidates) {
+                matchedItem = structDataList.find(item => {
+                    const itemId = (item?.id ?? item?.ID ?? "").toString().trim();
+                    return itemId !== "" && itemId !== "0" && itemId.toLowerCase() === val.toLowerCase();
+                });
+                if (matchedItem) break;
+            }
+
+            // 2. Match exact displaydata, caption, or name
+            if (!matchedItem) {
+                for (const val of candidates) {
+                    const cleanVal = cleanString(val).toLowerCase();
+                    matchedItem = structDataList.find(item => {
+                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                        const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
+                        return display === cleanVal || caption === cleanVal || name === cleanVal;
+                    });
+                    if (matchedItem) break;
+                }
+            }
+
+            // 3. Match without bracketed text (e.g., "CBE [1446880000000]" vs "CBE")
+            if (!matchedItem) {
+                for (const val of candidates) {
+                    const cleanVal = cleanString(val).replace(/\[.*?\]/g, "").trim().toLowerCase();
+                    if (!cleanVal) continue;
+                    matchedItem = structDataList.find(item => {
+                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                        const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                        return display === cleanVal || caption === cleanVal;
+                    });
+                    if (matchedItem) break;
+                }
+            }
+
+            // 4. Substring match
+            if (!matchedItem) {
+                for (const val of candidates) {
+                    const cleanVal = cleanString(val).toLowerCase();
+                    if (!cleanVal) continue;
+                    matchedItem = structDataList.find(item => {
+                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                        return display.includes(cleanVal) || caption.includes(cleanVal);
+                    });
+                    if (matchedItem) break;
+                }
+            }
+        }
+
+        const matchedId = matchedItem ? (matchedItem.id ?? matchedItem.ID) : null;
+        const isSaveNormalized = matchedId !== undefined && matchedId !== null && String(matchedId).trim() !== "0" && String(matchedId).trim() !== "";
+
+        if (isSaveNormalized) {
+            const normalizedFieldId = String(matchedId).trim();
+            redirectToIvtstload(transId, rawStruct, targetFieldName, normalizedFieldId);
+        } else if (!matchedItem && fieldValue && fieldValue.includes("[") && fieldValue.includes("]") && fieldUniqueId && fieldUniqueId !== "0" && fieldUniqueId !== fieldValue && /^\d+$/.test(fieldUniqueId)) {
+            // Fallback: If item had bracketed ID from autocomplete
+            redirectToIvtstload(transId, rawStruct, targetFieldName, fieldUniqueId);
+        } else {
+            redirectToTstruct(transId, rawStruct, true, targetFieldName, fieldUniqueId);
+        }
     }
 
 
