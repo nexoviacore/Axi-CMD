@@ -465,8 +465,8 @@ if (typeof document !== "undefined") {
 
 
     const VIEW_HANDLERS = {
-        tstruct: ({ transId, rawStruct, fieldName, fieldValue }) =>
-            redirectToEntity(transId, rawStruct, fieldName, fieldValue),
+        tstruct: ({ transId, rawStruct, fieldName, fieldValue, recordId }) =>
+            redirectToEntity(transId, rawStruct, fieldName, fieldValue, recordId),
 
         iview: ({ transId, rawStruct }) =>
             redirectToIView(transId, rawStruct),
@@ -1939,6 +1939,58 @@ if (typeof document !== "undefined") {
             isDupTab = false;
         }
         targetUrl += `&isDupTab=${isDupTab}`;
+        targetUrl += `&hdnbElapsTime=0`;
+
+        if (extraParams) {
+            const separator = targetUrl.includes("?") ? "&" : "?";
+            targetUrl += `${separator}${extraParams}`;
+        }
+
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+            targetUrl += "&AxPop=true";
+            openPopOption(targetUrl);
+        } else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+        }
+    }
+
+    /**
+     * Generic redirect function to load a Tstruct via tstruct.aspx using transrecordid.
+     * @param {string} transId - Transaction structure ID (transid).
+     * @param {string} [tstructCaption=""] - Form caption for popup mode.
+     * @param {string} [recordId=""] - Transaction record ID (transrecordid).
+     * @param {string} [extraParams=""] - Additional query string parameters.
+     * @returns {void}
+     */
+    function redirectToTstructRecord(transId, tstructCaption = "", recordId = "", extraParams = "") {
+        if (!transId) {
+            alert("There is no Tstruct name provided!");
+            return;
+        }
+        hide();
+
+        let isDupTab = false;
+        try {
+            if (typeof callParentNew === "function") {
+                isDupTab = callParentNew("isDuplicateTab") || false;
+            }
+        } catch (e) {
+            isDupTab = false;
+        }
+
+        let targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+        targetUrl += `&recordid=${encodeURIComponent(recordId)}`;
+        targetUrl += `&hltype=load`;
+        targetUrl += `&torecid=false`;
+        targetUrl += `&recPos=1`;
+        targetUrl += `&curPage=1`;
+        targetUrl += `&pageType=first`;
+        targetUrl += `&openerIV=${transId}`;
+        targetUrl += `&isIV=false`;
+        targetUrl += `&isDupTab=${isDupTab}`;
+        targetUrl += `&dummyload=false`;
         targetUrl += `&hdnbElapsTime=0`;
 
         if (extraParams) {
@@ -8147,20 +8199,38 @@ if (typeof document !== "undefined") {
                 .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
                 .map(v => String(v).trim());
 
-            // 1. Match by id directly
+            // 1. Match by transrecordid directly
             for (const val of candidates) {
                 matchedItem = structDataList.find(item => {
-                    const itemId = (item?.id ?? item?.ID ?? "").toString().trim();
-                    return itemId !== "" && itemId !== "0" && itemId.toLowerCase() === val.toLowerCase();
+                    const transRecId = (item?.transrecordid ?? item?.TRANSRECORDID ?? "").toString().trim();
+                    return transRecId !== "" && transRecId !== "0" && transRecId.toLowerCase() === val.toLowerCase();
                 });
                 if (matchedItem) break;
             }
 
-            // 2. Match exact displaydata, caption, or name
+            // 2. Match by id directly
+            if (!matchedItem) {
+                for (const val of candidates) {
+                    matchedItem = structDataList.find(item => {
+                        const itemId = (item?.id ?? item?.ID ?? "").toString().trim();
+                        return itemId !== "" && itemId !== "0" && itemId.toLowerCase() === val.toLowerCase();
+                    });
+                    if (matchedItem) break;
+                }
+            }
+
+            // 3. Match exact displaydata, caption, or name (preferring actual records where isfield != 't')
             if (!matchedItem) {
                 for (const val of candidates) {
                     const cleanVal = cleanString(val).toLowerCase();
                     matchedItem = structDataList.find(item => {
+                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                        if (isField) return false;
+                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                        const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
+                        return display === cleanVal || caption === cleanVal || name === cleanVal;
+                    }) || structDataList.find(item => {
                         const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
                         const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
                         const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
@@ -8170,12 +8240,18 @@ if (typeof document !== "undefined") {
                 }
             }
 
-            // 3. Match without bracketed text (e.g., "CBE [1446880000000]" vs "CBE")
+            // 4. Match without bracketed text (e.g., "CBE [1446880000000]" vs "CBE")
             if (!matchedItem) {
                 for (const val of candidates) {
                     const cleanVal = cleanString(val).replace(/\[.*?\]/g, "").trim().toLowerCase();
                     if (!cleanVal) continue;
                     matchedItem = structDataList.find(item => {
+                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                        if (isField) return false;
+                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                        const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                        return display === cleanVal || caption === cleanVal;
+                    }) || structDataList.find(item => {
                         const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
                         const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
                         return display === cleanVal || caption === cleanVal;
@@ -8184,12 +8260,18 @@ if (typeof document !== "undefined") {
                 }
             }
 
-            // 4. Substring match
+            // 5. Substring match
             if (!matchedItem) {
                 for (const val of candidates) {
                     const cleanVal = cleanString(val).toLowerCase();
                     if (!cleanVal) continue;
                     matchedItem = structDataList.find(item => {
+                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                        if (isField) return false;
+                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                        return display.includes(cleanVal) || caption.includes(cleanVal);
+                    }) || structDataList.find(item => {
                         const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
                         const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
                         return display.includes(cleanVal) || caption.includes(cleanVal);
@@ -8199,15 +8281,14 @@ if (typeof document !== "undefined") {
             }
         }
 
-        const matchedId = matchedItem ? (matchedItem.id ?? matchedItem.ID) : null;
-        const isSaveNormalized = matchedId !== undefined && matchedId !== null && String(matchedId).trim() !== "0" && String(matchedId).trim() !== "";
+        const transRecordId = matchedItem ? (matchedItem.transrecordid ?? matchedItem.TRANSRECORDID) : null;
+        const hasTransRecordId = transRecordId !== undefined && transRecordId !== null && String(transRecordId).trim() !== "" && String(transRecordId).trim() !== "0";
 
-        if (isSaveNormalized) {
-            const normalizedFieldId = String(matchedId).trim();
-            redirectToIvtstload(transId, rawStruct, targetFieldName, normalizedFieldId);
+        if (hasTransRecordId) {
+            redirectToTstructRecord(transId, rawStruct, String(transRecordId).trim());
         } else if (!matchedItem && fieldValue && fieldValue.includes("[") && fieldValue.includes("]") && fieldUniqueId && fieldUniqueId !== "0" && fieldUniqueId !== fieldValue && /^\d+$/.test(fieldUniqueId)) {
-            // Fallback: If item had bracketed ID from autocomplete
-            redirectToIvtstload(transId, rawStruct, targetFieldName, fieldUniqueId);
+            // Fallback: If item had bracketed numeric record ID from autocomplete
+            redirectToTstructRecord(transId, rawStruct, fieldUniqueId);
         } else {
             redirectToTstruct(transId, rawStruct, true, targetFieldName, fieldUniqueId);
         }
@@ -8419,37 +8500,73 @@ if (typeof document !== "undefined") {
 
 
     /**
+     * Generic redirect function to load an Entity Form via EntityForm.aspx using record ID.
+     * @param {string} transId - Transaction structure ID (tstid).
+     * @param {string} [formCaption=""] - Form caption for popup mode.
+     * @param {string} [recordId=""] - Record ID (recid).
+     * @param {string} [extraParams=""] - Additional query string parameters.
+     * @returns {void}
+     */
+    function redirectToEntityForm(transId, formCaption = "", recordId = "", extraParams = "") {
+        if (!transId) {
+            alert("There is no Tstruct name provided!");
+            return;
+        }
+        hide();
+
+        let targetUrl = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${encodeURIComponent(recordId)}&hdnbElapsTime=0`;
+
+        if (extraParams) {
+            const separator = targetUrl.includes("?") ? "&" : "?";
+            targetUrl += `${separator}${extraParams}`;
+        }
+
+        setCommandRoutes(input.value.trim(), targetUrl);
+
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(formCaption)}`;
+            openPopOption(targetUrl);
+        } else {
+            if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
+                top.window.LoadIframe(targetUrl);
+            } else {
+                window.LoadIframe(targetUrl);
+            }
+        }
+    }
+
+    /**
      * Navigates main window or iframe to entity form with pre-filtered record fields.
      * @param {string} transId - Transaction structure ID.
      * @param {string} [formCaption=""] - Form title caption.
-     * @param {string} fieldName - Key field name.
-     * @param {string} fieldValue - Key field value.
+     * @param {string} [fieldName=""] - Key field name.
+     * @param {string} [fieldValue=""] - Key field value.
+     * @param {string} [recordId=""] - Record ID (recid).
      * @returns {void}
      */
-    function redirectToEntity(transId, formCaption = "", fieldName, fieldValue) {
+    function redirectToEntity(transId, formCaption = "", fieldName = "", fieldValue = "", recordId = "") {
         let targetUrl;
-        if (!fieldValue) {
-
+        const resolvedRecId = recordId || (/^\d+$/.test(String(fieldValue).trim()) ? String(fieldValue).trim() : "");
+        if (resolvedRecId) {
+            targetUrl = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${encodeURIComponent(resolvedRecId)}&hdnbElapsTime=0`;
+        } else if (!fieldValue) {
             targetUrl = `../aspx/Entity.aspx?tstid=${transId}`;
-
         } else {
-            targetUrl = `../aspx/EntityForm.aspx?tstid=${transId}`;
-            targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
-
-
-
-
+            targetUrl = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${encodeURIComponent(fieldValue)}&hdnbElapsTime=0`;
         }
 
         setCommandRoutes(input.value.trim(), targetUrl);
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(formCaption)}`;
-            openPopOption(targetUrl)
+            openPopOption(targetUrl);
         }
         else {
-            window.LoadIframe(targetUrl);
+            if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
+                top.window.LoadIframe(targetUrl);
+            } else {
+                window.LoadIframe(targetUrl);
+            }
         }
-
     }
 
     /**
@@ -8766,17 +8883,6 @@ if (typeof document !== "undefined") {
         //const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
 
 
-        if (tokens.length > 3) {
-            fieldValueIndex = 3;
-
-
-        } else {
-            fieldValueIndex = 2;
-
-
-        }
-
-
         let preferredType = type;
         if (preferredType) {
             preferredType = preferredType.toLowerCase();
@@ -8785,10 +8891,10 @@ if (typeof document !== "undefined") {
         }
 
         const struct_rowList = axDatasourceObj[viewDataSourceKey];
-        const struct_row = struct_rowList.find(r =>
+        const struct_row = struct_rowList ? (struct_rowList.find(r =>
             r.name === transId &&
             (!preferredType || (r.stype || "").toLowerCase() === preferredType)
-        ) || struct_rowList.find(r => r.name === transId);
+        ) || struct_rowList.find(r => r.name === transId)) : null;
 
         const primaryField = struct_row?.keyfield;
 
@@ -8798,36 +8904,156 @@ if (typeof document !== "undefined") {
             return [];
         }
 
-        setEditSessionState(transId)
+        setEditSessionState(transId);
 
+        if (tokens.length === 2) {
+            handler({
+                transId,
+                fieldName: primaryField,
+                fieldValue: "",
+                rawStruct
+            });
+            return;
+        }
 
-        //const extraList = axDatasourceObj[extraSourceKey];
+        let tokenIndex;
+        let tokenBasedBooleanCheck;
+        let targetFieldName = primaryField;
 
-        //if (extraList && extraList.length > 0) {
-        //    fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
-        //} else {
-        //    // console.warn("Hidden field name not found in cache");
-        //}
+        if (tokens.length > 3) {
+            tokenIndex = 3;
+            tokenBasedBooleanCheck = false;
+            const fieldToken = cleanCommandToken(tokens[2]);
+            const matchedFld = getMatchedField(fieldToken, transId);
+            if (matchedFld && matchedFld.name) {
+                targetFieldName = matchedFld.name;
+            } else if (matchedFld && matchedFld.displaydata) {
+                const fnameMatch = matchedFld.displaydata.match(/\((.*?)\)/);
+                targetFieldName = fnameMatch ? fnameMatch[1].trim() : (matchedFld.caption || fieldToken);
+            } else {
+                const resolvedFld = tryResolveToken(2, fieldToken, commandConfig, false);
+                targetFieldName = (resolvedFld && resolvedFld.value) ? resolvedFld.value : (fieldToken || primaryField);
+            }
+        } else {
+            tokenIndex = 2;
+            tokenBasedBooleanCheck = true;
+            targetFieldName = primaryField;
+        }
 
-        rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
-        // rawFieldName = cleanCommandToken(tokens[fieldValueIndex - 1]); 
-        // fieldValue = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
-        const { value } = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
-        // const { value: fieldname } = tryResolveToken(fieldValueIndex - 1, rawFieldName, commandConfig, false);
-        fieldValue = value;
+        rawFieldValue = cleanCommandToken(tokens[tokenIndex]);
+        const { value: resolvedFieldValue } = tryResolveToken(tokenIndex, rawFieldValue, commandConfig, tokenBasedBooleanCheck);
+        fieldValue = resolvedFieldValue;
         fieldUniqueId = getUniqueId(fieldValue);
 
+        // Fetch struct data list from localStorage (axi_axi_getstructsdata_...) to resolve record ID
+        const structDataList = getStructDataListFromStorage(transId, targetFieldName);
+        let matchedItem = null;
 
-        // console.log(
-        //     `view Data ? TStruct=${transId}, Field=${primaryField}, Value=${fieldValue}`
-        // );
+        if (Array.isArray(structDataList) && structDataList.length > 0) {
+            const candidates = [fieldValue, fieldUniqueId, rawFieldValue]
+                .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
+                .map(v => String(v).trim());
 
-        handler({
-            transId,
-            fieldName: primaryField,
-            fieldValue: fieldUniqueId,
-            rawStruct
-        })
+            // 1. Match by transrecordid directly
+            for (const val of candidates) {
+                matchedItem = structDataList.find(item => {
+                    const transRecId = (item?.transrecordid ?? item?.TRANSRECORDID ?? "").toString().trim();
+                    return transRecId !== "" && transRecId !== "0" && transRecId.toLowerCase() === val.toLowerCase();
+                });
+                if (matchedItem) break;
+            }
+
+            // 2. Match by id directly
+            if (!matchedItem) {
+                for (const val of candidates) {
+                    matchedItem = structDataList.find(item => {
+                        const itemId = (item?.id ?? item?.ID ?? "").toString().trim();
+                        return itemId !== "" && itemId !== "0" && itemId.toLowerCase() === val.toLowerCase();
+                    });
+                    if (matchedItem) break;
+                }
+            }
+
+            // 3. Match exact displaydata, caption, or name (preferring actual records where isfield != 't')
+            if (!matchedItem) {
+                for (const val of candidates) {
+                    const cleanVal = cleanString(val).toLowerCase();
+                    matchedItem = structDataList.find(item => {
+                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                        if (isField) return false;
+                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                        const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
+                        return display === cleanVal || caption === cleanVal || name === cleanVal;
+                    }) || structDataList.find(item => {
+                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                        const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
+                        return display === cleanVal || caption === cleanVal || name === cleanVal;
+                    });
+                    if (matchedItem) break;
+                }
+            }
+
+            // 4. Match without bracketed text (e.g., "CBE [1446880000000]" vs "CBE")
+            if (!matchedItem) {
+                for (const val of candidates) {
+                    const cleanVal = cleanString(val).replace(/\[.*?\]/g, "").trim().toLowerCase();
+                    if (!cleanVal) continue;
+                    matchedItem = structDataList.find(item => {
+                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                        if (isField) return false;
+                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                        const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                        return display === cleanVal || caption === cleanVal;
+                    }) || structDataList.find(item => {
+                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                        const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                        return display === cleanVal || caption === cleanVal;
+                    });
+                    if (matchedItem) break;
+                }
+            }
+
+            // 5. Substring match
+            if (!matchedItem) {
+                for (const val of candidates) {
+                    const cleanVal = cleanString(val).toLowerCase();
+                    if (!cleanVal) continue;
+                    matchedItem = structDataList.find(item => {
+                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                        if (isField) return false;
+                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                        return display.includes(cleanVal) || caption.includes(cleanVal);
+                    }) || structDataList.find(item => {
+                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                        return display.includes(cleanVal) || caption.includes(cleanVal);
+                    });
+                    if (matchedItem) break;
+                }
+            }
+        }
+
+        const transRecordId = matchedItem ? (matchedItem.transrecordid ?? matchedItem.TRANSRECORDID) : null;
+        const hasTransRecordId = transRecordId !== undefined && transRecordId !== null && String(transRecordId).trim() !== "" && String(transRecordId).trim() !== "0";
+
+        if (hasTransRecordId) {
+            redirectToEntityForm(transId, rawStruct, String(transRecordId).trim());
+        } else if (!matchedItem && fieldValue && fieldValue.includes("[") && fieldValue.includes("]") && fieldUniqueId && fieldUniqueId !== "0" && fieldUniqueId !== fieldValue && /^\d+$/.test(fieldUniqueId)) {
+            // Fallback: If item had bracketed numeric record ID from autocomplete
+            redirectToEntityForm(transId, rawStruct, fieldUniqueId);
+        } else if (fieldUniqueId && /^\d+$/.test(fieldUniqueId) && fieldUniqueId !== "0") {
+            redirectToEntityForm(transId, rawStruct, fieldUniqueId);
+        } else {
+            handler({
+                transId,
+                fieldName: targetFieldName,
+                fieldValue: fieldUniqueId,
+                rawStruct
+            });
+        }
 
     }
 
