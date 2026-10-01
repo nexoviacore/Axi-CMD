@@ -1646,24 +1646,16 @@ Home Cunfiguration Page Templete
         return typeof f === "string" && f.indexOf("axicmdmain.css") !== -1;
     });
 
-    // Step 4: Pre-render cleanup.
-    // If AxiCMD is disabled or its scripts/styles are not loaded:
-    // - Remove all Axi-related DOM nodes (.AXI-Sec, modals, hidden loader, .axi-cmd-param-section)
-    //   from the <template class="templateContent"> tag so product code .product-param-section is used.
-    // If AxiCMD is enabled:
-    // - Remove the product code .product-param-section from the template so toolbar .axi-cmd-param-section is used.
-    // This prevents duplicate #AppGlobalParams and unstyled elements from ever being stamped into the DOM.
+    // Step 4: Pre-render template setup:
+    // If AxiCMD is disabled, purge Axi nodes from template immediately.
+    // If AxiCMD is enabled, do NOT remove product-param-section yet; keep it present as a fallback
+    // in case axicmdmain.js or axicmdmain.css fail to load (e.g. 404/missing file).
     try {
         var tpl = document.querySelector('template.templateContent');
         if (tpl && tpl.content) {
             if (!isAxiActive) {
                 var axiElements = tpl.content.querySelectorAll('.AXI-Sec, #axiFavModalOverlay, #axiFavDeleteModalOverlay, #hiddenLoader, .Application_Parameter-Section.axi-cmd-param-section');
                 axiElements.forEach(function (el) {
-                    el.remove();
-                });
-            } else {
-                var prodElements = tpl.content.querySelectorAll('.Application_Parameter-Section.product-param-section');
-                prodElements.forEach(function (el) {
                     el.remove();
                 });
             }
@@ -1684,12 +1676,39 @@ Home Cunfiguration Page Templete
             // Render the main page template into the live DOM
             renderTemplete('template.templateContent');
 
-            // Step 5: Final DOM state setup:
-            // - If AxiCMD is disabled or commented out: remove any remaining Axi nodes & toolbar parameter section (.axi-cmd-param-section),
-            //   add 'axi-cmd-disabled' class to body, and ensure the default Axpert search bar (.search-bar, #globalSearchinp) is displayed.
-            // - If AxiCMD is enabled: remove product code parameter section (.product-param-section), apply 'axi-cmd-enabled' class to body,
-            //   and ensure default search bar is hidden in favor of Axi CMD.
-            if (!isAxiActive) {
+            // Step 5: Verify whether axicmdmain.js and axicmdmain.css were actually loaded into the browser.
+            // Even if isAxiCmdEnabled is true, if the files are physically missing (404/not present):
+            // - axicmdmain.js functions (e.g., isAxiCmdEnabled/applyAxiCmdVisibility/executeCommandsV2) will NOT be defined.
+            // - axicmdmain.css link stylesheet will not have accessible rules.
+            var isAxiScriptLoaded = (typeof window.isAxiCmdEnabled === "function" || typeof isAxiCmdEnabled === "function") &&
+                                    (typeof window.applyAxiCmdVisibility === "function" || typeof applyAxiCmdVisibility === "function");
+
+            var isAxiCssLoaded = false;
+            try {
+                for (var s = 0; s < document.styleSheets.length; s++) {
+                    var sheet = document.styleSheets[s];
+                    var sheetHref = sheet.href || "";
+                    if (sheetHref.indexOf("axicmdmain.css") !== -1) {
+                        try {
+                            if (sheet.cssRules && sheet.cssRules.length > 0) {
+                                isAxiCssLoaded = true;
+                                break;
+                            }
+                        } catch (corsErr) {
+                            // Cross-origin stylesheet access restriction - if the link exists and loaded without onerror
+                            isAxiCssLoaded = true;
+                            break;
+                        }
+                    }
+                }
+            } catch (csEx) { }
+
+            // Both JS and CSS MUST be present and loaded to consider AxiCMD active at runtime
+            var isAxiActuallyActive = isAxiActive && isAxiScriptLoaded && isAxiCssLoaded;
+
+            if (!isAxiActuallyActive) {
+                // If files are missing or failed to load:
+                // Remove all Axi-related DOM nodes and toolbar parameter section
                 $('.AXI-Sec, #axiFavModalOverlay, #axiFavDeleteModalOverlay, #hiddenLoader, .Application_Parameter-Section.axi-cmd-param-section').remove();
                 $('body').removeClass('axi-cmd-enabled').addClass('axi-cmd-disabled');
                 var searchBar = document.querySelector('.search-bar');
@@ -1701,6 +1720,8 @@ Home Cunfiguration Page Templete
                     globalSearchInp.style.removeProperty('display');
                 }
             } else {
+                // If files are present and loaded successfully:
+                // Remove product code fallback parameter section, apply enabled class, hide default search bar
                 $('.Application_Parameter-Section.product-param-section').remove();
                 $('body').removeClass('axi-cmd-disabled').addClass('axi-cmd-enabled');
                 var searchBar = document.querySelector('.search-bar');
@@ -2466,14 +2487,16 @@ Home Cunfiguration Page Templete
 
             if (document.querySelector("#AxGloVarHTML")) {
                 let axGloVarsHtml = document.querySelector("#AxGloVarHTML").innerHTML;
-                document.querySelector(".Application_Parameter_Wrapper").insertAdjacentHTML("afterbegin", axGloVarsHtml);
-
+                document.querySelectorAll(".Application_Parameter_Wrapper").forEach(function (wrapper) {
+                    wrapper.innerHTML = axGloVarsHtml;
+                });
 
                 if (document.querySelector("#AxGloVarPopOverHTML")) {
                     let axGloVarsPopOverHtml = document.querySelector("#AxGloVarPopOverHTML").innerHTML;
-                    document.querySelector("#AppGlobalParams").insertAdjacentHTML("afterbegin", axGloVarsPopOverHtml);
+                    document.querySelectorAll("#AppGlobalParams").forEach(function (popover) {
+                        popover.innerHTML = axGloVarsPopOverHtml;
+                    });
                 }
-
 
                 setTimeout(function () {
                     $('.Application_Parameter-Items [data-toggle="tooltip"]').tooltip();
