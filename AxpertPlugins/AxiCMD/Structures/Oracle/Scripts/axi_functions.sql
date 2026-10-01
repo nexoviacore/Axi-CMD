@@ -29,7 +29,8 @@ CREATE OR REPLACE TYPE axi_getstructs_obj AS OBJECT (
     displaydata   CLOB,
     id            CLOB,
     caption       CLOB,
-    isfield       CLOB
+    isfield       CLOB,
+    transrecordid number
 )
 >>
 
@@ -72,7 +73,8 @@ CREATE OR REPLACE FUNCTION fn_axi_getstructs_obj (
 )
 RETURN AXI_GETSTRUCTS_OBJ_TBL
 PIPELINED
-AS
+
+is
 
     v_sql                       CLOB;
 
@@ -81,7 +83,7 @@ AS
     v_keyfield_srcfld           VARCHAR2(200);
 
     v_selectedfld_normalized    VARCHAR2(10);
-    v_selectedfld_srctbl        VARCHAR2(200);
+    v_selectedfld_srctbl        VARCHAR2(200); 
     v_selectedfld_srcfld        VARCHAR2(200);
 
     v_dimension_filter          CLOB;
@@ -105,6 +107,7 @@ AS
     r_id            CLOB;
     r_caption       CLOB;
     r_isfield       CLOB;
+    r_transrecordid NUMBER; 
 
 BEGIN
 
@@ -212,8 +215,8 @@ BEGIN
                 || '(caption || '' ('' || fname || '') [field]'') displaydata, '
                 || '''0'' id, '
                 || 'caption, '
-                || '''t'' isfield '
-                || 'FROM axpflds '
+                || '''t'' isfield,0 transrecordid '
+                || ' FROM axpflds '
                 || 'WHERE tstruct = '''
                 || ptransid || ''' '
                 || 'AND dcname = ''dc1'' '
@@ -229,7 +232,7 @@ BEGIN
                 || '(caption || '' ('' || fname || '') [field]'') displaydata, '
                 || '''0'' id, '
                 || 'caption, '
-                || '''t'' isfield '
+                || '''t'' isfield,0 transrecordid '
                 || 'FROM axpflds '
                 || 'WHERE tstruct = '''
                 || ptransid || ''' '
@@ -248,7 +251,7 @@ BEGIN
                 || '(caption || '' ('' || fname || '') [field]'') displaydata, '
                 || '''0'' id, '
                 || 'caption, '
-                || '''t'' isfield '
+                || '''t'' isfield,0 transrecordid  '
                 || 'FROM axpflds '
                 || 'WHERE tstruct = '''
                 || ptransid || ''' '
@@ -268,7 +271,7 @@ BEGIN
             || '(caption || '' ('' || fname || '') [field]'') displaydata, '
             || '''0'' id, '
             || 'caption, '
-            || '''t'' isfield '
+            || '''t'' isfield,0 transrecordid  '
             || 'FROM axpflds '
             || 'WHERE tstruct = '''||ptransid||''''
             || 'AND dcname = ''dc1'' '
@@ -286,7 +289,7 @@ BEGIN
             || 's.' || v_keyfield_srcfld || ' displaydata, '
             || '''0'' id, '
             || 's.' || v_keyfield_srcfld || ' caption, '
-            || '''f'' isfield '
+            || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid ' 
             || 'FROM ' || LOWER(pprimarytable) || ' p '
             || 'JOIN ' || v_keyfield_srctbl || ' s '
             || 'ON p.' || LOWER(pkeyfield)
@@ -303,7 +306,7 @@ BEGIN
             || 'p.' || LOWER(pkeyfield) || ' displaydata, '
             || '''0'' id, '
             || 'p.' || LOWER(pkeyfield) || ' caption, '
-            || '''f'' isfield '
+            || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
             || 'FROM ' || LOWER(pprimarytable) || ' p '
             || 'WHERE p.' || LOWER(pkeyfield)
             || ' IS NOT NULL '
@@ -319,11 +322,11 @@ BEGIN
                 v_selectedfld_sql :=
                        'SELECT '
                     || '(s.' || v_selectedfld_srcfld
-                    || ' || '' ['' || p.' || LOWER(pkeyfield)
+                    || ' || ''['' || p.' || LOWER(pkeyfield)
                     || ' || '']'') displaydata, '
                     || '''0'' id, '
                     || 's.' || v_selectedfld_srcfld || ' caption, '
-                    || '''f'' isfield '
+                    || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
                     || 'FROM ' || LOWER(pprimarytable) || ' p '
                     || 'JOIN ' || v_selectedfld_srctbl || ' s '
                     || 'ON p.' || LOWER(pselectedfield)
@@ -338,11 +341,11 @@ BEGIN
                 v_selectedfld_sql :=
                        'SELECT '
                     || '(s.' || v_selectedfld_srcfld
-                    || ' || '' ['' || k.' || v_keyfield_srcfld
+                    || ' || ''['' || k.' || v_keyfield_srcfld
                     || ' || '']'') displaydata, '
                     || '''0'' id, '
                     || 's.' || v_selectedfld_srcfld || ' caption, '
-                    || '''f'' isfield '
+                    || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
                     || 'FROM ' || LOWER(pprimarytable) || ' p '
                     || 'JOIN ' || v_selectedfld_srctbl || ' s '
                     || 'ON p.' || LOWER(pselectedfield)
@@ -364,11 +367,11 @@ BEGIN
                 v_selectedfld_sql :=
                        'SELECT '
                     || '(p.' || LOWER(pselectedfield)
-                    || ' || '' ['' || p.' || LOWER(pkeyfield)
+                    || ' || ''['' || p.' || LOWER(pkeyfield)
                     || ' || '']'') displaydata, '
                     || '''0'' id, '
                     || 'p.' || LOWER(pselectedfield) || ' caption, '
-                    || '''f'' isfield '
+                    || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
                     || 'FROM ' || LOWER(pprimarytable) || ' p '
                     || 'WHERE p.' || LOWER(pselectedfield)
                     || ' IS NOT NULL '
@@ -382,11 +385,11 @@ BEGIN
                 v_selectedfld_sql :=
                        'SELECT '
                     || '(p.' || LOWER(pselectedfield)
-                    || ' || '' ['' || s.' || v_keyfield_srcfld
+                    || ' || ''['' || s.' || v_keyfield_srcfld
                     || ' || '']'') displaydata, '
                     || '''0'' id, '
                     || 'p.' || LOWER(pselectedfield) || ' caption, '
-                    || '''f'' isfield '
+                    || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
                     || 'FROM ' || LOWER(pprimarytable) || ' p '
                     || 'JOIN ' || v_keyfield_srctbl || ' s '
                     || 'ON p.' || LOWER(pkeyfield)
@@ -424,7 +427,7 @@ BEGIN
         INTO r_displaydata,
              r_id,
              r_caption,
-             r_isfield;
+             r_isfield,r_transrecordid;
 
         EXIT WHEN rc%NOTFOUND;
 
@@ -433,18 +436,15 @@ BEGIN
                 r_displaydata,
                 r_id,
                 r_caption,
-                r_isfield
+                r_isfield,r_transrecordid
             )
         );
 
     END LOOP;
 
     CLOSE rc;
-
-    RETURN;
-
+    
 END;
-
 >>
 
 
