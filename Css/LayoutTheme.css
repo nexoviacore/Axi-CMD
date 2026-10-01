@@ -1222,9 +1222,46 @@ div[data-kt-search-element] a.mb-5 {
 	display: table-cell;
 }
 
-.Application_Parameter-Section {
+/* ==========================================================================
+   Application Parameter Section Styling
+   --------------------------------------------------------------------------
+   Handles the Application Parameter Section layout in two distinct modes:
+   1. Product Code Default Mode (Axi CMD disabled / inactive):
+      - Uses absolute positioning below the header (top: 50px, right: 15px/0px).
+      - Displayed when Axi CMD is disabled or its plugin files are omitted.
+   2. Axi CMD Active Mode (Axi CMD enabled / active):
+      - Uses relative positioning within the topbar flex toolbar wrapper.
+      - Scoped to .Application_Parameter-Section.axi-cmd-param-section and
+        body.axi-cmd-enabled .Application_Parameter-Section.
+   ========================================================================== */
+
+/* 1. Product code: Application Parameter Section layout when Axi CMD is not enabled (pinned to the end/right of the header) */
+.Application_Parameter-Section,
+.Application_Parameter-Section.product-param-section,
+body.axi-cmd-disabled .Application_Parameter-Section {
+	position: absolute;
+	top: 50px;
+	padding: 5px;
+	padding: 0 15px !important;
+	left: auto !important;
+	right: 0 !important;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	max-width: 400px;
+	width: 400px;
+	display: flex !important;
+	justify-content: end;
+}
+
+/* 2. Application Parameter Section layout when Axi CMD is enabled (integrated into topbar toolbar) */
+.Application_Parameter-Section.axi-cmd-param-section,
+body.axi-cmd-enabled .Application_Parameter-Section {
 	/* changes needs to be  reviewed with with vijay mohan */
 	position: relative;
+	top: auto;
+	left: auto;
+	right: auto;
 	align-items: center;
 	padding: 0 5px !important;
 	overflow: hidden;

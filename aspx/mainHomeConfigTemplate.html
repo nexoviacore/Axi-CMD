@@ -420,8 +420,8 @@ Home Cunfiguration Page Templete
 
                             <!--begin::Toolbar wrapper-->
                             <div class="d-flex align-items-stretch flex-shrink-0">
-                                <!--begin::Application Parameter Section-->
-                                <div class="Application_Parameter-Section d-flex align-items-center me-1">
+                                <!--begin::Application Parameter Section when the axi cmd is enabled -->
+                                <div class="Application_Parameter-Section axi-cmd-param-section d-flex align-items-center me-1">
                                     <div class="Application_Parameter_Wrapper">
                                     </div>
                                     <button type="button"
@@ -1083,8 +1083,8 @@ Home Cunfiguration Page Templete
                         <!--end::Topbar-->
                     </div>
                     <!--end::Container-->
-  <!-- Commented out for Axi-cmd development after reviewing with Vijay Mohan 
-                  <div class="Application_Parameter-Section">
+  <!-- Product code  -->
+                  <div class="Application_Parameter-Section product-param-section">
                         <div class="Application_Parameter_Wrapper">
                         </div>
                         <button type="button"
@@ -1100,17 +1100,23 @@ Home Cunfiguration Page Templete
                         </div>
                         
                     </div> 
-                --> 
+                
 
                 </div>
                 <!--end::Header-->
 
-                <!-- begin: Axi Popup IFrame-->
+                <!-- begin: Axi Popup IFrame (hidden container used for iframe loaders) -->
                 <iframe id="hiddenLoader" style="display:none;"></iframe>
-                <!-- end: Axi Popup IFrame-->
+                <!-- end: Axi Popup IFrame -->
+
+                <!-- 
+                    Axi CMD Elements (Favorites modals and .AXI-Sec command bar):
+                    Hidden with inline style="display: none;" by default so they never flash or render 
+                    unstyled if Axi CMD is disabled or if axicmdmain.js / axicmdmain.css are commented out.
+                -->
 
                 <!-- begin: Axi Favourites Add Modal -->
-                <div id="axiFavModalOverlay" class="axi-modal-overlay">
+                <div id="axiFavModalOverlay" class="axi-modal-overlay" style="display: none;">
                     <div class="axi-modal-container">
                         <h4 class="axi-modal-title">Save to Favorites</h4>
                         <label class="axi-modal-label">Name your favorite:</label>
@@ -1132,7 +1138,7 @@ Home Cunfiguration Page Templete
                 </div>
                 <!-- end: Axi Favourites Add Modal -->
                 <!-- begin: Axi Favourites Delete Alert Modal -->
-                <div id="axiFavDeleteModalOverlay" class="axi-modal-overlay">
+                <div id="axiFavDeleteModalOverlay" class="axi-modal-overlay" style="display: none;">
                     <div class="axi-modal-container">
                         <h4 class="axi-modal-title" style="color: #ef4444;">Delete Favourite</h4>
                         <p id="axiDeleteModalParagraph" style="font-size: 14px; color: #4b5563; margin-bottom: 20px;">
@@ -1560,7 +1566,7 @@ Home Cunfiguration Page Templete
         // files.css.push("/Css/axpertUI.min.css?v=50");
     }
 
-    files.css.push("/Css/LayoutTheme.min.css?v=11");
+    files.css.push("/Css/LayoutTheme.min.css?v=12");
     files.css.push("/Css/AxNotifications.min.css?v=2");
     files.css.push("/Css/HomeConfigPageCards.min.css?v=12");
     files.js.push("/Js/signalr.min.js");
@@ -1569,8 +1575,101 @@ Home Cunfiguration Page Templete
     files.js.push("/Js/HomeConfigPageCards.min.js?v=15");
     files.js.push("/Js/Entity-common.min.js?v=18");
 
-    files.js.push("/AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js?v=286");
-    files.css.push("/AxpertPlugins/AxiCMD/HTMLPages/css/axicmdmain.css?v=38");
+    // =========================================================================
+    // Axi Command Line (AxiCMD) Lifecycle & Dynamic Loading Management
+    // =========================================================================
+
+    // Step 1: Detect whether AxiCMD is enabled from database config / parent windows.
+    // In Mainnew.aspx, 'axicmdEnabled' is set from GetAdvConfigs("Axi Command Line Enable").
+    var isAxiCmdEnabled = (function () {
+        var raw;
+
+        // 1. Direct variable in current scope
+        if (typeof axicmdEnabled !== "undefined") raw = axicmdEnabled;
+        else if (typeof axicmdenabled !== "undefined") raw = axicmdenabled;
+
+        // 2. Current window object
+        if (typeof raw === "undefined" && typeof window !== "undefined") {
+            if (typeof window.axicmdEnabled !== "undefined") raw = window.axicmdEnabled;
+            else if (typeof window.axicmdenabled !== "undefined") raw = window.axicmdenabled;
+        }
+
+        // 3. Parent frame scope (isolated try-catch for cross-origin security)
+        if (typeof raw === "undefined" && typeof window !== "undefined") {
+            try {
+                if (window.parent && window.parent !== window) {
+                    if (typeof window.parent.axicmdEnabled !== "undefined") raw = window.parent.axicmdEnabled;
+                    else if (typeof window.parent.axicmdenabled !== "undefined") raw = window.parent.axicmdenabled;
+                }
+            } catch (e) { }
+        }
+
+        // 4. Top frame scope (isolated try-catch for cross-origin security)
+        if (typeof raw === "undefined" && typeof window !== "undefined") {
+            try {
+                if (window.top && window.top !== window) {
+                    if (typeof window.top.axicmdEnabled !== "undefined") raw = window.top.axicmdEnabled;
+                    else if (typeof window.top.axicmdenabled !== "undefined") raw = window.top.axicmdenabled;
+                }
+            } catch (e) { }
+        }
+
+        // 5. Fallback via callParentNew helper
+        if (typeof raw === "undefined" && typeof callParentNew === "function") {
+            try {
+                raw = callParentNew("axicmdEnabled");
+            } catch (e) { }
+        }
+
+        // Normalize truthy values ('true', 't', '1', 'yes', true)
+        if (typeof raw === "boolean") return raw;
+        if (typeof raw === "string") {
+            var lower = raw.trim().toLowerCase();
+            return lower === "true" || lower === "t" || lower === "1" || lower === "yes" || lower === "y";
+        }
+        if (typeof raw === "number") return raw !== 0;
+        return false;
+    })();
+
+    // Step 2: Only queue AxiCMD JavaScript and CSS bundles if AxiCMD is explicitly enabled.
+    // If axicmdEnabled is false, these files will not be downloaded.
+    if (isAxiCmdEnabled) {
+        files.js.push("/AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js?v=286");
+        files.css.push("/AxpertPlugins/AxiCMD/HTMLPages/css/axicmdmain.css?v=38");
+    }
+
+    // Step 3: Check if the plugin is actually queued in the files bundle (both JS and CSS).
+    // Note: MUST be captured before loadAndCall executes because loadAndCall splices/empties files.js and files.css.
+    var isAxiActive = isAxiCmdEnabled && files.js.some(function (f) {
+        return typeof f === "string" && f.indexOf("axicmdmain.js") !== -1;
+    }) && files.css.some(function (f) {
+        return typeof f === "string" && f.indexOf("axicmdmain.css") !== -1;
+    });
+
+    // Step 4: Pre-render cleanup.
+    // If AxiCMD is disabled or its scripts/styles are not loaded:
+    // - Remove all Axi-related DOM nodes (.AXI-Sec, modals, hidden loader, .axi-cmd-param-section)
+    //   from the <template class="templateContent"> tag so product code .product-param-section is used.
+    // If AxiCMD is enabled:
+    // - Remove the product code .product-param-section from the template so toolbar .axi-cmd-param-section is used.
+    // This prevents duplicate #AppGlobalParams and unstyled elements from ever being stamped into the DOM.
+    try {
+        var tpl = document.querySelector('template.templateContent');
+        if (tpl && tpl.content) {
+            if (!isAxiActive) {
+                var axiElements = tpl.content.querySelectorAll('.AXI-Sec, #axiFavModalOverlay, #axiFavDeleteModalOverlay, #hiddenLoader, .Application_Parameter-Section.axi-cmd-param-section');
+                axiElements.forEach(function (el) {
+                    el.remove();
+                });
+            } else {
+                var prodElements = tpl.content.querySelectorAll('.Application_Parameter-Section.product-param-section');
+                prodElements.forEach(function (el) {
+                    el.remove();
+                });
+            }
+        }
+    } catch (e) { }
+
     var dirLeft = true;
 
     if ($("body").hasClass("btextDir-rtl")) {
@@ -1581,7 +1680,41 @@ Home Cunfiguration Page Templete
         files: files,
         callBack: function () {
             $("body").addClass("mixed-theme");
+
+            // Render the main page template into the live DOM
             renderTemplete('template.templateContent');
+
+            // Step 5: Final DOM state setup:
+            // - If AxiCMD is disabled or commented out: remove any remaining Axi nodes & toolbar parameter section (.axi-cmd-param-section),
+            //   add 'axi-cmd-disabled' class to body, and ensure the default Axpert search bar (.search-bar, #globalSearchinp) is displayed.
+            // - If AxiCMD is enabled: remove product code parameter section (.product-param-section), apply 'axi-cmd-enabled' class to body,
+            //   and ensure default search bar is hidden in favor of Axi CMD.
+            if (!isAxiActive) {
+                $('.AXI-Sec, #axiFavModalOverlay, #axiFavDeleteModalOverlay, #hiddenLoader, .Application_Parameter-Section.axi-cmd-param-section').remove();
+                $('body').removeClass('axi-cmd-enabled').addClass('axi-cmd-disabled');
+                var searchBar = document.querySelector('.search-bar');
+                if (searchBar) {
+                    searchBar.style.removeProperty('display');
+                }
+                var globalSearchInp = document.getElementById('globalSearchinp');
+                if (globalSearchInp) {
+                    globalSearchInp.style.removeProperty('display');
+                }
+            } else {
+                $('.Application_Parameter-Section.product-param-section').remove();
+                $('body').removeClass('axi-cmd-disabled').addClass('axi-cmd-enabled');
+                var searchBar = document.querySelector('.search-bar');
+                if (searchBar) {
+                    searchBar.style.setProperty('display', 'none', 'important');
+                }
+                var globalSearchInp = document.getElementById('globalSearchinp');
+                if (globalSearchInp) {
+                    globalSearchInp.style.setProperty('display', 'none', 'important');
+                }
+                if (typeof applyAxiCmdVisibility === "function") {
+                    applyAxiCmdVisibility();
+                }
+            }
 
             $(function () {
                 KTDrawer.init();
