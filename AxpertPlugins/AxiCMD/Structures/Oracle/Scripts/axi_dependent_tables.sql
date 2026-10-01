@@ -1,22 +1,14 @@
 
--- <<
--- CREATE TABLE axiconfig (axienabled varchar2(1), mainpagetemplate varchar2(255))
--- >>
 
--- <<
--- DELETE FROM axiconfig where  mainpagetemplate = 'AxiCMDMainPage.html'
--- <<
-
-
--- <<
--- INSERT INTO axiconfig (axienabled, mainpagetemplate) VALUES ('T','AxiCMDMainPage.html') 
--- >>
+<<
+DELETE FROM axiconfig where  mainpagetemplate = 'AxiCMDMainPage.html'
+<<
 
 
 -- TODO: Remove this on next release. 
-<<
-DROP TABLE axiconfig;
->> 
+-- <<
+-- DROP TABLE axiconfig;
+-- >> 
 
 <<
 CREATE TABLE Axi_UserFavourites (
@@ -40,11 +32,6 @@ CREATE TABLE Axi_UserFavourites (
 
 <<
 ALTER TABLE AXI_USERFAVOURITES  ADD originalcommandtext VARCHAR2(4000) NULL
->>
-
--- TODO: remove this in the next release
-<<
-DELETE FROM AXPSTRUCTCONFIG WHERE PROPVALUE1 = 'axicmdmainpage.html';
 >>
 
 -- Insert AxiCMD Developer Option into axpstructconfigprops table

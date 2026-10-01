@@ -1142,8 +1142,8 @@ $function$
 -- fn_axi_getstructs_obj | replace for primaryfieldvalue+fieldnames and selected fieldvalue with primary fieldvalue suffix
 <<
 CREATE OR REPLACE FUNCTION fn_axi_getstructs_obj(pcmd character varying, pusername character varying, puserrole character varying, ptransid character varying, pselectedfield character varying, pdimension character varying, ppermission character varying, pkeyfield character varying, pprimarytable character varying, pglobalvars character varying)
- RETURNS TABLE(displaydata text, id text, caption text, isfield text)
- LANGUAGE plpgsql
+ RETURNS TABLE(displaydata text, id text, caption text, isfield text,transrecordid numeric)
+LANGUAGE plpgsql
 AS $function$
 declare 
 v_sql text;
@@ -1198,7 +1198,7 @@ if ppermission = 'T' then
            SELECT (caption || ' (' || fname || ')' || ' [' || 'field' || ']')::text AS displaydata,
                  '0'::text AS id,
                  caption::text AS caption,
-                 't'::text AS isfield
+                 't'::text AS isfield,0 transrecordid
             FROM axpflds
             WHERE tstruct = %L
          and dcname='dc1'
@@ -1213,7 +1213,7 @@ if ppermission = 'T' then
            SELECT (caption || ' (' || fname || ')' || ' [' || 'field' || ']')::text AS displaydata,
                  '0'::text AS id,
                  caption::text AS caption,
-                 't'::text AS isfield,2::numeric ord 
+                 't'::text AS isfield,2::numeric ord ,0 transrecordid
             FROM axpflds
             WHERE tstruct = %L
          and dcname='dc1'
@@ -1230,7 +1230,7 @@ if ppermission = 'T' then
             SELECT (caption || ' (' || fname || ')' || ' [' || 'field' || ']')::text AS displaydata,
                   '0'::text AS id,
                   caption::text AS caption,
-                  't'::text AS isfield
+                  't'::text AS isfield,0 transrecordid
              FROM axpflds
              WHERE tstruct = %L
           and dcname='dc1'
@@ -1249,7 +1249,7 @@ else
       SELECT (caption || ' (' || fname || ')' || ' [' || 'field' || ']')::text AS displaydata,
       '0'::text AS id,
       caption::text AS caption,
-      't'::text AS isfield 
+      't'::text AS isfield,0 transrecordid 
       FROM axpflds
       WHERE tstruct = %L
       and dcname='dc1'
@@ -1267,9 +1267,9 @@ if v_keyfield_normalized = 'T' then
 v_keyfield_sql := format(
     $sql$
     SELECT   (s.%I)::text AS displaydata,
-           '0'::text AS id,
+           s.%I::text AS id,
            (s.%I)::text AS caption,
-           'f'::text AS isfield
+           'f'::text AS isfield,%I transrecordid
     FROM %I p 
     JOIN %I s ON p.%I = s.%I
     WHERE p.%I IS NOT NULL
@@ -1277,8 +1277,10 @@ v_keyfield_sql := format(
  order by p.modifiedon desc
     $sql$,
  v_keyfield_srcfld,
+  v_keyfield_srctbl||'id',
     v_keyfield_srcfld,          
-    lower(pprimarytable), 
+ lower(pprimarytable)||'id', 
+    lower(pprimarytable),
     v_keyfield_srctbl, 
     lower(pkeyfield),   
     v_keyfield_srctbl||'id',   
@@ -1291,7 +1293,7 @@ v_keyfield_sql := format(
     SELECT (p.%I)::text AS displaydata,
            '0'::text AS id,
            p.%I::text AS caption,
-           'f'::text AS isfield
+           'f'::text AS isfield,%I transrecordid
     FROM %I p
     WHERE p.%I IS NOT NULL
  %s
@@ -1299,6 +1301,7 @@ v_keyfield_sql := format(
 $sql$,
     lower(pkeyfield),
     lower(pkeyfield),
+ lower(pprimarytable)||'id',
     lower(pprimarytable),
     lower(pkeyfield),
  v_dimension_filter
@@ -1312,10 +1315,10 @@ if pselectedfield!='0' then
          format(
             $sql$
             SELECT --distinct on (p.%I,s.%I) 
-           (s.%I || ' [' || p.%I || ']')::text AS displaydata,
+           (s.%I || '[' || p.%I || ']')::text AS displaydata,
                    '0'::text AS id,
                    (s.%I)::text AS caption,
-                   'f'::text AS isfield
+                   'f'::text AS isfield,%I transrecordid
             FROM %I p 
             JOIN %I s ON p.%I = s.%I
             WHERE p.%I IS NOT NULL
@@ -1324,9 +1327,10 @@ if pselectedfield!='0' then
             $sql$, 
          lower(pkeyfield),
          v_selectedfld_srcfld,
-         v_selectedfld_srcfld,     
+         v_selectedfld_srcfld,            
          lower(pkeyfield),
-            v_selectedfld_srcfld,     
+            v_selectedfld_srcfld,
+         lower(pprimarytable)||'id',       
             lower(pprimarytable), 
             v_selectedfld_srctbl, 
             lower(pselectedfield),   
@@ -1338,10 +1342,10 @@ if pselectedfield!='0' then
         format(
             $sql$
             SELECT --distinct on (s.%I,k.%I) 
-           (s.%I || ' [' || k.%I || ']')::text AS displaydata,
-                   '0'::text AS id,
+           (s.%I || '[' || k.%I || ']')::text AS displaydata,
+                   k.%I::text AS id,
                    (s.%I)::text AS caption,
-                   'f'::text AS isfield
+                   'f'::text AS isfield,%I transrecordid
             FROM %I p 
             JOIN %I s ON p.%I = s.%I
          join %I k on p.%I = k.%I
@@ -1351,9 +1355,11 @@ if pselectedfield!='0' then
             $sql$,
          v_selectedfld_srcfld,
          v_keyfield_srcfld,
+         v_keyfield_srctbl||'id',
          v_selectedfld_srcfld,     
          v_keyfield_srcfld,
-            v_selectedfld_srcfld,     
+            v_selectedfld_srcfld,  
+         lower(pprimarytable)||'id',   
             lower(pprimarytable), 
             v_selectedfld_srctbl, 
             lower(pselectedfield),   
@@ -1369,10 +1375,10 @@ end;
   v_selectedfld_sql := case when v_keyfield_normalized='F' then 
         format(
            $sql$
-           SELECT  (p.%I || ' [' || p.%I || ']')::text AS displaydata,
+           SELECT  (p.%I || '[' || p.%I || ']')::text AS displaydata,
                   '0'::text AS id,
                   p.%I::text AS caption,
-                  'f'::text AS isfield
+                  'f'::text AS isfield,%I transrecordid
            FROM %I p
            WHERE p.%I IS NOT NULL
         %s
@@ -1381,6 +1387,7 @@ end;
            lower(pselectedfield),
         lower(pkeyfield),
            lower(pselectedfield),
+           lower(pprimarytable)||'id',
            lower(pprimarytable),
            lower(pselectedfield),
         v_dimension_filter,
@@ -1389,10 +1396,10 @@ end;
        when v_keyfield_normalized='T' then 
         format(
            $sql$
-           SELECT (p.%I || ' [' || s.%I || ']')::text AS displaydata,
-                  '0'::text AS id,
+           SELECT (p.%I || '[' || s.%I || ']')::text AS displaydata,
+                  s.%I::text AS id,
                   p.%I::text AS caption,
-                  'f'::text AS isfield
+                  'f'::text AS isfield,%I transrecordid
            FROM %I p
         join %I s on p.%I = s.%I
            WHERE p.%I IS NOT NULL
@@ -1401,7 +1408,9 @@ end;
         $sql$,
            lower(pselectedfield),
         v_keyfield_srcfld,
+        v_keyfield_srctbl||'id',
         lower(pselectedfield),
+           lower(pprimarytable)||'id',
         lower(pprimarytable),
         v_keyfield_srctbl,
            lower(pkeyfield),
@@ -1422,5 +1431,6 @@ end if;
 return query execute v_sql;
 
 END; $function$
+; 
 >>
 
