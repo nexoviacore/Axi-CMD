@@ -97,7 +97,7 @@
                                             <span class="d-flex mx-2">
                                                 <i class="setting-icon material-icons">history</i>
                                             </span>
-                                            <span class="menu-title mx-2">Roles</span>
+                                            <span class="menu-title mx-2">Role Listing</span>
                                         </a>
                                     </div>
 
@@ -106,7 +106,7 @@
                                             <span class="d-flex mx-2">
                                                 <i class="setting-icon material-icons">how_to_reg</i>
                                             </span>
-                                            <span class="menu-title mx-2">Responsibilities</span>
+                                            <span class="menu-title mx-2">Responsibility Listing</span>
                                         </a>
                                     </div>
 
@@ -115,7 +115,7 @@
                                             <span class="d-flex mx-2">
                                                 <i class="setting-icon material-icons">supervisor_account</i>
                                             </span>
-                                            <span class="menu-title mx-2">Users</span>
+                                            <span class="menu-title mx-2">User Listing</span>
                                         </a>
                                     </div>
 
@@ -133,7 +133,7 @@
                                             <span class="d-flex mx-2">
                                                 <i class="setting-icon material-icons">account_circle</i>
                                             </span>
-                                            <span class="menu-title mx-2">Actor listing</span>
+                                            <span class="menu-title mx-2">Actor Listing</span>
                                         </a>
                                     </div>
 
@@ -142,7 +142,7 @@
                                             <span class="d-flex mx-2">
                                                 <i class="setting-icon material-icons">group</i>
                                             </span>
-                                            <span class="menu-title mx-2">User Group</span>
+                                            <span class="menu-title mx-2">Usergroup Listing</span>
                                         </a>
                                     </div>
 
@@ -159,7 +159,7 @@
                                             <span class="d-flex mx-2">
                                                 <i class="setting-icon material-icons">settings_accessibility</i>
                                             </span>
-                                            <span class="menu-title mx-2">Dimensions</span>
+                                            <span class="menu-title mx-2">Dimension Listing</span>
                                         </a>
                                     </div>
 
@@ -232,12 +232,21 @@
                                 </a>
                             </div>
 
-                            <div class="menu-item">
+                            <%--  <div class="menu-item">
                                 <a class="menu-link" onclick='callParentNew("loadFrame();","function");LoadIframeac("iview.aspx?ivname=ad___nwa");callParentNew("closeFrame();","function");'>
                                     <span class="menu-icon">
                                         <i class="setting-icon material-icons">feed</i>
                                     </span>
                                     <span class="setting-caption menu-title">News and Announcements</span>
+                                </a>
+                            </div>--%>
+
+                            <div class="menu-item">
+                                <a class="menu-link" onclick='callParentNew("loadFrame();","function");LoadIframeac("iview.aspx?ivname=a___smtl");callParentNew("closeFrame();","function");'>
+                                    <span class="menu-icon">
+                                        <i class="setting-icon material-icons">view_list</i>
+                                    </span>
+                                    <span class="setting-caption menu-title">Smart View Listing</span>
                                 </a>
                             </div>
 
@@ -319,7 +328,7 @@
                                 </a>
                             </div>
 
-                           <%-- <div class="menu-item">
+                            <%-- <div class="menu-item">
                                 <a class="menu-link" onclick='callParentNew("loadFrame();","function");LoadIframeac("ivtoivload.aspx?ivname=ad__qls");callParentNew("closeFrame();","function");'>
                                     <span class="menu-icon">
                                         <i class="setting-icon material-icons">queue</i>
@@ -369,7 +378,7 @@
                                             <span class="d-flex mx-2">
                                                 <i class="setting-icon material-icons">vertical_align_bottom</i>
                                             </span>
-                                            <span class="menu-title mx-2">Import jobs</span>
+                                            <span class="menu-title mx-2">Import Jobs</span>
                                         </a>
                                     </div>
                                     <div class="menu-item">
@@ -385,13 +394,13 @@
                                             <span class="d-flex mx-2">
                                                 <i class="setting-icon material-icons">check_circle</i>
                                             </span>
-                                            <span class="menu-title mx-2">API jobs</span>
+                                            <span class="menu-title mx-2">API Jobs</span>
                                         </a>
                                     </div>
                                 </div>
                             </div>
 
-                         <%--   <div class="menu-item">
+                            <%--   <div class="menu-item">
                                 <a class="menu-link" onclick='callParentNew("loadFrame();","function");LoadIframeac("ivtoivload.aspx?ivname=inmemdb");callParentNew("closeFrame();","function");'>
                                     <span class="menu-icon">
                                         <i class="setting-icon material-icons">playlist_add_check</i>
@@ -491,8 +500,8 @@
     </asp:PlaceHolder>
 
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
-    <script src="../Js/helper.min.js?v=177" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
+    <script src="../Js/helper.min.js?v=178" type="text/javascript"></script>
     <script src="../js/configurationStudio.min.js?v=11" type="text/javascript"></script>
     <script type="text/javascript">
         $(callParentNew("appBackBtn", "class")).hide();

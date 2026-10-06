@@ -1088,7 +1088,7 @@
                                                 <div class="configLeftForm card-title align-items-start flex-column">
                                                     <div>
                                                         <h3>
-                                                            <asp:Label ID="Label3" runat="server">Axpert Captch Settings</asp:Label>
+                                                            <asp:Label ID="Label3" runat="server">Axpert Captcha Settings</asp:Label>
                                                         </h3>
                                                     </div>
                                                 </div>
@@ -1485,8 +1485,8 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <script src="../Js/xmlToJson.min.js?v=2"></script>
-    <script src="../Js/config.min.js?v=31" type="text/javascript"></script>
+    <script src="../Js/config.min.js?v=32" type="text/javascript"></script>
     <script src="../Js/lang/content-<%=langType%>.js?v=64" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
 </body>
 </html>

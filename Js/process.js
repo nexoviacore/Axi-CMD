@@ -1163,7 +1163,7 @@ function CallAction(actionName, fileup, confirmmsg, remarks, manRemarks, dsignac
                     }
                 }
                 let scriptRemark = EvaluateDirectScript(actScriptCancel[actInd].split("♠")[1]);
-                if (scriptRemark != "" && (scriptRemark.toLowerCase() == "y" || scriptRemark.toLowerCase() == "t"))
+                if (scriptRemark != "" && (scriptRemark.toLowerCase() == "y" || scriptRemark.toLowerCase() == "yes" || scriptRemark.toLowerCase() == "t" || scriptRemark.toLowerCase() == "true"))
                     remarks = "y";
                 if (typeof tstReadOnly != "undefined" && tstReadOnly) {
                     ShowDimmer(false);
@@ -1286,14 +1286,10 @@ function CallActionExt(actionName, fileup, remarks, dsignaction, isScript, ruleS
     var startIndex;
     var actionId; var dcNo = 0; var activerow = 0; var fullFldName = actionName;
     if (actionName.indexOf("_") != -1) {
-        //if (actionName.indexOf("onfocus") != -1) {
-
-
         if ($j.inArray(GetFieldsName(actionName), FNames) != -1) {
             startIndex = actionName.lastIndexOf("_");
             actionName = actionName.substring(startIndex + 1);
         }
-
         if (actionName.indexOf("F") != -1) {
 
             activerow = parseInt(GetActiveRow(fullFldName), 10) + 1;
@@ -1301,7 +1297,19 @@ function CallActionExt(actionName, fileup, remarks, dsignaction, isScript, ruleS
             dcNo = parseInt(actionName.toString().substring(fIndx + 1));
             actionName = actionName.substring(0, fIndx - 3);
         }
-        // }
+    } else if (typeof AxActiveAction != "undefined" && AxActiveAction.indexOf("_") != -1) {
+        let _thisActionName = '';
+        if ($j.inArray(GetFieldsName(AxActiveAction), FNames) != -1) {
+            startIndex = AxActiveAction.lastIndexOf("_");
+            _thisActionName = AxActiveAction.substring(startIndex + 1);
+        }
+        if (_thisActionName.indexOf("F") != -1) {
+
+            activerow = parseInt(GetActiveRow(AxActiveAction), 10) + 1;
+            var fIndx = _thisActionName.lastIndexOf("F");
+            dcNo = parseInt(_thisActionName.toString().substring(fIndx + 1));
+            actionName = _thisActionName.substring(0, fIndx - 3);
+        }
     }
     // for all else condion defualt value of 0 will go.
 
@@ -1350,7 +1358,7 @@ function CallActionExt(actionName, fileup, remarks, dsignaction, isScript, ruleS
             axrulesFlds = "";
         callBackFunDtls = "CallActionExt♠" + actionName + "♠" + fileup + "♠" + remarks + "♠" + dsignaction;
         var source = "t";
-        if (typeof transid != "undefined" && transid == "sect")
+        if (typeof transid != "undefined" && (transid == "sect" || transid == "a__rp"))
             source = "t" + transid;
         let _isLoadFromDraft = "false";
         if (typeof isLoadFromDraft != "undefined")
@@ -1399,7 +1407,7 @@ function SuccessCallbackAction(result, eventArgs) {
     } catch (ex) { }
     if (result != "") {// && result.toLowerCase().indexOf("access violation") === -1) {
         let _istimeTaking = false;
-        if (result.indexOf('{"msg":"This proces taking time is more than expected. You will get a notification once completed"}') == -1) {
+        if (result.indexOf('{"msg":"This process taking long time than expected. You will get notified once process is completed."}') == -1) {
             actionCallbackFlag = actionCallFlag;
             $("#icons,#btnSaveTst,.BottomToolbarBar a:not(.btndis),.wizardNextPrevWrapper").css({ "pointer-events": "auto" });
             ArrActionLog = "";
@@ -1596,6 +1604,16 @@ function SuccessCallbackAction(result, eventArgs) {
             actionCallbackFlag = actionCallFlag;
             $("#icons,#btnSaveTst,.BottomToolbarBar a,.wizardNextPrevWrapper,.toolbarRightMenu a:not([title=Search],[onclick*=CallListView]),.toolbarRightMenu button").css({ "pointer-events": "none" });
             ArrActionLog = "";
+            if (window.document.location.href.indexOf("tstruct.aspx") > -1) {
+                SetFormDirty(false);
+                callParentNew("isSessionCleared=", true);
+                AxWaitCursor(true);
+                ShowDimmer(true);
+                if (window.opener)
+                    GetFormLoadData("AxIsPop=true");
+                else
+                    GetFormLoadData("");
+            }
         }
     }
     else {
@@ -1669,7 +1687,7 @@ var AxFormLoadSkipped = false;
 //Function which fills the values from result json into the fields.
 function AssignLoadValues(resultJson, calledFrom, actnName, navigationURL) {
     actnName = typeof actnName != "undefined" ? actnName : "";
-    if (resultJson == "This proces taking time is more than expected. You will get a notification once completed") {
+    if (resultJson == "This process taking long time than expected. You will get notified once process is completed." || resultJson == '{"error":[{"msg":"This process taking long time than expected. You will get notified once process is completed."}]}') {
         showAlertDialog("info", appGlobalVarsObject.lcm[491]);
         return;
     }
@@ -1693,6 +1711,7 @@ function AssignLoadValues(resultJson, calledFrom, actnName, navigationURL) {
         //Adding this line of code for <script></script>
         strSingleLineText = strSingleLineText.replace(new RegExp("&lt", "g"), "<");
         strSingleLineText = strSingleLineText.replace(new RegExp("&gt", "g"), ">");
+        strSingleLineText = strSingleLineText.replace(/â€¢/g, "•");     
         if (strSingleLineText == "")
             continue;
         try {
@@ -4820,6 +4839,11 @@ function ExecCommand(cmdJsonObj, actnName, axpConfigNavType, calledFrom = "") {
                             htmlCustomSaveRedirect();
                         } catch (ex) { }
                     }
+                    if (typeof transid != "undefined" && transid == "a__rp") {
+                        try {
+                            htmlCustomSaveRedirectReact();
+                        } catch (ex) { }
+                    }
 
                     if (typeof transid != "undefined" && transid == "ad_lg") {
                         try {
@@ -5264,6 +5288,9 @@ function ClearRowsInGrid(gridDcNo, calledFrom) {
                         UpdateDcRowArrays(gridDcNo, ClientRowNo[ind], "Delete");
                     }
                     else if (i == rCount - 1)
+                        ClientRowNo[ind] = "001";
+                } else if (RowDcNo[ind] == gridDcNo && ClientRowNo[0] != "001") {
+                    if (i == rCount - 1)
                         ClientRowNo[ind] = "001";
                 }
             }

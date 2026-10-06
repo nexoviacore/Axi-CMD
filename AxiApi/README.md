@@ -194,7 +194,7 @@ Content-Type: application/json
 
 ## Database Schema
 
-AxiApi interacts with the following core tables (located in `AxpertPlugins/Axi_Beta/Structures/` for both PostgreSQL and Oracle):
+AxiApi interacts with the following core tables (located in `AxpertPlugins/AxiCMD/Structures/` for both PostgreSQL and Oracle):
 
 ### `axi_command_config`
 

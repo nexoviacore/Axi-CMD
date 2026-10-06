@@ -503,14 +503,14 @@ namespace ASB
             ObjExecTr.SetCurrentTime();
             if (HttpContext.Current.Session["project"] == null)
                 return utilObj.SESSTIMEOUT;
-            if (source != "tsect")
+            if (source != "tsect" && source != "ta__rp")
             {
                 if (Util.Util.CheckCrossScriptingInString(String.Join(",", fldValueArray.ToArray())))
                 {
                     return Constants.MALICIOUSNPUTDETECTED;
                 }
             }
-            if (source == "tsect")
+            if (source == "tsect" || source == "ta__rp")
                 source = "t";
 
             string result = string.Empty;
@@ -1027,8 +1027,10 @@ namespace ASB
             string fdKey = Constants.REDISTSTRUCT;
             if (HttpContext.Current.Session["MobileView"] != null && HttpContext.Current.Session["MobileView"].ToString() == "True")
                 fdKey = Constants.REDISTSTRUCTMOB;
-            //FDW fdwObj = new FDW();
+            string _sXML = strObj.structRes;
+            strObj.structRes = "";
             fdwObj.SaveInRedisServer(utilObj.GetRedisServerkey(fdKey, transid), strObj, Constants.REDISTSTRUCT, schemaName);
+            strObj.structRes = _sXML;
             tstData.tstStrObj = strObj;
             Session[key] = (TStructData)tstData;
 
@@ -4266,6 +4268,7 @@ namespace ASB
             string fdKeyMob = Constants.REDISTSTRUCTMOB;
             string designKey = Constants.REDISTSTRUCTAXDESIGN;
             string designCustHtmlKey = Constants.REDISTSTRUCTAXCUSTHTML;
+            string fdKeyXML = Constants.REDISTSTRUCTXML;
             //string designTblKey = Constants.REDISTSTRUCTAXDESIGNTABLE;
             string schemaName = string.Empty;
             if (HttpContext.Current.Session["dbuser"] != null)
@@ -4275,10 +4278,11 @@ namespace ASB
             fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(fdKeyMob, transId), "", false, schemaName);
             saved = fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(designKey, transId), "", false, schemaName);
             fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(designCustHtmlKey, transId), "", false, schemaName);
+            fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(fdKeyXML, transId), "", false, schemaName);
             return saved;
         }
 
-        public string GetdllAutoComplete(string tstDataId, string fldName, string fldValue, ArrayList ChangedFields, ArrayList ChangedFieldDbRowNo, ArrayList ChangedFieldValues, ArrayList DeletedDCRows, string pageData, string fastdll, string fldNameAc, string refreshAC, string pickArrow, string parentFlds, string rfSave, string IsApiFld, string tblSourceParams, string isTstHtmlLs, string ddlFldSqlParams, string ddlSqlPNames)
+        public string GetdllAutoComplete(string tstDataId, string fldName, string fldValue, ArrayList ChangedFields, ArrayList ChangedFieldDbRowNo, ArrayList ChangedFieldValues, ArrayList DeletedDCRows, string pageData, string fastdll, string fldNameAc, string refreshAC, string pickArrow, string parentFlds, string rfSave, string IsApiFld, string tblSourceParams, string isTstHtmlLs, string ddlFldSqlParams, string ddlSqlPNames, string isDupTab)
         {
             HttpContext.Current.Session["LastUpdatedSess"] = DateTime.Now.ToString();
             string strJson = string.Empty;
@@ -4303,7 +4307,8 @@ namespace ASB
 
             strRequest += ObjExecTr.KernelProcessTime(startkst, "After CheckCrossScriptingInString called ", "", "");
             startkst = DateTime.Now;
-
+            if (isDupTab != "" && isDupTab.StartsWith("true-"))
+                HttpContext.Current.Session["isDupTab"] = isDupTab;
             string _tstKeyChanged = "";
             if (isTstHtmlLs != "")
             {

@@ -1222,19 +1222,34 @@ div[data-kt-search-element] a.mb-5 {
 	display: table-cell;
 }
 
-.Application_Parameter-Section {
+.Application_Parameter-Section.product-param-section {
 	position: absolute;
 	top: 50px;
 	padding: 5px;
 	padding: 0 15px !important;
-	right: 15px;
+	left: auto !important;
+	right: 0 !important;
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	max-width: 400px;
 	width: 400px;
 	display: flex !important;
-	right: 0;
+	justify-content: end;
+}
+.Application_Parameter-Section.axi-cmd-param-section {
+	position: relative;
+	top: auto;
+	left: auto;
+	right: auto;
+	align-items: center;
+	padding: 0 5px !important;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	width: auto;
+	max-width: fit-content;
+	display: flex !important;
 	justify-content: end;
 }
 

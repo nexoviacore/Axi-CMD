@@ -311,6 +311,7 @@ function loadcontentsFromFile() {
                 cssFileName = [], jsFileName = [];
             },
             error: function (error) {
+                cssFileName = [], jsFileName = [];
                 ShowDialog("error", error);
             }
         });
@@ -331,6 +332,138 @@ function onSuccessFileLoad(data) {
         /* @Description: Loading template's style or/and script file(s) available. 
             Every Template may have one script and one stylesheet only.
         */
+        try {
+            if (typeof data.css[cssFileName[0]] != "undefined" && data.css[cssFileName[0]] != "") {
+                addCssJs("addCssRow", true);
+                if (typeof htmlObj.template.grId != "undefined" && htmlObj.template.grId != "") {
+                    $(`#${htmlObj.template.grId}`).find('label[for^="css_js"]').text("Css");
+                    $(`#${htmlObj.template.grId}`).find("[id^='filetype']").val("Css");
+                    var typeID = $(`#${htmlObj.template.grId}`).find("input[id^='filetype']").attr("id");
+                    SetFieldValue(typeID, "Css");
+                    UpdateFieldArray(typeID, GetFieldsRowNo(typeID), "Css", "parent");
+                    formGridRowBlur($("#" + typeID));
+
+                    $(`#${htmlObj.template.grId}`).find("[id^='filename']").val(htmlObj.template.name);
+                    let _filenameId = $(`#${htmlObj.template.grId}`).find("[id^='filename']").attr("id");
+                    SetFieldValue(_filenameId, htmlObj.template.name);
+                    UpdateFieldArray(_filenameId, GetFieldsRowNo(_filenameId), htmlObj.template.name, "parent");
+                    formGridRowBlur($("#" + _filenameId));
+
+                    let editorid = $(`#${htmlObj.template.grId}`).find("textarea[id^='css_js_src']").attr('id');
+                    $(`#${editorid}`).val(data.css[cssFileName[0]]);
+                    if ($(`#${editorid}`).next(".CodeMirror").length > 0)
+                        $(`#${editorid}`).next(".CodeMirror")[0].CodeMirror.setValue(data.css[cssFileName[0]]);
+                    formGridRowBlur($("#" + editorid));
+                }
+            }
+            if (typeof data.js[jsFileName[0]] != "undefined" && data.js[jsFileName[0]] != "") {
+                addCssJs("addJsRow", true);
+                if (typeof htmlObj.template.grId != "undefined" && htmlObj.template.grId != "") {
+                    $(`#${htmlObj.template.grId}`).find('label[for^="css_js"]').text("Js");
+                    $(`#${htmlObj.template.grId}`).find("[id^=filetype]").val("Js");
+                    var typeID = $(`#${htmlObj.template.grId}`).find("input[id^='filetype']").attr("id");
+                    SetFieldValue(typeID, "Js");
+                    UpdateFieldArray(typeID, GetFieldsRowNo(typeID), "Js", "parent");
+                    formGridRowBlur($("#" + typeID));
+
+                    $(`#${htmlObj.template.grId}`).find("[id^='filename']").val(htmlObj.template.name);
+                    let _filenameId = $(`#${htmlObj.template.grId}`).find("[id^='filename']").attr("id");
+                    SetFieldValue(_filenameId, htmlObj.template.name);
+                    UpdateFieldArray(_filenameId, GetFieldsRowNo(_filenameId), htmlObj.template.name, "parent");
+                    formGridRowBlur($("#" + _filenameId));
+
+                    let editorid = $(`#${htmlObj.template.grId}`).find("textarea[id^='css_js_src']").attr('id');
+                    $(`#${editorid}`).val(data.js[jsFileName[0]]);
+                    if ($(`#${editorid}`).next(".CodeMirror").length > 0)
+                        $(`#${editorid}`).next(".CodeMirror")[0].CodeMirror.setValue(data.js[jsFileName[0]]);
+                    formGridRowBlur($("#" + editorid));
+
+                    if (!isLoadDataRow) {
+                        let fields = GetGridFields("3");
+                        if (typeof wsPerfEnabled != "undefined" && wsPerfEnabled)
+                            CallEvaluateOnAddPerf("3", "002", fields, "ToCheckAddRow");
+                        else
+                            CallEvaluateOnAdd("3", "002", fields, "ToCheckAddRow");
+                    }
+                }
+            }
+        } catch (error) {
+            showAlertDialog("error", error.Message);
+        }
+    }
+    else {
+        $('.formGridRow').each(function () {
+            var fileExt = $(this).find("[id^='filetype']").val().toLowerCase();
+            var fileName = `${$(this).find("[id^='filename']").val().replace(/ /g, "_")}_${GetFieldValue("pageno000F1")}.${fileExt}`;
+            var editorid = $(this).find("textarea[id^='css_js_src']").attr('id');
+            if (fileExt == "css") {
+                if (typeof data.css[fileName] != "undefined") {
+                    $("#" + editorid).val(data.css[fileName]);
+                    if ($("#" + editorid).next(".CodeMirror").length > 0)
+                        $("#" + editorid).next(".CodeMirror")[0].CodeMirror.setValue(data.css[fileName]);
+                }
+            }
+            else if (fileExt == "js") {
+                if (typeof data.js[fileName] != "undefined") {
+                    $("#" + editorid).val(data.js[fileName]);
+                    if ($("#" + editorid).next(".CodeMirror").length > 0)
+                        $("#" + editorid).next(".CodeMirror")[0].CodeMirror.setValue(data.js[fileName]);
+                }
+            }
+        });
+    }
+}
+function loadcontentsFromFileReact() {
+    let htmlFileName = "";
+    if (htmlObj.template.flag && !+recordid) {
+        htmlFileName = `${htmlObj.template.name}.html`;
+        cssFileName.push(`${htmlObj.template.name}.css`);
+        jsFileName.push(`${htmlObj.template.name}.jsx`);
+    } else {
+        htmlFileName = `${GetFieldValue("caption000F1").replace(/ /g, "_")}_${GetFieldValue("pageno000F1")}.html`;
+
+        $('.formGridRow').each(function () {
+            var fileExt = $(this).find("[id^='filetype']").val().toLowerCase();
+            if (fileExt == "css") {
+                var fileName = `${$(this).find("[id^='filename']").val().replace(/ /g, "_")}_${GetFieldValue("pageno000F1")}.${fileExt}`;
+                cssFileName.push(fileName);
+            }
+            else if (fileExt == "js") {
+                var fileName = `${$(this).find("[id^='filename']").val().replace(/ /g, "_")}_${GetFieldValue("pageno000F1")}.jsx`;
+                jsFileName.push(fileName);
+            }
+        });
+    }
+    try {
+        $.ajax({
+            url: "tstruct.aspx/renderHtmlPagesFilesReact",
+            type: "POST",
+            cache: false,
+            async: false,
+            data: JSON.stringify({
+                htmlFileName, cssFileName, jsFileName, getTemplate: htmlObj.template.flag
+            }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                //console.log("success", data);
+                onSuccessFileLoadReact(data.d);
+                cssFileName = [], jsFileName = [];
+            },
+            error: function (error) {
+                cssFileName = [], jsFileName = [];
+                ShowDialog("error", error);
+            }
+        });
+    }
+    catch (e) {
+        ShowDialog("error", "");
+    }
+}
+function onSuccessFileLoadReact(data) {
+    $("#html_editor_htmlsrc000F2").val(data.html);
+    if (htmlObj.template.flag && !+recordid) {
+        htmlObj.template.files.html = htmlObj.template.files.html == "" ? data.html : htmlObj.template.files.html;
         try {
             if (typeof data.css[cssFileName[0]] != "undefined" && data.css[cssFileName[0]] != "") {
                 addCssJs("addCssRow", true);
@@ -393,9 +526,9 @@ function onSuccessFileLoad(data) {
     else {
         $('.formGridRow').each(function () {
             var fileExt = $(this).find("[id^='filetype']").val().toLowerCase();
-            var fileName = `${$(this).find("[id^='filename']").val().replace(/ /g, "_")}_${GetFieldValue("pageno000F1")}.${fileExt}`;
             var editorid = $(this).find("textarea[id^='css_js_src']").attr('id');
             if (fileExt == "css") {
+                var fileName = `${$(this).find("[id^='filename']").val().replace(/ /g, "_")}_${GetFieldValue("pageno000F1")}.${fileExt}`;
                 if (typeof data.css[fileName] != "undefined") {
                     $("#" + editorid).val(data.css[fileName]);
                     if ($("#" + editorid).next(".CodeMirror").length > 0)
@@ -403,6 +536,7 @@ function onSuccessFileLoad(data) {
                 }
             }
             else if (fileExt == "js") {
+                var fileName = `${$(this).find("[id^='filename']").val().replace(/ /g, "_")}_${GetFieldValue("pageno000F1")}.jsx`;
                 if (typeof data.js[fileName] != "undefined") {
                     $("#" + editorid).val(data.js[fileName]);
                     if ($("#" + editorid).next(".CodeMirror").length > 0)
@@ -411,6 +545,9 @@ function onSuccessFileLoad(data) {
             }
         });
     }
+    //if (typeof parent._pageName != "undefined" && parent._pageName != "ta__rp") {
+    //    parent.window.location.reload();
+    //}
 }
 
 function createHtmlEditor(editorId) {

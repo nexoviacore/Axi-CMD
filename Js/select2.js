@@ -31,6 +31,7 @@ function createFormSelect(fld) {
             data: function (params) {
                 iscalled = true;
                 isLSNotExist = false;
+                fldNameAc = $(this).attr("id");
                 GetCurrentTime("Tstruct " + fldNameAc + " Dropdown click(ws call)");
                 let _$this = $(this);
                 if (select2IsOpened && (typeof params.term == "undefined" || params.term == "")) {
@@ -95,7 +96,7 @@ function createFormSelect(fld) {
                     }
                     let _ddlappSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
                     let ddlrefreshsave = $("#" + fldNameAc).hasClass('isrefreshsave');
-                    if (isDataStoreInLs == "true" && fastdll == true && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + transid + "♦" + fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0 && !isRefreshClick && !_$this.hasClass('multiFldChk') && _cacheTrue && isApifld != "true") {
+                    if (isDataStoreInLs == "true" && fastdll == true && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + proj + "♦" + transid + "♦" + fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0 && !isRefreshClick && !_$this.hasClass('multiFldChk') && _cacheTrue && isApifld != "true") {
                         IsBindData = true;
                     }
                     else if (FldListParents.length > 0 && FldListParents.indexOf(fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 && termVal == "" && !isRefreshClick && !_$this.hasClass('multiFldChk') && _cacheTrue && isApifld != "true") {//&& $(this).val() != null
@@ -104,7 +105,7 @@ function createFormSelect(fld) {
                         GetProcessTime();
                         IsBindData = false;
                         isRefreshClick = false;
-
+                        let _isDupTab = callParentNew('isDuplicateTab');
                         return JSON.stringify({
                             tstDataId: tstDataId,
                             FldName: fieldName,
@@ -124,7 +125,8 @@ function createFormSelect(fld) {
                             tblSourceParams: "",
                             isTstHtmlLs: resTstHtmlLS,
                             ddlFldSqlParams: dllSqlParamsFlag,
-                            ddlSqlPNames: ddlSqlPNames
+                            ddlSqlPNames: ddlSqlPNames,
+                            isDupTab: _isDupTab
                         });
                     }
                 } else {
@@ -233,7 +235,7 @@ function createFormSelect(fld) {
                                     checkDevOptDdlStoreLS();
                                 }
                                 if (fastdll == true && isDataStoreInLs == "true") {
-                                    setDropdownDatafromLS("tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal, JSON.stringify(serResult));
+                                    setDropdownDatafromLS("tstDDFVal♠" + proj + "♦" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal, JSON.stringify(serResult));
                                 } else {
                                     if (termVal == "") {
                                         /* let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);*/
@@ -432,8 +434,8 @@ function createFormSelect(fld) {
                         $("#" + fldNameAc).select2("updateResults");
                         $("#" + fldNameAc).data('depFldMap', _depFldName);
                     }
-                    else if (isDataStoreInLs == "true" && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0) {
-                        let _keyPrefix = "tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";
+                    else if (isDataStoreInLs == "true" && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + proj + "♦" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0) {
+                        let _keyPrefix = "tstDDFVal♠" + proj + "♦" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";
                         let _thisKey = getDdlKeysWithPrefix(_keyPrefix);
                         if (_thisKey.length > 0) {
                             let resData = localStorage[_thisKey[0]];
@@ -830,7 +832,7 @@ function createFormSelect(fld) {
                 parentFldVal = ISBoundAutoCom(_fieldName, fldNameAc);
             else
                 parentFldVal = ISBoundNew(fieldName, fldNameAc);
-            let _keyPrefix = "tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";//"tstDDFVal♠tdepd♦field2♦♦http://localhost/aw11.4df♥";//
+            let _keyPrefix = "tstDDFVal♠" + proj + "♦" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";//"tstDDFVal♠tdepd♦field2♦♦http://localhost/aw11.4df♥";//
             let _thisKey = getDdlKeysWithPrefix(_keyPrefix);
             if (_thisKey.length > 0) {
                 isLSNotExist = false;
@@ -1495,6 +1497,7 @@ function AxGetCustSelectFldData(fieldId) {
     let isApifld = FldIsAPI[fldApiInd];
     let dllSqlParamsFlag = FldDSqlParams[fldApiInd];
     let ddlSqlPNames = GetFieldParamList(fieldName);
+    let _isDupTab = callParentNew('isDuplicateTab');
     $.ajax({
         url: 'tstruct.aspx/GetAutoCompleteData',
         type: 'POST',
@@ -1503,7 +1506,7 @@ function AxGetCustSelectFldData(fieldId) {
         data: JSON.stringify({
             tstDataId: tstDataId, FldName: fieldName, FltValue: "", ChangedFields: ChangedFields, ChangedFieldDbRowNo: ChangedFieldDbRowNo,
             ChangedFieldValues: ChangedFieldValues, DeletedDCRows: DeletedDCRows, pageData: pageData, fastdll: fastdll, fldNameAc: fieldId, refreshAC: false,
-            pickArrow: false, parentsFlds: parentFldVal, rfSave: true, IsApiFld: isApifld, tblSourceParams: "", isTstHtmlLs: resTstHtmlLS, ddlFldSqlParams: dllSqlParamsFlag, ddlSqlPNames: ddlSqlPNames
+            pickArrow: false, parentsFlds: parentFldVal, rfSave: true, IsApiFld: isApifld, tblSourceParams: "", isTstHtmlLs: resTstHtmlLS, ddlFldSqlParams: dllSqlParamsFlag, ddlSqlPNames: ddlSqlPNames, isDupTab: _isDupTab
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -1594,7 +1597,7 @@ function createFormSelectMultiChecklist(fld) {
 
                 if (typeof $(this).data("separator") != "undefined")
                     mulSeparator = $(this).data("separator");
-
+                fldNameAc = $(this).attr("id");
                 fastdll = $(this).hasClass('multiFldChk') ? true : $(this).hasClass('fastdll');
                 if (fastdll == true || (fastdll == false && termVal == "") || (fastdll == false && (typeof termVal == "undefined" || termVal.length > 1))) {
                     isPickMinChar = false;
@@ -1616,6 +1619,7 @@ function createFormSelectMultiChecklist(fld) {
                     } else {
                         IsBindData = false;
                         isRefreshClick = false;
+                        let _isDupTab = callParentNew('isDuplicateTab');
                         return JSON.stringify({
                             tstDataId: tstDataId,
                             FldName: fieldName,
@@ -1635,7 +1639,8 @@ function createFormSelectMultiChecklist(fld) {
                             tblSourceParams: "",
                             isTstHtmlLs: resTstHtmlLS,
                             ddlFldSqlParams: dllSqlParamsFlag,
-                            ddlSqlPNames: ddlSqlPNames
+                            ddlSqlPNames: ddlSqlPNames,
+                            isDupTab: _isDupTab
                         });
                     }
                 } else {

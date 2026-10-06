@@ -100,7 +100,7 @@ public partial class Tstruct : System.Web.UI.Page
     string customPage = string.Empty;
     LogFile.Log logobj = new LogFile.Log();
     ASBExt.WebServiceExt objWebServiceExt = new ASBExt.WebServiceExt();
-    public string structXml = string.Empty;
+    //public string structXml = string.Empty;
     public string jsFromCache = string.Empty;
     public string htmlFromCache = string.Empty;
     Boolean isTstInCache = false;
@@ -342,8 +342,8 @@ public partial class Tstruct : System.Web.UI.Page
                         _isDupTab = Request.QueryString["isDupTab"].ToString();
                     if (_isDupTab != "" && _isDupTab.StartsWith("true-"))
                         HttpContext.Current.Session["isDupTab"] = _isDupTab;
-                    else
-                        HttpContext.Current.Session["isDupTab"] = "false";
+                    //else
+                    //    HttpContext.Current.Session["isDupTab"] = "false";
                     hdnTstSInfo.Value = Session["project"].ToString() + "~" + Session["user"].ToString() + "~" + _thistrId + "~" + Session["nsessionid"].ToString() + "~" + Session["AxRole"].ToString() + "~" + Session["AxTrace"].ToString();
                 }
                 ScriptManager.RegisterStartupScript(this, this.GetType(), "dummyload", "tstDummyLoad('" + _thistrId + "');", true);
@@ -895,7 +895,7 @@ public partial class Tstruct : System.Web.UI.Page
 
             if (strObj == null)
                 return;
-            structXml = strObj.structRes;
+            //structXml = strObj.structRes;
             edTime = DateTime.Now;
             strLogTime.Append("GetStructure-" + stTime.Subtract(edTime).TotalMilliseconds.ToString());
             formLogTime = float.Parse(edTime.Subtract(stTime).TotalMilliseconds.ToString());
@@ -1274,7 +1274,7 @@ public partial class Tstruct : System.Web.UI.Page
                 else
                     Session["AxInlineGridEdit"] = "true";
 
-                if (transId == "sect")
+                if (transId == "sect" || transId == "a__rp")
                 {
                     Session["AxInlineGridEdit"] = "false";
                     AxpGridFormCols = "form" + "♠";
@@ -1388,6 +1388,12 @@ public partial class Tstruct : System.Web.UI.Page
                 var fileprotected = axpConfigStr.AsEnumerable().Where(x => x.Field<string>("PROPS").ToLower() == "file protected in tstruct attachments").Select(x => new { val = x.Field<string>("PROPSVAL"), sfld = x.Field<string>("SFIELD") }).ToList();
                 if (fileprotected.Count > 0)
                     tstIsFileProtected = fileprotected[0].val;
+
+                var transactionSearchOrder = axpConfigStr.AsEnumerable().Where(x => x.Field<string>("PROPS").ToLower() == "transaction search order").Select(x => new { val = x.Field<string>("PROPSVAL"), sfld = x.Field<string>("SFIELD") }).ToList();
+                if (transactionSearchOrder.Count > 0 && transactionSearchOrder[0].val != "")
+                    Session["TstTranSearchOrder-" + transId] = transactionSearchOrder[0].val;
+                else
+                    Session.Remove("TstTranSearchOrder-" + transId);
 
                 var formdatavalidateworkflowaction = axpConfigStr.AsEnumerable().Where(x => x.Field<string>("PROPS").ToLower() == "form data validate on workflow action").Select(x => new { val = x.Field<string>("PROPSVAL"), sfld = x.Field<string>("SFIELD") }).ToList();
                 if (formdatavalidateworkflowaction.Count > 0 && formdatavalidateworkflowaction[0].val != "" && formdatavalidateworkflowaction[0].val.ToLower() == "true")
@@ -1589,10 +1595,10 @@ public partial class Tstruct : System.Web.UI.Page
             {
                 Session["isDupTab"] = Request.QueryString["isDupTab"].ToString();
             }
-            else
-            {
-                Session["isDupTab"] = "false";
-            }
+            //else
+            //{
+            //    Session["isDupTab"] = "false";
+            //}
         }
         catch (Exception ex) { }
 
@@ -1954,10 +1960,20 @@ public partial class Tstruct : System.Web.UI.Page
                 designMode = Convert.ToBoolean(HttpContext.Current.Session[transId + "IsDesignMode"]);
             if (!designMode)
             {
-                cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transId), strObj, Constants.REDISTSTRUCT, schemaName);
-
                 FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
-
+                string _sXML = strObj.structRes;
+                strObj.structRes = "";
+                cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transId), strObj, Constants.REDISTSTRUCT, schemaName);
+                if (_sXML != string.Empty)
+                {
+                    cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transId), _sXML, Constants.REDISTSTRUCTXML, schemaName);
+                    strObj.structRes = _sXML;
+                }
+                else
+                {
+                    string thisStructXML = fObj.StringFromRedis(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transId));
+                    strObj.structRes = thisStructXML;
+                }
                 var redisvalues1 = fObj.ObjectJsonFromRedis(util.GetRedisServerkey(pgKey, ""));
                 if (redisvalues1 == null)
                     redisvalues.Add(Title + "♠" + tstCaption + "♠" + transId);
@@ -2358,6 +2374,8 @@ public partial class Tstruct : System.Web.UI.Page
                     else
                     {
                         toolbarBtnHtml = createDwbToolbarButtons(strObj, new ArrayList());
+                        if (toolbarBtnHtml.ToString() == "")
+                            toolbarBtnHtml = createDwbToolbarButtonsFromStudio(strObj, new ArrayList());
                         PrintHTMLtoPDFNew(strObj);
                         if (Session["axDesign"].ToString() == "true")
                         {
@@ -2576,10 +2594,12 @@ public partial class Tstruct : System.Web.UI.Page
                     break;
                 case "draft":
                     isDraftbutton = "true";
-                    toolBarBtns.Add("<a href=\"javascript: void(0)\" title='Draft' data-extra='" + _hint + "' class=\"menu-link text-gray-600 text-hover-white\"><span class=\"menu-title\">" + lblTaskBtn.Text + "</span><span class=\"menu-arrow text-gray-600 text-hover-white\"></span></a><div class=\"menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-bold w-200px py-3\" data-kt-menu=\"true\" data-popper-placement=\"top-end\">");
-                    toolBarBtns.Add("<div class=\"liTaskItems menu-item px-3\"><a href=\"javascript:void(0)\" id='DraftSave' onclick=\"SaveAsDraftNew();\" title='Draft Save' class=\"TaskItems menu-link px-3\">Save</a></div>");
-                    toolBarBtns.Add("<div class=\"liTaskItems menu-item px-3\"><a href=\"javascript:void(0)\" id='DraftLoad' onclick=\"getDraftsListNew(this);\" title='Draft Load' class=\"TaskItems menu-link px-3\">Load</a></div>");
-                    toolBarBtns.Add("</div>");
+                    StringBuilder TaskBtnHTMLDraft = new StringBuilder();
+                    TaskBtnHTMLDraft.Append("<div class=\"dropdown menu menu-dropdown menu-item btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2 p-0\" data-kt-menu-trigger=\"click\" data-kt-menu-placement=\"bottom-start\"><a href=\"javascript: void(0)\" title='Draft' data-extra='" + _hint + "' class=\"menu-link text-gray-600 text-hover-white\"><span class=\"menu-title\">Draft</span><span class=\"menu-arrow text-gray-600 text-hover-white\"></span></a><div class=\"menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-bold w-200px py-3\" data-kt-menu=\"true\" data-popper-placement=\"top-end\">");
+                    TaskBtnHTMLDraft.Append("<div class=\"liTaskItems menu-item px-3\"><a href=\"javascript:void(0)\" id='DraftSave' onclick=\"SaveAsDraftNew();\" title='Draft Save' class=\"TaskItems menu-link px-3\">Save</a></div>");
+                    TaskBtnHTMLDraft.Append("<div class=\"liTaskItems menu-item px-3\"><a href=\"javascript:void(0)\" id='DraftLoad' onclick=\"getDraftsListNew(this);\" title='Draft Load' class=\"TaskItems menu-link px-3\">Load</a></div>");
+                    TaskBtnHTMLDraft.Append("</div></div>");
+                    toolBarBtns.Add(TaskBtnHTMLDraft.ToString());
                     break;
 
                 case "attach":
@@ -2597,7 +2617,7 @@ public partial class Tstruct : System.Web.UI.Page
                     {
                         StringBuilder TaskBtnHTML = new StringBuilder();
                         //TaskBtnHTML.Append("<li class='dropdown'><a href='javascript:void(0)' id='tasks' class='dropdown-toggle' data-toggle='dropdown' data-hover='dropdown' title='Tasks' data-close-others='true'>" + lblTaskBtn.Text + "&nbsp;<span class='icon-arrows-down'></span></a><ul class='dropdown-menu'>");
-                        TaskBtnHTML.Append("<div class=\"menu menu-dropdown menu-item btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2 p-0\" data-kt-menu-trigger=\"click\" data-kt-menu-placement=\"bottom-start\"><a href=\"javascript: void(0)\" title='Options' class=\"menu-link text-gray-600 text-hover-white\"><span class=\"menu-title\">" + lblTaskBtn.Text + "</span><span class=\"menu-arrow text-gray-600 text-hover-white\"></span></a><div class=\"menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-bold w-200px py-3\" data-kt-menu=\"true\" data-popper-placement=\"top-end\">");
+                        TaskBtnHTML.Append("<div class=\"dropdown menu menu-dropdown menu-item btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2 p-0\" data-kt-menu-trigger=\"click\" data-kt-menu-placement=\"bottom-start\"><a href=\"javascript: void(0)\" title='Options' class=\"menu-link text-gray-600 text-hover-white\"><span class=\"menu-title\">" + lblTaskBtn.Text + "</span><span class=\"menu-arrow text-gray-600 text-hover-white\"></span></a><div class=\"menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-bold w-200px py-3\" data-kt-menu=\"true\" data-popper-placement=\"top-end\">");
                         TaskBtnHTML.Append(CreateTaskButtonsOld(strObj));
                         TaskBtnHTML.Append("</div></div>");
                         toolBarBtns.Add(TaskBtnHTML.ToString());
@@ -2792,6 +2812,10 @@ public partial class Tstruct : System.Web.UI.Page
             tlhw = btn.dimension;
             if (parentID == "")
             {
+                if (i == buttonList.Count - 1 && (tlhw == "4,9310210,26,28" || tlhw == "4,9309954,26,28"))
+                {
+                    return toolbarBtnHtml = new StringBuilder();
+                }
                 if (!string.IsNullOrEmpty(tlhw))
                 {
                     arrLeft = tlhw.Split(',');
@@ -3110,6 +3134,323 @@ public partial class Tstruct : System.Web.UI.Page
         }
         //return BtnHtml;
         return toolbarBtnHtml;
+
+    }
+
+    private StringBuilder createDwbToolbarButtonsFromStudio(TStructDef strObj, ArrayList buttons, string parentID = "")
+    {
+
+        StringBuilder BtnHtml = new StringBuilder();
+        ArrayList footerbuttonList = new ArrayList();
+        ArrayList buttonList;
+        string buttonClass = "";
+        if (parentID != "")
+        {
+            buttonList = new ArrayList(buttons);
+            buttonClass = " listItem ";
+        }
+        else
+        {
+            buttonList = new ArrayList(strObj.btns);
+            buttonClass = " dwbBtn ";
+        }
+        for (int i = 0; i < buttonList.Count; i++)
+        {
+            TStructDef.ButtonStruct btn = (TStructDef.ButtonStruct)buttonList[i];
+            string id = btn.ID;
+            string caption = btn.caption;
+            string hint = btn.hint;
+            string task = btn.task.ToLower();
+            string action = btn.action.ToLower();
+            bool script = btn.isScript;
+            bool isDropDwn = btn.isDrpDwn;
+            string isFooter = btn.footer;
+            bool isVisible = btn.visible == "true" ? true : false;
+            if (!isVisible)
+                continue;
+            string iconStyle = string.Empty;
+            btnFunction = string.Empty;
+            btnStyle = string.Empty;
+            btnStyle = "";
+            if (btn.image != "" && util.IsImageAvailable(btn.image, "icon"))
+            {
+                iconStyle = "<img src='" + btn.image + "' class='tbIcon'>";
+            }
+            else if (btn.icon.text != "" && btn.icon.addclass != "")
+            {
+                iconStyle = "<i class='" + btn.icon.addclass + " material-icons-style material-icons-2'>" + btn.icon.text + "</i>";
+            }
+            switch (task)
+            {
+                case "new":
+                    if (isVisible)
+                    {
+                        string _hint = string.IsNullOrEmpty(hint) ? (caption == "" ? "add" : caption) : hint;
+                        if (isFooter == "true" && !isMobileView)
+                        {
+                            footerbuttonList.Add("ftbtn_iNew~" + id + "~" + _hint);
+                        }
+                        else
+                        {
+                            btnFunction = " onclick='javascript:NewTstruct();' ";
+                            btnStyle = "handCur";
+                            //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
+                            BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='add' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                        }
+
+                    }
+                    break;
+
+                case "save":
+                    if (isVisible)
+                    {
+                        string _hint = string.IsNullOrEmpty(hint) ? (caption == "" ? task : caption) : hint;
+                        if (isFooter == "true" && !isMobileView)
+                            footerbuttonList.Add("ftbtn_iSave~" + id + "~" + _hint);
+                        else
+                        {
+                            btnFunction = " onclick='javascript:FormSubmit();' ";
+                            btnStyle = "handCur";
+                            //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
+                            BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                        }
+                    }
+                    break;
+
+                case "search":
+                    if (isVisible)
+                    {
+                        string _hint = string.IsNullOrEmpty(hint) ? (caption == "" ? task : caption) : hint;
+                        btnFunction = " onclick=\"javascript:OpenSearch('" + transId + "');\" ";
+                        btnStyle = "handCur";
+                        //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
+                        BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                    }
+                    break;
+
+                case "remove":
+                    if (isVisible)
+                    {
+                        string _hint = string.IsNullOrEmpty(hint) ? (caption == "" ? task : caption) : hint;
+                        if (isFooter == "true" && !isMobileView)
+                            footerbuttonList.Add("ftbtn_iRemove~" + id + "~" + _hint);
+                        else
+                        {
+                            btnFunction = " onclick='javascript:DeleteTstruct();' ";
+                            btnStyle = "handCur";
+                            //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='delete' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
+                            BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                        }
+                    }
+                    break;
+                case "print":
+                    if (isVisible)
+                    {
+                        string _hint = string.IsNullOrEmpty(hint) ? (caption == "" ? task : caption) : hint;
+                        btnFunction = " onclick=\"javascript:OpenPrint('" + transId + "');\" ";
+                        btnStyle = "handCur";
+                        if (strObj.tstPform == "yes")
+                        {
+                            //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + "  alt='" + caption + "' title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
+                            BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                        }
+                    }
+                    break;
+
+                case "pdf":
+                    if (isVisible)
+                    {
+                        string _hint = string.IsNullOrEmpty(hint) ? (caption == "" ? task : caption) : hint;
+                        string hideStyle = string.Empty;
+                        if (strObj.pdfList == "")
+                        {
+                            hideStyle = " style=\"display:none\"";
+                        }
+                        btnFunction = " onclick='javascript:OpenPdfDocList();'";
+                        btnStyle = "handCur";
+                        //BtnHtml.Append("<li" + buttonClass.ToString() + hideStyle.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
+                        BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                    }
+                    break;
+
+                case "view history":
+                    if (isVisible)
+                    {
+                        string _hint = string.IsNullOrEmpty(hint) ? (caption == "" ? task : caption) : hint;
+                        btnFunction = " onclick=\"javascript:OpenHistory('" + transId + "');\" ";
+                        btnStyle = "handCur";
+                        //BtnHtml.Append("<li" + buttonClass.ToString() + " ><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + "  alt='" + caption + "' title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
+                        BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                    }
+                    break;
+
+                case "listview":
+                    if (isVisible)
+                    {
+                        string _hint = string.IsNullOrEmpty(hint) ? (caption == "" ? task : caption) : hint;
+                        if (Session["IsAxOldDataList"] != null && Session["IsAxOldDataList"].ToString() == "true")
+                        {
+                            if (isFooter == "true" && !isMobileView)
+                            {
+                                footerbuttonList.Add("ftbtn_iList~" + id + "~" + _hint);
+                                btnfooterlist = "javascript:CallListView('" + transId + "')";
+                            }
+                            else
+                            {
+                                btnFunction = " onclick=\"javascript:CallListView('" + transId + "');\" ";
+                                btnStyle = "handCur";
+                                //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' src=\"../AxpImages/toolicons/view2.png\" " + btnFunction.ToString() + " title='List View' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
+                                BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                            }
+                        }
+                        else
+                        {
+                            if (isFooter == "true" && !isMobileView)
+                            {
+                                footerbuttonList.Add("ftbtn_iList~" + id + "~" + _hint);
+                                btnfooterlist = "javascript:CallEntityList('" + transId + "')";
+                            }
+                            else
+                            {
+                                btnFunction = " onclick=\"javascript:CallEntityList('" + transId + "');\" ";
+                                btnStyle = "handCur";
+                                //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' src=\"../AxpImages/toolicons/view2.png\" " + btnFunction.ToString() + " title='List View' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
+                                BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                            }
+                        }
+                    }
+                    break;
+
+                case "attach":
+                    if (isVisible)
+                    {
+                        string _hint = string.IsNullOrEmpty(hint) ? (caption == "" ? task : caption) : hint;
+                        btnFunction = " onclick='javascript:AttachFiles();' ";
+                        btnStyle = "handCur";
+                        //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
+                        BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                    }
+                    break;
+
+                case "tasks":
+                    if (isVisible)
+                    {
+                        btnFunction = " onclick='javascript:FindPos();ShowTaskList();' ";
+                        btnStyle = "handCur";
+                        if (strObj.taskBtns.Count > 0)
+                        {
+                            StringBuilder TaskBtnHTML = new StringBuilder();
+                            //TaskBtnHTML.Append("<li class='dropdown'><a href='javascript:void(0)' id='tasks' class='dropdown-toggle' data-toggle='dropdown' data-hover='dropdown' title='Tasks' data-close-others='true'>" + lblTaskBtn.Text + "&nbsp;<span class='icon-arrows-down'></span></a><ul class='dropdown-menu'>");
+                            TaskBtnHTML.Append("<div id='tasks' class=\"menu menu-dropdown menu-item btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2 p-0\" data-kt-menu-trigger=\"click\" data-kt-menu-placement=\"bottom-start\"><a href=\"javascript: void(0)\" title='Tasks' class=\"menu-link text-gray-600 text-hover-white\"><span class=\"menu-title\">" + lblTaskBtn.Text + "</span><span class=\"menu-arrow text-gray-600 text-hover-white\"></span></a><div class=\"menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-bold w-200px py-3\" data-kt-menu=\"true\" data-popper-placement=\"top-end\">");
+                            TaskBtnHTML.Append(CreateTaskButtons(strObj, true));
+                            TaskBtnHTML.Append("</div></div>");
+                            toolBarBtns.Add(TaskBtnHTML.ToString());
+                        }
+                        else
+                        {
+                            toolBarBtns.Add("");
+                        }
+                    }
+                    break;
+
+                case "preview":
+                    if (isVisible)
+                    {
+                        string _hint = string.IsNullOrEmpty(hint) ? (caption == "" ? task : caption) : hint;
+                        btnFunction = " onclick=\"javascript:OpenPrint('" + transId + "')\" ";
+                        btnStyle = "handCur";
+                        if (strObj.tstPform == "yes")
+                        {
+                            //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' class='" + btnStyle + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
+                            BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "' " + btnFunction.ToString() + " data-extra='" + _hint + "' alt='" + caption + "' title='" + caption + "' class=\"" + buttonClass + " btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                        }
+                    }
+                    break;
+
+                case "":
+                    if (btn.action != "")
+                    {
+                        string actConfirmMsg = string.Empty;
+                        string actRem = string.Empty;
+                        string manRem = string.Empty;
+                        for (int m = 0; m <= strObj.actions.Count - 1; m++)
+                        {
+                            TStructDef.ActionStruct actn = (TStructDef.ActionStruct)strObj.actions[m];
+                            if (actn.actname == btn.action)
+                            {
+                                actConfirmMsg = actn.actdesc;
+                                actRem = actn.actRem;
+                                manRem = actn.manRem;
+                                break;
+                            }
+                        }
+                        btnStyle = "handCur";
+                        if (btn.action == "Custom" && !btn.isformbtn)
+                            btnFunction = " onclick=\"javascript:" + id + "onclick();\" ";
+                        else if (!string.IsNullOrEmpty(btn.fileupload))
+                        {
+                            if (btn.fileupload == "y")
+                            {
+                                btnFunction = " onclick=\"javascript:CallFileUploadAction('" + btn.action + "','" + btn.fileupload + "');\" ";
+                                BtnHtml.Append("<input type=hidden id='cb_sactbu' name='cb_sactbu'>");
+                            }
+                            else if (btn.fileupload == "a")
+                            {
+                                btnFunction = " onclick='javascript:AttachFiles();' ";
+                            }
+                            else
+                            {
+                                if ((btn.fileupload.IndexOf("\\") != -1))
+                                {
+                                    btn.fileupload = btn.fileupload.Replace("\\", "\\\\");
+                                }
+                                btnFunction = " onclick=\"javascript:CallAction('" + btn.action + "','" + btn.fileupload + "','" + actConfirmMsg + "','" + actRem + "','" + manRem + "','','" + script.ToString().ToLower() + "');\" ";
+                            }
+                            btn.fileupload = "";
+                        }
+                        else
+                            btnFunction = " onclick=\"javascript:CallAction('" + btn.action + "','" + btn.fileupload + "','" + actConfirmMsg + "','" + actRem + "','" + manRem + "',''," + script.ToString().ToLower() + ");\" ";
+                        string btnId = "actbtn_" + ID;
+
+                        if (!string.IsNullOrEmpty(btn.caption))
+                        {
+                            //toolbarBtnHtml.Append("<li><a href=\"javascript:void(0)\" id='" + btnId + "' " + btnFunction.ToString() + " class=\"action \" title=\"" + caption + "\" ><span>" + caption + "</span></a></li>");
+                            //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='actbtn_" + id + "' " + btnFunction.ToString() + " alt=\"" + caption + "\" class=\"action " + btnStyle + "\" title=\"" + caption + "\" >" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
+                            string _hint = string.IsNullOrEmpty(hint) ? caption : hint;
+                            if (parentID == "")
+                                BtnHtml.Append("<a href=\"javascript:void(0)\" id='actbtn_" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' data-extra='" + _hint + "' class=\"" + buttonClass + " caption btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                            else
+                            {
+                                iconStyle = iconStyle.Replace(" material-icons-2", " material-icons-2 text-gray-500");
+                                BtnHtml.Append("<a href=\"javascript:void(0)\" id='actbtn_" + id + "' " + btnFunction.ToString() + " alt='" + caption + "' title='" + caption + "' data-extra='" + _hint + "' class=\"" + buttonClass + " caption menu-item px-3\"><span class='tbCaption menu-link px-3'>" + iconStyle + "<span class=\"text-truncate d-inline-block\">" + caption + "</span></span></a>");
+                            }
+                        }
+                    }
+                    else if (isDropDwn)
+                    {
+                        if (parentID == "")
+                            //BtnHtml.Append("<li class='dwbBtn dropdown'><a href=\"javascript:void(0)\" id='" + id + "' alt='" + caption + "' title='" + caption + "' class='dropdown-toggle' data-toggle='dropdown' >" + iconStyle + "<span class='tbCaption'>" + caption + "</span><span class='icon-arrows-down'></span></a> <ul class=\"dropdown-menu\">");
+                            BtnHtml.Append("<div class=\"dwbBtn dropdown menu menu-dropdown menu-item btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2 p-0\" data-kt-menu-trigger=\"click\" data-kt-menu-placement=\"bottom-start\"><a href=\"javascript: void(0)\" id='" + id + "' alt='" + caption + "' title='" + caption + "' class=\"menu-link text-gray-600 text-hover-white\"><span class=\"menu-title\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></span><span class=\"menu-arrow text-gray-600 text-hover-white\"></span></a><div class=\"menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-bold w-200px py-3\" data-kt-menu=\"true\" data-popper-placement=\"top-end\">");
+                        else
+                            //BtnHtml.Append("<li class='dwbBtn dropdown dropdown-submenu'><a href=\"javascript:void(0)\" id='" + id + "' alt='" + caption + "' title='" + caption + "' class='dropdown-toggle' data-toggle='dropdown' >" + iconStyle + "<span class='tbCaption'>" + caption + "</span><span class='icon-arrows-down'></span></a> <ul class=\"dropdown-menu\">");
+                            BtnHtml.Append("<div class=\"menu-item px-3\" data-kt-menu-trigger=\"hover\" data-kt-menu-placement=\"left-start\" data-kt-menu-flip=\"center, top\"><a href=\"javascript:void(0)\" id='" + id + "' alt='" + caption + "' title='" + caption + "' class=\"menu-link px-3\"><span class=\"menu-title\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></span><span class=\"menu-arrow\"></span></a><div class=\"menu-sub menu-sub-dropdown w-175px py-4\">");
+                        if (btn.childBtns.Count > 0)
+                            BtnHtml.Append(createDwbToolbarButtonsFromStudio(strObj, new ArrayList(btn.childBtns), id));
+                        BtnHtml.Append("</div></div>");
+                    }
+                    else
+                    {
+                        string _hint = string.IsNullOrEmpty(hint) ? caption : hint;
+                        //BtnHtml.Append("<li " + buttonClass.ToString() + "><a href=\"javascript:void(0)\" id='" + id + "'  alt='" + caption + "'>" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></li>");
+                        BtnHtml.Append("<a href=\"javascript:void(0)\" id='" + id + "'  alt='" + caption + "' data-extra='" + _hint + "' title='" + caption + "' class=\"" + buttonClass + " caption btn btn-white btn-sm btn-color-gray-600 btn-active-primary shadow-sm me-2\">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a>");
+                    }
+                    break;
+
+            }
+        }
+        if (footerbuttonList.Count > 0)
+            btnfooteropenlist += string.Join(",", footerbuttonList.ToArray()) + ",";
+        return BtnHtml;
 
     }
     private StringBuilder createModernToolbarButtons(TStructDef strObj, ArrayList buttons, string parentID = "")
@@ -5251,7 +5592,10 @@ public partial class Tstruct : System.Web.UI.Page
                             if (HttpContext.Current.Session["MobileView"] != null && HttpContext.Current.Session["MobileView"].ToString() == "True")
                                 fdKey = Constants.REDISTSTRUCTMOB;
                             FDW fdwObj = new FDW();
+                            string _sXML = strObj.structRes;
+                            strObj.structRes = "";
                             fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transId), strObj, Constants.REDISTSTRUCT, schemaName);
+                            strObj.structRes = _sXML;
                         }
                         else if (flKey == "none")
                         {
@@ -5374,7 +5718,7 @@ public partial class Tstruct : System.Web.UI.Page
             {
                 string _thisDupTab = HttpContext.Current.Session["isDupTab"].ToString();
                 _thisDupTab = _thisDupTab.Split('-')[1];
-                HttpContext.Current.Session["isDupTab"] = "false";
+                //HttpContext.Current.Session["isDupTab"] = "false";
                 if (Session["tstivobjkey-duptab-" + _thisDupTab] != null && Session["tstivobjkey-duptab-" + _thisDupTab].ToString() != string.Empty)
                     Session["tstivobjkey-duptab-" + _thisDupTab] = Session["tstivobjkey-duptab-" + _thisDupTab].ToString() + "," + key;
                 else
@@ -6786,7 +7130,7 @@ public partial class Tstruct : System.Web.UI.Page
         return json;
     }
     [WebMethod]
-    public static string GetAutoCompleteData(string tstDataId, string FldName, string FltValue, ArrayList ChangedFields, ArrayList ChangedFieldDbRowNo, ArrayList ChangedFieldValues, ArrayList DeletedDCRows, string pageData, string fastdll, string fldNameAc, string refreshAC, string pickArrow, string parentsFlds, string rfSave, string IsApiFld, string tblSourceParams, string isTstHtmlLs, string ddlFldSqlParams, string ddlSqlPNames)
+    public static string GetAutoCompleteData(string tstDataId, string FldName, string FltValue, ArrayList ChangedFields, ArrayList ChangedFieldDbRowNo, ArrayList ChangedFieldValues, ArrayList DeletedDCRows, string pageData, string fastdll, string fldNameAc, string refreshAC, string pickArrow, string parentsFlds, string rfSave, string IsApiFld, string tblSourceParams, string isTstHtmlLs, string ddlFldSqlParams, string ddlSqlPNames, string isDupTab)
     {
         string requestProcess_logtime = string.Empty;
         ExecTrace ObjExecTrace = ExecTrace.Instance;
@@ -6797,7 +7141,7 @@ public partial class Tstruct : System.Web.UI.Page
         try
         {
             ASB.WebService objws = new ASB.WebService();
-            json = objws.GetdllAutoComplete(tstDataId, FldName, FltValue, ChangedFields, ChangedFieldDbRowNo, ChangedFieldValues, DeletedDCRows, pageData, fastdll, fldNameAc, refreshAC, pickArrow, parentsFlds, rfSave, IsApiFld, tblSourceParams, isTstHtmlLs, ddlFldSqlParams, ddlSqlPNames);
+            json = objws.GetdllAutoComplete(tstDataId, FldName, FltValue, ChangedFields, ChangedFieldDbRowNo, ChangedFieldValues, DeletedDCRows, pageData, fastdll, fldNameAc, refreshAC, pickArrow, parentsFlds, rfSave, IsApiFld, tblSourceParams, isTstHtmlLs, ddlFldSqlParams, ddlSqlPNames, isDupTab);
             if (json.IndexOf('♠') > -1)
             {
                 requestProcess_logtime += json.Split('♠')[1];
@@ -6990,6 +7334,7 @@ public partial class Tstruct : System.Web.UI.Page
             string designCustHtmlKey = Constants.REDISTSTRUCTAXCUSTHTML;
             string designREDISTSTHTMLLS = Constants.REDISTSTHTMLLS;
             string designREDISTSTHTMLLSMob = Constants.REDISTSTHTMLLSMob;
+            string fdKeyXML = Constants.REDISTSTRUCTXML;
             //string fdkey1 = Constants.AXPAGETITLE;
             string schemaName = string.Empty;
             if (HttpContext.Current.Session["dbuser"] != null)
@@ -7002,6 +7347,7 @@ public partial class Tstruct : System.Web.UI.Page
             fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(designCustHtmlKey, Transid), "", false, schemaName);
             fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(designREDISTSTHTMLLS, Transid), "", false, schemaName);
             fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(designREDISTSTHTMLLSMob, Transid), "", false, schemaName);
+            fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(fdKeyXML, Transid), "", false, schemaName);
         }
         catch (Exception ex) { }
     }
@@ -7046,8 +7392,8 @@ public partial class Tstruct : System.Web.UI.Page
                 return utils.SESSTIMEOUT;
             if (isDupTab != "" && isDupTab.StartsWith("true-"))
                 HttpContext.Current.Session["isDupTab"] = isDupTab;
-            else
-                HttpContext.Current.Session["isDupTab"] = "false";
+            //else
+            //    HttpContext.Current.Session["isDupTab"] = "false";
             string _isTstLoadFromLSdelObj = string.Empty;
             if (isTstHtmlLs != "" && HttpContext.Current.Session[key] == null)
             {
@@ -7202,8 +7548,11 @@ public partial class Tstruct : System.Web.UI.Page
                         string schemaName = string.Empty;
                         if (HttpContext.Current.Session["dbuser"] != null)
                             schemaName = HttpContext.Current.Session["dbuser"].ToString();
+                        string _sXML = strObj.structRes;
+                        strObj.structRes = "";
                         FDW fdwObj = new FDW();
                         fdwObj.SaveInRedisServer(utils.GetRedisServerkey(fdKey, transId), strObj, Constants.REDISTSTRUCT, schemaName);
+                        strObj.structRes = _sXML;
                     }
                     else if (flKey == "none")
                     {
@@ -7569,8 +7918,8 @@ public partial class Tstruct : System.Web.UI.Page
                 return utils.SESSTIMEOUT;
             if (isDupTab != "" && isDupTab.StartsWith("true-"))
                 HttpContext.Current.Session["isDupTab"] = isDupTab;
-            else
-                HttpContext.Current.Session["isDupTab"] = "false";
+            //else
+            //    HttpContext.Current.Session["isDupTab"] = "false";
             //if (isTstHtmlLs != "")
             //    key = utils.GetReGenTstDataObj(key, isTstHtmlLs);
             string _isTstLoadFromLSdelObj = string.Empty;
@@ -7824,8 +8173,8 @@ public partial class Tstruct : System.Web.UI.Page
                             case "isduptab":
                                 if (prValue != null && prValue != "")
                                     HttpContext.Current.Session["isDupTab"] = prValue;
-                                else
-                                    HttpContext.Current.Session["isDupTab"] = "false";
+                                //else
+                                //    HttpContext.Current.Session["isDupTab"] = "false";
                                 break;
                             case "axsplit":
                                 isAxSplit = prValue;
@@ -7993,7 +8342,7 @@ public partial class Tstruct : System.Web.UI.Page
                 else
                     HttpContext.Current.Session["AxInlineGridEdit"] = "true";
 
-                if (transId == "sect")
+                if (transId == "sect" || transId == "a__rp")
                 {
                     HttpContext.Current.Session["AxInlineGridEdit"] = "false";
                 }
@@ -8031,6 +8380,12 @@ public partial class Tstruct : System.Web.UI.Page
                 {
                     HttpContext.Current.Session["AxtstAFSDB"] = "false";
                 }
+
+                var transactionSearchOrder = axpConfigStr.AsEnumerable().Where(x => x.Field<string>("PROPS").ToLower() == "transaction search order").Select(x => new { val = x.Field<string>("PROPSVAL"), sfld = x.Field<string>("SFIELD") }).ToList();
+                if (transactionSearchOrder.Count > 0 && transactionSearchOrder[0].val != "")
+                    HttpContext.Current.Session["TstTranSearchOrder-" + transId] = transactionSearchOrder[0].val;
+                else
+                    HttpContext.Current.Session.Remove("TstTranSearchOrder-" + transId);
 
                 var TstAllowVideoAtta = axpConfigStr.AsEnumerable().Where(x => x.Field<string>("PROPS").ToLower() == "allow video file in attachments").Select(x => new { val = x.Field<string>("PROPSVAL"), alfiles = x.Field<string>("PROPVALUE2") }).ToList();
                 if (TstAllowVideoAtta.Count > 0 && TstAllowVideoAtta[0].val != "" && TstAllowVideoAtta[0].val.ToLower() == "true")
@@ -8730,8 +9085,8 @@ public partial class Tstruct : System.Web.UI.Page
                 return utils.SESSTIMEOUT;
             if (isDupTab != "" && isDupTab.StartsWith("true-"))
                 HttpContext.Current.Session["isDupTab"] = isDupTab;
-            else
-                HttpContext.Current.Session["isDupTab"] = "false";
+            //else
+            //    HttpContext.Current.Session["isDupTab"] = "false";
             //if (isTstHtmlLs != "")
             //    key = utils.GetReGenTstDataObj(key, isTstHtmlLs);
             string _isTstLoadFromLSdelObj = string.Empty;
@@ -8997,10 +9352,13 @@ public partial class Tstruct : System.Web.UI.Page
                         return "Error♠records:Enter " + fld.datatype.ToLower() + " values";
                     }
                 }
+                string transSearchOrder = "";
+                if (HttpContext.Current.Session["TstTranSearchOrder-" + transId] != null && HttpContext.Current.Session["TstTranSearchOrder-" + transId].ToString() != string.Empty && HttpContext.Current.Session["TstTranSearchOrder-" + transId].ToString().ToLower() == "desc")
+                    transSearchOrder = " searchorder=\"desc\" ";
 
                 string _errorLog = logobjs.CreateLog("Loading Search List.", sid, "GetTstSearchData-" + transId, "new");
                 string iXml = string.Empty;
-                iXml = "<sqlresultset axpapp=\"" + HttpContext.Current.Session["project"].ToString() + "\" transid=\"" + transId + "\" sessionid=\"" + sid + "\" trace=\"" + _errorLog + "\" pageno=\"" + pageNo + "\" pagesize=\"" + int.Parse(pageSize) + "\" appsessionkey='" + HttpContext.Current.Session["AppSessionKey"].ToString() + "' username='" + HttpContext.Current.Session["username"].ToString() + "'>";
+                iXml = "<sqlresultset axpapp=\"" + HttpContext.Current.Session["project"].ToString() + "\" " + transSearchOrder + " transid=\"" + transId + "\" sessionid=\"" + sid + "\" trace=\"" + _errorLog + "\" pageno=\"" + pageNo + "\" pagesize=\"" + int.Parse(pageSize) + "\" appsessionkey='" + HttpContext.Current.Session["AppSessionKey"].ToString() + "' username='" + HttpContext.Current.Session["username"].ToString() + "'>";
                 string _fldsSelected = ddlSearch.Replace("~~", ",");
                 iXml = iXml + "<fields>" + _fldsSelected + "</fields><searchfor>" + ddlSearch + "</searchfor><value>" + searchVal + "</value>";
 
@@ -9317,13 +9675,71 @@ public partial class Tstruct : System.Web.UI.Page
         Dictionary<string, string> cssFiles = new Dictionary<string, string>();
         foreach (string css in cssFileName)
         {
-            cssFiles.Add(css, File.ReadAllText(GetSafePath(cssFileDir, css, new[] { ".css" })));
+            try
+            {
+                cssFiles.Add(css, File.ReadAllText(GetSafePath(cssFileDir, css, new[] { ".css" })));
+            }
+            catch (Exception ex)
+            { }
         }
         returnObject.Add("css", cssFiles);
         Dictionary<string, string> jsFiles = new Dictionary<string, string>();
         foreach (string js in jsFileName)
         {
-            jsFiles.Add(js, File.ReadAllText(GetSafePath(jsFileDir, js, new[] { ".js" })));
+            try
+            {
+                jsFiles.Add(js, File.ReadAllText(GetSafePath(jsFileDir, js, new[] { ".js" })));
+            }
+            catch (Exception ex)
+            { }
+        }
+        returnObject.Add("js", jsFiles);
+        return returnObject;
+    }
+
+    [WebMethod]
+    public static object renderHtmlPagesFilesReact(string htmlFileName, string[] cssFileName, string[] jsFileName, bool getTemplate)
+    {
+        if (HttpContext.Current.Session["project"] == null)
+            throw new Exception("SESSION_TIMEOUT");
+        var returnObject = new Dictionary<string, object>();
+        string axpertWebDir = string.Empty;
+        if (ConfigurationManager.AppSettings["axpertWebDirPath"] != null && ConfigurationManager.AppSettings["axpertWebDirPath"].ToString() != "" && !getTemplate)
+        {
+            axpertWebDir = ConfigurationManager.AppSettings["axpertWebDirPath"].ToString();
+        }
+        else
+        {
+            axpertWebDir = HttpRuntime.AppDomainAppPath;
+        }
+        string projName = HttpContext.Current.Session["project"].ToString();
+        //string cssFileDir = getTemplate ? Path.Combine(axpertWebDir, "AxpTemplates", "css") : Path.Combine(axpertWebDir, projName, "HTMLPages", "css");
+        //string jsFileDir = getTemplate ? Path.Combine(axpertWebDir, "AxpTemplates", "js") : Path.Combine(axpertWebDir, projName, "HTMLPages", "js");
+        //string htmlFileDir = getTemplate ? Path.Combine(axpertWebDir, "AxpTemplates") : Path.Combine(axpertWebDir, projName, "HTMLPages");
+        string cssFileDir = Path.Combine(axpertWebDir, "ReactPages", projName, "css");
+        string jsFileDir = Path.Combine(axpertWebDir, "ReactPages", projName, "js");
+        string htmlFileDir = Path.Combine(axpertWebDir, "ReactPages", projName);
+        returnObject.Add("html", File.ReadAllText(GetSafePath(htmlFileDir, htmlFileName, new[] { ".html" })));
+        Dictionary<string, string> cssFiles = new Dictionary<string, string>();
+        foreach (string css in cssFileName)
+        {
+            try
+            {
+                cssFiles.Add(css, File.ReadAllText(GetSafePath(cssFileDir, css, new[] { ".css" })));
+            }
+            catch (Exception ex)
+            { }
+        }
+        returnObject.Add("css", cssFiles);
+        Dictionary<string, string> jsFiles = new Dictionary<string, string>();
+        foreach (string js in jsFileName)
+        {
+            try
+            {
+                jsFiles.Add(js, File.ReadAllText(GetSafePath(jsFileDir, js, new[] { ".jsx" })));
+            }
+            catch (Exception ex)
+            { }
         }
         returnObject.Add("js", jsFiles);
         return returnObject;
@@ -9394,6 +9810,62 @@ public partial class Tstruct : System.Web.UI.Page
         else
         {
             logObj.CreateLog("Delete HtmlPages File - \n\tPage Name- 'HP" + pageNo + "' \n\tError - pageno value is not found", curSessId, "Delete HtmlPages File", "");
+            result = "PageNo is not found";
+        }
+        return result;
+    }
+
+    [WebMethod]
+    public static string removeFromMenuAndFolderReact(string pageNo)
+    {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return util.SESSTIMEOUT;
+
+        string axpertWebDir = string.Empty;
+        string projectName = HttpContext.Current.Session["project"].ToString();
+        string curSessId = HttpContext.Current.Session["nsessionid"].ToString();
+        string result = string.Empty;
+        string inputXML = string.Empty;
+
+        if (ConfigurationManager.AppSettings["axpertWebDirPath"] != null && ConfigurationManager.AppSettings["axpertWebDirPath"].ToString() != "")
+            axpertWebDir = ConfigurationManager.AppSettings["axpertWebDirPath"].ToString() + projectName;
+        else
+            axpertWebDir = HttpRuntime.AppDomainAppPath + "\\ReactPages\\" + projectName;
+
+        LogFile.Log logObj = new LogFile.Log();
+
+        string[] filePaths = { axpertWebDir, axpertWebDir + "\\css\\", axpertWebDir + "\\js\\" };
+        if (pageNo != "")
+        {
+            try
+            {
+                foreach (string path in filePaths)
+                {
+                    DirectoryInfo di = new DirectoryInfo(path);
+                    if (di.Exists)
+                    {
+                        string[] allFiles = Directory.GetFiles(path);
+                        foreach (string file in allFiles)
+                        {
+                            if (file.Contains("_" + pageNo + "."))
+                            {
+                                File.Delete(file);
+                            }
+                        }
+                    }
+                }
+                result = "done";
+            }
+            catch (Exception ex)
+            {
+                logObj.CreateLog("Delete ReactPages File - \n\tPage Name- 'RP" + pageNo + "' \n\tError - " + ex.Message, curSessId, "Delete ReactPages File", "");
+                result = ex.Message;
+            }
+        }
+        else
+        {
+            logObj.CreateLog("Delete ReactPages File - \n\tPage Name- 'RP" + pageNo + "' \n\tError - pageno value is not found", curSessId, "Delete ReactPages File", "");
             result = "PageNo is not found";
         }
         return result;
@@ -9513,11 +9985,145 @@ public partial class Tstruct : System.Web.UI.Page
                 writer.WriteLine(htmlContent);
                 writer.Flush();
             }
+
+            string schemaName = string.Empty;
+            if (HttpContext.Current.Session["dbuser"] != null)
+                schemaName = HttpContext.Current.Session["dbuser"].ToString();
+            FDW fdwObj = new FDW();
+            fdwObj.Deletekey(util.GetRedisServerkey(Constants.HTMLPAGESCONTENT, pageNo));
+
             return "done";
         }
         catch (Exception ex)
         {
             logObj.CreateLog("Save HtmlPages File - \n\tPage Name- " + pageName + "\n\tError - " + ex.Message, curSessId, "Save HtmlPages File", "");
+            return ex.Message;
+        }
+    }
+
+    [WebMethod]
+    public static string reactPagePublish(string htmlContent, string[] cssFileName, string[] cssContents, string[] jsFileName, string[] jsContents, string pageCaption, bool addToMenu, string pageNo, bool isNewPage)
+    {
+        Util.Util util = new Util.Util();
+        if (HttpContext.Current.Session["project"] == null)
+            return util.SESSTIMEOUT;
+        LogFile.Log logObj = new LogFile.Log();
+        pageCaption = Regex.Replace(pageCaption, @"[^a-zA-Z0-9_\- ]", "");
+        string pageName = pageCaption.Replace(" ", "_") + "_" + pageNo + ".html";
+        string curSessId = HttpContext.Current.Session["nsessionid"].ToString();
+        try
+        {
+            string axpertWebDir = string.Empty;
+            if (ConfigurationManager.AppSettings["axpertWebDirPath"] != null && ConfigurationManager.AppSettings["axpertWebDirPath"].ToString() != "")
+                axpertWebDir = ConfigurationManager.AppSettings["axpertWebDirPath"].ToString();
+            else
+                axpertWebDir = HttpRuntime.AppDomainAppPath;
+
+            string projName = HttpContext.Current.Session["project"].ToString();
+            string cssFileDir = axpertWebDir + "\\ReactPages\\" + projName + "\\css\\";
+            string jsFileDir = axpertWebDir + "\\ReactPages\\" + projName + "\\js\\";
+            string htmlFileDir = axpertWebDir + "\\ReactPages\\" + projName;
+
+            if (cssFileName.Length != cssContents.Length)
+                throw new Exception("CSS file/content mismatch");
+
+            if (jsFileName.Length != jsContents.Length)
+                throw new Exception("JS file/content mismatch");
+
+            int i = 0, j = 0;
+            foreach (string Name in cssFileName)
+            {
+                //string cssFile = cssFileDir + Name;
+                string cssFile = GetSafePath(cssFileDir, Name, new[] { ".css" });
+                DirectoryInfo dir = new DirectoryInfo(cssFileDir);
+                if (!dir.Exists)
+                {
+                    dir.Create();
+                    File.Create(cssFile).Close();
+                }
+                else
+                {
+                    if (!File.Exists(cssFile))
+                        File.Create(cssFile).Close();
+                    else
+                    {
+                        File.Delete(cssFile);
+                        File.Create(cssFile).Close();
+                    }
+                }
+                string ext = Path.GetExtension(Name).ToLowerInvariant();
+                ValidateContent(cssContents[i], ext);
+                using (StreamWriter writer = new StreamWriter(cssFile, false))
+                {
+                    writer.WriteLine(cssContents[i++]);
+                    writer.Flush();
+                }
+            }
+            foreach (string Name in jsFileName)
+            {
+                //string jsFile = jsFileDir + Name;
+                string jsFile = GetSafePath(jsFileDir, Name, new[] { ".jsx" });
+                DirectoryInfo dir = new DirectoryInfo(jsFileDir);
+                if (!dir.Exists)
+                {
+                    dir.Create();
+                    File.Create(jsFile).Close();
+                }
+                else
+                {
+                    if (!File.Exists(jsFile))
+                        File.Create(jsFile).Close();
+                    else
+                    {
+                        File.Delete(jsFile);
+                        File.Create(jsFile).Close();
+                    }
+
+                }
+                string ext = Path.GetExtension(Name).ToLowerInvariant();
+                ValidateContent(jsContents[j], ext);
+                using (StreamWriter writer = new StreamWriter(jsFile, false))
+                {
+                    writer.WriteLine(jsContents[j++]);
+                    writer.Flush();
+                }
+            }
+            string htmlFile = GetSafePath(htmlFileDir, pageName, new[] { ".html" });
+            htmlContent = util.ReverseCheckSpecialChars(htmlContent);
+            DirectoryInfo di = new DirectoryInfo(htmlFileDir);
+            if (!di.Exists)
+            {
+                di.Create();
+                File.Create(htmlFile).Close();
+            }
+            else
+            {
+                if (!File.Exists(htmlFile))
+                    File.Create(htmlFile).Close();
+                else
+                {
+                    File.Delete(htmlFile);
+                    File.Create(htmlFile).Close();
+                }
+            }
+            ValidateContent(htmlContent, ".html");
+            using (StreamWriter writer = new StreamWriter(htmlFile, false))
+            {
+                writer.WriteLine(htmlContent);
+                writer.Flush();
+            }
+
+            string schemaName = string.Empty;
+            if (HttpContext.Current.Session["dbuser"] != null)
+                schemaName = HttpContext.Current.Session["dbuser"].ToString();
+            FDW fdwObj = new FDW();
+            fdwObj.Deletekey(util.GetRedisServerkey(Constants.REACTPAGESCONTENT, pageNo));
+
+            return "done";
+        }
+        catch (Exception ex)
+        {
+            logObj.CreateLog("Save ReactPages File - \n\tPage Name- " + pageName + "\n\tError - " + ex.Message, curSessId, "Save ReactPages File", "");
             return ex.Message;
         }
     }

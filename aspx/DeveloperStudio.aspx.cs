@@ -38,6 +38,10 @@ public partial class aspx_DeveloperStudio : System.Web.UI.Page
             if (Request.QueryString["ivtstName"] != null && Request.QueryString["ivtstName"].ToString() != "")
             {
                 pname = Request.QueryString["ivtstName"].ToString();
+                if (pname.Contains('♣'))
+                {
+                    pname = pname.Replace('♣', '&');
+                }
             }
         }
     }

@@ -107,7 +107,11 @@ function LoadTableEvents(dvId) {
         }
     });
     $j(dvId + " .input-group-text").on("click", function () {
-        $j(dvId + " .flatpickr-input")[0]._flatpickr.open();
+        //$j(dvId + " .flatpickr-input")[0]._flatpickr.open();
+        let fpInput = $j(this).closest(".input-group").find(".flatpickr-input")[0];
+        if (fpInput && fpInput._flatpickr) {
+            fpInput._flatpickr.open();
+        }
     });
 }
 
@@ -146,6 +150,7 @@ function createFormSelect(fld) {
                 let fldApiInd = callParentNew("GetFieldIndex(" + fieldName + ")", "function");
                 let isApifld = callParentNew("FldIsAPI")[fldApiInd];
                 let dllSqlParamsFlag = callParentNew("FldDSqlParams")[fldApiInd];
+                let _isDupTab = callParentNew('isDuplicateTab');
                 return JSON.stringify({
                     tstDataId: callParentNew("tstDataId"),
                     FldName: fieldName,
@@ -165,7 +170,8 @@ function createFormSelect(fld) {
                     tblSourceParams: tblSourceParams,
                     isTstHtmlLs: callParentNew("resTstHtmlLS"),
                     ddlFldSqlParams: dllSqlParamsFlag,
-                    ddlSqlPNames: ""
+                    ddlSqlPNames: "",
+                    isDupTab: _isDupTab
                 });
             },
             processResults: function (data) {
@@ -289,9 +295,11 @@ function createFormSelect(fld) {
                     var depfldId = tbldfName.split('^')[dfCount];
                     dfCount++;
                     let findx = $j.inArray(depfldId, colFillNames);
-                    let fillfName = colNames[findx];
-                    $("#" + fillfName + 'R' + vRowNo).val(value);
-                    MainBlur($("#" + fillfName + 'R' + vRowNo), "input");
+                    if (findx > -1) {
+                        let fillfName = colNames[findx];
+                        $("#" + fillfName + 'R' + vRowNo).val(value);
+                        MainBlur($("#" + fillfName + 'R' + vRowNo), "input");
+                    }
                 });
             } catch (Ex) { }
         }
@@ -530,9 +538,8 @@ function GetTableHtml() {
                                         colValue = $(callParentNew(sourceFldId)).val();
                                     if (typeof colValue == "undefined")
                                         colValue = "";
-                                    tdRow += "<td class=\"input-group input-group-sm " + tfhide + "\"><input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" class=\"tem Family form-control flatpickr-input fldtableinput\" name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + j) + "\" value=\"" + colValue + "\">";
-                                    //tdRow += "<span class=\"input-group-addon spandate \"><i class=\"glyphicon glyphicon-calendar icon-basic-calendar\" title=" + (colNames[i] + "R" + j) + "></i></span></td>";
-                                    tdRow += "<span class=\"input-group-text\" id=\"basic-addon2\" data-toggle><span class=\"material-icons material-icons-style cursor-pointer fs-4\">calendar_today</span></span>";
+                                    tdRow += "<td class=\"input-group-- input-group-sm " + tfhide + "\"><div class=\"input-group input-group-sm\"><input " + isDisabled + tfreadyOnly + allowEmpty + allowDuplicate + " type=\"text\" class=\"tem Family form-control flatpickr-input fldtableinput\" name=\"" + colNames[i] + "\" id=\"" + (colNames[i] + "R" + j) + "\" value=\"" + colValue + "\">";
+                                    tdRow += "<span class=\"input-group-text\" id=\"basic-addon2\" data-toggle><span class=\"material-icons material-icons-style cursor-pointer fs-4\">calendar_today</span></span></div></td>";
                                 }
                                 else {
                                     if (sourceFld != "" && callParentNew("FMoe")[sourFldInd] == "Accept" && $(callParentNew(sourceFldId)).val() != "" && $(callParentNew(sourceFldId)).val().indexOf(',') > 0) {
@@ -813,7 +820,12 @@ function AddTableData() {
             $(this).find("td").each(function () {
                 if ($(this).find("select").length > 0 && typeof $(this).find("select").attr("value") != "undefined") {
                     if (typeof $(this).find("select").data("ae") != "undefined" && $(this).find("select").data("ae") == false && $(this).find("select").attr("value") == "") {
-                        callParentNew('showAlertDialog("error",' + $(this).find("select").attr('id') + ' cannot be left empty.)', 'function');
+                        //callParentNew('showAlertDialog("error",' + $(this).find("select").attr('id') + ' cannot be left empty.)', 'function');
+                        const _thisInput = $(this).find("select");
+                        const _td = _thisInput.closest("td");
+                        const _columnIndex = _td.index();
+                        const _caption = _td.closest("table").find("thead th").eq(_columnIndex).text().trim();
+                        callParentNew('showAlertDialog("error",' + _caption + ' cannot be left empty.)', 'function');
                         $(this).find("select").focus();
                         isErrorflag = false;
                         return false;
@@ -821,7 +833,12 @@ function AddTableData() {
                     if (typeof $(this).find("select").data("ad") != "undefined" && $(this).find("select").data("ad") == false && $(this).find("select").attr("value") != "") {
                         let _thisAd = $(this).find("select").attr('name') + "~" + $(this).find("select").attr("value") + "♠";
                         if (strAllowDuplicate.indexOf(_thisAd) > -1) {
-                            callParentNew('showAlertDialog("error",' + $(this).find("select").attr('id') + ' duplicate value not allowed.)', 'function');
+                            //callParentNew('showAlertDialog("error",' + $(this).find("select").attr('id') + ' duplicate value not allowed.)', 'function');
+                            const _thisInputDup = $(this).find("select");
+                            const _tdDup = _thisInputDup.closest("td");
+                            const _columnIndexDup = _tdDup.index();
+                            const _captionDup = _tdDup.closest("table").find("thead th").eq(_columnIndexDup).text().trim();
+                            callParentNew('showAlertDialog("error",' + _captionDup + ' duplicate value not allowed.)', 'function');
                             $(this).find("select").focus();
                             isErrorflag = false;
                             return false;
@@ -833,7 +850,14 @@ function AddTableData() {
                 }
                 else if ($(this).find("input:text").length > 0) {
                     if (typeof $(this).find("input").data("ae") != "undefined" && $(this).find("input").data("ae") == false && $(this).find("input").attr("value") == "") {
-                        callParentNew('showAlertDialog("error",' + $(this).find("input").attr('id') + ' cannot be left empty.)', 'function');
+                        //callParentNew('showAlertDialog("error",' + $(this).find("input").attr('id') + ' cannot be left empty.)', 'function');
+
+                        const _thisInput = $(this).find("input");
+                        const _td = _thisInput.closest("td");
+                        const _columnIndex = _td.index();
+                        const _caption = _td.closest("table").find("thead th").eq(_columnIndex).text().trim();
+                        callParentNew('showAlertDialog("error",' + _caption + ' cannot be left empty.)', 'function');
+
                         $(this).find("input").focus();
                         isErrorflag = false;
                         return false;
@@ -841,7 +865,12 @@ function AddTableData() {
                     if (typeof $(this).find("input").data("ad") != "undefined" && $(this).find("input").data("ad") == false && $(this).find("input").attr("value") != "") {
                         let _thisAd = $(this).find("input").attr('name') + "~" + $(this).find("input").attr("value") + "♠";
                         if (strAllowDuplicate.indexOf(_thisAd) > -1) {
-                            callParentNew('showAlertDialog("error",' + $(this).find("input").attr('id') + ' duplicate value not allowed.)', 'function');
+                            //callParentNew('showAlertDialog("error",' + $(this).find("input").attr('id') + ' duplicate value not allowed.)', 'function');
+                            const _thisInputDup = $(this).find("input");
+                            const _tdDup = _thisInputDup.closest("td");
+                            const _columnIndexDup = _tdDup.index();
+                            const _captionDup = _tdDup.closest("table").find("thead th").eq(_columnIndexDup).text().trim();
+                            callParentNew('showAlertDialog("error",' + _captionDup + ' duplicate value not allowed.)', 'function');
                             $(this).find("select").focus();
                             isErrorflag = false;
                             return false;
@@ -1006,6 +1035,7 @@ function AddTableRows(thisTblId, isAddRowClk = '') {
                     let cellVal = String(parent.ChangedTblFieldVals[indx]).split('~');
                     cellVal[vRowNo] = _colValue;
                     parent.ChangedTblFieldVals[indx] = cellVal.join("~");
+                    MainBlur($("#" + _thisEleName), ($("#" + _thisEleName).is("select") ? "select" : "input"));
                 }
             }
         });

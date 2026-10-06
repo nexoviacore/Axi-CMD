@@ -36,7 +36,7 @@ public partial class aspx_EntityForm : System.Web.UI.Page
 
     LogFile.Log logobj = new LogFile.Log();
     ASBExt.WebServiceExt objWebServiceExt = new ASBExt.WebServiceExt();
-    public string structXml = string.Empty;
+    //public string structXml = string.Empty;
     public Custom customObj = null;
     string actstr = " act='load' ";
     string actstrType = "load";
@@ -189,7 +189,7 @@ public partial class aspx_EntityForm : System.Web.UI.Page
         strObj = GetStrObject(cacheMgr);
         if (strObj == null)
             return "";
-        structXml = strObj.structRes;
+        //structXml = strObj.structRes;
 
         string visibleDCs = string.Empty;
         visibleDCs = strObj.GetVisibleDCs();
@@ -669,9 +669,12 @@ public partial class aspx_EntityForm : System.Web.UI.Page
         {
             string language = HttpContext.Current.Session["language"].ToString();
             strObj = cacheMgr.GetStructDef(proj, sid, user, transId, AxRole);
-            //isTstCustomHtml = strObj.IsObjCustomHtml;
-            //requestProcess_logtime += cacheMgr.requestProcess_log;
-            //ClearDcHasDataRows(strObj);
+            if (strObj != null)
+            {
+                FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+                string thisStructXML = fObj.StringFromRedis(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transId));
+                strObj.structRes = thisStructXML;
+            }
         }
         catch (Exception ex)
         {

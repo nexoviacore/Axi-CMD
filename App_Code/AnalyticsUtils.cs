@@ -11,6 +11,7 @@ using System.Xml.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StackExchange.Redis;
+using iTextSharp.text;
 
 public class AnalyticsUtils
 {
@@ -193,6 +194,7 @@ public class AnalyticsUtils
                         sessionValues.Add("APPNAME", project);
                         sessionValues.Add("SCHEMANAME", schemaName);
                         sessionValues.Add("GLOBALVARS", JsonConvert.SerializeObject(GetGlobalParams()));
+                        sessionValues.Add("USERVARS", JsonConvert.SerializeObject(GetUserVars()));
                         sessionValues.Add("LANGUAGE", HttpContext.Current.Session["language"].ToString());
 
                         FDW objFDW = new FDW();
@@ -241,6 +243,22 @@ public class AnalyticsUtils
                 globalParams.Add(key, value);
             }
 
+            string _value = HttpContext.Current.Session["ARM_SessionId"] != null ? HttpContext.Current.Session["ARM_SessionId"].ToString() : string.Empty;
+            globalParams["ARM_SessionId"] = _value;
+            var node = root.Element("ARM_SessionId");
+            if (node != null)
+                node.Value = _value;
+            else
+                root.Add(new XElement("ARM_SessionId", _value));
+
+            string _value_token = HttpContext.Current.Session["ARM_Token"] != null ? HttpContext.Current.Session["ARM_Token"].ToString() : string.Empty;
+            globalParams["ARM_Token"] = _value_token;
+            node = root.Element("ARM_Token");
+            if (node != null)
+                node.Value = _value_token;
+            else
+                root.Add(new XElement("ARM_Token", _value_token));
+            HttpContext.Current.Session["axGlobalVars"] = root.ToString();
             HttpContext.Current.Session["axGlobalVarsJson"] = JsonConvert.SerializeObject(globalParams);
         }
         else
@@ -250,6 +268,38 @@ public class AnalyticsUtils
         }
 
         return globalParams;
+    }
+
+    public Dictionary<string, string> GetUserVars()
+    {
+        Dictionary<string, string> userVars = new Dictionary<string, string>();
+        if (HttpContext.Current.Session["axUserVarsJson"] == null)
+        {
+            string xml = HttpContext.Current.Session["axUserVars"].ToString();
+
+            XElement root = XElement.Parse(xml);
+
+            foreach (XElement element in root.Elements())
+            {
+                string key = element.Name.LocalName;
+                if (userVars.ContainsKey(key))
+                {
+                    userVars.Remove(key);
+                }
+
+                string value = element.Value;
+                userVars.Add(key, value);
+            }
+
+            HttpContext.Current.Session["axUserVarsJson"] = JsonConvert.SerializeObject(userVars);
+        }
+        else
+        {
+            string json = (string)HttpContext.Current.Session["axUserVarsJson"];
+            userVars = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+        }
+
+        return userVars;
     }
 
 

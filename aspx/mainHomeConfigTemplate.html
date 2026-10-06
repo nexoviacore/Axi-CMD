@@ -418,6 +418,25 @@ Home Cunfiguration Page Templete
                             <!--end::Search-->
                             <!--begin::Toolbar wrapper-->
                             <div class="d-flex align-items-stretch flex-shrink-0">
+                                <!--begin::Application Parameter Section when the axi cmd is enabled -->
+                                <div class="Application_Parameter-Section axi-cmd-param-section d-flex align-items-center me-1 d-none">
+                                    <div class="Application_Parameter_Wrapper">
+                                    </div>
+                                    <button type="button"
+                                        class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary tb-btn btn-sm"
+                                        title="" onclick="" data-kt-menu-trigger="{default:'click', lg: 'hover'}"
+                                        data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+                                        <span class="material-icons material-icons-style material-icons-2">more_horiz</span>
+                                    </button>
+                                    <!--begin::Menu-->
+                                    <div id="AppGlobalParams"
+                                        class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-title-gray-700 menu-icon-gray-500 menu-active-bg menu-state-color fw-semibold py-4 fs-base w-150px"
+                                        data-kt-menu="true" data-kt-element="theme-mode-menu">
+
+                                    </div>
+                                    <!--end::Menu-->
+                                </div>
+                                <!--end::Application Parameter Section-->
                                 <!--begin::License Info-->
                                 <div id="LicInfo" class="d-flex align-items-center ms-1 ms-lg-2">
                                     <!--begin::Menu wrapper-->
@@ -707,13 +726,13 @@ Home Cunfiguration Page Templete
                                                     </a>
                                                 </div>
 
-                                                <div id="CustomPages" class="col-md-3 col-sm-6 col-6">
+                                                <!--<div id="CustomPages" class="col-md-3 col-sm-6 col-6">
                                                     <a href="javascript:void(0);" onclick='openDeveloperStudio("ihplist");' title="Custom Pages" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/custom-pages.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Custom Pages</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">HTML</span>
                                                     </a>
-                                                </div>
+                                                </div>-->
 
                                                 <div id="ADS" class="col-md-3 col-sm-6 col-6">
                                                     <a href="javascript:void(0);" onclick='openDeveloperStudio("icsqlist");' title="Axpert Data Sources" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
@@ -1062,7 +1081,7 @@ Home Cunfiguration Page Templete
                         <!--end::Topbar-->
                     </div>
                     <!--end::Container-->
-                    <div class="Application_Parameter-Section">
+                    <div class="Application_Parameter-Section product-param-section">
                         <div class="Application_Parameter_Wrapper">
                         </div>
                         <button type="button"
@@ -1081,6 +1100,201 @@ Home Cunfiguration Page Templete
 
                 </div>
                 <!--end::Header-->
+                <!--Begin::Axi CMD line div -->
+                <div class="DvAxiCMD d-none" id="DvAxiCMD">
+                    <!--Should add here Axi CMD html -->
+                    <!-- begin: Axi Popup IFrame (hidden container used for iframe loaders) -->
+                    <iframe id="hiddenLoader" style="display:none;"></iframe>
+                    <!-- end: Axi Popup IFrame -->
+                    <!-- begin: Axi Favourites Add Modal -->
+                    <div id="axiFavModalOverlay" class="axi-modal-overlay" style="display: none;">
+                        <div class="axi-modal-container">
+                            <h4 class="axi-modal-title">Save to Favorites</h4>
+                            <label class="axi-modal-label">Name your favorite:</label>
+                            <input type="text" id="axiFavNameInput" class="axi-modal-input" autocomplete="off" />
+                            <input type="hidden" id="axiFavOriginalCmd" />
+                            <input type="hidden" id="axiFavTargetUrl" class="d-none" />
+                            <input type="hidden" id="axiFavIsEdit" value="false" />
+                            <div class="axi-modal-actions">
+                                <button id="axiFavCancelBtn" class="axi-btn axi-btn-cancel">Cancel</button>
+                                <button id="axiFavSaveBtn" class="axi-btn axi-btn-save d-flex align-items-center justify-content-center">
+                                    <span class="axi-spinner d-none" id="axiFavSaveSpinner"></span>
+                                    <span class="axi-btn-text">Save</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end: Axi Favourites Add Modal -->
+                    <!-- begin: Axi Favourites Delete Alert Modal -->
+                    <div id="axiFavDeleteModalOverlay" class="axi-modal-overlay" style="display: none;">
+                        <div class="axi-modal-container">
+                            <h4 class="axi-modal-title" style="color: #ef4444;">Delete Favourite</h4>
+                            <p id="axiDeleteModalParagraph" style="font-size: 14px; color: #4b5563; margin-bottom: 20px;">
+                            </p>
+                            <input type="hidden" id="axiFavDeleteCmd" />
+                            <div class="axi-modal-actions">
+                                <button id="axiFavDeleteCancelBtn" class="axi-btn axi-btn-cancel">Cancel</button>
+                                <button id="axiFavDeleteConfirmBtn" class="axi-btn axi-btn-danger d-flex align-items-center justify-content-center">
+                                    <span class="axi-spinner d-none" id="axiFavDeleteSpinner"></span>
+                                    <span class="axi-btn-text">Delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end: Axi Favourites Delete Alert  Modal -->
+                    <!--begin: Axi Command Pallete-->
+                    <div class="AXI-Sec">
+                        <div class="searchwrap-AXI">
+                            <label id="axiLogo" class="AXI-Logo">
+                                <img src="../AxpertPlugins/AxiCMD/images/axi-logo.png" alt="axi logo">
+                                cmd
+                            </label>
+                            <input type="text" class="search-input form-control form-control-transparent ps-8" name="search"
+                                   value="" data-kt-search-element="input" placeholder="Axpert AI" id="Axi-Searchinp"
+                                   autocomplete="off">
+                            <div id="axiHint" class="axi-input-hint"></div>
+                            <div id="axiClearBtn" class="clearbtn" style="display: none; cursor: pointer;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                     stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="Tkts-toolbar-Left">
+                            <div class="d-flex gap-1">
+                                <div class="d-flex-- align-items-stretch flex-shrink-0 gap-8">
+                                    <!--Run/Send Button-->
+                                    <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                         id="runBtn" data-kt-menu-placement="bottom" data-kt-menu-flip="top"
+                                         data-kt-menu-attach="parent" data-kt-menu-trigger="click">
+                                        <span class="material-icons material-icons-style material-icons-2"
+                                              data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                              title="Run">send</span>
+                                    </div>
+                                    <!-- Add to Favorites Button -->
+                                    <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                         id="axiAddFavoriteBtn" aria-label="Add to Favorites">
+                                        <span class="material-icons material-icons-style material-icons-2"
+                                              data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add to Favorites">bookmark_add</span>
+                                    </div>
+                                    <!-- View Favorites Button -->
+                                    <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                         id="axiViewFavoritesBtn" aria-label="View Favorites">
+                                        <span class="material-icons material-icons-style material-icons-2"
+                                              data-bs-toggle="tooltip" data-bs-placement="bottom" title="View Favorites">bookmarks</span>
+                                    </div>
+                                    <!--                                Previous Page Btn-->
+                                    <div id="btnHistoryPrev"
+                                         class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn d-none">
+                                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" title=""
+                                              class="material-icons material-icons-style material-icons-2 "
+                                              data-bs-original-title="Previous Page">keyboard_arrow_left</span>
+                                    </div>
+                                    <!--  Previous Page Btn-->
+                                    <!--  Next Page Btn-->
+                                    <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn d-none">
+                                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" title=""
+                                              class="material-icons material-icons-style material-icons-2 "
+                                              data-bs-original-title="Next Page">keyboard_arrow_right</span>
+                                    </div>
+                                    <!--  Next Page Btn-->
+                                    <!--  History Pages Btn-->
+                                    <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm d-none"
+                                         id="History_pages" data-kt-menu-placement="bottom" data-kt-menu-flip="top"
+                                         data-kt-menu-attach="parent">
+                                        <span class="material-icons material-icons-style material-icons-2 "
+                                              data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                              title="History">restore</span>
+                                    </div>
+                                    <!--  History Pages Btn-->
+                                    <!--begin::My Favourites-->
+                                    <div class="d-flex align-items-center " id="My_Fav_Bookmarks">
+                                        <!--begin::Menu wrapper-->
+                                        <div id="axiFavouriteBtn"
+                                             class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm">
+                                            <span class="material-icons material-icons-style material-icons-2 "
+                                                  data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                                  data-bs-original-title="My Favourites" title="My Favourites">
+                                                bookmark_star
+                                            </span>
+                                        </div>
+                                        <!--begin::My Favourite popout-->
+                                        <div id="axiMegaDropdown" data-kt-menu="true"
+                                             class="menu menu-sub menu-sub-dropdown menu-column z-3"
+                                             style="display: none; position: absolute; bottom: 100%; left: 100px; width: 950px !important; max-width: calc(100vw - 120px) !important;">
+                                            <!--begin::Card-->
+                                            <div id="axiFavouritesCard" class="card">
+                                                <!--begin::Card header-->
+                                                <div class="card-header">
+                                                    <h3 class="card-title">
+                                                        My Favorites
+                                                        <span id="axiFavoriteCount"
+                                                              class="badge badge-light-success fs-7 fw-500 ms-3"></span>
+                                                    </h3>
+                                                    <!-- <a href="#">View All</a> -->
+                                                </div>
+                                                <!--end::Card header-->
+                                                <!--begin::Card body-->
+                                                <div class="card-body p-0">
+                                                    <div class="axi-fav-search-container" id="axiFavFilterContainer">
+                                                        <div class="axi-fav-search-wrapper">
+                                                            <span class="axi-fav-search-icon material-icons">search</span>
+                                                            <input type="text"
+                                                                   id="axiFavFilterInput"
+                                                                   class="axi-fav-search-input"
+                                                                   placeholder="Search favorites..."
+                                                                   autocomplete="off">
+                                                        </div>
+                                                    </div>
+                                                    <!--begin::Notifications-->
+                                                    <div class="scroll-y My-Fav-Items-Wrapper">
+                                                    </div>
+                                                    <!--end::Notifications-->
+                                                </div>
+                                                <!--end::Card header-->
+                                            </div>
+                                            <div class="card">
+                                                <div class="card-header" id="axiCommandsHeader">
+                                                    <h3 class="card-title">Commands</h3>
+                                                </div>
+                                                <div class="card-body p-0">
+                                                    <div class="My-Command-Wrapper">
+                                                        <ul id="axiSuggestions" class="axi-suggestions"></ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--end::My Favourite popout--> <!--end::Menu wrapper-->
+                                    </div>
+                                    <!--end::Favourites-->
+                                    <!--Enhance Button-->
+                                    <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm enhance-btn d-none">
+                                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" title="Enhance">âœ¨</span>
+                                    </div>
+                                    <!--Refresh Button-->
+                                    <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                         id="btnRefresh" data-kt-menu-placement="bottom" data-kt-menu-flip="top"
+                                         data-kt-menu-attach="parent">
+                                        <span class="material-icons material-icons-style material-icons-2 axi-refresh-icon"
+                                              data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                              title="Refresh">refresh</span>
+                                    </div>
+                                    <!--Notification Button-->
+                                    <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm selectbtn d-none"
+                                         data-kt-menu-placement="bottom" data-kt-menu-flip="top"
+                                         data-kt-menu-attach="parent">
+                                        <span class="material-icons material-icons-style material-icons-2 initialized"
+                                              data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                              data-bs-original-title="Notify" title="Notify">notifications_active</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--end: Axi Command Pallete-->
+                </div>
+                <!--end::Axi CMD line div-->
                 <!--begin::Content-->
                 <div class="content fs-6 d-flex flex-column flex-column-fluid px-3 pt-5 pb-2">
                     <!-- <div class="btn btn-icon btn-sm position-absolute ms-n20 mt-2 fw-bolder z-index-2 transform-270 appBackBtn" onclick="prevbtn_click($(this))">
@@ -1256,7 +1470,7 @@ Home Cunfiguration Page Templete
     files.js.push("/Js/handlebars.min.js?v=2");
     files.js.push("/Js/handleBarsHelpers.min.js");
     if (homePageType == "cards") {
-        files.js.push("/Js/AxInterface.min.js?v=21");//min
+        files.js.push("/Js/AxInterface.min.js?v=23");//min
         files.js.push("/ThirdParty/Highcharts/highcharts.js");
         files.js.push("/ThirdParty/Highcharts/highcharts-3d.js");
         files.js.push("/ThirdParty/Highcharts/highcharts-more.js");
@@ -1290,10 +1504,48 @@ Home Cunfiguration Page Templete
     files.css.push("/Css/AxNotifications.min.css?v=2");
     files.css.push("/Css/HomeConfigPageCards.min.css?v=12");
     files.js.push("/Js/signalr.min.js");
-    files.js.push("/Js/axpertUI_homecards.min.js?v=29");
+    files.js.push("/Js/axpertUI_homecards.min.js?v=30");
     files.js.push("/Js/AxNotifications.min.js?v=16");
     files.js.push("/Js/HomeConfigPageCards.min.js?v=15");
     files.js.push("/Js/Entity-common.min.js?v=18");
+
+    var isAxiCMDEnabled = typeof axicmdEnabled !== 'undefined' && axicmdEnabled !== false && axicmdEnabled !== 'false';
+    if (isAxiCMDEnabled) {
+        let _appUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        var axiCmdJs = _appUrl + "/AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js?v=1";
+        var axiCmdCss = _appUrl + "/AxpertPlugins/AxiCMD/HTMLPages/css/axicmdmain.css?v=1";
+        function checkFileExists(url) {
+            var fileExists = false;
+            $.ajax({
+                url: url,
+                type: "GET",
+                async: false,
+                cache: false,
+                success: function (data, textStatus, xhr) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        fileExists = true;
+                    }
+                },
+                error: function (xhr) {
+                    fileExists = false;
+                }
+            });
+            if (!fileExists) {
+                throw new Error("File not found: " + url);
+            }
+        }
+        try {
+            checkFileExists(axiCmdJs);
+            checkFileExists(axiCmdCss);
+            files.js.push(axiCmdJs);
+            files.css.push(axiCmdCss);
+        }
+        catch (ex) {
+            isAxiCMDEnabled = false;
+            console.log("AxiCMD files not available. AxiCMD disabled.");
+        }
+    }
+
     var dirLeft = true;
 
     if ($("body").hasClass("btextDir-rtl")) {
@@ -1305,7 +1557,14 @@ Home Cunfiguration Page Templete
         callBack: function () {
             $("body").addClass("mixed-theme");
             renderTemplete('template.templateContent');
-
+            if (!isAxiCMDEnabled) {
+                $("#DvAxiCMD").remove();
+                $(".axi-cmd-param-section").remove();
+            } else {
+                $("#DvAxiCMD").removeClass('d-none');
+                $(".product-param-section").remove();
+                $(".axi-cmd-param-section").removeClass('d-none');
+            }
             $(function () {
                 KTDrawer.init();
                 KTMenu.init();
@@ -1725,18 +1984,18 @@ Home Cunfiguration Page Templete
                                         title: lcm[398],
                                     },
 
-                                    CustomPages: {
-                                        div: "#CustomPages",
-                                        atitle: lcm[549].split(" ")[0] + " " + lcm[549].split(" ")[1],
-                                        title: {
-                                            div: ".divTitle",
-                                            title: lcm[549].split(" ")[0] + " " + lcm[549].split(" ")[1]
-                                        },
-                                        subTitle: {
-                                            div: ".divSubTitle",
-                                            title: lcm[549].split(" ")[2]
-                                        }
-                                    },
+                                    //CustomPages: {
+                                    //    div: "#CustomPages",
+                                    //    atitle: lcm[549].split(" ")[0] + " " + lcm[549].split(" ")[1],
+                                    //    title: {
+                                    //        div: ".divTitle",
+                                    //        title: lcm[549].split(" ")[0] + " " + lcm[549].split(" ")[1]
+                                    //    },
+                                    //    subTitle: {
+                                    //        div: ".divSubTitle",
+                                    //        title: lcm[549].split(" ")[2]
+                                    //    }
+                                    //},
 
                                     pluginCustomCode: {
                                         div: "#pluginCustomCode",
