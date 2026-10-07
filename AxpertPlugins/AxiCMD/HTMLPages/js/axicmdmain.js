@@ -590,6 +590,7 @@ if (typeof document !== "undefined") {
     let activeFetches = new Set();
     let failedFetches = new Set();
     let filteredObjects = [];
+    let dynamicSearchDebounceTimer = null;
     let adsfieldvalueanddt = {};
     let createfieldnamevaluesList = {};
     let AxiArmUrl;
@@ -1189,25 +1190,67 @@ if (typeof document !== "undefined") {
      * @async
      * @param {string} sourceName - Source definition name.
      * @param {string} [paramValue=""] - Optional parameter filter value.
+     * @param {string} [searchTerm=""] - Optional search query string (minimum 3 chars for dynamic search).
+     * @param {number} [pageNo=1] - Page number to fetch.
+     * @param {number} [pageSize=100] - Number of records per page (default 100).
      * @returns {Promise<Array<object>>} List of suggestion items.
      */
-    async function loadList(sourceName, paramValue = "") {
+    async function loadList(sourceName, paramValue = "", searchTerm = "", pageNo = 1, pageSize = 100) {
         if (!axicmdenabled || sourceName === "axi_dummy") {
-            return;
+            return [];
         }
-        const key = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
-        if (activeFetches.has(key) || failedFetches.has(key)) return;
-        activeFetches.add(key);
+        const baseKey = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
+        const cleanTerm = (typeof searchTerm === "string" ? searchTerm : "").trim().toLowerCase();
+        const fetchKey = cleanTerm ? `${baseKey}_q_${cleanTerm}` : baseKey;
+
+        if (activeFetches.has(fetchKey) || failedFetches.has(fetchKey)) return axDatasourceObj[fetchKey] || [];
+        activeFetches.add(fetchKey);
 
         try {
-            const data = await getList(sourceName, paramValue);
-            axDatasourceObj[key] = Array.isArray(data) ? data : (data ? [data] : []);
+            // For metadata list (axi_structmetalist), fetch all records (pageSize = 0).
+            // For form records (e.g. axi_getstructsdata) or large datasets, use initial 100 records or requested pageSize.
+            const effectivePageSize = (sourceName.toLowerCase() === "axi_structmetalist") ? 0 : (pageSize || 100);
+            const data = await getList(sourceName, paramValue, cleanTerm, pageNo, effectivePageSize);
+            const list = Array.isArray(data) ? data : (data ? [data] : []);
+            axDatasourceObj[fetchKey] = list;
+
+            // When dynamic search returns records, merge them into the base list in memory
+            // so token resolvers, command runners, and storage lookups can find any selected record.
+            if (cleanTerm && list.length > 0) {
+                if (!axDatasourceObj[baseKey] || !Array.isArray(axDatasourceObj[baseKey])) {
+                    axDatasourceObj[baseKey] = [];
+                }
+                const existing = axDatasourceObj[baseKey];
+                const seenIds = new Set();
+                for (let i = 0; i < existing.length; i++) {
+                    const item = existing[i];
+                    const uid = item?.transrecordid ?? item?.id ?? item?.displaydata ?? item?.name;
+                    if (uid !== undefined && uid !== null) {
+                        seenIds.add(String(uid).toLowerCase());
+                    }
+                }
+                for (let i = 0; i < list.length; i++) {
+                    const item = list[i];
+                    const uid = item?.transrecordid ?? item?.id ?? item?.displaydata ?? item?.name;
+                    if (uid !== undefined && uid !== null) {
+                        const key = String(uid).toLowerCase();
+                        if (!seenIds.has(key)) {
+                            seenIds.add(key);
+                            existing.push(item);
+                        }
+                    } else {
+                        existing.push(item);
+                    }
+                }
+            }
+            return list;
         } catch (error) {
-            failedFetches.add(key);
-            axDatasourceObj[key] = [];
+            failedFetches.add(fetchKey);
+            axDatasourceObj[fetchKey] = [];
             // console.error("loadlist failed", error);
+            return [];
         } finally {
-            activeFetches.delete(key);
+            activeFetches.delete(fetchKey);
             if (!isInitialLoad && document.activeElement === input) {
                 handleInput();
             }
@@ -4697,7 +4740,38 @@ if (typeof document !== "undefined") {
             }
 
             // Filter Cache
+            const isDynamicSource = (apiSourceName.toLowerCase() === "axi_getstructsdata" || apiSourceName.toLowerCase() === "axi_viewlist");
+            const cleanSearch = (partialTyped || "").trim().toLowerCase();
             let dataList = axDatasourceObj[sourceKey] || [];
+
+            if (isDynamicSource) {
+                if (cleanSearch.length >= 3) {
+                    const searchKey = `${sourceKey}_q_${cleanSearch}`;
+                    if (axDatasourceObj[searchKey] !== undefined) {
+                        dataList = axDatasourceObj[searchKey];
+                    } else {
+                        clearTimeout(dynamicSearchDebounceTimer);
+                        dynamicSearchDebounceTimer = setTimeout(() => {
+                            loadList(apiSourceName, paramValue, cleanSearch, 1, 100);
+                        }, 250);
+
+                        const localMatches = dataList.filter(item => {
+                            const display = item.displaydata || item.caption || item.name || "";
+                            return display.toLowerCase().includes(cleanSearch);
+                        });
+
+                        if (localMatches.length > 0) {
+                            dataList = localMatches;
+                        } else {
+                            filteredObjects = [];
+                            return ["Searching..."];
+                        }
+                    }
+                } else {
+                    clearTimeout(dynamicSearchDebounceTimer);
+                }
+            }
+
             const currentAccessPerms = getAccessPermissions();
             if (groupKey.toLowerCase() === "sdk" && currentAccessPerms?.buildAccess && tokens.length >= 2) {
                 const targetToken = cleanCommandToken(tokens[1])?.toLowerCase().trim();
@@ -4716,6 +4790,14 @@ if (typeof document !== "undefined") {
 
             ///added to restrict user by typing only the listed values from the list(if they type other than that we prompt them again with the default list added - 18-3-2026(t))
             if (dataList.length > 0 && filtered.length === 0) {
+                if (isDynamicSource) {
+                    filteredObjects = [];
+                    if (cleanSearch.length < 3) {
+                        return ["Type at least 3 characters to search records..."];
+                    } else {
+                        return ["No matching records found"];
+                    }
+                }
 
                 // console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
                 showToast("Please select a valid option from the list.");
@@ -4729,6 +4811,9 @@ if (typeof document !== "undefined") {
                 input.value = dummyTokens.join(" ");
 
                 filtered = [...dataList];
+            } else if (isDynamicSource && filtered.length === 0 && cleanSearch.length >= 3) {
+                filteredObjects = [];
+                return ["No matching records found"];
             }
 
 
@@ -5510,7 +5595,18 @@ if (typeof document !== "undefined") {
 
             let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
 
-            const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
+            let cachedList = axDatasourceObj[cacheKey.toLowerCase()];
+            if (!cachedList) {
+                for (const k in axDatasourceObj) {
+                    if (k.startsWith(cacheKey.toLowerCase())) {
+                        const sub = axDatasourceObj[k];
+                        if (Array.isArray(sub) && sub.length > 0) {
+                            cachedList = sub;
+                            break;
+                        }
+                    }
+                }
+            }
             if (cachedList) {
                 // Find matching items
                 const matches = cachedList.filter(item =>
@@ -5636,7 +5732,7 @@ if (typeof document !== "undefined") {
         const validItems = items.filter(item => {
             if (!item) return false;
             if (typeof item === "string") {
-                return (item !== "Loading options..." && item.trim() !== "");
+                return (item !== "Loading options..." && !item.startsWith("Fetching") && !item.startsWith("Searching") && item.trim() !== "");
             }
             if (typeof item === "object") {
                 return (typeof item.displaydata === "string" && item.displaydata.trim() !== "");
@@ -5693,7 +5789,7 @@ if (typeof document !== "undefined") {
 
         const isAnyLoadingItem = items.some(item => {
             const text = typeof item === "string" ? item : (item?.displaydata || "");
-            return typeof text === "string" && text.startsWith("Loading");
+            return typeof text === "string" && (text.startsWith("Loading") || text.startsWith("Searching") || text.startsWith("Fetching"));
         });
         const isAnyFetchActive = activeFetches.size > 0 || isCmdsLoading || isStructsLoading || isAnyLoadingItem;
 
@@ -5716,9 +5812,10 @@ if (typeof document !== "undefined") {
                 li.className = "axi-suggestion-loading d-flex align-items-center justify-content-center py-3 px-4 text-muted gap-2";
                 li.style.fontSize = "13px";
                 li.style.textAlign = "center";
+                const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || "Loading options...";
                 li.innerHTML = `
                     <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-right: 6px;"></span>
-                    <span>Loading options...</span>
+                    <span>${loadingText}</span>
                 `;
                 list.appendChild(li);
                 list.style.display = "block";
@@ -5757,7 +5854,13 @@ if (typeof document !== "undefined") {
 
             const isCreateNewItem = (typeof item === 'string' && item.toLowerCase() === 'create new') || (typeof item === 'object' && (item.isCreateNew || item?.name?.toLowerCase() === 'create new'));
 
-            if (isCreateNewItem) {
+            if (isSystemMessage(item)) {
+                li.classList.add("axi-suggestion-system-message");
+                li.style.cursor = "default";
+                li.style.color = "#6c757d";
+                li.style.fontStyle = "italic";
+                li.textContent = displayText;
+            } else if (isCreateNewItem) {
                 li.classList.add("axi-create-new-item");
                 li.textContent = displayText;
             } else if (typeof item === 'object' && item.isExecutable) {
@@ -5962,11 +6065,11 @@ if (typeof document !== "undefined") {
         const validItems = items.filter(item => {
             if (!item) return false;
             if (typeof item === "string") {
-                return (!item.startsWith("Loading") && item !== "No Data" && item.trim() !== "");
+                return (!item.startsWith("Loading") && !item.startsWith("Searching") && !item.startsWith("Fetching") && !item.startsWith("Type at least") && !item.startsWith("No matching") && item !== "No Data" && item.trim() !== "");
             }
             if (typeof item === "object") {
                 const text = item.displaydata || item.name || "";
-                return (typeof text === "string" && !text.startsWith("Loading") && text !== "No Data" && text.trim() !== "");
+                return (typeof text === "string" && !text.startsWith("Loading") && !text.startsWith("Searching") && !text.startsWith("Fetching") && !text.startsWith("Type at least") && !text.startsWith("No matching") && text !== "No Data" && text.trim() !== "");
             }
             return false;
         });
@@ -6338,12 +6441,16 @@ if (typeof document !== "undefined") {
 
     /**
      * Fetches dataset for specified Axpert data source name and parameters.
+     * Supports pagination and dynamic server-side search filtering.
      * @async
      * @param {string} axDatasourceName - Name of the Axpert data source.
-     * @param {string} [paramValuesCsv=""] - Comma-separated parameter values.
+     * @param {string} [paramValuesCsv=""] - Comma-separated or delimiter-separated parameter values.
+     * @param {string} [searchTerm=""] - Dynamic search filter term.
+     * @param {number} [pageNo=1] - Page number (1-based).
+     * @param {number} [pageSize=100] - Records per page (0 to fetch all, or limit like 100).
      * @returns {Promise<Array<object>>} Dataset rows.
      */
-    async function getList(axDatasourceName, paramValuesCsv = "") {
+    async function getList(axDatasourceName, paramValuesCsv = "", searchTerm = "", pageNo = 1, pageSize = 100) {
         if (!axicmdenabled) return [];
         try {
             //await ensureSignedIn();
@@ -6359,10 +6466,6 @@ if (typeof document !== "undefined") {
 
 
             if (paramValuesCsv && typeof paramValuesCsv === "string") {
-                //const values = paramValuesCsv
-                //    .split(",")
-                //    .map(v => v.trim())
-                //    .filter(Boolean);
                 const values = paramValuesCsv
                     .split("$#$")
                     .map(v => v.trim())
@@ -6375,24 +6478,46 @@ if (typeof document !== "undefined") {
                 });
             }
 
+            const cleanTerm = (typeof searchTerm === "string" ? searchTerm : "").trim().toLowerCase();
+
             // ---- Stable cache key ----
-            const cacheKey = `axi_${axDatasourceName}_${normalizedParams.join("|")}_v1`;
+            let cacheKey = `axi_${axDatasourceName}_${normalizedParams.join("|")}`;
+            if (cleanTerm) {
+                cacheKey += `_q_${cleanTerm}`;
+            }
+            cacheKey += `_v1`;
 
             const cached = localStorage.getItem(cacheKey);
             if (cached) {
                 return JSON.parse(cached);
             }
 
+            const effectivePageSize = (typeof pageSize === "number") ? pageSize : 100;
             const requestBody = {
-
                 action: "view",
                 adsNames: [axDatasourceName],
                 trace: true,
                 refreshCache: true,
-                sqlParams: sqlParams
+                sqlParams: sqlParams,
+                props: {
+                    ADS: true,
+                    CachePermissions: true,
+                    getallrecordscount: false,
+                    pageno: pageNo || 1,
+                    pagesize: effectivePageSize
+                }
             };
 
-
+            if (cleanTerm && cleanTerm.length >= 3) {
+                requestBody.props.filters = [
+                    {
+                        fldname: "displaydata",
+                        condition: "CONTAINS",
+                        value: cleanTerm,
+                        datatype: "TEXT"
+                    }
+                ];
+            }
 
             const res = await getAxListAsync(requestBody);
 
@@ -6423,13 +6548,17 @@ if (typeof document !== "undefined") {
             if (dataObj?.result?.data?.[0]?.error) {
                 showToast(`Error: ${dataObj?.result?.data?.[0]?.error}`);
                 // console.log(`Error: ${dataObj?.result?.data?.[0]?.error}`);
-                return;
+                return [];
             }
 
 
             if (list.length > 0) {
                 // console.log("Get List Cache Key: " + cacheKey);
-                localStorage.setItem(cacheKey, JSON.stringify(list));
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify(list));
+                } catch (storageErr) {
+                    // Safe handling if localStorage quota is exceeded
+                }
             } else {
                 // console.log(`List Data for Ads name ${axDatasourceName} is Empty`);
             }
@@ -7993,7 +8122,31 @@ if (typeof document !== "undefined") {
         const lowTransId = transId.toLowerCase().trim();
         const lowFieldName = (fieldName || "").toLowerCase().trim();
 
-        // 1. Search localStorage for matching axi_getstructsdata key
+        // 1. Check in-memory axDatasourceObj first (contains initial and all dynamically fetched records)
+        if (typeof axDatasourceObj === "object" && axDatasourceObj) {
+            for (const key in axDatasourceObj) {
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
+                    if (!lowFieldName || lowKey.includes(lowFieldName)) {
+                        const list = axDatasourceObj[key];
+                        if (Array.isArray(list) && list.length > 0) {
+                            return list;
+                        }
+                    }
+                }
+            }
+            for (const key in axDatasourceObj) {
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
+                    const list = axDatasourceObj[key];
+                    if (Array.isArray(list) && list.length > 0) {
+                        return list;
+                    }
+                }
+            }
+        }
+
+        // 2. Search localStorage for matching axi_getstructsdata key
         try {
             // Priority 1: Key matching both transId (param4) and fieldName (param8)
             for (let i = 0; i < localStorage.length; i++) {
@@ -8047,30 +8200,6 @@ if (typeof document !== "undefined") {
                 }
             }
         } catch (e) { }
-
-        // 2. Fallback to in-memory axDatasourceObj
-        if (typeof axDatasourceObj === "object" && axDatasourceObj) {
-            for (const key in axDatasourceObj) {
-                const lowKey = key.toLowerCase();
-                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
-                    if (!lowFieldName || lowKey.includes(lowFieldName)) {
-                        const list = axDatasourceObj[key];
-                        if (Array.isArray(list) && list.length > 0) {
-                            return list;
-                        }
-                    }
-                }
-            }
-            for (const key in axDatasourceObj) {
-                const lowKey = key.toLowerCase();
-                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
-                    const list = axDatasourceObj[key];
-                    if (Array.isArray(list) && list.length > 0) {
-                        return list;
-                    }
-                }
-            }
-        }
 
         return [];
     }
@@ -11440,6 +11569,9 @@ if (typeof document !== "undefined") {
             text.startsWith("Waiting") ||
             text.startsWith("Error") ||
             text.startsWith("Fetching") ||
+            text.startsWith("Searching") ||
+            text.startsWith("Type at least") ||
+            text.startsWith("No matching") ||
             text === "No Data" ||
             text === "Please type the value..." ||
             text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
