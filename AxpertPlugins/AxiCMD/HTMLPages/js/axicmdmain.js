@@ -4819,13 +4819,13 @@ if (typeof document !== "undefined") {
                         dataList = axDatasourceObj[searchKey];
                         console.log("%c[AxiCMD Debounce] Found cached results for term. Count:", "color: #16a34a;", dataList.length);
                     } else {
-                        console.log(`%c[AxiCMD Debounce] Scheduling 250ms debounce ADS call for '${cleanSearch}'...`, "color: #e11d48; font-weight: bold;");
+                        console.log(`%c[AxiCMD Debounce] Scheduling 300ms debounce ADS call for '${cleanSearch}'...`, "color: #e11d48; font-weight: bold;");
                         clearTimeout(dynamicSearchDebounceTimer);
                         dynamicSearchDebounceTimer = setTimeout(() => {
                             console.log(`%c[AxiCMD Debounce] >>> TIMER FIRED! Calling loadList with search '${cleanSearch}' <<<`, "background: #7c3aed; color: #fff; padding: 2px 6px; border-radius: 2px; font-weight: bold;");
                             debugger; // <<< DEBUGGER STOP POINT: Debounce timer fired, about to call loadList >>>
                             loadList(apiSourceName, paramValue, cleanSearch, 1, 100);
-                        }, 250);
+                        }, 300);
 
                         const localMatches = dataList.filter(item => {
                             const display = item.displaydata || item.caption || item.name || "";
@@ -6420,6 +6420,20 @@ if (typeof document !== "undefined") {
         resolvedParams[targetIndex] = realValue;
         resolvedParamType[targetIndex] = realType;
 
+        if (typeof selectedItem === "object" && selectedItem) {
+            const recUid = selectedItem.transrecordid ?? selectedItem.id ?? selectedItem.name;
+            if (recUid !== undefined && recUid !== null) {
+                for (const key in axDatasourceObj) {
+                    if (key.toLowerCase().startsWith("axi_getstructsdata") && !key.includes("_q_")) {
+                        const baseArr = axDatasourceObj[key];
+                        if (Array.isArray(baseArr) && !baseArr.some(x => (x.transrecordid ?? x.id ?? x.name) == recUid)) {
+                            baseArr.push(selectedItem);
+                        }
+                    }
+                }
+            }
+        }
+
         displayName = displayName.replace(/[\r\n]+/g, " ").trim();
 
         if (["create", "view", "edit", "source"].includes(displayName.toLowerCase())) {
@@ -6554,6 +6568,23 @@ if (typeof document !== "undefined") {
             }
 
             const cleanTerm = (typeof searchTerm === "string" ? searchTerm : "").trim().toLowerCase();
+            const effectivePageSize = (typeof pageSize === "number") ? pageSize : 100;
+            const effectivePageNo = (typeof pageNo === "number") ? pageNo : 1;
+
+            if (axDatasourceName && axDatasourceName.toLowerCase().includes("getstructsdata")) {
+                if (!sqlParams.param11 || cleanTerm) {
+                    sqlParams.param11 = cleanTerm || "";
+                    normalizedParams.push(`param11:${sqlParams.param11}`);
+                }
+                if (!sqlParams.param12) {
+                    sqlParams.param12 = String(effectivePageNo);
+                    normalizedParams.push(`param12:${sqlParams.param12}`);
+                }
+                if (!sqlParams.param13) {
+                    sqlParams.param13 = String(effectivePageSize);
+                    normalizedParams.push(`param13:${sqlParams.param13}`);
+                }
+            }
 
             // ---- Stable cache key ----
             let cacheKey = `axi_${axDatasourceName}_${normalizedParams.join("|")}`;
@@ -6568,7 +6599,6 @@ if (typeof document !== "undefined") {
                 return JSON.parse(cached);
             }
 
-            const effectivePageSize = (typeof pageSize === "number") ? pageSize : 100;
             const requestBody = {
                 action: "view",
                 adsNames: [axDatasourceName],
@@ -6579,7 +6609,7 @@ if (typeof document !== "undefined") {
                     ADS: true,
                     CachePermissions: true,
                     getallrecordscount: false,
-                    pageno: pageNo || 1,
+                    pageno: effectivePageNo,
                     pagesize: effectivePageSize
                 }
             };
@@ -8202,6 +8232,130 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Clears cached query results for a transaction structure in memory and localStorage.
+     * @param {string} transId - Transaction structure ID (e.g. 'tmmsg').
+     * @returns {void}
+     */
+    function clearStructSearchCache(transId) {
+        if (!transId) return;
+        const lowTransId = transId.toLowerCase().trim();
+        if (typeof axDatasourceObj === "object" && axDatasourceObj) {
+            for (const key in axDatasourceObj) {
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
+                    delete axDatasourceObj[key];
+                }
+            }
+        }
+        try {
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.toLowerCase().includes("getstructsdata") && key.toLowerCase().includes(lowTransId)) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(k => localStorage.removeItem(k));
+        } catch (e) { }
+    }
+
+    if (typeof window !== "undefined") {
+        window.clearStructSearchCache = clearStructSearchCache;
+        window.axiClearStructCache = clearStructSearchCache;
+        try {
+            if (top && top !== window) {
+                top.axiClearStructCache = clearStructSearchCache;
+            }
+        } catch (e) { }
+    }
+
+    /**
+     * Matches a candidate token or record ID against a list of struct records.
+     * @param {Array<object>} structDataList - Candidate records.
+     * @param {string[]} candidates - Candidate string values.
+     * @returns {object|null} Matched record object or null.
+     */
+    function findMatchingRecordItem(structDataList, candidates) {
+        if (!Array.isArray(structDataList) || structDataList.length === 0 || !Array.isArray(candidates) || candidates.length === 0) return null;
+        let matched = null;
+
+        // 1. Match by transrecordid directly
+        for (const val of candidates) {
+            matched = structDataList.find(item => {
+                const transRecId = (item?.transrecordid ?? item?.TRANSRECORDID ?? "").toString().trim();
+                return transRecId !== "" && transRecId !== "0" && transRecId.toLowerCase() === val.toLowerCase();
+            });
+            if (matched) return matched;
+        }
+
+        // 2. Match by id directly
+        for (const val of candidates) {
+            matched = structDataList.find(item => {
+                const itemId = (item?.id ?? item?.ID ?? "").toString().trim();
+                return itemId !== "" && itemId !== "0" && itemId.toLowerCase() === val.toLowerCase();
+            });
+            if (matched) return matched;
+        }
+
+        // 3. Match exact displaydata, caption, or name (preferring actual records where isfield != 't')
+        for (const val of candidates) {
+            const cleanVal = cleanString(val).toLowerCase();
+            matched = structDataList.find(item => {
+                const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                if (isField) return false;
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
+                return display === cleanVal || caption === cleanVal || name === cleanVal;
+            }) || structDataList.find(item => {
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
+                return display === cleanVal || caption === cleanVal || name === cleanVal;
+            });
+            if (matched) return matched;
+        }
+
+        // 4. Match without bracketed text
+        for (const val of candidates) {
+            const cleanVal = cleanString(val).replace(/\[.*?\]/g, "").trim().toLowerCase();
+            if (!cleanVal) continue;
+            matched = structDataList.find(item => {
+                const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                if (isField) return false;
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                return display === cleanVal || caption === cleanVal;
+            }) || structDataList.find(item => {
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                return display === cleanVal || caption === cleanVal;
+            });
+            if (matched) return matched;
+        }
+
+        // 5. Substring match
+        for (const val of candidates) {
+            const cleanVal = cleanString(val).toLowerCase();
+            if (!cleanVal) continue;
+            matched = structDataList.find(item => {
+                const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                if (isField) return false;
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                return display.includes(cleanVal) || caption.includes(cleanVal);
+            }) || structDataList.find(item => {
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                return display.includes(cleanVal) || caption.includes(cleanVal);
+            });
+            if (matched) return matched;
+        }
+
+        return null;
+    }
+
+    /**
      * Retrieves cached struct data list for a transId and field from localStorage or axDatasourceObj.
      * @param {string} transId - Transaction structure ID.
      * @param {string} [fieldName=""] - Field name or keyfield.
@@ -8307,7 +8461,7 @@ if (typeof document !== "undefined") {
      * @param {object} [context.resolvedParams] - Resolved parameter map.
      * @returns {void}
      */
-    function handleEditData({ tokens, commandConfig, resolvedParams }) {
+    async function handleEditData({ tokens, commandConfig, resolvedParams }) {
 
         let rawStruct = cleanCommandToken(tokens[1]);
         // let transId = tryResolveToken(1, rawStruct, commandConfig, false);
@@ -8413,89 +8567,39 @@ if (typeof document !== "undefined") {
         const structDataList = getStructDataListFromStorage(transId, targetFieldName);
         let matchedItem = null;
 
+        const candidates = [fieldValue, fieldUniqueId, rawValue]
+            .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
+            .map(v => String(v).trim());
+
         if (Array.isArray(structDataList) && structDataList.length > 0) {
-            const candidates = [fieldValue, fieldUniqueId, rawValue]
-                .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
-                .map(v => String(v).trim());
+            matchedItem = findMatchingRecordItem(structDataList, candidates);
+        }
 
-            // 1. Match by transrecordid directly
-            for (const val of candidates) {
-                matchedItem = structDataList.find(item => {
-                    const transRecId = (item?.transrecordid ?? item?.TRANSRECORDID ?? "").toString().trim();
-                    return transRecId !== "" && transRecId !== "0" && transRecId.toLowerCase() === val.toLowerCase();
-                });
-                if (matchedItem) break;
-            }
+        const hasUserProvidedRecord = (tokens.length > 2 && candidates.length > 0);
 
-            // 2. Match by id directly
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    matchedItem = structDataList.find(item => {
-                        const itemId = (item?.id ?? item?.ID ?? "").toString().trim();
-                        return itemId !== "" && itemId !== "0" && itemId.toLowerCase() === val.toLowerCase();
-                    });
-                    if (matchedItem) break;
-                }
-            }
-
-            // 3. Match exact displaydata, caption, or name (preferring actual records where isfield != 't')
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    const cleanVal = cleanString(val).toLowerCase();
-                    matchedItem = structDataList.find(item => {
-                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
-                        if (isField) return false;
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
-                        return display === cleanVal || caption === cleanVal || name === cleanVal;
-                    }) || structDataList.find(item => {
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
-                        return display === cleanVal || caption === cleanVal || name === cleanVal;
-                    });
-                    if (matchedItem) break;
-                }
-            }
-
-            // 4. Match without bracketed text (e.g., "CBE [1446880000000]" vs "CBE")
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    const cleanVal = cleanString(val).replace(/\[.*?\]/g, "").trim().toLowerCase();
-                    if (!cleanVal) continue;
-                    matchedItem = structDataList.find(item => {
-                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
-                        if (isField) return false;
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        return display === cleanVal || caption === cleanVal;
-                    }) || structDataList.find(item => {
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        return display === cleanVal || caption === cleanVal;
-                    });
-                    if (matchedItem) break;
-                }
-            }
-
-            // 5. Substring match
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    const cleanVal = cleanString(val).toLowerCase();
-                    if (!cleanVal) continue;
-                    matchedItem = structDataList.find(item => {
-                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
-                        if (isField) return false;
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        return display.includes(cleanVal) || caption.includes(cleanVal);
-                    }) || structDataList.find(item => {
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        return display.includes(cleanVal) || caption.includes(cleanVal);
-                    });
-                    if (matchedItem) break;
+        // If record wasn't preloaded, perform on-demand server lookup
+        if (!matchedItem && hasUserProvidedRecord) {
+            const candidateSearch = cleanString(candidates[0] || rawValue || fieldValue).replace(/\[.*?\]/g, "").trim();
+            if (candidateSearch) {
+                try {
+                    const lookupParams = processParamforEditndView(tokens, commandConfig, transId, tokenIndex);
+                    if (lookupParams) {
+                        const fetchedResults = await getList("axi_getstructsdata", lookupParams, candidateSearch, 1, 50);
+                        if (Array.isArray(fetchedResults) && fetchedResults.length > 0) {
+                            matchedItem = findMatchingRecordItem(fetchedResults, candidates);
+                            if (matchedItem) {
+                                const baseKey = `axi_getstructsdata_${lookupParams}`.toLowerCase();
+                                if (!axDatasourceObj[baseKey]) axDatasourceObj[baseKey] = [];
+                                const existing = axDatasourceObj[baseKey];
+                                const recUid = matchedItem.transrecordid ?? matchedItem.id;
+                                if (!existing.some(x => (x.transrecordid ?? x.id) == recUid)) {
+                                    existing.push(matchedItem);
+                                }
+                            }
+                        }
+                    }
+                } catch (lookupErr) {
+                    console.warn("[AxiCMD] On-demand record resolution failed:", lookupErr);
                 }
             }
         }
@@ -8508,6 +8612,9 @@ if (typeof document !== "undefined") {
         } else if (!matchedItem && fieldValue && fieldValue.includes("[") && fieldValue.includes("]") && fieldUniqueId && fieldUniqueId !== "0" && fieldUniqueId !== fieldValue && /^\d+$/.test(fieldUniqueId)) {
             // Fallback: If item had bracketed numeric record ID from autocomplete
             redirectToTstructRecord(transId, rawStruct, fieldUniqueId);
+        } else if (hasUserProvidedRecord && !matchedItem) {
+            showToast(`Record '${rawValue || fieldValue}' not found in ${rawStruct}.`);
+            return;
         } else {
             redirectToTstruct(transId, rawStruct, true, targetFieldName, fieldUniqueId);
         }
@@ -9168,89 +9275,39 @@ if (typeof document !== "undefined") {
         const structDataList = getStructDataListFromStorage(transId, targetFieldName);
         let matchedItem = null;
 
+        const candidates = [fieldValue, fieldUniqueId, rawFieldValue]
+            .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
+            .map(v => String(v).trim());
+
         if (Array.isArray(structDataList) && structDataList.length > 0) {
-            const candidates = [fieldValue, fieldUniqueId, rawFieldValue]
-                .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
-                .map(v => String(v).trim());
+            matchedItem = findMatchingRecordItem(structDataList, candidates);
+        }
 
-            // 1. Match by transrecordid directly
-            for (const val of candidates) {
-                matchedItem = structDataList.find(item => {
-                    const transRecId = (item?.transrecordid ?? item?.TRANSRECORDID ?? "").toString().trim();
-                    return transRecId !== "" && transRecId !== "0" && transRecId.toLowerCase() === val.toLowerCase();
-                });
-                if (matchedItem) break;
-            }
+        const hasUserProvidedRecord = (tokens.length > 2 && candidates.length > 0);
 
-            // 2. Match by id directly
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    matchedItem = structDataList.find(item => {
-                        const itemId = (item?.id ?? item?.ID ?? "").toString().trim();
-                        return itemId !== "" && itemId !== "0" && itemId.toLowerCase() === val.toLowerCase();
-                    });
-                    if (matchedItem) break;
-                }
-            }
-
-            // 3. Match exact displaydata, caption, or name (preferring actual records where isfield != 't')
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    const cleanVal = cleanString(val).toLowerCase();
-                    matchedItem = structDataList.find(item => {
-                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
-                        if (isField) return false;
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
-                        return display === cleanVal || caption === cleanVal || name === cleanVal;
-                    }) || structDataList.find(item => {
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
-                        return display === cleanVal || caption === cleanVal || name === cleanVal;
-                    });
-                    if (matchedItem) break;
-                }
-            }
-
-            // 4. Match without bracketed text (e.g., "CBE [1446880000000]" vs "CBE")
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    const cleanVal = cleanString(val).replace(/\[.*?\]/g, "").trim().toLowerCase();
-                    if (!cleanVal) continue;
-                    matchedItem = structDataList.find(item => {
-                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
-                        if (isField) return false;
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        return display === cleanVal || caption === cleanVal;
-                    }) || structDataList.find(item => {
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        return display === cleanVal || caption === cleanVal;
-                    });
-                    if (matchedItem) break;
-                }
-            }
-
-            // 5. Substring match
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    const cleanVal = cleanString(val).toLowerCase();
-                    if (!cleanVal) continue;
-                    matchedItem = structDataList.find(item => {
-                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
-                        if (isField) return false;
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        return display.includes(cleanVal) || caption.includes(cleanVal);
-                    }) || structDataList.find(item => {
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        return display.includes(cleanVal) || caption.includes(cleanVal);
-                    });
-                    if (matchedItem) break;
+        // If record wasn't preloaded, perform on-demand server lookup
+        if (!matchedItem && hasUserProvidedRecord) {
+            const candidateSearch = cleanString(candidates[0] || rawFieldValue || fieldValue).replace(/\[.*?\]/g, "").trim();
+            if (candidateSearch) {
+                try {
+                    const lookupParams = processParamforEditndView(tokens, commandConfig, transId, tokenIndex);
+                    if (lookupParams) {
+                        const fetchedResults = await getList("axi_getstructsdata", lookupParams, candidateSearch, 1, 50);
+                        if (Array.isArray(fetchedResults) && fetchedResults.length > 0) {
+                            matchedItem = findMatchingRecordItem(fetchedResults, candidates);
+                            if (matchedItem) {
+                                const baseKey = `axi_getstructsdata_${lookupParams}`.toLowerCase();
+                                if (!axDatasourceObj[baseKey]) axDatasourceObj[baseKey] = [];
+                                const existing = axDatasourceObj[baseKey];
+                                const recUid = matchedItem.transrecordid ?? matchedItem.id;
+                                if (!existing.some(x => (x.transrecordid ?? x.id) == recUid)) {
+                                    existing.push(matchedItem);
+                                }
+                            }
+                        }
+                    }
+                } catch (lookupErr) {
+                    console.warn("[AxiCMD] On-demand view record resolution failed:", lookupErr);
                 }
             }
         }
@@ -9265,6 +9322,9 @@ if (typeof document !== "undefined") {
             redirectToEntityForm(transId, rawStruct, fieldUniqueId);
         } else if (fieldUniqueId && /^\d+$/.test(fieldUniqueId) && fieldUniqueId !== "0") {
             redirectToEntityForm(transId, rawStruct, fieldUniqueId);
+        } else if (hasUserProvidedRecord && !matchedItem) {
+            showToast(`Record '${rawFieldValue || fieldValue}' not found in ${rawStruct}.`);
+            return;
         } else {
             handler({
                 transId,
@@ -13989,6 +14049,7 @@ if (typeof document !== "undefined") {
                         const recordId = msgObj.recordid || "";
                         const sid = msgObj.SID || "";
                         showToast(`${msg}`, 5000, true);
+                        clearStructSearchCache(transid);
                         // console.log("Data submitted successfully,Record-ID : " + recordId);
                         // console.log(data);
 

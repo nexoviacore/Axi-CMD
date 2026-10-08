@@ -920,6 +920,13 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
                             const transid = childWin.transid;
                             // Sync data to the server-side session/Redis
                             await this.syncTstruct(transid, tstDataId);
+                            try {
+                                if (window.parent && typeof window.parent.axiClearStructCache === "function") {
+                                    window.parent.axiClearStructCache(transid);
+                                } else if (window.top && typeof window.top.axiClearStructCache === "function") {
+                                    window.top.axiClearStructCache(transid);
+                                }
+                            } catch (e) { }
                         }
                     }
                 } catch (e) {

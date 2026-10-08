@@ -17,3 +17,6 @@
 - **Large Dataset Lazy Autocomplete**: The mechanism in AxiCMD to handle Tstruct record suggestions for tables exceeding 50,000+ records by loading an initial page of 100 records and dynamically querying server-side matching records when typing 3 or more characters with debounce.
 - **`axi_getstructsdata`**: The Axpert Data Source (ADS) executing `fn_axi_getstructs_obj` to retrieve primary key field records, field names, and captions for target Tstructs.
 - **Dynamic On-Demand Token Resolution**: The fallback mechanism ensuring typed or pasted record identifiers not present in the locally cached initial page are queried and resolved directly from the server before command execution.
+- **`fn_axi_getstructs_obj` Parameter Extension**: The 13-parameter database function accepting optional `psearchterm`, `ppageno`, and `ppagesize` defaults, enabling SQL-level pagination (`LIMIT / OFFSET`) and multi-column keyword filtering (`LIKE %term%`) across primary key, caption, and record ID.
+- **Dynamic Search Debounce**: A 300ms–350ms delay timer buffering server-side ADS requests during continuous keystrokes to prevent excessive backend queries.
+- **Search In-Memory Cache**: The in-session JavaScript cache (`axDatasourceObj`) storing dynamic keyword results by term key (`_q_<term>`), invalidated upon explicit refresh (`#btnRefresh`) or record save/update actions.
