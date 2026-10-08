@@ -14,3 +14,6 @@
 - **`AXI-Sec`**: The fixed/sticky DOM container hosting the Axi AI Command Palette input (`#Axi-Searchinp`), action triggers (`#runBtn`, `#axiAddFavoriteBtn`, `#btnRefresh`), and the combined suggestions/favorites mega-dropdown (`#axiMegaDropdown`).
 - **`hiddenLoader`**: Background hidden iframe utility used by the Axi engine to asynchronously execute command dispatches and popup requests without interrupting the primary workspace.
 - **`mainHomeConfigTemplate`**: The default Axpert application shell template (`aspx/mainHomeConfigTemplate.html`), responsible for rendering the primary layout, navigation frames, application parameters, and the embedded `AXI-Sec` command palette.
+- **Large Dataset Lazy Autocomplete**: The mechanism in AxiCMD to handle Tstruct record suggestions for tables exceeding 50,000+ records by loading an initial page of 100 records and dynamically querying server-side matching records when typing 3 or more characters with debounce.
+- **`axi_getstructsdata`**: The Axpert Data Source (ADS) executing `fn_axi_getstructs_obj` to retrieve primary key field records, field names, and captions for target Tstructs.
+- **Dynamic On-Demand Token Resolution**: The fallback mechanism ensuring typed or pasted record identifiers not present in the locally cached initial page are queried and resolved directly from the server before command execution.

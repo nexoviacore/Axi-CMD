@@ -1,3 +1,5 @@
+console.log("%c[AxiCMD] axicmdmain.js loaded (Debounce ADS Debugger active)", "background: #0284c7; color: #fff; padding: 3px 6px; border-radius: 3px; font-weight: bold;");
+
 /**
  * Safely parses boolean values from boolean, string ("true"/"false"), or number.
  * Ensures string 'false' evaluates to false (unlike JavaScript's native Boolean('false')).
@@ -855,6 +857,19 @@ if (typeof document !== "undefined") {
 
     if (typeof window !== "undefined") {
         window.initAxiCmd = init;
+        window.axiDebug = {
+            getDataSourceCache: () => axDatasourceObj,
+            getActiveFetches: () => Array.from(activeFetches),
+            getFailedFetches: () => Array.from(failedFetches),
+            loadList: loadList,
+            getList: getList,
+            testDebounceAds: async function (adsName = "axi_getstructsdata", params = "", searchTerm = "abc") {
+                console.log("%c[axiDebug.testDebounceAds] Triggering test ADS search directly...", "color: #9333ea; font-weight: bold;", { adsName, params, searchTerm });
+                debugger; // Stop point: invoked via window.axiDebug.testDebounceAds
+                return await loadList(adsName, params, searchTerm, 1, 100);
+            }
+        };
+        console.log("%c[AxiCMD] window.axiDebug registered. Run window.axiDebug.testDebounceAds('axi_getstructsdata', 'your_struct_param', 'search_text') in console to test.", "color: #0284c7;");
     }
 
     let initRetries = 0;
@@ -1199,9 +1214,27 @@ if (typeof document !== "undefined") {
         if (!axicmdenabled || sourceName === "axi_dummy") {
             return [];
         }
+        if (sourceName.toLowerCase().includes("getstructsdata") && (!paramValue || !String(paramValue).trim())) {
+            console.warn(`[AxiCMD loadList] Blocked call to ${sourceName} without required paramValue.`);
+            return [];
+        }
         const baseKey = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
         const cleanTerm = (typeof searchTerm === "string" ? searchTerm : "").trim().toLowerCase();
         const fetchKey = cleanTerm ? `${baseKey}_q_${cleanTerm}` : baseKey;
+
+        console.log("%c[AxiCMD loadList] Called:", "color: #2563eb; font-weight: bold;", {
+            sourceName,
+            paramValue,
+            searchTerm: cleanTerm,
+            pageNo,
+            pageSize,
+            fetchKey,
+            alreadyActive: activeFetches.has(fetchKey)
+        });
+
+        if (cleanTerm) {
+            debugger; // <<< DEBUGGER STOP POINT: Inside loadList with dynamic search term >>>
+        }
 
         if (activeFetches.has(fetchKey) || failedFetches.has(fetchKey)) return axDatasourceObj[fetchKey] || [];
         activeFetches.add(fetchKey);
@@ -1211,8 +1244,28 @@ if (typeof document !== "undefined") {
             // For form records (e.g. axi_getstructsdata) or large datasets, use initial 100 records or requested pageSize.
             const effectivePageSize = (sourceName.toLowerCase() === "axi_structmetalist") ? 0 : (pageSize || 100);
             const data = await getList(sourceName, paramValue, cleanTerm, pageNo, effectivePageSize);
-            const list = Array.isArray(data) ? data : (data ? [data] : []);
+            let list = Array.isArray(data) ? data : (data ? [data] : []);
+
+            // Ensure initial load respects pageSize limit (e.g. initial 100 records)
+            if (!cleanTerm && effectivePageSize > 0 && list.length > effectivePageSize) {
+                console.log(`%c[AxiCMD loadList] Capping initial loaded dataset from ${list.length} to ${effectivePageSize} records.`, "color: #0284c7; font-weight: bold;");
+                list = list.slice(0, effectivePageSize);
+            }
+
+            // Ensure dynamic search results only contain matching items (in case server ignores filters)
+            if (cleanTerm && list.length > 0) {
+                list = list.filter(item => {
+                    const display = item.displaydata || item.caption || item.name || item.fname || item.keyfield || "";
+                    return String(display).toLowerCase().includes(cleanTerm);
+                });
+            }
+
             axDatasourceObj[fetchKey] = list;
+
+            console.log("%c[AxiCMD loadList] Fetched data for " + fetchKey + ":", "color: #059669; font-weight: bold;", {
+                count: list.length,
+                sample: list.slice(0, 3)
+            });
 
             // When dynamic search returns records, merge them into the base list in memory
             // so token resolvers, command runners, and storage lookups can find any selected record.
@@ -1242,12 +1295,13 @@ if (typeof document !== "undefined") {
                         existing.push(item);
                     }
                 }
+                console.log(`%c[AxiCMD loadList] Merged ${list.length} dynamic search items into base list '${baseKey}'. Total now: ${existing.length}`, "color: #10b981;");
             }
             return list;
         } catch (error) {
             failedFetches.add(fetchKey);
             axDatasourceObj[fetchKey] = [];
-            // console.error("loadlist failed", error);
+            console.error("[AxiCMD loadList] Failed fetch:", fetchKey, error);
             return [];
         } finally {
             activeFetches.delete(fetchKey);
@@ -4684,7 +4738,10 @@ if (typeof document !== "undefined") {
 
             if (!axDatasourceObj[sourceKey]) {
                 const paramStr = typeof paramValue === "string" ? paramValue : (Array.isArray(paramValue) ? paramValue.join("$#$") : "");
-                const hasValidParams = !activePrompt.promptParams || (paramStr && paramStr.replace(/,/g, '').trim().length > 0);
+                const isGetStructsData = apiSourceName.toLowerCase().includes("getstructsdata");
+                const hasValidParams = isGetStructsData
+                    ? (paramStr && paramStr.replace(/,/g, '').trim().length > 0)
+                    : (!activePrompt.promptParams || (paramStr && paramStr.replace(/,/g, '').trim().length > 0));
 
                 if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
                     if (groupKey.toLowerCase() === "sdk" && tokens.length >= 2) {
@@ -4740,18 +4797,33 @@ if (typeof document !== "undefined") {
             }
 
             // Filter Cache
-            const isDynamicSource = (apiSourceName.toLowerCase() === "axi_getstructsdata" || apiSourceName.toLowerCase() === "axi_viewlist");
+            const isDynamicSource = (apiSourceName.toLowerCase() === "axi_getstructsdata" || apiSourceName.toLowerCase() === "axi_viewlist" || apiSourceName.toLowerCase().includes("getstructsdata"));
             const cleanSearch = (partialTyped || "").trim().toLowerCase();
             let dataList = axDatasourceObj[sourceKey] || [];
+
+            console.log("%c[AxiCMD Suggest] Remote suggestion check:", "color: #0284c7; font-weight: bold;", {
+                apiSourceName,
+                paramValue,
+                sourceKey,
+                partialTyped,
+                cleanSearch,
+                isDynamicSource,
+                cachedBaseCount: (axDatasourceObj[sourceKey] || []).length
+            });
 
             if (isDynamicSource) {
                 if (cleanSearch.length >= 3) {
                     const searchKey = `${sourceKey}_q_${cleanSearch}`;
+                    console.log(`%c[AxiCMD Debounce] Search term '${cleanSearch}' >= 3 chars. Checking searchKey: ${searchKey}`, "color: #d97706;");
                     if (axDatasourceObj[searchKey] !== undefined) {
                         dataList = axDatasourceObj[searchKey];
+                        console.log("%c[AxiCMD Debounce] Found cached results for term. Count:", "color: #16a34a;", dataList.length);
                     } else {
+                        console.log(`%c[AxiCMD Debounce] Scheduling 250ms debounce ADS call for '${cleanSearch}'...`, "color: #e11d48; font-weight: bold;");
                         clearTimeout(dynamicSearchDebounceTimer);
                         dynamicSearchDebounceTimer = setTimeout(() => {
+                            console.log(`%c[AxiCMD Debounce] >>> TIMER FIRED! Calling loadList with search '${cleanSearch}' <<<`, "background: #7c3aed; color: #fff; padding: 2px 6px; border-radius: 2px; font-weight: bold;");
+                            debugger; // <<< DEBUGGER STOP POINT: Debounce timer fired, about to call loadList >>>
                             loadList(apiSourceName, paramValue, cleanSearch, 1, 100);
                         }, 250);
 
@@ -4761,13 +4833,16 @@ if (typeof document !== "undefined") {
                         });
 
                         if (localMatches.length > 0) {
+                            console.log("%c[AxiCMD Debounce] Showing local cached matches while fetching:", "color: #0284c7;", localMatches.length);
                             dataList = localMatches;
                         } else {
+                            console.log("%c[AxiCMD Debounce] No local matches found, displaying 'Searching...'", "color: #64748b;");
                             filteredObjects = [];
                             return ["Searching..."];
                         }
                     }
                 } else {
+                    console.log(`[AxiCMD Debounce] Search length (${cleanSearch.length}) < 3. Clearing pending debounce timer.`);
                     clearTimeout(dynamicSearchDebounceTimer);
                 }
             }
@@ -6489,6 +6564,7 @@ if (typeof document !== "undefined") {
 
             const cached = localStorage.getItem(cacheKey);
             if (cached) {
+                console.log(`%c[AxiCMD getList / ADS] LocalStorage cache HIT for: ${cacheKey}`, "color: #16a34a; font-weight: bold;");
                 return JSON.parse(cached);
             }
 
@@ -6519,7 +6595,21 @@ if (typeof document !== "undefined") {
                 ];
             }
 
+            console.log("%c[AxiCMD getList / ADS] Dispatching ADS request payload:", "color: #ea580c; font-weight: bold;", {
+                axDatasourceName,
+                searchTerm: cleanTerm,
+                pageNo,
+                pageSize: effectivePageSize,
+                payload: JSON.parse(JSON.stringify(requestBody))
+            });
+
+            if (cleanTerm) {
+                debugger; // <<< DEBUGGER STOP POINT: Inside getList right before ADS API call >>>
+            }
+
             const res = await getAxListAsync(requestBody);
+
+            console.log("%c[AxiCMD getList / ADS] Server response received for " + axDatasourceName + ":", "color: #059669; font-weight: bold;", res);
 
             // console.log("Get List data: " + JSON.stringify(res));
 
