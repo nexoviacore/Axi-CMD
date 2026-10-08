@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Signin.aspx.cs" Inherits="Signin" %>
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Signin.aspx.cs" Inherits="Signin" %>
 
 <%@ OutputCache Duration="1" Location="None" %>
 <!DOCTYPE html>
@@ -50,11 +50,11 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/noConflict.min.js?v=1" type="text/javascript"></script>
     <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
-    <script type="text/javascript" src="../Js/login.min.js?v=116"></script>
+    <script type="text/javascript" src="../Js/login.min.js?v=119"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
     <script src="../Js/jsencrypt.js?v=1" type="text/javascript"></script>
     <script src="../Js/crypto-js.js?v=1" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
     <script type="text/javascript">
         history.go(1);
         var cdt = new Date();
@@ -207,7 +207,7 @@
                                             </div>
                                         </div>
                                     </div>--%>
-                                    <div class="fv-plugins-message-container invalid-feedback"></div>
+                                    <%--<div class="fv-plugins-message-container invalid-feedback"></div>--%>
 
                                     <asp:Panel ID="pnlCaptcha" runat="server" Visible="false">
                                         <div class="control-group">
@@ -216,7 +216,7 @@
                                                     <asp:Label ID="lblcaptcha" runat="server" CssClass="form-label fs-6 fw-boldest text-dark">Captcha</asp:Label>
                                                 </div>
                                                 <BotDetect:WebFormsCaptcha ID="DynamicCaptcha" runat="server" UserInputID="CaptchaCodeTextBox" CodeStyle="Alphanumeric" CodeLength="7" SoundEnabled="false" AutoReloadExpiredCaptchas="true" AutoReloadTimeout="7200" />
-                                                <asp:TextBox ID="CaptchaCodeTextBox" runat="server" CssClass="m-wrap placeholder-no-fix form-control form-control-solid" />
+                                                <asp:TextBox ID="CaptchaCodeTextBox" runat="server" CssClass="m-wrap placeholder-no-fix form-control form-control-solid" placeholder="Enter captcha" aria-label="Enter captcha" />
                                             </div>
                                         </div>
                                     </asp:Panel>

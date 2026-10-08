@@ -409,7 +409,8 @@ namespace CacheMgr
             strObj = (TStructDef)fObj.TstructDefFromRedis(util.GetRedisServerkey(fdKey, transId));
             if (strObj != null)
             {
-                string res = strObj.structRes;
+                string thisStructXML = fObj.StringFromRedis(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transId));
+                string res = thisStructXML;// strObj.structRes;
                 string customDetails = string.Empty;
                 {
                     customDetails = "<axpconfigs_" + transId + "><configname>searchcols</configname><cvalue>" + strObj.srchCols + "</cvalue>";

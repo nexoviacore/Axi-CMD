@@ -726,7 +726,7 @@
     <script type="text/javascript" src="../UI/axpertUI/plugins.bundle.js"></script>
     <script type="text/javascript" src="../UI/axpertUI/scripts.bundle.js"></script>
     <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
-    <script type="text/javascript" src="../Js/common.min.js?v=165"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=166"></script>
     <script type="text/javascript" src="../Js/alerts.min.js"></script>
     <script type="text/javascript" src="../Js/xmlToJson.js"></script>
     <script type="text/javascript" src="../Js/handlebars.min.js"></script>
@@ -735,7 +735,7 @@
     <script src="../js/datatables.min.js"></script>
     <script src="../js/Entity-Filter.min.js?v=9"></script>
     <script src="../js/Entity-common.min.js?v=18"></script>
-    <script src="../js/Entity.min.js?v=37"></script>
+    <script src="../js/Entity.min.js?v=40"></script>
 
     <script type="text/javascript">
         /* Variables from mainpage */

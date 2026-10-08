@@ -28,11 +28,11 @@ public class IviewData
         //
         ReportHdrs = new ArrayList();
         IViewWhenEmpty = string.Empty;
-        
-        
-        
-        
-        
+
+
+
+
+
         ShowHiddengridCols = new ArrayList();
         IsRunningTotal = new ArrayList();
         GolbalVarName = new ArrayList();
@@ -47,7 +47,7 @@ public class IviewData
         RunningTotalValue = new DataTable();
         RunningPageCount = new int();
         ColNoRepeat = new ArrayList();
-        
+
         customBtnIV = new ArrayList();
 
         iviewParams = new IviewParams();
@@ -64,7 +64,7 @@ public class IviewData
 
     private ArrayList colNoRepeat;
 
-    
+
     public ArrayList customBtnIV;
 
     public IviewParams iviewParams;
@@ -116,7 +116,7 @@ public class IviewData
 
     private bool isIviewStagLoad;
 
-    
+
 
     private List<DataTable> stagTables;
 
@@ -145,9 +145,9 @@ public class IviewData
         set { iviewFooter = value; }
     }
 
-    
 
-    
+
+
 
     public bool isPivotReport = false;
 
@@ -348,7 +348,7 @@ public class IviewData
     private string axpIviewDisableSplit;
     Dictionary<string, string> actBtnNavigation;
     Dictionary<string, string> hypLnkNavigation;
-    private int webServiceTimeout = 100000;
+    private int webServiceTimeout = 300000;
     private bool retainIviewParams = false;
     private bool iviewSessionCaching = true;
     LogFile.Log logobj = new LogFile.Log();
@@ -544,7 +544,7 @@ public class IviewData
 
     public int WebServiceTimeout
     {
-        get { return webServiceTimeout > 0 ? webServiceTimeout : 100000; }
+        get { return webServiceTimeout > 0 ? webServiceTimeout : 300000; }
         set { webServiceTimeout = value; }
     }
 
@@ -718,7 +718,13 @@ public class IviewData
         }
         else
         {
-            iXml = "<root " + purposeString + headerCompsCachedAttr + " name ='" + IvName + "' axpapp = '" + proj + "' sessionid = '" + sessionId + "' appsessionkey='" + HttpContext.Current.Session["AppSessionKey"].ToString() + "' username='" + HttpContext.Current.Session["username"].ToString() + "' trace = '" + errlog + "' pageno='" + pageNo + "' pagesize='" + recsPerPage.ToString() + "' firsttime='" + (pageNo <= 2 && headerCompsCachedAttr == " headercached='false' " ? "yes" : "no") + "' sqlpagination='" + IsDbPagination.ToString().ToLower() + "' getrowcount='" + getIviewRowCount.ToString().ToLower() + "' gettotalrows='false' smartview='true'><params>" + paramX + "</params>" + lvXmlToProcess;
+            if (pageNo.ToString() == "1")
+            {
+                headerCompsCachedAttr = " headercached='false' ";
+                iXml = "<root " + purposeString + headerCompsCachedAttr + " name ='" + IvName + "' axpapp = '" + proj + "' sessionid = '" + sessionId + "' appsessionkey='" + HttpContext.Current.Session["AppSessionKey"].ToString() + "' username='" + HttpContext.Current.Session["username"].ToString() + "' trace = '" + errlog + "' pageno='" + pageNo + "' pagesize='" + recsPerPage.ToString() + "' firsttime='yes' sqlpagination='" + IsDbPagination.ToString().ToLower() + "' getrowcount='" + getIviewRowCount.ToString().ToLower() + "' gettotalrows='false' smartview='true'><params>" + paramX + "</params>" + lvXmlToProcess;
+            }
+            else
+                iXml = "<root " + purposeString + headerCompsCachedAttr + " name ='" + IvName + "' axpapp = '" + proj + "' sessionid = '" + sessionId + "' appsessionkey='" + HttpContext.Current.Session["AppSessionKey"].ToString() + "' username='" + HttpContext.Current.Session["username"].ToString() + "' trace = '" + errlog + "' pageno='" + pageNo + "' pagesize='" + recsPerPage.ToString() + "' firsttime='" + (pageNo <= 2 && headerCompsCachedAttr == " headercached='false' " ? "yes" : "no") + "' sqlpagination='" + IsDbPagination.ToString().ToLower() + "' getrowcount='" + getIviewRowCount.ToString().ToLower() + "' gettotalrows='false' smartview='true'><params>" + paramX + "</params>" + lvXmlToProcess;
         }
 
         iXml += HttpContext.Current.Session["axApps"].ToString() + HttpContext.Current.Application["axProps"].ToString() + HttpContext.Current.Session["axGlobalVars"].ToString() + HttpContext.Current.Session["axUserVars"].ToString() + "</root> ";
@@ -761,7 +767,7 @@ public class IviewData
                     ASB.WebService objws = new ASB.WebService();
                     resultSplitter[0] = objws.AxpFieldDataDecrypt(resultSplitter[0], EncryptedColumns, "true");
                     resString = string.Join("#$♥#", resultSplitter);
-                    string[] _result = result.Split('♠');                    
+                    string[] _result = result.Split('♠');
                     _result[1] = resString;
                     result = string.Join("♠", _result);
                 }

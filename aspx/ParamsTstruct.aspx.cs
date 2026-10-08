@@ -1520,9 +1520,20 @@ public partial class ParamsTstruct : System.Web.UI.Page
                 designMode = Convert.ToBoolean(HttpContext.Current.Session[transId + "IsDesignMode"]);
             if (!designMode)
             {
-                cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transId), strObj, Constants.REDISTSTRUCT, schemaName);
-
                 FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+                string _sXML = strObj.structRes;
+                strObj.structRes = "";
+                cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transId), strObj, Constants.REDISTSTRUCT, schemaName);
+                if (_sXML != string.Empty)
+                {
+                    cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transId), _sXML, Constants.REDISTSTRUCTXML, schemaName);
+                    strObj.structRes = _sXML;
+                }
+                else
+                {
+                    string thisStructXML = fObj.StringFromRedis(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transId));
+                    strObj.structRes = thisStructXML;
+                }
 
                 var redisvalues1 = fObj.ObjectJsonFromRedis(util.GetRedisServerkey(pgKey, ""));
                 if (redisvalues1 == null)
@@ -4342,8 +4353,11 @@ public partial class ParamsTstruct : System.Web.UI.Page
                             string fdKey = Constants.REDISTSTRUCT;
                             if (HttpContext.Current.Session["MobileView"] != null && HttpContext.Current.Session["MobileView"].ToString() == "True")
                                 fdKey = Constants.REDISTSTRUCTMOB;
+                            string _sXML = strObj.structRes;
+                            strObj.structRes = "";
                             FDW fdwObj = new FDW();
                             fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transId), strObj, Constants.REDISTSTRUCT, schemaName);
+                            strObj.structRes = _sXML;
                         }
                     }
                     else if (loadRes != string.Empty)
@@ -5706,7 +5720,7 @@ public partial class ParamsTstruct : System.Web.UI.Page
         return json;
     }
     [WebMethod]
-    public static string GetAutoCompleteData(string tstDataId, string FldName, string FltValue, ArrayList ChangedFields, ArrayList ChangedFieldDbRowNo, ArrayList ChangedFieldValues, ArrayList DeletedDCRows, string pageData, string fastdll, string fldNameAc, string refreshAC, string pickArrow, string parentsFlds, string rfSave, string IsApiFld, string tblSourceParams, string isTstHtmlLs, string ddlFldSqlParams, string ddlSqlPNames)
+    public static string GetAutoCompleteData(string tstDataId, string FldName, string FltValue, ArrayList ChangedFields, ArrayList ChangedFieldDbRowNo, ArrayList ChangedFieldValues, ArrayList DeletedDCRows, string pageData, string fastdll, string fldNameAc, string refreshAC, string pickArrow, string parentsFlds, string rfSave, string IsApiFld, string tblSourceParams, string isTstHtmlLs, string ddlFldSqlParams, string ddlSqlPNames, string isDupTab)
     {
         string requestProcess_logtime = string.Empty;
         ExecTrace ObjExecTrace = ExecTrace.Instance;
@@ -5717,7 +5731,7 @@ public partial class ParamsTstruct : System.Web.UI.Page
         try
         {
             ASB.WebService objws = new ASB.WebService();
-            json = objws.GetdllAutoComplete(tstDataId, FldName, FltValue, ChangedFields, ChangedFieldDbRowNo, ChangedFieldValues, DeletedDCRows, pageData, fastdll, fldNameAc, refreshAC, pickArrow, parentsFlds, rfSave, IsApiFld, tblSourceParams, isTstHtmlLs, ddlFldSqlParams, ddlSqlPNames);
+            json = objws.GetdllAutoComplete(tstDataId, FldName, FltValue, ChangedFields, ChangedFieldDbRowNo, ChangedFieldValues, DeletedDCRows, pageData, fastdll, fldNameAc, refreshAC, pickArrow, parentsFlds, rfSave, IsApiFld, tblSourceParams, isTstHtmlLs, ddlFldSqlParams, ddlSqlPNames, isDupTab);
             if (json.IndexOf('♠') > -1)
             {
                 requestProcess_logtime += json.Split('♠')[1];
@@ -5901,6 +5915,7 @@ public partial class ParamsTstruct : System.Web.UI.Page
         string fdKeyMob = Constants.REDISTSTRUCTMOB;
         string designKey = Constants.REDISTSTRUCTAXDESIGN;
         string designCustHtmlKey = Constants.REDISTSTRUCTAXCUSTHTML;
+        string fdKeyXML = Constants.REDISTSTRUCTXML;
         //string fdkey1 = Constants.AXPAGETITLE;
         string schemaName = string.Empty;
         if (HttpContext.Current.Session["dbuser"] != null)
@@ -5911,6 +5926,7 @@ public partial class ParamsTstruct : System.Web.UI.Page
         fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(fdKeyMob, Transid), "", false, schemaName);
         fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(designKey, Transid), "", false, schemaName);
         fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(designCustHtmlKey, Transid), "", false, schemaName);
+        fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(fdKeyXML, Transid), "", false, schemaName);
     }
 
 
@@ -6077,8 +6093,11 @@ public partial class ParamsTstruct : System.Web.UI.Page
                         string schemaName = string.Empty;
                         if (HttpContext.Current.Session["dbuser"] != null)
                             schemaName = HttpContext.Current.Session["dbuser"].ToString();
+                        string _sXML = strObj.structRes;
+                        strObj.structRes = "";
                         FDW fdwObj = new FDW();
                         fdwObj.SaveInRedisServer(utils.GetRedisServerkey(fdKey, transId), strObj, Constants.REDISTSTRUCT, schemaName);
+                        strObj.structRes = _sXML;
                     }
                 }
                 else if (result != string.Empty)

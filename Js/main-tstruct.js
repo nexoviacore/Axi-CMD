@@ -90,6 +90,7 @@ $j(document).ready(function () {
     if (typeof isTstPostBackVal == "undefined" || isTstPostBackVal == "")
         WireElapsTime(serverprocesstime, requestProcess_logtime);
     AxpGridForm = AxpGridFormCols != "" ? AxpGridFormCols.split("♠")[0] : "popup";
+    SetGridUiLayout();
     if (theMode == "design") {
         $(callParentNew("splitIcon", "id")).css({
             "display": ""
@@ -98,6 +99,9 @@ $j(document).ready(function () {
             "display": ""
         }).removeClass("hide");
     }
+    FldDListPFNames = new Array();
+    FldDListPFNameVals = new Array();
+    tstGrdAttDdlAutoSelect = "false";
     fldsHideOnPage = "false";
     AxIsTstructLocked = false
     tstReadOnly = false;
@@ -1143,7 +1147,8 @@ function GenTstHtmlLocalStorage() {
             else
                 callParentNew("lastLoadtstId=", window.frameElement.contentWindow.jQuery('#form1').attr('action'));
         }        
-        callParentNew("updateAppLinkObj")?.(window.frameElement.src, 0, window?.frameElement?.id == "axpiframe", { ...window?.frameElement?.dataset });
+        if (window?.frameElement?.id !== "loadPopUpPage")
+            callParentNew("updateAppLinkObj")?.(window.frameElement.src, 0, window?.frameElement?.id == "axpiframe", { ...window?.frameElement?.dataset });
         if (_thsiifId == 'middle1' || _thsiifId.startsWith("axMultiiframe_")) {
             if (recordid != "" && recordid != "0" && $(".tstructMainBottomFooter .tstructBottomLeftButton").length == 0 && loadRecordFromSearch == false) {
                 if (typeof AxDiscardNxtPrevFc != "undefined" && AxDiscardNxtPrevFc.length > 0) {
@@ -5066,6 +5071,11 @@ function ProcessFormControl(fld, actionStr, fldValue) {
                     else
                         EnableDisableBtns(destfld, true);
                 } else {
+                    try {
+                        let _fName = GetFieldsName(destfld.attr("id"));
+                        let _fldIndex = $j.inArray(_fName, FNames);
+                        FFieldReadOnly[_fldIndex] = "False";
+                    } catch (ex) { }
 
                     if (IsPickListField(destfld.attr("id")) == true) {
                         var pickFld = document.getElementById("img~" + destfld.attr("id"));
@@ -5109,6 +5119,11 @@ function ProcessFormControl(fld, actionStr, fldValue) {
                     else
                         EnableDisableBtns(destfld, false);
                 } else {
+                    try {
+                        let _fName = GetFieldsName(destfld.attr("id"));
+                        let _fldIndex = $j.inArray(_fName, FNames);
+                        FFieldReadOnly[_fldIndex] = "True";
+                    } catch (ex) { }
                     if (IsPickListField(destfld.attr("id")) == true) {
                         var pickFld = document.getElementById("img~" + destfld.attr("id"));
                         pickFld.disabled = true;
@@ -5192,6 +5207,11 @@ function ProcessFormControl(fld, actionStr, fldValue) {
                     else
                         EnableDisableBtns(destfld, true);
                 } else {
+                    try {
+                        let _fName = GetFieldsName(destfld.attr("id"));
+                        let _fldIndex = $j.inArray(_fName, FNames);
+                        FFieldReadOnly[_fldIndex] = "False";
+                    } catch (ex) { }
                     if (IsPickListField(destfld.attr("id")) == true) {
                         var pickFld = document.getElementById("img~" + destfld.attr("id"));
                         pickFld.disabled = false;
@@ -5212,6 +5232,11 @@ function ProcessFormControl(fld, actionStr, fldValue) {
                     else
                         EnableDisableBtns(destfld, false);
                 } else {
+                    try {
+                        let _fName = GetFieldsName(destfld.attr("id"));
+                        let _fldIndex = $j.inArray(_fName, FNames);
+                        FFieldReadOnly[_fldIndex] = "True";
+                    } catch (ex) { }
                     if (IsPickListField(destfld.attr("id")) == true) {
                         var pickFld = document.getElementById("img~" + destfld.attr("id"));
                         pickFld.disabled = true;
@@ -7845,7 +7870,7 @@ function totalFillGridColVal(obj, _thisFgInd) {
     }
 }
 
-function DeleteAllRows(dcNo, RowCount, calledfrom="") {
+function DeleteAllRows(dcNo, RowCount, calledfrom = "") {
     var rCount = parseInt(RowCount, 10);
     if (rCount > 1 && !axInlineGridEdit && AxpGridForm != "form") {
         grdRCOunt = $("#gridHd" + dcNo + " tbody tr").length;
@@ -7861,7 +7886,7 @@ function DeleteAllRows(dcNo, RowCount, calledfrom="") {
         $("#divDc" + dcNo + " .formGridRow").remove();
         if ($(".wrapperForGridData" + dcNo + " table tbody tr").length == 0) {
             adjustEditLayoutId(dcNo);
-            if (typeof ClientRowNo != "undefined" && typeof ClientRowNo[0] == "undefined")
+            if (typeof ClientRowNo != "undefined" && typeof ClientRowNo[0] == "undefined" && calledfrom != "FillGrid")
                 ClientRowNo[0] = "001";
         }
         setDesignedLayout("divDc" + dcNo);
@@ -7871,7 +7896,7 @@ function DeleteAllRows(dcNo, RowCount, calledfrom="") {
                 if ($next.is('hr.text-gray-500.row-sep')) {
                     $next.remove();
                 }
-                $(this).remove();                
+                $(this).remove();
             });
         }
         if (calledfrom != "FillGrid")
@@ -10004,16 +10029,14 @@ function ProcessScriptFormControl(listControls, actionStr, sfName) {
                     return false;
                 }
             });
-
             $j(".tstformbutton").each(function () {
-                if ($j(this).attr("id") == newFldName) {
+                if ((typeof $j(this).attr("id") != "undefined" && $j(this).attr("id").toLowerCase() == newFldName.toLowerCase()) || (typeof $j(this).attr("value") != "undefined" && $j(this).attr("value").toLowerCase() == newFldName.toLowerCase()) || (typeof $j(this).attr("title") != "undefined" && $j(this).attr("title").toLowerCase() == newFldName.toLowerCase())) {
                     actTmpBtn = $j(this);
                     isFieldBtn = true;
                     isBtnInDc = true;
                     return false;
                 }
             });
-
 
             if (newFldName.toLowerCase() == "remove")
                 newFldName = "delete";
@@ -11363,7 +11386,6 @@ function closeWeightScalePort() {
         ASB.WebService.NotifyCloseWeightScalePort(callParentNew("hybridGUID"), (success) => { }, (error) => { });
     } catch (error) { }
 }
-
 function DropzoneInit(dvId) {
     let _thisDiv;
     if (typeof dvId != "undefined") {
@@ -11403,6 +11425,8 @@ function DropzoneInit(dvId) {
         if (typeof UploadFileTypes != "undefined" && UploadFileTypes == "true" && typeof UploadFileTypesVal != "undefined")
             _uploadFileTypes = UploadFileTypesVal;
         let isthisReadOnly = false;
+        let _isDummyFirstUpAxp = false;
+        let _isDummyFirstcountAxp = 0;
         if (FFieldReadOnly[_ffuIndex] == "True") {
             let _thisFldId = $(id).attr("id").substr(9);
             $("#" + _thisFldId).prop('disabled', true);
@@ -11460,6 +11484,41 @@ function DropzoneInit(dvId) {
                 var fieldRowNo = GetFieldsRowNo(thisFldId);
                 var fldDcNo = GetFieldsDcNo(thisFldId);
                 UpdateGridRowFlags(thisFldId, fldDcNo, fieldRowNo);
+                if (IsDcGrid(fldDcNo) && typeof isAddRowWsCalled != "undefined" && isAddRowWsCalled == "true") {
+                    ShowDimmer(false);
+                    var pendingFileAxp = file;
+                    var checkInterval = setInterval(function () {
+                        if (typeof isAddRowWsCalled != "undefined" && isAddRowWsCalled == "false") {
+                            clearInterval(checkInterval);
+                            if (pendingFileAxp) {
+                                let _thisFilePathNew = $(".axpFilePath_" + $(id).attr("id").substring(("dropzone_axpfile_").length)).val()
+                                if (typeof _thisFilePathNew == "undefined") {
+                                    var _textareaId = 'axpfilepath_' + $(id).attr("id").substring(("dropzone_axpfile_").length);
+                                    var _textarea = $('textarea').filter(function () {
+                                        return this.id && this.id.toLowerCase() === _textareaId.toLowerCase();
+                                    });
+                                    if (typeof _textarea != "undefined" && _textarea.length != 0) {
+                                        _thisFilePathNew = $(_textarea).val();
+                                        if (typeof _thisFilePathNew == "undefined")
+                                            _thisFilePathNew = "";
+                                    } else
+                                        _thisFilePathNew = "";
+                                }
+                                myDropzone.options.url = url + `TstFileUpload.ashx?thisFld=${$(id).attr("id").substr(9)}&filePath=${_thisFilePathNew}&dcNo=${GetFieldsDcNo($(id).attr("id"))}&attFldName=${GetFieldsName($(id).attr("id").substr(9))}&fileExt=${_uploadFileTypes}&futransid=${transid}&protectFile=${protectFile}`;
+                                const dropzoneItems = dropzone.querySelectorAll('.dropzone-item');
+                                dropzoneItems.forEach(dropzoneItem => {
+                                    dropzoneItem.style.display = '';
+                                });
+                                $(pendingFileAxp.previewElement).parents(".dropzone").css({ "width": $(pendingFileAxp.previewElement).parents(".dropzone").outerWidth() + "px" })
+                                _isDummyFirstUpAxp = true;
+                                myDropzone.processFile(pendingFileAxp);
+                                pendingFileAxp = null;
+                                _isDataLoad = false;
+                            }
+                        }
+                    }, 100);
+                    return;
+                }
             }
             let _thisFilePath = $(".axpFilePath_" + $(id).attr("id").substring(("dropzone_axpfile_").length)).val()
             if (typeof _thisFilePath == "undefined") {
@@ -11494,6 +11553,12 @@ function DropzoneInit(dvId) {
             const progressBars = dropzone.querySelectorAll('.dz-complete');
             if (progress.status == 'success') {
                 if (progress.xhr.response == "success" || progress.xhr.response.startsWith("success:")) {
+                    tstGrdAttDdlAutoSelect = "true";
+                    _isDummyFirstcountAxp = _isDummyFirstcountAxp + 1;
+                    if (_isDummyFirstUpAxp && _isDummyFirstcountAxp > 1) {
+                        _isDummyFirstUpAxp = false;
+                        return;
+                    }
                     let mesg = progress.xhr.response;
                     let _thisupfile = "";
                     if (mesg != "")
@@ -12283,6 +12348,7 @@ function DropzoneGridInit(dvId) {
             const progressBars = dropzone.querySelectorAll('.dz-complete');
             if (progress.status == 'success') {
                 if (progress.xhr.response == "success" || progress.xhr.response.startsWith("success:")) {
+                    tstGrdAttDdlAutoSelect = "true";
                     let mesg = progress.xhr.response;
                     _isDummyFirstcount = _isDummyFirstcount + 1;
                     if (_isDummyFirstUp && _isDummyFirstcount > 1) {
@@ -14001,5 +14067,23 @@ function tstExcludeElements() {
             }
             HideShowField(field, "show");
         });
+    }
+}
+
+function SetGridUiLayout() {
+    if (typeof mobileCardLayout != "undefined" && typeof currentDeviceType != "undefined") {
+        if (mobileCardLayout.toLowerCase() == 'show as grid in tabs' && currentDeviceType == "TABLET") {
+            axInlineGridEdit = true;
+            AxpGridFormCols = "inline♠";
+            AxpGridForm = "inline";
+        } else if (mobileCardLayout.toLowerCase() == 'show as grid in mobile' && currentDeviceType == "MOBILE") {
+            axInlineGridEdit = true;
+            AxpGridFormCols = "inline♠";
+            AxpGridForm = "inline";
+        } else if (mobileCardLayout.toLowerCase() == 'show as form in desktop' && currentDeviceType == "DESKTOP") {
+            axInlineGridEdit = false;
+            AxpGridFormCols = "form♠";
+            AxpGridForm = "form";
+        }
     }
 }

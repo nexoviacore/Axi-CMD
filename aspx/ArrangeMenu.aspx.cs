@@ -43,6 +43,15 @@ public partial class aspx_ArrangeMenu : System.Web.UI.Page
     }
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!IsPostBack)
+        {
+            string fetchDest = Request.Headers["Sec-Fetch-Dest"];
+            if (!string.IsNullOrEmpty(fetchDest) && !string.Equals(fetchDest, "iframe", StringComparison.OrdinalIgnoreCase))
+            {
+                SessExpires();
+                return;
+            }
+        }
         if (HttpContext.Current.Session["Project"] == null || Convert.ToString(HttpContext.Current.Session["Project"]) == string.Empty)
         {
             SessExpires();

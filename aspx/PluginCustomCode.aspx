@@ -95,6 +95,18 @@
                                                 </a>
                                             </div>
                                             <div class="menu-item px-3 my-0">
+                                                <a href="#" class="menu-link px-3 py-2" data-target="report" onclick="_customPlugins.loadIvTstPage('tsect')">
+                                                    <span class="material-icons material-icons-style material-icons-2">html</span>
+                                                    <span class="menu-title">Add HTML Pages</span>
+                                                </a>
+                                            </div>
+                                            <div class="menu-item px-3 my-0">
+                                                <a href="#" class="menu-link px-3 py-2" data-target="report" onclick="_customPlugins.loadIvTstPage('ta__rp')">
+                                                    <span class="material-icons material-icons-style material-icons-2">code</span>
+                                                    <span class="menu-title">Add React Pages</span>
+                                                </a>
+                                            </div>
+                                            <div class="menu-item px-3 my-0 d-none">
                                                 <a href="#" class="menu-link px-3 py-2" data-target="report" onclick="_customPlugins.loadAddFilesFields('landingpagehtmltemplates')">
                                                     <span class="material-icons material-icons-style material-icons-2">description</span>
                                                     <span class="menu-title">Add Landing Page HTML Templates</span>
@@ -342,7 +354,7 @@
             </div>
         </div>
         <asp:HiddenField ID="hdnStructures" runat="server" />
-        <asp:HiddenField ID="hdnApplicationTemplate" runat="server" value=""/>
+        <asp:HiddenField ID="hdnApplicationTemplate" runat="server" Value="" />
     </form>
 
 
@@ -381,7 +393,7 @@
     <script type="text/javascript" src="../ThirdParty/codemirror/addon/search/jump-to-line.js"></script>
 
     <script src="../js/Entity-common.min.js?v=18"></script>
-    <script type="text/javascript" src="../Js/PluginCustomCode.min.js?v=6"></script>
+    <script type="text/javascript" src="../Js/PluginCustomCode.min.js?v=7"></script>
 
 
 </body>

@@ -64,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Favorites Modal Transitions**: Implemented smooth entry and exit transitions for the Favorites modals (Add, Rename, and Delete modals) using CSS transitions, transforming scale, opacity, and backdrop blur.
-- **Resource Versioning**: Bumped the resource query parameters for `axicmdmain.js` and `axicmdmain.css` in both `CustomPages/AxiCMDMainPage.html` and `AxpertPlugins/Axi_Beta/HTMLPages/AxiCMDMainPage.html` to prevent browser caching.
+- **Resource Versioning**: Bumped the resource query parameters for `axicmdmain.js` and `axicmdmain.css` in both `CustomPages/AxiCMDMainPage.html` and `AxpertPlugins/AxiCMD/HTMLPages/AxiCMDMainPage.html` to prevent browser caching.
 
 ### Fixed
 - **Roles Popup Configuration**: Configured the roles popup container and fixed the new icon click loading behavior inside `Js/iview.js`.

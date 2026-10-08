@@ -89,7 +89,7 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/thirdparty/bootstrap/3.3.6/bootstrap.min.js" type="text/javascript"></script>
     <script src="../Js/AppSettings.min.js?v=13" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
     <link id="themecss" type="text/css" href="" rel="stylesheet" />
 </head>
 <body dir='<%=direction%>'>

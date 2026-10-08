@@ -38,7 +38,7 @@ This release brings stability improvements, database schema optimizations, secur
     *   Corrected the Configure prompt source for the object name from `axi_structlist` to `axi_structmetalist` and updated missing context variables in `extraparams`.
 
 ### 4. Code Cleanup & Deployment Documentation
-*   **Mermaid Deployment Guide:** Enhanced the `README.md` guide with detailed flow diagrams, prerequisite badges, and specific instructions to copy the `AxiApi_Beta` folder to the target `Arm microservices` server directory.
+*   **Mermaid Deployment Guide:** Enhanced the `README.md` guide with detailed flow diagrams, prerequisite badges, and specific instructions to copy the `AxiCMDApi` folder to the target `Arm microservices` server directory.
 *   **Codebase Cleanup:** Removed unused/backup `.zip` files from the plugin folders.
 
 
@@ -46,13 +46,13 @@ This release brings stability improvements, database schema optimizations, secur
 
 ## 📋 QA Validation & Plugin Rollout Guidelines
 
-### 1. Cross-Database QA Verification (Axi_Beta)
+### 1. Cross-Database QA Verification (AxiCMD)
 *   **Testing Requirement:** This release **must** be thoroughly tested and verified in both **PostgreSQL** and **Oracle** environments.
 *   **Approval Gate:** Under no circumstances should this release be applied to `agile-axi`, `alpha-axi`, or any other shared/production/shared instances without complete verification and explicit QA sign-off.
 
 ### 2. Plugin Naming & Transition Strategy
-*   **Current State:** The plugin is packaged and named as **Axi_Beta**. During this phase, it must be treated strictly as a testing and verification plugin.
-*   **Production Rollout:** Once all validations, testing, and environment verifications are completed successfully, the existing **Axi** plugin will be replaced and overwritten by **Axi_Beta** for production use.
+*   **Current State:** The plugin is packaged and named as **AxiCMD** (formerly `Axi_Beta`).
+*   **Production Rollout:** Once all validations, testing, and environment verifications are completed successfully, the legacy **Axi** plugin will be replaced and superseded by **AxiCMD** for production use.
 
 ---
 

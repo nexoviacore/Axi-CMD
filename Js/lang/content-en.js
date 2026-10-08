@@ -646,7 +646,13 @@ function LoadglLangauge(message) {// Custom messages
         case 5006:
             lngMessage = "Please select search for";
             break
-
+        case 5007:
+            lngMessage = "Please enter captcha";
+            break
+        case 5008:
+            lngMessage = "Please enter a valid captcha";
+            break
+           
         default:
             lngMessage = "Content is not defined";
             break;
@@ -1208,7 +1214,7 @@ lcm[487] = "Password should be alphanumeric, contains one UpperCharacter, one Lo
 lcm[488] = "Notifications";
 lcm[489] = "File Upload";
 lcm[490] = "Upload";
-lcm[491] = "This proces is taking more time than expected. You will get a notification once completed.";
+lcm[491] = "This process taking long time than expected. You will get notified once process is completed.";
 lcm[492] = "User Manual";
 //Custom Field Type validations
 lcm[493] = "Please enter a valid IP Address.";

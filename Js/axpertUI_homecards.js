@@ -2882,7 +2882,7 @@
                         else if (loadurl.indexOf('iview.aspx') !== -1 || loadurl.indexOf('ivtoivload.aspx') !== -1) {
                             viewName = loadurl.match(/(ivname=[^"&]+)/)[1];
                         }
-                        else if (toolTip.toLowerCase() == "active list") {
+                        else if (toolTip.toLowerCase() == "active list" || toolTip.toLowerCase() == "inbox") {
                             viewName = toolTip;
                         } else if (loadurl.toLowerCase().startsWith('opennewtabsite(')) {
                             loadurl.replace('openNewtabSite(', '').split(',')[0].replace('"', '').replace('"', '');
@@ -3530,11 +3530,11 @@
                     $(_thisStag.showLog.div).find(_thisStag.showLog.subTitle.div).attr("title", _thisStag.showLog.subTitle.title).text(_thisStag.showLog.subTitle.title);
                 }
 
-                if ($(_thisStag.CustomPages).length > 0) {
-                    $(_thisStag.CustomPages.div).find("a").attr("title", _thisStag.CustomPages.atitle);
-                    $(_thisStag.CustomPages.div).find(_thisStag.CustomPages.title.div).attr("title", _thisStag.CustomPages.title.title).text(_thisStag.CustomPages.title.title);
-                    $(_thisStag.CustomPages.div).find(_thisStag.CustomPages.subTitle.div).attr("title", _thisStag.CustomPages.subTitle.title).text(_thisStag.CustomPages.subTitle.title);
-                }
+                //if ($(_thisStag.CustomPages).length > 0) {
+                //    $(_thisStag.CustomPages.div).find("a").attr("title", _thisStag.CustomPages.atitle);
+                //    $(_thisStag.CustomPages.div).find(_thisStag.CustomPages.title.div).attr("title", _thisStag.CustomPages.title.title).text(_thisStag.CustomPages.title.title);
+                //    $(_thisStag.CustomPages.div).find(_thisStag.CustomPages.subTitle.div).attr("title", _thisStag.CustomPages.subTitle.title).text(_thisStag.CustomPages.subTitle.title);
+                //}
 
                 if ($(_thisStag.pluginCustomCode).length > 0) {
                     $(_thisStag.pluginCustomCode.div).find("a").attr("title", _thisStag.pluginCustomCode.atitle);

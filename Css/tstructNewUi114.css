@@ -953,15 +953,72 @@ table .dvdcframe .dropzone.dropzone-queue {
 	white-space: normal !important;
 }
 
-#searchoverrelay {
-	border-radius: 0 !important;
-	/* height: 93%; */
+/*#searchoverrelay {*/
+	/*border-radius: 0 !important;*/
+	 /*height: 93%; 
 }
-#searchoverrelay #srchcontent {
-	/* height: 79vh !important; */
-	overflow: scroll;
+#searchoverrelay #srchcontent {*/
+	 /*height: 79vh !important;*/ 
+	/*overflow: scroll;
+	padding-bottom: 0 !important;
+}*/
+/*#searchoverrelay {
+	border-radius: 0 !important;
+	height: 93%;
+}
+
+	#searchoverrelay #srchcontent {
+		height: 79vh !important;
+		overflow: scroll;
+		padding-bottom: 0 !important;
+	}
+
+	#searchoverrelay #grdSearchRes_wrapper {
+		height: 69vh !important;
+		overflow: scroll;
+	}*/
+#searchoverrelay {
+	height: calc(100vh - 40px);
+	margin-bottom: 0 !important;
 	padding-bottom: 0 !important;
 }
+
+	#searchoverrelay #srchcontent {
+		height: 77vh !important;
+		overflow-x: hidden !important;
+	}
+
+#searchoverrelay {
+	border-radius: 0 !important;
+	height: 93%;
+}
+
+	#searchoverrelay #srchcontent {
+		height: 80vh !important;
+		overflow-y: scroll;
+		padding-bottom: 0 !important;
+		overflow-x: hidden !important;
+	}
+
+	#searchoverrelay #grdSearchRes_wrapper {
+		height: 74vh !important;
+		overflow-y: scroll;
+		overflow-x: hidden !important;
+		height: calc(100vh - 180px) !important;
+	}
+
+	#searchoverrelay .card-body {
+		padding-bottom: 0 !important;
+	}
+
+#grdSearchRes tr th {
+	padding-block: 5px !important;
+}
+
+#searchoverrelay #srchcontent .overflow-auto {
+	overflow-x: hidden !important;
+}
+ 
 
 .btextDir-rtl .btn[data-bs-dismiss="modal"] {
   right: auto !important;
@@ -1515,3 +1572,336 @@ body.block-ui::after {
 	z-index: 999999;
 	cursor: wait;
 }
+
+
+/* #modalIdTableField starts ---------------------------------------------------------------------------- */
+  #modalIdTableField #divTable .btn.btn-sm.btn-icon.btn-white:has(span[title="Delete"]),
+#divTable .btn.btn-sm.btn-icon.btn-white:has(span[title="Fill Data"]) {
+	border: 1px solid orange !important;
+	border-radius: 4px;
+	position: fixed;
+	right: 65px;
+	z-index: 99;
+	top: 0;
+}
+ #modalIdTableField #divTable .btn.btn-sm.btn-icon.btn-white:has(span[title="Delete"]),
+ #divTable .btn.btn-sm.btn-icon.btn-white:has(span[title="Add"]) {
+	background: #31d158 !important;
+	border-radius: 4px;
+	position: fixed;
+	top: 0px;
+	z-index: 999 !important;
+	right: 32px;
+}
+ #modalIdTableField #divTable .btn.btn-sm.btn-icon.btn-white:has(span[title="Delete"]),
+ #divTable .btn.btn-sm.btn-icon.btn-white:has(span[title="Delete"]) {
+	border: 1px solid #ff3b2f !important;
+	border-radius: 4px;
+	position: fixed;
+	right: 0;
+	z-index: 99;
+	top: 0;
+}
+
+/*#modalIdTableField #divTable table#fldTable th ,#modalIdTableField #divTable table#fldTable th {*/
+#modalIdTableField #divTable table#fldTable th, #divTable table#fldTable th {
+	vertical-align: middle;
+	position: sticky;
+	top: -8px;
+	background: #fff !important;
+	z-index: 9;
+}
+#modalIdTableField .w-100.h-400px {
+	height: 98% !important;
+}
+
+/*mobile UI changes starts */
+
+@media (max-width: 768px) {
+	:root {
+		--bg: #F8FAFC;
+		--surface: #FFFFFF;
+		--surface-sunk: #F1F5F9;
+		--border: #E2E8F0;
+		--text: #0F172A;
+		--text-muted: #64748B;
+		--text-faint: #94A3B8;
+		--primary: #2563EB; /* Modern Corporate Blue */
+		--primary-dark: #1D4ED8;
+		--accent: #0EA5E9; /* Sky Blue Accent */
+		--accent-soft: #E0F2FE;
+		--danger: #EF4444;
+		--radius: 10px;
+		--radius-sm: 6px;
+	}
+
+	.grid-stack.grid-stack-one-column-mode > .grid-stack-item {
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		padding: 4px 4px 14px;
+		margin-bottom: 10px;
+		box-shadow: 0 1px 2px rgba(0,0,0,0.01);
+		width: 100% !important;
+	}
+
+	.input-group:has(.input-group-text) .form-control {
+		border-radius: 6px 0 0px 6px !important;
+		border-right: 0 !important;
+		width: 88%;
+	}
+
+	.input-group > .form-control, .input-group > .form-select {
+		width: 100%;
+		border: 1px solid var(--border) !important;
+		background: var(--surface-sunk) !important;
+		border-radius: var(--radius-sm) !important;
+		padding: 10px 11px;
+		font-size: 14px;
+		color: var(--text);
+		font-family: inherit;
+		outline: none;
+		-webkit-appearance: none;
+		appearance: none;
+		transition: all 0.2s ease;
+		height: 38px !important;
+	}
+
+	.select2-container--bootstrap5 .select2-selection {
+		width: 100%;
+		border: 1px solid var(--border) !important;
+		border-radius: var(--radius-sm) !important;
+		padding: 5px 11px !important;
+		font-size: 14px;
+		color: var(--text);
+		font-family: inherit;
+		outline: none;
+		-webkit-appearance: none;
+		appearance: none;
+		transition: all 0.2s ease;
+		height: 38px !important;
+		background-color: #f1f5f9 !important;
+	}
+
+	.select2-container .select2-search--inline .select2-search__field {
+		font-family: inherit !important;
+	}
+
+	.input-group > .form-control.flatpickr-input {
+		width: 88%;
+		background: #f1f5f9 !important;
+		/*  border-radius: 6px 0 0px 6px !important;*/
+		border-right: 0 !important;
+	}
+
+	.input-group > .form-control.flatpickr-input {
+		padding: 3px 9px;
+		/* border-radius: 0 6px 6px 0 !important;*/
+		border-color: #e2e8f0 !important;
+		background: #f1f5f9;
+	}
+
+	#DivFrame1 .card {
+		background: #edeff4;
+		border: 0 !important;
+	}
+
+		#DivFrame1 .card .card-body {
+			padding-inline: 0 !important;
+		}
+
+	.input-group-sm > .input-group-text {
+		border-radius: 0 6px 6px 0 !important;
+		background: #f1f5f9 !important;
+	}
+
+
+	/*   Grid table mobile resolution*/
+
+	.griddivColumn .customSetupTableMN.gridHeader thead {
+		display: none;
+	}
+
+	.griddivColumn .customSetupTableMN.gridHeader tr {
+		display: block;
+		margin-bottom: 15px;
+		border: 1px solid #ddd;
+		padding: 10px;
+	}
+
+	.griddivColumn .customSetupTableMN.gridHeader td {
+		display: flex;
+		justify-content: space-between;
+		padding: 8px;
+		border: none;
+		border-bottom: 1px solid #eee;
+		flex-direction: column;
+		margin-block: 7px !important;
+	}
+
+		.griddivColumn .customSetupTableMN.gridHeader td::before {
+			content: attr(data-title);
+			font-weight: bold;
+			color: #555;
+		}
+
+		.griddivColumn .customSetupTableMN.gridHeader td input.form-control, .griddivColumn .customSetupTableMN.gridHeader td .form-select {
+			width: 100%;
+			border: 1px solid var(--border) !important;
+			background: var(--surface-sunk) !important;
+			border-radius: var(--radius-sm) !important;
+			padding: 10px 11px;
+			font-size: 14px;
+			color: var(--text);
+			font-family: inherit;
+			outline: none;
+			-webkit-appearance: none;
+			appearance: none;
+			transition: all 0.2s ease;
+			height: 32px !important;
+		}
+
+	.edit-mode-content.input-group-sm {
+		width: 100% !important;
+	}
+
+	/*    tab grid*/
+
+	.formGridRow .row {
+		position: relative;
+	}
+
+	.formGridRow {
+		border: 1px solid #e2e8f0;
+		border-top: 0;
+		margin-bottom: 10px;
+		border-radius: 0 0 6px 6px;
+		padding: 12px;
+	}
+
+	.tab-content.mainIframe {
+		border: double green;
+		border-radius: 6px;
+	}
+
+	hr.text-gray-500.row-sep {
+		display: none;
+	}
+
+	.dcCaptionBtn {
+		border-bottom: 0;
+		border-radius: 6px 6px 0 0;
+	}
+
+	.tab-content.mainIframe {
+		border: 1px solid #e2e8f0;
+		border-radius: 6px;
+	}
+
+		.tab-content.mainIframe .card-body {
+			padding: 10px !important;
+		}
+
+	.dcCaptionBtn {
+		padding: 7px 15px;
+		background: #f1f5f9;
+		border: 1px solid #e2e8f0;
+	}
+
+	#containerDc .grid-stack-item {
+		padding: 12px;
+	}
+
+	.tab-content.mainIframe .input-group:has(.input-group-text) .form-control {
+		width: 85% !important;
+	}
+
+	.tab-content.mainIframe .grid-stack-item {
+		border: 0 !important;
+	}
+
+	.tab-content.mainIframe .grid-stack-item {
+		border: 0 !important;
+		margin-bottom: 0 !important;
+		padding-bottom: 5px !important;
+	}
+
+	.tab-content.mainIframe input.form-control {
+		height: 32px !important;
+		font-size: 13px !important;
+		font-weight: 600 !important;
+		background: #f1f5f9;
+	}
+
+	.tab-content.mainIframe .select2-selection.select2-selection--single.select2-selection--clearable {
+		height: 32px !important;
+	}
+
+	.tab-content.mainIframe .select2-container--bootstrap5 .select2-selection {
+		height: 32px !important;
+	}
+
+	/*    add row and delete btn */
+
+	.tab-content.mainIframe .formGridRow {
+		position: relative;
+	}
+
+	.tab-content.mainIframe .removeformGridbutton {
+		position: absolute;
+		top: -38px;
+		right: 52px;
+	}
+
+		.tab-content.mainIframe .removeformGridbutton button {
+			padding: 5px 16px !important;
+			/* margin-top: 2px; */
+			background: #ff000024;
+			color: #c10e0e;
+			border: 1px solid red !important;
+			border-radius: 6px;
+		}
+
+	.tab-content.mainIframe .addFormGridbutton {
+		width: 100%;
+		margin-top: 7px;
+	}
+
+	.addFormGridbutton button.btn.btn-primary {
+		width: 100%;
+		font-size: 13px;
+		font-weight: 600 !important;
+		background: green !important;
+	}
+
+	/*    footer btn changs*/
+
+	.btn-group-sm > .btn:not(.btn-outline):not(.btn-dashed):not(.border-hover):not(.border-active):not(.btn-flush):not(.btn-icon), .btn:not(.btn-outline):not(.btn-dashed):not(.border-hover):not(.border-active):not(.btn-flush):not(.btn-icon).btn-sm {
+		padding: calc(0.55rem + 1px) calc(4.3rem + 1px);
+	}
+
+	.BottomToolbarBar a .material-icons.material-icons-2x.mx-auto.material-icons-style.material-icons-2 {
+		margin-right: 5px !important;
+	}
+
+	.BottomToolbarBar a.btn {
+		font-size: 13px !important;
+		flex-direction: row !important;
+	}
+	/*    toolbar icon*/
+	.toolbar .btn {
+		border-radius: 6px;
+		width: 32px;
+		height: 32px;
+	}
+
+		.toolbar .btn .material-icons.material-icons-style {
+			font-size: 20px;
+		}
+
+	.fld-wrap3 {
+		margin-bottom: 4px;
+	}
+}
+
+/*mobile UI changes ends */

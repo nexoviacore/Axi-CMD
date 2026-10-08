@@ -146,6 +146,7 @@ public partial class tstructhtml : System.Web.UI.Page
         string fdKeyMob = Constants.REDISTSTRUCTMOB;
         //string designKey = Constants.REDISTSTRUCTAXDESIGN;
         string designCustHtmlKey = Constants.REDISTSTRUCTAXCUSTHTML;
+        string fdKeyXML = Constants.REDISTSTRUCTXML;
         string fdkey1 = Constants.AXPAGETITLE;
         string schemaName = string.Empty;
         if (HttpContext.Current.Session["dbuser"] != null)
@@ -156,6 +157,7 @@ public partial class tstructhtml : System.Web.UI.Page
         fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(fdKeyMob, Transid), "", false, schemaName);
         //fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(designKey, Transid), "", false, schemaName);
         fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(designCustHtmlKey, Transid), "", false, schemaName);
+        fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(fdKeyXML, Transid), "", false, schemaName);
     }
 
 

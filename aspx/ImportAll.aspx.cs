@@ -88,6 +88,15 @@ public partial class aspx_ImportNew : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!IsPostBack)
+        {
+            string fetchDest = Request.Headers["Sec-Fetch-Dest"];
+            if (!string.IsNullOrEmpty(fetchDest) && !string.Equals(fetchDest, "iframe", StringComparison.OrdinalIgnoreCase))
+            {
+                SessExpires();
+                return;
+            }
+        }
         if (Session["project"] != null)
         {
             if (!util.CheckValidLogin())
@@ -644,6 +653,10 @@ public partial class aspx_ImportNew : System.Web.UI.Page
     public void UploadButton_Click(object sender, EventArgs e)
     {
         string checkHeader = hdnCheckHeader.Value;
+        string AutoGenFlds = hdnAutoGenFlds.Value;
+        string[] AutoGenFldsList = Array.Empty<string>();
+        if (!string.IsNullOrWhiteSpace(AutoGenFlds))
+            AutoGenFldsList = AutoGenFlds.Split(',');
         chkForIgnoreErr.Checked = true;
         string sid = Session["nsessionid"].ToString();
         string ScriptsPath = HttpContext.Current.Application["ScriptsPath"].ToString();
@@ -695,6 +708,11 @@ public partial class aspx_ImportNew : System.Web.UI.Page
                                     .ToArray();
                 firstRows.Add(headers);
                 // }
+                if (AutoGenFldsList.Length > 0 && headers.Length > 0 && headers.Any(h => AutoGenFldsList.Contains(h, StringComparer.OrdinalIgnoreCase)))
+                {
+                    ScriptManager.RegisterStartupScript(updatePln3, typeof(UpdatePanel), "uploadAlertErrorMessage", "ShowImportError('The Excel file contains AutoGenerate fields. Please remove them and try importing again.');", true);
+                    return;
+                }
             }
 
             if (dataTables.Count >= 1) // Check if there are at least two DataTables in the list
@@ -1222,7 +1240,22 @@ public partial class aspx_ImportNew : System.Web.UI.Page
     public static int GetDcs(string transid)
     {
         Util.Util util = new Util.Util();
-        TStructDef strObj = util.GetTstructDefObj("Get structure for", transid.Trim());
+        //TStructDef strObj = util.GetTstructDefObj("Get structure for", transid.Trim(), "true");
+        CacheManager cacheMgr = new CacheManager("Get structure for");
+        TStructDef strObj = cacheMgr.GetStructDef(HttpContext.Current.Session["project"].ToString(), HttpContext.Current.Session["nsessionid"].ToString(), HttpContext.Current.Session["user"].ToString(), transid, HttpContext.Current.Session["AxRole"].ToString());
+        if (!strObj.IsObjFromCache)
+        {
+            string schemaName = HttpContext.Current.Session["dbuser"].ToString();
+            string fdKey = Constants.REDISTSTRUCT;
+            if (HttpContext.Current.Session["MobileView"] != null && HttpContext.Current.Session["MobileView"].ToString() == "True")
+                fdKey = Constants.REDISTSTRUCTMOB;
+            string pgKey = Constants.AXPAGETITLE;
+            ArrayList redisvalues = new ArrayList();
+            string _sXML = strObj.structRes;
+            strObj.structRes = "";
+            cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transid), strObj, Constants.REDISTSTRUCT, schemaName);
+            cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transid), _sXML, Constants.REDISTSTRUCTXML, schemaName);
+        }
         return strObj.dcs.Count;
 
     }
@@ -1362,7 +1395,24 @@ public partial class aspx_ImportNew : System.Web.UI.Page
     public static string GetFields(string transid)
     {
         Util.Util util = new Util.Util();
-        TStructDef strObj = util.GetTstructDefObj("Get structure for", transid.Trim());
+        //TStructDef strObj = util.GetTstructDefObj("Get structure for", transid.Trim(), "true");
+
+        CacheManager cacheMgr = new CacheManager("Get structure for");
+        TStructDef strObj = cacheMgr.GetStructDef(HttpContext.Current.Session["project"].ToString(), HttpContext.Current.Session["nsessionid"].ToString(), HttpContext.Current.Session["user"].ToString(), transid, HttpContext.Current.Session["AxRole"].ToString());
+        if (!strObj.IsObjFromCache)
+        {
+            string schemaName = HttpContext.Current.Session["dbuser"].ToString();
+            string fdKey = Constants.REDISTSTRUCT;
+            if (HttpContext.Current.Session["MobileView"] != null && HttpContext.Current.Session["MobileView"].ToString() == "True")
+                fdKey = Constants.REDISTSTRUCTMOB;
+            string pgKey = Constants.AXPAGETITLE;
+            ArrayList redisvalues = new ArrayList();
+            string _sXML = strObj.structRes;
+            strObj.structRes = "";
+            cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transid), strObj, Constants.REDISTSTRUCT, schemaName);
+            cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transid), _sXML, Constants.REDISTSTRUCTXML, schemaName);
+        }
+
         //Session["transid"] = temp;
         List<string> myCollection = new List<string>();
         // string combinedString1 = "";
@@ -1373,6 +1423,8 @@ public partial class aspx_ImportNew : System.Web.UI.Page
         StringBuilder visibleTstFlds = new StringBuilder();
         StringBuilder visibleTstFldsGridDc = new StringBuilder();
         StringBuilder visibleTstFldsNonGriddc = new StringBuilder();
+        StringBuilder visibleTstFldsAllowDuplicate = new StringBuilder();
+        StringBuilder TstfldAutoGenerate = new StringBuilder();
         string gridDc = "false";
         for (int i = 0; i < strObj.flds.Count; i++)
         {
@@ -1385,7 +1437,7 @@ public partial class aspx_ImportNew : System.Web.UI.Page
                 {
                     gridDc = "true";
                     // visibleTstFldsGridDc.Append(dc.dcPList + "♠").ToString();
-                    if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && !fld.visibility && fld.moe != "AutoGenerate")
+                    if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && !fld.visibility && fld.moe.ToLower() != "autogenerate")
                     {
                         visibleTstFldsGridDc.Append(fld.caption + (fld.allowempty ? "" : "*") + "(" + fld.name + ")" + "♠" + fld.fldframeno + ",");
                     }
@@ -1393,7 +1445,7 @@ public partial class aspx_ImportNew : System.Web.UI.Page
                 else
                 {
                     //visibleTstFlds.Append(dc.name + "false" + "♠");
-                    if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && !fld.visibility)//&& fld.moe != "AutoGenerate"
+                    if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && !fld.visibility && fld.moe.ToLower() != "autogenerate")
                     {
                         visibleTstFldsNonGriddc.Append(fld.caption + (fld.allowempty ? "" : "*") + "(" + fld.name + ")" + "♠" + fld.fldframeno + ",");
                         multiselect.Add(fld.name + "&&" + fld.caption + (fld.allowempty ? "" : "*") + "(" + fld.name + ")", fld.caption + "(" + fld.name + ")");
@@ -1401,9 +1453,21 @@ public partial class aspx_ImportNew : System.Web.UI.Page
 
                 }
             }
-            if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && !fld.visibility)//&& fld.moe != "AutoGenerate"
+            //if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && !fld.visibility)//&& fld.moe != "AutoGenerate"
+            //{
+            //    visibleTstFlds.Append(fld.caption + (fld.allowempty ? "" : "*") + "(" + fld.name + ")" + ",");
+            //}
+            if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && fld.moe.ToLower() != "autogenerate" && !fld.visibility)
             {
                 visibleTstFlds.Append(fld.caption + (fld.allowempty ? "" : "*") + "(" + fld.name + ")" + ",");
+            }
+            if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && fld.moe.ToLower() != "autogenerate" && !fld.allowduplicate && !fld.visibility)
+            {
+                visibleTstFldsAllowDuplicate.Append(fld.caption + (fld.allowempty ? "" : "*") + "(" + fld.name + ")" + ",");
+            }
+            if (fld.moe.ToLower() == "autogenerate")
+            {
+                TstfldAutoGenerate.Append(fld.caption + (fld.allowempty ? "" : "*") + "(" + fld.name + ")" + ",");
             }
         }
 
@@ -1413,7 +1477,9 @@ public partial class aspx_ImportNew : System.Web.UI.Page
             // Multiselect = multiselect,
             VisibleTstFlds = visibleTstFlds,
             visibleTstFldsGridDc = visibleTstFldsGridDc,
-            visibleTstFldsNonGriddc = visibleTstFldsNonGriddc
+            visibleTstFldsNonGriddc = visibleTstFldsNonGriddc,
+            visibleTstFldsAllowDuplicate = visibleTstFldsAllowDuplicate,
+            TstfldAutoGenerate = TstfldAutoGenerate
         };
 
         return JsonConvert.SerializeObject(response);
@@ -2478,7 +2544,7 @@ public partial class aspx_ImportNew : System.Web.UI.Page
             AnalyticsUtils _aUtils = new AnalyticsUtils();
             string armSessionId = _aUtils.ARMSessionId;
             queueData = queueData.Replace("$ARMSESSIONID$", armSessionId);
-            queueData = queueData.Replace("$ARMTOKEN$", HttpContext.Current.Session["ARM_Token"].ToString());             
+            queueData = queueData.Replace("$ARMTOKEN$", HttpContext.Current.Session["ARM_Token"].ToString());
             queueData = queueData.Replace("$SIGNALRURL$", ARM_Notification_URL.TrimEnd('/') + "/api/v1/SendSignalR");
             queueData = queueData.Replace("$ARMSCRIPTURL$", ArmScriptURL.TrimEnd('/') + "/ASBRapidSaveRest.dll/datasnap/rest/TASBRapidSaveRest/ConvertXLToJSON");
             if (queueData.EndsWith("}"))
@@ -2575,7 +2641,22 @@ public partial class aspx_ImportNew : System.Web.UI.Page
     public static string GetFieldsNew(string transid, string _selectedDcs)
     {
         Util.Util util = new Util.Util();
-        TStructDef strObj = util.GetTstructDefObj("Get structure for", transid.Trim());
+        //TStructDef strObj = util.GetTstructDefObj("Get structure for", transid.Trim(), "true");
+        CacheManager cacheMgr = new CacheManager("Get structure for");
+        TStructDef strObj = cacheMgr.GetStructDef(HttpContext.Current.Session["project"].ToString(), HttpContext.Current.Session["nsessionid"].ToString(), HttpContext.Current.Session["user"].ToString(), transid, HttpContext.Current.Session["AxRole"].ToString());
+        if (!strObj.IsObjFromCache)
+        {
+            string schemaName = HttpContext.Current.Session["dbuser"].ToString();
+            string fdKey = Constants.REDISTSTRUCT;
+            if (HttpContext.Current.Session["MobileView"] != null && HttpContext.Current.Session["MobileView"].ToString() == "True")
+                fdKey = Constants.REDISTSTRUCTMOB;
+            string pgKey = Constants.AXPAGETITLE;
+            ArrayList redisvalues = new ArrayList();
+            string _sXML = strObj.structRes;
+            strObj.structRes = "";
+            cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, transid), strObj, Constants.REDISTSTRUCT, schemaName);
+            cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transid), _sXML, Constants.REDISTSTRUCTXML, schemaName);
+        }
         List<string> myCollection = new List<string>();
 
         var selectedDcNumbers = string.IsNullOrWhiteSpace(_selectedDcs) ? new int[0] : _selectedDcs.Split(',').Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => int.Parse(x.Trim())).ToArray();
@@ -2599,7 +2680,7 @@ public partial class aspx_ImportNew : System.Web.UI.Page
                 {
                     gridDc = "true";
                     // visibleTstFldsGridDc.Append(dc.dcPList + "♠").ToString();
-                    if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && !fld.visibility && fld.moe != "AutoGenerate")
+                    if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && !fld.visibility && fld.moe.ToLower() != "autogenerate")
                     {
                         visibleTstFldsGridDc.Append(fld.caption + (fld.allowempty ? "" : "*") + "(" + fld.name + ")" + "♠" + fld.fldframeno + ",");
                     }
@@ -2607,7 +2688,7 @@ public partial class aspx_ImportNew : System.Web.UI.Page
                 else
                 {
                     //visibleTstFlds.Append(dc.name + "false" + "♠");
-                    if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && !fld.visibility)//&& fld.moe != "AutoGenerate"
+                    if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && !fld.visibility && fld.moe.ToLower() != "autogenerate")
                     {
                         visibleTstFldsNonGriddc.Append(fld.caption + (fld.allowempty ? "" : "*") + "(" + fld.name + ")" + "♠" + fld.fldframeno + ",");
                         multiselect.Add(fld.name + "&&" + fld.caption + (fld.allowempty ? "" : "*") + "(" + fld.name + ")", fld.caption + "(" + fld.name + ")");
@@ -2617,7 +2698,7 @@ public partial class aspx_ImportNew : System.Web.UI.Page
             }
             if (selectedDcNumbers.Contains(fld.fldframeno))
             {
-                if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && !fld.visibility)//&& fld.moe != "AutoGenerate"
+                if (fld.savevalue && !fld.name.StartsWith("axp_recid") && fld.datatype.ToLower() != "image" && !fld.visibility && fld.moe.ToLower() != "autogenerate")
                 {
                     visibleTstFlds.Append(fld.caption + (fld.allowempty ? "" : "*") + "(" + fld.name + ")" + ",");
                 }

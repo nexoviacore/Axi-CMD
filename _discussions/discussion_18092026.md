@@ -1,0 +1,1 @@
+1. image should be loaded from local instead of cdn in the axi-sec 
