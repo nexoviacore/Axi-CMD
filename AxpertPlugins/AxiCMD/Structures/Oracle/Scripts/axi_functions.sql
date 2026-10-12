@@ -130,7 +130,9 @@ BEGIN
 
     IF v_search IS NOT NULL AND LENGTH(v_search) > 0 THEN
         v_search_escaped := REPLACE(v_search, '''', '''''');
-        v_fld_search_filter := ' AND (LOWER(caption) LIKE LOWER(''%' || v_search_escaped || '%'') OR LOWER(fname) LIKE LOWER(''%' || v_search_escaped || '%''))';
+        -- v_fld_search_filter is intentionally left empty: the search term applies to record rows only.
+        -- Field rows (isfield = 't') must stay visible while the user is typing, so they are never filtered.
+        v_fld_search_filter := '';
     ELSE
         v_fld_search_filter := '';
     END IF;
@@ -478,11 +480,20 @@ BEGIN
 
     IF pselectedfield = '0' THEN
 
-        v_sql :=
-               'SELECT * FROM ('
-            || v_keyfield_sql
-            || ') UNION ALL '
-            || v_fieldlist_sql;
+        -- Result = record rows (isfield 'f': searched + paginated) UNION field rows (isfield 't').
+        -- Field rows are never filtered by the search term and never limited by page size.
+        IF v_offset > 0 THEN
+            -- Page 2+ of the record list: records only. The field rows were already delivered with
+            -- page 1, so repeating them would create duplicates.
+            v_sql := v_keyfield_sql;
+        ELSE
+            -- Page 1: records followed by the complete field list.
+            v_sql :=
+                   'SELECT * FROM ('
+                || v_keyfield_sql
+                || ') UNION ALL '
+                || v_fieldlist_sql;
+        END IF;
 
     ELSE
 

@@ -591,6 +591,127 @@ if (typeof document !== "undefined") {
     let axDatasourceObj = {};
     let activeFetches = new Set();
     let failedFetches = new Set();
+
+    // ---- Large dataset handling ------------------------------------------------------------
+    // Sources whose server query accepts param11 = search term, param12 = page no, param13 = page size.
+    // Only these are searched/paged on the server; everything else is small and filtered locally.
+    // axi_structmetalist = the list of forms / reports / pages / data sources shown under the commands.
+    // (axi_viewlist is also paged on the server, but the command line does not use it.)
+    const PAGED_SOURCES = ["axi_getstructsdata", "axi_structmetalist", "axi_viewlist"];
+    const PAGE_SIZE = 100;                 // rows requested per page
+    const MAX_CACHED_SEARCH_KEYS = 20;     // in-memory "_q_<term>" result sets kept per session (LRU)
+    const MAX_MERGED_BASE_ROWS = 5000;     // search hits merged into a base list stop growing past this
+    const MAX_RENDERED_ITEMS = 1000;       // hard cap of <li> elements built in one render
+    const FAILED_FETCH_RETRY_MS = 10000;   // a failed fetch key may be retried after this long
+    const LS_MAX_ENTRY_CHARS = 200000;     // results bigger than this are not persisted to localStorage
+
+    /**
+     * Tells whether a data source is searched/paged on the server.
+     * @param {string} sourceName - Data source (ADS) name.
+     * @returns {boolean} True if the source supports param11/12/13 search + paging.
+     */
+    function isPagedSource(sourceName) {
+        const name = (sourceName || "").toLowerCase();
+        return PAGED_SOURCES.includes(name) || name.includes("getstructsdata");
+    }
+
+    // Paging state per fetch key: { page: last page loaded, hasMore: server may have more rows, loading }
+    const axPageState = {};
+    // Insertion order of "_q_" search keys in axDatasourceObj, used for LRU eviction
+    const axSearchKeyOrder = [];
+    // Row-id index per base list so merging search hits does not rescan the whole list each time
+    const axBaseIdIndex = {};
+    // When a fetch failed (fetchKey -> timestamp) so it can be retried after FAILED_FETCH_RETRY_MS
+    const failedFetchTimes = {};
+    const LS_TTL_MS = 30 * 60 * 1000;      // persisted list results are reused for this long
+
+    /**
+     * Reads rows back from a localStorage entry written by writeListCache. Also accepts a plain array
+     * (older format). Returns an empty array for anything unreadable.
+     * @param {string} raw - Raw localStorage string.
+     * @returns {Array<object>} Rows.
+     */
+    function parseStoredList(raw) {
+        try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return parsed;
+            if (parsed && Array.isArray(parsed.d)) return parsed.d;
+        } catch (e) { }
+        return [];
+    }
+
+    /**
+     * Returns a still-fresh cached result for the key, or null (missing, expired or unreadable).
+     * Expired entries are removed.
+     * @param {string} cacheKey - localStorage key.
+     * @returns {Array<object>|null} Cached rows or null.
+     */
+    function readListCache(cacheKey) {
+        try {
+            const raw = localStorage.getItem(cacheKey);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.d) && typeof parsed.t === "number" && Date.now() - parsed.t < LS_TTL_MS) {
+                return parsed.d;
+            }
+            localStorage.removeItem(cacheKey);
+        } catch (e) { }
+        return null;
+    }
+
+    /**
+     * Stores rows in localStorage with a timestamp. Very large result sets are not stored (parsing them
+     * later would block the page). If the browser quota is exceeded, old AxiCMD list entries are
+     * removed and the write is retried once.
+     * @param {string} cacheKey - localStorage key.
+     * @param {Array<object>} rows - Rows to store.
+     * @returns {void}
+     */
+    function writeListCache(cacheKey, rows) {
+        let json;
+        try {
+            json = JSON.stringify({ t: Date.now(), d: rows });
+        } catch (e) { return; }
+        if (json.length > LS_MAX_ENTRY_CHARS) return;
+        try {
+            localStorage.setItem(cacheKey, json);
+        } catch (quotaErr) {
+            try {
+                // Quota exceeded: drop every cached list result (they are cheap to reload), then retry once
+                const stale = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && k.startsWith("axi_") && /_v[12]$/.test(k) && k !== cacheKey && k.toLowerCase().includes("_param")) stale.push(k);
+                }
+                stale.forEach(k => localStorage.removeItem(k));
+                localStorage.setItem(cacheKey, json);
+            } catch (e) { /* still no room: skip caching, in-memory cache is still used */ }
+        }
+    }
+
+    // Coalesces "fetch finished -> refresh suggestions" calls (see scheduleSuggestionRefresh)
+    let suggestionRefreshTimer = null;
+    // Dropdown scrollTop to restore after a "load more" re-render (null = start from top)
+    let pendingScrollRestore = null;
+    // The paged list currently shown in the dropdown: { source, param, term, listKey } or null
+    let activePagedContext = null;
+
+    /**
+     * Registers a search key as most recently used and drops the oldest ones beyond the limit.
+     * @param {string} key - Search result key containing "_q_".
+     * @returns {void}
+     */
+    function touchSearchKey(key) {
+        const idx = axSearchKeyOrder.indexOf(key);
+        if (idx !== -1) axSearchKeyOrder.splice(idx, 1);
+        axSearchKeyOrder.push(key);
+        while (axSearchKeyOrder.length > MAX_CACHED_SEARCH_KEYS) {
+            const oldest = axSearchKeyOrder.shift();
+            delete axDatasourceObj[oldest];
+            delete axPageState[oldest];
+        }
+    }
+
     let filteredObjects = [];
     let dynamicSearchDebounceTimer = null;
     let adsfieldvalueanddt = {};
@@ -867,7 +988,6 @@ if (typeof document !== "undefined") {
             getList: getList,
             testDebounceAds: async function (adsName = "axi_getstructsdata", params = "", searchTerm = "abc") {
                 console.log("%c[axiDebug.testDebounceAds] Triggering test ADS search directly...", "color: #9333ea; font-weight: bold;", { adsName, params, searchTerm });
-                debugger; // Stop point: invoked via window.axiDebug.testDebounceAds
                 return await loadList(adsName, params, searchTerm, 1, 100);
             }
         };
@@ -1267,7 +1387,7 @@ if (typeof document !== "undefined") {
      * @param {number} [pageSize=100] - Number of records per page (default 100).
      * @returns {Promise<Array<object>>} List of suggestion items.
      */
-    async function loadList(sourceName, paramValue = "", searchTerm = "", pageNo = 1, pageSize = 100) {
+    async function loadList(sourceName, paramValue = "", searchTerm = "", pageNo = 1, pageSize = PAGE_SIZE) {
         if (!axicmdenabled || sourceName === "axi_dummy") {
             return [];
         }
@@ -1277,95 +1397,256 @@ if (typeof document !== "undefined") {
         }
         const baseKey = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
         const cleanTerm = (typeof searchTerm === "string" ? searchTerm : "").trim().toLowerCase();
-        const fetchKey = cleanTerm ? `${baseKey}_q_${cleanTerm}` : baseKey;
 
-        console.log("%c[AxiCMD loadList] Called:", "color: #2563eb; font-weight: bold;", {
-            sourceName,
-            paramValue,
-            searchTerm: cleanTerm,
-            pageNo,
-            pageSize,
-            fetchKey,
-            alreadyActive: activeFetches.has(fetchKey)
-        });
+        // listKey = where the accumulated rows live (base list, or the list for one search term).
+        // fetchKey = what identifies one network request (page 2+ get their own key so they can run
+        // while page 1 is already cached, and so duplicate scroll events are ignored).
+        const listKey = cleanTerm ? `${baseKey}_q_${cleanTerm}` : baseKey;
+        const isNextPage = pageNo > 1;
+        const fetchKey = isNextPage ? `${listKey}_p${pageNo}` : listKey;
 
-        if (cleanTerm) {
-            debugger; // <<< DEBUGGER STOP POINT: Inside loadList with dynamic search term >>>
+        if (activeFetches.has(fetchKey)) return axDatasourceObj[listKey] || [];
+        if (failedFetches.has(fetchKey)) {
+            // A failed fetch is only blocked for a short time, then it may be retried
+            if (Date.now() - (failedFetchTimes[fetchKey] || 0) < FAILED_FETCH_RETRY_MS) return axDatasourceObj[listKey] || [];
+            failedFetches.delete(fetchKey);
+            delete failedFetchTimes[fetchKey];
         }
-
-        if (activeFetches.has(fetchKey) || failedFetches.has(fetchKey)) return axDatasourceObj[fetchKey] || [];
         activeFetches.add(fetchKey);
 
         try {
-            // For metadata list (axi_structmetalist), fetch all records (pageSize = 0).
-            // For form records (e.g. axi_getstructsdata) or large datasets, use initial 100 records or requested pageSize.
-            const effectivePageSize = (sourceName.toLowerCase() === "axi_structmetalist") ? 0 : (pageSize || 100);
+            const paged = isPagedSource(sourceName);
+            // Every source is requested one page at a time. (The structure list, axi_structmetalist, used to
+            // be fetched whole with pageSize 0; it is paged on the server now like the record lists.)
+            const effectivePageSize = pageSize || PAGE_SIZE;
             const data = await getList(sourceName, paramValue, cleanTerm, pageNo, effectivePageSize);
             let list = Array.isArray(data) ? data : (data ? [data] : []);
 
-            // Ensure initial load respects pageSize limit (e.g. initial 100 records)
-            if (!cleanTerm && effectivePageSize > 0 && list.length > effectivePageSize) {
-                console.log(`%c[AxiCMD loadList] Capping initial loaded dataset from ${list.length} to ${effectivePageSize} records.`, "color: #0284c7; font-weight: bold;");
-                list = list.slice(0, effectivePageSize);
-            }
+            // Field rows (isfield === 't') are exempt from pagination and search: they are always
+            // returned in full by the server. Only record rows are capped/filtered below.
+            const isFieldItem = item => String(item?.isfield ?? item?.ISFIELD ?? "").toLowerCase() === "t";
+            const fieldItems = list.filter(isFieldItem);
+            let recordItems = list.filter(item => !isFieldItem(item));
 
-            // Ensure dynamic search results only contain matching items (in case server ignores filters)
-            if (cleanTerm && list.length > 0) {
-                list = list.filter(item => {
+            // A full page from the server means there may be another page ("load more" on scroll)
+            // hasMore is true only when the server returned EXACTLY one full page. More rows than a page means
+            // the server did not apply paging (for example the ADS query has not been updated yet): then
+            // everything it sent is already here and there is no next page to ask for.
+            const serverRecordCount = recordItems.length;
+            axPageState[listKey] = {
+                page: pageNo,
+                hasMore: paged && effectivePageSize > 0 && serverRecordCount === effectivePageSize
+            };
+
+            // Search first, then limit. (Limiting first would cut the list to its first rows and the search
+            // would then run on those only, so a match further down could never be found.)
+            // The server already applies the term; this is a safety net in case it does not.
+            if (cleanTerm && recordItems.length > 0) {
+                recordItems = recordItems.filter(item => {
                     const display = item.displaydata || item.caption || item.name || item.fname || item.keyfield || "";
                     return String(display).toLowerCase().includes(cleanTerm);
                 });
             }
 
-            axDatasourceObj[fetchKey] = list;
+            // Page-size limit for sources that are not paged on the server. Paged sources are not cut here:
+            // the server limits them, and when it did not, the rows it sent are kept rather than dropped.
+            if (!paged && effectivePageSize > 0 && recordItems.length > effectivePageSize) {
+                recordItems = recordItems.slice(0, effectivePageSize);
+            }
 
-            console.log("%c[AxiCMD loadList] Fetched data for " + fetchKey + ":", "color: #059669; font-weight: bold;", {
-                count: list.length,
-                sample: list.slice(0, 3)
-            });
+            const uidOf = item => {
+                const uid = item?.transrecordid ?? item?.id ?? item?.displaydata ?? item?.name;
+                return (uid !== undefined && uid !== null) ? String(uid).toLowerCase() : null;
+            };
+
+            if (isNextPage && Array.isArray(axDatasourceObj[listKey])) {
+                // Page 2+: append only rows we do not already hold (no field rows - they came with page 1)
+                const current = axDatasourceObj[listKey];
+                const seen = new Set();
+                current.forEach(item => { const u = uidOf(item); if (u !== null) seen.add(u); });
+                const incoming = new Set();
+                recordItems.forEach(item => {
+                    const u = uidOf(item);
+                    if (u !== null) incoming.add(u);
+                    if (u === null || !seen.has(u)) current.push(item);
+                });
+                // Rows that were only merged from a search and have now arrived as a real page are plain rows again
+                if (!cleanTerm) {
+                    current.forEach(item => { if (item && item.__fromSearch && incoming.has(uidOf(item))) delete item.__fromSearch; });
+                }
+                list = current;
+            } else {
+                // Page 1: replace the list (records first, then the untouched field rows)
+                const previous = axDatasourceObj[listKey];
+                list = recordItems.concat(fieldItems);
+                // A reload of a base list must not forget structures / records that were merged in from earlier
+                // searches (they are not on page 1 but may already be in use by a typed command).
+                if (!cleanTerm && paged && Array.isArray(previous) && previous.length > 0) {
+                    const have = new Set();
+                    list.forEach(item => { const u = uidOf(item); if (u !== null) have.add(u); });
+                    for (let i = 0; i < previous.length && list.length < MAX_MERGED_BASE_ROWS; i++) {
+                        const u = uidOf(previous[i]);
+                        if (u !== null && !have.has(u) && !isFieldItem(previous[i])) { have.add(u); list.push(previous[i]); }
+                    }
+                }
+                axDatasourceObj[listKey] = list;
+            }
+
+            if (cleanTerm) touchSearchKey(listKey);
 
             // When dynamic search returns records, merge them into the base list in memory
             // so token resolvers, command runners, and storage lookups can find any selected record.
-            if (cleanTerm && list.length > 0) {
+            if (cleanTerm && recordItems.length > 0) {
                 if (!axDatasourceObj[baseKey] || !Array.isArray(axDatasourceObj[baseKey])) {
                     axDatasourceObj[baseKey] = [];
                 }
                 const existing = axDatasourceObj[baseKey];
-                const seenIds = new Set();
-                for (let i = 0; i < existing.length; i++) {
-                    const item = existing[i];
-                    const uid = item?.transrecordid ?? item?.id ?? item?.displaydata ?? item?.name;
-                    if (uid !== undefined && uid !== null) {
-                        seenIds.add(String(uid).toLowerCase());
+
+                // Id index kept per base list so every merge does not rescan the whole list.
+                // It is rebuilt only if the base array itself was replaced (e.g. after a reset).
+                let idx = axBaseIdIndex[baseKey];
+                if (!idx || idx.ref !== existing) {
+                    idx = { ref: existing, ids: new Set() };
+                    existing.forEach(item => { const u = uidOf(item); if (u !== null) idx.ids.add(u); });
+                    axBaseIdIndex[baseKey] = idx;
+                }
+
+                // Rows merged in from a search are copies marked __fromSearch. They stay findable for resolvers
+                // (tryResolveToken, edit/view lookups ...) but are not part of the list as the server returned it,
+                // so the plain list (nothing typed) does not show them out of order at its end.
+                for (let i = 0; i < recordItems.length && existing.length < MAX_MERGED_BASE_ROWS; i++) {
+                    const item = recordItems[i];
+                    const u = uidOf(item);
+                    if (u === null) {
+                        existing.push(Object.assign({}, item, { __fromSearch: true }));
+                    } else if (!idx.ids.has(u)) {
+                        idx.ids.add(u);
+                        existing.push(Object.assign({}, item, { __fromSearch: true }));
                     }
                 }
-                for (let i = 0; i < list.length; i++) {
-                    const item = list[i];
-                    const uid = item?.transrecordid ?? item?.id ?? item?.displaydata ?? item?.name;
-                    if (uid !== undefined && uid !== null) {
-                        const key = String(uid).toLowerCase();
-                        if (!seenIds.has(key)) {
-                            seenIds.add(key);
-                            existing.push(item);
-                        }
-                    } else {
-                        existing.push(item);
-                    }
-                }
-                console.log(`%c[AxiCMD loadList] Merged ${list.length} dynamic search items into base list '${baseKey}'. Total now: ${existing.length}`, "color: #10b981;");
             }
             return list;
         } catch (error) {
             failedFetches.add(fetchKey);
-            axDatasourceObj[fetchKey] = [];
+            failedFetchTimes[fetchKey] = Date.now();
+            if (!isNextPage) axDatasourceObj[listKey] = [];
             console.error("[AxiCMD loadList] Failed fetch:", fetchKey, error);
             return [];
         } finally {
             activeFetches.delete(fetchKey);
+            scheduleSuggestionRefresh();
+        }
+    }
+
+    /**
+     * Re-runs the suggestion pipeline after a fetch finishes. Several fetches can finish close together
+     * (for example while typing), so refreshes are coalesced into one to avoid re-filtering and
+     * re-rendering large lists repeatedly.
+     * @returns {void}
+     */
+    function scheduleSuggestionRefresh() {
+        if (isInitialLoad) return;
+        clearTimeout(suggestionRefreshTimer);
+        suggestionRefreshTimer = setTimeout(() => {
             if (!isInitialLoad && document.activeElement === input) {
                 handleInput();
             }
+        }, 30);
+    }
+
+    // Structure-list search (axi_structmetalist): only a first page of the list is loaded, so names that are
+    // not in it are looked up on the server as the user types.
+    let structSearchTimer = null;
+    let structSearchPendingTerm = null;
+    // True while a debounced record search (axi_getstructsdata etc.) is waiting to be sent
+    let dynamicSearchPending = false;
+
+    /**
+     * Tells whether a server search has been requested but not finished: either waiting out its debounce delay
+     * (nothing is in activeFetches yet) or running. The dropdown must show "Searching..." then, never "No Data".
+     * @returns {boolean} True while a search is pending.
+     */
+    function isSearchPending() {
+        return structSearchPendingTerm !== null || dynamicSearchPending;
+    }
+    const structSearchAsked = new Set();
+
+    /**
+     * Asks the server for structures (forms / reports / pages / data sources) matching a typed word, when the
+     * word is not in the part of the structure list loaded so far. Debounced, and each term is asked only once.
+     * Hits are merged into the base list by loadList, which then refreshes the suggestions.
+     * @param {string} term - Text typed by the user (3+ characters are searched).
+     * @param {string} [paramOverride] - Parameter string of the structure list to search. Commands such as edit
+     *   use their own (e.g. "...$#$run$#$t"), so the list that is searched must be the one that command reads.
+     * @returns {void}
+     */
+    function requestStructSearch(term, paramOverride) {
+        term = (term || "").replace(/"/g, "").trim().toLowerCase();
+        if (term.length < 3 || !axicmdenabled) return;
+        const param = paramOverride || getStructParam();
+        const baseKey = "axi_structmetalist_" + param.toLowerCase();
+        const state = axPageState[baseKey];
+        // Not loaded yet, or the whole list already fits in the first page: nothing more to find on the server
+        if (!state || !state.hasMore) return;
+        // A command word (create, edit, ...) is not a structure name
+        if (["create", "edit", "view", "source"].includes(term) || getCommandConfig(term)) return;
+        const askKey = baseKey + "|" + term;
+        if (structSearchAsked.has(askKey) || structSearchPendingTerm === askKey) return;
+        structSearchPendingTerm = askKey;
+        clearTimeout(structSearchTimer);
+        structSearchTimer = setTimeout(() => {
+            structSearchPendingTerm = null;
+            structSearchAsked.add(askKey);
+            loadList("axi_structmetalist", param, term, 1, PAGE_SIZE);
+        }, 300);
+    }
+
+    /**
+     * Builds the small non-selectable row shown under a paged list: a spinner while the next page is
+     * loading, a hint when more rows can be loaded by scrolling, or a note when the render cap is reached.
+     * It deliberately does not use the "axi-suggestion" class so keyboard navigation ignores it.
+     * @param {number} renderedTotal - Number of valid items currently in the list.
+     * @returns {HTMLElement|null} Footer element or null when there is nothing to show.
+     */
+    function buildLoadMoreFooter(renderedTotal) {
+        const ctx = activePagedContext;
+        if (!ctx) return null;
+        const state = axPageState[ctx.listKey];
+        if (!state || !state.hasMore) return null;
+
+        const li = document.createElement("li");
+        li.className = "axi-load-more";
+        li.style.cssText = "list-style:none;text-align:center;padding:8px;font-size:12px;color:#6b7280;cursor:default;";
+        if (activeFetches.has(`${ctx.listKey}_p${state.page + 1}`)) {
+            li.textContent = "Loading more...";
+        } else if (renderedTotal >= MAX_RENDERED_ITEMS) {
+            li.textContent = `Showing first ${MAX_RENDERED_ITEMS} - type more to narrow the results`;
+        } else {
+            li.textContent = "Scroll down for more...";
         }
+        return li;
+    }
+
+    /**
+     * Fetches the next page of the paged list currently shown in the dropdown (called when the user
+     * scrolls to the bottom). Does nothing if there is no next page, one is already loading, or the
+     * render cap has been reached.
+     * @returns {void}
+     */
+    function loadNextPage() {
+        const ctx = activePagedContext;
+        if (!ctx) return;
+        const state = axPageState[ctx.listKey];
+        if (!state || !state.hasMore) return;
+        const nextPage = state.page + 1;
+        if (activeFetches.has(`${ctx.listKey}_p${nextPage}`)) return;
+        if ((axDatasourceObj[ctx.listKey] || []).length >= MAX_RENDERED_ITEMS) return;
+
+        // Re-render happens when the page arrives; remember where the user was scrolled to
+        pendingScrollRestore = list.scrollTop;
+        const footer = list.querySelector(".axi-load-more");
+        if (footer) footer.textContent = "Loading more...";
+        loadList(ctx.source, ctx.param, ctx.term, nextPage, PAGE_SIZE);
     }
 
     //function openPopOption(targetURL) {
@@ -2658,7 +2939,8 @@ if (typeof document !== "undefined") {
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
         const list = axDatasourceObj[key] || [];
 
-        if (targetEntitiesCache.sourceList !== list || !targetEntitiesCache.matchesMap) {
+        // Rebuilt when the list object changes or grows in place (next pages / merged search hits)
+        if (targetEntitiesCache.sourceList !== list || targetEntitiesCache.listLength !== list.length || !targetEntitiesCache.matchesMap) {
             const map = new Map();
             for (let i = 0; i < list.length; i++) {
                 const d = list[i];
@@ -2687,10 +2969,15 @@ if (typeof document !== "undefined") {
                 });
             }
             targetEntitiesCache.sourceList = list;
+            targetEntitiesCache.listLength = list.length;
             targetEntitiesCache.matchesMap = map;
         }
 
-        return targetEntitiesCache.matchesMap.get(cleanTok) || [];
+        const found = targetEntitiesCache.matchesMap.get(cleanTok) || [];
+        // Not in the part of the list loaded so far: ask the server (debounced). When the hit is merged
+        // into the list the suggestions refresh and the name is recognised.
+        if (found.length === 0) requestStructSearch(cleanTok);
+        return found;
     }
 
     /**
@@ -2960,25 +3247,33 @@ if (typeof document !== "undefined") {
 
     let initialSuggestionsCache = null;
     let initialSuggestionsSourceList = null;
+    let initialSuggestionsListLength = -1;
     let initialSuggestionsRunnable = null;
+    let initialSuggestionsIncludeHits = false;
 
     /**
      * Returns list of base command verbs for initial/empty input state.
+     * @param {boolean} [includeSearchHits=false] - Also include structures merged in from a server search.
+     *   False for the plain list (nothing typed); true while the user is typing a word to search for.
      * @returns {Array<object>} Initial suggestion objects.
      */
-    function getInitialSuggestions() {
+    function getInitialSuggestions(includeSearchHits = false) {
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
         const currentList = axDatasourceObj[key] || [];
         const structType = getStructType();
         const isRunnable = !!(structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage() && !isViewDesignerModalOpen());
 
-        if (initialSuggestionsCache && initialSuggestionsSourceList === currentList && initialSuggestionsRunnable === isRunnable) {
+        // The list is extended in place (next pages, merged search hits), so besides the list identity the
+        // length is compared too; otherwise newly loaded structures would never show up.
+        if (initialSuggestionsCache && initialSuggestionsSourceList === currentList && initialSuggestionsListLength === currentList.length && initialSuggestionsRunnable === isRunnable && initialSuggestionsIncludeHits === includeSearchHits) {
             return initialSuggestionsCache;
         }
         const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view", "source"].includes(k.toLowerCase()));
-        const targets = currentList.filter(item => isStructureVisible(item));
+        const targets = currentList.filter(item => (includeSearchHits || !item.__fromSearch) && isStructureVisible(item));
+        initialSuggestionsIncludeHits = includeSearchHits;
         initialSuggestionsCache = [...verbs, ...targets];
         initialSuggestionsSourceList = currentList;
+        initialSuggestionsListLength = currentList.length;
         initialSuggestionsRunnable = isRunnable;
         return initialSuggestionsCache;
     }
@@ -4100,7 +4395,9 @@ if (typeof document !== "undefined") {
      * @returns {Array<object>} List of local suggestions.
      */
     function suggestLocal(inputText) {
-        // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        // Cleared on every pass; set again below only when the list shown is a server-paged one
+        activePagedContext = null;
+        // console.log("Resolved Param" + JSON.stringify(resolvedParams));
         // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
         normalizeGlobalState();
         let ignoreExtraParams = false;
@@ -4116,6 +4413,9 @@ if (typeof document !== "undefined") {
 
         if (rawTokens.length === 0) {
             hintDiv.textContent = "";
+            // The structure list under the commands is paged: scrolling to its end loads the next page
+            const metaParam0 = getStructParam();
+            activePagedContext = { source: "axi_structmetalist", param: metaParam0, term: "", listKey: "axi_structmetalist_" + metaParam0.toLowerCase() };
             const allSuggestions = getInitialSuggestions();
             filteredObjects = allSuggestions.map(item => {
                 if (typeof item === "string") {
@@ -4131,7 +4431,21 @@ if (typeof document !== "undefined") {
         if (rawTokens.length === 1 && (!endsWithSpace || isUnclosedString)) {
             hintDiv.textContent = "";
             const prefix = groupKeyRaw.toLowerCase();
-            const allSuggestions = getInitialSuggestions();
+
+            // The structure list is only partly loaded: search the server for what is being typed (3+ chars)
+            // and let scrolling load more of the matching list.
+            const metaParam1 = getStructParam();
+            const metaBaseKey1 = "axi_structmetalist_" + metaParam1.toLowerCase();
+            const searching = prefix.length >= 3;
+            activePagedContext = {
+                source: "axi_structmetalist",
+                param: metaParam1,
+                term: searching ? prefix : "",
+                listKey: searching ? `${metaBaseKey1}_q_${prefix}` : metaBaseKey1
+            };
+            if (searching) requestStructSearch(prefix);
+
+            const allSuggestions = getInitialSuggestions(true);
             const filtered = allSuggestions.filter(item => {
                 if (typeof item === "string") {
                     return item.toLowerCase().startsWith(prefix);
@@ -4854,9 +5168,22 @@ if (typeof document !== "undefined") {
             }
 
             // Filter Cache
-            const isDynamicSource = (apiSourceName.toLowerCase() === "axi_getstructsdata" || apiSourceName.toLowerCase() === "axi_viewlist" || apiSourceName.toLowerCase().includes("getstructsdata"));
+            // Sources that support server-side search + paging (see PAGED_SOURCES)
+            const isDynamicSource = isPagedSource(apiSourceName);
             const cleanSearch = (partialTyped || "").trim().toLowerCase();
             let dataList = axDatasourceObj[sourceKey] || [];
+            // Rows merged into the base list from earlier searches are shown only while searching (3+ chars)
+            if (cleanSearch.length < 3) dataList = dataList.filter(item => !item || !item.__fromSearch);
+
+            // Remember which list the dropdown is showing so scrolling to the bottom can load the next page
+            activePagedContext = isDynamicSource
+                ? {
+                    source: apiSourceName,
+                    param: paramValue,
+                    term: cleanSearch.length >= 3 ? cleanSearch : "",
+                    listKey: cleanSearch.length >= 3 ? `${sourceKey}_q_${cleanSearch}` : sourceKey
+                }
+                : null;
 
             console.log("%c[AxiCMD Suggest] Remote suggestion check:", "color: #0284c7; font-weight: bold;", {
                 apiSourceName,
@@ -4878,10 +5205,11 @@ if (typeof document !== "undefined") {
                     } else {
                         console.log(`%c[AxiCMD Debounce] Scheduling 300ms debounce ADS call for '${cleanSearch}'...`, "color: #e11d48; font-weight: bold;");
                         clearTimeout(dynamicSearchDebounceTimer);
+                        dynamicSearchPending = true;
                         dynamicSearchDebounceTimer = setTimeout(() => {
+                            dynamicSearchPending = false;
                             console.log(`%c[AxiCMD Debounce] >>> TIMER FIRED! Calling loadList with search '${cleanSearch}' <<<`, "background: #7c3aed; color: #fff; padding: 2px 6px; border-radius: 2px; font-weight: bold;");
-                            debugger; // <<< DEBUGGER STOP POINT: Debounce timer fired, about to call loadList >>>
-                            loadList(apiSourceName, paramValue, cleanSearch, 1, 100);
+                            loadList(apiSourceName, paramValue, cleanSearch, 1, PAGE_SIZE);
                         }, 300);
 
                         const localMatches = dataList.filter(item => {
@@ -4901,6 +5229,7 @@ if (typeof document !== "undefined") {
                 } else {
                     console.log(`[AxiCMD Debounce] Search length (${cleanSearch.length}) < 3. Clearing pending debounce timer.`);
                     clearTimeout(dynamicSearchDebounceTimer);
+                    dynamicSearchPending = false;
                 }
             }
 
@@ -5113,6 +5442,28 @@ if (typeof document !== "undefined") {
      * @param {number} position - Token position index.
      * @returns {Array<object>} Parameter suggestions.
      */
+    /**
+     * Finds a structure (form / report / page / data source) in a loaded part of the structure list.
+     * The list is loaded one page at a time, so a miss does not mean the structure does not exist:
+     * callers should ask the server (requestStructSearch) when this returns undefined.
+     * Matches the internal name first, then the caption / display text (ignoring case and a trailing [badge]).
+     * @param {Array<object>} list - Rows of axi_structmetalist (may be undefined).
+     * @param {string} wanted - Internal name or caption.
+     * @param {string} [preferredType] - Optional stype (t / i / p / ads); used to choose between equal names.
+     * @returns {object|undefined} Matching row.
+     */
+    function findStructRow(list, wanted, preferredType) {
+        if (!Array.isArray(list) || !wanted) return undefined;
+        const w = String(wanted).replace(/\s*\[[^\]]*\]$/, "").trim().toLowerCase();
+        if (!w) return undefined;
+        const same = v => v !== undefined && v !== null && String(v).trim().toLowerCase() === w;
+        const typeOk = r => !preferredType || (r.stype || "").toLowerCase() === preferredType;
+        return list.find(r => r && r.name === wanted && typeOk(r))
+            || list.find(r => r && r.name === wanted)
+            || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)) && typeOk(r))
+            || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)));
+    }
+
     function processParamforEditndView(tokens, commandConfig, paramValue, position) {
         if (!commandConfig || !commandConfig.prompts || !commandConfig.prompts[0]) {
             return "";
@@ -5141,6 +5492,13 @@ if (typeof document !== "undefined") {
         const struct_dataList = axDatasourceObj[struct_sourceKey];
         if (!struct_dataList || !Array.isArray(struct_dataList)) return "";
 
+        // A failed or empty load leaves [] cached under this key, and nothing would ever fetch it again.
+        // Ask again (loadList itself holds back repeated failures for a few seconds, so this cannot loop fast).
+        if (struct_dataList.length === 0) {
+            loadList(struct_source, struct_paramValue);
+            return "";
+        }
+
         // find struct row
 
         let struct_name = paramValue;
@@ -5157,12 +5515,20 @@ if (typeof document !== "undefined") {
             if (preferredType === "iview") preferredType = "i";
         }
 
-        const struct_row = struct_dataList.find(r =>
-            r && r.name === struct_name &&
-            (!preferredType || (r.stype || "").toLowerCase() === preferredType)
-        ) || struct_dataList.find(r => r && r.name === struct_name);
+        // struct_name is the internal name when it was resolved, or still the caption the user typed
+        const struct_row = findStructRow(struct_dataList, struct_name, preferredType);
 
         if (!struct_row) {
+            // The structure list is loaded one page at a time, so the chosen form / report may simply not be in the
+            // part loaded so far. Ask the server for it by the name the user typed (and by its resolved name);
+            // when the rows arrive loadList refreshes the suggestions and this lookup runs again.
+            // requestStructSearch asks once per term, so this cannot loop.
+            const typedStruct = cleanString(tokens[1] || "").replace(/\s*\[[^\]]*\]$/, "").trim();
+            console.warn("[AxiCMD edit/view] Structure not found in the loaded structure list:", {
+                struct_name, typedStruct, source: struct_source, listKey: struct_sourceKey, loadedRows: struct_dataList.length
+            });
+            requestStructSearch(typedStruct, struct_paramValue);
+            if (struct_name && struct_name.toLowerCase() !== typedStruct.toLowerCase()) requestStructSearch(struct_name, struct_paramValue);
             return "";
         }
 
@@ -5923,7 +6289,7 @@ if (typeof document !== "undefined") {
             const text = typeof item === "string" ? item : (item?.displaydata || "");
             return typeof text === "string" && (text.startsWith("Loading") || text.startsWith("Searching") || text.startsWith("Fetching"));
         });
-        const isAnyFetchActive = activeFetches.size > 0 || isCmdsLoading || isStructsLoading || isAnyLoadingItem;
+        const isAnyFetchActive = activeFetches.size > 0 || isCmdsLoading || isStructsLoading || isAnyLoadingItem || isSearchPending();
 
         const showInitialWrapper = isInitialCommandStage && (validItems.length > 0 || isCmdsLoading || isStructsLoading) && !isSystemMessage(validItems[0]);
 
@@ -5944,7 +6310,7 @@ if (typeof document !== "undefined") {
                 li.className = "axi-suggestion-loading d-flex align-items-center justify-content-center py-3 px-4 text-muted gap-2";
                 li.style.fontSize = "13px";
                 li.style.textAlign = "center";
-                const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || "Loading options...";
+                const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || (isSearchPending() ? "Searching..." : "Loading options...");
                 li.innerHTML = `
                     <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-right: 6px;"></span>
                     <span>${loadingText}</span>
@@ -6025,16 +6391,10 @@ if (typeof document !== "undefined") {
                 li.classList.add("active");
             }
 
-            li.addEventListener("mousedown", e => {
-                e.preventDefault();
-                let objectIndex = validItems.findIndex(obj => {
-                    if (obj === item) return true;
-                    const itemText = typeof item === "string" ? item : (item?.displaydata || item?.name || "");
-                    const objText = typeof obj === "string" ? obj : (obj?.displaydata || obj?.name || "");
-                    return itemText && objText && itemText.toLowerCase() === objText.toLowerCase();
-                });
-                apply(objectIndex !== -1 ? objectIndex : i);
-            });
+            // No per-row listener: with thousands of rows that is thousands of closures. One delegated
+            // "mousedown" handler on the list (see setupEventListeners) reads this index instead.
+            // i is already the index of the item inside validItems.
+            li.dataset.vi = String(i);
 
             return li;
         }
@@ -6107,22 +6467,37 @@ if (typeof document !== "undefined") {
                 if (isStructsLoading) {
                     listContainer.appendChild(createLoadingElement("Loading structures..."));
                 } else {
-                    structures.forEach(({ item, index }) => {
+                    // Never build more than MAX_RENDERED_ITEMS rows; the user narrows the list by typing
+                    structures.slice(0, MAX_RENDERED_ITEMS).forEach(({ item, index }) => {
                         const li = createSuggestionLi(item, index);
                         listContainer.appendChild(li);
                     });
+                    // "Scroll down for more..." / "Loading more..." for the paged structure list
+                    const structFooter = buildLoadMoreFooter(structures.length);
+                    if (structFooter) listContainer.appendChild(structFooter);
                 }
 
                 fragment.appendChild(listContainer);
             }
         } else {
-            validItems.forEach((item, i) => {
-                const li = createSuggestionLi(item, i);
-                fragment.appendChild(li);
-            });
+            // Render cap: at most MAX_RENDERED_ITEMS <li> are built, however long the list is
+            const renderCount = Math.min(validItems.length, MAX_RENDERED_ITEMS);
+            for (let i = 0; i < renderCount; i++) {
+                fragment.appendChild(createSuggestionLi(validItems[i], i));
+            }
+
+            // Footer for paged sources: spinner while the next page loads, hint when more can be loaded
+            const footer = buildLoadMoreFooter(validItems.length);
+            if (footer) fragment.appendChild(footer);
         }
 
         list.appendChild(fragment);
+
+        // After a "load more" re-render, keep the user where they were instead of jumping to the top
+        if (pendingScrollRestore !== null) {
+            list.scrollTop = pendingScrollRestore;
+            pendingScrollRestore = null;
+        }
 
         if (list.classList.contains("axi-grid-layout")) {
             list.style.display = "flex";
@@ -6628,7 +7003,9 @@ if (typeof document !== "undefined") {
             const effectivePageSize = (typeof pageSize === "number") ? pageSize : 100;
             const effectivePageNo = (typeof pageNo === "number") ? pageNo : 1;
 
-            if (axDatasourceName && axDatasourceName.toLowerCase().includes("getstructsdata")) {
+            // Paged sources (see PAGED_SOURCES) take param11 = search, param12 = page no, param13 = page size
+            const serverPaged = isPagedSource(axDatasourceName);
+            if (serverPaged) {
                 if (!sqlParams.param11 || cleanTerm) {
                     sqlParams.param11 = cleanTerm || "";
                     normalizedParams.push(`param11:${sqlParams.param11}`);
@@ -6641,6 +7018,12 @@ if (typeof document !== "undefined") {
                     sqlParams.param13 = String(effectivePageSize);
                     normalizedParams.push(`param13:${sqlParams.param13}`);
                 }
+                // The paged ADS rows declare param1..param13 (same shape as axi_getstructsdata). Send an empty
+                // value for the ones this source does not use so the engine always receives the full set.
+                // (Not added to normalizedParams: they must not change the cache key.)
+                for (let n = 1; n <= 13; n++) {
+                    if (sqlParams["param" + n] === undefined) sqlParams["param" + n] = "";
+                }
             }
 
             // ---- Stable cache key ----
@@ -6648,12 +7031,15 @@ if (typeof document !== "undefined") {
             if (cleanTerm) {
                 cacheKey += `_q_${cleanTerm}`;
             }
-            cacheKey += `_v1`;
+            // _v2 = entries are stored as { t: savedAtMs, d: rows } so they can expire (older _v1 entries are ignored)
+            cacheKey += `_v2`;
 
-            const cached = localStorage.getItem(cacheKey);
-            if (cached) {
+            // Persistent cache is read only when it is fresh. Search results (_q_) of server-paged sources
+            // are not persisted at all (see below), so nothing stale or huge is parsed here.
+            const cachedRows = readListCache(cacheKey);
+            if (cachedRows) {
                 console.log(`%c[AxiCMD getList / ADS] LocalStorage cache HIT for: ${cacheKey}`, "color: #16a34a; font-weight: bold;");
-                return JSON.parse(cached);
+                return cachedRows;
             }
 
             const requestBody = {
@@ -6666,12 +7052,20 @@ if (typeof document !== "undefined") {
                     ADS: true,
                     CachePermissions: true,
                     getallrecordscount: false,
-                    pageno: effectivePageNo,
-                    pagesize: effectivePageSize
+                    // Server-paged sources page inside their own SQL (param12/param13). Sending pageno/pagesize
+                    // to the ADS engine as well could page the already-paged result a second time (page 2 would
+                    // come back empty), so for them the engine is asked for "everything it is given" (pagesize 0).
+                    pageno: serverPaged ? 1 : effectivePageNo,
+                    pagesize: serverPaged ? 0 : effectivePageSize
                 }
             };
 
-            if (cleanTerm && cleanTerm.length >= 3) {
+            // For paged sources the search term is already applied inside the SQL (param11), e.g. in
+            // fn_axi_getstructs_obj, which searches the real record columns and leaves field rows
+            // (isfield = 't') untouched. Adding the generic ADS "displaydata CONTAINS" filter on top would
+            // filter a second time (hiding records matched by other columns and dropping all field rows).
+            const searchHandledBySql = serverPaged;
+            if (cleanTerm && cleanTerm.length >= 3 && !searchHandledBySql) {
                 requestBody.props.filters = [
                     {
                         fldname: "displaydata",
@@ -6689,10 +7083,6 @@ if (typeof document !== "undefined") {
                 pageSize: effectivePageSize,
                 payload: JSON.parse(JSON.stringify(requestBody))
             });
-
-            if (cleanTerm) {
-                debugger; // <<< DEBUGGER STOP POINT: Inside getList right before ADS API call >>>
-            }
 
             const res = await getAxListAsync(requestBody);
 
@@ -6730,11 +7120,11 @@ if (typeof document !== "undefined") {
 
 
             if (list.length > 0) {
-                // console.log("Get List Cache Key: " + cacheKey);
-                try {
-                    localStorage.setItem(cacheKey, JSON.stringify(list));
-                } catch (storageErr) {
-                    // Safe handling if localStorage quota is exceeded
+                // Persist only what is cheap to reload: never per-search results of paged sources
+                // (every keystroke would otherwise add a new key) and never very large result sets.
+                const skipPersist = serverPaged && !!cleanTerm;
+                if (!skipPersist) {
+                    writeListCache(cacheKey, list);
                 }
             } else {
                 // console.log(`List Data for Ads name ${axDatasourceName} is Empty`);
@@ -6784,82 +7174,115 @@ if (typeof document !== "undefined") {
      */
     function safeOpenDeveloperStudio(page, name = "", callFromAxi = true) {
         hide();
-        const topWin = (typeof top !== "undefined" ? top : (typeof parent !== "undefined" ? parent : window));
 
         // 1. Activate Axpert Web product loader immediately
         toggleShowDimmer(true);
 
-        // 2. Intercept premature ShowDimmer(false) calls (e.g. from SuccOpenDevStudioRedis in main.js)
-        // let originalShowDimmer = topWin.ShowDimmer;
-        // let isStudioLoading = true;
-
-        // if (typeof originalShowDimmer === "function") {
-        //     topWin.ShowDimmer = function(status) {
-        //         if (status === false && isStudioLoading) {
-        //             return;
-        //         }
-        //         return originalShowDimmer.apply(this, arguments);
-        //     };
-        // }
-
-        // const restoreShowDimmer = () => {
-        //     if (isStudioLoading) {
-        //         isStudioLoading = false;
-        //         if (typeof originalShowDimmer === "function" && topWin.ShowDimmer !== originalShowDimmer) {
-        //             topWin.ShowDimmer = originalShowDimmer;
-        //         }
-        //         toggleShowDimmer(false);
-        //     }
-        // };
+        // 2. Keep it on until Developer Studio has really loaded. openDeveloperStudio() (main.js) is asynchronous:
+        //    it calls the server first, then hides the loader itself (ShowDimmer(false)) and only then starts
+        //    loading the Developer Studio page into #middle1 - so the loader used to disappear while the page
+        //    was still blank. The guard ignores those early hide requests until #middle1 finishes loading.
+        const guard = holdDimmerUntilStudioLoads();
 
         const openFn = (typeof window !== "undefined" && typeof window.openDeveloperStudio === "function" && window.openDeveloperStudio) ||
             (typeof parent !== "undefined" && typeof parent.openDeveloperStudio === "function" && parent.openDeveloperStudio) ||
             (typeof top !== "undefined" && typeof top.openDeveloperStudio === "function" && top.openDeveloperStudio);
 
-        if (openFn) {
-            try {
-                openFn(page, name, callFromAxi);
-
-
-                setTimeout(() => {
-                    toggleShowDimmer(false)
-                }, 0);
-
-            } catch (err) {
-                // console.error("openDeveloperStudio call failed:", err);
-                toggleShowDimmer(false);
-
-                // restoreShowDimmer();
-                return;
-            }
-        } else {
+        if (!openFn) {
             // console.warn("openDeveloperStudio is not available");
-            toggleShowDimmer(false);
-
-            // restoreShowDimmer();
+            guard.release();
             return;
         }
 
-        // 3. Keep Axpert Web product loader active until Developer Studio iframe (#middle1) finishes loading
-        // try {
-        //     const topDoc = topWin.document || document;
-        //     const middle1Iframe = topDoc.getElementById("middle1");
-        //     if (middle1Iframe) {
-        //         // const hideDimmerOnLoad = () => {
-        //         //     // setTimeout(() => {
-        //         //         // restoreShowDimmer();
-        //         //     // }, 800);
-        //         //     // middle1Iframe.removeEventListener("load", hideDimmerOnLoad);
-        //         // };
-        //         // middle1Iframe.addEventListener("load", hideDimmerOnLoad, { once: true });
+        try {
+            openFn(page, name, callFromAxi);
+            // Only the React studio pages load into #middle1. Anything else (e.g. AxDBScript.aspx) opens in a
+            // modal straight away and never fires that load, so the loader is not held for it.
+            const loadsIntoMiddleFrame = ["tstreact", "ivreact"].includes(String(page || "").toLowerCase());
+            if (!loadsIntoMiddleFrame) setTimeout(() => guard.release(), 0);
+        } catch (err) {
+            // console.error("openDeveloperStudio call failed:", err);
+            guard.release();
+        }
+    }
 
-        //     }
-        // } catch (e) { }
+    /**
+     * Makes the shell loader (ShowDimmer) ignore "hide" requests until the Developer Studio page has loaded
+     * into the main content iframe (#middle1), then restores normal behaviour and hides the loader.
+     * A safety timer releases it anyway, so the loader can never stay on forever.
+     * @returns {{release: function(): void}} Handle; release() restores ShowDimmer and hides the loader (safe to call twice).
+     */
+    function holdDimmerUntilStudioLoads() {
+        const STUDIO_LOAD_TIMEOUT_MS = 20000;   // give up and hide the loader after this long
+        const ARM_AFTER_MS = 400;               // ignore iframe "load" events before this (a page that was already loading)
+        const SETTLE_AFTER_LOAD_MS = 300;       // let the new page paint before the loader goes away
 
-        // Safety fallback timer to restore dimmer if iframe load is delayed
-        // setTimeout(() => {
-        //     restoreShowDimmer();
-        // }, 12000);
+        const patched = [];                     // { win, original, wrapper }
+        let released = false;
+        let armed = false;
+        let iframe = null;
+        let onLoad = null;
+        let armTimer = null;
+        let safetyTimer = null;
+
+        // ShowDimmer may live on this window, the parent or the top window
+        const wins = [];
+        [window, (typeof parent !== "undefined" ? parent : null), (typeof top !== "undefined" ? top : null)].forEach(w => {
+            try {
+                if (w && wins.indexOf(w) === -1 && typeof w.ShowDimmer === "function") wins.push(w);
+            } catch (e) { /* cross-origin window: skip */ }
+        });
+
+        const release = () => {
+            if (released) return;
+            released = true;
+            clearTimeout(armTimer);
+            clearTimeout(safetyTimer);
+            if (iframe && onLoad) {
+                try { iframe.removeEventListener("load", onLoad); } catch (e) { }
+            }
+            patched.forEach(({ win, original, wrapper }) => {
+                try {
+                    if (win.ShowDimmer === wrapper) win.ShowDimmer = original;
+                } catch (e) { }
+            });
+            toggleShowDimmer(false);
+        };
+
+        wins.forEach(win => {
+            const original = win.ShowDimmer;
+            const wrapper = function (status) {
+                if (status === false && !released) {
+                    // The studio page is not loaded yet: ignore this early hide, but note that the server
+                    // step has finished so the next iframe load is the Developer Studio page.
+                    armed = true;
+                    return;
+                }
+                return original.apply(this, arguments);
+            };
+            try {
+                win.ShowDimmer = wrapper;
+                patched.push({ win, original, wrapper });
+            } catch (e) { }
+        });
+
+        try {
+            const topDoc = (typeof top !== "undefined" && top.document) ? top.document : document;
+            iframe = topDoc.getElementById("middle1");
+            if (iframe) {
+                onLoad = () => {
+                    if (!armed) return;
+                    setTimeout(release, SETTLE_AFTER_LOAD_MS);
+                };
+                iframe.addEventListener("load", onLoad);
+            }
+        } catch (e) { /* no access to the content iframe: the safety timer will release the loader */ }
+
+        // When the studio opens without a server round trip, no hide request ever arrives, so arm on a timer too
+        armTimer = setTimeout(() => { armed = true; }, ARM_AFTER_MS);
+        safetyTimer = setTimeout(release, STUDIO_LOAD_TIMEOUT_MS);
+
+        return { release };
     }
 
     /* ===============================
@@ -7136,6 +7559,32 @@ if (typeof document !== "undefined") {
      */
     function setupEventListeners() {
 
+        // One delegated handler for every suggestion row (rows no longer carry their own listener).
+        // Guarded so a repeated init does not attach the handlers twice.
+        if (!list.__axiListHandlers) {
+        list.__axiListHandlers = true;
+        list.addEventListener("mousedown", e => {
+            const li = e.target.closest ? e.target.closest("li.axi-suggestion") : null;
+            if (!li || !list.contains(li)) return;
+            e.preventDefault();
+            const idx = Number(li.dataset.vi);
+            if (Number.isInteger(idx)) apply(idx);
+        });
+
+        // Load the next page of a paged list when the user scrolls near the bottom of the dropdown
+        let scrollTicking = false;
+        list.addEventListener("scroll", () => {
+            if (scrollTicking) return;
+            scrollTicking = true;
+            requestAnimationFrame(() => {
+                scrollTicking = false;
+                if (list.scrollTop + list.clientHeight >= list.scrollHeight - 60) {
+                    loadNextPage();
+                }
+            });
+        });
+        }
+
         const favDeleteCancelBtn = document.getElementById("axiFavDeleteCancelBtn");
 
         if (favDeleteCancelBtn) {
@@ -7277,6 +7726,12 @@ if (typeof document !== "undefined") {
                     axDatasourceObj = {};
                     activeFetches.clear();
                     failedFetches.clear();
+                    // paging / search bookkeeping belongs to the data that was just discarded
+                    Object.keys(axPageState).forEach(k => delete axPageState[k]);
+                    Object.keys(failedFetchTimes).forEach(k => delete failedFetchTimes[k]);
+                    axSearchKeyOrder.length = 0;
+                    structSearchAsked.clear();
+                    structSearchPendingTerm = null;
                     resolvedParams = {};
                     resolvedParamType = {};
                     createfieldnamevaluesList = {};
@@ -8461,7 +8916,7 @@ if (typeof document !== "undefined") {
                     if (matchTrans && matchField) {
                         const raw = localStorage.getItem(key);
                         if (raw) {
-                            const parsed = JSON.parse(raw);
+                            const parsed = parseStoredList(raw);
                             if (Array.isArray(parsed) && parsed.length > 0) {
                                 return parsed;
                             }
@@ -8478,7 +8933,7 @@ if (typeof document !== "undefined") {
                 if (lowKey.includes("getstructsdata") && (lowKey.includes(`param4:${lowTransId}`) || lowKey.includes(`:${lowTransId}`))) {
                     const raw = localStorage.getItem(key);
                     if (raw) {
-                        const parsed = JSON.parse(raw);
+                        const parsed = parseStoredList(raw);
                         if (Array.isArray(parsed) && parsed.length > 0) {
                             return parsed;
                         }
@@ -8494,7 +8949,7 @@ if (typeof document !== "undefined") {
                 if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
                     const raw = localStorage.getItem(key);
                     if (raw) {
-                        const parsed = JSON.parse(raw);
+                        const parsed = parseStoredList(raw);
                         if (Array.isArray(parsed) && parsed.length > 0) {
                             return parsed;
                         }
@@ -10152,6 +10607,8 @@ if (typeof document !== "undefined") {
         //     return pureCaption === normalizedText;
         // });
 
+        if (!Array.isArray(viewList)) return null;
+
         bestMatch = viewList.find(d => {
             const isPageType = ['p', 'page'].includes((d.stype || "").toLowerCase());
             return isPageType && typeof d.displaydata === "string" && d.displaydata.toLowerCase() === rawTokenText.toLowerCase();
@@ -10178,6 +10635,8 @@ if (typeof document !== "undefined") {
         }
 
         if (!bestMatch || typeof bestMatch.displaydata !== "string") {
+            // The page may simply not be in the loaded part of the paged structure list: look it up on the server
+            requestStructSearch(rawTokenText, paramValue);
             return null;
         }
 
@@ -14022,7 +14481,9 @@ if (typeof document !== "undefined") {
 
             const struct_dataList = axDatasourceObj[struct_sourceKey];
 
-            const struct_row = struct_dataList.find(r => r.name === transid);
+            // The structure list is paged; look the form up by name and ask the server if it is not loaded.
+            const struct_row = findStructRow(struct_dataList, transid);
+            if (!struct_row) requestStructSearch(transid, struct_paramValue);
 
             const primaryField = struct_row?.keyfield
 

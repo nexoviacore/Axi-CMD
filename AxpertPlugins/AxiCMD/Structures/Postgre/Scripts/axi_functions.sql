@@ -1199,7 +1199,10 @@ if pdimension = 'T' then
 end if;
 
 if v_search <> '' then
- v_fld_search_filter := format(' and (lower(caption) like lower(%L) or lower(fname) like lower(%L))', '%' || v_search || '%', '%' || v_search || '%');
+ -- NOTE: v_fld_search_filter is intentionally left empty ('').
+ -- Previously the typed search term also filtered the field list (caption/fname), which hid
+ -- fields while the user was autocompleting. The search term now applies to record rows only
+ -- (v_key_search_filter / v_sel_search_filter below); field rows (isfield='t') always come back unfiltered.
 
  if v_keyfield_normalized = 'T' then
   v_key_search_filter := format(
@@ -1520,7 +1523,17 @@ end if;
 
 
 if pselectedfield='0' then
-v_sql := concat(' select * from(',v_keyfield_sql,')a',' union all',v_fieldlist_sql);
+ -- Result = record rows (isfield='f': searched + paginated) UNION field rows (isfield='t').
+ -- Field rows are never filtered by the search term and never limited by page size,
+ -- so the user can always pick any field.
+ if v_offset > 0 then
+  -- Page 2+ of the record list: return records only.
+  -- The field rows were already delivered with page 1; repeating them would create duplicates.
+  v_sql := v_keyfield_sql;
+ else
+  -- Page 1: records followed by the complete field list.
+  v_sql := concat(' select * from(',v_keyfield_sql,')a',' union all',v_fieldlist_sql);
+ end if;
 else
 v_sql := v_selectedfld_sql;
 end if;
