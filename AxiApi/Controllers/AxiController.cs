@@ -25,18 +25,21 @@ namespace AxiApi.Controllers
         private readonly IUserFavouriteService _userFavouriteService;
         private readonly ICommandConfigService _commandConfigService;
         private readonly IKeyfieldService _keyfieldService;
+        private readonly IUserSettingsService _userSettingsService;
 
         public AxiController(
             IGrammarService grammarService,
             IUserFavouriteService userFavouriteService,
             ICommandConfigService commandConfigService,
-            IKeyfieldService keyfieldService
+            IKeyfieldService keyfieldService,
+            IUserSettingsService userSettingsService
         )
         {
             _grammarService = grammarService;
             _userFavouriteService = userFavouriteService;
             _commandConfigService = commandConfigService;
             _keyfieldService = keyfieldService;
+            _userSettingsService = userSettingsService;
         }
 
         [HttpGet("command-config")]
@@ -88,6 +91,36 @@ namespace AxiApi.Controllers
         {
             NonQueryResult response = await _userFavouriteService.UpdateCommandText(favouritesId, requestDTO, appname, username);
             return Ok(response); 
+        }
+
+        [HttpGet("user-settings")]
+        public async Task<ActionResult<Dictionary<string, string>>> GetUserSettings([FromQuery] string username, [FromQuery] string appname)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+                return BadRequest("username query parameter is required.");
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+
+            return Ok(await _userSettingsService.GetUserSettingsAsync(username, appname));
+        }
+
+        [HttpPost("user-settings/{settingKey}")]
+        public async Task<IActionResult> SaveUserSetting([FromRoute] string settingKey, [FromBody] UserSettingRequestDTO requestDTO, [FromQuery] string appname)
+        {
+            if (string.IsNullOrWhiteSpace(requestDTO.Username))
+                return BadRequest("Username is required in payload.");
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+
+            try
+            {
+                var stored = await _userSettingsService.SaveUserSettingAsync(requestDTO.Username, settingKey, requestDTO.Value, appname);
+                return Ok(new { key = settingKey.ToLowerInvariant(), value = stored });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost("setkeyfield")]

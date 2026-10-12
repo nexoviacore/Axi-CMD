@@ -54,6 +54,7 @@ builder.Services.AddScoped<IGrammarBootstrapService, GrammarBootstrapService>();
 builder.Services.AddScoped<IUserFavouriteService, UserFavouritesService>();
 builder.Services.AddScoped<ICommandConfigService, CommandConfigService>();
 builder.Services.AddScoped<IKeyfieldService, KeyfieldService>();
+builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 
 builder.Services.AddScoped<IAxExtend, AxExtend.AxExtend>();
 /* Repositories */
@@ -61,6 +62,7 @@ builder.Services.AddScoped<IGrammarRepository, GrammarRepository>();
 builder.Services.AddScoped<IUserFavouritesRepository, UserFavouritesRepository>();
 builder.Services.AddScoped<ICommandConfigRepository, CommandConfigRepository>();
 builder.Services.AddScoped<IKeyfieldRepository, KeyfieldRepository>();
+builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails(); 
