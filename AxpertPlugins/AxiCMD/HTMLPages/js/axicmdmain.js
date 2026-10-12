@@ -451,6 +451,7 @@ if (typeof document !== "undefined") {
     let commandFavorites = [];
     let axiFavoritesUrl = "";
     let axiKeyfieldUrl = "";
+    let axiSettingsUrl = "";
     const MAX_FAVORITES = AxiCmdConfig.MAX_FAVORITES;
     let commandRoutes = [];
     let isDeleting = false;
@@ -598,7 +599,90 @@ if (typeof document !== "undefined") {
     // axi_structmetalist = the list of forms / reports / pages / data sources shown under the commands.
     // (axi_viewlist is also paged on the server, but the command line does not use it.)
     const PAGED_SOURCES = ["axi_getstructsdata", "axi_structmetalist", "axi_viewlist"];
-    const PAGE_SIZE = 100;                 // rows requested per page
+    // Rows loaded at a time is a per-user setting (gear button next to Refresh). It is stored under
+    // "axipref_" (NOT "axi_") so the Refresh button, which wipes every "axi_" cache key, keeps it.
+    const DEFAULT_PAGE_SIZE = 100;
+    const MIN_PAGE_SIZE = 10;
+    const MAX_PAGE_SIZE = 500;
+    const PAGE_SIZE_STORAGE_KEY = "axipref_pagesize";
+
+    /**
+     * Keeps a page size inside the allowed range; anything that is not a number gives the default.
+     * @param {*} value - Candidate page size.
+     * @returns {number} Whole number between MIN_PAGE_SIZE and MAX_PAGE_SIZE.
+     */
+    function clampPageSize(value) {
+        const n = parseInt(value, 10);
+        if (isNaN(n)) return DEFAULT_PAGE_SIZE;
+        return Math.min(MAX_PAGE_SIZE, Math.max(MIN_PAGE_SIZE, n));
+    }
+
+    /**
+     * Rows requested per page: the user's saved setting, or the default when none is saved.
+     * @returns {number} Current page size.
+     */
+    function getPageSize() {
+        try {
+            const saved = localStorage.getItem(PAGE_SIZE_STORAGE_KEY);
+            if (saved !== null) return clampPageSize(saved);
+        } catch (e) { }
+        return DEFAULT_PAGE_SIZE;
+    }
+
+    /**
+     * Saves the page size setting for this browser.
+     * @param {*} value - Requested page size (clamped to the allowed range).
+     * @returns {number} The value that was stored.
+     */
+    function setPageSize(value) {
+        const size = clampPageSize(value);
+        try { localStorage.setItem(PAGE_SIZE_STORAGE_KEY, String(size)); } catch (e) { }
+        return size;
+    }
+
+    /**
+     * Brings the local page size in line with the one saved on the server for this user (the server copy is
+     * what follows the user to another browser or machine). Never rejects and never waits long: if the API
+     * is down or slow the local value (or the default) is used.
+     * @returns {Promise<void>} Resolves when the check is over.
+     */
+    async function syncPageSizeFromServer() {
+        if (!axiSettingsUrl || !window.mainUserName) return;
+        const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+        const timer = setTimeout(() => { if (controller) controller.abort(); }, 2500);
+        try {
+            const res = await fetch(`${axiSettingsUrl}?username=${encodeURIComponent(window.mainUserName)}&appname=${encodeURIComponent(getProjectName())}`,
+                controller ? { signal: controller.signal } : undefined);
+            if (!res.ok) return;
+            const settings = await res.json();
+            const remote = settings && (settings.pagesize ?? settings.PAGESIZE);
+            if (remote !== undefined && remote !== null && remote !== "") setPageSize(remote);
+        } catch (e) {
+            // offline / timeout: keep the local value
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    /**
+     * Saves the page size for this user on the server. The local value is already stored, so a failure here
+     * only means the setting will not follow the user to another browser yet.
+     * @param {number} size - Page size that was just stored locally.
+     * @returns {Promise<boolean>} True if the server accepted it.
+     */
+    async function savePageSizeToServer(size) {
+        if (!axiSettingsUrl || !window.mainUserName) return false;
+        try {
+            const res = await fetch(`${axiSettingsUrl}/pagesize?appname=${encodeURIComponent(getProjectName())}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: window.mainUserName, value: String(size) })
+            });
+            return res.ok;
+        } catch (e) {
+            return false;
+        }
+    }
     const MAX_CACHED_SEARCH_KEYS = 20;     // in-memory "_q_<term>" result sets kept per session (LRU)
     const MAX_MERGED_BASE_ROWS = 5000;     // search hits merged into a base list stop growing past this
     const MAX_RENDERED_ITEMS = 1000;       // hard cap of <li> elements built in one render
@@ -848,6 +932,7 @@ if (typeof document !== "undefined") {
 
         axiCommandConfigUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/command-config`;
         axiKeyfieldUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/setkeyfield`;
+        axiSettingsUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/user-settings`;
 
 
         input = document.getElementById("Axi-Searchinp");
@@ -970,7 +1055,8 @@ if (typeof document !== "undefined") {
 
 
         if (axicmdenabled) {
-            initCommands(false);
+            // The saved "records to load at a time" must be known before the first lists are requested
+            syncPageSizeFromServer().finally(() => initCommands(false));
             loadFavorites();
         }
 
@@ -988,7 +1074,7 @@ if (typeof document !== "undefined") {
             getList: getList,
             testDebounceAds: async function (adsName = "axi_getstructsdata", params = "", searchTerm = "abc") {
                 console.log("%c[axiDebug.testDebounceAds] Triggering test ADS search directly...", "color: #9333ea; font-weight: bold;", { adsName, params, searchTerm });
-                return await loadList(adsName, params, searchTerm, 1, 100);
+                return await loadList(adsName, params, searchTerm, 1, getPageSize());
             }
         };
         console.log("%c[AxiCMD] window.axiDebug registered. Run window.axiDebug.testDebounceAds('axi_getstructsdata', 'your_struct_param', 'search_text') in console to test.", "color: #0284c7;");
@@ -1387,7 +1473,7 @@ if (typeof document !== "undefined") {
      * @param {number} [pageSize=100] - Number of records per page (default 100).
      * @returns {Promise<Array<object>>} List of suggestion items.
      */
-    async function loadList(sourceName, paramValue = "", searchTerm = "", pageNo = 1, pageSize = PAGE_SIZE) {
+    async function loadList(sourceName, paramValue = "", searchTerm = "", pageNo = 1, pageSize = getPageSize()) {
         if (!axicmdenabled || sourceName === "axi_dummy") {
             return [];
         }
@@ -1418,7 +1504,7 @@ if (typeof document !== "undefined") {
             const paged = isPagedSource(sourceName);
             // Every source is requested one page at a time. (The structure list, axi_structmetalist, used to
             // be fetched whole with pageSize 0; it is paged on the server now like the record lists.)
-            const effectivePageSize = pageSize || PAGE_SIZE;
+            const effectivePageSize = pageSize || getPageSize();
             const data = await getList(sourceName, paramValue, cleanTerm, pageNo, effectivePageSize);
             let list = Array.isArray(data) ? data : (data ? [data] : []);
 
@@ -1597,7 +1683,7 @@ if (typeof document !== "undefined") {
         structSearchTimer = setTimeout(() => {
             structSearchPendingTerm = null;
             structSearchAsked.add(askKey);
-            loadList("axi_structmetalist", param, term, 1, PAGE_SIZE);
+            loadList("axi_structmetalist", param, term, 1, getPageSize());
         }, 300);
     }
 
@@ -1646,7 +1732,7 @@ if (typeof document !== "undefined") {
         pendingScrollRestore = list.scrollTop;
         const footer = list.querySelector(".axi-load-more");
         if (footer) footer.textContent = "Loading more...";
-        loadList(ctx.source, ctx.param, ctx.term, nextPage, PAGE_SIZE);
+        loadList(ctx.source, ctx.param, ctx.term, nextPage, getPageSize());
     }
 
     //function openPopOption(targetURL) {
@@ -5209,7 +5295,7 @@ if (typeof document !== "undefined") {
                         dynamicSearchDebounceTimer = setTimeout(() => {
                             dynamicSearchPending = false;
                             console.log(`%c[AxiCMD Debounce] >>> TIMER FIRED! Calling loadList with search '${cleanSearch}' <<<`, "background: #7c3aed; color: #fff; padding: 2px 6px; border-radius: 2px; font-weight: bold;");
-                            loadList(apiSourceName, paramValue, cleanSearch, 1, PAGE_SIZE);
+                            loadList(apiSourceName, paramValue, cleanSearch, 1, getPageSize());
                         }, 300);
 
                         const localMatches = dataList.filter(item => {
@@ -6971,7 +7057,7 @@ if (typeof document !== "undefined") {
      * @param {number} [pageSize=100] - Records per page (0 to fetch all, or limit like 100).
      * @returns {Promise<Array<object>>} Dataset rows.
      */
-    async function getList(axDatasourceName, paramValuesCsv = "", searchTerm = "", pageNo = 1, pageSize = 100) {
+    async function getList(axDatasourceName, paramValuesCsv = "", searchTerm = "", pageNo = 1, pageSize = getPageSize()) {
         if (!axicmdenabled) return [];
         try {
             //await ensureSignedIn();
@@ -7000,7 +7086,7 @@ if (typeof document !== "undefined") {
             }
 
             const cleanTerm = (typeof searchTerm === "string" ? searchTerm : "").trim().toLowerCase();
-            const effectivePageSize = (typeof pageSize === "number") ? pageSize : 100;
+            const effectivePageSize = (typeof pageSize === "number") ? pageSize : getPageSize();
             const effectivePageNo = (typeof pageNo === "number") ? pageNo : 1;
 
             // Paged sources (see PAGED_SOURCES) take param11 = search, param12 = page no, param13 = page size
@@ -7761,6 +7847,88 @@ if (typeof document !== "undefined") {
 
 
 
+        // ---- Settings: how many records are loaded at a time ----------------------------------------------------
+        // A small popover under the gear button. Saving stores the number (see setPageSize) and then
+        // clicks Refresh, because cached lists were fetched with the old page size.
+        const settingsBtn = document.getElementById("axiSettingsBtn");
+        if (settingsBtn) {
+            let settingsPanel = null;
+
+            const closeSettingsPanel = () => {
+                if (settingsPanel) settingsPanel.style.display = "none";
+            };
+
+            const buildSettingsPanel = () => {
+                const panel = document.createElement("div");
+                panel.id = "axiSettingsPanel";
+                panel.style.cssText = "position:fixed;z-index:100000;display:none;min-width:260px;max-width:90vw;" +
+                    "padding:14px 16px;background:#fff;color:#222;border:1px solid #d0d5dd;border-radius:8px;" +
+                    "box-shadow:0 8px 24px rgba(0,0,0,.18);font-size:13px;";
+                panel.innerHTML =
+                    '<div style="font-weight:600;margin-bottom:8px;">Records to load at a time</div>' +
+                    '<div style="display:flex;gap:8px;align-items:center;">' +
+                    '<input id="axiPageSizeInput" type="number" step="10" style="width:90px;padding:4px 6px;border:1px solid #bbb;border-radius:4px;">' +
+                    '<button id="axiPageSizeSave" type="button" style="padding:4px 12px;border:0;border-radius:4px;background:#2563eb;color:#fff;cursor:pointer;">Save</button>' +
+                    '<button id="axiPageSizeDefault" type="button" style="padding:4px 10px;border:1px solid #bbb;border-radius:4px;background:#fff;cursor:pointer;">Default</button>' +
+                    '</div>' +
+                    '<div id="axiPageSizeHint" style="margin-top:8px;color:#667085;"></div>';
+                document.body.appendChild(panel);
+
+                const sizeInput = panel.querySelector("#axiPageSizeInput");
+                const hint = panel.querySelector("#axiPageSizeHint");
+                hint.textContent = "Between " + MIN_PAGE_SIZE + " and " + MAX_PAGE_SIZE + " (default " + DEFAULT_PAGE_SIZE + "). Lists reload when saved.";
+
+                const applyPageSize = (requested) => {
+                    const previous = getPageSize();
+                    const size = setPageSize(requested);
+                    sizeInput.value = size;
+                    closeSettingsPanel();
+                    savePageSizeToServer(size).then(ok => {
+                        if (!ok) showToast("Saved on this browser only (server unreachable)", 4000);
+                    });
+                    if (size !== previous) {
+                        showToast("Records to load at a time set to " + size, 3000, true);
+                        btnRefresh.click();
+                    }
+                };
+
+                panel.querySelector("#axiPageSizeSave").addEventListener("click", () => applyPageSize(sizeInput.value));
+                panel.querySelector("#axiPageSizeDefault").addEventListener("click", () => applyPageSize(DEFAULT_PAGE_SIZE));
+                sizeInput.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") { e.preventDefault(); applyPageSize(sizeInput.value); }
+                    else if (e.key === "Escape") closeSettingsPanel();
+                });
+                return panel;
+            };
+
+            settingsBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (!settingsPanel) settingsPanel = buildSettingsPanel();
+                if (settingsPanel.style.display === "block") { closeSettingsPanel(); return; }
+                settingsPanel.querySelector("#axiPageSizeInput").value = getPageSize();
+                // Open above the button when the palette sits near the bottom of the screen, else below
+                const r = settingsBtn.getBoundingClientRect();
+                settingsPanel.style.display = "block";
+                const h = settingsPanel.offsetHeight;
+                const top = (r.bottom + h + 8 > window.innerHeight) ? Math.max(8, r.top - h - 8) : r.bottom + 8;
+                const left = Math.max(8, Math.min(r.left, window.innerWidth - settingsPanel.offsetWidth - 8));
+                settingsPanel.style.top = top + "px";
+                settingsPanel.style.left = left + "px";
+                settingsPanel.querySelector("#axiPageSizeInput").focus();
+            });
+            // Also reachable from the iframe click/Esc handlers (attachClickToDoc) and the shell-wide Esc key
+            window.axiCloseSettingsPanel = closeSettingsPanel;
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") closeSettingsPanel();
+            });
+            document.addEventListener("click", (e) => {
+                if (settingsPanel && settingsPanel.style.display === "block" &&
+                    !settingsPanel.contains(e.target) && !settingsBtn.contains(e.target)) {
+                    closeSettingsPanel();
+                }
+            });
+        }
+
         if (axiClearBtn) {
             axiClearBtn.addEventListener("click", () => {
                 input.value = "";
@@ -8282,6 +8450,11 @@ if (typeof document !== "undefined") {
 
                 doc.addEventListener("click", () => {
                     hide();
+                    // a click inside the page iframe never reaches the shell document, so close the settings box here
+                    if (typeof window.axiCloseSettingsPanel === "function") window.axiCloseSettingsPanel();
+                });
+                doc.addEventListener("keydown", e => {
+                    if (e.key === "Escape" && typeof window.axiCloseSettingsPanel === "function") window.axiCloseSettingsPanel();
                 });
 
                 try {
