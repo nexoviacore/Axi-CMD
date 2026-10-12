@@ -1,0 +1,6 @@
+2026-10-12 18:56:48.685 +05:30 [INF] Starting Axi Api....
+2026-10-12 18:56:48.833 +05:30 [INF] Starting Axi Api....
+2026-10-12 18:56:49.530 +05:30 [INF] Now listening on: http://localhost:5000
+2026-10-12 18:56:49.540 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2026-10-12 18:56:49.542 +05:30 [INF] Hosting environment: Production
+2026-10-12 18:56:49.544 +05:30 [INF] Content root path: D:\Axpert11.4\AxpertWebLatest\AxpertPlugins\AxiCMD\PluginScripts\AxiCMDApi
