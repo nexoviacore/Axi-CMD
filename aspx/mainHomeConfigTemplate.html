@@ -1222,7 +1222,7 @@ Home Cunfiguration Page Templete
                                         <!--begin::My Favourite popout-->
                                         <div id="axiMegaDropdown" data-kt-menu="true"
                                              class="menu menu-sub menu-sub-dropdown menu-column z-3"
-                                             style="display: none; position: absolute; bottom: 100%; left: 100px; width: 950px !important; max-width: calc(100vw - 120px) !important;">
+                                             style="display: none; position: absolute; bottom: 100%; left: 100px;">
                                             <!--begin::Card-->
                                             <div id="axiFavouritesCard" class="card">
                                                 <!--begin::Card header-->
@@ -1519,6 +1519,7 @@ Home Cunfiguration Page Templete
             $.ajax({
                 url: url,
                 type: "GET",
+                dataType: "text", // existence check only; the default would execute .js responses
                 async: false,
                 cache: false,
                 success: function (data, textStatus, xhr) {

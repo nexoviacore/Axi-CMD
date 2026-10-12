@@ -877,7 +877,8 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
 
 
 
-#axiMegaDropdown {
+#axiMegaDropdown,
+#My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown#axiMegaDropdown {
   width: 950px !important;
   max-width: calc(100vw - 120px) !important;
 }
@@ -1441,31 +1442,203 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
 
 
 
- @media(max-width:768px) {
+/* =========================================
+   7. RESPONSIVE: TABLET & MOBILE
+   (aside is off-canvas below 992px, so the bar spans the full width)
+   ========================================= */
 
-.axi-suggestions.axi-grid-layout li.axi-suggestion {
-	width: fit-content;
-	min-width: 120px;
-}
-#My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown {
-	width: 100% !important;
-	left: 0 !important;
-}
-.AXI-Sec {
-	width: calc(100vw - 0px);
-}
-#btnHistoryPrev,.btn.btn-icon:has(span[data-bs-original-title="Next Page"]),
-        #History_pages,#My_Fav_Bookmarks,#btnRefresh{
-  display: none;
-}
-     /* .Application_Parameter-Section {
-	display: none !important;
-} */
-     .content:has(#New-Landing-layout) {
-	background: #f1f4f9 !important;
-	height: calc(100vh - 105px) !important;
-	 max-height: calc(100vh - 105px) !important; 
+/* TABLET (max 991px) */
+@media (max-width: 991px) {
+  .AXI-Sec,
+  #mainNewPageBody.active .AXI-Sec {
+    left: 0 !important;
+    right: 0;
+    width: 100% !important;
+    max-width: 100vw;
+    box-sizing: border-box;
+    padding: 6px 16px calc(6px + env(safe-area-inset-bottom, 0px));
+    gap: 10px;
+  }
+
+  .searchwrap-AXI {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100% !important;
+  }
+
+  .searchwrap-AXI #Axi-Searchinp {
+    min-width: 0;
+    padding-right: 120px;
+  }
+
+  .Tkts-toolbar-Left {
+    flex: 0 0 auto;
+  }
+
+  /* Favourites / suggestions popup: dock above the bar, edge to edge */
+  #axiMegaDropdown,
+  #My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown#axiMegaDropdown {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 100% !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    margin-bottom: 4px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  #axiMegaDropdown .axi-suggestions,
+  .axi-suggestions.axi-grid-layout.My-Command-Wrapper,
+  .My-Command-Wrapper {
+    max-height: min(380px, calc(100vh - 220px)) !important;
+    max-height: min(380px, calc(100dvh - 220px)) !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .My-Fav-Items-Wrapper {
+    max-height: min(235px, 35vh) !important;
+    max-height: min(235px, 35dvh) !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .My-Fav-Items {
+    min-width: min(340px, 100%);
+    padding: 10px 16px;
+  }
+
+  .My-Fav-Items-Content {
+    min-width: 0;
+  }
+
+  .axi-verbs-grid-container {
+    max-height: min(240px, 35vh);
+  }
+
+  .axi-modal-container {
+    width: min(350px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    box-sizing: border-box;
+  }
 }
 
+/* TABLET PORTRAIT & PHONES (max 768px) */
+@media (max-width: 768px) {
+  /* #My_Fav_Bookmarks stays visible: it contains the suggestions popup */
+  #btnHistoryPrev,
+  .btn.btn-icon:has(span[data-bs-original-title="Next Page"]),
+  #History_pages {
+    display: none;
+  }
+
+  .AXI-Sec .btn,
+  .AXI-Sec .enhance-btn {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+  }
+
+  .Tkts-toolbar-Left .d-flex,
+  .Tkts-toolbar-Left .d-flex-- {
+    gap: 6px;
+  }
+
+  /* 16px prevents iOS Safari from zooming on focus */
+  .searchwrap-AXI #Axi-Searchinp,
+  .axi-fav-search-input,
+  .axi-modal-input {
+    font-size: 16px;
+  }
+
+  .axi-suggestions.axi-grid-layout li.axi-suggestion {
+    width: fit-content;
+    min-width: 120px;
+  }
+
+  .axi-verbs-grid {
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  }
+
+  .axi-suggestions li {
+    padding: 12px 14px;
+  }
+
+  .content:has(#New-Landing-layout) {
+    background: #f1f4f9 !important;
+    height: calc(100vh - 105px) !important;
+    max-height: calc(100vh - 105px) !important;
+    height: calc(100dvh - 105px) !important;
+    max-height: calc(100dvh - 105px) !important;
+  }
 }
 
+/* SMALL PHONES (max 480px) */
+@media (max-width: 480px) {
+  .AXI-Sec,
+  #mainNewPageBody.active .AXI-Sec {
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    gap: 6px;
+    height: auto;
+    min-height: 55px;
+  }
+
+  .AXI-Sec .btn,
+  .AXI-Sec .enhance-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+
+  .searchwrap-AXI .AXI-Logo {
+    margin-right: 6px;
+    padding-right: 6px;
+  }
+
+  .searchwrap-AXI #Axi-Searchinp {
+    padding-right: 36px !important;
+    margin-right: 6px;
+  }
+
+  .Tkts-toolbar-Left .d-flex,
+  .Tkts-toolbar-Left .d-flex-- {
+    gap: 4px;
+  }
+
+  .axi-modal-container {
+    padding: 16px;
+  }
+
+  .axi-modal-actions .axi-btn {
+    flex: 1;
+  }
+}
+
+/* Touch devices: no hover, so reveal hover-only actions */
+@media (hover: none) {
+  .axi-suggestions.axi-grid-layout li.axi-suggestion .Add-Favourite {
+    display: block !important;
+  }
+
+  .edit-fav {
+    visibility: visible;
+  }
+
+  .AXI-Sec .btn:hover,
+  .AXI-Sec .enhance-btn:hover {
+    transform: none;
+  }
+}
+
+/* Landscape phones / short viewports */
+@media (max-height: 480px) and (max-width: 991px) {
+  #axiMegaDropdown .axi-suggestions,
+  .My-Command-Wrapper {
+    max-height: calc(100vh - 110px) !important;
+  }
+
+  .My-Fav-Items-Wrapper {
+    max-height: 30vh !important;
+  }
+}
