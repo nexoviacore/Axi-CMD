@@ -735,6 +735,8 @@ if (typeof document !== "undefined") {
             return;
         }
 
+        installInputScrollToEnd(input);
+
         axiSec = document.querySelector(".AXI-Sec");
         applyAxiCmdVisibility();
 
@@ -854,6 +856,61 @@ if (typeof document !== "undefined") {
 
     if (typeof window !== "undefined") {
         window.initAxiCmd = init;
+    }
+
+    /**
+     * Moves the caret to the end and scrolls the input horizontally so the tail of the text is visible.
+     * @param {HTMLInputElement} el - The command input element.
+     * @returns {void}
+     */
+    function scrollInputToEnd(el) {
+        try {
+            const len = el.value.length;
+            if (document.activeElement === el) {
+                el.setSelectionRange(len, len);
+            }
+            el.scrollLeft = el.scrollWidth;
+        } catch (e) { }
+    }
+
+    /**
+     * Wraps the input's value setter so every programmatic update (autocomplete, history,
+     * suggestion click) leaves the caret at the end with the end of the text in view.
+     * Typing by the user does not go through the setter, so normal editing is unaffected.
+     * @param {HTMLInputElement} el - The command input element.
+     * @returns {void}
+     */
+    function installInputScrollToEnd(el) {
+        if (!el || el.__axiScrollToEnd) return;
+        const proto = Object.getPrototypeOf(el);
+        const desc = Object.getOwnPropertyDescriptor(proto, "value") ||
+            Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+        if (!desc || !desc.set || !desc.configurable) return;
+        el.__axiScrollToEnd = true;
+        Object.defineProperty(el, "value", {
+            configurable: true,
+            enumerable: desc.enumerable,
+            get() { return desc.get.call(this); },
+            set(v) {
+                const changed = desc.get.call(this) !== String(v == null ? "" : v);
+                desc.set.call(this, v);
+                if (changed) {
+                    scrollInputToEnd(this);
+                    // re-apply after layout, once the browser has recomputed scrollWidth
+                    requestAnimationFrame(() => {
+                        if (this.selectionStart === this.value.length) {
+                            this.scrollLeft = this.scrollWidth;
+                        }
+                    });
+                }
+            }
+        });
+        // typing/paste/IME: keep the caret in view when the text outgrows the field
+        el.addEventListener("input", () => {
+            if (el.selectionStart === el.value.length) {
+                el.scrollLeft = el.scrollWidth;
+            }
+        });
     }
 
     let initRetries = 0;
@@ -7404,7 +7461,8 @@ if (typeof document !== "undefined") {
                 }
                 highlight();
             }
-            else if (e.key === "ArrowRight") {
+            // Left/Right move the text caret; they only navigate suggestions when the input is empty
+            else if (e.key === "ArrowRight" && input.value.length === 0) {
                 e.preventDefault();
                 if (isInitialGrid && activeIndex < verbsCount) {
                     activeIndex = (activeIndex + 1) % verbsCount;
@@ -7413,7 +7471,7 @@ if (typeof document !== "undefined") {
                 }
                 highlight();
             }
-            else if (e.key === "ArrowLeft") {
+            else if (e.key === "ArrowLeft" && input.value.length === 0) {
                 e.preventDefault();
                 if (isInitialGrid && activeIndex < verbsCount) {
                     activeIndex = (activeIndex - 1 + verbsCount) % verbsCount;
