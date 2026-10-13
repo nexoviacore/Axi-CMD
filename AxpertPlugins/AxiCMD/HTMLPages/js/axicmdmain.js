@@ -9046,6 +9046,49 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Looks a typed record up on the server when it is not in the part of the list that is already loaded.
+     * getList returns [] for ANY failure (timeout, dropped request, server hiccup), so one empty answer cannot be
+     * told apart from "record does not exist" and used to produce a false "Record ... not found". Therefore an
+     * empty first answer is asked once more, and when a full page comes back without the record the next pages
+     * are read too (a short term such as "msg11" matches many records).
+     * @async
+     * @param {string} lookupParams - Parameter string of axi_getstructsdata for this structure and field.
+     * @param {string} searchText - Text sent to the server search.
+     * @param {string[]} candidates - Values that identify the wanted record (see findMatchingRecordItem).
+     * @returns {Promise<object|null>} The matching record, or null if the server really has none.
+     */
+    async function lookupRecordOnServer(lookupParams, searchText, candidates) {
+        const LOOKUP_PAGE_SIZE = 50;
+        const MAX_LOOKUP_PAGES = 6;
+        let matched = null;
+
+        for (let page = 1; page <= MAX_LOOKUP_PAGES && !matched; page++) {
+            let rows = await getList("axi_getstructsdata", lookupParams, searchText, page, LOOKUP_PAGE_SIZE);
+            // Page 1 empty: either truly nothing, or a failed request. One more try tells them apart.
+            if (page === 1 && (!Array.isArray(rows) || rows.length === 0)) {
+                rows = await getList("axi_getstructsdata", lookupParams, searchText, 1, LOOKUP_PAGE_SIZE);
+            }
+            if (!Array.isArray(rows) || rows.length === 0) break;
+
+            matched = findMatchingRecordItem(rows, candidates);
+            // A page shorter than the page size is the last one
+            if (!matched && rows.filter(r => String(r?.isfield ?? "").toLowerCase() !== "t").length < LOOKUP_PAGE_SIZE) break;
+        }
+
+        if (matched) {
+            // Keep the record findable for later commands, as the old inline lookup did
+            const baseKey = `axi_getstructsdata_${lookupParams}`.toLowerCase();
+            if (!axDatasourceObj[baseKey]) axDatasourceObj[baseKey] = [];
+            const existing = axDatasourceObj[baseKey];
+            const recUid = matched.transrecordid ?? matched.id;
+            if (!existing.some(x => (x.transrecordid ?? x.id) == recUid)) {
+                existing.push(Object.assign({}, matched, { __fromSearch: true }));
+            }
+        }
+        return matched;
+    }
+
+    /**
      * Matches a candidate token or record ID against a list of struct records.
      * @param {Array<object>} structDataList - Candidate records.
      * @param {string[]} candidates - Candidate string values.
@@ -9360,19 +9403,9 @@ if (typeof document !== "undefined") {
                 try {
                     const lookupParams = processParamforEditndView(tokens, commandConfig, transId, tokenIndex);
                     if (lookupParams) {
-                        const fetchedResults = await getList("axi_getstructsdata", lookupParams, candidateSearch, 1, 50);
-                        if (Array.isArray(fetchedResults) && fetchedResults.length > 0) {
-                            matchedItem = findMatchingRecordItem(fetchedResults, candidates);
-                            if (matchedItem) {
-                                const baseKey = `axi_getstructsdata_${lookupParams}`.toLowerCase();
-                                if (!axDatasourceObj[baseKey]) axDatasourceObj[baseKey] = [];
-                                const existing = axDatasourceObj[baseKey];
-                                const recUid = matchedItem.transrecordid ?? matchedItem.id;
-                                if (!existing.some(x => (x.transrecordid ?? x.id) == recUid)) {
-                                    existing.push(matchedItem);
-                                }
-                            }
-                        }
+                        matchedItem = await lookupRecordOnServer(lookupParams, candidateSearch, candidates);
+                    } else {
+                        console.warn("[AxiCMD] Record lookup skipped: no lookup parameters for", transId);
                     }
                 } catch (lookupErr) {
                     console.warn("[AxiCMD] On-demand record resolution failed:", lookupErr);
@@ -10068,19 +10101,9 @@ if (typeof document !== "undefined") {
                 try {
                     const lookupParams = processParamforEditndView(tokens, commandConfig, transId, tokenIndex);
                     if (lookupParams) {
-                        const fetchedResults = await getList("axi_getstructsdata", lookupParams, candidateSearch, 1, 50);
-                        if (Array.isArray(fetchedResults) && fetchedResults.length > 0) {
-                            matchedItem = findMatchingRecordItem(fetchedResults, candidates);
-                            if (matchedItem) {
-                                const baseKey = `axi_getstructsdata_${lookupParams}`.toLowerCase();
-                                if (!axDatasourceObj[baseKey]) axDatasourceObj[baseKey] = [];
-                                const existing = axDatasourceObj[baseKey];
-                                const recUid = matchedItem.transrecordid ?? matchedItem.id;
-                                if (!existing.some(x => (x.transrecordid ?? x.id) == recUid)) {
-                                    existing.push(matchedItem);
-                                }
-                            }
-                        }
+                        matchedItem = await lookupRecordOnServer(lookupParams, candidateSearch, candidates);
+                    } else {
+                        console.warn("[AxiCMD] Record lookup skipped: no lookup parameters for", transId);
                     }
                 } catch (lookupErr) {
                     console.warn("[AxiCMD] On-demand view record resolution failed:", lookupErr);
