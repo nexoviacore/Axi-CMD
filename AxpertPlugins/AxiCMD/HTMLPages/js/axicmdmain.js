@@ -7403,9 +7403,10 @@ if (typeof document !== "undefined") {
      * @returns {{release: function(): void}} Handle; release() restores ShowDimmer and hides the loader (safe to call twice).
      */
     function holdDimmerUntilStudioLoads() {
-        const STUDIO_LOAD_TIMEOUT_MS = 20000;   // give up and hide the loader after this long
+        const STUDIO_LOAD_TIMEOUT_MS = 15000;   // give up and hide the loader after this long
         const ARM_AFTER_MS = 400;               // ignore iframe "load" events before this (a page that was already loading)
-        const SETTLE_AFTER_LOAD_MS = 300;       // let the new page paint before the loader goes away
+        const SETTLE_AFTER_LOAD_MS = 100;       // let the new page paint before the loader goes away
+        const POLL_MS = 150;                    // how often to check whether the studio has already rendered
 
         const patched = [];                     // { win, original, wrapper }
         let released = false;
@@ -7414,6 +7415,7 @@ if (typeof document !== "undefined") {
         let onLoad = null;
         let armTimer = null;
         let safetyTimer = null;
+        let pollTimer = null;
 
         // ShowDimmer may live on this window, the parent or the top window
         const wins = [];
@@ -7428,6 +7430,7 @@ if (typeof document !== "undefined") {
             released = true;
             clearTimeout(armTimer);
             clearTimeout(safetyTimer);
+            clearInterval(pollTimer);
             if (iframe && onLoad) {
                 try { iframe.removeEventListener("load", onLoad); } catch (e) { }
             }
@@ -7465,6 +7468,26 @@ if (typeof document !== "undefined") {
                     setTimeout(release, SETTLE_AFTER_LOAD_MS);
                 };
                 iframe.addEventListener("load", onLoad);
+                // The iframe "load" event waits for every image/font/script of the studio, which can take many
+                // seconds after the screen is already usable. So also watch the page itself: once it has left
+                // about:blank and has rendered content (React mounted into #root / body children) the loader goes.
+                // The page already showing in #middle1 is rendered too, so only a different address counts as the studio
+                let startHref = "";
+                try { startHref = String(iframe.contentWindow.location.href || ""); } catch (e) { }
+                pollTimer = setInterval(() => {
+                    if (!armed || released) return;
+                    try {
+                        const doc = iframe.contentDocument;
+                        const href = String(iframe.contentWindow.location.href || "");
+                        if (!doc || !doc.body) return;
+                        if (href === "about:blank" || href === startHref) return;
+                        const root = doc.getElementById("root") || doc.body;
+                        if (doc.readyState !== "loading" && root.children.length > 0 && root.offsetHeight > 0) {
+                            clearInterval(pollTimer);
+                            setTimeout(release, SETTLE_AFTER_LOAD_MS);
+                        }
+                    } catch (e) { /* cross-origin: rely on the load event */ }
+                }, POLL_MS);
             }
         } catch (e) { /* no access to the content iframe: the safety timer will release the loader */ }
 
