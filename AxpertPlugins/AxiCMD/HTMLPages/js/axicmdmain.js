@@ -607,6 +607,16 @@ if (typeof document !== "undefined") {
     const PAGE_SIZE_STORAGE_KEY = "axipref_pagesize";
 
     /**
+     * Local storage key for the page size of the signed-in user. The browser storage is shared by every
+     * user of this browser, so the user name is part of the key; otherwise one user's value shows for the next.
+     * @returns {string} Storage key.
+     */
+    function pageSizeStorageKey() {
+        const user = String(window.mainUserName || "").trim().toLowerCase();
+        return user ? PAGE_SIZE_STORAGE_KEY + "_" + user : PAGE_SIZE_STORAGE_KEY;
+    }
+
+    /**
      * Keeps a page size inside the allowed range; anything that is not a number gives the default.
      * @param {*} value - Candidate page size.
      * @returns {number} Whole number between MIN_PAGE_SIZE and MAX_PAGE_SIZE.
@@ -623,7 +633,7 @@ if (typeof document !== "undefined") {
      */
     function getPageSize() {
         try {
-            const saved = localStorage.getItem(PAGE_SIZE_STORAGE_KEY);
+            const saved = localStorage.getItem(pageSizeStorageKey());
             if (saved !== null) return clampPageSize(saved);
         } catch (e) { }
         return DEFAULT_PAGE_SIZE;
@@ -636,7 +646,7 @@ if (typeof document !== "undefined") {
      */
     function setPageSize(value) {
         const size = clampPageSize(value);
-        try { localStorage.setItem(PAGE_SIZE_STORAGE_KEY, String(size)); } catch (e) { }
+        try { localStorage.setItem(pageSizeStorageKey(), String(size)); } catch (e) { }
         return size;
     }
 
@@ -656,7 +666,12 @@ if (typeof document !== "undefined") {
             if (!res.ok) return;
             const settings = await res.json();
             const remote = settings && (settings.pagesize ?? settings.PAGESIZE);
-            if (remote !== undefined && remote !== null && remote !== "") setPageSize(remote);
+            if (remote !== undefined && remote !== null && remote !== "") {
+                setPageSize(remote);
+            } else {
+                // the server has no value for this user: they are on the default, so drop any stale local copy
+                try { localStorage.removeItem(pageSizeStorageKey()); } catch (e) { }
+            }
         } catch (e) {
             // offline / timeout: keep the local value
         } finally {
@@ -777,6 +792,14 @@ if (typeof document !== "undefined") {
     let suggestionRefreshTimer = null;
     // Dropdown scrollTop to restore after a "load more" re-render (null = start from top)
     let pendingScrollRestore = null;
+    // Watches the "Scroll down for more..." row. A scroll event does not bubble, and the dropdown has nested
+    // scrolling containers (list, commands grid, structures), so watching the row itself is what reliably
+    // tells that the user reached the end of whichever container scrolls.
+    let loadMoreObserver = null;
+    // listKey of the paged list drawn by the previous render(), to tell a refresh of the same list from a new one
+    let lastRenderedListKey = null;
+    // Paged-list context of the "load more" footer currently drawn (see buildLoadMoreFooter / loadNextPage)
+    let footerPagedContext = null;
     // The paged list currently shown in the dropdown: { source, param, term, listKey } or null
     let activePagedContext = null;
 
@@ -1070,6 +1093,23 @@ if (typeof document !== "undefined") {
             getDataSourceCache: () => axDatasourceObj,
             getActiveFetches: () => Array.from(activeFetches),
             getFailedFetches: () => Array.from(failedFetches),
+            // Prints what "load more" works from, to explain a scroll that fetches nothing:
+            // run window.axiDebug.paging() in the console after scrolling to the end of the list.
+            paging: () => {
+                const info = {
+                    scriptPageSize: getPageSize(),
+                    activePagedContext: activePagedContext,
+                    footerPagedContext: footerPagedContext,
+                    footerOnScreen: !!list.querySelector(".axi-load-more"),
+                    structKeyNow: "axi_structmetalist_" + getStructParam().toLowerCase(),
+                    pageStates: JSON.parse(JSON.stringify(axPageState)),
+                    activeFetches: Array.from(activeFetches),
+                    failedFetches: Array.from(failedFetches),
+                    loadedRows: Object.keys(axDatasourceObj).filter(k => k.startsWith("axi_structmetalist")).map(k => [k, (axDatasourceObj[k] || []).length])
+                };
+                console.log("[AxiCMD paging state]", info);
+                return info;
+            },
             loadList: loadList,
             getList: getList,
             testDebounceAds: async function (adsName = "axi_getstructsdata", params = "", searchTerm = "abc") {
@@ -1700,6 +1740,8 @@ if (typeof document !== "undefined") {
         const state = axPageState[ctx.listKey];
         if (!state || !state.hasMore) return null;
 
+        // Remember which list this footer belongs to; loadNextPage loads the next page of exactly that list
+        footerPagedContext = ctx;
         const li = document.createElement("li");
         li.className = "axi-load-more";
         li.style.cssText = "list-style:none;text-align:center;padding:8px;font-size:12px;color:#6b7280;cursor:default;";
@@ -1708,7 +1750,7 @@ if (typeof document !== "undefined") {
         } else if (renderedTotal >= MAX_RENDERED_ITEMS) {
             li.textContent = `Showing first ${MAX_RENDERED_ITEMS} - type more to narrow the results`;
         } else {
-            li.textContent = "Scroll down for more...";
+            li.textContent = list.classList.contains("My-Command-Wrapper") ? "Scroll for more..." : "Scroll down for more...";
         }
         return li;
     }
@@ -1720,16 +1762,21 @@ if (typeof document !== "undefined") {
      * @returns {void}
      */
     function loadNextPage() {
-        const ctx = activePagedContext;
-        if (!ctx) return;
+        // Use the context of the footer that is on screen. activePagedContext is cleared at the start of every
+        // suggestion pass, so between that and the next render it is null while the old footer still shows;
+        // a scroll in that window used to be dropped silently (no request at all).
+        const ctx = footerPagedContext || activePagedContext;
+        // Skips are logged at "verbose" level in the console so a scroll that does nothing can be explained
+        if (!ctx) { console.debug("[AxiCMD paging] skipped: no paged list on screen"); return; }
         const state = axPageState[ctx.listKey];
-        if (!state || !state.hasMore) return;
+        if (!state) { console.debug("[AxiCMD paging] skipped: no page state for", ctx.listKey); return; }
+        if (!state.hasMore) { console.debug("[AxiCMD paging] skipped: no more pages for", ctx.listKey); return; }
         const nextPage = state.page + 1;
         if (activeFetches.has(`${ctx.listKey}_p${nextPage}`)) return;
-        if ((axDatasourceObj[ctx.listKey] || []).length >= MAX_RENDERED_ITEMS) return;
+        if ((axDatasourceObj[ctx.listKey] || []).length >= MAX_RENDERED_ITEMS) { console.debug("[AxiCMD paging] skipped: render cap reached"); return; }
 
         // Re-render happens when the page arrives; remember where the user was scrolled to
-        pendingScrollRestore = list.scrollTop;
+        pendingScrollRestore = { top: list.scrollTop, left: list.scrollLeft };
         const footer = list.querySelector(".axi-load-more");
         if (footer) footer.textContent = "Loading more...";
         loadList(ctx.source, ctx.param, ctx.term, nextPage, getPageSize());
@@ -2651,6 +2698,17 @@ if (typeof document !== "undefined") {
      * Main input event handler; manages tokenization, suggestions popup, and dynamic hint rendering.
      * @returns {void}
      */
+    /**
+     * Marks the structure list (axi_structmetalist, nothing typed) as the paged list on screen, so the render
+     * draws its "Scroll down for more..." row and scrolling loads the next page. Every route that shows the
+     * initial suggestions must call this, not only suggestLocal.
+     * @returns {void}
+     */
+    function setInitialPagedContext() {
+        const param = getStructParam();
+        activePagedContext = { source: "axi_structmetalist", param: param, term: "", listKey: "axi_structmetalist_" + param.toLowerCase() };
+    }
+
     function handleInput() {
         try {
             if (!axicmdenabled) return;
@@ -2691,6 +2749,7 @@ if (typeof document !== "undefined") {
             }
             if (!commands) {
                 if (isInitialCommandStage) {
+                    setInitialPagedContext();
                     items = getInitialSuggestions();
                     hintDiv.textContent = "";
                     render();
@@ -2702,6 +2761,9 @@ if (typeof document !== "undefined") {
             if (!text.trim()) {
                 resolvedParams = {};
                 resolvedParamType = {};
+                // This empty-input shortcut skips suggestLocal, which is where the paged context is normally
+                // set. Without it the "Scroll down for more..." row is not drawn on the very first open.
+                setInitialPagedContext();
                 items = getInitialSuggestions();
                 hintDiv.textContent = "";
                 render();
@@ -4500,8 +4562,7 @@ if (typeof document !== "undefined") {
         if (rawTokens.length === 0) {
             hintDiv.textContent = "";
             // The structure list under the commands is paged: scrolling to its end loads the next page
-            const metaParam0 = getStructParam();
-            activePagedContext = { source: "axi_structmetalist", param: metaParam0, term: "", listKey: "axi_structmetalist_" + metaParam0.toLowerCase() };
+            setInitialPagedContext();
             const allSuggestions = getInitialSuggestions();
             filteredObjects = allSuggestions.map(item => {
                 if (typeof item === "string") {
@@ -6284,7 +6345,13 @@ if (typeof document !== "undefined") {
     function render() {
 
         // console.log("Render called");
+        // Emptying the list resets its scroll position. Background requests (commands, favourites, the next
+        // page ...) finish while the user is scrolling and trigger a re-render, which threw the user back to
+        // the top. Remember the position so a re-render of the SAME list can put it back (see below).
+        const scrollBeforeRender = { top: list.scrollTop, left: list.scrollLeft };
         list.innerHTML = "";
+        // No footer on screen until buildLoadMoreFooter draws one again in this render
+        footerPagedContext = null;
 
         const currentInput = input.value;
         const currentInputTokens = getTokens(currentInput.trim());
@@ -6580,10 +6647,19 @@ if (typeof document !== "undefined") {
         list.appendChild(fragment);
 
         // After a "load more" re-render, keep the user where they were instead of jumping to the top
+        // A re-render of the same list (same paged source and search term) keeps the scroll position; a
+        // different list (the user typed something else, another command) starts at the top as before.
+        const renderedListKey = activePagedContext ? activePagedContext.listKey : null;
+        const sameListAsBefore = renderedListKey !== null && renderedListKey === lastRenderedListKey;
         if (pendingScrollRestore !== null) {
-            list.scrollTop = pendingScrollRestore;
+            list.scrollTop = pendingScrollRestore.top;
+            list.scrollLeft = pendingScrollRestore.left;
             pendingScrollRestore = null;
+        } else if (sameListAsBefore) {
+            list.scrollTop = scrollBeforeRender.top;
+            list.scrollLeft = scrollBeforeRender.left;
         }
+        lastRenderedListKey = renderedListKey;
 
         if (list.classList.contains("axi-grid-layout")) {
             list.style.display = "flex";
@@ -6597,6 +6673,16 @@ if (typeof document !== "undefined") {
             megaDropdown.style.display = "flex";
         } else {
             list.style.display = "block";
+        }
+
+        // Load the next page as soon as the footer row scrolls into view
+        if (loadMoreObserver) { loadMoreObserver.disconnect(); loadMoreObserver = null; }
+        const footerRow = list.querySelector(".axi-load-more");
+        if (footerRow && typeof IntersectionObserver !== "undefined") {
+            loadMoreObserver = new IntersectionObserver(entries => {
+                if (entries.some(en => en.isIntersecting)) loadNextPage();
+            }, { threshold: 0.1 });
+            loadMoreObserver.observe(footerRow);
         }
 
 
@@ -7664,7 +7750,11 @@ if (typeof document !== "undefined") {
             scrollTicking = true;
             requestAnimationFrame(() => {
                 scrollTicking = false;
-                if (list.scrollTop + list.clientHeight >= list.scrollHeight - 60) {
+                // The first screen (commands + forms, class My-Command-Wrapper) is a single horizontal row of
+                // cards that scrolls sideways; every other list scrolls vertically. Check both directions.
+                const nearBottom = list.scrollHeight > list.clientHeight && list.scrollTop + list.clientHeight >= list.scrollHeight - 60;
+                const nearRight = list.scrollWidth > list.clientWidth && list.scrollLeft + list.clientWidth >= list.scrollWidth - 60;
+                if (nearBottom || nearRight) {
                     loadNextPage();
                 }
             });
