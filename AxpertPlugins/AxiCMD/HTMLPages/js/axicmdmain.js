@@ -658,24 +658,41 @@ if (typeof document !== "undefined") {
      */
     async function syncPageSizeFromServer() {
         if (!axiSettingsUrl || !window.mainUserName) return;
-        const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-        const timer = setTimeout(() => { if (controller) controller.abort(); }, 2500);
-        try {
-            const res = await fetch(`${axiSettingsUrl}?username=${encodeURIComponent(window.mainUserName)}&appname=${encodeURIComponent(getProjectName())}`,
-                controller ? { signal: controller.signal } : undefined);
-            if (!res.ok) return;
-            const settings = await res.json();
-            const remote = settings && (settings.pagesize ?? settings.PAGESIZE);
-            if (remote !== undefined && remote !== null && remote !== "") {
-                setPageSize(remote);
-            } else {
+        const sizeInUse = getPageSize();
+        // The request is NOT aborted when it is slow (a cold API can take several seconds). The palette only waits
+        // 2.5 s for it; if the answer arrives later and differs from what the lists were loaded with, the setting is
+        // applied then and the lists are reloaded, so the saved value is never silently ignored.
+        const request = fetchServerPageSize().then(remote => {
+            if (remote === undefined) return;               // unreachable: keep the local value
+            if (remote === null) {
                 // the server has no value for this user: they are on the default, so drop any stale local copy
                 try { localStorage.removeItem(pageSizeStorageKey()); } catch (e) { }
+            } else {
+                setPageSize(remote);
             }
+            return true;
+        });
+        const waited = await Promise.race([request, new Promise(resolve => setTimeout(() => resolve("timeout"), 2500))]);
+        if (waited === "timeout") {
+            request.then(done => {
+                if (done && getPageSize() !== sizeInUse && btnRefresh) btnRefresh.click();
+            });
+        }
+    }
+
+    /**
+     * Reads this user's saved page size from the server.
+     * @returns {Promise<number|null|undefined>} The size; null when the user has none saved; undefined when the API could not be read.
+     */
+    async function fetchServerPageSize() {
+        try {
+            const res = await fetch(`${axiSettingsUrl}?username=${encodeURIComponent(window.mainUserName)}&appname=${encodeURIComponent(getProjectName())}`);
+            if (!res.ok) return undefined;
+            const settings = await res.json();
+            const remote = settings && (settings.pagesize ?? settings.PAGESIZE ?? settings.Pagesize);
+            return (remote === undefined || remote === null || remote === "") ? null : clampPageSize(remote);
         } catch (e) {
-            // offline / timeout: keep the local value
-        } finally {
-            clearTimeout(timer);
+            return undefined;
         }
     }
 
@@ -2445,7 +2462,7 @@ if (typeof document !== "undefined") {
             targetUrl += `&openerIV=${transId}`;
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-            targetUrl += `&dummyload=false?`;
+            targetUrl += `&dummyload=false`;
         }
         else {
             if (fieldName && fieldValue) {
@@ -2454,7 +2471,7 @@ if (typeof document !== "undefined") {
             targetUrl += `&hltype=open`;
             targetUrl += `&createaxiflag=true`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-            targetUrl += `&dummyload=false?`;
+            targetUrl += `&dummyload=false`;
         }
 
         if (extraParams) {
@@ -2463,6 +2480,7 @@ if (typeof document !== "undefined") {
         }
 
         if (popUpOption) {
+            // Query string only ever has one '?': a stray one breaks the contenturl parsing in PopupContainer.html
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
             targetUrl += "&AxPop=true";
             openPopOption(targetUrl);
@@ -7996,6 +8014,16 @@ if (typeof document !== "undefined") {
                 if (!settingsPanel) settingsPanel = buildSettingsPanel();
                 if (settingsPanel.style.display === "block") { closeSettingsPanel(); return; }
                 settingsPanel.querySelector("#axiPageSizeInput").value = getPageSize();
+                // The saved server value is the truth: if this browser disagrees (sync was skipped or slow), show it
+                // and reload the lists with it so the box and the loaded rows match
+                if (axiSettingsUrl && window.mainUserName) {
+                    fetchServerPageSize().then(remote => {
+                        if (remote === undefined || remote === null || remote === getPageSize()) return;
+                        setPageSize(remote);
+                        settingsPanel.querySelector("#axiPageSizeInput").value = remote;
+                        btnRefresh.click();
+                    });
+                }
                 // Open above the button when the palette sits near the bottom of the screen, else below
                 const r = settingsBtn.getBoundingClientRect();
                 settingsPanel.style.display = "block";
