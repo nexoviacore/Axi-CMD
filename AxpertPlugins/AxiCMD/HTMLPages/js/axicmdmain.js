@@ -10284,6 +10284,19 @@ if (typeof document !== "undefined") {
 
 
     /**
+     * Drops everything cached about a form after its key field changed. The key field decides which value
+     * edit/view search by, so the cached form list (it carries the key field) and the cached record lists
+     * (rows were fetched by the old key) must not be reused. Refresh does exactly that reset for every
+     * cache layer (memory, localStorage "axi_" keys, paging state) and reloads the lists, so it is reused here.
+     * @param {string} transId - Form whose key field was changed.
+     * @returns {void}
+     */
+    function invalidateKeyfieldCaches(transId) {
+        clearStructSearchCache(transId);
+        if (btnRefresh) btnRefresh.click();
+    }
+
+    /**
      * Handles setting keyfield values for entity records.
      * @async
      * @param {object} context - Execution context.
@@ -10347,6 +10360,7 @@ if (typeof document !== "undefined") {
 
             if (dataObj && (dataObj.success === true || dataObj.message?.toLowerCase() === "success")) {
                 showToast(`Key field-${keyField} has been set for the form ${tstructName}`, 5000, true);
+                invalidateKeyfieldCaches(transId);
                 return;
             }
         } catch (err) {
