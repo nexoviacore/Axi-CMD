@@ -7,8 +7,8 @@ namespace AxiApi.Services
     {
         // Keep in step with MIN_PAGE_SIZE / MAX_PAGE_SIZE / DEFAULT_PAGE_SIZE in axicmdmain.js
         public const string PageSizeKey = "pagesize";
-        private const int MinPageSize = 10;
-        private const int MaxPageSize = 500;
+        private const int MinPageSize = 100;
+        private const int MaxPageSize = 5000;
         private const int DefaultPageSize = 100;
 
         private readonly IUserSettingsRepository _repository;

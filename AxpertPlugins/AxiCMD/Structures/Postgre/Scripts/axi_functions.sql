@@ -1017,7 +1017,12 @@ $function$
 
 --fn_axi_getstructures_meta with userpermission meta data
 <<
-CREATE OR REPLACE FUNCTION fn_axi_getstructures_meta(pusername character varying, puserrole character varying, presponsiblity character varying, pmode character varying, pstype character varying)
+-- Search + paging are done here (not in the axdirectsql row):
+--   psearchterm : case-insensitive "contains" filter on displaydata ('' / null = no filter)
+--   ppageno     : 1-based page number (null or < 1 = 1)
+--   ppagesize   : rows per page (null or < 1 = 100)
+-- The three extra parameters have defaults, so the original 5 argument call still works.
+CREATE OR REPLACE FUNCTION fn_axi_getstructures_meta(pusername character varying, puserrole character varying, presponsiblity character varying, pmode character varying, pstype character varying, psearchterm character varying DEFAULT '', ppageno integer DEFAULT 1, ppagesize integer DEFAULT 100)
  RETURNS TABLE(displaydata character varying, caption character varying, name character varying, stype character varying, dimension character varying, permission character varying, createallowed character varying, viewallowed character varying, keyfield character varying, primarytable character varying,keyfieldforedit varchar)
  LANGUAGE plpgsql
 AS $function$
@@ -1133,8 +1138,12 @@ SELECT * FROM (
     UNION ALL
     SELECT * FROM inbox WHERE pstype IN ('all')
 ) final_result
-ORDER BY displaydata;
- 
+WHERE coalesce(psearchterm, '') = ''
+   OR position(lower(psearchterm) in lower(final_result.displaydata)) > 0
+ORDER BY final_result.displaydata
+LIMIT CASE WHEN coalesce(ppagesize, 0) < 1 THEN 100 ELSE ppagesize END
+OFFSET (greatest(coalesce(ppageno, 1), 1) - 1) * CASE WHEN coalesce(ppagesize, 0) < 1 THEN 100 ELSE ppagesize END;
+
 END;
 $function$
 >>

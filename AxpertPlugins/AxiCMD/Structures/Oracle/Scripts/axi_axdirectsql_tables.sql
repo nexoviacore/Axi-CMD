@@ -584,14 +584,10 @@ Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIED
 >>
 
 -- axi_structmetalist | param1..param5 = user, roles, responsibility, mode, struct type (as before).
--- param11 = search term, param12 = page no (1-based), param13 = page size. fn_axi_getstructures_meta is unchanged;
--- search + paging are applied in this query so the client only receives one page of the structure list.
+-- param11 = search term, param12 = page no (1-based), param13 = page size. Search + paging are done inside
+-- fn_axi_getstructures_meta itself (see axi_functions.sql), so the client only receives one page of the structure list.
 <<
-Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990032,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_structmetalist',null,'Metadata',1,'SELECT * from (SELECT * from TABLE(fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5))) m
-WHERE :param11 is null OR instr(lower(m.displaydata), lower(:param11)) > 0
-ORDER BY m.displaydata
-OFFSET (greatest(to_number(nvl(:param12, ''1'')), 1) - 1) * to_number(nvl(:param13, ''100'')) ROWS
-FETCH NEXT to_number(nvl(:param13, ''100'')) ROWS ONLY','param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11,param12,param13','param1~Character~,param2~Character~,param3~Character~,param4~Character~,param5~Character~,param6~Character~,param7~Character~,param8~Character~,param9~Character~,param10~Character~,param11~Character~,param12~Character~,param13~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990032,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_structmetalist',null,'Metadata',1,'SELECT * from TABLE(fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5,:param11,to_number(nvl(:param12, ''1'')),to_number(nvl(:param13, ''100''))))','param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11,param12,param13','param1~Character~,param2~Character~,param3~Character~,param4~Character~,param5~Character~,param6~Character~,param7~Character~,param8~Character~,param9~Character~,param10~Character~,param11~Character~,param12~Character~,param13~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
 >>
 
 <<

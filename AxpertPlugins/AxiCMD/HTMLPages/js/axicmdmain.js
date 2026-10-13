@@ -602,8 +602,8 @@ if (typeof document !== "undefined") {
     // Rows loaded at a time is a per-user setting (gear button next to Refresh). It is stored under
     // "axipref_" (NOT "axi_") so the Refresh button, which wipes every "axi_" cache key, keeps it.
     const DEFAULT_PAGE_SIZE = 100;
-    const MIN_PAGE_SIZE = 10;
-    const MAX_PAGE_SIZE = 500;
+    const MIN_PAGE_SIZE = 100;
+    const MAX_PAGE_SIZE = 5000;
     const PAGE_SIZE_STORAGE_KEY = "axipref_pagesize";
 
     /**
@@ -7998,7 +7998,7 @@ if (typeof document !== "undefined") {
                 panel.innerHTML =
                     '<div style="font-weight:600;margin-bottom:8px;">Records to load at a time</div>' +
                     '<div style="display:flex;gap:8px;align-items:center;">' +
-                    '<input id="axiPageSizeInput" type="number" step="10" style="width:90px;padding:4px 6px;border:1px solid #bbb;border-radius:4px;">' +
+                    '<input id="axiPageSizeInput" type="number" step="100" style="width:90px;padding:4px 6px;border:1px solid #bbb;border-radius:4px;">' +
                     '<button id="axiPageSizeSave" type="button" style="padding:4px 12px;border:0;border-radius:4px;background:#2563eb;color:#fff;cursor:pointer;">Save</button>' +
                     '<button id="axiPageSizeDefault" type="button" style="padding:4px 10px;border:1px solid #bbb;border-radius:4px;background:#fff;cursor:pointer;">Default</button>' +
                     '</div>' +

@@ -532,12 +532,20 @@ END;
 
 
 <<
+-- Search + paging are done here (not in the AXDIRECTSQL row):
+--   psearchterm : case-insensitive "contains" filter on displaydata (null = no filter)
+--   ppageno     : 1-based page number (null or < 1 = 1)
+--   ppagesize   : rows per page (null or < 1 = 100)
+-- The three extra parameters have defaults, so the original 5 argument call still works.
 CREATE OR REPLACE FUNCTION fn_axi_getstructures_meta(
-    pusername        IN VARCHAR2, 
-    puserrole        IN VARCHAR2, 
-    presponsiblity   IN VARCHAR2, 
-    pmode            IN VARCHAR2, 
-    pstype           IN VARCHAR2
+    pusername        IN VARCHAR2,
+    puserrole        IN VARCHAR2,
+    presponsiblity   IN VARCHAR2,
+    pmode            IN VARCHAR2,
+    pstype           IN VARCHAR2,
+    psearchterm      IN VARCHAR2 DEFAULT NULL,
+    ppageno          IN NUMBER DEFAULT 1,
+    ppagesize        IN NUMBER DEFAULT 100
 ) RETURN AXI_GETSTRUCTURES_META_tbl PIPELINED 
 AS    
     type t_cursor IS REF CURSOR;
@@ -692,7 +700,11 @@ ads as(
             UNION ALL
             SELECT * FROM inbox WHERE pstype IN ('all')
         ) final_result
-        ORDER BY displaydata;
+        WHERE psearchterm IS NULL
+           OR INSTR(LOWER(final_result.displaydata), LOWER(psearchterm)) > 0
+        ORDER BY final_result.displaydata
+        OFFSET (GREATEST(NVL(ppageno, 1), 1) - 1) * (CASE WHEN NVL(ppagesize, 0) < 1 THEN 100 ELSE ppagesize END) ROWS
+        FETCH NEXT (CASE WHEN NVL(ppagesize, 0) < 1 THEN 100 ELSE ppagesize END) ROWS ONLY;
     
     IF v_cursor%ISOPEN THEN
         LOOP

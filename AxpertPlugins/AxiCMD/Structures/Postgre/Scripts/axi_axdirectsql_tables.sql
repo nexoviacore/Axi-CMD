@@ -688,16 +688,12 @@ VALUES
 >>
 
 -- axi_structmetalist | param1..param5 = user, roles, responsibility, mode, struct type (as before).
--- param11 = search term, param12 = page no (1-based), param13 = page size. fn_axi_getstructures_meta is unchanged;
--- search + paging are applied in this query so the client only receives one page of the structure list.
+-- param11 = search term, param12 = page no (1-based), param13 = page size. Search + paging are done inside
+-- fn_axi_getstructures_meta itself (see axi_functions.sql), so the client only receives one page of the structure list.
 <<
 INSERT INTO axdirectsql
 (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990038, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_structmetalist', NULL, 'Metadata', 5, 'SELECT * from fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5) m
-WHERE coalesce(:param11, '''') = '''' OR position(lower(:param11) in lower(m.displaydata)) > 0
-ORDER BY m.displaydata
-LIMIT coalesce(cast(nullif(cast(:param13 as varchar), '''') as integer), 100)
-OFFSET (greatest(coalesce(cast(nullif(cast(:param12 as varchar), '''') as integer), 1), 1) - 1) * coalesce(cast(nullif(cast(:param13 as varchar), '''') as integer), 100)', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11,param12,param13', 'param1~~,param2~~,param3~~,param4~~,param5~~,param6~~,param7~~,param8~~,param9~~,param10~~,param11~~,param12~~,param13~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+VALUES(99999999990038, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_structmetalist', NULL, 'Metadata', 5, 'SELECT * from fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5,:param11,cast(nullif(cast(:param12 as varchar), '''') as integer),cast(nullif(cast(:param13 as varchar), '''') as integer))', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11,param12,param13', 'param1~~,param2~~,param3~~,param4~~,param5~~,param6~~,param7~~,param8~~,param9~~,param10~~,param11~~,param12~~,param13~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
 >>
 
 <<
