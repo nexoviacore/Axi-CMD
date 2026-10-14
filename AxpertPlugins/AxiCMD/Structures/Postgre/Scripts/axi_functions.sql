@@ -1017,12 +1017,7 @@ $function$
 
 --fn_axi_getstructures_meta with userpermission meta data
 <<
--- Search + paging are done here (not in the axdirectsql row):
---   psearchterm : case-insensitive "contains" filter on displaydata ('' / null = no filter)
---   ppageno     : 1-based page number (null or < 1 = 1)
---   ppagesize   : rows per page (null or < 1 = 100)
--- The three extra parameters have defaults, so the original 5 argument call still works.
-CREATE OR REPLACE FUNCTION fn_axi_getstructures_meta(pusername character varying, puserrole character varying, presponsiblity character varying, pmode character varying, pstype character varying, psearchterm character varying DEFAULT '', ppageno integer DEFAULT 1, ppagesize integer DEFAULT 100)
+CREATE OR REPLACE FUNCTION fn_axi_getstructures_meta(pusername character varying, puserrole character varying, presponsiblity character varying, pmode character varying, pstype character varying)
  RETURNS TABLE(displaydata character varying, caption character varying, name character varying, stype character varying, dimension character varying, permission character varying, createallowed character varying, viewallowed character varying, keyfield character varying, primarytable character varying,keyfieldforedit varchar)
  LANGUAGE plpgsql
 AS $function$
@@ -1138,19 +1133,15 @@ SELECT * FROM (
     UNION ALL
     SELECT * FROM inbox WHERE pstype IN ('all')
 ) final_result
-WHERE coalesce(psearchterm, '') = ''
-   OR position(lower(psearchterm) in lower(final_result.displaydata)) > 0
-ORDER BY final_result.displaydata
-LIMIT CASE WHEN coalesce(ppagesize, 0) < 1 THEN 100 ELSE ppagesize END
-OFFSET (greatest(coalesce(ppageno, 1), 1) - 1) * CASE WHEN coalesce(ppagesize, 0) < 1 THEN 100 ELSE ppagesize END;
-
+ORDER BY displaydata;
+ 
 END;
 $function$
 >>
 
 -- fn_axi_getstructs_obj | replace for primaryfieldvalue+fieldnames and selected fieldvalue with primary fieldvalue suffix
 <<
-CREATE OR REPLACE FUNCTION fn_axi_getstructs_obj(pcmd character varying, pusername character varying, puserrole character varying, ptransid character varying, pselectedfield character varying, pdimension character varying, ppermission character varying, pkeyfield character varying, pprimarytable character varying, pglobalvars character varying, psearchterm character varying DEFAULT '', ppageno integer DEFAULT 1, ppagesize integer DEFAULT 100)
+CREATE OR REPLACE FUNCTION fn_axi_getstructs_obj(pcmd character varying, pusername character varying, puserrole character varying, ptransid character varying, pselectedfield character varying, pdimension character varying, ppermission character varying, pkeyfield character varying, pprimarytable character varying, pglobalvars character varying)
  RETURNS TABLE(displaydata text, id text, caption text, isfield text,transrecordid numeric)
 LANGUAGE plpgsql
 AS $function$
@@ -1172,19 +1163,7 @@ v_editctrl varchar;
 v_finalcomps text;
 v_fullcontrol varchar;
 v_fieldlist_sql text;
-v_search text;
-v_limit integer;
-v_offset integer;
-v_key_search_filter text := '';
-v_sel_search_filter text := '';
-v_fld_search_filter text := '';
 begin
-v_search := coalesce(trim(psearchterm), '');
-v_limit := coalesce(nullif(ppagesize, 0), 100);
-if v_limit <= 0 then v_limit := 100; end if;
-v_offset := (coalesce(nullif(ppageno, 0), 1) - 1) * v_limit;
-if v_offset < 0 then v_offset := 0; end if;
-
 ------Get flds metadata for keyfield
 select srckey,lower(srctf),lower(srcfld)
 into v_keyfield_normalized,v_keyfield_srctbl,v_keyfield_srcfld
@@ -1207,65 +1186,6 @@ if pdimension = 'T' then
 
 end if;
 
-if v_search <> '' then
- -- NOTE: v_fld_search_filter is intentionally left empty ('').
- -- Previously the typed search term also filtered the field list (caption/fname), which hid
- -- fields while the user was autocompleting. The search term now applies to record rows only
- -- (v_key_search_filter / v_sel_search_filter below); field rows (isfield='t') always come back unfiltered.
-
- if v_keyfield_normalized = 'T' then
-  v_key_search_filter := format(
-   ' and (lower((s.%I)::text) like lower(%L) or lower((p.%I)::text) like lower(%L) or cast(p.%I as text) like %L)',
-   v_keyfield_srcfld, '%' || v_search || '%',
-   lower(pkeyfield), '%' || v_search || '%',
-   lower(pprimarytable)||'id', '%' || v_search || '%'
-  );
- else
-  v_key_search_filter := format(
-   ' and (lower((p.%I)::text) like lower(%L) or cast(p.%I as text) like %L)',
-   lower(pkeyfield), '%' || v_search || '%',
-   lower(pprimarytable)||'id', '%' || v_search || '%'
-  );
- end if;
-
- if pselectedfield != '0' then
-  if v_selectedfld_normalized = 'T' then
-   if v_keyfield_normalized = 'F' then
-    v_sel_search_filter := format(
-     ' and (lower((s.%I)::text) like lower(%L) or lower((p.%I)::text) like lower(%L) or cast(p.%I as text) like %L)',
-     v_selectedfld_srcfld, '%' || v_search || '%',
-     lower(pkeyfield), '%' || v_search || '%',
-     lower(pprimarytable)||'id', '%' || v_search || '%'
-    );
-   else
-    v_sel_search_filter := format(
-     ' and (lower((s.%I)::text) like lower(%L) or lower((k.%I)::text) like lower(%L) or lower((p.%I)::text) like lower(%L) or cast(p.%I as text) like %L)',
-     v_selectedfld_srcfld, '%' || v_search || '%',
-     v_keyfield_srcfld, '%' || v_search || '%',
-     lower(pkeyfield), '%' || v_search || '%',
-     lower(pprimarytable)||'id', '%' || v_search || '%'
-    );
-   end if;
-  else
-   if v_keyfield_normalized = 'F' then
-    v_sel_search_filter := format(
-     ' and (lower((p.%I)::text) like lower(%L) or lower((p.%I)::text) like lower(%L) or cast(p.%I as text) like %L)',
-     lower(pselectedfield), '%' || v_search || '%',
-     lower(pkeyfield), '%' || v_search || '%',
-     lower(pprimarytable)||'id', '%' || v_search || '%'
-    );
-   else
-    v_sel_search_filter := format(
-     ' and (lower((p.%I)::text) like lower(%L) or lower((s.%I)::text) like lower(%L) or cast(p.%I as text) like %L)',
-     lower(pselectedfield), '%' || v_search || '%',
-     v_keyfield_srcfld, '%' || v_search || '%',
-     lower(pprimarytable)||'id', '%' || v_search || '%'
-    );
-   end if;
-  end if;
- end if;
-end if;
-
 -----Get included and excluded dcs, fields 
 if ppermission = 'T' then 
 
@@ -1285,10 +1205,9 @@ if ppermission = 'T' then
             AND hidden = 'F'
             AND savevalue = 'T'
          and datatype not in('t','i')
-         and (lower(fname) not like 'axpfile%%' or lower(fname) not like 'dc__image%%') %s          
+         and (lower(fname) not like 'axpfile%%' or lower(fname) not like 'dc__image%%')           
          $sql$,
-         ptransid,
-         v_fld_search_filter);
+         ptransid);
  elsif coalesce(v_fullcontrol,'F') = 'F' and v_viewctrl = '1' then
   v_fieldlist_sql := format($sql$
            SELECT (caption || ' (' || fname || ')' || ' [' || 'field' || ']')::text AS displaydata,
@@ -1302,11 +1221,10 @@ if ppermission = 'T' then
             AND savevalue = 'T' 
          and datatype not in('t','i')
          and (lower(fname) not like 'axpfile%%' or lower(fname) not like 'dc__image%%') 
-         and lower(fname) = ANY(string_to_array(%L,',')) %s                
+         and lower(fname) = ANY(string_to_array(%L,','))                 
          $sql$,
          ptransid,
-         lower(v_includedcomps),
-         v_fld_search_filter);
+         lower(v_includedcomps));
  elsif coalesce(v_fullcontrol,'F') = 'F' and v_viewctrl = '2' then
    v_fieldlist_sql := format($sql$
             SELECT (caption || ' (' || fname || ')' || ' [' || 'field' || ']')::text AS displaydata,
@@ -1320,11 +1238,10 @@ if ppermission = 'T' then
              AND savevalue = 'T'
           and datatype not in('t','i')
           and (lower(fname) not like 'axpfile%%' or lower(fname) not like 'dc__image%%')           
-          and lower(fname) != ALL(string_to_array(%L,',')) %s        
+          and lower(fname) != ALL(string_to_array(%L,','))         
           $sql$,
           ptransid,
-          v_excludedcomps,
-          v_fld_search_filter);
+          v_excludedcomps);
 
  end if;
 else  
@@ -1339,10 +1256,9 @@ else
       AND hidden = 'F'
       AND savevalue = 'T'
       and datatype not in('t','i')
-      and (lower(fname) not like 'axpfile%%' or lower(fname) not like 'dc__image%%') %s          
+      and (lower(fname) not like 'axpfile%%' or lower(fname) not like 'dc__image%%')           
       $sql$,
-      ptransid,
-      v_fld_search_filter);
+      ptransid);
 
 end if;
 
@@ -1357,9 +1273,8 @@ v_keyfield_sql := format(
     FROM %I p 
     JOIN %I s ON p.%I = s.%I
     WHERE p.%I IS NOT NULL
- %s %s
+ %s
  order by p.modifiedon desc
- limit %s offset %s
     $sql$,
  v_keyfield_srcfld,
   v_keyfield_srctbl||'id',
@@ -1370,10 +1285,7 @@ v_keyfield_sql := format(
     lower(pkeyfield),   
     v_keyfield_srctbl||'id',   
  lower(pkeyfield), 
- coalesce(v_dimension_filter, ''),
- v_key_search_filter,
- v_limit,
- v_offset    
+ v_dimension_filter    
 );
 else
 v_keyfield_sql := format(
@@ -1384,19 +1296,15 @@ v_keyfield_sql := format(
            'f'::text AS isfield,%I transrecordid
     FROM %I p
     WHERE p.%I IS NOT NULL
- %s %s
+ %s
  order by p.modifiedon desc
- limit %s offset %s
 $sql$,
     lower(pkeyfield),
     lower(pkeyfield),
  lower(pprimarytable)||'id',
     lower(pprimarytable),
     lower(pkeyfield),
- coalesce(v_dimension_filter, ''),
- v_key_search_filter,
- v_limit,
- v_offset
+ v_dimension_filter
 );
 
 end if;
@@ -1414,9 +1322,8 @@ if pselectedfield!='0' then
             FROM %I p 
             JOIN %I s ON p.%I = s.%I
             WHERE p.%I IS NOT NULL
-         %s %s 
+         %s  
          order by p.modifiedon desc      
-         limit %s offset %s
             $sql$, 
          lower(pkeyfield),
          v_selectedfld_srcfld,
@@ -1429,10 +1336,7 @@ if pselectedfield!='0' then
             lower(pselectedfield),   
             v_selectedfld_srctbl||'id',   
             lower(pselectedfield),
-         coalesce(v_dimension_filter, ''),
-         v_sel_search_filter,
-         v_limit,
-         v_offset  
+         v_dimension_filter  
         ) 
        when v_keyfield_normalized='T' then 
         format(
@@ -1446,9 +1350,8 @@ if pselectedfield!='0' then
             JOIN %I s ON p.%I = s.%I
          join %I k on p.%I = k.%I
             WHERE p.%I IS NOT NULL
-         %s %s
+         %s
          order by p.modifiedon desc 
-         limit %s offset %s
             $sql$,
          v_selectedfld_srcfld,
          v_keyfield_srcfld,
@@ -1465,10 +1368,7 @@ if pselectedfield!='0' then
          lower(pkeyfield),
          v_keyfield_srctbl||'id',
             lower(pselectedfield),
-         coalesce(v_dimension_filter, ''),
-         v_sel_search_filter,
-         v_limit,
-         v_offset    
+         v_dimension_filter    
         )
 end;
  else
@@ -1481,9 +1381,8 @@ end;
                   'f'::text AS isfield,%I transrecordid
            FROM %I p
            WHERE p.%I IS NOT NULL
-        %s %s
+        %s
         order by p.modifiedon desc,p.%I
-        limit %s offset %s
        $sql$,
            lower(pselectedfield),
         lower(pkeyfield),
@@ -1491,11 +1390,8 @@ end;
            lower(pprimarytable)||'id',
            lower(pprimarytable),
            lower(pselectedfield),
-        coalesce(v_dimension_filter, ''),
-        v_sel_search_filter,
-        lower(pselectedfield),
-        v_limit,
-        v_offset
+        v_dimension_filter,
+        lower(pselectedfield)
        )
        when v_keyfield_normalized='T' then 
         format(
@@ -1507,9 +1403,8 @@ end;
            FROM %I p
         join %I s on p.%I = s.%I
            WHERE p.%I IS NOT NULL
-        %s %s
+        %s
         order by p.modifiedon desc
-        limit %s offset %s
         $sql$,
            lower(pselectedfield),
         v_keyfield_srcfld,
@@ -1521,10 +1416,7 @@ end;
            lower(pkeyfield),
         v_keyfield_srctbl||'id',
         lower(pkeyfield),
-        coalesce(v_dimension_filter, ''),
-        v_sel_search_filter,
-        v_limit,
-        v_offset
+        v_dimension_filter
        ) end;
       
  end if;
@@ -1532,17 +1424,7 @@ end if;
 
 
 if pselectedfield='0' then
- -- Result = record rows (isfield='f': searched + paginated) UNION field rows (isfield='t').
- -- Field rows are never filtered by the search term and never limited by page size,
- -- so the user can always pick any field.
- if v_offset > 0 then
-  -- Page 2+ of the record list: return records only.
-  -- The field rows were already delivered with page 1; repeating them would create duplicates.
-  v_sql := v_keyfield_sql;
- else
-  -- Page 1: records followed by the complete field list.
-  v_sql := concat(' select * from(',v_keyfield_sql,')a',' union all',v_fieldlist_sql);
- end if;
+v_sql := concat(' select * from(',v_keyfield_sql,')a',' union all',v_fieldlist_sql);
 else
 v_sql := v_selectedfld_sql;
 end if;
