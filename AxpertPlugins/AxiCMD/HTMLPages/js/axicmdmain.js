@@ -9148,7 +9148,9 @@ if (typeof document !== "undefined") {
      * are read too (a short term such as "msg11" matches many records).
      * @async
      * @param {string} lookupParams - Parameter string of axi_getstructsdata for this structure and field.
-     * @param {string} searchText - Text sent to the server search.
+     * @param {string|string[]} searchText - Text sent to the server search. An array is tried in order until one
+     *   finds the record: the resolved value of a picked suggestion can be the record id (or "name [id]"), which
+     *   the server search does not match, while the text the user typed ("msg09") does.
      * @param {string[]} candidates - Values that identify the wanted record (see findMatchingRecordItem).
      * @returns {Promise<object|null>} The matching record, or null if the server really has none.
      */
@@ -9157,17 +9159,26 @@ if (typeof document !== "undefined") {
         const MAX_LOOKUP_PAGES = 6;
         let matched = null;
 
-        for (let page = 1; page <= MAX_LOOKUP_PAGES && !matched; page++) {
-            let rows = await getList("axi_getstructsdata", lookupParams, searchText, page, LOOKUP_PAGE_SIZE);
-            // Page 1 empty: either truly nothing, or a failed request. One more try tells them apart.
-            if (page === 1 && (!Array.isArray(rows) || rows.length === 0)) {
-                rows = await getList("axi_getstructsdata", lookupParams, searchText, 1, LOOKUP_PAGE_SIZE);
-            }
-            if (!Array.isArray(rows) || rows.length === 0) break;
+        const searchTexts = [];
+        (Array.isArray(searchText) ? searchText : [searchText]).forEach(t => {
+            const clean = cleanString(String(t ?? "")).replace(/\[.*?\]/g, "").trim();
+            if (clean && !searchTexts.some(s => s.toLowerCase() === clean.toLowerCase())) searchTexts.push(clean);
+        });
 
-            matched = findMatchingRecordItem(rows, candidates);
-            // A page shorter than the page size is the last one
-            if (!matched && rows.filter(r => String(r?.isfield ?? "").toLowerCase() !== "t").length < LOOKUP_PAGE_SIZE) break;
+        for (const term of searchTexts) {
+            for (let page = 1; page <= MAX_LOOKUP_PAGES && !matched; page++) {
+                let rows = await getList("axi_getstructsdata", lookupParams, term, page, LOOKUP_PAGE_SIZE);
+                // Page 1 empty: either truly nothing, or a failed request. One more try tells them apart.
+                if (page === 1 && (!Array.isArray(rows) || rows.length === 0)) {
+                    rows = await getList("axi_getstructsdata", lookupParams, term, 1, LOOKUP_PAGE_SIZE);
+                }
+                if (!Array.isArray(rows) || rows.length === 0) break;
+
+                matched = findMatchingRecordItem(rows, candidates);
+                // A page shorter than the page size is the last one
+                if (!matched && rows.filter(r => String(r?.isfield ?? "").toLowerCase() !== "t").length < LOOKUP_PAGE_SIZE) break;
+            }
+            if (matched) break;
         }
 
         if (matched) {
@@ -9493,8 +9504,9 @@ if (typeof document !== "undefined") {
 
         // If record wasn't preloaded, perform on-demand server lookup
         if (!matchedItem && hasUserProvidedRecord) {
-            const candidateSearch = cleanString(candidates[0] || rawValue || fieldValue).replace(/\[.*?\]/g, "").trim();
-            if (candidateSearch) {
+            // What the user typed first, then the resolved value (may be an id the server search cannot match)
+            const candidateSearch = [rawValue, ...candidates];
+            if (candidateSearch.some(t => cleanString(String(t ?? "")).replace(/\[.*?\]/g, "").trim())) {
                 try {
                     const lookupParams = processParamforEditndView(tokens, commandConfig, transId, tokenIndex);
                     if (lookupParams) {
@@ -9516,7 +9528,11 @@ if (typeof document !== "undefined") {
         } else if (!matchedItem && fieldValue && fieldValue.includes("[") && fieldValue.includes("]") && fieldUniqueId && fieldUniqueId !== "0" && fieldUniqueId !== fieldValue && /^\d+$/.test(fieldUniqueId)) {
             // Fallback: If item had bracketed numeric record ID from autocomplete
             redirectToTstructRecord(transId, rawStruct, fieldUniqueId);
+        } else if (fieldUniqueId && /^\d+$/.test(fieldUniqueId) && fieldUniqueId !== "0") {
+            // A picked suggestion carries the record id: open it directly (same as the view command does)
+            redirectToTstructRecord(transId, rawStruct, fieldUniqueId);
         } else if (hasUserProvidedRecord && !matchedItem) {
+            console.warn("[AxiCMD edit] Record not found", { transId, rawValue, fieldValue, fieldUniqueId, candidates, targetFieldName });
             showToast(`Record '${rawValue || fieldValue}' not found in ${rawStruct}.`);
             return;
         } else {
@@ -10191,8 +10207,9 @@ if (typeof document !== "undefined") {
 
         // If record wasn't preloaded, perform on-demand server lookup
         if (!matchedItem && hasUserProvidedRecord) {
-            const candidateSearch = cleanString(candidates[0] || rawFieldValue || fieldValue).replace(/\[.*?\]/g, "").trim();
-            if (candidateSearch) {
+            // What the user typed first, then the resolved value (may be an id the server search cannot match)
+            const candidateSearch = [rawFieldValue, ...candidates];
+            if (candidateSearch.some(t => cleanString(String(t ?? "")).replace(/\[.*?\]/g, "").trim())) {
                 try {
                     const lookupParams = processParamforEditndView(tokens, commandConfig, transId, tokenIndex);
                     if (lookupParams) {
