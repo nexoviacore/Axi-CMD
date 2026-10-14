@@ -410,11 +410,10 @@
                 }
 
                 // 2. Extract Data & CLEAN URL
-                const urlParts = urlString.split('?');
-                const baseUrl = urlParts[0];
-
-                // Merge full query (fixes missing params issue)
-                const fullQuery = urlParts.slice(1).join('');
+                // Split on the FIRST '?' only; any later '?' is treated as a parameter separator
+                const qIndex = urlString.indexOf('?');
+                const baseUrl = qIndex === -1 ? urlString : urlString.substring(0, qIndex);
+                const fullQuery = qIndex === -1 ? '' : urlString.substring(qIndex + 1).replace(/\?/g, '&');
                 let params = new URLSearchParams(fullQuery);
 
                 // Capture values before deleting
@@ -451,6 +450,7 @@
                 }
 
                 this.createPopupIfNeeded();
+                this.openedAt = Date.now();
 
                 if (this.mainPopup.dataset.minimized === "true") {
                     this.restore();
@@ -520,7 +520,7 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
                     const decodedUrl = decodeURIComponent(rawUrl);
 
                     // Extract a preliminary title to pass to openForm
-                    const innerParams = new URLSearchParams(decodedUrl.split('?')[1]);
+                    const innerParams = new URLSearchParams(decodedUrl.substring(decodedUrl.indexOf('?') + 1).replace(/\?/g, '&'));
                     let initialTitle = innerParams.get("tname") || innerParams.get("transid") || "Loading...";
                     initialTitle = decodeURIComponent(initialTitle);
 
@@ -801,6 +801,8 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
             attachEvents() {
                 const p = this.mainPopup;
                 document.addEventListener("mousedown", async (e) => {
+                    // Ignore clicks while the form is still opening (the same click that launched it must not minimize it)
+                    if (Date.now() - (this.openedAt || 0) < 2000) return;
                     if (this.mainPopup &&
                         this.mainPopup.dataset.minimized !== "true" &&
                         !this.mainPopup.contains(e.target)) {
@@ -911,6 +913,8 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
                 const iframe = this.tabs[title].ifr;
                 try {
                     const childWin = iframe.contentWindow;
+                    // Form still loading (tstruct.js globals such as FNames not defined yet): nothing to save, and calling it throws
+                    if (!childWin || !childWin.transid || typeof childWin.FNames === "undefined") return;
                     // Skip saving only when the form explicitly reports clean state (both false)
                     const isExplicitlyClean = childWin && childWin.IsFormDirty === false && childWin.globalChange === false;
                     if (!isExplicitlyClean && childWin && typeof childWin.SaveMultiFrameDataJSON === "function") {
@@ -920,6 +924,13 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
                             const transid = childWin.transid;
                             // Sync data to the server-side session/Redis
                             await this.syncTstruct(transid, tstDataId);
+                            try {
+                                if (window.parent && typeof window.parent.axiClearStructCache === "function") {
+                                    window.parent.axiClearStructCache(transid);
+                                } else if (window.top && typeof window.top.axiClearStructCache === "function") {
+                                    window.top.axiClearStructCache(transid);
+                                }
+                            } catch (e) { }
                         }
                     }
                 } catch (e) {

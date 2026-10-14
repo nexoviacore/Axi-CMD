@@ -1,4 +1,4 @@
-﻿
+
 <<
 DELETE FROM axdirectsql where sqlname = 'axi_jobnameslist'
 >>
@@ -457,10 +457,17 @@ INSERT INTO axdirectsql
 VALUES(99999999990021, 'F', 0, NULL, 'admin', '2025-12-23 13:35:16.000', 'admin', '2025-12-22 16:01:14.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_keyfieldlist', NULL, 'Metadata', 5, 'SELECT keyfield FROM (SELECT keyfield, 1 AS priority, NULL AS modeofentry, NULL AS allowduplicate, NULL AS datatype, NULL AS ordno FROM axp_tstructprops WHERE name = :param1 UNION ALL SELECT fname AS keyfield, 2 AS priority, modeofentry, allowduplicate, datatype, ordno FROM axpflds WHERE tstruct = :param1 and dcname = ''dc1'' AND (modeofentry = ''autogenerate'' OR ((LOWER(allowduplicate) = ''f'' OR datatype = ''c'') AND LOWER(hidden) = ''f''))) t ORDER BY priority, CASE WHEN modeofentry = ''autogenerate'' THEN 1 WHEN LOWER(allowduplicate) = ''f'' THEN 2 WHEN datatype = ''c'' THEN 3 ELSE 4 END, ordno ASC LIMIT 1', 'param1', 'param1', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
 >>
 
+-- axi_viewlist | param1 = roles, param11 = search term, param12 = page no (1-based), param13 = page size.
+-- axi_fn_getaxobjectlist is unchanged; search + paging are applied in this query so the client only receives one page
+-- (needed when the object list is very large).
 <<
 INSERT INTO axdirectsql
 (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990022, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_viewlist', NULL, 'Metadata', 5, 'SELECT * FROM axi_fn_getaxobjectlist(:param1)', 'param1', 'param1', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+VALUES(99999999990022, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_viewlist', NULL, 'Metadata', 5, 'SELECT * FROM axi_fn_getaxobjectlist(:param1) o
+WHERE coalesce(:param11, '''') = '''' OR position(lower(:param11) in lower(o.displaydata)) > 0
+ORDER BY o.displaydata
+LIMIT coalesce(cast(nullif(cast(:param13 as varchar), '''') as integer), 100)
+OFFSET (greatest(coalesce(cast(nullif(cast(:param12 as varchar), '''') as integer), 1), 1) - 1) * coalesce(cast(nullif(cast(:param13 as varchar), '''') as integer), 100)', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11,param12,param13', 'param1~~,param2~~,param3~~,param4~~,param5~~,param6~~,param7~~,param8~~,param9~~,param10~~,param11~~,param12~~,param13~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
 >>
 
 <<
@@ -680,16 +687,19 @@ VALUES
 )
 >>
 
+-- axi_structmetalist | param1..param5 = user, roles, responsibility, mode, struct type (as before).
+-- param11 = search term, param12 = page no (1-based), param13 = page size. Search + paging are done inside
+-- fn_axi_getstructures_meta itself (see axi_functions.sql), so the client only receives one page of the structure list.
 <<
 INSERT INTO axdirectsql
 (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990038, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_structmetalist', NULL, 'Metadata', 5, 'SELECT * from fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5)', 'param1,param2,param3,param4,param5', 'param1~~,param2~~,param3~~,param4~~,param5~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+VALUES(99999999990038, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_structmetalist', NULL, 'Metadata', 5, 'SELECT * from fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5,:param11,cast(nullif(cast(:param12 as varchar), '''') as integer),cast(nullif(cast(:param13 as varchar), '''') as integer))', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11,param12,param13', 'param1~~,param2~~,param3~~,param4~~,param5~~,param6~~,param7~~,param8~~,param9~~,param10~~,param11~~,param12~~,param13~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
 >>
 
 <<
 INSERT INTO axdirectsql
 (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
-VALUES(99999999990039, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_getstructsdata', NULL, 'Metadata', 5, 'select * from fn_axi_getstructs_obj(:param1, :param2, :param3, :param4, :param5, :param6, :param7, :param8, :param9, :param10)', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10', 'param1~~,param2~~,param3~~,param4~~,param5~~param6~~,param7~~,param8~~,param9~~,param10~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+VALUES(99999999990039, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_getstructsdata', NULL, 'Metadata', 5, 'select * from fn_axi_getstructs_obj(:param1, :param2, :param3, :param4, :param5, :param6, :param7, :param8, :param9, :param10, :param11, cast(nullif(cast(:param12 as varchar), '''') as integer), cast(nullif(cast(:param13 as varchar), '''') as integer))', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11,param12,param13', 'param1~~,param2~~,param3~~,param4~~,param5~~,param6~~,param7~~,param8~~,param9~~,param10~~,param11~~,param12~~,param13~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
 >>
 
 <<

@@ -52,3 +52,23 @@ VALUES (1920990000006,'F',0,NULL,'admin',TO_TIMESTAMP('2026-09-25 13:36:05','YYY
 >>
 
 
+
+<<
+CREATE TABLE Axi_UserSettings (
+    Id VARCHAR2(36)
+        DEFAULT LOWER(
+            REGEXP_REPLACE(
+                RAWTOHEX(SYS_GUID()),
+                '(.{8})(.{4})(.{4})(.{4})(.{12})',
+                '\1-\2-\3-\4-\5'
+            )
+        )
+        PRIMARY KEY,
+
+    UserName VARCHAR2(255) NOT NULL,
+    SettingKey VARCHAR2(100) NOT NULL,
+    SettingValue VARCHAR2(4000),
+    ModifiedOn TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_axi_usersettings UNIQUE (UserName, SettingKey)
+)
+>>

@@ -583,8 +583,11 @@ and dcname = ''dc1'' and hidden = ''F'' and savevalue = ''T'' and modeofentry in
 Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990031,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_structlist',null,'Metadata',1,'select * from axi_fn_getstructlist(:param1,:param2,:param3)','param1,param2,param3','param1~Character~,param2~Character~,param3~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
 >>
 
+-- axi_structmetalist | param1..param5 = user, roles, responsibility, mode, struct type (as before).
+-- param11 = search term, param12 = page no (1-based), param13 = page size. Search + paging are done inside
+-- fn_axi_getstructures_meta itself (see axi_functions.sql), so the client only receives one page of the structure list.
 <<
-Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990032,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_structmetalist',null,'Metadata',1,'SELECT * from TABLE(fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5))','param1,param2,param3,param4,param5','param1~Character~,param2~Character~,param3~Character~,param4~Character~,param5~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990032,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_structmetalist',null,'Metadata',1,'SELECT * from TABLE(fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5,:param11,to_number(nvl(:param12, ''1'')),to_number(nvl(:param13, ''100''))))','param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11,param12,param13','param1~Character~,param2~Character~,param3~Character~,param4~Character~,param5~Character~,param6~Character~,param7~Character~,param8~Character~,param9~Character~,param10~Character~,param11~Character~,param12~Character~,param13~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
 >>
 
 <<
@@ -673,7 +676,7 @@ Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIED
 >>
 
 <<
-INSERT INTO axdirectsql (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd) VALUES(99999999990039, 'F', 0, NULL, 'admin', to_date('2025-12-23 13:22:07', 'YYYY-MM-DD HH24:MI:SS'), 'admin', to_date('2025-12-19 16:06:57', 'YYYY-MM-DD HH24:MI:SS'), NULL, 1, 1, NULL, NULL, NULL, 'axi_getstructsdata', NULL, 'Metadata', 5, 'select * from TABLE(fn_axi_getstructs_obj(:param1, :param2, :param3, :param4, :param5, :param6, :param7, :param8, :param9, :param10))', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10', 'param1~~,param2~~,param3~~,param4~~,param5~~param6~~,param7~~,param8~~,param9~~,param10~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+INSERT INTO axdirectsql (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd) VALUES(99999999990039, 'F', 0, NULL, 'admin', to_date('2025-12-23 13:22:07', 'YYYY-MM-DD HH24:MI:SS'), 'admin', to_date('2025-12-19 16:06:57', 'YYYY-MM-DD HH24:MI:SS'), NULL, 1, 1, NULL, NULL, NULL, 'axi_getstructsdata', NULL, 'Metadata', 5, 'select * from TABLE(fn_axi_getstructs_obj(:param1, :param2, :param3, :param4, :param5, :param6, :param7, :param8, :param9, :param10, :param11, :param12, :param13))', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11,param12,param13', 'param1~~,param2~~,param3~~,param4~~,param5~~,param6~~,param7~~,param8~~,param9~~,param10~~,param11~~,param12~~,param13~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
 >>
 
 
@@ -688,3 +691,49 @@ INSERT INTO axdirectsql (axdirectsqlid, cancel, sourceid, mapname, username, mod
 Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990052,'F',0,null,'admin',TO_DATE('2025-12-23 13:22:07', 'YYYY-MM-DD HH24:MI:SS'),'admin',TO_DATE('2025-12-19 16:06:57', 'YYYY-MM-DD HH24:MI:SS'),null,1,1,null,null,null,'axi_userpwd',null,'Metadata',1,'select password  from axusers where username = :param1','param1','param1~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
 >>
 
+-- axi_viewlist | object list (tstruct / iview / page / ads / inbox) visible to the roles in param1.
+-- param11 = search term, param12 = page no (1-based), param13 = page size. Search + paging run in this query
+-- so the client only receives one page (needed when the object list is very large).
+<<
+DELETE FROM axdirectsql where sqlname = 'axi_viewlist'
+>>
+
+<<
+INSERT INTO axdirectsql (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd) VALUES(99999999990053, 'F', 0, NULL, 'admin', to_date('2026-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'admin', to_date('2026-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), NULL, 1, 1, NULL, NULL, NULL, 'axi_viewlist', NULL, 'Metadata', 5, 'select src.displaydata, src.caption, src.name
+from (
+    select (a.caption || '' ('' || a.name || '') [tstruct]'') as displaydata, a.caption as caption, a.name as name
+    from tstructs a
+    join axpages b on b.pagetype = ''t'' || a.name
+    left join axuseraccess ua on ua.sname = a.name
+    where b.visible = ''T''
+      and (instr('','' || lower(:param1) || '','', '',default,'') > 0
+           or (ua.stype = ''t'' and instr('','' || lower(:param1) || '','', '','' || lower(ua.rname) || '','') > 0))
+    union
+    select (a.caption || '' ('' || a.name || '') [iview]'') as displaydata, a.caption as caption, a.name as name
+    from iviews a
+    join axpages b on b.pagetype = ''i'' || a.name
+    left join axuseraccess ua on ua.sname = a.name
+    where b.visible = ''T''
+      and (instr('','' || lower(:param1) || '','', '',default,'') > 0
+           or (ua.stype = ''i'' and instr('','' || lower(:param1) || '','', '','' || lower(ua.rname) || '','') > 0))
+    union
+    select (p.caption || '' [page]'') as displaydata, p.caption as caption, to_char(p.props) as name
+    from axpages p
+    left join axuseraccess ua on ua.sname = p.props
+    where p.pagetype = ''web''
+      and p.visible = ''T''
+      and p.props is not null
+      and (instr('','' || lower(:param1) || '','', '',default,'') > 0
+           or (ua.stype = ''p'' and instr('','' || lower(:param1) || '','', '','' || lower(ua.rname) || '','') > 0))
+    union
+    select (a.sqlname || '' ('' || a.sqlsrc || '') [ads]'') as displaydata, a.sqlsrc as caption, a.sqlname as name
+    from axdirectsql a
+    where exists (select 1 from axdirectsql_metadata m where m.axdirectsqlid = a.axdirectsqlid)
+    union
+    select ''Inbox'' as displaydata, ''Inbox'' as caption, ''Inbox'' as name from dual
+) src
+where :param11 is null or instr(lower(src.displaydata), lower(:param11)) > 0
+order by src.displaydata
+offset (greatest(to_number(nvl(:param12, ''1'')), 1) - 1) * to_number(nvl(:param13, ''100'')) rows
+fetch next to_number(nvl(:param13, ''100'')) rows only', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11,param12,param13', 'param1~~,param2~~,param3~~,param4~~,param5~~,param6~~,param7~~,param8~~,param9~~,param10~~,param11~~,param12~~,param13~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+>>

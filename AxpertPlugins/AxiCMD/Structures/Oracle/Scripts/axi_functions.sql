@@ -69,7 +69,10 @@ CREATE OR REPLACE FUNCTION fn_axi_getstructs_obj (
     ppermission     VARCHAR2,
     pkeyfield       VARCHAR2,
     pprimarytable   VARCHAR2,
-    pglobalvars     VARCHAR2
+    pglobalvars     VARCHAR2,
+    psearchterm     VARCHAR2 DEFAULT '',
+    ppageno         NUMBER DEFAULT 1,
+    ppagesize       NUMBER DEFAULT 100
 )
 RETURN AXI_GETSTRUCTS_OBJ_TBL
 PIPELINED
@@ -99,6 +102,14 @@ is
     v_keyfield_sql              CLOB;
     v_selectedfld_sql           CLOB;
 
+    v_search                    VARCHAR2(500);
+    v_search_escaped            VARCHAR2(1000);
+    v_limit                     NUMBER;
+    v_offset                    NUMBER;
+    v_key_search_filter         CLOB;
+    v_sel_search_filter         CLOB;
+    v_fld_search_filter         CLOB;
+
     TYPE refcur IS REF CURSOR;
 
     rc refcur;
@@ -110,6 +121,21 @@ is
     r_transrecordid NUMBER; 
 
 BEGIN
+
+    v_search := TRIM(psearchterm);
+    v_limit := NVL(ppagesize, 100);
+    IF v_limit <= 0 THEN v_limit := 100; END IF;
+    v_offset := (NVL(ppageno, 1) - 1) * v_limit;
+    IF v_offset < 0 THEN v_offset := 0; END IF;
+
+    IF v_search IS NOT NULL AND LENGTH(v_search) > 0 THEN
+        v_search_escaped := REPLACE(v_search, '''', '''''');
+        -- v_fld_search_filter is intentionally left empty: the search term applies to record rows only.
+        -- Field rows (isfield = 't') must stay visible while the user is typing, so they are never filtered.
+        v_fld_search_filter := '';
+    ELSE
+        v_fld_search_filter := '';
+    END IF;
 
     SELECT srckey,
            LOWER(srctf),
@@ -223,7 +249,8 @@ BEGIN
                 || 'AND hidden = ''F'' '
                 || 'AND savevalue = ''T'''
                 || 'AND datatype not in(''t'',''i'')'
-    || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
+                || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')'
+                || v_fld_search_filter;               
         ELSIF NVL(v_fullcontrol,'F') = 'F'
               AND v_viewctrl = '1' THEN
 
@@ -242,7 +269,8 @@ BEGIN
                 || 'AND LOWER(fname) IN ('''
                 || REPLACE(v_includedcomps, ',', ''',''')|| ''')'
                 || 'AND datatype not in(''t'',''i'')'
-    || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
+                || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')'
+                || v_fld_search_filter;               
         ELSIF NVL(v_fullcontrol,'F') = 'F'
               AND v_viewctrl = '2' THEN
 
@@ -261,7 +289,8 @@ BEGIN
                 || 'AND LOWER(fname) NOT IN ('''
                 || REPLACE(v_excludedcomps, ',', ''',''')|| ''')'
                 || 'AND datatype not in(''t'',''i'')'
-    || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
+                || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')'
+                || v_fld_search_filter;               
         END IF;
 
     ELSE
@@ -277,12 +306,19 @@ BEGIN
             || 'AND dcname = ''dc1'' '
             || 'AND hidden = ''F'' '
             || 'AND savevalue = ''T'''
-   || 'AND datatype not in(''t'',''i'')'
-   || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
+            || 'AND datatype not in(''t'',''i'')'
+            || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')'
+            || v_fld_search_filter;               
 
     END IF;
 
     IF v_keyfield_normalized = 'T' THEN
+
+        IF v_search IS NOT NULL AND LENGTH(v_search) > 0 THEN
+            v_key_search_filter := ' AND (LOWER(s.' || v_keyfield_srcfld || ') LIKE LOWER(''%' || v_search_escaped || '%'') OR LOWER(p.' || LOWER(pkeyfield) || ') LIKE LOWER(''%' || v_search_escaped || '%'') OR TO_CHAR(p.' || LOWER(pprimarytable) || 'id) LIKE ''%' || v_search_escaped || '%'')';
+        ELSE
+            v_key_search_filter := '';
+        END IF;
 
         v_keyfield_sql :=
                'SELECT '
@@ -297,9 +333,17 @@ BEGIN
             || 'WHERE p.' || LOWER(pkeyfield)
             || ' IS NOT NULL '
             || NVL(v_dimension_filter,'')
-            || ' ORDER BY p.modifiedon DESC';
+            || v_key_search_filter
+            || ' ORDER BY p.modifiedon DESC '
+            || ' OFFSET ' || v_offset || ' ROWS FETCH NEXT ' || v_limit || ' ROWS ONLY';
 
     ELSE
+
+        IF v_search IS NOT NULL AND LENGTH(v_search) > 0 THEN
+            v_key_search_filter := ' AND (LOWER(p.' || LOWER(pkeyfield) || ') LIKE LOWER(''%' || v_search_escaped || '%'') OR TO_CHAR(p.' || LOWER(pprimarytable) || 'id) LIKE ''%' || v_search_escaped || '%'')';
+        ELSE
+            v_key_search_filter := '';
+        END IF;
 
         v_keyfield_sql :=
                'SELECT '
@@ -311,11 +355,32 @@ BEGIN
             || 'WHERE p.' || LOWER(pkeyfield)
             || ' IS NOT NULL '
             || NVL(v_dimension_filter,'')
-            || ' ORDER BY p.modifiedon DESC';
+            || v_key_search_filter
+            || ' ORDER BY p.modifiedon DESC '
+            || ' OFFSET ' || v_offset || ' ROWS FETCH NEXT ' || v_limit || ' ROWS ONLY';
 
     END IF;
 
     IF pselectedfield <> '0' THEN
+
+        IF v_search IS NOT NULL AND LENGTH(v_search) > 0 THEN
+            IF v_selectedfld_normalized = 'T' THEN
+                IF v_keyfield_normalized = 'F' THEN
+                    v_sel_search_filter := ' AND (LOWER(s.' || v_selectedfld_srcfld || ') LIKE LOWER(''%' || v_search_escaped || '%'') OR LOWER(p.' || LOWER(pkeyfield) || ') LIKE LOWER(''%' || v_search_escaped || '%'') OR TO_CHAR(p.' || LOWER(pprimarytable) || 'id) LIKE ''%' || v_search_escaped || '%'')';
+                ELSIF v_keyfield_normalized = 'T' THEN
+                    v_sel_search_filter := ' AND (LOWER(s.' || v_selectedfld_srcfld || ') LIKE LOWER(''%' || v_search_escaped || '%'') OR LOWER(k.' || v_keyfield_srcfld || ') LIKE LOWER(''%' || v_search_escaped || '%'') OR LOWER(p.' || LOWER(pkeyfield) || ') LIKE LOWER(''%' || v_search_escaped || '%'') OR TO_CHAR(p.' || LOWER(pprimarytable) || 'id) LIKE ''%' || v_search_escaped || '%'')';
+                END IF;
+            ELSE
+                IF v_keyfield_normalized = 'F' THEN
+                    v_sel_search_filter := ' AND (LOWER(p.' || LOWER(pselectedfield) || ') LIKE LOWER(''%' || v_search_escaped || '%'') OR LOWER(p.' || LOWER(pkeyfield) || ') LIKE LOWER(''%' || v_search_escaped || '%'') OR TO_CHAR(p.' || LOWER(pprimarytable) || 'id) LIKE ''%' || v_search_escaped || '%'')';
+                ELSIF v_keyfield_normalized = 'T' THEN
+                    v_sel_search_filter := ' AND (LOWER(p.' || LOWER(pselectedfield) || ') LIKE LOWER(''%' || v_search_escaped || '%'') OR LOWER(s.' || v_keyfield_srcfld || ') LIKE LOWER(''%' || v_search_escaped || '%'') OR TO_CHAR(p.' || LOWER(pprimarytable) || 'id) LIKE ''%' || v_search_escaped || '%'')';
+                END IF;
+            END IF;
+        ELSE
+            v_sel_search_filter := '';
+        END IF;
+
         IF v_selectedfld_normalized = 'T' THEN
             IF v_keyfield_normalized = 'F' THEN
 
@@ -334,7 +399,9 @@ BEGIN
                     || 'WHERE p.' || LOWER(pselectedfield)
                     || ' IS NOT NULL '
                     || NVL(v_dimension_filter,'')
-                    || ' ORDER BY p.modifiedon DESC';
+                    || v_sel_search_filter
+                    || ' ORDER BY p.modifiedon DESC '
+                    || ' OFFSET ' || v_offset || ' ROWS FETCH NEXT ' || v_limit || ' ROWS ONLY';
 
             ELSIF v_keyfield_normalized = 'T' THEN
 
@@ -356,7 +423,9 @@ BEGIN
                     || 'WHERE p.' || LOWER(pselectedfield)
                     || ' IS NOT NULL '
                     || NVL(v_dimension_filter,'')
-                    || ' ORDER BY p.modifiedon DESC';
+                    || v_sel_search_filter
+                    || ' ORDER BY p.modifiedon DESC '
+                    || ' OFFSET ' || v_offset || ' ROWS FETCH NEXT ' || v_limit || ' ROWS ONLY';
 
             END IF;
 
@@ -376,8 +445,10 @@ BEGIN
                     || 'WHERE p.' || LOWER(pselectedfield)
                     || ' IS NOT NULL '
                     || NVL(v_dimension_filter,'')
+                    || v_sel_search_filter
                     || ' ORDER BY p.modifiedon DESC, '
-                    || 'p.' || LOWER(pselectedfield);
+                    || 'p.' || LOWER(pselectedfield)
+                    || ' OFFSET ' || v_offset || ' ROWS FETCH NEXT ' || v_limit || ' ROWS ONLY';
 
 
             ELSIF v_keyfield_normalized = 'T' THEN
@@ -397,7 +468,9 @@ BEGIN
                     || 'WHERE p.' || LOWER(pselectedfield)
                     || ' IS NOT NULL '
                     || NVL(v_dimension_filter,'')
-                    || ' ORDER BY p.modifiedon DESC';
+                    || v_sel_search_filter
+                    || ' ORDER BY p.modifiedon DESC '
+                    || ' OFFSET ' || v_offset || ' ROWS FETCH NEXT ' || v_limit || ' ROWS ONLY';
 
             END IF;
 
@@ -407,11 +480,20 @@ BEGIN
 
     IF pselectedfield = '0' THEN
 
-        v_sql :=
-               'SELECT * FROM ('
-            || v_keyfield_sql
-            || ') UNION ALL '
-            || v_fieldlist_sql;
+        -- Result = record rows (isfield 'f': searched + paginated) UNION field rows (isfield 't').
+        -- Field rows are never filtered by the search term and never limited by page size.
+        IF v_offset > 0 THEN
+            -- Page 2+ of the record list: records only. The field rows were already delivered with
+            -- page 1, so repeating them would create duplicates.
+            v_sql := v_keyfield_sql;
+        ELSE
+            -- Page 1: records followed by the complete field list.
+            v_sql :=
+                   'SELECT * FROM ('
+                || v_keyfield_sql
+                || ') UNION ALL '
+                || v_fieldlist_sql;
+        END IF;
 
     ELSE
 
@@ -450,12 +532,20 @@ END;
 
 
 <<
+-- Search + paging are done here (not in the AXDIRECTSQL row):
+--   psearchterm : case-insensitive "contains" filter on displaydata (null = no filter)
+--   ppageno     : 1-based page number (null or < 1 = 1)
+--   ppagesize   : rows per page (null or < 1 = 100)
+-- The three extra parameters have defaults, so the original 5 argument call still works.
 CREATE OR REPLACE FUNCTION fn_axi_getstructures_meta(
-    pusername        IN VARCHAR2, 
-    puserrole        IN VARCHAR2, 
-    presponsiblity   IN VARCHAR2, 
-    pmode            IN VARCHAR2, 
-    pstype           IN VARCHAR2
+    pusername        IN VARCHAR2,
+    puserrole        IN VARCHAR2,
+    presponsiblity   IN VARCHAR2,
+    pmode            IN VARCHAR2,
+    pstype           IN VARCHAR2,
+    psearchterm      IN VARCHAR2 DEFAULT NULL,
+    ppageno          IN NUMBER DEFAULT 1,
+    ppagesize        IN NUMBER DEFAULT 100
 ) RETURN AXI_GETSTRUCTURES_META_tbl PIPELINED 
 AS    
     type t_cursor IS REF CURSOR;
@@ -610,7 +700,11 @@ ads as(
             UNION ALL
             SELECT * FROM inbox WHERE pstype IN ('all')
         ) final_result
-        ORDER BY displaydata;
+        WHERE psearchterm IS NULL
+           OR INSTR(LOWER(final_result.displaydata), LOWER(psearchterm)) > 0
+        ORDER BY final_result.displaydata
+        OFFSET (GREATEST(NVL(ppageno, 1), 1) - 1) * (CASE WHEN NVL(ppagesize, 0) < 1 THEN 100 ELSE ppagesize END) ROWS
+        FETCH NEXT (CASE WHEN NVL(ppagesize, 0) < 1 THEN 100 ELSE ppagesize END) ROWS ONLY;
     
     IF v_cursor%ISOPEN THEN
         LOOP
