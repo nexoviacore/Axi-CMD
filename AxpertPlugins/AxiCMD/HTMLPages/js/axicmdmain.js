@@ -4556,6 +4556,92 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Tells whether the typed words are the beginning of ONE structure name that has spaces but was typed
+     * without quotes (for example "test save" for "Test Save Normalized"): two or more words, the first is
+     * not quoted, not a command word and not already a complete structure name (a single word followed by a
+     * typed space counts too). Empty tokens are ignored.
+     * @param {string[]} typedTokens - Tokens of the input (a trailing "" from a typed space is allowed).
+     * @returns {boolean} True if the words should be searched as one name.
+     */
+    function isUnquotedStructPhrase(typedTokens) {
+        const words = (typedTokens || []).filter(t => cleanString(t) !== "");
+        // one word followed by a typed space ("test ") already counts: the name may continue with more words
+        const spaceTyped = words.length === 1 && (typedTokens || []).length > 1;
+        if ((words.length < 2 && !spaceTyped) || words[0].startsWith('"')) return false;
+        if (words.some(t => t.startsWith('"'))) return false;
+        const firstLow = cleanString(words[0]).toLowerCase();
+        const isVerb = ["create", "edit", "view", "source"].includes(firstLow) ||
+            (commands && Object.keys(commands).some(k => k.toLowerCase() === firstLow));
+        return !isVerb && !isTargetEntity(firstLow);
+    }
+
+    /**
+     * Suggests the commands and structures (forms, reports, pages, data sources) whose name contains the typed
+     * text, best matches (name starts with it) first. Also asks the server for matches that are not loaded yet.
+     * Used for a single typed word and for a multi-word structure name typed without quotes.
+     * @param {string} prefix - Lower case text typed so far (may contain spaces).
+     * @returns {Array<object|string>} Suggestions to show; filteredObjects is set to match.
+     */
+    function suggestStructsByPrefix(prefix) {
+        hintDiv.textContent = "";
+
+        // The structure list is only partly loaded: search the server for what is being typed (3+ chars)
+        // and let scrolling load more of the matching list.
+        const searchTerm = prefix.trim();
+        const metaParam1 = getStructParam();
+        const metaBaseKey1 = "axi_structmetalist_" + metaParam1.toLowerCase();
+        const searching = searchTerm.length >= 3;
+        activePagedContext = {
+            source: "axi_structmetalist",
+            param: metaParam1,
+            term: searching ? searchTerm : "",
+            listKey: searching ? `${metaBaseKey1}_q_${searchTerm}` : metaBaseKey1
+        };
+        if (searching) requestStructSearch(searchTerm);
+
+        const allSuggestions = getInitialSuggestions(true);
+        const filtered = allSuggestions.filter(item => {
+            if (typeof item === "string") {
+                return item.toLowerCase().startsWith(prefix);
+            } else {
+                const nameMatch = item.name && item.name.toLowerCase().includes(prefix);
+                const displayMatch = item.displaydata && item.displaydata.toLowerCase().includes(prefix);
+                const cleanCaptionMatch = typeof item.displaydata === "string" &&
+                    getCleanCaption(item).includes(prefix);
+                const captionMatch = item.caption && item.caption.toLowerCase().includes(prefix);
+                return nameMatch || displayMatch || cleanCaptionMatch || captionMatch;
+            }
+        });
+
+        // Rank startsWith matches higher than includes matches to keep better matching.
+        const startsWithPrefix = [];
+        const containsPrefix = [];
+        filtered.forEach(item => {
+            if (typeof item === "string") {
+                startsWithPrefix.push(item);
+            } else {
+                const starts = (item.name && item.name.toLowerCase().startsWith(prefix)) ||
+                    (item.displaydata && item.displaydata.toLowerCase().startsWith(prefix)) ||
+                    (typeof item.displaydata === "string" && getCleanCaption(item).startsWith(prefix)) ||
+                    (item.caption && item.caption.toLowerCase().startsWith(prefix));
+                if (starts) {
+                    startsWithPrefix.push(item);
+                } else {
+                    containsPrefix.push(item);
+                }
+            }
+        });
+        const rankedFiltered = [...startsWithPrefix, ...containsPrefix];
+        filteredObjects = rankedFiltered.map(item => {
+            if (typeof item === "string") {
+                return { name: item, displaydata: item };
+            }
+            return item;
+        });
+        return rankedFiltered.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
+    }
+
+    /**
      * Generates local keyword, entity, and action suggestions for current input text.
      * @param {string} inputText - User typed input text.
      * @returns {Array<object>} List of local suggestions.
@@ -4594,62 +4680,18 @@ if (typeof document !== "undefined") {
         const groupKeyRaw = cleanString(rawTokens[0]);
 
         if (rawTokens.length === 1 && (!endsWithSpace || isUnclosedString)) {
-            hintDiv.textContent = "";
-            const prefix = groupKeyRaw.toLowerCase();
+            return suggestStructsByPrefix(groupKeyRaw.toLowerCase());
+        }
 
-            // The structure list is only partly loaded: search the server for what is being typed (3+ chars)
-            // and let scrolling load more of the matching list.
-            const metaParam1 = getStructParam();
-            const metaBaseKey1 = "axi_structmetalist_" + metaParam1.toLowerCase();
-            const searching = prefix.length >= 3;
-            activePagedContext = {
-                source: "axi_structmetalist",
-                param: metaParam1,
-                term: searching ? prefix : "",
-                listKey: searching ? `${metaBaseKey1}_q_${prefix}` : metaBaseKey1
-            };
-            if (searching) requestStructSearch(prefix);
-
-            const allSuggestions = getInitialSuggestions(true);
-            const filtered = allSuggestions.filter(item => {
-                if (typeof item === "string") {
-                    return item.toLowerCase().startsWith(prefix);
-                } else {
-                    const nameMatch = item.name && item.name.toLowerCase().includes(prefix);
-                    const displayMatch = item.displaydata && item.displaydata.toLowerCase().includes(prefix);
-                    const cleanCaptionMatch = typeof item.displaydata === "string" &&
-                        getCleanCaption(item).includes(prefix);
-                    const captionMatch = item.caption && item.caption.toLowerCase().includes(prefix);
-                    return nameMatch || displayMatch || cleanCaptionMatch || captionMatch;
-                }
-            });
-
-            // Rank startsWith matches higher than includes matches to keep better matching.
-            const startsWithPrefix = [];
-            const containsPrefix = [];
-            filtered.forEach(item => {
-                if (typeof item === "string") {
-                    startsWithPrefix.push(item);
-                } else {
-                    const starts = (item.name && item.name.toLowerCase().startsWith(prefix)) ||
-                        (item.displaydata && item.displaydata.toLowerCase().startsWith(prefix)) ||
-                        (typeof item.displaydata === "string" && getCleanCaption(item).startsWith(prefix)) ||
-                        (item.caption && item.caption.toLowerCase().startsWith(prefix));
-                    if (starts) {
-                        startsWithPrefix.push(item);
-                    } else {
-                        containsPrefix.push(item);
-                    }
-                }
-            });
-            const rankedFiltered = [...startsWithPrefix, ...containsPrefix];
-            filteredObjects = rankedFiltered.map(item => {
-                if (typeof item === "string") {
-                    return { name: item, displaydata: item };
-                }
-                return item;
-            });
-            return rankedFiltered.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
+        // A structure name with spaces typed WITHOUT quotes ("test save" for "Test Save Normalized"): the
+        // first word is neither a command verb nor a complete structure name, so the words typed so far are
+        // the start of one structure name. Search for the whole text instead of giving up with no suggestions.
+        // (Pressing space normally opens the quote itself, but only when the matching name was already loaded;
+        // a name that is still being fetched from the server used to leave this case empty.)
+        if (isUnquotedStructPhrase(rawTokens)) {
+            const phrase = rawTokens.map(t => cleanString(t)).join(" ").toLowerCase();
+            const phraseMatches = suggestStructsByPrefix(phrase);
+            if (phraseMatches.length > 0) return phraseMatches;
         }
 
         if (rawTokens.length === 2 && isTargetEntity(rawTokens[0])) {
@@ -6778,7 +6820,9 @@ if (typeof document !== "undefined") {
 
 
         const currentInput = input.value;
-        const tokens = getTokens(currentInput, false);
+        let tokens = getTokens(currentInput, false);
+        // "test save" typed without quotes for "Test Save Normalized": the picked name replaces ALL the words typed
+        if (isUnquotedStructPhrase(tokens)) tokens = [tokens.map(t => cleanString(t)).join(" ")];
 
         let checkTokens = [...tokens];
         if (checkTokens.length >= 2) {
