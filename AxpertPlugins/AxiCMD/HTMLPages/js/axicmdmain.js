@@ -594,10 +594,10 @@ if (typeof document !== "undefined") {
     let failedFetches = new Set();
 
     // ---- Large dataset handling ------------------------------------------------------------
-    // Sources whose server query accepts param11 = search term, param12 = page no, param13 = page size.
-    // Only these are searched/paged on the server; everything else is small and filtered locally.
+    // Sources that are searched and paged on the server by the AxList API (props.pageno / pagesize / filters,
+    // see getList); everything else is small and filtered locally.
     // axi_structmetalist = the list of forms / reports / pages / data sources shown under the commands.
-    // (axi_viewlist is also paged on the server, but the command line does not use it.)
+    // (axi_viewlist is paged the same way, but the command line does not use it.)
     const PAGED_SOURCES = ["axi_getstructsdata", "axi_structmetalist", "axi_viewlist"];
     // Rows loaded at a time is a per-user setting (gear button next to Refresh). It is stored under
     // "axipref_" (NOT "axi_") so the Refresh button, which wipes every "axi_" cache key, keeps it.
@@ -724,7 +724,7 @@ if (typeof document !== "undefined") {
     /**
      * Tells whether a data source is searched/paged on the server.
      * @param {string} sourceName - Data source (ADS) name.
-     * @returns {boolean} True if the source supports param11/12/13 search + paging.
+     * @returns {boolean} True if the source is searched + paged by the AxList API.
      */
     function isPagedSource(sourceName) {
         const name = (sourceName || "").toLowerCase();
@@ -1578,7 +1578,8 @@ if (typeof document !== "undefined") {
             const serverRecordCount = recordItems.length;
             axPageState[listKey] = {
                 page: pageNo,
-                hasMore: paged && effectivePageSize > 0 && serverRecordCount === effectivePageSize
+                // The AxList API pages the whole result (field rows count too), so compare the full row count
+                hasMore: paged && effectivePageSize > 0 && (serverRecordCount === effectivePageSize || list.length === effectivePageSize)
             };
 
             // Search first, then limit. (Limiting first would cut the list to its first rows and the search
@@ -7176,14 +7177,109 @@ if (typeof document !== "undefined") {
 
 
 
+    // ---- Direct call to the ARM AxList API --------------------------------------------------------------------
+    // The palette calls {armUrl}/AxList/api/v1/AxList itself, with the ARM session id and bearer token that the
+    // Axpert session keeps in its global variables (ARM_SessionId / ARM_Token, read through
+    // axinterface.aspx/GetGlobalVar). That saves the hop through AxPEG.aspx. Anything that goes wrong (no URL, no
+    // token, 401 because the token expired, network/CORS error, a non-OK answer) falls back to the old route
+    // through window.GetDataFromAxList, which renews the ARM session on the server.
+    let armAuthCache = null;            // { sessionId, token }
+    let armDirectDisabledUntil = 0;     // after a network/CORS failure the direct route rests for a while
+
     /**
-     * Asynchronously calls Axpert server API to fetch list data.
+     * Reads the ARM session id and bearer token from the Axpert session global variables.
+     * @async
+     * @param {boolean} [force=false] - Ignore the cached pair and read it again.
+     * @returns {Promise<{sessionId: string, token: string}|null>} The pair, or null when not available.
+     */
+    async function getArmAuth(force = false) {
+        if (armAuthCache && !force) return armAuthCache;
+        try {
+            const res = await fetch(getAppBaseUrl() + "/aspx/axinterface.aspx/GetGlobalVar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: "{}"
+            });
+            if (!res.ok) return null;
+            const outer = await res.json();
+            const vars = JSON.parse(outer.d || "{}").globalVars || [];
+            const read = key => {
+                const hit = vars.find(o => o && o[key] !== undefined);
+                return hit ? String(hit[key] || "") : "";
+            };
+            const sessionId = read("ARM_SessionId");
+            const token = read("ARM_Token");
+            armAuthCache = (sessionId && token) ? { sessionId, token } : null;
+        } catch (e) {
+            armAuthCache = null;
+        }
+        return armAuthCache;
+    }
+
+    /**
+     * Sends a list request straight to the ARM AxList API.
+     * @async
+     * @param {object} data - Request in the AxPEG shape built by getList (adsNames, sqlParams, props ...).
+     * @returns {Promise<object|undefined>} AxList response, or undefined when the direct route could not be used.
+     */
+    async function callArmAxListDirect(data) {
+        if (!AxiArmUrl || Date.now() < armDirectDisabledUntil) return undefined;
+        for (let attempt = 0; attempt < 2; attempt++) {
+            const auth = await getArmAuth(attempt > 0);
+            if (!auth) return undefined;
+            const p = data.props || {};
+            const body = {
+                ARMSessionId: auth.sessionId,
+                action: data.action || "view",
+                Project: getProjectName(),
+                ADSNames: data.adsNames,
+                trace: false,
+                refreshCache: !!data.refreshCache,
+                getallrecordscount: !!p.getallrecordscount,
+                CachePermissions: p.CachePermissions !== false,
+                pageno: p.pageno,
+                pagesize: p.pagesize,
+                keyfield: data.keyField || "",
+                keyvalue: data.keyValue || "",
+                select_columns: p.select_columns || [],
+                aggregations: p.aggregations || {},
+                groupby_columns: p.groupby_columns || [],
+                sorting: p.sorting || [],
+                filters: p.filters || [],
+                sqlparams: data.sqlParams || {}
+            };
+            try {
+                const res = await fetch(AxiArmUrl.replace(/\/+$/, "") + "/AxList/api/v1/AxList", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + auth.token },
+                    body: JSON.stringify(body)
+                });
+                if (res.status === 401 || res.status === 400) {
+                    armAuthCache = null;        // token / session no longer valid: read a fresh pair and try once more
+                    continue;
+                }
+                if (!res.ok) return undefined;
+                return await res.json();
+            } catch (e) {
+                // Network error or blocked by CORS: do not try the direct route again for a few minutes
+                armDirectDisabledUntil = Date.now() + 5 * 60 * 1000;
+                return undefined;
+            }
+        }
+        return undefined;
+    }
+
+    /**
+     * Asynchronously fetches list data: straight from the ARM AxList API when possible, otherwise through the
+     * Axpert server (AxPEG.aspx GetDataFromAxList).
      * @async
      * @param {object} data - Request payload data.
      * @returns {Promise<object>} Server response data.
      */
     async function getAxListAsync(data) {
         if (!axicmdenabled) return null;
+        const direct = await callArmAxListDirect(data);
+        if (direct !== undefined) return direct;
         return new Promise((resolve, reject) => {
             window.GetDataFromAxList(
                 data,
@@ -7237,27 +7333,13 @@ if (typeof document !== "undefined") {
             const effectivePageSize = (typeof pageSize === "number") ? pageSize : getPageSize();
             const effectivePageNo = (typeof pageNo === "number") ? pageNo : 1;
 
-            // Paged sources (see PAGED_SOURCES) take param11 = search, param12 = page no, param13 = page size
+            // Paged sources (see PAGED_SOURCES) are paged and searched by the AxList API itself, through
+            // props.pageno / props.pagesize / props.filters below. The ADS rows and SQL functions stay unchanged and
+            // receive no extra params. Page and page size only go into the cache key: each page of each search
+            // is a different result and must not overwrite another one.
             const serverPaged = isPagedSource(axDatasourceName);
             if (serverPaged) {
-                if (!sqlParams.param11 || cleanTerm) {
-                    sqlParams.param11 = cleanTerm || "";
-                    normalizedParams.push(`param11:${sqlParams.param11}`);
-                }
-                if (!sqlParams.param12) {
-                    sqlParams.param12 = String(effectivePageNo);
-                    normalizedParams.push(`param12:${sqlParams.param12}`);
-                }
-                if (!sqlParams.param13) {
-                    sqlParams.param13 = String(effectivePageSize);
-                    normalizedParams.push(`param13:${sqlParams.param13}`);
-                }
-                // The paged ADS rows declare param1..param13 (same shape as axi_getstructsdata). Send an empty
-                // value for the ones this source does not use so the engine always receives the full set.
-                // (Not added to normalizedParams: they must not change the cache key.)
-                for (let n = 1; n <= 13; n++) {
-                    if (sqlParams["param" + n] === undefined) sqlParams["param" + n] = "";
-                }
+                normalizedParams.push(`page:${effectivePageNo}`, `size:${effectivePageSize}`);
             }
 
             // ---- Stable cache key ----
@@ -7286,20 +7368,17 @@ if (typeof document !== "undefined") {
                     ADS: true,
                     CachePermissions: true,
                     getallrecordscount: false,
-                    // Server-paged sources page inside their own SQL (param12/param13). Sending pageno/pagesize
-                    // to the ADS engine as well could page the already-paged result a second time (page 2 would
-                    // come back empty), so for them the engine is asked for "everything it is given" (pagesize 0).
-                    pageno: serverPaged ? 1 : effectivePageNo,
-                    pagesize: serverPaged ? 0 : effectivePageSize
+                    // Paging is done by the AxList API (AxPEG.aspx -> ARM /AxList): the page asked for here is the
+                    // page that comes back, for every source. (0 would mean "all rows".)
+                    pageno: effectivePageNo,
+                    pagesize: effectivePageSize
                 }
             };
 
-            // For paged sources the search term is already applied inside the SQL (param11), e.g. in
-            // fn_axi_getstructs_obj, which searches the real record columns and leaves field rows
-            // (isfield = 't') untouched. Adding the generic ADS "displaydata CONTAINS" filter on top would
-            // filter a second time (hiding records matched by other columns and dropping all field rows).
-            const searchHandledBySql = serverPaged;
-            if (cleanTerm && cleanTerm.length >= 3 && !searchHandledBySql) {
+            // Search is the AxList "displaydata CONTAINS" filter, applied before paging.
+            // Note: for record lists (axi_getstructsdata) it also applies to the field rows (isfield = 't'),
+            // so while a term is typed only fields whose text contains it come back.
+            if (cleanTerm && cleanTerm.length >= 3) {
                 requestBody.props.filters = [
                     {
                         fldname: "displaydata",
