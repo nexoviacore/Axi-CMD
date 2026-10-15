@@ -1,8 +1,8 @@
 # Axi Command Palette (`AxiCMD`)
 
-[![Plugin Version](https://img.shields.io/badge/Axi--Plugin-v0.5.1--rc-orange.svg)](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD)
+[![Plugin Version](https://img.shields.io/badge/AxiCMD-v1.0.0-orange.svg)](AxiCMDVersioninfo.json)
 [![Runtime](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/8.0)
-[![Database](https://img.shields.io/badge/Database-PostgreSQL%20%7C%20Oracle-green.svg)](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL%20%7C%20Oracle-green.svg)](Structures)
 
 The **Axi Command Palette** (`AxiCMD`) is an in-app developer and user command navigation engine designed for the Axpert Web Shell interface. It provides real-time token autocompletion, dynamic transaction routing, multi-entity structure execution (TStructs, IViews, Axpert Data Sources / ADS, Pages, and Inbox), form keyfield management, tabbed record popups, and user favorites.
 
@@ -27,7 +27,7 @@ graph TD
 ```
 
 ### 1. Frontend Layer
-* **`AxiCMDMainPage.html`**: Host template loaded by Axpert as the application shell interface.
+* **`MainHomeConfigTemplate.html`** (`aspx/`): The product main page template that hosts the command line markup. The separate `AxiCMDMainPage.html` template no longer exists.
 * **`axicmdmain.js`**: Core client engine handling input parsing, token resolution, state tracking, suggestion ranking, dynamic command execution, and favorites synchronization.
 * **`Smartview.html`**: Interactive list view container supporting dynamic filters, column groupings, and bulk record operations.
 * **`PopupContainer.html`**: Tabbed layout engine allowing users to execute and view multiple transaction records concurrently.
@@ -40,7 +40,7 @@ graph TD
 
 ### 3. Database Layer
 * Stores command catalog definitions, prompt sequences, user permission mappings, and TStruct property metadata across PostgreSQL and Oracle.
-* Scripts located under [`Structures/`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/).
+* Scripts located under [`Structures/`](Structures/).
 
 ---
 
@@ -57,7 +57,7 @@ graph TD
 
 ## Database Objects Catalog
 
-The database setup scripts are organized by provider under [`Structures/Postgre/Scripts/`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/) and [`Structures/Oracle/Scripts/`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Oracle/Scripts/).
+The database setup scripts are organized by provider under [`Structures/Postgre/Scripts/`](Structures/Postgre/Scripts/) and [`Structures/Oracle/Scripts/`](Structures/Oracle/Scripts/). Keep the two sets in sync when you change either one.
 
 ### Core Tables
 
@@ -82,22 +82,30 @@ The database setup scripts are organized by provider under [`Structures/Postgre/
 
 ```mermaid
 graph LR
-    Step1[1. Core Plugin Copy] --> Step2[2. Template Setup]
-    Step2 --> Step3[3. App Template Config]
-    Step3 --> Step4[4. IIS API Hosting]
+    Step1[1. Core Plugin Copy] --> Step2[2. Enable Command Line]
+    Step2 --> Step3[3. IIS API Hosting]
 ```
 
 ### 1. Core Files Placement
 1. Install or copy the `AxiCMD` plugin folder into `/AxpertPlugins/AxiCMD/`.
-2. Copy `AxiCMDMainPage.html` from `AxpertPlugins/AxiCMD/HTMLPages/` into `../CustomPages/AxiCMDMainPage.html`.
+2. The command line markup is part of the product main page template, `aspx/MainHomeConfigTemplate.html`. No separate template file needs to be copied or selected.
 
 > [!IMPORTANT]
-> Do not rename `AxiCMDMainPage.html`. The Axpert routing system relies on this exact filename.
+> `AxiCMDMainPage.html` and `AxiCMDMainTemplate.html` must **not** exist in `AxpertPlugins/AxiCMD/`, in `AxpertWeb/AxpertPlugins/AxiCMD/HTMLPages/`, or in `AxpertWeb/CustomPages/`. Remove any old copies when you upgrade.
 
-### 2. Axpert Environment Configuration
+### 2. Enable the Command Line
+The command line is **hidden by default**. A flag named `axicmdEnabled` on the MainNew page controls whether it is shown. Set it with this Developer Option:
+
+| Setting | Value |
+| :--- | :--- |
+| Property | **Axi Command Line Enable** |
+| Property Code | `General` |
+| Value | `true` / `false` (default `false`) |
+| User Role | All, or a single role |
+
 1. Log in to **AxpertWeb** $\rightarrow$ Navigate to **Dev Options**.
-2. Set **Application Template** property to `AxiCMDMainPage.html`.
-3. If `AxiCMDMainPage.html` is not visible in the dropdown, navigate to **Configuration Property List**, edit **Application Template**, and append `AxiCMDMainPage.html` to the Values collection.
+2. Set **Axi Command Line Enable** to `true` for the roles that should see it.
+3. Set it to `false` to hide the command line again.
 
 ### 3. IIS Backend API (`AxiCMDApi`) Hosting
 1. Publish and copy `AxiCMDApi` into your target **Arm microservices** directory.
@@ -110,9 +118,22 @@ graph LR
 
 ## Key Files Reference
 
-* [`HTMLPages/js/axicmdmain.js`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js): Command palette core JavaScript engine.
-* [`AxiCMDVersioninfo.json`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/AxiCMDVersioninfo.json): Version tracker manifest.
-* [`CustomPages/AxiCMDMainPage.html`](file:///D:/Axpert11.4/AxpertWebLatest/CustomPages/AxiCMDMainPage.html): Main application template.
-* [`HTMLPages/Smartview.html`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/Smartview.html): Dynamic list view engine for ADS and IViews.
-* [`HTMLPages/PopupContainer.html`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/PopupContainer.html): Multi-tab popup window manager.
-* [`DOCUMENTATION.md`](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/DOCUMENTATION.md): Detailed technical & developer guide.
+* [`HTMLPages/js/axicmdmain.js`](HTMLPages/js/axicmdmain.js): Command palette core JavaScript engine.
+* [`AxiCMDVersioninfo.json`](AxiCMDVersioninfo.json): Version tracker manifest (currently `v1.0.0`).
+* [`aspx/MainHomeConfigTemplate.html`](../../aspx/MainHomeConfigTemplate.html): Product main page template that hosts the command line.
+* [`HTMLPages/Smartview.html`](HTMLPages/Smartview.html): Dynamic list view engine for ADS and IViews.
+* [`HTMLPages/PopupContainer.html`](HTMLPages/PopupContainer.html): Multi-tab popup window manager.
+* [`docs/DOCUMENTATION.md`](docs/DOCUMENTATION.md): Detailed technical & developer guide.
+* [`docs/DYNAMIC_COMMAND_CONFIG_USER_GUIDE.md`](docs/DYNAMIC_COMMAND_CONFIG_USER_GUIDE.md): User guide for dynamic command configuration.
+
+---
+
+## Release Notes
+
+### v1.0.0
+
+* Renamed **Axi_Beta** to **AxiCMD**, and **AxiApi_Beta** to **AxiCMDApi**.
+* Moved the AxiCMD HTML into `MainHomeConfigTemplate.html` and removed the separate `AxiCMDMainPage.html` template.
+* Added the **Axi Command Line Enable** Developer Option and the `axicmdEnabled` flag. The command line is hidden by default.
+* The popup container (`PopupContainer.html`) now loads all of its assets locally, with no CDN references.
+* Bug fixes: TKT-1301 (ERPDEMO command line issues), TKT-1212 (command line getting stuck), TKT-1214 (input field unresponsive after Backspace).
