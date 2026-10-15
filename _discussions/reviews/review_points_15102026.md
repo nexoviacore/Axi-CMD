@@ -1,0 +1,1 @@
+TKT-1383 - When the user logs in to the Axpert Offline Application, the icon is not displayed/loaded in the Command Line. 
