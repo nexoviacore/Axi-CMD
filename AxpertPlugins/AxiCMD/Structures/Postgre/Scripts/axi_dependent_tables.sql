@@ -51,7 +51,7 @@ VALUES (1920660000001,'F',0,NULL,'admin','2026-09-25 12:32:04','admin','2026-09-
 -- Insert AxiCMD Developer Option into axpstructconfigproval table
 <<
 INSERT INTO axpstructconfigproval (axpstructconfigprovalid, axpstructconfigpropsid, axpstructconfigprovalrow, configvalues)
-VALUES (1920660000003, 1920660000001, 1, 'true')
+VALUES (1920660000003, 1920660000001, 1, 'false')
 >>
 
 -- Insert AxiCMD Developer Option into axpstructconfig table

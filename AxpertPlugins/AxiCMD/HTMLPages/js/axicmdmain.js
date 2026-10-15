@@ -373,7 +373,6 @@ if (typeof document !== "undefined") {
                 }
                 return { valid: true };
             } catch (err) {
-                // // console.error("[AxiApiService] Session check error:", err);
                 return { valid: true };
             }
         }
@@ -641,7 +640,6 @@ if (typeof document !== "undefined") {
                 parentArmUrl = callParentNew("armUrl") || "";
             }
         } catch (e) {
-            // // console.warn("callParentNew failed", e);
         }
 
         // 2. Try parent window
@@ -654,7 +652,6 @@ if (typeof document !== "undefined") {
                 if (!parentArmUrl) parentArmUrl = parent.armUrl || "";
             }
         } catch (e) {
-            // // console.warn("parent access failed", e);
         }
 
         // 3. Try top window
@@ -667,7 +664,6 @@ if (typeof document !== "undefined") {
                 if (!parentArmUrl) parentArmUrl = top.armUrl || "";
             }
         } catch (e) {
-            // // console.warn("top access failed", e);
         }
 
         // 4. Try local variable scope fallback
@@ -711,16 +707,13 @@ if (typeof document !== "undefined") {
                     AxiArmUrl = config.axiarmurl || config.armUrl || config.axiArmUrl || "";
                 }
             } catch (err) {
-                // // console.error("Failed to load AxiArmUrl from config file:", err);
             }
         }
 
         apiMetadataUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/axi_get`;
-        // // console.log("ApiMetadataUrl = " + apiMetadataUrl);
 
         axiFavoritesUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/user-favourites`;
         // axiFavoritesUrl = `http://localhost:5057/api/v1/Axi/user-favourites`; 
-        // // console.log("AxiFavoritesUrl = " + axiFavoritesUrl);
 
         axiCommandConfigUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/command-config`;
         axiKeyfieldUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/setkeyfield`;
@@ -730,7 +723,6 @@ if (typeof document !== "undefined") {
 
 
         if (!input) {
-            // // console.log("Axi Input not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
@@ -740,14 +732,12 @@ if (typeof document !== "undefined") {
         axiSec = document.querySelector(".AXI-Sec");
         applyAxiCmdVisibility();
 
-        // // console.log("Axi Input Found!", input);
 
         axiLogo = document.getElementById("axiLogo");
 
 
 
         if (!axiLogo) {
-            // // console.log("Axi Logo not ready yet... waiting.");
             setTimeout(init, 200);
             return;
 
@@ -756,7 +746,6 @@ if (typeof document !== "undefined") {
         searchWrapper = document.querySelector(".searchwrap-AXI");
 
         if (!searchWrapper) {
-            // // console.log("Axi search wrapper not ready yet... waiting.");
             setTimeout(init, 200);
             return;
 
@@ -764,44 +753,35 @@ if (typeof document !== "undefined") {
 
         hintDiv = document.getElementById("axiHint");
         if (!hintDiv) {
-            // // console.log("Axi HintDiv not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
 
-        // // console.log("Axi HintDiv Found!", hintDiv);
 
         list = document.getElementById("axiSuggestions");
         if (!list) {
-            // // console.log("Axi AxiSuggestion not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
 
-        // console.log("Axi AxiSuggestionList found Found!", list);
 
         btnRefresh = document.getElementById("btnRefresh");
         if (!btnRefresh) {
-            // console.log("Axi btnRefresh not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
 
-        // console.log("Axi btnRefresh Found!", btnRefresh);
 
         runBtn = document.getElementById("runBtn");
         if (!runBtn) {
-            // console.log("Axi Run btn not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
 
-        // console.log("Axi Runbtn Found!", runBtn);
 
         axiClearBtn = document.getElementById("axiClearBtn");
 
         if (!axiClearBtn) {
-            // console.log("Axi Clear button not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
@@ -810,7 +790,6 @@ if (typeof document !== "undefined") {
 
 
 
-        // console.log("Axi Clear button found!", axiClearBtn);
 
         megaDropdown = document.getElementById("axiMegaDropdown");
 
@@ -820,21 +799,16 @@ if (typeof document !== "undefined") {
 
 
 
-        // console.log("Axi Clear button found!", megaDropdown);
 
         favouritesCard = document.getElementById("axiFavouritesCard");
-        // console.log("Axi Clear favouritesCard Found!", favouritesCard);
 
         commandHeader = document.getElementById("axiCommandsHeader");
-        // console.log("Axi Command Header found!", commandHeader);
 
         hiddenLoader = document.getElementById("hiddenLoader");
-        // console.log("Axi hidden Loader found!", hiddenLoader);
 
 
         favouriteBtn = document.getElementById("axiFavouriteBtn");
 
-        // console.log("Axi Favourite Button found!", favouriteBtn);
 
 
 
@@ -946,12 +920,10 @@ if (typeof document !== "undefined") {
      */
     function getProjectName() {
         // let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-        // // console.log("Origin: " + appSessUrl);
         // const projInfoKey = `projInfo-${appSessUrl}`;
 
         // const appname = localStorage.getItem(projInfoKey);
 
-        // // console.log(appname);
         // return appname;
 
         return window.mainProject ||
@@ -979,10 +951,8 @@ if (typeof document !== "undefined") {
         }
 
         const appname = getProjectName();
-        // console.log(appname);
 
         if (!apiMetadataUrl) {
-            // console.error("Metadata API URL is not configured.", apiMetadataConfigError);
             showToast("Metadata API URL is not configured.");
             return;
         }
@@ -1000,7 +970,6 @@ if (typeof document !== "undefined") {
                 try {
                     commandsFromDb = JSON.parse(cached);
                 } catch (e) {
-                    // console.error("Failed to parse cached raw commands", e);
                 }
             }
 
@@ -1009,7 +978,6 @@ if (typeof document !== "undefined") {
 
                 if (!res.ok) {
                     showToast("Metadata fetch failed. Please contact Administrator");
-                    // console.error("Metadata fetch failed");
                     return;
                 }
 
@@ -1043,7 +1011,6 @@ if (typeof document !== "undefined") {
                     prompts: []
                 };
 
-                // console.log(JSON.stringify(commands));
 
                 // Load target entities (tstructs, iview, ads and pages) from metadata on startup asynchronously
                 const metadataParams = getStructParam();
@@ -1053,13 +1020,11 @@ if (typeof document !== "undefined") {
                 // }
             }
         } catch (err) {
-            // console.error("Critical: Could not load commands", err);
         } finally {
             isCommandsLoading = false;
             suppressFocusSuggestions = true;
             input.disabled = false;
             input.placeholder = "Axpert AI";
-            console.log("commands: ", JSON.stringify(commands));
         }
     }
 
@@ -1106,7 +1071,6 @@ if (typeof document !== "undefined") {
     //         apiMetadataUrl = "";
     //         apiMetadataConfigError = (error && error.message) ? error.message : String(error);
     //         showToast("Failed to load API metadata configuration.");
-    //         // console.error(`Failed to resolve API_METADATA from ${configUrl || "app base URL"}`, error);
     //     }
     // }
 
@@ -1182,7 +1146,6 @@ if (typeof document !== "undefined") {
                     }
 
                     if (foundItem && foundItem.isfield === 'f') {
-                        // console.log("Short Circuit: Previous item is not a field. Stopping prompts.");
                         return null;
                     }
                 }
@@ -1229,8 +1192,6 @@ if (typeof document !== "undefined") {
                     activeSource = sources[valueIndex] ? sources[valueIndex].trim() : "";
                 }
 
-                // console.log("Value Index: " + valueIndex);
-                // console.log("Active Source: " + activeSource);
             }
         }
 
@@ -1262,7 +1223,6 @@ if (typeof document !== "undefined") {
         } catch (error) {
             failedFetches.add(key);
             axDatasourceObj[key] = [];
-            // console.error("loadlist failed", error);
         } finally {
             activeFetches.delete(key);
             if (!isInitialLoad && document.activeElement === input) {
@@ -1272,28 +1232,21 @@ if (typeof document !== "undefined") {
     }
 
     //function openPopOption(targetURL) {
-    //    // console.log("PopOption is clicked");
 
 
     //    if (targetURL) {
     //        let popUpContainerUrl = `../AxpertPlugins/Axi/HTMLPages/PopUpContainer.html`;
 
     //        //if (targetURL && targetURL.toLowerCase().includes("/aspx")) {
-    //        //    // console.log("Before removing : " + targetURL);
     //        //    targetURL = targetURL.replace("/aspx", "");
-    //        //    // console.log("After removing : " + targetURL);
     //        //}
 
     //        //if (targetURL && targetURL.toLowerCase().includes("/aspx/")) {
-    //        //    // console.log("Before removing : " + targetURL)
     //        //    targetURL = targetURL.split("/aspx/")[1];
-    //        //    // console.log("After removing : " + targetURL);
     //        //}
     //        if (targetURL && targetURL.toLowerCase().includes("../")) {
-    //            // console.log("Before removing : " + targetURL)
     //            targetURL = targetURL.replace("../", "");
     //            //targetURL = targetURL.split("/")[1];
-    //            // console.log("After removing : " + targetURL);
     //        }
 
 
@@ -1302,11 +1255,9 @@ if (typeof document !== "undefined") {
 
 
     //        popUpOption = false;
-    //        // console.log("PopUp Option is set to :" + popUpOption);
 
 
     //        let hiddenVar = document.getElementById("hiddenLoader");
-    //        // console.log(hiddenVar);
     //        hiddenVar.src = finalUrl;
     //        //hiddenVar.style.display = "block";
     //        hiddenVar.style.display = "flex";
@@ -1316,7 +1267,6 @@ if (typeof document !== "undefined") {
     //    }
     //    else {
     //        popUpOption = false;
-    //        // console.log("Error in Popup: TargetURL is empty");
     //        showToast("Something went wrong. Please try again later");
     //    }
     //}
@@ -1363,7 +1313,6 @@ if (typeof document !== "undefined") {
                 });
             }
         } catch (err) {
-            // console.warn("Failed to load axi_command_config:", err);
         }
     }
 
@@ -1670,7 +1619,6 @@ if (typeof document !== "undefined") {
      */
     function openPopOption(targetURL) {
         hide();
-        // console.log("PopOption is clicked");
 
         if (targetURL) {
 
@@ -1714,7 +1662,6 @@ if (typeof document !== "undefined") {
 
         } else {
             popUpOption = false;
-            // console.log("Error in Popup: TargetURL is empty");
             showToast("Something went wrong. Please try again later");
         }
     }
@@ -1763,29 +1710,7 @@ if (typeof document !== "undefined") {
             targetUrl += `&filter=${encodedFilterQuery}`;
         }
 
-        // console.log("Target Url for SmartViewTable:  " + targetUrl);
         setCommandRoutes(input.value.trim(), targetUrl);
-        /**====================================================================================
-         * NOTE: This is Debug code remove it before deploying  to the  production environment 
-         * ====================================================================================
-         */
-        if (typeof encodedFilterQuery !== "undefined") {
-            try {
-                const decodedForDebug = JSON.parse(atob(encodedFilterQuery));
-                // console.group("AXI SmartView Redirect Debug");
-                // console.log("Final URL:", targetUrl);
-                // console.log("Encoded q:", encodedFilterQuery);
-                // console.log("Decoded payload:", JSON.stringify(decodedForDebug));
-                // console.groupEnd();
-            } catch (e) {
-                // console.error("AXI SmartView payload decode failed", e);
-            }
-        }
-
-
-        /**
-         * ===================== End ========================================
-         */
 
         if (popUpOption) {
             targetUrl += "&AxIsPop=true";
@@ -1842,7 +1767,6 @@ if (typeof document !== "undefined") {
         targetUrl += "&dummyload=false";
 
         setEditSessionState(transId);
-        // console.log(`LoadIframe called with Url: ${targetUrl}`);
         setCommandRoutes(input.value.trim(), targetUrl);
 
 
@@ -1853,7 +1777,6 @@ if (typeof document !== "undefined") {
 
 
     // function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "") {
-    //     // console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
 
 
 
@@ -2100,7 +2023,6 @@ if (typeof document !== "undefined") {
      */
     function redirectToIView(iViewName, iViewCaption = "") {
         hide();
-        // console.log("Redirecting to Iview: " + iViewName + "..............");
 
 
         if (popUpOption) {
@@ -2126,7 +2048,6 @@ if (typeof document !== "undefined") {
      * @returns {void}
      */
     function redirectToProcessFlow(caption, tstructCaption) {
-        // console.log(`Redirecting to Process flow for caption:  ${caption}`);
 
 
 
@@ -2286,7 +2207,6 @@ if (typeof document !== "undefined") {
 
                 if (lastToken && !numericRegex.test(lastToken)) {
 
-                    // console.error("Type only numeric value");
 
                     if (grpKey === "view")
                         showToast("Please enter a valid number. You may use comparison operators (>, <, >=, <=, !=, =).");
@@ -2310,7 +2230,6 @@ if (typeof document !== "undefined") {
             const lastToken = lastTypedTokens[idx] ? lastTypedTokens[idx].replace(/"/g, "") : null;
 
             if (lastToken && cleanToken !== lastToken) {
-                // console.log(`Token changed at position ${idx}: "${lastToken}" -> "${cleanToken}"`);
 
                 const lowerLast = lastToken.toLowerCase();
                 const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(lowerLast);
@@ -2321,7 +2240,6 @@ if (typeof document !== "undefined") {
                         if (parseInt(key) > idx) {
                             delete resolvedParams[key];
                             delete resolvedParamType[key];
-                            // console.log(`Cleared dependent resolution at index ${key}`);
                         }
                     });
                 }
@@ -2336,7 +2254,6 @@ if (typeof document !== "undefined") {
                     if (resolvedParams[i]) {
                         delete resolvedParams[i];
                         delete resolvedParamType[i];
-                        // console.log(`Cleared deleted token resolution at index ${i}`);
                     }
                 }
             }
@@ -2907,7 +2824,6 @@ if (typeof document !== "undefined") {
                     const tempType = resolvedParamType[0];
                     resolvedParamType[0] = resolvedParamType[1];
                     resolvedParamType[1] = tempType;
-                    // console.log("Global state: Swapped to normalized order");
                 }
             } else {
                 const val0 = (resolvedParams[0] || "").toLowerCase();
@@ -2920,7 +2836,6 @@ if (typeof document !== "undefined") {
                     const tempType = resolvedParamType[0];
                     resolvedParamType[0] = resolvedParamType[1];
                     resolvedParamType[1] = tempType;
-                    // console.log("Global state: Swapped back to user order");
                 }
             }
         } else {
@@ -2933,7 +2848,6 @@ if (typeof document !== "undefined") {
                 const tempType = resolvedParamType[0];
                 resolvedParamType[0] = resolvedParamType[1];
                 resolvedParamType[1] = tempType;
-                // console.log("Global state: Swapped back to user order (length < 2)");
             }
         }
     }
@@ -2995,7 +2909,6 @@ if (typeof document !== "undefined") {
                         ///We need to use System Date Format
                         date = formatDate(date, dateString);
 
-                        // console.log("Final date:", date);
 
                         settokens[lastIndex] = date;
 
@@ -3041,7 +2954,6 @@ if (typeof document !== "undefined") {
                             ///We need to use System Date Format
                             const formattedDate = formatDate(partialDate, dateString);
                             date = formattedDate;
-                            // console.log("Final date:", date);
                             SET_COMMAND_STATE.currentFieldValue = date;
                             SET_COMMAND_STATE.currentFieldType = null;
                             SET_COMMAND_STATE.isNextField = true;
@@ -3094,7 +3006,6 @@ if (typeof document !== "undefined") {
 
 
                 if (acceptedValue && filtered.length === 0) {
-                    // console.log("User given value which is not in the date list");
                     showToast("Please select a valid Option from the list", 5000, true);
 
                     let lastIndex = tokens.length - 1;
@@ -3273,7 +3184,6 @@ if (typeof document !== "undefined") {
                 const colList = axDatasourceObj[colSourceKey];
 
                 if (!colList) {
-                    // console.log("In processAds " + "axi_adscolumnlist" + " is empty");
                     showToast("Please Try Again Later.");
                     return [];
                 }
@@ -3285,11 +3195,9 @@ if (typeof document !== "undefined") {
                 ) || null;
 
                 if (!columnMetadata) {
-                    //// console.log("Selected Field Name is Not in the List " + prevColumnName);
                     //showToast("Please Select Field from the list", 5000, true);
                     //return [];
 
-                    // console.log("Selected Field Name is Not in the List " + prevColumnName);
                     showToast("Please Select Field from the list", 5000, true);
 
                     let settokens = [...tokens]
@@ -3410,7 +3318,6 @@ if (typeof document !== "undefined") {
                     } else {
                         SET_COMMAND_STATE.isDropDown = true;
                         if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
-                            // console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
                             showToast("Please Try Again Later.");
                             return [];
                         }
@@ -3449,7 +3356,6 @@ if (typeof document !== "undefined") {
                         });
 
                         if (acceptedValue && filtered.length === 0) {
-                            // console.log("User given value is not in the dropdown");
                             showToast("Please select a valid value from the dropdown", 5000, true);
 
                             let lastIndex = tokens.length - 1;
@@ -3664,7 +3570,6 @@ if (typeof document !== "undefined") {
     //        else {
 
     //            if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
-    //                // console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
     //                return [];
     //            }
 
@@ -3851,7 +3756,6 @@ if (typeof document !== "undefined") {
 
 
             default:
-                // console.error("Invalid StructType")
                 break;
         }
 
@@ -4003,8 +3907,6 @@ if (typeof document !== "undefined") {
      * @returns {Array<object>} List of local suggestions.
      */
     function suggestLocal(inputText) {
-        // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
-        // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
         normalizeGlobalState();
         let ignoreExtraParams = false;
         let detectedType = "";
@@ -4308,8 +4210,6 @@ if (typeof document !== "undefined") {
             const viewValues = commandConfig.prompts?.[0]?.promptValues;
             const firstToken = cleanString(tokens[1] || "");
             const { value: actualFirstToken, type } = tryResolveToken(1, firstToken, commandConfig, false);
-            // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
-            // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
             detectedType = getType(viewSource.toLowerCase(), { value: actualFirstToken, type: type }, viewValues, tokens, commandConfig);
             // detectedType = getType(viewSource.toLowerCase(), {value: act}, viewValues, tokens, commandConfig);
 
@@ -4321,7 +4221,6 @@ if (typeof document !== "undefined") {
 
                 }
 
-                // console.log("ResolutionContext: ignoreExtraParams = true (ADS)")
             }
         }
 
@@ -4355,8 +4254,6 @@ if (typeof document !== "undefined") {
             return processRunCommands(tokens, targetIndex, structType);
         }
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
-        // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
-        // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
 
 
         ///KeyValue based edit handling.
@@ -4502,7 +4399,6 @@ if (typeof document !== "undefined") {
 
             //  if (staticValues.length > 0 && result.length === 0 && partialTyped.length > 0) {
 
-            //     // console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
             //     showToast("Please select a valid option from the list.");
 
             //     let dummyTokens = [...tokens];
@@ -4575,7 +4471,6 @@ if (typeof document !== "undefined") {
 
 
                 if (!paramValue || paramValue.trim() === "") {
-                    // console.log("Skipping extraParams � dependency not resolved yet");
 
                 } else {
                     const extraSource = activePrompt.extraParams.toLowerCase();
@@ -4585,7 +4480,6 @@ if (typeof document !== "undefined") {
 
                     if (!axDatasourceObj[extraKey]) {
 
-                        // console.log(`Fetching Hidden Param Source: ${extraSource}`);
                         if (tokens[1].toLowerCase() === "inbox") {
                             return [goOption];
                         }
@@ -4597,7 +4491,6 @@ if (typeof document !== "undefined") {
                     const extraList = axDatasourceObj[extraKey];
                     if (extraList && extraList.length > 0) {
                         const hiddenValue = extraList[0].name || extraList[0].displaydata || extraList[0].fname || extraList[0].keyfield;
-                        // console.log(`Hidden Param Found (Index 0): ${hiddenValue}`);
 
                         // Append hidden value to params for the MAIN list
                         if (paramValue) paramValue += "$#$" + hiddenValue;
@@ -4740,7 +4633,6 @@ if (typeof document !== "undefined") {
                         return [goOption];
                     }
                     loadList(apiSourceName, paramValue);
-                    // console.log(axDatasourceObj);
                     // if (realSource.toLowerCase() === "axi_dummy") {
                     //     if (groupKey.toLowerCase() === "open" && tokens.length > 2) {
                     //         filteredObjects = [goOption];
@@ -4774,7 +4666,6 @@ if (typeof document !== "undefined") {
             ///added to restrict user by typing only the listed values from the list(if they type other than that we prompt them again with the default list added - 18-3-2026(t))
             if (dataList.length > 0 && filtered.length === 0) {
 
-                // console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
                 showToast("Please select a valid option from the list.");
 
                 let dummyTokens = [...tokens];
@@ -5208,7 +5099,6 @@ if (typeof document !== "undefined") {
     //         });
 
     //     } catch (err) {
-    //         // console.log("Error in processExtraParams:", err);
     //     }
 
     //     return paramValue;
@@ -5300,7 +5190,6 @@ if (typeof document !== "undefined") {
                 }
             });
         } catch (err) {
-            // console.log("Error in processExtraParams:", err);
         }
 
         return paramValue;
@@ -5660,7 +5549,6 @@ if (typeof document !== "undefined") {
      */
     function render() {
 
-        // console.log("Render called");
         list.innerHTML = "";
 
         const currentInput = input.value;
@@ -5701,7 +5589,6 @@ if (typeof document !== "undefined") {
             return false;
         });
 
-        // console.log(`Valid Items: ${validItems.length}`);
 
         if (items.length > 0 && isSystemMessage(items[0])) {
             activeIndex = -1;
@@ -6052,7 +5939,6 @@ if (typeof document !== "undefined") {
         const saveCommandConfig = getCommandConfig(saveGroupKeyCheck, checkTokens);
 
         if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "GO_ACTION") {
-            // console.log("Action item selected. Executing command...");
             const rawInput = input.value.trim();
             const rawTokens = getTokens(rawInput, false);
             const firstToken = rawTokens.length > 0 ? cleanString(rawTokens[0]).toLowerCase() : "";
@@ -6078,21 +5964,18 @@ if (typeof document !== "undefined") {
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "create") {
-            // console.log("Save Option Selected...Submitting Data...");
             hide();
             AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, checkTokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "edit") {
-            // console.log("Save Option Selected...Submitting Data...");
             hide();
             AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, checkTokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Pop_ACTION") {
-            // console.log("Pop Option Selected......");
             try {
                 let executeTokens = tokens;
                 const rawInput = input.value.trim();
@@ -6127,7 +6010,6 @@ if (typeof document !== "undefined") {
             catch (err) {
                 popUpOption = false;
 
-                // console.log("Error in Popup:", err);
 
                 showToast("Something went wrong. Please try again later");
 
@@ -6259,7 +6141,6 @@ if (typeof document !== "undefined") {
 
             if ((!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) && type?.toLowerCase() === "page") {
                 showToast("Redirection link is not available for this page.");
-                // console.error("No Redirection link!");
                 return;
             }
         }
@@ -6453,7 +6334,6 @@ if (typeof document !== "undefined") {
 
             const res = await getAxListAsync(requestBody);
 
-            // console.log("Get List data: " + JSON.stringify(res));
 
             if (res) {
                 const resStr = (typeof res === "string" ? res : JSON.stringify(res)).toLowerCase();
@@ -6473,22 +6353,17 @@ if (typeof document !== "undefined") {
                 dataObj = typeof dataObj.d === "string" ? JSON.parse(dataObj.d) : dataObj.d;
             }
 
-            // console.log("DATA obj is : " + dataObj);
-            // console.log("Type of DATA OBJ: " + typeof dataObj);
             const list = dataObj?.result?.data?.[0]?.data ?? [];
 
             if (dataObj?.result?.data?.[0]?.error) {
                 showToast(`Error: ${dataObj?.result?.data?.[0]?.error}`);
-                // console.log(`Error: ${dataObj?.result?.data?.[0]?.error}`);
                 return;
             }
 
 
             if (list.length > 0) {
-                // console.log("Get List Cache Key: " + cacheKey);
                 localStorage.setItem(cacheKey, JSON.stringify(list));
             } else {
-                // console.log(`List Data for Ads name ${axDatasourceName} is Empty`);
             }
 
             return list;
@@ -6522,7 +6397,6 @@ if (typeof document !== "undefined") {
                 callParentNew(`ShowDimmer(${status})`, "function");
             }
         } catch (e) {
-            // console.warn("Failed to invoke ShowDimmer:", e);
         }
     }
 
@@ -6577,14 +6451,12 @@ if (typeof document !== "undefined") {
                 }, 0);
 
             } catch (err) {
-                // console.error("openDeveloperStudio call failed:", err);
                 toggleShowDimmer(false);
 
                 // restoreShowDimmer();
                 return;
             }
         } else {
-            // console.warn("openDeveloperStudio is not available");
             toggleShowDimmer(false);
 
             // restoreShowDimmer();
@@ -6653,7 +6525,6 @@ if (typeof document !== "undefined") {
                 alertFn(alertType, message);
                 return;
             } catch (e) {
-                // console.warn("showAlertDialog call failed, falling back to axi toast:", e);
             }
         }
 
@@ -6850,7 +6721,6 @@ if (typeof document !== "undefined") {
                 showToast("Version information is not available.");
             }
         } catch (err) {
-            // console.error("Failed to load version info", err);
             showToast("Failed to load version information.");
         }
     }
@@ -7014,7 +6884,6 @@ if (typeof document !== "undefined") {
         }
         if (btnRefresh) {
             btnRefresh.addEventListener("click", async () => {
-                // console.log("Refresh Logic......");
                 const refreshIcon = btnRefresh.querySelector(".axi-refresh-icon");
                 if (refreshIcon) {
                     refreshIcon.classList.add("rotating");
@@ -7044,7 +6913,6 @@ if (typeof document !== "undefined") {
                     input.focus();
 
                 } catch (error) {
-                    // console.log("Refresh Failed: " + error);
                     alert("Error refreshing: " + error);
 
                 } finally {
@@ -7142,7 +7010,6 @@ if (typeof document !== "undefined") {
                 return;
             }
             isDeleting = (e.key === "Backspace" || e.key === "Delete");
-            // console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
 
             const tokens = getTokens(input.value.trim(), false);
             let normalizedTokens = [...tokens];
@@ -7322,8 +7189,6 @@ if (typeof document !== "undefined") {
                 catch (err) {
                     popUpOption = false;
 
-                    // console.log("Error in Popup:", err);
-
                     showToast("Something went wrong. Please try again later");
 
                     return;
@@ -7497,7 +7362,6 @@ if (typeof document !== "undefined") {
 
             if (e.ctrlKey && e.key.toLowerCase() === "s") {
                 e.preventDefault();
-                // console.log("Save Option Selected...Submitting Data...");
                 hide();
                 if (grpKey.toLowerCase() === "create")
                     AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
@@ -7608,7 +7472,6 @@ if (typeof document !== "undefined") {
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                     attachClickToDoc(iframeDoc);
                 } catch (err) {
-                    // console.warn("Could not attach click listener to iframe (likely CORS restriction):", err);
                 }
             };
 
@@ -7635,7 +7498,6 @@ if (typeof document !== "undefined") {
 
         keysToRemove.forEach(key => localStorage.removeItem(key));
 
-        // console.log(`Cleared ${keysToRemove.length} keys starting with ${prefix}`);
 
     }
 
@@ -7810,7 +7672,6 @@ if (typeof document !== "undefined") {
         const groupConfig = getCommandConfig(groupKey, tokens);
 
         if (!groupConfig) {
-            // console.warn(`Unknown command group: ${groupKey}`);
 
         }
 
@@ -7927,7 +7788,6 @@ if (typeof document !== "undefined") {
             return;
         }
 
-        // console.log(`Dispatching to: ${group}.${handlerKey}`);
 
 
         try {
@@ -7937,7 +7797,6 @@ if (typeof document !== "undefined") {
                 resolvedParams: resolvedParams
             });
         } catch (err) {
-            // console.error(`Error executing handler for ${group}.${handlerKey}:`, err);
         }
     }
 
@@ -7966,7 +7825,6 @@ if (typeof document !== "undefined") {
             );
             if (found) transId = found.name
             else {
-                // console.error("Invalid Tstruct name");
                 return;
             }
         }
@@ -8198,7 +8056,6 @@ if (typeof document !== "undefined") {
 
 
         if (!primaryField) {
-            // console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
             showToast("Please try again later...");
             return [];
         }
@@ -8383,7 +8240,6 @@ if (typeof document !== "undefined") {
     //             x => x.caption?.toLowerCase() === rawStruct
     //         );
     //         if (!found || !found.name) {
-    //             // console.error("TStruct not found:", rawStruct);
     //             return;
     //         }
     //         transId = found.name;
@@ -8396,12 +8252,10 @@ if (typeof document !== "undefined") {
 
 
     //         if (!Array.isArray(extraList)) {
-    //             // console.warn("Hidden field list is missing or invalid", extraList);
     //             actualFieldName = null;
     //             return;
 
     //         } else if (extraList.length === 0) {
-    //             // console.log("hidden field List is Empty!");
     //             actualFieldName = null;
     //             return;
 
@@ -8411,11 +8265,9 @@ if (typeof document !== "undefined") {
     //             fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
 
     //             if (actualFieldName === null) {
-    //                 // console.error("Field name resolution failed: ", fieldName)
     //             }
     //         }
     //         if (!fieldName) {
-    //             // console.error("Field resolution failed:", rawFieldName);
     //             return;
     //         }
 
@@ -8424,7 +8276,6 @@ if (typeof document !== "undefined") {
     //         fieldUniqueId = getUniqueId(fieldValue);
 
     //         const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${actualFieldName}`.toLowerCase()];
-    //         // console.log(`Edit Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
 
     //         setEditSessionState(transId);
 
@@ -8456,12 +8307,10 @@ if (typeof document !== "undefined") {
     //         fieldValuePromptSource = commandConfig.prompts[1].promptSource.toLowerCase()
 
     //         if (!Array.isArray(extraList)) {
-    //             // console.warn("Hidden field list is missing or invalid", extraList);
     //             fieldName = null;
     //             return;
 
     //         } else if (extraList.length === 0) {
-    //             // console.log("hidden field List is Empty!");
     //             fieldName = null;
     //             return;
 
@@ -8471,7 +8320,6 @@ if (typeof document !== "undefined") {
     //             fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
 
     //             if (fieldName === null) {
-    //                 // console.error("Field name resolution failed: ", fieldName)
     //             }
 
     //             rawValue = cleanCommandToken(tokens[2]);
@@ -8479,7 +8327,6 @@ if (typeof document !== "undefined") {
     //             fieldUniqueId = getUniqueId(fieldValue);
 
     //             if (fieldValue === null) {
-    //                 // console.error("Field value resolution failed:", rawValue);
     //                 return;
     //             }
 
@@ -8488,7 +8335,6 @@ if (typeof document !== "undefined") {
     //         }
 
     //         const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${fieldName}`.toLowerCase()];
-    //         // console.log(`Edit Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
 
     //         setEditSessionState(transId);
 
@@ -8529,7 +8375,6 @@ if (typeof document !== "undefined") {
         const aspxIndex = href.indexOf("/aspx/");
 
         if (aspxIndex === -1) {
-            // console.warn("setEditSessionState: '/aspx/' not found in URL", href);
             return;
         }
 
@@ -8541,7 +8386,6 @@ if (typeof document !== "undefined") {
         );
 
         if (!Array.isArray(transIdArray)) {
-            // console.warn("setEditSessionState: invalid stored value", transIdArray);
             return;
         }
 
@@ -8551,7 +8395,6 @@ if (typeof document !== "undefined") {
             const updated = transIdArray.filter(
                 x => x.toLowerCase() !== normalizedTransId
             );
-            // console.log("SetEditSessioncachekey: " + storageKey);
             localStorage.setItem(storageKey, JSON.stringify(updated));
         }
     }
@@ -8693,7 +8536,6 @@ if (typeof document !== "undefined") {
 
         if (!structName) {
             showToast("Unable to determine current structure");
-            // console.error("handleViewSource: getCurrentStructName() returned null or undefined");
             return;
         }
 
@@ -8821,12 +8663,10 @@ if (typeof document !== "undefined") {
 
 
         if (tokens.length < 2) {
-            // console.warn("View Command required atleast two tokens");
             showToast("view command requires atleast two tokens");
             return;
         }
 
-        // console.log(JSON.stringify(commandConfig));
 
 
         const promptValues = commandConfig?.prompts?.[0].promptValues;
@@ -8865,7 +8705,6 @@ if (typeof document !== "undefined") {
 
 
         if (!handler) {
-            // console.log("Error: Unsupported View Type");
             showToast("Error: Unsupported View Type");
             return;
         }
@@ -8884,7 +8723,6 @@ if (typeof document !== "undefined") {
                         colList = await getList("axi_adscolumnlist", adsName);
                         if (colList) axDatasourceObj[colSourceKey] = colList;
                     } catch (err) {
-                        // console.error("Failed to fetch column list for validation", err);
                     }
                 }
 
@@ -8912,7 +8750,6 @@ if (typeof document !== "undefined") {
                 }
             }
 
-            // console.log("Ads Filters: ", filters);
 
             redirectToSmartView({
                 adsName: adsName,
@@ -8957,7 +8794,6 @@ if (typeof document !== "undefined") {
         const primaryField = struct_row?.keyfield;
 
         if (!primaryField) {
-            // console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
             showToast("Please try again later...");
             return [];
         }
@@ -9130,12 +8966,10 @@ if (typeof document !== "undefined") {
 
 
     //     if (tokens.length < 2) {
-    //         // console.warn("View Command required atleast two tokens");
     //         showToast("view command requires atleast two tokens");
     //         return;
     //     }
 
-    //     // console.log(JSON.stringify(commandConfig));
 
 
     //     const promptValues = commandConfig?.prompts?.[0].promptValues;
@@ -9156,7 +8990,6 @@ if (typeof document !== "undefined") {
 
 
     //     if (!handler) {
-    //         // console.log("Error: Unsupported View Type");
     //         showToast("Error: Unsupported View Type");
     //         return;
     //     }
@@ -9168,7 +9001,6 @@ if (typeof document !== "undefined") {
     //         const adsName = cleanCommandToken(tokens[1]);
     //         const filters = extractAdsFilters(tokens);
 
-    //         // console.log("Ads Filters: ", filters);
 
 
 
@@ -9213,7 +9045,6 @@ if (typeof document !== "undefined") {
     //     if (extraList && extraList.length > 0) {
     //         fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
     //     } else {
-    //         // console.warn("Hidden field name not found in cache");
     //     }
 
     //     rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
@@ -9221,9 +9052,6 @@ if (typeof document !== "undefined") {
     //     fieldUniqueId = getUniqueId(fieldValue);
 
 
-    //     // console.log(
-    //         `view Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
-    //     );
 
     //     handler({
     //         transId,
@@ -9251,7 +9079,6 @@ if (typeof document !== "undefined") {
         const { value: transId } = tryResolveToken(2, tstructName, commandConfig, false);
         if (!tstructName || !keyField) {
             showToast("TStruct and Key Field are required");
-            // console.log("TStruct and Key Field are required");
             return;
         }
 
@@ -9324,7 +9151,6 @@ if (typeof document !== "undefined") {
 
     //     if (!data || !Array.isArray(data)) return null;
 
-    //     // console.log(JSON.stringify(data));
 
     //     const resolvedText = typeof text === 'object' ? (text?.value || "") : (text || "");
 
@@ -9499,7 +9325,6 @@ if (typeof document !== "undefined") {
         if (!Array.isArray(data))
             return "";
 
-        // console.log(JSON.stringify(data));
 
         // -----------------------------------
         // text may be:
@@ -9903,7 +9728,6 @@ if (typeof document !== "undefined") {
         }
 
         const requestUrl = bestMatch.name;
-        // console.log(requestUrl);
 
         setCommandRoutes(input.value.trim(), requestUrl);
 
@@ -9993,7 +9817,6 @@ if (typeof document !== "undefined") {
             );
 
             if (!found || !found.name) {
-                // console.error(`Source not found: ${rawName}`);
                 return;
             }
 
@@ -10039,7 +9862,6 @@ if (typeof document !== "undefined") {
 
 
         if (structType === "o") {
-            // console.error("Invalid Struct type");
             showToast("Invalid Struct type");
             return;
         }
@@ -10157,11 +9979,9 @@ if (typeof document !== "undefined") {
             });
         }
 
-        // console.log("All Buttons: " + JSON.stringify(allButtons));
 
         let { value: resolvedBtnId, type } = tryResolveToken(1, buttonLabel, commandConfig, false);
 
-        // console.log(`Run Command Debug: Label="${buttonLabel}", ResolvedID="${resolvedBtnId}"`);
 
         let targetBtn = null;
 
@@ -10200,12 +10020,10 @@ if (typeof document !== "undefined") {
 
 
         if (!targetBtn) {
-            // console.error(`Button not found for label: ${buttonLabel}`);
             showToast(`Button '${buttonLabel}' not found`, 3000);
             return;
         }
 
-        // console.log(`Clicking button: ${targetBtn.label} (${targetBtn.id})`);
 
         targetBtn.click();
 
@@ -10704,12 +10522,10 @@ if (typeof document !== "undefined") {
             if (window.frameElement) {
                 const el = window.frameElement;
                 if (el.id === "loadPopUpPage" || el.name === "loadPopUpPage" || el.id === "middle1" || el.name === "middle1" || el.classList.contains("middle") || el.classList.contains("middle1")) {
-                    // console.log("Axi: running inside loadPopUpPage or middle1 iframe");
                     return true;
                 }
             }
             if (window.name === "loadPopUpPage" || window.name === "middle" || window.name === "middle1") {
-                // console.log("Axi: running inside frame with name loadPopUpPage, middle or middle1");
                 return true;
             }
         } catch (e) {
@@ -10722,7 +10538,6 @@ if (typeof document !== "undefined") {
                 rootWin = window.top;
             }
         } catch (e) {
-            // console.warn("Axi: Failed to access window.top due to cross-origin boundary.");
         }
 
         /**
@@ -10738,7 +10553,6 @@ if (typeof document !== "undefined") {
                 const loadPopUpPageModal = win.document.getElementById("loadPopUpPage");
                 if (loadPopUpPageModal) {
                     if (loadPopUpPageModal.offsetWidth > 0 || loadPopUpPageModal.offsetHeight > 0 || loadPopUpPageModal.style.display === "block" || loadPopUpPageModal.classList.contains("show")) {
-                        // console.log("Axi: found active preview modal via loadPopUpPage");
                         return true;
                     }
                 }
@@ -10751,7 +10565,6 @@ if (typeof document !== "undefined") {
                         const innerModal = middleDoc.getElementById("loadPopUpPage");
                         if (innerModal) {
                             if (innerModal.offsetWidth > 0 || innerModal.offsetHeight > 0 || innerModal.style.display === "block" || innerModal.classList.contains("show")) {
-                                // console.log("Axi: found active preview modal inside middle1 iframe");
                                 return true;
                             }
                         }
@@ -10761,14 +10574,12 @@ if (typeof document !== "undefined") {
                 // 1. Check for remodal wrapper containing the popupIframeRemodal
                 const openedModal = win.document.querySelector(".remodal-wrapper.remodal-is-opened #popupIframeRemodal");
                 if (openedModal) {
-                    // console.log("Axi: found active preview modal via remodal selector");
                     return true;
                 }
 
                 // 2. Check for remodal wrapper containing any htmlPages.aspx iframe
                 const htmlPagesModal = win.document.querySelector(".remodal-wrapper.remodal-is-opened iframe[src*='htmlPages.aspx']");
                 if (htmlPagesModal) {
-                    // console.log("Axi: found active preview modal via htmlPages src selector");
                     return true;
                 }
 
@@ -10778,11 +10589,9 @@ if (typeof document !== "undefined") {
                     const wrapper = win.document.getElementById("axpertPopupWrapper") || win.document.querySelector("[data-remodal-id=axpertPopupModal]");
                     if (wrapper) {
                         if (wrapper.offsetWidth > 0 || wrapper.offsetHeight > 0 || wrapper.classList.contains("remodal-is-opened")) {
-                            // console.log("Axi: found active preview modal via wrapper visibility/class");
                             return true;
                         }
                     } else if (modal.offsetWidth > 0 || modal.offsetHeight > 0) {
-                        // console.log("Axi: found active preview modal via modal direct visibility");
                         return true;
                     }
                 }
@@ -10802,7 +10611,6 @@ if (typeof document !== "undefined") {
         }
 
         const result = checkWindow(rootWin);
-        // console.log("Axi: isPreviewModalOpen returning:", result);
         return result;
     }
 
@@ -10937,7 +10745,7 @@ if (typeof document !== "undefined") {
             const id = btn.id || btn.getAttribute("data-id");
             if (!id) return;
             const label = btn.innerText.trim();
-            if (!label) // console.log("There is no label for Element: " + btn);
+            if (!label)
                 if (label.toLowerCase() === "plugin custom code") return;
 
 
@@ -11275,7 +11083,7 @@ if (typeof document !== "undefined") {
             if (!id) return;
             // const label = btn.innerText.trim();
             const label = extractButtonLabel(btn);
-            if (!label) // console.log("There is no label for Element: " + btn);
+            if (!label)
                 if (label.toLowerCase() === "plugin custom code") return;
 
 
@@ -11517,7 +11325,6 @@ if (typeof document !== "undefined") {
 
         if (tokens < 1) {
             showToast("Error:Invalid Tokens, Analyze command requires atleast 2 tokens");
-            // console.error("Error:Invalid Tokens, Analyze command requires atleast 2 tokens");
             return;
         }
 
@@ -11561,7 +11368,6 @@ if (typeof document !== "undefined") {
         // }
 
         setCommandRoutes(input.value.trim(), targetUrl);
-        // console.log("Target URL from analyse command : " + targetUrl);
         window.LoadIframe(targetUrl);
     }
 
@@ -11639,7 +11445,6 @@ if (typeof document !== "undefined") {
                         ///We need to use System Date Format
                         date = formatDate(date, dateString);
 
-                        // console.log("Final date:", date);
 
                         settokens[lastIndex] = date;
 
@@ -11678,7 +11483,6 @@ if (typeof document !== "undefined") {
                             ///We need to use System Date Format
                             const formattedDate = formatDate(partialDate, dateString);
                             date = formattedDate;
-                            // console.log("Final date:", date);
                             SET_COMMAND_STATE.currentFieldValue = date;
                             SET_COMMAND_STATE.currentFieldType = null;
                             SET_COMMAND_STATE.isNextField = true;
@@ -11724,7 +11528,6 @@ if (typeof document !== "undefined") {
 
 
                 if (acceptedValue && filtered.length === 0) {
-                    // console.log("User given value which is not in the date list");
                     showToast("Please select a valid Option from the list", 5000, true);
 
                     let lastIndex = tokens.length - 1;
@@ -11870,7 +11673,6 @@ if (typeof document !== "undefined") {
                 const colList = axDatasourceObj[colSourceKey];
 
                 if (!colList) {
-                    // console.log("In processCreateCommand " + createCommandSourceObj + " is empty");
                     showToast("Please Try Again Later.");
                     return [];
                 }
@@ -11883,10 +11685,8 @@ if (typeof document !== "undefined") {
 
                 if (!columnMetadata) {
 
-                    //// console.log("In processEditCommond " + createCommandSourceObj + " is empty");
                     //showToast("Please Try Again Later.");
 
-                    // console.log("Selected Field Name is Not in the List " + prevColumnName);
                     showToast("Please Select Field from the list", 5000, true);
 
                     let settokens = [...tokens]
@@ -11996,13 +11796,11 @@ if (typeof document !== "undefined") {
 
                         var params1 = columnMetadata.fldsql;
                         var params2 = prepareKeyValueString(allGloblVars);
-                        // console.log(params2);
                         var params3 = columnMetadata.normalized;
                         var params4 = columnMetadata.fromlist;
 
                         params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList[setCommandTransid], commandConfig);
 
-                        // console.log(params2);
 
 
 
@@ -12028,7 +11826,6 @@ if (typeof document !== "undefined") {
                         });
 
                         if (acceptedValue && filtered.length === 0) {
-                            // console.log("User given value is not in the dropdown");
                             showToast("Please select a valid value from the dropdown", 5000, true);
 
                             let lastIndex = tokens.length - 1;
@@ -12147,7 +11944,6 @@ if (typeof document !== "undefined") {
                         ///We need to use System Date Format
                         date = formatDate(date, dateString);
 
-                        // console.log("Final date:", date);
 
                         settokens[lastIndex] = date;
 
@@ -12186,7 +11982,6 @@ if (typeof document !== "undefined") {
                             ///We need to use System Date Format
                             const formattedDate = formatDate(partialDate, dateString);
                             date = formattedDate;
-                            // console.log("Final date:", date);
                             SET_COMMAND_STATE.currentFieldValue = date;
                             SET_COMMAND_STATE.currentFieldType = null;
                             SET_COMMAND_STATE.isNextField = true;
@@ -12232,7 +12027,6 @@ if (typeof document !== "undefined") {
 
 
                 if (acceptedValue && filtered.length === 0) {
-                    // console.log("User given value which is not in the date list");
                     showToast("Please select a valid Option from the list", 5000, true);
 
                     let lastIndex = tokens.length - 1;
@@ -12402,7 +12196,6 @@ if (typeof document !== "undefined") {
                 const colList = axDatasourceObj[colSourceKey];
 
                 if (!colList) {
-                    // console.log("In processEditCommond " + createCommandSourceObj + " is empty");
                     showToast("Please Try Again Later.");
                     return [];
                 }
@@ -12414,10 +12207,8 @@ if (typeof document !== "undefined") {
                 ) || null;
 
                 if (!columnMetadata) {
-                    //// console.log("In processEditCommond " + createCommandSourceObj + " is empty");
                     //showToast("Please Try Again Later.");
 
-                    // console.log("Selected Field Name is Not in the List " + prevColumnName);
                     showToast("Please Select Field only from the list", 5000, true);
 
                     let settokens = [...tokens]
@@ -12523,14 +12314,12 @@ if (typeof document !== "undefined") {
 
                         var params1 = columnMetadata.fldsql;
                         var params2 = prepareKeyValueString(allGloblVars);
-                        // console.log(params2);
                         var params3 = columnMetadata.normalized;
                         var params4 = columnMetadata.fromlist;
 
 
                         params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList[setCommandTransid], commandConfig);
 
-                        // console.log(params2);
 
 
 
@@ -12556,7 +12345,6 @@ if (typeof document !== "undefined") {
                         });
 
                         if (acceptedValue && filtered.length === 0) {
-                            // console.log("User given value which is not in the dropdown");
                             showToast("Please select a valid value from the dropdown", 5000, true);
 
                             let lastIndex = tokens.length - 1;
@@ -12670,7 +12458,6 @@ if (typeof document !== "undefined") {
 
         // const iframes = document.querySelectorAll("iframe");
 
-        // // console.log(iframes);
 
         const currentIframe = document.getElementById("middle1");
 
@@ -12682,12 +12469,10 @@ if (typeof document !== "undefined") {
 
             //const key = fetchTransidfromUrl ? fetchTransidfromUrl[1] : null;
             //const value = fetchTransidfromUrl ? fetchTransidfromUrl[2] : null;
-            //// console.log(key, value);
             //transID = value;
             transID = currentIframe.contentWindow.transid;
 
             if (transID) {
-                //// console.log("iFrame Found");
                 return transID;
             }
             else
@@ -12888,7 +12673,6 @@ if (typeof document !== "undefined") {
             return false;
 
         } catch (ex) {
-            // console.error("AxisetFieldValue error:", ex);
             return false;
         }
     }
@@ -12903,7 +12687,6 @@ if (typeof document !== "undefined") {
     function handleCreate({ tokens, commandConfig }) {
 
         if (tokens.length < 2) {
-            // console.warn("create command requires <tstructname> <fieldname> <fieldvalue>");
             showToast("create command requires <tstructname> <fieldname> <fieldvalue>");
             return;
         }
@@ -12921,7 +12704,6 @@ if (typeof document !== "undefined") {
             //     );
             //     if (found) transId = found.name
             //     else {
-            //         // console.error("Invalid Tstruct name");
             //         showToast("Invalid Tstruct name please select the valid tstruct");
             //         return;
             //     }
@@ -12946,7 +12728,6 @@ if (typeof document !== "undefined") {
                     );
 
                     if (!isValidField) {
-                        // console.error("Execution blocked: Invalid field name - " + rawField);
                         showToast(`'${rawField}' is not a valid field. Please select from the list.`, 5000, false);
                         return;
                     }
@@ -12962,13 +12743,11 @@ if (typeof document !== "undefined") {
         let { value: transId, type } = tryResolveToken(1, rawName, commandConfig, false);
 
         //if (!transId ) {
-        //    // console.log("Missing transaction ID or field values.");
         //    showToast("Some required information is missing. Please re-enter the command and try again.");
         //    return;
         //}
 
         if (!transId || !createfieldnamevaluesList || !createfieldnamevaluesList[transId] || createfieldnamevaluesList[transId].length === 0) {
-            // console.log("Missing transaction ID or field values. Tstructid : " + transId);
             showToast("Incomplete command detected. Please clear the entire command and try again.");
             return [];
         }
@@ -13004,7 +12783,6 @@ if (typeof document !== "undefined") {
         //        //const rowNo = "1";
 
         //        if (!fieldname || value == null || value === "") {
-        //            // console.log(`SET FAILED ? ${fieldname} = ${value}`);
         //            continue;
         //        }
 
@@ -13012,19 +12790,16 @@ if (typeof document !== "undefined") {
         //        let resultOfSetFieldValue = AxisetFieldValue(actualFieldName, value, rowNo);
 
         //        if (resultOfSetFieldValue) {
-        //            // console.log(`SET SUCCESS ? ${fieldname} = ${value}`);
         //            continue;
 
         //        }
         //        else {
-        //            // console.log(`SET FAILED ? ${fieldname} = ${value}`);
         //        }
         //    }
         //    createfieldnamevaluesList = []
         //}
         //else 
         //{
-        // console.log("Form not loaded. Attaching onload and redirecting...");
 
         let iframe = null;
 
@@ -13033,19 +12808,16 @@ if (typeof document !== "undefined") {
             iframe = document.getElementById("middle1");
 
             if (!iframe) {
-                // console.log("Iframe not found");
                 return;
             }
 
 
             iframe.onload = function () {
                 //we can also try: 0 (minimum delay),50,100,200 (if needed)
-                // console.log("Iframe loaded. Setting all fields now...");
                 setTimeout(function () {
                     try {
 
 
-                        // console.log(createfieldnamevaluesList[transId]);
                         // for (let j = 2; j < tokens.length; j += 2) {
                         for (let j = 0; j < createfieldnamevaluesList[transId].length; j++) {
 
@@ -13069,23 +12841,19 @@ if (typeof document !== "undefined") {
                             //let rowNo = "1";
 
                             if (!actualFName || val == null || val === "") {
-                                // console.log(`SET FAILED ? ${fname} = ${val}`);
                                 continue;
                             }
 
                             let resultOfSetFieldValue = AxisetFieldValue(actualFName, val, rowNo);
 
                             if (resultOfSetFieldValue) {
-                                // console.log(`SET SUCCESS ? ${actualFName} = ${val}`);
                             }
                             else {
-                                // console.log(`SET FAILED ? ${actualFName} = ${val}`);
                             }
                         }
 
                     }
                     catch (ex) {
-                        // console.error("Error while setting fields after iframe load:", ex);
                     }
                     finally {
                         iframe.onload = null;
@@ -13102,7 +12870,6 @@ if (typeof document !== "undefined") {
 
         }
         catch (ex) {
-            // console.log("Error in handleCreate: " + ex);
             showToast("Incomplete command detected. Please clear the entire command and try again.");
             //createfieldnamevaluesList = [];
         }
@@ -13545,7 +13312,6 @@ if (typeof document !== "undefined") {
     //    let sessionId;
     //    getARMSessionId().then(sessionIdFetch => {
     //        sessionId = sessionIdFetch;
-    //        // console.log(sessionIdFetch);
     //    });
 
     //    if (!sessionId) return ["Session expired"]
@@ -13613,7 +13379,6 @@ if (typeof document !== "undefined") {
     //        ]
     //    };
 
-    //    // console.log("AxPut Payload created : " + payload);
     //    //If EDIT ? attach keyfield & keyvalue at root level
     //    if (!isCreate) {
     //        payload.data[0]["keyfield"] = "recordid";
@@ -13635,7 +13400,6 @@ if (typeof document !== "undefined") {
     //        //const result = await response.json();
 
     //    } catch (error) {
-    //        // console.log("Error from Axput : "+ error);
     //    }
 
 
@@ -13647,11 +13411,8 @@ if (typeof document !== "undefined") {
     //    var result = preparePayload(createfieldnamevaluesList, transid, sourcename, iscreate = true);
 
     //    if (result.isSuccess) {
-    //        // console.log("Payload Ready");
-    //        // console.log(result.payload);
     //        payload = result.payload;
     //    } else {
-    //        // console.log("Payload is empty");
     //        payload = {};
     //    }
 
@@ -13670,12 +13431,10 @@ if (typeof document !== "undefined") {
     //            //const result = await response.json();
     //            if (response.isSuccess) {
     //                showToast("Your Data is submitted Successfully!!");
-    //                // console.log("Data is submitted Successfully!!");
     //            }
 
     //        } catch (error) {
     //            showToast("Your Data is not Submitted..Please Submit it Manually!!");
-    //            // console.log("Error from Axput : "+ error);
     //        }
 
 
@@ -13701,13 +13460,11 @@ if (typeof document !== "undefined") {
         //            return;
         //        }
 
-        //        // console.log("Fetched Session ID: " + sessionId);
 
         // ?? Call preparePayload AFTER session is ready
 
         //if (!transid || saveListWithFieldNamendValues.length == 0) {
         if (!transid || !saveListWithFieldNamendValues || !saveListWithFieldNamendValues[transid] || saveListWithFieldNamendValues[transid].length === 0) {
-            // console.log("Missing transaction ID or field values.");
             showToast("Incomplete command detected. Please clear the entire command and try again.");
 
             return [];
@@ -13768,15 +13525,12 @@ if (typeof document !== "undefined") {
                 throw new Error("Payload is empty or invalid");
             }
 
-            // console.log("Payload is Created successfully " + "\n");
-            // console.log(result.payload);
 
             var payload = result.payload;
 
 
             var SaveDataapiUrl = mainArmRestDllPath + "ASBTStructrest.dll/datasnap/rest/TASBTstruct/savedata";
 
-            // console.log("SaveDataapi URL : " + SaveDataapiUrl);
 
             showToast("Saving Data is in progress....", 5000, true);
 
@@ -13813,8 +13567,6 @@ if (typeof document !== "undefined") {
 
                     if (firstResult.error) {
                         showToast(`Save Failed : ${firstResult.error.msg}`);
-                        // console.log(`Save Failed : ${firstResult.error.msg}`);
-                        // console.log(data);
                         return [];
                     }
 
@@ -13825,15 +13577,12 @@ if (typeof document !== "undefined") {
                         const recordId = msgObj.recordid || "";
                         const sid = msgObj.SID || "";
                         showToast(`${msg}`, 5000, true);
-                        // console.log("Data submitted successfully,Record-ID : " + recordId);
-                        // console.log(data);
 
                         //saveListWithFieldNamendValues = [];
                         //createfieldnamevaluesList = [];
                         return [];
                     }
 
-                    // console.log(data);
                     throw new Error("Unexpected API response structure");
 
                 })
@@ -13842,7 +13591,6 @@ if (typeof document !== "undefined") {
                     //showToast("Your Data is not Submitted,Please Submit it Manually using(Ctrl + Enter)!");
                     // showToast("Save failed.Please retry with Ctrl + Enter.");
                     showToast("Save failed.Please try again later.");
-                    // console.log("Error from AxiSaveDataFn :" + error);
                     return [];
 
                 });
@@ -13896,7 +13644,6 @@ if (typeof document !== "undefined") {
         let payloadUsername = mainUserName;
 
         if (!payloadUsername || payloadUsername.trim() === "") {
-            // console.log("Username not found or invalid.");
             return Promise.resolve({
                 isSuccess: false,
                 payload: {}
@@ -13918,7 +13665,6 @@ if (typeof document !== "undefined") {
             const colList = axDatasourceObj[colSourceKey];
 
             if (!colList) {
-                // console.warn("Column metadata not found for:", colSourceKey);
                 return {
                     isSuccess: false,
                     payload: {}
@@ -14023,12 +13769,10 @@ if (typeof document !== "undefined") {
                     }
                 };
 
-                // console.log("PreparedPayload : Payload is created successfully with isCreate :", iscreate);
 
             }
             catch (ex) {
                 isSuccess = false;
-                // console.log("Error in preparePayload Payload creation :" + ex);
             }
 
             if (payload && Object.keys(payload).length > 0 && isSuccess) {
@@ -14066,7 +13810,6 @@ if (typeof document !== "undefined") {
 
 
 
-        // console.log("Target Url for AxiBot:  " + targetUrl);
 
 
         setCommandRoutes(input.value.trim(), targetUrl);
@@ -14142,7 +13885,6 @@ if (typeof document !== "undefined") {
      */
     function handleAiButtons(btnId) {
         const axiButtons = getAxiBotActionButtons();
-        // console.log(axiButtons);
 
 
         if (axiButtons) {
@@ -14150,7 +13892,6 @@ if (typeof document !== "undefined") {
 
 
         } else {
-            // console.error("Cannot get Axi bot action buttons");
             showToast("Error: Cannot get Axi bot action buttons")
         }
 
@@ -14166,22 +13907,18 @@ if (typeof document !== "undefined") {
         const iframe = document.getElementById("middle1");
 
         if (!iframe) {
-            // console.error("Axi bot: Iframe middle1 not found.");
             return;
         }
 
         const iframeWindow = iframe.contentWindow;
 
         if (!iframeWindow) {
-            // console.error("Axi Bot: Cannot access iframe window.");
             return;
         }
 
         if (typeof iframeWindow.sendAxiMessageToAxibot === "function") {
-            // console.log(`Sending to AxiBot: "${text}"`);
             iframeWindow.sendAxiMessageToAxibot(text);
         } else {
-            // console.warn("Axi Bot: Script not fully loaded in iframe yet.");
             if (typeof showToast === 'function') showToast("Chatbot is loading...");
         }
 
@@ -14227,7 +13964,6 @@ if (typeof document !== "undefined") {
         cachedCommands = localStorage.getItem("axi_commands_v1");
         initCommands();
         window.LoadIframe("loadhomepage");
-        // console.log(JSON.stringify(commands));
     }
 
     /**
@@ -14328,8 +14064,6 @@ if (typeof document !== "undefined") {
                     return res.json()
                 })
                 .then(data => {
-                    // console.log("Fetched favorites from backend: ", data);
-                    // console.log("type : ", typeof data);
                     if (data && Array.isArray(data)) {
                         commandFavorites = data.map(item => ({
                             favouritesId: item?.favouritesId,
@@ -14347,7 +14081,6 @@ if (typeof document !== "undefined") {
                     }
                 })
                 .catch(err => {
-                    // console.error("Axi: Failed to sync favorites from backend", err);
                     showToast("Axi: Axi: Failed to sync favorites from backend");
 
                 }).finally(() => {
@@ -14446,7 +14179,7 @@ if (typeof document !== "undefined") {
             //             favOrder: 0,
             //             targetURL: removedFav?.targetUrl || removedFav?.targetURL || removedFav?.targeturl
             //         })
-            //     }).catch(err => // console.error("Axi: Failed to update on backend", err));
+            //     }).catch(err => {});
             // }
 
             showDeleteFavoriteModal(cmdText);
@@ -14485,7 +14218,6 @@ if (typeof document !== "undefined") {
         //         })
         //     }).catch(err => {
         //         showToast("Axi: Failed to update favorite on backend, Please check AxiApi Configuration");
-        //         // console.error("Axi: Failed to update favorite on backend", err)
         //     });
         // }
 
@@ -14721,7 +14453,6 @@ if (typeof document !== "undefined") {
         }
 
         if (favObj.targetUrl && favObj.targetUrl.trim() !== "" && !favObj.targetUrl.startsWith("developerstudio:")) {
-            // console.log("Executing Favorite directly via Target URL:", favObj.targetUrl);
             const params = new URLSearchParams(favObj.targetUrl.split("?")[1]);
             const transId = params.get("transid");
             if (transId) {
@@ -14729,7 +14460,6 @@ if (typeof document !== "undefined") {
             }
             top.window.LoadIframe(favObj.targetUrl);
         } else if (favObj.targetUrl && favObj.targetUrl.startsWith("developerstudio:")) {
-            // console.log("Executing Favorite via Developer Studio custom target URL:", favObj.targetUrl);
             const parts = favObj.targetUrl.split(":");
             const type = parts[1]; // tstruct or iview
             const name = parts[2]; // the resolved name
@@ -14781,7 +14511,6 @@ if (typeof document !== "undefined") {
         const existingCommandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
 
         if (existingCommandRoute) {
-            // console.log("Command route for ", cmdText, " already exists");
             return;
         }
 
@@ -14790,7 +14519,6 @@ if (typeof document !== "undefined") {
             targetUrl: targetUrl
         })
 
-        // console.log("Command Routes: " + JSON.stringify(commandRoutes));
     }
 
     /**
@@ -15265,7 +14993,6 @@ if (typeof document !== "undefined") {
                     }
                 })
                     .catch(error => {
-                        // console.error("Backend edit failed", error);
                         showToast("An Error occured while editing favorite");
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
                         favCancelBtn.disabled = false;
@@ -15296,7 +15023,6 @@ if (typeof document !== "undefined") {
                         }
                     }
                 ).then(data => {
-                    // console.log("Response from backend after adding favorite: ", data);
                     const favObj = data[0];
 
                     commandFavorites.unshift({
@@ -15318,7 +15044,6 @@ if (typeof document !== "undefined") {
                 })
                     .catch(err => {
                         showToast("Axi: Failed to update favorite on backend");
-                        // console.error("Backend sync failed", err);
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
                         favCancelBtn.disabled = false;
 
@@ -15437,7 +15162,6 @@ if (typeof document !== "undefined") {
                     }
                 })
                     .catch(err => {
-                        // console.error("Axi: Failed to delete on backend", err);
                         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
                         deleteFavCancelBtn.disabled = false;
 
@@ -15494,7 +15218,6 @@ if (typeof document !== "undefined") {
                 // return params.get("tstid"); 
                 return { name: decodeURIComponent(structNameRaw), type: "entity" };
             } catch (error) {
-                // console.error("Error parsing struct name from URL: ", error);
                 return null;
             }
 
@@ -15509,7 +15232,6 @@ if (typeof document !== "undefined") {
                 // return params.get("tstid"); 
                 return { name: decodeURIComponent(structNameRaw), type: "entity" };
             } catch (error) {
-                // console.error("Error parsing struct name from URL: ", error);
                 return null;
             }
 
@@ -15521,7 +15243,6 @@ if (typeof document !== "undefined") {
                 // return params.get("ivname"); 
                 return { name: decodeURIComponent(structNameRaw), type: "iview" };
             } catch (error) {
-                // console.error("Error parsing struct name from URL: ", error);
                 return null;
             }
         } else if (src.includes("Smartview_table.html")) {
@@ -15531,7 +15252,6 @@ if (typeof document !== "undefined") {
                 const structNameRaw = params.get("ads");
                 return { name: decodeURIComponent(structNameRaw), type: "ads" };
             } catch (error) {
-                // console.error("Error parsing struct name from URL: ", error);
                 return null;
 
             }

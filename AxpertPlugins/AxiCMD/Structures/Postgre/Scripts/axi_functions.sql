@@ -1431,6 +1431,5 @@ end if;
 return query execute v_sql;
 
 END; $function$
-; 
 >>
 

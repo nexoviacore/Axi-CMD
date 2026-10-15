@@ -1,5 +1,6 @@
 
 
+-- TODO: Remove this on next release. 
 <<
 DELETE FROM axiconfig where  mainpagetemplate = 'AxiCMDMainPage.html'
 <<
@@ -43,7 +44,7 @@ VALUES (1920660000001,'F',0,NULL,'admin',TO_TIMESTAMP('2026-09-25 12:32:04','YYY
 -- Insert AxiCMD Developer Option into axpstructconfigproval table
 <<
 INSERT INTO axpstructconfigproval (axpstructconfigprovalid, axpstructconfigpropsid, axpstructconfigprovalrow, configvalues)
-VALUES (1920660000003, 1920660000001, 1, 'true')
+VALUES (1920660000003, 1920660000001, 1, 'false')
 >>
 
 <<
