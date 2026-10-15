@@ -1867,6 +1867,13 @@ public partial class Tstruct : System.Web.UI.Page
         tstTabScript = ClearStringBuilders(tstTabScript);
         if (objFromCache)
         {
+            if (strObj.structRes == "")
+            {
+                FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+                string thisStructXML = fObj.StringFromRedis(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transId));
+                strObj.structRes = thisStructXML;
+            }
+
             tstTabScript.Append(strObj.GenerateTabScript(strObj));
             cacheMgr.GetStructureHTML(transId, AxRole, sid, language);
             tstHTML.Append(cacheMgr.StructureHtml);
@@ -9829,7 +9836,7 @@ public partial class Tstruct : System.Web.UI.Page
         string inputXML = string.Empty;
 
         if (ConfigurationManager.AppSettings["axpertWebDirPath"] != null && ConfigurationManager.AppSettings["axpertWebDirPath"].ToString() != "")
-            axpertWebDir = ConfigurationManager.AppSettings["axpertWebDirPath"].ToString() + projectName;
+            axpertWebDir = ConfigurationManager.AppSettings["axpertWebDirPath"].ToString() + "\\ReactPages\\" + projectName;
         else
             axpertWebDir = HttpRuntime.AppDomainAppPath + "\\ReactPages\\" + projectName;
 

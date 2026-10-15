@@ -130,6 +130,7 @@ var subtoaltColor = "";
 var grandtoaltColor = "";
 
 var advMultilingualPdf = "";
+var isPDFExportClient = false;
 var previewfileinsteaddownload = false;
 var showallrecordsbutton = false;
 var isIvRefreshParentOnClose = "";
@@ -306,12 +307,13 @@ function pageLoad(sender, args) {
         $("#ivInSearchInput").attr({ 'placeholder': callParentNew('lcm')[415] });
     }
 
+    $("#hdnOndemandLoad").val('');
     /**
      * Entry point for initializing jquery Datatable
      * @author Prashik
      * @Date   2019-04-11T10:40:40+0530
      */
-    
+    checkNextShowAllRows = false;
     try {
         ivVarNode = (typeof ivVarNode != "undefined" && ivVarNode) ? ivVarNode : "";
     } catch (error) {
@@ -321,6 +323,7 @@ function pageLoad(sender, args) {
     if (iVData != "" && iVData != 'No Data') {
             try {
                 if (iVData) {
+                    iVData = checkIsAxicmdPopup(iVData);
                     createIvir(iVData);
                     try {
                         nxtScrollSize = ivDatas.length;//100; //default record size for datatable initilization
@@ -2921,8 +2924,10 @@ function toPDF(a, c) {
     if ($j("#hdnKey").length > 0 && $j("#hdnKey").val() != "") {
         ivKey = "&ivKey=" + $j("#hdnKey").val();
     }
-    if (typeof advMultilingualPdf != "undefined" && advMultilingualPdf == true)
+    if (typeof advMultilingualPdf != "undefined" && advMultilingualPdf == true) {
+        isPDFExportClient = true;
         SetExport("../aspx/htmliv.aspx?ivname=" + a + "&ivtype=" + c + ivKey + "&params=&isPrint=true", pa, a);
+    }
     else
         SetExport("../aspx/pdfiview.aspx?ivname=" + a + "&ivtype=" + c + ivKey + "&params=", pa, a);
 }
@@ -9959,7 +9964,9 @@ function getAllRecords() {
                         ShowDimmer(true);
                         setTimeout(function () {
                             setTimeout(() => {
-                                getNextDtRecords(0);
+                                //getNextDtRecords(0);
+                                $("#hdnOndemandLoad").val('true');
+                                $("#button1").click();
                             }, 0);
                         }, 100);
 
@@ -9983,16 +9990,33 @@ function getAllRecords() {
                 setTimeout(() => {
                     exportType = '';
                     if (checkNextDBRowsExist)
-                        checkKeyARMExport(exportType);
+                        checkKeyARMExport('excel');
                     else
                         exportExcelAllRows('excel');
                 }, 0);
             }, 100);
         } else if (exportType == "word") {
-            ExecuteDatatableExport('currentrecords');
-            /* } else if (exportType == "pdf" && isMobile) {*/
+            //ExecuteDatatableExport('currentrecords');
+            setTimeout(function () {
+                setTimeout(() => {
+                    exportType = '';
+                    if (checkNextDBRowsExist)
+                        checkKeyARMExport('word');
+                    else
+                        exportExcelAllRows('word');
+                }, 0);
+            }, 100);
         } else if (exportType == "pdf") {
-            ExecuteDatatableExport('currentrecords');
+            //ExecuteDatatableExport('currentrecords');
+            setTimeout(function () {
+                setTimeout(() => {
+                    exportType = '';
+                    if (checkNextDBRowsExist)
+                        checkKeyARMExport('pdf');
+                    else
+                        exportExcelAllRows('pdf');
+                }, 0);
+            }, 100);
         }
         else {
             var ConfirmDeleteCB = $.confirm({
@@ -10018,7 +10042,7 @@ function getAllRecords() {
                                     if (exportType != "excel")
                                         getNextDtRecords(0);
                                     else
-                                        showExportConfirmforARM();
+                                        showExportConfirmforARM('excel');
                                 }, 0);
                             }, 100);
                         }
@@ -10135,7 +10159,7 @@ function checkKeyARMExport(_exportType) {
                                 setTimeout(function () {
                                     setTimeout(() => {
                                         exportType = '';
-                                        showExportConfirmforARM();
+                                        showExportConfirmforARM(_exportType);
                                     }, 0);
                                 }, 100);
                             }
@@ -10148,7 +10172,7 @@ function checkKeyARMExport(_exportType) {
         }
     });
 }
-function showExportConfirmforARM() {
+function showExportConfirmforARM(_exportType) {
     var pa = form1.param.value;
     var ivParamCaption = processParamStringForExport();
     let _glCulture = eval(callParent('glCulture'));
@@ -10156,7 +10180,7 @@ function showExportConfirmforARM() {
     if (_glCulture == "en-us")
         _dtFormat = "MM/dd/yyyy";
     const _smartViewSettings = GetSmartViewSettings();
-    ASB.WebService.ExportARMPushToQueue(iName, pa, ivParamCaption, isListView, IVIRCaption, _dtFormat, _smartViewSettings, SuccessCallbackARMQueue);
+    ASB.WebService.ExportARMPushToQueue(iName, pa, ivParamCaption, isListView, IVIRCaption, _dtFormat, _smartViewSettings, _exportType, SuccessCallbackARMQueue);
 }
 function SuccessCallbackARMQueue(result, eventArgs) {
     if (CheckSessionTimeout(result))
@@ -10233,6 +10257,12 @@ function getNextDtRecords(pageNo) {
     }
     if (typeof checkNextShowAllRows != "undefined" && checkNextShowAllRows)
         defaultRecsPerPage = '500';
+
+    if (typeof advMultilingualPdf != "undefined" && advMultilingualPdf == true && pageNo == 0 && isPDFExportClient) {
+        defaultRecsPerPage = '50000';
+        pageNo = 1;
+    }
+    isPDFExportClient = false;
     if (paramX != "") {
         const aesKey = CryptoJS.lib.WordArray.random(16);
         const iv = CryptoJS.lib.WordArray.random(16);
@@ -10303,31 +10333,9 @@ function getNextDtRecords(pageNo) {
                             checkNextDBRowsExist = false;
                             $("#ivInSearchInputButton").addClass("d-none");
 
-                            pageScrollToEnd = true;
-                            scrollDataTableToBottom();
-
                             ivirDataTableApi.rows().remove();
                             ivirDataTableApi.page.len(-1).draw();
                             ivirDataTableApi.rows.add(ivDatas).draw();  //append next records to the datatable & redraw it
-
-                            setTimeout(function () {
-                                setTimeout(function () {
-                                    try {
-                                        if (ivirDataTableApi.scroller) {
-                                            ivirDataTableApi.scroller.measure();
-                                        }
-                                    }
-                                    catch (ex) {
-                                    }
-                                    requestAnimationFrame(function () {
-                                        scrollDataTableToTop();
-                                        if ($j("#chkall").prop("checked") === true) {
-                                            $j("input[name=chkItem]:checkbox").prop("checked", true);
-                                        }
-                                        pageScrollToEnd = false;
-                                    });
-                                }, 0);
-                            }, 50);
 
                             $("#lnkShowAll, #requestNextRecords").remove();
                             if (showChartsWithAllRecords) {
@@ -10355,19 +10363,31 @@ function getNextDtRecords(pageNo) {
                             var processedData = processRowData(parsedData.data);
                             if (processedData.length > 0) { //if records exists
 
-                                var oldGtotIndex = ivDatas.findIndex((v) => {
-                                    return v.axrowtype == "gtot"
+                                // Keep only one Grand Total row and always place it at the end.
+                                var oldGrandTotal = ivDatas.find(function (row) {
+                                    return row && row.axrowtype == "gtot";
                                 });
 
-                                var newGtotIndex = processedData.findIndex((v) => {
-                                    return v.axrowtype == "gtot"
+                                // Remove existing Grand Total rows from the DataTable and data array.
+                                ivirDataTableApi.rows(function (idx, row) {
+                                    return row && row.axrowtype == "gtot";
+                                }).remove();
+
+                                ivDatas = ivDatas.filter(function (row) {
+                                    return !row || row.axrowtype != "gtot";
                                 });
 
-                                if (oldGtotIndex > -1 && newGtotIndex > -1) {//code for removing multiple grand total rows
-                                    ivDatas.splice(oldGtotIndex, 1);
-                                    ivirDataTableApi.rows(oldGtotIndex).remove();
-                                    currRowSize = ivDatas.length;
-                                }
+                                // Prefer the latest Grand Total returned by this page.
+                                var newGtotIndex = processedData.findIndex(function (row) {
+                                    return row && row.axrowtype == "gtot";
+                                });
+
+                                var newGrandTotal = newGtotIndex > -1
+                                    ? processedData.splice(newGtotIndex, 1)[0]
+                                    : oldGrandTotal;
+
+                                // Rows will be appended starting from the current data length.
+                                currRowSize = ivDatas.length;
 
                                 var nullCounter = 0;
                                 var lastSubHeadGroup = Object.keys(subHeadGroup).reverse().reduce((returnObj, obj, ind) => {
@@ -10399,6 +10419,12 @@ function getNextDtRecords(pageNo) {
                                 }
 
                                 ivDatas = ivDatas.concat(processedData);
+
+                                // Append exactly one Grand Total row at the end of the data array.
+                                if (newGrandTotal) {
+                                    ivDatas.push(newGrandTotal);
+                                }
+
                                 dtDbTotalRecords = getDtRecordCount(); //update total record count on every page change
 
                                 var currScrollSize = nxtScrollSize > ivDatas.length ? ivDatas.length : nxtScrollSize;
@@ -12504,27 +12530,30 @@ function refreshIview(e) {
 
 function ClearRedisDataCache(calledFrom = "") {
     try {
-        // var ivKey = $j("#hdnKey").val();
-        $.ajax({
-            type: "POST",
-            url: "iview.aspx/ClearRedisDataCache",
-            cache: false,
-            async: false,
-            contentType: "application/json",
-            dataType: "json",
-            data: JSON.stringify({
-                iName,
-                calledFrom,
-                isListView
-            }),
-            success: function (data) {
-                if (calledFrom == "refreshParams") {
-                    ReloadIframe(`iview.aspx?ivname=${iName}`);
-                }                
-            },
-            error: function (response) {
-            }
-        });
+        //// var ivKey = $j("#hdnKey").val();
+        //$.ajax({
+        //    type: "POST",
+        //    url: "iview.aspx/ClearRedisDataCache",
+        //    cache: false,
+        //    async: false,
+        //    contentType: "application/json",
+        //    dataType: "json",
+        //    data: JSON.stringify({
+        //        iName,
+        //        calledFrom,
+        //        isListView
+        //    }),
+        //    success: function (data) {
+        //        if (calledFrom == "refreshParams") {
+        //            ReloadIframe(`iview.aspx?ivname=${iName}`);
+        //        }
+        //    },
+        //    error: function (response) {
+        //    }
+        //});
+        if (calledFrom == "refreshParams") {
+            ReloadIframe(`iview.aspx?ivname=${iName}`);
+        }       
     } catch (ex) {}
 }
 
@@ -12922,13 +12951,16 @@ function GetSmartViewSettings() {
 }
 
 function ShowHugeDataStatusDiv(parsedData) {
+    $("#hdnOndemandLoad").val('');
     if (typeof parsedData?.msg?.msg != "undefined" && parsedData?.msg?.msg != "" && !checkNextShowAllRows) {
         $("#ivInSearchInputButton").removeClass("d-none");
         $("#lnkShowAll").remove();
         $("#ivInSearchInputButton").html($("#ivInSearchInputButtonLoader")[0].outerHTML + " Search in Loaded Records");
+        dtPageNo = 1;
         dtTotalRecords = parsedData.reccount.reccount;
         defaultRecsPerPage = dtTotalRecords;
         dtDbTotalRecords = getDtRecordCount();
+        nxtScrollSize = 500;
         $("#lblCurPage").text('Rows: 1-' + dtDbTotalRecords + ' of ');
         totRowCount = iviewDataWSRows = parsedData.actualrows.actualrows;
         $("#lblNoOfRecs").text(iviewDataWSRows);
@@ -12972,7 +13004,7 @@ function ShowHugeDataStatusDiv(parsedData) {
                         setTimeout(function () {
                             setTimeout(function () {
                                 exportType = '';
-                                showExportConfirmforARM();
+                                showExportConfirmforARM('excel');
                             }, 0);
                         }, 100);
                     }
@@ -12985,17 +13017,17 @@ function ShowHugeDataStatusDiv(parsedData) {
                         setTimeout(function () {
                             setTimeout(function () {
                                 exportType = '';
-                                let pa = form1.param.value;
-                                let _ivKey = "";
-                                if ($j("#hdnKey").length > 0 && $j("#hdnKey").val() != "") {
-                                    _ivKey = "&ivKey=" + $j("#hdnKey").val();
+                                if (typeof advMultilingualPdf != "undefined" && advMultilingualPdf == true) {
+                                    let pa = form1.param.value;
+                                    let _ivKey = "";
+                                    if ($j("#hdnKey").length > 0 && $j("#hdnKey").val() != "") {
+                                        _ivKey = "&ivKey=" + $j("#hdnKey").val();
+                                    }
+                                    isPDFExportClient = true;
+                                    SetExport("../aspx/htmliv.aspx?ivname=" + iName + "&ivtype=Iview" + _ivKey + "&params=&isPrint=true", pa, iName);
+                                } else {
+                                    showExportConfirmforARM('pdf');
                                 }
-                                let typeIvOrLv = "&typeIvOrLv=" + isListView;
-                                let _smartViewSettings = GetSmartViewSettings();
-                                let smartIvSetting = "";
-                                if (_smartViewSettings != "")
-                                    smartIvSetting = "&smartViewSettings=" + _smartViewSettings;
-                                SetExportWord("../aspx/pdfiview.aspx?ivname=" + iName + "&ivtype=Iview" + _ivKey + typeIvOrLv + smartIvSetting + "&params=", pa, iName);
                             }, 0);
                         }, 100);
                     }
@@ -13008,13 +13040,7 @@ function ShowHugeDataStatusDiv(parsedData) {
                         setTimeout(function () {
                             setTimeout(function () {
                                 exportType = '';
-                                let pa = form1.param.value;
-                                let _ivKey = "";
-                                if ($j("#hdnKey").length > 0 && $j("#hdnKey").val() != "") {
-                                    _ivKey = "&ivKey=" + $j("#hdnKey").val();
-                                }
-                                let typeIvOrLv = "&typeIvOrLv=" + isListView;
-                                SetExportWord("../aspx/wordview.aspx?ivname=" + iName + "&ivtype=Iview" + _ivKey + typeIvOrLv + "&params=", pa, iName);
+                                showExportConfirmforARM('word');
                             }, 0);
                         }, 100);
                     }
@@ -13040,4 +13066,33 @@ function scrollDataTableToTop() {
     if (scrollBody) {
         scrollBody.scrollTop = 0;
     }
+}
+
+function checkIsAxicmdPopup(_iVData) {
+    try {
+        if (window.frameElement?.id?.startsWith('axMultiiframe_') && window.parent.frameElement?.id === "hiddenLoader") {
+            _iVData = _iVData
+                .replace(
+                    /parent\.LoadIframe\('EntityForm\.aspx\?/gi,
+                    "parent.PopupManager.openForm('', '../aspx/EntityForm.aspx?"
+                )
+                .replace(
+                    /window\.top\.LoadIframe\('EntityForm\.aspx\?/gi,
+                    "parent.PopupManager.openForm('', '../aspx/EntityForm.aspx?"
+                )
+                .replace(
+                    /parent\.LoadIframe\('(tstruct|iview)\.aspx/gi,
+                    "parent.parent.LoadIframe('$1.aspx"
+                )
+                .replace(
+                    /window\.top\.LoadIframe\('(tstruct|iview)\.aspx/gi,
+                    "parent.parent.LoadIframe('$1.aspx"
+                )
+                .replace(
+                    /(^|[^.\w])(?:parent\.)?ShowDimmer\(/gi,
+                    "$1parent.parent.ShowDimmer("
+                );;
+        }
+    } catch (ex) { }
+    return _iVData;
 }

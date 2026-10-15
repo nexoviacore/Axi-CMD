@@ -155,7 +155,7 @@ public class HeaderFileUpload : IHttpHandler, IRequiresSessionState
                                 context.Response.Write("error:Too many characters in the filename");
                                 return;
                             }
-                            if (FileExt != string.Empty && FileExt.Contains(file.FileName.Substring(fname.LastIndexOf(".") + 1).ToLower()) == false)
+                            if (FileExt != string.Empty && FileExt.Contains(file.FileName.Substring(fname.LastIndexOf(".") + 1).ToLower()) == false && ((jsonVideos == "" || jsonVideos.Contains(file.FileName.Substring(fname.LastIndexOf(".")).ToLower()) == false) && (jsonSpecificFiles == "" || jsonSpecificFiles.Contains(file.FileName.Substring(fname.LastIndexOf(".")).ToLower()) == false)))
                             {
                                 context.Response.Write("error:Selected file type not allowed in this form as per the setting.");
                                 return;

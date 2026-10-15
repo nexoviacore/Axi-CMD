@@ -1805,7 +1805,7 @@ public partial class iview : System.Web.UI.Page
                 }
             }
             //}
-            setDataCachingFlag();
+            //setDataCachingFlag();
         }
         else
         {
@@ -1841,69 +1841,69 @@ public partial class iview : System.Web.UI.Page
         catch (Exception ex) { }
     }
 
-    private void setDataCachingFlag()
-    {
-        try
-        {
-            string ivupdateOn = string.Empty;
+    //private void setDataCachingFlag()
+    //{
+    //    try
+    //    {
+    //        string ivupdateOn = string.Empty;
 
-            if (objIview.StructureXml != string.Empty && objIview.StructureXml != "false")
-            {
-                XmlDocument xmldoc = new XmlDocument();
-                xmldoc.LoadXml(objIview.StructureXml);
+    //        if (objIview.StructureXml != string.Empty && objIview.StructureXml != "false")
+    //        {
+    //            XmlDocument xmldoc = new XmlDocument();
+    //            xmldoc.LoadXml(objIview.StructureXml);
 
-                if (xmldoc.DocumentElement.Attributes["updatedon"] != null)
-                {
-                    ivupdateOn = xmldoc.DocumentElement.Attributes["updatedon"].Value;
-                }
+    //            if (xmldoc.DocumentElement.Attributes["updatedon"] != null)
+    //            {
+    //                ivupdateOn = xmldoc.DocumentElement.Attributes["updatedon"].Value;
+    //            }
 
-                System.Globalization.CultureInfo culture = default(System.Globalization.CultureInfo);
-                culture = new System.Globalization.CultureInfo("en-GB");
-                if (HttpContext.Current.Session["axdb"] != null)
-                {
-                    if (HttpContext.Current.Session["axdb"].ToString().ToLower() == "ms sql")
-                        culture = new System.Globalization.CultureInfo("en-US");
-                }
+    //            System.Globalization.CultureInfo culture = default(System.Globalization.CultureInfo);
+    //            culture = new System.Globalization.CultureInfo("en-GB");
+    //            if (HttpContext.Current.Session["axdb"] != null)
+    //            {
+    //                if (HttpContext.Current.Session["axdb"].ToString().ToLower() == "ms sql")
+    //                    culture = new System.Globalization.CultureInfo("en-US");
+    //            }
 
-                if (object.ReferenceEquals(ivupdateOn, ""))
-                    ivupdateOn = "01/01/2000 00:00:01 AM";
-                DateTime cacheTime;
-                try
-                {
-                    cacheTime = DateTime.Parse(ivupdateOn, culture);
-                }
-                catch (System.FormatException ex)
-                {
-                    cacheTime = DateTime.Parse(ivupdateOn);
-                }
+    //            if (object.ReferenceEquals(ivupdateOn, ""))
+    //                ivupdateOn = "01/01/2000 00:00:01 AM";
+    //            DateTime cacheTime;
+    //            try
+    //            {
+    //                cacheTime = DateTime.Parse(ivupdateOn, culture);
+    //            }
+    //            catch (System.FormatException ex)
+    //            {
+    //                cacheTime = DateTime.Parse(ivupdateOn);
+    //            }
 
-                DateTime boundryDate;
-                if (!DateTime.TryParseExact("11/18/2022", "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out boundryDate))
-                {
-                    //Invalid date
-                }
+    //            DateTime boundryDate;
+    //            if (!DateTime.TryParseExact("11/18/2022", "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out boundryDate))
+    //            {
+    //                //Invalid date
+    //            }
 
 
-                if (boundryDate != null && boundryDate.Date <= cacheTime.Date)
-                {
-                    if (xmldoc.SelectSingleNode("//iview/b39") != null)
-                    {
-                        string dataCache = xmldoc.SelectSingleNode("//iview/b39").InnerText;
-                        objIview.dataCache = dataCache;
-                    }
-                }
-                else
-                {
-                    objIview.dataCache = "none";
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            objIview.dataCache = "none";
-            logobj.CreateLog("Exception in setDataCachingFlag: " + ex.Message, sid, "IvsetDataCachingFlag-" + iName, string.Empty);
-        }
-    }
+    //            if (boundryDate != null && boundryDate.Date <= cacheTime.Date)
+    //            {
+    //                if (xmldoc.SelectSingleNode("//iview/b39") != null)
+    //                {
+    //                    string dataCache = xmldoc.SelectSingleNode("//iview/b39").InnerText;
+    //                    objIview.dataCache = dataCache;
+    //                }
+    //            }
+    //            else
+    //            {
+    //                objIview.dataCache = "none";
+    //            }
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        objIview.dataCache = "none";
+    //        logobj.CreateLog("Exception in setDataCachingFlag: " + ex.Message, sid, "IvsetDataCachingFlag-" + iName, string.Empty);
+    //    }
+    //}
 
     private DataTable processXmlConfigAsDt(string configurationXml)
     {
@@ -2374,12 +2374,20 @@ public partial class iview : System.Web.UI.Page
                                 "</listviewCols>";
                             }
 
-                            ivDataArray = checkCacheData(objIview.purposeString == "" ? pXml : lvXml, objIview.purposeString);
+                            //ivDataArray = checkCacheData(objIview.purposeString == "" ? pXml : lvXml, objIview.purposeString);//Not using Iview/ListIview data caching
 
                             if (ivDataArray.Count == 0)
                             {
                                 ivDataArray = new JArray();
-                                idata = objIview.GetData(iName, hdnWebServiceViewName.Value == "" ? 1 : 0, objIview.iviewDataWSRows, pXml, lvXml, objIview.purposeString, hdnLvChangedStructure.Value).ToString();
+
+                                string ondemand = hdnOndemandLoad.Value;
+                                int existingPageSize = hdnWebServiceViewName.Value == "" ? 1 : 0;
+                                if (ondemand == "true")
+                                {
+                                    existingPageSize = 0;
+                                }
+                                //idata = objIview.GetData(iName, hdnWebServiceViewName.Value == "" ? 1 : 0, objIview.iviewDataWSRows, pXml, lvXml, objIview.purposeString, hdnLvChangedStructure.Value).ToString();
+                                idata = objIview.GetData(iName, existingPageSize, objIview.iviewDataWSRows, pXml, lvXml, objIview.purposeString, hdnLvChangedStructure.Value).ToString();
 
                                 string[] idataSplit = idata.Split('♠');
 

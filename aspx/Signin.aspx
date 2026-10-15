@@ -1,4 +1,4 @@
-<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Signin.aspx.cs" Inherits="Signin" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Signin.aspx.cs" Inherits="Signin" %>
 
 <%@ OutputCache Duration="1" Location="None" %>
 <!DOCTYPE html>
@@ -50,7 +50,7 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/noConflict.min.js?v=1" type="text/javascript"></script>
     <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
-    <script type="text/javascript" src="../Js/login.min.js?v=119"></script>
+    <script type="text/javascript" src="../Js/login.min.js?v=120"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
     <script src="../Js/jsencrypt.js?v=1" type="text/javascript"></script>
     <script src="../Js/crypto-js.js?v=1" type="text/javascript"></script>
@@ -86,6 +86,7 @@
         localStorage.removeItem('web_browser-' + projUrl);
         localStorage.removeItem('web_browser_dup-' + projUrl);
         localStorage.removeItem("axpertLogoutLock-" + projUrl);
+        var axiLogin = '<%=axiLogin%>';
     </script>
 
     <script src="../Js/sso.min.js?v=2" type="text/javascript"></script>
@@ -339,6 +340,12 @@ c-45 8 -53 30 -33 91 22 70 14 75 -11 7z"
                                 <asp:Button runat="server" Text="OTP Login" title="OTP Login" TabIndex="0" ID="btnOTPLogin" class="d-none" OnClick="btnOTPLogin_Click" />
                                 <asp:Button runat="server" Text="Resend OTP" title="PWD OTP" TabIndex="0" ID="btnResendOtp" class="d-none" OnClick="btnResendOtp_Click" />
                                 <asp:Button runat="server" Text="Windows SSO" title="Windows SSO" TabIndex="0" ID="WindowCloneBtn" class="d-none" OnClientClick="return chkLoginFormNew(this);" OnClick="WindowsBtn_Click" />
+
+                                <asp:Panel runat="server" ID="panelAxiLogin" Visible="false">
+                                    <div class="d-flex flex-row-fluid">
+                                        <asp:Button runat="server" Text="AxiLogin" title="AxiLogin" TabIndex="0" ID="btnAxiLogin" class="btn btn-lg btn-primary mb-5 w-100 d-none" OnClick="btnAxiLogin_Click" />
+                                    </div>
+                                </asp:Panel>
                             </div>
                         </div>
                         <input type="hidden" runat="server" name="hdnAxProjs" id="hdnAxProjs" />

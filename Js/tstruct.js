@@ -10594,8 +10594,11 @@ function DeleteTstruct() {
                             txt = txt + '<Transaction axpapp="' + proj + '" transid="' + tst + '" recordid="' + rid + '" action="delete" trace="' + trace + '" sessionid="' + sid + '" allowCancel="' + AxAllowCancel + '"> ';
                             //txt = txt + '</Transaction>';
                             try {
+                                ShowDimmer(true);
+                                AxWaitCursor(true);
                                 ASB.WebService.DeleteDataXML(rid, txt, tstDataId, AxAllowCancel, resTstHtmlLS, SucceededCallbackDelTst);
                             } catch (exp) {
+                                ShowDimmer(false);
                                 AxWaitCursor(false);
                                 var execMess = exp.name + "^♠^" + exp.message;
                                 showAlertDialog("error", 2030, "client", execMess);
@@ -10627,6 +10630,8 @@ function SucceededCallbackDelTst(result, eventArgs) {
         tstDataId = result.split("♠*♠")[0];
         result = result.split("♠*♠")[1];
     }
+    ShowDimmer(false);
+    AxWaitCursor(false);
     if (CheckSessionTimeout(result))
         return;
 
@@ -10654,6 +10659,9 @@ function SucceededCallbackDelTst(result, eventArgs) {
             if (typeof transid != "" && transid == "ad_af") {
                 eval(callParent('isRefreshParentOnClose') + "= true");
                 isTstRefreshParentOnClose = "true";
+            }
+            if (typeof transid != "" && transid == "job_s") {
+                DeleteAxpertJobs();
             }
             if (AxLogTimeTaken == "true") {
                 var edTime = new Date();
@@ -14940,7 +14948,10 @@ function lnkNextClick() {
                     btnClass: 'btn btn-primary',
                     action: function () {
                         lvNavDetails = "next";
-                        FormSubmit();
+                        if (typeof transid != "undefined" && transid == "job_s") {
+                            $("#ftbtn_iSave").click();
+                        } else
+                            FormSubmit();
                     }
                 },
                 buttonB: {
@@ -14987,7 +14998,10 @@ function lnkPrevClick() {
                     btnClass: 'btn btn-primary',
                     action: function () {
                         lvNavDetails = "prev";
-                        FormSubmit();
+                        if (typeof transid != "undefined" && transid == "job_s") {
+                            $("#ftbtn_iSave").click();
+                        } else
+                            FormSubmit();
                     }
                 },
                 buttonB: {
@@ -20528,9 +20542,9 @@ function AxDevStudioHelper(_transid) {
             $("#wBdr").addClass("htmlPagesCls");
             $("#wBdr").css({ "height": "85vh", "overflow": "auto" });
             ToggleWizardDc("3", "hide");
-            if ($(".tstructMainBottomFooter .BottomToolbarBar").find("[onclick='previewHtmlPage();']").length == 0) {
+            if ($(".tstructMainBottomFooter .BottomToolbarBar").find("[onclick='previewReactPage();']").length == 0) {
                 var customButtons = `
-        <button onclick="previewHtmlPage();" class="btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm" type="button" id="previewHtmlPageId" title="Preview"><span class="material-icons">preview</span><span class="hpCustBtnsText">Preview</span></button>
+        <button onclick="previewReactPage();" class="btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm" type="button" id="previewReactPageId" title="Preview"><span class="material-icons">preview</span><span class="hpCustBtnsText">Preview</span></button>
         
         <button onclick="addCssJs(this.id);" class="btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm" type="button" id="addCssRow" title="Add Css"><span class="material-icons">code</span><span class="hpCustBtnsText">Add Css</span></button>
 
@@ -20828,6 +20842,9 @@ function htmlCustomDeleteRedirect() {
                     success: function (response) {
                         if (response.d == "done") {
                             window.location.href = "ivtoivload.aspx?ivname=hplist";
+                            setTimeout(function () {
+                                parent.parent.reloadPluginCustomPage(false);
+                            }, 0);
                         }
                         else {
                             ShowDialog("error", response.d);
@@ -20860,6 +20877,9 @@ function htmlCustomDeleteRedirect() {
                     success: function (response) {
                         if (response.d == "done") {
                             window.location.href = "ivtoivload.aspx?ivname=a__rplst";
+                            setTimeout(function () {
+                                parent.parent.reloadPluginCustomPage(true);
+                            }, 0);
                         }
                         else {
                             ShowDialog("error", response.d);
@@ -21635,5 +21655,59 @@ function ClearRefreshOnSaveListLS() {
                 localStorage.removeItem(key);
             }
         });
-    } catch (ex) { }
+    } catch (ex) {
+    }
+}
+
+function DeleteAxpertJobs() {
+    if (typeof transid != "" && transid == "job_s") {
+        var period = $("#jobschedule000F1").val();
+        var tmpPeriod = period.toLowerCase().trim();
+        var sendOn = "";
+        if (tmpPeriod == "every week") {
+            sendOn = $("#weekday000F1").val()
+        }
+        else if (tmpPeriod == "every month" || tmpPeriod == "every quarter") {
+            sendOn = $("#jday000F1").val()
+        }
+        else if (tmpPeriod == "custom") {
+            sendOn = $("#noofmins000F1").val()
+        }
+        let _glCulture = eval(callParent('glCulture'));
+        let start_date = $("#jobstartfrom000F1").val();
+        if (_glCulture.toLowerCase() === "en-us" && start_date) {
+            let parts = start_date.split('/');
+            if (parts.length === 3) {
+                let month = parts[0];
+                let day = parts[1];
+                let year = parts[2];
+                start_date = day + '/' + month + '/' + year;
+            }
+        }
+        $.ajax({
+            type: "POST",
+            url: "../aspx/AxPEG.aspx/AxPushToQueue",
+            data: JSON.stringify({
+                queueName: "ARMAxpertJobsQueue",
+                queueJson: {
+                    "start_date": start_date,
+                    "period": period,
+                    "sendtime": $("#axptm_starttime000F1").val(),
+                    "sendon": sendOn,
+                    "project": $("#appname000F1").val(),
+                    "jobname": $("#jname000F1").val(),
+                    "jobid": $("#jobid000F1").val(), 
+                    "username": callParentNew("mainUserName")
+                }
+            }),
+            cache: false,
+            async: false,
+            dataType: 'json',
+            contentType: "application/json",
+            success: function (response) {
+            },
+            error: function (error) {
+            }
+        });
+    }
 }

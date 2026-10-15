@@ -2417,7 +2417,7 @@ namespace ASB
                     utilObj.SaveExecutionText();
                     utilObj.DeleteUnwantedKeys();
                     utilObj.TempAttaServerFiles();
-                    utilObj.ClearUserIviewData();
+                    //utilObj.ClearUserIviewData();
                     string result = string.Empty;
                     utilObj.delALLNotificiationKeyfromRedis();
                     //result = asbExt.CallLogoutWS("Signout", iXml);
@@ -7470,6 +7470,44 @@ namespace ASB
         }
 
         [WebMethod(EnableSession = true)]
+        public string GetProjectCustomAssets(string projName)
+        {
+            string[] assetNames =
+            {
+                "customGlobalStyles.css",
+                "customIviewNewUi.css",
+                "customTstructNewUi.css",
+                "customCard.js",
+                "customAxpertUI.css",
+                "customCompressedTstructUI.css"
+            };
+            JObject assets = new JObject();
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(projName) || projName == "." || projName == ".." || Path.GetFileName(projName) != projName)
+                {
+                    return assets.ToString();
+                }
+
+                string projectPath = HttpContext.Current.Server.MapPath("~/" + projName);
+                foreach (string assetName in assetNames)
+                {
+                    assets[assetName] = File.Exists(Path.Combine(projectPath, assetName));
+                }
+            }
+            catch (Exception)
+            {
+                foreach (string assetName in assetNames)
+                {
+                    assets[assetName] = false;
+                }
+            }
+
+            return assets.ToString();
+        }
+
+        [WebMethod(EnableSession = true)]
         public string NotifyHybridForWeightScale(string guId)
         {
             string result = string.Empty;
@@ -8314,7 +8352,7 @@ namespace ASB
         }
 
         [WebMethod(EnableSession = true)]
-        public string ExportARMPushToQueue(string iviewName, string iviewParams, string ivParamCaption, string isListView, string IVIRCaption, string dtFormat, string _smartViewSettings)
+        public string ExportARMPushToQueue(string iviewName, string iviewParams, string ivParamCaption, string isListView, string IVIRCaption, string dtFormat, string _smartViewSettings, string _exportType)
         {
             string response = string.Empty;
             if (HttpContext.Current.Session["project"] == null || Session["nsessionid"] == null)
@@ -8406,7 +8444,7 @@ namespace ASB
             globalVars = globalVars.Replace(@"\", "\\\\");
             string _axapps = HttpContext.Current.Session["axApps"].ToString();
             _axapps = _axapps.Replace(@"\", "\\\\");
-            DATA = "{\"getreport\":{\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\"," + purpose + "\"metadata\":\"true\",\"fetchhidcol\":\"false\",\"_dateformat\":\"" + dtFormat + "\",\"smartViewSettings\":\"" + _smartViewSettings + "\",\"ivcaption\":\"" + IVIRCaption + "\",\"sqlpagination\":\"false\",\"params\":" + iviewParamsJson + ",\"ivParamCaption\":" + iviewParamsJsonCap + ",\"project\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"name\":\"" + iviewName + "\",\"token\":\"d152232e23ff6523b8104196ff1b6015\",\"seed\":\"211269\",\"userauthkey\":\"" + Session["username"].ToString() + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"arm_url\":\"" + HttpContext.Current.Session["ARM_URL"].ToString() + "\",\"ARMScriptURL\":\"" + ArmScriptURL + "\",\"axConfigFilePath\":\"" + axConfigFilePath + "\",\"axConfigFileMapUser\":\"" + AxConfigFileMapUser + "\",\"axConfigFileMapPwd\":\"" + AxConfigFileMapPwd + "\"},\"axprops\":\"" + HttpContext.Current.Application["axProps"].ToString() + "\",\"axapps\":\"" + _axapps + "\",\"globalvars\":\"" + globalVars + "\",\"uservars\":\"" + HttpContext.Current.Session["axUserVars"].ToString() + "\"}";
+            DATA = "{\"getreport\":{\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\"," + purpose + "\"metadata\":\"true\",\"exportType\":\"" + _exportType + "\",\"fetchhidcol\":\"false\",\"_dateformat\":\"" + dtFormat + "\",\"smartViewSettings\":\"" + _smartViewSettings + "\",\"ivcaption\":\"" + IVIRCaption + "\",\"sqlpagination\":\"false\",\"params\":" + iviewParamsJson + ",\"ivParamCaption\":" + iviewParamsJsonCap + ",\"project\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"name\":\"" + iviewName + "\",\"token\":\"d152232e23ff6523b8104196ff1b6015\",\"seed\":\"211269\",\"userauthkey\":\"" + Session["username"].ToString() + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"arm_url\":\"" + HttpContext.Current.Session["ARM_URL"].ToString() + "\",\"ARMScriptURL\":\"" + ArmScriptURL + "\",\"axConfigFilePath\":\"" + axConfigFilePath + "\",\"axConfigFileMapUser\":\"" + AxConfigFileMapUser + "\",\"axConfigFileMapPwd\":\"" + AxConfigFileMapPwd + "\"},\"axprops\":\"" + HttpContext.Current.Application["axProps"].ToString() + "\",\"axapps\":\"" + _axapps + "\",\"globalvars\":\"" + globalVars + "\",\"uservars\":\"" + HttpContext.Current.Session["axUserVars"].ToString() + "\"}";
             var saveDetails = "{\"queuename\":\"ARMExportQueue\",\"queuedata\":" + JsonConvert.SerializeObject(DATA) + ",\"timespandelay\":\"0\"}";
             request.ContentLength = saveDetails.Length;
 
