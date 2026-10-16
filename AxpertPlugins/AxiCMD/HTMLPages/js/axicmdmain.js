@@ -5372,6 +5372,10 @@ if (typeof document !== "undefined") {
                     // }
                     return [`Fetching Data...`];
                 }
+                // edit <form>: the form/field names are still being resolved against the structure list (or the
+                // list itself is loading), so paramStr is empty for a moment. Say "Fetching Data..." like view
+                // does instead of flashing "Waiting for input..."
+                if (isGetStructsData && tokens.length >= 2) return [`Fetching Data...`];
                 return ["Waiting for input..."];
             }
 
@@ -7233,7 +7237,7 @@ if (typeof document !== "undefined") {
                 action: data.action || "view",
                 Project: getProjectName(),
                 ADSNames: data.adsNames,
-                trace: false,
+                trace: true,
                 refreshCache: !!data.refreshCache,
                 getallrecordscount: !!p.getallrecordscount,
                 CachePermissions: p.CachePermissions !== false,
@@ -8115,27 +8119,71 @@ if (typeof document !== "undefined") {
             const buildSettingsPanel = () => {
                 const panel = document.createElement("div");
                 panel.id = "axiSettingsPanel";
-                panel.style.cssText = "position:fixed;z-index:100000;display:none;min-width:260px;max-width:90vw;" +
-                    "padding:14px 16px;background:#fff;color:#222;border:1px solid #d0d5dd;border-radius:8px;" +
-                    "box-shadow:0 8px 24px rgba(0,0,0,.18);font-size:13px;";
+                // Look (glass card, gradient Save button, hover effects) lives in axicmdmain.css, section 8
+                panel.className = "axi-sp";
                 panel.innerHTML =
-                    '<div style="font-weight:600;margin-bottom:8px;">Records to load at a time</div>' +
-                    '<div style="display:flex;gap:8px;align-items:center;">' +
-                    '<input id="axiPageSizeInput" type="number" step="100" style="width:90px;padding:4px 6px;border:1px solid #bbb;border-radius:4px;">' +
-                    '<button id="axiPageSizeSave" type="button" style="padding:4px 12px;border:0;border-radius:4px;background:#2563eb;color:#fff;cursor:pointer;">Save</button>' +
-                    '<button id="axiPageSizeDefault" type="button" style="padding:4px 10px;border:1px solid #bbb;border-radius:4px;background:#fff;cursor:pointer;">Default</button>' +
+                    '<div class="axi-sp-title">Records per load</div>' +
+                    '<div class="axi-sp-sub">How many items each list fetches at once</div>' +
+                    // The big number is the editable input itself; the slider below it moves the same value
+                    '<div class="axi-sp-readout">' +
+                    '<input id="axiPageSizeInput" class="axi-sp-input" type="number" step="100" aria-label="Records per load">' +
+                    '<span class="axi-sp-unit">records</span>' +
                     '</div>' +
-                    '<div id="axiPageSizeHint" style="margin-top:8px;color:#667085;"></div>';
+                    '<input id="axiPageSizeRange" class="axi-sp-range" type="range" step="100" aria-label="Records per load slider">' +
+                    '<div class="axi-sp-ends"><span id="axiPageSizeMin"></span><span id="axiPageSizeMax"></span></div>' +
+                    '<div id="axiPageSizeError" class="axi-sp-error" role="alert" hidden></div>' +
+                    '<div class="axi-sp-actions">' +
+                    '<button id="axiPageSizeSave" class="axi-sp-btn axi-sp-save" type="button">Save</button>' +
+                    '<button id="axiPageSizeDefault" class="axi-sp-btn axi-sp-default" type="button">Default</button>' +
+                    '</div>' +
+                    '<div id="axiPageSizeHint" class="axi-sp-hint"></div>';
                 document.body.appendChild(panel);
 
                 const sizeInput = panel.querySelector("#axiPageSizeInput");
                 const hint = panel.querySelector("#axiPageSizeHint");
-                hint.textContent = "Between " + MIN_PAGE_SIZE + " and " + MAX_PAGE_SIZE + " (default " + DEFAULT_PAGE_SIZE + "). Lists reload when saved.";
+                hint.textContent = "Default is " + DEFAULT_PAGE_SIZE + ". Lists reload when you save.";
+
+                // The slider mirrors the number box. syncDial copies the box value onto the slider and sets the
+                // fill width (--axi-sp-fill) used by the gradient track. Callers that set the box in code call it too.
+                const dial = panel.querySelector("#axiPageSizeRange");
+                dial.min = MIN_PAGE_SIZE;
+                dial.max = MAX_PAGE_SIZE;
+                panel.querySelector("#axiPageSizeMin").textContent = MIN_PAGE_SIZE;
+                panel.querySelector("#axiPageSizeMax").textContent = MAX_PAGE_SIZE;
+                panel.axiSyncDial = () => {
+                    const v = Math.min(MAX_PAGE_SIZE, Math.max(MIN_PAGE_SIZE, parseInt(sizeInput.value, 10) || MIN_PAGE_SIZE));
+                    dial.value = v;
+                    panel.style.setProperty("--axi-sp-fill", ((v - MIN_PAGE_SIZE) / (MAX_PAGE_SIZE - MIN_PAGE_SIZE) * 100) + "%");
+                };
+                // Rejects a typed value that is empty, not a whole number, or outside MIN..MAX instead of silently
+                // changing it. Shows the reason under the slider and marks the box (aria-invalid).
+                const errorBox = panel.querySelector("#axiPageSizeError");
+                const validatePageSize = (raw) => {
+                    const text = String(raw === undefined || raw === null ? "" : raw).trim();
+                    let message = "";
+                    if (text === "" || !/^\d+$/.test(text)) message = "Enter a whole number between " + MIN_PAGE_SIZE + " and " + MAX_PAGE_SIZE + ".";
+                    else if (parseInt(text, 10) < MIN_PAGE_SIZE) message = "Invalid value. Records per load can't be lower than " + MIN_PAGE_SIZE + ".";
+                    else if (parseInt(text, 10) > MAX_PAGE_SIZE) message = "Invalid value. Records per load can't be higher than " + MAX_PAGE_SIZE + ".";
+                    errorBox.textContent = message;
+                    errorBox.hidden = !message;
+                    sizeInput.setAttribute("aria-invalid", message ? "true" : "false");
+                    panel.classList.toggle("axi-sp-invalid", !!message);
+                    return !message;
+                };
+                panel.axiClearError = () => validatePageSize(sizeInput.value);
+
+                dial.addEventListener("input", () => { sizeInput.value = dial.value; panel.axiSyncDial(); validatePageSize(sizeInput.value); });
+                sizeInput.addEventListener("input", () => { panel.axiSyncDial(); validatePageSize(sizeInput.value); });
 
                 const applyPageSize = (requested) => {
+                    if (!validatePageSize(requested)) {
+                        sizeInput.focus();
+                        return;
+                    }
                     const previous = getPageSize();
                     const size = setPageSize(requested);
                     sizeInput.value = size;
+                    panel.axiSyncDial();
                     closeSettingsPanel();
                     savePageSizeToServer(size).then(ok => {
                         if (!ok) showToast("Saved on this browser only (server unreachable)", 4000);
@@ -8160,6 +8208,8 @@ if (typeof document !== "undefined") {
                 if (!settingsPanel) settingsPanel = buildSettingsPanel();
                 if (settingsPanel.style.display === "block") { closeSettingsPanel(); return; }
                 settingsPanel.querySelector("#axiPageSizeInput").value = getPageSize();
+                settingsPanel.axiSyncDial();
+                settingsPanel.axiClearError();
                 // The saved server value is the truth: if this browser disagrees (sync was skipped or slow), show it
                 // and reload the lists with it so the box and the loaded rows match
                 if (axiSettingsUrl && window.mainUserName) {
@@ -8167,6 +8217,7 @@ if (typeof document !== "undefined") {
                         if (remote === undefined || remote === null || remote === getPageSize()) return;
                         setPageSize(remote);
                         settingsPanel.querySelector("#axiPageSizeInput").value = remote;
+                        settingsPanel.axiSyncDial();
                         btnRefresh.click();
                     });
                 }
