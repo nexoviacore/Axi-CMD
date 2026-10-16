@@ -1,6 +1,7 @@
 ﻿var _customPlugins;
 var _codeMirrorEdit;
 var _codeMirrorNewPlugin;
+var _codeMirrorNewTemplate;
 var _entityCommon;
 var dtCulture = eval(callParent('glCulture'));
 
@@ -231,6 +232,21 @@ class CustomPlugins {
                     <textarea id="pluginText" style="width:100%;min-height:40vh;"></textarea>
                 </div>                   
             </div>`;
+        //this.addFiles.landingpagehtmltemplates =
+        //    `
+        //    <div class="row" data-type="DropDown" >
+        //        <div class="col-md-3 fldCaption"><p class="form-group required">HTML Template Name</p></div>
+        //        <div class="col-md-6 fldCaption">
+        //            <input class="form-control filter-fld required" type="text" id="TemplateName" required ></input>
+        //        </div>
+                    
+        //    </div>                
+        //    <div class="row">
+        //        <div class="col-md-3 fldCaption"><p class="form-group required">HTML Template Text</p></div>
+        //        <div class="col-md-12 fldCaption" style="min-height:40vh;">
+        //            <textarea id="pluginText" style="width:100%;min-height:40vh;"></textarea>
+        //        </div>                   
+        //    </div>`;
         this.navList = {};
         this.filesList = [];
         this.foldersList = [];
@@ -276,7 +292,7 @@ class CustomPlugins {
                     }
                 },
                 "type": "main",
-                "groupname" : "Main Page"
+                "groupname" : "Main Page HTML Templates"
             },
             "Custom Main - $APP_NAME$": {
                 "files": {
@@ -300,7 +316,7 @@ class CustomPlugins {
                     }
                 },
                 "type": "main",
-                "groupname": "Main Page"
+                "groupname": "Main Page HTML Templates"
             },           
             "Custom Iview Reports - All": {
                 "files": {
@@ -407,7 +423,7 @@ class CustomPlugins {
                     }
                 },
                 "type": "main",
-                "groupname": "Main Page"
+                "groupname": "Main Page HTML Templates"
             }
 
         };
@@ -447,7 +463,26 @@ class CustomPlugins {
 
         // Update folder dropdowns (same as before)
         function updateFolderDropdowns() {
-            const folders = [...new Set(folderList.map(file => file.FolderName))];
+            let folders = [...new Set(folderList.map(file => file.FolderName))];
+            const projectName = window.top.mainProject;
+            if (typeof projectName != "undefined" && projectName != null) {
+                const removeFolders = [
+                    projectName + "\\HTMLPages",
+                    projectName + "\\HTMLPages\\css",
+                    projectName + "\\HTMLPages\\js",
+                    "ReactPages\\" + projectName,
+                    "ReactPages\\" + projectName + "\\css",
+                    "ReactPages\\" + projectName + "\\js"
+                ];
+                folders = folders.filter(folder => {
+                    return !removeFolders.some(
+                        removeFolder =>
+                            folder.toLowerCase().replace(/\\+$/, '') ===
+                            removeFolder.toLowerCase().replace(/\\+$/, '')
+                    );
+                });
+            }
+
             const $parentFolder = $('#parentFolder');
             const $uploadFolder = $('#uploadFolder');
 
@@ -462,6 +497,16 @@ class CustomPlugins {
 
         // Display files in accordion structure
         function displayFilesAccordion() {
+            try {
+                fileList = Array.from(
+                    new Map(
+                        fileList.map(file => [
+                            JSON.stringify(file),
+                            file
+                        ])
+                    ).values()
+                );
+            } catch (ex) { }
             const $accordion = $('#folderAccordion');
             $accordion.empty();
 
@@ -529,7 +574,29 @@ class CustomPlugins {
         function createFileItemHtml(file) {
             const fileSize = formatFileSize(file.FileSize);
             _customPlugins.fileManagerFiles[file.FullFilePath] = file;
-            return `
+            if (typeof file?.RecId != "undefined" && file?.RecId != null) {
+
+                return `
+                    <div class="file-item" data-filepath="${file.FullFilePath}">
+                        <div class="d-flex justify-content-between align-items-center p-3" >
+                            <div class="col-4 d-flex align-items-center">
+                                <a href="javascript:void(0);" onclick="_customPlugins.loadFileTypes(this, '${file.FileName.toLowerCase()}')" class="filename fw-bold">${file.FileName}</a>
+                            </div>
+    
+                            <div class="col-4 text-center">
+                                <span><i class="fas fa-hdd me-1"></i>${fileSize}</span>
+                            </div>
+    
+                            <div class="col-4 text-end">
+                                <span><i class="fas fa-clock me-1"></i>${_customPlugins.formatDate(file.ModifiedOn)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                `;
+            } else {
+                return `
                     <div class="file-item" data-filepath="${file.FullFilePath}">
                         <div class="d-flex justify-content-between align-items-center p-3" >
                             <div class="col-4 d-flex align-items-center">
@@ -548,6 +615,7 @@ class CustomPlugins {
 
                     
                 `;
+            }
         }
 
         function formatFileSize(size) {
@@ -582,7 +650,7 @@ class CustomPlugins {
                     menuName = `Custom Main - Application Template`;
                 }
                 pageType = "main";
-                groupName = "Main Page";
+                groupName = "Main Page HTML Templates";
             }
             else if (folderName.indexOf(appName) == 0) {
                 if (folderName.indexOf("tstruct") > -1) {
@@ -638,6 +706,15 @@ class CustomPlugins {
                     pageType = "html";
                     groupName = `Custom HTML Pages`;
                 }
+                //else if (folderName.indexOf("landingpagehtmltemplates") > -1) {
+                //    menuName = fileName;
+                //    pageType = "landingpagehtmltemplates";
+                //    groupName = `Landing Page HTML Templates`;
+                //}
+            } else if (folderName.indexOf("reactpages") > -1) {
+                menuName = fileName;
+                pageType = "html";
+                groupName = `React Pages`;
             }
 
             
@@ -690,12 +767,18 @@ class CustomPlugins {
 
             });
         }
+        if (typeof filesList?.HTML?.RecId != "undefined" && filesList?.HTML?.RecId != null) {
+            if (filesList?.HTML?.ReactPage == "true") 
+                _this.loadIvTstPage("ta__rp♣recordid=" + filesList?.HTML?.RecId +"♣act=load♣openerIV=a__rplst♣isIV=true♣isDupTab=false♣dummyload=false♠");
+            else
+                _this.loadIvTstPage("tsect♣recordid=" + filesList?.HTML?.RecId +"♣act=load♣openerIV=hplist♣isIV=true♣isDupTab=false♣dummyload=false♠");
+        } else {
+            $("#dv_EntityContainer").html(fileTypeHtml);
+            _this.openCodeEditor();
 
-        $("#dv_EntityContainer").html(fileTypeHtml);
-        _this.openCodeEditor();
-
-        if ($("#dv_EntityContainer .nav-item").length) {
-            $("#dv_EntityContainer .nav-item")[0].click();
+            if ($("#dv_EntityContainer .nav-item").length) {
+                $("#dv_EntityContainer .nav-item")[0].click();
+            }
         }
     }
 
@@ -714,52 +797,109 @@ class CustomPlugins {
         let groups = {};
         //let htmlString = '';
 
+        //// Group items
+        //Object.entries(_this.navList).forEach(([key, value]) => {
+        //    if (!value.groupname)
+        //        value.groupname = "Others";
+
+        //    if (!groups[value.groupname]) {
+        //        groups[value.groupname] = [];
+        //    }
+        //    groups[value.groupname].push({ key, ...value });
+        //});
+
+        //// Build HTML string
+        //Object.entries(groups).forEach(([groupName, items]) => {
+        //    htmlString += `
+        //            <div class="accordion accordion-icon-toggle">
+        //                <div class="accordion-header">
+        //                    ${groupName}
+        //                    <span class="arrow">▼</span>
+        //                </div>
+        //                <div class="accordion-content">
+        //        `;
+
+        //    items.forEach(item => {
+        //        htmlString += `
+        //                <div class="Data-Group_Items group-all" data-nav="${item.key}"
+        //                    onclick="_customPlugins.loadFileTypes(this, '${item.key}')">
+        //                    <a href="#" class="group-item">
+        //                        <div class="d-flex">
+        //                            <div class="symbol symbol-40px symbol-circle me-5" style="margin-left: 5px !important;">
+        //                                <div class="symbol-label bgs1">
+        //                                    <span class="material-icons material-icons-style material-icons-2">${_customPlugins.getIcon(item.type)}</span>
+        //                                </div>
+        //                            </div>
+        //                            <div class="d-flex flex-column y-axis-caption">
+        //                                <span class="Data-Group-name">${item.key}</span>
+        //                            </div>
+        //                        </div>
+        //                    </a>
+        //                </div>
+        //            `;
+        //    });
+
+        //    htmlString += `
+        //                </div>
+        //            </div>
+        //        `;
+        //});
+
         // Group items
         Object.entries(_this.navList).forEach(([key, value]) => {
-            if (!value.groupname)
-                value.groupname = "Others";
-
+            value.groupname = value.groupname || "Others";
             if (!groups[value.groupname]) {
                 groups[value.groupname] = [];
             }
             groups[value.groupname].push({ key, ...value });
         });
 
-        // Build HTML string
-        Object.entries(groups).forEach(([groupName, items]) => {
+        // Move the second group after the first group
+        const groupNames = Object.keys(groups);
+        const mainIndex = groupNames.findIndex((_, i) => i === 0);
+        const landingIndex = groupNames.findIndex((_, i) => groups[groupNames[i]].some(x => x.type === "landingpagehtmltemplates"));
+
+        if (landingIndex > 0) {
+            const landingGroup = groupNames.splice(landingIndex, 1)[0];
+            groupNames.splice(mainIndex + 1, 0, landingGroup);
+        }
+
+        groupNames.forEach(groupName => {
+            const items = groups[groupName];
+
             htmlString += `
-                    <div class="accordion accordion-icon-toggle">
-                        <div class="accordion-header">
-                            ${groupName}
-                            <span class="arrow">▼</span>
-                        </div>
-                        <div class="accordion-content">
-                `;
+        <div class="accordion accordion-icon-toggle">
+            <div class="accordion-header">
+                ${groupName}
+                <span class="arrow">▼</span>
+            </div>
+            <div class="accordion-content">
+    `;
 
             items.forEach(item => {
                 htmlString += `
-                        <div class="Data-Group_Items group-all" data-nav="${item.key}" 
-                            onclick="_customPlugins.loadFileTypes(this, '${item.key}')">
-                            <a href="#" class="group-item">
-                                <div class="d-flex">
-                                    <div class="symbol symbol-40px symbol-circle me-5" style="margin-left: 5px !important;">
-                                        <div class="symbol-label bgs1">
-                                            <span class="material-icons material-icons-style material-icons-2">${_customPlugins.getIcon(item.type)}</span>
+                            <div class="Data-Group_Items group-all" data-nav="${item.key}"
+                                onclick="_customPlugins.loadFileTypes(this, '${item.key}')">
+                                <a href="#" class="group-item">
+                                    <div class="d-flex">
+                                        <div class="symbol symbol-40px symbol-circle me-5" style="margin-left: 5px !important;">
+                                            <div class="symbol-label bgs1">
+                                                <span class="material-icons material-icons-style material-icons-2">${_customPlugins.getIcon(item.type)}</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex flex-column y-axis-caption">
+                                            <span class="Data-Group-name">${item.key}</span>
                                         </div>
                                     </div>
-                                    <div class="d-flex flex-column y-axis-caption">
-                                        <span class="Data-Group-name">${item.key}</span>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    `;
+                                </a>
+                            </div>
+                        `;
             });
 
             htmlString += `
-                        </div>
-                    </div>
-                `;
+            </div>
+        </div>
+    `;
         });
 
         // Insert the built HTML string
@@ -1058,7 +1198,34 @@ class CustomPlugins {
                 width: "100%"
             });
         }
+        //else if (type.toLowerCase() == "landingpagehtmltemplates") {
+        //    _codeMirrorNewTemplate = CodeMirror.fromTextArea(document.getElementById('pluginText'), {
+        //        mode: "htmlmixed",
+        //        smartIndent: true,
+        //        lineNumbers: true,
+        //        matchBrackets: true,
+        //        autoCloseBrackets: true,
+        //        autoRefresh: true,
+        //        foldGutter: true,
+        //        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        //        extraKeys: { "Alt-F": "findPersistent" },
+        //        height: "40vh",  // Ensure editor height takes full space
+        //        width: "100%"
+        //    });
+        //}
+    }
 
+    loadIvTstPage(ivTstName) {
+        let myModal = new BSModal("devStudioPopup", "Plugin Custom Code", "<iframe src='../aspx/DeveloperStudio.aspx?ivtstName=" + ivTstName + "' style='width:100%; height:100%; border:0;' ></iframe>", () => {
+            //shown callback
+        }, () => {
+            //hide callback
+        });
+        myModal.changeSize("lg");
+        myModal.hideFooter();
+        myModal.hideHeader();
+        myModal.modalBody.classList.add(..."p-0 overflow-hidden".split(" "));
+        myModal.showFloatingClose();
     }
 
     initializeDropdowns(type) {
@@ -1130,6 +1297,20 @@ class CustomPlugins {
 
             _this.callHTMLPluginWS(pluginName, pluginType, pluginText, "INSERT", "Plugin added successfully.")            
         }
+        //else if (_this.addFileType.toLowerCase() == "landingpagehtmltemplates") {
+        //    let templateName = $("#TemplateName").val();
+        //    let templateText = _codeMirrorNewTemplate.getValue();
+        //    if (templateName == "") {
+        //        showAlertDialog("error", "HTML Template Name can not left empty.");
+        //        return;
+        //    }
+        //    if (templateText == "") {
+        //        showAlertDialog("error", "HTML Template Text can not left empty.");
+        //        return;
+        //    }
+        //    let _filePath = `${_this.appName.toLowerCase()}\\LandingPageHTMLTemplates\\`;
+        //    _this.callHTMLTemplateWS(templateName, templateText, _filePath, "INSERT", "Template added successfully.")
+        //}
     }
 
     callHTMLPluginWS(pluginName, pluginType, pluginText, action, successMsg) {
@@ -1148,6 +1329,29 @@ class CustomPlugins {
                 }
                 else
                     showAlertDialog("error", "Error: " + JSON.parse(response.d).result.message);
+            },
+            error: function (xhr, status, error) {
+                showAlertDialog("error", error);
+            }
+        });
+    }
+
+    callHTMLTemplateWS(templateName, templateText, _filePath, action, successMsg) {
+        $.ajax({
+            type: "POST",
+            url: "../aspx/PluginCustomCode.aspx/AddorEditHTMLTemplate",
+            data: JSON.stringify({ name: templateName, htmlText: templateText, filePath: _filePath, action: action }),
+            contentType: "application/json; charset=utf-8",
+            async: false,
+            dataType: "json",
+            success: function (response) {
+
+                if (typeof response.d != "undefined" && response.d == 'File created successfully.') {
+                    showAlertDialog("success", successMsg);
+                    window.location.reload();
+                }
+                else
+                    showAlertDialog("error", "Error: " + response.d);
             },
             error: function (xhr, status, error) {
                 showAlertDialog("error", error);
@@ -1585,4 +1789,18 @@ $(document).ready(function () {
     _customPlugins = new CustomPlugins();
     _customPlugins.init();
 
+    var pageToLoad = sessionStorage.getItem(
+        "reloadPluginCustomPage"
+    );
+    if (pageToLoad) {
+        sessionStorage.removeItem(
+            "reloadPluginCustomPage"
+        );
+        setTimeout(function () {
+            if (typeof _customPlugins !== "undefined" &&
+                typeof _customPlugins.loadIvTstPage === "function") {
+                _customPlugins.loadIvTstPage(pageToLoad);
+            }
+        }, 500);
+    }
 });

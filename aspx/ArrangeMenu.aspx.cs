@@ -43,6 +43,15 @@ public partial class aspx_ArrangeMenu : System.Web.UI.Page
     }
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!IsPostBack)
+        {
+            string fetchDest = Request.Headers["Sec-Fetch-Dest"];
+            if (!string.IsNullOrEmpty(fetchDest) && !string.Equals(fetchDest, "iframe", StringComparison.OrdinalIgnoreCase))
+            {
+                SessExpires();
+                return;
+            }
+        }
         if (HttpContext.Current.Session["Project"] == null || Convert.ToString(HttpContext.Current.Session["Project"]) == string.Empty)
         {
             SessExpires();
@@ -235,9 +244,10 @@ public partial class aspx_ArrangeMenu : System.Web.UI.Page
             string result = asbWeb.saveArrangeMenuData(key, changedNodes, actionSequence, changedVisibility);
             if (result.ToLower() == "done")
             {
-                bool IsMenuCache = fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKeyMenuData, "Menu"), key, Constants.REDISMENUDATA, schemaName);
-                if (IsMenuCache == false)
-                    HttpContext.Current.Session["MenuData"] = key;
+                //bool IsMenuCache = fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKeyMenuData, "Menu"), key, Constants.REDISMENUDATA, schemaName);
+                //if (IsMenuCache == false)
+                //    HttpContext.Current.Session["MenuData"] = key;
+                asbWeb.RefreshMenu();
                 return new { status = "success", msg = "" };
             }
             else

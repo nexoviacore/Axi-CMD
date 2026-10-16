@@ -101,7 +101,7 @@
     <link id="themecss" type="text/css" rel="Stylesheet" href="" />
     <script src="../Js/Resetpassword.min.js?v=3" type="text/javascript"></script>
 
-    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
     <title>Reset Password</title>
 </head>
 <body class="dc" dir="<%=direction%>">

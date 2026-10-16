@@ -503,14 +503,14 @@ namespace ASB
             ObjExecTr.SetCurrentTime();
             if (HttpContext.Current.Session["project"] == null)
                 return utilObj.SESSTIMEOUT;
-            if (source != "tsect")
+            if (source != "tsect" && source != "ta__rp")
             {
                 if (Util.Util.CheckCrossScriptingInString(String.Join(",", fldValueArray.ToArray())))
                 {
                     return Constants.MALICIOUSNPUTDETECTED;
                 }
             }
-            if (source == "tsect")
+            if (source == "tsect" || source == "ta__rp")
                 source = "t";
 
             string result = string.Empty;
@@ -1027,8 +1027,10 @@ namespace ASB
             string fdKey = Constants.REDISTSTRUCT;
             if (HttpContext.Current.Session["MobileView"] != null && HttpContext.Current.Session["MobileView"].ToString() == "True")
                 fdKey = Constants.REDISTSTRUCTMOB;
-            //FDW fdwObj = new FDW();
+            string _sXML = strObj.structRes;
+            strObj.structRes = "";
             fdwObj.SaveInRedisServer(utilObj.GetRedisServerkey(fdKey, transid), strObj, Constants.REDISTSTRUCT, schemaName);
+            strObj.structRes = _sXML;
             tstData.tstStrObj = strObj;
             Session[key] = (TStructData)tstData;
 
@@ -2415,7 +2417,7 @@ namespace ASB
                     utilObj.SaveExecutionText();
                     utilObj.DeleteUnwantedKeys();
                     utilObj.TempAttaServerFiles();
-                    utilObj.ClearUserIviewData();
+                    //utilObj.ClearUserIviewData();
                     string result = string.Empty;
                     utilObj.delALLNotificiationKeyfromRedis();
                     //result = asbExt.CallLogoutWS("Signout", iXml);
@@ -4266,6 +4268,7 @@ namespace ASB
             string fdKeyMob = Constants.REDISTSTRUCTMOB;
             string designKey = Constants.REDISTSTRUCTAXDESIGN;
             string designCustHtmlKey = Constants.REDISTSTRUCTAXCUSTHTML;
+            string fdKeyXML = Constants.REDISTSTRUCTXML;
             //string designTblKey = Constants.REDISTSTRUCTAXDESIGNTABLE;
             string schemaName = string.Empty;
             if (HttpContext.Current.Session["dbuser"] != null)
@@ -4275,10 +4278,11 @@ namespace ASB
             fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(fdKeyMob, transId), "", false, schemaName);
             saved = fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(designKey, transId), "", false, schemaName);
             fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(designCustHtmlKey, transId), "", false, schemaName);
+            fdwObj.ClearRedisServerDataByKey(utilObj.GetRedisServerkey(fdKeyXML, transId), "", false, schemaName);
             return saved;
         }
 
-        public string GetdllAutoComplete(string tstDataId, string fldName, string fldValue, ArrayList ChangedFields, ArrayList ChangedFieldDbRowNo, ArrayList ChangedFieldValues, ArrayList DeletedDCRows, string pageData, string fastdll, string fldNameAc, string refreshAC, string pickArrow, string parentFlds, string rfSave, string IsApiFld, string tblSourceParams, string isTstHtmlLs, string ddlFldSqlParams, string ddlSqlPNames)
+        public string GetdllAutoComplete(string tstDataId, string fldName, string fldValue, ArrayList ChangedFields, ArrayList ChangedFieldDbRowNo, ArrayList ChangedFieldValues, ArrayList DeletedDCRows, string pageData, string fastdll, string fldNameAc, string refreshAC, string pickArrow, string parentFlds, string rfSave, string IsApiFld, string tblSourceParams, string isTstHtmlLs, string ddlFldSqlParams, string ddlSqlPNames, string isDupTab)
         {
             HttpContext.Current.Session["LastUpdatedSess"] = DateTime.Now.ToString();
             string strJson = string.Empty;
@@ -4303,7 +4307,8 @@ namespace ASB
 
             strRequest += ObjExecTr.KernelProcessTime(startkst, "After CheckCrossScriptingInString called ", "", "");
             startkst = DateTime.Now;
-
+            if (isDupTab != "" && isDupTab.StartsWith("true-"))
+                HttpContext.Current.Session["isDupTab"] = isDupTab;
             string _tstKeyChanged = "";
             if (isTstHtmlLs != "")
             {
@@ -7465,6 +7470,44 @@ namespace ASB
         }
 
         [WebMethod(EnableSession = true)]
+        public string GetProjectCustomAssets(string projName)
+        {
+            string[] assetNames =
+            {
+                "customGlobalStyles.css",
+                "customIviewNewUi.css",
+                "customTstructNewUi.css",
+                "customCard.js",
+                "customAxpertUI.css",
+                "customCompressedTstructUI.css"
+            };
+            JObject assets = new JObject();
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(projName) || projName == "." || projName == ".." || Path.GetFileName(projName) != projName)
+                {
+                    return assets.ToString();
+                }
+
+                string projectPath = HttpContext.Current.Server.MapPath("~/" + projName);
+                foreach (string assetName in assetNames)
+                {
+                    assets[assetName] = File.Exists(Path.Combine(projectPath, assetName));
+                }
+            }
+            catch (Exception)
+            {
+                foreach (string assetName in assetNames)
+                {
+                    assets[assetName] = false;
+                }
+            }
+
+            return assets.ToString();
+        }
+
+        [WebMethod(EnableSession = true)]
         public string NotifyHybridForWeightScale(string guId)
         {
             string result = string.Empty;
@@ -8309,7 +8352,7 @@ namespace ASB
         }
 
         [WebMethod(EnableSession = true)]
-        public string ExportARMPushToQueue(string iviewName, string iviewParams, string ivParamCaption, string isListView, string IVIRCaption, string dtFormat, string _smartViewSettings)
+        public string ExportARMPushToQueue(string iviewName, string iviewParams, string ivParamCaption, string isListView, string IVIRCaption, string dtFormat, string _smartViewSettings, string _exportType)
         {
             string response = string.Empty;
             if (HttpContext.Current.Session["project"] == null || Session["nsessionid"] == null)
@@ -8401,7 +8444,7 @@ namespace ASB
             globalVars = globalVars.Replace(@"\", "\\\\");
             string _axapps = HttpContext.Current.Session["axApps"].ToString();
             _axapps = _axapps.Replace(@"\", "\\\\");
-            DATA = "{\"getreport\":{\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\"," + purpose + "\"metadata\":\"true\",\"fetchhidcol\":\"false\",\"_dateformat\":\"" + dtFormat + "\",\"smartViewSettings\":\"" + _smartViewSettings + "\",\"ivcaption\":\"" + IVIRCaption + "\",\"sqlpagination\":\"false\",\"params\":" + iviewParamsJson + ",\"ivParamCaption\":" + iviewParamsJsonCap + ",\"project\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"name\":\"" + iviewName + "\",\"token\":\"d152232e23ff6523b8104196ff1b6015\",\"seed\":\"211269\",\"userauthkey\":\"" + Session["username"].ToString() + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"arm_url\":\"" + HttpContext.Current.Session["ARM_URL"].ToString() + "\",\"ARMScriptURL\":\"" + ArmScriptURL + "\",\"axConfigFilePath\":\"" + axConfigFilePath + "\",\"axConfigFileMapUser\":\"" + AxConfigFileMapUser + "\",\"axConfigFileMapPwd\":\"" + AxConfigFileMapPwd + "\"},\"axprops\":\"" + HttpContext.Current.Application["axProps"].ToString() + "\",\"axapps\":\"" + _axapps + "\",\"globalvars\":\"" + globalVars + "\",\"uservars\":\"" + HttpContext.Current.Session["axUserVars"].ToString() + "\"}";
+            DATA = "{\"getreport\":{\"trace\":\"" + HttpContext.Current.Session["AxTrace"].ToString() + "\"," + purpose + "\"metadata\":\"true\",\"exportType\":\"" + _exportType + "\",\"fetchhidcol\":\"false\",\"_dateformat\":\"" + dtFormat + "\",\"smartViewSettings\":\"" + _smartViewSettings + "\",\"ivcaption\":\"" + IVIRCaption + "\",\"sqlpagination\":\"false\",\"params\":" + iviewParamsJson + ",\"ivParamCaption\":" + iviewParamsJsonCap + ",\"project\":\"" + HttpContext.Current.Session["project"].ToString() + "\",\"name\":\"" + iviewName + "\",\"token\":\"d152232e23ff6523b8104196ff1b6015\",\"seed\":\"211269\",\"userauthkey\":\"" + Session["username"].ToString() + "\",\"s\":\"" + Session.SessionID + "\",\"username\":\"" + Session["username"].ToString() + "\",\"arm_url\":\"" + HttpContext.Current.Session["ARM_URL"].ToString() + "\",\"ARMScriptURL\":\"" + ArmScriptURL + "\",\"axConfigFilePath\":\"" + axConfigFilePath + "\",\"axConfigFileMapUser\":\"" + AxConfigFileMapUser + "\",\"axConfigFileMapPwd\":\"" + AxConfigFileMapPwd + "\"},\"axprops\":\"" + HttpContext.Current.Application["axProps"].ToString() + "\",\"axapps\":\"" + _axapps + "\",\"globalvars\":\"" + globalVars + "\",\"uservars\":\"" + HttpContext.Current.Session["axUserVars"].ToString() + "\"}";
             var saveDetails = "{\"queuename\":\"ARMExportQueue\",\"queuedata\":" + JsonConvert.SerializeObject(DATA) + ",\"timespandelay\":\"0\"}";
             request.ContentLength = saveDetails.Length;
 

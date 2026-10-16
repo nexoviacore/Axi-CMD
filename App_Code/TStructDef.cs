@@ -209,7 +209,7 @@ public class TStructDef
     string defaultDateTimeStr = "dd/mm/yyyy hh:mm:ss";
     string defaultTimeStr = "HH:MM";
     string defaultColWidth = "50";
-    string res = string.Empty;
+    //string res = string.Empty;
     //If this property comes in Grid DC from xml, showZeroForNumeric variable should be updated.
     Boolean showZeroForNumeric = true;
     Boolean isFillGridCall = false;
@@ -244,12 +244,12 @@ public class TStructDef
     bool isMobile = false;
     public ArrayList fldSetCarry = new ArrayList();
     public ArrayList fldAcceptFromApi = new ArrayList();
-    private int webServiceTimeout = 100000;
+    private int webServiceTimeout = 300000;
     public int actNo = 0;
     public bool isfldDcGrid = false;
     public int WebServiceTimeout
     {
-        get { return webServiceTimeout > 0 ? webServiceTimeout : 100000; }
+        get { return webServiceTimeout > 0 ? webServiceTimeout : 300000; }
         set { webServiceTimeout = value; }
     }
     public string listofRagVarfld = string.Empty;
@@ -279,7 +279,7 @@ public class TStructDef
             isMobile = true;
 
         ParseSearchAndGroups(customDS);
-        this.structRes = xml;
+        //this.structRes = xml;
         this.Create(xml);
         if (!string.IsNullOrEmpty(tstVersion) && Int64.Parse(tstVersion) > 10000)
         {
@@ -609,10 +609,14 @@ public class TStructDef
         set { actions = value; }
     }
 
+    //public string structRes
+    //{
+    //    get { return res; }
+    //    set { res = value; }
+    //}
     public string structRes
     {
-        get { return res; }
-        set { res = value; }
+        get; set;
     }
 
     public Boolean ShowZeroForNumeric
@@ -4159,7 +4163,7 @@ public class TStructDef
                             if (string.IsNullOrEmpty(image))
                                 btnHtml.Append("<div class=\"input-group\"><input type=button " + btnFunction.ToString() + " class=\"tstformbutton btn btn-sm col-12 m-auto shadow-sm btn btn-white btn-color-gray-900 btn-active-primary\" value=\"" + caption + "\" title=\"" + hint + "\"></div>");
                             else
-                                btnHtml.Append("<img style=\"" + position + ":10px\" id='" + btnId + "' src=\"../AxpImages/" + image + "\" alt='" + caption + "' " + btnFunction.ToString() + " title='" + hint + "' class=\"handCur tstbtnIcon\"><input type=button " + btnFunction.ToString() + " class=\"form-control hotbtn btn\" value=\"" + caption + "\" title=\"" + hint + "\">");
+                                btnHtml.Append("<img style=\"" + position + ":10px\" id='" + btnId + "' src=\"../AxpImages/" + image + "\" alt='" + caption + "' " + btnFunction.ToString() + " title='" + hint + "' class=\"handCur tstbtnIcon\"><input id=\"" + btnId + "\" type=button " + btnFunction.ToString() + " class=\"form-control hotbtn btn\" value=\"" + caption + "\" title=\"" + hint + "\">");
                         }
                     }
                     else
@@ -4183,7 +4187,7 @@ public class TStructDef
                         else if (!string.IsNullOrEmpty(caption) & string.IsNullOrEmpty(image))
                         {
                             //Display button with Caption
-                            btnHtml.Append("<div class=\"input-group\"><input type=button " + btnFunction.ToString() + " value=\"" + caption + "\" tooltip=\"" + caption + "\" class=\"tstformbutton btn btn-sm col-12 m-auto shadow-sm btn btn-white btn-color-gray-900 btn-active-primary\" title=\"" + hint + "\"></div>");
+                            btnHtml.Append("<div class=\"input-group\"><input id=\"" + btnId + "\" type=button " + btnFunction.ToString() + " value=\"" + caption + "\" tooltip=\"" + caption + "\" class=\"tstformbutton btn btn-sm col-12 m-auto shadow-sm btn btn-white btn-color-gray-900 btn-active-primary\" title=\"" + hint + "\"></div>");
                         }
                         else
                         {
@@ -4208,7 +4212,7 @@ public class TStructDef
                     if (string.IsNullOrEmpty(image))
                         btnHtml.Append("<div class=\"input-group\"><input type='button' id=\"" + btnId + "\" value=\"" + caption + "\" class=\"tstformbutton btn btn-sm col-12 m-auto shadow-sm btn btn-white btn-color-gray-900 btn-active-primary\" title=\"" + hint + "\" " + btnFunction + "></div>");
                     else
-                        btnHtml.Append("<img style=\"" + position + ":10px\" id='" + btnId + "' src=\"../AxpImages/" + image + "\" alt='" + caption + "' " + btnFunction.ToString() + " title='" + hint + "' class=\"handCur tstbtnIcon\"><input type='button' style =\"\" value=\"" + caption + "\" class=\"hotbtn btn form-control\" title=\"" + hint + "\" " + btnFunction + ">");
+                        btnHtml.Append("<img style=\"" + position + ":10px\" id='" + btnId + "' src=\"../AxpImages/" + image + "\" alt='" + caption + "' " + btnFunction.ToString() + " title='" + hint + "' class=\"handCur tstbtnIcon\"><input id=\"" + btnId + "\" type='button' style =\"\" value=\"" + caption + "\" class=\"hotbtn btn form-control\" title=\"" + hint + "\" " + btnFunction + ">");
                     btnHtml.Append("</div></div>");
                 }
             }
@@ -4372,7 +4376,7 @@ public class TStructDef
                                             if (string.IsNullOrEmpty(image))
                                                 btnHtml.Append("<div class=\"input-group\"><a href=\"javascript:void(0)\" id='" + btnId + "' " + btnFunction.ToString() + " alt='" + hint + "' title='" + hint + "' class='tstformbutton btn btn-sm col-12 m-auto shadow-sm btn btn-white btn-color-gray-900 btn-active-primary' " + designFontStyle + ">" + iconStyle + "<span class='tbCaption'>" + caption + "</span></a></div>");
                                             else
-                                                btnHtml.Append("<img id='" + btnId + "' src=\"../AxpImages/" + image + "\" alt='" + caption + "' " + btnFunction.ToString() + " title='" + hint + "' class=\"handCur tstbtnIcon\"><input type=button " + btnFunction.ToString() + " class=\"form-control hotbtn btn\" value=\"" + caption + "\" title=\"" + hint + "\">");
+                                                btnHtml.Append("<img id='" + btnId + "' src=\"../AxpImages/" + image + "\" alt='" + caption + "' " + btnFunction.ToString() + " title='" + hint + "' class=\"handCur tstbtnIcon\"><input id=\"" + btnId + "\" type=button " + btnFunction.ToString() + " class=\"form-control hotbtn btn\" value=\"" + caption + "\" title=\"" + hint + "\">");
                                         }
                                     }
                                     else
@@ -4391,6 +4395,8 @@ public class TStructDef
                                         else if (!string.IsNullOrEmpty(caption) & string.IsNullOrEmpty(image))
                                         {
                                             //Display button with Caption
+                                            if (hint == string.Empty)
+                                                hint = caption;
                                             btnHtml.Append("<div class=\"input-group\"><a href=\"javascript:void(0)\" id=\"" + btnId + "\" " + btnFunction.ToString() + " alt=\"" + hint + "\" title=\"" + hint + "\" class=\"tstformbutton btn btn-sm col-12 m-auto shadow-sm btn btn-white btn-color-gray-900 btn-active-primary\" " + designFontStyle + ">" + iconStyle + "<span class=\"tbCaption\">" + caption + "</span></a></div>");
                                         }
                                         else
@@ -13064,7 +13070,7 @@ public class TStructDef
             try
             {
                 fDsign = curDc.fieldsDesign.FirstOrDefault(elm => elm.fld_id == fld.name);
-                if (transId == "sect" && (fld.name == "filename" || fld.name == "css_js_src"))
+                if ((transId == "sect" || transId == "a__rp") && (fld.name == "filename" || fld.name == "css_js_src"))
                     fDsign.width = 36;
             }
             catch (Exception ex)

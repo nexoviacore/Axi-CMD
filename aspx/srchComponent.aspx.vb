@@ -226,6 +226,11 @@ Partial Class srchComponent
         ' cachemanager and TStructDef objects throw exceptions
         Try
             strObj = cacheMgr.GetStructDef(proj, sid, user, tid, AxRole)
+            If strObj IsNot Nothing Then
+                Dim fObj As FDR = DirectCast(HttpContext.Current.Session("FDR"), FDR)
+                Dim thisStructXML As String = fObj.StringFromRedis(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, tid))
+                strObj.structRes = thisStructXML
+            End If
         Catch ex As Exception
             Response.Redirect(util.ERRPATH + ex.Message)
         End Try

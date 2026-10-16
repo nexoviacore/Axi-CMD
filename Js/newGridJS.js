@@ -2703,7 +2703,7 @@ function addRowFormGrid(dcNo, newRowNo, calledFrom) {
         mobileDcCapt = $(`#head${dcNo}`).length > 0 ? $(`#head${dcNo}>:not(.material-icons)`).text() : $(`#dcCaption${dcNo}`)[0].childNodes[0].nodeValue;
     } catch (error) { }    
 
-    if (isMobile) { //&& strRowNo != "001") {
+    if (isMobile || (typeof mobileCardLayout!="undefined" && mobileCardLayout.toLowerCase() == 'show as form in desktop' && currentDeviceType == "DESKTOP")) { //&& strRowNo != "001") {
         if ($(`#dcCaptionBtn${dcNo}-${strRowNo}`).length > 0 && typeof delRowNo != "undefined") {
             let formRowHeader = $(`#dcCaptionBtn${dcNo}-${delRowNo}`);
             formRowHeader.next().hasClass("row-sep") ? formRowHeader.next().remove() : "";
@@ -2721,14 +2721,14 @@ function addRowFormGrid(dcNo, newRowNo, calledFrom) {
     $("#colScroll" + dcNo + " [id^=gridrowWrap" + dcNo + "-]").children("#wrapperForEditFields" + dcNo + "Added").attr('id', "wrapperForEditFields" + dcNo);
     $("#colScroll" + dcNo).append(gridHtml);
 
-    let gridClsList = isMobile ? "editWrapTr grid-stack grid-stack-one-column-mode dynamicRunMode dirty" : "editWrapTr grid-stack dynamicRunMode dirty"
+    let gridClsList = isMobile ? "editWrapTr grid-stack grid-stack-one-column-mode dynamicRunMode dirty" : "editWrapTr grid-stack dynamicRunMode dirty";
     $("#gridrowWrap" + dcNo + "-" + strRowNo).find(".editWrapTr").removeAttr("class").attr("class", gridClsList);
 
     if ($(`#DivFrame${dcNo} .grdAttach`).length > 0) {
         $(`#DivFrame${dcNo} .grdAttach`).attr("id").toLowerCase().startsWith("axpfile_") != true && $(`#DivFrame${dcNo} .grdAttach`).next().find(" .dropzone.dropzone-queue").addClass("dropzoneGrid");
         $(`#DivFrame${dcNo} .grdAttach`).next().find(".fileuploadmore").removeClass("initialized");
     }
-    if (isMobile) {
+    if (isMobile || (typeof mobileCardLayout != "undefined" && mobileCardLayout.toLowerCase() == 'show as form in desktop' && currentDeviceType == "DESKTOP")) {
         // $("#colScroll" + dcNo).css({
         //     "overflow": "hidden"
         // });
@@ -2737,6 +2737,11 @@ function addRowFormGrid(dcNo, newRowNo, calledFrom) {
         $(`#DivFrame${dcNo} .gridIconBtns:not(.dcCaptionBtn .gridIconBtns)`).addClass("d-none");
         $(`#dcCaptionBtn${dcNo}-${strRowNo} .gridIconBtns`).addClass("ms-auto").removeClass("d-none");
         // strRowNo == "001" ? $("#dcCaption" + dcNo).html(mobileDcCapt + mobileDcRowNo) : "";
+        if (typeof mobileCardLayout != "undefined" && mobileCardLayout.toLowerCase() == 'show as form in desktop' && currentDeviceType == "DESKTOP") {
+            $(`[id="exportGridToExcel${dcNo}"]`).addClass("d-none");
+            $(`[id="ExcelGridimport${dcNo}"]`).addClass("d-none");
+            $(`[id="freezeGridColumns${dcNo}"]`).addClass("d-none");
+        }
     }
     SetGridBtnAccess();
     var arrEditDiv = new Array();
@@ -2775,7 +2780,7 @@ function DeleteFromGridRow(dcNo, rowFrmNo, elem, calledFrom = "") {
             });
         }
         clearFormGridFirstRow(dcNo, delRowNo, calledFrom);
-        if (isMobile) {
+        if (isMobile || (typeof mobileCardLayout != "undefined" && mobileCardLayout.toLowerCase() == 'show as form in desktop' && currentDeviceType == "DESKTOP")) {
             let formRowHeader = $(`#dcCaptionBtn${dcNo}-${delRowNo}`);
             formRowHeader.next().hasClass("row-sep") ? formRowHeader.next().remove() : "";
             let _rowbtnHtml = $(formRowHeader).find(".gridIconBtns").prop("outerHTML");
@@ -2809,7 +2814,7 @@ function DeleteFromGridRow(dcNo, rowFrmNo, elem, calledFrom = "") {
             }
         }
 
-        if (isMobile) {
+        if (isMobile || (typeof mobileCardLayout != "undefined" && mobileCardLayout.toLowerCase() == 'show as form in desktop' && currentDeviceType == "DESKTOP")) {
             let formRowHeader = $(`#dcCaptionBtn${dcNo}-${delRowNo}`);
             formRowHeader.next().hasClass("row-sep") ? formRowHeader.next().remove() : "";
             formRowHeader.remove();
@@ -3220,7 +3225,7 @@ function clearFormGridFirstRow(dcNo, delRowNo, calledFrom = "") {
                 $("#divDc" + dcNo + " .grid-icons").append(gridDivHtml[dcNo]);
                 $("#divDc" + dcNo + " .formGridRow").remove();
 
-                if (isMobile) {
+                if (isMobile || (typeof mobileCardLayout != "undefined" && mobileCardLayout.toLowerCase() == 'show as form in desktop' && currentDeviceType == "DESKTOP")) {
                     let formRowHeader = $(`#dcCaptionBtn${dcNo}-${delRowNo}`);
                     formRowHeader.next().hasClass("row-sep") ? formRowHeader.next().remove() : "";
                     formRowHeader.remove();
@@ -3239,7 +3244,7 @@ function clearFormGridFirstRow(dcNo, delRowNo, calledFrom = "") {
             $("#divDc" + dcNo + " .grid-icons").append(gridDivHtml[dcNo]);
             $("#divDc" + dcNo + " .formGridRow").remove();
 
-            if (isMobile) {
+            if (isMobile || (typeof mobileCardLayout != "undefined" && mobileCardLayout.toLowerCase() == 'show as form in desktop' && currentDeviceType == "DESKTOP")) {
                 let formRowHeader = $(`#dcCaptionBtn${dcNo}-${delRowNo}`);
                 formRowHeader.next().hasClass("row-sep") ? formRowHeader.next().remove() : "";
                 formRowHeader.remove();

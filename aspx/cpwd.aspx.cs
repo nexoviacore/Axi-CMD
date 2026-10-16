@@ -14,6 +14,9 @@ using Org.BouncyCastle.Ocsp;
 using Newtonsoft.Json.Linq;
 using System.Security;
 using System.Web.Services;
+using Newtonsoft.Json;
+using System.Data;
+using System.Security.Cryptography;
 
 public partial class aspx_cpwd : System.Web.UI.Page
 {
@@ -126,10 +129,40 @@ public partial class aspx_cpwd : System.Web.UI.Page
             //}
             FDR fdrObj = new FDR();
             string jsoncontents = fdrObj.StringFromRedis(Constants.AXPASSWORDPOL_CONN_KEY, Session["project"].ToString());
-            if (jsoncontents != string.Empty)
+            if (jsoncontents != string.Empty && jsoncontents != "NoPWDPolicy")
             {
                 hdnpwdPolicy.Value = jsoncontents.Trim();
                 btnSumit.Text = "Next";
+            }
+            else if (jsoncontents == string.Empty)
+            {
+                FDW fdwObj = new FDW();
+                DBContext objDbCont = new DBContext();
+                DataTable dt = new DataTable();
+                string sqlQuery = Constants.SQL_GET_AXUSERPWDPOLICY;
+                dt = objDbCont.GetDataTableInline(sqlQuery);
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    var propertiesDict = new Dictionary<string, object>
+                 {
+                { "pwdminchar", dt.Rows[0]["PWDMINCHAR"].ToString() },
+                { "pwdmaxchar", dt.Rows[0]["PWDMAXCHAR"].ToString() },
+                { "pwdalphanum", dt.Rows[0]["PWDALPHANUM"].ToString() },
+                { "pwdcapchar", dt.Rows[0]["PWDCAPCHAR"].ToString() },
+                { "pwdsmallchar", dt.Rows[0]["PWDSMALLCHAR"].ToString() },
+                { "pwdnumchar",dt.Rows[0]["PWDNUMCHAR"].ToString()},
+                { "pwdsplchar",dt.Rows[0]["PWDSPLCHAR"].ToString()},
+                { "pwdaes",dt.Rows[0]["PWDENCRYPT"].ToString()}
+                 };
+                    string _jsonStringRedis = JsonConvert.SerializeObject(propertiesDict);
+                    fdwObj.SaveInRedisServer(Constants.AXPASSWORDPOL_CONN_KEY, _jsonStringRedis, Constants.AXPASSWORDPOL_CONN_KEY, _proj);
+                    hdnpwdPolicy.Value = _jsonStringRedis.Trim();
+                    btnSumit.Text = "Next";
+                }
+                else
+                {
+                    fdwObj.SaveInRedisServer(Constants.AXPASSWORDPOL_CONN_KEY, "NoPWDPolicy", Constants.AXPASSWORDPOL_CONN_KEY, _proj);
+                }
             }
         }
         // End
@@ -164,7 +197,8 @@ public partial class aspx_cpwd : System.Web.UI.Page
                 direction = "rtl";
             if (Session["cpwdErr"] != null & Session["cpwdErr"] != string.Empty)
             {
-                Page.ClientScript.RegisterStartupScript(GetType(), "myrest", "<script>showAlertDialog('warning','" + Session["cpwdErr"].ToString() + "');displayAlertMsgOnParent()</script>");
+                //Page.ClientScript.RegisterStartupScript(GetType(), "myrest", "<script>showAlertDialog('warning','" + Session["cpwdErr"].ToString() + "');displayAlertMsgOnParent()</script>");
+                Page.ClientScript.RegisterStartupScript(GetType(), "myrest", "<script>setTimeout(function () {showAlertDialog('warning','" + Session["cpwdErr"].ToString() + "',undefined,undefined,undefined,true);},10);</script>");
                 Session["cpwdErr"] = string.Empty;
             }
 
@@ -246,11 +280,43 @@ public partial class aspx_cpwd : System.Web.UI.Page
     {
         string ePwd = util.CheckSpecialChars(swee000F0.Value);
         checkSecurityVal(ePwd);
+        ASBExt.WebServiceExt objWebServiceExt = new ASBExt.WebServiceExt();
+        if (Session["pwd"] != null && Session["pwd"] != "")
+        {
+            if (Session["pwd"].ToString() != ePwd)
+            {
+                Session["cpwdErr"] = "Incorrect existing password.";
+                Response.Redirect("cpwd.aspx?remark=" + Request.QueryString["remark"]);
+                return;
+            }
+        }
+        else
+        {
+            DBContext objDbCont = new DBContext();
+            DataTable dt = new DataTable();
+            string sqlQuery = Constants.SQL_GET_PWDCPWD;
+            sqlQuery = sqlQuery.Replace("$USERNAME$", Session["user"].ToString());
+            dt = objDbCont.GetDataTableInline(sqlQuery);
+            if (dt != null && dt.Rows.Count > 0)
+            {
+                string dbPwd = dt.Rows[0]["password"].ToString();
+                string exMd5Pwd = MD5Hash(ePwd);
+                if (exMd5Pwd != dbPwd)
+                {
+                    string exAesPwd = objWebServiceExt.GetEncryptedValue(ePwd);
+                    if (exAesPwd != dbPwd)
+                    {
+                        Session["cpwdErr"] = "Incorrect existing password.";
+                        Response.Redirect("cpwd.aspx?remark=" + Request.QueryString["remark"]);
+                        return;
+                    }
+                }
+            }
+        }
         string md5pwd = util.CheckSpecialChars(swc000F0.Value);
         checkSecurityVal(md5pwd);
         string npwdString = npwdHidden.Value;
         checkSecurityVal(npwdString);
-        ASBExt.WebServiceExt objWebServiceExt = new ASBExt.WebServiceExt();
         string aesPwd = string.Empty;
         if ((md5pwd == ""))
         {
@@ -510,6 +576,10 @@ public partial class aspx_cpwd : System.Web.UI.Page
                 if ((Request.QueryString["remark"] == "1") | (Request.QueryString["remark"] == "2") | (Request.QueryString["remark"] == "3"))
                 {
                     Session["validated"] = "True";
+                    bool isSSOLogin = false;
+                    if (Session["isSSOLogin"] != null && Session["isSSOLogin"].ToString().ToLower() == "true")
+                        isSSOLogin = true;
+                    string _proj = Session["project"].ToString();
 
                     System.Web.Configuration.SessionStateSection sessionStateSection = (System.Web.Configuration.SessionStateSection)ConfigurationManager.GetSection("system.web/sessionState");
                     string cookieName = sessionStateSection.CookieName;
@@ -519,7 +589,10 @@ public partial class aspx_cpwd : System.Web.UI.Page
                     System.Web.HttpContext.Current.Session.Abandon();
                     SessionIDManager manager = new SessionIDManager();
                     manager.RemoveSessionID(System.Web.HttpContext.Current);
-                    Page.ClientScript.RegisterStartupScript(GetType(), "closepopup", "<script>parent.ShowDimmer(true); parent.showAlertDialog('success','" + result + "'); setTimeout(function(){window.location.href= '../aspx/SignIn.aspx';},200)</script>");
+                    if (isSSOLogin)
+                        Page.ClientScript.RegisterStartupScript(GetType(), "closepopup", "<script>parent.ShowDimmer(true); parent.showAlertDialog('success','" + result + "'); setTimeout(function(){window.location.href= '../aspx/SignIn.aspx?" + _proj + "';},200)</script>");
+                    else
+                        Page.ClientScript.RegisterStartupScript(GetType(), "closepopup", "<script>parent.ShowDimmer(true); parent.showAlertDialog('success','" + result + "'); setTimeout(function(){window.location.href= '../aspx/SignIn.aspx';},200)</script>");
                 }
                 else
                 {
@@ -530,7 +603,18 @@ public partial class aspx_cpwd : System.Web.UI.Page
                     if (Session["AxiProjectLogin"] != null && Session["AxiProjectLogin"].ToString() == "true")
                         Page.ClientScript.RegisterStartupScript(GetType(), "closepopup", "<script>closeDialog('" + result + "','/AxiPortal/index.html')</script>");
                     else
-                        Page.ClientScript.RegisterStartupScript(GetType(), "closepopup", "<script>closeDialog('" + result + "','/aspx/SignIn.aspx')</script>");
+                    {
+                        bool isSSOLogin = false;
+                        if (Session["isSSOLogin"] != null && Session["isSSOLogin"].ToString().ToLower() == "true")
+                            isSSOLogin = true;
+                        if (isSSOLogin)
+                        {
+                            string _proj = Session["project"].ToString();
+                            Page.ClientScript.RegisterStartupScript(GetType(), "closepopup", "<script>closeDialog('" + result + "','/aspx/SignIn.aspx?" + _proj + "')</script>");
+                        }
+                        else
+                            Page.ClientScript.RegisterStartupScript(GetType(), "closepopup", "<script>closeDialog('" + result + "','/aspx/SignIn.aspx')</script>");
+                    }
                 }
             }
             else
@@ -826,5 +910,26 @@ public partial class aspx_cpwd : System.Web.UI.Page
             Session.Remove("changepwdtemp");
             CallChangePwdWS(changepwdtemp[0], changepwdtemp[1], changepwdtemp[2]);
         }
+    }
+
+    public static string MD5Hash(string text)
+    {
+        MD5 md5 = new MD5CryptoServiceProvider();
+
+        //compute hash from the bytes of text  
+        md5.ComputeHash(ASCIIEncoding.ASCII.GetBytes(text));
+
+        //get hash result after compute it  
+        byte[] result = md5.Hash;
+
+        StringBuilder strBuilder = new StringBuilder();
+        for (int i = 0; i < result.Length; i++)
+        {
+            //change it into 2 hexadecimal digits  
+            //for each byte  
+            strBuilder.Append(result[i].ToString("x2"));
+        }
+
+        return strBuilder.ToString();
     }
 }

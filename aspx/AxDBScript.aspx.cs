@@ -43,7 +43,15 @@ public partial class aspx_AxDBScript : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-
+        if (!IsPostBack)
+        {
+            string fetchDest = Request.Headers["Sec-Fetch-Dest"];
+            if (!string.IsNullOrEmpty(fetchDest) && !string.Equals(fetchDest, "iframe", StringComparison.OrdinalIgnoreCase))
+            {
+                SessExpires();
+                return;
+            }
+        }
         if (HttpContext.Current.Session["Project"] == null || Convert.ToString(HttpContext.Current.Session["Project"]) == string.Empty)
         {
             SessExpires();
@@ -175,7 +183,8 @@ public partial class aspx_AxDBScript : System.Web.UI.Page
                 result = obj["result"][0].ToString();
             }
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             result = "Error:" + ex.Message;
         }
         return result;

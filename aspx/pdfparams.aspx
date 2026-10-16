@@ -93,7 +93,7 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <%--custom alerts end--%>
     <script type="text/javascript" src="../Js/pdfparam.min.js?v=5"></script>
-    <script src="../Js/common.min.js?v=165" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
     <style type="text/css">
         .style1 {
             width: 153px;

@@ -5,7 +5,8 @@ using Newtonsoft.Json;
 
 public class Entity
 {
-    List<string> entityProperties = new List<string> { "FIELDS", "FILTERS", "KEYFIELD", "CHARTS", "RIGHTPANEL", "MODIFICATIONFIELDS", "CONFIG","THEME" };
+    //List<string> entityProperties = new List<string> { "FIELDS", "FILTERS", "KEYFIELD", "CHARTS", "RIGHTPANEL", "MODIFICATIONFIELDS", "CONFIG","THEME" };
+    List<string> entityProperties = new List<string> { "FIELDS", "FILTERS", "KEYFIELD", "CHARTS", "RIGHTPANEL", "MODIFICATIONFIELDS", "CONFIG" };
     string ARM_URL = string.Empty;
     string ARMSessionId = string.Empty;
     AnalyticsUtils _aUtils;

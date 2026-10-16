@@ -31,6 +31,7 @@ function createFormSelect(fld) {
             data: function (params) {
                 iscalled = true;
                 isLSNotExist = false;
+                fldNameAc = $(this).attr("id");
                 GetCurrentTime("Tstruct " + fldNameAc + " Dropdown click(ws call)");
                 let _$this = $(this);
                 if (select2IsOpened && (typeof params.term == "undefined" || params.term == "")) {
@@ -95,20 +96,21 @@ function createFormSelect(fld) {
                     }
                     let _ddlappSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
                     let ddlrefreshsave = $("#" + fldNameAc).hasClass('isrefreshsave');
-                    if (isDataStoreInLs == "true" && fastdll == true && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + transid + "♦" + fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0 && !isRefreshClick && !_$this.hasClass('multiFldChk') && _cacheTrue && isApifld != "true") {
+                    if (isDataStoreInLs == "true" && fastdll == true && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + proj + "♦" + transid + "♦" + fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0 && !isRefreshClick && !_$this.hasClass('multiFldChk') && _cacheTrue && isApifld != "true") {
                         IsBindData = true;
                     }
                     else if (FldListParents.length > 0 && FldListParents.indexOf(fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 && termVal == "" && !isRefreshClick && !_$this.hasClass('multiFldChk') && _cacheTrue && isApifld != "true") {//&& $(this).val() != null
                         IsBindData = true;
                     } else {
                         GetProcessTime();
+                        let _stermVal = termVal;
                         IsBindData = false;
                         isRefreshClick = false;
-
+                        let _isDupTab = callParentNew('isDuplicateTab');
                         return JSON.stringify({
                             tstDataId: tstDataId,
                             FldName: fieldName,
-                            FltValue: termVal,
+                            FltValue: _stermVal,
                             ChangedFields: ChangedFields,
                             ChangedFieldDbRowNo: ChangedFieldDbRowNo,
                             ChangedFieldValues: ChangedFieldValues,
@@ -124,7 +126,8 @@ function createFormSelect(fld) {
                             tblSourceParams: "",
                             isTstHtmlLs: resTstHtmlLS,
                             ddlFldSqlParams: dllSqlParamsFlag,
-                            ddlSqlPNames: ddlSqlPNames
+                            ddlSqlPNames: ddlSqlPNames,
+                            isDupTab: _isDupTab
                         });
                     }
                 } else {
@@ -233,7 +236,7 @@ function createFormSelect(fld) {
                                     checkDevOptDdlStoreLS();
                                 }
                                 if (fastdll == true && isDataStoreInLs == "true") {
-                                    setDropdownDatafromLS("tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal, JSON.stringify(serResult));
+                                    setDropdownDatafromLS("tstDDFVal♠" + proj + "♦" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal, JSON.stringify(serResult));
                                 } else {
                                     if (termVal == "") {
                                         /* let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);*/
@@ -260,6 +263,9 @@ function createFormSelect(fld) {
                                 $(".msSelectAllOption").removeClass("d-none");
                             if (fastdll) {
                                 var aSearch = [];
+
+                                termVal = String(termVal || "").replace(/"/g, '&quot;');
+
                                 $(dtAssoc).each(function (iIndex, sElement) {
                                     sElement.i = sElement.i.replace(/\^\^dq/g, '&quot;');
                                     if (typeof DropdownSStartsWith != "undefined" && DropdownSStartsWith != "" && DropdownSStartsWith == "starts with") {
@@ -309,9 +315,10 @@ function createFormSelect(fld) {
                             } else {
                                 var result = ($.map(dtAssoc, function (item) {
                                     if (termVal != "") {
+                                        termVal = termVal.replace(/"/g, '&quot;');
+                                        item.i = item.i.replace(/\^\^dq/g, '&quot;');
                                         if (typeof DropdownSStartsWith != "undefined" && DropdownSStartsWith != "" && DropdownSStartsWith == "starts with") {
                                             if (arabic.test(item.i.toLowerCase()) && item.i.toLowerCase().endsWith(termVal.toLowerCase())) {
-                                                item.i = item.i.replace(/\^\^dq/g, '&quot;');
                                                 return {
                                                     //id: item.v == "" ? item.i : item.v,
                                                     id: item.i,
@@ -320,7 +327,6 @@ function createFormSelect(fld) {
                                                 }
                                             }
                                             else if (item.i.toLowerCase().startsWith(termVal.toLowerCase())) {
-                                                item.i = item.i.replace(/\^\^dq/g, '&quot;');
                                                 return {
                                                     //id: item.v == "" ? item.i : item.v,
                                                     id: item.i,
@@ -342,7 +348,7 @@ function createFormSelect(fld) {
                                                 });
 
                                                 if (_thisTrue) {
-                                                    item.i = item.i.replace(/\^\^dq/g, '&quot;');
+                                                    //item.i = item.i.replace(/\^\^dq/g, '&quot;');
                                                     return {
                                                         //id: item.v == "" ? item.i : item.v,
                                                         id: item.i,
@@ -352,7 +358,7 @@ function createFormSelect(fld) {
                                                 }
                                             } else {
                                                 if (item.i.toLowerCase().indexOf(termVal.toLowerCase()) >= 0) {
-                                                    item.i = item.i.replace(/\^\^dq/g, '&quot;');
+                                                    //item.i = item.i.replace(/\^\^dq/g, '&quot;');
                                                     return {
                                                         //id: item.v == "" ? item.i : item.v,
                                                         id: item.i,
@@ -432,8 +438,8 @@ function createFormSelect(fld) {
                         $("#" + fldNameAc).select2("updateResults");
                         $("#" + fldNameAc).data('depFldMap', _depFldName);
                     }
-                    else if (isDataStoreInLs == "true" && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0) {
-                        let _keyPrefix = "tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";
+                    else if (isDataStoreInLs == "true" && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + proj + "♦" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0) {
+                        let _keyPrefix = "tstDDFVal♠" + proj + "♦" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";
                         let _thisKey = getDdlKeysWithPrefix(_keyPrefix);
                         if (_thisKey.length > 0) {
                             let resData = localStorage[_thisKey[0]];
@@ -596,6 +602,9 @@ function createFormSelect(fld) {
                                     UpdateFieldArray(depfldId + rcID, rowNum, depfldValue, "parent", "AutoComplete");
                                     UpdateAllFieldValues(depfldId + rcID, depfldValue);
                                 }
+                                let _thisfldDcNo = GetDcNo(depfldId);
+                                if (_thisfldDcNo && IsDcGrid(_thisfldDcNo))
+                                    GridNurfldDisplayTot(_thisfldDcNo, depfldId, _fldIndex);
                             }
                         }
                     });
@@ -635,6 +644,9 @@ function createFormSelect(fld) {
                         if (depfldId.toLowerCase().startsWith("axpfile_")) {
                             BindAxpFilesonDep(depfldId + rcID, depfldValue);
                         }
+                        let _thisfldDcNo = GetDcNo(depfldId);
+                        if (_thisfldDcNo && IsDcGrid(_thisfldDcNo)) 
+                            GridNurfldDisplayTot(_thisfldDcNo, depfldId, _fldIndex);
                     });
                 } catch (Ex) { }
             }
@@ -643,6 +655,7 @@ function createFormSelect(fld) {
         AxFocusedFld = "";
         setTimeout(function () {
             AxOldValue = "";
+            AxDoBlur = true;
             MainBlur($j("#" + fldNameAc));
         }, 0);
     }).on("select2:unselect", function (e) {
@@ -662,6 +675,7 @@ function createFormSelect(fld) {
         else if (!$(this).hasClass("multiFldChk"))
             AxOldValue = fldAcValue;
         AxFocusedFld = "";
+        AxDoBlur = true;
         MainBlur($j("#" + fldNamesf));
     }).on('select2:open', function (e) {
 
@@ -700,6 +714,7 @@ function createFormSelect(fld) {
 
                 if ($(this).attr("id") != AxFocusedFld && AxFocusedFld != "" && AxFldBlured != AxFocusedFld && !$("#" + AxFocusedFld).hasClass("fldFromSelect") && !$("#" + AxFocusedFld).hasClass("multiFldChk") && !$("#" + AxFocusedFld).hasClass("gridHeaderSwitch") && !$("#" + AxFocusedFld).hasClass("dvgrdchkboxnonedit") && !$("#" + AxFocusedFld).hasClass("ckbGridStretchSwitch"))// Changed text field and directlly click on select2 field using mouse changed field not getting call mainblur.
                 {
+                    AxDoBlur = true;
                     MainBlur($("#" + AxFocusedFld));
                     AxOldValue = "";
                     MainFocus($j(this));
@@ -715,6 +730,7 @@ function createFormSelect(fld) {
         else {
             if ($(this).attr("id") != AxFocusedFld && AxFocusedFld != "" && AxFldBlured != AxFocusedFld && !$("#" + AxFocusedFld).hasClass("fldFromSelect") && !$("#" + AxFocusedFld).hasClass("multiFldChk") && !$("#" + AxFocusedFld).hasClass("gridHeaderSwitch") && !$("#" + AxFocusedFld).hasClass("dvgrdchkboxnonedit") && !$("#" + AxFocusedFld).hasClass("ckbGridStretchSwitch"))// Changed text field and directlly click on select2 field using mouse changed field not getting call mainblur.
             {
+                AxDoBlur = true;
                 MainBlur($("#" + AxFocusedFld));
                 AxOldValue = "";
                 MainFocus($j(this));
@@ -830,7 +846,7 @@ function createFormSelect(fld) {
                 parentFldVal = ISBoundAutoCom(_fieldName, fldNameAc);
             else
                 parentFldVal = ISBoundNew(fieldName, fldNameAc);
-            let _keyPrefix = "tstDDFVal♠" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";//"tstDDFVal♠tdepd♦field2♦♦http://localhost/aw11.4df♥";//
+            let _keyPrefix = "tstDDFVal♠" + proj + "♦" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";//"tstDDFVal♠tdepd♦field2♦♦http://localhost/aw11.4df♥";//
             let _thisKey = getDdlKeysWithPrefix(_keyPrefix);
             if (_thisKey.length > 0) {
                 isLSNotExist = false;
@@ -1265,6 +1281,7 @@ function createFormMultiSelect(msfldId) {
                     if (msData.length != 0) {
                         let aSearch = [];
                         if (typeof termVal != "undefined" && termVal != "" && termVal != null && termVal.toLowerCase() != "") {
+                            termVal = termVal.replace(/"/g, '&quot;');
                             $(msData).each(function (iIndex, sElement) {
                                 sElement.mslist = sElement.mslist.replace(/\^\^dq/g, '&quot;');
                                 if (sElement.mslist.toLowerCase().indexOf(termVal.toLowerCase()) >= 0) {
@@ -1360,6 +1377,7 @@ function createFormMultiSelect(msfldId) {
         UpdateFieldArray(fldNameMs, rowNum, fldMulValue, "parent", "AutoComplete");
         UpdateAllFieldValues(fldNameMs, fldMulValue);
         setTimeout(function () {
+            AxDoBlur = true;
             MainBlur($j("#" + fldNameMs));
         }, 0);
     }).on("select2:unselect", function (e) {
@@ -1378,6 +1396,7 @@ function createFormMultiSelect(msfldId) {
             AxOldValue = " ";
         //else
         //    AxOldValue = fldMulValue;
+        AxDoBlur = true;
         MainBlur($j("#" + fldNamesf));
     }).on('select2:open', function (e) {
         const evt = "scroll.select2";
@@ -1400,6 +1419,7 @@ function createFormMultiSelect(msfldId) {
 
             if ($(this).attr("id") != AxFocusedFld && AxFocusedFld != "" && !$("#" + AxFocusedFld).hasClass("fldFromSelect") && !$("#" + AxFocusedFld).hasClass("multiFldChk") && !$("#" + AxFocusedFld).hasClass("gridHeaderSwitch") && !$("#" + AxFocusedFld).hasClass("dvgrdchkboxnonedit") && !$("#" + AxFocusedFld).hasClass("ckbGridStretchSwitch"))// Changed text field and directlly click on select2 field using mouse changed field not getting call mainblur.
             {
+                AxDoBlur = true;
                 MainBlur($("#" + AxFocusedFld));
                 AxOldValue = "";
                 MainFocus($j(this));
@@ -1412,6 +1432,7 @@ function createFormMultiSelect(msfldId) {
         else {
             if ($(this).attr("id") != AxFocusedFld && AxFocusedFld != "" && !$("#" + AxFocusedFld).hasClass("fldFromSelect") && !$("#" + AxFocusedFld).hasClass("multiFldChk") && !$("#" + AxFocusedFld).hasClass("gridHeaderSwitch") && !$("#" + AxFocusedFld).hasClass("dvgrdchkboxnonedit") && !$("#" + AxFocusedFld).hasClass("ckbGridStretchSwitch"))// Changed text field and directlly click on select2 field using mouse changed field not getting call mainblur.
             {
+                AxDoBlur = true;
                 MainBlur($("#" + AxFocusedFld));
                 AxOldValue = "";
                 MainFocus($j(this));
@@ -1495,6 +1516,7 @@ function AxGetCustSelectFldData(fieldId) {
     let isApifld = FldIsAPI[fldApiInd];
     let dllSqlParamsFlag = FldDSqlParams[fldApiInd];
     let ddlSqlPNames = GetFieldParamList(fieldName);
+    let _isDupTab = callParentNew('isDuplicateTab');
     $.ajax({
         url: 'tstruct.aspx/GetAutoCompleteData',
         type: 'POST',
@@ -1503,7 +1525,7 @@ function AxGetCustSelectFldData(fieldId) {
         data: JSON.stringify({
             tstDataId: tstDataId, FldName: fieldName, FltValue: "", ChangedFields: ChangedFields, ChangedFieldDbRowNo: ChangedFieldDbRowNo,
             ChangedFieldValues: ChangedFieldValues, DeletedDCRows: DeletedDCRows, pageData: pageData, fastdll: fastdll, fldNameAc: fieldId, refreshAC: false,
-            pickArrow: false, parentsFlds: parentFldVal, rfSave: true, IsApiFld: isApifld, tblSourceParams: "", isTstHtmlLs: resTstHtmlLS, ddlFldSqlParams: dllSqlParamsFlag, ddlSqlPNames: ddlSqlPNames
+            pickArrow: false, parentsFlds: parentFldVal, rfSave: true, IsApiFld: isApifld, tblSourceParams: "", isTstHtmlLs: resTstHtmlLS, ddlFldSqlParams: dllSqlParamsFlag, ddlSqlPNames: ddlSqlPNames, isDupTab: _isDupTab
         }),
         dataType: 'json',
         contentType: "application/json",
@@ -1594,7 +1616,7 @@ function createFormSelectMultiChecklist(fld) {
 
                 if (typeof $(this).data("separator") != "undefined")
                     mulSeparator = $(this).data("separator");
-
+                fldNameAc = $(this).attr("id");
                 fastdll = $(this).hasClass('multiFldChk') ? true : $(this).hasClass('fastdll');
                 if (fastdll == true || (fastdll == false && termVal == "") || (fastdll == false && (typeof termVal == "undefined" || termVal.length > 1))) {
                     isPickMinChar = false;
@@ -1614,12 +1636,14 @@ function createFormSelectMultiChecklist(fld) {
                         //let _thisIdx = FldListParents.indexOf(fieldName + "~" + parentFldVal);
                         IsBindData = true;
                     } else {
+                        let _stermVal = termVal;//.replace(/"/g, '^^dq');
                         IsBindData = false;
                         isRefreshClick = false;
+                        let _isDupTab = callParentNew('isDuplicateTab');
                         return JSON.stringify({
                             tstDataId: tstDataId,
                             FldName: fieldName,
-                            FltValue: termVal,
+                            FltValue: _stermVal,
                             ChangedFields: ChangedFields,
                             ChangedFieldDbRowNo: ChangedFieldDbRowNo,
                             ChangedFieldValues: ChangedFieldValues,
@@ -1635,7 +1659,8 @@ function createFormSelectMultiChecklist(fld) {
                             tblSourceParams: "",
                             isTstHtmlLs: resTstHtmlLS,
                             ddlFldSqlParams: dllSqlParamsFlag,
-                            ddlSqlPNames: ddlSqlPNames
+                            ddlSqlPNames: ddlSqlPNames,
+                            isDupTab: _isDupTab
                         });
                     }
                 } else {
@@ -1723,6 +1748,7 @@ function createFormSelectMultiChecklist(fld) {
                                 $(".msSelectAllOption").removeClass("d-none");
                             if (fastdll) {
                                 var aSearch = [];
+                                termVal = termVal.replace(/"/g, '&quot;');
                                 $(dtAssoc).each(function (iIndex, sElement) {
                                     sElement.i = sElement.i.replace(/\^\^dq/g, '&quot;');
                                     if (sElement.i.toLowerCase().indexOf(termVal.toLowerCase()) >= 0) {
@@ -1912,6 +1938,9 @@ function createFormSelectMultiChecklist(fld) {
                         UpdateFieldArray(depfldId + rcID, rowNum, depfldValue, "parent", "AutoComplete");
                         UpdateAllFieldValues(depfldId + rcID, depfldValue);
                     }
+                    let _thisfldDcNo = GetDcNo(depfldId);
+                    if (_thisfldDcNo && IsDcGrid(_thisfldDcNo)) 
+                        GridNurfldDisplayTot(_thisfldDcNo, depfldId, _fldIndex);
                 });
             } catch (Ex) { }
         }
@@ -1956,6 +1985,7 @@ function createFormSelectMultiChecklist(fld) {
 
             if ($(this).attr("id") != AxFocusedFld && AxFocusedFld != "" && !$("#" + AxFocusedFld).hasClass("fldFromSelect") && !$("#" + AxFocusedFld).hasClass("multiFldChk") && !$("#" + AxFocusedFld).hasClass("gridHeaderSwitch") && !$("#" + AxFocusedFld).hasClass("dvgrdchkboxnonedit") && !$("#" + AxFocusedFld).hasClass("ckbGridStretchSwitch"))// Changed text field and directlly click on select2 field using mouse changed field not getting call mainblur.
             {
+                AxDoBlur = true;
                 MainBlur($("#" + AxFocusedFld));
                 AxOldValue = "";
                 MainFocus($j(this));
@@ -1969,6 +1999,7 @@ function createFormSelectMultiChecklist(fld) {
         else {
             if ($(this).attr("id") != AxFocusedFld && AxFocusedFld != "" && !$("#" + AxFocusedFld).hasClass("fldFromSelect") && !$("#" + AxFocusedFld).hasClass("multiFldChk") && !$("#" + AxFocusedFld).hasClass("gridHeaderSwitch") && !$("#" + AxFocusedFld).hasClass("dvgrdchkboxnonedit") && !$("#" + AxFocusedFld).hasClass("ckbGridStretchSwitch"))// Changed text field and directlly click on select2 field using mouse changed field not getting call mainblur.
             {
+                AxDoBlur = true;
                 MainBlur($("#" + AxFocusedFld));
                 AxOldValue = "";
                 MainFocus($j(this));

@@ -524,7 +524,7 @@ public partial class iview : System.Web.UI.Page
                     {
                         string _thisDupTab = HttpContext.Current.Session["isDupTab"].ToString();
                         _thisDupTab = _thisDupTab.Split('-')[1];
-                        HttpContext.Current.Session["isDupTab"] = "false";
+                        //HttpContext.Current.Session["isDupTab"] = "false";
                         if (Session["tstivobjkey-duptab-" + _thisDupTab] != null && Session["tstivobjkey-duptab-" + _thisDupTab].ToString() != string.Empty)
                             Session["tstivobjkey-duptab-" + _thisDupTab] = Session["tstivobjkey-duptab-" + _thisDupTab].ToString() + "," + Ivkey + "," + IvParamKey;
                         else
@@ -632,7 +632,8 @@ public partial class iview : System.Web.UI.Page
                     Session[Ivkey + "_param"] = objParams;
 
                 }
-                System.Web.UI.ScriptManager.RegisterClientScriptBlock(Page, GetType(), "ivDataVar", "<script>" + ivVarNode.ToString() + ";</script>", false);
+                //System.Web.UI.ScriptManager.RegisterClientScriptBlock(Page, GetType(), "ivDataVar", "<script>" + ivVarNode.ToString() + ";</script>", false);
+                System.Web.UI.ScriptManager.RegisterStartupScript(Page, GetType(), "ivDataVar", "<script>" + ivVarNode.ToString() + ";</script>", false);
                 if (objIview.requestJSON && !objIview.isObjFromCache && !objParams.ForceDisableCache)
                 {
                     if (flKey == null)
@@ -1804,7 +1805,7 @@ public partial class iview : System.Web.UI.Page
                 }
             }
             //}
-            setDataCachingFlag();
+            //setDataCachingFlag();
         }
         else
         {
@@ -1840,69 +1841,69 @@ public partial class iview : System.Web.UI.Page
         catch (Exception ex) { }
     }
 
-    private void setDataCachingFlag()
-    {
-        try
-        {
-            string ivupdateOn = string.Empty;
+    //private void setDataCachingFlag()
+    //{
+    //    try
+    //    {
+    //        string ivupdateOn = string.Empty;
 
-            if (objIview.StructureXml != string.Empty && objIview.StructureXml != "false")
-            {
-                XmlDocument xmldoc = new XmlDocument();
-                xmldoc.LoadXml(objIview.StructureXml);
+    //        if (objIview.StructureXml != string.Empty && objIview.StructureXml != "false")
+    //        {
+    //            XmlDocument xmldoc = new XmlDocument();
+    //            xmldoc.LoadXml(objIview.StructureXml);
 
-                if (xmldoc.DocumentElement.Attributes["updatedon"] != null)
-                {
-                    ivupdateOn = xmldoc.DocumentElement.Attributes["updatedon"].Value;
-                }
+    //            if (xmldoc.DocumentElement.Attributes["updatedon"] != null)
+    //            {
+    //                ivupdateOn = xmldoc.DocumentElement.Attributes["updatedon"].Value;
+    //            }
 
-                System.Globalization.CultureInfo culture = default(System.Globalization.CultureInfo);
-                culture = new System.Globalization.CultureInfo("en-GB");
-                if (HttpContext.Current.Session["axdb"] != null)
-                {
-                    if (HttpContext.Current.Session["axdb"].ToString().ToLower() == "ms sql")
-                        culture = new System.Globalization.CultureInfo("en-US");
-                }
+    //            System.Globalization.CultureInfo culture = default(System.Globalization.CultureInfo);
+    //            culture = new System.Globalization.CultureInfo("en-GB");
+    //            if (HttpContext.Current.Session["axdb"] != null)
+    //            {
+    //                if (HttpContext.Current.Session["axdb"].ToString().ToLower() == "ms sql")
+    //                    culture = new System.Globalization.CultureInfo("en-US");
+    //            }
 
-                if (object.ReferenceEquals(ivupdateOn, ""))
-                    ivupdateOn = "01/01/2000 00:00:01 AM";
-                DateTime cacheTime;
-                try
-                {
-                    cacheTime = DateTime.Parse(ivupdateOn, culture);
-                }
-                catch (System.FormatException ex)
-                {
-                    cacheTime = DateTime.Parse(ivupdateOn);
-                }
+    //            if (object.ReferenceEquals(ivupdateOn, ""))
+    //                ivupdateOn = "01/01/2000 00:00:01 AM";
+    //            DateTime cacheTime;
+    //            try
+    //            {
+    //                cacheTime = DateTime.Parse(ivupdateOn, culture);
+    //            }
+    //            catch (System.FormatException ex)
+    //            {
+    //                cacheTime = DateTime.Parse(ivupdateOn);
+    //            }
 
-                DateTime boundryDate;
-                if (!DateTime.TryParseExact("11/18/2022", "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out boundryDate))
-                {
-                    //Invalid date
-                }
+    //            DateTime boundryDate;
+    //            if (!DateTime.TryParseExact("11/18/2022", "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out boundryDate))
+    //            {
+    //                //Invalid date
+    //            }
 
 
-                if (boundryDate != null && boundryDate.Date <= cacheTime.Date)
-                {
-                    if (xmldoc.SelectSingleNode("//iview/b39") != null)
-                    {
-                        string dataCache = xmldoc.SelectSingleNode("//iview/b39").InnerText;
-                        objIview.dataCache = dataCache;
-                    }
-                }
-                else
-                {
-                    objIview.dataCache = "none";
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            objIview.dataCache = "none";
-            logobj.CreateLog("Exception in setDataCachingFlag: " + ex.Message, sid, "IvsetDataCachingFlag-" + iName, string.Empty);
-        }
-    }
+    //            if (boundryDate != null && boundryDate.Date <= cacheTime.Date)
+    //            {
+    //                if (xmldoc.SelectSingleNode("//iview/b39") != null)
+    //                {
+    //                    string dataCache = xmldoc.SelectSingleNode("//iview/b39").InnerText;
+    //                    objIview.dataCache = dataCache;
+    //                }
+    //            }
+    //            else
+    //            {
+    //                objIview.dataCache = "none";
+    //            }
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        objIview.dataCache = "none";
+    //        logobj.CreateLog("Exception in setDataCachingFlag: " + ex.Message, sid, "IvsetDataCachingFlag-" + iName, string.Empty);
+    //    }
+    //}
 
     private DataTable processXmlConfigAsDt(string configurationXml)
     {
@@ -2009,8 +2010,10 @@ public partial class iview : System.Web.UI.Page
                         fdKey = Constants.REDISTSTRUCTMOB;
                     string pgKey = Constants.AXPAGETITLE;
                     ArrayList redisvalues = new ArrayList();
+                    string _sXML = strObj.structRes;
+                    strObj.structRes = "";
                     cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKey, iName), strObj, Constants.REDISTSTRUCT, schemaName);
-
+                    cacheMgr.fdwObj.SaveInRedisServer(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, iName), _sXML, Constants.REDISTSTRUCTXML, schemaName);
                     var redisvalues1 = fObj.ObjectJsonFromRedis(util.GetRedisServerkey(pgKey, ""));
                     if (redisvalues1 == null)
                         redisvalues.Add(Title + "♠" + tstCaption + "♠" + iName);
@@ -2371,12 +2374,20 @@ public partial class iview : System.Web.UI.Page
                                 "</listviewCols>";
                             }
 
-                            ivDataArray = checkCacheData(objIview.purposeString == "" ? pXml : lvXml, objIview.purposeString);
+                            //ivDataArray = checkCacheData(objIview.purposeString == "" ? pXml : lvXml, objIview.purposeString);//Not using Iview/ListIview data caching
 
                             if (ivDataArray.Count == 0)
                             {
                                 ivDataArray = new JArray();
-                                idata = objIview.GetData(iName, hdnWebServiceViewName.Value == "" ? 1 : 0, objIview.iviewDataWSRows, pXml, lvXml, objIview.purposeString, hdnLvChangedStructure.Value).ToString();
+
+                                string ondemand = hdnOndemandLoad.Value;
+                                int existingPageSize = hdnWebServiceViewName.Value == "" ? 1 : 0;
+                                if (ondemand == "true")
+                                {
+                                    existingPageSize = 0;
+                                }
+                                //idata = objIview.GetData(iName, hdnWebServiceViewName.Value == "" ? 1 : 0, objIview.iviewDataWSRows, pXml, lvXml, objIview.purposeString, hdnLvChangedStructure.Value).ToString();
+                                idata = objIview.GetData(iName, existingPageSize, objIview.iviewDataWSRows, pXml, lvXml, objIview.purposeString, hdnLvChangedStructure.Value).ToString();
 
                                 string[] idataSplit = idata.Split('♠');
 
@@ -2781,6 +2792,10 @@ public partial class iview : System.Web.UI.Page
         if (!objIview.requestJSON || data.StartsWith(Constants.ERROR))
         {
             returnString = util.ParseXmlErrorNode(data);
+            if (iName == "a___smtl" && returnString == "List index out of bounds (0)")
+            {
+                returnString = "Smart View package needs to be installed to use this option.";
+            }
         }
         else
         {
@@ -4858,10 +4873,10 @@ public partial class iview : System.Web.UI.Page
             {
                 Session["isDupTab"] = Request.Form["isDupTab"] == null ? Request.QueryString["isDupTab"].ToString() : Request.Form["isDupTab"];
             }
-            else
-            {
-                Session["isDupTab"] = "false";
-            }
+            //else
+            //{
+            //    Session["isDupTab"] = "false";
+            //}
         }
         catch (Exception ex) { }
 

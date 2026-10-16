@@ -58,6 +58,15 @@ public partial class aspx_ExportNew : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!IsPostBack)
+        {
+            string fetchDest = Request.Headers["Sec-Fetch-Dest"];
+            if (!string.IsNullOrEmpty(fetchDest) && !string.Equals(fetchDest, "iframe", StringComparison.OrdinalIgnoreCase))
+            {
+                SessExpires();
+                return;
+            }
+        }
         util.IsValidSession();
         if (Session["project"] == null)
         {

@@ -932,6 +932,12 @@ namespace Util
             {
                 CacheManager cacheMgr = new CacheManager(errorLog);
                 strObj = cacheMgr.GetStructDef(HttpContext.Current.Session["project"].ToString(), HttpContext.Current.Session["nsessionid"].ToString(), HttpContext.Current.Session["user"].ToString(), transid, HttpContext.Current.Session["AxRole"].ToString());
+                if (strObj != null)
+                {
+                    FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
+                    string thisStructXML = fObj.StringFromRedis(GetRedisServerkey(Constants.REDISTSTRUCTXML, transid));
+                    strObj.structRes = thisStructXML;
+                }
             }
             catch (Exception ex)
             {
@@ -4680,6 +4686,9 @@ namespace Util
                 case Constants.REDISTSTRUCTMOB:
                     key = transId + "-Mob-" + AxRole + '-' + lang;
                     break;
+                case Constants.REDISTSTRUCTXML:
+                    key = transId + "-TstructXML-" + AxRole + '-' + lang;
+                    break;
                 case Constants.REDISTSTRUCTTABLE:
                     key = transId + "-DcTable" + '-' + AxRole + '-' + lang;
                     break;
@@ -4793,6 +4802,21 @@ namespace Util
                     break;
                 case Constants.HTMLPAGESQUERY:
                     key = transId + "-HTMLPAGESQUERY-" + user + '-' + lang;
+                    break;
+                case Constants.REACTPAGESQUERY:
+                    key = transId + "-REACTPAGESQUERY-" + user + '-' + lang;
+                    break;
+                case Constants.HTMLPAGESCONTENT:
+                    key = "General-" + transId + "-HTMLPAGECONTENT-" + user + '-' + lang;
+                    break;
+                case Constants.REACTPAGESCONTENT:
+                    key = "General-" + transId + "-REACTPAGECONTENT-" + user + '-' + lang;
+                    break;
+                case Constants.HTMLPAGESDBXML:
+                    key = "General-" + transId + "-HTMLPAGESXML-" + lang;
+                    break;
+                case Constants.REACTPAGESDBXML:
+                    key = "General-" + transId + "-REACTPAGESXML-" + lang;
                     break;
                 case Constants.AXVALERRORCODE:
                     key = transId + "-AxValErrorCode-" + AxRole + '-' + lang;
@@ -6470,18 +6494,18 @@ namespace Util
                         var item = lstKeys.Where(x => x.StartsWith(TstIvKey + "_")).ToList();
                         if (TstIvKey != "" && item.Count > 0)//To remove from the TstIvKey to next keys
                         {
-                            string delKeys = string.Empty;
-                            int keyInd = Array.IndexOf(lstKeys, item[0]);
-                            for (int i = keyInd; i < lstKeys.Length; i++)
-                            {
-                                HttpContext.Current.Session.Remove(lstKeys[i]);
-                                if (delKeys == string.Empty)
-                                    delKeys = lstKeys[i];
-                                else
-                                    delKeys += "," + lstKeys[i];
-                            }
-                            tstivobjkey = tstivobjkey.Replace(delKeys, "").TrimEnd(',');
-                            HttpContext.Current.Session["tstivobjkey-duptab-" + _thisDupTab] = tstivobjkey;
+                            //string delKeys = string.Empty;
+                            //int keyInd = Array.IndexOf(lstKeys, item[0]);
+                            //for (int i = keyInd; i < lstKeys.Length; i++)
+                            //{
+                            //    HttpContext.Current.Session.Remove(lstKeys[i]);
+                            //    if (delKeys == string.Empty)
+                            //        delKeys = lstKeys[i];
+                            //    else
+                            //        delKeys += "," + lstKeys[i];
+                            //}
+                            //tstivobjkey = tstivobjkey.Replace(delKeys, "").TrimEnd(',');
+                            //HttpContext.Current.Session["tstivobjkey-duptab-" + _thisDupTab] = tstivobjkey;
                         }
                         else//To remove all the keys 
                         {
@@ -7839,7 +7863,7 @@ namespace Util
             {
                 string _thisDupTab = HttpContext.Current.Session["isDupTab"].ToString();
                 _thisDupTab = _thisDupTab.Split('-')[1];
-                HttpContext.Current.Session["isDupTab"] = "false";
+                //HttpContext.Current.Session["isDupTab"] = "false";
                 if (HttpContext.Current.Session["tstivobjkey-duptab-" + _thisDupTab] != null && HttpContext.Current.Session["tstivobjkey-duptab-" + _thisDupTab].ToString() != string.Empty)
                     HttpContext.Current.Session["tstivobjkey-duptab-" + _thisDupTab] = HttpContext.Current.Session["tstivobjkey-duptab-" + _thisDupTab].ToString() + "," + NewKey;
                 else
@@ -8404,6 +8428,10 @@ namespace Util
             SetOrUpdate(root, "AxRapidSaveURL", "RapidSaveURL");
             SetOrUpdate(root, "axpegemailactionurl", "pegemailactionurl");
             SetOrUpdate(root, "AxScriptsAPIURL", "ScriptsAPIURL");
+
+            SetOrUpdate(root, "ARM_SessionId", "ARM_SessionId");
+            SetOrUpdate(root, "ARM_Token", "ARM_Token");
+
             return string.Concat(root.Elements());
         }
 

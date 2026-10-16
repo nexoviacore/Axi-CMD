@@ -5784,12 +5784,12 @@ function focusOnFirstInputOnTabClick(tabNo, reffreshEditor) {
                 if (v.split("~")[0] == tabNo && v.split("~")[1] == "001") isExitDummy = true;
             });
         }
-        if(isExitDummy){
+        if (isExitDummy) {
             forceRowedit = true;
             gridRowEditOnLoad = true;
             $("#gridHd" + tabNo + " tr#sp" + tabNo + "R001F" + tabNo + " td:eq(2)").click();
         }
-        SetPositionfldDisplayTot();  
+        SetPositionfldDisplayTot();
         if (typeof theModeDesign != "undefined" && theModeDesign == "true") {
             const _obj = $(".tstformbutton");
             _obj.prop("disabled", true);
@@ -5801,6 +5801,9 @@ function focusOnFirstInputOnTabClick(tabNo, reffreshEditor) {
         }
         try {
             if (typeof TabDcActive != "undefined" && TabDcActive && !isExitDummy && recordid != "0") {
+                DropzoneInit("#divDc" + tabNo);
+                DropzoneGridInit("#divDc" + tabNo);
+            } else if (typeof reffreshEditor == "undefined" && typeof TabDcActive != "undefined" && TabDcActive && !isExitDummy && recordid == "0" && $("#gridHd" + tabNo + " tbody tr").length > 0) {
                 DropzoneInit("#divDc" + tabNo);
                 DropzoneGridInit("#divDc" + tabNo);
             }
@@ -8818,7 +8821,7 @@ function SucceededCallback(resultJson, eventArgs) {
             GetFormLoadData("AxIsPop=true");
         else
             GetFormLoadData("");
-        ShowDialog('error', "Transaction save taking long time than expected.");
+        ShowDialog('info', "Transaction save taking long time than expected. You will get notified once save is completed.");
         return;
     }
 
@@ -10591,8 +10594,11 @@ function DeleteTstruct() {
                             txt = txt + '<Transaction axpapp="' + proj + '" transid="' + tst + '" recordid="' + rid + '" action="delete" trace="' + trace + '" sessionid="' + sid + '" allowCancel="' + AxAllowCancel + '"> ';
                             //txt = txt + '</Transaction>';
                             try {
+                                ShowDimmer(true);
+                                AxWaitCursor(true);
                                 ASB.WebService.DeleteDataXML(rid, txt, tstDataId, AxAllowCancel, resTstHtmlLS, SucceededCallbackDelTst);
                             } catch (exp) {
+                                ShowDimmer(false);
                                 AxWaitCursor(false);
                                 var execMess = exp.name + "^♠^" + exp.message;
                                 showAlertDialog("error", 2030, "client", execMess);
@@ -10624,6 +10630,8 @@ function SucceededCallbackDelTst(result, eventArgs) {
         tstDataId = result.split("♠*♠")[0];
         result = result.split("♠*♠")[1];
     }
+    ShowDimmer(false);
+    AxWaitCursor(false);
     if (CheckSessionTimeout(result))
         return;
 
@@ -10652,6 +10660,9 @@ function SucceededCallbackDelTst(result, eventArgs) {
                 eval(callParent('isRefreshParentOnClose') + "= true");
                 isTstRefreshParentOnClose = "true";
             }
+            if (typeof transid != "" && transid == "job_s") {
+                DeleteAxpertJobs();
+            }
             if (AxLogTimeTaken == "true") {
                 var edTime = new Date();
                 var diff = edTime.getTime() - stTime.getTime();
@@ -10676,7 +10687,7 @@ function SucceededCallbackDelTst(result, eventArgs) {
                     } catch (ex) { }
                 }
             } else {
-                if (typeof transid!="undefined" && transid == "sect") {
+                if (typeof transid != "undefined" && (transid == "sect" || transid == "a__rp")) {
                     try {
                         htmlCustomDeleteRedirect();
                     } catch (ex) { }
@@ -14937,7 +14948,10 @@ function lnkNextClick() {
                     btnClass: 'btn btn-primary',
                     action: function () {
                         lvNavDetails = "next";
-                        FormSubmit();
+                        if (typeof transid != "undefined" && transid == "job_s") {
+                            $("#ftbtn_iSave").click();
+                        } else
+                            FormSubmit();
                     }
                 },
                 buttonB: {
@@ -14984,7 +14998,10 @@ function lnkPrevClick() {
                     btnClass: 'btn btn-primary',
                     action: function () {
                         lvNavDetails = "prev";
-                        FormSubmit();
+                        if (typeof transid != "undefined" && transid == "job_s") {
+                            $("#ftbtn_iSave").click();
+                        } else
+                            FormSubmit();
                     }
                 },
                 buttonB: {
@@ -19480,6 +19497,11 @@ function bindNotificationFldData(notifyData) {
                 _dataJson += `{"n":"axp_recid` + _ic + `","v":"0","r":"` + _rowN + `","t":"s"},`;
                 for (_key in _json[i]["axp_recid" + _ic][j].columns) {
                     let _val = _json[i]["axp_recid" + _ic][j].columns[_key];
+
+                    _val = _val.toString().replace(new RegExp("\\n", "g"), "");
+                    _val = _val.replace(new RegExp("\\t", "g"), "&#9;");
+                    _val = ReverseCheckSpecialChars(_val);
+
                     _dataJson += `{"n":"` + _key + `","v":"` + _val + `","r":"` + _rowN + `","t":"s"},`;
                 }
             }
@@ -20229,6 +20251,10 @@ function axDeveloperStudioTstToolbar() {
                 $(".toolbarRightMenu").append(`<a id="axdevList" onclick='callParentNew("loadFrame();","function");parent.LoadIframeac("ivtoivload.aspx?ivname=csqlist");callParentNew("closeFrame();","function");' title="List" href="javascript:void(0)" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 btn-sm"><span class="material-icons material-icons-style material-icons-2">view_list</span></a>`);
             } else if (transid == "sect" && $(".toolbarRightMenu").find("a#axdevList").length == 0) {
                 $(".toolbarRightMenu").append(`<a id="axdevList" onclick='callParentNew("loadFrame();","function");parent.LoadIframeac("ivtoivload.aspx?ivname=hplist");callParentNew("closeFrame();","function");' title="List" href="javascript:void(0)" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 btn-sm"><span class="material-icons material-icons-style material-icons-2">view_list</span></a>`);
+                if (typeof parent._pageName != "undefined" && parent._pageName.startsWith("tsect&")) {
+                    $(".toolbarRightMenu").addClass('d-none');
+                    $("#ftbtn_iNew").remove();
+                }
             } else if (transid == "apidg" && $(".toolbarRightMenu").find("a#axdevList").length == 0) {
                 $(".toolbarRightMenu").append(`<a id="axdevList" onclick='callParentNew("loadFrame();","function");parent.LoadIframeac("ivtoivload.aspx?ivname=exapidef");callParentNew("closeFrame();","function");' title="List" href="javascript:void(0)" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 btn-sm"><span class="material-icons material-icons-style material-icons-2">view_list</span></a>`);
             } else if (transid == "axeml" && $(".toolbarRightMenu").find("a#axdevList").length == 0) {
@@ -20258,8 +20284,13 @@ function axDeveloperStudioTstToolbar() {
                     $(".toolbarRightMenu").append(`<a id="axdevList" onclick='callParentNew("loadFrame();","function");parent.LoadIframeac("ivtoivload.aspx?ivname=ad__qls");callParentNew("closeFrame();","function");' title="Queue listing" href="javascript:void(0)" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 btn-sm"><span class="material-icons material-icons-style material-icons-2">view_list</span></a>`);
                 else
                     $(".toolbarRightMenu").append(`<a id="axdevList" onclick='callParentNew("loadFrame();","function");parent.parent.LoadIframeac("ivtoivload.aspx?ivname=ad__qls");callParentNew("closeFrame();","function");' title="Queue listing" href="javascript:void(0)" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 btn-sm"><span class="material-icons material-icons-style material-icons-2">view_list</span></a>`);
+            } else if (transid == "a__rp" && $(".toolbarRightMenu").find("a#axdevList").length == 0) {
+                $(".toolbarRightMenu").append(`<a id="axdevList" onclick='callParentNew("loadFrame();","function");parent.LoadIframeac("ivtoivload.aspx?ivname=a__rplst");callParentNew("closeFrame();","function");' title="List" href="javascript:void(0)" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm me-2 btn-sm"><span class="material-icons material-icons-style material-icons-2">view_list</span></a>`);
+                if (typeof parent._pageName != "undefined" && parent._pageName.startsWith("ta__rp&")) {
+                    $(".toolbarRightMenu").addClass('d-none');
+                    $("#ftbtn_iNew").remove();
+                }
             }
-
             $(".toolbarRightMenu").css({ "padding-right": "45px" });
 
             AxDevStudioHelper(transid);
@@ -20507,7 +20538,57 @@ function AxDevStudioHelper(_transid) {
                 $("#DivFrame3 .gridIconBtns").addClass('d-none');
             }
         }
+        if (_transid == "a__rp") {
+            $("#wBdr").addClass("htmlPagesCls");
+            $("#wBdr").css({ "height": "85vh", "overflow": "auto" });
+            ToggleWizardDc("3", "hide");
+            if ($(".tstructMainBottomFooter .BottomToolbarBar").find("[onclick='previewReactPage();']").length == 0) {
+                var customButtons = `
+        <button onclick="previewReactPage();" class="btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm" type="button" id="previewReactPageId" title="Preview"><span class="material-icons">preview</span><span class="hpCustBtnsText">Preview</span></button>
+        
+        <button onclick="addCssJs(this.id);" class="btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm" type="button" id="addCssRow" title="Add Css"><span class="material-icons">code</span><span class="hpCustBtnsText">Add Css</span></button>
 
+        <button onclick="addCssJs(this.id);" class="btn btn-white btn-color-gray-700 btn-active-primary btn-sm d-inline-flex align-items-center shadow-sm me-2 dwbIvBtnbtm" type="button" id="addJsRow" title="Add Js"><span class="material-icons">code</span><span class="hpCustBtnsText">Add Js</span></button>
+        `;
+                $(".tstructMainBottomFooter .BottomToolbarBar").prepend(customButtons);
+            }
+            let HPImagePath = $("#hdnAxpertWebDirPath").val() + proj + "\\HTMLPages\\images\\*";
+            SetFieldValue("AxpFilePath_hpImages000F1", HPImagePath);
+            UpdateFieldArray("AxpFilePath_hpImages000F1", "000", HPImagePath, "parent", "");
+
+            if (recordid != "0") {
+                pageNo = GetFieldValue("pageno000F1");
+                loadcontentsFromFileReact();
+                $(`#${htmlObj.fields.templateBtn}`).prop("disabled", true);
+            }
+            else if (recordid == "0") {
+                pageNo = Date.now().toString();
+                SetFieldValue("pageno000F1", pageNo);
+                UpdateFieldArray("pageno000F1", GetFieldsRowNo("pageno000F1"), pageNo, "parent");
+                $(`#${htmlObj.fields.templateBtn}`).removeAttr("onclick").attr("onclick", "selectTemplate()");
+            }
+            htmlObj.template.name = GetFieldValue(`${htmlObj.fields.template}`);
+            if (htmlObj.template.name != "" && !+recordid) {
+                htmlObj.template.flag = true;
+                SetFieldValue(`${htmlObj.fields.template}`, htmlObj.template.name);
+                UpdateFieldArray(`${htmlObj.fields.template}`, GetFieldsRowNo(`${htmlObj.fields.template}`), htmlObj.template.name, "parent");
+                /*$("#DivFrame3").hide();*/
+                $("#DivFrame3").show();
+                $("#DivFrame3").removeClass('d-none');
+                $("#DivFrame3 .gridIconBtns").addClass('d-none');
+                loadcontentsFromFileReact();
+                htmlCodeMirror.getDoc().setValue($(`#${htmlObj.fields.htmlCm}`).val());
+                htmlObj.template.files.html = htmlObj.template.files.html == "" ? $(`#${htmlObj.fields.htmlCm}`).val() : htmlObj.template.files.html;
+            } else if (recordid == "0" || (recordid != "0" && DCHasDataRows[2].toLowerCase() == "false")) {
+                $("#DivFrame3").hide();
+                $("#DivFrame3").addClass('d-none');
+            }
+            else {
+                $("#DivFrame3").show();
+                $("#DivFrame3").removeClass('d-none');
+                $("#DivFrame3 .gridIconBtns").addClass('d-none');
+            }
+        }
 
         if (_transid == 'b_sql') {
             $("#sqlparams000F1").addClass("fldCustTable");
@@ -20638,6 +20719,10 @@ function htmlCustomSaveRedirect() {
                     if (response.d == "done") {
                         cssFileName = [], cssContents = [], jsFileName = [], jsContents = [];
                         SetFormDirty(false);
+                        //if (typeof parent._pageName != "undefined" && parent._pageName.startsWith("tsect&")) {
+                        //    parent.parent.window.location.reload();
+                        //}
+                        parent.parent.window.location.reload();
                     }
                     else {
                         ShowDialog("error", response.d);
@@ -20655,6 +20740,92 @@ function htmlCustomSaveRedirect() {
     }
 }
 
+function htmlCustomSaveRedirectReact() {
+    if (transid == "a__rp") {
+        var htmlContent = htmlCodeMirror.getValue();
+        htmlContent = htmlContent.replace(/&/g, '&amp;');
+        var domParser = new DOMParser();
+        var dom = "";
+        if (htmlContent.trim() != "") {
+            dom = domParser.parseFromString(htmlContent, 'text/html');
+        }
+        var cssContents = [], jsContents = [], isNewPage = true;
+        var headTag = dom.getElementsByTagName('head')[0];
+        var bodyTag = dom.getElementsByTagName('body')[0];
+        let HtmlDirPath = "../../ReactPages/" + callParentNew("mainProject") + "/";
+        $(".formGridRow").each(function () {
+            var fileExt = $(this).find("[id^='filetype']").val().toLowerCase();
+            var content = $(this).find("textarea[id^='css_js_src']").val();
+            if (fileExt == "css") {
+                var fileName = $(this).find("[id^='filename']").val().replace(/ /g, "_") + "_" + pageNo + "." + fileExt;
+                cssFileName.push(fileName);
+                cssContents.push(content);
+
+                $(headTag).find("link[href*='/" + fileName + "']").remove();
+
+                var linkTag = dom.createElement("link");
+                linkTag.setAttribute("type", "text/css");
+                linkTag.setAttribute("rel", "stylesheet");
+                linkTag.setAttribute("href", HtmlDirPath + "Css/" + fileName + "?v=" + (new Date()).getTime());
+                headTag.append("\t");
+                headTag.appendChild(linkTag);
+                headTag.append("\n");
+            }
+            else if (fileExt == "js") {
+                var fileName = $(this).find("[id^='filename']").val().replace(/ /g, "_") + "_" + pageNo + ".jsx";
+                jsFileName.push(fileName);
+                jsContents.push(content);
+
+                $(bodyTag).find("script[src*='/" + fileName + "']").remove();
+
+                var scriptTag = dom.createElement("script");
+                scriptTag.setAttribute("type", "text/babel");
+                scriptTag.setAttribute("src", HtmlDirPath + "Js/" + fileName + "?v=" + (new Date()).getTime());
+                bodyTag.append("\t");
+                bodyTag.appendChild(scriptTag);
+                bodyTag.append("\n");
+            }
+        });
+
+        htmlContent = dom.documentElement.outerHTML;
+        pageCaption = GetFieldValue("caption000F1");
+        var addToMenu = GetFieldValue("isacoretrans000F1") == "Yes" ? true : false;
+        if (recordid != "0") {
+            isNewPage = false;
+        }
+        try {
+            $.ajax({
+                type: "POST",
+                url: "tstruct.aspx/reactPagePublish",
+                data: JSON.stringify({
+                    htmlContent, cssFileName, cssContents, jsFileName, jsContents, pageCaption, addToMenu, pageNo, isNewPage
+                }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.d == "done") {
+                        cssFileName = [], cssContents = [], jsFileName = [], jsContents = [];
+                        SetFormDirty(false);
+                        //if (typeof parent._pageName != "undefined" && parent._pageName.startsWith("ta__rp&")) {
+                        //    parent.parent.window.location.reload();
+                        //}
+                        parent.parent.window.location.reload();
+                    }
+                    else {
+                        ShowDialog("error", response.d);
+                        SetFormDirty(false);
+                    }
+                },
+                error: function (error) {
+                    ShowDialog("error", "Error occurred while saving..!");
+                }
+            });
+        }
+        catch (e) {
+            ShowDialog("error", "Exception occurred while saving");
+        }
+    }
+}
 /* delete redirection for htmlpages and hyperlinks in iview builder */
 function htmlCustomDeleteRedirect() {
     if (transid == "sect") {
@@ -20671,6 +20842,44 @@ function htmlCustomDeleteRedirect() {
                     success: function (response) {
                         if (response.d == "done") {
                             window.location.href = "ivtoivload.aspx?ivname=hplist";
+                            setTimeout(function () {
+                                parent.parent.reloadPluginCustomPage(false);
+                            }, 0);
+                        }
+                        else {
+                            ShowDialog("error", response.d);
+                        }
+                    },
+                    error: function (error) {
+                        ShowDialog("error", "Error while removing the file..!");
+                    }
+                });
+            }
+            catch (ex) {
+                ShowDialog("error", "Error while removing the file..! " + ex);
+            }
+        }
+        else {
+            ShowDialog("error", "page number not found");
+        }
+    }
+    else if (transid == "a__rp") {
+        if (pageNo != "") {
+            try {
+                $.ajax({
+                    type: "POST",
+                    url: "tstruct.aspx/removeFromMenuAndFolderReact",
+                    data: JSON.stringify({
+                        pageNo
+                    }),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.d == "done") {
+                            window.location.href = "ivtoivload.aspx?ivname=a__rplst";
+                            setTimeout(function () {
+                                parent.parent.reloadPluginCustomPage(true);
+                            }, 0);
                         }
                         else {
                             ShowDialog("error", response.d);
@@ -21446,5 +21655,59 @@ function ClearRefreshOnSaveListLS() {
                 localStorage.removeItem(key);
             }
         });
-    } catch (ex) { }
+    } catch (ex) {
+    }
+}
+
+function DeleteAxpertJobs() {
+    if (typeof transid != "" && transid == "job_s") {
+        var period = $("#jobschedule000F1").val();
+        var tmpPeriod = period.toLowerCase().trim();
+        var sendOn = "";
+        if (tmpPeriod == "every week") {
+            sendOn = $("#weekday000F1").val()
+        }
+        else if (tmpPeriod == "every month" || tmpPeriod == "every quarter") {
+            sendOn = $("#jday000F1").val()
+        }
+        else if (tmpPeriod == "custom") {
+            sendOn = $("#noofmins000F1").val()
+        }
+        let _glCulture = eval(callParent('glCulture'));
+        let start_date = $("#jobstartfrom000F1").val();
+        if (_glCulture.toLowerCase() === "en-us" && start_date) {
+            let parts = start_date.split('/');
+            if (parts.length === 3) {
+                let month = parts[0];
+                let day = parts[1];
+                let year = parts[2];
+                start_date = day + '/' + month + '/' + year;
+            }
+        }
+        $.ajax({
+            type: "POST",
+            url: "../aspx/AxPEG.aspx/AxPushToQueue",
+            data: JSON.stringify({
+                queueName: "ARMAxpertJobsQueue",
+                queueJson: {
+                    "start_date": start_date,
+                    "period": period,
+                    "sendtime": $("#axptm_starttime000F1").val(),
+                    "sendon": sendOn,
+                    "project": $("#appname000F1").val(),
+                    "jobname": $("#jname000F1").val(),
+                    "jobid": $("#jobid000F1").val(), 
+                    "username": callParentNew("mainUserName")
+                }
+            }),
+            cache: false,
+            async: false,
+            dataType: 'json',
+            contentType: "application/json",
+            success: function (response) {
+            },
+            error: function (error) {
+            }
+        });
+    }
 }

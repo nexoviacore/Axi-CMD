@@ -2621,8 +2621,10 @@ function HideDialog() {
                         if (recordid != 0)
                             url += "&recordid=" + axSaveRecId;
                         if (Isaxpiframe.indexOf("axpfrm") != -1)
-                            url += "&axpfrm=t"
-
+                            url += "&axpfrm=t";
+                        let _thisTstURL = window.location.href;
+                        if (typeof _thisTstURL != "undefined" && (_thisTstURL.toLowerCase().indexOf("&axpop=true") || _thisTstURL.toLowerCase().indexOf("axpop=true&")))
+                            url += "&AxPop=true";
                         if (presentFrameObj.attr("id") !== "axpiframe") {
                             AvoidPostBackAfterSave(url);
                         }

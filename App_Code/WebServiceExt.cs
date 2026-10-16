@@ -9,6 +9,7 @@ using System.Web.Configuration;
 using System.Data;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace ASBExt
 {
@@ -445,69 +446,29 @@ namespace ASBExt
         public string CallRemoteDoActionWS(string transId, string inputXML, string ires, int webServiceTimeout)
         {
             string result = string.Empty;
-
-            string redisIP = string.Empty;
-
-            string redisPort = string.Empty;
-
-            string redisPass = string.Empty;
-
-
-            if (HttpContext.Current.Session["RedisCacheIP"] != null && HttpContext.Current.Session["RedisCacheIP"].ToString() != "")
+            int tempWebServiceTimeout = 0;
+            int tempWebScriptTimeout = 0;
+            if (webServiceTimeout == 0)
             {
-                string[] redisIpPort = HttpContext.Current.Session["RedisCacheIP"].ToString().Split(':');
-                if (redisIpPort.Length > 0)
-                {
-                    redisIP = redisIpPort[0];
-                }
-                if (redisIpPort.Length > 1)
-                {
-                    redisPort = redisIpPort[1];
-                }
+                HttpRuntimeSection httpRuntime = (HttpRuntimeSection)WebConfigurationManager.GetSection("system.web/httpRuntime");
+                int scriptTimeoutSec = (int)httpRuntime.ExecutionTimeout.TotalSeconds;
+                if (scriptTimeoutSec > 0)
+                    webServiceTimeout = (int)(scriptTimeoutSec * 1000);
             }
-
-            if (HttpContext.Current.Session["RedisCachePwd"] != null && HttpContext.Current.Session["RedisCachePwd"].ToString() != "")
+            if (webServiceTimeout > 0)
             {
-                redisPass = HttpContext.Current.Session["RedisCachePwd"].ToString();
+                tempWebServiceTimeout = asbAction.Timeout;
+                asbAction.Timeout = webServiceTimeout;
+                tempWebScriptTimeout = HttpContext.Current.Server.ScriptTimeout;
+                HttpContext.Current.Server.ScriptTimeout = Convert.ToInt32(webServiceTimeout / 1000);
             }
-
-            if (webServiceTimeout != 0)
-            {
-                string notifyTimeout = string.Empty;
-
-                try
-                {
-                    notifyTimeout = utilObj.GetAdvConfigs("notification time interval");
-                }
-                catch (Exception ex)
-                { }
-
-                //webServiceTimeout = 10;
-                var webServiceTimeoutsecs = webServiceTimeout / 1000;
-
-                if (notifyTimeout != string.Empty && inputXML != string.Empty)
-                {
-                    inputXML = inputXML.Replace("<root", "<root timeout='" + webServiceTimeoutsecs + "'");
-                    inputXML = inputXML.Replace("<root", "<root redispwd='" + redisPass + "'");
-                    inputXML = inputXML.Replace("<root", "<root redisserver ='" + redisIP + "'");
-                    inputXML = inputXML.Replace("<root", "<root redisportno ='" + redisPort + "'");
-                }
-
-            }
-            int tempWebServiceTimeout = asbAction.Timeout;
-            asbAction.Timeout = webServiceTimeout;
-
-            int tempWebScriptTimeout = HttpContext.Current.Server.ScriptTimeout;
-            HttpContext.Current.Server.ScriptTimeout = Convert.ToInt32(webServiceTimeout / 1000);
-
             try
             {
+                var webServiceTimeoutsecs = webServiceTimeout / 1000;
+                inputXML = inputXML.Replace("<root", "<root timeout='" + webServiceTimeoutsecs + "'");
                 string strRequest = ObjExecTr.RequestProcessTime("Request");
                 DateTime kst = DateTime.Now;
                 result = asbAction.RemoteDoAction(inputXML, ires);
-
-                //strRequest += "Service Result:" + result + " ♦ ";
-
                 result = GetAppSessionKey("CallRemoteDoActionWS", result);
                 result = strRequest + ObjExecTr.KernelProcessTime(kst, "DoAction", inputXML, result) + "♠" + result;
             }
@@ -515,9 +476,7 @@ namespace ASBExt
             {
                 if (ex.Message.ToString().IndexOf("operation has timed out") != -1)
                 {
-                    //result = "This proces taking time is more than expected. You will get a notification once completed";
-                    //result = "{\"result\":[{\"action\": \"retry\"}]}*$*{\"error\":[{\"msg\":\"This proces taking time is more than expected. You will get a notification once completed\"}]}";
-                    result = "{\"error\":[{\"msg\":\"This proces taking time is more than expected. You will get a notification once completed\"}]}";
+                    result = "{\"error\":[{\"msg\":\"This process taking long time than expected. You will get notified once process is completed.\"}]}";
                 }
                 else
                     CallExceptionErrorPage("RemoteDoAction", ex.Message.ToString(), "RemoteDoAction-" + transId + "");
@@ -1326,6 +1285,13 @@ namespace ASBExt
             string result = string.Empty;
             int tempWebServiceTimeout = 0;
             int tempWebScriptTimeout = 0;
+            if (webServiceTimeout == 0)
+            {
+                HttpRuntimeSection httpRuntime = (HttpRuntimeSection)WebConfigurationManager.GetSection("system.web/httpRuntime");
+                int scriptTimeoutSec = (int)httpRuntime.ExecutionTimeout.TotalSeconds;
+                if (scriptTimeoutSec > 0)
+                    webServiceTimeout = (int)(scriptTimeoutSec * 1000);
+            }
             if (webServiceTimeout > 0)
             {
                 tempWebServiceTimeout = asbTStruct.Timeout;
@@ -1335,6 +1301,8 @@ namespace ASBExt
             }
             try
             {
+                var webServiceTimeoutsecs = webServiceTimeout / 1000;
+                inputXML = inputXML.Replace("<Transaction ", "<Transaction timeout='" + webServiceTimeoutsecs + "' ");
                 string strRequest = ObjExecTr.RequestProcessTime("Request");
                 DateTime kst = DateTime.Now;
                 result = asbTStruct.SaveData(inputXML, structure);
@@ -2258,67 +2226,29 @@ namespace ASBExt
             return result;
 
         }
-
         public string callRemoteDoScriptWS(string transId, string inputXML, string ires, int webServiceTimeout)
         {
             string result = string.Empty;
-
-            string redisIP = string.Empty;
-
-            string redisPort = string.Empty;
-
-            string redisPass = string.Empty;
-
-
-            if (HttpContext.Current.Session["RedisCacheIP"] != null && HttpContext.Current.Session["RedisCacheIP"].ToString() != "")
+            int tempWebServiceTimeout = 0;
+            int tempWebScriptTimeout = 0;
+            if (webServiceTimeout == 0)
             {
-                string[] redisIpPort = HttpContext.Current.Session["RedisCacheIP"].ToString().Split(':');
-                if (redisIpPort.Length > 0)
-                {
-                    redisIP = redisIpPort[0];
-                }
-                if (redisIpPort.Length > 1)
-                {
-                    redisPort = redisIpPort[1];
-                }
+                HttpRuntimeSection httpRuntime = (HttpRuntimeSection)WebConfigurationManager.GetSection("system.web/httpRuntime");
+                int scriptTimeoutSec = (int)httpRuntime.ExecutionTimeout.TotalSeconds;
+                if (scriptTimeoutSec > 0)
+                    webServiceTimeout = (int)(scriptTimeoutSec * 1000);
             }
-
-            if (HttpContext.Current.Session["RedisCachePwd"] != null && HttpContext.Current.Session["RedisCachePwd"].ToString() != "")
+            if (webServiceTimeout > 0)
             {
-                redisPass = HttpContext.Current.Session["RedisCachePwd"].ToString();
+                tempWebServiceTimeout = asbScript.Timeout;
+                asbScript.Timeout = webServiceTimeout;
+                tempWebScriptTimeout = HttpContext.Current.Server.ScriptTimeout;
+                HttpContext.Current.Server.ScriptTimeout = Convert.ToInt32(webServiceTimeout / 1000);
             }
-
-            if (webServiceTimeout != 0)
-            {
-                string notifyTimeout = string.Empty;
-
-                try
-                {
-                    notifyTimeout = utilObj.GetAdvConfigs("notification time interval");
-                }
-                catch (Exception ex)
-                { }
-
-                //webServiceTimeout = 10;
-                var webServiceTimeoutsecs = webServiceTimeout / 1000;
-
-                if (notifyTimeout != string.Empty && inputXML != string.Empty)
-                {
-                    inputXML = inputXML.Replace("<root", "<root timeout='" + webServiceTimeoutsecs + "'");
-                    inputXML = inputXML.Replace("<root", "<root redispwd='" + redisPass + "'");
-                    inputXML = inputXML.Replace("<root", "<root redisserver ='" + redisIP + "'");
-                    inputXML = inputXML.Replace("<root", "<root redisportno ='" + redisPort + "'");
-                }
-
-            }
-            int tempWebServiceTimeout = asbScript.Timeout;
-            asbScript.Timeout = webServiceTimeout;
-
-            int tempWebScriptTimeout = HttpContext.Current.Server.ScriptTimeout;
-            HttpContext.Current.Server.ScriptTimeout = Convert.ToInt32(webServiceTimeout / 1000);
-
             try
             {
+                var webServiceTimeoutsecs = webServiceTimeout / 1000;
+                inputXML = inputXML.Replace("<root", "<root timeout='" + webServiceTimeoutsecs + "'");
                 string strRequest = ObjExecTr.RequestProcessTime("Request");
                 DateTime kst = DateTime.Now;
                 result = asbScript.RemoteDoScript(inputXML, ires);
@@ -2333,18 +2263,14 @@ namespace ASBExt
             {
                 if (ex.Message.ToString().IndexOf("operation has timed out") != -1)
                 {
-                    //result = "This proces taking time is more than expected. You will get a notification once completed";
-                    result = "{\"error\":[{\"msg\":\"This proces taking time is more than expected. You will get a notification once completed\"}]}";
+                    result = "{\"error\":[{\"msg\":\"This process taking long time than expected. You will get notified once process is completed.\"}]}";
                 }
                 else
                     CallExceptionErrorPage("RemoteDoScript", ex.Message.ToString(), "RemoteDoScript-" + transId + "");
                 result = ObjExecTr.ResponseErrorMsg("Kernel - " + ex.Message) + "♠" + result;
             }
-
             asbScript.Timeout = tempWebServiceTimeout;
-
             HttpContext.Current.Server.ScriptTimeout = tempWebScriptTimeout;
-
             return result;
         }
 
