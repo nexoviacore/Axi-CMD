@@ -737,6 +737,12 @@ if (typeof document !== "undefined") {
     const axSearchKeyOrder = [];
     // Row-id index per base list so merging search hits does not rescan the whole list each time
     const axBaseIdIndex = {};
+    // Wait after the last keystroke before a typed term is sent to the server (a database round-trip is slower
+    // than 300 ms, so a shorter wait sends terms that are already outdated).
+    const SEARCH_DEBOUNCE_MS = 450;
+    // The search request still running for each base list (baseKey -> AbortController). Starting a new search of
+    // the same list aborts the old one, so outdated queries do not keep the server busy or re-render the dropdown.
+    const axSearchAbort = {};
     // When a fetch failed (fetchKey -> timestamp) so it can be retried after FAILED_FETCH_RETRY_MS
     const failedFetchTimes = {};
     const LS_TTL_MS = 30 * 60 * 1000;      // persisted list results are reused for this long
@@ -834,6 +840,42 @@ if (typeof document !== "undefined") {
             delete axDatasourceObj[oldest];
             delete axPageState[oldest];
         }
+    }
+
+    /**
+     * Builds the result of a typed search from a list the client already holds completely, so no request is sent.
+     * Works when the base list, or the result of a shorter term contained in the typed one, came back without a
+     * "more pages" flag: then every match of the longer term is among its rows. Field rows (isfield 't') are
+     * kept as the server returns them whatever the term.
+     * @param {string} baseKey - Key of the base list, e.g. "axi_getstructsdata_<params>".
+     * @param {string} term - Lower-case typed term (3+ chars).
+     * @returns {boolean} True when axDatasourceObj["<baseKey>_q_<term>"] was filled from local data.
+     */
+    function refineFromCompleteList(baseKey, term) {
+        const isField = r => String(r?.isfield ?? r?.ISFIELD ?? "").toLowerCase() === "t";
+        const sources = [baseKey];
+        axSearchKeyOrder.forEach(k => {
+            if (k.startsWith(baseKey + "_q_")) {
+                const t = k.slice(baseKey.length + 3);
+                if (t.length < term.length && term.includes(t)) sources.push(k);
+            }
+        });
+        for (const k of sources) {
+            const state = axPageState[k];
+            const rows = axDatasourceObj[k];
+            if (!state || state.hasMore || !Array.isArray(rows)) continue;
+            const searchKey = `${baseKey}_q_${term}`;
+            axDatasourceObj[searchKey] = rows.filter(r => {
+                if (!r) return false;
+                if (isField(r)) return true;
+                const display = r.displaydata || r.caption || r.name || r.fname || r.keyfield || "";
+                return String(display).toLowerCase().includes(term);
+            });
+            axPageState[searchKey] = { page: 1, hasMore: false };
+            touchSearchKey(searchKey);
+            return true;
+        }
+        return false;
     }
 
     let filteredObjects = [];
@@ -1557,12 +1599,21 @@ if (typeof document !== "undefined") {
         }
         activeFetches.add(fetchKey);
 
+        // A typed-term search (page 1) cancels the earlier search of the same list that is still running
+        let abortCtl = null;
+        // (Not for the structure list: each of its terms is asked only once, so an aborted term would never be retried.)
+        if (cleanTerm && !isNextPage && typeof AbortController !== "undefined" && sourceName.toLowerCase() !== "axi_structmetalist") {
+            if (axSearchAbort[baseKey]) axSearchAbort[baseKey].abort();
+            abortCtl = new AbortController();
+            axSearchAbort[baseKey] = abortCtl;
+        }
+
         try {
             const paged = isPagedSource(sourceName);
             // Every source is requested one page at a time. (The structure list, axi_structmetalist, used to
             // be fetched whole with pageSize 0; it is paged on the server now like the record lists.)
             const effectivePageSize = pageSize || getPageSize();
-            const data = await getList(sourceName, paramValue, cleanTerm, pageNo, effectivePageSize);
+            const data = await getList(sourceName, paramValue, cleanTerm, pageNo, effectivePageSize, abortCtl ? abortCtl.signal : undefined);
             let list = Array.isArray(data) ? data : (data ? [data] : []);
 
             // Field rows (isfield === 't') are exempt from pagination and search: they are always
@@ -1671,6 +1722,8 @@ if (typeof document !== "undefined") {
             }
             return list;
         } catch (error) {
+            // Aborted because the user typed on: not a failure, nothing is stored, the newer search takes over
+            if (error && error.name === "AbortError") return axDatasourceObj[listKey] || [];
             failedFetches.add(fetchKey);
             failedFetchTimes[fetchKey] = Date.now();
             if (!isNextPage) axDatasourceObj[listKey] = [];
@@ -1678,6 +1731,7 @@ if (typeof document !== "undefined") {
             return [];
         } finally {
             activeFetches.delete(fetchKey);
+            if (abortCtl && axSearchAbort[baseKey] === abortCtl) delete axSearchAbort[baseKey];
             scheduleSuggestionRefresh();
         }
     }
@@ -1742,7 +1796,7 @@ if (typeof document !== "undefined") {
             structSearchPendingTerm = null;
             structSearchAsked.add(askKey);
             loadList("axi_structmetalist", param, term, 1, getPageSize());
-        }, 300);
+        }, SEARCH_DEBOUNCE_MS);
     }
 
     /**
@@ -5414,15 +5468,20 @@ if (typeof document !== "undefined") {
                     if (axDatasourceObj[searchKey] !== undefined) {
                         dataList = axDatasourceObj[searchKey];
                         console.log("%c[AxiCMD Debounce] Found cached results for term. Count:", "color: #16a34a;", dataList.length);
+                    } else if (refineFromCompleteList(sourceKey, cleanSearch)) {
+                        // A shorter search (or the base list) already holds every match, so no server call is needed
+                        clearTimeout(dynamicSearchDebounceTimer);
+                        dynamicSearchPending = false;
+                        dataList = axDatasourceObj[searchKey];
                     } else {
-                        console.log(`%c[AxiCMD Debounce] Scheduling 300ms debounce ADS call for '${cleanSearch}'...`, "color: #e11d48; font-weight: bold;");
+                        console.log(`%c[AxiCMD Debounce] Scheduling ${SEARCH_DEBOUNCE_MS}ms debounce ADS call for '${cleanSearch}'...`, "color: #e11d48; font-weight: bold;");
                         clearTimeout(dynamicSearchDebounceTimer);
                         dynamicSearchPending = true;
                         dynamicSearchDebounceTimer = setTimeout(() => {
                             dynamicSearchPending = false;
                             console.log(`%c[AxiCMD Debounce] >>> TIMER FIRED! Calling loadList with search '${cleanSearch}' <<<`, "background: #7c3aed; color: #fff; padding: 2px 6px; border-radius: 2px; font-weight: bold;");
                             loadList(apiSourceName, paramValue, cleanSearch, 1, getPageSize());
-                        }, 300);
+                        }, SEARCH_DEBOUNCE_MS);
 
                         const localMatches = dataList.filter(item => {
                             const display = item.displaydata || item.caption || item.name || "";
@@ -7215,7 +7274,34 @@ if (typeof document !== "undefined") {
     // token, 401 because the token expired, network/CORS error, a non-OK answer) falls back to the old route
     // through window.GetDataFromAxList, which renews the ARM session on the server.
     let armAuthCache = null;            // { sessionId, token }
-    let armDirectDisabledUntil = 0;     // after a network/CORS failure the direct route rests for a while
+    let lastDirectFailToast = 0;        // when the "could not reach the data service" toast was last shown
+    let armDirectDisabledUntil = 0;    // after a network/CORS failure the direct route rests for a while
+
+    /**
+     * True when an AxList answer says the ARM / Axpert session is gone, e.g.
+     * {"result":{"message":"SessionId is not valid","success":false}}.
+     * @param {*} res - Response object, JSON string or error text.
+     * @returns {boolean}
+     */
+    function isSessionInvalidResponse(res) {
+        if (!res) return false;
+        let text;
+        try { text = (typeof res === "string" ? res : (res.message || JSON.stringify(res))).toLowerCase(); } catch (e) { return false; }
+        return text.includes("sessionid is not valid") ||
+            text.includes("session is not valid") ||
+            text.includes("session expired") ||
+            text.includes("sessionid is invalid") ||
+            text.includes("session is invalid");
+    }
+
+    /**
+     * Sends the whole application to the session-expired page (aspx/sess.aspx) and stops the caller.
+     * @throws {Error} Always, with the message "SessionId is not valid" so callers do not carry on.
+     */
+    function redirectToSessionExpired() {
+        top.window.location.href = `${getAppBaseUrl()}/aspx/sess.aspx`;
+        throw new Error("SessionId is not valid");
+    }
 
     /**
      * Reads the ARM session id and bearer token from the Axpert session global variables.
@@ -7253,7 +7339,7 @@ if (typeof document !== "undefined") {
      * @param {object} data - Request in the AxPEG shape built by getList (adsNames, sqlParams, props ...).
      * @returns {Promise<object|undefined>} AxList response, or undefined when the direct route could not be used.
      */
-    async function callArmAxListDirect(data) {
+    async function callArmAxListDirect(data, signal) {
         if (!AxiArmUrl || Date.now() < armDirectDisabledUntil) return undefined;
         for (let attempt = 0; attempt < 2; attempt++) {
             const auth = await getArmAuth(attempt > 0);
@@ -7283,15 +7369,23 @@ if (typeof document !== "undefined") {
                 const res = await fetch(AxiArmUrl.replace(/\/+$/, "") + "/AxList/api/v1/AxList", {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "Authorization": "Bearer " + auth.token },
-                    body: JSON.stringify(body)
+                    body: JSON.stringify(body),
+                    signal
                 });
                 if (res.status === 401 || res.status === 400) {
+                    // AxList answers a dead session with {"result":{"message":"SessionId is not valid"}}.
+                    // A fresh pair is tried once; if it is still refused the session is really gone.
+                    const text = await res.text().catch(() => "");
+                    if (isSessionInvalidResponse(text) && attempt > 0) redirectToSessionExpired();
                     armAuthCache = null;        // token / session no longer valid: read a fresh pair and try once more
                     continue;
                 }
+                const json = await res.json().catch(() => undefined);
+                if (isSessionInvalidResponse(json)) redirectToSessionExpired();
                 if (!res.ok) return undefined;
-                return await res.json();
+                return json;
             } catch (e) {
+                if (e && (e.message === "SessionId is not valid" || e.name === "AbortError")) throw e;
                 // Network error or blocked by CORS: do not try the direct route again for a few minutes
                 armDirectDisabledUntil = Date.now() + 5 * 60 * 1000;
                 return undefined;
@@ -7337,17 +7431,31 @@ if (typeof document !== "undefined") {
      * @param {object} data - Request payload data.
      * @returns {Promise<object>} Server response data.
      */
-    async function getAxListAsync(data) {
+    async function getAxListAsync(data, signal) {
         if (!axicmdenabled) return null;
-        const direct = await callArmAxListDirect(data);
+        const direct = await callArmAxListDirect(data, signal);
         if (direct !== undefined) return direct;
-        return new Promise((resolve, reject) => {
-            window.GetDataFromAxList(
-                data,
-                res => resolve(res),
-                err => reject(err)
-            );
-        });
+        // The direct route could not be used and the server fallback is off: tell the user once in a while,
+        // instead of silently showing empty lists.
+        if (Date.now() - lastDirectFailToast > 30000) {
+            lastDirectFailToast = Date.now();
+            try { showToast("AxiCMD could not reach the data service. Please try again or contact your administrator."); } catch (e) { }
+        }
+        // The fallback through AxPEG.aspx/GetDataFromAxList is switched off on purpose (it must not be called).
+        // Kept commented out in case it is needed again; when the direct route fails, the caller gets null (empty list).
+        // return new Promise((resolve, reject) => {
+        //     window.GetDataFromAxList(
+        //         data,
+        //         res => resolve(res),
+        //         err => {
+        //             // The server route can also report the dead session through its error callback
+        //             try { if (isSessionInvalidResponse(err) || isSessionInvalidResponse(err?.responseText)) redirectToSessionExpired(); }
+        //             catch (e) { return reject(e); }
+        //             reject(err);
+        //         }
+        //     );
+        // });
+        return null;
 
     }
 
@@ -7362,7 +7470,7 @@ if (typeof document !== "undefined") {
      * @param {number} [pageSize=100] - Records per page (0 to fetch all, or limit like 100).
      * @returns {Promise<Array<object>>} Dataset rows.
      */
-    async function getList(axDatasourceName, paramValuesCsv = "", searchTerm = "", pageNo = 1, pageSize = getPageSize()) {
+    async function getList(axDatasourceName, paramValuesCsv = "", searchTerm = "", pageNo = 1, pageSize = getPageSize(), signal) {
         if (!axicmdenabled) return [];
         try {
             //await ensureSignedIn();
@@ -7458,24 +7566,14 @@ if (typeof document !== "undefined") {
                 payload: JSON.parse(JSON.stringify(requestBody))
             });
 
-            const res = await getAxListAsync(requestBody);
+            const res = await getAxListAsync(requestBody, signal);
 
             console.log("%c[AxiCMD getList / ADS] Server response received for " + axDatasourceName + ":", "color: #059669; font-weight: bold;", res);
 
             // console.log("Get List data: " + JSON.stringify(res));
 
-            if (res) {
-                const resStr = (typeof res === "string" ? res : JSON.stringify(res)).toLowerCase();
-                if (resStr.includes("sessionid is not valid") ||
-                    resStr.includes("session is not valid") ||
-                    resStr.includes("session expired") ||
-                    resStr.includes("sessionid is invalid") ||
-                    resStr.includes("session is invalid")) {
-                    const baseUrl = getAppBaseUrl();
-                    top.window.location.href = `${baseUrl}/aspx/sess.aspx`;
-                    throw new Error("SessionId is not valid");
-                }
-            }
+            // Dead session (also covers the fallback route): go to the session-expired page
+            if (isSessionInvalidResponse(res)) redirectToSessionExpired();
 
             let dataObj = typeof res === "string" ? JSON.parse(res) : res;
             if (dataObj && dataObj.d) {
@@ -7506,7 +7604,8 @@ if (typeof document !== "undefined") {
             return list;
 
         } catch (err) {
-            if (err.message === "SessionId is not valid") {
+            // Session expired, or the request was aborted by a newer search: let the caller decide
+            if (err.message === "SessionId is not valid" || err.name === "AbortError") {
                 throw err;
             }
             return [];
