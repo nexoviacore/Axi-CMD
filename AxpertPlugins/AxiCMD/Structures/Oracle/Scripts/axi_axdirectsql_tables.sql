@@ -584,9 +584,7 @@ Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIED
 >>
 
 <<
-Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990032,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_structmetalist',null,'Metadata',1,'SELECT * from TABLE(fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5)) m --ax_ui_filter_withwhere
-ORDER BY m.displaydata --ax_pagination
-','param1,param2,param3,param4,param5','param1~Character~,param2~Character~,param3~Character~,param4~Character~,param5~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990032,'F',0,null,'admin',to_date('21-05-26','DD-MM-RR'),'admin',to_date('21-05-26','DD-MM-RR'),null,1,1,null,null,null,'axi_structmetalist',null,'Metadata',1,'SELECT * from TABLE(fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5))','param1,param2,param3,param4,param5','param1~Character~,param2~Character~,param3~Character~,param4~Character~,param5~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
 >>
 
 <<
@@ -675,9 +673,7 @@ Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIED
 >>
 
 <<
-INSERT INTO axdirectsql (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd, pagination, applydimensions) VALUES(99999999990039, 'F', 0, NULL, 'admin', to_date('2025-12-23 13:22:07', 'YYYY-MM-DD HH24:MI:SS'), 'admin', to_date('2025-12-19 16:06:57', 'YYYY-MM-DD HH24:MI:SS'), NULL, 1, 1, NULL, NULL, NULL, 'axi_getstructsdata', NULL, 'Metadata', 5, 'select * from TABLE(fn_axi_getstructs_obj(:param1, :param2, :param3, :param4, :param5, :param6, :param7, :param8, :param9, :param10)) o --ax_ui_filter_withwhere
-ORDER BY dbms_lob.substr(o.isfield, 1, 1) DESC, o.transrecordid DESC --ax_pagination
-', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10', 'param1~~,param2~~,param3~~,param4~~,param5~~param6~~,param7~~,param8~~,param9~~,param10~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL, 'T', 'F')
+INSERT INTO axdirectsql (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd) VALUES(99999999990039, 'F', 0, NULL, 'admin', to_date('2025-12-23 13:22:07', 'YYYY-MM-DD HH24:MI:SS'), 'admin', to_date('2025-12-19 16:06:57', 'YYYY-MM-DD HH24:MI:SS'), NULL, 1, 1, NULL, NULL, NULL, 'axi_getstructsdata', NULL, 'Metadata', 5, 'select * from TABLE(fn_axi_getstructs_obj(:param1, :param2, :param3, :param4, :param5, :param6, :param7, :param8, :param9, :param10))', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10', 'param1~~,param2~~,param3~~,param4~~,param5~~param6~~,param7~~,param8~~,param9~~,param10~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
 >>
 
 

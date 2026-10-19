@@ -9,6 +9,10 @@ DROP FUNCTION fn_axi_getstructs_obj
 >>
 
 <<
+DROP FUNCTION fn_axi_getstructures_meta
+>>
+
+<<
 DROP TYPE AXI_GETSTRUCTURES_META_tbl
 >>
 

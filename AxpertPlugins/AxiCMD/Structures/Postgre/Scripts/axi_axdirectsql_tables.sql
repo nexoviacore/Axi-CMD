@@ -680,25 +680,16 @@ VALUES
 )
 >>
 
--- axi_structmetalist and axi_getstructsdata: search and paging are done by the AxList API (ARM), not by the SQL
--- function. AxList replaces the marker comments --ax_ui_filter_withwhere (WHERE <typed filter>) and
--- --ax_pagination (LIMIT n OFFSET m) from props.filters / props.pageno / props.pagesize; without a marker it
--- applies nothing. Keep each marker as the last thing on its line (the rest of a line after -- is a comment).
--- axi_getstructsdata orders field rows (isfield = 't') first, so page 1 carries all of them and later pages are records.
 <<
 INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd, pagination, applydimensions)
-VALUES(99999999990038, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_structmetalist', NULL, 'Metadata', 5, 'SELECT * from fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5) m --ax_ui_filter_withwhere
-ORDER BY m.displaydata --ax_pagination
-', 'param1,param2,param3,param4,param5', 'param1~~,param2~~,param3~~,param4~~,param5~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL, 'T', 'F')
+(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
+VALUES(99999999990038, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_structmetalist', NULL, 'Metadata', 5, 'SELECT * from fn_axi_getstructures_meta(:param1,:param2,:param3,:param4,:param5)', 'param1,param2,param3,param4,param5', 'param1~~,param2~~,param3~~,param4~~,param5~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
 >>
 
 <<
 INSERT INTO axdirectsql
-(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd, pagination, applydimensions)
-VALUES(99999999990039, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_getstructsdata', NULL, 'Metadata', 5, 'select * from fn_axi_getstructs_obj(:param1, :param2, :param3, :param4, :param5, :param6, :param7, :param8, :param9, :param10) o --ax_ui_filter_withwhere
-ORDER BY o.isfield DESC, o.transrecordid DESC --ax_pagination
-', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10', 'param1~~,param2~~,param3~~,param4~~,param5~~param6~~,param7~~,param8~~,param9~~,param10~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL, 'T', 'F')
+(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
+VALUES(99999999990039, 'F', 0, NULL, 'admin', '2025-12-23 13:22:07.000', 'admin', '2025-12-19 16:06:57.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_getstructsdata', NULL, 'Metadata', 5, 'select * from fn_axi_getstructs_obj(:param1, :param2, :param3, :param4, :param5, :param6, :param7, :param8, :param9, :param10)', 'param1,param2,param3,param4,param5,param6,param7,param8,param9,param10', 'param1~~,param2~~,param3~~,param4~~,param5~~param6~~,param7~~,param8~~,param9~~,param10~~', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
 >>
 
 <<
