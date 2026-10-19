@@ -16961,85 +16961,210 @@ if (typeof document !== "undefined") {
             .AXI-Sec.axi-tour-active #axiAddFavoriteBtn,
             .AXI-Sec.axi-tour-active #axiViewFavoritesBtn,
             .AXI-Sec.axi-tour-active #btnRefresh,
+            .AXI-Sec.axi-tour-active #axiSettingsBtn,
             .AXI-Sec.axi-tour-active .clearbtn {
                 pointer-events: none !important;
                 opacity: 0.5 !important;
                 cursor: not-allowed !important;
             }
+            /* Help tour palette follows the settings panel: navy ink on frosted white glass, blue for "help" */
             .introjs-overlay {
-                background: rgba(10, 10, 18, 0.75) !important;
-                backdrop-filter: blur(4px);
+                background: rgba(20, 27, 56, 0.5) !important;
+                -webkit-backdrop-filter: blur(5px);
+                backdrop-filter: blur(5px);
             }
+            /* The highlighted control gets a clear blue ring instead of a glow */
             .introjs-helperLayer {
                 z-index: 10000000 !important;
-                background: rgba(161, 0, 255, 0.1) !important;
-                border: 1px solid rgba(161, 0, 255, 0.5) !important;
-                box-shadow: 0 0 10px rgba(161, 0, 255, 0.3) !important;
+                background: rgba(255, 255, 255, 0.14) !important;
+                border: 2px solid #2563eb !important;
+                border-radius: 10px !important;
+                box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.22) !important;
             }
             .introjs-tooltipReferenceLayer {
                 z-index: 10000001 !important;
             }
             .introjs-tooltip {
-                background: #151521 !important;
-                color: #ffffff !important;
-                border: 1px solid #a100ff !important;
-                box-shadow: 0 0 15px rgba(161, 0, 255, 0.4) !important;
-                border-radius: 8px !important;
+                color: #1d2547 !important;
                 font-family: inherit !important;
-                padding: 15px !important;
                 min-width: 250px !important;
+                padding: 15px !important;
+                border-radius: 18px !important;
+                background: linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.56)) !important;
+                border: 1px solid rgba(255, 255, 255, 0.85) !important;
+                -webkit-backdrop-filter: blur(24px) saturate(170%);
+                backdrop-filter: blur(24px) saturate(170%);
+                box-shadow: 0 28px 64px -16px rgba(20, 27, 56, 0.55),
+                            0 6px 16px -6px rgba(20, 27, 56, 0.25),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
             }
             .introjs-tooltiptext {
                 font-size: 13px !important;
                 line-height: 1.5 !important;
+                padding: 0 !important;
+            }
+            /* Help tour content: header, intro line, command rows, key caps */
+            .introjs-tooltip.axi-tour-tip {
+                min-width: 320px !important;
+                max-width: 400px !important;
+                padding: 18px 18px 14px !important;
+            }
+            .axi-tour-head {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding-bottom: 10px;
+                margin-bottom: 10px;
+                border-bottom: 1px solid rgba(29, 37, 71, 0.1);
+            }
+            .axi-tour-icon {
+                flex: none;
+                width: 32px;
+                height: 32px;
+                line-height: 32px;
+                text-align: center;
+                font-size: 19px;
+                color: #2563eb;
+                background: rgba(37, 99, 235, 0.12);
+                border: 1px solid rgba(37, 99, 235, 0.22);
+                border-radius: 10px;
+            }
+            .axi-tour-title {
+                font-size: 15px;
+                font-weight: 700;
+                line-height: 1.3;
+                color: #1d2547;
+            }
+            .axi-tour-body {
+                font-size: 12.5px;
+                line-height: 1.6;
+                color: #46506f;
+            }
+            .axi-tour-body p {
+                margin: 0 0 8px;
+            }
+            .axi-tour-row {
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                padding: 7px 0;
+                border-top: 1px solid rgba(29, 37, 71, 0.07);
+            }
+            .axi-tour-row:first-of-type {
+                border-top: 0;
+            }
+            .axi-tour-body code {
+                align-self: flex-start;
+                padding: 2px 8px;
+                font-size: 12px;
+                color: #1d4ed8;
+                background: rgba(255, 255, 255, 0.7);
+                border: 1px solid rgba(37, 99, 235, 0.25);
+                border-radius: 7px;
+                white-space: normal;
+            }
+            .axi-tour-body kbd {
+                padding: 1px 6px;
+                font-size: 11.5px;
+                color: #1d2547;
+                background: rgba(255, 255, 255, 0.85);
+                border: 1px solid rgba(29, 37, 71, 0.2);
+                border-bottom-width: 2px;
+                border-radius: 5px;
+            }
+            .axi-tour-note {
+                margin-top: 8px;
+                padding: 8px 10px;
+                font-size: 12px;
+                color: #7a4a05;
+                background: rgba(245, 158, 11, 0.14);
+                border-left: 3px solid #f59e0b;
+                border-radius: 8px;
             }
             .introjs-arrow.bottom {
-                border-top-color: #a100ff !important;
+                border-top-color: rgba(255, 255, 255, 0.85) !important;
             }
             .introjs-arrow.top {
-                border-bottom-color: #a100ff !important;
+                border-bottom-color: rgba(255, 255, 255, 0.85) !important;
             }
             .introjs-arrow.left {
-                border-right-color: #a100ff !important;
+                border-right-color: rgba(255, 255, 255, 0.85) !important;
             }
             .introjs-arrow.right {
-                border-left-color: #a100ff !important;
+                border-left-color: rgba(255, 255, 255, 0.85) !important;
             }
+            /* Back / Skip are quiet; Next / Done is the one solid button */
             .introjs-button {
-                background: #a100ff !important;
-                color: #ffffff !important;
-                border: none !important;
+                background: rgba(255, 255, 255, 0.6) !important;
+                color: #1d2547 !important;
+                border: 1px solid rgba(29, 37, 71, 0.18) !important;
                 text-shadow: none !important;
-                border-radius: 4px !important;
+                border-radius: 10px !important;
                 font-weight: 600 !important;
-                transition: background 0.2s ease;
-                padding: 6px 12px !important;
+                transition: background 0.15s ease, border-color 0.15s ease;
+                padding: 6px 14px !important;
                 pointer-events: auto !important;
                 cursor: pointer !important;
+            }
+            .introjs-button.introjs-nextbutton,
+            .introjs-button.introjs-donebutton {
+                background: #1d2547 !important;
+                border-color: #1d2547 !important;
+                color: #ffffff !important;
             }
             .introjs-tooltipbuttons {
                 display: flex !important;
                 gap: 8px !important;
                 justify-content: flex-end !important;
+                border-top: 0 !important;
             }
             .introjs-button:hover {
-                background: #c34dff !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+                border-color: #2563eb !important;
+                color: #1d2547 !important;
+            }
+            .introjs-button.introjs-nextbutton:hover,
+            .introjs-button.introjs-donebutton:hover {
+                background: #2563eb !important;
+                border-color: #2563eb !important;
                 color: #ffffff !important;
             }
+            .introjs-button:focus-visible {
+                outline: 2px solid #2563eb !important;
+                outline-offset: 2px;
+            }
             .introjs-disabled {
-                background: #2e2e3e !important;
-                color: #7e7e8e !important;
+                background: transparent !important;
+                border-color: rgba(29, 37, 71, 0.1) !important;
+                color: #9aa3bd !important;
                 cursor: not-allowed !important;
             }
+            .introjs-bullets ul li a {
+                background: rgba(29, 37, 71, 0.25) !important;
+            }
             .introjs-bullets ul li a.active {
-                background: #a100ff !important;
+                background: #2563eb !important;
+                width: 16px !important;
+                border-radius: 4px !important;
             }
             .AXI-Sec.axi-tour-active .btn.introjs-showElement,
             .AXI-Sec.axi-tour-active #btnRefresh.introjs-showElement {
                 opacity: 1 !important;
             }
-            .introjs-bullets ul li a {
-                background: #5e5e6e !important;
+            @media (prefers-reduced-motion: no-preference) {
+                .introjs-tooltip {
+                    animation: axi-tour-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+                }
+                @keyframes axi-tour-in {
+                    from { opacity: 0; transform: translateY(6px) scale(0.98); }
+                    to { opacity: 1; transform: none; }
+                }
+            }
+            /* Browsers without backdrop-filter get an almost opaque card so text stays readable */
+            @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+                .introjs-tooltip {
+                    background: rgba(255, 255, 255, 0.97) !important;
+                }
             }
             @media (max-width: 768px) {
                 .introjs-tooltipReferenceLayer {
@@ -17065,7 +17190,7 @@ if (typeof document !== "undefined") {
                     margin: 0 !important;
                     box-sizing: border-box !important;
                     padding: 12px !important;
-                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(161, 0, 255, 0.4) !important;
+                    box-shadow: 0 -8px 32px rgba(20, 27, 56, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
                 }
                 .introjs-arrow {
                     display: none !important;
@@ -17094,37 +17219,79 @@ if (typeof document !== "undefined") {
         input.disabled = true;
         document.querySelector(".AXI-Sec")?.classList.add("axi-tour-active");
 
+        // One step = icon + title, then plain-language body. Markup is styled by the .axi-tour-* rules above.
+        const tourStep = (icon, title, bodyHtml) =>
+            `<div class="axi-tour-head"><span class="axi-tour-icon material-icons">${icon}</span><span class="axi-tour-title">${title}</span></div>` +
+            `<div class="axi-tour-body">${bodyHtml}</div>`;
+        // One command example: the command to type, then what it does
+        const tourRow = (code, text) => `<div class="axi-tour-row"><code>${code}</code><span>${text}</span></div>`;
+
         const tour = introJs();
         tour.setOptions({
+            tooltipClass: 'axi-tour-tip',
             steps: [
                 {
                     element: '#Axi-Searchinp',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Command Search &amp; Execution</strong></div><div style="font-size: 12px; line-height: 1.6;">command syntax:<br>• <code>&quot;Customer Form&quot; create</code> (Open forms)<br>• <code>&quot;Sales Order&quot; view &quot;SO-101&quot;</code> (View record)<br>• <code>&quot;Items&quot; edit quantity 50</code> (Modify records)<br><br>Or run system administration commands:<br>• <code>configure peg &lt;pegname&gt;</code>, <code>configure settings</code><br>• <code>sdk db console</code> (Access developer tools)<br><br>Press <strong>Enter</strong> to run the command.</div>',
+                    intro: tourStep('search', 'Type a command',
+                        '<p>Type what you want to do, pick a suggestion, then press <kbd>Enter</kbd>.</p>' +
+                        tourRow('&quot;Customer Form&quot; create', 'Open a form to add a new record') +
+                        tourRow('&quot;Sales Order&quot; view &quot;SO-101&quot;', 'Open a record to read it') +
+                        tourRow('&quot;Items&quot; edit quantity 50', 'Change a field on a record') +
+                        tourRow('configure peg &lt;pegname&gt;', 'Open an administration setting') +
+                        tourRow('sdk &quot;db console&quot;','Open a developer tool')),
+                    position: 'bottom'
+                },
+                {
+                    element: '#Axi-Searchinp',
+                    intro: tourStep('code', 'Open Developer Studio with source',
+                        '<p>Use the <code>source</code> command to open a form, report, page or data source in Developer Studio.</p>' +
+                        tourRow('&quot;Sales Order&quot; source', 'Open the form or report design') +
+                        tourRow('&quot;Monthly Sales&quot; source', 'Open a page or data source definition') +
+                        '<div class="axi-tour-note">Only users with developer access can use <code>source</code>. Everyone else sees a message that they have no access.</div>'),
                     position: 'bottom'
                 },
                 {
                     element: '#axiAddFavoriteBtn',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">bookmark_add</span></span><strong style="color: #a100ff;">Add to Favorites</strong></div><div style="font-size: 12px; line-height: 1.6;">Click this button to save the current command in the search box to your personal favorites card.<br>Name it as you like for quick reference later (excludes <code>run</code> commands).</div>',
+                    intro: tourStep('bookmark_add', 'Save a command as a favorite',
+                        '<p>Save the command in the box so you can run it again in one click. Give it a name you will recognize.</p>' +
+                        '<p>Commands that start with <code>run</code> cannot be saved.</p>'),
                     position: 'bottom'
                 },
                 {
                     element: '#axiViewFavoritesBtn',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">bookmarks</span></span><strong style="color: #a100ff;">View &amp; Search Favorites</strong></div><div style="font-size: 12px; line-height: 1.6;">Click this button to open the sliding Favorites card.<br>Use the new built-in filter field to search and execute your bookmarks instantly.</div>',
+                    intro: tourStep('bookmarks', 'Find your favorites',
+                        '<p>Open your saved commands. Type in the filter box to narrow the list, then select one to run it.</p>'),
                     position: 'bottom'
                 },
                 {
                     element: '#axiSuggestions',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">list</span></span><strong style="color: #a100ff;">Smart Autocomplete Suggestions</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Target-First Matching:</strong> Search results list target forms, views, and commands first.<br>• <strong>Space Auto-Quoting:</strong> Pressing space automatically wraps multi-word targets in quotes.<br>• <strong>Capability-Constrained Actions:</strong> Available actions (<code>create</code>, <code>edit</code>, <code>view</code>) are limited based on target type capability (TStructs allow all; IViews, Pages, and ADS allow <code>view</code> only).<br>• <strong>Flexible Navigation:</strong> Select <strong>Go</strong> or <strong>Pop-Up</strong> from suggestion options.</div>',
+                    intro: tourStep('list', 'Suggestions as you type',
+                        '<p>Forms, reports and commands that match what you typed appear here.</p>' +
+                        tourRow('Quotes', 'Press <kbd>Space</kbd> after a name with several words and quotes are added for you') +
+                        tourRow('Actions', 'The actions offered depend on the target. Forms allow create, edit and view. Reports, pages and data sources allow view only.') +
+                        tourRow('Go or Pop-Up', 'Choose to open the result here or in a pop-up')),
                     position: 'bottom'
                 },
                 {
                     element: '#btnRefresh',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">refresh</span></span><strong style="color: #a100ff;">Force Reload Metadata</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Force Reload:</strong> Click to immediately reload structural metadata, active shell views, and database commands.</div>',
+                    intro: tourStep('refresh', 'Reload the lists',
+                        '<p>Select this when something you just created is missing from the suggestions. It reloads forms, reports and commands.</p>'),
+                    position: 'bottom'
+                },
+                {
+                    element: '#axiSettingsBtn',
+                    intro: tourStep('settings', 'Choose how many records load',
+                        '<p>Set how many records each list loads at a time. Lists with more records load the rest as you scroll.</p>' +
+                        '<p>Pick a number from 100 to 5000, then select <strong>Save</strong>. The lists reload to use the new number.</p>' +
+                        '<div class="axi-tour-note">A smaller number loads faster. A larger number shows more records at once.</div>'),
                     position: 'bottom'
                 },
                 {
                     element: '.searchwrap-AXI',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">keyboard</span></span><strong style="color: #a100ff;">Shortcuts &amp; Quick Exit</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Ctrl + Enter:</strong> Execute the default <strong>Go</strong> option (opens target in current frame).<br>• <strong>Ctrl + Shift + Enter:</strong> Execute in a new <strong>Pop-Up</strong> window/modal.<br>• <strong>Esc:</strong> Closes the command palette instantly, or click anywhere outside to exit.</div>',
+                    intro: tourStep('keyboard', 'Shortcuts',
+                        tourRow('<kbd>Ctrl</kbd> + <kbd>Enter</kbd>', 'Run and open the result in this window') +
+                        tourRow('<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd>', 'Run and open the result in a pop-up') +
+                        tourRow('<kbd>Esc</kbd>', 'Close the command box. Clicking outside also closes it.')),
                     position: 'bottom'
                 }
             ],
