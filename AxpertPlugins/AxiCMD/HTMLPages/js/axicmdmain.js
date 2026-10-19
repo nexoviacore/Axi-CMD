@@ -5758,6 +5758,33 @@ if (typeof document !== "undefined") {
         } else {
             const struct_split = (paramValue && typeof paramValue === "string") ? paramValue.split("$#$") : [];
             struct_selectedfield = struct_split.length > 1 ? struct_split[1] : "";
+
+            // The word after the form name can be a record key VALUE (e.g. "msg04") instead of a field name.
+            // fn_axi_getstructs_obj reads that word as a column of the primary table, which fails with
+            // 42703 "column p.msg04 does not exist". Only a word confirmed as a field row is sent as the
+            // selected field; a key value, or a word we cannot classify yet (cache empty after Refresh or a
+            // settings Save), is sent as "0". That "0" list holds both key values and fields, so once it has
+            // loaded the suggestions are rebuilt and this check runs again with the rows available.
+            if (struct_selectedfield && struct_selectedfield !== "0") {
+                const selLower = struct_selectedfield.toLowerCase();
+                const rawLower = cleanString(tokens[2] || "").toLowerCase();
+                // list keys are "axi_getstructsdata_<cmd>$#$<user>$#$<role>$#$<transid>$#$..." (lower case)
+                const transidLower = String(struct_row.name || "").toLowerCase();
+                let isField = false;
+                for (const key in axDatasourceObj) {
+                    if (!key.startsWith("axi_getstructsdata_") || !key.includes(transidLower) || !Array.isArray(axDatasourceObj[key])) continue;
+                    for (const row of axDatasourceObj[key]) {
+                        if (row.isfield !== 't') continue;
+                        const hit = [row.name, row.displaydata, row.caption]
+                            .some(v => v && (String(v).toLowerCase() === selLower || String(v).toLowerCase() === rawLower));
+                        // field rows are shown as "Caption (fname) [field]"; the resolved value may be just fname
+                        const byFname = String(row.displaydata || "").toLowerCase().includes(`(${selLower})`);
+                        if (hit || byFname) { isField = true; break; }
+                    }
+                    if (isField) break;
+                }
+                if (!isField) struct_selectedfield = "0";
+            }
         }
 
         //// already available globals
@@ -7274,6 +7301,36 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Turns a raw database / ARM error from a data source call into a message an end user can act on.
+     * The raw text (SQL state, function signature, column names) is only written to the console.
+     * @param {string} rawError - Error text returned by the server.
+     * @param {string} [sourceName] - Name of the data source that failed (for the console only).
+     * @returns {string} Short user-friendly message.
+     */
+    function friendlyDataError(rawError, sourceName) {
+        const raw = String(rawError ?? "");
+        const lower = raw.toLowerCase();
+        console.error(`[AxiCMD] Data source "${sourceName || ""}" failed:`, raw);
+
+        // Postgres 42883 / Oracle PLS-00201, ORA-00904 ...: the AxiCMD database objects are missing or outdated
+        if (/42883|does not exist.*function|function .* does not exist|pls-00201|ora-00904|ora-06575|ora-00942/.test(lower) &&
+            /function|procedure|identifier|table or view|axi_/.test(lower)) {
+            return "AxiCMD could not load this list because its database setup is incomplete or outdated. Please ask your administrator to run the AxiCMD database scripts.";
+        }
+        // 42703 undefined column, 42P01 undefined table
+        if (/42703|42p01|column .* does not exist|relation .* does not exist/.test(lower)) {
+            return "This item has a field or table that AxiCMD could not read. Try a different field, or contact your administrator.";
+        }
+        if (/timeout|timed out/.test(lower)) {
+            return "The request took too long. Please try again.";
+        }
+        if (/exception while reading from stream|connection|network|unable to connect/.test(lower)) {
+            return "AxiCMD could not reach the database. Please try again in a moment.";
+        }
+        return "Something went wrong while loading this list. Please try again, or contact your administrator if it continues.";
+    }
+
+    /**
      * Asynchronously fetches list data: straight from the ARM AxList API when possible, otherwise through the
      * Axpert server (AxPEG.aspx GetDataFromAxList).
      * @async
@@ -7430,8 +7487,7 @@ if (typeof document !== "undefined") {
             const list = dataObj?.result?.data?.[0]?.data ?? [];
 
             if (dataObj?.result?.data?.[0]?.error) {
-                showToast(`Error: ${dataObj?.result?.data?.[0]?.error}`);
-                // console.log(`Error: ${dataObj?.result?.data?.[0]?.error}`);
+                showToast(friendlyDataError(dataObj.result.data[0].error, axDatasourceName));
                 return [];
             }
 
