@@ -1991,3 +1991,259 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
     max-height: 30vh !important;
   }
 }
+
+/* =========================================
+   9. VERSION MODAL - frosted glass dialog for the "version" command
+   Markup is built in axicmdmain.js (openVersionModal). Same ink / amber / navy palette as the settings panel.
+   ========================================= */
+.axi-vm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  background: rgba(29, 37, 71, 0.38);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: axi-vm-fade 0.2s ease-out;
+}
+
+.axi-vm {
+  --axi-vm-ink: #1d2547;
+  --axi-vm-muted: #5b6482;
+  --axi-vm-amber: #f59e0b;
+  position: relative;
+  width: 380px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 22px 24px 20px;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--axi-vm-ink);
+  font-size: 13px;
+  border-radius: 24px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.5));
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter: blur(26px) saturate(170%);
+  backdrop-filter: blur(26px) saturate(170%);
+  box-shadow: 0 32px 70px -18px rgba(29, 37, 71, 0.5),
+              0 8px 18px -8px rgba(29, 37, 71, 0.22),
+              inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  animation: axi-vm-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Warm light top right and cool navy bottom left, so the glass has something to refract */
+.axi-vm::before,
+.axi-vm::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  filter: blur(46px);
+  pointer-events: none;
+}
+
+.axi-vm::before {
+  top: -100px;
+  right: -70px;
+  background: var(--axi-vm-amber);
+  opacity: 0.42;
+}
+
+.axi-vm::after {
+  bottom: -120px;
+  left: -80px;
+  background: #4f63c9;
+  opacity: 0.32;
+}
+
+.axi-vm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.axi-vm-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--axi-vm-ink);
+}
+
+.axi-vm-x {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--axi-vm-muted);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.axi-vm-x:hover {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--axi-vm-ink);
+}
+
+/* Each product sits on its own translucent glass strip; the version is the largest thing in the dialog */
+.axi-vm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.axi-vm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.axi-vm-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--axi-vm-muted);
+}
+
+.axi-vm-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.axi-vm-ver {
+  max-width: 100%;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  text-align: right;
+  color: var(--axi-vm-ink);
+}
+
+.axi-vm-ver.axi-vm-missing {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--axi-vm-muted);
+}
+
+.axi-vm-tag {
+  padding: 2px 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #92400e;
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  border-radius: 999px;
+}
+
+.axi-vm-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.axi-vm-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.axi-vm-btn-ghost {
+  color: var(--axi-vm-ink);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+}
+
+.axi-vm-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.axi-vm-btn-main {
+  color: #fff;
+  background: var(--axi-vm-ink);
+  border: 1px solid var(--axi-vm-ink);
+}
+
+.axi-vm-btn-main:hover {
+  background: #2c3868;
+}
+
+.axi-vm-btn:active {
+  transform: scale(0.97);
+}
+
+.axi-vm-x:focus-visible,
+.axi-vm-btn:focus-visible {
+  outline: 2px solid #4f63c9;
+  outline-offset: 2px;
+}
+
+/* No backdrop-filter support: keep the text readable with a more solid surface */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .axi-vm {
+    background: rgba(255, 255, 255, 0.97);
+  }
+}
+
+@media (max-width: 420px) {
+  .axi-vm {
+    padding: 18px 16px 16px;
+  }
+
+  .axi-vm-ver {
+    font-size: 19px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .axi-vm-overlay,
+  .axi-vm {
+    animation: none;
+  }
+}
+
+@keyframes axi-vm-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes axi-vm-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

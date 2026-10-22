@@ -8146,6 +8146,7 @@ if (typeof document !== "undefined") {
 
             let axiVersion = "";
             let axpertVersion = "";
+            let axpertBuild = "";
 
             if (axiRes.ok) {
                 const axiData = await axiRes.json();
@@ -8154,28 +8155,151 @@ if (typeof document !== "undefined") {
 
             if (axpertRes.ok) {
                 const axpertData = await axpertRes.json();
-                const ver = axpertData?.version || "";
-                const sub = axpertData?.subVersion || "";
-                if (ver) {
-                    axpertVersion = ver;
-                    if (sub) {
-                        axpertVersion += ` (${sub})`;
-                    }
-                }
+                axpertVersion = axpertData?.version || "";
+                // subVersion (e.g. "release59") is shown as a build tag beside the version
+                axpertBuild = axpertVersion ? (axpertData?.subVersion || "") : "";
             }
 
-            if (axiVersion && axpertVersion) {
-                showToast(`Axpert Version: ${axpertVersion}\nAxi CMD Version: ${axiVersion}`, 5000, "info");
-            } else if (axiVersion) {
-                showToast(`Axi CMD Version: ${axiVersion}`, 5000, "info");
-            } else if (axpertVersion) {
-                showToast(`Axpert Version: ${axpertVersion}`, 5000, "info");
-            } else {
-                showToast("Version information is not available.");
-            }
+            openVersionModal(axpertVersion, axpertBuild, axiVersion);
         } catch (err) {
             // console.error("Failed to load version info", err);
-            showToast("Failed to load version information.");
+            // Network or parse failure: still open the modal so the user sees both rows as unavailable
+            openVersionModal("", "", "");
+        }
+    }
+
+    /**
+     * Opens the glass "Version" modal. Replaces any modal that is already open.
+     * Closes on Esc, a click on the backdrop, the X button or the Close button.
+     * @param {string} axpertVersion Axpert web version, empty when unavailable.
+     * @param {string} axpertBuild Axpert build tag (subVersion), may be empty.
+     * @param {string} axiVersion AxiCMD version, empty when unavailable.
+     * @returns {void}
+     */
+    function openVersionModal(axpertVersion, axpertBuild, axiVersion) {
+        closeVersionModal();
+
+        const previousFocus = document.activeElement;
+        const el = (tag, className, text) => {
+            const node = document.createElement(tag);
+            if (className) node.className = className;
+            if (text !== undefined) node.textContent = text;
+            return node;
+        };
+
+        const overlay = el("div", "axi-vm-overlay");
+        overlay.id = "axiVersionModal";
+
+        const dialog = el("div", "axi-vm");
+        dialog.setAttribute("role", "dialog");
+        dialog.setAttribute("aria-modal", "true");
+        dialog.setAttribute("aria-labelledby", "axiVersionModalTitle");
+
+        const header = el("div", "axi-vm-header");
+        const title = el("h2", "axi-vm-title", "Version");
+        title.id = "axiVersionModalTitle";
+        const closeX = el("button", "axi-vm-x", "×");
+        closeX.type = "button";
+        closeX.setAttribute("aria-label", "Close");
+        header.appendChild(title);
+        header.appendChild(closeX);
+
+        // One row per product: name on the left, big version on the right, optional build tag under it
+        const buildRow = (name, version, build) => {
+            const row = el("div", "axi-vm-row");
+            row.appendChild(el("span", "axi-vm-name", name));
+            const value = el("div", "axi-vm-value");
+            if (version) {
+                value.appendChild(el("span", "axi-vm-ver", version));
+                if (build) value.appendChild(el("span", "axi-vm-tag", build));
+            } else {
+                value.appendChild(el("span", "axi-vm-ver axi-vm-missing", "Not available"));
+            }
+            row.appendChild(value);
+            return row;
+        };
+
+        const body = el("div", "axi-vm-body");
+        body.appendChild(buildRow("Axpert", axpertVersion, axpertBuild));
+        body.appendChild(buildRow("AxiCMD", axiVersion, ""));
+
+        const footer = el("div", "axi-vm-footer");
+        const copyBtn = el("button", "axi-vm-btn axi-vm-btn-ghost", "Copy versions");
+        copyBtn.type = "button";
+        const closeBtn = el("button", "axi-vm-btn axi-vm-btn-main", "Close");
+        closeBtn.type = "button";
+        footer.appendChild(copyBtn);
+        footer.appendChild(closeBtn);
+
+        dialog.appendChild(header);
+        dialog.appendChild(body);
+        dialog.appendChild(footer);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        // Plain text that can be pasted into a support ticket
+        const summary = [
+            "Axpert: " + (axpertVersion ? axpertVersion + (axpertBuild ? " (" + axpertBuild + ")" : "") : "not available"),
+            "AxiCMD: " + (axiVersion || "not available")
+        ].join("\n");
+
+        let copyTimer = null;
+        copyBtn.addEventListener("click", () => {
+            const done = (label) => {
+                copyBtn.textContent = label;
+                clearTimeout(copyTimer);
+                copyTimer = setTimeout(() => { copyBtn.textContent = "Copy versions"; }, 1800);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(summary).then(() => done("Copied"), () => done("Copy failed"));
+            } else {
+                done("Copy failed");
+            }
+        });
+
+        const close = () => {
+            clearTimeout(copyTimer);
+            document.removeEventListener("keydown", onKey, true);
+            overlay.remove();
+            if (previousFocus && typeof previousFocus.focus === "function") previousFocus.focus();
+        };
+        // Keep the Tab key inside the dialog while it is open
+        const onKey = (e) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+                close();
+            } else if (e.key === "Tab") {
+                const focusable = [closeX, copyBtn, closeBtn];
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        };
+        overlay._axiClose = close;
+
+        closeX.addEventListener("click", close);
+        closeBtn.addEventListener("click", close);
+        overlay.addEventListener("mousedown", (e) => { if (e.target === overlay) close(); });
+        document.addEventListener("keydown", onKey, true);
+        closeBtn.focus();
+    }
+
+    /**
+     * Closes the version modal when it is open.
+     * @returns {void}
+     */
+    function closeVersionModal() {
+        const open = document.getElementById("axiVersionModal");
+        if (open) {
+            if (typeof open._axiClose === "function") open._axiClose();
+            else open.remove();
         }
     }
 
