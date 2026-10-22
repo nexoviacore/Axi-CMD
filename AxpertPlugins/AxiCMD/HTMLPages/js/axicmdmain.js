@@ -1630,7 +1630,7 @@ if (typeof document !== "undefined") {
             axPageState[listKey] = {
                 page: pageNo,
                 // The AxList API pages the whole result (field rows count too), so compare the full row count
-                hasMore: paged && effectivePageSize > 0 && (serverRecordCount === effectivePageSize || list.length === effectivePageSize)
+                hasMore: paged && effectivePageSize > 0 && (serverRecordCount === effectivePageSize || list.length === effectivePageSize || recordItems.some(r => r && r.__fullPage))
             };
 
             // Search first, then limit. (Limiting first would cut the list to its first rows and the search
@@ -7326,7 +7326,7 @@ if (typeof document !== "undefined") {
             };
             const sessionId = read("ARM_SessionId");
             const token = read("ARM_Token");
-            armAuthCache = (sessionId && token) ? { sessionId, token } : null;
+            armAuthCache = (sessionId && token) ? { sessionId, token, read } : null;
         } catch (e) {
             armAuthCache = null;
         }
@@ -7459,6 +7459,145 @@ if (typeof document !== "undefined") {
 
     }
 
+    // ---- View records through the ARM Entity API (TKT-1387) -------------------------------------------------------
+    // The generic AxList data source (axi_getstructsdata) knows nothing about the form's view filter (the
+    // "<transid>_filter" application variable, e.g. cityf_filter = "... and cityf1.createdby = :username"), so
+    // "view <form>" listed every record. The Entity page does not have that problem because it asks ARM for the
+    // records of a TransId, and ARM applies the filter itself. The palette does the same for the record rows of the
+    // "view" command. Field rows (isfield = 't') still come from axi_getstructsdata, page 1 only.
+
+    /**
+     * True when this axi_getstructsdata request is a "view" or "edit" record list of a tstruct that must come from
+     * the Entity API.
+     * @param {string} axDatasourceName - Data source of the request.
+     * @param {object} sqlParams - param1..param10 as sent to the data source (cmd, user, role, transid, selectedfield,
+     *                             dimension, permission, keyfield, primarytable, globalvars).
+     * @returns {boolean}
+     */
+    function isViewRecordsRequest(axDatasourceName, sqlParams) {
+        if (String(axDatasourceName || "").toLowerCase() !== "axi_getstructsdata") return false;
+        const p = sqlParams || {};
+        const isNA = v => !v || String(v).toUpperCase() === "NA";
+        // "view" and "edit" list the same records, so both must honour the form's view filter
+        const cmd = String(p.param1 || "").toLowerCase();
+        if (!((cmd === "view" || cmd === "edit") && !isNA(p.param4) && !isNA(p.param8))) return false;
+
+        // Only tstructs go through the Entity API. iviews, pages and ADS stay on AxList. The structure type
+        // (stype: t / i / p / ads) is read from the loaded structure list; when the form is not found there, AxList is used.
+        const transLower = String(p.param4).toLowerCase();
+        for (const key in axDatasourceObj) {
+            if (!key.startsWith("axi_structmetalist") || !Array.isArray(axDatasourceObj[key])) continue;
+            const row = axDatasourceObj[key].find(r => r && String(r.name || "").toLowerCase() === transLower && (r.stype || r.STYPE));
+            if (row) return String(row.stype || row.STYPE).toLowerCase() === "t";
+        }
+        return false;
+    }
+
+    /**
+     * Case-insensitive read of a column from an Entity list row.
+     * @param {object} row - One row of result.data.ListData.
+     * @param {string} name - Column (field) name.
+     * @returns {string} The value as text, or "" when missing.
+     */
+    function entityRowValue(row, name) {
+        if (!row || !name) return "";
+        const lower = String(name).toLowerCase();
+        const hit = Object.keys(row).find(k => k.toLowerCase() === lower);
+        const v = hit === undefined ? "" : row[hit];
+        return (v === null || v === undefined) ? "" : String(v);
+    }
+
+    /**
+     * Fetches one page of records of a form from the ARM Entity API, the same call the Entity page makes, so ARM
+     * applies the form's view filter and the user's permissions. Rows are returned in the palette's list shape
+     * { displaydata, id, caption, isfield: 'f', transrecordid }.
+     * @async
+     * @param {object} sqlParams - param1..param10 of the axi_getstructsdata request.
+     * @param {string} searchTerm - Typed term (already trimmed and lower-cased); used when 3+ characters.
+     * @param {number} pageNo - Page number (1-based).
+     * @param {number} pageSize - Page size, the same one AxList uses.
+     * @param {AbortSignal} [signal] - Aborts the request when a newer search starts.
+     * @returns {Promise<Array<object>|null>} Rows, or null when the Entity API could not be used.
+     */
+    async function getViewRecordsFromEntityApi(sqlParams, searchTerm, pageNo, pageSize, signal) {
+        if (!AxiArmUrl) return null;
+        const transId = String(sqlParams.param4 || "");
+        const keyField = String(sqlParams.param8 || "");
+        const selField = (sqlParams.param5 && sqlParams.param5 !== "0" && String(sqlParams.param5).toUpperCase() !== "NA") ? String(sqlParams.param5) : "";
+
+        const filters = [];
+        if (searchTerm && searchTerm.length >= 3) {
+            filters.push({ ftransid: transId, fldname: selField || keyField, condition: "CONTAINS", datatype: "TEXT", value: searchTerm });
+        }
+
+        for (let attempt = 0; attempt < 2; attempt++) {
+            const auth = await getArmAuth(attempt > 0);
+            if (!auth) return null;
+            const body = {
+                Page: "Entity",
+                ARMSessionId: auth.sessionId,
+                OnlyData: true,
+                TransId: transId,
+                AppName: getProjectName(),
+                Roles: window.AxUserRoles || "",
+                UserName: sqlParams.param2 || window.mainUserName || "",
+                PageNo: pageNo,
+                PageSize: pageSize,
+                Filters: filters,
+                CalledFromDataList: true
+            };
+            try {
+                const res = await fetch(AxiArmUrl.replace(/\/+$/, "") + "/AxList/api/v1/GetEntityListPageLoadData", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + auth.token },
+                    body: JSON.stringify(body),
+                    signal
+                });
+                if (res.status === 401 || res.status === 400) {
+                    const text = await res.text().catch(() => "");
+                    if (isSessionInvalidResponse(text) && attempt > 0) redirectToSessionExpired();
+                    armAuthCache = null;
+                    continue;
+                }
+                const json = await res.json().catch(() => undefined);
+                if (isSessionInvalidResponse(json)) redirectToSessionExpired();
+                if (!res.ok || !json) return null;
+
+                // ListData can come back null or empty (no record matches, or ARM has nothing for this page): that is
+                // "no data", not an error, so the suggestions are simply empty. Only an answer with no result at all
+                // is treated as a failure.
+                if (!json?.result) return null;
+                const listData = Array.isArray(json.result.data?.ListData) ? json.result.data.ListData : [];
+
+                const records = listData.map(row => {
+                    const keyVal = entityRowValue(row, keyField);
+                    const selVal = selField ? entityRowValue(row, selField) : "";
+                    return {
+                        // same text the SQL function builds: key value, or "<selected field value>[<key value>]"
+                        displaydata: selField ? `${selVal}[${keyVal}]` : keyVal,
+                        id: "0",
+                        caption: selField ? selVal : keyVal,
+                        isfield: "f",
+                        transrecordid: row.recordid
+                    };
+                }).filter(r => r.displaydata !== "" && r.displaydata !== "[]");
+
+                // Rows with an empty key are dropped above (like "p.<key> IS NOT NULL" in the SQL function), so a full
+                // server page can shrink below the page size. The paging code decides "load more" from the row count,
+                // so the last row remembers that the server page was full. The mark is plain data and survives the cache.
+                if (pageSize > 0 && listData.length >= pageSize && records.length > 0) {
+                    records[records.length - 1].__fullPage = true;
+                }
+                return records;
+            } catch (e) {
+                if (e && (e.message === "SessionId is not valid" || e.name === "AbortError")) throw e;
+                console.error("[AxiCMD] Entity API call failed:", e);
+                return null;
+            }
+        }
+        return null;
+    }
+
     /**
      * Fetches dataset for specified Axpert data source name and parameters.
      * Supports pagination and dynamic server-side search filtering.
@@ -7516,6 +7655,9 @@ if (typeof document !== "undefined") {
             if (cleanTerm) {
                 cacheKey += `_q_${cleanTerm}`;
             }
+            // "view" records come from the Entity API (filtered); _ent keeps them apart from older unfiltered entries
+            const viewFromEntity = isViewRecordsRequest(axDatasourceName, sqlParams);
+            if (viewFromEntity) cacheKey += `_ent`;
             // _v2 = entries are stored as { t: savedAtMs, d: rows } so they can expire (older _v1 entries are ignored)
             cacheKey += `_v2`;
 
@@ -7566,7 +7708,10 @@ if (typeof document !== "undefined") {
                 payload: JSON.parse(JSON.stringify(requestBody))
             });
 
-            const res = await getAxListAsync(requestBody, signal);
+            // View records: page 1 still asks AxList for the field rows; later pages are records only, so the
+            // Entity API alone answers them.
+            const skipAxList = viewFromEntity && effectivePageNo > 1;
+            const res = skipAxList ? null : await getAxListAsync(requestBody, signal);
 
             console.log("%c[AxiCMD getList / ADS] Server response received for " + axDatasourceName + ":", "color: #059669; font-weight: bold;", res);
 
@@ -7582,11 +7727,23 @@ if (typeof document !== "undefined") {
 
             // console.log("DATA obj is : " + dataObj);
             // console.log("Type of DATA OBJ: " + typeof dataObj);
-            const list = dataObj?.result?.data?.[0]?.data ?? [];
+            let list = dataObj?.result?.data?.[0]?.data ?? [];
 
             if (dataObj?.result?.data?.[0]?.error) {
                 showToast(friendlyDataError(dataObj.result.data[0].error, axDatasourceName));
                 return [];
+            }
+
+            if (viewFromEntity) {
+                // Keep only the field rows of AxList (its record rows ignore the form's view filter) and add the
+                // filtered records from the Entity API.
+                list = list.filter(r => r && r.isfield === "t");
+                const records = await getViewRecordsFromEntityApi(sqlParams, cleanTerm, effectivePageNo, effectivePageSize, signal);
+                if (records === null) {
+                    showToast("AxiCMD could not load the records of this form. Please try again or contact your administrator.");
+                } else {
+                    list = list.concat(records);
+                }
             }
 
 
