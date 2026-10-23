@@ -2782,6 +2782,54 @@ if (typeof document !== "undefined") {
         activePagedContext = { source: "axi_structmetalist", param: param, term: "", listKey: "axi_structmetalist_" + param.toLowerCase() };
     }
 
+    /**
+     * Opens a double quote before the word being typed when a space is typed after it and a suggestion with
+     * spaces starts with that word (typing "test" then a space for "Test Target" gives `"test `), so the
+     * rest of the name is treated as one value. Uses the suggestions currently shown (`items`).
+     * @param {string} val - Input text before the space is added.
+     * @returns {string|null} New input text including the space, or null when no quote should be added.
+     */
+    function autoQuoteMultiWordValue(val) {
+        const tokens = getTokens(val);
+        const lastTokenRaw = tokens[tokens.length - 1] || "";
+        const isFirstToken = tokens.length === 1;
+
+        if (lastTokenRaw.startsWith('"') || (isFirstToken && getCommandConfig(lastTokenRaw))) return null;
+
+        const hasMultiWordMatch = items.some(item => {
+            const str = (typeof item === 'string' ? item : item.displaydata || "").toLowerCase();
+            return str.startsWith(lastTokenRaw.toLowerCase()) && str.includes(" ");
+        });
+        if (!hasMultiWordMatch) return null;
+
+        const lastIndex = val.lastIndexOf(lastTokenRaw);
+        if (lastIndex === -1) return null;
+        return val.substring(0, lastIndex) + '"' + lastTokenRaw + ' ';
+    }
+
+    /**
+     * Soft keyboards (Android Chrome, WebView, hybrid app) do not send a usable keydown for the space key,
+     * so the quote is added here instead: the input event reports the text that was inserted.
+     * Does nothing when the keydown path already quoted the word (the last token then starts with a quote).
+     * @param {InputEvent} ev - The input event.
+     * @returns {void}
+     */
+    function quoteMultiWordAfterSpace(ev) {
+        try {
+            const type = ev && ev.inputType;
+            if (type !== "insertText" && type !== "insertCompositionText") return;
+            const val = input.value;
+            // Only a single space just typed at the end of the text: not a double space, not mid-text edits
+            if (!/[^\s]\s$/.test(val) || val.slice(-1) !== " " || input.selectionStart !== val.length) return;
+            if (items.length === 0) return;
+            const quoted = autoQuoteMultiWordValue(val.slice(0, -1));
+            if (quoted !== null) {
+                input.value = quoted;
+                input.setSelectionRange(quoted.length, quoted.length);
+            }
+        } catch (e) { }
+    }
+
     function handleInput() {
         try {
             if (!axicmdenabled) return;
@@ -5829,7 +5877,7 @@ if (typeof document !== "undefined") {
                 const rawLower = cleanString(tokens[2] || "").toLowerCase();
                 // list keys are "axi_getstructsdata_<cmd>$#$<user>$#$<role>$#$<transid>$#$..." (lower case)
                 const transidLower = String(struct_row.name || "").toLowerCase();
-                let isField = false;
+                let confirmedFname = "";
                 for (const key in axDatasourceObj) {
                     if (!key.startsWith("axi_getstructsdata_") || !key.includes(transidLower) || !Array.isArray(axDatasourceObj[key])) continue;
                     for (const row of axDatasourceObj[key]) {
@@ -5838,11 +5886,17 @@ if (typeof document !== "undefined") {
                             .some(v => v && (String(v).toLowerCase() === selLower || String(v).toLowerCase() === rawLower));
                         // field rows are shown as "Caption (fname) [field]"; the resolved value may be just fname
                         const byFname = String(row.displaydata || "").toLowerCase().includes(`(${selLower})`);
-                        if (hit || byFname) { isField = true; break; }
+                        if (hit || byFname) {
+                            // The function needs the field's internal name (fname). A word matched by its caption
+                            // ("Rent Expenses") must not be sent as typed, or it is read as the column p."rent expenses".
+                            const m = /\(([^()]+)\)\s*\[field\]\s*$/i.exec(String(row.displaydata || ""));
+                            confirmedFname = m ? m[1].trim() : "";
+                            break;
+                        }
                     }
-                    if (isField) break;
+                    if (confirmedFname) break;
                 }
-                if (!isField) struct_selectedfield = "0";
+                struct_selectedfield = confirmedFname || "0";
             }
         }
 
@@ -6460,7 +6514,11 @@ if (typeof document !== "undefined") {
 
                     let real = found.name || found.sqlname || found.displaydata;
 
-                    if (real.includes("(") && real.includes(")")) {
+                    // Field rows read "Caption (fname) [field]": keep only the field name. A record row (isfield "f")
+                    // holds a plain value that can contain brackets itself ("Rent Expenses (Indirect Expenses)"),
+                    // so it must keep its whole text or the record lookup searches for "Indirect Expenses".
+                    const isRecordRow = String(found.isfield ?? "").toLowerCase() === "f";
+                    if (!isRecordRow && real.includes("(") && real.includes(")")) {
                         const match = real.match(/\(([^)]+)\)/);
 
                         real = match ? match[1] : real;
@@ -7145,6 +7203,17 @@ if (typeof document !== "undefined") {
 
         realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
         realType = foundObj?.stype ?? "";
+
+        // A record row (isfield "f") is always a value, also in "edit <form> <record>" where it sits at index 2.
+        // Without this "Test (issue)" was cut to "Test" below, and the next suggestions then read that word as a
+        // field name. The list can hold plain strings (the row objects are in filteredObjects), so the row is
+        // looked up by the shown text as well as through foundObj / selectedItem.
+        const shownText = String(suggestion).toLowerCase();
+        const pickedRow = [foundObj, selectedItem, ...(Array.isArray(filteredObjects) ? filteredObjects : [])]
+            .find(o => o && typeof o === "object" && String(o.displaydata || "").toLowerCase() === shownText);
+        if (pickedRow && String(pickedRow.isfield ?? "").toLowerCase() === "f") {
+            isValueToken = true;
+        }
 
 
 
@@ -8754,8 +8823,9 @@ if (typeof document !== "undefined") {
             handleInput();
         });
 
-        input.addEventListener("input", () => {
+        input.addEventListener("input", (ev) => {
             isInitialLoad = false;
+            quoteMultiWordAfterSpace(ev);
             handleInput();
         });
         input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
@@ -8990,30 +9060,17 @@ if (typeof document !== "undefined") {
             }
 
             // AUTO DOUBLE-QUOTE FOR MULTI-WORD SUGGESTIONS
+            // Physical keyboards report the space here. Phone soft keyboards usually do not (key is
+            // "Unidentified"), so the same quoting is repeated from the input event below.
             if (e.key === " " && items.length > 0) {
                 const val = input.value;
                 if (input.selectionStart === val.length) {
-                    const tokens = getTokens(val);
-                    const lastTokenRaw = tokens[tokens.length - 1] || "";
-
-                    const isFirstToken = tokens.length === 1;
-
-                    if (!lastTokenRaw.startsWith('"') && (!isFirstToken || !getCommandConfig(lastTokenRaw))) {
-                        const hasMultiWordMatch = items.some(item => {
-                            const str = (typeof item === 'string' ? item : item.displaydata).toLowerCase();
-                            return str.startsWith(lastTokenRaw.toLowerCase()) && str.includes(" ");
-                        });
-
-                        if (hasMultiWordMatch) {
-                            e.preventDefault();
-                            const lastIndex = val.lastIndexOf(lastTokenRaw);
-                            if (lastIndex !== -1) {
-                                const prefix = val.substring(0, lastIndex);
-                                input.value = prefix + '"' + lastTokenRaw + ' ';
-                                handleInput();
-                                return;
-                            }
-                        }
+                    const quoted = autoQuoteMultiWordValue(val);
+                    if (quoted !== null) {
+                        e.preventDefault();
+                        input.value = quoted;
+                        handleInput();
+                        return;
                     }
                 }
             }
