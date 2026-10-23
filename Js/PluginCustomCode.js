@@ -463,26 +463,7 @@ class CustomPlugins {
 
         // Update folder dropdowns (same as before)
         function updateFolderDropdowns() {
-            let folders = [...new Set(folderList.map(file => file.FolderName))];
-            const projectName = window.top.mainProject;
-            if (typeof projectName != "undefined" && projectName != null) {
-                const removeFolders = [
-                    projectName + "\\HTMLPages",
-                    projectName + "\\HTMLPages\\css",
-                    projectName + "\\HTMLPages\\js",
-                    "ReactPages\\" + projectName,
-                    "ReactPages\\" + projectName + "\\css",
-                    "ReactPages\\" + projectName + "\\js"
-                ];
-                folders = folders.filter(folder => {
-                    return !removeFolders.some(
-                        removeFolder =>
-                            folder.toLowerCase().replace(/\\+$/, '') ===
-                            removeFolder.toLowerCase().replace(/\\+$/, '')
-                    );
-                });
-            }
-
+            const folders = [...new Set(folderList.map(file => file.FolderName))];
             const $parentFolder = $('#parentFolder');
             const $uploadFolder = $('#uploadFolder');
 
@@ -497,16 +478,6 @@ class CustomPlugins {
 
         // Display files in accordion structure
         function displayFilesAccordion() {
-            try {
-                fileList = Array.from(
-                    new Map(
-                        fileList.map(file => [
-                            JSON.stringify(file),
-                            file
-                        ])
-                    ).values()
-                );
-            } catch (ex) { }
             const $accordion = $('#folderAccordion');
             $accordion.empty();
 
@@ -574,29 +545,7 @@ class CustomPlugins {
         function createFileItemHtml(file) {
             const fileSize = formatFileSize(file.FileSize);
             _customPlugins.fileManagerFiles[file.FullFilePath] = file;
-            if (typeof file?.RecId != "undefined" && file?.RecId != null) {
-
-                return `
-                    <div class="file-item" data-filepath="${file.FullFilePath}">
-                        <div class="d-flex justify-content-between align-items-center p-3" >
-                            <div class="col-4 d-flex align-items-center">
-                                <a href="javascript:void(0);" onclick="_customPlugins.loadFileTypes(this, '${file.FileName.toLowerCase()}')" class="filename fw-bold">${file.FileName}</a>
-                            </div>
-    
-                            <div class="col-4 text-center">
-                                <span><i class="fas fa-hdd me-1"></i>${fileSize}</span>
-                            </div>
-    
-                            <div class="col-4 text-end">
-                                <span><i class="fas fa-clock me-1"></i>${_customPlugins.formatDate(file.ModifiedOn)}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    
-                `;
-            } else {
-                return `
+            return `
                     <div class="file-item" data-filepath="${file.FullFilePath}">
                         <div class="d-flex justify-content-between align-items-center p-3" >
                             <div class="col-4 d-flex align-items-center">
@@ -615,7 +564,6 @@ class CustomPlugins {
 
                     
                 `;
-            }
         }
 
         function formatFileSize(size) {
@@ -767,7 +715,7 @@ class CustomPlugins {
 
             });
         }
-        if (typeof filesList?.HTML?.RecId != "undefined" && filesList?.HTML?.RecId != null) {
+        if (typeof filesList?.HTML?.RecId != "undefined") {
             if (filesList?.HTML?.ReactPage == "true") 
                 _this.loadIvTstPage("ta__rp♣recordid=" + filesList?.HTML?.RecId +"♣act=load♣openerIV=a__rplst♣isIV=true♣isDupTab=false♣dummyload=false♠");
             else
@@ -1789,18 +1737,4 @@ $(document).ready(function () {
     _customPlugins = new CustomPlugins();
     _customPlugins.init();
 
-    var pageToLoad = sessionStorage.getItem(
-        "reloadPluginCustomPage"
-    );
-    if (pageToLoad) {
-        sessionStorage.removeItem(
-            "reloadPluginCustomPage"
-        );
-        setTimeout(function () {
-            if (typeof _customPlugins !== "undefined" &&
-                typeof _customPlugins.loadIvTstPage === "function") {
-                _customPlugins.loadIvTstPage(pageToLoad);
-            }
-        }, 500);
-    }
 });

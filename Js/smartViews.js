@@ -2720,11 +2720,10 @@ function createIvirDataTable(task, index, totalArray, grandTotalArray) {
         } catch (error) { }
         var st = Math.round($(this).scrollTop());
         if (st > lastScrollTop) {
-            var $o = checkNextDBRowsExist ? $(e.currentTarget) : $(e.currentTarget);// undefined;
+            var $o = checkNextDBRowsExist ? $(e.currentTarget) : undefined;
             var scrollBarExists = $(this).hasScrollBar();
             console.clear();
-            /*if (!checkNextDBRowsExist && typeof $o == 'undefined') {*/
-            if (!checkNextDBRowsExist) {
+            if (!checkNextDBRowsExist && typeof $o == 'undefined') {
                 setTimeout(function () {
                     if (typeof checkNextShowAllRows != "undefined" && checkNextShowAllRows)
                         $("#lblCurPage").html('Rows: 1-' + dtDbTotalRecords + ' of ');

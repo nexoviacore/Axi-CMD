@@ -1,0 +1,52 @@
+---
+title: Architecture
+description: The parts of AxiCMD and how a request flows through them.
+---
+
+## The parts
+
+```text
+ Axpert Web shell (mainHomeConfigTemplate.html)
+ └─ AXI-Sec palette  ──  axicmdmain.js
+        │
+        ├── command grammar, favourites, settings ──►  AxiApi  (ASP.NET Core, .NET 8)  ──►  database
+        │
+        └── lists of forms, records, fields ───────►  ARM AxList API  ──►  ADS (axdirectsql)  ──►  SQL functions
+```
+
+| Part | Role |
+| --- | --- |
+| **Shell host** | `aspx/mainHomeConfigTemplate.html` renders the shell and the `AXI-Sec` palette container, and loads `axicmdmain.js?v=N`. |
+| **Engine** | `axicmdmain.js` is one large IIFE. It tokenises the input, resolves entities, ranks suggestions and runs commands. |
+| **AxiApi** | Serves the command configuration, grammar bootstrap, user favourites, user settings and key-field configuration. See [AxiApi](/docs/axiapi). |
+| **ARM AxList** | The service that runs an ADS and applies paging and filters. The palette calls `{armUrl}/AxList/api/v1/AxList` directly. |
+| **ADS** | An Axpert Data Source: a row in `axdirectsql` holding inline SQL or a call to a function. |
+| **SQL functions** | For example `fn_axi_getstructs_obj` and `fn_axi_getstructures_meta`. They exist for PostgreSQL and Oracle. |
+
+## A request from end to end
+
+Typing `cityf view` and picking a record:
+
+1. The engine tokenises the input. Commands are typed target first (the form name, then the command). `getTokens` swaps the first two words when the first is a known target and the second is a valid action for it, so internally the command is handled as `view cityf`. The command `view` is resolved from the command configuration (data, not code).
+2. It looks up the form `cityf` in the structure list (`axi_structmetalist`). That list is paged, so the lookup uses `findStructRow(...)` and falls back to `requestStructSearch(...)`.
+3. For the record suggestions it calls `getList("axi_getstructsdata", params, term, page, size)`.
+4. `getList` builds a request with `adsNames`, `sqlParams` (`param1` to `param10`) and `props.pageno` / `props.pagesize`. When 3 or more characters are typed it adds a `displaydata CONTAINS` filter.
+5. `getAxListAsync` sends it to the AxList API with the ARM session id and bearer token, which come from the session global variables `ARM_SessionId` and `ARM_Token`.
+6. AxList runs the ADS, which calls `fn_axi_getstructs_obj`. The function applies permissions, dimensions and the form's [view filter](/docs/view-filters). AxList applies the typed filter and the paging.
+7. The rows come back, are cached, ranked, and shown. Selecting one opens the form through the shell hook `top.window.LoadIframe`.
+
+## Shell hooks to reuse
+
+New code should use the shell's existing mechanisms and not add parallel ones:
+
+- `top.window.LoadIframe` to open a page in the shell.
+- `ShowDimmer` for the loader.
+- `openDeveloperStudio` to open the builders. It is asynchronous, which is why `holdDimmerUntilStudioLoads` keeps the loader on.
+
+All three live in `Js/main.js`.
+
+## Known weak spots
+
+- `axicmdmain.js` is very large and its parts depend on each other. A change in `getList` can affect caching, paging and view filters at once. The plan for splitting it is in `docs/refactor-plan-axicmdmain.md`.
+- There are three cache layers (see [Data loading](/docs/data-loading)), so an old result can survive a fix.
+- There is no automated UI test. The tests in `tests/` re-implement logic with mock data and do not load the real script.

@@ -1,0 +1,247 @@
+{
+  "info": {
+    "name": "AxList paging (axi_structmetalist)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "page 1, size 100",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "const inner = JSON.parse(typeof outer.d === 'string' ? outer.d : JSON.stringify(outer.d));",
+              "const rows = (inner.result && inner.result.data && inner.result.data[0] && inner.result.data[0].data) || [];",
+              "console.log('rows returned: ' + rows.length);",
+              "pm.test('status 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(inner.result.success).to.eql(true));",
+              "pm.test('at most 100 rows', () => pm.expect(rows.length).to.be.at.most(100));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"default\",\n    \"param3\": \"default\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": false,\n    \"pageno\": 1,\n    \"pagesize\": 100\n  }\n}"
+        }
+      }
+    },
+    {
+      "name": "page 1, size 10",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "const inner = JSON.parse(typeof outer.d === 'string' ? outer.d : JSON.stringify(outer.d));",
+              "const rows = (inner.result && inner.result.data && inner.result.data[0] && inner.result.data[0].data) || [];",
+              "console.log('rows returned: ' + rows.length);",
+              "pm.test('status 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(inner.result.success).to.eql(true));",
+              "pm.test('at most 10 rows', () => pm.expect(rows.length).to.be.at.most(10));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"default\",\n    \"param3\": \"default\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": false,\n    \"pageno\": 1,\n    \"pagesize\": 10\n  }\n}"
+        }
+      }
+    },
+    {
+      "name": "page 2, size 10",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "const inner = JSON.parse(typeof outer.d === 'string' ? outer.d : JSON.stringify(outer.d));",
+              "const rows = (inner.result && inner.result.data && inner.result.data[0] && inner.result.data[0].data) || [];",
+              "console.log('rows returned: ' + rows.length);",
+              "pm.test('status 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(inner.result.success).to.eql(true));",
+              "pm.test('at most 10 rows', () => pm.expect(rows.length).to.be.at.most(10));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"default\",\n    \"param3\": \"default\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": false,\n    \"pageno\": 2,\n    \"pagesize\": 10\n  }\n}"
+        }
+      }
+    },
+    {
+      "name": "page 1, size 10, filter 'test save'",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "const inner = JSON.parse(typeof outer.d === 'string' ? outer.d : JSON.stringify(outer.d));",
+              "const rows = (inner.result && inner.result.data && inner.result.data[0] && inner.result.data[0].data) || [];",
+              "console.log('rows returned: ' + rows.length);",
+              "pm.test('status 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(inner.result.success).to.eql(true));",
+              "pm.test('filtered rows contain the term', () => rows.forEach(r => pm.expect(String(r.displaydata).toLowerCase()).to.include('test save')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"default\",\n    \"param3\": \"default\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": false,\n    \"pageno\": 1,\n    \"pagesize\": 10,\n    \"filters\": [\n      {\n        \"fldname\": \"displaydata\",\n        \"condition\": \"CONTAINS\",\n        \"value\": \"test save\",\n        \"datatype\": \"TEXT\"\n      }\n    ]\n  }\n}"
+        }
+      }
+    },
+    {
+      "name": "size 0 (all rows, for comparison)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "const inner = JSON.parse(typeof outer.d === 'string' ? outer.d : JSON.stringify(outer.d));",
+              "const rows = (inner.result && inner.result.data && inner.result.data[0] && inner.result.data[0].data) || [];",
+              "console.log('rows returned: ' + rows.length);",
+              "pm.test('status 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(inner.result.success).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"default\",\n    \"param3\": \"default\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": false,\n    \"pageno\": 1,\n    \"pagesize\": 0\n  }\n}"
+        }
+      }
+    }
+  ]
+}

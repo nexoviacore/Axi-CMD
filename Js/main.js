@@ -109,7 +109,6 @@ appGlobalVarsObject = new appGlobalObj();
  */
 function appGlobalObj() {
     //this.lcm = callParentNew("lcm");
-    var hideCount = 0;
     _this_ = this;
     this.lcm = lcm;
     this._CONSTANTS = new globalConstants();
@@ -199,33 +198,16 @@ function appGlobalObj() {
                 },
                 hide(e, modal, win) {
                     // setTimeout(() => {
-                    if (hideCount > 0) {
-                        try {
-                            var backBtn = $(_this_._CONSTANTS.window.appGlobalVarsObject._CONSTANTS.navigation.backButton.div);
-                            if (backBtn?.length > 0) {
-                                if (!_this_._CONSTANTS.window.appGlobalVarsObject._CONSTANTS.isBackBtnHidden) {
-                                    backBtn.addClass("d-none");
-                                    _this_._CONSTANTS.window.appGlobalVarsObject._CONSTANTS.isBackBtnHidden = true;
-                                }
-                            }
-                        } catch (ex) { }
-                        return;
-                    }
-                    hideCount++;
                     try {
                         var backBtn = $(_this_._CONSTANTS.window.appGlobalVarsObject._CONSTANTS.navigation.backButton.div);
                         if (backBtn?.length > 0) {
-                            if (_this_._CONSTANTS.window.appGlobalVarsObject._CONSTANTS.isBackBtnHidden && typeof win != "undefined" && win?.name != 'loadPopUpPage') {
+                            if (_this_._CONSTANTS.window.appGlobalVarsObject._CONSTANTS.isBackBtnHidden) {
                                 backBtn.removeClass("d-none");
                                 // backBtn.show();
                                 _this_._CONSTANTS.window.appGlobalVarsObject._CONSTANTS.isBackBtnHidden = false;
                             }
                         }
-                    } finally {
-                        setTimeout(function () {
-                            hideCount = 0;
-                        }, 0);
-                    }
+                    } catch (ex) { }
                     // }, 0);
                 }
             }
@@ -865,7 +847,7 @@ function BeforeWindowClose() {
             var localSessionVal = parseInt(window.localStorage.getItem("axpertLocalsession"));
             if (!localSessionVal || localSessionVal == 0) {
                 var isExeSave = (typeof callParentNew("axExecTraceFlag") != 'undefined' && callParentNew("axExecTraceFlag") == 'true') ? ExecutionTraceInterval(true) : true;
-                clearLocalStorage(['projInfo-', 'versionInfo-', 'langInfo-', 'hybridGUID-', 'hybridDeviceId-', 'compressedMode-', 'duplicateUser-', 'instanceName-', 'customGlobalStylesExist-', 'axGlobalThemeStyle-', 'axThemeFldr-', 'tstDDFVal♠', 'current_tabsignin-', 'axKeepMeBrowserId-'], true);
+                clearLocalStorage(['projInfo-', 'versionInfo-', 'langInfo-', 'hybridGUID-', 'hybridDeviceId-', 'compressedMode-', 'duplicateUser-', 'instanceName-', 'customGlobalStylesExist-', 'axGlobalThemeStyle-', 'axThemeFldr-', 'tstDDFVal♠', 'current_tabsignin-'], true);
                 window.localStorage.removeItem("axpertLocalsession");
                 if (isExeSave) {
                     let appSessUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
@@ -1601,8 +1583,6 @@ function prevbtn_click(thisobject) {
 
     if (isMobile && appLinkHistory.length == 1)
         console.log('axm_mainpageloaded');
-    else if (isMobile && appLinkHistory.length == 0)
-        console.log('axm_homepageloaded');
     updateLinks(thisobject, 'prev');
 
 }
@@ -5345,8 +5325,6 @@ function updateHisLabel(url) {
         // For Iview  
 
         var childPT = $('#middle1').contents().find('div#breadcrumb-panel').find('.bcrumb').find('.tstivCaption').text();
-        if (typeof childPT != "undefined" && childPT == "")
-            childPT = $('#middle1').contents().find('div#breadcrumb-panel').find('.page-caption').text();
         if (findGetParameter("tstcaption", url) != null) {
             childPT += " - Listview";
         }

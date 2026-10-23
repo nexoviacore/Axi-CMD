@@ -19,15 +19,7 @@
     <link rel="stylesheet" href="../ThirdParty/codemirror/addon/search/matchesonscrollbar.css">
 
     <link rel="stylesheet" href="../Css/PluginCustomCode.min.css?v=2">
-    <script type="text/javascript">
-        function reloadPluginCustomPage(isreact) {
-            sessionStorage.setItem(
-                "reloadPluginCustomPage",
-                isreact ? "ta__rp" : "tsect"
-            );
-            window.location.reload();
-        }
-    </script>
+
 </head>
 
 <body id="Entitymanagement_Body" class="header-fixed header-tablet-and-mobile-fixed aside-fixed gradTheme" runat="server">
@@ -401,7 +393,7 @@
     <script type="text/javascript" src="../ThirdParty/codemirror/addon/search/jump-to-line.js"></script>
 
     <script src="../js/Entity-common.min.js?v=18"></script>
-    <script type="text/javascript" src="../Js/PluginCustomCode.min.js?v=10"></script>
+    <script type="text/javascript" src="../Js/PluginCustomCode.min.js?v=7"></script>
 
 
 </body>

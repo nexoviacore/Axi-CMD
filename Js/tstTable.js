@@ -420,9 +420,6 @@ function GetTableHtml() {
                         if (colExp != "") {
                             colExp = colExp.replace(/,/g, "♦");
                             result = callParentNew("Evaluate(" + tableJson.columns[i + 1].name + ",000," + colExp + ",expr,table)", "function");
-                            if (Number.isNaN(result) || result === "NaN") {
-                                result = "";
-                            }
                         }
                         fldExpData.push(result);
                         colVExp.push(tableJson.columns[i + 1].vexp);
@@ -1030,17 +1027,6 @@ function AddTableRows(thisTblId, isAddRowClk = '') {
                 let _colValue = "";
                 if (_sourceFld != "")
                     _colValue = $(callParentNew(sourceFldId)).val();
-
-                if (colfExp[iIndex] != "") {
-                    let colExp = colfExp[iIndex].replace(/,/g, "♦");
-                    let _expcolValue = callParentNew("Evaluate(" + sElement + "," + _thisRNo + "," + colExp + ",expr,table)", "function");
-                    if (Number.isNaN(_expcolValue) || _expcolValue === "NaN") {
-                        _expcolValue = "";
-                    }
-                    if (_expcolValue != "")
-                        _colValue = _expcolValue;
-                }
-
                 if (typeof _colValue != "undefined" && _colValue != "" && $("#" + _thisEleName).length > 0) {
                     $("#" + _thisEleName).val(_colValue);
 
@@ -1062,7 +1048,6 @@ function AddTableRows(thisTblId, isAddRowClk = '') {
 }
 
 function MainBlur(obj, type) {
-    parent.allowClose = false;
     let fldInd = colNames.indexOf(obj.attr("name"));
     if (typeof colVExp[fldInd] != "undefined" && colVExp[fldInd] != "") {
         var vExp = colVExp[fldInd].replace(/,/g, "♦");
@@ -1072,10 +1057,7 @@ function MainBlur(obj, type) {
         var cellVal = String(parent.ChangedTblFieldVals[indx]).split('~');       
         cellVal[vRowNo] = $(obj).val();
         parent.ChangedTblFieldVals[indx] = cellVal.join("~");
-        let OldValue = '';
-        if ($(obj).is("[value]")) {
-            OldValue = $(obj).attr('value');
-        }
+
         var fResult = callParentNew("Evaluate(" + obj.attr("name") + "," + vRowNo + "," + vExp + ",vexpr,table)", "function");
         if (fResult != 'T' && fResult != 't' && fResult != true) {
             var cutMsg = eval(callParent('lcm[52]'));
@@ -1085,7 +1067,21 @@ function MainBlur(obj, type) {
                 showAlertDialog("error", alertMsg);
             } else if (firstChar == "?") {
                 showAlertDialog("error", alertMsg);
-                SetValueOnVExpr(obj, type);
+                if (type == "input") {
+                    $(obj).val($(obj).val());
+                    $(obj).attr("value", $(obj).val());
+                }
+                else {
+                    let ddlValue = $j(obj).val();
+                    if ($(obj).hasClass("tblFromSelect")) {
+                        ddlValue = ddlValue == null ? "" : ddlValue;
+                        $(obj).append('<option value="' + ddlValue + '" selected="selected">' + ddlValue + '</option>');
+                        $(obj).attr("value", ddlValue);
+                    } else {
+                        $j(obj).attr("selected", "selected");
+                        $(obj).attr("value", ddlValue);
+                    }
+                }
                 return false;
             } else if (firstChar == "*") {
                 showAlertDialog("error", alertMsg);
@@ -1095,11 +1091,11 @@ function MainBlur(obj, type) {
                     return true;
                 } else if (confirm(fResult + ". " + cutMsg)) {
                     if (type == "input") {
-                        $(obj).val(OldValue);
-                        $(obj).attr("value", OldValue);
+                        $(obj).val($(obj).val());
+                        $(obj).attr("value", $(obj).val());
                     }
                     else {
-                        let ddlValue = OldValue;// $j(obj).val();
+                        let ddlValue = $j(obj).val();
                         if ($(obj).hasClass("tblFromSelect")) {
                             ddlValue = ddlValue == null ? "" : ddlValue;
                             $(obj).append('<option value="' + ddlValue + '" selected="selected">' + ddlValue + '</option>');
@@ -1109,17 +1105,14 @@ function MainBlur(obj, type) {
                             $(obj).attr("value", ddlValue);
                         }
                     }
-                    cellVal[vRowNo] = $(obj).val();
-                    parent.ChangedTblFieldVals[indx] = cellVal.join("~");
+
                     return false;
                 } else {
-                    SetValueOnVExpr(obj, type);
                     return true;
                 }
             }
-        } else {
-            SetValueOnVExpr(obj, type);
         }
+
         TableEvalonBlur(indx, vRowNo);
     }
     else {
@@ -1154,28 +1147,7 @@ function MainBlur(obj, type) {
         totalOnLoadtstTable();
     }, 0);
 }
-function SetValueOnVExpr(obj, type) {
-    if (type == "input") {
-        $(obj).val($(obj).val());
-        $(obj).attr("value", $(obj).val());
-    }
-    else {
-        let ddlValue = $j(obj).val();
-        if ($(obj).hasClass("tblFromSelect")) {
-            ddlValue = ddlValue == null ? "" : ddlValue;
-            $(obj).append('<option value="' + ddlValue + '" selected="selected">' + ddlValue + '</option>');
-            $(obj).attr("value", ddlValue);
-        } else {
-            $j(obj).attr("selected", "selected");
-            $(obj).attr("value", ddlValue);
-        }
-    }
-    var vRowNo = obj.attr("id").replace(obj.attr("name") + "R", '');
-    var indx = $j.inArray(obj.attr("name"), parent.ChangedTblFields);
-    var cellVal = String(parent.ChangedTblFieldVals[indx]).split('~');
-    cellVal[vRowNo] = $(obj).val();
-    parent.ChangedTblFieldVals[indx] = cellVal.join("~");
-}
+
 function TableEvalonBlur(fldInd, fRowNo) {
     if (typeof colfExp[fldInd] != "undefined" && colfExp[fldInd] == "") {
         for (var i = fldInd; i < colfExp.length; i++) {
@@ -1191,9 +1163,6 @@ function TableEvalonBlur(fldInd, fRowNo) {
 
                 var fResult = callParentNew("Evaluate(" + obj.attr("name") + "," + fRowNo + "," + fExp + ",expr,table)", "function");
                 if (fResult != '') {
-                    if (Number.isNaN(fResult) || fResult === "NaN") {
-                        fResult = "";
-                    }
                     let type = $(obj).attr("type");
                     if (type == "text") {
                         $(obj).val(fResult);

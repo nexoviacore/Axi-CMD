@@ -244,10 +244,9 @@ public partial class aspx_ArrangeMenu : System.Web.UI.Page
             string result = asbWeb.saveArrangeMenuData(key, changedNodes, actionSequence, changedVisibility);
             if (result.ToLower() == "done")
             {
-                //bool IsMenuCache = fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKeyMenuData, "Menu"), key, Constants.REDISMENUDATA, schemaName);
-                //if (IsMenuCache == false)
-                //    HttpContext.Current.Session["MenuData"] = key;
-                asbWeb.RefreshMenu();
+                bool IsMenuCache = fdwObj.SaveInRedisServer(util.GetRedisServerkey(fdKeyMenuData, "Menu"), key, Constants.REDISMENUDATA, schemaName);
+                if (IsMenuCache == false)
+                    HttpContext.Current.Session["MenuData"] = key;
                 return new { status = "success", msg = "" };
             }
             else

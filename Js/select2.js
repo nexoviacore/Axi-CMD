@@ -103,14 +103,13 @@ function createFormSelect(fld) {
                         IsBindData = true;
                     } else {
                         GetProcessTime();
-                        let _stermVal = termVal;
                         IsBindData = false;
                         isRefreshClick = false;
                         let _isDupTab = callParentNew('isDuplicateTab');
                         return JSON.stringify({
                             tstDataId: tstDataId,
                             FldName: fieldName,
-                            FltValue: _stermVal,
+                            FltValue: termVal,
                             ChangedFields: ChangedFields,
                             ChangedFieldDbRowNo: ChangedFieldDbRowNo,
                             ChangedFieldValues: ChangedFieldValues,
@@ -263,9 +262,6 @@ function createFormSelect(fld) {
                                 $(".msSelectAllOption").removeClass("d-none");
                             if (fastdll) {
                                 var aSearch = [];
-
-                                termVal = String(termVal || "").replace(/"/g, '&quot;');
-
                                 $(dtAssoc).each(function (iIndex, sElement) {
                                     sElement.i = sElement.i.replace(/\^\^dq/g, '&quot;');
                                     if (typeof DropdownSStartsWith != "undefined" && DropdownSStartsWith != "" && DropdownSStartsWith == "starts with") {
@@ -315,10 +311,9 @@ function createFormSelect(fld) {
                             } else {
                                 var result = ($.map(dtAssoc, function (item) {
                                     if (termVal != "") {
-                                        termVal = termVal.replace(/"/g, '&quot;');
-                                        item.i = item.i.replace(/\^\^dq/g, '&quot;');
                                         if (typeof DropdownSStartsWith != "undefined" && DropdownSStartsWith != "" && DropdownSStartsWith == "starts with") {
                                             if (arabic.test(item.i.toLowerCase()) && item.i.toLowerCase().endsWith(termVal.toLowerCase())) {
+                                                item.i = item.i.replace(/\^\^dq/g, '&quot;');
                                                 return {
                                                     //id: item.v == "" ? item.i : item.v,
                                                     id: item.i,
@@ -327,6 +322,7 @@ function createFormSelect(fld) {
                                                 }
                                             }
                                             else if (item.i.toLowerCase().startsWith(termVal.toLowerCase())) {
+                                                item.i = item.i.replace(/\^\^dq/g, '&quot;');
                                                 return {
                                                     //id: item.v == "" ? item.i : item.v,
                                                     id: item.i,
@@ -348,7 +344,7 @@ function createFormSelect(fld) {
                                                 });
 
                                                 if (_thisTrue) {
-                                                    //item.i = item.i.replace(/\^\^dq/g, '&quot;');
+                                                    item.i = item.i.replace(/\^\^dq/g, '&quot;');
                                                     return {
                                                         //id: item.v == "" ? item.i : item.v,
                                                         id: item.i,
@@ -358,7 +354,7 @@ function createFormSelect(fld) {
                                                 }
                                             } else {
                                                 if (item.i.toLowerCase().indexOf(termVal.toLowerCase()) >= 0) {
-                                                    //item.i = item.i.replace(/\^\^dq/g, '&quot;');
+                                                    item.i = item.i.replace(/\^\^dq/g, '&quot;');
                                                     return {
                                                         //id: item.v == "" ? item.i : item.v,
                                                         id: item.i,
@@ -602,9 +598,6 @@ function createFormSelect(fld) {
                                     UpdateFieldArray(depfldId + rcID, rowNum, depfldValue, "parent", "AutoComplete");
                                     UpdateAllFieldValues(depfldId + rcID, depfldValue);
                                 }
-                                let _thisfldDcNo = GetDcNo(depfldId);
-                                if (_thisfldDcNo && IsDcGrid(_thisfldDcNo))
-                                    GridNurfldDisplayTot(_thisfldDcNo, depfldId, _fldIndex);
                             }
                         }
                     });
@@ -644,9 +637,6 @@ function createFormSelect(fld) {
                         if (depfldId.toLowerCase().startsWith("axpfile_")) {
                             BindAxpFilesonDep(depfldId + rcID, depfldValue);
                         }
-                        let _thisfldDcNo = GetDcNo(depfldId);
-                        if (_thisfldDcNo && IsDcGrid(_thisfldDcNo)) 
-                            GridNurfldDisplayTot(_thisfldDcNo, depfldId, _fldIndex);
                     });
                 } catch (Ex) { }
             }
@@ -655,7 +645,6 @@ function createFormSelect(fld) {
         AxFocusedFld = "";
         setTimeout(function () {
             AxOldValue = "";
-            AxDoBlur = true;
             MainBlur($j("#" + fldNameAc));
         }, 0);
     }).on("select2:unselect", function (e) {
@@ -675,7 +664,6 @@ function createFormSelect(fld) {
         else if (!$(this).hasClass("multiFldChk"))
             AxOldValue = fldAcValue;
         AxFocusedFld = "";
-        AxDoBlur = true;
         MainBlur($j("#" + fldNamesf));
     }).on('select2:open', function (e) {
 
@@ -714,7 +702,6 @@ function createFormSelect(fld) {
 
                 if ($(this).attr("id") != AxFocusedFld && AxFocusedFld != "" && AxFldBlured != AxFocusedFld && !$("#" + AxFocusedFld).hasClass("fldFromSelect") && !$("#" + AxFocusedFld).hasClass("multiFldChk") && !$("#" + AxFocusedFld).hasClass("gridHeaderSwitch") && !$("#" + AxFocusedFld).hasClass("dvgrdchkboxnonedit") && !$("#" + AxFocusedFld).hasClass("ckbGridStretchSwitch"))// Changed text field and directlly click on select2 field using mouse changed field not getting call mainblur.
                 {
-                    AxDoBlur = true;
                     MainBlur($("#" + AxFocusedFld));
                     AxOldValue = "";
                     MainFocus($j(this));
@@ -730,7 +717,6 @@ function createFormSelect(fld) {
         else {
             if ($(this).attr("id") != AxFocusedFld && AxFocusedFld != "" && AxFldBlured != AxFocusedFld && !$("#" + AxFocusedFld).hasClass("fldFromSelect") && !$("#" + AxFocusedFld).hasClass("multiFldChk") && !$("#" + AxFocusedFld).hasClass("gridHeaderSwitch") && !$("#" + AxFocusedFld).hasClass("dvgrdchkboxnonedit") && !$("#" + AxFocusedFld).hasClass("ckbGridStretchSwitch"))// Changed text field and directlly click on select2 field using mouse changed field not getting call mainblur.
             {
-                AxDoBlur = true;
                 MainBlur($("#" + AxFocusedFld));
                 AxOldValue = "";
                 MainFocus($j(this));
@@ -1281,7 +1267,6 @@ function createFormMultiSelect(msfldId) {
                     if (msData.length != 0) {
                         let aSearch = [];
                         if (typeof termVal != "undefined" && termVal != "" && termVal != null && termVal.toLowerCase() != "") {
-                            termVal = termVal.replace(/"/g, '&quot;');
                             $(msData).each(function (iIndex, sElement) {
                                 sElement.mslist = sElement.mslist.replace(/\^\^dq/g, '&quot;');
                                 if (sElement.mslist.toLowerCase().indexOf(termVal.toLowerCase()) >= 0) {
@@ -1377,7 +1362,6 @@ function createFormMultiSelect(msfldId) {
         UpdateFieldArray(fldNameMs, rowNum, fldMulValue, "parent", "AutoComplete");
         UpdateAllFieldValues(fldNameMs, fldMulValue);
         setTimeout(function () {
-            AxDoBlur = true;
             MainBlur($j("#" + fldNameMs));
         }, 0);
     }).on("select2:unselect", function (e) {
@@ -1396,7 +1380,6 @@ function createFormMultiSelect(msfldId) {
             AxOldValue = " ";
         //else
         //    AxOldValue = fldMulValue;
-        AxDoBlur = true;
         MainBlur($j("#" + fldNamesf));
     }).on('select2:open', function (e) {
         const evt = "scroll.select2";
@@ -1419,7 +1402,6 @@ function createFormMultiSelect(msfldId) {
 
             if ($(this).attr("id") != AxFocusedFld && AxFocusedFld != "" && !$("#" + AxFocusedFld).hasClass("fldFromSelect") && !$("#" + AxFocusedFld).hasClass("multiFldChk") && !$("#" + AxFocusedFld).hasClass("gridHeaderSwitch") && !$("#" + AxFocusedFld).hasClass("dvgrdchkboxnonedit") && !$("#" + AxFocusedFld).hasClass("ckbGridStretchSwitch"))// Changed text field and directlly click on select2 field using mouse changed field not getting call mainblur.
             {
-                AxDoBlur = true;
                 MainBlur($("#" + AxFocusedFld));
                 AxOldValue = "";
                 MainFocus($j(this));
@@ -1432,7 +1414,6 @@ function createFormMultiSelect(msfldId) {
         else {
             if ($(this).attr("id") != AxFocusedFld && AxFocusedFld != "" && !$("#" + AxFocusedFld).hasClass("fldFromSelect") && !$("#" + AxFocusedFld).hasClass("multiFldChk") && !$("#" + AxFocusedFld).hasClass("gridHeaderSwitch") && !$("#" + AxFocusedFld).hasClass("dvgrdchkboxnonedit") && !$("#" + AxFocusedFld).hasClass("ckbGridStretchSwitch"))// Changed text field and directlly click on select2 field using mouse changed field not getting call mainblur.
             {
-                AxDoBlur = true;
                 MainBlur($("#" + AxFocusedFld));
                 AxOldValue = "";
                 MainFocus($j(this));
@@ -1636,14 +1617,13 @@ function createFormSelectMultiChecklist(fld) {
                         //let _thisIdx = FldListParents.indexOf(fieldName + "~" + parentFldVal);
                         IsBindData = true;
                     } else {
-                        let _stermVal = termVal;//.replace(/"/g, '^^dq');
                         IsBindData = false;
                         isRefreshClick = false;
                         let _isDupTab = callParentNew('isDuplicateTab');
                         return JSON.stringify({
                             tstDataId: tstDataId,
                             FldName: fieldName,
-                            FltValue: _stermVal,
+                            FltValue: termVal,
                             ChangedFields: ChangedFields,
                             ChangedFieldDbRowNo: ChangedFieldDbRowNo,
                             ChangedFieldValues: ChangedFieldValues,
@@ -1748,7 +1728,6 @@ function createFormSelectMultiChecklist(fld) {
                                 $(".msSelectAllOption").removeClass("d-none");
                             if (fastdll) {
                                 var aSearch = [];
-                                termVal = termVal.replace(/"/g, '&quot;');
                                 $(dtAssoc).each(function (iIndex, sElement) {
                                     sElement.i = sElement.i.replace(/\^\^dq/g, '&quot;');
                                     if (sElement.i.toLowerCase().indexOf(termVal.toLowerCase()) >= 0) {
@@ -1938,9 +1917,6 @@ function createFormSelectMultiChecklist(fld) {
                         UpdateFieldArray(depfldId + rcID, rowNum, depfldValue, "parent", "AutoComplete");
                         UpdateAllFieldValues(depfldId + rcID, depfldValue);
                     }
-                    let _thisfldDcNo = GetDcNo(depfldId);
-                    if (_thisfldDcNo && IsDcGrid(_thisfldDcNo)) 
-                        GridNurfldDisplayTot(_thisfldDcNo, depfldId, _fldIndex);
                 });
             } catch (Ex) { }
         }
@@ -1985,7 +1961,6 @@ function createFormSelectMultiChecklist(fld) {
 
             if ($(this).attr("id") != AxFocusedFld && AxFocusedFld != "" && !$("#" + AxFocusedFld).hasClass("fldFromSelect") && !$("#" + AxFocusedFld).hasClass("multiFldChk") && !$("#" + AxFocusedFld).hasClass("gridHeaderSwitch") && !$("#" + AxFocusedFld).hasClass("dvgrdchkboxnonedit") && !$("#" + AxFocusedFld).hasClass("ckbGridStretchSwitch"))// Changed text field and directlly click on select2 field using mouse changed field not getting call mainblur.
             {
-                AxDoBlur = true;
                 MainBlur($("#" + AxFocusedFld));
                 AxOldValue = "";
                 MainFocus($j(this));
@@ -1999,7 +1974,6 @@ function createFormSelectMultiChecklist(fld) {
         else {
             if ($(this).attr("id") != AxFocusedFld && AxFocusedFld != "" && !$("#" + AxFocusedFld).hasClass("fldFromSelect") && !$("#" + AxFocusedFld).hasClass("multiFldChk") && !$("#" + AxFocusedFld).hasClass("gridHeaderSwitch") && !$("#" + AxFocusedFld).hasClass("dvgrdchkboxnonedit") && !$("#" + AxFocusedFld).hasClass("ckbGridStretchSwitch"))// Changed text field and directlly click on select2 field using mouse changed field not getting call mainblur.
             {
-                AxDoBlur = true;
                 MainBlur($("#" + AxFocusedFld));
                 AxOldValue = "";
                 MainFocus($j(this));

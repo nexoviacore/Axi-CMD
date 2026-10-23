@@ -1,3 +1,5 @@
+console.log("%c[AxiCMD] axicmdmain.js loaded (Debounce ADS Debugger active)", "background: #0284c7; color: #fff; padding: 3px 6px; border-radius: 3px; font-weight: bold;");
+
 /**
  * Safely parses boolean values from boolean, string ("true"/"false"), or number.
  * Ensures string 'false' evaluates to false (unlike JavaScript's native Boolean('false')).
@@ -373,6 +375,7 @@ if (typeof document !== "undefined") {
                 }
                 return { valid: true };
             } catch (err) {
+                // // console.error("[AxiApiService] Session check error:", err);
                 return { valid: true };
             }
         }
@@ -448,6 +451,7 @@ if (typeof document !== "undefined") {
     let commandFavorites = [];
     let axiFavoritesUrl = "";
     let axiKeyfieldUrl = "";
+    let axiSettingsUrl = "";
     const MAX_FAVORITES = AxiCmdConfig.MAX_FAVORITES;
     let commandRoutes = [];
     let isDeleting = false;
@@ -588,7 +592,294 @@ if (typeof document !== "undefined") {
     let axDatasourceObj = {};
     let activeFetches = new Set();
     let failedFetches = new Set();
+
+    // ---- Large dataset handling ------------------------------------------------------------
+    // Sources that are searched and paged on the server by the AxList API (props.pageno / pagesize / filters,
+    // see getList); everything else is small and filtered locally.
+    // axi_structmetalist = the list of forms / reports / pages / data sources shown under the commands.
+    // (axi_viewlist is paged the same way, but the command line does not use it.)
+    const PAGED_SOURCES = ["axi_getstructsdata", "axi_structmetalist", "axi_viewlist"];
+    // Rows loaded at a time is a per-user setting (gear button next to Refresh). It is stored under
+    // "axipref_" (NOT "axi_") so the Refresh button, which wipes every "axi_" cache key, keeps it.
+    const DEFAULT_PAGE_SIZE = 100;
+    const MIN_PAGE_SIZE = 100;
+    const MAX_PAGE_SIZE = 5000;
+    const PAGE_SIZE_STORAGE_KEY = "axipref_pagesize";
+
+    /**
+     * Local storage key for the page size of the signed-in user. The browser storage is shared by every
+     * user of this browser, so the user name is part of the key; otherwise one user's value shows for the next.
+     * @returns {string} Storage key.
+     */
+    function pageSizeStorageKey() {
+        const user = String(window.mainUserName || "").trim().toLowerCase();
+        return user ? PAGE_SIZE_STORAGE_KEY + "_" + user : PAGE_SIZE_STORAGE_KEY;
+    }
+
+    /**
+     * Keeps a page size inside the allowed range; anything that is not a number gives the default.
+     * @param {*} value - Candidate page size.
+     * @returns {number} Whole number between MIN_PAGE_SIZE and MAX_PAGE_SIZE.
+     */
+    function clampPageSize(value) {
+        const n = parseInt(value, 10);
+        if (isNaN(n)) return DEFAULT_PAGE_SIZE;
+        return Math.min(MAX_PAGE_SIZE, Math.max(MIN_PAGE_SIZE, n));
+    }
+
+    /**
+     * Rows requested per page: the user's saved setting, or the default when none is saved.
+     * @returns {number} Current page size.
+     */
+    function getPageSize() {
+        try {
+            const saved = localStorage.getItem(pageSizeStorageKey());
+            if (saved !== null) return clampPageSize(saved);
+        } catch (e) { }
+        return DEFAULT_PAGE_SIZE;
+    }
+
+    /**
+     * Saves the page size setting for this browser.
+     * @param {*} value - Requested page size (clamped to the allowed range).
+     * @returns {number} The value that was stored.
+     */
+    function setPageSize(value) {
+        const size = clampPageSize(value);
+        try { localStorage.setItem(pageSizeStorageKey(), String(size)); } catch (e) { }
+        return size;
+    }
+
+    /**
+     * Brings the local page size in line with the one saved on the server for this user (the server copy is
+     * what follows the user to another browser or machine). Never rejects and never waits long: if the API
+     * is down or slow the local value (or the default) is used.
+     * @returns {Promise<void>} Resolves when the check is over.
+     */
+    async function syncPageSizeFromServer() {
+        if (!axiSettingsUrl || !window.mainUserName) return;
+        const sizeInUse = getPageSize();
+        // The request is NOT aborted when it is slow (a cold API can take several seconds). The palette only waits
+        // 2.5 s for it; if the answer arrives later and differs from what the lists were loaded with, the setting is
+        // applied then and the lists are reloaded, so the saved value is never silently ignored.
+        const request = fetchServerPageSize().then(remote => {
+            if (remote === undefined) return;               // unreachable: keep the local value
+            if (remote === null) {
+                // the server has no value for this user: they are on the default, so drop any stale local copy
+                try { localStorage.removeItem(pageSizeStorageKey()); } catch (e) { }
+            } else {
+                setPageSize(remote);
+            }
+            return true;
+        });
+        const waited = await Promise.race([request, new Promise(resolve => setTimeout(() => resolve("timeout"), 2500))]);
+        if (waited === "timeout") {
+            request.then(done => {
+                if (done && getPageSize() !== sizeInUse && btnRefresh) btnRefresh.click();
+            });
+        }
+    }
+
+    /**
+     * Reads this user's saved page size from the server.
+     * @returns {Promise<number|null|undefined>} The size; null when the user has none saved; undefined when the API could not be read.
+     */
+    async function fetchServerPageSize() {
+        try {
+            const res = await fetch(`${axiSettingsUrl}?username=${encodeURIComponent(window.mainUserName)}&appname=${encodeURIComponent(getProjectName())}`);
+            if (!res.ok) return undefined;
+            const settings = await res.json();
+            const remote = settings && (settings.pagesize ?? settings.PAGESIZE ?? settings.Pagesize);
+            return (remote === undefined || remote === null || remote === "") ? null : clampPageSize(remote);
+        } catch (e) {
+            return undefined;
+        }
+    }
+
+    /**
+     * Saves the page size for this user on the server. The local value is already stored, so a failure here
+     * only means the setting will not follow the user to another browser yet.
+     * @param {number} size - Page size that was just stored locally.
+     * @returns {Promise<boolean>} True if the server accepted it.
+     */
+    async function savePageSizeToServer(size) {
+        if (!axiSettingsUrl || !window.mainUserName) return false;
+        try {
+            const res = await fetch(`${axiSettingsUrl}/pagesize?appname=${encodeURIComponent(getProjectName())}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: window.mainUserName, value: String(size) })
+            });
+            return res.ok;
+        } catch (e) {
+            return false;
+        }
+    }
+    const MAX_CACHED_SEARCH_KEYS = 20;     // in-memory "_q_<term>" result sets kept per session (LRU)
+    const MAX_MERGED_BASE_ROWS = 5000;     // search hits merged into a base list stop growing past this
+    const MAX_RENDERED_ITEMS = 1000;       // hard cap of <li> elements built in one render
+    const FAILED_FETCH_RETRY_MS = 10000;   // a failed fetch key may be retried after this long
+    const LS_MAX_ENTRY_CHARS = 200000;     // results bigger than this are not persisted to localStorage
+
+    /**
+     * Tells whether a data source is searched/paged on the server.
+     * @param {string} sourceName - Data source (ADS) name.
+     * @returns {boolean} True if the source is searched + paged by the AxList API.
+     */
+    function isPagedSource(sourceName) {
+        const name = (sourceName || "").toLowerCase();
+        return PAGED_SOURCES.includes(name) || name.includes("getstructsdata");
+    }
+
+    // Paging state per fetch key: { page: last page loaded, hasMore: server may have more rows, loading }
+    const axPageState = {};
+    // Insertion order of "_q_" search keys in axDatasourceObj, used for LRU eviction
+    const axSearchKeyOrder = [];
+    // Row-id index per base list so merging search hits does not rescan the whole list each time
+    const axBaseIdIndex = {};
+    // Wait after the last keystroke before a typed term is sent to the server (a database round-trip is slower
+    // than 300 ms, so a shorter wait sends terms that are already outdated).
+    const SEARCH_DEBOUNCE_MS = 450;
+    // The search request still running for each base list (baseKey -> AbortController). Starting a new search of
+    // the same list aborts the old one, so outdated queries do not keep the server busy or re-render the dropdown.
+    const axSearchAbort = {};
+    // When a fetch failed (fetchKey -> timestamp) so it can be retried after FAILED_FETCH_RETRY_MS
+    const failedFetchTimes = {};
+    const LS_TTL_MS = 30 * 60 * 1000;      // persisted list results are reused for this long
+
+    /**
+     * Reads rows back from a localStorage entry written by writeListCache. Also accepts a plain array
+     * (older format). Returns an empty array for anything unreadable.
+     * @param {string} raw - Raw localStorage string.
+     * @returns {Array<object>} Rows.
+     */
+    function parseStoredList(raw) {
+        try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return parsed;
+            if (parsed && Array.isArray(parsed.d)) return parsed.d;
+        } catch (e) { }
+        return [];
+    }
+
+    /**
+     * Returns a still-fresh cached result for the key, or null (missing, expired or unreadable).
+     * Expired entries are removed.
+     * @param {string} cacheKey - localStorage key.
+     * @returns {Array<object>|null} Cached rows or null.
+     */
+    function readListCache(cacheKey) {
+        try {
+            const raw = localStorage.getItem(cacheKey);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.d) && typeof parsed.t === "number" && Date.now() - parsed.t < LS_TTL_MS) {
+                return parsed.d;
+            }
+            localStorage.removeItem(cacheKey);
+        } catch (e) { }
+        return null;
+    }
+
+    /**
+     * Stores rows in localStorage with a timestamp. Very large result sets are not stored (parsing them
+     * later would block the page). If the browser quota is exceeded, old AxiCMD list entries are
+     * removed and the write is retried once.
+     * @param {string} cacheKey - localStorage key.
+     * @param {Array<object>} rows - Rows to store.
+     * @returns {void}
+     */
+    function writeListCache(cacheKey, rows) {
+        let json;
+        try {
+            json = JSON.stringify({ t: Date.now(), d: rows });
+        } catch (e) { return; }
+        if (json.length > LS_MAX_ENTRY_CHARS) return;
+        try {
+            localStorage.setItem(cacheKey, json);
+        } catch (quotaErr) {
+            try {
+                // Quota exceeded: drop every cached list result (they are cheap to reload), then retry once
+                const stale = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && k.startsWith("axi_") && /_v[12]$/.test(k) && k !== cacheKey && k.toLowerCase().includes("_param")) stale.push(k);
+                }
+                stale.forEach(k => localStorage.removeItem(k));
+                localStorage.setItem(cacheKey, json);
+            } catch (e) { /* still no room: skip caching, in-memory cache is still used */ }
+        }
+    }
+
+    // Coalesces "fetch finished -> refresh suggestions" calls (see scheduleSuggestionRefresh)
+    let suggestionRefreshTimer = null;
+    // Dropdown scrollTop to restore after a "load more" re-render (null = start from top)
+    let pendingScrollRestore = null;
+    // Watches the "Scroll down for more..." row. A scroll event does not bubble, and the dropdown has nested
+    // scrolling containers (list, commands grid, structures), so watching the row itself is what reliably
+    // tells that the user reached the end of whichever container scrolls.
+    let loadMoreObserver = null;
+    // listKey of the paged list drawn by the previous render(), to tell a refresh of the same list from a new one
+    let lastRenderedListKey = null;
+    // Paged-list context of the "load more" footer currently drawn (see buildLoadMoreFooter / loadNextPage)
+    let footerPagedContext = null;
+    // The paged list currently shown in the dropdown: { source, param, term, listKey } or null
+    let activePagedContext = null;
+
+    /**
+     * Registers a search key as most recently used and drops the oldest ones beyond the limit.
+     * @param {string} key - Search result key containing "_q_".
+     * @returns {void}
+     */
+    function touchSearchKey(key) {
+        const idx = axSearchKeyOrder.indexOf(key);
+        if (idx !== -1) axSearchKeyOrder.splice(idx, 1);
+        axSearchKeyOrder.push(key);
+        while (axSearchKeyOrder.length > MAX_CACHED_SEARCH_KEYS) {
+            const oldest = axSearchKeyOrder.shift();
+            delete axDatasourceObj[oldest];
+            delete axPageState[oldest];
+        }
+    }
+
+    /**
+     * Builds the result of a typed search from a list the client already holds completely, so no request is sent.
+     * Works when the base list, or the result of a shorter term contained in the typed one, came back without a
+     * "more pages" flag: then every match of the longer term is among its rows. Field rows (isfield 't') are
+     * kept as the server returns them whatever the term.
+     * @param {string} baseKey - Key of the base list, e.g. "axi_getstructsdata_<params>".
+     * @param {string} term - Lower-case typed term (3+ chars).
+     * @returns {boolean} True when axDatasourceObj["<baseKey>_q_<term>"] was filled from local data.
+     */
+    function refineFromCompleteList(baseKey, term) {
+        const isField = r => String(r?.isfield ?? r?.ISFIELD ?? "").toLowerCase() === "t";
+        const sources = [baseKey];
+        axSearchKeyOrder.forEach(k => {
+            if (k.startsWith(baseKey + "_q_")) {
+                const t = k.slice(baseKey.length + 3);
+                if (t.length < term.length && term.includes(t)) sources.push(k);
+            }
+        });
+        for (const k of sources) {
+            const state = axPageState[k];
+            const rows = axDatasourceObj[k];
+            if (!state || state.hasMore || !Array.isArray(rows)) continue;
+            const searchKey = `${baseKey}_q_${term}`;
+            axDatasourceObj[searchKey] = rows.filter(r => {
+                if (!r) return false;
+                if (isField(r)) return true;
+                const display = r.displaydata || r.caption || r.name || r.fname || r.keyfield || "";
+                return String(display).toLowerCase().includes(term);
+            });
+            axPageState[searchKey] = { page: 1, hasMore: false };
+            touchSearchKey(searchKey);
+            return true;
+        }
+        return false;
+    }
+
     let filteredObjects = [];
+    let dynamicSearchDebounceTimer = null;
     let adsfieldvalueanddt = {};
     let createfieldnamevaluesList = {};
     let AxiArmUrl;
@@ -640,6 +931,7 @@ if (typeof document !== "undefined") {
                 parentArmUrl = callParentNew("armUrl") || "";
             }
         } catch (e) {
+            // // console.warn("callParentNew failed", e);
         }
 
         // 2. Try parent window
@@ -652,6 +944,7 @@ if (typeof document !== "undefined") {
                 if (!parentArmUrl) parentArmUrl = parent.armUrl || "";
             }
         } catch (e) {
+            // // console.warn("parent access failed", e);
         }
 
         // 3. Try top window
@@ -664,6 +957,7 @@ if (typeof document !== "undefined") {
                 if (!parentArmUrl) parentArmUrl = top.armUrl || "";
             }
         } catch (e) {
+            // // console.warn("top access failed", e);
         }
 
         // 4. Try local variable scope fallback
@@ -707,22 +1001,27 @@ if (typeof document !== "undefined") {
                     AxiArmUrl = config.axiarmurl || config.armUrl || config.axiArmUrl || "";
                 }
             } catch (err) {
+                // // console.error("Failed to load AxiArmUrl from config file:", err);
             }
         }
 
         apiMetadataUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/axi_get`;
+        // // console.log("ApiMetadataUrl = " + apiMetadataUrl);
 
         axiFavoritesUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/user-favourites`;
         // axiFavoritesUrl = `http://localhost:5057/api/v1/Axi/user-favourites`; 
+        // // console.log("AxiFavoritesUrl = " + axiFavoritesUrl);
 
         axiCommandConfigUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/command-config`;
         axiKeyfieldUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/setkeyfield`;
+        axiSettingsUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/user-settings`;
 
 
         input = document.getElementById("Axi-Searchinp");
 
 
         if (!input) {
+            // // console.log("Axi Input not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
@@ -732,12 +1031,14 @@ if (typeof document !== "undefined") {
         axiSec = document.querySelector(".AXI-Sec");
         applyAxiCmdVisibility();
 
+        // // console.log("Axi Input Found!", input);
 
         axiLogo = document.getElementById("axiLogo");
 
 
 
         if (!axiLogo) {
+            // // console.log("Axi Logo not ready yet... waiting.");
             setTimeout(init, 200);
             return;
 
@@ -746,6 +1047,7 @@ if (typeof document !== "undefined") {
         searchWrapper = document.querySelector(".searchwrap-AXI");
 
         if (!searchWrapper) {
+            // // console.log("Axi search wrapper not ready yet... waiting.");
             setTimeout(init, 200);
             return;
 
@@ -753,35 +1055,44 @@ if (typeof document !== "undefined") {
 
         hintDiv = document.getElementById("axiHint");
         if (!hintDiv) {
+            // // console.log("Axi HintDiv not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
 
+        // // console.log("Axi HintDiv Found!", hintDiv);
 
         list = document.getElementById("axiSuggestions");
         if (!list) {
+            // // console.log("Axi AxiSuggestion not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
 
+        // console.log("Axi AxiSuggestionList found Found!", list);
 
         btnRefresh = document.getElementById("btnRefresh");
         if (!btnRefresh) {
+            // console.log("Axi btnRefresh not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
 
+        // console.log("Axi btnRefresh Found!", btnRefresh);
 
         runBtn = document.getElementById("runBtn");
         if (!runBtn) {
+            // console.log("Axi Run btn not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
 
+        // console.log("Axi Runbtn Found!", runBtn);
 
         axiClearBtn = document.getElementById("axiClearBtn");
 
         if (!axiClearBtn) {
+            // console.log("Axi Clear button not ready yet... waiting.");
             setTimeout(init, 200);
             return;
         }
@@ -790,6 +1101,7 @@ if (typeof document !== "undefined") {
 
 
 
+        // console.log("Axi Clear button found!", axiClearBtn);
 
         megaDropdown = document.getElementById("axiMegaDropdown");
 
@@ -799,16 +1111,21 @@ if (typeof document !== "undefined") {
 
 
 
+        // console.log("Axi Clear button found!", megaDropdown);
 
         favouritesCard = document.getElementById("axiFavouritesCard");
+        // console.log("Axi Clear favouritesCard Found!", favouritesCard);
 
         commandHeader = document.getElementById("axiCommandsHeader");
+        // console.log("Axi Command Header found!", commandHeader);
 
         hiddenLoader = document.getElementById("hiddenLoader");
+        // console.log("Axi hidden Loader found!", hiddenLoader);
 
 
         favouriteBtn = document.getElementById("axiFavouriteBtn");
 
+        // console.log("Axi Favourite Button found!", favouriteBtn);
 
 
 
@@ -820,7 +1137,8 @@ if (typeof document !== "undefined") {
 
 
         if (axicmdenabled) {
-            initCommands(false);
+            // The saved "records to load at a time" must be known before the first lists are requested
+            syncPageSizeFromServer().finally(() => initCommands(false));
             loadFavorites();
         }
 
@@ -830,6 +1148,35 @@ if (typeof document !== "undefined") {
 
     if (typeof window !== "undefined") {
         window.initAxiCmd = init;
+        window.axiDebug = {
+            getDataSourceCache: () => axDatasourceObj,
+            getActiveFetches: () => Array.from(activeFetches),
+            getFailedFetches: () => Array.from(failedFetches),
+            // Prints what "load more" works from, to explain a scroll that fetches nothing:
+            // run window.axiDebug.paging() in the console after scrolling to the end of the list.
+            paging: () => {
+                const info = {
+                    scriptPageSize: getPageSize(),
+                    activePagedContext: activePagedContext,
+                    footerPagedContext: footerPagedContext,
+                    footerOnScreen: !!list.querySelector(".axi-load-more"),
+                    structKeyNow: "axi_structmetalist_" + getStructParam().toLowerCase(),
+                    pageStates: JSON.parse(JSON.stringify(axPageState)),
+                    activeFetches: Array.from(activeFetches),
+                    failedFetches: Array.from(failedFetches),
+                    loadedRows: Object.keys(axDatasourceObj).filter(k => k.startsWith("axi_structmetalist")).map(k => [k, (axDatasourceObj[k] || []).length])
+                };
+                console.log("[AxiCMD paging state]", info);
+                return info;
+            },
+            loadList: loadList,
+            getList: getList,
+            testDebounceAds: async function (adsName = "axi_getstructsdata", params = "", searchTerm = "abc") {
+                console.log("%c[axiDebug.testDebounceAds] Triggering test ADS search directly...", "color: #9333ea; font-weight: bold;", { adsName, params, searchTerm });
+                return await loadList(adsName, params, searchTerm, 1, getPageSize());
+            }
+        };
+        console.log("%c[AxiCMD] window.axiDebug registered. Run window.axiDebug.testDebounceAds('axi_getstructsdata', 'your_struct_param', 'search_text') in console to test.", "color: #0284c7;");
     }
 
     /**
@@ -920,10 +1267,12 @@ if (typeof document !== "undefined") {
      */
     function getProjectName() {
         // let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        // // console.log("Origin: " + appSessUrl);
         // const projInfoKey = `projInfo-${appSessUrl}`;
 
         // const appname = localStorage.getItem(projInfoKey);
 
+        // // console.log(appname);
         // return appname;
 
         return window.mainProject ||
@@ -951,8 +1300,10 @@ if (typeof document !== "undefined") {
         }
 
         const appname = getProjectName();
+        // console.log(appname);
 
         if (!apiMetadataUrl) {
+            // console.error("Metadata API URL is not configured.", apiMetadataConfigError);
             showToast("Metadata API URL is not configured.");
             return;
         }
@@ -970,6 +1321,7 @@ if (typeof document !== "undefined") {
                 try {
                     commandsFromDb = JSON.parse(cached);
                 } catch (e) {
+                    // console.error("Failed to parse cached raw commands", e);
                 }
             }
 
@@ -978,6 +1330,7 @@ if (typeof document !== "undefined") {
 
                 if (!res.ok) {
                     showToast("Metadata fetch failed. Please contact Administrator");
+                    // console.error("Metadata fetch failed");
                     return;
                 }
 
@@ -1011,6 +1364,7 @@ if (typeof document !== "undefined") {
                     prompts: []
                 };
 
+                // console.log(JSON.stringify(commands));
 
                 // Load target entities (tstructs, iview, ads and pages) from metadata on startup asynchronously
                 const metadataParams = getStructParam();
@@ -1020,11 +1374,13 @@ if (typeof document !== "undefined") {
                 // }
             }
         } catch (err) {
+            // console.error("Critical: Could not load commands", err);
         } finally {
             isCommandsLoading = false;
             suppressFocusSuggestions = true;
             input.disabled = false;
             input.placeholder = "Axpert AI";
+            console.log("commands: ", JSON.stringify(commands));
         }
     }
 
@@ -1071,6 +1427,7 @@ if (typeof document !== "undefined") {
     //         apiMetadataUrl = "";
     //         apiMetadataConfigError = (error && error.message) ? error.message : String(error);
     //         showToast("Failed to load API metadata configuration.");
+    //         // console.error(`Failed to resolve API_METADATA from ${configUrl || "app base URL"}`, error);
     //     }
     // }
 
@@ -1146,6 +1503,7 @@ if (typeof document !== "undefined") {
                     }
 
                     if (foundItem && foundItem.isfield === 'f') {
+                        // console.log("Short Circuit: Previous item is not a field. Stopping prompts.");
                         return null;
                     }
                 }
@@ -1192,6 +1550,8 @@ if (typeof document !== "undefined") {
                     activeSource = sources[valueIndex] ? sources[valueIndex].trim() : "";
                 }
 
+                // console.log("Value Index: " + valueIndex);
+                // console.log("Active Source: " + activeSource);
             }
         }
 
@@ -1207,46 +1567,316 @@ if (typeof document !== "undefined") {
      * @async
      * @param {string} sourceName - Source definition name.
      * @param {string} [paramValue=""] - Optional parameter filter value.
+     * @param {string} [searchTerm=""] - Optional search query string (minimum 3 chars for dynamic search).
+     * @param {number} [pageNo=1] - Page number to fetch.
+     * @param {number} [pageSize=100] - Number of records per page (default 100).
      * @returns {Promise<Array<object>>} List of suggestion items.
      */
-    async function loadList(sourceName, paramValue = "") {
+    async function loadList(sourceName, paramValue = "", searchTerm = "", pageNo = 1, pageSize = getPageSize()) {
         if (!axicmdenabled || sourceName === "axi_dummy") {
-            return;
+            return [];
         }
-        const key = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
-        if (activeFetches.has(key) || failedFetches.has(key)) return;
-        activeFetches.add(key);
+        if (sourceName.toLowerCase().includes("getstructsdata") && (!paramValue || !String(paramValue).trim())) {
+            console.warn(`[AxiCMD loadList] Blocked call to ${sourceName} without required paramValue.`);
+            return [];
+        }
+        const baseKey = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
+        const cleanTerm = (typeof searchTerm === "string" ? searchTerm : "").trim().toLowerCase();
+
+        // listKey = where the accumulated rows live (base list, or the list for one search term).
+        // fetchKey = what identifies one network request (page 2+ get their own key so they can run
+        // while page 1 is already cached, and so duplicate scroll events are ignored).
+        const listKey = cleanTerm ? `${baseKey}_q_${cleanTerm}` : baseKey;
+        const isNextPage = pageNo > 1;
+        const fetchKey = isNextPage ? `${listKey}_p${pageNo}` : listKey;
+
+        if (activeFetches.has(fetchKey)) return axDatasourceObj[listKey] || [];
+        if (failedFetches.has(fetchKey)) {
+            // A failed fetch is only blocked for a short time, then it may be retried
+            if (Date.now() - (failedFetchTimes[fetchKey] || 0) < FAILED_FETCH_RETRY_MS) return axDatasourceObj[listKey] || [];
+            failedFetches.delete(fetchKey);
+            delete failedFetchTimes[fetchKey];
+        }
+        activeFetches.add(fetchKey);
+
+        // A typed-term search (page 1) cancels the earlier search of the same list that is still running
+        let abortCtl = null;
+        // (Not for the structure list: each of its terms is asked only once, so an aborted term would never be retried.)
+        if (cleanTerm && !isNextPage && typeof AbortController !== "undefined" && sourceName.toLowerCase() !== "axi_structmetalist") {
+            if (axSearchAbort[baseKey]) axSearchAbort[baseKey].abort();
+            abortCtl = new AbortController();
+            axSearchAbort[baseKey] = abortCtl;
+        }
 
         try {
-            const data = await getList(sourceName, paramValue);
-            axDatasourceObj[key] = Array.isArray(data) ? data : (data ? [data] : []);
-        } catch (error) {
-            failedFetches.add(key);
-            axDatasourceObj[key] = [];
-        } finally {
-            activeFetches.delete(key);
-            if (!isInitialLoad && document.activeElement === input) {
-                handleInput();
+            const paged = isPagedSource(sourceName);
+            // Every source is requested one page at a time. (The structure list, axi_structmetalist, used to
+            // be fetched whole with pageSize 0; it is paged on the server now like the record lists.)
+            const effectivePageSize = pageSize || getPageSize();
+            const data = await getList(sourceName, paramValue, cleanTerm, pageNo, effectivePageSize, abortCtl ? abortCtl.signal : undefined);
+            let list = Array.isArray(data) ? data : (data ? [data] : []);
+
+            // Field rows (isfield === 't') are exempt from pagination and search: they are always
+            // returned in full by the server. Only record rows are capped/filtered below.
+            const isFieldItem = item => String(item?.isfield ?? item?.ISFIELD ?? "").toLowerCase() === "t";
+            const fieldItems = list.filter(isFieldItem);
+            let recordItems = list.filter(item => !isFieldItem(item));
+
+            // A full page from the server means there may be another page ("load more" on scroll)
+            // hasMore is true only when the server returned EXACTLY one full page. More rows than a page means
+            // the server did not apply paging (for example the ADS query has not been updated yet): then
+            // everything it sent is already here and there is no next page to ask for.
+            const serverRecordCount = recordItems.length;
+            axPageState[listKey] = {
+                page: pageNo,
+                // The AxList API pages the whole result (field rows count too), so compare the full row count
+                hasMore: paged && effectivePageSize > 0 && (serverRecordCount === effectivePageSize || list.length === effectivePageSize || recordItems.some(r => r && r.__fullPage))
+            };
+
+            // Search first, then limit. (Limiting first would cut the list to its first rows and the search
+            // would then run on those only, so a match further down could never be found.)
+            // The server already applies the term; this is a safety net in case it does not.
+            if (cleanTerm && recordItems.length > 0) {
+                recordItems = recordItems.filter(item => {
+                    const display = item.displaydata || item.caption || item.name || item.fname || item.keyfield || "";
+                    return String(display).toLowerCase().includes(cleanTerm);
+                });
             }
+
+            // Page-size limit for sources that are not paged on the server. Paged sources are not cut here:
+            // the server limits them, and when it did not, the rows it sent are kept rather than dropped.
+            if (!paged && effectivePageSize > 0 && recordItems.length > effectivePageSize) {
+                recordItems = recordItems.slice(0, effectivePageSize);
+            }
+
+            const uidOf = item => {
+                const uid = item?.transrecordid ?? item?.id ?? item?.displaydata ?? item?.name;
+                return (uid !== undefined && uid !== null) ? String(uid).toLowerCase() : null;
+            };
+
+            if (isNextPage && Array.isArray(axDatasourceObj[listKey])) {
+                // Page 2+: append only rows we do not already hold (no field rows - they came with page 1)
+                const current = axDatasourceObj[listKey];
+                const seen = new Set();
+                current.forEach(item => { const u = uidOf(item); if (u !== null) seen.add(u); });
+                const incoming = new Set();
+                recordItems.forEach(item => {
+                    const u = uidOf(item);
+                    if (u !== null) incoming.add(u);
+                    if (u === null || !seen.has(u)) current.push(item);
+                });
+                // Rows that were only merged from a search and have now arrived as a real page are plain rows again
+                if (!cleanTerm) {
+                    current.forEach(item => { if (item && item.__fromSearch && incoming.has(uidOf(item))) delete item.__fromSearch; });
+                }
+                list = current;
+            } else {
+                // Page 1: replace the list (records first, then the untouched field rows)
+                const previous = axDatasourceObj[listKey];
+                list = recordItems.concat(fieldItems);
+                // A reload of a base list must not forget structures / records that were merged in from earlier
+                // searches (they are not on page 1 but may already be in use by a typed command).
+                if (!cleanTerm && paged && Array.isArray(previous) && previous.length > 0) {
+                    const have = new Set();
+                    list.forEach(item => { const u = uidOf(item); if (u !== null) have.add(u); });
+                    for (let i = 0; i < previous.length && list.length < MAX_MERGED_BASE_ROWS; i++) {
+                        const u = uidOf(previous[i]);
+                        if (u !== null && !have.has(u) && !isFieldItem(previous[i])) { have.add(u); list.push(previous[i]); }
+                    }
+                }
+                axDatasourceObj[listKey] = list;
+            }
+
+            if (cleanTerm) touchSearchKey(listKey);
+
+            // When dynamic search returns records, merge them into the base list in memory
+            // so token resolvers, command runners, and storage lookups can find any selected record.
+            if (cleanTerm && recordItems.length > 0) {
+                if (!axDatasourceObj[baseKey] || !Array.isArray(axDatasourceObj[baseKey])) {
+                    axDatasourceObj[baseKey] = [];
+                }
+                const existing = axDatasourceObj[baseKey];
+
+                // Id index kept per base list so every merge does not rescan the whole list.
+                // It is rebuilt only if the base array itself was replaced (e.g. after a reset).
+                let idx = axBaseIdIndex[baseKey];
+                if (!idx || idx.ref !== existing) {
+                    idx = { ref: existing, ids: new Set() };
+                    existing.forEach(item => { const u = uidOf(item); if (u !== null) idx.ids.add(u); });
+                    axBaseIdIndex[baseKey] = idx;
+                }
+
+                // Rows merged in from a search are copies marked __fromSearch. They stay findable for resolvers
+                // (tryResolveToken, edit/view lookups ...) but are not part of the list as the server returned it,
+                // so the plain list (nothing typed) does not show them out of order at its end.
+                for (let i = 0; i < recordItems.length && existing.length < MAX_MERGED_BASE_ROWS; i++) {
+                    const item = recordItems[i];
+                    const u = uidOf(item);
+                    if (u === null) {
+                        existing.push(Object.assign({}, item, { __fromSearch: true }));
+                    } else if (!idx.ids.has(u)) {
+                        idx.ids.add(u);
+                        existing.push(Object.assign({}, item, { __fromSearch: true }));
+                    }
+                }
+            }
+            return list;
+        } catch (error) {
+            // Aborted because the user typed on: not a failure, nothing is stored, the newer search takes over
+            if (error && error.name === "AbortError") return axDatasourceObj[listKey] || [];
+            failedFetches.add(fetchKey);
+            failedFetchTimes[fetchKey] = Date.now();
+            if (!isNextPage) axDatasourceObj[listKey] = [];
+            console.error("[AxiCMD loadList] Failed fetch:", fetchKey, error);
+            return [];
+        } finally {
+            activeFetches.delete(fetchKey);
+            if (abortCtl && axSearchAbort[baseKey] === abortCtl) delete axSearchAbort[baseKey];
+            scheduleSuggestionRefresh();
         }
     }
 
+    /**
+     * Re-runs the suggestion pipeline after a fetch finishes. Several fetches can finish close together
+     * (for example while typing), so refreshes are coalesced into one to avoid re-filtering and
+     * re-rendering large lists repeatedly.
+     * @returns {void}
+     */
+    function scheduleSuggestionRefresh() {
+        if (isInitialLoad) return;
+        clearTimeout(suggestionRefreshTimer);
+        suggestionRefreshTimer = setTimeout(() => {
+            if (!isInitialLoad && document.activeElement === input) {
+                handleInput();
+            }
+        }, 30);
+    }
+
+    // Structure-list search (axi_structmetalist): only a first page of the list is loaded, so names that are
+    // not in it are looked up on the server as the user types.
+    let structSearchTimer = null;
+    let structSearchPendingTerm = null;
+    // True while a debounced record search (axi_getstructsdata etc.) is waiting to be sent
+    let dynamicSearchPending = false;
+
+    /**
+     * Tells whether a server search has been requested but not finished: either waiting out its debounce delay
+     * (nothing is in activeFetches yet) or running. The dropdown must show "Searching..." then, never "No Data".
+     * @returns {boolean} True while a search is pending.
+     */
+    function isSearchPending() {
+        return structSearchPendingTerm !== null || dynamicSearchPending;
+    }
+    const structSearchAsked = new Set();
+
+    /**
+     * Asks the server for structures (forms / reports / pages / data sources) matching a typed word, when the
+     * word is not in the part of the structure list loaded so far. Debounced, and each term is asked only once.
+     * Hits are merged into the base list by loadList, which then refreshes the suggestions.
+     * @param {string} term - Text typed by the user (3+ characters are searched).
+     * @param {string} [paramOverride] - Parameter string of the structure list to search. Commands such as edit
+     *   use their own (e.g. "...$#$run$#$t"), so the list that is searched must be the one that command reads.
+     * @returns {void}
+     */
+    function requestStructSearch(term, paramOverride) {
+        term = (term || "").replace(/"/g, "").trim().toLowerCase();
+        if (term.length < 3 || !axicmdenabled) return;
+        const param = paramOverride || getStructParam();
+        const baseKey = "axi_structmetalist_" + param.toLowerCase();
+        const state = axPageState[baseKey];
+        // Not loaded yet, or the whole list already fits in the first page: nothing more to find on the server
+        if (!state || !state.hasMore) return;
+        // A command word (create, edit, ...) is not a structure name
+        if (["create", "edit", "view", "source"].includes(term) || getCommandConfig(term)) return;
+        const askKey = baseKey + "|" + term;
+        if (structSearchAsked.has(askKey) || structSearchPendingTerm === askKey) return;
+        structSearchPendingTerm = askKey;
+        clearTimeout(structSearchTimer);
+        structSearchTimer = setTimeout(() => {
+            structSearchPendingTerm = null;
+            structSearchAsked.add(askKey);
+            loadList("axi_structmetalist", param, term, 1, getPageSize());
+        }, SEARCH_DEBOUNCE_MS);
+    }
+
+    /**
+     * Builds the small non-selectable row shown under a paged list: a spinner while the next page is
+     * loading, a hint when more rows can be loaded by scrolling, or a note when the render cap is reached.
+     * It deliberately does not use the "axi-suggestion" class so keyboard navigation ignores it.
+     * @param {number} renderedTotal - Number of valid items currently in the list.
+     * @returns {HTMLElement|null} Footer element or null when there is nothing to show.
+     */
+    function buildLoadMoreFooter(renderedTotal) {
+        const ctx = activePagedContext;
+        if (!ctx) return null;
+        const state = axPageState[ctx.listKey];
+        if (!state || !state.hasMore) return null;
+
+        // Remember which list this footer belongs to; loadNextPage loads the next page of exactly that list
+        footerPagedContext = ctx;
+        const li = document.createElement("li");
+        li.className = "axi-load-more";
+        li.style.cssText = "list-style:none;text-align:center;padding:8px;font-size:12px;color:#6b7280;cursor:default;";
+        if (activeFetches.has(`${ctx.listKey}_p${state.page + 1}`)) {
+            li.textContent = "Loading more...";
+        } else if (renderedTotal >= MAX_RENDERED_ITEMS) {
+            li.textContent = `Showing first ${MAX_RENDERED_ITEMS} - type more to narrow the results`;
+        } else {
+            li.textContent = list.classList.contains("My-Command-Wrapper") ? "Scroll for more..." : "Scroll down for more...";
+        }
+        return li;
+    }
+
+    /**
+     * Fetches the next page of the paged list currently shown in the dropdown (called when the user
+     * scrolls to the bottom). Does nothing if there is no next page, one is already loading, or the
+     * render cap has been reached.
+     * @returns {void}
+     */
+    function loadNextPage() {
+        // Use the context of the footer that is on screen. activePagedContext is cleared at the start of every
+        // suggestion pass, so between that and the next render it is null while the old footer still shows;
+        // a scroll in that window used to be dropped silently (no request at all).
+        const ctx = footerPagedContext || activePagedContext;
+        // Skips are logged at "verbose" level in the console so a scroll that does nothing can be explained
+        if (!ctx) { console.debug("[AxiCMD paging] skipped: no paged list on screen"); return; }
+        const state = axPageState[ctx.listKey];
+        if (!state) { console.debug("[AxiCMD paging] skipped: no page state for", ctx.listKey); return; }
+        if (!state.hasMore) { console.debug("[AxiCMD paging] skipped: no more pages for", ctx.listKey); return; }
+        const nextPage = state.page + 1;
+        if (activeFetches.has(`${ctx.listKey}_p${nextPage}`)) return;
+        if ((axDatasourceObj[ctx.listKey] || []).length >= MAX_RENDERED_ITEMS) { console.debug("[AxiCMD paging] skipped: render cap reached"); return; }
+
+        // Re-render happens when the page arrives; remember where the user was scrolled to
+        pendingScrollRestore = { top: list.scrollTop, left: list.scrollLeft };
+        const footer = list.querySelector(".axi-load-more");
+        if (footer) footer.textContent = "Loading more...";
+        loadList(ctx.source, ctx.param, ctx.term, nextPage, getPageSize());
+    }
+
     //function openPopOption(targetURL) {
+    //    // console.log("PopOption is clicked");
 
 
     //    if (targetURL) {
     //        let popUpContainerUrl = `../AxpertPlugins/Axi/HTMLPages/PopUpContainer.html`;
 
     //        //if (targetURL && targetURL.toLowerCase().includes("/aspx")) {
+    //        //    // console.log("Before removing : " + targetURL);
     //        //    targetURL = targetURL.replace("/aspx", "");
+    //        //    // console.log("After removing : " + targetURL);
     //        //}
 
     //        //if (targetURL && targetURL.toLowerCase().includes("/aspx/")) {
+    //        //    // console.log("Before removing : " + targetURL)
     //        //    targetURL = targetURL.split("/aspx/")[1];
+    //        //    // console.log("After removing : " + targetURL);
     //        //}
     //        if (targetURL && targetURL.toLowerCase().includes("../")) {
+    //            // console.log("Before removing : " + targetURL)
     //            targetURL = targetURL.replace("../", "");
     //            //targetURL = targetURL.split("/")[1];
+    //            // console.log("After removing : " + targetURL);
     //        }
 
 
@@ -1255,9 +1885,11 @@ if (typeof document !== "undefined") {
 
 
     //        popUpOption = false;
+    //        // console.log("PopUp Option is set to :" + popUpOption);
 
 
     //        let hiddenVar = document.getElementById("hiddenLoader");
+    //        // console.log(hiddenVar);
     //        hiddenVar.src = finalUrl;
     //        //hiddenVar.style.display = "block";
     //        hiddenVar.style.display = "flex";
@@ -1267,6 +1899,7 @@ if (typeof document !== "undefined") {
     //    }
     //    else {
     //        popUpOption = false;
+    //        // console.log("Error in Popup: TargetURL is empty");
     //        showToast("Something went wrong. Please try again later");
     //    }
     //}
@@ -1313,6 +1946,7 @@ if (typeof document !== "undefined") {
                 });
             }
         } catch (err) {
+            // console.warn("Failed to load axi_command_config:", err);
         }
     }
 
@@ -1619,6 +2253,7 @@ if (typeof document !== "undefined") {
      */
     function openPopOption(targetURL) {
         hide();
+        // console.log("PopOption is clicked");
 
         if (targetURL) {
 
@@ -1662,6 +2297,7 @@ if (typeof document !== "undefined") {
 
         } else {
             popUpOption = false;
+            // console.log("Error in Popup: TargetURL is empty");
             showToast("Something went wrong. Please try again later");
         }
     }
@@ -1710,7 +2346,29 @@ if (typeof document !== "undefined") {
             targetUrl += `&filter=${encodedFilterQuery}`;
         }
 
+        // console.log("Target Url for SmartViewTable:  " + targetUrl);
         setCommandRoutes(input.value.trim(), targetUrl);
+        /**====================================================================================
+         * NOTE: This is Debug code remove it before deploying  to the  production environment 
+         * ====================================================================================
+         */
+        if (typeof encodedFilterQuery !== "undefined") {
+            try {
+                const decodedForDebug = JSON.parse(atob(encodedFilterQuery));
+                // console.group("AXI SmartView Redirect Debug");
+                // console.log("Final URL:", targetUrl);
+                // console.log("Encoded q:", encodedFilterQuery);
+                // console.log("Decoded payload:", JSON.stringify(decodedForDebug));
+                // console.groupEnd();
+            } catch (e) {
+                // console.error("AXI SmartView payload decode failed", e);
+            }
+        }
+
+
+        /**
+         * ===================== End ========================================
+         */
 
         if (popUpOption) {
             targetUrl += "&AxIsPop=true";
@@ -1767,6 +2425,7 @@ if (typeof document !== "undefined") {
         targetUrl += "&dummyload=false";
 
         setEditSessionState(transId);
+        // console.log(`LoadIframe called with Url: ${targetUrl}`);
         setCommandRoutes(input.value.trim(), targetUrl);
 
 
@@ -1777,6 +2436,7 @@ if (typeof document !== "undefined") {
 
 
     // function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "") {
+    //     // console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
 
 
 
@@ -1857,7 +2517,7 @@ if (typeof document !== "undefined") {
             targetUrl += `&openerIV=${transId}`;
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-            targetUrl += `&dummyload=false?`;
+            targetUrl += `&dummyload=false`;
         }
         else {
             if (fieldName && fieldValue) {
@@ -1866,7 +2526,7 @@ if (typeof document !== "undefined") {
             targetUrl += `&hltype=open`;
             targetUrl += `&createaxiflag=true`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-            targetUrl += `&dummyload=false?`;
+            targetUrl += `&dummyload=false`;
         }
 
         if (extraParams) {
@@ -1875,6 +2535,7 @@ if (typeof document !== "undefined") {
         }
 
         if (popUpOption) {
+            // Query string only ever has one '?': a stray one breaks the contenturl parsing in PopupContainer.html
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
             targetUrl += "&AxPop=true";
             openPopOption(targetUrl);
@@ -2023,6 +2684,7 @@ if (typeof document !== "undefined") {
      */
     function redirectToIView(iViewName, iViewCaption = "") {
         hide();
+        // console.log("Redirecting to Iview: " + iViewName + "..............");
 
 
         if (popUpOption) {
@@ -2048,6 +2710,7 @@ if (typeof document !== "undefined") {
      * @returns {void}
      */
     function redirectToProcessFlow(caption, tstructCaption) {
+        // console.log(`Redirecting to Process flow for caption:  ${caption}`);
 
 
 
@@ -2108,6 +2771,65 @@ if (typeof document !== "undefined") {
      * Main input event handler; manages tokenization, suggestions popup, and dynamic hint rendering.
      * @returns {void}
      */
+    /**
+     * Marks the structure list (axi_structmetalist, nothing typed) as the paged list on screen, so the render
+     * draws its "Scroll down for more..." row and scrolling loads the next page. Every route that shows the
+     * initial suggestions must call this, not only suggestLocal.
+     * @returns {void}
+     */
+    function setInitialPagedContext() {
+        const param = getStructParam();
+        activePagedContext = { source: "axi_structmetalist", param: param, term: "", listKey: "axi_structmetalist_" + param.toLowerCase() };
+    }
+
+    /**
+     * Opens a double quote before the word being typed when a space is typed after it and a suggestion with
+     * spaces starts with that word (typing "test" then a space for "Test Target" gives `"test `), so the
+     * rest of the name is treated as one value. Uses the suggestions currently shown (`items`).
+     * @param {string} val - Input text before the space is added.
+     * @returns {string|null} New input text including the space, or null when no quote should be added.
+     */
+    function autoQuoteMultiWordValue(val) {
+        const tokens = getTokens(val);
+        const lastTokenRaw = tokens[tokens.length - 1] || "";
+        const isFirstToken = tokens.length === 1;
+
+        if (lastTokenRaw.startsWith('"') || (isFirstToken && getCommandConfig(lastTokenRaw))) return null;
+
+        const hasMultiWordMatch = items.some(item => {
+            const str = (typeof item === 'string' ? item : item.displaydata || "").toLowerCase();
+            return str.startsWith(lastTokenRaw.toLowerCase()) && str.includes(" ");
+        });
+        if (!hasMultiWordMatch) return null;
+
+        const lastIndex = val.lastIndexOf(lastTokenRaw);
+        if (lastIndex === -1) return null;
+        return val.substring(0, lastIndex) + '"' + lastTokenRaw + ' ';
+    }
+
+    /**
+     * Soft keyboards (Android Chrome, WebView, hybrid app) do not send a usable keydown for the space key,
+     * so the quote is added here instead: the input event reports the text that was inserted.
+     * Does nothing when the keydown path already quoted the word (the last token then starts with a quote).
+     * @param {InputEvent} ev - The input event.
+     * @returns {void}
+     */
+    function quoteMultiWordAfterSpace(ev) {
+        try {
+            const type = ev && ev.inputType;
+            if (type !== "insertText" && type !== "insertCompositionText") return;
+            const val = input.value;
+            // Only a single space just typed at the end of the text: not a double space, not mid-text edits
+            if (!/[^\s]\s$/.test(val) || val.slice(-1) !== " " || input.selectionStart !== val.length) return;
+            if (items.length === 0) return;
+            const quoted = autoQuoteMultiWordValue(val.slice(0, -1));
+            if (quoted !== null) {
+                input.value = quoted;
+                input.setSelectionRange(quoted.length, quoted.length);
+            }
+        } catch (e) { }
+    }
+
     function handleInput() {
         try {
             if (!axicmdenabled) return;
@@ -2148,6 +2870,7 @@ if (typeof document !== "undefined") {
             }
             if (!commands) {
                 if (isInitialCommandStage) {
+                    setInitialPagedContext();
                     items = getInitialSuggestions();
                     hintDiv.textContent = "";
                     render();
@@ -2159,6 +2882,9 @@ if (typeof document !== "undefined") {
             if (!text.trim()) {
                 resolvedParams = {};
                 resolvedParamType = {};
+                // This empty-input shortcut skips suggestLocal, which is where the paged context is normally
+                // set. Without it the "Scroll down for more..." row is not drawn on the very first open.
+                setInitialPagedContext();
                 items = getInitialSuggestions();
                 hintDiv.textContent = "";
                 render();
@@ -2207,6 +2933,7 @@ if (typeof document !== "undefined") {
 
                 if (lastToken && !numericRegex.test(lastToken)) {
 
+                    // console.error("Type only numeric value");
 
                     if (grpKey === "view")
                         showToast("Please enter a valid number. You may use comparison operators (>, <, >=, <=, !=, =).");
@@ -2230,6 +2957,7 @@ if (typeof document !== "undefined") {
             const lastToken = lastTypedTokens[idx] ? lastTypedTokens[idx].replace(/"/g, "") : null;
 
             if (lastToken && cleanToken !== lastToken) {
+                // console.log(`Token changed at position ${idx}: "${lastToken}" -> "${cleanToken}"`);
 
                 const lowerLast = lastToken.toLowerCase();
                 const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(lowerLast);
@@ -2240,6 +2968,7 @@ if (typeof document !== "undefined") {
                         if (parseInt(key) > idx) {
                             delete resolvedParams[key];
                             delete resolvedParamType[key];
+                            // console.log(`Cleared dependent resolution at index ${key}`);
                         }
                     });
                 }
@@ -2254,6 +2983,7 @@ if (typeof document !== "undefined") {
                     if (resolvedParams[i]) {
                         delete resolvedParams[i];
                         delete resolvedParamType[i];
+                        // console.log(`Cleared deleted token resolution at index ${i}`);
                     }
                 }
             }
@@ -2478,7 +3208,8 @@ if (typeof document !== "undefined") {
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
         const list = axDatasourceObj[key] || [];
 
-        if (targetEntitiesCache.sourceList !== list || !targetEntitiesCache.matchesMap) {
+        // Rebuilt when the list object changes or grows in place (next pages / merged search hits)
+        if (targetEntitiesCache.sourceList !== list || targetEntitiesCache.listLength !== list.length || !targetEntitiesCache.matchesMap) {
             const map = new Map();
             for (let i = 0; i < list.length; i++) {
                 const d = list[i];
@@ -2507,10 +3238,15 @@ if (typeof document !== "undefined") {
                 });
             }
             targetEntitiesCache.sourceList = list;
+            targetEntitiesCache.listLength = list.length;
             targetEntitiesCache.matchesMap = map;
         }
 
-        return targetEntitiesCache.matchesMap.get(cleanTok) || [];
+        const found = targetEntitiesCache.matchesMap.get(cleanTok) || [];
+        // Not in the part of the list loaded so far: ask the server (debounced). When the hit is merged
+        // into the list the suggestions refresh and the name is recognised.
+        if (found.length === 0) requestStructSearch(cleanTok);
+        return found;
     }
 
     /**
@@ -2780,25 +3516,33 @@ if (typeof document !== "undefined") {
 
     let initialSuggestionsCache = null;
     let initialSuggestionsSourceList = null;
+    let initialSuggestionsListLength = -1;
     let initialSuggestionsRunnable = null;
+    let initialSuggestionsIncludeHits = false;
 
     /**
      * Returns list of base command verbs for initial/empty input state.
+     * @param {boolean} [includeSearchHits=false] - Also include structures merged in from a server search.
+     *   False for the plain list (nothing typed); true while the user is typing a word to search for.
      * @returns {Array<object>} Initial suggestion objects.
      */
-    function getInitialSuggestions() {
+    function getInitialSuggestions(includeSearchHits = false) {
         const key = "axi_structmetalist_" + getStructParam().toLowerCase();
         const currentList = axDatasourceObj[key] || [];
         const structType = getStructType();
         const isRunnable = !!(structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage() && !isViewDesignerModalOpen());
 
-        if (initialSuggestionsCache && initialSuggestionsSourceList === currentList && initialSuggestionsRunnable === isRunnable) {
+        // The list is extended in place (next pages, merged search hits), so besides the list identity the
+        // length is compared too; otherwise newly loaded structures would never show up.
+        if (initialSuggestionsCache && initialSuggestionsSourceList === currentList && initialSuggestionsListLength === currentList.length && initialSuggestionsRunnable === isRunnable && initialSuggestionsIncludeHits === includeSearchHits) {
             return initialSuggestionsCache;
         }
         const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view", "source"].includes(k.toLowerCase()));
-        const targets = currentList.filter(item => isStructureVisible(item));
+        const targets = currentList.filter(item => (includeSearchHits || !item.__fromSearch) && isStructureVisible(item));
+        initialSuggestionsIncludeHits = includeSearchHits;
         initialSuggestionsCache = [...verbs, ...targets];
         initialSuggestionsSourceList = currentList;
+        initialSuggestionsListLength = currentList.length;
         initialSuggestionsRunnable = isRunnable;
         return initialSuggestionsCache;
     }
@@ -2824,6 +3568,7 @@ if (typeof document !== "undefined") {
                     const tempType = resolvedParamType[0];
                     resolvedParamType[0] = resolvedParamType[1];
                     resolvedParamType[1] = tempType;
+                    // console.log("Global state: Swapped to normalized order");
                 }
             } else {
                 const val0 = (resolvedParams[0] || "").toLowerCase();
@@ -2836,6 +3581,7 @@ if (typeof document !== "undefined") {
                     const tempType = resolvedParamType[0];
                     resolvedParamType[0] = resolvedParamType[1];
                     resolvedParamType[1] = tempType;
+                    // console.log("Global state: Swapped back to user order");
                 }
             }
         } else {
@@ -2848,6 +3594,7 @@ if (typeof document !== "undefined") {
                 const tempType = resolvedParamType[0];
                 resolvedParamType[0] = resolvedParamType[1];
                 resolvedParamType[1] = tempType;
+                // console.log("Global state: Swapped back to user order (length < 2)");
             }
         }
     }
@@ -2909,6 +3656,7 @@ if (typeof document !== "undefined") {
                         ///We need to use System Date Format
                         date = formatDate(date, dateString);
 
+                        // console.log("Final date:", date);
 
                         settokens[lastIndex] = date;
 
@@ -2954,6 +3702,7 @@ if (typeof document !== "undefined") {
                             ///We need to use System Date Format
                             const formattedDate = formatDate(partialDate, dateString);
                             date = formattedDate;
+                            // console.log("Final date:", date);
                             SET_COMMAND_STATE.currentFieldValue = date;
                             SET_COMMAND_STATE.currentFieldType = null;
                             SET_COMMAND_STATE.isNextField = true;
@@ -3006,6 +3755,7 @@ if (typeof document !== "undefined") {
 
 
                 if (acceptedValue && filtered.length === 0) {
+                    // console.log("User given value which is not in the date list");
                     showToast("Please select a valid Option from the list", 5000, true);
 
                     let lastIndex = tokens.length - 1;
@@ -3184,6 +3934,7 @@ if (typeof document !== "undefined") {
                 const colList = axDatasourceObj[colSourceKey];
 
                 if (!colList) {
+                    // console.log("In processAds " + "axi_adscolumnlist" + " is empty");
                     showToast("Please Try Again Later.");
                     return [];
                 }
@@ -3195,9 +3946,11 @@ if (typeof document !== "undefined") {
                 ) || null;
 
                 if (!columnMetadata) {
+                    //// console.log("Selected Field Name is Not in the List " + prevColumnName);
                     //showToast("Please Select Field from the list", 5000, true);
                     //return [];
 
+                    // console.log("Selected Field Name is Not in the List " + prevColumnName);
                     showToast("Please Select Field from the list", 5000, true);
 
                     let settokens = [...tokens]
@@ -3318,6 +4071,7 @@ if (typeof document !== "undefined") {
                     } else {
                         SET_COMMAND_STATE.isDropDown = true;
                         if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
+                            // console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
                             showToast("Please Try Again Later.");
                             return [];
                         }
@@ -3356,6 +4110,7 @@ if (typeof document !== "undefined") {
                         });
 
                         if (acceptedValue && filtered.length === 0) {
+                            // console.log("User given value is not in the dropdown");
                             showToast("Please select a valid value from the dropdown", 5000, true);
 
                             let lastIndex = tokens.length - 1;
@@ -3570,6 +4325,7 @@ if (typeof document !== "undefined") {
     //        else {
 
     //            if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
+    //                // console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
     //                return [];
     //            }
 
@@ -3756,6 +4512,7 @@ if (typeof document !== "undefined") {
 
 
             default:
+                // console.error("Invalid StructType")
                 break;
         }
 
@@ -3902,11 +4659,101 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Tells whether the typed words are the beginning of ONE structure name that has spaces but was typed
+     * without quotes (for example "test save" for "Test Save Normalized"): two or more words, the first is
+     * not quoted, not a command word and not already a complete structure name (a single word followed by a
+     * typed space counts too). Empty tokens are ignored.
+     * @param {string[]} typedTokens - Tokens of the input (a trailing "" from a typed space is allowed).
+     * @returns {boolean} True if the words should be searched as one name.
+     */
+    function isUnquotedStructPhrase(typedTokens) {
+        const words = (typedTokens || []).filter(t => cleanString(t) !== "");
+        // one word followed by a typed space ("test ") already counts: the name may continue with more words
+        const spaceTyped = words.length === 1 && (typedTokens || []).length > 1;
+        if ((words.length < 2 && !spaceTyped) || words[0].startsWith('"')) return false;
+        if (words.some(t => t.startsWith('"'))) return false;
+        const firstLow = cleanString(words[0]).toLowerCase();
+        const isVerb = ["create", "edit", "view", "source"].includes(firstLow) ||
+            (commands && Object.keys(commands).some(k => k.toLowerCase() === firstLow));
+        return !isVerb && !isTargetEntity(firstLow);
+    }
+
+    /**
+     * Suggests the commands and structures (forms, reports, pages, data sources) whose name contains the typed
+     * text, best matches (name starts with it) first. Also asks the server for matches that are not loaded yet.
+     * Used for a single typed word and for a multi-word structure name typed without quotes.
+     * @param {string} prefix - Lower case text typed so far (may contain spaces).
+     * @returns {Array<object|string>} Suggestions to show; filteredObjects is set to match.
+     */
+    function suggestStructsByPrefix(prefix) {
+        hintDiv.textContent = "";
+
+        // The structure list is only partly loaded: search the server for what is being typed (3+ chars)
+        // and let scrolling load more of the matching list.
+        const searchTerm = prefix.trim();
+        const metaParam1 = getStructParam();
+        const metaBaseKey1 = "axi_structmetalist_" + metaParam1.toLowerCase();
+        const searching = searchTerm.length >= 3;
+        activePagedContext = {
+            source: "axi_structmetalist",
+            param: metaParam1,
+            term: searching ? searchTerm : "",
+            listKey: searching ? `${metaBaseKey1}_q_${searchTerm}` : metaBaseKey1
+        };
+        if (searching) requestStructSearch(searchTerm);
+
+        const allSuggestions = getInitialSuggestions(true);
+        const filtered = allSuggestions.filter(item => {
+            if (typeof item === "string") {
+                return item.toLowerCase().startsWith(prefix);
+            } else {
+                const nameMatch = item.name && item.name.toLowerCase().includes(prefix);
+                const displayMatch = item.displaydata && item.displaydata.toLowerCase().includes(prefix);
+                const cleanCaptionMatch = typeof item.displaydata === "string" &&
+                    getCleanCaption(item).includes(prefix);
+                const captionMatch = item.caption && item.caption.toLowerCase().includes(prefix);
+                return nameMatch || displayMatch || cleanCaptionMatch || captionMatch;
+            }
+        });
+
+        // Rank startsWith matches higher than includes matches to keep better matching.
+        const startsWithPrefix = [];
+        const containsPrefix = [];
+        filtered.forEach(item => {
+            if (typeof item === "string") {
+                startsWithPrefix.push(item);
+            } else {
+                const starts = (item.name && item.name.toLowerCase().startsWith(prefix)) ||
+                    (item.displaydata && item.displaydata.toLowerCase().startsWith(prefix)) ||
+                    (typeof item.displaydata === "string" && getCleanCaption(item).startsWith(prefix)) ||
+                    (item.caption && item.caption.toLowerCase().startsWith(prefix));
+                if (starts) {
+                    startsWithPrefix.push(item);
+                } else {
+                    containsPrefix.push(item);
+                }
+            }
+        });
+        const rankedFiltered = [...startsWithPrefix, ...containsPrefix];
+        filteredObjects = rankedFiltered.map(item => {
+            if (typeof item === "string") {
+                return { name: item, displaydata: item };
+            }
+            return item;
+        });
+        return rankedFiltered.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
+    }
+
+    /**
      * Generates local keyword, entity, and action suggestions for current input text.
      * @param {string} inputText - User typed input text.
      * @returns {Array<object>} List of local suggestions.
      */
     function suggestLocal(inputText) {
+        // Cleared on every pass; set again below only when the list shown is a server-paged one
+        activePagedContext = null;
+        // console.log("Resolved Param" + JSON.stringify(resolvedParams));
+        // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
         normalizeGlobalState();
         let ignoreExtraParams = false;
         let detectedType = "";
@@ -3921,6 +4768,8 @@ if (typeof document !== "undefined") {
 
         if (rawTokens.length === 0) {
             hintDiv.textContent = "";
+            // The structure list under the commands is paged: scrolling to its end loads the next page
+            setInitialPagedContext();
             const allSuggestions = getInitialSuggestions();
             filteredObjects = allSuggestions.map(item => {
                 if (typeof item === "string") {
@@ -3934,48 +4783,18 @@ if (typeof document !== "undefined") {
         const groupKeyRaw = cleanString(rawTokens[0]);
 
         if (rawTokens.length === 1 && (!endsWithSpace || isUnclosedString)) {
-            hintDiv.textContent = "";
-            const prefix = groupKeyRaw.toLowerCase();
-            const allSuggestions = getInitialSuggestions();
-            const filtered = allSuggestions.filter(item => {
-                if (typeof item === "string") {
-                    return item.toLowerCase().startsWith(prefix);
-                } else {
-                    const nameMatch = item.name && item.name.toLowerCase().includes(prefix);
-                    const displayMatch = item.displaydata && item.displaydata.toLowerCase().includes(prefix);
-                    const cleanCaptionMatch = typeof item.displaydata === "string" &&
-                        getCleanCaption(item).includes(prefix);
-                    const captionMatch = item.caption && item.caption.toLowerCase().includes(prefix);
-                    return nameMatch || displayMatch || cleanCaptionMatch || captionMatch;
-                }
-            });
+            return suggestStructsByPrefix(groupKeyRaw.toLowerCase());
+        }
 
-            // Rank startsWith matches higher than includes matches to keep better matching.
-            const startsWithPrefix = [];
-            const containsPrefix = [];
-            filtered.forEach(item => {
-                if (typeof item === "string") {
-                    startsWithPrefix.push(item);
-                } else {
-                    const starts = (item.name && item.name.toLowerCase().startsWith(prefix)) ||
-                        (item.displaydata && item.displaydata.toLowerCase().startsWith(prefix)) ||
-                        (typeof item.displaydata === "string" && getCleanCaption(item).startsWith(prefix)) ||
-                        (item.caption && item.caption.toLowerCase().startsWith(prefix));
-                    if (starts) {
-                        startsWithPrefix.push(item);
-                    } else {
-                        containsPrefix.push(item);
-                    }
-                }
-            });
-            const rankedFiltered = [...startsWithPrefix, ...containsPrefix];
-            filteredObjects = rankedFiltered.map(item => {
-                if (typeof item === "string") {
-                    return { name: item, displaydata: item };
-                }
-                return item;
-            });
-            return rankedFiltered.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
+        // A structure name with spaces typed WITHOUT quotes ("test save" for "Test Save Normalized"): the
+        // first word is neither a command verb nor a complete structure name, so the words typed so far are
+        // the start of one structure name. Search for the whole text instead of giving up with no suggestions.
+        // (Pressing space normally opens the quote itself, but only when the matching name was already loaded;
+        // a name that is still being fetched from the server used to leave this case empty.)
+        if (isUnquotedStructPhrase(rawTokens)) {
+            const phrase = rawTokens.map(t => cleanString(t)).join(" ").toLowerCase();
+            const phraseMatches = suggestStructsByPrefix(phrase);
+            if (phraseMatches.length > 0) return phraseMatches;
         }
 
         if (rawTokens.length === 2 && isTargetEntity(rawTokens[0])) {
@@ -4210,6 +5029,8 @@ if (typeof document !== "undefined") {
             const viewValues = commandConfig.prompts?.[0]?.promptValues;
             const firstToken = cleanString(tokens[1] || "");
             const { value: actualFirstToken, type } = tryResolveToken(1, firstToken, commandConfig, false);
+            // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+            // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
             detectedType = getType(viewSource.toLowerCase(), { value: actualFirstToken, type: type }, viewValues, tokens, commandConfig);
             // detectedType = getType(viewSource.toLowerCase(), {value: act}, viewValues, tokens, commandConfig);
 
@@ -4221,6 +5042,7 @@ if (typeof document !== "undefined") {
 
                 }
 
+                // console.log("ResolutionContext: ignoreExtraParams = true (ADS)")
             }
         }
 
@@ -4254,6 +5076,8 @@ if (typeof document !== "undefined") {
             return processRunCommands(tokens, targetIndex, structType);
         }
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
+        // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
 
 
         ///KeyValue based edit handling.
@@ -4399,6 +5223,7 @@ if (typeof document !== "undefined") {
 
             //  if (staticValues.length > 0 && result.length === 0 && partialTyped.length > 0) {
 
+            //     // console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
             //     showToast("Please select a valid option from the list.");
 
             //     let dummyTokens = [...tokens];
@@ -4471,6 +5296,7 @@ if (typeof document !== "undefined") {
 
 
                 if (!paramValue || paramValue.trim() === "") {
+                    // console.log("Skipping extraParams � dependency not resolved yet");
 
                 } else {
                     const extraSource = activePrompt.extraParams.toLowerCase();
@@ -4480,6 +5306,7 @@ if (typeof document !== "undefined") {
 
                     if (!axDatasourceObj[extraKey]) {
 
+                        // console.log(`Fetching Hidden Param Source: ${extraSource}`);
                         if (tokens[1].toLowerCase() === "inbox") {
                             return [goOption];
                         }
@@ -4491,6 +5318,7 @@ if (typeof document !== "undefined") {
                     const extraList = axDatasourceObj[extraKey];
                     if (extraList && extraList.length > 0) {
                         const hiddenValue = extraList[0].name || extraList[0].displaydata || extraList[0].fname || extraList[0].keyfield;
+                        // console.log(`Hidden Param Found (Index 0): ${hiddenValue}`);
 
                         // Append hidden value to params for the MAIN list
                         if (paramValue) paramValue += "$#$" + hiddenValue;
@@ -4591,7 +5419,10 @@ if (typeof document !== "undefined") {
 
             if (!axDatasourceObj[sourceKey]) {
                 const paramStr = typeof paramValue === "string" ? paramValue : (Array.isArray(paramValue) ? paramValue.join("$#$") : "");
-                const hasValidParams = !activePrompt.promptParams || (paramStr && paramStr.replace(/,/g, '').trim().length > 0);
+                const isGetStructsData = apiSourceName.toLowerCase().includes("getstructsdata");
+                const hasValidParams = isGetStructsData
+                    ? (paramStr && paramStr.replace(/,/g, '').trim().length > 0)
+                    : (!activePrompt.promptParams || (paramStr && paramStr.replace(/,/g, '').trim().length > 0));
 
                 if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
                     if (groupKey.toLowerCase() === "sdk" && tokens.length >= 2) {
@@ -4633,6 +5464,7 @@ if (typeof document !== "undefined") {
                         return [goOption];
                     }
                     loadList(apiSourceName, paramValue);
+                    // console.log(axDatasourceObj);
                     // if (realSource.toLowerCase() === "axi_dummy") {
                     //     if (groupKey.toLowerCase() === "open" && tokens.length > 2) {
                     //         filteredObjects = [goOption];
@@ -4642,11 +5474,84 @@ if (typeof document !== "undefined") {
                     // }
                     return [`Fetching Data...`];
                 }
+                // edit <form>: the form/field names are still being resolved against the structure list (or the
+                // list itself is loading), so paramStr is empty for a moment. Say "Fetching Data..." like view
+                // does instead of flashing "Waiting for input..."
+                if (isGetStructsData && tokens.length >= 2) return [`Fetching Data...`];
                 return ["Waiting for input..."];
             }
 
             // Filter Cache
+            // Sources that support server-side search + paging (see PAGED_SOURCES)
+            const isDynamicSource = isPagedSource(apiSourceName);
+            const cleanSearch = (partialTyped || "").trim().toLowerCase();
             let dataList = axDatasourceObj[sourceKey] || [];
+            // Rows merged into the base list from earlier searches are shown only while searching (3+ chars)
+            if (cleanSearch.length < 3) dataList = dataList.filter(item => !item || !item.__fromSearch);
+
+            // Remember which list the dropdown is showing so scrolling to the bottom can load the next page
+            activePagedContext = isDynamicSource
+                ? {
+                    source: apiSourceName,
+                    param: paramValue,
+                    term: cleanSearch.length >= 3 ? cleanSearch : "",
+                    listKey: cleanSearch.length >= 3 ? `${sourceKey}_q_${cleanSearch}` : sourceKey
+                }
+                : null;
+
+            console.log("%c[AxiCMD Suggest] Remote suggestion check:", "color: #0284c7; font-weight: bold;", {
+                apiSourceName,
+                paramValue,
+                sourceKey,
+                partialTyped,
+                cleanSearch,
+                isDynamicSource,
+                cachedBaseCount: (axDatasourceObj[sourceKey] || []).length
+            });
+
+            if (isDynamicSource) {
+                if (cleanSearch.length >= 3) {
+                    const searchKey = `${sourceKey}_q_${cleanSearch}`;
+                    console.log(`%c[AxiCMD Debounce] Search term '${cleanSearch}' >= 3 chars. Checking searchKey: ${searchKey}`, "color: #d97706;");
+                    if (axDatasourceObj[searchKey] !== undefined) {
+                        dataList = axDatasourceObj[searchKey];
+                        console.log("%c[AxiCMD Debounce] Found cached results for term. Count:", "color: #16a34a;", dataList.length);
+                    } else if (refineFromCompleteList(sourceKey, cleanSearch)) {
+                        // A shorter search (or the base list) already holds every match, so no server call is needed
+                        clearTimeout(dynamicSearchDebounceTimer);
+                        dynamicSearchPending = false;
+                        dataList = axDatasourceObj[searchKey];
+                    } else {
+                        console.log(`%c[AxiCMD Debounce] Scheduling ${SEARCH_DEBOUNCE_MS}ms debounce ADS call for '${cleanSearch}'...`, "color: #e11d48; font-weight: bold;");
+                        clearTimeout(dynamicSearchDebounceTimer);
+                        dynamicSearchPending = true;
+                        dynamicSearchDebounceTimer = setTimeout(() => {
+                            dynamicSearchPending = false;
+                            console.log(`%c[AxiCMD Debounce] >>> TIMER FIRED! Calling loadList with search '${cleanSearch}' <<<`, "background: #7c3aed; color: #fff; padding: 2px 6px; border-radius: 2px; font-weight: bold;");
+                            loadList(apiSourceName, paramValue, cleanSearch, 1, getPageSize());
+                        }, SEARCH_DEBOUNCE_MS);
+
+                        const localMatches = dataList.filter(item => {
+                            const display = item.displaydata || item.caption || item.name || "";
+                            return display.toLowerCase().includes(cleanSearch);
+                        });
+
+                        if (localMatches.length > 0) {
+                            console.log("%c[AxiCMD Debounce] Showing local cached matches while fetching:", "color: #0284c7;", localMatches.length);
+                            dataList = localMatches;
+                        } else {
+                            console.log("%c[AxiCMD Debounce] No local matches found, displaying 'Searching...'", "color: #64748b;");
+                            filteredObjects = [];
+                            return ["Searching..."];
+                        }
+                    }
+                } else {
+                    console.log(`[AxiCMD Debounce] Search length (${cleanSearch.length}) < 3. Clearing pending debounce timer.`);
+                    clearTimeout(dynamicSearchDebounceTimer);
+                    dynamicSearchPending = false;
+                }
+            }
+
             const currentAccessPerms = getAccessPermissions();
             if (groupKey.toLowerCase() === "sdk" && currentAccessPerms?.buildAccess && tokens.length >= 2) {
                 const targetToken = cleanCommandToken(tokens[1])?.toLowerCase().trim();
@@ -4665,7 +5570,16 @@ if (typeof document !== "undefined") {
 
             ///added to restrict user by typing only the listed values from the list(if they type other than that we prompt them again with the default list added - 18-3-2026(t))
             if (dataList.length > 0 && filtered.length === 0) {
+                if (isDynamicSource) {
+                    filteredObjects = [];
+                    if (cleanSearch.length < 3) {
+                        return ["Type at least 3 characters to search records..."];
+                    } else {
+                        return ["No matching records found"];
+                    }
+                }
 
+                // console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
                 showToast("Please select a valid option from the list.");
 
                 let dummyTokens = [...tokens];
@@ -4677,6 +5591,9 @@ if (typeof document !== "undefined") {
                 input.value = dummyTokens.join(" ");
 
                 filtered = [...dataList];
+            } else if (isDynamicSource && filtered.length === 0 && cleanSearch.length >= 3) {
+                filteredObjects = [];
+                return ["No matching records found"];
             }
 
 
@@ -4844,6 +5761,28 @@ if (typeof document !== "undefined") {
      * @param {number} position - Token position index.
      * @returns {Array<object>} Parameter suggestions.
      */
+    /**
+     * Finds a structure (form / report / page / data source) in a loaded part of the structure list.
+     * The list is loaded one page at a time, so a miss does not mean the structure does not exist:
+     * callers should ask the server (requestStructSearch) when this returns undefined.
+     * Matches the internal name first, then the caption / display text (ignoring case and a trailing [badge]).
+     * @param {Array<object>} list - Rows of axi_structmetalist (may be undefined).
+     * @param {string} wanted - Internal name or caption.
+     * @param {string} [preferredType] - Optional stype (t / i / p / ads); used to choose between equal names.
+     * @returns {object|undefined} Matching row.
+     */
+    function findStructRow(list, wanted, preferredType) {
+        if (!Array.isArray(list) || !wanted) return undefined;
+        const w = String(wanted).replace(/\s*\[[^\]]*\]$/, "").trim().toLowerCase();
+        if (!w) return undefined;
+        const same = v => v !== undefined && v !== null && String(v).trim().toLowerCase() === w;
+        const typeOk = r => !preferredType || (r.stype || "").toLowerCase() === preferredType;
+        return list.find(r => r && r.name === wanted && typeOk(r))
+            || list.find(r => r && r.name === wanted)
+            || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)) && typeOk(r))
+            || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)));
+    }
+
     function processParamforEditndView(tokens, commandConfig, paramValue, position) {
         if (!commandConfig || !commandConfig.prompts || !commandConfig.prompts[0]) {
             return "";
@@ -4872,6 +5811,13 @@ if (typeof document !== "undefined") {
         const struct_dataList = axDatasourceObj[struct_sourceKey];
         if (!struct_dataList || !Array.isArray(struct_dataList)) return "";
 
+        // A failed or empty load leaves [] cached under this key, and nothing would ever fetch it again.
+        // Ask again (loadList itself holds back repeated failures for a few seconds, so this cannot loop fast).
+        if (struct_dataList.length === 0) {
+            loadList(struct_source, struct_paramValue);
+            return "";
+        }
+
         // find struct row
 
         let struct_name = paramValue;
@@ -4888,12 +5834,20 @@ if (typeof document !== "undefined") {
             if (preferredType === "iview") preferredType = "i";
         }
 
-        const struct_row = struct_dataList.find(r =>
-            r && r.name === struct_name &&
-            (!preferredType || (r.stype || "").toLowerCase() === preferredType)
-        ) || struct_dataList.find(r => r && r.name === struct_name);
+        // struct_name is the internal name when it was resolved, or still the caption the user typed
+        const struct_row = findStructRow(struct_dataList, struct_name, preferredType);
 
         if (!struct_row) {
+            // The structure list is loaded one page at a time, so the chosen form / report may simply not be in the
+            // part loaded so far. Ask the server for it by the name the user typed (and by its resolved name);
+            // when the rows arrive loadList refreshes the suggestions and this lookup runs again.
+            // requestStructSearch asks once per term, so this cannot loop.
+            const typedStruct = cleanString(tokens[1] || "").replace(/\s*\[[^\]]*\]$/, "").trim();
+            console.warn("[AxiCMD edit/view] Structure not found in the loaded structure list:", {
+                struct_name, typedStruct, source: struct_source, listKey: struct_sourceKey, loadedRows: struct_dataList.length
+            });
+            requestStructSearch(typedStruct, struct_paramValue);
+            if (struct_name && struct_name.toLowerCase() !== typedStruct.toLowerCase()) requestStructSearch(struct_name, struct_paramValue);
             return "";
         }
 
@@ -4911,6 +5865,39 @@ if (typeof document !== "undefined") {
         } else {
             const struct_split = (paramValue && typeof paramValue === "string") ? paramValue.split("$#$") : [];
             struct_selectedfield = struct_split.length > 1 ? struct_split[1] : "";
+
+            // The word after the form name can be a record key VALUE (e.g. "msg04") instead of a field name.
+            // fn_axi_getstructs_obj reads that word as a column of the primary table, which fails with
+            // 42703 "column p.msg04 does not exist". Only a word confirmed as a field row is sent as the
+            // selected field; a key value, or a word we cannot classify yet (cache empty after Refresh or a
+            // settings Save), is sent as "0". That "0" list holds both key values and fields, so once it has
+            // loaded the suggestions are rebuilt and this check runs again with the rows available.
+            if (struct_selectedfield && struct_selectedfield !== "0") {
+                const selLower = struct_selectedfield.toLowerCase();
+                const rawLower = cleanString(tokens[2] || "").toLowerCase();
+                // list keys are "axi_getstructsdata_<cmd>$#$<user>$#$<role>$#$<transid>$#$..." (lower case)
+                const transidLower = String(struct_row.name || "").toLowerCase();
+                let confirmedFname = "";
+                for (const key in axDatasourceObj) {
+                    if (!key.startsWith("axi_getstructsdata_") || !key.includes(transidLower) || !Array.isArray(axDatasourceObj[key])) continue;
+                    for (const row of axDatasourceObj[key]) {
+                        if (row.isfield !== 't') continue;
+                        const hit = [row.name, row.displaydata, row.caption]
+                            .some(v => v && (String(v).toLowerCase() === selLower || String(v).toLowerCase() === rawLower));
+                        // field rows are shown as "Caption (fname) [field]"; the resolved value may be just fname
+                        const byFname = String(row.displaydata || "").toLowerCase().includes(`(${selLower})`);
+                        if (hit || byFname) {
+                            // The function needs the field's internal name (fname). A word matched by its caption
+                            // ("Rent Expenses") must not be sent as typed, or it is read as the column p."rent expenses".
+                            const m = /\(([^()]+)\)\s*\[field\]\s*$/i.exec(String(row.displaydata || ""));
+                            confirmedFname = m ? m[1].trim() : "";
+                            break;
+                        }
+                    }
+                    if (confirmedFname) break;
+                }
+                struct_selectedfield = confirmedFname || "0";
+            }
         }
 
         //// already available globals
@@ -4965,7 +5952,14 @@ if (typeof document !== "undefined") {
                 value = struct_row?.primarytable || "";
             }
             else if (param === ":globalvars") {
+                // Dimension part stays "NA" (as before). For "view" / "edit" the session variables that the form's
+                // <transid>_filter application variable may use (e.g. :branch) follow the marker, see buildFilterVarsString.
                 value = "NA";
+                const cmdForVars = String(commandConfig.commandGroup || "").toLowerCase();
+                if (cmdForVars === "view" || cmdForVars === "edit") {
+                    const filterVars = buildFilterVarsString(allGloblVars);
+                    if (filterVars) value = "NA" + FILTER_VARS_MARK + filterVars;
+                }
             }
 
 
@@ -4994,6 +5988,32 @@ if (typeof document !== "undefined") {
         //    .join("$#$");
 
         return struct_finalParams;
+    }
+
+    // Separator between the dimension part and the session variables inside param10 (:globalvars) of axi_getstructsdata.
+    // fn_axi_getstructs_obj splits on it (keep in sync with Structures/*/Scripts/axi_functions.sql).
+    const FILTER_VARS_MARK = "@@VARS@@";
+
+    /**
+     * Builds "name=value~~name=value" from the session global variables, for the view filter of a form
+     * (<transid>_filter in axvarcore, e.g. "and Form11.branch=:branch"), which fn_axi_getstructs_obj resolves.
+     * Only plain short values are sent: passwords, keys, tokens, urls, paths and the *_filter variables stay out,
+     * because this text goes into the request, the cache key and the database log.
+     * @param {object} allVars - Session variables object ({ globalVars: [ { name: value }, ... ] }).
+     * @returns {string} Pairs joined by "~~", or "" when there is nothing to send.
+     */
+    function buildFilterVarsString(allVars) {
+        if (!allVars || !Array.isArray(allVars.globalVars)) return "";
+        const blockedName = /pwd|pass|secret|token|key|auth|url|path|server|mail|connection|schema|_filter$/i;
+        const plainValue = /^[A-Za-z0-9_. -]{1,60}$/;
+        const pairs = [];
+        allVars.globalVars.forEach(obj => {
+            const name = obj && Object.keys(obj)[0];
+            if (!name || !/^[A-Za-z0-9_]+$/.test(name) || blockedName.test(name)) return;
+            const value = String(obj[name] === null || obj[name] === undefined ? "" : obj[name]).trim();
+            if (plainValue.test(value)) pairs.push(name.toLowerCase() + "=" + value);
+        });
+        return pairs.join("~~");
     }
 
     /**
@@ -5099,6 +6119,7 @@ if (typeof document !== "undefined") {
     //         });
 
     //     } catch (err) {
+    //         // console.log("Error in processExtraParams:", err);
     //     }
 
     //     return paramValue;
@@ -5190,6 +6211,7 @@ if (typeof document !== "undefined") {
                 }
             });
         } catch (err) {
+            // console.log("Error in processExtraParams:", err);
         }
 
         return paramValue;
@@ -5456,7 +6478,18 @@ if (typeof document !== "undefined") {
 
             let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
 
-            const cachedList = axDatasourceObj[cacheKey.toLowerCase()];
+            let cachedList = axDatasourceObj[cacheKey.toLowerCase()];
+            if (!cachedList) {
+                for (const k in axDatasourceObj) {
+                    if (k.startsWith(cacheKey.toLowerCase())) {
+                        const sub = axDatasourceObj[k];
+                        if (Array.isArray(sub) && sub.length > 0) {
+                            cachedList = sub;
+                            break;
+                        }
+                    }
+                }
+            }
             if (cachedList) {
                 // Find matching items
                 const matches = cachedList.filter(item =>
@@ -5514,7 +6547,11 @@ if (typeof document !== "undefined") {
 
                     let real = found.name || found.sqlname || found.displaydata;
 
-                    if (real.includes("(") && real.includes(")")) {
+                    // Field rows read "Caption (fname) [field]": keep only the field name. A record row (isfield "f")
+                    // holds a plain value that can contain brackets itself ("Rent Expenses (Indirect Expenses)"),
+                    // so it must keep its whole text or the record lookup searches for "Indirect Expenses".
+                    const isRecordRow = String(found.isfield ?? "").toLowerCase() === "f";
+                    if (!isRecordRow && real.includes("(") && real.includes(")")) {
                         const match = real.match(/\(([^)]+)\)/);
 
                         real = match ? match[1] : real;
@@ -5549,7 +6586,14 @@ if (typeof document !== "undefined") {
      */
     function render() {
 
+        // console.log("Render called");
+        // Emptying the list resets its scroll position. Background requests (commands, favourites, the next
+        // page ...) finish while the user is scrolling and trigger a re-render, which threw the user back to
+        // the top. Remember the position so a re-render of the SAME list can put it back (see below).
+        const scrollBeforeRender = { top: list.scrollTop, left: list.scrollLeft };
         list.innerHTML = "";
+        // No footer on screen until buildLoadMoreFooter draws one again in this render
+        footerPagedContext = null;
 
         const currentInput = input.value;
         const currentInputTokens = getTokens(currentInput.trim());
@@ -5581,7 +6625,7 @@ if (typeof document !== "undefined") {
         const validItems = items.filter(item => {
             if (!item) return false;
             if (typeof item === "string") {
-                return (item !== "Loading options..." && item.trim() !== "");
+                return (item !== "Loading options..." && !item.startsWith("Fetching") && !item.startsWith("Searching") && item.trim() !== "");
             }
             if (typeof item === "object") {
                 return (typeof item.displaydata === "string" && item.displaydata.trim() !== "");
@@ -5589,6 +6633,7 @@ if (typeof document !== "undefined") {
             return false;
         });
 
+        // console.log(`Valid Items: ${validItems.length}`);
 
         if (items.length > 0 && isSystemMessage(items[0])) {
             activeIndex = -1;
@@ -5637,9 +6682,9 @@ if (typeof document !== "undefined") {
 
         const isAnyLoadingItem = items.some(item => {
             const text = typeof item === "string" ? item : (item?.displaydata || "");
-            return typeof text === "string" && text.startsWith("Loading");
+            return typeof text === "string" && (text.startsWith("Loading") || text.startsWith("Searching") || text.startsWith("Fetching"));
         });
-        const isAnyFetchActive = activeFetches.size > 0 || isCmdsLoading || isStructsLoading || isAnyLoadingItem;
+        const isAnyFetchActive = activeFetches.size > 0 || isCmdsLoading || isStructsLoading || isAnyLoadingItem || isSearchPending();
 
         const showInitialWrapper = isInitialCommandStage && (validItems.length > 0 || isCmdsLoading || isStructsLoading) && !isSystemMessage(validItems[0]);
 
@@ -5660,9 +6705,10 @@ if (typeof document !== "undefined") {
                 li.className = "axi-suggestion-loading d-flex align-items-center justify-content-center py-3 px-4 text-muted gap-2";
                 li.style.fontSize = "13px";
                 li.style.textAlign = "center";
+                const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || (isSearchPending() ? "Searching..." : "Loading options...");
                 li.innerHTML = `
                     <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-right: 6px;"></span>
-                    <span>Loading options...</span>
+                    <span>${loadingText}</span>
                 `;
                 list.appendChild(li);
                 list.style.display = "block";
@@ -5701,7 +6747,13 @@ if (typeof document !== "undefined") {
 
             const isCreateNewItem = (typeof item === 'string' && item.toLowerCase() === 'create new') || (typeof item === 'object' && (item.isCreateNew || item?.name?.toLowerCase() === 'create new'));
 
-            if (isCreateNewItem) {
+            if (isSystemMessage(item)) {
+                li.classList.add("axi-suggestion-system-message");
+                li.style.cursor = "default";
+                li.style.color = "#6c757d";
+                li.style.fontStyle = "italic";
+                li.textContent = displayText;
+            } else if (isCreateNewItem) {
                 li.classList.add("axi-create-new-item");
                 li.textContent = displayText;
             } else if (typeof item === 'object' && item.isExecutable) {
@@ -5734,16 +6786,10 @@ if (typeof document !== "undefined") {
                 li.classList.add("active");
             }
 
-            li.addEventListener("mousedown", e => {
-                e.preventDefault();
-                let objectIndex = validItems.findIndex(obj => {
-                    if (obj === item) return true;
-                    const itemText = typeof item === "string" ? item : (item?.displaydata || item?.name || "");
-                    const objText = typeof obj === "string" ? obj : (obj?.displaydata || obj?.name || "");
-                    return itemText && objText && itemText.toLowerCase() === objText.toLowerCase();
-                });
-                apply(objectIndex !== -1 ? objectIndex : i);
-            });
+            // No per-row listener: with thousands of rows that is thousands of closures. One delegated
+            // "mousedown" handler on the list (see setupEventListeners) reads this index instead.
+            // i is already the index of the item inside validItems.
+            li.dataset.vi = String(i);
 
             return li;
         }
@@ -5816,22 +6862,46 @@ if (typeof document !== "undefined") {
                 if (isStructsLoading) {
                     listContainer.appendChild(createLoadingElement("Loading structures..."));
                 } else {
-                    structures.forEach(({ item, index }) => {
+                    // Never build more than MAX_RENDERED_ITEMS rows; the user narrows the list by typing
+                    structures.slice(0, MAX_RENDERED_ITEMS).forEach(({ item, index }) => {
                         const li = createSuggestionLi(item, index);
                         listContainer.appendChild(li);
                     });
+                    // "Scroll down for more..." / "Loading more..." for the paged structure list
+                    const structFooter = buildLoadMoreFooter(structures.length);
+                    if (structFooter) listContainer.appendChild(structFooter);
                 }
 
                 fragment.appendChild(listContainer);
             }
         } else {
-            validItems.forEach((item, i) => {
-                const li = createSuggestionLi(item, i);
-                fragment.appendChild(li);
-            });
+            // Render cap: at most MAX_RENDERED_ITEMS <li> are built, however long the list is
+            const renderCount = Math.min(validItems.length, MAX_RENDERED_ITEMS);
+            for (let i = 0; i < renderCount; i++) {
+                fragment.appendChild(createSuggestionLi(validItems[i], i));
+            }
+
+            // Footer for paged sources: spinner while the next page loads, hint when more can be loaded
+            const footer = buildLoadMoreFooter(validItems.length);
+            if (footer) fragment.appendChild(footer);
         }
 
         list.appendChild(fragment);
+
+        // After a "load more" re-render, keep the user where they were instead of jumping to the top
+        // A re-render of the same list (same paged source and search term) keeps the scroll position; a
+        // different list (the user typed something else, another command) starts at the top as before.
+        const renderedListKey = activePagedContext ? activePagedContext.listKey : null;
+        const sameListAsBefore = renderedListKey !== null && renderedListKey === lastRenderedListKey;
+        if (pendingScrollRestore !== null) {
+            list.scrollTop = pendingScrollRestore.top;
+            list.scrollLeft = pendingScrollRestore.left;
+            pendingScrollRestore = null;
+        } else if (sameListAsBefore) {
+            list.scrollTop = scrollBeforeRender.top;
+            list.scrollLeft = scrollBeforeRender.left;
+        }
+        lastRenderedListKey = renderedListKey;
 
         if (list.classList.contains("axi-grid-layout")) {
             list.style.display = "flex";
@@ -5845,6 +6915,16 @@ if (typeof document !== "undefined") {
             megaDropdown.style.display = "flex";
         } else {
             list.style.display = "block";
+        }
+
+        // Load the next page as soon as the footer row scrolls into view
+        if (loadMoreObserver) { loadMoreObserver.disconnect(); loadMoreObserver = null; }
+        const footerRow = list.querySelector(".axi-load-more");
+        if (footerRow && typeof IntersectionObserver !== "undefined") {
+            loadMoreObserver = new IntersectionObserver(entries => {
+                if (entries.some(en => en.isIntersecting)) loadNextPage();
+            }, { threshold: 0.1 });
+            loadMoreObserver.observe(footerRow);
         }
 
 
@@ -5906,11 +6986,11 @@ if (typeof document !== "undefined") {
         const validItems = items.filter(item => {
             if (!item) return false;
             if (typeof item === "string") {
-                return (!item.startsWith("Loading") && item !== "No Data" && item.trim() !== "");
+                return (!item.startsWith("Loading") && !item.startsWith("Searching") && !item.startsWith("Fetching") && !item.startsWith("Type at least") && !item.startsWith("No matching") && item !== "No Data" && item.trim() !== "");
             }
             if (typeof item === "object") {
                 const text = item.displaydata || item.name || "";
-                return (typeof text === "string" && !text.startsWith("Loading") && text !== "No Data" && text.trim() !== "");
+                return (typeof text === "string" && !text.startsWith("Loading") && !text.startsWith("Searching") && !text.startsWith("Fetching") && !text.startsWith("Type at least") && !text.startsWith("No matching") && text !== "No Data" && text.trim() !== "");
             }
             return false;
         });
@@ -5922,7 +7002,9 @@ if (typeof document !== "undefined") {
 
 
         const currentInput = input.value;
-        const tokens = getTokens(currentInput, false);
+        let tokens = getTokens(currentInput, false);
+        // "test save" typed without quotes for "Test Save Normalized": the picked name replaces ALL the words typed
+        if (isUnquotedStructPhrase(tokens)) tokens = [tokens.map(t => cleanString(t)).join(" ")];
 
         let checkTokens = [...tokens];
         if (checkTokens.length >= 2) {
@@ -5939,6 +7021,7 @@ if (typeof document !== "undefined") {
         const saveCommandConfig = getCommandConfig(saveGroupKeyCheck, checkTokens);
 
         if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "GO_ACTION") {
+            // console.log("Action item selected. Executing command...");
             const rawInput = input.value.trim();
             const rawTokens = getTokens(rawInput, false);
             const firstToken = rawTokens.length > 0 ? cleanString(rawTokens[0]).toLowerCase() : "";
@@ -5964,18 +7047,21 @@ if (typeof document !== "undefined") {
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "create") {
+            // console.log("Save Option Selected...Submitting Data...");
             hide();
             AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, checkTokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "edit") {
+            // console.log("Save Option Selected...Submitting Data...");
             hide();
             AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, checkTokens, saveCommandConfig);
             resetSetCommandState();
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Pop_ACTION") {
+            // console.log("Pop Option Selected......");
             try {
                 let executeTokens = tokens;
                 const rawInput = input.value.trim();
@@ -6010,6 +7096,7 @@ if (typeof document !== "undefined") {
             catch (err) {
                 popUpOption = false;
 
+                // console.log("Error in Popup:", err);
 
                 showToast("Something went wrong. Please try again later");
 
@@ -6141,6 +7228,7 @@ if (typeof document !== "undefined") {
 
             if ((!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) && type?.toLowerCase() === "page") {
                 showToast("Redirection link is not available for this page.");
+                // console.error("No Redirection link!");
                 return;
             }
         }
@@ -6148,6 +7236,17 @@ if (typeof document !== "undefined") {
 
         realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
         realType = foundObj?.stype ?? "";
+
+        // A record row (isfield "f") is always a value, also in "edit <form> <record>" where it sits at index 2.
+        // Without this "Test (issue)" was cut to "Test" below, and the next suggestions then read that word as a
+        // field name. The list can hold plain strings (the row objects are in filteredObjects), so the row is
+        // looked up by the shown text as well as through foundObj / selectedItem.
+        const shownText = String(suggestion).toLowerCase();
+        const pickedRow = [foundObj, selectedItem, ...(Array.isArray(filteredObjects) ? filteredObjects : [])]
+            .find(o => o && typeof o === "object" && String(o.displaydata || "").toLowerCase() === shownText);
+        if (pickedRow && String(pickedRow.isfield ?? "").toLowerCase() === "f") {
+            isValueToken = true;
+        }
 
 
 
@@ -6179,6 +7278,20 @@ if (typeof document !== "undefined") {
 
         resolvedParams[targetIndex] = realValue;
         resolvedParamType[targetIndex] = realType;
+
+        if (typeof selectedItem === "object" && selectedItem) {
+            const recUid = selectedItem.transrecordid ?? selectedItem.id ?? selectedItem.name;
+            if (recUid !== undefined && recUid !== null) {
+                for (const key in axDatasourceObj) {
+                    if (key.toLowerCase().startsWith("axi_getstructsdata") && !key.includes("_q_")) {
+                        const baseArr = axDatasourceObj[key];
+                        if (Array.isArray(baseArr) && !baseArr.some(x => (x.transrecordid ?? x.id ?? x.name) == recUid)) {
+                            baseArr.push(selectedItem);
+                        }
+                    }
+                }
+            }
+        }
 
         displayName = displayName.replace(/[\r\n]+/g, " ").trim();
 
@@ -6256,32 +7369,354 @@ if (typeof document !== "undefined") {
 
 
 
+    // ---- Direct call to the ARM AxList API --------------------------------------------------------------------
+    // The palette calls {armUrl}/AxList/api/v1/AxList itself, with the ARM session id and bearer token that the
+    // Axpert session keeps in its global variables (ARM_SessionId / ARM_Token, read through
+    // axinterface.aspx/GetGlobalVar). That saves the hop through AxPEG.aspx. Anything that goes wrong (no URL, no
+    // token, 401 because the token expired, network/CORS error, a non-OK answer) falls back to the old route
+    // through window.GetDataFromAxList, which renews the ARM session on the server.
+    let armAuthCache = null;            // { sessionId, token }
+    let lastDirectFailToast = 0;        // when the "could not reach the data service" toast was last shown
+    let armDirectDisabledUntil = 0;    // after a network/CORS failure the direct route rests for a while
+
     /**
-     * Asynchronously calls Axpert server API to fetch list data.
+     * True when an AxList answer says the ARM / Axpert session is gone, e.g.
+     * {"result":{"message":"SessionId is not valid","success":false}}.
+     * @param {*} res - Response object, JSON string or error text.
+     * @returns {boolean}
+     */
+    function isSessionInvalidResponse(res) {
+        if (!res) return false;
+        let text;
+        try { text = (typeof res === "string" ? res : (res.message || JSON.stringify(res))).toLowerCase(); } catch (e) { return false; }
+        return text.includes("sessionid is not valid") ||
+            text.includes("session is not valid") ||
+            text.includes("session expired") ||
+            text.includes("sessionid is invalid") ||
+            text.includes("session is invalid");
+    }
+
+    /**
+     * Sends the whole application to the session-expired page (aspx/sess.aspx) and stops the caller.
+     * @throws {Error} Always, with the message "SessionId is not valid" so callers do not carry on.
+     */
+    function redirectToSessionExpired() {
+        top.window.location.href = `${getAppBaseUrl()}/aspx/sess.aspx`;
+        throw new Error("SessionId is not valid");
+    }
+
+    /**
+     * Reads the ARM session id and bearer token from the Axpert session global variables.
+     * @async
+     * @param {boolean} [force=false] - Ignore the cached pair and read it again.
+     * @returns {Promise<{sessionId: string, token: string}|null>} The pair, or null when not available.
+     */
+    async function getArmAuth(force = false) {
+        if (armAuthCache && !force) return armAuthCache;
+        try {
+            const res = await fetch(getAppBaseUrl() + "/aspx/axinterface.aspx/GetGlobalVar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: "{}"
+            });
+            if (!res.ok) return null;
+            const outer = await res.json();
+            const vars = JSON.parse(outer.d || "{}").globalVars || [];
+            const read = key => {
+                const hit = vars.find(o => o && o[key] !== undefined);
+                return hit ? String(hit[key] || "") : "";
+            };
+            const sessionId = read("ARM_SessionId");
+            const token = read("ARM_Token");
+            armAuthCache = (sessionId && token) ? { sessionId, token, read } : null;
+        } catch (e) {
+            armAuthCache = null;
+        }
+        return armAuthCache;
+    }
+
+    /**
+     * Sends a list request straight to the ARM AxList API.
+     * @async
+     * @param {object} data - Request in the AxPEG shape built by getList (adsNames, sqlParams, props ...).
+     * @returns {Promise<object|undefined>} AxList response, or undefined when the direct route could not be used.
+     */
+    async function callArmAxListDirect(data, signal) {
+        if (!AxiArmUrl || Date.now() < armDirectDisabledUntil) return undefined;
+        for (let attempt = 0; attempt < 2; attempt++) {
+            const auth = await getArmAuth(attempt > 0);
+            if (!auth) return undefined;
+            const p = data.props || {};
+            const body = {
+                ARMSessionId: auth.sessionId,
+                action: data.action || "view",
+                Project: getProjectName(),
+                ADSNames: data.adsNames,
+                trace: true,
+                refreshCache: !!data.refreshCache,
+                getallrecordscount: !!p.getallrecordscount,
+                CachePermissions: p.CachePermissions !== false,
+                pageno: p.pageno,
+                pagesize: p.pagesize,
+                keyfield: data.keyField || "",
+                keyvalue: data.keyValue || "",
+                select_columns: p.select_columns || [],
+                aggregations: p.aggregations || {},
+                groupby_columns: p.groupby_columns || [],
+                sorting: p.sorting || [],
+                filters: p.filters || [],
+                sqlparams: data.sqlParams || {}
+            };
+            try {
+                const res = await fetch(AxiArmUrl.replace(/\/+$/, "") + "/AxList/api/v1/AxList", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + auth.token },
+                    body: JSON.stringify(body),
+                    signal
+                });
+                if (res.status === 401 || res.status === 400) {
+                    // AxList answers a dead session with {"result":{"message":"SessionId is not valid"}}.
+                    // A fresh pair is tried once; if it is still refused the session is really gone.
+                    const text = await res.text().catch(() => "");
+                    if (isSessionInvalidResponse(text) && attempt > 0) redirectToSessionExpired();
+                    armAuthCache = null;        // token / session no longer valid: read a fresh pair and try once more
+                    continue;
+                }
+                const json = await res.json().catch(() => undefined);
+                if (isSessionInvalidResponse(json)) redirectToSessionExpired();
+                if (!res.ok) return undefined;
+                return json;
+            } catch (e) {
+                if (e && (e.message === "SessionId is not valid" || e.name === "AbortError")) throw e;
+                // Network error or blocked by CORS: do not try the direct route again for a few minutes
+                armDirectDisabledUntil = Date.now() + 5 * 60 * 1000;
+                return undefined;
+            }
+        }
+        return undefined;
+    }
+
+    /**
+     * Turns a raw database / ARM error from a data source call into a message an end user can act on.
+     * The raw text (SQL state, function signature, column names) is only written to the console.
+     * @param {string} rawError - Error text returned by the server.
+     * @param {string} [sourceName] - Name of the data source that failed (for the console only).
+     * @returns {string} Short user-friendly message.
+     */
+    function friendlyDataError(rawError, sourceName) {
+        const raw = String(rawError ?? "");
+        const lower = raw.toLowerCase();
+        console.error(`[AxiCMD] Data source "${sourceName || ""}" failed:`, raw);
+
+        // Postgres 42883 / Oracle PLS-00201, ORA-00904 ...: the AxiCMD database objects are missing or outdated
+        if (/42883|does not exist.*function|function .* does not exist|pls-00201|ora-00904|ora-06575|ora-00942/.test(lower) &&
+            /function|procedure|identifier|table or view|axi_/.test(lower)) {
+            return "AxiCMD could not load this list because its database setup is incomplete or outdated. Please ask your administrator to run the AxiCMD database scripts.";
+        }
+        // 42703 undefined column, 42P01 undefined table
+        if (/42703|42p01|column .* does not exist|relation .* does not exist/.test(lower)) {
+            return "This item has a field or table that AxiCMD could not read. Try a different field, or contact your administrator.";
+        }
+        if (/timeout|timed out/.test(lower)) {
+            return "The request took too long. Please try again.";
+        }
+        if (/exception while reading from stream|connection|network|unable to connect/.test(lower)) {
+            return "AxiCMD could not reach the database. Please try again in a moment.";
+        }
+        return "Something went wrong while loading this list. Please try again, or contact your administrator if it continues.";
+    }
+
+    /**
+     * Asynchronously fetches list data: straight from the ARM AxList API when possible, otherwise through the
+     * Axpert server (AxPEG.aspx GetDataFromAxList).
      * @async
      * @param {object} data - Request payload data.
      * @returns {Promise<object>} Server response data.
      */
-    async function getAxListAsync(data) {
+    async function getAxListAsync(data, signal) {
         if (!axicmdenabled) return null;
-        return new Promise((resolve, reject) => {
-            window.GetDataFromAxList(
-                data,
-                res => resolve(res),
-                err => reject(err)
-            );
-        });
+        const direct = await callArmAxListDirect(data, signal);
+        if (direct !== undefined) return direct;
+        // The direct route could not be used and the server fallback is off: tell the user once in a while,
+        // instead of silently showing empty lists.
+        if (Date.now() - lastDirectFailToast > 30000) {
+            lastDirectFailToast = Date.now();
+            try { showToast("AxiCMD could not reach the data service. Please try again or contact your administrator."); } catch (e) { }
+        }
+        // The fallback through AxPEG.aspx/GetDataFromAxList is switched off on purpose (it must not be called).
+        // Kept commented out in case it is needed again; when the direct route fails, the caller gets null (empty list).
+        // return new Promise((resolve, reject) => {
+        //     window.GetDataFromAxList(
+        //         data,
+        //         res => resolve(res),
+        //         err => {
+        //             // The server route can also report the dead session through its error callback
+        //             try { if (isSessionInvalidResponse(err) || isSessionInvalidResponse(err?.responseText)) redirectToSessionExpired(); }
+        //             catch (e) { return reject(e); }
+        //             reject(err);
+        //         }
+        //     );
+        // });
+        return null;
 
     }
 
+    // ---- View records: view filter applied by fn_axi_getstructs_obj (TKT-1387) -----------------------------------------
+    // NOTE: the text below describes the former Entity API route (GetEntityListPageLoadData), now commented out
+    // further down. The view filter is now applied by fn_axi_getstructs_obj from axvarcore (<transid>_filter).
+    // The generic AxList data source (axi_getstructsdata) knows nothing about the form's view filter (the
+    // "<transid>_filter" application variable, e.g. cityf_filter = "... and cityf1.createdby = :username"), so
+    // "view <form>" listed every record. The Entity page does not have that problem because it asks ARM for the
+    // records of a TransId, and ARM applies the filter itself. The palette does the same for the record rows of the
+    // "view" command. Field rows (isfield = 't') still come from axi_getstructsdata, page 1 only.
+
+    /**
+     * True when this axi_getstructsdata request is a "view" or "edit" record list of a tstruct that must come from
+     * the view filter (axvarcore <transid>_filter) that fn_axi_getstructs_obj applies.
+     * @param {string} axDatasourceName - Data source of the request.
+     * @param {object} sqlParams - param1..param10 as sent to the data source (cmd, user, role, transid, selectedfield,
+     *                             dimension, permission, keyfield, primarytable, globalvars).
+     * @returns {boolean}
+     */
+    function isViewRecordsRequest(axDatasourceName, sqlParams) {
+        if (String(axDatasourceName || "").toLowerCase() !== "axi_getstructsdata") return false;
+        const p = sqlParams || {};
+        const isNA = v => !v || String(v).toUpperCase() === "NA";
+        // "view" and "edit" list the same records, so both must honour the form's view filter
+        const cmd = String(p.param1 || "").toLowerCase();
+        if (!((cmd === "view" || cmd === "edit") && !isNA(p.param4) && !isNA(p.param8))) return false;
+
+        // Only tstructs have a view filter. iviews, pages and ADS are not filtered. The structure type
+        // (stype: t / i / p / ads) is read from the loaded structure list; when the form is not found there, AxList is used.
+        const transLower = String(p.param4).toLowerCase();
+        for (const key in axDatasourceObj) {
+            if (!key.startsWith("axi_structmetalist") || !Array.isArray(axDatasourceObj[key])) continue;
+            const row = axDatasourceObj[key].find(r => r && String(r.name || "").toLowerCase() === transLower && (r.stype || r.STYPE));
+            if (row) return String(row.stype || row.STYPE).toLowerCase() === "t";
+        }
+        return false;
+    }
+
+    // Kept for future use: the former Entity API route (GetEntityListPageLoadData). It is not called any more;
+    // fn_axi_getstructs_obj applies the view filter instead. Uncomment this block and the commented
+    // code in getList to switch back.
+    // /**
+    //  * Case-insensitive read of a column from an Entity list row.
+    //  * @param {object} row - One row of result.data.ListData.
+    //  * @param {string} name - Column (field) name.
+    //  * @returns {string} The value as text, or "" when missing.
+    //  */
+    // function entityRowValue(row, name) {
+    //     if (!row || !name) return "";
+    //     const lower = String(name).toLowerCase();
+    //     const hit = Object.keys(row).find(k => k.toLowerCase() === lower);
+    //     const v = hit === undefined ? "" : row[hit];
+    //     return (v === null || v === undefined) ? "" : String(v);
+    // }
+
+    // /**
+    //  * Fetches one page of records of a form from the ARM Entity API, the same call the Entity page makes, so ARM
+    //  * applies the form's view filter and the user's permissions. Rows are returned in the palette's list shape
+    //  * { displaydata, id, caption, isfield: 'f', transrecordid }.
+    //  * @async
+    //  * @param {object} sqlParams - param1..param10 of the axi_getstructsdata request.
+    //  * @param {string} searchTerm - Typed term (already trimmed and lower-cased); used when 3+ characters.
+    //  * @param {number} pageNo - Page number (1-based).
+    //  * @param {number} pageSize - Page size, the same one AxList uses.
+    //  * @param {AbortSignal} [signal] - Aborts the request when a newer search starts.
+    //  * @returns {Promise<Array<object>|null>} Rows, or null when the Entity API could not be used.
+    //  */
+    // async function getViewRecordsFromEntityApi(sqlParams, searchTerm, pageNo, pageSize, signal) {
+    //     if (!AxiArmUrl) return null;
+    //     const transId = String(sqlParams.param4 || "");
+    //     const keyField = String(sqlParams.param8 || "");
+    //     const selField = (sqlParams.param5 && sqlParams.param5 !== "0" && String(sqlParams.param5).toUpperCase() !== "NA") ? String(sqlParams.param5) : "";
+
+    //     const filters = [];
+    //     if (searchTerm && searchTerm.length >= 3) {
+    //         filters.push({ ftransid: transId, fldname: selField || keyField, condition: "CONTAINS", datatype: "TEXT", value: searchTerm });
+    //     }
+
+    //     for (let attempt = 0; attempt < 2; attempt++) {
+    //         const auth = await getArmAuth(attempt > 0);
+    //         if (!auth) return null;
+    //         const body = {
+    //             Page: "Entity",
+    //             ARMSessionId: auth.sessionId,
+    //             OnlyData: true,
+    //             TransId: transId,
+    //             AppName: getProjectName(),
+    //             Roles: window.AxUserRoles || "",
+    //             UserName: sqlParams.param2 || window.mainUserName || "",
+    //             PageNo: pageNo,
+    //             PageSize: pageSize,
+    //             Filters: filters,
+    //             CalledFromDataList: true
+    //         };
+    //         try {
+    //             const res = await fetch(AxiArmUrl.replace(/\/+$/, "") + "/AxList/api/v1/GetEntityListPageLoadData", {
+    //                 method: "POST",
+    //                 headers: { "Content-Type": "application/json", "Authorization": "Bearer " + auth.token },
+    //                 body: JSON.stringify(body),
+    //                 signal
+    //             });
+    //             if (res.status === 401 || res.status === 400) {
+    //                 const text = await res.text().catch(() => "");
+    //                 if (isSessionInvalidResponse(text) && attempt > 0) redirectToSessionExpired();
+    //                 armAuthCache = null;
+    //                 continue;
+    //             }
+    //             const json = await res.json().catch(() => undefined);
+    //             if (isSessionInvalidResponse(json)) redirectToSessionExpired();
+    //             if (!res.ok || !json) return null;
+
+    //             // ListData can come back null or empty (no record matches, or ARM has nothing for this page): that is
+    //             // "no data", not an error, so the suggestions are simply empty. Only an answer with no result at all
+    //             // is treated as a failure.
+    //             if (!json?.result) return null;
+    //             const listData = Array.isArray(json.result.data?.ListData) ? json.result.data.ListData : [];
+
+    //             const records = listData.map(row => {
+    //                 const keyVal = entityRowValue(row, keyField);
+    //                 const selVal = selField ? entityRowValue(row, selField) : "";
+    //                 return {
+    //                     // same text the SQL function builds: key value, or "<selected field value>[<key value>]"
+    //                     displaydata: selField ? `${selVal}[${keyVal}]` : keyVal,
+    //                     id: "0",
+    //                     caption: selField ? selVal : keyVal,
+    //                     isfield: "f",
+    //                     transrecordid: row.recordid
+    //                 };
+    //             }).filter(r => r.displaydata !== "" && r.displaydata !== "[]");
+
+    //             // Rows with an empty key are dropped above (like "p.<key> IS NOT NULL" in the SQL function), so a full
+    //             // server page can shrink below the page size. The paging code decides "load more" from the row count,
+    //             // so the last row remembers that the server page was full. The mark is plain data and survives the cache.
+    //             if (pageSize > 0 && listData.length >= pageSize && records.length > 0) {
+    //                 records[records.length - 1].__fullPage = true;
+    //             }
+    //             return records;
+    //         } catch (e) {
+    //             if (e && (e.message === "SessionId is not valid" || e.name === "AbortError")) throw e;
+    //             console.error("[AxiCMD] Entity API call failed:", e);
+    //             return null;
+    //         }
+    //     }
+    //     return null;
+    // }
+
     /**
      * Fetches dataset for specified Axpert data source name and parameters.
+     * Supports pagination and dynamic server-side search filtering.
      * @async
      * @param {string} axDatasourceName - Name of the Axpert data source.
-     * @param {string} [paramValuesCsv=""] - Comma-separated parameter values.
+     * @param {string} [paramValuesCsv=""] - Comma-separated or delimiter-separated parameter values.
+     * @param {string} [searchTerm=""] - Dynamic search filter term.
+     * @param {number} [pageNo=1] - Page number (1-based).
+     * @param {number} [pageSize=100] - Records per page (0 to fetch all, or limit like 100).
      * @returns {Promise<Array<object>>} Dataset rows.
      */
-    async function getList(axDatasourceName, paramValuesCsv = "") {
+    async function getList(axDatasourceName, paramValuesCsv = "", searchTerm = "", pageNo = 1, pageSize = getPageSize(), signal) {
         if (!axicmdenabled) return [];
         try {
             //await ensureSignedIn();
@@ -6297,10 +7732,6 @@ if (typeof document !== "undefined") {
 
 
             if (paramValuesCsv && typeof paramValuesCsv === "string") {
-                //const values = paramValuesCsv
-                //    .split(",")
-                //    .map(v => v.trim())
-                //    .filter(Boolean);
                 const values = paramValuesCsv
                     .split("$#$")
                     .map(v => v.trim())
@@ -6313,63 +7744,135 @@ if (typeof document !== "undefined") {
                 });
             }
 
-            // ---- Stable cache key ----
-            const cacheKey = `axi_${axDatasourceName}_${normalizedParams.join("|")}_v1`;
+            const cleanTerm = (typeof searchTerm === "string" ? searchTerm : "").trim().toLowerCase();
+            const effectivePageSize = (typeof pageSize === "number") ? pageSize : getPageSize();
+            const effectivePageNo = (typeof pageNo === "number") ? pageNo : 1;
 
-            const cached = localStorage.getItem(cacheKey);
-            if (cached) {
-                return JSON.parse(cached);
+            // Paged sources (see PAGED_SOURCES) are paged and searched by the AxList API itself, through
+            // props.pageno / props.pagesize / props.filters below. The ADS rows and SQL functions stay unchanged and
+            // receive no extra params. Page and page size only go into the cache key: each page of each search
+            // is a different result and must not overwrite another one.
+            const serverPaged = isPagedSource(axDatasourceName);
+            if (serverPaged) {
+                normalizedParams.push(`page:${effectivePageNo}`, `size:${effectivePageSize}`);
+            }
+
+            // ---- Stable cache key ----
+            let cacheKey = `axi_${axDatasourceName}_${normalizedParams.join("|")}`;
+            if (cleanTerm) {
+                cacheKey += `_q_${cleanTerm}`;
+            }
+            // "view" / "edit" records of a tstruct are filtered by the database function; _ent keeps them apart from older unfiltered entries
+            const viewFromEntity = isViewRecordsRequest(axDatasourceName, sqlParams);
+            if (viewFromEntity) cacheKey += `_ent`;
+            // _v2 = entries are stored as { t: savedAtMs, d: rows } so they can expire (older _v1 entries are ignored)
+            cacheKey += `_v2`;
+
+            // Persistent cache is read only when it is fresh. Search results (_q_) of server-paged sources
+            // are not persisted at all (see below), so nothing stale or huge is parsed here.
+            const cachedRows = readListCache(cacheKey);
+            if (cachedRows) {
+                console.log(`%c[AxiCMD getList / ADS] LocalStorage cache HIT for: ${cacheKey}`, "color: #16a34a; font-weight: bold;");
+                return cachedRows;
             }
 
             const requestBody = {
-
                 action: "view",
                 adsNames: [axDatasourceName],
                 trace: true,
                 refreshCache: true,
-                sqlParams: sqlParams
+                sqlParams: sqlParams,
+                props: {
+                    ADS: true,
+                    CachePermissions: true,
+                    getallrecordscount: false,
+                    // Paging is done by the AxList API (AxPEG.aspx -> ARM /AxList): the page asked for here is the
+                    // page that comes back, for every source. (0 would mean "all rows".)
+                    pageno: effectivePageNo,
+                    pagesize: effectivePageSize
+                }
             };
 
-
-
-            const res = await getAxListAsync(requestBody);
-
-
-            if (res) {
-                const resStr = (typeof res === "string" ? res : JSON.stringify(res)).toLowerCase();
-                if (resStr.includes("sessionid is not valid") ||
-                    resStr.includes("session is not valid") ||
-                    resStr.includes("session expired") ||
-                    resStr.includes("sessionid is invalid") ||
-                    resStr.includes("session is invalid")) {
-                    const baseUrl = getAppBaseUrl();
-                    top.window.location.href = `${baseUrl}/aspx/sess.aspx`;
-                    throw new Error("SessionId is not valid");
-                }
+            // Search is the AxList "displaydata CONTAINS" filter, applied before paging.
+            // Note: for record lists (axi_getstructsdata) it also applies to the field rows (isfield = 't'),
+            // so while a term is typed only fields whose text contains it come back.
+            if (cleanTerm && cleanTerm.length >= 3) {
+                requestBody.props.filters = [
+                    {
+                        fldname: "displaydata",
+                        condition: "CONTAINS",
+                        value: cleanTerm,
+                        datatype: "TEXT"
+                    }
+                ];
             }
+
+            console.log("%c[AxiCMD getList / ADS] Dispatching ADS request payload:", "color: #ea580c; font-weight: bold;", {
+                axDatasourceName,
+                searchTerm: cleanTerm,
+                pageNo,
+                pageSize: effectivePageSize,
+                payload: JSON.parse(JSON.stringify(requestBody))
+            });
+
+            // // View records: page 1 still asks AxList for the field rows; later pages are records only, so the
+            // // Entity API alone answers them.
+            // const skipAxList = viewFromEntity && effectivePageNo > 1;
+            // const res = skipAxList ? null : await getAxListAsync(requestBody, signal);
+            const res = await getAxListAsync(requestBody, signal);
+
+            console.log("%c[AxiCMD getList / ADS] Server response received for " + axDatasourceName + ":", "color: #059669; font-weight: bold;", res);
+
+            // console.log("Get List data: " + JSON.stringify(res));
+
+            // Dead session (also covers the fallback route): go to the session-expired page
+            if (isSessionInvalidResponse(res)) redirectToSessionExpired();
 
             let dataObj = typeof res === "string" ? JSON.parse(res) : res;
             if (dataObj && dataObj.d) {
                 dataObj = typeof dataObj.d === "string" ? JSON.parse(dataObj.d) : dataObj.d;
             }
 
-            const list = dataObj?.result?.data?.[0]?.data ?? [];
+            // console.log("DATA obj is : " + dataObj);
+            // console.log("Type of DATA OBJ: " + typeof dataObj);
+            let list = dataObj?.result?.data?.[0]?.data ?? [];
 
             if (dataObj?.result?.data?.[0]?.error) {
-                showToast(`Error: ${dataObj?.result?.data?.[0]?.error}`);
-                return;
+                showToast(friendlyDataError(dataObj.result.data[0].error, axDatasourceName));
+                return [];
             }
+
+            // Kept for future use: records used to be merged in from the ARM Entity API (GetEntityListPageLoadData).
+            // The view filter is now applied inside fn_axi_getstructs_obj (axvarcore <transid>_filter), see :globalvars.
+            // if (viewFromEntity) {
+            //     // Keep only the field rows of AxList (its record rows ignore the form's view filter) and add the
+            //     // filtered records from the Entity API.
+            //     list = list.filter(r => r && r.isfield === "t");
+            //     const records = await getViewRecordsFromEntityApi(sqlParams, cleanTerm, effectivePageNo, effectivePageSize, signal);
+            //     if (records === null) {
+            //         showToast("AxiCMD could not load the records of this form. Please try again or contact your administrator.");
+            //     } else {
+            //         list = list.concat(records);
+            //     }
+            // }
 
 
             if (list.length > 0) {
-                localStorage.setItem(cacheKey, JSON.stringify(list));
+                // Persist only what is cheap to reload: never per-search results of paged sources
+                // (every keystroke would otherwise add a new key) and never very large result sets.
+                const skipPersist = serverPaged && !!cleanTerm;
+                if (!skipPersist) {
+                    writeListCache(cacheKey, list);
+                }
             } else {
+                // console.log(`List Data for Ads name ${axDatasourceName} is Empty`);
             }
 
             return list;
 
         } catch (err) {
-            if (err.message === "SessionId is not valid") {
+            // Session expired, or the request was aborted by a newer search: let the caller decide
+            if (err.message === "SessionId is not valid" || err.name === "AbortError") {
                 throw err;
             }
             return [];
@@ -6397,6 +7900,7 @@ if (typeof document !== "undefined") {
                 callParentNew(`ShowDimmer(${status})`, "function");
             }
         } catch (e) {
+            // console.warn("Failed to invoke ShowDimmer:", e);
         }
     }
 
@@ -6409,80 +7913,138 @@ if (typeof document !== "undefined") {
      */
     function safeOpenDeveloperStudio(page, name = "", callFromAxi = true) {
         hide();
-        const topWin = (typeof top !== "undefined" ? top : (typeof parent !== "undefined" ? parent : window));
 
         // 1. Activate Axpert Web product loader immediately
         toggleShowDimmer(true);
 
-        // 2. Intercept premature ShowDimmer(false) calls (e.g. from SuccOpenDevStudioRedis in main.js)
-        // let originalShowDimmer = topWin.ShowDimmer;
-        // let isStudioLoading = true;
-
-        // if (typeof originalShowDimmer === "function") {
-        //     topWin.ShowDimmer = function(status) {
-        //         if (status === false && isStudioLoading) {
-        //             return;
-        //         }
-        //         return originalShowDimmer.apply(this, arguments);
-        //     };
-        // }
-
-        // const restoreShowDimmer = () => {
-        //     if (isStudioLoading) {
-        //         isStudioLoading = false;
-        //         if (typeof originalShowDimmer === "function" && topWin.ShowDimmer !== originalShowDimmer) {
-        //             topWin.ShowDimmer = originalShowDimmer;
-        //         }
-        //         toggleShowDimmer(false);
-        //     }
-        // };
+        // 2. Keep it on until Developer Studio has really loaded. openDeveloperStudio() (main.js) is asynchronous:
+        //    it calls the server first, then hides the loader itself (ShowDimmer(false)) and only then starts
+        //    loading the Developer Studio page into #middle1 - so the loader used to disappear while the page
+        //    was still blank. The guard ignores those early hide requests until #middle1 finishes loading.
+        const guard = holdDimmerUntilStudioLoads();
 
         const openFn = (typeof window !== "undefined" && typeof window.openDeveloperStudio === "function" && window.openDeveloperStudio) ||
             (typeof parent !== "undefined" && typeof parent.openDeveloperStudio === "function" && parent.openDeveloperStudio) ||
             (typeof top !== "undefined" && typeof top.openDeveloperStudio === "function" && top.openDeveloperStudio);
 
-        if (openFn) {
-            try {
-                openFn(page, name, callFromAxi);
-
-
-                setTimeout(() => {
-                    toggleShowDimmer(false)
-                }, 0);
-
-            } catch (err) {
-                toggleShowDimmer(false);
-
-                // restoreShowDimmer();
-                return;
-            }
-        } else {
-            toggleShowDimmer(false);
-
-            // restoreShowDimmer();
+        if (!openFn) {
+            // console.warn("openDeveloperStudio is not available");
+            guard.release();
             return;
         }
 
-        // 3. Keep Axpert Web product loader active until Developer Studio iframe (#middle1) finishes loading
-        // try {
-        //     const topDoc = topWin.document || document;
-        //     const middle1Iframe = topDoc.getElementById("middle1");
-        //     if (middle1Iframe) {
-        //         // const hideDimmerOnLoad = () => {
-        //         //     // setTimeout(() => {
-        //         //         // restoreShowDimmer();
-        //         //     // }, 800);
-        //         //     // middle1Iframe.removeEventListener("load", hideDimmerOnLoad);
-        //         // };
-        //         // middle1Iframe.addEventListener("load", hideDimmerOnLoad, { once: true });
+        try {
+            openFn(page, name, callFromAxi);
+            // Only the React studio pages load into #middle1. Anything else (e.g. AxDBScript.aspx) opens in a
+            // modal straight away and never fires that load, so the loader is not held for it.
+            const loadsIntoMiddleFrame = ["tstreact", "ivreact"].includes(String(page || "").toLowerCase());
+            if (!loadsIntoMiddleFrame) setTimeout(() => guard.release(), 0);
+        } catch (err) {
+            // console.error("openDeveloperStudio call failed:", err);
+            guard.release();
+        }
+    }
 
-        //     }
-        // } catch (e) { }
+    /**
+     * Makes the shell loader (ShowDimmer) ignore "hide" requests until the Developer Studio page has loaded
+     * into the main content iframe (#middle1), then restores normal behaviour and hides the loader.
+     * A safety timer releases it anyway, so the loader can never stay on forever.
+     * @returns {{release: function(): void}} Handle; release() restores ShowDimmer and hides the loader (safe to call twice).
+     */
+    function holdDimmerUntilStudioLoads() {
+        const STUDIO_LOAD_TIMEOUT_MS = 15000;   // give up and hide the loader after this long
+        const ARM_AFTER_MS = 400;               // ignore iframe "load" events before this (a page that was already loading)
+        const SETTLE_AFTER_LOAD_MS = 100;       // let the new page paint before the loader goes away
+        const POLL_MS = 150;                    // how often to check whether the studio has already rendered
 
-        // Safety fallback timer to restore dimmer if iframe load is delayed
-        // setTimeout(() => {
-        //     restoreShowDimmer();
-        // }, 12000);
+        const patched = [];                     // { win, original, wrapper }
+        let released = false;
+        let armed = false;
+        let iframe = null;
+        let onLoad = null;
+        let armTimer = null;
+        let safetyTimer = null;
+        let pollTimer = null;
+
+        // ShowDimmer may live on this window, the parent or the top window
+        const wins = [];
+        [window, (typeof parent !== "undefined" ? parent : null), (typeof top !== "undefined" ? top : null)].forEach(w => {
+            try {
+                if (w && wins.indexOf(w) === -1 && typeof w.ShowDimmer === "function") wins.push(w);
+            } catch (e) { /* cross-origin window: skip */ }
+        });
+
+        const release = () => {
+            if (released) return;
+            released = true;
+            clearTimeout(armTimer);
+            clearTimeout(safetyTimer);
+            clearInterval(pollTimer);
+            if (iframe && onLoad) {
+                try { iframe.removeEventListener("load", onLoad); } catch (e) { }
+            }
+            patched.forEach(({ win, original, wrapper }) => {
+                try {
+                    if (win.ShowDimmer === wrapper) win.ShowDimmer = original;
+                } catch (e) { }
+            });
+            toggleShowDimmer(false);
+        };
+
+        wins.forEach(win => {
+            const original = win.ShowDimmer;
+            const wrapper = function (status) {
+                if (status === false && !released) {
+                    // The studio page is not loaded yet: ignore this early hide, but note that the server
+                    // step has finished so the next iframe load is the Developer Studio page.
+                    armed = true;
+                    return;
+                }
+                return original.apply(this, arguments);
+            };
+            try {
+                win.ShowDimmer = wrapper;
+                patched.push({ win, original, wrapper });
+            } catch (e) { }
+        });
+
+        try {
+            const topDoc = (typeof top !== "undefined" && top.document) ? top.document : document;
+            iframe = topDoc.getElementById("middle1");
+            if (iframe) {
+                onLoad = () => {
+                    if (!armed) return;
+                    setTimeout(release, SETTLE_AFTER_LOAD_MS);
+                };
+                iframe.addEventListener("load", onLoad);
+                // The iframe "load" event waits for every image/font/script of the studio, which can take many
+                // seconds after the screen is already usable. So also watch the page itself: once it has left
+                // about:blank and has rendered content (React mounted into #root / body children) the loader goes.
+                // The page already showing in #middle1 is rendered too, so only a different address counts as the studio
+                let startHref = "";
+                try { startHref = String(iframe.contentWindow.location.href || ""); } catch (e) { }
+                pollTimer = setInterval(() => {
+                    if (!armed || released) return;
+                    try {
+                        const doc = iframe.contentDocument;
+                        const href = String(iframe.contentWindow.location.href || "");
+                        if (!doc || !doc.body) return;
+                        if (href === "about:blank" || href === startHref) return;
+                        const root = doc.getElementById("root") || doc.body;
+                        if (doc.readyState !== "loading" && root.children.length > 0 && root.offsetHeight > 0) {
+                            clearInterval(pollTimer);
+                            setTimeout(release, SETTLE_AFTER_LOAD_MS);
+                        }
+                    } catch (e) { /* cross-origin: rely on the load event */ }
+                }, POLL_MS);
+            }
+        } catch (e) { /* no access to the content iframe: the safety timer will release the loader */ }
+
+        // When the studio opens without a server round trip, no hide request ever arrives, so arm on a timer too
+        armTimer = setTimeout(() => { armed = true; }, ARM_AFTER_MS);
+        safetyTimer = setTimeout(release, STUDIO_LOAD_TIMEOUT_MS);
+
+        return { release };
     }
 
     /* ===============================
@@ -6525,6 +8087,7 @@ if (typeof document !== "undefined") {
                 alertFn(alertType, message);
                 return;
             } catch (e) {
+                // console.warn("showAlertDialog call failed, falling back to axi toast:", e);
             }
         }
 
@@ -6693,6 +8256,7 @@ if (typeof document !== "undefined") {
 
             let axiVersion = "";
             let axpertVersion = "";
+            let axpertBuild = "";
 
             if (axiRes.ok) {
                 const axiData = await axiRes.json();
@@ -6701,27 +8265,151 @@ if (typeof document !== "undefined") {
 
             if (axpertRes.ok) {
                 const axpertData = await axpertRes.json();
-                const ver = axpertData?.version || "";
-                const sub = axpertData?.subVersion || "";
-                if (ver) {
-                    axpertVersion = ver;
-                    if (sub) {
-                        axpertVersion += ` (${sub})`;
-                    }
-                }
+                axpertVersion = axpertData?.version || "";
+                // subVersion (e.g. "release59") is shown as a build tag beside the version
+                axpertBuild = axpertVersion ? (axpertData?.subVersion || "") : "";
             }
 
-            if (axiVersion && axpertVersion) {
-                showToast(`Axpert Version: ${axpertVersion}\nAxi CMD Version: ${axiVersion}`, 5000, "info");
-            } else if (axiVersion) {
-                showToast(`Axi CMD Version: ${axiVersion}`, 5000, "info");
-            } else if (axpertVersion) {
-                showToast(`Axpert Version: ${axpertVersion}`, 5000, "info");
-            } else {
-                showToast("Version information is not available.");
-            }
+            openVersionModal(axpertVersion, axpertBuild, axiVersion);
         } catch (err) {
-            showToast("Failed to load version information.");
+            // console.error("Failed to load version info", err);
+            // Network or parse failure: still open the modal so the user sees both rows as unavailable
+            openVersionModal("", "", "");
+        }
+    }
+
+    /**
+     * Opens the glass "Version" modal. Replaces any modal that is already open.
+     * Closes on Esc, a click on the backdrop, the X button or the Close button.
+     * @param {string} axpertVersion Axpert web version, empty when unavailable.
+     * @param {string} axpertBuild Axpert build tag (subVersion), may be empty.
+     * @param {string} axiVersion AxiCMD version, empty when unavailable.
+     * @returns {void}
+     */
+    function openVersionModal(axpertVersion, axpertBuild, axiVersion) {
+        closeVersionModal();
+
+        const previousFocus = document.activeElement;
+        const el = (tag, className, text) => {
+            const node = document.createElement(tag);
+            if (className) node.className = className;
+            if (text !== undefined) node.textContent = text;
+            return node;
+        };
+
+        const overlay = el("div", "axi-vm-overlay");
+        overlay.id = "axiVersionModal";
+
+        const dialog = el("div", "axi-vm");
+        dialog.setAttribute("role", "dialog");
+        dialog.setAttribute("aria-modal", "true");
+        dialog.setAttribute("aria-labelledby", "axiVersionModalTitle");
+
+        const header = el("div", "axi-vm-header");
+        const title = el("h2", "axi-vm-title", "Version");
+        title.id = "axiVersionModalTitle";
+        const closeX = el("button", "axi-vm-x", "×");
+        closeX.type = "button";
+        closeX.setAttribute("aria-label", "Close");
+        header.appendChild(title);
+        header.appendChild(closeX);
+
+        // One row per product: name on the left, big version on the right, optional build tag under it
+        const buildRow = (name, version, build) => {
+            const row = el("div", "axi-vm-row");
+            row.appendChild(el("span", "axi-vm-name", name));
+            const value = el("div", "axi-vm-value");
+            if (version) {
+                value.appendChild(el("span", "axi-vm-ver", version));
+                if (build) value.appendChild(el("span", "axi-vm-tag", build));
+            } else {
+                value.appendChild(el("span", "axi-vm-ver axi-vm-missing", "Not available"));
+            }
+            row.appendChild(value);
+            return row;
+        };
+
+        const body = el("div", "axi-vm-body");
+        body.appendChild(buildRow("Axpert", axpertVersion, axpertBuild));
+        body.appendChild(buildRow("AxiCMD", axiVersion, ""));
+
+        const footer = el("div", "axi-vm-footer");
+        const copyBtn = el("button", "axi-vm-btn axi-vm-btn-ghost", "Copy versions");
+        copyBtn.type = "button";
+        const closeBtn = el("button", "axi-vm-btn axi-vm-btn-main", "Close");
+        closeBtn.type = "button";
+        footer.appendChild(copyBtn);
+        footer.appendChild(closeBtn);
+
+        dialog.appendChild(header);
+        dialog.appendChild(body);
+        dialog.appendChild(footer);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        // Plain text that can be pasted into a support ticket
+        const summary = [
+            "Axpert: " + (axpertVersion ? axpertVersion + (axpertBuild ? " (" + axpertBuild + ")" : "") : "not available"),
+            "AxiCMD: " + (axiVersion || "not available")
+        ].join("\n");
+
+        let copyTimer = null;
+        copyBtn.addEventListener("click", () => {
+            const done = (label) => {
+                copyBtn.textContent = label;
+                clearTimeout(copyTimer);
+                copyTimer = setTimeout(() => { copyBtn.textContent = "Copy versions"; }, 1800);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(summary).then(() => done("Copied"), () => done("Copy failed"));
+            } else {
+                done("Copy failed");
+            }
+        });
+
+        const close = () => {
+            clearTimeout(copyTimer);
+            document.removeEventListener("keydown", onKey, true);
+            overlay.remove();
+            if (previousFocus && typeof previousFocus.focus === "function") previousFocus.focus();
+        };
+        // Keep the Tab key inside the dialog while it is open
+        const onKey = (e) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+                close();
+            } else if (e.key === "Tab") {
+                const focusable = [closeX, copyBtn, closeBtn];
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        };
+        overlay._axiClose = close;
+
+        closeX.addEventListener("click", close);
+        closeBtn.addEventListener("click", close);
+        overlay.addEventListener("mousedown", (e) => { if (e.target === overlay) close(); });
+        document.addEventListener("keydown", onKey, true);
+        closeBtn.focus();
+    }
+
+    /**
+     * Closes the version modal when it is open.
+     * @returns {void}
+     */
+    function closeVersionModal() {
+        const open = document.getElementById("axiVersionModal");
+        if (open) {
+            if (typeof open._axiClose === "function") open._axiClose();
+            else open.remove();
         }
     }
 
@@ -6756,6 +8444,36 @@ if (typeof document !== "undefined") {
      * @returns {void}
      */
     function setupEventListeners() {
+
+        // One delegated handler for every suggestion row (rows no longer carry their own listener).
+        // Guarded so a repeated init does not attach the handlers twice.
+        if (!list.__axiListHandlers) {
+        list.__axiListHandlers = true;
+        list.addEventListener("mousedown", e => {
+            const li = e.target.closest ? e.target.closest("li.axi-suggestion") : null;
+            if (!li || !list.contains(li)) return;
+            e.preventDefault();
+            const idx = Number(li.dataset.vi);
+            if (Number.isInteger(idx)) apply(idx);
+        });
+
+        // Load the next page of a paged list when the user scrolls near the bottom of the dropdown
+        let scrollTicking = false;
+        list.addEventListener("scroll", () => {
+            if (scrollTicking) return;
+            scrollTicking = true;
+            requestAnimationFrame(() => {
+                scrollTicking = false;
+                // The first screen (commands + forms, class My-Command-Wrapper) is a single horizontal row of
+                // cards that scrolls sideways; every other list scrolls vertically. Check both directions.
+                const nearBottom = list.scrollHeight > list.clientHeight && list.scrollTop + list.clientHeight >= list.scrollHeight - 60;
+                const nearRight = list.scrollWidth > list.clientWidth && list.scrollLeft + list.clientWidth >= list.scrollWidth - 60;
+                if (nearBottom || nearRight) {
+                    loadNextPage();
+                }
+            });
+        });
+        }
 
         const favDeleteCancelBtn = document.getElementById("axiFavDeleteCancelBtn");
 
@@ -6884,6 +8602,7 @@ if (typeof document !== "undefined") {
         }
         if (btnRefresh) {
             btnRefresh.addEventListener("click", async () => {
+                // console.log("Refresh Logic......");
                 const refreshIcon = btnRefresh.querySelector(".axi-refresh-icon");
                 if (refreshIcon) {
                     refreshIcon.classList.add("rotating");
@@ -6897,6 +8616,12 @@ if (typeof document !== "undefined") {
                     axDatasourceObj = {};
                     activeFetches.clear();
                     failedFetches.clear();
+                    // paging / search bookkeeping belongs to the data that was just discarded
+                    Object.keys(axPageState).forEach(k => delete axPageState[k]);
+                    Object.keys(failedFetchTimes).forEach(k => delete failedFetchTimes[k]);
+                    axSearchKeyOrder.length = 0;
+                    structSearchAsked.clear();
+                    structSearchPendingTerm = null;
                     resolvedParams = {};
                     resolvedParamType = {};
                     createfieldnamevaluesList = {};
@@ -6913,6 +8638,7 @@ if (typeof document !== "undefined") {
                     input.focus();
 
                 } catch (error) {
+                    // console.log("Refresh Failed: " + error);
                     alert("Error refreshing: " + error);
 
                 } finally {
@@ -6924,6 +8650,145 @@ if (typeof document !== "undefined") {
         }
 
 
+
+        // ---- Settings: how many records are loaded at a time ----------------------------------------------------
+        // A small popover under the gear button. Saving stores the number (see setPageSize) and then
+        // clicks Refresh, because cached lists were fetched with the old page size.
+        const settingsBtn = document.getElementById("axiSettingsBtn");
+        if (settingsBtn) {
+            let settingsPanel = null;
+
+            const closeSettingsPanel = () => {
+                if (settingsPanel) settingsPanel.style.display = "none";
+            };
+
+            const buildSettingsPanel = () => {
+                const panel = document.createElement("div");
+                panel.id = "axiSettingsPanel";
+                // Look (glass card, gradient Save button, hover effects) lives in axicmdmain.css, section 8
+                panel.className = "axi-sp";
+                panel.innerHTML =
+                    '<div class="axi-sp-title">Records per load</div>' +
+                    '<div class="axi-sp-sub">How many items each list fetches at once</div>' +
+                    // The big number is the editable input itself; the slider below it moves the same value
+                    '<div class="axi-sp-readout">' +
+                    '<input id="axiPageSizeInput" class="axi-sp-input" type="number" step="100" aria-label="Records per load">' +
+                    '<span class="axi-sp-unit">records</span>' +
+                    '</div>' +
+                    '<input id="axiPageSizeRange" class="axi-sp-range" type="range" step="100" aria-label="Records per load slider">' +
+                    '<div class="axi-sp-ends"><span id="axiPageSizeMin"></span><span id="axiPageSizeMax"></span></div>' +
+                    '<div id="axiPageSizeError" class="axi-sp-error" role="alert" hidden></div>' +
+                    '<div class="axi-sp-actions">' +
+                    '<button id="axiPageSizeSave" class="axi-sp-btn axi-sp-save" type="button">Save</button>' +
+                    '<button id="axiPageSizeDefault" class="axi-sp-btn axi-sp-default" type="button">Default</button>' +
+                    '</div>' +
+                    '<div id="axiPageSizeHint" class="axi-sp-hint"></div>';
+                document.body.appendChild(panel);
+
+                const sizeInput = panel.querySelector("#axiPageSizeInput");
+                const hint = panel.querySelector("#axiPageSizeHint");
+                hint.textContent = "Default is " + DEFAULT_PAGE_SIZE + ". Lists reload when you save.";
+
+                // The slider mirrors the number box. syncDial copies the box value onto the slider and sets the
+                // fill width (--axi-sp-fill) used by the gradient track. Callers that set the box in code call it too.
+                const dial = panel.querySelector("#axiPageSizeRange");
+                dial.min = MIN_PAGE_SIZE;
+                dial.max = MAX_PAGE_SIZE;
+                panel.querySelector("#axiPageSizeMin").textContent = MIN_PAGE_SIZE;
+                panel.querySelector("#axiPageSizeMax").textContent = MAX_PAGE_SIZE;
+                panel.axiSyncDial = () => {
+                    const v = Math.min(MAX_PAGE_SIZE, Math.max(MIN_PAGE_SIZE, parseInt(sizeInput.value, 10) || MIN_PAGE_SIZE));
+                    dial.value = v;
+                    panel.style.setProperty("--axi-sp-fill", ((v - MIN_PAGE_SIZE) / (MAX_PAGE_SIZE - MIN_PAGE_SIZE) * 100) + "%");
+                };
+                // Rejects a typed value that is empty, not a whole number, or outside MIN..MAX instead of silently
+                // changing it. Shows the reason under the slider and marks the box (aria-invalid).
+                const errorBox = panel.querySelector("#axiPageSizeError");
+                const validatePageSize = (raw) => {
+                    const text = String(raw === undefined || raw === null ? "" : raw).trim();
+                    let message = "";
+                    if (text === "" || !/^\d+$/.test(text)) message = "Enter a whole number between " + MIN_PAGE_SIZE + " and " + MAX_PAGE_SIZE + ".";
+                    else if (parseInt(text, 10) < MIN_PAGE_SIZE) message = "Invalid value. Records per load can't be lower than " + MIN_PAGE_SIZE + ".";
+                    else if (parseInt(text, 10) > MAX_PAGE_SIZE) message = "Invalid value. Records per load can't be higher than " + MAX_PAGE_SIZE + ".";
+                    errorBox.textContent = message;
+                    errorBox.hidden = !message;
+                    sizeInput.setAttribute("aria-invalid", message ? "true" : "false");
+                    panel.classList.toggle("axi-sp-invalid", !!message);
+                    return !message;
+                };
+                panel.axiClearError = () => validatePageSize(sizeInput.value);
+
+                dial.addEventListener("input", () => { sizeInput.value = dial.value; panel.axiSyncDial(); validatePageSize(sizeInput.value); });
+                sizeInput.addEventListener("input", () => { panel.axiSyncDial(); validatePageSize(sizeInput.value); });
+
+                const applyPageSize = (requested) => {
+                    if (!validatePageSize(requested)) {
+                        sizeInput.focus();
+                        return;
+                    }
+                    const previous = getPageSize();
+                    const size = setPageSize(requested);
+                    sizeInput.value = size;
+                    panel.axiSyncDial();
+                    closeSettingsPanel();
+                    savePageSizeToServer(size).then(ok => {
+                        if (!ok) showToast("Saved on this browser only (server unreachable)", 4000);
+                    });
+                    if (size !== previous) {
+                        showToast("Records to load at a time set to " + size, 3000, true);
+                        btnRefresh.click();
+                    }
+                };
+
+                panel.querySelector("#axiPageSizeSave").addEventListener("click", () => applyPageSize(sizeInput.value));
+                panel.querySelector("#axiPageSizeDefault").addEventListener("click", () => applyPageSize(DEFAULT_PAGE_SIZE));
+                sizeInput.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") { e.preventDefault(); applyPageSize(sizeInput.value); }
+                    else if (e.key === "Escape") closeSettingsPanel();
+                });
+                return panel;
+            };
+
+            settingsBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (!settingsPanel) settingsPanel = buildSettingsPanel();
+                if (settingsPanel.style.display === "block") { closeSettingsPanel(); return; }
+                settingsPanel.querySelector("#axiPageSizeInput").value = getPageSize();
+                settingsPanel.axiSyncDial();
+                settingsPanel.axiClearError();
+                // The saved server value is the truth: if this browser disagrees (sync was skipped or slow), show it
+                // and reload the lists with it so the box and the loaded rows match
+                if (axiSettingsUrl && window.mainUserName) {
+                    fetchServerPageSize().then(remote => {
+                        if (remote === undefined || remote === null || remote === getPageSize()) return;
+                        setPageSize(remote);
+                        settingsPanel.querySelector("#axiPageSizeInput").value = remote;
+                        settingsPanel.axiSyncDial();
+                        btnRefresh.click();
+                    });
+                }
+                // Open above the button when the palette sits near the bottom of the screen, else below
+                const r = settingsBtn.getBoundingClientRect();
+                settingsPanel.style.display = "block";
+                const h = settingsPanel.offsetHeight;
+                const top = (r.bottom + h + 8 > window.innerHeight) ? Math.max(8, r.top - h - 8) : r.bottom + 8;
+                const left = Math.max(8, Math.min(r.left, window.innerWidth - settingsPanel.offsetWidth - 8));
+                settingsPanel.style.top = top + "px";
+                settingsPanel.style.left = left + "px";
+                settingsPanel.querySelector("#axiPageSizeInput").focus();
+            });
+            // Also reachable from the iframe click/Esc handlers (attachClickToDoc) and the shell-wide Esc key
+            window.axiCloseSettingsPanel = closeSettingsPanel;
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") closeSettingsPanel();
+            });
+            document.addEventListener("click", (e) => {
+                if (settingsPanel && settingsPanel.style.display === "block" &&
+                    !settingsPanel.contains(e.target) && !settingsBtn.contains(e.target)) {
+                    closeSettingsPanel();
+                }
+            });
+        }
 
         if (axiClearBtn) {
             axiClearBtn.addEventListener("click", () => {
@@ -6999,8 +8864,9 @@ if (typeof document !== "undefined") {
             handleInput();
         });
 
-        input.addEventListener("input", () => {
+        input.addEventListener("input", (ev) => {
             isInitialLoad = false;
+            quoteMultiWordAfterSpace(ev);
             handleInput();
         });
         input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
@@ -7010,6 +8876,7 @@ if (typeof document !== "undefined") {
                 return;
             }
             isDeleting = (e.key === "Backspace" || e.key === "Delete");
+            // console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
 
             const tokens = getTokens(input.value.trim(), false);
             let normalizedTokens = [...tokens];
@@ -7189,6 +9056,8 @@ if (typeof document !== "undefined") {
                 catch (err) {
                     popUpOption = false;
 
+                    // console.log("Error in Popup:", err);
+
                     showToast("Something went wrong. Please try again later");
 
                     return;
@@ -7232,30 +9101,17 @@ if (typeof document !== "undefined") {
             }
 
             // AUTO DOUBLE-QUOTE FOR MULTI-WORD SUGGESTIONS
+            // Physical keyboards report the space here. Phone soft keyboards usually do not (key is
+            // "Unidentified"), so the same quoting is repeated from the input event below.
             if (e.key === " " && items.length > 0) {
                 const val = input.value;
                 if (input.selectionStart === val.length) {
-                    const tokens = getTokens(val);
-                    const lastTokenRaw = tokens[tokens.length - 1] || "";
-
-                    const isFirstToken = tokens.length === 1;
-
-                    if (!lastTokenRaw.startsWith('"') && (!isFirstToken || !getCommandConfig(lastTokenRaw))) {
-                        const hasMultiWordMatch = items.some(item => {
-                            const str = (typeof item === 'string' ? item : item.displaydata).toLowerCase();
-                            return str.startsWith(lastTokenRaw.toLowerCase()) && str.includes(" ");
-                        });
-
-                        if (hasMultiWordMatch) {
-                            e.preventDefault();
-                            const lastIndex = val.lastIndexOf(lastTokenRaw);
-                            if (lastIndex !== -1) {
-                                const prefix = val.substring(0, lastIndex);
-                                input.value = prefix + '"' + lastTokenRaw + ' ';
-                                handleInput();
-                                return;
-                            }
-                        }
+                    const quoted = autoQuoteMultiWordValue(val);
+                    if (quoted !== null) {
+                        e.preventDefault();
+                        input.value = quoted;
+                        handleInput();
+                        return;
                     }
                 }
             }
@@ -7362,6 +9218,7 @@ if (typeof document !== "undefined") {
 
             if (e.ctrlKey && e.key.toLowerCase() === "s") {
                 e.preventDefault();
+                // console.log("Save Option Selected...Submitting Data...");
                 hide();
                 if (grpKey.toLowerCase() === "create")
                     AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
@@ -7442,6 +9299,11 @@ if (typeof document !== "undefined") {
 
                 doc.addEventListener("click", () => {
                     hide();
+                    // a click inside the page iframe never reaches the shell document, so close the settings box here
+                    if (typeof window.axiCloseSettingsPanel === "function") window.axiCloseSettingsPanel();
+                });
+                doc.addEventListener("keydown", e => {
+                    if (e.key === "Escape" && typeof window.axiCloseSettingsPanel === "function") window.axiCloseSettingsPanel();
                 });
 
                 try {
@@ -7472,6 +9334,7 @@ if (typeof document !== "undefined") {
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                     attachClickToDoc(iframeDoc);
                 } catch (err) {
+                    // console.warn("Could not attach click listener to iframe (likely CORS restriction):", err);
                 }
             };
 
@@ -7498,6 +9361,7 @@ if (typeof document !== "undefined") {
 
         keysToRemove.forEach(key => localStorage.removeItem(key));
 
+        // console.log(`Cleared ${keysToRemove.length} keys starting with ${prefix}`);
 
     }
 
@@ -7672,6 +9536,7 @@ if (typeof document !== "undefined") {
         const groupConfig = getCommandConfig(groupKey, tokens);
 
         if (!groupConfig) {
+            // console.warn(`Unknown command group: ${groupKey}`);
 
         }
 
@@ -7788,6 +9653,7 @@ if (typeof document !== "undefined") {
             return;
         }
 
+        // console.log(`Dispatching to: ${group}.${handlerKey}`);
 
 
         try {
@@ -7797,6 +9663,7 @@ if (typeof document !== "undefined") {
                 resolvedParams: resolvedParams
             });
         } catch (err) {
+            // console.error(`Error executing handler for ${group}.${handlerKey}:`, err);
         }
     }
 
@@ -7825,6 +9692,7 @@ if (typeof document !== "undefined") {
             );
             if (found) transId = found.name
             else {
+                // console.error("Invalid Tstruct name");
                 return;
             }
         }
@@ -7899,6 +9767,184 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Clears cached query results for a transaction structure in memory and localStorage.
+     * @param {string} transId - Transaction structure ID (e.g. 'tmmsg').
+     * @returns {void}
+     */
+    function clearStructSearchCache(transId) {
+        if (!transId) return;
+        const lowTransId = transId.toLowerCase().trim();
+        if (typeof axDatasourceObj === "object" && axDatasourceObj) {
+            for (const key in axDatasourceObj) {
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
+                    delete axDatasourceObj[key];
+                }
+            }
+        }
+        try {
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.toLowerCase().includes("getstructsdata") && key.toLowerCase().includes(lowTransId)) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(k => localStorage.removeItem(k));
+        } catch (e) { }
+    }
+
+    if (typeof window !== "undefined") {
+        window.clearStructSearchCache = clearStructSearchCache;
+        window.axiClearStructCache = clearStructSearchCache;
+        try {
+            if (top && top !== window) {
+                top.axiClearStructCache = clearStructSearchCache;
+            }
+        } catch (e) { }
+    }
+
+    /**
+     * Looks a typed record up on the server when it is not in the part of the list that is already loaded.
+     * getList returns [] for ANY failure (timeout, dropped request, server hiccup), so one empty answer cannot be
+     * told apart from "record does not exist" and used to produce a false "Record ... not found". Therefore an
+     * empty first answer is asked once more, and when a full page comes back without the record the next pages
+     * are read too (a short term such as "msg11" matches many records).
+     * @async
+     * @param {string} lookupParams - Parameter string of axi_getstructsdata for this structure and field.
+     * @param {string|string[]} searchText - Text sent to the server search. An array is tried in order until one
+     *   finds the record: the resolved value of a picked suggestion can be the record id (or "name [id]"), which
+     *   the server search does not match, while the text the user typed ("msg09") does.
+     * @param {string[]} candidates - Values that identify the wanted record (see findMatchingRecordItem).
+     * @returns {Promise<object|null>} The matching record, or null if the server really has none.
+     */
+    async function lookupRecordOnServer(lookupParams, searchText, candidates) {
+        const LOOKUP_PAGE_SIZE = 50;
+        const MAX_LOOKUP_PAGES = 6;
+        let matched = null;
+
+        const searchTexts = [];
+        (Array.isArray(searchText) ? searchText : [searchText]).forEach(t => {
+            const clean = cleanString(String(t ?? "")).replace(/\[.*?\]/g, "").trim();
+            if (clean && !searchTexts.some(s => s.toLowerCase() === clean.toLowerCase())) searchTexts.push(clean);
+        });
+
+        for (const term of searchTexts) {
+            for (let page = 1; page <= MAX_LOOKUP_PAGES && !matched; page++) {
+                let rows = await getList("axi_getstructsdata", lookupParams, term, page, LOOKUP_PAGE_SIZE);
+                // Page 1 empty: either truly nothing, or a failed request. One more try tells them apart.
+                if (page === 1 && (!Array.isArray(rows) || rows.length === 0)) {
+                    rows = await getList("axi_getstructsdata", lookupParams, term, 1, LOOKUP_PAGE_SIZE);
+                }
+                if (!Array.isArray(rows) || rows.length === 0) break;
+
+                matched = findMatchingRecordItem(rows, candidates);
+                // A page shorter than the page size is the last one
+                if (!matched && rows.filter(r => String(r?.isfield ?? "").toLowerCase() !== "t").length < LOOKUP_PAGE_SIZE) break;
+            }
+            if (matched) break;
+        }
+
+        if (matched) {
+            // Keep the record findable for later commands, as the old inline lookup did
+            const baseKey = `axi_getstructsdata_${lookupParams}`.toLowerCase();
+            if (!axDatasourceObj[baseKey]) axDatasourceObj[baseKey] = [];
+            const existing = axDatasourceObj[baseKey];
+            const recUid = matched.transrecordid ?? matched.id;
+            if (!existing.some(x => (x.transrecordid ?? x.id) == recUid)) {
+                existing.push(Object.assign({}, matched, { __fromSearch: true }));
+            }
+        }
+        return matched;
+    }
+
+    /**
+     * Matches a candidate token or record ID against a list of struct records.
+     * @param {Array<object>} structDataList - Candidate records.
+     * @param {string[]} candidates - Candidate string values.
+     * @returns {object|null} Matched record object or null.
+     */
+    function findMatchingRecordItem(structDataList, candidates) {
+        if (!Array.isArray(structDataList) || structDataList.length === 0 || !Array.isArray(candidates) || candidates.length === 0) return null;
+        let matched = null;
+
+        // 1. Match by transrecordid directly
+        for (const val of candidates) {
+            matched = structDataList.find(item => {
+                const transRecId = (item?.transrecordid ?? item?.TRANSRECORDID ?? "").toString().trim();
+                return transRecId !== "" && transRecId !== "0" && transRecId.toLowerCase() === val.toLowerCase();
+            });
+            if (matched) return matched;
+        }
+
+        // 2. Match by id directly
+        for (const val of candidates) {
+            matched = structDataList.find(item => {
+                const itemId = (item?.id ?? item?.ID ?? "").toString().trim();
+                return itemId !== "" && itemId !== "0" && itemId.toLowerCase() === val.toLowerCase();
+            });
+            if (matched) return matched;
+        }
+
+        // 3. Match exact displaydata, caption, or name (preferring actual records where isfield != 't')
+        for (const val of candidates) {
+            const cleanVal = cleanString(val).toLowerCase();
+            matched = structDataList.find(item => {
+                const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                if (isField) return false;
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
+                return display === cleanVal || caption === cleanVal || name === cleanVal;
+            }) || structDataList.find(item => {
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
+                return display === cleanVal || caption === cleanVal || name === cleanVal;
+            });
+            if (matched) return matched;
+        }
+
+        // 4. Match without bracketed text
+        for (const val of candidates) {
+            const cleanVal = cleanString(val).replace(/\[.*?\]/g, "").trim().toLowerCase();
+            if (!cleanVal) continue;
+            matched = structDataList.find(item => {
+                const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                if (isField) return false;
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                return display === cleanVal || caption === cleanVal;
+            }) || structDataList.find(item => {
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                return display === cleanVal || caption === cleanVal;
+            });
+            if (matched) return matched;
+        }
+
+        // 5. Substring match
+        for (const val of candidates) {
+            const cleanVal = cleanString(val).toLowerCase();
+            if (!cleanVal) continue;
+            matched = structDataList.find(item => {
+                const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                if (isField) return false;
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                return display.includes(cleanVal) || caption.includes(cleanVal);
+            }) || structDataList.find(item => {
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                return display.includes(cleanVal) || caption.includes(cleanVal);
+            });
+            if (matched) return matched;
+        }
+
+        return null;
+    }
+
+    /**
      * Retrieves cached struct data list for a transId and field from localStorage or axDatasourceObj.
      * @param {string} transId - Transaction structure ID.
      * @param {string} [fieldName=""] - Field name or keyfield.
@@ -7909,62 +9955,7 @@ if (typeof document !== "undefined") {
         const lowTransId = transId.toLowerCase().trim();
         const lowFieldName = (fieldName || "").toLowerCase().trim();
 
-        // 1. Search localStorage for matching axi_getstructsdata key
-        try {
-            // Priority 1: Key matching both transId (param4) and fieldName (param8)
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (!key) continue;
-                const lowKey = key.toLowerCase();
-                if (lowKey.includes("getstructsdata")) {
-                    const matchTrans = lowKey.includes(`param4:${lowTransId}|`) || lowKey.includes(`param4:${lowTransId}_`) || lowKey.includes(`:${lowTransId}|`) || lowKey.includes(`:${lowTransId}_`);
-                    const matchField = !lowFieldName || lowKey.includes(`param8:${lowFieldName}|`) || lowKey.includes(`param8:${lowFieldName}_`) || lowKey.includes(`:${lowFieldName}|`) || lowKey.includes(`:${lowFieldName}_`);
-                    if (matchTrans && matchField) {
-                        const raw = localStorage.getItem(key);
-                        if (raw) {
-                            const parsed = JSON.parse(raw);
-                            if (Array.isArray(parsed) && parsed.length > 0) {
-                                return parsed;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Priority 2: Key matching transId in param4 or anywhere
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (!key) continue;
-                const lowKey = key.toLowerCase();
-                if (lowKey.includes("getstructsdata") && (lowKey.includes(`param4:${lowTransId}`) || lowKey.includes(`:${lowTransId}`))) {
-                    const raw = localStorage.getItem(key);
-                    if (raw) {
-                        const parsed = JSON.parse(raw);
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            return parsed;
-                        }
-                    }
-                }
-            }
-
-            // Priority 3: Any getstructsdata key containing transId
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (!key) continue;
-                const lowKey = key.toLowerCase();
-                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
-                    const raw = localStorage.getItem(key);
-                    if (raw) {
-                        const parsed = JSON.parse(raw);
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            return parsed;
-                        }
-                    }
-                }
-            }
-        } catch (e) { }
-
-        // 2. Fallback to in-memory axDatasourceObj
+        // 1. Check in-memory axDatasourceObj first (contains initial and all dynamically fetched records)
         if (typeof axDatasourceObj === "object" && axDatasourceObj) {
             for (const key in axDatasourceObj) {
                 const lowKey = key.toLowerCase();
@@ -7988,6 +9979,61 @@ if (typeof document !== "undefined") {
             }
         }
 
+        // 2. Search localStorage for matching axi_getstructsdata key
+        try {
+            // Priority 1: Key matching both transId (param4) and fieldName (param8)
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key) continue;
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata")) {
+                    const matchTrans = lowKey.includes(`param4:${lowTransId}|`) || lowKey.includes(`param4:${lowTransId}_`) || lowKey.includes(`:${lowTransId}|`) || lowKey.includes(`:${lowTransId}_`);
+                    const matchField = !lowFieldName || lowKey.includes(`param8:${lowFieldName}|`) || lowKey.includes(`param8:${lowFieldName}_`) || lowKey.includes(`:${lowFieldName}|`) || lowKey.includes(`:${lowFieldName}_`);
+                    if (matchTrans && matchField) {
+                        const raw = localStorage.getItem(key);
+                        if (raw) {
+                            const parsed = parseStoredList(raw);
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                return parsed;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Priority 2: Key matching transId in param4 or anywhere
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key) continue;
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && (lowKey.includes(`param4:${lowTransId}`) || lowKey.includes(`:${lowTransId}`))) {
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                        const parsed = parseStoredList(raw);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            return parsed;
+                        }
+                    }
+                }
+            }
+
+            // Priority 3: Any getstructsdata key containing transId
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key) continue;
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                        const parsed = parseStoredList(raw);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            return parsed;
+                        }
+                    }
+                }
+            }
+        } catch (e) { }
+
         return [];
     }
 
@@ -8004,7 +10050,7 @@ if (typeof document !== "undefined") {
      * @param {object} [context.resolvedParams] - Resolved parameter map.
      * @returns {void}
      */
-    function handleEditData({ tokens, commandConfig, resolvedParams }) {
+    async function handleEditData({ tokens, commandConfig, resolvedParams }) {
 
         let rawStruct = cleanCommandToken(tokens[1]);
         // let transId = tryResolveToken(1, rawStruct, commandConfig, false);
@@ -8056,6 +10102,7 @@ if (typeof document !== "undefined") {
 
 
         if (!primaryField) {
+            // console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
             showToast("Please try again later...");
             return [];
         }
@@ -8109,89 +10156,30 @@ if (typeof document !== "undefined") {
         const structDataList = getStructDataListFromStorage(transId, targetFieldName);
         let matchedItem = null;
 
+        const candidates = [fieldValue, fieldUniqueId, rawValue]
+            .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
+            .map(v => String(v).trim());
+
         if (Array.isArray(structDataList) && structDataList.length > 0) {
-            const candidates = [fieldValue, fieldUniqueId, rawValue]
-                .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
-                .map(v => String(v).trim());
+            matchedItem = findMatchingRecordItem(structDataList, candidates);
+        }
 
-            // 1. Match by transrecordid directly
-            for (const val of candidates) {
-                matchedItem = structDataList.find(item => {
-                    const transRecId = (item?.transrecordid ?? item?.TRANSRECORDID ?? "").toString().trim();
-                    return transRecId !== "" && transRecId !== "0" && transRecId.toLowerCase() === val.toLowerCase();
-                });
-                if (matchedItem) break;
-            }
+        const hasUserProvidedRecord = (tokens.length > 2 && candidates.length > 0);
 
-            // 2. Match by id directly
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    matchedItem = structDataList.find(item => {
-                        const itemId = (item?.id ?? item?.ID ?? "").toString().trim();
-                        return itemId !== "" && itemId !== "0" && itemId.toLowerCase() === val.toLowerCase();
-                    });
-                    if (matchedItem) break;
-                }
-            }
-
-            // 3. Match exact displaydata, caption, or name (preferring actual records where isfield != 't')
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    const cleanVal = cleanString(val).toLowerCase();
-                    matchedItem = structDataList.find(item => {
-                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
-                        if (isField) return false;
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
-                        return display === cleanVal || caption === cleanVal || name === cleanVal;
-                    }) || structDataList.find(item => {
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
-                        return display === cleanVal || caption === cleanVal || name === cleanVal;
-                    });
-                    if (matchedItem) break;
-                }
-            }
-
-            // 4. Match without bracketed text (e.g., "CBE [1446880000000]" vs "CBE")
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    const cleanVal = cleanString(val).replace(/\[.*?\]/g, "").trim().toLowerCase();
-                    if (!cleanVal) continue;
-                    matchedItem = structDataList.find(item => {
-                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
-                        if (isField) return false;
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        return display === cleanVal || caption === cleanVal;
-                    }) || structDataList.find(item => {
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        return display === cleanVal || caption === cleanVal;
-                    });
-                    if (matchedItem) break;
-                }
-            }
-
-            // 5. Substring match
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    const cleanVal = cleanString(val).toLowerCase();
-                    if (!cleanVal) continue;
-                    matchedItem = structDataList.find(item => {
-                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
-                        if (isField) return false;
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        return display.includes(cleanVal) || caption.includes(cleanVal);
-                    }) || structDataList.find(item => {
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        return display.includes(cleanVal) || caption.includes(cleanVal);
-                    });
-                    if (matchedItem) break;
+        // If record wasn't preloaded, perform on-demand server lookup
+        if (!matchedItem && hasUserProvidedRecord) {
+            // What the user typed first, then the resolved value (may be an id the server search cannot match)
+            const candidateSearch = [rawValue, ...candidates];
+            if (candidateSearch.some(t => cleanString(String(t ?? "")).replace(/\[.*?\]/g, "").trim())) {
+                try {
+                    const lookupParams = processParamforEditndView(tokens, commandConfig, transId, tokenIndex);
+                    if (lookupParams) {
+                        matchedItem = await lookupRecordOnServer(lookupParams, candidateSearch, candidates);
+                    } else {
+                        console.warn("[AxiCMD] Record lookup skipped: no lookup parameters for", transId);
+                    }
+                } catch (lookupErr) {
+                    console.warn("[AxiCMD] On-demand record resolution failed:", lookupErr);
                 }
             }
         }
@@ -8204,6 +10192,13 @@ if (typeof document !== "undefined") {
         } else if (!matchedItem && fieldValue && fieldValue.includes("[") && fieldValue.includes("]") && fieldUniqueId && fieldUniqueId !== "0" && fieldUniqueId !== fieldValue && /^\d+$/.test(fieldUniqueId)) {
             // Fallback: If item had bracketed numeric record ID from autocomplete
             redirectToTstructRecord(transId, rawStruct, fieldUniqueId);
+        } else if (fieldUniqueId && /^\d+$/.test(fieldUniqueId) && fieldUniqueId !== "0") {
+            // A picked suggestion carries the record id: open it directly (same as the view command does)
+            redirectToTstructRecord(transId, rawStruct, fieldUniqueId);
+        } else if (hasUserProvidedRecord && !matchedItem) {
+            console.warn("[AxiCMD edit] Record not found", { transId, rawValue, fieldValue, fieldUniqueId, candidates, targetFieldName });
+            showToast(`Record '${rawValue || fieldValue}' not found in ${rawStruct}.`);
+            return;
         } else {
             redirectToTstruct(transId, rawStruct, true, targetFieldName, fieldUniqueId);
         }
@@ -8240,6 +10235,7 @@ if (typeof document !== "undefined") {
     //             x => x.caption?.toLowerCase() === rawStruct
     //         );
     //         if (!found || !found.name) {
+    //             // console.error("TStruct not found:", rawStruct);
     //             return;
     //         }
     //         transId = found.name;
@@ -8252,10 +10248,12 @@ if (typeof document !== "undefined") {
 
 
     //         if (!Array.isArray(extraList)) {
+    //             // console.warn("Hidden field list is missing or invalid", extraList);
     //             actualFieldName = null;
     //             return;
 
     //         } else if (extraList.length === 0) {
+    //             // console.log("hidden field List is Empty!");
     //             actualFieldName = null;
     //             return;
 
@@ -8265,9 +10263,11 @@ if (typeof document !== "undefined") {
     //             fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
 
     //             if (actualFieldName === null) {
+    //                 // console.error("Field name resolution failed: ", fieldName)
     //             }
     //         }
     //         if (!fieldName) {
+    //             // console.error("Field resolution failed:", rawFieldName);
     //             return;
     //         }
 
@@ -8276,6 +10276,7 @@ if (typeof document !== "undefined") {
     //         fieldUniqueId = getUniqueId(fieldValue);
 
     //         const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${actualFieldName}`.toLowerCase()];
+    //         // console.log(`Edit Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
 
     //         setEditSessionState(transId);
 
@@ -8307,10 +10308,12 @@ if (typeof document !== "undefined") {
     //         fieldValuePromptSource = commandConfig.prompts[1].promptSource.toLowerCase()
 
     //         if (!Array.isArray(extraList)) {
+    //             // console.warn("Hidden field list is missing or invalid", extraList);
     //             fieldName = null;
     //             return;
 
     //         } else if (extraList.length === 0) {
+    //             // console.log("hidden field List is Empty!");
     //             fieldName = null;
     //             return;
 
@@ -8320,6 +10323,7 @@ if (typeof document !== "undefined") {
     //             fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
 
     //             if (fieldName === null) {
+    //                 // console.error("Field name resolution failed: ", fieldName)
     //             }
 
     //             rawValue = cleanCommandToken(tokens[2]);
@@ -8327,6 +10331,7 @@ if (typeof document !== "undefined") {
     //             fieldUniqueId = getUniqueId(fieldValue);
 
     //             if (fieldValue === null) {
+    //                 // console.error("Field value resolution failed:", rawValue);
     //                 return;
     //             }
 
@@ -8335,6 +10340,7 @@ if (typeof document !== "undefined") {
     //         }
 
     //         const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${fieldName}`.toLowerCase()];
+    //         // console.log(`Edit Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
 
     //         setEditSessionState(transId);
 
@@ -8375,6 +10381,7 @@ if (typeof document !== "undefined") {
         const aspxIndex = href.indexOf("/aspx/");
 
         if (aspxIndex === -1) {
+            // console.warn("setEditSessionState: '/aspx/' not found in URL", href);
             return;
         }
 
@@ -8386,6 +10393,7 @@ if (typeof document !== "undefined") {
         );
 
         if (!Array.isArray(transIdArray)) {
+            // console.warn("setEditSessionState: invalid stored value", transIdArray);
             return;
         }
 
@@ -8395,6 +10403,7 @@ if (typeof document !== "undefined") {
             const updated = transIdArray.filter(
                 x => x.toLowerCase() !== normalizedTransId
             );
+            // console.log("SetEditSessioncachekey: " + storageKey);
             localStorage.setItem(storageKey, JSON.stringify(updated));
         }
     }
@@ -8536,6 +10545,7 @@ if (typeof document !== "undefined") {
 
         if (!structName) {
             showToast("Unable to determine current structure");
+            // console.error("handleViewSource: getCurrentStructName() returned null or undefined");
             return;
         }
 
@@ -8663,10 +10673,12 @@ if (typeof document !== "undefined") {
 
 
         if (tokens.length < 2) {
+            // console.warn("View Command required atleast two tokens");
             showToast("view command requires atleast two tokens");
             return;
         }
 
+        // console.log(JSON.stringify(commandConfig));
 
 
         const promptValues = commandConfig?.prompts?.[0].promptValues;
@@ -8705,6 +10717,7 @@ if (typeof document !== "undefined") {
 
 
         if (!handler) {
+            // console.log("Error: Unsupported View Type");
             showToast("Error: Unsupported View Type");
             return;
         }
@@ -8723,6 +10736,7 @@ if (typeof document !== "undefined") {
                         colList = await getList("axi_adscolumnlist", adsName);
                         if (colList) axDatasourceObj[colSourceKey] = colList;
                     } catch (err) {
+                        // console.error("Failed to fetch column list for validation", err);
                     }
                 }
 
@@ -8750,6 +10764,7 @@ if (typeof document !== "undefined") {
                 }
             }
 
+            // console.log("Ads Filters: ", filters);
 
             redirectToSmartView({
                 adsName: adsName,
@@ -8794,6 +10809,7 @@ if (typeof document !== "undefined") {
         const primaryField = struct_row?.keyfield;
 
         if (!primaryField) {
+            // console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
             showToast("Please try again later...");
             return [];
         }
@@ -8843,89 +10859,30 @@ if (typeof document !== "undefined") {
         const structDataList = getStructDataListFromStorage(transId, targetFieldName);
         let matchedItem = null;
 
+        const candidates = [fieldValue, fieldUniqueId, rawFieldValue]
+            .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
+            .map(v => String(v).trim());
+
         if (Array.isArray(structDataList) && structDataList.length > 0) {
-            const candidates = [fieldValue, fieldUniqueId, rawFieldValue]
-                .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
-                .map(v => String(v).trim());
+            matchedItem = findMatchingRecordItem(structDataList, candidates);
+        }
 
-            // 1. Match by transrecordid directly
-            for (const val of candidates) {
-                matchedItem = structDataList.find(item => {
-                    const transRecId = (item?.transrecordid ?? item?.TRANSRECORDID ?? "").toString().trim();
-                    return transRecId !== "" && transRecId !== "0" && transRecId.toLowerCase() === val.toLowerCase();
-                });
-                if (matchedItem) break;
-            }
+        const hasUserProvidedRecord = (tokens.length > 2 && candidates.length > 0);
 
-            // 2. Match by id directly
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    matchedItem = structDataList.find(item => {
-                        const itemId = (item?.id ?? item?.ID ?? "").toString().trim();
-                        return itemId !== "" && itemId !== "0" && itemId.toLowerCase() === val.toLowerCase();
-                    });
-                    if (matchedItem) break;
-                }
-            }
-
-            // 3. Match exact displaydata, caption, or name (preferring actual records where isfield != 't')
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    const cleanVal = cleanString(val).toLowerCase();
-                    matchedItem = structDataList.find(item => {
-                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
-                        if (isField) return false;
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
-                        return display === cleanVal || caption === cleanVal || name === cleanVal;
-                    }) || structDataList.find(item => {
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
-                        return display === cleanVal || caption === cleanVal || name === cleanVal;
-                    });
-                    if (matchedItem) break;
-                }
-            }
-
-            // 4. Match without bracketed text (e.g., "CBE [1446880000000]" vs "CBE")
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    const cleanVal = cleanString(val).replace(/\[.*?\]/g, "").trim().toLowerCase();
-                    if (!cleanVal) continue;
-                    matchedItem = structDataList.find(item => {
-                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
-                        if (isField) return false;
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        return display === cleanVal || caption === cleanVal;
-                    }) || structDataList.find(item => {
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
-                        return display === cleanVal || caption === cleanVal;
-                    });
-                    if (matchedItem) break;
-                }
-            }
-
-            // 5. Substring match
-            if (!matchedItem) {
-                for (const val of candidates) {
-                    const cleanVal = cleanString(val).toLowerCase();
-                    if (!cleanVal) continue;
-                    matchedItem = structDataList.find(item => {
-                        const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
-                        if (isField) return false;
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        return display.includes(cleanVal) || caption.includes(cleanVal);
-                    }) || structDataList.find(item => {
-                        const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                        const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                        return display.includes(cleanVal) || caption.includes(cleanVal);
-                    });
-                    if (matchedItem) break;
+        // If record wasn't preloaded, perform on-demand server lookup
+        if (!matchedItem && hasUserProvidedRecord) {
+            // What the user typed first, then the resolved value (may be an id the server search cannot match)
+            const candidateSearch = [rawFieldValue, ...candidates];
+            if (candidateSearch.some(t => cleanString(String(t ?? "")).replace(/\[.*?\]/g, "").trim())) {
+                try {
+                    const lookupParams = processParamforEditndView(tokens, commandConfig, transId, tokenIndex);
+                    if (lookupParams) {
+                        matchedItem = await lookupRecordOnServer(lookupParams, candidateSearch, candidates);
+                    } else {
+                        console.warn("[AxiCMD] Record lookup skipped: no lookup parameters for", transId);
+                    }
+                } catch (lookupErr) {
+                    console.warn("[AxiCMD] On-demand view record resolution failed:", lookupErr);
                 }
             }
         }
@@ -8940,6 +10897,9 @@ if (typeof document !== "undefined") {
             redirectToEntityForm(transId, rawStruct, fieldUniqueId);
         } else if (fieldUniqueId && /^\d+$/.test(fieldUniqueId) && fieldUniqueId !== "0") {
             redirectToEntityForm(transId, rawStruct, fieldUniqueId);
+        } else if (hasUserProvidedRecord && !matchedItem) {
+            showToast(`Record '${rawFieldValue || fieldValue}' not found in ${rawStruct}.`);
+            return;
         } else {
             handler({
                 transId,
@@ -8966,10 +10926,12 @@ if (typeof document !== "undefined") {
 
 
     //     if (tokens.length < 2) {
+    //         // console.warn("View Command required atleast two tokens");
     //         showToast("view command requires atleast two tokens");
     //         return;
     //     }
 
+    //     // console.log(JSON.stringify(commandConfig));
 
 
     //     const promptValues = commandConfig?.prompts?.[0].promptValues;
@@ -8990,6 +10952,7 @@ if (typeof document !== "undefined") {
 
 
     //     if (!handler) {
+    //         // console.log("Error: Unsupported View Type");
     //         showToast("Error: Unsupported View Type");
     //         return;
     //     }
@@ -9001,6 +10964,7 @@ if (typeof document !== "undefined") {
     //         const adsName = cleanCommandToken(tokens[1]);
     //         const filters = extractAdsFilters(tokens);
 
+    //         // console.log("Ads Filters: ", filters);
 
 
 
@@ -9045,6 +11009,7 @@ if (typeof document !== "undefined") {
     //     if (extraList && extraList.length > 0) {
     //         fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
     //     } else {
+    //         // console.warn("Hidden field name not found in cache");
     //     }
 
     //     rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
@@ -9052,6 +11017,9 @@ if (typeof document !== "undefined") {
     //     fieldUniqueId = getUniqueId(fieldValue);
 
 
+    //     // console.log(
+    //         `view Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
+    //     );
 
     //     handler({
     //         transId,
@@ -9062,6 +11030,19 @@ if (typeof document !== "undefined") {
 
     // }
 
+
+    /**
+     * Drops everything cached about a form after its key field changed. The key field decides which value
+     * edit/view search by, so the cached form list (it carries the key field) and the cached record lists
+     * (rows were fetched by the old key) must not be reused. Refresh does exactly that reset for every
+     * cache layer (memory, localStorage "axi_" keys, paging state) and reloads the lists, so it is reused here.
+     * @param {string} transId - Form whose key field was changed.
+     * @returns {void}
+     */
+    function invalidateKeyfieldCaches(transId) {
+        clearStructSearchCache(transId);
+        if (btnRefresh) btnRefresh.click();
+    }
 
     /**
      * Handles setting keyfield values for entity records.
@@ -9079,6 +11060,7 @@ if (typeof document !== "undefined") {
         const { value: transId } = tryResolveToken(2, tstructName, commandConfig, false);
         if (!tstructName || !keyField) {
             showToast("TStruct and Key Field are required");
+            // console.log("TStruct and Key Field are required");
             return;
         }
 
@@ -9126,6 +11108,7 @@ if (typeof document !== "undefined") {
 
             if (dataObj && (dataObj.success === true || dataObj.message?.toLowerCase() === "success")) {
                 showToast(`Key field-${keyField} has been set for the form ${tstructName}`, 5000, true);
+                invalidateKeyfieldCaches(transId);
                 return;
             }
         } catch (err) {
@@ -9151,6 +11134,7 @@ if (typeof document !== "undefined") {
 
     //     if (!data || !Array.isArray(data)) return null;
 
+    //     // console.log(JSON.stringify(data));
 
     //     const resolvedText = typeof text === 'object' ? (text?.value || "") : (text || "");
 
@@ -9325,6 +11309,7 @@ if (typeof document !== "undefined") {
         if (!Array.isArray(data))
             return "";
 
+        // console.log(JSON.stringify(data));
 
         // -----------------------------------
         // text may be:
@@ -9698,6 +11683,8 @@ if (typeof document !== "undefined") {
         //     return pureCaption === normalizedText;
         // });
 
+        if (!Array.isArray(viewList)) return null;
+
         bestMatch = viewList.find(d => {
             const isPageType = ['p', 'page'].includes((d.stype || "").toLowerCase());
             return isPageType && typeof d.displaydata === "string" && d.displaydata.toLowerCase() === rawTokenText.toLowerCase();
@@ -9724,10 +11711,13 @@ if (typeof document !== "undefined") {
         }
 
         if (!bestMatch || typeof bestMatch.displaydata !== "string") {
+            // The page may simply not be in the loaded part of the paged structure list: look it up on the server
+            requestStructSearch(rawTokenText, paramValue);
             return null;
         }
 
         const requestUrl = bestMatch.name;
+        // console.log(requestUrl);
 
         setCommandRoutes(input.value.trim(), requestUrl);
 
@@ -9817,6 +11807,7 @@ if (typeof document !== "undefined") {
             );
 
             if (!found || !found.name) {
+                // console.error(`Source not found: ${rawName}`);
                 return;
             }
 
@@ -9862,6 +11853,7 @@ if (typeof document !== "undefined") {
 
 
         if (structType === "o") {
+            // console.error("Invalid Struct type");
             showToast("Invalid Struct type");
             return;
         }
@@ -9979,9 +11971,11 @@ if (typeof document !== "undefined") {
             });
         }
 
+        // console.log("All Buttons: " + JSON.stringify(allButtons));
 
         let { value: resolvedBtnId, type } = tryResolveToken(1, buttonLabel, commandConfig, false);
 
+        // console.log(`Run Command Debug: Label="${buttonLabel}", ResolvedID="${resolvedBtnId}"`);
 
         let targetBtn = null;
 
@@ -10020,10 +12014,12 @@ if (typeof document !== "undefined") {
 
 
         if (!targetBtn) {
+            // console.error(`Button not found for label: ${buttonLabel}`);
             showToast(`Button '${buttonLabel}' not found`, 3000);
             return;
         }
 
+        // console.log(`Clicking button: ${targetBtn.label} (${targetBtn.id})`);
 
         targetBtn.click();
 
@@ -10522,10 +12518,12 @@ if (typeof document !== "undefined") {
             if (window.frameElement) {
                 const el = window.frameElement;
                 if (el.id === "loadPopUpPage" || el.name === "loadPopUpPage" || el.id === "middle1" || el.name === "middle1" || el.classList.contains("middle") || el.classList.contains("middle1")) {
+                    // console.log("Axi: running inside loadPopUpPage or middle1 iframe");
                     return true;
                 }
             }
             if (window.name === "loadPopUpPage" || window.name === "middle" || window.name === "middle1") {
+                // console.log("Axi: running inside frame with name loadPopUpPage, middle or middle1");
                 return true;
             }
         } catch (e) {
@@ -10538,6 +12536,7 @@ if (typeof document !== "undefined") {
                 rootWin = window.top;
             }
         } catch (e) {
+            // console.warn("Axi: Failed to access window.top due to cross-origin boundary.");
         }
 
         /**
@@ -10553,6 +12552,7 @@ if (typeof document !== "undefined") {
                 const loadPopUpPageModal = win.document.getElementById("loadPopUpPage");
                 if (loadPopUpPageModal) {
                     if (loadPopUpPageModal.offsetWidth > 0 || loadPopUpPageModal.offsetHeight > 0 || loadPopUpPageModal.style.display === "block" || loadPopUpPageModal.classList.contains("show")) {
+                        // console.log("Axi: found active preview modal via loadPopUpPage");
                         return true;
                     }
                 }
@@ -10565,6 +12565,7 @@ if (typeof document !== "undefined") {
                         const innerModal = middleDoc.getElementById("loadPopUpPage");
                         if (innerModal) {
                             if (innerModal.offsetWidth > 0 || innerModal.offsetHeight > 0 || innerModal.style.display === "block" || innerModal.classList.contains("show")) {
+                                // console.log("Axi: found active preview modal inside middle1 iframe");
                                 return true;
                             }
                         }
@@ -10574,12 +12575,14 @@ if (typeof document !== "undefined") {
                 // 1. Check for remodal wrapper containing the popupIframeRemodal
                 const openedModal = win.document.querySelector(".remodal-wrapper.remodal-is-opened #popupIframeRemodal");
                 if (openedModal) {
+                    // console.log("Axi: found active preview modal via remodal selector");
                     return true;
                 }
 
                 // 2. Check for remodal wrapper containing any htmlPages.aspx iframe
                 const htmlPagesModal = win.document.querySelector(".remodal-wrapper.remodal-is-opened iframe[src*='htmlPages.aspx']");
                 if (htmlPagesModal) {
+                    // console.log("Axi: found active preview modal via htmlPages src selector");
                     return true;
                 }
 
@@ -10589,9 +12592,11 @@ if (typeof document !== "undefined") {
                     const wrapper = win.document.getElementById("axpertPopupWrapper") || win.document.querySelector("[data-remodal-id=axpertPopupModal]");
                     if (wrapper) {
                         if (wrapper.offsetWidth > 0 || wrapper.offsetHeight > 0 || wrapper.classList.contains("remodal-is-opened")) {
+                            // console.log("Axi: found active preview modal via wrapper visibility/class");
                             return true;
                         }
                     } else if (modal.offsetWidth > 0 || modal.offsetHeight > 0) {
+                        // console.log("Axi: found active preview modal via modal direct visibility");
                         return true;
                     }
                 }
@@ -10611,6 +12616,7 @@ if (typeof document !== "undefined") {
         }
 
         const result = checkWindow(rootWin);
+        // console.log("Axi: isPreviewModalOpen returning:", result);
         return result;
     }
 
@@ -10745,7 +12751,7 @@ if (typeof document !== "undefined") {
             const id = btn.id || btn.getAttribute("data-id");
             if (!id) return;
             const label = btn.innerText.trim();
-            if (!label)
+            if (!label) // console.log("There is no label for Element: " + btn);
                 if (label.toLowerCase() === "plugin custom code") return;
 
 
@@ -11083,7 +13089,7 @@ if (typeof document !== "undefined") {
             if (!id) return;
             // const label = btn.innerText.trim();
             const label = extractButtonLabel(btn);
-            if (!label)
+            if (!label) // console.log("There is no label for Element: " + btn);
                 if (label.toLowerCase() === "plugin custom code") return;
 
 
@@ -11306,6 +13312,9 @@ if (typeof document !== "undefined") {
             text.startsWith("Waiting") ||
             text.startsWith("Error") ||
             text.startsWith("Fetching") ||
+            text.startsWith("Searching") ||
+            text.startsWith("Type at least") ||
+            text.startsWith("No matching") ||
             text === "No Data" ||
             text === "Please type the value..." ||
             text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
@@ -11325,6 +13334,7 @@ if (typeof document !== "undefined") {
 
         if (tokens < 1) {
             showToast("Error:Invalid Tokens, Analyze command requires atleast 2 tokens");
+            // console.error("Error:Invalid Tokens, Analyze command requires atleast 2 tokens");
             return;
         }
 
@@ -11368,6 +13378,7 @@ if (typeof document !== "undefined") {
         // }
 
         setCommandRoutes(input.value.trim(), targetUrl);
+        // console.log("Target URL from analyse command : " + targetUrl);
         window.LoadIframe(targetUrl);
     }
 
@@ -11445,6 +13456,7 @@ if (typeof document !== "undefined") {
                         ///We need to use System Date Format
                         date = formatDate(date, dateString);
 
+                        // console.log("Final date:", date);
 
                         settokens[lastIndex] = date;
 
@@ -11483,6 +13495,7 @@ if (typeof document !== "undefined") {
                             ///We need to use System Date Format
                             const formattedDate = formatDate(partialDate, dateString);
                             date = formattedDate;
+                            // console.log("Final date:", date);
                             SET_COMMAND_STATE.currentFieldValue = date;
                             SET_COMMAND_STATE.currentFieldType = null;
                             SET_COMMAND_STATE.isNextField = true;
@@ -11528,6 +13541,7 @@ if (typeof document !== "undefined") {
 
 
                 if (acceptedValue && filtered.length === 0) {
+                    // console.log("User given value which is not in the date list");
                     showToast("Please select a valid Option from the list", 5000, true);
 
                     let lastIndex = tokens.length - 1;
@@ -11673,6 +13687,7 @@ if (typeof document !== "undefined") {
                 const colList = axDatasourceObj[colSourceKey];
 
                 if (!colList) {
+                    // console.log("In processCreateCommand " + createCommandSourceObj + " is empty");
                     showToast("Please Try Again Later.");
                     return [];
                 }
@@ -11685,8 +13700,10 @@ if (typeof document !== "undefined") {
 
                 if (!columnMetadata) {
 
+                    //// console.log("In processEditCommond " + createCommandSourceObj + " is empty");
                     //showToast("Please Try Again Later.");
 
+                    // console.log("Selected Field Name is Not in the List " + prevColumnName);
                     showToast("Please Select Field from the list", 5000, true);
 
                     let settokens = [...tokens]
@@ -11796,11 +13813,13 @@ if (typeof document !== "undefined") {
 
                         var params1 = columnMetadata.fldsql;
                         var params2 = prepareKeyValueString(allGloblVars);
+                        // console.log(params2);
                         var params3 = columnMetadata.normalized;
                         var params4 = columnMetadata.fromlist;
 
                         params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList[setCommandTransid], commandConfig);
 
+                        // console.log(params2);
 
 
 
@@ -11826,6 +13845,7 @@ if (typeof document !== "undefined") {
                         });
 
                         if (acceptedValue && filtered.length === 0) {
+                            // console.log("User given value is not in the dropdown");
                             showToast("Please select a valid value from the dropdown", 5000, true);
 
                             let lastIndex = tokens.length - 1;
@@ -11944,6 +13964,7 @@ if (typeof document !== "undefined") {
                         ///We need to use System Date Format
                         date = formatDate(date, dateString);
 
+                        // console.log("Final date:", date);
 
                         settokens[lastIndex] = date;
 
@@ -11982,6 +14003,7 @@ if (typeof document !== "undefined") {
                             ///We need to use System Date Format
                             const formattedDate = formatDate(partialDate, dateString);
                             date = formattedDate;
+                            // console.log("Final date:", date);
                             SET_COMMAND_STATE.currentFieldValue = date;
                             SET_COMMAND_STATE.currentFieldType = null;
                             SET_COMMAND_STATE.isNextField = true;
@@ -12027,6 +14049,7 @@ if (typeof document !== "undefined") {
 
 
                 if (acceptedValue && filtered.length === 0) {
+                    // console.log("User given value which is not in the date list");
                     showToast("Please select a valid Option from the list", 5000, true);
 
                     let lastIndex = tokens.length - 1;
@@ -12196,6 +14219,7 @@ if (typeof document !== "undefined") {
                 const colList = axDatasourceObj[colSourceKey];
 
                 if (!colList) {
+                    // console.log("In processEditCommond " + createCommandSourceObj + " is empty");
                     showToast("Please Try Again Later.");
                     return [];
                 }
@@ -12207,8 +14231,10 @@ if (typeof document !== "undefined") {
                 ) || null;
 
                 if (!columnMetadata) {
+                    //// console.log("In processEditCommond " + createCommandSourceObj + " is empty");
                     //showToast("Please Try Again Later.");
 
+                    // console.log("Selected Field Name is Not in the List " + prevColumnName);
                     showToast("Please Select Field only from the list", 5000, true);
 
                     let settokens = [...tokens]
@@ -12314,12 +14340,14 @@ if (typeof document !== "undefined") {
 
                         var params1 = columnMetadata.fldsql;
                         var params2 = prepareKeyValueString(allGloblVars);
+                        // console.log(params2);
                         var params3 = columnMetadata.normalized;
                         var params4 = columnMetadata.fromlist;
 
 
                         params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList[setCommandTransid], commandConfig);
 
+                        // console.log(params2);
 
 
 
@@ -12345,6 +14373,7 @@ if (typeof document !== "undefined") {
                         });
 
                         if (acceptedValue && filtered.length === 0) {
+                            // console.log("User given value which is not in the dropdown");
                             showToast("Please select a valid value from the dropdown", 5000, true);
 
                             let lastIndex = tokens.length - 1;
@@ -12458,6 +14487,7 @@ if (typeof document !== "undefined") {
 
         // const iframes = document.querySelectorAll("iframe");
 
+        // // console.log(iframes);
 
         const currentIframe = document.getElementById("middle1");
 
@@ -12469,10 +14499,12 @@ if (typeof document !== "undefined") {
 
             //const key = fetchTransidfromUrl ? fetchTransidfromUrl[1] : null;
             //const value = fetchTransidfromUrl ? fetchTransidfromUrl[2] : null;
+            //// console.log(key, value);
             //transID = value;
             transID = currentIframe.contentWindow.transid;
 
             if (transID) {
+                //// console.log("iFrame Found");
                 return transID;
             }
             else
@@ -12673,6 +14705,7 @@ if (typeof document !== "undefined") {
             return false;
 
         } catch (ex) {
+            // console.error("AxisetFieldValue error:", ex);
             return false;
         }
     }
@@ -12687,6 +14720,7 @@ if (typeof document !== "undefined") {
     function handleCreate({ tokens, commandConfig }) {
 
         if (tokens.length < 2) {
+            // console.warn("create command requires <tstructname> <fieldname> <fieldvalue>");
             showToast("create command requires <tstructname> <fieldname> <fieldvalue>");
             return;
         }
@@ -12704,6 +14738,7 @@ if (typeof document !== "undefined") {
             //     );
             //     if (found) transId = found.name
             //     else {
+            //         // console.error("Invalid Tstruct name");
             //         showToast("Invalid Tstruct name please select the valid tstruct");
             //         return;
             //     }
@@ -12728,6 +14763,7 @@ if (typeof document !== "undefined") {
                     );
 
                     if (!isValidField) {
+                        // console.error("Execution blocked: Invalid field name - " + rawField);
                         showToast(`'${rawField}' is not a valid field. Please select from the list.`, 5000, false);
                         return;
                     }
@@ -12743,11 +14779,13 @@ if (typeof document !== "undefined") {
         let { value: transId, type } = tryResolveToken(1, rawName, commandConfig, false);
 
         //if (!transId ) {
+        //    // console.log("Missing transaction ID or field values.");
         //    showToast("Some required information is missing. Please re-enter the command and try again.");
         //    return;
         //}
 
         if (!transId || !createfieldnamevaluesList || !createfieldnamevaluesList[transId] || createfieldnamevaluesList[transId].length === 0) {
+            // console.log("Missing transaction ID or field values. Tstructid : " + transId);
             showToast("Incomplete command detected. Please clear the entire command and try again.");
             return [];
         }
@@ -12783,6 +14821,7 @@ if (typeof document !== "undefined") {
         //        //const rowNo = "1";
 
         //        if (!fieldname || value == null || value === "") {
+        //            // console.log(`SET FAILED ? ${fieldname} = ${value}`);
         //            continue;
         //        }
 
@@ -12790,16 +14829,19 @@ if (typeof document !== "undefined") {
         //        let resultOfSetFieldValue = AxisetFieldValue(actualFieldName, value, rowNo);
 
         //        if (resultOfSetFieldValue) {
+        //            // console.log(`SET SUCCESS ? ${fieldname} = ${value}`);
         //            continue;
 
         //        }
         //        else {
+        //            // console.log(`SET FAILED ? ${fieldname} = ${value}`);
         //        }
         //    }
         //    createfieldnamevaluesList = []
         //}
         //else 
         //{
+        // console.log("Form not loaded. Attaching onload and redirecting...");
 
         let iframe = null;
 
@@ -12808,16 +14850,19 @@ if (typeof document !== "undefined") {
             iframe = document.getElementById("middle1");
 
             if (!iframe) {
+                // console.log("Iframe not found");
                 return;
             }
 
 
             iframe.onload = function () {
                 //we can also try: 0 (minimum delay),50,100,200 (if needed)
+                // console.log("Iframe loaded. Setting all fields now...");
                 setTimeout(function () {
                     try {
 
 
+                        // console.log(createfieldnamevaluesList[transId]);
                         // for (let j = 2; j < tokens.length; j += 2) {
                         for (let j = 0; j < createfieldnamevaluesList[transId].length; j++) {
 
@@ -12841,19 +14886,23 @@ if (typeof document !== "undefined") {
                             //let rowNo = "1";
 
                             if (!actualFName || val == null || val === "") {
+                                // console.log(`SET FAILED ? ${fname} = ${val}`);
                                 continue;
                             }
 
                             let resultOfSetFieldValue = AxisetFieldValue(actualFName, val, rowNo);
 
                             if (resultOfSetFieldValue) {
+                                // console.log(`SET SUCCESS ? ${actualFName} = ${val}`);
                             }
                             else {
+                                // console.log(`SET FAILED ? ${actualFName} = ${val}`);
                             }
                         }
 
                     }
                     catch (ex) {
+                        // console.error("Error while setting fields after iframe load:", ex);
                     }
                     finally {
                         iframe.onload = null;
@@ -12870,6 +14919,7 @@ if (typeof document !== "undefined") {
 
         }
         catch (ex) {
+            // console.log("Error in handleCreate: " + ex);
             showToast("Incomplete command detected. Please clear the entire command and try again.");
             //createfieldnamevaluesList = [];
         }
@@ -13312,6 +15362,7 @@ if (typeof document !== "undefined") {
     //    let sessionId;
     //    getARMSessionId().then(sessionIdFetch => {
     //        sessionId = sessionIdFetch;
+    //        // console.log(sessionIdFetch);
     //    });
 
     //    if (!sessionId) return ["Session expired"]
@@ -13379,6 +15430,7 @@ if (typeof document !== "undefined") {
     //        ]
     //    };
 
+    //    // console.log("AxPut Payload created : " + payload);
     //    //If EDIT ? attach keyfield & keyvalue at root level
     //    if (!isCreate) {
     //        payload.data[0]["keyfield"] = "recordid";
@@ -13400,6 +15452,7 @@ if (typeof document !== "undefined") {
     //        //const result = await response.json();
 
     //    } catch (error) {
+    //        // console.log("Error from Axput : "+ error);
     //    }
 
 
@@ -13411,8 +15464,11 @@ if (typeof document !== "undefined") {
     //    var result = preparePayload(createfieldnamevaluesList, transid, sourcename, iscreate = true);
 
     //    if (result.isSuccess) {
+    //        // console.log("Payload Ready");
+    //        // console.log(result.payload);
     //        payload = result.payload;
     //    } else {
+    //        // console.log("Payload is empty");
     //        payload = {};
     //    }
 
@@ -13431,10 +15487,12 @@ if (typeof document !== "undefined") {
     //            //const result = await response.json();
     //            if (response.isSuccess) {
     //                showToast("Your Data is submitted Successfully!!");
+    //                // console.log("Data is submitted Successfully!!");
     //            }
 
     //        } catch (error) {
     //            showToast("Your Data is not Submitted..Please Submit it Manually!!");
+    //            // console.log("Error from Axput : "+ error);
     //        }
 
 
@@ -13460,11 +15518,13 @@ if (typeof document !== "undefined") {
         //            return;
         //        }
 
+        //        // console.log("Fetched Session ID: " + sessionId);
 
         // ?? Call preparePayload AFTER session is ready
 
         //if (!transid || saveListWithFieldNamendValues.length == 0) {
         if (!transid || !saveListWithFieldNamendValues || !saveListWithFieldNamendValues[transid] || saveListWithFieldNamendValues[transid].length === 0) {
+            // console.log("Missing transaction ID or field values.");
             showToast("Incomplete command detected. Please clear the entire command and try again.");
 
             return [];
@@ -13497,7 +15557,9 @@ if (typeof document !== "undefined") {
 
             const struct_dataList = axDatasourceObj[struct_sourceKey];
 
-            const struct_row = struct_dataList.find(r => r.name === transid);
+            // The structure list is paged; look the form up by name and ask the server if it is not loaded.
+            const struct_row = findStructRow(struct_dataList, transid);
+            if (!struct_row) requestStructSearch(transid, struct_paramValue);
 
             const primaryField = struct_row?.keyfield
 
@@ -13525,12 +15587,15 @@ if (typeof document !== "undefined") {
                 throw new Error("Payload is empty or invalid");
             }
 
+            // console.log("Payload is Created successfully " + "\n");
+            // console.log(result.payload);
 
             var payload = result.payload;
 
 
             var SaveDataapiUrl = mainArmRestDllPath + "ASBTStructrest.dll/datasnap/rest/TASBTstruct/savedata";
 
+            // console.log("SaveDataapi URL : " + SaveDataapiUrl);
 
             showToast("Saving Data is in progress....", 5000, true);
 
@@ -13567,6 +15632,8 @@ if (typeof document !== "undefined") {
 
                     if (firstResult.error) {
                         showToast(`Save Failed : ${firstResult.error.msg}`);
+                        // console.log(`Save Failed : ${firstResult.error.msg}`);
+                        // console.log(data);
                         return [];
                     }
 
@@ -13577,12 +15644,16 @@ if (typeof document !== "undefined") {
                         const recordId = msgObj.recordid || "";
                         const sid = msgObj.SID || "";
                         showToast(`${msg}`, 5000, true);
+                        clearStructSearchCache(transid);
+                        // console.log("Data submitted successfully,Record-ID : " + recordId);
+                        // console.log(data);
 
                         //saveListWithFieldNamendValues = [];
                         //createfieldnamevaluesList = [];
                         return [];
                     }
 
+                    // console.log(data);
                     throw new Error("Unexpected API response structure");
 
                 })
@@ -13591,6 +15662,7 @@ if (typeof document !== "undefined") {
                     //showToast("Your Data is not Submitted,Please Submit it Manually using(Ctrl + Enter)!");
                     // showToast("Save failed.Please retry with Ctrl + Enter.");
                     showToast("Save failed.Please try again later.");
+                    // console.log("Error from AxiSaveDataFn :" + error);
                     return [];
 
                 });
@@ -13644,6 +15716,7 @@ if (typeof document !== "undefined") {
         let payloadUsername = mainUserName;
 
         if (!payloadUsername || payloadUsername.trim() === "") {
+            // console.log("Username not found or invalid.");
             return Promise.resolve({
                 isSuccess: false,
                 payload: {}
@@ -13665,6 +15738,7 @@ if (typeof document !== "undefined") {
             const colList = axDatasourceObj[colSourceKey];
 
             if (!colList) {
+                // console.warn("Column metadata not found for:", colSourceKey);
                 return {
                     isSuccess: false,
                     payload: {}
@@ -13769,10 +15843,12 @@ if (typeof document !== "undefined") {
                     }
                 };
 
+                // console.log("PreparedPayload : Payload is created successfully with isCreate :", iscreate);
 
             }
             catch (ex) {
                 isSuccess = false;
+                // console.log("Error in preparePayload Payload creation :" + ex);
             }
 
             if (payload && Object.keys(payload).length > 0 && isSuccess) {
@@ -13810,6 +15886,7 @@ if (typeof document !== "undefined") {
 
 
 
+        // console.log("Target Url for AxiBot:  " + targetUrl);
 
 
         setCommandRoutes(input.value.trim(), targetUrl);
@@ -13885,6 +15962,7 @@ if (typeof document !== "undefined") {
      */
     function handleAiButtons(btnId) {
         const axiButtons = getAxiBotActionButtons();
+        // console.log(axiButtons);
 
 
         if (axiButtons) {
@@ -13892,6 +15970,7 @@ if (typeof document !== "undefined") {
 
 
         } else {
+            // console.error("Cannot get Axi bot action buttons");
             showToast("Error: Cannot get Axi bot action buttons")
         }
 
@@ -13907,18 +15986,22 @@ if (typeof document !== "undefined") {
         const iframe = document.getElementById("middle1");
 
         if (!iframe) {
+            // console.error("Axi bot: Iframe middle1 not found.");
             return;
         }
 
         const iframeWindow = iframe.contentWindow;
 
         if (!iframeWindow) {
+            // console.error("Axi Bot: Cannot access iframe window.");
             return;
         }
 
         if (typeof iframeWindow.sendAxiMessageToAxibot === "function") {
+            // console.log(`Sending to AxiBot: "${text}"`);
             iframeWindow.sendAxiMessageToAxibot(text);
         } else {
+            // console.warn("Axi Bot: Script not fully loaded in iframe yet.");
             if (typeof showToast === 'function') showToast("Chatbot is loading...");
         }
 
@@ -13964,6 +16047,7 @@ if (typeof document !== "undefined") {
         cachedCommands = localStorage.getItem("axi_commands_v1");
         initCommands();
         window.LoadIframe("loadhomepage");
+        // console.log(JSON.stringify(commands));
     }
 
     /**
@@ -14064,6 +16148,8 @@ if (typeof document !== "undefined") {
                     return res.json()
                 })
                 .then(data => {
+                    // console.log("Fetched favorites from backend: ", data);
+                    // console.log("type : ", typeof data);
                     if (data && Array.isArray(data)) {
                         commandFavorites = data.map(item => ({
                             favouritesId: item?.favouritesId,
@@ -14081,6 +16167,7 @@ if (typeof document !== "undefined") {
                     }
                 })
                 .catch(err => {
+                    // console.error("Axi: Failed to sync favorites from backend", err);
                     showToast("Axi: Axi: Failed to sync favorites from backend");
 
                 }).finally(() => {
@@ -14179,7 +16266,7 @@ if (typeof document !== "undefined") {
             //             favOrder: 0,
             //             targetURL: removedFav?.targetUrl || removedFav?.targetURL || removedFav?.targeturl
             //         })
-            //     }).catch(err => {});
+            //     }).catch(err => // console.error("Axi: Failed to update on backend", err));
             // }
 
             showDeleteFavoriteModal(cmdText);
@@ -14218,6 +16305,7 @@ if (typeof document !== "undefined") {
         //         })
         //     }).catch(err => {
         //         showToast("Axi: Failed to update favorite on backend, Please check AxiApi Configuration");
+        //         // console.error("Axi: Failed to update favorite on backend", err)
         //     });
         // }
 
@@ -14453,6 +16541,7 @@ if (typeof document !== "undefined") {
         }
 
         if (favObj.targetUrl && favObj.targetUrl.trim() !== "" && !favObj.targetUrl.startsWith("developerstudio:")) {
+            // console.log("Executing Favorite directly via Target URL:", favObj.targetUrl);
             const params = new URLSearchParams(favObj.targetUrl.split("?")[1]);
             const transId = params.get("transid");
             if (transId) {
@@ -14460,6 +16549,7 @@ if (typeof document !== "undefined") {
             }
             top.window.LoadIframe(favObj.targetUrl);
         } else if (favObj.targetUrl && favObj.targetUrl.startsWith("developerstudio:")) {
+            // console.log("Executing Favorite via Developer Studio custom target URL:", favObj.targetUrl);
             const parts = favObj.targetUrl.split(":");
             const type = parts[1]; // tstruct or iview
             const name = parts[2]; // the resolved name
@@ -14511,6 +16601,7 @@ if (typeof document !== "undefined") {
         const existingCommandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
 
         if (existingCommandRoute) {
+            // console.log("Command route for ", cmdText, " already exists");
             return;
         }
 
@@ -14519,6 +16610,7 @@ if (typeof document !== "undefined") {
             targetUrl: targetUrl
         })
 
+        // console.log("Command Routes: " + JSON.stringify(commandRoutes));
     }
 
     /**
@@ -14993,6 +17085,7 @@ if (typeof document !== "undefined") {
                     }
                 })
                     .catch(error => {
+                        // console.error("Backend edit failed", error);
                         showToast("An Error occured while editing favorite");
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
                         favCancelBtn.disabled = false;
@@ -15023,6 +17116,7 @@ if (typeof document !== "undefined") {
                         }
                     }
                 ).then(data => {
+                    // console.log("Response from backend after adding favorite: ", data);
                     const favObj = data[0];
 
                     commandFavorites.unshift({
@@ -15044,6 +17138,7 @@ if (typeof document !== "undefined") {
                 })
                     .catch(err => {
                         showToast("Axi: Failed to update favorite on backend");
+                        // console.error("Backend sync failed", err);
                         setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
                         favCancelBtn.disabled = false;
 
@@ -15162,6 +17257,7 @@ if (typeof document !== "undefined") {
                     }
                 })
                     .catch(err => {
+                        // console.error("Axi: Failed to delete on backend", err);
                         setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
                         deleteFavCancelBtn.disabled = false;
 
@@ -15218,6 +17314,7 @@ if (typeof document !== "undefined") {
                 // return params.get("tstid"); 
                 return { name: decodeURIComponent(structNameRaw), type: "entity" };
             } catch (error) {
+                // console.error("Error parsing struct name from URL: ", error);
                 return null;
             }
 
@@ -15232,6 +17329,7 @@ if (typeof document !== "undefined") {
                 // return params.get("tstid"); 
                 return { name: decodeURIComponent(structNameRaw), type: "entity" };
             } catch (error) {
+                // console.error("Error parsing struct name from URL: ", error);
                 return null;
             }
 
@@ -15243,6 +17341,7 @@ if (typeof document !== "undefined") {
                 // return params.get("ivname"); 
                 return { name: decodeURIComponent(structNameRaw), type: "iview" };
             } catch (error) {
+                // console.error("Error parsing struct name from URL: ", error);
                 return null;
             }
         } else if (src.includes("Smartview_table.html")) {
@@ -15252,6 +17351,7 @@ if (typeof document !== "undefined") {
                 const structNameRaw = params.get("ads");
                 return { name: decodeURIComponent(structNameRaw), type: "ads" };
             } catch (error) {
+                // console.error("Error parsing struct name from URL: ", error);
                 return null;
 
             }
@@ -15339,85 +17439,210 @@ if (typeof document !== "undefined") {
             .AXI-Sec.axi-tour-active #axiAddFavoriteBtn,
             .AXI-Sec.axi-tour-active #axiViewFavoritesBtn,
             .AXI-Sec.axi-tour-active #btnRefresh,
+            .AXI-Sec.axi-tour-active #axiSettingsBtn,
             .AXI-Sec.axi-tour-active .clearbtn {
                 pointer-events: none !important;
                 opacity: 0.5 !important;
                 cursor: not-allowed !important;
             }
+            /* Help tour palette follows the settings panel: navy ink on frosted white glass, blue for "help" */
             .introjs-overlay {
-                background: rgba(10, 10, 18, 0.75) !important;
-                backdrop-filter: blur(4px);
+                background: rgba(20, 27, 56, 0.5) !important;
+                -webkit-backdrop-filter: blur(5px);
+                backdrop-filter: blur(5px);
             }
+            /* The highlighted control gets a clear blue ring instead of a glow */
             .introjs-helperLayer {
                 z-index: 10000000 !important;
-                background: rgba(161, 0, 255, 0.1) !important;
-                border: 1px solid rgba(161, 0, 255, 0.5) !important;
-                box-shadow: 0 0 10px rgba(161, 0, 255, 0.3) !important;
+                background: rgba(255, 255, 255, 0.14) !important;
+                border: 2px solid #2563eb !important;
+                border-radius: 10px !important;
+                box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.22) !important;
             }
             .introjs-tooltipReferenceLayer {
                 z-index: 10000001 !important;
             }
             .introjs-tooltip {
-                background: #151521 !important;
-                color: #ffffff !important;
-                border: 1px solid #a100ff !important;
-                box-shadow: 0 0 15px rgba(161, 0, 255, 0.4) !important;
-                border-radius: 8px !important;
+                color: #1d2547 !important;
                 font-family: inherit !important;
-                padding: 15px !important;
                 min-width: 250px !important;
+                padding: 15px !important;
+                border-radius: 18px !important;
+                background: linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.56)) !important;
+                border: 1px solid rgba(255, 255, 255, 0.85) !important;
+                -webkit-backdrop-filter: blur(24px) saturate(170%);
+                backdrop-filter: blur(24px) saturate(170%);
+                box-shadow: 0 28px 64px -16px rgba(20, 27, 56, 0.55),
+                            0 6px 16px -6px rgba(20, 27, 56, 0.25),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
             }
             .introjs-tooltiptext {
                 font-size: 13px !important;
                 line-height: 1.5 !important;
+                padding: 0 !important;
+            }
+            /* Help tour content: header, intro line, command rows, key caps */
+            .introjs-tooltip.axi-tour-tip {
+                min-width: 320px !important;
+                max-width: 400px !important;
+                padding: 18px 18px 14px !important;
+            }
+            .axi-tour-head {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding-bottom: 10px;
+                margin-bottom: 10px;
+                border-bottom: 1px solid rgba(29, 37, 71, 0.1);
+            }
+            .axi-tour-icon {
+                flex: none;
+                width: 32px;
+                height: 32px;
+                line-height: 32px;
+                text-align: center;
+                font-size: 19px;
+                color: #2563eb;
+                background: rgba(37, 99, 235, 0.12);
+                border: 1px solid rgba(37, 99, 235, 0.22);
+                border-radius: 10px;
+            }
+            .axi-tour-title {
+                font-size: 15px;
+                font-weight: 700;
+                line-height: 1.3;
+                color: #1d2547;
+            }
+            .axi-tour-body {
+                font-size: 12.5px;
+                line-height: 1.6;
+                color: #46506f;
+            }
+            .axi-tour-body p {
+                margin: 0 0 8px;
+            }
+            .axi-tour-row {
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                padding: 7px 0;
+                border-top: 1px solid rgba(29, 37, 71, 0.07);
+            }
+            .axi-tour-row:first-of-type {
+                border-top: 0;
+            }
+            .axi-tour-body code {
+                align-self: flex-start;
+                padding: 2px 8px;
+                font-size: 12px;
+                color: #1d4ed8;
+                background: rgba(255, 255, 255, 0.7);
+                border: 1px solid rgba(37, 99, 235, 0.25);
+                border-radius: 7px;
+                white-space: normal;
+            }
+            .axi-tour-body kbd {
+                padding: 1px 6px;
+                font-size: 11.5px;
+                color: #1d2547;
+                background: rgba(255, 255, 255, 0.85);
+                border: 1px solid rgba(29, 37, 71, 0.2);
+                border-bottom-width: 2px;
+                border-radius: 5px;
+            }
+            .axi-tour-note {
+                margin-top: 8px;
+                padding: 8px 10px;
+                font-size: 12px;
+                color: #7a4a05;
+                background: rgba(245, 158, 11, 0.14);
+                border-left: 3px solid #f59e0b;
+                border-radius: 8px;
             }
             .introjs-arrow.bottom {
-                border-top-color: #a100ff !important;
+                border-top-color: rgba(255, 255, 255, 0.85) !important;
             }
             .introjs-arrow.top {
-                border-bottom-color: #a100ff !important;
+                border-bottom-color: rgba(255, 255, 255, 0.85) !important;
             }
             .introjs-arrow.left {
-                border-right-color: #a100ff !important;
+                border-right-color: rgba(255, 255, 255, 0.85) !important;
             }
             .introjs-arrow.right {
-                border-left-color: #a100ff !important;
+                border-left-color: rgba(255, 255, 255, 0.85) !important;
             }
+            /* Back / Skip are quiet; Next / Done is the one solid button */
             .introjs-button {
-                background: #a100ff !important;
-                color: #ffffff !important;
-                border: none !important;
+                background: rgba(255, 255, 255, 0.6) !important;
+                color: #1d2547 !important;
+                border: 1px solid rgba(29, 37, 71, 0.18) !important;
                 text-shadow: none !important;
-                border-radius: 4px !important;
+                border-radius: 10px !important;
                 font-weight: 600 !important;
-                transition: background 0.2s ease;
-                padding: 6px 12px !important;
+                transition: background 0.15s ease, border-color 0.15s ease;
+                padding: 6px 14px !important;
                 pointer-events: auto !important;
                 cursor: pointer !important;
+            }
+            .introjs-button.introjs-nextbutton,
+            .introjs-button.introjs-donebutton {
+                background: #1d2547 !important;
+                border-color: #1d2547 !important;
+                color: #ffffff !important;
             }
             .introjs-tooltipbuttons {
                 display: flex !important;
                 gap: 8px !important;
                 justify-content: flex-end !important;
+                border-top: 0 !important;
             }
             .introjs-button:hover {
-                background: #c34dff !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+                border-color: #2563eb !important;
+                color: #1d2547 !important;
+            }
+            .introjs-button.introjs-nextbutton:hover,
+            .introjs-button.introjs-donebutton:hover {
+                background: #2563eb !important;
+                border-color: #2563eb !important;
                 color: #ffffff !important;
             }
+            .introjs-button:focus-visible {
+                outline: 2px solid #2563eb !important;
+                outline-offset: 2px;
+            }
             .introjs-disabled {
-                background: #2e2e3e !important;
-                color: #7e7e8e !important;
+                background: transparent !important;
+                border-color: rgba(29, 37, 71, 0.1) !important;
+                color: #9aa3bd !important;
                 cursor: not-allowed !important;
             }
+            .introjs-bullets ul li a {
+                background: rgba(29, 37, 71, 0.25) !important;
+            }
             .introjs-bullets ul li a.active {
-                background: #a100ff !important;
+                background: #2563eb !important;
+                width: 16px !important;
+                border-radius: 4px !important;
             }
             .AXI-Sec.axi-tour-active .btn.introjs-showElement,
             .AXI-Sec.axi-tour-active #btnRefresh.introjs-showElement {
                 opacity: 1 !important;
             }
-            .introjs-bullets ul li a {
-                background: #5e5e6e !important;
+            @media (prefers-reduced-motion: no-preference) {
+                .introjs-tooltip {
+                    animation: axi-tour-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+                }
+                @keyframes axi-tour-in {
+                    from { opacity: 0; transform: translateY(6px) scale(0.98); }
+                    to { opacity: 1; transform: none; }
+                }
+            }
+            /* Browsers without backdrop-filter get an almost opaque card so text stays readable */
+            @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+                .introjs-tooltip {
+                    background: rgba(255, 255, 255, 0.97) !important;
+                }
             }
             @media (max-width: 768px) {
                 .introjs-tooltipReferenceLayer {
@@ -15443,7 +17668,7 @@ if (typeof document !== "undefined") {
                     margin: 0 !important;
                     box-sizing: border-box !important;
                     padding: 12px !important;
-                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(161, 0, 255, 0.4) !important;
+                    box-shadow: 0 -8px 32px rgba(20, 27, 56, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
                 }
                 .introjs-arrow {
                     display: none !important;
@@ -15472,37 +17697,79 @@ if (typeof document !== "undefined") {
         input.disabled = true;
         document.querySelector(".AXI-Sec")?.classList.add("axi-tour-active");
 
+        // One step = icon + title, then plain-language body. Markup is styled by the .axi-tour-* rules above.
+        const tourStep = (icon, title, bodyHtml) =>
+            `<div class="axi-tour-head"><span class="axi-tour-icon material-icons">${icon}</span><span class="axi-tour-title">${title}</span></div>` +
+            `<div class="axi-tour-body">${bodyHtml}</div>`;
+        // One command example: the command to type, then what it does
+        const tourRow = (code, text) => `<div class="axi-tour-row"><code>${code}</code><span>${text}</span></div>`;
+
         const tour = introJs();
         tour.setOptions({
+            tooltipClass: 'axi-tour-tip',
             steps: [
                 {
                     element: '#Axi-Searchinp',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">search</span></span><strong style="color: #a100ff;">Command Search &amp; Execution</strong></div><div style="font-size: 12px; line-height: 1.6;">command syntax:<br>• <code>&quot;Customer Form&quot; create</code> (Open forms)<br>• <code>&quot;Sales Order&quot; view &quot;SO-101&quot;</code> (View record)<br>• <code>&quot;Items&quot; edit quantity 50</code> (Modify records)<br><br>Or run system administration commands:<br>• <code>configure peg &lt;pegname&gt;</code>, <code>configure settings</code><br>• <code>sdk db console</code> (Access developer tools)<br><br>Press <strong>Enter</strong> to run the command.</div>',
+                    intro: tourStep('search', 'Type a command',
+                        '<p>Type what you want to do, pick a suggestion, then press <kbd>Enter</kbd>.</p>' +
+                        tourRow('&quot;Customer Form&quot; create', 'Open a form to add a new record') +
+                        tourRow('&quot;Sales Order&quot; view &quot;SO-101&quot;', 'Open a record to read it') +
+                        tourRow('&quot;Items&quot; edit quantity 50', 'Change a field on a record') +
+                        tourRow('configure peg &lt;pegname&gt;', 'Open an administration setting') +
+                        tourRow('sdk &quot;db console&quot;','Open a developer tool')),
+                    position: 'bottom'
+                },
+                {
+                    element: '#Axi-Searchinp',
+                    intro: tourStep('code', 'Open Developer Studio with source',
+                        '<p>Use the <code>source</code> command to open a form, report, page or data source in Developer Studio.</p>' +
+                        tourRow('&quot;Sales Order&quot; source', 'Open the form or report design') +
+                        tourRow('&quot;Monthly Sales&quot; source', 'Open a page or data source definition') +
+                        '<div class="axi-tour-note">Only users with developer access can use <code>source</code>. Everyone else sees a message that they have no access.</div>'),
                     position: 'bottom'
                 },
                 {
                     element: '#axiAddFavoriteBtn',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">bookmark_add</span></span><strong style="color: #a100ff;">Add to Favorites</strong></div><div style="font-size: 12px; line-height: 1.6;">Click this button to save the current command in the search box to your personal favorites card.<br>Name it as you like for quick reference later (excludes <code>run</code> commands).</div>',
+                    intro: tourStep('bookmark_add', 'Save a command as a favorite',
+                        '<p>Save the command in the box so you can run it again in one click. Give it a name you will recognize.</p>' +
+                        '<p>Commands that start with <code>run</code> cannot be saved.</p>'),
                     position: 'bottom'
                 },
                 {
                     element: '#axiViewFavoritesBtn',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">bookmarks</span></span><strong style="color: #a100ff;">View &amp; Search Favorites</strong></div><div style="font-size: 12px; line-height: 1.6;">Click this button to open the sliding Favorites card.<br>Use the new built-in filter field to search and execute your bookmarks instantly.</div>',
+                    intro: tourStep('bookmarks', 'Find your favorites',
+                        '<p>Open your saved commands. Type in the filter box to narrow the list, then select one to run it.</p>'),
                     position: 'bottom'
                 },
                 {
                     element: '#axiSuggestions',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">list</span></span><strong style="color: #a100ff;">Smart Autocomplete Suggestions</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Target-First Matching:</strong> Search results list target forms, views, and commands first.<br>• <strong>Space Auto-Quoting:</strong> Pressing space automatically wraps multi-word targets in quotes.<br>• <strong>Capability-Constrained Actions:</strong> Available actions (<code>create</code>, <code>edit</code>, <code>view</code>) are limited based on target type capability (TStructs allow all; IViews, Pages, and ADS allow <code>view</code> only).<br>• <strong>Flexible Navigation:</strong> Select <strong>Go</strong> or <strong>Pop-Up</strong> from suggestion options.</div>',
+                    intro: tourStep('list', 'Suggestions as you type',
+                        '<p>Forms, reports and commands that match what you typed appear here.</p>' +
+                        tourRow('Quotes', 'Press <kbd>Space</kbd> after a name with several words and quotes are added for you') +
+                        tourRow('Actions', 'The actions offered depend on the target. Forms allow create, edit and view. Reports, pages and data sources allow view only.') +
+                        tourRow('Go or Pop-Up', 'Choose to open the result here or in a pop-up')),
                     position: 'bottom'
                 },
                 {
                     element: '#btnRefresh',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">refresh</span></span><strong style="color: #a100ff;">Force Reload Metadata</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Force Reload:</strong> Click to immediately reload structural metadata, active shell views, and database commands.</div>',
+                    intro: tourStep('refresh', 'Reload the lists',
+                        '<p>Select this when something you just created is missing from the suggestions. It reloads forms, reports and commands.</p>'),
+                    position: 'bottom'
+                },
+                {
+                    element: '#axiSettingsBtn',
+                    intro: tourStep('settings', 'Choose how many records load',
+                        '<p>Set how many records each list loads at a time. Lists with more records load the rest as you scroll.</p>' +
+                        '<p>Pick a number from 100 to 5000, then select <strong>Save</strong>. The lists reload to use the new number.</p>' +
+                        '<div class="axi-tour-note">A smaller number loads faster. A larger number shows more records at once.</div>'),
                     position: 'bottom'
                 },
                 {
                     element: '.searchwrap-AXI',
-                    intro: '<div class="d-flex align-items-center gap-2 mb-2"><span class="d-flex align-items-center justify-content-center" style="background: #a100ff; border-radius: 50%; padding: 4px; width: 26px; height: 26px;"><span class="material-icons" style="font-size: 16px; color: #ffffff;">keyboard</span></span><strong style="color: #a100ff;">Shortcuts &amp; Quick Exit</strong></div><div style="font-size: 12px; line-height: 1.6;">• <strong>Ctrl + Enter:</strong> Execute the default <strong>Go</strong> option (opens target in current frame).<br>• <strong>Ctrl + Shift + Enter:</strong> Execute in a new <strong>Pop-Up</strong> window/modal.<br>• <strong>Esc:</strong> Closes the command palette instantly, or click anywhere outside to exit.</div>',
+                    intro: tourStep('keyboard', 'Shortcuts',
+                        tourRow('<kbd>Ctrl</kbd> + <kbd>Enter</kbd>', 'Run and open the result in this window') +
+                        tourRow('<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd>', 'Run and open the result in a pop-up') +
+                        tourRow('<kbd>Esc</kbd>', 'Close the command box. Clicking outside also closes it.')),
                     position: 'bottom'
                 }
             ],

@@ -371,5 +371,4 @@ public class Constants
     public const string AX_PERMISSIONS = "AxTstPermissions";
 
     public const string SQL_GET_AXUSERPWDPOLICY = "select pwdminchar, pwdmaxchar, pwdalphanum, pwdcapchar, pwdsmallchar, pwdnumchar, pwdsplchar, pwdencrypt from AXPDEF_AXPERTPROPS";
-    public const string SQL_GET_PWDCPWD = "select password from axusers where username='$USERNAME$'";
 }

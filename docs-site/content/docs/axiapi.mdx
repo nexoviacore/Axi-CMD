@@ -1,0 +1,120 @@
+---
+title: AxiApi
+description: The ASP.NET Core API behind the palette - endpoints, layers and current limits.
+---
+
+AxiApi (`AxiApi/`) is an ASP.NET Core (.NET 8) API. In the ARM environment it is hosted as an IIS application (application pool with **No Managed Code**). Connection settings come from `appsettings.ini` in the parent microservices folder.
+
+## Layers
+
+```text
+AxiController
+  └─ Services      CommandConfigService, UserFavouritesService, UserSettingsService,
+                   KeyfieldService, GrammarService, GrammarBootstrapService
+       └─ Repositories   (data access through AxExtend and parameterised SQL)
+            └─ Database  (PostgreSQL / Oracle)
+```
+
+All endpoints are versioned under `/api/v1/Axi`.
+
+## Endpoints
+
+These are the routes declared in `AxiController.cs`.
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `command-config` | The command configuration (`appname`, `username`, `forceRefresh`). |
+| `GET` | `axi_get` | The command grammar for autocomplete (`view`, `appname`, `forceRefresh`). |
+| `GET` | `user-favourites` | A user's favourites (`username`, `appname`). |
+| `POST` | `user-favourites` | Add or toggle a favourite (`appname`). |
+| `PATCH` | `user-favourites/{favouritesId}` | Rename a favourite (`username`, `appname`). |
+| `GET` | `user-settings` | A user's settings as key/value pairs (`username`, `appname`). |
+| `POST` | `user-settings/{settingKey}` | Save one setting (`appname`; `username` and `value` in the body). |
+| `POST` | `setkeyfield` | Set the key field of a form. |
+
+`user-settings` returns `400` when `username` or `appname` is missing.
+
+### Example: set a key field
+
+```http
+POST /api/v1/Axi/setkeyfield
+Content-Type: application/json
+
+{ "appName": "axpbase", "transId": "axusr", "keyField": "username", "username": "admin" }
+```
+
+It writes to `axp_tstructprops` with a parameterised upsert.
+
+### Example: add a favourite
+
+```http
+POST /api/v1/Axi/user-favourites?appname=axpbase
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "commandText": "My User List",
+  "originalCommandText": "configure user listing",
+  "action": "add",
+  "favOrder": 0,
+  "targetURL": "../aspx/iview.aspx?ivname=axusers"
+}
+```
+
+## Redis cache
+
+AxiApi caches through Redis, but it does not open Redis itself. The services use the `AxExtend` component (`IAxExtend`), which is registered in `Program.cs` with `AddScoped<IAxExtend, AxExtend.AxExtend>()` and manages the connection for each application:
+
+```csharp
+var connected = await _axExtend.OpenRedisConnectionAsync(appname);
+if (connected)
+{
+    var redis = await _axExtend.GetRedis();   // IRedisCacheHelper: StringGetAsync, StringSetAsync, KeyDeleteAsync ...
+}
+```
+
+`AxExtend` manages the Redis connection for each application name, so the services never create or configure a Redis client.
+
+The earlier design, with a direct `IConnectionMultiplexer` and an `IRedisService` registered in `Program.cs`, is commented out (for example in `GrammarService`). It is kept as comments and is not used. The `StackExchange.Redis` package is still referenced because the services use its types (`RedisKey`, `RedisException`) together with the helper that `AxExtend` returns.
+
+### What is cached
+
+| Data | Cache key (from `Keygenerator.GenerateCacheKey`) | Refreshed by |
+| --- | --- | --- |
+| Command configuration | `command_config`, per application and user | `forceRefresh=true` deletes the key. |
+| Command grammar | `commands`, per application, stored with an expiry value of 7200 | `forceRefresh=true` deletes the key. |
+| User favourites | `userfavourites`, per application and user | The key is deleted when a favourite is added, changed or removed. |
+
+User settings and the key-field endpoint do not use Redis.
+
+### Cache misses and Redis failures
+
+| Data | Situation | Behaviour |
+| --- | --- | --- |
+| Command configuration, command grammar | Not in the cache, or a Redis call fails | Reads the database. A failing Redis call is logged as a warning. |
+| User favourites | Redis is connected but the key is not in the cache | Reads the database, then stores the result in Redis. |
+| User favourites | Redis is not connected | **Fails.** `GET user-favourites` throws `RedisCacheConnectionException` ("Unable to connect Redis!"), which the exception handler returns as `400 Bad Request`. The database is not read. |
+| User favourites | The database was read but writing the result to Redis fails | **Fails** with the same exception, even though the data was loaded. |
+
+<Callout type="warn" title="Favourites need a Redis connection">
+  The database fallback for favourites only covers a cache miss. If the application's Redis connection is not
+  available, the favourites list cannot be loaded, although the rest of the palette still works. Configuration and
+  grammar keep working without Redis.
+</Callout>
+
+## Current state and limits
+
+These are facts about the code today, not recommendations.
+
+- **No authentication in the app.** No controller action has `[Authorize]`. The caller identifies the user with the `username` it sends.
+- **CORS allows any origin, header and method** (`AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()`).
+- **No rate limiting.** No rate-limiting middleware or package is configured. Any limiting would come from IIS, a proxy or a gateway in front.
+- **Redis is used, through `AxExtend`.** See [Redis cache](#redis-cache). Favourites need a Redis connection (the database is only read on a cache miss); configuration and grammar fall back to the database without it.
+- **Pipeline.** `UseExceptionHandler`, `UseHttpsRedirection`, `UseCors`, `UseAuthorization`, `MapControllers`. Swagger is added in development.
+
+<Callout type="info" title="Under consideration">
+  Per-IP rate limiting with the built-in .NET 8 middleware, with a stricter policy for the POST routes, is a candidate
+  change. It needs a decision about proxies and forwarded headers first.
+</Callout>
+
+More detail, including the table schemas, is in `AxiApi/README.md`.

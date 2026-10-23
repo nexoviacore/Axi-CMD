@@ -1427,12 +1427,6 @@ public partial class ParamsTstruct : System.Web.UI.Page
         tstTabScript = ClearStringBuilders(tstTabScript);
         if (objFromCache)
         {
-            if (strObj.structRes == "")
-            {
-                FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
-                string thisStructXML = fObj.StringFromRedis(util.GetRedisServerkey(Constants.REDISTSTRUCTXML, transId));
-                strObj.structRes = thisStructXML;
-            }
             tstTabScript.Append(strObj.GenerateTabScript(strObj));
             cacheMgr.GetStructureHTML(transId, AxRole, sid, language);
             tstHTML.Append(cacheMgr.StructureHtml);

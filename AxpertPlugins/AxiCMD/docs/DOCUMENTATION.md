@@ -35,7 +35,7 @@ The Axi Command Palette is designed as a modular, high-performance command-drive
 
 ```mermaid
 graph TD
-    User([User in Axpert Shell]) <-->|Ctrl + Space / Shortcuts| Frontend[Frontend Shell UI: MainHomeConfigTemplate.html]
+    User([User in Axpert Shell]) <-->|Ctrl + Space / Shortcuts| Frontend[Frontend Shell UI: AxiCMDMainPage.html]
     Frontend <-->|HTTP REST Requests| Backend[Backend Web API: AxiCMDApi]
     Backend <-->|ADO.NET / EF Core| DB[(Database: Oracle / PostgreSQL)]
     subgraph Frontend Components
@@ -46,10 +46,10 @@ graph TD
 ```
 
 ### 1. Frontend Layer
-*   **MainHomeConfigTemplate.html** ([aspx/MainHomeConfigTemplate.html](../../../aspx/MainHomeConfigTemplate.html)): The product main page template. It contains the command line markup (`DvAxiCMD`) and loads `axicmdmain.js` and `axicmdmain.css` only when the command line is enabled. The former separate template, `AxiCMDMainPage.html`, no longer exists.
-*   **axicmdmain.js** ([axicmdmain.js](../HTMLPages/js/axicmdmain.js)): Contains the main autocomplete suggestion logic, command parser, state machine, and API client.
-*   **Smartview.html** ([Smartview.html](../HTMLPages/Smartview.html)): Handles interactive record list views, filtering, utility actions, and multi-select deletion.
-*   **PopupContainer.html** ([PopupContainer.html](../HTMLPages/PopupContainer.html)): Provides a tabbed interface to manage multiple open transactions in parallel. All of its assets (Bootstrap and icon styles, jQuery, jQuery UI, html2canvas) are served locally; it makes no CDN requests.
+*   **AxiCMDMainPage.html** ([AxiCMDMainPage.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/AxiCMDMainPage.html)): Integrates directly within Axpert as the master template.
+*   **axicmdmain.js** ([axicmdmain.js](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js)): Contains the main autocomplete suggestion logic, command parser, state machine, and API client.
+*   **Smartview.html** ([Smartview.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/Smartview.html)): Handles interactive record list views, filtering, utility actions, and multi-select deletion.
+*   **PopupContainer.html** ([PopupContainer.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/PopupContainer.html)): Provides a tabbed interface to manage multiple open transactions in parallel.
 
 
 ### 2. Backend API Layer (`AxiCMDApi`)
@@ -66,7 +66,7 @@ graph TD
 
 ## 🗄 Database Schema & Objects
 
-The database schema scripts are located under the [Structures](../Structures/) directory.
+The database schema scripts are located under the [Structures](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/) directory.
 
 ### Tables Catalog
 
@@ -83,29 +83,26 @@ The following tables define the command structure and properties:
 ### Stored Procedures & Functions (PostgreSQL vs. Oracle)
 
 Depending on the database engine, the structures differ slightly to accommodate platform features:
-*   **PostgreSQL Scripts:** [Structures/Postgre/Scripts/](../Structures/Postgre/Scripts/)
-*   **Oracle Scripts:** [Structures/Oracle/Scripts/](../Structures/Oracle/Scripts/)
-
-Keep the two sets in sync: any change to a PostgreSQL script needs the matching change in the Oracle script, and the other way round.
+*   **PostgreSQL Scripts:** [Structures/Postgre/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/)
+*   **Oracle Scripts:** [Structures/Oracle/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Oracle/Scripts/)
 
 #### Core Functions:
 1.  **`fn_axi_getstructures_meta`**
-    *   **PostgreSQL:** [fn_axi_getstructures_meta](../Structures/Postgre/Scripts/axi_functions.sql)
+    *   **PostgreSQL:** [fn_axi_getstructures_meta](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/axi_functions.sql#L1079-L1180)
     *   **Oracle:** Returns a pipelined cursor table type `AXI_GETSTRUCTURES_META_tbl`.
     *   **Purpose:** Aggregates all accessible Tstructs, Iviews, Pages, and Axpert Data Sources (ADS) for the logged-in user. Filters by user responsibility permissions.
 2.  **`fn_axi_getstructs_obj`**
-    *   **PostgreSQL:** [fn_axi_getstructs_obj](../Structures/Postgre/Scripts/axi_functions.sql)
+    *   **PostgreSQL:** [fn_axi_getstructs_obj](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/axi_functions.sql#L1351)
     *   **Oracle:** Returns a pipelined type `axi_getstructs_obj_tbl`.
-    *   **Parameters (10):** `pcmd`, `pusername`, `puserrole`, `ptransid`, `pselectedfield`, `pdimension`, `ppermission`, `pkeyfield`, `pprimarytable`, `pglobalvars`. The `axi_getstructsdata` ADS row passes them as `:param1` to `:param10`, in this order.
-    *   **Purpose:** Fetches records from a target Tstruct base table dynamically based on a search value. Evaluates row-level dimension filters and user read-write permissions. When no field is selected (`pselectedfield = '0'`) it returns the record values first (newest first), followed by the field list (`isfield = 't'`).
+    *   **Purpose:** Fetches records from a target Tstruct base table dynamically based on a search value. Evaluates row-level dimension filters and user read-write permissions.
 3.  **`fn_permissions_getpermission`**
-    *   **PostgreSQL:** [fn_permissions_getpermission](../Structures/Postgre/Scripts/axi_functions.sql)
+    *   **PostgreSQL:** [fn_permissions_getpermission](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/axi_functions.sql#L858)
     *   **Purpose:** Validates whether the logged-in user is authorized to perform Create, View, or Edit operations on a specific transaction (transid).
 4.  **`fn_axi_getkeyvalueswithfieldnameslist`**
-    *   **PostgreSQL:** [fn_axi_getkeyvalueswithfieldnameslist](../Structures/Postgre/Scripts/axi_functions.sql)
+    *   **PostgreSQL:** [fn_axi_getkeyvalueswithfieldnameslist](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/axi_functions.sql#L154)
     *   **Purpose:** Dynamically extracts the primary key values and available column descriptors for a given transaction structure.
 5.  **`axi_firesql_v2`**
-    *   **PostgreSQL:** [axi_firesql_v2](../Structures/Postgre/Scripts/axi_functions.sql)
+    *   **PostgreSQL:** [axi_firesql_v2](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/axi_functions.sql#L614)
     *   **Purpose:** A secure SQL executor that allows parametrized queries to prevent SQL injection vulnerabilities.
 
 > [!NOTE]
@@ -143,14 +140,13 @@ The .NET 8 backend API acts as the bridge. It provides three key endpoints consu
 ## 🎨 Frontend Components & User Interface
 
 The frontend code leverages existing Axpert UI style libraries and custom CSS extensions:
-1.  **MainHomeConfigTemplate.html** ([aspx/MainHomeConfigTemplate.html](../../../aspx/MainHomeConfigTemplate.html)):
-    *   Hosts the search container `<div class="AXI-Sec">` which floats at the top of the interface, inside the `DvAxiCMD` block.
-    *   The `DvAxiCMD` block is hidden (`d-none`) by default. It is shown, and `axicmdmain.js` / `axicmdmain.css` are loaded, only when the `axicmdEnabled` flag is true (see [Enabling the Command Line](#step-3-enable-the-command-line)).
+1.  **AxiCMDMainPage.html** ([AxiCMDMainPage.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/AxiCMDMainPage.html)):
+    *   Hosts the search container `<div class="AXI-Sec">` which floats at the top of the interface.
     *   Defines modal overlays for confirming deletion of favorites, custom alerts, and dynamic loading states.
-2.  **axicmdmain.js** ([axicmdmain.js](../HTMLPages/js/axicmdmain.js)):
+2.  **axicmdmain.js** ([axicmdmain.js](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js)):
     *   Maintains autocomplete logic. It tokenizes user inputs and maps them to the matching command group (e.g., `Create`, `Edit`, `View`, `DevTools`).
     *   Appends dynamic parameter helpers in `axiHint` to instruct users on what parameters (like field values or search strings) are expected next.
-3.  **axicmdmain.css** ([axicmdmain.css](../HTMLPages/css/axicmdmain.css)):
+3.  **axicmdmain.css** ([axicmdmain.css](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/css/axicmdmain.css)):
     *   Provides clean aesthetics: rounded boundaries, transparent inputs, custom action overlays, and scrollable recommendation list containers.
 
 ---
@@ -221,30 +217,18 @@ Follow this step-by-step pipeline to host and configure the plugin:
 3.  Ensure source files populate correctly under `D:\Axpert11.4\AxpertWebLatest\AxpertPlugins\AxiCMD\`.
 
 ### Step 2: Front-End Registration
-There is **no separate template to copy**. The command line markup is part of the product main page template, `aspx/MainHomeConfigTemplate.html`, which ships with the product.
+1.  Copy [AxiCMDMainPage.html](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/HTMLPages/AxiCMDMainPage.html) from `HTMLPages/` directory.
+2.  Paste it into the `D:\Axpert11.4\AxpertWebLatest\CustomPages\` folder.
+3.  **Warning:** Do not change the filename, as routing relies on `AxiCMDMainPage.html`.
 
-> [!IMPORTANT]
-> The files `AxiCMDMainPage.html` and `AxiCMDMainTemplate.html` must **not** exist in any of these locations. Delete old copies when you upgrade from an earlier version:
-> *   `AxpertPlugins/AxiCMD/` (in git)
-> *   `AxpertWeb/AxpertPlugins/AxiCMD/HTMLPages/` (on the server)
-> *   `AxpertWeb/CustomPages/` (on the server)
-
-### Step 3: Enable the Command Line
-The command line is **hidden by default**. The MainNew page sets a flag named `axicmdEnabled`, and the main page template shows or hides the command line based on it. Control the flag with a Developer Option:
-
-| Setting | Value |
-| :--- | :--- |
-| Property | **Axi Command Line Enable** |
-| Property Code | `General` |
-| Value | `true` / `false` (default `false`) |
-| User Role | All roles, or a single role |
-
+### Step 3: Enable Template inside Axpert Options
 1.  Log in to the **AxpertWeb** interface as administrator.
-2.  Navigate to **Dev Options** and set **Axi Command Line Enable** to `true` for the roles that should see the command line.
-3.  Reload the application. Set the value back to `false` to hide the command line again, for example while testing.
+2.  Navigate to **Dev Options** -> **Application Template**.
+3.  Choose `AxiCMDMainPage.html` from the dropdown list.
+4.  *If missing from the dropdown:* Go to **Configuration Property List** -> edit **Application Template** -> add `AxiCMDMainPage.html` to the Values collection.
 
 ### Step 4: IIS Backend Setup (`AxiCMDApi`)
-1.  Copy the [AxiCMDApi](../PluginScripts/AxiCMDApi) folder.
+1.  Copy the [AxiCMDApi](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/PluginScripts/AxiCMDApi) folder.
 2.  Paste it into the **Arm microservices** publication directory on your target IIS server.
 3.  Configure a new Application Pool in IIS Manager:
     *   **Name:** `AxiCMDApi`
@@ -256,22 +240,19 @@ The command line is **hidden by default**. The MainNew page sets a flag named `a
 ### Step 5: Database Scripts Execution
 Execute the appropriate scripts based on your target database:
 
-*   **PostgreSQL:** Run the scripts inside [Structures/Postgre/Scripts/](../Structures/Postgre/Scripts/):
+*   **PostgreSQL:** Run the scripts inside [Structures/Postgre/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Postgre/Scripts/):
     1.  `axi_axdirectsql_tables.sql`
     2.  `axi_command_tables.sql`
     3.  `axi_command_config.sql`
     4.  `axi_dependent_tables.sql`
     5.  `axi_functions.sql`
 
-*   **Oracle:** Run the scripts inside [Structures/Oracle/Scripts/](../Structures/Oracle/Scripts/):
+*   **Oracle:** Run the scripts inside [Structures/Oracle/Scripts/](file:///D:/Axpert11.4/AxpertWebLatest/AxpertPlugins/AxiCMD/Structures/Oracle/Scripts/):
     1.  `axi_axdirectsql_tables.sql`
     2.  `axi_command_tables.sql`
     3.  `axi_command_config.sql`
     4.  `axi_dependent_tables.sql`
     5.  `axi_functions.sql`
-
-> [!NOTE]
-> The Oracle `axi_functions.sql` script drops functions before the types they use (for example `fn_axi_getstructures_meta` before `AXI_GETSTRUCTURES_META_tbl`), so it can be re-run safely. If a re-run still fails with `ORA-02303: cannot drop or replace a type with type or table dependents`, find what depends on the type with `SELECT name, type, referenced_name FROM user_dependencies WHERE referenced_name IN (...)`, drop those objects first, and run the script again.
 
 ---
 
@@ -392,39 +373,14 @@ VALUES
 ## 🛠 Troubleshooting & Maintenance
 
 *   **Command Palette is not visible:**
-    *   The command line is hidden by default. Check that the **Axi Command Line Enable** Developer Option is set to `true` for the user's role.
-    *   Confirm that `AxiCMDMainPage.html` and `AxiCMDMainTemplate.html` do not exist in `AxpertPlugins/AxiCMD/`, `AxpertWeb/AxpertPlugins/AxiCMD/HTMLPages/` or `AxpertWeb/CustomPages/`.
-    *   Make sure the search input (`Axi-Searchinp`) is present in the rendered `MainHomeConfigTemplate.html`, and that `axicmdmain.js` and `axicmdmain.css` load without errors in the browser's Network tab.
-*   **A script change does not take effect:**
-    *   The browser caches `axicmdmain.js` and `axicmdmain.css`. After changing either file, increase the `?v=` number on their `<script>` / `<link>` tags in `aspx/MainHomeConfigTemplate.html`, then reload with Ctrl + F5.
+    *   Ensure the web application has registered `AxiCMDMainPage.html` as the Application Template in Dev Options.
+    *   Check if the console logs show `Axi Input not ready yet... waiting`. If so, ensure that the search input ID (`Axi-Searchinp`) is present in the rendered HTML.
 *   **Search suggestions are empty:**
     *   Verify the backend API is running. Open the IIS application URL in your browser (e.g., `http://<server>/AxiCMDApi/api/v1/Axi/axi_get`) and verify it responds.
     *   Check the API's log file located in `AxiCMDApi/logs/log.txt` for database connection errors.
     *   Verify that you executed the database scripts (specifically `axi_commands`, `axi_command_prompts`, and `axi_command_config`) and the tables are populated.
 *   **Data permissions / Row filtering issue:**
     *   Axi evaluates permissions via `fn_permissions_getpermission`. Verify that the user's role responsibilities are correctly assigned in Axpert's standard user settings pages.
-
-## 🚀 Release Notes (v1.0.0, October 7, 2026)
-
-### QA Instructions
-1.  After installing **AxiCMD v1.0.0**, a new Developer Option named **Axi Command Line Enable** is available.
-2.  Use it to enable or disable the Axi command line during testing.
-
-### Enhancements
-1.  Renamed **Axi_Beta** to **AxiCMD**, and **AxiApi_Beta** to **AxiCMDApi**.
-2.  Moved the AxiCMD HTML into the product main page template, `MainHomeConfigTemplate.html`, and removed the old command line template (`AxiCMDMainPage.html`).
-3.  **Command line enablement:** a flag named `axicmdEnabled` was added to the MainNew page. The command line `<div>` is shown or hidden in the main page template according to this flag, and is hidden by default. Developer Option: property **Axi Command Line Enable**, property code `General`, value `true` / `false` (default `false`), for all roles or a single role.
-4.  `PopupContainer.html` now serves Bootstrap, the Material Icons styles, jQuery, jQuery UI and html2canvas locally. It no longer loads anything from a CDN.
-5.  Removed leftover debug code and commented-out `console` statements from `axicmdmain.js`.
-6.  **Note to QA:** make sure `AxiCMDMainTemplate.html` does not exist in `AxpertPlugins/AxiCMD` in git, nor on the server in `AxpertWeb/AxpertPlugins/AxiCMD/HTMLPages/` and `AxpertWeb/CustomPages/`.
-
-### Bug Fixes
-*   **TKT-1301:** ERPDEMO command line issues.
-*   **TKT-1212:** the command line became unresponsive in erplive and did not accept further input.
-*   **TKT-1214:** the input field lost focus and became unresponsive after pressing **Backspace**.
-*   **Oracle scripts:** `axi_functions.sql` now drops `fn_axi_getstructures_meta` before dropping the type it returns, which avoids `ORA-02303` on re-runs.
-
----
 
 ## 🚀 Release Notes & Recent Bug Fixes (August 14, 2026)
 

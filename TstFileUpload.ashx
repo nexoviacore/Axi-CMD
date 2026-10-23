@@ -138,7 +138,7 @@ public class TstFileUpload : IHttpHandler, IRequiresSessionState
                             context.Response.Write("error:Too many characters in the filename");
                             return;
                         }
-                        else if (FileExt != string.Empty && FileExt.Contains(httpAttFile.FileName.Substring(thisFileName.LastIndexOf(".") + 1).ToLower()) == false  && ((jsonVideos == "" || jsonVideos.Contains(httpAttFile.FileName.Substring(thisFileName.LastIndexOf(".")).ToLower()) == false) && (jsonSpecificFiles == "" || jsonSpecificFiles.Contains(httpAttFile.FileName.Substring(thisFileName.LastIndexOf(".")).ToLower()) == false)))
+                        else if (FileExt != string.Empty && FileExt.Contains(httpAttFile.FileName.Substring(thisFileName.LastIndexOf(".") + 1).ToLower()) == false)
                         {
                             context.Response.Write("error:Selected file type not allowed in this form as per the setting.");
                             return;

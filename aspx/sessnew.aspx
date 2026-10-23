@@ -132,7 +132,7 @@
             instanceName = instanceName.replace(/[^a-zA-Z0-9_\-\/]/g, "");
 
         localStorage.removeItem("axpertLogoutLock-" + appSessUrl);
-        clearLocalStorage(['projInfo-', 'versionInfo-', 'langInfo-', 'hybridGUID-', 'hybridDeviceId-', 'compressedMode-', 'duplicateUser-', 'instanceName-', 'customGlobalStylesExist-', 'axGlobalThemeStyle-', 'axThemeFldr-', 'tstDDFVal♠', 'current_tabsignin-', 'axKeepMeBrowserId-'], true);
+        clearLocalStorage(['projInfo-', 'versionInfo-', 'langInfo-', 'hybridGUID-', 'hybridDeviceId-', 'compressedMode-', 'duplicateUser-', 'instanceName-', 'customGlobalStylesExist-', 'axGlobalThemeStyle-', 'axThemeFldr-', 'tstDDFVal♠','current_tabsignin-'], true);
         var diFileInfo = '<%=strFileinfo%>';
         var showAlertMsgText = '<%=showAlertMsgText%>';
         $(document).ready(function () {
