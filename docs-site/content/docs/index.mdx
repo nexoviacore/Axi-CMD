@@ -1,0 +1,54 @@
+---
+title: AxiCMD Documentation
+description: Developer documentation for the AxiCMD command palette of Axpert Web.
+---
+
+AxiCMD is the command palette of the Axpert Web shell. Users type commands such as `view`, `edit`, `create`, `configure` or `sdk` and get ranked, token-by-token suggestions. Selecting a suggestion opens the form, report or builder in the shell.
+
+This site documents how AxiCMD works, for the people who build and maintain it.
+
+<Callout type="info" title="Source of truth">
+  The code is the source of truth. Each page names the file it describes. When a page and the code disagree, the code
+  wins; please fix the page.
+</Callout>
+
+## Where to start
+
+<Cards>
+  <Card title="Architecture" href="/docs/architecture">
+    The pieces, and how a request travels from the palette to the database and back.
+  </Card>
+  <Card title="Commands" href="/docs/commands">
+    Commands are data, not code: how the grammar and the prompt options are stored.
+  </Card>
+  <Card title="Data loading" href="/docs/data-loading">
+    ADS, AxList, paging, search, and the three cache layers.
+  </Card>
+  <Card title="View filters" href="/docs/view-filters">
+    How a form's view filter from `axvarcore` limits the records of `view` and `edit`.
+  </Card>
+  <Card title="Database" href="/docs/database">
+    Tables, the ADS row, the SQL functions, and keeping Postgres and Oracle in sync.
+  </Card>
+  <Card title="AxiApi" href="/docs/axiapi">
+    The ASP.NET Core API for command configuration, favourites and settings.
+  </Card>
+  <Card title="Operations" href="/docs/operations">
+    Cache clearing, version bumps, and a troubleshooting checklist.
+  </Card>
+  <Card title="Contributing" href="/docs/contributing">
+    Commands, conventions, tests and backups.
+  </Card>
+</Cards>
+
+## The repository at a glance
+
+| Path | What it holds |
+| --- | --- |
+| `AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js` | The engine: one large script that parses tokens, resolves entities, ranks suggestions and runs commands. |
+| `AxpertPlugins/AxiCMD/Structures/Postgre/Scripts` | Database scripts for PostgreSQL. |
+| `AxpertPlugins/AxiCMD/Structures/Oracle/Scripts` | The same scripts for Oracle. Keep both sets in sync. |
+| `AxiApi/` | ASP.NET Core (.NET 8) API for command configuration, favourites and user settings. |
+| `aspx/mainHomeConfigTemplate.html` | The shell page that hosts the palette and loads `axicmdmain.js?v=N`. |
+| `docs/` | ADRs, specs and the refactor plan written alongside the code. |
+| `ThirdParty/` | Pinned vendor code. Do not edit. |

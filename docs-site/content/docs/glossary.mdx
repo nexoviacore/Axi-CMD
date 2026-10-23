@@ -1,0 +1,37 @@
+---
+title: Glossary
+description: Terms used in AxiCMD and Axpert Web.
+---
+
+## Axpert
+
+| Term | Meaning |
+| --- | --- |
+| **Tstruct** | A data-entry form defined as metadata. Opens at `tstruct.aspx?transid=<name>`. |
+| **IView** | A report or list view with filters. Opens at `iview.aspx?ivname=<name>`. |
+| **Transid** | The short id of a Tstruct, for example `cityf`. |
+| **ADS** | Axpert Data Source: a named query in the `axdirectsql` table that pages call with parameters. |
+| **AxList** | The ARM service that runs an ADS and applies paging and filters. |
+| **ARM** | The Axpert microservices environment that hosts AxList and AxiApi. |
+| **Developer Studio** | The browser designer for forms (`tstreact`) and reports (`ivreact`). |
+| **`axvarcore`** | The table of application variables, including form view filters named `<transid>_filter`. |
+
+## AxiCMD
+
+| Term | Meaning |
+| --- | --- |
+| **`AXI-Sec`** | The sticky container in the shell that holds the palette input (`#Axi-Searchinp`), its buttons and the suggestion dropdown (`#axiMegaDropdown`). |
+| **`mainHomeConfigTemplate`** | The shell template, `aspx/mainHomeConfigTemplate.html`, that renders the layout and the palette. |
+| **Dynamic command configuration** | The database-driven table (`axi_command_config`) that maps command verbs and options to forms, reports, URLs and parameters. |
+| **SDK commands** | Developer commands under `sdk` that open builders: `sdk tstruct`, `sdk iview`, `sdk page`, `sdk axpert data sources`. |
+| **"Create New" option** | A pinned suggestion shown for SDK builder commands to create a new structure without picking an existing one. |
+| **TStruct Builder** | The Developer Studio form builder (`tstreact`). |
+| **IView Builder** | The Developer Studio report builder (`ivreact`). |
+| **Page Designer** | The configuration form for pages (`tstruct.aspx?transid=sect`). |
+| **ADS Builder** | The form for Axpert Data Source SQL (`tstruct.aspx?transid=b_sql`). |
+| **`axi_getstructsdata`** | The ADS that returns the record rows and field rows of a form, through `fn_axi_getstructs_obj`. |
+| **`hiddenLoader`** | A hidden iframe the engine uses to run command dispatches and popup requests in the background. |
+| **Lazy autocomplete** | Loading one page of suggestions and querying the server when 3 or more characters are typed, so very large tables stay responsive. |
+| **Debounce** | A short delay that groups keystrokes before a server search is sent. |
+| **`axDatasourceObj`** | The in-memory cache of lists. Search results are stored under `<key>_q_<term>`. |
+| **View filter** | The condition from `<transid>_filter` in `axvarcore` that limits the records of `view` and `edit`. See [View filters](/docs/view-filters). |

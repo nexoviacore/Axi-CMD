@@ -1,0 +1,16 @@
+{
+  "title": "AxiCMD",
+  "pages": [
+    "index",
+    "architecture",
+    "commands",
+    "data-loading",
+    "view-filters",
+    "database",
+    "axiapi",
+    "operations",
+    "contributing",
+    "glossary",
+    "adr"
+  ]
+}

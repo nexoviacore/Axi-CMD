@@ -1,0 +1,77 @@
+---
+title: View filters
+description: How a form's view filter from axvarcore limits the records shown by view and edit.
+---
+
+An Axpert form can have a view filter: an application variable named `<transid>_filter` whose value is an SQL condition. The Entity page honours it, so the palette must as well, or `view <form>` would list records the user may not see.
+
+The filter is applied inside `fn_axi_getstructs_obj`, for both PostgreSQL and Oracle.
+
+## Where the filter is stored
+
+The table `axvarcore` holds one row per application variable. The function uses two columns:
+
+| Column | Example |
+| --- | --- |
+| `vpname` | `Form1_filter` |
+| `vpvalue` | `and Form11.branch=:branch` |
+
+Rows with `cancel` other than `F` are ignored. The table is read without a schema prefix, like `axpflds`, so it resolves through the connection's schema.
+
+## What the function does
+
+For `pcmd` equal to `view` or `edit` only. The field rows (`isfield = 't'`) are never filtered.
+
+1. Look up the row where `lower(vpname) = lower(<transid> || '_filter')`. No row means no filter and the list is returned as it is.
+2. Replace the primary table prefix with the alias used in the queries. `Form11.branch` becomes `p.branch`; `{primarytable.}` is replaced too. The match is case-insensitive.
+3. Replace `:username` and `:userrole` with the quoted values of the current user.
+4. Replace each other `:name` with the quoted value sent in the session variables (see below).
+5. If a `:name` placeholder is still unresolved, **skip the filter** and raise a notice (Postgres), because the SQL would fail.
+6. Strip a leading `and`, and append `and (<filter>)` to the record queries. The parentheses stop an `or` inside the filter from widening the result.
+
+The result is combined with the existing dimension filter, so both apply.
+
+## Sending the session variables
+
+`:branch` and similar placeholders are session variables, so the function cannot know them. The client sends them in `param10` (`:globalvars`):
+
+```text
+NA@@VARS@@branch=HO~~dep=d1
+```
+
+- The part before `@@VARS@@` is the dimension part. It is passed to `fn_permissions_getpermission` exactly as before, so permissions do not change. Today it is `NA`.
+- The part after it is `name=value` pairs joined by `~~`.
+- The client builds it in `buildFilterVarsString` for `view` and `edit` only.
+
+### What the client leaves out
+
+The text goes into the request, the cache key and the database log, so only safe values are sent. The helper skips:
+
+- names containing `pwd`, `pass`, `secret`, `token`, `key`, `auth`, `url`, `path`, `server`, `mail`, `connection` or `schema`
+- names ending in `_filter`
+- values that are not plain: only letters, digits, `_`, `.`, space and `-`, at most 60 characters, are sent
+
+The function applies the same character rule again on the server and quotes every value.
+
+## Testing it
+
+1. Run the updated `axi_functions.sql` for your database and clear the ADS cache.
+2. Pick a form with a filter such as `and <table>.branch=:branch`, then run `view <form>`.
+3. In DevTools, find the log line `[AxiCMD getList / ADS] Dispatching ADS request payload`. `param10` should read `NA@@VARS@@...`, with no passwords.
+4. To test other values, set `allGloblVars.globalVars` in the console, for example `allGloblVars.globalVars = [{ branch: "HO" }]`.
+
+| Case | Expected |
+| --- | --- |
+| `branch` set | Only that branch's records. |
+| No `axvarcore` row for the form | The full list. |
+| Filter `and 1=1` | The full list. |
+| `allGloblVars.globalVars = []` | `:branch` is unresolved, the filter is skipped, the full list shows. |
+
+<Callout type="warn" title="Skipped filter means a full list">
+  When a placeholder cannot be resolved the list is not filtered. This is deliberate (the alternative is an error), but
+  it means a missing session variable shows more records, not fewer.
+</Callout>
+
+## History
+
+Earlier, `view` and `edit` of a form took their records from the ARM Entity API (`GetEntityListPageLoadData`), which applies the filter itself. That code is commented out in `axicmdmain.js` ("kept for future use") and can be restored.

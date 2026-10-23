@@ -1,0 +1,79 @@
+---
+title: AxiApi
+description: The ASP.NET Core API behind the palette - endpoints, layers and current limits.
+---
+
+AxiApi (`AxiApi/`) is an ASP.NET Core (.NET 8) API. In the ARM environment it is hosted as an IIS application (application pool with **No Managed Code**). Connection settings come from `appsettings.ini` in the parent microservices folder.
+
+## Layers
+
+```text
+AxiController
+  └─ Services      CommandConfigService, UserFavouritesService, UserSettingsService,
+                   KeyfieldService, GrammarService, GrammarBootstrapService
+       └─ Repositories   (data access through AxExtend and parameterised SQL)
+            └─ Database  (PostgreSQL / Oracle)
+```
+
+All endpoints are versioned under `/api/v1/Axi`.
+
+## Endpoints
+
+These are the routes declared in `AxiController.cs`.
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `command-config` | The command configuration (`appname`, `username`, `forceRefresh`). |
+| `GET` | `axi_get` | The command grammar for autocomplete (`view`, `appname`, `forceRefresh`). |
+| `GET` | `user-favourites` | A user's favourites (`username`, `appname`). |
+| `POST` | `user-favourites` | Add or toggle a favourite (`appname`). |
+| `PATCH` | `user-favourites/{favouritesId}` | Rename a favourite (`username`, `appname`). |
+| `GET` | `user-settings` | A user's settings as key/value pairs (`username`, `appname`). |
+| `POST` | `user-settings/{settingKey}` | Save one setting (`appname`; `username` and `value` in the body). |
+| `POST` | `setkeyfield` | Set the key field of a form. |
+
+`user-settings` returns `400` when `username` or `appname` is missing.
+
+### Example: set a key field
+
+```http
+POST /api/v1/Axi/setkeyfield
+Content-Type: application/json
+
+{ "appName": "axpbase", "transId": "axusr", "keyField": "username", "username": "admin" }
+```
+
+It writes to `axp_tstructprops` with a parameterised upsert.
+
+### Example: add a favourite
+
+```http
+POST /api/v1/Axi/user-favourites?appname=axpbase
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "commandText": "My User List",
+  "originalCommandText": "configure user listing",
+  "action": "add",
+  "favOrder": 0,
+  "targetURL": "../aspx/iview.aspx?ivname=axusers"
+}
+```
+
+## Current state and limits
+
+These are facts about the code today, not recommendations.
+
+- **No authentication in the app.** No controller action has `[Authorize]`. The caller identifies the user with the `username` it sends.
+- **CORS allows any origin, header and method** (`AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()`).
+- **No rate limiting.** No rate-limiting middleware or package is configured. Any limiting would come from IIS, a proxy or a gateway in front.
+- **Redis.** `StackExchange.Redis` is referenced and the older README describes cached command configuration, but the `IConnectionMultiplexer` registration in `Program.cs` is commented out. Check the deployed behaviour before relying on the cache.
+- **Pipeline.** `UseExceptionHandler`, `UseHttpsRedirection`, `UseCors`, `UseAuthorization`, `MapControllers`. Swagger is added in development.
+
+<Callout type="info" title="Under consideration">
+  Per-IP rate limiting with the built-in .NET 8 middleware, with a stricter policy for the POST routes, is a candidate
+  change. It needs a decision about proxies and forwarded headers first.
+</Callout>
+
+More detail, including the table schemas, is in `AxiApi/README.md`.

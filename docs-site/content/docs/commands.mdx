@@ -1,0 +1,65 @@
+---
+title: Commands
+description: How commands, prompts and options are stored and resolved.
+---
+
+## Commands are data
+
+The words a user can type are not hard-coded in the script. The command grammar comes from database tables, and the `configure` and `sdk` options and their sources are rows, not code. Adding or changing one is a data change.
+
+The verbs include `create`, `edit`, `view`, `source`, `configure`, `sdk`, `analyse`, `upload` and `download`.
+
+## Tables
+
+| Table | Purpose |
+| --- | --- |
+| `axi_commands` | Root command verbs, aliases and active status. |
+| `axi_command_prompts` | The prompt (autocomplete) positions of each command, in order, and the data source of each position. |
+| `axi_command_config` | Routing for `configure`, `sdk`, `upload` and `download`: the option, the target (`transid`, `ivname`, script or URL), and its type. |
+| `axp_tstructprops` | Form properties, including the key field and whether a user configured it. |
+| `axi_userfavourites` | Saved commands with alias labels and target URLs. |
+
+The scripts that create and fill them are `axi_command_tables.sql` and `axi_axdirectsql_tables.sql` in `Structures/Postgre/Scripts` and `Structures/Oracle/Scripts`.
+
+### `axi_command_config` columns
+
+| Column | Meaning |
+| --- | --- |
+| `config_id` | Unique id, for example `cfg_configure_user`. |
+| `command` | The verb: `Configure`, `SDK`, `Upload` or `Download`. |
+| `prompt_options` | The option the user picks, for example `user listing`. |
+| `prompt_id` | The target: a `transid`, an `ivname` or a script name. |
+| `prompt_option_type` | How to open it: `tstruct`, `iview`, `action` or `url`. |
+| `param_field` | Field used to load a record. |
+| `target_url` | Explicit URL override. |
+| `extra_params` | Extra query parameters, for example `AxOpenAct=true&isDupTab=false`. |
+| `active` | `T` or `F`. |
+
+## Prompts and their parameters
+
+A prompt row has a `PROMPTSOURCE` (the ADS to call) and `EXTRAPARAMS`, a comma-separated list of placeholders. The engine turns each placeholder into a value and sends the values as `param1` to `paramN`. For the record and field prompts of `view` and `edit`, the placeholders are:
+
+| Position | Placeholder | Value |
+| --- | --- | --- |
+| `param1` | `:cmd` | The command group, for example `view` or `edit`. |
+| `param2` | `:username` | The signed-in user. |
+| `param3` | `:userrole` | The user's roles. |
+| `param4` | `:transid` | The form (`name` of the structure row). |
+| `param5` | `:selectedfield` | The chosen field, or `0`. |
+| `param6` | `:dimension` | Whether the form has dimensions (`T` / `F`). |
+| `param7` | `:permission` | Whether the form has permissions (`T` / `F`). |
+| `param8` | `:keyfield` | The key field of the form. |
+| `param9` | `:primarytable` | The primary table of the form. |
+| `param10` | `:globalvars` | `NA`, plus the session variables after `@@VARS@@` for `view` and `edit`. See [View filters](/docs/view-filters). |
+
+An empty value is sent as `NA`.
+
+## Structure types
+
+Names can be shared between a form, a report, a page and a data source. The engine resolves them with context-aware default rules and labels them `[form]`, `[iview]`, `[page]` and `[ads]`.
+
+## Related specs in the repository
+
+- `docs/specs/dynamic-command-config-spec.md`
+- `docs/specs/sdk-create-new-suggestions-spec.md`
+- `AxpertPlugins/AxiCMD/docs/DYNAMIC_COMMAND_CONFIG_USER_GUIDE.md`
