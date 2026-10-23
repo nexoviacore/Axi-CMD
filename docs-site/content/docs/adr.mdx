@@ -9,7 +9,7 @@ The full records are in `docs/adr/`. Read them before changing how data is loade
 
 **Decision (original):** support tables with 50,000 or more records by adding server-side paging and search to the SQL function `fn_axi_getstructs_obj` (three optional parameters `psearchterm`, `ppageno`, `ppagesize` mapped to `:param11` to `:param13`) with a debounced client query.
 
-**Why:** fetching every record on `edit <form>` caused a large payload, high database load and browser freezes.
+**Why:** fetching every record on `<form> edit` caused a large payload, high database load and browser freezes.
 
 **What stayed:**
 

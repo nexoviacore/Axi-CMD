@@ -1,10 +1,10 @@
-import { llms, loader } from 'fumadocs-core/source';
-import { docsContentRoute, docsImageRoute, docsRoute } from './shared';
-import { defineDocs } from 'fumadocs-mdx/macro';
-import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
+import { llms, loader } from "fumadocs-core/source";
+import { docsContentRoute, docsImageRoute, docsRoute } from "./shared";
+import { defineDocs } from "fumadocs-mdx/macro";
+import { metaSchema, pageSchema } from "fumadocs-core/source/schema";
 
 const docs = defineDocs({
-  dir: 'content/docs',
+  dir: "content/docs",
   docs: {
     schema: pageSchema,
     postprocess: {
@@ -26,5 +26,5 @@ export const source = loader({
 export const docsLlms = llms(source, {
   renderPage: async (page) => `# ${page.data.title} (${page.url})
 
-${await page.data.getText('processed')}`,
+${await page.data.getText("processed")}`,
 });

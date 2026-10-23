@@ -9,6 +9,19 @@ The words a user can type are not hard-coded in the script. The command grammar 
 
 The verbs include `create`, `edit`, `view`, `source`, `configure`, `sdk`, `analyse`, `upload` and `download`.
 
+## Word order: target first
+
+Commands that act on a form, report or page are typed with the target first, then the command:
+
+| Typed | Meaning |
+| --- | --- |
+| `cityf view` | List the records of the form `cityf`, to view one. |
+| `invoice edit` | List the records of the form `invoice`, to edit one. |
+
+Commands that have no target of their own start with the verb: `configure user listing`, `sdk tstruct`, `upload`, `download`.
+
+The engine also accepts the verb first (`view cityf`). `getTokens` swaps the first two words when the first is a known target and the second is a valid action for it, so the rest of the code always sees the verb first. This is why `param1` is the command and `param4` the form, whichever order the user typed. The docs and examples use the target-first order.
+
 ## Tables
 
 | Table | Purpose |

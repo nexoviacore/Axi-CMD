@@ -25,9 +25,9 @@ description: The parts of AxiCMD and how a request flows through them.
 
 ## A request from end to end
 
-Typing `view cityf` and picking a record:
+Typing `cityf view` and picking a record:
 
-1. The engine tokenises the input and resolves `view` from the command configuration (data, not code).
+1. The engine tokenises the input. Commands are typed target first (the form name, then the command). `getTokens` swaps the first two words when the first is a known target and the second is a valid action for it, so internally the command is handled as `view cityf`. The command `view` is resolved from the command configuration (data, not code).
 2. It looks up the form `cityf` in the structure list (`axi_structmetalist`). That list is paged, so the lookup uses `findStructRow(...)` and falls back to `requestStructSearch(...)`.
 3. For the record suggestions it calls `getList("axi_getstructsdata", params, term, page, size)`.
 4. `getList` builds a request with `adsNames`, `sqlParams` (`param1` to `param10`) and `props.pageno` / `props.pagesize`. When 3 or more characters are typed it adds a `displaydata CONTAINS` filter.

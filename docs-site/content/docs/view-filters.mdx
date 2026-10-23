@@ -3,7 +3,7 @@ title: View filters
 description: How a form's view filter from axvarcore limits the records shown by view and edit.
 ---
 
-An Axpert form can have a view filter: an application variable named `<transid>_filter` whose value is an SQL condition. The Entity page honours it, so the palette must as well, or `view <form>` would list records the user may not see.
+An Axpert form can have a view filter: an application variable named `<transid>_filter` whose value is an SQL condition. The Entity page honours it, so the palette must as well, or `<form> view` would list records the user may not see.
 
 The filter is applied inside `fn_axi_getstructs_obj`, for both PostgreSQL and Oracle.
 
@@ -56,7 +56,7 @@ The function applies the same character rule again on the server and quotes ever
 ## Testing it
 
 1. Run the updated `axi_functions.sql` for your database and clear the ADS cache.
-2. Pick a form with a filter such as `and <table>.branch=:branch`, then run `view <form>`.
+2. Pick a form with a filter such as `and <table>.branch=:branch`, then run `<form> view`, for example `cityf view`.
 3. In DevTools, find the log line `[AxiCMD getList / ADS] Dispatching ADS request payload`. `param10` should read `NA@@VARS@@...`, with no passwords.
 4. To test other values, set `allGloblVars.globalVars` in the console, for example `allGloblVars.globalVars = [{ branch: "HO" }]`.
 
