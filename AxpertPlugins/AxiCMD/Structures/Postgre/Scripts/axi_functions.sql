@@ -1163,7 +1163,25 @@ v_editctrl varchar;
 v_finalcomps text;
 v_fullcontrol varchar;
 v_fieldlist_sql text;
+v_globalvars_dim varchar;
+v_vars_part text;
+v_view_filter text;
+v_pair text;
+v_varname text;
+v_varvalue text;
+v_repl text;
 begin
+------pglobalvars = <dimension part>[@@VARS@@name=value~~name=value]; the second part carries the session variables
+------used by the form's view filter (axvarcore <transid>_filter, e.g. ':branch'). The dimension part is used as before.
+if position('@@VARS@@' in coalesce(pglobalvars,'')) > 0 then
+ v_globalvars_dim := split_part(pglobalvars,'@@VARS@@',1);
+ v_vars_part := split_part(pglobalvars,'@@VARS@@',2);
+else
+ v_globalvars_dim := pglobalvars;
+ v_vars_part := '';
+end if;
+v_globalvars_dim := case when coalesce(v_globalvars_dim,'') = '' then 'NA' else v_globalvars_dim end;
+
 ------Get flds metadata for keyfield
 select srckey,lower(srctf),lower(srcfld)
 into v_keyfield_normalized,v_keyfield_srctbl,v_keyfield_srcfld
@@ -1180,18 +1198,65 @@ where tstruct = ptransid and lower(fname)= lower(pselectedfield);
 if pdimension = 'T' then
 
  SELECT filtercnd into v_dimension_filter 
- from fn_permissions_getpermission('axi', ptransid, pusername, puserrole, pglobalvars);
+ from fn_permissions_getpermission('axi', ptransid, pusername, puserrole, v_globalvars_dim);
 
  v_dimension_filter := case when length(v_dimension_filter) > 2 then concat(' and ',replace(v_dimension_filter,'{primarytable.}','p.')) end;
 
 end if;
 
------Get included and excluded dcs, fields 
+------Get the form's view filter (record lists of 'view' / 'edit' only; the field rows are not filtered).
+------axvarcore.vpname = '<transid>_filter', vpvalue = e.g. 'and Form11.branch=:branch'. No row = list as it is.
+if lower(pcmd) in ('view','edit') then
+
+ select vpvalue into v_view_filter
+ from axvarcore
+ where lower(vpname) = lower(ptransid || '_filter') and coalesce(cancel,'F') = 'F'
+ limit 1;
+
+ if length(trim(coalesce(v_view_filter,''))) > 0 then
+
+  -- the primary table is aliased 'p' in the queries below
+  v_view_filter := replace(v_view_filter,'{primarytable.}','p.');
+  v_view_filter := regexp_replace(v_view_filter,'(^|[^A-Za-z0-9_])' || regexp_replace(coalesce(pprimarytable,'-'),'[^A-Za-z0-9_]','','g') || '[.]','\1p.','gi');
+
+  -- :username and :userrole
+  v_repl := replace(replace(quote_literal(coalesce(pusername,'')),'\','\\'),'&','\&');
+  v_view_filter := regexp_replace(v_view_filter,'(^|[^:A-Za-z0-9_]):username(?![A-Za-z0-9_])','\1' || v_repl,'gi');
+  v_repl := replace(replace(quote_literal(coalesce(puserrole,'')),'\','\\'),'&','\&');
+  v_view_filter := regexp_replace(v_view_filter,'(^|[^:A-Za-z0-9_]):userrole(?![A-Za-z0-9_])','\1' || v_repl,'gi');
+
+  -- session variables, e.g. ':branch' (only plain values are accepted)
+  for v_pair in select unnest(string_to_array(v_vars_part,'~~')) loop
+   v_varname := lower(regexp_replace(split_part(v_pair,'=',1),'[^A-Za-z0-9_]','','g'));
+   v_varvalue := regexp_replace(substr(v_pair,position('=' in v_pair)+1),'[^A-Za-z0-9_. -]','','g');
+   if v_varname <> '' and position('=' in v_pair) > 0 then
+    v_repl := replace(replace(quote_literal(v_varvalue),'\','\\'),'&','\&');
+    v_view_filter := regexp_replace(v_view_filter,'(^|[^:A-Za-z0-9_]):' || v_varname || '(?![A-Za-z0-9_])','\1' || v_repl,'gi');
+   end if;
+  end loop;
+
+  -- a placeholder without a value cannot be resolved: do not apply the filter, as the SQL would fail
+  if v_view_filter ~ '(^|[^:]):[A-Za-z_]' then
+   raise notice 'fn_axi_getstructs_obj: view filter of % has an unresolved variable, filter skipped', ptransid;
+   v_view_filter := null;
+  else
+   v_view_filter := concat(' and (',regexp_replace(trim(v_view_filter),'^and\s+','','i'),')');
+  end if;
+
+ else
+  v_view_filter := null;
+ end if;
+
+ v_dimension_filter := concat(v_dimension_filter,v_view_filter);
+
+end if;
+
+-----Get included and excluded dcs, fields
 if ppermission = 'T' then 
 
  SELECT lower(concat(view_includedc,view_includeflds)),lower(concat(view_excludedc,view_excludeflds)),viewctrl,editctrl,fullcontrol
  into v_includedcomps,v_excludedcomps,v_viewctrl,v_editctrl ,v_fullcontrol
- from fn_permissions_getpermission('axi', ptransid, pusername, puserrole, pglobalvars);
+ from fn_permissions_getpermission('axi', ptransid, pusername, puserrole, v_globalvars_dim);
 
  if v_fullcontrol = 'T' or v_viewctrl = '0' then
   v_fieldlist_sql := format($sql$

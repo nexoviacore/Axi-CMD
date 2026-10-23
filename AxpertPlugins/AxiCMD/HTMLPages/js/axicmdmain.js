@@ -5952,7 +5952,14 @@ if (typeof document !== "undefined") {
                 value = struct_row?.primarytable || "";
             }
             else if (param === ":globalvars") {
+                // Dimension part stays "NA" (as before). For "view" / "edit" the session variables that the form's
+                // <transid>_filter application variable may use (e.g. :branch) follow the marker, see buildFilterVarsString.
                 value = "NA";
+                const cmdForVars = String(commandConfig.commandGroup || "").toLowerCase();
+                if (cmdForVars === "view" || cmdForVars === "edit") {
+                    const filterVars = buildFilterVarsString(allGloblVars);
+                    if (filterVars) value = "NA" + FILTER_VARS_MARK + filterVars;
+                }
             }
 
 
@@ -5981,6 +5988,32 @@ if (typeof document !== "undefined") {
         //    .join("$#$");
 
         return struct_finalParams;
+    }
+
+    // Separator between the dimension part and the session variables inside param10 (:globalvars) of axi_getstructsdata.
+    // fn_axi_getstructs_obj splits on it (keep in sync with Structures/*/Scripts/axi_functions.sql).
+    const FILTER_VARS_MARK = "@@VARS@@";
+
+    /**
+     * Builds "name=value~~name=value" from the session global variables, for the view filter of a form
+     * (<transid>_filter in axvarcore, e.g. "and Form11.branch=:branch"), which fn_axi_getstructs_obj resolves.
+     * Only plain short values are sent: passwords, keys, tokens, urls, paths and the *_filter variables stay out,
+     * because this text goes into the request, the cache key and the database log.
+     * @param {object} allVars - Session variables object ({ globalVars: [ { name: value }, ... ] }).
+     * @returns {string} Pairs joined by "~~", or "" when there is nothing to send.
+     */
+    function buildFilterVarsString(allVars) {
+        if (!allVars || !Array.isArray(allVars.globalVars)) return "";
+        const blockedName = /pwd|pass|secret|token|key|auth|url|path|server|mail|connection|schema|_filter$/i;
+        const plainValue = /^[A-Za-z0-9_. -]{1,60}$/;
+        const pairs = [];
+        allVars.globalVars.forEach(obj => {
+            const name = obj && Object.keys(obj)[0];
+            if (!name || !/^[A-Za-z0-9_]+$/.test(name) || blockedName.test(name)) return;
+            const value = String(obj[name] === null || obj[name] === undefined ? "" : obj[name]).trim();
+            if (plainValue.test(value)) pairs.push(name.toLowerCase() + "=" + value);
+        });
+        return pairs.join("~~");
     }
 
     /**
@@ -7528,7 +7561,9 @@ if (typeof document !== "undefined") {
 
     }
 
-    // ---- View records through the ARM Entity API (TKT-1387) -------------------------------------------------------
+    // ---- View records: view filter applied by fn_axi_getstructs_obj (TKT-1387) -----------------------------------------
+    // NOTE: the text below describes the former Entity API route (GetEntityListPageLoadData), now commented out
+    // further down. The view filter is now applied by fn_axi_getstructs_obj from axvarcore (<transid>_filter).
     // The generic AxList data source (axi_getstructsdata) knows nothing about the form's view filter (the
     // "<transid>_filter" application variable, e.g. cityf_filter = "... and cityf1.createdby = :username"), so
     // "view <form>" listed every record. The Entity page does not have that problem because it asks ARM for the
@@ -7537,7 +7572,7 @@ if (typeof document !== "undefined") {
 
     /**
      * True when this axi_getstructsdata request is a "view" or "edit" record list of a tstruct that must come from
-     * the Entity API.
+     * the view filter (axvarcore <transid>_filter) that fn_axi_getstructs_obj applies.
      * @param {string} axDatasourceName - Data source of the request.
      * @param {object} sqlParams - param1..param10 as sent to the data source (cmd, user, role, transid, selectedfield,
      *                             dimension, permission, keyfield, primarytable, globalvars).
@@ -7551,7 +7586,7 @@ if (typeof document !== "undefined") {
         const cmd = String(p.param1 || "").toLowerCase();
         if (!((cmd === "view" || cmd === "edit") && !isNA(p.param4) && !isNA(p.param8))) return false;
 
-        // Only tstructs go through the Entity API. iviews, pages and ADS stay on AxList. The structure type
+        // Only tstructs have a view filter. iviews, pages and ADS are not filtered. The structure type
         // (stype: t / i / p / ads) is read from the loaded structure list; when the form is not found there, AxList is used.
         const transLower = String(p.param4).toLowerCase();
         for (const key in axDatasourceObj) {
@@ -7562,110 +7597,113 @@ if (typeof document !== "undefined") {
         return false;
     }
 
-    /**
-     * Case-insensitive read of a column from an Entity list row.
-     * @param {object} row - One row of result.data.ListData.
-     * @param {string} name - Column (field) name.
-     * @returns {string} The value as text, or "" when missing.
-     */
-    function entityRowValue(row, name) {
-        if (!row || !name) return "";
-        const lower = String(name).toLowerCase();
-        const hit = Object.keys(row).find(k => k.toLowerCase() === lower);
-        const v = hit === undefined ? "" : row[hit];
-        return (v === null || v === undefined) ? "" : String(v);
-    }
+    // Kept for future use: the former Entity API route (GetEntityListPageLoadData). It is not called any more;
+    // fn_axi_getstructs_obj applies the view filter instead. Uncomment this block and the commented
+    // code in getList to switch back.
+    // /**
+    //  * Case-insensitive read of a column from an Entity list row.
+    //  * @param {object} row - One row of result.data.ListData.
+    //  * @param {string} name - Column (field) name.
+    //  * @returns {string} The value as text, or "" when missing.
+    //  */
+    // function entityRowValue(row, name) {
+    //     if (!row || !name) return "";
+    //     const lower = String(name).toLowerCase();
+    //     const hit = Object.keys(row).find(k => k.toLowerCase() === lower);
+    //     const v = hit === undefined ? "" : row[hit];
+    //     return (v === null || v === undefined) ? "" : String(v);
+    // }
 
-    /**
-     * Fetches one page of records of a form from the ARM Entity API, the same call the Entity page makes, so ARM
-     * applies the form's view filter and the user's permissions. Rows are returned in the palette's list shape
-     * { displaydata, id, caption, isfield: 'f', transrecordid }.
-     * @async
-     * @param {object} sqlParams - param1..param10 of the axi_getstructsdata request.
-     * @param {string} searchTerm - Typed term (already trimmed and lower-cased); used when 3+ characters.
-     * @param {number} pageNo - Page number (1-based).
-     * @param {number} pageSize - Page size, the same one AxList uses.
-     * @param {AbortSignal} [signal] - Aborts the request when a newer search starts.
-     * @returns {Promise<Array<object>|null>} Rows, or null when the Entity API could not be used.
-     */
-    async function getViewRecordsFromEntityApi(sqlParams, searchTerm, pageNo, pageSize, signal) {
-        if (!AxiArmUrl) return null;
-        const transId = String(sqlParams.param4 || "");
-        const keyField = String(sqlParams.param8 || "");
-        const selField = (sqlParams.param5 && sqlParams.param5 !== "0" && String(sqlParams.param5).toUpperCase() !== "NA") ? String(sqlParams.param5) : "";
+    // /**
+    //  * Fetches one page of records of a form from the ARM Entity API, the same call the Entity page makes, so ARM
+    //  * applies the form's view filter and the user's permissions. Rows are returned in the palette's list shape
+    //  * { displaydata, id, caption, isfield: 'f', transrecordid }.
+    //  * @async
+    //  * @param {object} sqlParams - param1..param10 of the axi_getstructsdata request.
+    //  * @param {string} searchTerm - Typed term (already trimmed and lower-cased); used when 3+ characters.
+    //  * @param {number} pageNo - Page number (1-based).
+    //  * @param {number} pageSize - Page size, the same one AxList uses.
+    //  * @param {AbortSignal} [signal] - Aborts the request when a newer search starts.
+    //  * @returns {Promise<Array<object>|null>} Rows, or null when the Entity API could not be used.
+    //  */
+    // async function getViewRecordsFromEntityApi(sqlParams, searchTerm, pageNo, pageSize, signal) {
+    //     if (!AxiArmUrl) return null;
+    //     const transId = String(sqlParams.param4 || "");
+    //     const keyField = String(sqlParams.param8 || "");
+    //     const selField = (sqlParams.param5 && sqlParams.param5 !== "0" && String(sqlParams.param5).toUpperCase() !== "NA") ? String(sqlParams.param5) : "";
 
-        const filters = [];
-        if (searchTerm && searchTerm.length >= 3) {
-            filters.push({ ftransid: transId, fldname: selField || keyField, condition: "CONTAINS", datatype: "TEXT", value: searchTerm });
-        }
+    //     const filters = [];
+    //     if (searchTerm && searchTerm.length >= 3) {
+    //         filters.push({ ftransid: transId, fldname: selField || keyField, condition: "CONTAINS", datatype: "TEXT", value: searchTerm });
+    //     }
 
-        for (let attempt = 0; attempt < 2; attempt++) {
-            const auth = await getArmAuth(attempt > 0);
-            if (!auth) return null;
-            const body = {
-                Page: "Entity",
-                ARMSessionId: auth.sessionId,
-                OnlyData: true,
-                TransId: transId,
-                AppName: getProjectName(),
-                Roles: window.AxUserRoles || "",
-                UserName: sqlParams.param2 || window.mainUserName || "",
-                PageNo: pageNo,
-                PageSize: pageSize,
-                Filters: filters,
-                CalledFromDataList: true
-            };
-            try {
-                const res = await fetch(AxiArmUrl.replace(/\/+$/, "") + "/AxList/api/v1/GetEntityListPageLoadData", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + auth.token },
-                    body: JSON.stringify(body),
-                    signal
-                });
-                if (res.status === 401 || res.status === 400) {
-                    const text = await res.text().catch(() => "");
-                    if (isSessionInvalidResponse(text) && attempt > 0) redirectToSessionExpired();
-                    armAuthCache = null;
-                    continue;
-                }
-                const json = await res.json().catch(() => undefined);
-                if (isSessionInvalidResponse(json)) redirectToSessionExpired();
-                if (!res.ok || !json) return null;
+    //     for (let attempt = 0; attempt < 2; attempt++) {
+    //         const auth = await getArmAuth(attempt > 0);
+    //         if (!auth) return null;
+    //         const body = {
+    //             Page: "Entity",
+    //             ARMSessionId: auth.sessionId,
+    //             OnlyData: true,
+    //             TransId: transId,
+    //             AppName: getProjectName(),
+    //             Roles: window.AxUserRoles || "",
+    //             UserName: sqlParams.param2 || window.mainUserName || "",
+    //             PageNo: pageNo,
+    //             PageSize: pageSize,
+    //             Filters: filters,
+    //             CalledFromDataList: true
+    //         };
+    //         try {
+    //             const res = await fetch(AxiArmUrl.replace(/\/+$/, "") + "/AxList/api/v1/GetEntityListPageLoadData", {
+    //                 method: "POST",
+    //                 headers: { "Content-Type": "application/json", "Authorization": "Bearer " + auth.token },
+    //                 body: JSON.stringify(body),
+    //                 signal
+    //             });
+    //             if (res.status === 401 || res.status === 400) {
+    //                 const text = await res.text().catch(() => "");
+    //                 if (isSessionInvalidResponse(text) && attempt > 0) redirectToSessionExpired();
+    //                 armAuthCache = null;
+    //                 continue;
+    //             }
+    //             const json = await res.json().catch(() => undefined);
+    //             if (isSessionInvalidResponse(json)) redirectToSessionExpired();
+    //             if (!res.ok || !json) return null;
 
-                // ListData can come back null or empty (no record matches, or ARM has nothing for this page): that is
-                // "no data", not an error, so the suggestions are simply empty. Only an answer with no result at all
-                // is treated as a failure.
-                if (!json?.result) return null;
-                const listData = Array.isArray(json.result.data?.ListData) ? json.result.data.ListData : [];
+    //             // ListData can come back null or empty (no record matches, or ARM has nothing for this page): that is
+    //             // "no data", not an error, so the suggestions are simply empty. Only an answer with no result at all
+    //             // is treated as a failure.
+    //             if (!json?.result) return null;
+    //             const listData = Array.isArray(json.result.data?.ListData) ? json.result.data.ListData : [];
 
-                const records = listData.map(row => {
-                    const keyVal = entityRowValue(row, keyField);
-                    const selVal = selField ? entityRowValue(row, selField) : "";
-                    return {
-                        // same text the SQL function builds: key value, or "<selected field value>[<key value>]"
-                        displaydata: selField ? `${selVal}[${keyVal}]` : keyVal,
-                        id: "0",
-                        caption: selField ? selVal : keyVal,
-                        isfield: "f",
-                        transrecordid: row.recordid
-                    };
-                }).filter(r => r.displaydata !== "" && r.displaydata !== "[]");
+    //             const records = listData.map(row => {
+    //                 const keyVal = entityRowValue(row, keyField);
+    //                 const selVal = selField ? entityRowValue(row, selField) : "";
+    //                 return {
+    //                     // same text the SQL function builds: key value, or "<selected field value>[<key value>]"
+    //                     displaydata: selField ? `${selVal}[${keyVal}]` : keyVal,
+    //                     id: "0",
+    //                     caption: selField ? selVal : keyVal,
+    //                     isfield: "f",
+    //                     transrecordid: row.recordid
+    //                 };
+    //             }).filter(r => r.displaydata !== "" && r.displaydata !== "[]");
 
-                // Rows with an empty key are dropped above (like "p.<key> IS NOT NULL" in the SQL function), so a full
-                // server page can shrink below the page size. The paging code decides "load more" from the row count,
-                // so the last row remembers that the server page was full. The mark is plain data and survives the cache.
-                if (pageSize > 0 && listData.length >= pageSize && records.length > 0) {
-                    records[records.length - 1].__fullPage = true;
-                }
-                return records;
-            } catch (e) {
-                if (e && (e.message === "SessionId is not valid" || e.name === "AbortError")) throw e;
-                console.error("[AxiCMD] Entity API call failed:", e);
-                return null;
-            }
-        }
-        return null;
-    }
+    //             // Rows with an empty key are dropped above (like "p.<key> IS NOT NULL" in the SQL function), so a full
+    //             // server page can shrink below the page size. The paging code decides "load more" from the row count,
+    //             // so the last row remembers that the server page was full. The mark is plain data and survives the cache.
+    //             if (pageSize > 0 && listData.length >= pageSize && records.length > 0) {
+    //                 records[records.length - 1].__fullPage = true;
+    //             }
+    //             return records;
+    //         } catch (e) {
+    //             if (e && (e.message === "SessionId is not valid" || e.name === "AbortError")) throw e;
+    //             console.error("[AxiCMD] Entity API call failed:", e);
+    //             return null;
+    //         }
+    //     }
+    //     return null;
+    // }
 
     /**
      * Fetches dataset for specified Axpert data source name and parameters.
@@ -7724,7 +7762,7 @@ if (typeof document !== "undefined") {
             if (cleanTerm) {
                 cacheKey += `_q_${cleanTerm}`;
             }
-            // "view" records come from the Entity API (filtered); _ent keeps them apart from older unfiltered entries
+            // "view" / "edit" records of a tstruct are filtered by the database function; _ent keeps them apart from older unfiltered entries
             const viewFromEntity = isViewRecordsRequest(axDatasourceName, sqlParams);
             if (viewFromEntity) cacheKey += `_ent`;
             // _v2 = entries are stored as { t: savedAtMs, d: rows } so they can expire (older _v1 entries are ignored)
@@ -7777,10 +7815,11 @@ if (typeof document !== "undefined") {
                 payload: JSON.parse(JSON.stringify(requestBody))
             });
 
-            // View records: page 1 still asks AxList for the field rows; later pages are records only, so the
-            // Entity API alone answers them.
-            const skipAxList = viewFromEntity && effectivePageNo > 1;
-            const res = skipAxList ? null : await getAxListAsync(requestBody, signal);
+            // // View records: page 1 still asks AxList for the field rows; later pages are records only, so the
+            // // Entity API alone answers them.
+            // const skipAxList = viewFromEntity && effectivePageNo > 1;
+            // const res = skipAxList ? null : await getAxListAsync(requestBody, signal);
+            const res = await getAxListAsync(requestBody, signal);
 
             console.log("%c[AxiCMD getList / ADS] Server response received for " + axDatasourceName + ":", "color: #059669; font-weight: bold;", res);
 
@@ -7803,17 +7842,19 @@ if (typeof document !== "undefined") {
                 return [];
             }
 
-            if (viewFromEntity) {
-                // Keep only the field rows of AxList (its record rows ignore the form's view filter) and add the
-                // filtered records from the Entity API.
-                list = list.filter(r => r && r.isfield === "t");
-                const records = await getViewRecordsFromEntityApi(sqlParams, cleanTerm, effectivePageNo, effectivePageSize, signal);
-                if (records === null) {
-                    showToast("AxiCMD could not load the records of this form. Please try again or contact your administrator.");
-                } else {
-                    list = list.concat(records);
-                }
-            }
+            // Kept for future use: records used to be merged in from the ARM Entity API (GetEntityListPageLoadData).
+            // The view filter is now applied inside fn_axi_getstructs_obj (axvarcore <transid>_filter), see :globalvars.
+            // if (viewFromEntity) {
+            //     // Keep only the field rows of AxList (its record rows ignore the form's view filter) and add the
+            //     // filtered records from the Entity API.
+            //     list = list.filter(r => r && r.isfield === "t");
+            //     const records = await getViewRecordsFromEntityApi(sqlParams, cleanTerm, effectivePageNo, effectivePageSize, signal);
+            //     if (records === null) {
+            //         showToast("AxiCMD could not load the records of this form. Please try again or contact your administrator.");
+            //     } else {
+            //         list = list.concat(records);
+            //     }
+            // }
 
 
             if (list.length > 0) {

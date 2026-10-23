@@ -92,6 +92,16 @@ is
 
     v_dimension_filter          CLOB;
 
+    v_globalvars_dim            VARCHAR2(4000);
+    v_vars_part                 VARCHAR2(4000);
+    v_rest                      VARCHAR2(4000);
+    v_pair                      VARCHAR2(4000);
+    v_pos                       NUMBER;
+    v_eq                        NUMBER;
+    v_varname                   VARCHAR2(200);
+    v_varvalue                  VARCHAR2(4000);
+    v_view_filter               CLOB;
+
     v_includedcomps             CLOB;
     v_excludedcomps             CLOB;
 
@@ -114,6 +124,20 @@ is
     r_transrecordid NUMBER; 
 
 BEGIN
+
+    -- pglobalvars = <dimension part>[@@VARS@@name=value~~name=value]; the second part carries the session variables
+    -- used by the form's view filter (axvarcore <transid>_filter, e.g. ':branch'). The dimension part is used as before.
+    IF INSTR(NVL(pglobalvars,'-'),'@@VARS@@') > 0 THEN
+        v_globalvars_dim := SUBSTR(pglobalvars,1,INSTR(pglobalvars,'@@VARS@@') - 1);
+        v_vars_part      := SUBSTR(pglobalvars,INSTR(pglobalvars,'@@VARS@@') + 8);
+    ELSE
+        v_globalvars_dim := pglobalvars;
+        v_vars_part      := NULL;
+    END IF;
+
+    IF v_globalvars_dim IS NULL THEN
+        v_globalvars_dim := 'NA';
+    END IF;
 
     SELECT srckey,
            LOWER(srctf),
@@ -156,7 +180,7 @@ BEGIN
                     ptransid,
                     pusername,
                     puserrole,
-                    pglobalvars
+                    v_globalvars_dim
                 )
             )
             WHERE ROWNUM = 1;
@@ -180,6 +204,99 @@ BEGIN
 
     END IF;
 
+    -- The form's view filter (record lists of 'view' / 'edit' only; the field rows are not filtered).
+    -- axvarcore.vpname = '<transid>_filter', vpvalue = e.g. 'and Form11.branch=:branch'. No row = list as it is.
+    IF LOWER(pcmd) IN ('view','edit') THEN
+
+        BEGIN
+
+            SELECT vpvalue
+            INTO v_view_filter
+            FROM axvarcore
+            WHERE LOWER(vpname) = LOWER(ptransid || '_filter')
+              AND NVL(cancel,'F') = 'F'
+              AND ROWNUM = 1;
+
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                v_view_filter := NULL;
+        END;
+
+        IF v_view_filter IS NOT NULL AND LENGTH(TRIM(v_view_filter)) > 0 THEN
+
+            -- the primary table is aliased 'p' in the queries below
+            v_view_filter := REPLACE(v_view_filter,'{primarytable.}','p.');
+            v_view_filter := REGEXP_REPLACE(
+                                 v_view_filter,
+                                 '(^|[^A-Za-z0-9_])' || REGEXP_REPLACE(NVL(pprimarytable,'-'),'[^A-Za-z0-9_]','') || '[.]',
+                                 '\1p.',
+                                 1, 0, 'i');
+
+            -- :username and :userrole (run twice so that two neighbouring placeholders are both replaced)
+            FOR i IN 1..2 LOOP
+                v_view_filter := REGEXP_REPLACE(
+                                     v_view_filter,
+                                     '(^|[^:A-Za-z0-9_]):username([^A-Za-z0-9_]|$)',
+                                     '\1''' || REPLACE(REPLACE(NVL(pusername,''),'''',''''''),'\','\\') || '''\2',
+                                     1, 0, 'i');
+                v_view_filter := REGEXP_REPLACE(
+                                     v_view_filter,
+                                     '(^|[^:A-Za-z0-9_]):userrole([^A-Za-z0-9_]|$)',
+                                     '\1''' || REPLACE(REPLACE(NVL(puserrole,''),'''',''''''),'\','\\') || '''\2',
+                                     1, 0, 'i');
+            END LOOP;
+
+            -- session variables, e.g. ':branch' (only plain values are accepted)
+            v_rest := v_vars_part;
+
+            WHILE v_rest IS NOT NULL LOOP
+
+                v_pos := INSTR(v_rest,'~~');
+
+                IF v_pos > 0 THEN
+                    v_pair := SUBSTR(v_rest,1,v_pos - 1);
+                    v_rest := SUBSTR(v_rest,v_pos + 2);
+                ELSE
+                    v_pair := v_rest;
+                    v_rest := NULL;
+                END IF;
+
+                v_eq := INSTR(v_pair,'=');
+
+                IF v_eq > 1 THEN
+
+                    v_varname  := LOWER(REGEXP_REPLACE(SUBSTR(v_pair,1,v_eq - 1),'[^A-Za-z0-9_]',''));
+                    v_varvalue := REGEXP_REPLACE(SUBSTR(v_pair,v_eq + 1),'[^A-Za-z0-9_. -]','');
+
+                    IF v_varname IS NOT NULL THEN
+                        FOR i IN 1..2 LOOP
+                            v_view_filter := REGEXP_REPLACE(
+                                                 v_view_filter,
+                                                 '(^|[^:A-Za-z0-9_]):' || v_varname || '([^A-Za-z0-9_]|$)',
+                                                 '\1''' || v_varvalue || '''\2',
+                                                 1, 0, 'i');
+                        END LOOP;
+                    END IF;
+
+                END IF;
+
+            END LOOP;
+
+            -- a placeholder without a value cannot be resolved: do not apply the filter, as the SQL would fail
+            IF REGEXP_LIKE(v_view_filter,'(^|[^:]):[A-Za-z_]') THEN
+                v_view_filter := NULL;
+            ELSE
+                v_view_filter := ' AND (' || REGEXP_REPLACE(TRIM(v_view_filter),'^and[[:space:]]+','',1,1,'i') || ')';
+            END IF;
+
+        ELSE
+            v_view_filter := NULL;
+        END IF;
+
+        v_dimension_filter := v_dimension_filter || v_view_filter;
+
+    END IF;
+
     IF ppermission = 'T' THEN
 
         BEGIN
@@ -200,7 +317,7 @@ BEGIN
                     ptransid,
                     pusername,
                     puserrole,
-                    pglobalvars
+                    v_globalvars_dim
                 )
             )
             WHERE ROWNUM = 1;
