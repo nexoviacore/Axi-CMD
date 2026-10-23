@@ -878,10 +878,11 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
 
 
 /* Favourites / suggestions popup.
-   Wide screens (1400px and up): a fixed 950px panel, shifted 100px right by the inline left in the template.
-   Below that it would run off the right edge once the sidebar (60-300px) and the 100px shift are counted
-   (1024px: 280px cut off, 1280px: 70px), so it is docked to the bar instead. The two ranges do not overlap,
-   so no rule depends on the cascade order to win (a phone showed the desktop max-width winning). */
+   1400px and up: a fixed 950px panel, shifted 100px right by the inline left in the template.
+   Laptops (1024px to 1399px): the same panel, clamped to the bar width (see below), because the sidebar (60-300px)
+   and the 100px shift would push a fixed 950px panel off the right edge.
+   Phones and tablets (up to 1023px): docked to the bar, edge to edge.
+   The ranges do not overlap, so no rule depends on the cascade order to win (a phone showed the desktop max-width winning). */
 @media (min-width: 1400px) {
   #axiMegaDropdown,
   #My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown#axiMegaDropdown {
@@ -890,9 +891,19 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
   }
 }
 
-/* Phones, tablets and small laptops (up to 1399px): as wide as the bar it sits above, edge to edge.
+/* Laptops (1024px to 1399px): the 950px panel, kept in the bar. The template's inline left (100px) is kept, and the
+   width is clamped to the bar (its containing block) minus that shift, so it never runs off the right edge. */
+@media (min-width: 1024px) and (max-width: 1399px) {
+  #axiMegaDropdown,
+  #My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown#axiMegaDropdown {
+    width: min(950px, calc(100% - 100px)) !important;
+    max-width: calc(100% - 100px) !important;
+  }
+}
+
+/* Phones and tablets (up to 1023px): as wide as the bar it sits above, edge to edge.
    Its containing block is .AXI-Sec, so 100% is the bar width whatever the sidebar state. */
-@media (max-width: 1399px) {
+@media (max-width: 1023px) {
   #axiMegaDropdown,
   #My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown#axiMegaDropdown {
     position: absolute !important;
