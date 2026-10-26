@@ -11,3 +11,5 @@ AxiApi/logs/
 *.user
 *.lscache
 /AxpertPlugins/AxiCMD/docs/.obsidian
+# Local Netlify folder
+.netlify
