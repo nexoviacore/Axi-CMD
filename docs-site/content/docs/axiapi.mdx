@@ -1,6 +1,6 @@
 ---
 title: AxiApi
-description: The ASP.NET Core API behind the palette - endpoints, layers and current limits.
+description: The ASP.NET Core API behind the palette - full endpoint reference (parameters, bodies, responses, errors), layers and current limits.
 ---
 
 AxiApi (`AxiApi/`) is an ASP.NET Core (.NET 8) API. In the ARM environment it is hosted as an IIS application (application pool with **No Managed Code**). Connection settings come from `appsettings.ini` in the parent microservices folder.
@@ -15,37 +15,219 @@ AxiController
             └─ Database  (PostgreSQL / Oracle)
 ```
 
-All endpoints are versioned under `/api/v1/Axi`.
+## API reference
 
-## Endpoints
+This page is written from the controller, DTOs and services, in the style of a Swagger page. In development the same API also has a live Swagger UI at `/swagger` (for example `http://localhost:5057/swagger`).
 
-These are the routes declared in `AxiController.cs`.
+### Conventions
 
-| Method | Route | Purpose |
+| | |
+| --- | --- |
+| **Base path** | `/api/v1/Axi` (route `api/v{version:apiVersion}/[controller]`, API version `1`). |
+| **Deployed URL** | `{ARM host}/AxiCMDApi/api/v1/Axi/...` - the palette builds it from the ARM URL. |
+| **Local URL** | `http://localhost:5057/api/v1/Axi/...` |
+| **Content type** | `application/json` for request and response bodies. |
+| **Authentication** | None. No action has `[Authorize]`; the caller sends `username` itself. |
+| **`appname`** | The Axpert application (project) name. It selects the database and Redis connection, and is part of every cache key. |
+| **Property names** | Successful responses use `camelCase` (for example `targetURL`). Error bodies from the exception handler use the C# names (`Success`, `Message`, `StatusCode`). |
+
+### Overview
+
+| Method | Route | Summary | Tag |
+| --- | --- | --- | --- |
+| `GET` | `/command-config` | Command configuration rows for a user | Commands |
+| `GET` | `/axi_get` | The command grammar used for autocomplete | Commands |
+| `GET` | `/user-favourites` | List a user's favourites | Favourites |
+| `POST` | `/user-favourites` | Add or remove a favourite | Favourites |
+| `PATCH` | `/user-favourites/{favouritesId}` | Rename a favourite | Favourites |
+| `GET` | `/user-settings` | List a user's settings | Settings |
+| `POST` | `/user-settings/{settingKey}` | Save one setting | Settings |
+| `POST` | `/setkeyfield` | Set the key field of a form | Structures |
+
+---
+
+### Commands
+
+#### `GET /command-config`
+
+Returns the command configuration rows (the `axi_command_config` table) that the palette turns into commands such as `Configure` and `SDK`.
+
+**Query parameters**
+
+| Name | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `appname` | string | yes | | Application name. |
+| `username` | string | yes | | User the configuration is cached for. |
+| `forceRefresh` | boolean | no | `false` | `true` deletes the cached copy and reads the database. |
+
+**Responses**
+
+| Status | Description | Body |
 | --- | --- | --- |
-| `GET` | `command-config` | The command configuration (`appname`, `username`, `forceRefresh`). |
-| `GET` | `axi_get` | The command grammar for autocomplete (`view`, `appname`, `forceRefresh`). |
-| `GET` | `user-favourites` | A user's favourites (`username`, `appname`). |
-| `POST` | `user-favourites` | Add or toggle a favourite (`appname`). |
-| `PATCH` | `user-favourites/{favouritesId}` | Rename a favourite (`username`, `appname`). |
-| `GET` | `user-settings` | A user's settings as key/value pairs (`username`, `appname`). |
-| `POST` | `user-settings/{settingKey}` | Save one setting (`appname`; `username` and `value` in the body). |
-| `POST` | `setkeyfield` | Set the key field of a form. |
+| `200` | The configuration rows. An empty array when there are none. | `CommandConfig[]` |
+| `400` | `appname` or `username` is missing or blank. | Validation problem details, or plain text `appname query parameter is required.` / `username query parameter is required.` |
+| `500` | Unexpected error. | [`ApiResponse`](#apiresponse) |
 
-`user-settings` returns `400` when `username` or `appname` is missing.
-
-### Example: set a key field
+**Example**
 
 ```http
-POST /api/v1/Axi/setkeyfield
-Content-Type: application/json
-
-{ "appName": "axpbase", "transId": "axusr", "keyField": "username", "username": "admin" }
+GET /api/v1/Axi/command-config?appname=axpbase&username=admin&forceRefresh=false
 ```
 
-It writes to `axp_tstructprops` with a parameterised upsert.
+```json
+[
+  {
+    "configId": "cfg_configure_app_props",
+    "command": "Configure",
+    "promptOptions": "application properties",
+    "promptId": "ad_pr",
+    "promptOptionType": "url",
+    "paramField": null,
+    "targetUrl": "../aspx/tstruct.aspx",
+    "extraParams": "act=load&transid=ad_pr&axpdef_axpertpropsid=1&dummyload=false",
+    "active": "T"
+  }
+]
+```
 
-### Example: add a favourite
+**Behaviour:** read from Redis first (`command_config`, per application and user). If Redis is unavailable or the call fails, the database is read and a warning is logged. A non-empty result is written back to Redis.
+
+---
+
+#### `GET /axi_get`
+
+Returns the command grammar: every command with its prompts, plus the prompts grouped by command token. The palette loads it once and builds autocomplete from it.
+
+**Query parameters**
+
+| Name | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `view` | enum | yes | | `Metadata`, `Commands`, `Prompts`, `FieldList` or `UserList` (not case sensitive). **Only `Metadata` is implemented.** |
+| `appname` | string | yes | | Application name. |
+| `forceRefresh` | boolean | no | `false` | `true` deletes the cached grammar and rebuilds it from the database. |
+
+**Responses**
+
+| Status | Description | Body |
+| --- | --- | --- |
+| `200` | The grammar (for `view=Metadata`). | [`Grammar`](#grammar) |
+| `400` | `view` is not one of the enum names. The message reads `Invalid view: Metadata` - it prints the parsed default, not the value you sent. | plain text |
+| `500` | Any other valid `view` (the other four are not implemented), or a database error. | [`ApiResponse`](#apiresponse) |
+
+**Example**
+
+```http
+GET /api/v1/Axi/axi_get?view=Metadata&appname=axpbase&forceRefresh=false
+```
+
+```json
+{
+  "commands": {
+    "ask": {
+      "cmdToken": 11,
+      "command": "ask",
+      "commandGroup": "ask",
+      "prompts": [
+        { "cmdToken": 11, "wordPos": 2, "prompt": "Chat", "promptSource": "", "promptParams": "", "promptValues": "", "extraParams": "" }
+      ]
+    }
+  },
+  "promptsByCmdToken": {
+    "11": [
+      { "cmdToken": 11, "wordPos": 2, "prompt": "Chat", "promptSource": "", "promptParams": "", "promptValues": "", "extraParams": "" }
+    ]
+  },
+  "loadedAtUtc": "2026-10-27T08:30:00Z"
+}
+```
+
+The example is trimmed and illustrative; the real grammar has one entry per command.
+
+**Behaviour:** cached in Redis as `commands` per application (expiry value 7200). `forceRefresh=true` deletes the key. Without Redis, or on a Redis failure, the database is read.
+
+---
+
+### Favourites
+
+<Callout type="warn" title="Favourites need a Redis connection">
+  `GET /user-favourites` fails with `400` ("Unable to connect Redis!") when the application's Redis connection is not
+  available. `POST /user-favourites` does not fail in that case: it returns `200` with an empty object and does nothing.
+</Callout>
+
+#### `GET /user-favourites`
+
+Returns the saved favourites of one user.
+
+**Query parameters**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `username` | string | yes | User whose favourites to return. |
+| `appname` | string | yes | Application name. |
+
+**Responses**
+
+| Status | Description | Body |
+| --- | --- | --- |
+| `200` | The favourites. An empty array when the user has none. | [`UserFavourite[]`](#userfavourite) |
+| `400` | `username` is empty (`Username is Invalid`), or Redis is not connected (`Unable to connect Redis!`), or writing the loaded list to Redis failed. | [`ApiResponse`](#apiresponse) |
+| `500` | Unexpected error. | [`ApiResponse`](#apiresponse) |
+
+**Example**
+
+```http
+GET /api/v1/Axi/user-favourites?username=admin&appname=axpbase
+```
+
+```json
+[
+  {
+    "favouritesId": "8f5c2a64-5f0b-4d4e-9a62-3a1f0c3e7b11",
+    "username": "admin",
+    "commandText": "My User List",
+    "originalCommandText": "configure user listing",
+    "favOrder": 0,
+    "targetURL": "../aspx/iview.aspx?ivname=axusers",
+    "createdOn": "2026-10-20T10:15:00"
+  }
+]
+```
+
+**Behaviour:** Redis key `userfavourites` per application and user. On a cache miss the database is read and the result is stored in Redis. The database is never read when Redis is not connected.
+
+---
+
+#### `POST /user-favourites`
+
+Adds a favourite, or removes one, depending on `action`.
+
+**Query parameters**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `appname` | string | yes | Application name. |
+
+**Request body** - [`UserFavouritesRequest`](#userfavouritesrequest)
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `username` | string | yes | Owner of the favourite. |
+| `action` | string | yes | `add` or `remove` (not case sensitive). |
+| `commandText` | string | yes | The name shown in the list. For `remove` it identifies the row (with `username`). |
+| `originalCommandText` | string | for `add` | The command that was typed. |
+| `favOrder` | integer | no | Sort position. |
+| `targetURL` | string | for `add` | Where the favourite opens. |
+
+**Responses**
+
+| Status | Description | Body |
+| --- | --- | --- |
+| `200` | `add`: rows matching `originalCommandText` after the insert. `remove`: the delete result. | [`UserFavourite[]`](#userfavourite) for `add`, [`NonQueryResult`](#nonqueryresult) for `remove` |
+| `200` | Redis is not connected: **nothing is added or removed** and the body is `{}`. | empty object |
+| `400` | `action` is not `add` or `remove` (`Action is Invalid`), `appname` is missing, or the database call failed. | [`ApiResponse`](#apiresponse) |
+| `500` | Unexpected error. | [`ApiResponse`](#apiresponse) |
+
+**Example - add**
 
 ```http
 POST /api/v1/Axi/user-favourites?appname=axpbase
@@ -60,6 +242,278 @@ Content-Type: application/json
   "targetURL": "../aspx/iview.aspx?ivname=axusers"
 }
 ```
+
+**Example - remove**
+
+```http
+POST /api/v1/Axi/user-favourites?appname=axpbase
+Content-Type: application/json
+
+{ "username": "admin", "commandText": "My User List", "action": "remove" }
+```
+
+**Behaviour:** `add` inserts into `Axi_UserFavourites`, then selects rows by `originalCommandText` only, so the returned list is not limited to `username`. `remove` deletes by `username` and `commandText`. Both delete the user's cached favourites so the next `GET` reloads them.
+
+---
+
+#### `PATCH /user-favourites/{favouritesId}`
+
+Renames a favourite (changes its `commandText`).
+
+**Path parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `favouritesId` | string (GUID) | `favouritesId` from `GET /user-favourites`. |
+
+**Query parameters**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `appname` | string | yes | Application name. |
+| `username` | string | yes | Owner; used to clear that user's cached favourites. |
+
+**Request body** - [`UpdateUserFavourites`](#updateuserfavourites)
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `commandText` | string | yes | The new name. |
+
+**Responses**
+
+| Status | Description | Body |
+| --- | --- | --- |
+| `200` | Updated. | [`NonQueryResult`](#nonqueryresult) |
+| `400` | `appname` is missing, or the database update failed. | [`ApiResponse`](#apiresponse) |
+| `500` | Unexpected error. | [`ApiResponse`](#apiresponse) |
+
+**Example**
+
+```http
+PATCH /api/v1/Axi/user-favourites/8f5c2a64-5f0b-4d4e-9a62-3a1f0c3e7b11?appname=axpbase&username=admin
+Content-Type: application/json
+
+{ "commandText": "Users" }
+```
+
+**Behaviour:** the user's cached favourites are deleted before the update. If Redis is not connected a warning is logged and the update still runs.
+
+---
+
+### Settings
+
+#### `GET /user-settings`
+
+Returns all AxiCMD settings saved for a user.
+
+**Query parameters**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `username` | string | yes | User. |
+| `appname` | string | yes | Application name. |
+
+**Responses**
+
+| Status | Description | Body |
+| --- | --- | --- |
+| `200` | Setting key to value. `{}` when nothing is saved. | `object` (string to string) |
+| `400` | `username` or `appname` is missing or blank. | validation problem details, or plain text `username query parameter is required.` / `appname query parameter is required.` |
+| `500` | Unexpected error. | [`ApiResponse`](#apiresponse) |
+
+**Example**
+
+```http
+GET /api/v1/Axi/user-settings?username=admin&appname=axpbase
+```
+
+```json
+{ "pagesize": "250" }
+```
+
+**Behaviour:** read from the `Axi_UserSettings` table (one row per user and key). Settings do not use Redis.
+
+---
+
+#### `POST /user-settings/{settingKey}`
+
+Saves one setting for a user.
+
+**Path parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `settingKey` | string | Setting name (not case sensitive, trimmed). The only supported key is `pagesize`. |
+
+**Query parameters**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `appname` | string | yes | Application name. |
+
+**Request body** - [`UserSettingRequest`](#usersettingrequest)
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `username` | string | yes | User the setting belongs to. |
+| `value` | string | yes | The new value. |
+
+**Responses**
+
+| Status | Description | Body |
+| --- | --- | --- |
+| `200` | Saved. `value` is the value that was stored, which may differ from what was sent. | `{ "key": "pagesize", "value": "250" }` |
+| `400` | `username` is empty (`Username is required in payload.`), `appname` is missing, or the key is not supported (`Unknown setting '<key>'.`). | plain text |
+| `500` | Unexpected error. | [`ApiResponse`](#apiresponse) |
+
+**Example**
+
+```http
+POST /api/v1/Axi/user-settings/pagesize?appname=axpbase
+Content-Type: application/json
+
+{ "username": "admin", "value": "250" }
+```
+
+**`pagesize` rules:** the number of records the palette loads at a time. Values are corrected, never rejected: a number is clamped to **100-5000**, and a non-numeric value becomes **100**. The key in the response is lower case. The server keeps these limits in step with `MIN_PAGE_SIZE`, `MAX_PAGE_SIZE` and `DEFAULT_PAGE_SIZE` in `axicmdmain.js`.
+
+**Behaviour:** the row is replaced with a `DELETE` followed by an `INSERT`, so the same code runs on PostgreSQL and Oracle.
+
+---
+
+### Structures
+
+#### `POST /setkeyfield`
+
+Sets the key field of a form (tstruct) in `axp_tstructprops`.
+
+**Request body** - [`SetKeyfieldRequest`](#setkeyfieldrequest) (all fields required)
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `appName` | string | Application name. |
+| `transId` | string | Form id. Stored in lower case. |
+| `keyField` | string | Field to use as the key field. |
+| `username` | string | User making the change. |
+
+**Responses**
+
+| Status | Description | Body |
+| --- | --- | --- |
+| `200` | The change was attempted. Check `success` in the body - a failed change still returns `200`. | [`ApiResponse`](#apiresponse) |
+| `400` | A required field is missing, or the database is unreachable. | validation problem details, or [`ApiResponse`](#apiresponse) |
+| `500` | Unexpected error. | [`ApiResponse`](#apiresponse) |
+
+**Example**
+
+```http
+POST /api/v1/Axi/setkeyfield
+Content-Type: application/json
+
+{ "appName": "axpbase", "transId": "axusr", "keyField": "username", "username": "admin" }
+```
+
+```json
+{ "success": true, "message": "Success", "statusCode": 200 }
+```
+
+**Behaviour:** a parameterised upsert (check if the row exists, then update or insert). Connecting to the database is retried up to 3 times before it fails.
+
+---
+
+### Other routes
+
+| Method | Route | Note |
+| --- | --- | --- |
+| `GET` | `/WeatherForecast` | The ASP.NET project template sample. It is not versioned, returns random data and is not used by AxiCMD. |
+
+## Schemas
+
+### CommandConfig
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `configId` | string | Row id, for example `cfg_configure_app_props`. |
+| `command` | string | The command word, for example `Configure`. |
+| `promptOptions` | string | The option typed after the command. |
+| `promptId` | string | Structure id the option opens. |
+| `promptOptionType` | string | `url`, `tstruct` and so on. |
+| `paramField` | string \| null | |
+| `targetUrl` | string \| null | Page to open. |
+| `extraParams` | string \| null | Query string added to the target. |
+| `active` | string | `T` or `F` (default `T`). |
+
+### Grammar
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `commands` | object | Command name (not case sensitive) to a `CommandNode`. |
+| `promptsByCmdToken` | object | Command token to a `PromptNode[]`. |
+| `loadedAtUtc` | string (date-time) | When the grammar was built. |
+
+**CommandNode:** `cmdToken` (integer), `command` (string), `commandGroup` (string), `prompts` (`PromptNode[]`).
+
+**PromptNode:** `cmdToken` (integer), `wordPos` (integer \| null), `prompt`, `promptSource`, `promptParams`, `promptValues`, `extraParams` (all string \| null).
+
+### UserFavourite
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `favouritesId` | string (GUID) | |
+| `username` | string | |
+| `commandText` | string | The name shown in the list. |
+| `originalCommandText` | string | The command that was typed. |
+| `favOrder` | integer \| null | |
+| `targetURL` | string | |
+| `createdOn` | string (date-time) \| null | |
+
+### UserFavouritesRequest
+
+`username`, `commandText`, `originalCommandText`, `action` (`add` \| `remove`), `targetURL` (strings) and `favOrder` (integer \| null). See [`POST /user-favourites`](#post-user-favourites).
+
+### UpdateUserFavourites
+
+`commandText` (string).
+
+### UserSettingRequest
+
+`username` (string), `value` (string).
+
+### SetKeyfieldRequest
+
+`appName`, `transId`, `keyField`, `username` (all strings, all required).
+
+### ApiResponse
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `success` | boolean | |
+| `message` | string | |
+| `statusCode` | integer | |
+
+Returned by `POST /setkeyfield` and by the exception handler. Error bodies from the handler use PascalCase names (`Success`, `Message`, `StatusCode`); the `setkeyfield` success body uses camelCase.
+
+### NonQueryResult
+
+The write result from the shared ARMCommon library. It has an `error` string that is empty on success; the other fields come from that library and are not defined in AxiApi.
+
+## Errors
+
+A global exception handler turns unhandled exceptions into an [`ApiResponse`](#apiresponse):
+
+```json
+{ "Success": false, "Message": "Action is Invalid", "StatusCode": 400 }
+```
+
+| Exception | Status | Message |
+| --- | --- | --- |
+| `ArgumentException` | `400` | The exception message. |
+| `DatabaseException` | `400` | `<action> Database Operation failed. Error: ...` |
+| `RedisCacheConnectionException` | `400` | `Unable to connect Redis!` |
+| `KeyNotFoundException` | `404` | The exception message. |
+| Anything else | `500` | `An unexpected error occured` |
+
+A missing required query parameter or body field is rejected earlier by ASP.NET Core model validation, with a standard `400` validation problem response.
 
 ## Redis cache
 
@@ -111,6 +565,7 @@ These are facts about the code today, not recommendations.
 - **No rate limiting.** No rate-limiting middleware or package is configured. Any limiting would come from IIS, a proxy or a gateway in front.
 - **Redis is used, through `AxExtend`.** See [Redis cache](#redis-cache). Favourites need a Redis connection (the database is only read on a cache miss); configuration and grammar fall back to the database without it.
 - **Pipeline.** `UseExceptionHandler`, `UseHttpsRedirection`, `UseCors`, `UseAuthorization`, `MapControllers`. Swagger is added in development.
+- **Unfinished pieces.** `axi_get` only serves `view=Metadata`. `POST /user-favourites` silently does nothing when Redis is not connected.
 
 <Callout type="info" title="Under consideration">
   Per-IP rate limiting with the built-in .NET 8 middleware, with a stricter policy for the POST routes, is a candidate
