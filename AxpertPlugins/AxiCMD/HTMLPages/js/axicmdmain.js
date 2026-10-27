@@ -1800,6 +1800,22 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Sets status text such as "Searching..." inside <bdi>. In an RTL page (Arabic) the trailing dots are
+     * neutral characters and take the page direction, so they jump to the start ("...Searching"). <bdi> works
+     * out the direction from the text itself, so English status text keeps its dots at the end while the row
+     * stays aligned with the page. Harmless in LTR.
+     * @param {HTMLElement} el - Element that receives the text.
+     * @param {string} text - Status text.
+     * @returns {void}
+     */
+    function setStatusText(el, text) {
+        el.textContent = "";
+        const bdi = document.createElement("bdi");
+        bdi.textContent = text;
+        el.appendChild(bdi);
+    }
+
+    /**
      * Builds the small non-selectable row shown under a paged list: a spinner while the next page is
      * loading, a hint when more rows can be loaded by scrolling, or a note when the render cap is reached.
      * It deliberately does not use the "axi-suggestion" class so keyboard navigation ignores it.
@@ -1818,11 +1834,11 @@ if (typeof document !== "undefined") {
         li.className = "axi-load-more";
         li.style.cssText = "list-style:none;text-align:center;padding:8px;font-size:12px;color:#6b7280;cursor:default;";
         if (activeFetches.has(`${ctx.listKey}_p${state.page + 1}`)) {
-            li.textContent = "Loading more...";
+            setStatusText(li, "Loading more...");
         } else if (renderedTotal >= MAX_RENDERED_ITEMS) {
-            li.textContent = `Showing first ${MAX_RENDERED_ITEMS} - type more to narrow the results`;
+            setStatusText(li, `Showing first ${MAX_RENDERED_ITEMS} - type more to narrow the results`);
         } else {
-            li.textContent = list.classList.contains("My-Command-Wrapper") ? "Scroll for more..." : "Scroll down for more...";
+            setStatusText(li, list.classList.contains("My-Command-Wrapper") ? "Scroll for more..." : "Scroll down for more...");
         }
         return li;
     }
@@ -1850,7 +1866,7 @@ if (typeof document !== "undefined") {
         // Re-render happens when the page arrives; remember where the user was scrolled to
         pendingScrollRestore = { top: list.scrollTop, left: list.scrollLeft };
         const footer = list.querySelector(".axi-load-more");
-        if (footer) footer.textContent = "Loading more...";
+        if (footer) setStatusText(footer, "Loading more...");
         loadList(ctx.source, ctx.param, ctx.term, nextPage, getPageSize());
     }
 
@@ -2854,7 +2870,7 @@ if (typeof document !== "undefined") {
 
             if (isCommandsLoading && !isInitialCommandStage) {
                 items = ["Loading Commands...."];
-                hintDiv.textContent = "Please wait...";
+                setStatusText(hintDiv, "Please wait...");
                 render();
                 return;
             }
@@ -6707,8 +6723,8 @@ if (typeof document !== "undefined") {
                 li.style.textAlign = "center";
                 const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || (isSearchPending() ? "Searching..." : "Loading options...");
                 li.innerHTML = `
-                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-right: 6px;"></span>
-                    <span>${loadingText}</span>
+                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-inline-end: 6px;"></span>
+                    <span><bdi>${loadingText}</bdi></span>
                 `;
                 list.appendChild(li);
                 list.style.display = "block";
@@ -6722,7 +6738,7 @@ if (typeof document !== "undefined") {
             li.textContent = "No Data";
             li.className = "no-data-axi-suggestion";
             li.style.color = "#FF0000";
-            li.style.textAlign = "left";
+            li.style.textAlign = "start";
             li.style.padding = "12px";
 
             list.appendChild(li);
@@ -6752,7 +6768,7 @@ if (typeof document !== "undefined") {
                 li.style.cursor = "default";
                 li.style.color = "#6c757d";
                 li.style.fontStyle = "italic";
-                li.textContent = displayText;
+                setStatusText(li, displayText);
             } else if (isCreateNewItem) {
                 li.classList.add("axi-create-new-item");
                 li.textContent = displayText;
@@ -6818,8 +6834,8 @@ if (typeof document !== "undefined") {
                 div.className = "d-flex align-items-center justify-content-center py-2 px-5 text-muted gap-2";
                 div.style.fontSize = "13px";
                 div.innerHTML = `
-                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-right: 6px;"></span>
-                    <span>${text}</span>
+                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-inline-end: 6px;"></span>
+                    <span><bdi>${text}</bdi></span>
                 `;
                 return div;
             };
