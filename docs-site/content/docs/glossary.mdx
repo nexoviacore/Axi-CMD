@@ -35,3 +35,5 @@ description: Terms used in AxiCMD and Axpert Web.
 | **Debounce** | A short delay that groups keystrokes before a server search is sent. |
 | **`axDatasourceObj`** | The in-memory cache of lists. Search results are stored under `<key>_q_<term>`. |
 | **View filter** | The condition from `<transid>_filter` in `axvarcore` that limits the records of `view` and `edit`. See [View filters](/docs/view-filters). |
+| **`btextDir-rtl`** | The class the shell puts on `<body>` when the app language is Arabic. The palette's RTL rules are all scoped to it. See [Arabic and RTL](/docs/arabic-rtl). |
+| **`setStatusText`** | The helper in `axicmdmain.js` that writes status messages such as `Searching...` inside `<bdi>`, so their trailing dots stay at the end in RTL. |

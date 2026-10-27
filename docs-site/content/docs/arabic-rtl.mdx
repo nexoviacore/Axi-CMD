@@ -1,0 +1,95 @@
+---
+title: Arabic and RTL
+description: How the palette mirrors itself when the app language is Arabic, and the rules for keeping it that way.
+---
+
+When a user picks Arabic as the application language, the Axpert shell switches to right-to-left (RTL). The palette follows it. This page describes what is mirrored, where the code lives and the rules for new styles.
+
+## How it switches
+
+1. The user opens the profile icon (`#mainProfileIcon`) in `aspx/mainHomeConfigTemplate.html`, then **Language**, and picks Arabic.
+2. The shell renders `<body>` with the class `btextDir-rtl` and `dir="rtl"` (from `aspx/Mainnew.aspx`). English gives `btextDir-ltr`.
+3. The palette reacts to that class only. It has no language setting of its own.
+
+<Callout type="warn" title="Only style the palette">
+  The shell header, sidebar and page wrapper are product code. Do not add RTL rules for them in
+  `axicmdmain.css`, even if they look wrong in Arabic. If a shell element needs fixing, raise it with the product team.
+</Callout>
+
+## Where the code is
+
+| File | What it does |
+| --- | --- |
+| `AxpertPlugins/AxiCMD/HTMLPages/css/axicmdmain.css` | A block at the very end, headed `RTL (Arabic) support`. Every rule is scoped to `body.btextDir-rtl`. |
+| `AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js` | `setStatusText(el, text)`, which writes status messages inside a `<bdi>` element. |
+| `aspx/mainHomeConfigTemplate.html` | Loads both files. Bump `axicmdmain.css?v=N` and `axicmdmain.js?v=N` after a change. |
+
+The rest of the stylesheet is written with physical `left` / `right` values. Instead of rewriting it, the RTL block overrides each of those values for Arabic, so the English layout is untouched.
+
+## What is mirrored
+
+| Element | In Arabic |
+| --- | --- |
+| Logo and its divider line | Divider and spacing move to the other side of the logo. |
+| Input box | Padding, margin and border swap sides; the text is right-aligned. |
+| Autocomplete hint and clear button | Move from the right to the left end of the input. |
+| Suggestions popup | Opens aligned to the right (`right` instead of `left`), including the grid layout. |
+| Verbs grid items | Text is right-aligned. |
+| Previous and next page arrows | Flipped horizontally, because they are drawn as left and right glyphs. |
+| Favourites list | Item padding, the add icon, the edit icon and the search box icon swap sides. |
+| Spinner | The gap sits on the correct side of the label. |
+| Version dialog readout | Aligned to the left. |
+| The bar itself (`.AXI-Sec`) | Pinned to the left edge on desktop, and to the right (beside the collapsed sidebar) on tablets. On phones it is full width. |
+
+## Two details worth knowing
+
+### The input keeps `direction: ltr`
+
+The input is right-aligned, but its text direction is left-to-right:
+
+```css
+body.btextDir-rtl .searchwrap-AXI #Axi-Searchinp {
+  direction: ltr;
+  text-align: right;
+}
+```
+
+Commands are English words and the palette adds a space after each one, for example `create `. In a right-to-left box that trailing space takes the RTL direction and is drawn to the **left** of the word, so the caret appeared on the wrong side of what the user had typed. Keeping the text direction left-to-right keeps the caret at the end of the command, while `text-align: right` keeps the text against the right edge.
+
+### Status text uses `<bdi>`
+
+Messages such as `Searching...`, `Loading...`, `Fetching Data...`, `Waiting for input...` and `Scroll down for more...` end in dots. Dots are neutral characters and take the page direction, so in Arabic `Searching...` was drawn as `...Searching`.
+
+`setStatusText` wraps the text in `<bdi>`, which works out the direction from the text itself. English status text keeps its dots at the end and the row stays aligned with the page. It changes nothing in English. Use it for any new status message:
+
+```js
+setStatusText(li, "Searching...");        // not li.textContent = "Searching..."
+```
+
+If you build the row with `innerHTML`, put the text inside `<bdi>…</bdi>` yourself.
+
+## Rules for new styles
+
+1. Prefer logical properties in new CSS: `margin-inline-start` / `margin-inline-end`, `padding-inline-*`, `inset-inline-*` and `text-align: start` / `end`. They follow the page direction and need no mirror rule.
+2. If you must use `left`, `right`, `margin-left`, `padding-right`, `border-left`, `text-align: left` and so on, add a matching rule to the RTL block at the end of `axicmdmain.css`, scoped to `body.btextDir-rtl`.
+3. Keep the RTL block last. It relies on appearing after the rules it overrides.
+4. A rule inside a media query needs its mirror inside the same query, because the base rule changes with the screen width.
+5. If the base rule uses `!important`, the mirror rule needs it too.
+6. Never target shell elements (`.aside`, `.header`, `.wrapper`, `.menu-*`) in the RTL block.
+
+## Testing
+
+1. Press Ctrl+F5 after bumping the version numbers.
+2. Open the profile icon, then **Language**, and choose Arabic.
+3. Check the bar at desktop, tablet and phone widths: logo divider, input, hint, clear button, the buttons at the end of the bar (the **Settings** gear is the last one) and the suggestions popup.
+4. Type a command followed by a space. The caret must stay at the right end of the text.
+5. Type a few characters of a record search and confirm the row reads `Searching...`, not `...Searching`.
+6. Open Favourites and the Settings panel.
+7. Switch back to English and confirm nothing moved.
+
+## Known gaps
+
+- **Arrow keys in the suggestion grid** still move left-to-right. In Arabic, ArrowLeft should move to the next item. The handlers are in `axicmdmain.js` where the input handles `ArrowLeft` and `ArrowRight`.
+- **Arabic typed into the input.** The input is left-to-right so that English commands behave. An Arabic word followed by a space can place the caret on the unexpected side.
+- **Shell rules in the palette stylesheet.** `axicmdmain.css` already overrides some shell selectors with physical sides in English mode (for example the collapsed-sidebar padding and the sidebar accent border). They are not mirrored here, by the rule above.
+- **Plain messages without dots** (for example `No Data`) are not wrapped in `<bdi>`. They are not affected by the trailing-dots problem.

@@ -44,3 +44,4 @@ It is rebuilt from the session on page load. See [View filters](/docs/view-filte
 | `view` / `edit` shows all records | No `axvarcore` row for the form, or an unresolved placeholder skipped the filter. See [View filters](/docs/view-filters). |
 | Search on a form fails with `column p.na does not exist` | The form has no key field. Known open item. |
 | List shows only the first 100 rows | Paged by design. Scroll to load more, or type 3 or more characters to search the server. |
+| In Arabic the bar, input or status text looks mirrored wrongly, or the Settings gear is missing | The `btextDir-rtl` rules in `axicmdmain.css` or the old cached stylesheet. Bump `axicmdmain.css?v=N` and press Ctrl+F5. See [Arabic and RTL](/docs/arabic-rtl). |
