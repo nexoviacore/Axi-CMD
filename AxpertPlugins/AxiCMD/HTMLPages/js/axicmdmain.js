@@ -2546,9 +2546,20 @@ if (typeof document !== "undefined") {
         }
 
         if (extraParams) {
+            // dummyload is already set above. A second (or malformed "false?") one makes the server cache this
+            // open's HTML, and 'act=load' without a record caches an empty "load" page that other openers
+            // (e.g. the Developer Studio modal) then reuse, which renders blank.
+            const dropped = isEdit ? ["dummyload"] : ["dummyload", "act"];
+            extraParams = extraParams.split("&")
+                .filter(p => p && !dropped.includes(p.split("=")[0].trim().toLowerCase()))
+                .join("&");
+        }
+        if (extraParams) {
             const separator = targetUrl.includes("?") ? "&" : "?";
             targetUrl += `${separator}${extraParams}`;
         }
+
+        console.log("[AxiCMD] redirectToTstruct targetUrl:", targetUrl, { transId, isEdit, extraParams });
 
         if (popUpOption) {
             // Query string only ever has one '?': a stray one breaks the contenturl parsing in PopupContainer.html

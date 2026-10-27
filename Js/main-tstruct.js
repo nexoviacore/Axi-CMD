@@ -13376,6 +13376,12 @@ function tstDummyLoad(_openingTrId) {
             }
         }
     } catch (ex) { }
+    // The dummy-load flow below only renders through LoadIframe, which targets middle1. In any other frame
+    // (e.g. the Developer Studio modal) it renders nothing, leaving a blank page, so ask the server for a full render.
+    if (window.frameElement && window.frameElement.id != "middle1" && !window.frameElement.id.startsWith("axMultiiframe_")) {
+        window.location.replace(window.location.href.replace(/([?&]dummyload=)[^&]*/i, "$1false%E2%99%A0"));
+        return;
+    }
     callParentNew("isdummyLoad=", "true");
     if (callParentNew("originalUri") != "") {
         resTstLoadDummy = $("#hdnTstLoadDummy").val();
