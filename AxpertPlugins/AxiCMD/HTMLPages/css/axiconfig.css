@@ -261,6 +261,59 @@ body {
   .ac-tab { transition: background 0.2s, color 0.2s, box-shadow 0.2s; }
 }
 
+/* Drawer animation. The page script unhides the drawer, then adds .ac-open on the next frame, and on close
+   removes .ac-open and hides it after the slide-out (300ms). The sheet slides in from the inline-end edge,
+   the scrim fades and blurs in, and the fields rise in one after another. */
+.ac-scrim { opacity: 0; transition: opacity 0.25s ease, backdrop-filter 0.25s ease; }
+.ac-scrim.ac-open {
+  opacity: 1;
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+.ac-drawer {
+  --ac-slide: 100%;
+  transform: translateX(var(--ac-slide));
+  opacity: 0.6;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 1, 1), opacity 0.3s ease;
+}
+[dir="rtl"] .ac-drawer { --ac-slide: -100%; }
+.ac-drawer.ac-open {
+  transform: translateX(0);
+  opacity: 1;
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+}
+.ac-drawer .ac-fields > *,
+.ac-drawer .ac-drawer-foot {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.ac-drawer.ac-open .ac-fields > *,
+.ac-drawer.ac-open .ac-drawer-foot {
+  animation: ac-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.ac-drawer.ac-open .ac-fields > :nth-child(2) { animation-delay: 0.08s; }
+.ac-drawer.ac-open .ac-fields > :nth-child(3) { animation-delay: 0.11s; }
+.ac-drawer.ac-open .ac-fields > :nth-child(4) { animation-delay: 0.14s; }
+.ac-drawer.ac-open .ac-fields > :nth-child(5) { animation-delay: 0.17s; }
+.ac-drawer.ac-open .ac-fields > :nth-child(6) { animation-delay: 0.2s; }
+.ac-drawer.ac-open .ac-fields > :nth-child(7) { animation-delay: 0.23s; }
+.ac-drawer.ac-open .ac-fields > :nth-child(n+8) { animation-delay: 0.26s; }
+.ac-drawer.ac-open .ac-drawer-foot { animation-delay: 0.28s; }
+.ac-drawer.ac-open .ac-fields > :first-child { animation-delay: 0.05s; }
+
+@keyframes ac-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Reduced motion: no slide or rise, only a quick fade */
+@media (prefers-reduced-motion: reduce) {
+  .ac-drawer, .ac-drawer.ac-open { transform: none; transition: opacity 0.15s linear; }
+  .ac-drawer .ac-fields > *, .ac-drawer .ac-drawer-foot { opacity: 1; transform: none; }
+  .ac-drawer.ac-open .ac-fields > *, .ac-drawer.ac-open .ac-drawer-foot { animation: none; }
+  .ac-scrim { transition: opacity 0.15s linear; }
+}
+
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .ac-scroll, .ac-tabs, .ac-search input { background: rgba(255, 255, 255, 0.95); }
 }

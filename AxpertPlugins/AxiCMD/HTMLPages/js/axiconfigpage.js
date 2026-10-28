@@ -288,18 +288,30 @@
                 }
                 setReadOnly(true);
             }
+            // Unhide first, then add .ac-open on the next frame so the slide-in transition runs (see axiconfig.css)
+            clearTimeout(hideTimer);
             scrim.hidden = false;
             drawer.hidden = false;
+            void drawer.offsetWidth;
+            scrim.classList.add("ac-open");
+            drawer.classList.add("ac-open");
             saveBtn.disabled = false;
-            (editing && !isEditable(editing) ? $("fActive") : inputOf.name).focus();
+            (editing && !isEditable(editing) ? $("fActive") : inputOf.name).focus({ preventScroll: true });
         }
 
         let opener = null;
+        let hideTimer = 0;
         function closeDrawer() {
-            drawer.hidden = true;
-            scrim.hidden = true;
+            if (!drawer.classList.contains("ac-open")) return;
+            drawer.classList.remove("ac-open");
+            scrim.classList.remove("ac-open");
             editing = null;
             (opener && document.contains(opener) ? opener : addBtn).focus();
+            // Hide once the slide-out has finished; the timer also covers reduced motion, where no transition runs
+            hideTimer = setTimeout(() => {
+                drawer.hidden = true;
+                scrim.hidden = true;
+            }, 320);
         }
 
         // True when this user may change the route of the row in the drawer: Configure Access and a Custom Option
