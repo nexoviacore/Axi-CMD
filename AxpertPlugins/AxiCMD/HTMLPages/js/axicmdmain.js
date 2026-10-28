@@ -8892,11 +8892,11 @@ if (typeof document !== "undefined") {
                 if (settingsMenu) settingsMenu.style.display = "none";
             };
 
-            // Opens the AxiCMD Config page (AxiConfig.html) in the work area. Only offered with Configure Access.
+            // Opens the AxiCMD Config page (AxiCMDConfig.html) in the work area. Only offered with Configure Access.
             const openConfigPage = () => {
                 const rtl = document.body.classList.contains("btextDir-rtl");
                 const lang = rtl ? "ar" : (document.documentElement.lang || "en");
-                const targetUrl = `${getAppBaseUrl()}/AxpertPlugins/AxiCMD/HTMLPages/AxiConfig.html` +
+                const targetUrl = `${getAppBaseUrl()}/AxpertPlugins/AxiCMD/HTMLPages/AxiCMDConfig.html` +
                     `?api=${encodeURIComponent(axiCommandConfigUrl)}` +
                     `&appname=${encodeURIComponent(getProjectName())}` +
                     `&username=${encodeURIComponent(window.mainUserName || "")}` +

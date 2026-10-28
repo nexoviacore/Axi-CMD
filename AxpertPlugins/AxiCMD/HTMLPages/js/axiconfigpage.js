@@ -1,5 +1,5 @@
 /*
- * AxiCMD Config page (AxiConfig.html). Read-only list of every `Configure` and `SDK` option.
+ * AxiCMD Config page (AxiCMDConfig.html). Read-only list of every `Configure` and `SDK` option.
  * The top half is pure logic (loaded by tests/axi-config-page-ticket-283.test.js); the bottom half wires the DOM
  * and only runs in a browser. Opened by the gear menu in axicmdmain.js with ?api=<command-config url>&appname=&username=&lang=.
  */
