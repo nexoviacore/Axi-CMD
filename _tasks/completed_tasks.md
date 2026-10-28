@@ -16,3 +16,6 @@
 
 9. 	In cmd line,"clear all" button is overlapped-Arabic language login
 
+10. Setting trace on or off and viewing the files should be available through configure command.
+Issue #30 
+
