@@ -1,0 +1,174 @@
+/* AxiCMD Config page. Same palette as the palette's settings panel (axicmdmain.css section 8):
+   ink #1d2547, muted #5b6482, coral #ef4444, amber #f59e0b, indigo glow #4f63c9.
+   Logical properties (inline-start / inline-end) make the page mirror itself when <html dir="rtl">. */
+:root {
+  --ink: #1d2547;
+  --muted: #5b6482;
+  --coral: #ef4444;
+  --amber: #f59e0b;
+  --indigo: #4f63c9;
+  --glass: rgba(255, 255, 255, 0.62);
+  --line: rgba(29, 37, 71, 0.12);
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  font: 14px/1.45 "Segoe UI", system-ui, -apple-system, "Noto Sans Arabic", sans-serif;
+  color: var(--ink);
+  /* Warm light top-end, cool indigo bottom-start: gives the glass something to blur */
+  background:
+    radial-gradient(520px 380px at 100% 0%, rgba(245, 158, 11, 0.38), transparent 70%),
+    radial-gradient(620px 460px at 0% 100%, rgba(79, 99, 201, 0.34), transparent 70%),
+    #eef0f8;
+  background-attachment: fixed;
+}
+
+.ac {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  max-width: 1100px;
+  margin-inline: auto;
+  padding: 24px clamp(12px, 3vw, 28px);
+}
+
+.ac-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.ac-title { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+.ac-sub { margin: 4px 0 0; color: var(--muted); }
+.ac-count { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.ac-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+
+.ac-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Tabs: a glass segmented control, the active one carries the amber-to-coral accent */
+.ac-tabs {
+  display: inline-flex;
+  padding: 4px;
+  gap: 4px;
+  border-radius: 14px;
+  background: var(--glass);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%);
+}
+
+.ac-tab {
+  font: inherit;
+  font-weight: 600;
+  color: var(--muted);
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ac-tab:hover { color: var(--ink); }
+
+.ac-tab[aria-selected="true"] {
+  color: #fff;
+  background: linear-gradient(135deg, var(--amber), var(--coral));
+  box-shadow: 0 6px 14px -6px rgba(239, 68, 68, 0.7);
+}
+
+.ac-tabn { margin-inline-start: 6px; font-weight: 500; opacity: 0.85; font-variant-numeric: tabular-nums; }
+
+.ac-search { flex: 1 1 240px; max-width: 360px; }
+
+.ac-search input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 14px;
+  font: inherit;
+  color: var(--ink);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%);
+}
+
+.ac-search input::placeholder { color: var(--muted); }
+
+/* The table sits on one large glass sheet that scrolls inside the page */
+.ac-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.46));
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: 0 28px 64px -16px rgba(29, 37, 71, 0.45), 0 6px 16px -6px rgba(29, 37, 71, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.ac-table { width: 100%; border-collapse: collapse; }
+
+.ac-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 12px 16px;
+  text-align: start;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid var(--line);
+}
+
+.ac-table td { padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.ac-table tbody tr:hover { background: rgba(255, 255, 255, 0.55); }
+
+.ac-name { font-weight: 600; }
+.ac-type { color: var(--muted); }
+.ac-target { color: var(--muted); font-family: Consolas, "Courier New", monospace; font-size: 12.5px; overflow-wrap: anywhere; direction: ltr; text-align: start; unicode-bidi: plaintext; }
+
+.ac-badge {
+  margin-inline-start: 8px;
+  padding: 2px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--indigo);
+  border-radius: 999px;
+  border: 1px solid rgba(79, 99, 201, 0.4);
+  background: rgba(79, 99, 201, 0.1);
+  white-space: nowrap;
+}
+
+.ac-state { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.ac-state::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
+.ac-on { color: #166534; }
+.ac-on::before { background: #22a559; }
+.ac-inactive { color: #9a3412; }
+.ac-inactive::before { background: transparent; border: 2px solid var(--coral); }
+
+/* Inactive options stay listed but recede */
+.ac-off .ac-name, .ac-off .ac-type, .ac-off .ac-target { opacity: 0.6; }
+
+.ac-status { margin: 0; padding: 28px 16px; text-align: center; color: var(--muted); }
+.ac-status[hidden] { display: none; }
+
+:focus-visible { outline: 3px solid var(--indigo); outline-offset: 2px; }
+
+/* Tablet and narrower: drop the Type column, keep the rest readable */
+@media (max-width: 900px) {
+  .ac-col-type, .ac-type { display: none; }
+  .ac-table th, .ac-table td { padding-inline: 12px; }
+  .ac-search { max-width: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ac-tab { transition: background 0.2s, color 0.2s, box-shadow 0.2s; }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ac-scroll, .ac-tabs, .ac-search input { background: rgba(255, 255, 255, 0.95); }
+}

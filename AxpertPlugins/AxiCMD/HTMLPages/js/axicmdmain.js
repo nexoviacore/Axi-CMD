@@ -8886,8 +8886,69 @@ if (typeof document !== "undefined") {
                 return panel;
             };
 
-            settingsBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
+            let settingsMenu = null;
+
+            const closeSettingsMenu = () => {
+                if (settingsMenu) settingsMenu.style.display = "none";
+            };
+
+            // Opens the AxiCMD Config page (AxiConfig.html) in the work area. Only offered with Configure Access.
+            const openConfigPage = () => {
+                const rtl = document.body.classList.contains("btextDir-rtl");
+                const lang = rtl ? "ar" : (document.documentElement.lang || "en");
+                const targetUrl = `${getAppBaseUrl()}/AxpertPlugins/AxiCMD/HTMLPages/AxiConfig.html` +
+                    `?api=${encodeURIComponent(axiCommandConfigUrl)}` +
+                    `&appname=${encodeURIComponent(getProjectName())}` +
+                    `&username=${encodeURIComponent(window.mainUserName || "")}` +
+                    `&lang=${encodeURIComponent(lang)}`;
+                const loadFn = (top && top.window && top.window.LoadIframe) || window.LoadIframe;
+                if (typeof loadFn === "function") loadFn(targetUrl);
+            };
+
+            // The gear opens a small menu: "Records per load" (the panel below) and, with Configure Access, "Configure"
+            const buildSettingsMenu = () => {
+                const menu = document.createElement("div");
+                menu.id = "axiSettingsMenu";
+                menu.className = "axi-sm";
+                menu.setAttribute("role", "menu");
+                const entries = [{ id: "pagesize", label: "Records per load", run: () => openPageSizePanel() }];
+                if (getAccessPermissions().appMgrAccess) entries.push({ id: "configure", label: "Configure", run: openConfigPage });
+                entries.forEach((en) => {
+                    const item = document.createElement("button");
+                    item.type = "button";
+                    item.className = "axi-sm-item";
+                    item.setAttribute("role", "menuitem");
+                    item.dataset.entry = en.id;
+                    item.textContent = en.label;
+                    item.addEventListener("click", (ev) => { ev.stopPropagation(); closeSettingsMenu(); en.run(); });
+                    menu.appendChild(item);
+                });
+                menu.addEventListener("keydown", (ev) => {
+                    const items = Array.prototype.slice.call(menu.querySelectorAll(".axi-sm-item"));
+                    const at = items.indexOf(document.activeElement);
+                    if (ev.key === "ArrowDown") { items[(at + 1) % items.length].focus(); ev.preventDefault(); }
+                    else if (ev.key === "ArrowUp") { items[(at - 1 + items.length) % items.length].focus(); ev.preventDefault(); }
+                    else if (ev.key === "Escape") { closeSettingsMenu(); settingsBtn.focus(); }
+                });
+                document.body.appendChild(menu);
+                return menu;
+            };
+
+            const openSettingsMenu = () => {
+                // Rebuilt each time so Configure appears or disappears with the current access
+                if (settingsMenu) settingsMenu.remove();
+                settingsMenu = buildSettingsMenu();
+                const r = settingsBtn.getBoundingClientRect();
+                settingsMenu.style.display = "block";
+                const h = settingsMenu.offsetHeight;
+                const top = (r.bottom + h + 8 > window.innerHeight) ? Math.max(8, r.top - h - 8) : r.bottom + 8;
+                const left = Math.max(8, Math.min(r.left, window.innerWidth - settingsMenu.offsetWidth - 8));
+                settingsMenu.style.top = top + "px";
+                settingsMenu.style.left = left + "px";
+                settingsMenu.querySelector(".axi-sm-item").focus();
+            };
+
+            const openPageSizePanel = () => {
                 if (!settingsPanel) settingsPanel = buildSettingsPanel();
                 if (settingsPanel.style.display === "block") { closeSettingsPanel(); return; }
                 settingsPanel.querySelector("#axiPageSizeInput").value = getPageSize();
@@ -8913,13 +8974,24 @@ if (typeof document !== "undefined") {
                 settingsPanel.style.top = top + "px";
                 settingsPanel.style.left = left + "px";
                 settingsPanel.querySelector("#axiPageSizeInput").focus();
+            };
+
+            settingsBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                closeSettingsPanel();
+                if (settingsMenu && settingsMenu.style.display === "block") { closeSettingsMenu(); return; }
+                openSettingsMenu();
             });
             // Also reachable from the iframe click/Esc handlers (attachClickToDoc) and the shell-wide Esc key
-            window.axiCloseSettingsPanel = closeSettingsPanel;
+            window.axiCloseSettingsPanel = () => { closeSettingsPanel(); closeSettingsMenu(); };
             document.addEventListener("keydown", (e) => {
-                if (e.key === "Escape") closeSettingsPanel();
+                if (e.key === "Escape") { closeSettingsPanel(); closeSettingsMenu(); }
             });
             document.addEventListener("click", (e) => {
+                if (settingsMenu && settingsMenu.style.display === "block" &&
+                    !settingsMenu.contains(e.target) && !settingsBtn.contains(e.target)) {
+                    closeSettingsMenu();
+                }
                 if (settingsPanel && settingsPanel.style.display === "block" &&
                     !settingsPanel.contains(e.target) && !settingsBtn.contains(e.target)) {
                     closeSettingsPanel();

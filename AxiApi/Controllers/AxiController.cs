@@ -54,6 +54,15 @@ namespace AxiApi.Controllers
             return Ok(configs);
         }
 
+        [HttpGet("command-config/options")]
+        public async Task<ActionResult<List<CommandConfigOptionDTO>>> GetCommandConfigOptions([FromQuery] string appname, [FromQuery] string username)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+
+            return Ok(await _commandConfigService.GetAllCommandOptionsAsync(appname));
+        }
+
         [HttpGet("axi_get")]
 
         public async Task<IActionResult> AxiGet([FromQuery] string view, [FromQuery] bool forceRefresh, [FromQuery] string appname)

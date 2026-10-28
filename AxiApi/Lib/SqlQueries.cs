@@ -8,6 +8,19 @@ namespace AxiApi.Lib
             "WHERE active = 'T' " +
             "ORDER BY command, prompt_options";
 
+        // Every Configure / SDK option, inactive ones too (the AxiCMD Config page lists them all)
+        public const string SelectAllCommandConfigs =
+            "SELECT config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system " +
+            "FROM axi_command_config " +
+            "WHERE LOWER(command) IN ('configure', 'sdk') " +
+            "ORDER BY command, prompt_options";
+
+        // Option names (wordpos 2) and record source names (wordpos 3) of Configure (cmdtoken 4) and SDK (cmdtoken 7)
+        public const string SelectCommandOptionPrompts =
+            "SELECT cmdtoken, wordpos, promptvalues, promptsource " +
+            "FROM axi_command_prompts " +
+            "WHERE cmdtoken IN (4, 7) AND wordpos IN (2, 3)";
+
         public const string CheckTstructPropsExists = 
             "SELECT COUNT(*) FROM axp_tstructprops WHERE LOWER(name) = :transid";
 

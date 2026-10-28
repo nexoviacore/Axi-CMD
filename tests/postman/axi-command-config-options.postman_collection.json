@@ -1,0 +1,65 @@
+{
+  "info": {
+    "name": "AxiApi command-config options (ticket 283)",
+    "description": "Read-only list of every Configure and SDK option, inactive ones included, with is_system (isSystem) and the record source name. Set variables: axiApiUrl (e.g. https://host/AxiCMDApi), appname, username. Needs a database that ran axi_command_config.sql (ticket 282).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "axiApiUrl", "value": "https://YOUR-HOST/AxiCMDApi" },
+    { "key": "appname", "value": "YOUR-APP" },
+    { "key": "username", "value": "admin" }
+  ],
+  "item": [
+    {
+      "name": "list all options",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const rows = pm.response.json();",
+              "pm.test('array of rows', () => pm.expect(rows).to.be.an('array').that.is.not.empty);",
+              "pm.test('only Configure and SDK', () => rows.forEach(r => pm.expect(['configure', 'sdk']).to.include(r.command.toLowerCase())));",
+              "pm.test('every row has isSystem T or F', () => rows.forEach(r => pm.expect(['T', 'F']).to.include(r.isSystem)));",
+              "pm.test('both tabs present', () => { const c = rows.map(r => r.command.toLowerCase()); pm.expect(c).to.include('configure'); pm.expect(c).to.include('sdk'); });",
+              "pm.test('active flag is T or F (inactive rows are returned)', () => rows.forEach(r => pm.expect(['T', 'F']).to.include(r.active)));",
+              "pm.test('Configure user has a record source', () => { const u = rows.find(r => r.command === 'Configure' && r.promptOptions === 'user'); pm.expect(u, 'cfg_configure_user').to.exist; pm.expect(u.recordSource).to.eql('axi_userlist'); pm.expect(u.isSystem).to.eql('T'); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}&username={{username}}",
+          "host": ["{{axiApiUrl}}"],
+          "path": ["api", "v1", "Axi", "command-config", "options"],
+          "query": [
+            { "key": "appname", "value": "{{appname}}" },
+            { "key": "username", "value": "{{username}}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "missing appname is rejected",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": ["pm.test('400', () => pm.response.to.have.status(400));"] }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?username={{username}}",
+          "host": ["{{axiApiUrl}}"],
+          "path": ["api", "v1", "Axi", "command-config", "options"],
+          "query": [{ "key": "username", "value": "{{username}}" }]
+        }
+      }
+    }
+  ]
+}

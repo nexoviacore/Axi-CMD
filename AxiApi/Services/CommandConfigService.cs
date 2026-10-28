@@ -90,5 +90,13 @@ namespace AxiApi.Services
 
             return configs ?? new List<CommandConfigDTO>();
         }
+
+        // Not cached: the Config page must always show what is in the table
+        public async Task<List<CommandConfigOptionDTO>> GetAllCommandOptionsAsync(string appname)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return new List<CommandConfigOptionDTO>();
+            return await _repository.GetAllCommandOptionsAsync(appname);
+        }
     }
 }

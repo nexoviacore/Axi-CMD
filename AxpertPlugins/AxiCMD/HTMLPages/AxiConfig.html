@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AxiCMD Config</title>
+    <!-- Own styles and script only; no CDN. Opened from the palette gear menu (axicmdmain.js). -->
+    <link rel="stylesheet" href="css/axiconfig.css">
+</head>
+
+<body>
+    <main class="ac" aria-labelledby="acTitle">
+        <header class="ac-head">
+            <div>
+                <h1 id="acTitle" class="ac-title">AxiCMD Config</h1>
+                <p class="ac-sub">Every option the Configure and SDK commands offer. Read-only for now.</p>
+            </div>
+            <span id="acCount" class="ac-count" aria-live="polite"></span>
+        </header>
+
+        <div class="ac-bar">
+            <div class="ac-tabs" role="tablist" aria-label="Command">
+                <button id="tab-configure" class="ac-tab" role="tab" type="button" data-tab="configure"
+                    aria-selected="true" aria-controls="acTable">Configure <span id="acCountConfigure" class="ac-tabn">0</span></button>
+                <button id="tab-sdk" class="ac-tab" role="tab" type="button" data-tab="sdk" aria-selected="false"
+                    tabindex="-1" aria-controls="acTable">SDK <span id="acCountSdk" class="ac-tabn">0</span></button>
+            </div>
+            <label class="ac-search">
+                <span class="ac-vh">Search by name or target</span>
+                <input id="acSearch" type="search" placeholder="Search by name or target" autocomplete="off">
+            </label>
+        </div>
+
+        <div class="ac-scroll" tabindex="0" role="region" aria-label="Options table">
+            <table id="acTable" class="ac-table" role="tabpanel">
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col" class="ac-col-type">Type</th>
+                        <th scope="col">Target</th>
+                        <th scope="col">State</th>
+                    </tr>
+                </thead>
+                <tbody id="acBody"></tbody>
+            </table>
+            <p id="acStatus" class="ac-status" role="status">Loading options...</p>
+        </div>
+    </main>
+    <script src="js/axiconfigpage.js"></script>
+</body>
+
+</html>
