@@ -77,6 +77,25 @@ body {
   box-shadow: 0 6px 14px -6px rgba(239, 68, 68, 0.7);
 }
 
+/* Sliding highlight: the page script adds .ac-has-pill and one .ac-tab-pill that it moves to the selected tab,
+   so the selected tab itself stays transparent and only the pill carries the gradient */
+.ac-tabs.ac-has-pill { position: relative; }
+.ac-tabs.ac-has-pill .ac-tab { position: relative; z-index: 1; }
+.ac-tabs.ac-has-pill .ac-tab[aria-selected="true"] { background: transparent; box-shadow: none; }
+.ac-tab-pill {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  width: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--amber), var(--coral));
+  box-shadow: 0 6px 14px -6px rgba(239, 68, 68, 0.7);
+  pointer-events: none;
+  transition: transform 0.38s cubic-bezier(0.34, 1.32, 0.64, 1), width 0.38s cubic-bezier(0.34, 1.32, 0.64, 1);
+}
+.ac-tab-pill.ac-no-anim { transition: none; }
+
 .ac-tabn { margin-inline-start: 6px; font-weight: 500; opacity: 0.85; font-variant-numeric: tabular-nums; }
 
 .ac-search { flex: 1 1 240px; max-width: 360px; }
@@ -306,12 +325,45 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Tab switch: the new tab's rows slide in from the side of the tab that was picked (next = inline-end),
+   one after another. Only the first 12 rows are staggered; the rest arrive with the 12th. */
+.ac-table tbody.ac-swap-next tr { animation: ac-swap-next 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.ac-table tbody.ac-swap-prev tr { animation: ac-swap-prev 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.ac-table tbody[class*="ac-swap-"] tr:nth-child(2) { animation-delay: 0.025s; }
+.ac-table tbody[class*="ac-swap-"] tr:nth-child(3) { animation-delay: 0.05s; }
+.ac-table tbody[class*="ac-swap-"] tr:nth-child(4) { animation-delay: 0.075s; }
+.ac-table tbody[class*="ac-swap-"] tr:nth-child(5) { animation-delay: 0.1s; }
+.ac-table tbody[class*="ac-swap-"] tr:nth-child(6) { animation-delay: 0.125s; }
+.ac-table tbody[class*="ac-swap-"] tr:nth-child(7) { animation-delay: 0.15s; }
+.ac-table tbody[class*="ac-swap-"] tr:nth-child(8) { animation-delay: 0.175s; }
+.ac-table tbody[class*="ac-swap-"] tr:nth-child(9) { animation-delay: 0.2s; }
+.ac-table tbody[class*="ac-swap-"] tr:nth-child(10) { animation-delay: 0.225s; }
+.ac-table tbody[class*="ac-swap-"] tr:nth-child(11) { animation-delay: 0.25s; }
+.ac-table tbody[class*="ac-swap-"] tr:nth-child(n+12) { animation-delay: 0.275s; }
+
+@keyframes ac-swap-next {
+  from { opacity: 0; transform: translateX(var(--ac-swap-shift, 24px)); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes ac-swap-prev {
+  from { opacity: 0; transform: translateX(calc(-1 * var(--ac-swap-shift, 24px))); }
+  to { opacity: 1; transform: translateX(0); }
+}
+[dir="rtl"] .ac-table tbody { --ac-swap-shift: -24px; }
+
 /* Reduced motion: no slide or rise, only a quick fade */
 @media (prefers-reduced-motion: reduce) {
   .ac-drawer, .ac-drawer.ac-open { transform: none; transition: opacity 0.15s linear; }
   .ac-drawer .ac-fields > *, .ac-drawer .ac-drawer-foot { opacity: 1; transform: none; }
   .ac-drawer.ac-open .ac-fields > *, .ac-drawer.ac-open .ac-drawer-foot { animation: none; }
   .ac-scrim { transition: opacity 0.15s linear; }
+  .ac-tab-pill { transition: none; }
+  .ac-table tbody[class*="ac-swap-"] tr { animation: ac-fade 0.15s linear both; animation-delay: 0s; }
+}
+
+@keyframes ac-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

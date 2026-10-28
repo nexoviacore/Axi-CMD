@@ -156,6 +156,8 @@
         function updateCounts() {
             $("acCountConfigure").textContent = groups.configure.length;
             $("acCountSdk").textContent = groups.sdk.length;
+            // The counts change the tab widths, so the highlight has to follow
+            movePill(false);
         }
 
         // ---- Add option drawer ----
@@ -411,9 +413,15 @@
             return td;
         }
 
-        function render() {
+        // swapFrom: on a tab switch, "next" or "prev" makes the rows slide in from that side (see axiconfig.css)
+        function render(swapFrom) {
             const rows = filterRows(groups[active], search.value);
             body.textContent = "";
+            body.classList.remove("ac-swap-next", "ac-swap-prev");
+            if (swapFrom) {
+                void body.offsetWidth;
+                body.classList.add("ac-swap-" + swapFrom);
+            }
             rows.forEach((r) => {
                 const tr = document.createElement("tr");
                 if (!r.active) tr.className = "ac-off";
@@ -462,7 +470,37 @@
             status.textContent = groups[active].length ? "Nothing matches \"" + search.value.trim() + "\". Try part of a name or target." : "No options found.";
         }
 
+        // Sliding highlight behind the selected tab: one pill that moves and resizes instead of each tab repainting
+        const tabList = tabs.length ? tabs[0].parentNode : null;
+        const pill = document.createElement("span");
+        pill.className = "ac-tab-pill";
+        pill.setAttribute("aria-hidden", "true");
+        if (tabList) {
+            tabList.insertBefore(pill, tabList.firstChild);
+            tabList.classList.add("ac-has-pill");
+        }
+        function movePill(animate) {
+            const sel = tabs.find((t) => t.dataset.tab === active);
+            if (!sel) return;
+            if (!animate) pill.classList.add("ac-no-anim");
+            pill.style.width = sel.offsetWidth + "px";
+            pill.style.transform = "translateX(" + sel.offsetLeft + "px)";
+            if (!animate) {
+                void pill.offsetWidth;
+                pill.classList.remove("ac-no-anim");
+            }
+        }
+        window.addEventListener("resize", () => movePill(false));
+
         function selectTab(name) {
+            // Same tab (first load, or a save in the open tab): just redraw, no slide
+            if (name === active) {
+                movePill(false);
+                render();
+                return;
+            }
+            const from = tabs.findIndex((t) => t.dataset.tab === active);
+            const to = tabs.findIndex((t) => t.dataset.tab === name);
             active = name;
             tabs.forEach((t) => {
                 const on = t.dataset.tab === name;
@@ -470,7 +508,8 @@
                 t.tabIndex = on ? 0 : -1;
             });
             $("acTable").setAttribute("aria-labelledby", "tab-" + name);
-            render();
+            movePill(true);
+            render(to > from ? "next" : "prev");
         }
 
         tabs.forEach((t, i) => {
@@ -486,7 +525,7 @@
                 e.preventDefault();
             });
         });
-        search.addEventListener("input", render);
+        search.addEventListener("input", () => render());
 
         const api = apiBase, appname = appName, username = userName;
         if (!api || !appname) {
