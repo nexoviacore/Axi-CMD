@@ -652,16 +652,15 @@ if (typeof document !== "undefined") {
 
     /**
      * Brings the local page size in line with the one saved on the server for this user (the server copy is
-     * what follows the user to another browser or machine). Never rejects and never waits long: if the API
-     * is down or slow the local value (or the default) is used.
-     * @returns {Promise<void>} Resolves when the check is over.
+     * what follows the user to another browser or machine). Never rejects and nobody waits for it: the lists load
+     * at once with the value known in this browser (or the default), and if the answer arrives later and differs
+     * from what the lists were loaded with, the setting is applied and the lists are reloaded, so the saved value
+     * is never silently ignored. The request is not aborted when it is slow (a cold API can take several seconds).
+     * @returns {void}
      */
-    async function syncPageSizeFromServer() {
+    function syncPageSizeFromServer() {
         if (!axiSettingsUrl || !window.mainUserName) return;
         const sizeInUse = getPageSize();
-        // The request is NOT aborted when it is slow (a cold API can take several seconds). The palette only waits
-        // 2.5 s for it; if the answer arrives later and differs from what the lists were loaded with, the setting is
-        // applied then and the lists are reloaded, so the saved value is never silently ignored.
         const request = fetchServerPageSize().then(remote => {
             if (remote === undefined) return;               // unreachable: keep the local value
             if (remote === null) {
@@ -675,12 +674,9 @@ if (typeof document !== "undefined") {
             }
             return true;
         });
-        const waited = await Promise.race([request, new Promise(resolve => setTimeout(() => resolve("timeout"), 2500))]);
-        if (waited === "timeout") {
-            request.then(done => {
-                if (done && getPageSize() !== sizeInUse && btnRefresh) btnRefresh.click();
-            });
-        }
+        request.then(done => {
+            if (done && getPageSize() !== sizeInUse && btnRefresh) btnRefresh.click();
+        });
     }
 
     /**
@@ -1140,8 +1136,10 @@ if (typeof document !== "undefined") {
 
 
         if (axicmdenabled) {
-            // The saved "records to load at a time" must be known before the first lists are requested
-            syncPageSizeFromServer().finally(() => initCommands(false));
+            // The commands load at once with the page size known in this browser. The value saved on the server is
+            // checked in the background and reloads the lists only if it differs (#275).
+            syncPageSizeFromServer();
+            initCommands(false);
             loadFavorites();
         }
 
