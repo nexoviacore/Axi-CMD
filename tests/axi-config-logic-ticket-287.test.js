@@ -95,7 +95,7 @@ test('replaceRow swaps the updated row in its tab', () => {
 
 test('the page wires edit mode, the rename warning and a read-only built-in view', () => {
     const js = read('AxpertPlugins', 'AxiCMD', 'HTMLPages', 'js', 'axiconfigpage.js');
-    assert.match(js, /method: "PUT"[\s\S]*buildUpdateUrl|buildUpdateUrl[\s\S]*method: "PUT"/);
+    assert.match(js, /method: "POST"[\s\S]*buildUpdateUrl|buildUpdateUrl[\s\S]*method: "POST"/);
     assert.match(js, /renameWarning/);
     assert.match(js, /isEditable/);
     const h = read('AxpertPlugins', 'AxiCMD', 'HTMLPages', 'AxiCMDConfig.html');
@@ -105,7 +105,7 @@ test('the page wires edit mode, the rename warning and a read-only built-in view
 // ---- server mirror -------------------------------------------------------------------------------------------
 test('the API has the update endpoint, refuses Built-in route changes and clears caches', () => {
     const ctl = read('AxiApi', 'Controllers', 'AxiController.cs');
-    assert.match(ctl, /HttpPut\("command-config\/options\/\{configId\}"\)/);
+    assert.match(ctl, /HttpPost\("command-config\/options\/\{configId\}"\)/);
     const repo = read('AxiApi', 'Repositories', 'CommandConfigRepository.cs');
     assert.match(repo, /UpdateCommandOptionAsync/);
     assert.match(repo, /Built-in Options/);

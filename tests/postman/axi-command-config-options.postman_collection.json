@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "AxiApi command-config options (tickets 283, 284, 285, 286, 287)",
-    "description": "Read-only list of every Configure and SDK option, inactive ones included, with is_system (isSystem) and the record source name. Set variables: axiApiUrl (e.g. https://host/AxiCMDApi), appname, username. Needs a database that ran axi_command_config.sql (ticket 282). Ticket 284 adds the Active switch (PUT .../options/{configId}/active). Run the folder in order: it deactivates the option in variable configId, checks the read cache is fresh, then reactivates it. Variable configId must be a shipped Configure or SDK option. Ticket 285 adds POST .../options (create a Custom Option of type url): run the 285 requests in order after the 284 ones. They check the access refusal, name rules (comma, blank, 201 characters, duplicate in another case including a Built-in name), the type and URL rules, then create \"Postman Audit <timestamp>\", read it back through GET command-config and the options list (record sources of existing options unchanged = lists still paired) and finally switch the new option off. Each run leaves one inactive Custom Option behind: there is no delete. Ticket 287 adds PUT .../options/{configId} (edit or rename a Custom Option, in place). Run the 287 requests in order after the 286 ones: they create \"Postman Edit <timestamp>\", check the access, name and route rules (403, 400, 404, 409), rename it and change its route and record source, read it back through the list and GET command-config (other options keep their record sources = lists stay paired), check that a Built-in Option refuses any route, name or record source change with 403 while an unchanged body is accepted, and finally switch the edited option off. Each run leaves one inactive Custom Option behind.",
+    "description": "Read-only list of every Configure and SDK option, inactive ones included, with is_system (isSystem) and the record source name. Set variables: axiApiUrl (e.g. https://host/AxiCMDApi), appname, username. Needs a database that ran axi_command_config.sql (ticket 282). Ticket 284 adds the Active switch (POST .../options/{configId}/active). Run the folder in order: it deactivates the option in variable configId, checks the read cache is fresh, then reactivates it. Variable configId must be a shipped Configure or SDK option. Ticket 285 adds POST .../options (create a Custom Option of type url): run the 285 requests in order after the 284 ones. They check the access refusal, name rules (comma, blank, 201 characters, duplicate in another case including a Built-in name), the type and URL rules, then create \"Postman Audit <timestamp>\", read it back through GET command-config and the options list (record sources of existing options unchanged = lists still paired) and finally switch the new option off. Each run leaves one inactive Custom Option behind: there is no delete. Ticket 287 adds POST .../options/{configId} (edit or rename a Custom Option, in place). Run the 287 requests in order after the 286 ones: they create \"Postman Edit <timestamp>\", check the access, name and route rules (403, 400, 404, 409), rename it and change its route and record source, read it back through the list and GET command-config (other options keep their record sources = lists stay paired), check that a Built-in Option refuses any route, name or record source change with 403 while an unchanged body is accepted, and finally switch the edited option off. Each run leaves one inactive Custom Option behind.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -160,7 +160,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -208,7 +208,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -297,7 +297,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -426,7 +426,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -513,7 +513,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -1366,7 +1366,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -1820,7 +1820,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -1868,7 +1868,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -1916,7 +1916,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2069,7 +2069,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2116,7 +2116,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2163,7 +2163,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2210,7 +2210,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2257,7 +2257,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2313,7 +2313,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2360,7 +2360,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2407,7 +2407,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2454,7 +2454,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2511,7 +2511,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2569,7 +2569,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2712,7 +2712,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2811,7 +2811,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2867,7 +2867,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2923,7 +2923,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -2970,7 +2970,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",
@@ -3061,7 +3061,7 @@
         }
       ],
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [
           {
             "key": "Content-Type",

@@ -135,7 +135,7 @@
             input.disabled = true;
             showNote("Saving...", false);
             return fetch(buildActiveUrl(apiBase, row.id, appName), {
-                method: "PUT",
+                method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(buildActiveBody(userName, wanted, hasAccess))
             }).then((res) => {
@@ -344,7 +344,7 @@
             const target = editing;
             const request = target
                 ? fetch(Logic.buildUpdateUrl(apiBase, target.id, appName), {
-                    method: "PUT",
+                    method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(Logic.buildUpdateBody(userName, hasAccess, checked.value))
                 })

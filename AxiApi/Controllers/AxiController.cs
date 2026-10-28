@@ -64,7 +64,7 @@ namespace AxiApi.Controllers
             return Ok(await _commandConfigService.GetAllCommandOptionsAsync(appname));
         }
 
-        [HttpPut("command-config/options/{configId}/active")]
+        [HttpPost("command-config/options/{configId}/active")]
         public async Task<IActionResult> SetCommandOptionActive([FromRoute] string configId, [FromBody] SetCommandOptionActiveRequestDTO requestDTO, [FromQuery] string appname)
         {
             var refused = CheckConfigureAccess(appname, requestDTO?.Username, requestDTO?.AppMgrAccess ?? false);
@@ -93,7 +93,7 @@ namespace AxiApi.Controllers
             }
         }
 
-        [HttpPut("command-config/options/{configId}")]
+        [HttpPost("command-config/options/{configId}")]
         public async Task<IActionResult> UpdateCommandOption([FromRoute] string configId, [FromBody] UpdateCommandOptionRequestDTO requestDTO, [FromQuery] string appname)
         {
             var refused = CheckConfigureAccess(appname, requestDTO?.Username, requestDTO?.AppMgrAccess ?? false);

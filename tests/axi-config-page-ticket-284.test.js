@@ -58,7 +58,7 @@ test('palette passes Configure Access to the page', () => {
 });
 
 test('API write checks appMgrAccess first and clears the command-config cache key', () => {
-    assert.match(controller, /HttpPut\("command-config\/options\/\{configId\}\/active"\)/);
+    assert.match(controller, /HttpPost\("command-config\/options\/\{configId\}\/active"\)/);
     // one shared guard (appname, username, Configure Access) used by the three write actions
     assert.match(controller, /CheckConfigureAccess\(string appname, string\? username, bool appMgrAccess\)[\s\S]{0,600}StatusCode\(StatusCodes\.Status403Forbidden/);
     assert.strictEqual((controller.match(/CheckConfigureAccess\(appname, requestDTO/g) || []).length, 3);
