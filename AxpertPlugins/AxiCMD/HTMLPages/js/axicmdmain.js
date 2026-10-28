@@ -10038,22 +10038,27 @@ if (typeof document !== "undefined") {
             if (matched) return matched;
         }
 
-        // 5. Substring match
+        // 5. Substring match: only when exactly one record contains the text, and never a field row. Taking the first
+        // of several opened an arbitrary record ("msg1" with msg11 and msg12 loaded opened msg11) instead of
+        // reporting that the record was not found (#273).
         for (const val of candidates) {
             const cleanVal = cleanString(val).toLowerCase();
             if (!cleanVal) continue;
-            matched = structDataList.find(item => {
+            const hits = structDataList.filter(item => {
                 const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
                 if (isField) return false;
                 const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
                 const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
                 return display.includes(cleanVal) || caption.includes(cleanVal);
-            }) || structDataList.find(item => {
-                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
-                const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
-                return display.includes(cleanVal) || caption.includes(cleanVal);
             });
-            if (matched) return matched;
+            // The same record can be in the list twice (page rows and a search hit): count it once
+            const rowKey = item => {
+                const recId = String(item?.transrecordid ?? item?.TRANSRECORDID ?? "").trim();
+                if (recId !== "" && recId !== "0") return "r:" + recId;
+                return "d:" + String(item?.displaydata ?? item?.DISPLAYDATA ?? "").toLowerCase();
+            };
+            const distinct = new Set(hits.map(rowKey));
+            if (distinct.size === 1) return hits[0];
         }
 
         return null;
@@ -10307,8 +10312,9 @@ if (typeof document !== "undefined") {
         } else if (!matchedItem && fieldValue && fieldValue.includes("[") && fieldValue.includes("]") && fieldUniqueId && fieldUniqueId !== "0" && fieldUniqueId !== fieldValue && /^\d+$/.test(fieldUniqueId)) {
             // Fallback: If item had bracketed numeric record ID from autocomplete
             redirectToTstructRecord(transId, rawStruct, fieldUniqueId);
-        } else if (fieldUniqueId && /^\d+$/.test(fieldUniqueId) && fieldUniqueId !== "0") {
-            // A picked suggestion carries the record id: open it directly (same as the view command does)
+        } else if (fieldUniqueId && /^\d+$/.test(fieldUniqueId) && fieldUniqueId !== "0" && String(fieldValue).trim() !== String(rawValue).trim()) {
+            // A picked suggestion carries the record id: open it directly (same as the view command does).
+            // A number the user simply typed (resolved value equal to what was typed) is a key value, not a record id (#273).
             redirectToTstructRecord(transId, rawStruct, fieldUniqueId);
         } else if (hasUserProvidedRecord && !matchedItem) {
             console.warn("[AxiCMD edit] Record not found", { transId, rawValue, fieldValue, fieldUniqueId, candidates, targetFieldName });
@@ -11010,7 +11016,8 @@ if (typeof document !== "undefined") {
         } else if (!matchedItem && fieldValue && fieldValue.includes("[") && fieldValue.includes("]") && fieldUniqueId && fieldUniqueId !== "0" && fieldUniqueId !== fieldValue && /^\d+$/.test(fieldUniqueId)) {
             // Fallback: If item had bracketed numeric record ID from autocomplete
             redirectToEntityForm(transId, rawStruct, fieldUniqueId);
-        } else if (fieldUniqueId && /^\d+$/.test(fieldUniqueId) && fieldUniqueId !== "0") {
+        } else if (fieldUniqueId && /^\d+$/.test(fieldUniqueId) && fieldUniqueId !== "0" && String(fieldValue).trim() !== String(rawFieldValue).trim()) {
+            // Only a picked suggestion carries a record id; a number the user typed is a key value (#273)
             redirectToEntityForm(transId, rawStruct, fieldUniqueId);
         } else if (hasUserProvidedRecord && !matchedItem) {
             showToast(`Record '${rawFieldValue || fieldValue}' not found in ${rawStruct}.`);
