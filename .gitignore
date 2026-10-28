@@ -8,6 +8,8 @@
 AxiApi/bin/
 AxiApi/obj/
 AxiApi/logs/
+# Runtime logs of the published AxiCMD API (written by Serilog next to the binaries)
+AxpertPlugins/AxiCMD/PluginScripts/AxiCMDApi/logs/
 *.user
 *.lscache
 /AxpertPlugins/AxiCMD/docs/.obsidian
