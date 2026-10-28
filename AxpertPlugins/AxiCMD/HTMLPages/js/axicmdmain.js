@@ -1768,6 +1768,8 @@ if (typeof document !== "undefined") {
         return structSearchPendingTerm !== null || dynamicSearchPending;
     }
     const structSearchAsked = new Set();
+    // Structure list keys that were already asked again after coming back empty (see processParamforEditndView)
+    const emptyStructListRetried = new Set();
 
     /**
      * Asks the server for structures (forms / reports / pages / data sources) matching a typed word, when the
@@ -5915,9 +5917,14 @@ if (typeof document !== "undefined") {
         if (!struct_dataList || !Array.isArray(struct_dataList)) return "";
 
         // A failed or empty load leaves [] cached under this key, and nothing would ever fetch it again.
-        // Ask again (loadList itself holds back repeated failures for a few seconds, so this cannot loop fast).
+        // Ask again, but only once per key until Refresh: getList returns [] for server errors too, so loadList
+        // sees them as successful loads, and every finished load re-runs this function through the suggestion refresh.
+        // Asking every time would request the list in an endless loop (#267).
         if (struct_dataList.length === 0) {
-            loadList(struct_source, struct_paramValue);
+            if (!emptyStructListRetried.has(struct_sourceKey)) {
+                emptyStructListRetried.add(struct_sourceKey);
+                loadList(struct_source, struct_paramValue);
+            }
             return "";
         }
 
@@ -8724,6 +8731,7 @@ if (typeof document !== "undefined") {
                     Object.keys(failedFetchTimes).forEach(k => delete failedFetchTimes[k]);
                     axSearchKeyOrder.length = 0;
                     structSearchAsked.clear();
+                    emptyStructListRetried.clear();
                     structSearchPendingTerm = null;
                     resolvedParams = {};
                     resolvedParamType = {};
