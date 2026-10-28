@@ -8,5 +8,7 @@ namespace AxiApi.Interfaces
         Task<List<CommandConfigOptionDTO>> GetAllCommandOptionsAsync(string appname);
         /// <summary>Sets the active flag and clears the command-config cache of the saving user. False when the option does not exist.</summary>
         Task<bool> SetCommandOptionActiveAsync(string appname, string username, string configId, bool active);
+        /// <summary>Adds a Custom Option and clears the command-config cache of the saving user and the shared prompt (grammar) cache.</summary>
+        Task<CommandConfigOptionDTO> CreateCommandOptionAsync(string appname, CreateCommandOptionRequestDTO request);
     }
 }

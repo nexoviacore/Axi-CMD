@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "AxiApi command-config options (tickets 283, 284)",
-    "description": "Read-only list of every Configure and SDK option, inactive ones included, with is_system (isSystem) and the record source name. Set variables: axiApiUrl (e.g. https://host/AxiCMDApi), appname, username. Needs a database that ran axi_command_config.sql (ticket 282). Ticket 284 adds the Active switch (PUT .../options/{configId}/active). Run the folder in order: it deactivates the option in variable configId, checks the read cache is fresh, then reactivates it. Variable configId must be a shipped Configure or SDK option.",
+    "name": "AxiApi command-config options (tickets 283, 284, 285)",
+    "description": "Read-only list of every Configure and SDK option, inactive ones included, with is_system (isSystem) and the record source name. Set variables: axiApiUrl (e.g. https://host/AxiCMDApi), appname, username. Needs a database that ran axi_command_config.sql (ticket 282). Ticket 284 adds the Active switch (PUT .../options/{configId}/active). Run the folder in order: it deactivates the option in variable configId, checks the read cache is fresh, then reactivates it. Variable configId must be a shipped Configure or SDK option. Ticket 285 adds POST .../options (create a Custom Option of type url): run the 285 requests in order after the 284 ones. They check the access refusal, name rules (comma, blank, 201 characters, duplicate in another case including a Built-in name), the type and URL rules, then create \"Postman Audit <timestamp>\", read it back through GET command-config and the options list (record sources of existing options unchanged = lists still paired) and finally switch the new option off. Each run leaves one inactive Custom Option behind: there is no delete.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -20,6 +20,18 @@
     {
       "key": "configId",
       "value": "cfg_configure_roles"
+    },
+    {
+      "key": "customName",
+      "value": ""
+    },
+    {
+      "key": "newConfigId",
+      "value": ""
+    },
+    {
+      "key": "sourcesBefore",
+      "value": "{}"
     }
   ],
   "item": [
@@ -504,6 +516,859 @@
               "value": "{{appname}}"
             }
           ]
+        }
+      }
+    },
+    {
+      "name": "285 snapshot record sources before create",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const before = {};",
+              "pm.response.json().filter(o => o.command === 'Configure').forEach(o => { before[o.promptOptions] = o.recordSource; });",
+              "pm.collectionVariables.set('sourcesBefore', JSON.stringify(before));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}&username={{username}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "username",
+              "value": "{{username}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "285 create refused without appMgrAccess",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('403', () => pm.response.to.have.status(403));",
+              "pm.test('says why', () => pm.expect(pm.response.text()).to.match(/Configure Access/));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":false,\"command\":\"Configure\",\"name\":\"Postman nope\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+        }
+      }
+    },
+    {
+      "name": "285 create refused when appMgrAccess is missing",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('403', () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"command\":\"Configure\",\"name\":\"Postman nope\",\"type\":\"url\",\"targetUrl\":\"/a\"}"
+        }
+      }
+    },
+    {
+      "name": "285 create refused without username",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman refused\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+        }
+      }
+    },
+    {
+      "name": "285 comma in name is 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));",
+              "pm.test('says why', () => pm.expect(pm.response.text()).to.match(/comma/i));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"a,b\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+        }
+      }
+    },
+    {
+      "name": "285 blank name is 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"   \",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+        }
+      }
+    },
+    {
+      "name": "285 201 characters is 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));",
+              "pm.test('says why', () => pm.expect(pm.response.text()).to.match(/200/));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+        }
+      }
+    },
+    {
+      "name": "285 built-in name in another case is 409",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('409', () => pm.response.to.have.status(409));",
+              "pm.test('says why', () => pm.expect(pm.response.text()).to.match(/already exists/i));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"USER\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+        }
+      }
+    },
+    {
+      "name": "285 unknown command is 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Upload\",\"name\":\"Postman refused\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+        }
+      }
+    },
+    {
+      "name": "285 action type is 400 (built-in only)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman refused\",\"type\":\"action\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+        }
+      }
+    },
+    {
+      "name": "285 url type without a URL is 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman refused\",\"type\":\"url\",\"targetUrl\":\"\",\"paramField\":\"\"}"
+        }
+      }
+    },
+    {
+      "name": "285 javascript: URL is 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman refused\",\"type\":\"url\",\"targetUrl\":\"javascript:alert(1)\",\"paramField\":\"\"}"
+        }
+      }
+    },
+    {
+      "name": "285 refusals created nothing",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "pm.test('no Postman refused/nope option', () => pm.expect(pm.response.json().filter(o => /^postman (refused|nope)/i.test(o.promptOptions)).length).to.eql(0));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}&username={{username}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "username",
+              "value": "{{username}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "285 create url option",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('customName', 'Postman Audit ' + Date.now());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201', () => pm.response.to.have.status(201));",
+              "const o = pm.response.json();",
+              "pm.test('id is usr_configure_<slug>', () => pm.expect(o.configId).to.match(/^usr_configure_postman_audit_[0-9]+$/));",
+              "pm.test('custom, active, url, no record source', () => { pm.expect(o.isSystem).to.eql('F'); pm.expect(o.active).to.eql('T'); pm.expect(o.promptOptionType).to.eql('url'); pm.expect(o.recordSource).to.eql('Axi_Dummy'); });",
+              "pm.test('only url fields kept', () => { pm.expect(o.targetUrl).to.eql('../aspx/postman.aspx'); pm.expect(o.paramField).to.eql('id'); });",
+              "pm.collectionVariables.set('newConfigId', o.configId);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\",\"promptId\":\"ignored for url\"}"
+        }
+      }
+    },
+    {
+      "name": "285 same name again in another case is 409",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('customName', pm.collectionVariables.get('customName').toUpperCase());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('409', () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customName}}\",\"type\":\"url\",\"targetUrl\":\"/a\"}"
+        }
+      }
+    },
+    {
+      "name": "285 GET command-config is fresh (new option present)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const name = pm.collectionVariables.get('customName').toLowerCase();",
+              "pm.test('new url option is in the active list', () => pm.expect(pm.response.json().some(o => (o.promptOptions || '').toLowerCase() === name && o.promptOptionType === 'url')).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config?appname={{appname}}&username={{username}}&forceRefresh=false",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "username",
+              "value": "{{username}}"
+            },
+            {
+              "key": "forceRefresh",
+              "value": "false"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "285 option and source lists stay paired",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const rows = pm.response.json();",
+              "const mine = rows.find(o => o.configId === pm.collectionVariables.get('newConfigId'));",
+              "pm.test('new option listed as Custom with source None', () => { pm.expect(mine).to.be.an('object'); pm.expect(mine.isSystem).to.eql('F'); pm.expect(mine.recordSource).to.eql('Axi_Dummy'); });",
+              "const before = JSON.parse(pm.collectionVariables.get('sourcesBefore'));",
+              "pm.test('every existing option kept its record source (positions unchanged)', () => {",
+              "  rows.filter(o => o.command === 'Configure' && o.configId !== mine.configId).forEach(o => pm.expect(o.recordSource, o.promptOptions).to.eql(before[o.promptOptions]));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}&username={{username}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "username",
+              "value": "{{username}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "285 deactivate the test option again",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{newConfigId}}/active?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "{{newConfigId}}",
+            "active"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"appMgrAccess\":true}"
         }
       }
     }

@@ -173,5 +173,99 @@ namespace AxiApi.Repositories
             _logger.LogInformation("Command option {ConfigId} set active={Active} for appname: {AppName}", configId, active, appname);
             return true;
         }
+
+        public async Task<CommandConfigOptionDTO> CreateCommandOptionAsync(string appname, CreateCommandOptionRequestDTO request)
+        {
+            var command = CommandOptionRules.NormalizeCommand(request.Command) ?? throw new CommandOptionException("Choose Configure or SDK.");
+            int token = CommandOptionRules.CmdToken(command);
+
+            var isDbConnected = await _axExtend.OpenDBConnectionAsync(appname);
+            if (!isDbConnected)
+            {
+                _logger.LogError("Failed to open DB connection for appname: {AppName}", appname);
+                throw new DatabaseException($"Failed to connect to database for application: {appname}", "CONNECT");
+            }
+            var db = await _axExtend.GetDB();
+
+            // Names and ids already used by this command, Built-in Options included, active or not
+            SQLResult existing = await db.ExecuteSQLAsync(SqlQueries.SelectCommandOptionNames,
+                new[] { ":command" }, new[] { DbType.String }, new object[] { command.ToLowerInvariant() });
+            if (!string.IsNullOrEmpty(existing?.error)) throw new DatabaseException(existing.error, "SELECT");
+            var usedNames = new List<string>();
+            var usedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (existing?.data != null)
+            {
+                foreach (DataRow r in existing.data.Rows)
+                {
+                    usedIds.Add(r["config_id"]?.ToString() ?? string.Empty);
+                    usedNames.Add(r["prompt_options"]?.ToString() ?? string.Empty);
+                }
+            }
+
+            // The palette's option list (wordpos 2) and the paired source list (wordpos 3)
+            SQLResult prompts = await db.ExecuteSQLAsync(SqlQueries.SelectCommandOptionPrompts);
+            if (!string.IsNullOrEmpty(prompts?.error)) throw new DatabaseException(prompts.error, "SELECT");
+            string? listNames = null, listSources = null;
+            if (prompts?.data != null)
+            {
+                foreach (DataRow p in prompts.data.Rows)
+                {
+                    if (Convert.ToInt32(p["cmdtoken"]) != token) continue;
+                    var wordpos = Convert.ToInt32(p["wordpos"]);
+                    if (wordpos == 2) listNames = p["promptvalues"] == DBNull.Value ? null : p["promptvalues"]?.ToString();
+                    else if (wordpos == 3) listSources = p["promptsource"] == DBNull.Value ? null : p["promptsource"]?.ToString();
+                }
+            }
+            if (!CommandOptionRules.ListsArePaired(listNames, listSources))
+                throw new CommandOptionException($"The {command} option and source lists in axi_command_prompts are missing or out of step. Re-run the AxiCMD install scripts and try again.", true);
+            usedNames.AddRange(listNames!.Split(','));
+
+            var option = CommandOptionRules.Validate(request, usedNames);
+            var configId = CommandOptionRules.MakeConfigId(command, option.Name);
+            if (usedIds.Contains(configId))
+                throw new CommandOptionException($"An existing option already uses the id '{configId}'. Choose a name that differs by more than punctuation.", true);
+            var promptId = string.IsNullOrEmpty(option.PromptId) ? configId.Substring(4) : option.PromptId!;
+
+            // Same limit checks as the page script; the lists themselves are extended in SQL
+            CommandOptionRules.AppendOption(listNames, listSources, option.Name, option.RecordSource);
+
+            object Db(string? v) => string.IsNullOrEmpty(v) ? DBNull.Value : v;
+            var commands = new List<SQLCommandBuilder>
+            {
+                new SQLCommandBuilder(SqlQueries.InsertCustomCommandOption,
+                    new[] { ":configid", ":command", ":promptoptions", ":promptid", ":optiontype", ":paramfield", ":targeturl", ":extraparams" },
+                    new[] { DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.String },
+                    new object[] { configId, command, option.Name, promptId, option.Type, Db(option.ParamField), Db(option.TargetUrl), Db(option.ExtraParams) },
+                    ARMCommon.Helpers.Constants.DATA_ACTION.INSERT),
+                new SQLCommandBuilder(string.Format(SqlQueries.AppendCommandOptionName, token),
+                    new[] { ":suffix" }, new[] { DbType.String }, new object[] { "," + option.Name }, ARMCommon.Helpers.Constants.DATA_ACTION.UPDATE),
+                new SQLCommandBuilder(string.Format(SqlQueries.AppendCommandOptionSource, token),
+                    new[] { ":suffix" }, new[] { DbType.String }, new object[] { "," + option.RecordSource }, ARMCommon.Helpers.Constants.DATA_ACTION.UPDATE)
+            };
+
+            // One transaction: the row and both lists are saved together or not at all
+            TransactionResult saved = await db.ExecuteSQLsInTransactionAsync(commands, true);
+            if (saved == null || !saved.success)
+            {
+                _logger.LogError("Create command option {ConfigId} failed: {Error}", configId, saved?.error);
+                throw new DatabaseException(saved?.error ?? "The option could not be saved.", "INSERT");
+            }
+
+            _logger.LogInformation("Custom Option {ConfigId} added to {Command} for appname: {AppName}", configId, command, appname);
+            return new CommandConfigOptionDTO
+            {
+                ConfigId = configId,
+                Command = command,
+                PromptOptions = option.Name,
+                PromptId = promptId,
+                PromptOptionType = option.Type,
+                ParamField = string.IsNullOrEmpty(option.ParamField) ? null : option.ParamField,
+                TargetUrl = string.IsNullOrEmpty(option.TargetUrl) ? null : option.TargetUrl,
+                ExtraParams = string.IsNullOrEmpty(option.ExtraParams) ? null : option.ExtraParams,
+                Active = "T",
+                IsSystem = "F",
+                RecordSource = option.RecordSource ?? CommandOptionRules.NoSource
+            };
+        }
     }
 }

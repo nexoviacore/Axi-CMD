@@ -104,22 +104,36 @@ namespace AxiApi.Services
             var found = await _repository.SetCommandOptionActiveAsync(appname, configId, active);
             if (!found) return false;
 
-            // Same key GetCommandConfigsAsync reads, so the next GET command-config is served fresh from the table.
-            // Other users keep their own cached copy until it expires.
-            string cacheKey = Keygenerator.GenerateCacheKey(appname, "command_config", username);
+            await ClearCachesAsync(appname, username, includePrompts: false);
+            return true;
+        }
+
+        public async Task<CommandConfigOptionDTO> CreateCommandOptionAsync(string appname, CreateCommandOptionRequestDTO request)
+        {
+            var created = await _repository.CreateCommandOptionAsync(appname, request);
+            // A new option also changes the prompt lists, which the palette reads from the shared grammar cache
+            await ClearCachesAsync(appname, request.Username, includePrompts: true);
+            return created;
+        }
+
+        // Command-config key GetCommandConfigsAsync reads, so the next GET command-config is served fresh from the table.
+        // Other users keep their own cached copy until they press Refresh.
+        private async Task ClearCachesAsync(string appname, string username, bool includePrompts)
+        {
+            var keys = new List<RedisKey> { Keygenerator.GenerateCacheKey(appname, "command_config", username) };
+            if (includePrompts) keys.Add(Keygenerator.GenerateCacheKey(appname, "", "commands"));
             try
             {
                 if (await _axExtend.OpenRedisConnectionAsync(appname))
                 {
                     var redisCache = await _axExtend.GetRedis();
-                    await redisCache.KeysDeleteAsync(new RedisKey[] { cacheKey });
+                    await redisCache.KeysDeleteAsync(keys.ToArray());
                 }
             }
             catch (RedisException ex)
             {
-                _logger.LogWarning(ex, "CommandConfigService: Could not clear Redis cache key {CacheKey} after a save.", cacheKey);
+                _logger.LogWarning(ex, "CommandConfigService: Could not clear Redis cache keys {CacheKeys} after a save.", string.Join(", ", keys));
             }
-            return true;
         }
     }
 }

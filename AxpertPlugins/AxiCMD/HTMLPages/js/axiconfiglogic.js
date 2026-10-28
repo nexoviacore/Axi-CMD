@@ -1,0 +1,147 @@
+/*
+ * AxiCMD Config page logic for Custom Options: name rules, fields per option type, config id, and the
+ * option/source list update. No DOM, no network. Loaded by AxiCMDConfig.html before axiconfigpage.js and by
+ * tests/axi-config-logic-ticket-285.test.js. The API (AxiApi/Lib/CommandOptionRules.cs) enforces the same rules:
+ * change both together.
+ */
+(function (root, factory) {
+    const api = factory();
+    if (typeof module === "object" && module.exports) module.exports = api;
+    else root.AxiConfigLogic = api;
+}(typeof self !== "undefined" ? self : this, function () {
+    "use strict";
+
+    const MAX_NAME_LENGTH = 200;
+    const MAX_LIST_LENGTH = 4000;      // axi_command_prompts.promptvalues / promptsource
+    const MAX_CONFIG_ID_LENGTH = 50;   // axi_command_config.config_id
+    const NO_SOURCE = "Axi_Dummy";     // "None" as a record source
+    const COMMANDS = ["Configure", "SDK"];
+    const CUSTOM_TYPES = ["tstruct", "iview", "ivtoivload", "url"];
+
+    /** Fields each Custom Option type uses; every other field is blanked. promptId = target form / report. */
+    const FIELDS_BY_TYPE = {
+        tstruct: ["promptId", "paramField"],
+        iview: ["promptId", "targetUrl"],
+        ivtoivload: ["promptId", "paramField", "extraParams"],
+        url: ["targetUrl", "paramField"]
+    };
+    const REQUIRED_FIELDS = { tstruct: ["promptId"], iview: ["promptId"], ivtoivload: ["promptId"], url: ["targetUrl"] };
+    const FIELD_MAX = { promptId: 50, targetUrl: 500, paramField: 100, extraParams: 500 };
+
+    function fieldsFor(type) {
+        return (FIELDS_BY_TYPE[type] || []).slice();
+    }
+
+    const norm = (s) => String(s === undefined || s === null ? "" : s).trim();
+
+    function validateName(name, existingNames) {
+        const n = norm(name);
+        if (!n) return { ok: false, code: "required", message: "Enter a name for the option." };
+        if (n.indexOf(",") !== -1) return { ok: false, code: "comma", message: "The name cannot contain a comma." };
+        if (n.length > MAX_NAME_LENGTH) return { ok: false, code: "length", message: "The name can have at most " + MAX_NAME_LENGTH + " characters (now " + n.length + ")." };
+        const lower = n.toLowerCase();
+        if ((existingNames || []).some((e) => norm(e).toLowerCase() === lower)) {
+            return { ok: false, code: "duplicate", message: "An option named \"" + n + "\" already exists in this command (names are not case sensitive)." };
+        }
+        return { ok: true, name: n };
+    }
+
+    /** FNV-1a over UTF-16 code units: a stable id part for names that have no latin letters or digits. */
+    function hashName(text) {
+        let h = 0x811c9dc5;
+        for (let i = 0; i < text.length; i++) {
+            h ^= text.charCodeAt(i);
+            h = Math.imul(h, 0x01000193) >>> 0;
+        }
+        return ("00000000" + h.toString(16)).slice(-8);
+    }
+
+    /** usr_<command>_<slug>, at most 50 characters. */
+    function makeConfigId(command, name) {
+        const prefix = "usr_" + norm(command).toLowerCase() + "_";
+        const lower = norm(name).toLowerCase();
+        let slug = lower.replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+        if (!slug) slug = "x" + hashName(lower);
+        return (prefix + slug.slice(0, MAX_CONFIG_ID_LENGTH - prefix.length)).replace(/_+$/, "");
+    }
+
+    function validateUrl(url) {
+        return /^(https?:\/\/|\/|\.\.\/)/i.test(url);
+    }
+
+    /**
+     * Checks a whole option from the drawer. Returns { ok, errors } or { ok, value } where value only holds the
+     * fields of the chosen type (the rest are blank). existingNames = every option name of the command, built-in too.
+     */
+    function validateOption(input, existingNames) {
+        const errors = {};
+        const command = COMMANDS.filter((c) => c.toLowerCase() === norm(input.command).toLowerCase())[0];
+        if (!command) errors.command = "Choose Configure or SDK.";
+        const type = norm(input.type).toLowerCase();
+        if (CUSTOM_TYPES.indexOf(type) === -1) errors.type = "Choose a type: " + CUSTOM_TYPES.join(", ") + ".";
+
+        const nameCheck = validateName(input.name, existingNames);
+        if (!nameCheck.ok) errors.name = nameCheck.message;
+
+        const value = { command: command || "", name: nameCheck.name || norm(input.name), type: type, promptId: "", targetUrl: "", paramField: "", extraParams: "", recordSource: NO_SOURCE };
+        const used = fieldsFor(type);
+        used.forEach((f) => {
+            const v = norm(input[f]);
+            value[f] = v;
+            if (!v && (REQUIRED_FIELDS[type] || []).indexOf(f) !== -1) errors[f] = "This field is required.";
+            else if (v && v.length > FIELD_MAX[f]) errors[f] = "At most " + FIELD_MAX[f] + " characters.";
+            else if (v && f === "targetUrl" && !validateUrl(v)) errors[f] = "Start with http://, https://, / or ../";
+            else if (v && f === "paramField" && !/^[A-Za-z0-9_]+$/.test(v)) errors[f] = "Letters, digits and underscore only.";
+            else if (v && f === "promptId" && !/^[A-Za-z0-9_.\/-]+$/.test(v)) errors[f] = "Letters, digits, underscore, dot, dash and slash only.";
+        });
+
+        if (input.recordSource !== undefined) {
+            const src = norm(input.recordSource);
+            if (src && !/^[A-Za-z0-9_]+$/.test(src)) errors.recordSource = "Use a data source name without commas or spaces.";
+            else if (src) value.recordSource = src;
+        }
+        return Object.keys(errors).length ? { ok: false, errors: errors } : { ok: true, value: value };
+    }
+
+    function splitList(list) {
+        // Trailing blanks and commas carry no position, so they are dropped
+        const text = norm(list).replace(/[,\s]+$/, "");
+        return text ? text.split(",") : [];
+    }
+
+    /**
+     * Appends one option to the option list and its record source to the paired source list. The lists are
+     * comma separated and matched by position, so a short source list is padded first.
+     */
+    function appendOption(names, sources, name, recordSource) {
+        const src = norm(recordSource) || NO_SOURCE;
+        if (!/^[A-Za-z0-9_]+$/.test(src)) return { ok: false, code: "source", message: "The record source name is not valid." };
+        const n = splitList(names), s = splitList(sources);
+        while (s.length < n.length) s.push(NO_SOURCE);
+        n.push(norm(name));
+        s.push(src);
+        const outNames = n.join(","), outSources = s.join(",");
+        if (outNames.length > MAX_LIST_LENGTH || outSources.length > MAX_LIST_LENGTH) {
+            return { ok: false, code: "listfull", message: "The option list is full (" + MAX_LIST_LENGTH + " characters). Remove an option before adding another." };
+        }
+        return { ok: true, names: outNames, sources: outSources };
+    }
+
+    function buildCreateUrl(baseUrl, appname) {
+        return baseUrl.replace(/\/+$/, "") + "/options?appname=" + encodeURIComponent(appname);
+    }
+
+    function buildCreateBody(username, appMgrAccess, value) {
+        return {
+            username: username, appMgrAccess: !!appMgrAccess,
+            command: value.command, name: value.name, type: value.type,
+            promptId: value.promptId, targetUrl: value.targetUrl, paramField: value.paramField, extraParams: value.extraParams,
+            recordSource: value.recordSource
+        };
+    }
+
+    return {
+        MAX_NAME_LENGTH, MAX_LIST_LENGTH, NO_SOURCE, COMMANDS, CUSTOM_TYPES, FIELDS_BY_TYPE,
+        fieldsFor, validateName, makeConfigId, validateOption, appendOption, buildCreateUrl, buildCreateBody
+    };
+}));

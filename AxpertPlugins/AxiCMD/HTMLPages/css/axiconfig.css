@@ -170,12 +170,86 @@ body {
 .ac-note.ac-error { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.45); color: #991b1b; }
 .ac-note[hidden] { display: none; }
 
+/* Buttons */
+.ac-btn {
+  font: inherit;
+  font-weight: 600;
+  min-height: 40px;
+  padding: 0 18px;
+  color: var(--ink);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%);
+  cursor: pointer;
+}
+.ac-btn:hover { background: rgba(255, 255, 255, 0.85); }
+.ac-btn[hidden] { display: none; }
+.ac-btn:disabled { opacity: 0.6; cursor: progress; }
+.ac-btn-primary {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--amber), var(--coral));
+  box-shadow: 0 6px 14px -6px rgba(239, 68, 68, 0.7);
+}
+.ac-btn-primary:hover { background: linear-gradient(135deg, var(--amber), var(--coral)); filter: brightness(1.05); }
+
+/* Add option drawer: a glass sheet that slides in from the inline-end edge (right in LTR, left in RTL) */
+.ac-scrim { position: fixed; inset: 0; z-index: 20; background: rgba(29, 37, 71, 0.35); }
+.ac-scrim[hidden], .ac-drawer[hidden] { display: none; }
+.ac-drawer {
+  position: fixed;
+  z-index: 21;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: min(440px, 100%);
+  display: flex;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78));
+  border-inline-start: 1px solid rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: -24px 0 56px -16px rgba(29, 37, 71, 0.5);
+}
+[dir="rtl"] .ac-drawer { box-shadow: 24px 0 56px -16px rgba(29, 37, 71, 0.5); }
+.ac-form { display: flex; flex-direction: column; width: 100%; min-height: 0; }
+.ac-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--line); }
+.ac-drawer-title { margin: 0; font-size: 18px; font-weight: 700; }
+.ac-icon-btn { font: inherit; font-size: 24px; line-height: 1; width: 40px; height: 40px; color: var(--muted); border: 0; border-radius: 10px; background: transparent; cursor: pointer; }
+.ac-icon-btn:hover { color: var(--ink); background: rgba(29, 37, 71, 0.08); }
+.ac-fields { flex: 1 1 auto; overflow: auto; padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; }
+.ac-hint { margin: 0; color: var(--muted); }
+.ac-field { display: flex; flex-direction: column; gap: 5px; }
+.ac-field[hidden] { display: none; }
+.ac-field label { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.ac-opt { font-weight: 400; color: var(--muted); }
+.ac-field input, .ac-field select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  font: inherit;
+  color: var(--ink);
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.9);
+}
+.ac-field input:disabled, .ac-field select:disabled { color: var(--muted); background: rgba(255, 255, 255, 0.5); }
+.ac-field input[aria-invalid="true"] { border-color: var(--coral); }
+.ac-help { font-size: 12px; color: var(--muted); }
+.ac-err { font-size: 12.5px; font-weight: 600; color: #991b1b; }
+.ac-err:empty { display: none; }
+.ac-drawer-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--line); }
+
 .ac-status { margin: 0; padding: 28px 16px; text-align: center; color: var(--muted); }
 .ac-status[hidden] { display: none; }
 
 :focus-visible { outline: 3px solid var(--indigo); outline-offset: 2px; }
 
 /* Tablet and narrower: drop the Type column, keep the rest readable */
+@media (max-width: 480px) {
+  .ac-drawer { width: 100%; }
+}
+
 @media (max-width: 900px) {
   .ac-col-type, .ac-type { display: none; }
   .ac-table th, .ac-table td { padding-inline: 12px; }

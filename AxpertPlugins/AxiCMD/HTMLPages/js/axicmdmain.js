@@ -1969,9 +1969,11 @@ if (typeof document !== "undefined") {
         }
     }
 
-    // Called by the AxiCMD Config page after it saved an option: drops this user's local copy and rebuilds the commands
+    // Called by the AxiCMD Config page after it saved an option: drops this user's local copies (routes and the
+    // command/prompt lists, which a new Custom Option extends) and rebuilds the commands
     window.axiReloadCommandConfig = async function () {
         try { localStorage.removeItem("axi_command_config_v2"); } catch (e) { }
+        try { localStorage.removeItem("axi_commands_raw_v1"); } catch (e) { }
         await initCommands(false);
     };
 

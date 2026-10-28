@@ -108,6 +108,9 @@
         let active = "configure";
         const hasAccess = q.get("access") === "1";
         const apiBase = q.get("api"), appName = q.get("appname"), userName = q.get("username") || "";
+        const Logic = window.AxiConfigLogic;
+        const AVAILABLE_TYPES = ["url"];   // the types the drawer offers so far; the logic script knows all four
+        const TYPE_LABELS = { url: "URL" };
 
         function showNote(text, isError) {
             note.hidden = !text;
@@ -136,6 +139,127 @@
                 showNote(describeFailure(err && err.status, err && err.text), true);
             });
         }
+
+        function updateCounts() {
+            $("acCountConfigure").textContent = groups.configure.length;
+            $("acCountSdk").textContent = groups.sdk.length;
+        }
+
+        // ---- Add option drawer ----
+        const drawer = $("acDrawer"), scrim = $("acScrim"), form = $("acForm"), addBtn = $("acAdd");
+        const formError = $("acFormError"), saveBtn = $("acSave");
+        const fields = ["name", "promptId", "targetUrl", "paramField", "extraParams"];
+        const inputOf = { name: $("fName"), promptId: $("fPromptId"), targetUrl: $("fTargetUrl"), paramField: $("fParamField"), extraParams: $("fExtraParams") };
+        const errOf = { name: $("eName"), promptId: $("ePromptId"), targetUrl: $("eTargetUrl"), paramField: $("eParamField"), extraParams: $("eExtraParams") };
+
+        function showFieldsForType() {
+            const used = Logic.fieldsFor($("fType").value);
+            Array.prototype.forEach.call(form.querySelectorAll("[data-field]"), (el) => {
+                el.hidden = used.indexOf(el.getAttribute("data-field")) === -1;
+            });
+        }
+
+        function setFieldError(field, text) {
+            errOf[field].textContent = text || "";
+            if (text) inputOf[field].setAttribute("aria-invalid", "true"); else inputOf[field].removeAttribute("aria-invalid");
+        }
+
+        function clearErrors() {
+            fields.forEach((f) => setFieldError(f, ""));
+            formError.hidden = true;
+            formError.textContent = "";
+        }
+
+        function openDrawer() {
+            form.reset();
+            clearErrors();
+            const typeSel = $("fType");
+            typeSel.textContent = "";
+            AVAILABLE_TYPES.forEach((t) => {
+                const o = document.createElement("option");
+                o.value = t;
+                o.textContent = TYPE_LABELS[t] || t;
+                typeSel.appendChild(o);
+            });
+            $("fCommand").value = active === "sdk" ? "SDK" : "Configure";
+            showFieldsForType();
+            scrim.hidden = false;
+            drawer.hidden = false;
+            saveBtn.disabled = false;
+            inputOf.name.focus();
+        }
+
+        function closeDrawer() {
+            drawer.hidden = true;
+            scrim.hidden = true;
+            addBtn.focus();
+        }
+
+        function existingNames(command) {
+            return (groups[command.toLowerCase()] || []).map((r) => r.name);
+        }
+
+        function submitDrawer(e) {
+            e.preventDefault();
+            clearErrors();
+            const input = { command: $("fCommand").value, type: $("fType").value, recordSource: $("fSource").value };
+            fields.forEach((f) => { input[f] = inputOf[f].value; });
+            const checked = Logic.validateOption(input, existingNames(input.command));
+            if (!checked.ok) {
+                let first = null;
+                Object.keys(checked.errors).forEach((f) => {
+                    if (errOf[f]) { setFieldError(f, checked.errors[f]); first = first || inputOf[f]; }
+                    else { formError.hidden = false; formError.textContent = checked.errors[f]; }
+                });
+                if (first) first.focus();
+                return;
+            }
+            saveBtn.disabled = true;
+            formError.hidden = false;
+            formError.className = "ac-note";
+            formError.textContent = "Saving...";
+            fetch(Logic.buildCreateUrl(apiBase, appName), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(Logic.buildCreateBody(userName, hasAccess, checked.value))
+            }).then((res) => {
+                if (!res.ok) return res.text().then((t) => { throw { status: res.status, text: t }; });
+                return res.json();
+            }).then((created) => {
+                const key = checked.value.command.toLowerCase();
+                groups[key] = groups[key].concat([normalizeRow(created)]).sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+                updateCounts();
+                const shell = window.top || window.parent;
+                try { if (shell && typeof shell.axiReloadCommandConfig === "function") shell.axiReloadCommandConfig(); } catch (err) { }
+                closeDrawer();
+                selectTab(key);
+                showNote("Added \"" + checked.value.name + "\". " + OTHER_USERS_NOTE, false);
+            }).catch((err) => {
+                saveBtn.disabled = false;
+                formError.className = "ac-note ac-error";
+                formError.hidden = false;
+                formError.textContent = describeFailure(err && err.status, err && err.text);
+            });
+        }
+
+        if (hasAccess) addBtn.hidden = false;
+        addBtn.addEventListener("click", openDrawer);
+        $("fType").addEventListener("change", showFieldsForType);
+        $("acClose").addEventListener("click", closeDrawer);
+        $("acCancel").addEventListener("click", closeDrawer);
+        scrim.addEventListener("click", closeDrawer);
+        form.addEventListener("submit", submitDrawer);
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && !drawer.hidden) { closeDrawer(); return; }
+            // Keep Tab inside the open drawer
+            if (e.key === "Tab" && !drawer.hidden) {
+                const items = Array.prototype.filter.call(drawer.querySelectorAll("input, select, button"), (el) => !el.disabled && !el.closest("[hidden]"));
+                if (!items.length) return;
+                const first = items[0], last = items[items.length - 1];
+                if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
+                else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
+            }
+        });
 
         function cell(text, cls) {
             const td = document.createElement("td");
@@ -224,8 +348,7 @@
             .then((res) => { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
             .then((rows) => {
                 groups = groupByTab(rows);
-                $("acCountConfigure").textContent = groups.configure.length;
-                $("acCountSdk").textContent = groups.sdk.length;
+                updateCounts();
                 selectTab(active);
             })
             .catch((err) => {

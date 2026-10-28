@@ -1,5 +1,6 @@
 using AxiApi.DTOs;
 using AxiApi.Enums;
+using AxiApi.Exceptions;
 using AxiApi.Interfaces;
 using AxiApi.Services;
 using ARMCommon.ActionFilter;
@@ -77,6 +78,27 @@ namespace AxiApi.Controllers
             if (!found)
                 return NotFound($"Command option '{configId}' was not found.");
             return Ok(new { configId, active = requestDTO.Active ? "T" : "F" });
+        }
+
+        [HttpPost("command-config/options")]
+        public async Task<IActionResult> CreateCommandOption([FromBody] CreateCommandOptionRequestDTO requestDTO, [FromQuery] string appname)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+            if (requestDTO == null || string.IsNullOrWhiteSpace(requestDTO.Username))
+                return BadRequest("Username is required in payload.");
+            if (!requestDTO.AppMgrAccess)
+                return StatusCode(StatusCodes.Status403Forbidden, "Configure Access is required to change command options.");
+
+            try
+            {
+                var created = await _commandConfigService.CreateCommandOptionAsync(appname, requestDTO);
+                return StatusCode(StatusCodes.Status201Created, created);
+            }
+            catch (CommandOptionException ex)
+            {
+                return ex.IsConflict ? Conflict(ex.Message) : BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("axi_get")]
