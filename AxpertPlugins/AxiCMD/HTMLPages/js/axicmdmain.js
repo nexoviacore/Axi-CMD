@@ -7389,17 +7389,18 @@ if (typeof document !== "undefined") {
         resolvedParams[targetIndex] = realValue;
         resolvedParamType[targetIndex] = realType;
 
-        if (typeof selectedItem === "object" && selectedItem) {
+        // Keep a picked record findable for later lookups, but only in the one list it was picked from (the list on
+        // screen). Adding it to every record list put a record of one form into the suggestions of other forms (#270).
+        // The copy is marked __fromSearch like search hits merged by loadList, so the plain list does not show it.
+        if (typeof selectedItem === "object" && selectedItem && activePagedContext
+            && String(activePagedContext.source || "").toLowerCase().includes("getstructsdata")
+            && String(selectedItem.isfield ?? "").toLowerCase() !== "t") {
             const recUid = selectedItem.transrecordid ?? selectedItem.id ?? selectedItem.name;
-            if (recUid !== undefined && recUid !== null) {
-                for (const key in axDatasourceObj) {
-                    if (key.toLowerCase().startsWith("axi_getstructsdata") && !key.includes("_q_")) {
-                        const baseArr = axDatasourceObj[key];
-                        if (Array.isArray(baseArr) && !baseArr.some(x => (x.transrecordid ?? x.id ?? x.name) == recUid)) {
-                            baseArr.push(selectedItem);
-                        }
-                    }
-                }
+            const listParam = activePagedContext.param;
+            const baseArr = axDatasourceObj[(listParam ? `${activePagedContext.source}_${listParam}` : activePagedContext.source).toLowerCase()];
+            if (recUid !== undefined && recUid !== null && Array.isArray(baseArr)
+                && !baseArr.some(x => (x.transrecordid ?? x.id ?? x.name) == recUid)) {
+                baseArr.push(Object.assign({}, selectedItem, { __fromSearch: true }));
             }
         }
 
