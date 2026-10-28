@@ -98,5 +98,28 @@ namespace AxiApi.Services
                 return new List<CommandConfigOptionDTO>();
             return await _repository.GetAllCommandOptionsAsync(appname);
         }
+
+        public async Task<bool> SetCommandOptionActiveAsync(string appname, string username, string configId, bool active)
+        {
+            var found = await _repository.SetCommandOptionActiveAsync(appname, configId, active);
+            if (!found) return false;
+
+            // Same key GetCommandConfigsAsync reads, so the next GET command-config is served fresh from the table.
+            // Other users keep their own cached copy until it expires.
+            string cacheKey = Keygenerator.GenerateCacheKey(appname, "command_config", username);
+            try
+            {
+                if (await _axExtend.OpenRedisConnectionAsync(appname))
+                {
+                    var redisCache = await _axExtend.GetRedis();
+                    await redisCache.KeysDeleteAsync(new RedisKey[] { cacheKey });
+                }
+            }
+            catch (RedisException ex)
+            {
+                _logger.LogWarning(ex, "CommandConfigService: Could not clear Redis cache key {CacheKey} after a save.", cacheKey);
+            }
+            return true;
+        }
     }
 }

@@ -21,6 +21,14 @@ namespace AxiApi.Lib
             "FROM axi_command_prompts " +
             "WHERE cmdtoken IN (4, 7) AND wordpos IN (2, 3)";
 
+        // Switch one Configure / SDK option on or off. Only the active flag changes; prompt lists are untouched.
+        public const string SelectCommandOptionById =
+            "SELECT config_id FROM axi_command_config " +
+            "WHERE config_id = :configid AND LOWER(command) IN ('configure', 'sdk')";
+
+        public const string UpdateCommandOptionActive =
+            "UPDATE axi_command_config SET active = :active WHERE config_id = :configid";
+
         public const string CheckTstructPropsExists = 
             "SELECT COUNT(*) FROM axp_tstructprops WHERE LOWER(name) = :transid";
 

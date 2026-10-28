@@ -142,5 +142,36 @@ namespace AxiApi.Repositories
             _logger.LogInformation("Loaded {Count} command options for appname: {AppName}", options.Count, appname);
             return options;
         }
+
+        public async Task<bool> SetCommandOptionActiveAsync(string appname, string configId, bool active)
+        {
+            var isDbConnected = await _axExtend.OpenDBConnectionAsync(appname);
+            if (!isDbConnected)
+            {
+                _logger.LogError("Failed to open DB connection for appname: {AppName}", appname);
+                throw new DatabaseException($"Failed to connect to database for application: {appname}", "CONNECT");
+            }
+
+            var db = await _axExtend.GetDB();
+            string[] idNames = { ":configid" };
+            DbType[] idTypes = { DbType.String };
+            object[] idValues = { configId };
+
+            SQLResult found = await db.ExecuteSQLAsync(SqlQueries.SelectCommandOptionById, idNames, idTypes, idValues);
+            if (!string.IsNullOrEmpty(found?.error))
+                throw new DatabaseException(found.error, "SELECT");
+            if (found?.data == null || found.data.Rows.Count == 0)
+                return false;
+
+            string[] names = { ":active", ":configid" };
+            DbType[] types = { DbType.String, DbType.String };
+            object[] values = { active ? "T" : "F", configId };
+            var updated = await db.ExecuteNonQueryAsync(SqlQueries.UpdateCommandOptionActive, names, types, values);
+            if (!string.IsNullOrEmpty(updated?.error))
+                throw new DatabaseException(updated.error, "UPDATE");
+
+            _logger.LogInformation("Command option {ConfigId} set active={Active} for appname: {AppName}", configId, active, appname);
+            return true;
+        }
     }
 }

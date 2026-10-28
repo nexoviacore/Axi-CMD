@@ -63,6 +63,22 @@ namespace AxiApi.Controllers
             return Ok(await _commandConfigService.GetAllCommandOptionsAsync(appname));
         }
 
+        [HttpPut("command-config/options/{configId}/active")]
+        public async Task<IActionResult> SetCommandOptionActive([FromRoute] string configId, [FromBody] SetCommandOptionActiveRequestDTO requestDTO, [FromQuery] string appname)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+            if (requestDTO == null || string.IsNullOrWhiteSpace(requestDTO.Username))
+                return BadRequest("Username is required in payload.");
+            if (!requestDTO.AppMgrAccess)
+                return StatusCode(StatusCodes.Status403Forbidden, "Configure Access is required to change command options.");
+
+            var found = await _commandConfigService.SetCommandOptionActiveAsync(appname, requestDTO.Username, configId, requestDTO.Active);
+            if (!found)
+                return NotFound($"Command option '{configId}' was not found.");
+            return Ok(new { configId, active = requestDTO.Active ? "T" : "F" });
+        }
+
         [HttpGet("axi_get")]
 
         public async Task<IActionResult> AxiGet([FromQuery] string view, [FromQuery] bool forceRefresh, [FromQuery] string appname)

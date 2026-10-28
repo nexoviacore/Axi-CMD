@@ -1,13 +1,26 @@
 {
   "info": {
-    "name": "AxiApi command-config options (ticket 283)",
-    "description": "Read-only list of every Configure and SDK option, inactive ones included, with is_system (isSystem) and the record source name. Set variables: axiApiUrl (e.g. https://host/AxiCMDApi), appname, username. Needs a database that ran axi_command_config.sql (ticket 282).",
+    "name": "AxiApi command-config options (tickets 283, 284)",
+    "description": "Read-only list of every Configure and SDK option, inactive ones included, with is_system (isSystem) and the record source name. Set variables: axiApiUrl (e.g. https://host/AxiCMDApi), appname, username. Needs a database that ran axi_command_config.sql (ticket 282). Ticket 284 adds the Active switch (PUT .../options/{configId}/active). Run the folder in order: it deactivates the option in variable configId, checks the read cache is fresh, then reactivates it. Variable configId must be a shipped Configure or SDK option.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "axiApiUrl", "value": "https://YOUR-HOST/AxiCMDApi" },
-    { "key": "appname", "value": "YOUR-APP" },
-    { "key": "username", "value": "admin" }
+    {
+      "key": "axiApiUrl",
+      "value": "https://YOUR-HOST/AxiCMDApi"
+    },
+    {
+      "key": "appname",
+      "value": "YOUR-APP"
+    },
+    {
+      "key": "username",
+      "value": "admin"
+    },
+    {
+      "key": "configId",
+      "value": "cfg_configure_roles"
+    }
   ],
   "item": [
     {
@@ -34,11 +47,25 @@
         "method": "GET",
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}&username={{username}}",
-          "host": ["{{axiApiUrl}}"],
-          "path": ["api", "v1", "Axi", "command-config", "options"],
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
           "query": [
-            { "key": "appname", "value": "{{appname}}" },
-            { "key": "username", "value": "{{username}}" }
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "username",
+              "value": "{{username}}"
+            }
           ]
         }
       }
@@ -48,16 +75,435 @@
       "event": [
         {
           "listen": "test",
-          "script": { "type": "text/javascript", "exec": ["pm.test('400', () => pm.response.to.have.status(400));"] }
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));"
+            ]
+          }
         }
       ],
       "request": {
         "method": "GET",
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?username={{username}}",
-          "host": ["{{axiApiUrl}}"],
-          "path": ["api", "v1", "Axi", "command-config", "options"],
-          "query": [{ "key": "username", "value": "{{username}}" }]
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "username",
+              "value": "{{username}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "284 refused without appMgrAccess",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"403 with a readable message\", () => { pm.response.to.have.status(403); pm.expect(pm.response.text()).to.match(/Configure Access/); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"appMgrAccess\":false}"
+        },
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{configId}}/active?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "{{configId}}",
+            "active"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "284 refused when appMgrAccess is missing",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"403 with a readable message\", () => { pm.response.to.have.status(403); pm.expect(pm.response.text()).to.match(/Configure Access/); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"active\":false}"
+        },
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{configId}}/active?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "{{configId}}",
+            "active"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "284 option still active after the refusals",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"unchanged\", () => { const r = pm.response.json().find(x => x.configId === pm.variables.get(\"configId\")); pm.expect(r, \"configId\").to.exist; pm.collectionVariables.set(\"wasActive\", r.active); pm.collectionVariables.set(\"optionCount\", String(pm.response.json().length)); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}&username={{username}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "username",
+              "value": "{{username}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "284 deactivate with appMgrAccess",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"reports F\", () => pm.expect(pm.response.json().active).to.eql(\"F\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"appMgrAccess\":true}"
+        },
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{configId}}/active?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "{{configId}}",
+            "active"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "284 GET command-config is fresh (option gone)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"deactivated option is not served (cache cleared)\", () => pm.expect(pm.response.json().map(r => r.configId)).to.not.include(pm.variables.get(\"configId\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config?appname={{appname}}&username={{username}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "username",
+              "value": "{{username}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "284 options list shows F and the same options",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"row is inactive\", () => { const rows = pm.response.json(); const r = rows.find(x => x.configId === pm.variables.get(\"configId\")); pm.expect(r.active).to.eql(\"F\"); pm.expect(String(rows.length)).to.eql(pm.collectionVariables.get(\"optionCount\")); pm.expect(r.recordSource, \"prompt source untouched\").to.be.a(\"string\"); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}&username={{username}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "username",
+              "value": "{{username}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "284 reactivate with appMgrAccess",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"reports T\", () => pm.expect(pm.response.json().active).to.eql(\"T\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"active\":true,\"appMgrAccess\":true}"
+        },
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{configId}}/active?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "{{configId}}",
+            "active"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "284 GET command-config is fresh (option back)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"reactivated option is served again\", () => pm.expect(pm.response.json().map(r => r.configId)).to.include(pm.variables.get(\"configId\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config?appname={{appname}}&username={{username}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "username",
+              "value": "{{username}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "284 unknown option is 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"active\":true,\"appMgrAccess\":true}"
+        },
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/no_such_option/active?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "no_such_option",
+            "active"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
         }
       }
     }

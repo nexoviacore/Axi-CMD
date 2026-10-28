@@ -6,5 +6,7 @@ namespace AxiApi.Interfaces
     {
         Task<List<CommandConfigDTO>> GetCommandConfigsAsync(string appname);
         Task<List<CommandConfigOptionDTO>> GetAllCommandOptionsAsync(string appname);
+        /// <summary>Sets the active flag of one Configure / SDK option. False when no such option exists.</summary>
+        Task<bool> SetCommandOptionActiveAsync(string appname, string configId, bool active);
     }
 }

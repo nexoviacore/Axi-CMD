@@ -14,7 +14,7 @@
         <header class="ac-head">
             <div>
                 <h1 id="acTitle" class="ac-title">AxiCMD Config</h1>
-                <p class="ac-sub">Every option the Configure and SDK commands offer. Read-only for now.</p>
+                <p class="ac-sub">Every option the Configure and SDK commands offer. Switch an option off to hide it from the palette.</p>
             </div>
             <span id="acCount" class="ac-count" aria-live="polite"></span>
         </header>
@@ -32,6 +32,8 @@
             </label>
         </div>
 
+        <p id="acNote" class="ac-note" role="status" aria-live="polite" hidden></p>
+
         <div class="ac-scroll" tabindex="0" role="region" aria-label="Options table">
             <table id="acTable" class="ac-table" role="tabpanel">
                 <thead>
@@ -39,7 +41,7 @@
                         <th scope="col">Name</th>
                         <th scope="col" class="ac-col-type">Type</th>
                         <th scope="col">Target</th>
-                        <th scope="col">State</th>
+                        <th scope="col">Active</th>
                     </tr>
                 </thead>
                 <tbody id="acBody"></tbody>

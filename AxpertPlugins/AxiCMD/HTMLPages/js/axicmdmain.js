@@ -1969,6 +1969,12 @@ if (typeof document !== "undefined") {
         }
     }
 
+    // Called by the AxiCMD Config page after it saved an option: drops this user's local copy and rebuilds the commands
+    window.axiReloadCommandConfig = async function () {
+        try { localStorage.removeItem("axi_command_config_v2"); } catch (e) { }
+        await initCommands(false);
+    };
+
     /**
      * Finds an active command configuration row matching command name and prompt option.
      * @param {string} command - Command name (e.g. 'Configure', 'SDK').
@@ -8900,7 +8906,8 @@ if (typeof document !== "undefined") {
                     `?api=${encodeURIComponent(axiCommandConfigUrl)}` +
                     `&appname=${encodeURIComponent(getProjectName())}` +
                     `&username=${encodeURIComponent(window.mainUserName || "")}` +
-                    `&lang=${encodeURIComponent(lang)}`;
+                    `&lang=${encodeURIComponent(lang)}` +
+                    `&access=1`;
                 const loadFn = (top && top.window && top.window.LoadIframe) || window.LoadIframe;
                 if (typeof loadFn === "function") loadFn(targetUrl);
             };
