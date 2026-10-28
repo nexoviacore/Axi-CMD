@@ -7492,15 +7492,39 @@ if (typeof document !== "undefined") {
     let armDirectDisabledUntil = 0;    // after a network/CORS failure the direct route rests for a while
 
     /**
+     * The status text of a response, for the session check: only the message fields of the answer, never its rows.
+     * An AxList answer has no top-level message, and searching its whole JSON also searched the record data, so a
+     * form or record containing "session expired" sent the user to the session-expired page (#276).
+     * @param {*} res - Response object, JSON string, or error text.
+     * @param {number} [depth=0] - Nesting level, so a malformed answer cannot recurse for long.
+     * @returns {string} The message text found (may be empty).
+     */
+    function sessionMessageOf(res, depth = 0) {
+        if (res === null || res === undefined || depth > 2) return "";
+        if (typeof res === "string") {
+            const s = res.trim();
+            if (s.startsWith("{")) {
+                try { return sessionMessageOf(JSON.parse(s), depth + 1); } catch (e) { /* not JSON: plain text below */ }
+            }
+            // Plain error text is short; a long string is data, not a status message
+            return s.length <= 500 ? s : "";
+        }
+        if (typeof res !== "object") return "";
+        const parts = [res.message, res.Message, res.error, res.error && res.error.message, res.result && res.result.message, res.result && res.result.Message];
+        if (typeof res.d === "string") parts.push(sessionMessageOf(res.d, depth + 1));
+        return parts.filter(p => typeof p === "string").join(" ");
+    }
+
+    /**
      * True when an AxList answer says the ARM / Axpert session is gone, e.g.
-     * {"result":{"message":"SessionId is not valid","success":false}}.
+     * {"result":{"message":"SessionId is not valid","success":false}}. Only the message fields are read (see
+     * sessionMessageOf), never the record data.
      * @param {*} res - Response object, JSON string or error text.
      * @returns {boolean}
      */
     function isSessionInvalidResponse(res) {
         if (!res) return false;
-        let text;
-        try { text = (typeof res === "string" ? res : (res.message || JSON.stringify(res))).toLowerCase(); } catch (e) { return false; }
+        const text = sessionMessageOf(res).toLowerCase();
         return text.includes("sessionid is not valid") ||
             text.includes("session is not valid") ||
             text.includes("session expired") ||
