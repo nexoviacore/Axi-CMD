@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "AxiApi command-config options (tickets 283, 284, 285)",
+    "name": "AxiApi command-config options (tickets 283, 284, 285, 286)",
     "description": "Read-only list of every Configure and SDK option, inactive ones included, with is_system (isSystem) and the record source name. Set variables: axiApiUrl (e.g. https://host/AxiCMDApi), appname, username. Needs a database that ran axi_command_config.sql (ticket 282). Ticket 284 adds the Active switch (PUT .../options/{configId}/active). Run the folder in order: it deactivates the option in variable configId, checks the read cache is fresh, then reactivates it. Variable configId must be a shipped Configure or SDK option. Ticket 285 adds POST .../options (create a Custom Option of type url): run the 285 requests in order after the 284 ones. They check the access refusal, name rules (comma, blank, 201 characters, duplicate in another case including a Built-in name), the type and URL rules, then create \"Postman Audit <timestamp>\", read it back through GET command-config and the options list (record sources of existing options unchanged = lists still paired) and finally switch the new option off. Each run leaves one inactive Custom Option behind: there is no delete.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -1357,6 +1357,556 @@
             "command-config",
             "options",
             "{{newConfigId}}",
+            "active"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"appMgrAccess\":true}"
+        }
+      }
+    },
+    {
+      "name": "286 create tstruct option",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('customNametstruct', 'Postman tstruct ' + Date.now());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201', () => pm.response.to.have.status(201));",
+              "const o = pm.response.json();",
+              "pm.test('tstruct keeps structure and key field, drops the rest', () => { pm.expect(o.promptOptionType).to.eql('tstruct'); pm.expect(o.promptId).to.eql('axusr'); pm.expect(o.paramField).to.eql('username'); pm.expect(o.targetUrl).to.be.oneOf([null, undefined, '']); pm.expect(o.extraParams).to.be.oneOf([null, undefined, '']); });",
+              "pm.test('record source is the chosen one', () => pm.expect(o.recordSource).to.eql('axi_userlist'));",
+              "pm.collectionVariables.set('tstructConfigId', o.configId);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customNametstruct}}\",\"type\":\"tstruct\",\"promptId\":\"axusr\",\"paramField\":\"username\",\"targetUrl\":\"../ignored.aspx\",\"extraParams\":\"ignored=1\",\"recordSource\":\"axi_userlist\"}"
+        }
+      }
+    },
+    {
+      "name": "286 create iview option",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('customNameiview', 'Postman iview ' + Date.now());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201', () => pm.response.to.have.status(201));",
+              "const o = pm.response.json();",
+              "pm.test('iview keeps iview and URL, no key field', () => { pm.expect(o.promptOptionType).to.eql('iview'); pm.expect(o.promptId).to.eql('axusers'); pm.expect(o.targetUrl).to.eql('../aspx/iview.aspx?ivname=axusers'); pm.expect(o.paramField).to.be.oneOf([null, undefined, '']); });",
+              "pm.test('record source defaults to None', () => pm.expect(o.recordSource).to.eql('Axi_Dummy'));",
+              "pm.collectionVariables.set('iviewConfigId', o.configId);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customNameiview}}\",\"type\":\"iview\",\"promptId\":\"axusers\",\"targetUrl\":\"../aspx/iview.aspx?ivname=axusers\",\"paramField\":\"ignored\"}"
+        }
+      }
+    },
+    {
+      "name": "286 create ivtoivload option",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('customNameivtoivload', 'Postman ivtoivload ' + Date.now());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201', () => pm.response.to.have.status(201));",
+              "const o = pm.response.json();",
+              "pm.test('ivtoivload keeps iview, param field and extra params', () => { pm.expect(o.promptOptionType).to.eql('ivtoivload'); pm.expect(o.promptId).to.eql('ad___upg'); pm.expect(o.paramField).to.eql('prole'); pm.expect(o.extraParams).to.eql('AxOpenAct=true&isDupTab=false'); });",
+              "pm.test('record source is the chosen one', () => pm.expect(o.recordSource).to.eql('axi_rolelist'));",
+              "pm.collectionVariables.set('ivtoivloadConfigId', o.configId);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customNameivtoivload}}\",\"type\":\"ivtoivload\",\"promptId\":\"ad___upg\",\"paramField\":\"prole\",\"extraParams\":\"AxOpenAct=true&isDupTab=false\",\"recordSource\":\"axi_rolelist\"}"
+        }
+      }
+    },
+    {
+      "name": "286 tstruct without a structure is 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman no struct\",\"type\":\"tstruct\"}"
+        }
+      }
+    },
+    {
+      "name": "286 record source with a space is 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman bad source\",\"type\":\"tstruct\",\"promptId\":\"axusr\",\"recordSource\":\"bad source\"}"
+        }
+      }
+    },
+    {
+      "name": "286 processflow type is 400 (built-in only)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman pf\",\"type\":\"processflow\",\"promptId\":\"x\"}"
+        }
+      }
+    },
+    {
+      "name": "286 shellaction type is 400 (built-in only)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman sa\",\"type\":\"shellaction\",\"promptId\":\"x\"}"
+        }
+      }
+    },
+    {
+      "name": "286 options list shows the stored record sources",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const rows = pm.response.json();",
+              "const by = (id) => rows.find(r => (r.configId || r.ConfigId) === id) || {};",
+              "pm.test('tstruct option lists its record source', () => pm.expect(by(pm.collectionVariables.get('tstructConfigId')).recordSource).to.eql('axi_userlist'));",
+              "pm.test('ivtoivload option lists its record source', () => pm.expect(by(pm.collectionVariables.get('ivtoivloadConfigId')).recordSource).to.eql('axi_rolelist'));",
+              "pm.test('iview option has None', () => pm.expect(by(pm.collectionVariables.get('iviewConfigId')).recordSource).to.eql('Axi_Dummy'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}&username={{username}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "username",
+              "value": "{{username}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "286 deactivate the tstruct test option",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{tstructConfigId}}/active?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "{{tstructConfigId}}",
+            "active"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"appMgrAccess\":true}"
+        }
+      }
+    },
+    {
+      "name": "286 deactivate the iview test option",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{iviewConfigId}}/active?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "{{iviewConfigId}}",
+            "active"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"appMgrAccess\":true}"
+        }
+      }
+    },
+    {
+      "name": "286 deactivate the ivtoivload test option",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{ivtoivloadConfigId}}/active?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "{{ivtoivloadConfigId}}",
             "active"
           ],
           "query": [

@@ -1969,6 +1969,14 @@ if (typeof document !== "undefined") {
         }
     }
 
+    // Used by the AxiCMD Config page's structure picker: forms / reports matching a typed word (3+ characters),
+    // from the paged axi_structmetalist source (searched by the AxList API, not loaded whole)
+    window.axiSearchStructures = async function (term) {
+        const t = String(term || "").trim();
+        if (t.length < 3 || !axicmdenabled) return [];
+        try { return await getList("axi_structmetalist", getStructParam(), t, 1, 30); } catch (e) { return []; }
+    };
+
     // Called by the AxiCMD Config page after it saved an option: drops this user's local copies (routes and the
     // command/prompt lists, which a new Custom Option extends) and rebuilds the commands
     window.axiReloadCommandConfig = async function () {

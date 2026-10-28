@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS axi_command_config (
 	extra_params varchar(500) NULL,
 	active varchar(1) DEFAULT 'T',
 	is_system varchar(1) DEFAULT 'F',
+	record_source varchar(100) NULL,
 	CONSTRAINT pk_axi_command_config PRIMARY KEY (config_id)
 )
 >>
@@ -21,6 +22,11 @@ INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, p
 
 <<
 ALTER TABLE axi_command_config ADD COLUMN IF NOT EXISTS is_system varchar(1) DEFAULT 'F'
+>>
+
+<<
+-- Record source of a Custom Option (third word of the command); NULL = None (Axi_Dummy). Built-in Options leave it NULL
+ALTER TABLE axi_command_config ADD COLUMN IF NOT EXISTS record_source varchar(100) NULL
 >>
 
 <<
@@ -231,8 +237,8 @@ CREATE INDEX IF NOT EXISTS idx_axi_cmd_config_cmd ON axi_command_config(command)
 <<
 -- Custom Options (is_system = 'F') live in axi_command_config, but the palette reads option names and record sources from
 -- axi_command_prompts, which axi_command_tables.sql recreates on every install. Run this file after axi_command_tables.sql:
--- it puts every Custom Option name back at the end of the option list of its command (wordpos 2) and Axi_Dummy (None) at the same
--- position of the paired source list (wordpos 3). Names already in the list are skipped, so it is safe to run again.
+-- it puts every Custom Option name back at the end of the option list of its command (wordpos 2) and its record_source (Axi_Dummy = None
+-- when null) at the same position of the paired source list (wordpos 3). Names already in the list are skipped, so it is safe to run again.
 -- Configure = cmdtoken 4, SDK = cmdtoken 7. One statement, so both lists change together.
 UPDATE axi_command_prompts p
 SET promptvalues = CASE WHEN p.wordpos = 2 THEN COALESCE(p.promptvalues, '') || m.add_names ELSE p.promptvalues END,
@@ -240,7 +246,7 @@ SET promptvalues = CASE WHEN p.wordpos = 2 THEN COALESCE(p.promptvalues, '') || 
 FROM (
     SELECT k.cmdtoken,
            string_agg(',' || c.prompt_options, '' ORDER BY c.config_id) AS add_names,
-           string_agg(',Axi_Dummy', '' ORDER BY c.config_id) AS add_sources
+           string_agg(',' || COALESCE(c.record_source, 'Axi_Dummy'), '' ORDER BY c.config_id) AS add_sources
     FROM (VALUES ('configure', 4), ('sdk', 7)) AS k(command, cmdtoken)
     JOIN axi_command_config c ON LOWER(c.command) = k.command AND COALESCE(c.is_system, 'F') = 'F'
     JOIN axi_command_prompts n ON n.cmdtoken = k.cmdtoken AND n.wordpos = 2

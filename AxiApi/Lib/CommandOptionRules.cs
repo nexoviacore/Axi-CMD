@@ -15,6 +15,16 @@ namespace AxiApi.Lib
         public const int MaxConfigIdLength = 50;
         public const string NoSource = "Axi_Dummy";
 
+        /// <summary>Record sources already used by the Configure and SDK option lists; the page offers them after None. Mirrors KNOWN_RECORD_SOURCES in axiconfiglogic.js (other valid names are still accepted).</summary>
+        public static readonly string[] KnownRecordSources =
+        {
+            "Axi_PegList", "Axi_FormNotifyList", "Axi_ScheduleNotifyList", "Axi_PEGNotifyList", "Axi_RuleNamesList",
+            "axi_structmetalist", "axi_userlist", "axi_useractivation", "axi_usergrouplist", "axi_rolelist", "axi_actorlist",
+            "axi_publishapi", "Axi_ServernameList", "axi_cardlist", "axi_resposibilitylist", "axi_dimensionlist",
+            "axi_smartviewlist", "Axi_APINamesList", "axi_jobs", "axi_language", "axi_customtype", "axi_emaildef",
+            "axi_tabledesc", "axi_outbound", "axi_inbound", "axi_getstructsdata", "axi_viewlist"
+        };
+
         public static readonly string[] Commands = { "Configure", "SDK" };
         public static readonly string[] CustomTypes = { "tstruct", "iview", "ivtoivload", "url" };
 

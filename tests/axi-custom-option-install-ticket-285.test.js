@@ -29,11 +29,11 @@ for (const db of ['Postgre', 'Oracle']) {
         assert.match(last, /= 0/);
     });
 
-    test(`${db}: names and sources are appended in one statement, in the same order, with Axi_Dummy`, () => {
+    test(`${db}: names and sources are appended in one statement, in the same order, Axi_Dummy as the fallback`, () => {
         assert.strictEqual((last.match(/^\s*(UPDATE|MERGE)\b/gim) || []).length, 1);
         assert.match(last, /ORDER BY c\.config_id/i);
         assert.strictEqual((last.match(/ORDER BY c\.config_id/gi) || []).length, 2);
-        assert.match(last, /',Axi_Dummy'/);
+        assert.match(last, /'Axi_Dummy'/); // the fallback for a null record_source (ticket 286)
         assert.match(last, /wordpos = 2/i);
         assert.match(last, /wordpos = 3/i);
     });
@@ -75,7 +75,7 @@ test('the create endpoint checks access first and the service clears both caches
 test('the palette drops its prompt cache after a save and the script version is bumped', () => {
     const js = read('AxpertPlugins', 'AxiCMD', 'HTMLPages', 'js', 'axicmdmain.js');
     assert.match(js, /window\.axiReloadCommandConfig[\s\S]{0,400}removeItem\("axi_commands_raw_v1"\)/);
-    assert.match(read('aspx', 'mainHomeConfigTemplate.html'), /axicmdmain\.js\?v=75/);
+    assert.match(read('aspx', 'mainHomeConfigTemplate.html'), /axicmdmain\.js\?v=76/);
 });
 
 test('the config page loads the logic script before the page script', () => {

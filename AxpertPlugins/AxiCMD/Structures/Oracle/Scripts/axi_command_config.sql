@@ -16,6 +16,7 @@ BEGIN
 	"EXTRA_PARAMS" VARCHAR2(500),
 	"ACTIVE" VARCHAR2(1) DEFAULT 'T',
 	"IS_SYSTEM" VARCHAR2(1) DEFAULT 'F',
+	"RECORD_SOURCE" VARCHAR2(100),
 	 CONSTRAINT "PK_AXI_COMMAND_CONFIG" PRIMARY KEY ("CONFIG_ID"))]';
     END IF;
 END;
@@ -29,6 +30,18 @@ BEGIN
     SELECT COUNT(*) INTO v_exists FROM user_tab_columns WHERE table_name = 'AXI_COMMAND_CONFIG' AND column_name = 'IS_SYSTEM';
     IF v_exists = 0 THEN
         EXECUTE IMMEDIATE q'[ALTER TABLE AXI_COMMAND_CONFIG ADD (IS_SYSTEM VARCHAR2(1) DEFAULT 'F')]';
+    END IF;
+END;
+>>
+
+<<
+DECLARE
+    v_exists NUMBER;
+BEGIN
+    -- Record source of a Custom Option (third word of the command); NULL = None (Axi_Dummy). Built-in Options leave it NULL
+    SELECT COUNT(*) INTO v_exists FROM user_tab_columns WHERE table_name = 'AXI_COMMAND_CONFIG' AND column_name = 'RECORD_SOURCE';
+    IF v_exists = 0 THEN
+        EXECUTE IMMEDIATE q'[ALTER TABLE AXI_COMMAND_CONFIG ADD (RECORD_SOURCE VARCHAR2(100))]';
     END IF;
 END;
 >>
@@ -251,14 +264,14 @@ MERGE INTO AXI_COMMAND_CONFIG t USING (SELECT 'cfg_download_default' AS CONFIG_I
 <<
 -- Custom Options (IS_SYSTEM = 'F') live in AXI_COMMAND_CONFIG, but the palette reads option names and record sources from
 -- AXI_COMMAND_PROMPTS, which axi_command_tables.sql recreates on every install. Run this file after axi_command_tables.sql:
--- it puts every Custom Option name back at the end of the option list of its command (WORDPOS 2) and Axi_Dummy (None) at the same
--- position of the paired source list (WORDPOS 3). Names already in the list are skipped, so it is safe to run again.
+-- it puts every Custom Option name back at the end of the option list of its command (WORDPOS 2) and its RECORD_SOURCE (Axi_Dummy =
+-- None when null) at the same position of the paired source list (WORDPOS 3). Names already in the list are skipped, so it is safe to run again.
 -- Configure = CMDTOKEN 4, SDK = CMDTOKEN 7. One statement, so both lists change together.
 MERGE INTO AXI_COMMAND_PROMPTS p
 USING (
     SELECT k.CMDTOKEN,
            LISTAGG(',' || c.PROMPT_OPTIONS) WITHIN GROUP (ORDER BY c.CONFIG_ID) AS ADD_NAMES,
-           LISTAGG(',Axi_Dummy') WITHIN GROUP (ORDER BY c.CONFIG_ID) AS ADD_SOURCES
+           LISTAGG(',' || NVL(c.RECORD_SOURCE, 'Axi_Dummy')) WITHIN GROUP (ORDER BY c.CONFIG_ID) AS ADD_SOURCES
     FROM (SELECT 'configure' AS COMMAND, 4 AS CMDTOKEN FROM dual UNION ALL SELECT 'sdk', 7 FROM dual) k
     JOIN AXI_COMMAND_CONFIG c ON LOWER(c.COMMAND) = k.COMMAND AND NVL(c.IS_SYSTEM, 'F') = 'F'
     JOIN AXI_COMMAND_PROMPTS n ON n.CMDTOKEN = k.CMDTOKEN AND n.WORDPOS = 2

@@ -28,6 +28,42 @@
     const REQUIRED_FIELDS = { tstruct: ["promptId"], iview: ["promptId"], ivtoivload: ["promptId"], url: ["targetUrl"] };
     const FIELD_MAX = { promptId: 50, targetUrl: 500, paramField: 100, extraParams: 500 };
 
+    /** Record sources already used by the Configure and SDK option lists (axi_command_tables.sql), after "None". */
+    const KNOWN_RECORD_SOURCES = [
+        "Axi_PegList", "Axi_FormNotifyList", "Axi_ScheduleNotifyList", "Axi_PEGNotifyList", "Axi_RuleNamesList",
+        "axi_structmetalist", "axi_userlist", "axi_useractivation", "axi_usergrouplist", "axi_rolelist", "axi_actorlist",
+        "axi_publishapi", "Axi_ServernameList", "axi_cardlist", "axi_resposibilitylist", "axi_dimensionlist",
+        "axi_smartviewlist", "Axi_APINamesList", "axi_jobs", "axi_language", "axi_customtype", "axi_emaildef",
+        "axi_tabledesc", "axi_outbound", "axi_inbound", "axi_getstructsdata", "axi_viewlist"
+    ];
+    const STRUCT_TYPE_CODE = { tstruct: "t", iview: "i", ivtoivload: "i" };
+    const MAX_STRUCT_CHOICES = 50;
+
+    function recordSourceOptions() {
+        return [{ value: NO_SOURCE, label: "None" }].concat(KNOWN_RECORD_SOURCES.map((s) => ({ value: s, label: s })));
+    }
+
+    /** Structures (axi_structmetalist rows) the picker offers for an option type: tstruct -> forms, iview/ivtoivload -> reports. */
+    function structureChoices(rows, type) {
+        const code = STRUCT_TYPE_CODE[type];
+        const seen = {};
+        const out = [];
+        (rows || []).forEach((r) => {
+            if (!r || out.length >= MAX_STRUCT_CHOICES) return;
+            const name = norm(r.name !== undefined ? r.name : r.NAME);
+            const caption = norm(r.caption !== undefined ? r.caption : r.CAPTION);
+            const stype = norm(r.stype !== undefined ? r.stype : r.STYPE).toLowerCase();
+            if (!code || !name || stype !== code || seen[name.toLowerCase()]) return;
+            seen[name.toLowerCase()] = true;
+            out.push({ value: name, label: (caption && caption.toLowerCase() !== name.toLowerCase() ? caption : name) + (caption && caption.toLowerCase() !== name.toLowerCase() ? " (" + name + ")" : "") });
+        });
+        return out;
+    }
+
+    function canSearchStructures(term) {
+        return norm(term).length >= 3;
+    }
+
     function fieldsFor(type) {
         return (FIELDS_BY_TYPE[type] || []).slice();
     }
@@ -142,6 +178,6 @@
 
     return {
         MAX_NAME_LENGTH, MAX_LIST_LENGTH, NO_SOURCE, COMMANDS, CUSTOM_TYPES, FIELDS_BY_TYPE,
-        fieldsFor, validateName, makeConfigId, validateOption, appendOption, buildCreateUrl, buildCreateBody
+        fieldsFor, recordSourceOptions, structureChoices, canSearchStructures, KNOWN_RECORD_SOURCES, validateName, makeConfigId, validateOption, appendOption, buildCreateUrl, buildCreateBody
     };
 }));

@@ -10,7 +10,7 @@ namespace AxiApi.Lib
 
         // Every Configure / SDK option, inactive ones too (the AxiCMD Config page lists them all)
         public const string SelectAllCommandConfigs =
-            "SELECT config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system " +
+            "SELECT config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system, record_source " +
             "FROM axi_command_config " +
             "WHERE LOWER(command) IN ('configure', 'sdk') " +
             "ORDER BY command, prompt_options";
@@ -34,8 +34,8 @@ namespace AxiApi.Lib
             "SELECT config_id, prompt_options FROM axi_command_config WHERE LOWER(command) = :command";
 
         public const string InsertCustomCommandOption =
-            "INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) " +
-            "VALUES (:configid, :command, :promptoptions, :promptid, :optiontype, :paramfield, :targeturl, :extraparams, 'T', 'F')";
+            "INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system, record_source) " +
+            "VALUES (:configid, :command, :promptoptions, :promptid, :optiontype, :paramfield, :targeturl, :extraparams, 'T', 'F', :recordsource)";
 
         // {0} = cmdtoken (Configure 4, SDK 7). The suffix is ',' + name / ',' + source: appended in SQL so two admins saving together do not overwrite each other.
         public const string AppendCommandOptionName =

@@ -109,8 +109,8 @@
         const hasAccess = q.get("access") === "1";
         const apiBase = q.get("api"), appName = q.get("appname"), userName = q.get("username") || "";
         const Logic = window.AxiConfigLogic;
-        const AVAILABLE_TYPES = ["url"];   // the types the drawer offers so far; the logic script knows all four
-        const TYPE_LABELS = { url: "URL" };
+        const AVAILABLE_TYPES = Logic.CUSTOM_TYPES;   // tstruct, iview, ivtoivload, url (never action, processflow, shellaction)
+        const TYPE_LABELS = { tstruct: "Form (tstruct)", iview: "Report (iview)", ivtoivload: "Report with load (ivtoivload)", url: "URL" };
 
         function showNote(text, isError) {
             note.hidden = !text;
@@ -153,10 +153,39 @@
         const errOf = { name: $("eName"), promptId: $("ePromptId"), targetUrl: $("eTargetUrl"), paramField: $("eParamField"), extraParams: $("eExtraParams") };
 
         function showFieldsForType() {
-            const used = Logic.fieldsFor($("fType").value);
+            const type = $("fType").value;
+            const used = Logic.fieldsFor(type);
             Array.prototype.forEach.call(form.querySelectorAll("[data-field]"), (el) => {
                 el.hidden = used.indexOf(el.getAttribute("data-field")) === -1;
             });
+            $("lPromptId").textContent = type === "tstruct" ? "Form" : "Report";
+            $("fPromptIdList").textContent = "";
+        }
+
+        // Structure picker: the palette (parent window) searches the paged axi_structmetalist source
+        let structTimer = null, structAsk = 0;
+        function searchStructures() {
+            const term = inputOf.promptId.value;
+            clearTimeout(structTimer);
+            if (!Logic.canSearchStructures(term)) { $("fPromptIdList").textContent = ""; return; }
+            structTimer = setTimeout(() => {
+                const shell = window.top || window.parent;
+                let search = null;
+                try { search = shell && shell.axiSearchStructures; } catch (e) { }
+                if (typeof search !== "function") return;   // opened on its own: the ID can still be typed
+                const ask = ++structAsk, type = $("fType").value;
+                Promise.resolve(search.call(shell, term.trim())).then((rows) => {
+                    if (ask !== structAsk) return;
+                    const list = $("fPromptIdList");
+                    list.textContent = "";
+                    Logic.structureChoices(rows, type).forEach((c) => {
+                        const o = document.createElement("option");
+                        o.value = c.value;
+                        o.label = c.label;
+                        list.appendChild(o);
+                    });
+                }).catch(() => { });
+            }, 300);
         }
 
         function setFieldError(field, text) {
@@ -182,6 +211,14 @@
                 typeSel.appendChild(o);
             });
             $("fCommand").value = active === "sdk" ? "SDK" : "Configure";
+            const srcSel = $("fSource");
+            srcSel.textContent = "";
+            Logic.recordSourceOptions().forEach((s) => {
+                const o = document.createElement("option");
+                o.value = s.value;
+                o.textContent = s.label;
+                srcSel.appendChild(o);
+            });
             showFieldsForType();
             scrim.hidden = false;
             drawer.hidden = false;
@@ -245,6 +282,7 @@
         if (hasAccess) addBtn.hidden = false;
         addBtn.addEventListener("click", openDrawer);
         $("fType").addEventListener("change", showFieldsForType);
+        inputOf.promptId.addEventListener("input", searchStructures);
         $("acClose").addEventListener("click", closeDrawer);
         $("acCancel").addEventListener("click", closeDrawer);
         scrim.addEventListener("click", closeDrawer);

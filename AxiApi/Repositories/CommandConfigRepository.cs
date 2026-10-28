@@ -121,6 +121,9 @@ namespace AxiApi.Repositories
                     string recordSource = string.Empty;
                     if (sourcesByCommand.TryGetValue(command, out var map))
                         map.TryGetValue(option.Trim(), out recordSource!);
+                    // The palette reads the prompt lists, so those win; the stored column fills in when the lists lack the option
+                    if (string.IsNullOrEmpty(recordSource) && row.Table.Columns.Contains("record_source") && row["record_source"] != DBNull.Value)
+                        recordSource = row["record_source"]?.ToString() ?? string.Empty;
 
                     options.Add(new CommandConfigOptionDTO
                     {
@@ -233,9 +236,10 @@ namespace AxiApi.Repositories
             var commands = new List<SQLCommandBuilder>
             {
                 new SQLCommandBuilder(SqlQueries.InsertCustomCommandOption,
-                    new[] { ":configid", ":command", ":promptoptions", ":promptid", ":optiontype", ":paramfield", ":targeturl", ":extraparams" },
-                    new[] { DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.String },
-                    new object[] { configId, command, option.Name, promptId, option.Type, Db(option.ParamField), Db(option.TargetUrl), Db(option.ExtraParams) },
+                    new[] { ":configid", ":command", ":promptoptions", ":promptid", ":optiontype", ":paramfield", ":targeturl", ":extraparams", ":recordsource" },
+                    new[] { DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.String },
+                    // None is stored as NULL so a re-install restores Axi_Dummy
+                    new object[] { configId, command, option.Name, promptId, option.Type, Db(option.ParamField), Db(option.TargetUrl), Db(option.ExtraParams), option.RecordSource == CommandOptionRules.NoSource ? DBNull.Value : option.RecordSource! },
                     ARMCommon.Helpers.Constants.DATA_ACTION.INSERT),
                 new SQLCommandBuilder(string.Format(SqlQueries.AppendCommandOptionName, token),
                     new[] { ":suffix" }, new[] { DbType.String }, new object[] { "," + option.Name }, ARMCommon.Helpers.Constants.DATA_ACTION.UPDATE),

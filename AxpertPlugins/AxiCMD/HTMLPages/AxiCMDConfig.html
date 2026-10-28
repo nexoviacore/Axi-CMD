@@ -83,8 +83,10 @@
                 </div>
 
                 <div class="ac-field" data-field="promptId" hidden>
-                    <label for="fPromptId">Form or report ID</label>
-                    <input id="fPromptId" type="text" autocomplete="off" aria-describedby="ePromptId">
+                    <label for="fPromptId" id="lPromptId">Form or report</label>
+                    <input id="fPromptId" type="text" dir="ltr" autocomplete="off" list="fPromptIdList" aria-describedby="hPromptId ePromptId">
+                    <datalist id="fPromptIdList"></datalist>
+                    <span id="hPromptId" class="ac-help">Type 3 or more letters of the name or caption to search, or enter the ID.</span>
                     <span id="ePromptId" class="ac-err" role="alert"></span>
                 </div>
 
@@ -110,9 +112,10 @@
 
                 <div class="ac-field">
                     <label for="fSource">Record source</label>
-                    <select id="fSource" disabled>
+                    <select id="fSource" aria-describedby="hSource">
                         <option value="Axi_Dummy">None</option>
                     </select>
+                    <span id="hSource" class="ac-help">The list of records offered as the third word after the option name.</span>
                 </div>
 
                 <p id="acFormError" class="ac-note ac-error" role="alert" hidden></p>
@@ -125,8 +128,8 @@
         </form>
     </aside>
 
-    <script src="js/axiconfiglogic.js?v=1"></script>
-    <script src="js/axiconfigpage.js?v=3"></script>
+    <script src="js/axiconfiglogic.js?v=2"></script>
+    <script src="js/axiconfigpage.js?v=4"></script>
 </body>
 
 </html>
