@@ -22,14 +22,22 @@ CREATE TABLE axi_command_prompts (
 	cmdtoken int4 NULL,
 	wordpos int4 NULL,
 	prompt varchar(200) NULL,
-	promptsource varchar(500) NULL,
+	promptsource varchar(4000) NULL,
 	promptparams varchar(100) NULL,
-	promptvalues varchar(500) NULL,
+	promptvalues varchar(4000) NULL,
 	props varchar(100) NULL,
 	extraparams varchar(1000) NULL,
 	requesturl varchar(2000) NULL,
 	CONSTRAINT axi_command_prompts_pkey PRIMARY KEY (id)
 )
+>>
+
+<<
+ALTER TABLE axi_command_prompts ALTER COLUMN promptsource TYPE varchar(4000)
+>>
+
+<<
+ALTER TABLE axi_command_prompts ALTER COLUMN promptvalues TYPE varchar(4000)
 >>
 
 <<
