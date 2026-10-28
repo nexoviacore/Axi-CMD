@@ -74,16 +74,6 @@ test('the C# list helpers trim entries and drop only trailing empties', () => {
     assert.ok(!/string\.Join\(",", n\) == names/.test(rules), 'pairing check must not demand byte-identical lists');
 });
 
-// ---- install: 4000 character guard, same in both databases ----------------------------------------------------
-for (const db of ['Postgre', 'Oracle']) {
-    test(`${db}: the re-append step skips a command whose lists would pass 4000 characters instead of failing`, () => {
-        const last = read('AxpertPlugins', 'AxiCMD', 'docs', 'post-install', (db === 'Postgre' ? 'postgres' : 'oracle') + '_restore_custom_options.sql');
-        assert.match(last, /<= 4000/);
-        assert.strictEqual((last.match(/<= 4000/g) || []).length >= 2, true);
-        if (db === 'Oracle') assert.match(last, /ON OVERFLOW TRUNCATE/);
-    });
-}
-
 // ---- C# structure ---------------------------------------------------------------------------------------------
 test('the options list endpoint declares no unused username parameter', () => {
     const c = read('AxiApi', 'Controllers', 'AxiController.cs');

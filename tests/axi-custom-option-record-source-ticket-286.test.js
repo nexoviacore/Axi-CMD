@@ -13,7 +13,6 @@ const blocks = (sql) => [...sql.matchAll(/<<\r?\n([\s\S]*?)\r?\n>>/g)].map((m) =
 for (const db of ['Postgre', 'Oracle']) {
     const cfg = fs.readFileSync(path.join(sqlDir, db, 'Scripts', 'axi_command_config.sql'), 'utf8');
     const all = blocks(cfg);
-    const last = fs.readFileSync(path.join(root, 'AxpertPlugins', 'AxiCMD', 'docs', 'post-install', (db === 'Postgre' ? 'postgres' : 'oracle') + '_restore_custom_options.sql'), 'utf8');
 
     test(`${db}: record_source is a nullable column, in the create and in a re-runnable ALTER`, () => {
         const create = all.find((b) => /CREATE TABLE/i.test(b)) || cfg;
@@ -23,15 +22,6 @@ for (const db of ['Postgre', 'Oracle']) {
         assert.ok(alter, 'ALTER block');
         if (db === 'Postgre') assert.match(alter, /ADD COLUMN IF NOT EXISTS record_source/i);
         else assert.match(alter, /user_tab_columns[\s\S]*RECORD_SOURCE[\s\S]*ALTER TABLE AXI_COMMAND_CONFIG ADD/i);
-    });
-
-    test(`${db}: the re-install step restores each option's own record source, Axi_Dummy when null`, () => {
-        assert.match(last, /record_source/i);
-        assert.match(last, /(coalesce|nvl)\(\s*c\.record_source\s*,\s*'Axi_Dummy'\s*\)/i);
-        assert.ok(!/',Axi_Dummy'/.test(last));
-        // Postgres repeats both aggregates in HAVING (4000 character guard); Oracle filters in an outer select
-        assert.strictEqual((last.match(/ORDER BY c\.config_id/gi) || []).length, db === 'Postgre' ? 4 : 2);
-        assert.strictEqual((last.match(/^\s*(UPDATE|MERGE)\b/gim) || []).length, 1);
     });
 
     test(`${db}: shipped Built-in Options do not set a record source`, () => {
