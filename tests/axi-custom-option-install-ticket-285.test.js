@@ -8,17 +8,18 @@ const root = path.join(__dirname, '..');
 const sqlDir = path.join(root, 'AxpertPlugins', 'AxiCMD', 'Structures');
 const read = (...p) => fs.readFileSync(path.join(root, ...p), 'utf8');
 const blocks = (sql) => [...sql.matchAll(/<<\r?\n([\s\S]*?)\r?\n>>/g)].map((m) => m[1]);
+const restoreFile = (db) => path.join(root, 'AxpertPlugins', 'AxiCMD', 'docs', 'post-install', (db === 'Postgre' ? 'postgres' : 'oracle') + '_restore_custom_options.sql');
 const logic = require(path.join(root, 'AxpertPlugins', 'AxiCMD', 'HTMLPages', 'js', 'axiconfiglogic.js'));
 
 for (const db of ['Postgre', 'Oracle']) {
     const cfg = fs.readFileSync(path.join(sqlDir, db, 'Scripts', 'axi_command_config.sql'), 'utf8');
-    const last = blocks(cfg).pop();
+    // The re-append step is a separate post-install file run by hand: AxInstaller may run the scripts in any order
+    const last = fs.readFileSync(restoreFile(db), 'utf8');
 
-    test(`${db}: the re-append step is the last block, after every config row exists`, () => {
-        const all = blocks(cfg);
-        const lastShipped = all.map((b, i) => (/^\s*(INSERT|MERGE INTO AXI_COMMAND_CONFIG|MERGE INTO axi_command_config)/i.test(b) ? i : -1)).filter((i) => i >= 0).pop();
-        assert.ok(all.length - 1 > lastShipped);
+    test(`${db}: the re-append step is not in the installer scripts, only in the post-install file`, () => {
+        assert.ok(!blocks(cfg).some((b) => /axi_command_prompts/i.test(b)));
         assert.match(last, /axi_command_prompts/i);
+        assert.ok(!/^(<<|>>)/m.test(last), 'plain SQL, no installer block markers');
     });
 
     test(`${db}: re-append only touches Custom Options of Configure (4) and SDK (7) and skips names already listed`, () => {
@@ -43,11 +44,10 @@ for (const db of ['Postgre', 'Oracle']) {
     });
 }
 
-test('install order puts axi_command_config.sql after axi_command_tables.sql (documented)', () => {
-    const doc = read('AxpertPlugins', 'AxiCMD', 'docs', 'DOCUMENTATION.md');
-    const a = doc.indexOf('axi_command_tables.sql');
-    const b = doc.indexOf('axi_command_config.sql', a);
-    assert.ok(a > 0 && b > a);
+test('the release notes tell admins to run the post-install file', () => {
+    const notes = read('AxpertPlugins', 'AxiCMD', 'RELEASE_NOTES.md');
+    assert.match(notes, /postgres_restore_custom_options\.sql/);
+    assert.match(notes, /oracle_restore_custom_options\.sql/);
 });
 
 test('the C# rules use the same limits and fields as the page logic', () => {

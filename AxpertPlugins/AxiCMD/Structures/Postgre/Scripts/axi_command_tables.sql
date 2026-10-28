@@ -2,9 +2,10 @@
 DROP TABLE axi_commands
 >>
 
-<<
-DROP TABLE axi_command_prompts
->>
+-- axi_command_prompts is never dropped: it holds the Custom Option names added from the AxiCMD Config page.
+-- On a re-install its CREATE TABLE and the shipped INSERTs fail with "already exists" / duplicate key, which is expected.
+-- So a change to a shipped prompt row in a later release does not reach existing databases through its INSERT: add an UPDATE that keeps
+-- the Custom Option names already in the list.
 
 <<
 CREATE TABLE axi_commands (

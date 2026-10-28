@@ -18,6 +18,10 @@ for (const db of ['Postgre', 'Oracle']) {
         assert.ok(!/DROP\s+TABLE\s+axi_command_config/i.test(cfg));
     });
 
+    test(`${db}: tables script never drops axi_command_prompts, so Custom Option names survive a re-install`, () => {
+        assert.ok(!blocks(cmd).some((b) => /DROP\s+TABLE\s+axi_command_prompts/i.test(b)));
+    });
+
     test(`${db}: config table create is guarded and has is_system defaulting to F`, () => {
         if (db === 'Postgre') {
             assert.match(cfg, /CREATE TABLE IF NOT EXISTS axi_command_config/i);

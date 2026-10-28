@@ -13,7 +13,7 @@ const blocks = (sql) => [...sql.matchAll(/<<\r?\n([\s\S]*?)\r?\n>>/g)].map((m) =
 for (const db of ['Postgre', 'Oracle']) {
     const cfg = fs.readFileSync(path.join(sqlDir, db, 'Scripts', 'axi_command_config.sql'), 'utf8');
     const all = blocks(cfg);
-    const last = all[all.length - 1];
+    const last = fs.readFileSync(path.join(root, 'AxpertPlugins', 'AxiCMD', 'docs', 'post-install', (db === 'Postgre' ? 'postgres' : 'oracle') + '_restore_custom_options.sql'), 'utf8');
 
     test(`${db}: record_source is a nullable column, in the create and in a re-runnable ALTER`, () => {
         const create = all.find((b) => /CREATE TABLE/i.test(b)) || cfg;
