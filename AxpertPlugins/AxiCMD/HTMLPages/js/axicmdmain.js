@@ -12895,8 +12895,8 @@ if (typeof document !== "undefined") {
             const id = btn.id || btn.getAttribute("data-id");
             if (!id) return;
             const label = btn.innerText.trim();
-            if (!label) // console.log("There is no label for Element: " + btn);
-                if (label.toLowerCase() === "plugin custom code") return;
+            // Same as the other button readers: buttons without a label and "Plugin Custom Code" are not listed (#277)
+            if (!label || label.toLowerCase() === "plugin custom code") return;
 
 
 
@@ -13233,8 +13233,8 @@ if (typeof document !== "undefined") {
             if (!id) return;
             // const label = btn.innerText.trim();
             const label = extractButtonLabel(btn);
-            if (!label) // console.log("There is no label for Element: " + btn);
-                if (label.toLowerCase() === "plugin custom code") return;
+            // Same as the other button readers: buttons without a label and "Plugin Custom Code" are not listed (#277)
+            if (!label || label.toLowerCase() === "plugin custom code") return;
 
 
 
