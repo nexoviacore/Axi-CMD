@@ -54,7 +54,13 @@ VALUES (1920990000006,'F',0,NULL,'admin',TO_TIMESTAMP('2026-09-25 13:36:05','YYY
 
 
 <<
-CREATE TABLE Axi_UserSettings (
+DECLARE
+    v_exists NUMBER;
+BEGIN
+    -- The table holds user settings, so it is never dropped: create it only when it is not there yet
+    SELECT COUNT(*) INTO v_exists FROM user_tables WHERE table_name = 'AXI_USERSETTINGS';
+    IF v_exists = 0 THEN
+        EXECUTE IMMEDIATE q'[CREATE TABLE Axi_UserSettings (
     Id VARCHAR2(36)
         DEFAULT LOWER(
             REGEXP_REPLACE(
@@ -70,5 +76,7 @@ CREATE TABLE Axi_UserSettings (
     SettingValue VARCHAR2(4000),
     ModifiedOn TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_axi_usersettings UNIQUE (UserName, SettingKey)
-)
+)]';
+    END IF;
+END;
 >>

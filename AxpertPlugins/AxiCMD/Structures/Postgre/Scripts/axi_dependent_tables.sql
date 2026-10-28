@@ -61,7 +61,7 @@ INSERT INTO axpstructconfig (axpstructconfigid,cancel,sourceid,mapname,username,
 >>
 
 <<
-CREATE TABLE Axi_UserSettings (
+CREATE TABLE IF NOT EXISTS Axi_UserSettings (
     Id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     UserName VARCHAR(255) NOT NULL,
     SettingKey VARCHAR(100) NOT NULL,
