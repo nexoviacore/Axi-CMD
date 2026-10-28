@@ -116,6 +116,15 @@ namespace AxiApi.Services
             return created;
         }
 
+        public async Task<CommandConfigOptionDTO?> UpdateCommandOptionAsync(string appname, string configId, UpdateCommandOptionRequestDTO request)
+        {
+            var updated = await _repository.UpdateCommandOptionAsync(appname, configId, request);
+            if (updated == null) return null;
+            // A rename or a source change also changes the prompt lists, which the palette reads from the shared grammar cache
+            await ClearCachesAsync(appname, request.Username, includePrompts: true);
+            return updated;
+        }
+
         // Command-config key GetCommandConfigsAsync reads, so the next GET command-config is served fresh from the table.
         // Other users keep their own cached copy until they press Refresh.
         private async Task ClearCachesAsync(string appname, string username, bool includePrompts)

@@ -186,6 +186,7 @@ body {
 }
 .ac-btn:hover { background: rgba(255, 255, 255, 0.85); }
 .ac-btn[hidden] { display: none; }
+.ac-btn-sm { padding: 4px 10px; font-size: 12px; }
 .ac-btn:disabled { opacity: 0.6; cursor: progress; }
 .ac-btn-primary {
   color: #fff;

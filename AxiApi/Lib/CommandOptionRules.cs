@@ -129,6 +129,49 @@ namespace AxiApi.Lib
             };
         }
 
+        /// <summary>Validates an edit like a new option; the option's own current name is not a duplicate. The command comes from the stored row.</summary>
+        public static CreateCommandOptionRequestDTO ValidateEdit(UpdateCommandOptionRequestDTO req, string command, string currentName, IEnumerable<string> existingNames)
+        {
+            var own = (currentName ?? "").Trim();
+            var others = existingNames.Where(e => !string.Equals((e ?? "").Trim(), own, StringComparison.OrdinalIgnoreCase));
+            return Validate(new CreateCommandOptionRequestDTO
+            {
+                Username = req.Username, AppMgrAccess = req.AppMgrAccess, Command = command, Name = req.Name, Type = req.Type,
+                PromptId = req.PromptId, TargetUrl = req.TargetUrl, ParamField = req.ParamField, ExtraParams = req.ExtraParams, RecordSource = req.RecordSource
+            }, others);
+        }
+
+        /// <summary>Replaces the entry oldName in the option list by newName and the source at the same position by recordSource; order and pairing are kept. Mirrors replaceOption in axiconfiglogic.js.</summary>
+        public static (string Names, string Sources) ReplaceOption(string? names, string? sources, string oldName, string newName, string? recordSource)
+        {
+            var src = Clean(recordSource);
+            if (src.Length == 0) src = NoSource;
+            if (!Regex.IsMatch(src, "^[A-Za-z0-9_]+$")) throw new CommandOptionException("The record source name is not valid.");
+            var n = SplitList(names);
+            var s = SplitList(sources);
+            var at = n.FindIndex(x => string.Equals(x.Trim(), oldName.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (at < 0) throw new CommandOptionException($"The option \"{oldName.Trim()}\" is not in the command's option list.", true);
+            while (s.Count < n.Count) s.Add(NoSource);
+            n[at] = newName.Trim();
+            s[at] = src;
+            var outNames = string.Join(",", n);
+            var outSources = string.Join(",", s);
+            if (outNames.Length > MaxListLength || outSources.Length > MaxListLength)
+                throw new CommandOptionException($"The option list is full ({MaxListLength} characters). Shorten the name or remove an option.", true);
+            return (outNames, outSources);
+        }
+
+        /// <summary>True when the request would change the route (name, type, target, fields or record source) of the stored option.</summary>
+        public static bool ChangesRoute(UpdateCommandOptionRequestDTO req, string name, string type, string? promptId, string? targetUrl, string? paramField, string? extraParams, string? recordSource)
+        {
+            static string C(string? v) => (v ?? "").Trim();
+            static string S(string? v) => C(v).Length == 0 ? NoSource : C(v);
+            return C(req.Name) != C(name) || !string.Equals(C(req.Type), C(type), StringComparison.OrdinalIgnoreCase)
+                || C(req.PromptId) != C(promptId) || C(req.TargetUrl) != C(targetUrl)
+                || C(req.ParamField) != C(paramField) || C(req.ExtraParams) != C(extraParams)
+                || !string.Equals(S(req.RecordSource), S(recordSource), StringComparison.OrdinalIgnoreCase);
+        }
+
         /// <summary>True when both lists have entries, the same number of them, and no stray trailing commas or spaces, so an append keeps the positions paired.</summary>
         public static bool ListsArePaired(string? names, string? sources)
         {

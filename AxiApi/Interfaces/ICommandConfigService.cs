@@ -10,5 +10,6 @@ namespace AxiApi.Interfaces
         Task<bool> SetCommandOptionActiveAsync(string appname, string username, string configId, bool active);
         /// <summary>Adds a Custom Option and clears the command-config cache of the saving user and the shared prompt (grammar) cache.</summary>
         Task<CommandConfigOptionDTO> CreateCommandOptionAsync(string appname, CreateCommandOptionRequestDTO request);
+        Task<CommandConfigOptionDTO?> UpdateCommandOptionAsync(string appname, string configId, UpdateCommandOptionRequestDTO request);
     }
 }

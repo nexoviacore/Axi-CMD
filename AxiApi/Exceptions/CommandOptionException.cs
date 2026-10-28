@@ -4,10 +4,13 @@ namespace AxiApi.Exceptions
     public class CommandOptionException : Exception
     {
         public bool IsConflict { get; }
+        /// <summary>Forbidden = 403: the request is well formed but the option may not be changed (Built-in Option route).</summary>
+        public bool IsForbidden { get; }
 
-        public CommandOptionException(string message, bool isConflict = false) : base(message)
+        public CommandOptionException(string message, bool isConflict = false, bool isForbidden = false) : base(message)
         {
             IsConflict = isConflict;
+            IsForbidden = isForbidden;
         }
     }
 }

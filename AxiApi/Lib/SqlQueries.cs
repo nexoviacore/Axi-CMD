@@ -44,6 +44,24 @@ namespace AxiApi.Lib
         public const string AppendCommandOptionSource =
             "UPDATE axi_command_prompts SET promptsource = promptsource || :suffix WHERE cmdtoken = {0} AND wordpos = 3";
 
+        // Edit a Custom Option: the stored row, then the row and (when the name or source changed) both prompt lists, replaced in place.
+        // The is_system guard keeps a Built-in Option out of reach even if the checks in code were skipped.
+        public const string SelectCommandOptionRow =
+            "SELECT config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system, record_source " +
+            "FROM axi_command_config WHERE config_id = :configid AND LOWER(command) IN ('configure', 'sdk')";
+
+        public const string UpdateCustomCommandOption =
+            "UPDATE axi_command_config SET prompt_options = :promptoptions, prompt_id = :promptid, prompt_option_type = :optiontype, " +
+            "param_field = :paramfield, target_url = :targeturl, extra_params = :extraparams, record_source = :recordsource " +
+            "WHERE config_id = :configid AND (is_system IS NULL OR is_system <> 'T')";
+
+        // {0} = cmdtoken (Configure 4, SDK 7)
+        public const string ReplaceCommandOptionNames =
+            "UPDATE axi_command_prompts SET promptvalues = :value WHERE cmdtoken = {0} AND wordpos = 2";
+
+        public const string ReplaceCommandOptionSources =
+            "UPDATE axi_command_prompts SET promptsource = :value WHERE cmdtoken = {0} AND wordpos = 3";
+
         public const string CheckTstructPropsExists = 
             "SELECT COUNT(*) FROM axp_tstructprops WHERE LOWER(name) = :transid";
 

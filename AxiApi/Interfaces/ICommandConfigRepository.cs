@@ -10,5 +10,6 @@ namespace AxiApi.Interfaces
         Task<bool> SetCommandOptionActiveAsync(string appname, string configId, bool active);
         /// <summary>Validates and adds a Custom Option: the config row and both prompt lists in one transaction. Throws CommandOptionException when a rule is broken.</summary>
         Task<CommandConfigOptionDTO> CreateCommandOptionAsync(string appname, CreateCommandOptionRequestDTO request);
+        Task<CommandConfigOptionDTO?> UpdateCommandOptionAsync(string appname, string configId, UpdateCommandOptionRequestDTO request);
     }
 }

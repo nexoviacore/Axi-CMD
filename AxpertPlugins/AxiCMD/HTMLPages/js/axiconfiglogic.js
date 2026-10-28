@@ -163,6 +163,57 @@
         return { ok: true, names: outNames, sources: outSources };
     }
 
+    /**
+     * Rename / re-source one entry in place: finds oldName (case insensitive) in the option list, puts newName there and
+     * recordSource at the same position of the source list. Both lists stay paired and keep their order.
+     */
+    function replaceOption(names, sources, oldName, newName, recordSource) {
+        const src = norm(recordSource) || NO_SOURCE;
+        if (!/^[A-Za-z0-9_]+$/.test(src)) return { ok: false, code: "source", message: "The record source name is not valid." };
+        const n = splitList(names), s = splitList(sources);
+        const at = n.findIndex((x) => norm(x).toLowerCase() === norm(oldName).toLowerCase());
+        if (at === -1) return { ok: false, code: "missing", message: "The option \"" + norm(oldName) + "\" is not in the command's option list." };
+        while (s.length < n.length) s.push(NO_SOURCE);
+        n[at] = norm(newName);
+        s[at] = src;
+        const outNames = n.join(","), outSources = s.join(",");
+        if (outNames.length > MAX_LIST_LENGTH || outSources.length > MAX_LIST_LENGTH) {
+            return { ok: false, code: "listfull", message: "The option list is full (" + MAX_LIST_LENGTH + " characters). Shorten the name or remove an option." };
+        }
+        return { ok: true, names: outNames, sources: outSources };
+    }
+
+    /** Edit mode: the same rules as a new option, but the option's own current name does not count as a duplicate and the command stays. */
+    function validateEdit(input, row, existingNames) {
+        const own = norm(row.name).toLowerCase();
+        const others = (existingNames || []).filter((e) => norm(e).toLowerCase() !== own);
+        return validateOption(Object.assign({}, input, { command: row.command }), others);
+    }
+
+    /** Only Custom Options can be edited; a Built-in Option keeps its route (only Active can change). */
+    function isEditable(row) {
+        return !!row && !row.builtIn;
+    }
+
+    function renameWarning(oldName, newName) {
+        const o = norm(oldName), n = norm(newName);
+        if (!o || !n || o === n) return "";
+        return "Renaming \"" + o + "\" to \"" + n + "\": saved favourites that use \"" + o + "\" will stop working.";
+    }
+
+    function buildUpdateUrl(baseUrl, configId, appname) {
+        return baseUrl.replace(/\/+$/, "") + "/options/" + encodeURIComponent(configId) + "?appname=" + encodeURIComponent(appname);
+    }
+
+    function buildUpdateBody(username, appMgrAccess, value) {
+        return {
+            username: username, appMgrAccess: !!appMgrAccess,
+            name: value.name, type: value.type,
+            promptId: value.promptId, targetUrl: value.targetUrl, paramField: value.paramField, extraParams: value.extraParams,
+            recordSource: value.recordSource
+        };
+    }
+
     function buildCreateUrl(baseUrl, appname) {
         return baseUrl.replace(/\/+$/, "") + "/options?appname=" + encodeURIComponent(appname);
     }
@@ -178,6 +229,6 @@
 
     return {
         MAX_NAME_LENGTH, MAX_LIST_LENGTH, NO_SOURCE, COMMANDS, CUSTOM_TYPES, FIELDS_BY_TYPE,
-        fieldsFor, recordSourceOptions, structureChoices, canSearchStructures, KNOWN_RECORD_SOURCES, validateName, makeConfigId, validateOption, appendOption, buildCreateUrl, buildCreateBody
+        fieldsFor, recordSourceOptions, structureChoices, canSearchStructures, KNOWN_RECORD_SOURCES, validateName, makeConfigId, validateOption, appendOption, replaceOption, validateEdit, isEditable, renameWarning, buildUpdateUrl, buildUpdateBody, buildCreateUrl, buildCreateBody
     };
 }));

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AxiCMD Config</title>
     <!-- Own styles and script only; no CDN. Opened from the palette gear menu (axicmdmain.js). -->
-    <link rel="stylesheet" href="css/axiconfig.css?v=3">
+    <link rel="stylesheet" href="css/axiconfig.css?v=4">
 </head>
 
 <body>
@@ -43,6 +43,7 @@
                         <th scope="col" class="ac-col-type">Type</th>
                         <th scope="col">Target</th>
                         <th scope="col">Active</th>
+                        <th scope="col" class="ac-col-act"><span class="ac-vh">Open</span></th>
                     </tr>
                 </thead>
                 <tbody id="acBody"></tbody>
@@ -60,7 +61,17 @@
             </header>
 
             <div class="ac-fields">
-                <p class="ac-hint">A Custom Option opens a page you choose. It appears at the end of the command's list.</p>
+                <p id="acHint" class="ac-hint">A Custom Option opens a page you choose. It appears at the end of the command's list.</p>
+
+                <p id="acRenameWarn" class="ac-note ac-error" role="alert" hidden></p>
+
+                <div id="acActiveWrap" class="ac-field" hidden>
+                    <label class="ac-switch">
+                        <input id="fActive" type="checkbox">
+                        <span class="ac-track"></span>
+                        <span>Active</span>
+                    </label>
+                </div>
 
                 <div class="ac-field">
                     <label for="fCommand">Command</label>
@@ -128,8 +139,8 @@
         </form>
     </aside>
 
-    <script src="js/axiconfiglogic.js?v=2"></script>
-    <script src="js/axiconfigpage.js?v=4"></script>
+    <script src="js/axiconfiglogic.js?v=3"></script>
+    <script src="js/axiconfigpage.js?v=5"></script>
 </body>
 
 </html>

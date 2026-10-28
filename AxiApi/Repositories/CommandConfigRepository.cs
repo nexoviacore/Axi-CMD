@@ -177,6 +177,140 @@ namespace AxiApi.Repositories
             return true;
         }
 
+        /// <summary>
+        /// Edits or renames a Custom Option. A rename replaces the entry in place in the option list (position and pairing kept) and
+        /// the record source at the same position of the source list. A Built-in Option is refused any route change. Null = not found.
+        /// </summary>
+        public async Task<CommandConfigOptionDTO?> UpdateCommandOptionAsync(string appname, string configId, UpdateCommandOptionRequestDTO request)
+        {
+            var isDbConnected = await _axExtend.OpenDBConnectionAsync(appname);
+            if (!isDbConnected)
+            {
+                _logger.LogError("Failed to open DB connection for appname: {AppName}", appname);
+                throw new DatabaseException($"Failed to connect to database for application: {appname}", "CONNECT");
+            }
+            var db = await _axExtend.GetDB();
+
+            SQLResult found = await db.ExecuteSQLAsync(SqlQueries.SelectCommandOptionRow,
+                new[] { ":configid" }, new[] { DbType.String }, new object[] { configId });
+            if (!string.IsNullOrEmpty(found?.error)) throw new DatabaseException(found.error, "SELECT");
+            if (found?.data == null || found.data.Rows.Count == 0) return null;
+
+            DataRow row = found.data.Rows[0];
+            string Str(string col) => row[col] == DBNull.Value ? string.Empty : (row[col]?.ToString() ?? string.Empty);
+            var command = CommandOptionRules.NormalizeCommand(Str("command")) ?? throw new CommandOptionException("Only Configure and SDK options can be changed.");
+            int token = CommandOptionRules.CmdToken(command);
+            var currentName = Str("prompt_options").Trim();
+            bool isSystem = string.Equals(Str("is_system").Trim(), "T", StringComparison.OrdinalIgnoreCase);
+
+            // Option list (wordpos 2) and paired source list (wordpos 3) of the command
+            SQLResult prompts = await db.ExecuteSQLAsync(SqlQueries.SelectCommandOptionPrompts);
+            if (!string.IsNullOrEmpty(prompts?.error)) throw new DatabaseException(prompts.error, "SELECT");
+            string? listNames = null, listSources = null;
+            if (prompts?.data != null)
+            {
+                foreach (DataRow p in prompts.data.Rows)
+                {
+                    if (Convert.ToInt32(p["cmdtoken"]) != token) continue;
+                    var wordpos = Convert.ToInt32(p["wordpos"]);
+                    if (wordpos == 2) listNames = p["promptvalues"] == DBNull.Value ? null : p["promptvalues"]?.ToString();
+                    else if (wordpos == 3) listSources = p["promptsource"] == DBNull.Value ? null : p["promptsource"]?.ToString();
+                }
+            }
+            CommandOptionSources.Pair(listNames, listSources).TryGetValue(currentName, out var currentSource);
+            if (string.IsNullOrEmpty(currentSource)) currentSource = Str("record_source");
+
+            if (isSystem)
+            {
+                // The route of a Built-in Option is fixed; only Active can change (SetCommandOptionActiveAsync)
+                if (CommandOptionRules.ChangesRoute(request, currentName, Str("prompt_option_type"), Str("prompt_id"), Str("target_url"), Str("param_field"), Str("extra_params"), currentSource))
+                    throw new CommandOptionException("Built-in Options keep their route. Only the Active switch can be changed.", false, true);
+                return ToDto(row, command, currentName, currentSource);
+            }
+
+            if (!CommandOptionRules.ListsArePaired(listNames, listSources))
+                throw new CommandOptionException($"The {command} option and source lists in axi_command_prompts are missing or out of step. Re-run the AxiCMD install scripts and try again.", true);
+
+            // Names used by the command's other options, Built-in Options included; the option's own current name is allowed
+            SQLResult existing = await db.ExecuteSQLAsync(SqlQueries.SelectCommandOptionNames,
+                new[] { ":command" }, new[] { DbType.String }, new object[] { command.ToLowerInvariant() });
+            if (!string.IsNullOrEmpty(existing?.error)) throw new DatabaseException(existing.error, "SELECT");
+            var usedNames = new List<string>();
+            if (existing?.data != null)
+            {
+                foreach (DataRow r in existing.data.Rows)
+                {
+                    if (!string.Equals(r["config_id"]?.ToString(), configId, StringComparison.OrdinalIgnoreCase))
+                        usedNames.Add(r["prompt_options"]?.ToString() ?? string.Empty);
+                }
+            }
+            usedNames.AddRange(listNames!.Split(','));
+
+            var option = CommandOptionRules.ValidateEdit(request, command, currentName, usedNames);
+            var promptId = string.IsNullOrEmpty(option.PromptId) ? configId.Substring(4) : option.PromptId!;
+            var replaced = CommandOptionRules.ReplaceOption(listNames, listSources, currentName, option.Name, option.RecordSource);
+
+            object Db(string? v) => string.IsNullOrEmpty(v) ? DBNull.Value : v;
+            var commands = new List<SQLCommandBuilder>
+            {
+                new SQLCommandBuilder(SqlQueries.UpdateCustomCommandOption,
+                    new[] { ":promptoptions", ":promptid", ":optiontype", ":paramfield", ":targeturl", ":extraparams", ":recordsource", ":configid" },
+                    new[] { DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.String },
+                    // None is stored as NULL so a re-install restores Axi_Dummy
+                    new object[] { option.Name, promptId, option.Type, Db(option.ParamField), Db(option.TargetUrl), Db(option.ExtraParams), option.RecordSource == CommandOptionRules.NoSource ? DBNull.Value : option.RecordSource!, configId },
+                    ARMCommon.Helpers.Constants.DATA_ACTION.UPDATE)
+            };
+            if (replaced.Names != listNames)
+                commands.Add(new SQLCommandBuilder(string.Format(SqlQueries.ReplaceCommandOptionNames, token),
+                    new[] { ":value" }, new[] { DbType.String }, new object[] { replaced.Names }, ARMCommon.Helpers.Constants.DATA_ACTION.UPDATE));
+            if (replaced.Sources != listSources)
+                commands.Add(new SQLCommandBuilder(string.Format(SqlQueries.ReplaceCommandOptionSources, token),
+                    new[] { ":value" }, new[] { DbType.String }, new object[] { replaced.Sources }, ARMCommon.Helpers.Constants.DATA_ACTION.UPDATE));
+
+            // One transaction: the row and both lists are saved together or not at all
+            TransactionResult saved = await db.ExecuteSQLsInTransactionAsync(commands, true);
+            if (saved == null || !saved.success)
+            {
+                _logger.LogError("Update command option {ConfigId} failed: {Error}", configId, saved?.error);
+                throw new DatabaseException(saved?.error ?? "The option could not be saved.", "UPDATE");
+            }
+
+            _logger.LogInformation("Custom Option {ConfigId} updated in {Command} for appname: {AppName}", configId, command, appname);
+            return new CommandConfigOptionDTO
+            {
+                ConfigId = configId,
+                Command = command,
+                PromptOptions = option.Name,
+                PromptId = promptId,
+                PromptOptionType = option.Type,
+                ParamField = string.IsNullOrEmpty(option.ParamField) ? null : option.ParamField,
+                TargetUrl = string.IsNullOrEmpty(option.TargetUrl) ? null : option.TargetUrl,
+                ExtraParams = string.IsNullOrEmpty(option.ExtraParams) ? null : option.ExtraParams,
+                Active = Str("active").Length == 0 ? "T" : Str("active"),
+                IsSystem = "F",
+                RecordSource = option.RecordSource ?? CommandOptionRules.NoSource
+            };
+        }
+
+        private static CommandConfigOptionDTO ToDto(DataRow row, string command, string name, string? recordSource)
+        {
+            string? Opt(string col) => row[col] == DBNull.Value ? null : row[col]?.ToString();
+            return new CommandConfigOptionDTO
+            {
+                ConfigId = row["config_id"]?.ToString() ?? string.Empty,
+                Command = command,
+                PromptOptions = name,
+                PromptId = Opt("prompt_id") ?? string.Empty,
+                PromptOptionType = Opt("prompt_option_type") ?? string.Empty,
+                ParamField = Opt("param_field"),
+                TargetUrl = Opt("target_url"),
+                ExtraParams = Opt("extra_params"),
+                Active = Opt("active") ?? "T",
+                IsSystem = Opt("is_system") ?? "F",
+                RecordSource = recordSource ?? string.Empty
+            };
+        }
+
         public async Task<CommandConfigOptionDTO> CreateCommandOptionAsync(string appname, CreateCommandOptionRequestDTO request)
         {
             var command = CommandOptionRules.NormalizeCommand(request.Command) ?? throw new CommandOptionException("Choose Configure or SDK.");

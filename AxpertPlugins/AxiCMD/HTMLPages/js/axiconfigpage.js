@@ -32,6 +32,10 @@
             name: String(pick(raw, ["promptOptions", "PromptOptions", "prompt_options"])).trim(),
             type: String(pick(raw, ["promptOptionType", "PromptOptionType", "prompt_option_type"])).trim(),
             target: url || promptId,
+            promptId: promptId,
+            targetUrl: url,
+            paramField: String(pick(raw, ["paramField", "ParamField", "param_field"])).trim(),
+            extraParams: String(pick(raw, ["extraParams", "ExtraParams", "extra_params"])).trim(),
             active: isTrue(pick(raw, ["active", "Active"])),
             builtIn: isTrue(pick(raw, ["isSystem", "IsSystem", "is_system"])),
             source: String(pick(raw, ["recordSource", "RecordSource", "record_source"])).trim()
@@ -81,6 +85,15 @@
         const out = {};
         TABS.forEach((k) => {
             out[k] = groups[k].map((r) => (r.id === id ? Object.assign({}, r, { active: !!active }) : r));
+        });
+        return out;
+    }
+
+    /** Returns new groups with one row replaced by its updated version (same tab, same place); the input is not modified. */
+    function replaceRow(groups, id, row) {
+        const out = {};
+        TABS.forEach((k) => {
+            out[k] = groups[k].map((r) => (r.id === id ? row : r));
         });
         return out;
     }
@@ -199,9 +212,29 @@
             formError.textContent = "";
         }
 
-        function openDrawer() {
+        let editing = null;   // the row being edited or viewed; null = adding
+
+        function setReadOnly(on) {
+            Array.prototype.forEach.call(form.querySelectorAll("input[type=text], select"), (el) => {
+                el.disabled = on;
+            });
+            saveBtn.hidden = on;
+            $("acCancel").textContent = on ? "Close" : "Cancel";
+        }
+
+        function updateRenameWarning() {
+            const w = editing && isEditable(editing) ? Logic.renameWarning(editing.name, inputOf.name.value) : "";
+            $("acRenameWarn").hidden = !w;
+            $("acRenameWarn").textContent = w;
+        }
+
+        function openDrawer(row) {
+            editing = row && row.id ? row : null;
             form.reset();
             clearErrors();
+            setReadOnly(false);
+            $("acRenameWarn").hidden = true;
+            $("acActiveWrap").hidden = !editing;
             const typeSel = $("fType");
             typeSel.textContent = "";
             AVAILABLE_TYPES.forEach((t) => {
@@ -210,7 +243,13 @@
                 o.textContent = TYPE_LABELS[t] || t;
                 typeSel.appendChild(o);
             });
-            $("fCommand").value = active === "sdk" ? "SDK" : "Configure";
+            $("fCommand").value = editing ? editing.command : (active === "sdk" ? "SDK" : "Configure");
+            $("acDrawerTitle").textContent = !editing ? "Add option" : (isEditable(editing) ? "Edit option" : (Logic.isEditable(editing) ? "Option" : "Built-in option"));
+            $("acHint").textContent = !editing ? "A Custom Option opens a page you choose. It appears at the end of the command's list."
+                : (isEditable(editing) ? "Changes apply to the palette after it reloads; other users see them after they press Refresh."
+                    : (Logic.isEditable(editing) ? "You need Configure Access to change this option."
+                        : "A Built-in Option ships with the product, so its route is read-only. You can still switch it on or off."));
+            $("fCommand").disabled = !!editing;
             const srcSel = $("fSource");
             srcSel.textContent = "";
             Logic.recordSourceOptions().forEach((s) => {
@@ -219,18 +258,52 @@
                 o.textContent = s.label;
                 srcSel.appendChild(o);
             });
+            if (editing) {
+                const typeSel2 = $("fType");
+                if (AVAILABLE_TYPES.indexOf(editing.type) === -1) {
+                    // A Built-in type (action, processflow, ...) is shown as it is, read-only
+                    const o = document.createElement("option");
+                    o.value = editing.type;
+                    o.textContent = editing.type;
+                    typeSel2.appendChild(o);
+                }
+                typeSel2.value = editing.type;
+                const src = editing.source || Logic.NO_SOURCE;
+                if (!Array.prototype.some.call(srcSel.options, (o) => o.value === src)) {
+                    const o = document.createElement("option");
+                    o.value = src;
+                    o.textContent = src;
+                    srcSel.appendChild(o);
+                }
+                srcSel.value = src;
+                fields.forEach((f) => { inputOf[f].value = f === "name" ? editing.name : (editing[f] || ""); });
+                $("fActive").checked = editing.active;
+                $("fActive").disabled = !hasAccess;
+            }
             showFieldsForType();
+            if (editing && !isEditable(editing)) {
+                // Route fields that have a value stay visible but locked
+                if (AVAILABLE_TYPES.indexOf(editing.type) === -1) {
+                    Array.prototype.forEach.call(form.querySelectorAll("[data-field]"), (el) => { el.hidden = !editing[el.getAttribute("data-field")]; });
+                }
+                setReadOnly(true);
+            }
             scrim.hidden = false;
             drawer.hidden = false;
             saveBtn.disabled = false;
-            inputOf.name.focus();
+            (editing && !isEditable(editing) ? $("fActive") : inputOf.name).focus();
         }
 
+        let opener = null;
         function closeDrawer() {
             drawer.hidden = true;
             scrim.hidden = true;
-            addBtn.focus();
+            editing = null;
+            (opener && document.contains(opener) ? opener : addBtn).focus();
         }
+
+        // True when this user may change the route of the row in the drawer: Configure Access and a Custom Option
+        const isEditable = (row) => hasAccess && Logic.isEditable(row);
 
         function existingNames(command) {
             return (groups[command.toLowerCase()] || []).map((r) => r.name);
@@ -241,7 +314,8 @@
             clearErrors();
             const input = { command: $("fCommand").value, type: $("fType").value, recordSource: $("fSource").value };
             fields.forEach((f) => { input[f] = inputOf[f].value; });
-            const checked = Logic.validateOption(input, existingNames(input.command));
+            if (editing && !isEditable(editing)) return;
+            const checked = editing ? Logic.validateEdit(input, editing, existingNames(editing.command)) : Logic.validateOption(input, existingNames(input.command));
             if (!checked.ok) {
                 let first = null;
                 Object.keys(checked.errors).forEach((f) => {
@@ -255,22 +329,32 @@
             formError.hidden = false;
             formError.className = "ac-note";
             formError.textContent = "Saving...";
-            fetch(Logic.buildCreateUrl(apiBase, appName), {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(Logic.buildCreateBody(userName, hasAccess, checked.value))
-            }).then((res) => {
+            const target = editing;
+            const request = target
+                ? fetch(Logic.buildUpdateUrl(apiBase, target.id, appName), {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(Logic.buildUpdateBody(userName, hasAccess, checked.value))
+                })
+                : fetch(Logic.buildCreateUrl(apiBase, appName), {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(Logic.buildCreateBody(userName, hasAccess, checked.value))
+                });
+            request.then((res) => {
                 if (!res.ok) return res.text().then((t) => { throw { status: res.status, text: t }; });
                 return res.json();
             }).then((created) => {
                 const key = checked.value.command.toLowerCase();
-                groups[key] = groups[key].concat([normalizeRow(created)]).sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+                if (target) groups = replaceRow(groups, target.id, normalizeRow(created));
+                else groups[key] = groups[key].concat([normalizeRow(created)]);
+                groups[key].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
                 updateCounts();
                 const shell = window.top || window.parent;
                 try { if (shell && typeof shell.axiReloadCommandConfig === "function") shell.axiReloadCommandConfig(); } catch (err) { }
                 closeDrawer();
                 selectTab(key);
-                showNote("Added \"" + checked.value.name + "\". " + OTHER_USERS_NOTE, false);
+                showNote((target ? "Saved \"" : "Added \"") + checked.value.name + "\". " + OTHER_USERS_NOTE, false);
             }).catch((err) => {
                 saveBtn.disabled = false;
                 formError.className = "ac-note ac-error";
@@ -280,8 +364,17 @@
         }
 
         if (hasAccess) addBtn.hidden = false;
-        addBtn.addEventListener("click", openDrawer);
+        addBtn.addEventListener("click", () => { opener = addBtn; openDrawer(null); });
         $("fType").addEventListener("change", showFieldsForType);
+        inputOf.name.addEventListener("input", updateRenameWarning);
+        // The Active switch in the drawer saves on its own, like the one in the table
+        $("fActive").addEventListener("change", () => {
+            const row = editing;
+            if (!row) return;
+            save(row, $("fActive").checked, $("fActive")).then(() => {
+                if (editing === row) editing = groups[row.command.toLowerCase()].filter((r) => r.id === row.id)[0] || row;
+            });
+        });
         inputOf.promptId.addEventListener("input", searchStructures);
         $("acClose").addEventListener("click", closeDrawer);
         $("acCancel").addEventListener("click", closeDrawer);
@@ -341,6 +434,15 @@
                 sw.appendChild(lbl);
                 st.appendChild(sw);
                 tr.appendChild(st);
+                const act = document.createElement("td");
+                const eb = document.createElement("button");
+                eb.type = "button";
+                eb.className = "ac-btn ac-btn-sm";
+                eb.textContent = isEditable(r) ? "Edit" : "View";
+                eb.setAttribute("aria-label", eb.textContent + ": " + r.name);
+                eb.addEventListener("click", () => { opener = eb; openDrawer(r); });
+                act.appendChild(eb);
+                tr.appendChild(act);
                 body.appendChild(tr);
             });
             count.textContent = rows.length + " of " + groups[active].length;
@@ -396,5 +498,5 @@
         search.focus();
     }
 
-    return { OTHER_USERS_NOTE, buildActiveUrl, buildActiveBody, setActive, describeFailure, normalizeRow, groupByTab, filterRows, buildListUrl, directionFor, init };
+    return { replaceRow, OTHER_USERS_NOTE, buildActiveUrl, buildActiveBody, setActive, describeFailure, normalizeRow, groupByTab, filterRows, buildListUrl, directionFor, init };
 }));
