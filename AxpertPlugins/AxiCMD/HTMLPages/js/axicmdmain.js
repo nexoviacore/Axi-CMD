@@ -665,8 +665,11 @@ if (typeof document !== "undefined") {
         const request = fetchServerPageSize().then(remote => {
             if (remote === undefined) return;               // unreachable: keep the local value
             if (remote === null) {
-                // the server has no value for this user: they are on the default, so drop any stale local copy
-                try { localStorage.removeItem(pageSizeStorageKey()); } catch (e) { }
+                // The server has no value for this user. A value saved in this browser then never reached the server
+                // (the save failed, or the API was down): keep it and send it again instead of deleting it (#271).
+                let hasLocalValue = false;
+                try { hasLocalValue = localStorage.getItem(pageSizeStorageKey()) !== null; } catch (e) { }
+                if (hasLocalValue) savePageSizeToServer(getPageSize());
             } else {
                 setPageSize(remote);
             }
