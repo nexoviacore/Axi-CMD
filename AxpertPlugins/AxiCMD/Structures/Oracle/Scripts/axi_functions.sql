@@ -101,6 +101,7 @@ is
     v_varname                   VARCHAR2(200);
     v_varvalue                  VARCHAR2(4000);
     v_view_filter               CLOB;
+    v_view_check                CLOB;
 
     v_includedcomps             CLOB;
     v_excludedcomps             CLOB;
@@ -232,6 +233,14 @@ BEGIN
                                  '\1p.',
                                  1, 0, 'i');
 
+            -- The same text with every placeholder that has a value removed: what is left in it has no value. Checked on
+            -- this copy so that a ':x' inside a substituted value (for example a user name with a colon) is not taken for one.
+            v_view_check := v_view_filter;
+            FOR i IN 1..2 LOOP
+                v_view_check := REGEXP_REPLACE(v_view_check,'(^|[^:A-Za-z0-9_]):username([^A-Za-z0-9_]|$)','\1\2',1,0,'i');
+                v_view_check := REGEXP_REPLACE(v_view_check,'(^|[^:A-Za-z0-9_]):userrole([^A-Za-z0-9_]|$)','\1\2',1,0,'i');
+            END LOOP;
+
             -- :username and :userrole (run twice so that two neighbouring placeholders are both replaced)
             FOR i IN 1..2 LOOP
                 v_view_filter := REGEXP_REPLACE(
@@ -275,6 +284,11 @@ BEGIN
                                                  '(^|[^:A-Za-z0-9_]):' || v_varname || '([^A-Za-z0-9_]|$)',
                                                  '\1''' || v_varvalue || '''\2',
                                                  1, 0, 'i');
+                            v_view_check := REGEXP_REPLACE(
+                                                 v_view_check,
+                                                 '(^|[^:A-Za-z0-9_]):' || v_varname || '([^A-Za-z0-9_]|$)',
+                                                 '\1\2',
+                                                 1, 0, 'i');
                         END LOOP;
                     END IF;
 
@@ -282,9 +296,10 @@ BEGIN
 
             END LOOP;
 
-            -- a placeholder without a value cannot be resolved: do not apply the filter, as the SQL would fail
-            IF REGEXP_LIKE(v_view_filter,'(^|[^:]):[A-Za-z_]') THEN
-                v_view_filter := NULL;
+            -- a placeholder without a value cannot be resolved. The filter exists to hide records, so it must not be
+            -- dropped (that would list every record): list no records at all until the variable is available.
+            IF REGEXP_LIKE(v_view_check,'(^|[^:]):[A-Za-z_]') THEN
+                v_view_filter := ' AND 1=0';
             ELSE
                 v_view_filter := ' AND (' || REGEXP_REPLACE(TRIM(v_view_filter),'^and[[:space:]]+','',1,1,'i') || ')';
             END IF;

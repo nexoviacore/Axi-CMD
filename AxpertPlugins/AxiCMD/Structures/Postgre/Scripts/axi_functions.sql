@@ -1170,6 +1170,7 @@ v_pair text;
 v_varname text;
 v_varvalue text;
 v_repl text;
+v_view_check text;
 begin
 ------pglobalvars = <dimension part>[@@VARS@@name=value~~name=value]; the second part carries the session variables
 ------used by the form's view filter (axvarcore <transid>_filter, e.g. ':branch'). The dimension part is used as before.
@@ -1219,6 +1220,12 @@ if lower(pcmd) in ('view','edit') then
   v_view_filter := replace(v_view_filter,'{primarytable.}','p.');
   v_view_filter := regexp_replace(v_view_filter,'(^|[^A-Za-z0-9_])' || regexp_replace(coalesce(pprimarytable,'-'),'[^A-Za-z0-9_]','','g') || '[.]','\1p.','gi');
 
+  -- The same text with every placeholder that has a value removed: what is left in it has no value. Checked on this
+  -- copy so that a ':x' inside a substituted value (for example a user name with a colon) is not taken for one.
+  v_view_check := v_view_filter;
+  v_view_check := regexp_replace(v_view_check,'(^|[^:A-Za-z0-9_]):username(?![A-Za-z0-9_])','\1','gi');
+  v_view_check := regexp_replace(v_view_check,'(^|[^:A-Za-z0-9_]):userrole(?![A-Za-z0-9_])','\1','gi');
+
   -- :username and :userrole
   v_repl := replace(replace(quote_literal(coalesce(pusername,'')),'\','\\'),'&','\&');
   v_view_filter := regexp_replace(v_view_filter,'(^|[^:A-Za-z0-9_]):username(?![A-Za-z0-9_])','\1' || v_repl,'gi');
@@ -1232,13 +1239,15 @@ if lower(pcmd) in ('view','edit') then
    if v_varname <> '' and position('=' in v_pair) > 0 then
     v_repl := replace(replace(quote_literal(v_varvalue),'\','\\'),'&','\&');
     v_view_filter := regexp_replace(v_view_filter,'(^|[^:A-Za-z0-9_]):' || v_varname || '(?![A-Za-z0-9_])','\1' || v_repl,'gi');
+    v_view_check := regexp_replace(v_view_check,'(^|[^:A-Za-z0-9_]):' || v_varname || '(?![A-Za-z0-9_])','\1','gi');
    end if;
   end loop;
 
-  -- a placeholder without a value cannot be resolved: do not apply the filter, as the SQL would fail
-  if v_view_filter ~ '(^|[^:]):[A-Za-z_]' then
-   raise notice 'fn_axi_getstructs_obj: view filter of % has an unresolved variable, filter skipped', ptransid;
-   v_view_filter := null;
+  -- a placeholder without a value cannot be resolved. The filter exists to hide records, so it must not be dropped
+  -- (that would list every record): list no records at all until the variable is available.
+  if v_view_check ~ '(^|[^:]):[A-Za-z_]' then
+   raise notice 'fn_axi_getstructs_obj: view filter of % has an unresolved variable, no records listed', ptransid;
+   v_view_filter := ' and 1=0';
   else
    v_view_filter := concat(' and (',regexp_replace(trim(v_view_filter),'^and\s+','','i'),')');
   end if;
