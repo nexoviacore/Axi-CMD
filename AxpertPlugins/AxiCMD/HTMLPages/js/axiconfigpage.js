@@ -66,7 +66,7 @@
         return RTL_LANGS.indexOf(code) !== -1 ? "rtl" : "ltr";
     }
 
-    const OTHER_USERS_NOTE = "Saved. Other users see the change after their 30 minutes cache expires, or when they press Refresh.";
+    const OTHER_USERS_NOTE = "Saved. Other users see the change after they press Refresh in AxiCMD.";
 
     function buildActiveUrl(baseUrl, configId, appname) {
         return baseUrl.replace(/\/+$/, "") + "/options/" + encodeURIComponent(configId) + "/active?appname=" + encodeURIComponent(appname);

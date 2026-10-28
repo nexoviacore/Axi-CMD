@@ -41,7 +41,7 @@ test('describeFailure gives a readable message for a refusal and for a network e
 });
 
 test('the notice tells the user when other users see the change', () => {
-    assert.match(page.OTHER_USERS_NOTE, /30 minutes/);
+    assert.doesNotMatch(page.OTHER_USERS_NOTE, /30 minutes/);
     assert.match(page.OTHER_USERS_NOTE, /Refresh/);
 });
 
