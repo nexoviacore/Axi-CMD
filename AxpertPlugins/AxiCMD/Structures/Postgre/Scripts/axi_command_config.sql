@@ -132,6 +132,18 @@ INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, p
 >>
 
 <<
+INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_configure_trace_on', 'Configure', 'trace on', 'trace_on', 'shellaction', NULL, NULL, NULL, 'T') ON CONFLICT (config_id) DO NOTHING
+>>
+
+<<
+INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_configure_trace_off', 'Configure', 'trace off', 'trace_off', 'shellaction', NULL, NULL, NULL, 'T') ON CONFLICT (config_id) DO NOTHING
+>>
+
+<<
+INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_configure_trace_files', 'Configure', 'trace files', 'trace_files', 'shellaction', NULL, NULL, NULL, 'T') ON CONFLICT (config_id) DO NOTHING
+>>
+
+<<
 INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active) VALUES ('cfg_sdk_ads', 'SDK', 'axpert data sources', 'b_sql', 'tstruct', 'sqlname', NULL, 'act=load&dummyload=false?', 'T') ON CONFLICT (config_id) DO NOTHING
 >>
 

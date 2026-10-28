@@ -2056,6 +2056,77 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Calls a function the shell (Js/main.js) already exposes, so the palette does exactly what the header does.
+     * @param {string} fnName - Global function name in the main window.
+     * @param {...any} args - Arguments passed to the function.
+     * @returns {boolean} True when the function exists and was called.
+     */
+    function callShellFunction(fnName, ...args) {
+        const shellWin = (top && top.window) || window;
+        const fn = shellWin[fnName] || window[fnName];
+        if (typeof fn !== "function") {
+            showToast("This option is not available on the current page.");
+            return false;
+        }
+        fn.apply(shellWin, args);
+        return true;
+    }
+
+    /**
+     * Turns the header "Show Logs" trace switch on or off. The header switch is the single source of truth
+     * (ToggleShowLog reads it and saves the state to the session), so it is set first and the shell function is run.
+     * @param {boolean} turnOn - True to enable trace.
+     * @returns {void}
+     */
+    function setShellTrace(turnOn) {
+        const shellWin = (top && top.window) || window;
+        const traceSwitch = shellWin.document.querySelector("#chkshowlog input[name='trace']");
+        if (!traceSwitch) {
+            showToast("The trace switch is not available on the current page.");
+            return;
+        }
+        if (traceSwitch.checked === turnOn) {
+            showToast(`Trace is already ${turnOn ? "on" : "off"}.`, 3000, "info");
+            return;
+        }
+        traceSwitch.checked = turnOn;
+        if (callShellFunction("ToggleShowLog", true)) {
+            showToast(`Trace turned ${turnOn ? "on" : "off"}.`, 3000, true);
+        } else {
+            traceSwitch.checked = !turnOn;
+        }
+    }
+
+    /**
+     * Actions a "shellaction" command row can run, keyed by the row's prompt_id. Only these names run, so a
+     * configuration row can never make the palette call an arbitrary function.
+     */
+    const SHELL_ACTIONS = {
+        trace_on: () => setShellTrace(true),
+        trace_off: () => setShellTrace(false),
+        trace_files: () => callShellFunction("showTraceFileDialog")
+    };
+
+    /**
+     * Runs a shell action from a "shellaction" command row. Trace is a developer feature (the header hides it
+     * unless the user has build access), so the same rule applies here.
+     * @param {string} actionName - The row's prompt_id.
+     * @returns {void}
+     */
+    function runShellAction(actionName) {
+        const action = SHELL_ACTIONS[(actionName || "").toLowerCase()];
+        if (!action) {
+            showToast(`Unknown action '${actionName}'.`);
+            return;
+        }
+        if (!getAccessPermissions().buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access to trace options.`);
+            return;
+        }
+        action();
+    }
+
+    /**
      * Executes navigation for dynamically configured command routes.
      * @param {object} params - Parameter object.
      * @param {string[]} params.tokens - Command tokens.
@@ -2077,6 +2148,11 @@ if (typeof document !== "undefined") {
 
         if (optType === "action") {
             handleKeyfield({ tokens, commandConfig });
+            return true;
+        }
+
+        if (optType === "shellaction") {
+            runShellAction(promptId);
             return true;
         }
 
@@ -16872,6 +16948,12 @@ if (typeof document !== "undefined") {
                 const isActive = (axiCommandConfigList && axiCommandConfigList.length > 0) ? !!getCommandConfigRow("Configure", rawType) : true;
 
                 if (!isAdmin && rawType.toLowerCase() === "user activation") {
+                    continue;
+                }
+
+                const typeRow = getCommandConfigRow("Configure", rawType);
+                if (typeRow && (typeRow.promptOptionType || typeRow.prompt_option_type || typeRow.PromptOptionType || "").toLowerCase() === "shellaction"
+                    && accessPermissions.buildAccess === false) {
                     continue;
                 }
 
