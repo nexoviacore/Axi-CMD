@@ -8938,6 +8938,8 @@ if (typeof document !== "undefined") {
                     item.dataset.entry = en.id;
                     item.textContent = en.label;
                     item.addEventListener("click", (ev) => { ev.stopPropagation(); closeSettingsMenu(); en.run(); });
+                    // Focus follows the mouse, so the first entry (focused on open) does not stay highlighted next to the hovered one
+                    item.addEventListener("mouseenter", () => item.focus({ preventScroll: true }));
                     menu.appendChild(item);
                 });
                 menu.addEventListener("keydown", (ev) => {
