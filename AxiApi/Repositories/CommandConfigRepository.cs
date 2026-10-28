@@ -50,18 +50,7 @@ namespace AxiApi.Repositories
             {
                 foreach (DataRow row in sqlResult.data.Rows)
                 {
-                    configs.Add(new CommandConfigDTO
-                    {
-                        ConfigId = row["config_id"]?.ToString() ?? string.Empty,
-                        Command = row["command"]?.ToString() ?? string.Empty,
-                        PromptOptions = row["prompt_options"]?.ToString() ?? string.Empty,
-                        PromptId = row["prompt_id"]?.ToString() ?? string.Empty,
-                        PromptOptionType = row["prompt_option_type"]?.ToString() ?? string.Empty,
-                        ParamField = row["param_field"] != DBNull.Value ? row["param_field"]?.ToString() : null,
-                        TargetUrl = row["target_url"] != DBNull.Value ? row["target_url"]?.ToString() : null,
-                        ExtraParams = row["extra_params"] != DBNull.Value ? row["extra_params"]?.ToString() : null,
-                        Active = row["active"]?.ToString() ?? "T"
-                    });
+                    configs.Add(MapConfig<CommandConfigDTO>(row));
                 }
             }
 
@@ -88,21 +77,14 @@ namespace AxiApi.Repositories
                 throw new DatabaseException(rowsResult.error, "SELECT");
             }
 
-            // Record source per command (cmdtoken 4 = Configure, 7 = SDK): option names on wordpos 2, sources on wordpos 3
+            // Record source per command (cmdtoken from CommandOptionRules.CmdToken): option names on wordpos 2, sources on wordpos 3
             var sourcesByCommand = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
             SQLResult promptResult = await db.ExecuteSQLAsync(SqlQueries.SelectCommandOptionPrompts);
             if (string.IsNullOrEmpty(promptResult?.error) && promptResult?.data != null)
             {
-                foreach (var (token, command) in new[] { (4, "Configure"), (7, "SDK") })
+                foreach (var command in CommandOptionRules.Commands)
                 {
-                    string? names = null, sources = null;
-                    foreach (DataRow p in promptResult.data.Rows)
-                    {
-                        if (Convert.ToInt32(p["cmdtoken"]) != token) continue;
-                        var wordpos = Convert.ToInt32(p["wordpos"]);
-                        if (wordpos == 2) names = p["promptvalues"]?.ToString();
-                        else if (wordpos == 3) sources = p["promptsource"]?.ToString();
-                    }
+                    var (names, sources) = ReadPromptLists(promptResult.data, CommandOptionRules.CmdToken(command));
                     sourcesByCommand[command] = CommandOptionSources.Pair(names, sources);
                 }
             }
@@ -125,20 +107,7 @@ namespace AxiApi.Repositories
                     if (string.IsNullOrEmpty(recordSource) && row.Table.Columns.Contains("record_source") && row["record_source"] != DBNull.Value)
                         recordSource = row["record_source"]?.ToString() ?? string.Empty;
 
-                    options.Add(new CommandConfigOptionDTO
-                    {
-                        ConfigId = row["config_id"]?.ToString() ?? string.Empty,
-                        Command = command,
-                        PromptOptions = option,
-                        PromptId = row["prompt_id"]?.ToString() ?? string.Empty,
-                        PromptOptionType = row["prompt_option_type"]?.ToString() ?? string.Empty,
-                        ParamField = row["param_field"] != DBNull.Value ? row["param_field"]?.ToString() : null,
-                        TargetUrl = row["target_url"] != DBNull.Value ? row["target_url"]?.ToString() : null,
-                        ExtraParams = row["extra_params"] != DBNull.Value ? row["extra_params"]?.ToString() : null,
-                        Active = row["active"]?.ToString() ?? "T",
-                        IsSystem = row["is_system"] != DBNull.Value ? (row["is_system"]?.ToString() ?? "F") : "F",
-                        RecordSource = recordSource ?? string.Empty
-                    });
+                    options.Add(ToDto(row, command, option, recordSource));
                 }
             }
 
@@ -206,17 +175,7 @@ namespace AxiApi.Repositories
             // Option list (wordpos 2) and paired source list (wordpos 3) of the command
             SQLResult prompts = await db.ExecuteSQLAsync(SqlQueries.SelectCommandOptionPrompts);
             if (!string.IsNullOrEmpty(prompts?.error)) throw new DatabaseException(prompts.error, "SELECT");
-            string? listNames = null, listSources = null;
-            if (prompts?.data != null)
-            {
-                foreach (DataRow p in prompts.data.Rows)
-                {
-                    if (Convert.ToInt32(p["cmdtoken"]) != token) continue;
-                    var wordpos = Convert.ToInt32(p["wordpos"]);
-                    if (wordpos == 2) listNames = p["promptvalues"] == DBNull.Value ? null : p["promptvalues"]?.ToString();
-                    else if (wordpos == 3) listSources = p["promptsource"] == DBNull.Value ? null : p["promptsource"]?.ToString();
-                }
-            }
+            var (listNames, listSources) = ReadPromptLists(prompts?.data, token);
             CommandOptionSources.Pair(listNames, listSources).TryGetValue(currentName, out var currentSource);
             if (string.IsNullOrEmpty(currentSource)) currentSource = Str("record_source");
 
@@ -235,16 +194,7 @@ namespace AxiApi.Repositories
             SQLResult existing = await db.ExecuteSQLAsync(SqlQueries.SelectCommandOptionNames,
                 new[] { ":command" }, new[] { DbType.String }, new object[] { command.ToLowerInvariant() });
             if (!string.IsNullOrEmpty(existing?.error)) throw new DatabaseException(existing.error, "SELECT");
-            var usedNames = new List<string>();
-            if (existing?.data != null)
-            {
-                foreach (DataRow r in existing.data.Rows)
-                {
-                    if (!string.Equals(r["config_id"]?.ToString(), configId, StringComparison.OrdinalIgnoreCase))
-                        usedNames.Add(r["prompt_options"]?.ToString() ?? string.Empty);
-                }
-            }
-            usedNames.AddRange(listNames!.Split(','));
+            var usedNames = CollectUsedNames(existing?.data, listNames, configId);
 
             var option = CommandOptionRules.ValidateEdit(request, command, currentName, usedNames);
             var promptId = string.IsNullOrEmpty(option.PromptId) ? configId.Substring(4) : option.PromptId!;
@@ -292,23 +242,64 @@ namespace AxiApi.Repositories
             };
         }
 
+        private static string? Opt(DataRow row, string col) =>
+            row.Table.Columns.Contains(col) && row[col] != DBNull.Value ? row[col]?.ToString() : null;
+
+        /// <summary>The columns every command-config query returns, as a DTO.</summary>
+        private static T MapConfig<T>(DataRow row) where T : CommandConfigDTO, new() => new T
+        {
+            ConfigId = Opt(row, "config_id") ?? string.Empty,
+            Command = Opt(row, "command") ?? string.Empty,
+            PromptOptions = Opt(row, "prompt_options") ?? string.Empty,
+            PromptId = Opt(row, "prompt_id") ?? string.Empty,
+            PromptOptionType = Opt(row, "prompt_option_type") ?? string.Empty,
+            ParamField = Opt(row, "param_field"),
+            TargetUrl = Opt(row, "target_url"),
+            ExtraParams = Opt(row, "extra_params"),
+            Active = Opt(row, "active") ?? "T"
+        };
+
         private static CommandConfigOptionDTO ToDto(DataRow row, string command, string name, string? recordSource)
         {
-            string? Opt(string col) => row[col] == DBNull.Value ? null : row[col]?.ToString();
-            return new CommandConfigOptionDTO
+            var dto = MapConfig<CommandConfigOptionDTO>(row);
+            dto.Command = command;
+            dto.PromptOptions = name;
+            dto.IsSystem = Opt(row, "is_system") ?? "F";
+            dto.RecordSource = recordSource ?? string.Empty;
+            return dto;
+        }
+
+        /// <summary>Option list (wordpos 2, promptvalues) and paired source list (wordpos 3, promptsource) of a command's cmdtoken.</summary>
+        private static (string? Names, string? Sources) ReadPromptLists(DataTable? prompts, int token)
+        {
+            string? names = null, sources = null;
+            if (prompts == null) return (names, sources);
+            foreach (DataRow p in prompts.Rows)
             {
-                ConfigId = row["config_id"]?.ToString() ?? string.Empty,
-                Command = command,
-                PromptOptions = name,
-                PromptId = Opt("prompt_id") ?? string.Empty,
-                PromptOptionType = Opt("prompt_option_type") ?? string.Empty,
-                ParamField = Opt("param_field"),
-                TargetUrl = Opt("target_url"),
-                ExtraParams = Opt("extra_params"),
-                Active = Opt("active") ?? "T",
-                IsSystem = Opt("is_system") ?? "F",
-                RecordSource = recordSource ?? string.Empty
-            };
+                if (Convert.ToInt32(p["cmdtoken"]) != token) continue;
+                var wordpos = Convert.ToInt32(p["wordpos"]);
+                if (wordpos == 2) names = p["promptvalues"] == DBNull.Value ? null : p["promptvalues"]?.ToString();
+                else if (wordpos == 3) sources = p["promptsource"] == DBNull.Value ? null : p["promptsource"]?.ToString();
+            }
+            return (names, sources);
+        }
+
+        /// <summary>Names already used by a command: its config rows (except exceptConfigId) plus the entries of the option list. usedIds, when given, gets every config id.</summary>
+        private static List<string> CollectUsedNames(DataTable? existingRows, string? listNames, string? exceptConfigId = null, ISet<string>? usedIds = null)
+        {
+            var usedNames = new List<string>();
+            if (existingRows != null)
+            {
+                foreach (DataRow r in existingRows.Rows)
+                {
+                    var id = r["config_id"]?.ToString() ?? string.Empty;
+                    usedIds?.Add(id);
+                    if (exceptConfigId == null || !string.Equals(id, exceptConfigId, StringComparison.OrdinalIgnoreCase))
+                        usedNames.Add(r["prompt_options"]?.ToString() ?? string.Empty);
+                }
+            }
+            usedNames.AddRange(CommandOptionRules.SplitList(listNames));
+            return usedNames;
         }
 
         public async Task<CommandConfigOptionDTO> CreateCommandOptionAsync(string appname, CreateCommandOptionRequestDTO request)
@@ -328,34 +319,15 @@ namespace AxiApi.Repositories
             SQLResult existing = await db.ExecuteSQLAsync(SqlQueries.SelectCommandOptionNames,
                 new[] { ":command" }, new[] { DbType.String }, new object[] { command.ToLowerInvariant() });
             if (!string.IsNullOrEmpty(existing?.error)) throw new DatabaseException(existing.error, "SELECT");
-            var usedNames = new List<string>();
             var usedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            if (existing?.data != null)
-            {
-                foreach (DataRow r in existing.data.Rows)
-                {
-                    usedIds.Add(r["config_id"]?.ToString() ?? string.Empty);
-                    usedNames.Add(r["prompt_options"]?.ToString() ?? string.Empty);
-                }
-            }
 
             // The palette's option list (wordpos 2) and the paired source list (wordpos 3)
             SQLResult prompts = await db.ExecuteSQLAsync(SqlQueries.SelectCommandOptionPrompts);
             if (!string.IsNullOrEmpty(prompts?.error)) throw new DatabaseException(prompts.error, "SELECT");
-            string? listNames = null, listSources = null;
-            if (prompts?.data != null)
-            {
-                foreach (DataRow p in prompts.data.Rows)
-                {
-                    if (Convert.ToInt32(p["cmdtoken"]) != token) continue;
-                    var wordpos = Convert.ToInt32(p["wordpos"]);
-                    if (wordpos == 2) listNames = p["promptvalues"] == DBNull.Value ? null : p["promptvalues"]?.ToString();
-                    else if (wordpos == 3) listSources = p["promptsource"] == DBNull.Value ? null : p["promptsource"]?.ToString();
-                }
-            }
+            var (listNames, listSources) = ReadPromptLists(prompts?.data, token);
             if (!CommandOptionRules.ListsArePaired(listNames, listSources))
                 throw new CommandOptionException($"The {command} option and source lists in axi_command_prompts are missing or out of step. Re-run the AxiCMD install scripts and try again.", true);
-            usedNames.AddRange(listNames!.Split(','));
+            var usedNames = CollectUsedNames(existing?.data, listNames, null, usedIds);
 
             var option = CommandOptionRules.Validate(request, usedNames);
             var configId = CommandOptionRules.MakeConfigId(command, option.Name);
@@ -363,8 +335,10 @@ namespace AxiApi.Repositories
                 throw new CommandOptionException($"An existing option already uses the id '{configId}'. Choose a name that differs by more than punctuation.", true);
             var promptId = string.IsNullOrEmpty(option.PromptId) ? configId.Substring(4) : option.PromptId!;
 
-            // Same limit checks as the page script; the lists themselves are extended in SQL
-            CommandOptionRules.AppendOption(listNames, listSources, option.Name, option.RecordSource);
+            // Same limit checks as the page script. A clean list is extended in SQL (two admins saving together do not overwrite
+            // each other); a list with stray commas or spaces is saved normalised instead, or the append would leave ",," in it.
+            var appended = CommandOptionRules.AppendOption(listNames, listSources, option.Name, option.RecordSource);
+            bool clean = CommandOptionRules.IsCanonicalList(listNames) && CommandOptionRules.IsCanonicalList(listSources);
 
             object Db(string? v) => string.IsNullOrEmpty(v) ? DBNull.Value : v;
             var commands = new List<SQLCommandBuilder>
@@ -375,10 +349,16 @@ namespace AxiApi.Repositories
                     // None is stored as NULL so a re-install restores Axi_Dummy
                     new object[] { configId, command, option.Name, promptId, option.Type, Db(option.ParamField), Db(option.TargetUrl), Db(option.ExtraParams), option.RecordSource == CommandOptionRules.NoSource ? DBNull.Value : option.RecordSource! },
                     ARMCommon.Helpers.Constants.DATA_ACTION.INSERT),
-                new SQLCommandBuilder(string.Format(SqlQueries.AppendCommandOptionName, token),
-                    new[] { ":suffix" }, new[] { DbType.String }, new object[] { "," + option.Name }, ARMCommon.Helpers.Constants.DATA_ACTION.UPDATE),
-                new SQLCommandBuilder(string.Format(SqlQueries.AppendCommandOptionSource, token),
-                    new[] { ":suffix" }, new[] { DbType.String }, new object[] { "," + option.RecordSource }, ARMCommon.Helpers.Constants.DATA_ACTION.UPDATE)
+                clean
+                    ? new SQLCommandBuilder(string.Format(SqlQueries.AppendCommandOptionName, token),
+                        new[] { ":suffix" }, new[] { DbType.String }, new object[] { "," + option.Name }, ARMCommon.Helpers.Constants.DATA_ACTION.UPDATE)
+                    : new SQLCommandBuilder(string.Format(SqlQueries.ReplaceCommandOptionNames, token),
+                        new[] { ":value" }, new[] { DbType.String }, new object[] { appended.Names }, ARMCommon.Helpers.Constants.DATA_ACTION.UPDATE),
+                clean
+                    ? new SQLCommandBuilder(string.Format(SqlQueries.AppendCommandOptionSource, token),
+                        new[] { ":suffix" }, new[] { DbType.String }, new object[] { "," + option.RecordSource }, ARMCommon.Helpers.Constants.DATA_ACTION.UPDATE)
+                    : new SQLCommandBuilder(string.Format(SqlQueries.ReplaceCommandOptionSources, token),
+                        new[] { ":value" }, new[] { DbType.String }, new object[] { appended.Sources }, ARMCommon.Helpers.Constants.DATA_ACTION.UPDATE)
             };
 
             // One transaction: the row and both lists are saved together or not at all

@@ -32,14 +32,14 @@ for (const db of ['Postgre', 'Oracle']) {
     test(`${db}: names and sources are appended in one statement, in the same order, Axi_Dummy as the fallback`, () => {
         assert.strictEqual((last.match(/^\s*(UPDATE|MERGE)\b/gim) || []).length, 1);
         assert.match(last, /ORDER BY c\.config_id/i);
-        assert.strictEqual((last.match(/ORDER BY c\.config_id/gi) || []).length, 2);
+        assert.strictEqual((last.match(/ORDER BY c\.config_id/gi) || []).length, db === 'Postgre' ? 4 : 2); // Postgres repeats both aggregates in HAVING
         assert.match(last, /'Axi_Dummy'/); // the fallback for a null record_source (ticket 286)
         assert.match(last, /wordpos = 2/i);
         assert.match(last, /wordpos = 3/i);
     });
 
     test(`${db}: re-append never drops or deletes`, () => {
-        assert.ok(!/\b(DROP|DELETE|TRUNCATE)\b/i.test(last));
+        assert.ok(!/\b(DROP|DELETE|TRUNCATE)\b/i.test(last.replace(/ON OVERFLOW TRUNCATE/gi, ''))); // LISTAGG ON OVERFLOW TRUNCATE only shortens an aggregate
     });
 }
 

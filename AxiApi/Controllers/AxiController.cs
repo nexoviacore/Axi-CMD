@@ -56,7 +56,7 @@ namespace AxiApi.Controllers
         }
 
         [HttpGet("command-config/options")]
-        public async Task<ActionResult<List<CommandConfigOptionDTO>>> GetCommandConfigOptions([FromQuery] string appname, [FromQuery] string username)
+        public async Task<ActionResult<List<CommandConfigOptionDTO>>> GetCommandConfigOptions([FromQuery] string appname)
         {
             if (string.IsNullOrWhiteSpace(appname))
                 return BadRequest("appname query parameter is required.");
@@ -67,12 +67,8 @@ namespace AxiApi.Controllers
         [HttpPut("command-config/options/{configId}/active")]
         public async Task<IActionResult> SetCommandOptionActive([FromRoute] string configId, [FromBody] SetCommandOptionActiveRequestDTO requestDTO, [FromQuery] string appname)
         {
-            if (string.IsNullOrWhiteSpace(appname))
-                return BadRequest("appname query parameter is required.");
-            if (requestDTO == null || string.IsNullOrWhiteSpace(requestDTO.Username))
-                return BadRequest("Username is required in payload.");
-            if (!requestDTO.AppMgrAccess)
-                return StatusCode(StatusCodes.Status403Forbidden, "Configure Access is required to change command options.");
+            var refused = CheckConfigureAccess(appname, requestDTO?.Username, requestDTO?.AppMgrAccess ?? false);
+            if (refused != null) return refused;
 
             var found = await _commandConfigService.SetCommandOptionActiveAsync(appname, requestDTO.Username, configId, requestDTO.Active);
             if (!found)
@@ -83,12 +79,8 @@ namespace AxiApi.Controllers
         [HttpPost("command-config/options")]
         public async Task<IActionResult> CreateCommandOption([FromBody] CreateCommandOptionRequestDTO requestDTO, [FromQuery] string appname)
         {
-            if (string.IsNullOrWhiteSpace(appname))
-                return BadRequest("appname query parameter is required.");
-            if (requestDTO == null || string.IsNullOrWhiteSpace(requestDTO.Username))
-                return BadRequest("Username is required in payload.");
-            if (!requestDTO.AppMgrAccess)
-                return StatusCode(StatusCodes.Status403Forbidden, "Configure Access is required to change command options.");
+            var refused = CheckConfigureAccess(appname, requestDTO?.Username, requestDTO?.AppMgrAccess ?? false);
+            if (refused != null) return refused;
 
             try
             {
@@ -104,12 +96,8 @@ namespace AxiApi.Controllers
         [HttpPut("command-config/options/{configId}")]
         public async Task<IActionResult> UpdateCommandOption([FromRoute] string configId, [FromBody] UpdateCommandOptionRequestDTO requestDTO, [FromQuery] string appname)
         {
-            if (string.IsNullOrWhiteSpace(appname))
-                return BadRequest("appname query parameter is required.");
-            if (requestDTO == null || string.IsNullOrWhiteSpace(requestDTO.Username))
-                return BadRequest("Username is required in payload.");
-            if (!requestDTO.AppMgrAccess)
-                return StatusCode(StatusCodes.Status403Forbidden, "Configure Access is required to change command options.");
+            var refused = CheckConfigureAccess(appname, requestDTO?.Username, requestDTO?.AppMgrAccess ?? false);
+            if (refused != null) return refused;
 
             try
             {
@@ -123,6 +111,18 @@ namespace AxiApi.Controllers
                 if (ex.IsForbidden) return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
                 return ex.IsConflict ? Conflict(ex.Message) : BadRequest(ex.Message);
             }
+        }
+
+        /// <summary>The checks every command option write needs: appname, the user, and Configure Access. Null when all pass.</summary>
+        private IActionResult? CheckConfigureAccess(string appname, string? username, bool appMgrAccess)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+            if (string.IsNullOrWhiteSpace(username))
+                return BadRequest("Username is required in payload.");
+            if (!appMgrAccess)
+                return StatusCode(StatusCodes.Status403Forbidden, "Configure Access is required to change command options.");
+            return null;
         }
 
         [HttpGet("axi_get")]

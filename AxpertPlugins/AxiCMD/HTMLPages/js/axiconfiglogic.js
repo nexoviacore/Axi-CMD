@@ -13,6 +13,7 @@
 
     const MAX_NAME_LENGTH = 200;
     const MAX_LIST_LENGTH = 4000;      // axi_command_prompts.promptvalues / promptsource
+    const MAX_RECORD_SOURCE_LENGTH = 100; // longest record source (data source) name accepted
     const MAX_CONFIG_ID_LENGTH = 50;   // axi_command_config.config_id
     const NO_SOURCE = "Axi_Dummy";     // "None" as a record source
     const COMMANDS = ["Configure", "SDK"];
@@ -101,8 +102,21 @@
         return (prefix + slug.slice(0, MAX_CONFIG_ID_LENGTH - prefix.length)).replace(/_+$/, "");
     }
 
+    /**
+     * A target URL is http(s) or a relative path (iview.aspx?ivname=x, aspx/page.aspx, /x, ../x). Any other scheme
+     * (javascript:, data:, ftp:, ...) and control characters (which browsers strip inside a scheme) are refused.
+     */
     function validateUrl(url) {
-        return /^(https?:\/\/|\/|\.\.\/)/i.test(url);
+        if (/[\u0000-\u001f\u007f]/.test(url)) return false;
+        const scheme = /^([a-z][a-z0-9+.\-]*):/i.exec(url);
+        return !scheme || /^https?$/i.test(scheme[1]);
+    }
+
+    /** Record source: a plain name of at most MAX_RECORD_SOURCE_LENGTH characters. Returns an error text or "". */
+    function recordSourceError(src) {
+        if (src.length > MAX_RECORD_SOURCE_LENGTH) return "At most " + MAX_RECORD_SOURCE_LENGTH + " characters.";
+        if (!/^[A-Za-z0-9_]+$/.test(src)) return "Use a data source name without commas or spaces.";
+        return "";
     }
 
     /**
@@ -126,23 +140,27 @@
             value[f] = v;
             if (!v && (REQUIRED_FIELDS[type] || []).indexOf(f) !== -1) errors[f] = "This field is required.";
             else if (v && v.length > FIELD_MAX[f]) errors[f] = "At most " + FIELD_MAX[f] + " characters.";
-            else if (v && f === "targetUrl" && !validateUrl(v)) errors[f] = "Start with http://, https://, / or ../";
+            else if (v && f === "targetUrl" && !validateUrl(v)) errors[f] = "Use an http(s) address or a relative path such as aspx/page.aspx.";
             else if (v && f === "paramField" && !/^[A-Za-z0-9_]+$/.test(v)) errors[f] = "Letters, digits and underscore only.";
             else if (v && f === "promptId" && !/^[A-Za-z0-9_.\/-]+$/.test(v)) errors[f] = "Letters, digits, underscore, dot, dash and slash only.";
         });
 
         if (input.recordSource !== undefined) {
             const src = norm(input.recordSource);
-            if (src && !/^[A-Za-z0-9_]+$/.test(src)) errors.recordSource = "Use a data source name without commas or spaces.";
+            if (src && recordSourceError(src)) errors.recordSource = recordSourceError(src);
             else if (src) value.recordSource = src;
         }
         return Object.keys(errors).length ? { ok: false, errors: errors } : { ok: true, value: value };
     }
 
     function splitList(list) {
-        // Trailing blanks and commas carry no position, so they are dropped
-        const text = norm(list).replace(/[,\s]+$/, "");
-        return text ? text.split(",") : [];
+        // Entries are trimmed. Trailing empty entries (stray commas, spaces) carry no position and are dropped;
+        // an empty entry in the middle keeps its place so the two lists stay paired.
+        const text = norm(list);
+        if (!text) return [];
+        const parts = text.split(",").map((x) => x.trim());
+        while (parts.length && !parts[parts.length - 1]) parts.pop();
+        return parts;
     }
 
     /**
@@ -151,7 +169,7 @@
      */
     function appendOption(names, sources, name, recordSource) {
         const src = norm(recordSource) || NO_SOURCE;
-        if (!/^[A-Za-z0-9_]+$/.test(src)) return { ok: false, code: "source", message: "The record source name is not valid." };
+        if (recordSourceError(src)) return { ok: false, code: "source", message: "The record source name is not valid." };
         const n = splitList(names), s = splitList(sources);
         while (s.length < n.length) s.push(NO_SOURCE);
         n.push(norm(name));
@@ -169,7 +187,7 @@
      */
     function replaceOption(names, sources, oldName, newName, recordSource) {
         const src = norm(recordSource) || NO_SOURCE;
-        if (!/^[A-Za-z0-9_]+$/.test(src)) return { ok: false, code: "source", message: "The record source name is not valid." };
+        if (recordSourceError(src)) return { ok: false, code: "source", message: "The record source name is not valid." };
         const n = splitList(names), s = splitList(sources);
         const at = n.findIndex((x) => norm(x).toLowerCase() === norm(oldName).toLowerCase());
         if (at === -1) return { ok: false, code: "missing", message: "The option \"" + norm(oldName) + "\" is not in the command's option list." };
@@ -228,7 +246,7 @@
     }
 
     return {
-        MAX_NAME_LENGTH, MAX_LIST_LENGTH, NO_SOURCE, COMMANDS, CUSTOM_TYPES, FIELDS_BY_TYPE,
+        MAX_NAME_LENGTH, MAX_LIST_LENGTH, MAX_RECORD_SOURCE_LENGTH, NO_SOURCE, COMMANDS, CUSTOM_TYPES, FIELDS_BY_TYPE,
         fieldsFor, recordSourceOptions, structureChoices, canSearchStructures, KNOWN_RECORD_SOURCES, validateName, makeConfigId, validateOption, appendOption, replaceOption, validateEdit, isEditable, renameWarning, buildUpdateUrl, buildUpdateBody, buildCreateUrl, buildCreateBody
     };
 }));

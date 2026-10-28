@@ -13,6 +13,7 @@ namespace AxiApi.Lib
         public const int MaxNameLength = 200;
         public const int MaxListLength = 4000;
         public const int MaxConfigIdLength = 50;
+        public const int MaxRecordSourceLength = 100;
         public const string NoSource = "Axi_Dummy";
 
         /// <summary>Record sources already used by the Configure and SDK option lists; the page offers them after None. Mirrors KNOWN_RECORD_SOURCES in axiconfiglogic.js (other valid names are still accepted).</summary>
@@ -89,6 +90,22 @@ namespace AxiApi.Lib
 
         private static string Clean(string? v) => (v ?? "").Trim();
 
+        /// <summary>A target URL is http(s) or a relative path; any other scheme and control characters are refused. Mirrors validateUrl in axiconfiglogic.js.</summary>
+        public static bool IsValidTargetUrl(string url)
+        {
+            if (Regex.IsMatch(url, @"[\x00-\x1f\x7f]")) return false;
+            var scheme = Regex.Match(url, @"^([a-z][a-z0-9+.\-]*):", RegexOptions.IgnoreCase);
+            return !scheme.Success || scheme.Groups[1].Value.Equals("http", StringComparison.OrdinalIgnoreCase)
+                || scheme.Groups[1].Value.Equals("https", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>A record source is a plain name of at most MaxRecordSourceLength characters.</summary>
+        private static void CheckRecordSource(string src)
+        {
+            if (src.Length > MaxRecordSourceLength) throw new CommandOptionException($"The record source name can have at most {MaxRecordSourceLength} characters (now {src.Length}).");
+            if (!Regex.IsMatch(src, "^[A-Za-z0-9_]+$")) throw new CommandOptionException("The record source name is not valid.");
+        }
+
         /// <summary>Validates the request and returns it normalised: only the fields of the type are kept.</summary>
         public static CreateCommandOptionRequestDTO Validate(CreateCommandOptionRequestDTO req, IEnumerable<string> existingNames)
         {
@@ -110,15 +127,15 @@ namespace AxiApi.Lib
                 if (v.Length == 0 && RequiredByType[type].Contains(f)) throw new CommandOptionException($"{f} is required for a {type} option.");
                 if (v.Length == 0) continue;
                 if (v.Length > FieldMax[f]) throw new CommandOptionException($"{f} can have at most {FieldMax[f]} characters.");
-                if (f == "targetUrl" && !Regex.IsMatch(v, @"^(https?://|/|\.\./)", RegexOptions.IgnoreCase))
-                    throw new CommandOptionException("targetUrl must start with http://, https://, / or ../");
+                if (f == "targetUrl" && !IsValidTargetUrl(v))
+                    throw new CommandOptionException("targetUrl must be an http(s) address or a relative path such as aspx/page.aspx.");
                 if (f == "paramField" && !Regex.IsMatch(v, "^[A-Za-z0-9_]+$")) throw new CommandOptionException("paramField can only have letters, digits and underscore.");
                 if (f == "promptId" && !Regex.IsMatch(v, @"^[A-Za-z0-9_./-]+$")) throw new CommandOptionException("promptId can only have letters, digits, underscore, dot, dash and slash.");
             }
 
             var source = Clean(req.RecordSource);
             if (source.Length == 0) source = NoSource;
-            else if (!Regex.IsMatch(source, "^[A-Za-z0-9_]+$")) throw new CommandOptionException("The record source name is not valid.");
+            else CheckRecordSource(source);
 
             return new CreateCommandOptionRequestDTO
             {
@@ -146,7 +163,7 @@ namespace AxiApi.Lib
         {
             var src = Clean(recordSource);
             if (src.Length == 0) src = NoSource;
-            if (!Regex.IsMatch(src, "^[A-Za-z0-9_]+$")) throw new CommandOptionException("The record source name is not valid.");
+            CheckRecordSource(src);
             var n = SplitList(names);
             var s = SplitList(sources);
             var at = n.FindIndex(x => string.Equals(x.Trim(), oldName.Trim(), StringComparison.OrdinalIgnoreCase));
@@ -172,18 +189,25 @@ namespace AxiApi.Lib
                 || !string.Equals(S(req.RecordSource), S(recordSource), StringComparison.OrdinalIgnoreCase);
         }
 
-        /// <summary>True when both lists have entries, the same number of them, and no stray trailing commas or spaces, so an append keeps the positions paired.</summary>
+        /// <summary>True when both lists have entries and the same number of them once normalised (see SplitList), so an append keeps the positions paired.</summary>
         public static bool ListsArePaired(string? names, string? sources)
         {
             var n = SplitList(names);
             var s = SplitList(sources);
-            return n.Count > 0 && n.Count == s.Count && string.Join(",", n) == names && string.Join(",", s) == sources;
+            return n.Count > 0 && n.Count == s.Count;
         }
 
-        private static List<string> SplitList(string? list)
+        /// <summary>True when the stored list is already in the form SplitList + join produces (no stray spaces or trailing commas), so SQL may append to it directly.</summary>
+        public static bool IsCanonicalList(string? list) => string.Join(",", SplitList(list)) == (list ?? "");
+
+        /// <summary>Entries of a comma separated prompt list, trimmed. Trailing empty entries (stray commas, spaces) are dropped; an empty entry in the middle keeps its place so two lists stay paired. Mirrors splitList in axiconfiglogic.js.</summary>
+        public static List<string> SplitList(string? list)
         {
-            var text = Regex.Replace((list ?? "").Trim(), @"[,\s]+$", "");
-            return text.Length == 0 ? new List<string>() : text.Split(',').ToList();
+            var text = (list ?? "").Trim();
+            if (text.Length == 0) return new List<string>();
+            var parts = text.Split(',').Select(x => x.Trim()).ToList();
+            while (parts.Count > 0 && parts[parts.Count - 1].Length == 0) parts.RemoveAt(parts.Count - 1);
+            return parts;
         }
 
         /// <summary>Appends the name to the option list and its record source to the paired source list; a short source list is padded first.</summary>
@@ -191,7 +215,7 @@ namespace AxiApi.Lib
         {
             var src = Clean(recordSource);
             if (src.Length == 0) src = NoSource;
-            if (!Regex.IsMatch(src, "^[A-Za-z0-9_]+$")) throw new CommandOptionException("The record source name is not valid.");
+            CheckRecordSource(src);
             var n = SplitList(names);
             var s = SplitList(sources);
             while (s.Count < n.Count) s.Add(NoSource);

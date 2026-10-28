@@ -29,7 +29,8 @@ for (const db of ['Postgre', 'Oracle']) {
         assert.match(last, /record_source/i);
         assert.match(last, /(coalesce|nvl)\(\s*c\.record_source\s*,\s*'Axi_Dummy'\s*\)/i);
         assert.ok(!/',Axi_Dummy'/.test(last));
-        assert.strictEqual((last.match(/ORDER BY c\.config_id/gi) || []).length, 2);
+        // Postgres repeats both aggregates in HAVING (4000 character guard); Oracle filters in an outer select
+        assert.strictEqual((last.match(/ORDER BY c\.config_id/gi) || []).length, db === 'Postgre' ? 4 : 2);
         assert.strictEqual((last.match(/^\s*(UPDATE|MERGE)\b/gim) || []).length, 1);
     });
 
