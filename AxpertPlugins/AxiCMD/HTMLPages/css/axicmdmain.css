@@ -1960,8 +1960,10 @@ body.btextDir-rtl .axi-sp-hint {
 }
 
 /* =========================================
-   9. VERSION MODAL - frosted glass dialog for the "version" command
-   Markup is built in axicmdmain.js (openVersionModal). Same ink / amber / navy palette as the settings panel.
+   9. VERSION DIALOG - the "version" command
+   Markup is built in axicmdmain.js (openVersionModal). Follows DESIGN.md ("The Quiet Console"), like section 8:
+   a solid white sheet over a plain navy scrim, ruled rows, Console Ink for text and the primary action,
+   Signal Indigo only for focus. Versions are numbers, so they are set in Bahnschrift with tabular figures.
    ========================================= */
 .axi-vm-overlay {
   position: fixed;
@@ -1972,186 +1974,147 @@ body.btextDir-rtl .axi-sp-hint {
   justify-content: center;
   padding: 16px;
   box-sizing: border-box;
-  background: rgba(29, 37, 71, 0.38);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  animation: axi-vm-fade 0.2s ease-out;
+  background: rgba(29, 37, 71, 0.28);
+  animation: axi-vm-fade 0.14s ease-out;
 }
 
 .axi-vm {
   --axi-vm-ink: #1d2547;
-  --axi-vm-muted: #5b6482;
-  --axi-vm-amber: #f59e0b;
+  --axi-vm-ink-hover: #2c3766;
+  --axi-vm-slate: #5b6482;
+  --axi-vm-paper: #f4f5f9;
+  --axi-vm-rule: #dde1eb;
+  --axi-vm-field: #c9cedb;
+  --axi-vm-signal: #3f51c2;
   position: relative;
-  width: 380px;
+  width: 360px;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 22px 24px 20px;
-  overflow: hidden;
-  isolation: isolate;
+  padding: 16px 20px 20px;
   color: var(--axi-vm-ink);
-  font-size: 13px;
-  border-radius: 24px;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.5));
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  -webkit-backdrop-filter: blur(26px) saturate(170%);
-  backdrop-filter: blur(26px) saturate(170%);
-  box-shadow: 0 32px 70px -18px rgba(29, 37, 71, 0.5),
-              0 8px 18px -8px rgba(29, 37, 71, 0.22),
-              inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  animation: axi-vm-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  font: 13px/1.45 "Segoe UI", system-ui, -apple-system, "Noto Sans Arabic", sans-serif;
+  background: #fff;
+  border: 1px solid var(--axi-vm-rule);
+  border-radius: 8px;
+  box-shadow: 0 24px 56px -24px rgba(29, 37, 71, 0.5);
+  animation: axi-vm-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Warm light top right and cool navy bottom left, so the glass has something to refract */
-.axi-vm::before,
-.axi-vm::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  width: 240px;
-  height: 240px;
-  border-radius: 50%;
-  filter: blur(46px);
-  pointer-events: none;
-}
-
-.axi-vm::before {
-  top: -100px;
-  right: -70px;
-  background: var(--axi-vm-amber);
-  opacity: 0.42;
-}
-
-.axi-vm::after {
-  bottom: -120px;
-  left: -80px;
-  background: #4f63c9;
-  opacity: 0.32;
+.axi-vm ::selection {
+  background: #eceffb;
+  color: var(--axi-vm-ink);
 }
 
 .axi-vm-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  gap: 12px;
 }
 
 .axi-vm-title {
   margin: 0;
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font: 600 16px/1.25 Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
   color: var(--axi-vm-ink);
 }
 
+/* The close icon: a small square button; hover fills with Paper */
 .axi-vm-x {
+  flex: none;
   width: 30px;
   height: 30px;
+  margin-inline-end: -6px;
   padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  line-height: 1;
-  color: var(--axi-vm-muted);
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
+  color: var(--axi-vm-slate);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .axi-vm-x:hover {
-  background: rgba(255, 255, 255, 0.9);
   color: var(--axi-vm-ink);
+  background: var(--axi-vm-paper);
 }
 
-/* Each product sits on its own translucent glass strip; the version is the largest thing in the dialog */
+/* A two-row readout ruled above and between, like the Config page's table sheet */
 .axi-vm-body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--axi-vm-rule);
 }
 
 .axi-vm-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--axi-vm-rule);
 }
 
 .axi-vm-name {
-  font-size: 13px;
+  margin: 0;
   font-weight: 600;
-  color: var(--axi-vm-muted);
+  color: var(--axi-vm-slate);
 }
 
 .axi-vm-value {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
+  margin: 0;
 }
 
 .axi-vm-ver {
   max-width: 100%;
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  font: 600 18px/1.2 Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
-  text-align: right;
+  unicode-bidi: isolate;
   color: var(--axi-vm-ink);
 }
 
-.axi-vm-ver.axi-vm-missing {
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0;
-  color: var(--axi-vm-muted);
-}
-
 .axi-vm-tag {
-  padding: 2px 9px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #92400e;
-  background: rgba(245, 158, 11, 0.2);
-  border: 1px solid rgba(245, 158, 11, 0.45);
-  border-radius: 999px;
+  font-size: 12px;
+  unicode-bidi: isolate;
+  color: var(--axi-vm-slate);
 }
 
+.axi-vm-missing {
+  color: var(--axi-vm-slate);
+}
+
+/* Copy (secondary) first, Close (primary) at the end */
 .axi-vm-footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 18px;
+  margin-top: 16px;
 }
 
 .axi-vm-btn {
-  padding: 8px 16px;
-  font-size: 13px;
+  min-height: 34px;
+  padding: 0 14px;
+  font: inherit;
   font-weight: 600;
-  border-radius: 12px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
 .axi-vm-btn-ghost {
   color: var(--axi-vm-ink);
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: #fff;
+  border: 1px solid var(--axi-vm-field);
 }
 
 .axi-vm-btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--axi-vm-paper);
 }
 
 .axi-vm-btn-main {
@@ -2161,34 +2124,25 @@ body.btextDir-rtl .axi-sp-hint {
 }
 
 .axi-vm-btn-main:hover {
-  background: #2c3868;
-}
-
-.axi-vm-btn:active {
-  transform: scale(0.97);
+  background: var(--axi-vm-ink-hover);
+  border-color: var(--axi-vm-ink-hover);
 }
 
 .axi-vm-x:focus-visible,
 .axi-vm-btn:focus-visible {
-  outline: 2px solid #4f63c9;
+  outline: 2px solid var(--axi-vm-signal);
   outline-offset: 2px;
 }
 
-/* No backdrop-filter support: keep the text readable with a more solid surface */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .axi-vm {
-    background: rgba(255, 255, 255, 0.97);
-  }
-}
-
-@media (max-width: 420px) {
-  .axi-vm {
-    padding: 18px 16px 16px;
-  }
-
-  .axi-vm-ver {
-    font-size: 19px;
-  }
+/* Copy result for screen readers only */
+.axi-vm-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2206,12 +2160,12 @@ body.btextDir-rtl .axi-sp-hint {
 @keyframes axi-vm-in {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.96);
+    transform: translateY(6px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
@@ -2305,11 +2259,6 @@ body.btextDir-rtl .axi-fav-search-icon {
 
 body.btextDir-rtl .axi-fav-search-input {
   padding: 9px 40px 9px 14px;
-}
-
-/* Version dialog readout */
-body.btextDir-rtl .axi-vm-ver {
-  text-align: left;
 }
 
 /* Desktop: pin the command bar to the left edge so it ends where the sidebar (on the right) begins.

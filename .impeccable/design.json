@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-29T11:40:25.956Z",
+  "generatedAt": "2026-10-29T12:03:32.953Z",
   "title": "Design System: AxiCMD",
   "extensions": {
     "colorMeta": {
@@ -236,7 +236,12 @@
       {
         "name": "scrim",
         "value": "rgba(29, 37, 71, 0.28)",
-        "purpose": "Solid scrim fill behind a modal drawer; no blur."
+        "purpose": "Solid scrim fill behind a modal drawer or the version dialog; no blur."
+      },
+      {
+        "name": "dialog-lift",
+        "value": "0 24px 56px -24px rgba(29, 37, 71, 0.5)",
+        "purpose": "The palette version dialog floating over the scrim."
       }
     ],
     "motion": [
@@ -339,7 +344,7 @@
   ],
   "narrative": {
     "northStar": "The Quiet Console",
-    "overview": "AxiCMD is a precise tool that stays out of the way. It lives inside the Axpert shell, next to Axpert's own forms and reports, so it never competes with its host: surfaces are flat, white and thinly ruled, the density is that of a working admin tool, and almost everything is ink on paper. The work is done by type and by one signal colour. The words a user types (the command verbs such as Configure and SDK) are the only element allowed to be large.\n\nColour is information, never decoration. Console Ink means \"read this\" or \"press this\"; Signal Indigo means \"this is selected or switched on\". Each palette verb keeps its own small colour mark so users learn to recognise commands at a glance. Motion appears only in answer to something the user did: a drawer sliding in, the selected-tab bar moving, rows fading in after a change.\n\nThe frosted-glass look with the amber-to-coral gradient (still on the version modal, `axicmdmain.css` section 9) is legacy. It is not part of this system, and that surface should be brought in line when it is next touched. The gear menu and the \"Records per load\" panel (section 8) already follow this system.",
+    "overview": "AxiCMD is a precise tool that stays out of the way. It lives inside the Axpert shell, next to Axpert's own forms and reports, so it never competes with its host: surfaces are flat, white and thinly ruled, the density is that of a working admin tool, and almost everything is ink on paper. The work is done by type and by one signal colour. The words a user types (the command verbs such as Configure and SDK) are the only element allowed to be large.\n\nColour is information, never decoration. Console Ink means \"read this\" or \"press this\"; Signal Indigo means \"this is selected or switched on\". Each palette verb keeps its own small colour mark so users learn to recognise commands at a glance. Motion appears only in answer to something the user did: a drawer sliding in, the selected-tab bar moving, rows fading in after a change.\n\nAn earlier frosted-glass look with an amber-to-coral gradient has been retired. Every AxiCMD surface now follows this system, including the palette's gear menu, the \"Records per load\" panel and the version dialog (`axicmdmain.css` sections 8 and 9).",
     "keyCharacteristics": [
       "Flat white sheets on a cool paper page, separated by 1px rules.",
       "One signal colour (indigo) for state; navy ink for text and actions.",

@@ -128,7 +128,7 @@ AxiCMD is a precise tool that stays out of the way. It lives inside the Axpert s
 
 Colour is information, never decoration. Console Ink means "read this" or "press this"; Signal Indigo means "this is selected or switched on". Each palette verb keeps its own small colour mark so users learn to recognise commands at a glance. Motion appears only in answer to something the user did: a drawer sliding in, the selected-tab bar moving, rows fading in after a change.
 
-The frosted-glass look with the amber-to-coral gradient (still on the version modal, `axicmdmain.css` section 9) is legacy. It is not part of this system, and that surface should be brought in line when it is next touched. The gear menu and the "Records per load" panel (section 8) already follow this system.
+An earlier frosted-glass look with an amber-to-coral gradient has been retired. Every AxiCMD surface now follows this system, including the palette's gear menu, the "Records per load" panel and the version dialog (`axicmdmain.css` sections 8 and 9).
 
 **Key Characteristics:**
 - Flat white sheets on a cool paper page, separated by 1px rules.
@@ -270,6 +270,9 @@ A small solid Sheet anchored to the button that opened it: 1px Rule border, 8px 
 
 ### Toast
 The page's status after an action floats centred at the bottom of the page (Toast lift shadow), so it never pushes content. It names the object and who is affected, may carry one secondary action button (Undo, also Ctrl+Z), clears itself after 8s, and errors stay until the next message.
+
+### Dialog (palette "version" command)
+A centred solid Sheet, 360px wide, over the plain Scrim (no blur): 1px Rule border, 8px corners, an overlay shadow (`0 24px 56px -24px rgba(29, 37, 71, 0.5)`), and a short rise and fade (none with reduced motion). A Bahnschrift title sits next to a drawn close icon (a 30px button that fills with Paper on hover). The content is a ruled readout: each row puts a Slate label at the start and the value at the end, values in Bahnschrift with tabular figures and kept left-to-right, any qualifier (such as the build) in 12px Slate under the value, and "Not available" in Slate when a value is missing. Actions end the dialog, secondary first and the Console Ink primary last, and the primary takes focus when the dialog opens. Esc, the scrim and the close icon all close it, and focus returns to where it was.
 
 ### Verb marks (palette)
 A 20px square icon with 4px corners, filled with the verb's own colour, before each command in the palette list. The rest of the row stays neutral.

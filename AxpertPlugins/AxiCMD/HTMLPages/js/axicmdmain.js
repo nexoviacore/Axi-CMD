@@ -8431,8 +8431,8 @@ if (typeof document !== "undefined") {
     }
 
     /**
-     * Opens the glass "Version" modal. Replaces any modal that is already open.
-     * Closes on Esc, a click on the backdrop, the X button or the Close button.
+     * Opens the "Version" dialog: a plain sheet that lists the Axpert and AxiCMD versions. Replaces any open one.
+     * Closes on Esc, a click on the scrim, the close icon or the Close button.
      * @param {string} axpertVersion Axpert web version, empty when unavailable.
      * @param {string} axpertBuild Axpert build tag (subVersion), may be empty.
      * @param {string} axiVersion AxiCMD version, empty when unavailable.
@@ -8460,31 +8460,40 @@ if (typeof document !== "undefined") {
         const header = el("div", "axi-vm-header");
         const title = el("h2", "axi-vm-title", "Version");
         title.id = "axiVersionModalTitle";
-        const closeX = el("button", "axi-vm-x", "×");
+        const closeX = el("button", "axi-vm-x");
         closeX.type = "button";
         closeX.setAttribute("aria-label", "Close");
+        closeX.innerHTML = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>';
         header.appendChild(title);
         header.appendChild(closeX);
 
-        // One row per product: name on the left, big version on the right, optional build tag under it
+        // One ruled row per product: name at the start, version at the end, build tag under the version.
+        // Versions are Latin text, so they keep left-to-right order in an RTL shell
         const buildRow = (name, version, build) => {
             const row = el("div", "axi-vm-row");
-            row.appendChild(el("span", "axi-vm-name", name));
-            const value = el("div", "axi-vm-value");
+            row.appendChild(el("dt", "axi-vm-name", name));
+            const value = el("dd", "axi-vm-value");
             if (version) {
-                value.appendChild(el("span", "axi-vm-ver", version));
-                if (build) value.appendChild(el("span", "axi-vm-tag", build));
+                const ver = el("span", "axi-vm-ver", version);
+                ver.dir = "ltr";
+                value.appendChild(ver);
+                if (build) {
+                    const tag = el("span", "axi-vm-tag", "Build " + build);
+                    tag.dir = "ltr";
+                    value.appendChild(tag);
+                }
             } else {
-                value.appendChild(el("span", "axi-vm-ver axi-vm-missing", "Not available"));
+                value.appendChild(el("span", "axi-vm-missing", "Not available"));
             }
             row.appendChild(value);
             return row;
         };
 
-        const body = el("div", "axi-vm-body");
+        const body = el("dl", "axi-vm-body");
         body.appendChild(buildRow("Axpert", axpertVersion, axpertBuild));
         body.appendChild(buildRow("AxiCMD", axiVersion, ""));
 
+        // Secondary first, primary (Close) at the end, as in the gear menu panels
         const footer = el("div", "axi-vm-footer");
         const copyBtn = el("button", "axi-vm-btn axi-vm-btn-ghost", "Copy versions");
         copyBtn.type = "button";
@@ -8493,9 +8502,14 @@ if (typeof document !== "undefined") {
         footer.appendChild(copyBtn);
         footer.appendChild(closeBtn);
 
+        // Read out the copy result; the button label also changes for sighted users
+        const status = el("span", "axi-vm-status");
+        status.setAttribute("role", "status");
+
         dialog.appendChild(header);
         dialog.appendChild(body);
         dialog.appendChild(footer);
+        dialog.appendChild(status);
         overlay.appendChild(dialog);
         document.body.appendChild(overlay);
 
@@ -8507,15 +8521,20 @@ if (typeof document !== "undefined") {
 
         let copyTimer = null;
         copyBtn.addEventListener("click", () => {
-            const done = (label) => {
+            const done = (label, message) => {
                 copyBtn.textContent = label;
+                status.textContent = message;
                 clearTimeout(copyTimer);
-                copyTimer = setTimeout(() => { copyBtn.textContent = "Copy versions"; }, 1800);
+                copyTimer = setTimeout(() => {
+                    copyBtn.textContent = "Copy versions";
+                    status.textContent = "";
+                }, 1800);
             };
+            const failed = () => done("Copy failed", "Couldn't copy. Select the versions and copy them yourself.");
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(summary).then(() => done("Copied"), () => done("Copy failed"));
+                navigator.clipboard.writeText(summary).then(() => done("Copied", "Versions copied."), failed);
             } else {
-                done("Copy failed");
+                failed();
             }
         });
 
