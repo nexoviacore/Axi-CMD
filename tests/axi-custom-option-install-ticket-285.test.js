@@ -43,7 +43,7 @@ test('the create endpoint checks access first and the service clears both caches
 test('the palette drops its prompt cache after a save and the script version is bumped', () => {
     const js = read('AxpertPlugins', 'AxiCMD', 'HTMLPages', 'js', 'axicmdmain.js');
     assert.match(js, /window\.axiReloadCommandConfig[\s\S]{0,400}removeItem\("axi_commands_raw_v1"\)/);
-    assert.match(read('aspx', 'mainHomeConfigTemplate.html'), /axicmdmain\.js\?v=80/);
+    assert.match(read('aspx', 'mainHomeConfigTemplate.html'), /axicmdmain\.js\?v=81/);
 });
 
 test('the config page loads the logic script before the page script', () => {

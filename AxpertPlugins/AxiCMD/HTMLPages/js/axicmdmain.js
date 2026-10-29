@@ -1348,8 +1348,12 @@ if (typeof document !== "undefined") {
             if (commandsFromDb) {
                 const message = isForced ? "Refreshed Successfully!" : "Commands Loaded Successfully!.";
                 const accessPermissions = getAccessPermissions();
+                // User Activation under Configure also depends on axusers.licactivation; only asked when Configure is available
+                const canActivateUsers = (commandsFromDb["Configure"] && accessPermissions.appMgrAccess)
+                    ? await getUserLicActivation(window.mainUserName)
+                    : false;
                 // Clone to avoid mutating the cached object stored in memory
-                commands = buildCommandsByAccessPermissions(JSON.parse(JSON.stringify(commandsFromDb)), accessPermissions);
+                commands = buildCommandsByAccessPermissions(JSON.parse(JSON.stringify(commandsFromDb)), accessPermissions, canActivateUsers);
                 // Append Help command to initial suggestions list
                 commands["Help"] = {
                     cmdToken: 11,
@@ -15958,6 +15962,26 @@ if (typeof document !== "undefined") {
                 axDatasourceObj[sourceKey]?.[0]?.password || null
             );
     }
+
+    /**
+     * Reads the user's licactivation flag from axusers (ADS axi_userlicactivation).
+     * The value comes as a string (true / false / T / F, any case); a missing row, null or a failed call counts as false.
+     * @param {string} username - User login name.
+     * @returns {Promise<boolean>} True when licactivation is on for the user.
+     */
+    function getUserLicActivation(username) {
+        if (!username) return Promise.resolve(false);
+
+        const sourceName = "axi_userlicactivation";
+        const sourceKey = `${sourceName}_${username}`.toLowerCase();
+        const isOn = () => {
+            const row = axDatasourceObj[sourceKey]?.[0];
+            const flag = String(row?.licactivation ?? row?.LICACTIVATION ?? "").trim().toLowerCase();
+            return flag === "t" || flag === "true";
+        };
+
+        return loadList(sourceName, username).then(isOn, () => false);
+    }
     /**
      * Builds JSON/XML payload for saving data through ARM API.
      * @param {Array<object>} saveListWithFieldNamendValueswithTransId - Field values.
@@ -16997,9 +17021,10 @@ if (typeof document !== "undefined") {
      * Filters command dictionary according to user permissions.
      * @param {object} commandsFromDb - Raw commands from DB.
      * @param {object} accessPermissions - User permissions object.
+     * @param {boolean} [canActivateUsers=false] - axusers.licactivation is on for the user (shows User Activation to non-admins).
      * @returns {object} Filtered commands dictionary.
      */
-    function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions) {
+    function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions, canActivateUsers = false) {
         const currentUserRole = window.AxUserRoles;
         const currentUserName = window.mainUserName;
 
@@ -17102,7 +17127,8 @@ if (typeof document !== "undefined") {
                 const rawType = types[i].trim();
                 const isActive = (axiCommandConfigList && axiCommandConfigList.length > 0) ? !!getCommandConfigRow("Configure", rawType) : true;
 
-                if (!isAdmin && rawType.toLowerCase() === "user activation") {
+                // User Activation: admin always; anyone else only with licactivation on
+                if (!isAdmin && !canActivateUsers && rawType.toLowerCase() === "user activation") {
                     continue;
                 }
 
