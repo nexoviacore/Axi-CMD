@@ -22,6 +22,6 @@ Issue #30
 11. Make axi_command_config configurable by the user: new AxiCMDConfig.html page (opened from the AxiCMD gear menu "Configure", only for users with Configure Access) to turn Built-in Options of the configure and sdk commands on/off and add, edit or deactivate Custom Options, through new AxiApi command-config endpoints. Custom Options survive re-installs (axi_command_prompts is no longer dropped). New configure/sdk options are added only through this page, not SQL.
 Issue #281 (tickets #282 - #287)
 
-
-axusers  - licactivation. if the true show that 
+12. TSK-0896 - Show "User Activation" under the Configure command based on axusers.licactivation: admin (username admin with the default role) always sees it; any other user sees it only when their licactivation is true (true / T, any case). A missing row, null or a failed lookup hides it. New ADS axi_userlicactivation (Postgres and Oracle) is read through loadList before the commands are built.
+Issue #288
 
