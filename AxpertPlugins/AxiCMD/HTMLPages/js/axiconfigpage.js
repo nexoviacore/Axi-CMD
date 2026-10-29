@@ -45,10 +45,14 @@
     const PAGE_SIZE = 25;
 
     /** One page of a command's options, searched on the server (name or target contains the term). */
-    function buildPageUrl(baseUrl, appname, command, search, pageNo) {
+    // show: "custom" or "inactive" filters the list ("all" or nothing adds no parameter).
+    // focus: a config_id; the API then answers with the page that holds it.
+    function buildPageUrl(baseUrl, appname, command, search, pageNo, show, focus) {
         return baseUrl.replace(/\/+$/, "") + "/options/page?appname=" + encodeURIComponent(appname) +
             "&command=" + encodeURIComponent(command) + "&search=" + encodeURIComponent(String(search || "").trim()) +
-            "&pageNo=" + (pageNo > 0 ? Math.floor(pageNo) : 1) + "&pageSize=" + PAGE_SIZE;
+            "&pageNo=" + (pageNo > 0 ? Math.floor(pageNo) : 1) + "&pageSize=" + PAGE_SIZE +
+            (show && show !== "all" ? "&show=" + encodeURIComponent(show) : "") +
+            (focus ? "&focus=" + encodeURIComponent(focus) : "");
     }
 
     /** Flattens the API page (camelCase or PascalCase keys) into rows plus the numbers the pager and the tabs show. */
@@ -98,7 +102,12 @@
         return RTL_LANGS.indexOf(code) !== -1 ? "rtl" : "ltr";
     }
 
-    const OTHER_USERS_NOTE = "Saved. Other users see the change after they press Refresh in AxiCMD.";
+    const OTHER_USERS_NOTE = "Other users see the change after they press Refresh in AxiCMD.";
+
+    /** Toast text after an Active switch saves: names the option and says the change reaches everyone in the app. */
+    function switchMessage(name, isActive) {
+        return "\"" + name + "\" is " + (isActive ? "back in the palette" : "hidden from the palette") + " for everyone in this app. " + OTHER_USERS_NOTE;
+    }
 
     function buildActiveUrl(baseUrl, configId, appname) {
         return baseUrl.replace(/\/+$/, "") + "/options/" + encodeURIComponent(configId) + "/active?appname=" + encodeURIComponent(appname);
@@ -143,7 +152,8 @@
 
         const $ = (id) => document.getElementById(id);
         const note = $("acNote");
-        const body = $("acBody"), search = $("acSearch"), status = $("acStatus"), count = $("acCount");
+        const body = $("acBody"), search = $("acSearch"), status = $("acStatus"), count = $("acPageOf");
+        let showing = "all";   // the All / Custom / Inactive filter
         const tabs = Array.prototype.slice.call(document.querySelectorAll("[role=tab]"));
         // page: what the table shows now. pageNoOf: the page each tab was left on. cache: pages already fetched, by tab, search and page.
         let page = normalizePage({});
@@ -158,15 +168,60 @@
         const AVAILABLE_TYPES = Logic.CUSTOM_TYPES;   // tstruct, iview, ivtoivload, url (never action, processflow, shellaction)
         const TYPE_LABELS = { tstruct: "Form (tstruct)", iview: "Report (iview)", ivtoivload: "Report with load (ivtoivload)", url: "URL" };
 
-        function showNote(text, isError) {
+        // The note is a toast pinned to the bottom of the page, so showing it never moves the table.
+        // Errors stay until the next note; other notes clear themselves. action = { label, run } adds a button
+        // (Undo), which Ctrl+Z also presses while the toast shows it.
+        let noteTimer = 0;
+        let noteAction = null;
+        function showNote(text, isError, sticky, action) {
+            clearTimeout(noteTimer);
+            noteAction = text && action ? action : null;
             note.hidden = !text;
-            note.textContent = text || "";
-            note.className = "ac-note" + (isError ? " ac-error" : "");
+            note.textContent = "";
+            note.className = "ac-note ac-toast" + (isError ? " ac-error" : "");
+            if (!text) return;
+            const msg = document.createElement("span");
+            msg.textContent = text;
+            note.appendChild(msg);
+            if (noteAction) {
+                const b = document.createElement("button");
+                b.type = "button";
+                b.className = "ac-btn ac-btn-sm";
+                b.textContent = noteAction.label;
+                b.title = noteAction.label + " (Ctrl+Z)";
+                b.addEventListener("click", runNoteAction);
+                note.appendChild(b);
+            }
+            if (!isError && !sticky) noteTimer = setTimeout(() => showNote(""), 8000);
+        }
+        function runNoteAction() {
+            const act = noteAction;
+            if (!act) return;
+            showNote("");
+            act.run();
         }
 
+        // Updates the one table row of this option in place, so the switch the user pressed keeps focus
+        function patchRow(id, isActive) {
+            const tr = Array.prototype.find.call(body.rows, (t) => t.dataset.id === id);
+            if (!tr) return;
+            tr.classList.toggle("ac-off", !isActive);
+            const input = tr.querySelector(".ac-switch input");
+            if (input) input.checked = isActive;
+            const lbl = tr.querySelector(".ac-switch-label");
+            if (lbl) {
+                lbl.className = "ac-switch-label " + (isActive ? "ac-on" : "ac-inactive");
+                lbl.textContent = isActive ? "Active" : "Inactive";
+            }
+        }
+
+        // A switch stays focusable while it saves: a busy flag ignores further presses instead of disabling it,
+        // which would drop keyboard focus
         function save(row, wanted, input) {
-            input.disabled = true;
-            showNote("Saving...", false);
+            input.dataset.busy = "1";
+            input.setAttribute("aria-busy", "true");
+            const done = () => { delete input.dataset.busy; input.removeAttribute("aria-busy"); };
+            showNote("Saving...", false, true);
             return fetch(buildActiveUrl(apiBase, row.id, appName), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -178,16 +233,37 @@
                 cache.forEach((p, key) => {
                     if (p.rows.some((r) => r.id === row.id)) cache.set(key, Object.assign({}, p, { rows: setActive(p.rows, row.id, wanted) }));
                 });
+                // Under the Inactive filter a switch changes which options match and the counts: the next visit fetches again.
+                // The row itself stays on screen until then, so Undo is still in reach.
+                if (showing === "inactive") cache.clear();
                 // The palette drops this user's local copy and reloads its commands
                 const shell = window.top || window.parent;
                 try { if (shell && typeof shell.axiReloadCommandConfig === "function") shell.axiReloadCommandConfig(); } catch (e) { }
-                render();
-                showNote(OTHER_USERS_NOTE, false);
+                done();
+                patchRow(row.id, wanted);
+                if (editing && editing.id === row.id) $("fActive").checked = wanted;
+                // Switching off hides the option for everyone, so it can be undone straight away
+                showNote(switchMessage(row.name, wanted), false, false,
+                    wanted ? null : { label: "Undo", run: () => undoSwitchOff(row) });
             }).catch((err) => {
+                done();
                 input.checked = !wanted;
-                input.disabled = false;
                 showNote(describeFailure(err && err.status, err && err.text), true);
             });
+        }
+
+        // Switches the option back on through its own table switch, or the drawer's when the row is on another page
+        function undoSwitchOff(row) {
+            const tr = Array.prototype.find.call(body.rows, (t) => t.dataset.id === row.id);
+            const input = tr ? tr.querySelector(".ac-switch input") : (editing && editing.id === row.id ? $("fActive") : document.createElement("input"));
+            input.checked = true;
+            return save(row, true, input);
+        }
+
+        // Change handler for every Active switch: a press while the last save is still running is undone
+        function onSwitch(row, input) {
+            if (input.dataset.busy) { input.checked = !input.checked; return Promise.resolve(); }
+            return save(row, input.checked, input);
         }
 
         function updateCounts() {
@@ -243,6 +319,9 @@
         function setFieldError(field, text) {
             errOf[field].textContent = text || "";
             if (text) inputOf[field].setAttribute("aria-invalid", "true"); else inputOf[field].removeAttribute("aria-invalid");
+            // A field with an error must be visible, so a collapsed Advanced section opens
+            const adv = text && inputOf[field].closest("details");
+            if (adv) adv.open = true;
         }
 
         function clearErrors() {
@@ -289,6 +368,7 @@
                     : (Logic.isEditable(editing) ? "You need Configure Access and build access to change this option."
                         : "A Built-in Option ships with the product, so its route is read-only. You can still switch it on or off."));
             $("fCommand").disabled = !!editing;
+            $("acAdvanced").open = false;
             const srcSel = $("fSource");
             srcSel.textContent = "";
             Logic.recordSourceOptions().forEach((s) => {
@@ -316,6 +396,8 @@
                 }
                 srcSel.value = src;
                 fields.forEach((f) => { inputOf[f].value = f === "name" ? editing.name : (editing[f] || ""); });
+                // Advanced opens by itself when the option already uses one of its fields
+                $("acAdvanced").open = !!(editing.paramField || editing.extraParams || Logic.sourceName(editing.source));
                 $("fActive").checked = editing.active;
                 $("fActive").disabled = !hasAccess;
             }
@@ -403,8 +485,11 @@
                 closeDrawer();
                 // A new or renamed option can move to another page and changes the counts: fetch again
                 cache.clear();
-                if (key === active) load(active, pageNoOf[active]); else selectTab(key);
-                showNote((target ? "Saved \"" : "Added \"") + checked.value.name + "\". " + OTHER_USERS_NOTE, false);
+                // Show the saved option: the filter goes back to All (it may hide the option) and the API answers with its page
+                const savedId = target ? target.id : String((created && (created.configId || created.ConfigId)) || "");
+                setShowing("all");
+                if (key === active) load(active, pageNoOf[active], null, savedId); else selectTab(key, savedId);
+                showNote((target ? "Saved \"" : "Added \"") + checked.value.name + "\" for everyone in this app. " + OTHER_USERS_NOTE, false);
             }).catch((err) => {
                 saveBtn.disabled = false;
                 formError.className = "ac-note ac-error";
@@ -414,6 +499,8 @@
         }
 
         if (hasAccess) addBtn.hidden = false;
+        // Without both accesses the switches are disabled: say why instead of leaving them silently greyed out
+        else $("acAccessNote").hidden = false;
         addBtn.addEventListener("click", () => { opener = addBtn; openDrawer(null); });
         $("fType").addEventListener("change", showFieldsForType);
         inputOf.name.addEventListener("input", updateRenameWarning);
@@ -421,7 +508,7 @@
         $("fActive").addEventListener("change", () => {
             const row = editing;
             if (!row) return;
-            save(row, $("fActive").checked, $("fActive")).then(() => {
+            onSwitch(row, $("fActive")).then(() => {
                 if (editing === row) editing = page.rows.filter((r) => r.id === row.id)[0] || row;
             });
         });
@@ -432,9 +519,18 @@
         form.addEventListener("submit", submitDrawer);
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape" && !drawer.hidden) { closeDrawer(); return; }
+            // Ctrl+Z presses the toast's Undo, except inside a text field, where it keeps undoing typing
+            if (noteAction && (e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === "z" || e.key === "Z")
+                && !(e.target.matches && e.target.matches("input:not([type=checkbox]), textarea, select"))) {
+                e.preventDefault();
+                runNoteAction();
+                return;
+            }
             // Keep Tab inside the open drawer
             if (e.key === "Tab" && !drawer.hidden) {
-                const items = Array.prototype.filter.call(drawer.querySelectorAll("input, select, button"), (el) => !el.disabled && !el.closest("[hidden]"));
+                // Fields inside a collapsed Advanced section cannot take focus; its summary can
+                const items = Array.prototype.filter.call(drawer.querySelectorAll("input, select, button, summary"), (el) => !el.disabled && !el.closest("[hidden]")
+                    && !(el.tagName !== "SUMMARY" && el.closest("details:not([open])")));
                 if (!items.length) return;
                 const first = items[0], last = items[items.length - 1];
                 if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
@@ -460,8 +556,26 @@
             }
             rows.forEach((r) => {
                 const tr = document.createElement("tr");
+                tr.dataset.id = r.id;
                 if (!r.active) tr.className = "ac-off";
-                const nameTd = cell(r.name, "ac-name");
+                // The option as the user types it in the palette: command, option name, then its record source as the third word
+                const nameTd = document.createElement("td");
+                nameTd.className = "ac-name";
+                const words = [["ac-cmd", r.command.toLowerCase()], ["ac-optname", r.name]];
+                const src = Logic.sourceName(r.source);
+                if (src) words.push(["ac-src", "‹" + src + "›"]);
+                // One isolated run, so in a right-to-left page the phrase keeps its own word order and brackets
+                const phrase = document.createElement("span");
+                phrase.className = "ac-phrase";
+                words.forEach(([cls, text], n) => {
+                    if (n) phrase.appendChild(document.createTextNode(" "));
+                    const w = document.createElement("span");
+                    w.className = cls;
+                    w.textContent = text;
+                    phrase.appendChild(w);
+                });
+                if (src) phrase.lastChild.title = "Record source: " + src + " (" + r.source + ")";
+                nameTd.appendChild(phrase);
                 if (r.builtIn) {
                     const b = document.createElement("span");
                     b.className = "ac-badge";
@@ -484,7 +598,7 @@
                 const lbl = document.createElement("span");
                 lbl.className = "ac-switch-label " + (r.active ? "ac-on" : "ac-inactive");
                 lbl.textContent = r.active ? "Active" : "Inactive";
-                input.addEventListener("change", () => save(r, input.checked, input));
+                input.addEventListener("change", () => onSwitch(r, input));
                 sw.appendChild(input);
                 sw.appendChild(track);
                 sw.appendChild(lbl);
@@ -503,16 +617,36 @@
             });
             count.textContent = rangeText(page.pageNo, page.pageSize, page.total);
             status.hidden = rows.length > 0;
-            status.textContent = search.value.trim() ? "Nothing matches \"" + search.value.trim() + "\". Try part of a name or target." : "No options found.";
+            status.textContent = emptyText();
             renderPager();
+        }
+
+        function emptyText() {
+            const term = search.value.trim();
+            if (term) return "Nothing matches \"" + term + "\"" + (showing === "all" ? "" : " in " + showing + " options") + ". Try part of a name or target.";
+            if (showing === "custom") return "No Custom Options yet. Add one with Add option.";
+            if (showing === "inactive") return "Every option is switched on.";
+            return "No options found.";
+        }
+
+        // Briefly marks the row of an option that was just saved, and brings it into view
+        function flashRow(id) {
+            const tr = Array.prototype.find.call(body.rows, (t) => t.dataset.id === id);
+            if (!tr) return;
+            tr.classList.add("ac-flash");
+            tr.scrollIntoView({ block: "nearest" });
+            // Fade the tint out, then drop the fade so ordinary hovers stay instant
+            setTimeout(() => { tr.classList.add("ac-flash-out"); tr.classList.remove("ac-flash"); }, 2400);
+            setTimeout(() => tr.classList.remove("ac-flash-out"), 3300);
         }
 
         // ---- Pager ----
         const pager = $("acPager"), pageNums = $("acPageNums"), prevBtn = $("acPrev"), nextBtn = $("acNext");
 
+        // "1-25 of 61" sits at the start of the pager under the table; the page buttons only appear when there is more than one page
         function renderPager() {
-            pager.hidden = page.totalPages <= 1;
-            $("acPageOf").textContent = "Page " + page.pageNo + " of " + page.totalPages;
+            pager.hidden = page.total === 0;
+            $("acPages").hidden = page.totalPages <= 1;
             prevBtn.disabled = page.pageNo <= 1;
             nextBtn.disabled = page.pageNo >= page.totalPages;
             pageNums.textContent = "";
@@ -547,39 +681,48 @@
         prevBtn.addEventListener("click", () => goToPage(page.pageNo - 1));
         nextBtn.addEventListener("click", () => goToPage(page.pageNo + 1));
 
-        /** Shows page no of tab for the current search: from the cache when it was fetched before, else from the API. */
-        function load(tab, no, swapFrom) {
+        /** Shows page no of tab for the current search and filter: from the cache when it was fetched before, else from the API.
+            focus (a config_id, after a save) asks the API for the page holding that option, then marks its row. */
+        function load(tab, no, swapFrom, focus) {
             const term = search.value.trim();
             const ask = ++loadAsk;
+            const keyOf = (n) => tab + "|" + showing + "|" + term + "|" + n;
             const show = (p) => {
-                // A newer request (another page, tab or search) wins
+                // A newer request (another page, tab, search or filter) wins
                 if (ask !== loadAsk || tab !== active) return;
                 page = p;
                 pageNoOf[tab] = p.pageNo;
                 body.removeAttribute("aria-busy");
                 updateCounts();
                 render(swapFrom);
+                if (focus) flashRow(focus);
             };
-            const cached = cache.get(tab + "|" + term + "|" + no);
+            const cached = focus ? null : cache.get(keyOf(no));
             if (cached) {
                 show(cached);
                 return Promise.resolve();
             }
             body.setAttribute("aria-busy", "true");
             if (!page.rows.length) { status.hidden = false; status.textContent = "Loading options..."; }
-            return fetch(buildPageUrl(apiBase, appName, tab, term, no))
+            return fetch(buildPageUrl(apiBase, appName, tab, term, no, showing, focus))
                 .then((res) => { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
                 .then((raw) => {
                     const p = normalizePage(raw);
                     // Stored under the page the API answered with (a page past the end comes back as the last page)
-                    cache.set(tab + "|" + term + "|" + p.pageNo, p);
+                    cache.set(keyOf(p.pageNo), p);
                     show(p);
                 })
                 .catch((err) => {
                     if (ask !== loadAsk) return;
                     body.removeAttribute("aria-busy");
                     status.hidden = false;
-                    status.textContent = "Could not load the options (" + err.message + "). Check the connection and try again.";
+                    status.textContent = "Could not load the options (" + err.message + "). Check the connection, then try again. ";
+                    const retry = document.createElement("button");
+                    retry.type = "button";
+                    retry.className = "ac-btn ac-btn-sm";
+                    retry.textContent = "Try again";
+                    retry.addEventListener("click", () => load(tab, no, swapFrom, focus));
+                    status.appendChild(retry);
                 });
         }
 
@@ -605,11 +748,11 @@
         }
         window.addEventListener("resize", () => movePill(false));
 
-        function selectTab(name) {
+        function selectTab(name, focus) {
             // Same tab: just reload its page, no slide
             if (name === active) {
                 movePill(false);
-                load(active, pageNoOf[active]);
+                load(active, pageNoOf[active], null, focus);
                 return;
             }
             const from = tabs.findIndex((t) => t.dataset.tab === active);
@@ -620,10 +763,24 @@
                 t.setAttribute("aria-selected", on ? "true" : "false");
                 t.tabIndex = on ? 0 : -1;
             });
-            $("acTable").setAttribute("aria-labelledby", "tab-" + name);
+            $("acPanel").setAttribute("aria-labelledby", "tab-" + name);
             movePill(true);
-            load(name, pageNoOf[name], to > from ? "next" : "prev");
+            load(name, pageNoOf[name], to > from ? "next" : "prev", focus);
         }
+
+        // All / Custom / Inactive: pressing one starts both tabs again from page 1
+        const filterBtns = Array.prototype.slice.call(document.querySelectorAll("#acFilter [data-show]"));
+        function setShowing(value) {
+            showing = value;
+            filterBtns.forEach((b) => b.setAttribute("aria-pressed", b.dataset.show === value ? "true" : "false"));
+        }
+        filterBtns.forEach((b) => b.addEventListener("click", () => {
+            if (b.dataset.show === showing) return;
+            setShowing(b.dataset.show);
+            pageNoOf.configure = 1;
+            pageNoOf.sdk = 1;
+            load(active, 1);
+        }));
 
         tabs.forEach((t, i) => {
             t.addEventListener("click", () => selectTab(t.dataset.tab));
@@ -658,5 +815,5 @@
         search.focus();
     }
 
-    return { replaceRow, OTHER_USERS_NOTE, PAGE_SIZE, buildActiveUrl, buildActiveBody, readAccess, setActive, describeFailure, normalizeRow, buildPageUrl, normalizePage, pageNumbers, rangeText, directionFor, init };
+    return { replaceRow, OTHER_USERS_NOTE, switchMessage, PAGE_SIZE, buildActiveUrl, buildActiveBody, readAccess, setActive, describeFailure, normalizeRow, buildPageUrl, normalizePage, pageNumbers, rangeText, directionFor, init };
 }));

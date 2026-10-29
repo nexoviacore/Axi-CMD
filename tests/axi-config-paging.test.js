@@ -31,7 +31,29 @@ test('the page query sorts by name, filters by command and pages with OFFSET / F
     assert.match(q, /ORDER BY LOWER\(prompt_options\), config_id /);
     assert.match(q, /OFFSET \{1\} ROWS FETCH NEXT \{2\} ROWS ONLY$/);
     assert.ok(!/LIMIT/i.test(q));
-    assert.match(constOf('CountCommandOptionsPage'), /COUNT\(\*\) AS cnt FROM axi_command_config WHERE LOWER\(command\) = :command\{0\}$/);
+    // The page total is the paged command's count from the per-command query, so there is no separate count query
+    assert.ok(!/CountCommandOptionsPage/.test(sql));
+    assert.match(repo, /page\.TotalCount = command\.Equals\("sdk", StringComparison\.OrdinalIgnoreCase\) \? page\.SdkCount : page\.ConfigureCount;/);
+});
+
+test('the tab counts follow the search and the All / Custom / Inactive filter', () => {
+    assert.match(constOf('CountCommandOptionsByCommand'), /WHERE LOWER\(command\) IN \('configure', 'sdk'\)\{0\} GROUP BY LOWER\(command\)$/);
+    assert.match(repo, /string\.Format\(SqlQueries\.CountCommandOptionsByCommand, filter\)/);
+    assert.strictEqual(constOf('CommandOptionsShowCustom'), " AND COALESCE(is_system, 'F') <> 'T'");
+    assert.strictEqual(constOf('CommandOptionsShowInactive'), " AND COALESCE(active, 'T') = 'F'");
+    // Fixed SQL picked in C#; anything but custom / inactive is All
+    assert.match(paging, /return s == "custom" \|\| s == "inactive" \? s : "all";/);
+    assert.match(paging, /"custom" => SqlQueries\.CommandOptionsShowCustom,\s*"inactive" => SqlQueries\.CommandOptionsShowInactive,\s*_ => string\.Empty/);
+    assert.match(service, /CommandOptionPaging\.NormalizeShow\(show\), CommandOptionPaging\.CleanFocus\(focus\)/);
+    assert.match(controller, /\[FromQuery\] string\? show, \[FromQuery\] string\? focus\)/);
+});
+
+test('focus answers with the page that holds the saved option, counted in the page query\'s own order', () => {
+    assert.match(constOf('SelectCommandOptionSortKey'), /WHERE config_id = :configId AND LOWER\(command\) = :command\{0\}$/);
+    assert.match(constOf('CountCommandOptionsBefore'),
+        /WHERE LOWER\(command\) = :command\{0\} AND \(LOWER\(prompt_options\) < :focus1 OR \(LOWER\(prompt_options\) = :focus2 AND config_id < :focus3\)\)$/);
+    assert.match(paging, /public static int PageOf\(int rowsBefore, int pageSize\) => rowsBefore \/ pageSize \+ 1;/);
+    assert.match(paging, /return f\.Length > 50 \? string\.Empty : f;/);
 });
 
 test('the search matches name or target, escapes the user\'s % and _, and names each parameter once', () => {
@@ -43,7 +65,13 @@ test('the search matches name or target, escapes the user\'s % and _, and names 
 });
 
 test('parameters are passed in the order the SQL uses them (Oracle binds by position)', () => {
-    assert.match(repo, /new List<string> \{ ":command" \}[\s\S]{0,400}AddRange\(new\[\] \{ ":search1", ":search2", ":search3" \}\)/);
+    // The search condition comes before the filter text, and every query runs as: its own leading names, the search, its trailing names
+    assert.match(repo, /filter = SqlQueries\.CommandOptionsSearch \+ filter;/);
+    assert.match(repo, /searchNames\.AddRange\(new\[\] \{ ":search1", ":search2", ":search3" \}\)/);
+    assert.match(repo, /var names = before\.Concat\(searchNames\)\.Concat\(after \?\? Array\.Empty<string>\(\)\)\.ToArray\(\);/);
+    assert.match(repo, /Run\(string\.Format\(SqlQueries\.SelectCommandOptionSortKey, filter\), new\[\] \{ ":configId", ":command" \}/);
+    assert.match(repo, /new\[\] \{ ":focus1", ":focus2", ":focus3" \}, new object\[\] \{ sortKey, sortKey, focus \}/);
+    assert.match(repo, /SQLResult rows = await Run\(sql, cmd, cmdValue\);/);
 });
 
 test('offset and page size go into the SQL only as integers', () => {
@@ -74,7 +102,8 @@ test('the full list and the page share one row mapper, so both report the same r
 test('the page fetches pages instead of the full list, and keeps a request id so a slow answer cannot overwrite a newer one', () => {
     const js = read('AxpertPlugins', 'AxiCMD', 'HTMLPages', 'js', 'axiconfigpage.js');
     assert.ok(!/buildListUrl|groupByTab|filterRows/.test(js));
-    assert.match(js, /fetch\(buildPageUrl\(apiBase, appName, tab, term, no\)\)/);
+    assert.match(js, /fetch\(buildPageUrl\(apiBase, appName, tab, term, no, showing, focus\)\)/);
+    assert.match(js, /const keyOf = \(n\) => tab \+ "\|" \+ showing \+ "\|" \+ term \+ "\|" \+ n;/);
     assert.match(js, /if \(ask !== loadAsk \|\| tab !== active\) return;/);
     const html = read('AxpertPlugins', 'AxiCMD', 'HTMLPages', 'AxiCMDConfig.html');
     for (const id of ['acPager', 'acPageOf', 'acPrev', 'acPageNums', 'acNext']) assert.match(html, new RegExp('id="' + id + '"'), id);

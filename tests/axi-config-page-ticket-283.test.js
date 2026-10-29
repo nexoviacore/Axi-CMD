@@ -1,6 +1,7 @@
 // Ticket #283: pure logic of the AxiCMD Config page. Loads the REAL page script (not a re-implementation).
 const test = require('node:test');
 const assert = require('node:assert');
+const fs = require('node:fs');
 const path = require('node:path');
 
 const page = require(path.join(__dirname, '..', 'AxpertPlugins', 'AxiCMD', 'HTMLPages', 'js', 'axiconfigpage.js'));
@@ -42,6 +43,25 @@ test('buildPageUrl asks for one page of one command, 25 rows, with the trimmed s
         page.buildPageUrl('http://h/AxiCMDApi/api/v1/Axi/command-config/', 'my app', 'sdk', '  a&b ', 3),
         'http://h/AxiCMDApi/api/v1/Axi/command-config/options/page?appname=my%20app&command=sdk&search=a%26b&pageNo=3&pageSize=25');
     assert.match(page.buildPageUrl('http://h/x', 'a', 'configure', '', 0), /&search=&pageNo=1&/);
+});
+
+test('buildPageUrl adds the filter (not for All) and the option to focus after a save', () => {
+    assert.strictEqual(page.buildPageUrl('http://h/x', 'a', 'sdk', '', 1, 'all', ''),
+        'http://h/x/options/page?appname=a&command=sdk&search=&pageNo=1&pageSize=25');
+    assert.strictEqual(page.buildPageUrl('http://h/x', 'a', 'sdk', '', 1, 'custom', 'usr sdk'),
+        'http://h/x/options/page?appname=a&command=sdk&search=&pageNo=1&pageSize=25&show=custom&focus=usr%20sdk');
+});
+
+test('the page has the All / Custom / Inactive filter, the range in the pager, and marks the saved row', () => {
+    const markup = fs.readFileSync(path.join(__dirname, '..', 'AxpertPlugins', 'AxiCMD', 'HTMLPages', 'AxiCMDConfig.html'), 'utf8');
+    assert.match(markup, /id="acFilter" class="ac-filter" role="group" aria-label="Show"/);
+    for (const v of ['all', 'custom', 'inactive']) assert.match(markup, new RegExp('data-show="' + v + '" aria-pressed="' + (v === 'all') + '"'));
+    assert.ok(!/id="acCount"/.test(markup), 'range moved from the header to the pager');
+    assert.match(markup, /<div id="acPages" class="ac-pages">/);
+    const js = fs.readFileSync(path.join(__dirname, '..', 'AxpertPlugins', 'AxiCMD', 'HTMLPages', 'js', 'axiconfigpage.js'), 'utf8');
+    assert.match(js, /count = \$\("acPageOf"\)/);
+    assert.match(js, /setShowing\("all"\);\s*if \(key === active\) load\(active, pageNoOf\[active\], null, savedId\); else selectTab\(key, savedId\);/);
+    assert.match(js, /if \(focus\) flashRow\(focus\);/);
 });
 
 test('normalizePage reads the API page (camelCase or PascalCase) into rows, totals and tab counts', () => {

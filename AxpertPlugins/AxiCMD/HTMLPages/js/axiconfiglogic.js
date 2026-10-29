@@ -40,8 +40,27 @@
     const STRUCT_TYPE_CODE = { tstruct: "t", iview: "i", ivtoivload: "i" };
     const MAX_STRUCT_CHOICES = 50;
 
+    /** Readable names of the record sources (Axpert Data Sources); the stored value stays the id. */
+    const RECORD_SOURCE_NAMES = {
+        axi_peglist: "PEG list", axi_formnotifylist: "Form notifications", axi_schedulenotifylist: "Scheduled notifications",
+        axi_pegnotifylist: "PEG notifications", axi_rulenameslist: "Rules", axi_structmetalist: "Forms and reports",
+        axi_userlist: "Users", axi_useractivation: "User activation", axi_usergrouplist: "User groups", axi_rolelist: "Roles",
+        axi_actorlist: "Actors", axi_publishapi: "Published APIs", axi_servernamelist: "Servers", axi_cardlist: "Cards",
+        axi_resposibilitylist: "Responsibilities", axi_dimensionlist: "Dimensions", axi_smartviewlist: "Smart views",
+        axi_apinameslist: "APIs", axi_jobs: "Jobs", axi_language: "Languages", axi_customtype: "Custom types",
+        axi_emaildef: "Email definitions", axi_tabledesc: "Tables", axi_outbound: "Outbound", axi_inbound: "Inbound",
+        axi_getstructsdata: "Records of a form", axi_viewlist: "Views"
+    };
+
+    /** The readable name of a record source id; an unknown id is shown as it is, None for no source. */
+    function sourceName(id) {
+        const s = String(id || "").trim();
+        if (!s || s.toLowerCase() === NO_SOURCE.toLowerCase()) return "";
+        return RECORD_SOURCE_NAMES[s.toLowerCase()] || s;
+    }
+
     function recordSourceOptions() {
-        return [{ value: NO_SOURCE, label: "None" }].concat(KNOWN_RECORD_SOURCES.map((s) => ({ value: s, label: s })));
+        return [{ value: NO_SOURCE, label: "None" }].concat(KNOWN_RECORD_SOURCES.map((s) => ({ value: s, label: sourceName(s) + " (" + s + ")" })));
     }
 
     /** Structures (axi_structmetalist rows) the picker offers for an option type: tstruct -> forms, iview/ivtoivload -> reports. */
@@ -248,6 +267,6 @@
 
     return {
         MAX_NAME_LENGTH, MAX_LIST_LENGTH, MAX_RECORD_SOURCE_LENGTH, NO_SOURCE, COMMANDS, CUSTOM_TYPES, FIELDS_BY_TYPE,
-        fieldsFor, recordSourceOptions, structureChoices, canSearchStructures, KNOWN_RECORD_SOURCES, validateName, makeConfigId, validateOption, appendOption, replaceOption, validateEdit, isEditable, renameWarning, buildUpdateUrl, buildUpdateBody, buildCreateUrl, buildCreateBody
+        fieldsFor, recordSourceOptions, sourceName, structureChoices, canSearchStructures, KNOWN_RECORD_SOURCES, validateName, makeConfigId, validateOption, appendOption, replaceOption, validateEdit, isEditable, renameWarning, buildUpdateUrl, buildUpdateBody, buildCreateUrl, buildCreateBody
     };
 }));

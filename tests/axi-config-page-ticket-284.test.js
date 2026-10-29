@@ -57,6 +57,62 @@ test('the notice tells the user when other users see the change', () => {
     assert.match(page.OTHER_USERS_NOTE, /Refresh/);
 });
 
+test('a switch save keeps focus: it patches its own row and never disables or re-renders', () => {
+    const js = fs.readFileSync(path.join(html, 'js', 'axiconfigpage.js'), 'utf8');
+    const start = js.indexOf('function save(row, wanted, input)');
+    const saveFn = js.slice(start, js.indexOf('function onSwitch', start));
+    assert.doesNotMatch(saveFn, /input\.disabled = true/);
+    assert.doesNotMatch(saveFn, /render\(\)/);
+    assert.match(saveFn, /patchRow\(row\.id, wanted\)/);
+    assert.match(js, /if \(input\.dataset\.busy\) \{ input\.checked = !input\.checked; return Promise\.resolve\(\); \}/);
+    assert.match(js, /tr\.dataset\.id = r\.id/);
+});
+
+test('the page note is a toast outside the page flow, so it never pushes the table', () => {
+    const page = fs.readFileSync(path.join(html, 'AxiCMDConfig.html'), 'utf8');
+    const note = page.indexOf('id="acNote"');
+    assert.ok(note > page.indexOf('</main>'), 'note sits after </main>');
+    assert.match(page, /id="acNote" class="ac-note ac-toast"/);
+    const css = fs.readFileSync(path.join(html, 'css', 'axiconfig.css'), 'utf8');
+    assert.match(css, /\.ac-toast \{[^}]*position: fixed;/);
+});
+
+test('switching says the change reaches everyone in the app, and switching off can be undone', () => {
+    assert.strictEqual(page.switchMessage('user', false),
+        '"user" is hidden from the palette for everyone in this app. Other users see the change after they press Refresh in AxiCMD.');
+    assert.strictEqual(page.switchMessage('user', true),
+        '"user" is back in the palette for everyone in this app. Other users see the change after they press Refresh in AxiCMD.');
+    assert.doesNotMatch(page.OTHER_USERS_NOTE, /^Saved/, 'no "Saved \\"x\\". Saved." double');
+    const js = fs.readFileSync(path.join(html, 'js', 'axiconfigpage.js'), 'utf8');
+    assert.match(js, /wanted \? null : \{ label: "Undo", run: \(\) => undoSwitchOff\(row\) \}/);
+    assert.match(js, /\(e\.ctrlKey \|\| e\.metaKey\) && !e\.shiftKey && \(e\.key === "z" \|\| e\.key === "Z"\)/);
+    const markup = fs.readFileSync(path.join(html, 'AxiCMDConfig.html'), 'utf8');
+    assert.match(markup, /hides it from the palette for everyone in this app/);
+});
+
+test('inactive rows recede by colour and weight, never by opacity (which failed AA contrast at 2.3:1)', () => {
+    const css = fs.readFileSync(path.join(html, 'css', 'axiconfig.css'), 'utf8');
+    assert.doesNotMatch(css, /\.ac-off[^{]*\{[^}]*opacity/);
+    assert.match(css, /\.ac-off \.ac-name, \.ac-off \.ac-optname \{ color: var\(--slate\); font-weight: 400; \}/);
+});
+
+test('the tab panel is the table wrapper, so the table keeps its table semantics', () => {
+    const markup = fs.readFileSync(path.join(html, 'AxiCMDConfig.html'), 'utf8');
+    assert.match(markup, /<div id="acPanel" class="ac-scroll" tabindex="0" role="tabpanel" aria-labelledby="tab-configure">/);
+    assert.match(markup, /<table id="acTable" class="ac-table">/);
+    assert.strictEqual((markup.match(/aria-controls="acPanel"/g) || []).length, 2);
+    const js = fs.readFileSync(path.join(html, 'js', 'axiconfigpage.js'), 'utf8');
+    assert.match(js, /\$\("acPanel"\)\.setAttribute\("aria-labelledby", "tab-" \+ name\)/);
+});
+
+test('a viewer without both accesses is told why, and a failed load offers Try again', () => {
+    const markup = fs.readFileSync(path.join(html, 'AxiCMDConfig.html'), 'utf8');
+    assert.match(markup, /id="acAccessNote"[^>]*hidden>You can view these options\. Changing them needs Configure Access and build access\.<\/p>/);
+    const js = fs.readFileSync(path.join(html, 'js', 'axiconfigpage.js'), 'utf8');
+    assert.match(js, /if \(hasAccess\) addBtn\.hidden = false;\s*\/\/[^\n]*\n\s*else \$\("acAccessNote"\)\.hidden = false;/);
+    assert.match(js, /retry\.textContent = "Try again";\s*retry\.addEventListener\("click", \(\) => load\(tab, no, swapFrom, focus\)\);/);
+});
+
 test('palette exposes a reload hook that clears the local command-config cache', () => {
     assert.match(palette, /window\.axiReloadCommandConfig\s*=/);
     const start = palette.indexOf('window.axiReloadCommandConfig');

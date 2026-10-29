@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AxiCMD Config</title>
     <!-- Own styles and script only; no CDN. Opened from the palette gear menu (axicmdmain.js). -->
-    <link rel="stylesheet" href="css/axiconfig.css?v=9">
+    <link rel="stylesheet" href="css/axiconfig.css?v=17">
 </head>
 
 <body>
@@ -14,17 +14,21 @@
         <header class="ac-head">
             <div>
                 <h1 id="acTitle" class="ac-title">AxiCMD Config</h1>
-                <p class="ac-sub">Every option the Configure and SDK commands offer. Switch an option off to hide it from the palette.</p>
+                <p class="ac-sub">Every option the Configure and SDK commands offer. Switching an option off hides it from the palette for everyone in this app.</p>
             </div>
-            <span id="acCount" class="ac-count" aria-live="polite"></span>
         </header>
 
         <div class="ac-bar">
             <div class="ac-tabs" role="tablist" aria-label="Command">
                 <button id="tab-configure" class="ac-tab" role="tab" type="button" data-tab="configure"
-                    aria-selected="true" aria-controls="acTable">Configure <span id="acCountConfigure" class="ac-tabn">0</span></button>
+                    aria-selected="true" aria-controls="acPanel">Configure <span id="acCountConfigure" class="ac-tabn">0</span></button>
                 <button id="tab-sdk" class="ac-tab" role="tab" type="button" data-tab="sdk" aria-selected="false"
-                    tabindex="-1" aria-controls="acTable">SDK <span id="acCountSdk" class="ac-tabn">0</span></button>
+                    tabindex="-1" aria-controls="acPanel">SDK <span id="acCountSdk" class="ac-tabn">0</span></button>
+            </div>
+            <div id="acFilter" class="ac-filter" role="group" aria-label="Show">
+                <button class="ac-btn ac-btn-sm" type="button" data-show="all" aria-pressed="true">All</button>
+                <button class="ac-btn ac-btn-sm" type="button" data-show="custom" aria-pressed="false">Custom</button>
+                <button class="ac-btn ac-btn-sm" type="button" data-show="inactive" aria-pressed="false">Inactive</button>
             </div>
             <label class="ac-search">
                 <span class="ac-vh">Search by name or target</span>
@@ -33,13 +37,14 @@
             <button id="acAdd" class="ac-btn ac-btn-primary" type="button" aria-haspopup="dialog" hidden>Add option</button>
         </div>
 
-        <p id="acNote" class="ac-note" role="status" aria-live="polite" hidden></p>
+        <p id="acAccessNote" class="ac-note" role="note" hidden>You can view these options. Changing them needs Configure Access and build access.</p>
 
-        <div class="ac-scroll" tabindex="0" role="region" aria-label="Options table">
-            <table id="acTable" class="ac-table" role="tabpanel">
+        <!-- The tab panel is this wrapper, not the table, so screen readers still announce the table's rows and columns -->
+        <div id="acPanel" class="ac-scroll" tabindex="0" role="tabpanel" aria-labelledby="tab-configure">
+            <table id="acTable" class="ac-table">
                 <thead>
                     <tr>
-                        <th scope="col">Name</th>
+                        <th scope="col">You type</th>
                         <th scope="col" class="ac-col-type">Type</th>
                         <th scope="col">Target</th>
                         <th scope="col">Active</th>
@@ -53,13 +58,15 @@
 
         <nav id="acPager" class="ac-pager" aria-label="Pages" hidden>
             <span id="acPageOf" class="ac-pageof" aria-live="polite"></span>
-            <div class="ac-pages">
+            <div id="acPages" class="ac-pages">
                 <button id="acPrev" class="ac-btn ac-btn-sm" type="button">Previous</button>
                 <span id="acPageNums" class="ac-pagenums"></span>
                 <button id="acNext" class="ac-btn ac-btn-sm" type="button">Next</button>
             </div>
         </nav>
     </main>
+
+    <p id="acNote" class="ac-note ac-toast" role="status" aria-live="polite" hidden></p>
 
     <div id="acScrim" class="ac-scrim" hidden></div>
     <aside id="acDrawer" class="ac-drawer" role="dialog" aria-modal="true" aria-labelledby="acDrawerTitle" hidden>
@@ -117,26 +124,32 @@
                     <span id="eTargetUrl" class="ac-err" role="alert"></span>
                 </div>
 
-                <div class="ac-field" data-field="paramField">
-                    <label for="fParamField">Param field <span class="ac-opt">(optional)</span></label>
-                    <input id="fParamField" type="text" dir="ltr" autocomplete="off" aria-describedby="hParamField eParamField">
-                    <span id="hParamField" class="ac-help">The value typed after the name is added to the URL under this name.</span>
-                    <span id="eParamField" class="ac-err" role="alert"></span>
-                </div>
+                <!-- Rarely needed fields; the page opens this when the option already uses one of them or one has an error -->
+                <details id="acAdvanced" class="ac-advanced">
+                    <summary>Advanced <span class="ac-opt">(optional)</span></summary>
+                    <div class="ac-advanced-fields">
+                        <div class="ac-field" data-field="paramField">
+                            <label for="fParamField">Param field</label>
+                            <input id="fParamField" type="text" dir="ltr" autocomplete="off" aria-describedby="hParamField eParamField">
+                            <span id="hParamField" class="ac-help">The value typed after the name is added to the URL under this name.</span>
+                            <span id="eParamField" class="ac-err" role="alert"></span>
+                        </div>
 
-                <div class="ac-field" data-field="extraParams" hidden>
-                    <label for="fExtraParams">Extra parameters <span class="ac-opt">(optional)</span></label>
-                    <input id="fExtraParams" type="text" dir="ltr" autocomplete="off" aria-describedby="eExtraParams">
-                    <span id="eExtraParams" class="ac-err" role="alert"></span>
-                </div>
+                        <div class="ac-field" data-field="extraParams" hidden>
+                            <label for="fExtraParams">Extra parameters</label>
+                            <input id="fExtraParams" type="text" dir="ltr" autocomplete="off" aria-describedby="eExtraParams">
+                            <span id="eExtraParams" class="ac-err" role="alert"></span>
+                        </div>
 
-                <div class="ac-field">
-                    <label for="fSource">Record source</label>
-                    <select id="fSource" aria-describedby="hSource">
-                        <option value="Axi_Dummy">None</option>
-                    </select>
-                    <span id="hSource" class="ac-help">The list of records offered as the third word after the option name.</span>
-                </div>
+                        <div class="ac-field">
+                            <label for="fSource">Record source</label>
+                            <select id="fSource" aria-describedby="hSource">
+                                <option value="Axi_Dummy">None</option>
+                            </select>
+                            <span id="hSource" class="ac-help">The list of records offered as the third word after the option name.</span>
+                        </div>
+                    </div>
+                </details>
 
                 <p id="acFormError" class="ac-note ac-error" role="alert" hidden></p>
             </div>
@@ -148,8 +161,8 @@
         </form>
     </aside>
 
-    <script src="js/axiconfiglogic.js?v=5"></script>
-    <script src="js/axiconfigpage.js?v=10"></script>
+    <script src="js/axiconfiglogic.js?v=6"></script>
+    <script src="js/axiconfigpage.js?v=16"></script>
 </body>
 
 </html>
