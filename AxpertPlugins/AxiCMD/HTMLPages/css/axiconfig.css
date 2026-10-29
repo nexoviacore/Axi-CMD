@@ -1,14 +1,24 @@
-/* AxiCMD Config page. Same palette as the palette's settings panel (axicmdmain.css section 8):
-   ink #1d2547, muted #5b6482, coral #ef4444, amber #f59e0b, indigo glow #4f63c9.
+/* AxiCMD Config page. Runs inside the Axpert shell's middle1 iframe, so it stays plain: one white sheet on a light page.
+   Colour carries meaning: Signal (indigo) only marks what is selected or on (tab bar, Active switch, current page),
+   Ink marks actions (Add option, Save option). The command words Configure / SDK are the one large element.
    Logical properties (inline-start / inline-end) make the page mirror itself when <html dir="rtl">. */
 :root {
   --ink: #1d2547;
-  --muted: #5b6482;
-  --coral: #ef4444;
-  --amber: #f59e0b;
-  --indigo: #4f63c9;
-  --glass: rgba(255, 255, 255, 0.62);
-  --line: rgba(29, 37, 71, 0.12);
+  --ink-hover: #2c3766;
+  --slate: #5b6482;
+  --rule: #dde1eb;
+  --field: #c9cedb;
+  --paper: #f4f5f9;
+  --sheet: #ffffff;
+  --head: #f8f9fc;
+  --signal: #3f51c2;
+  --signal-tint: #eceffb;
+  --error: #a3261a;
+  --error-tint: #fcefed;
+  /* Bahnschrift ships with Windows 10+; the page loads no web fonts */
+  --display: Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+  --body: "Segoe UI", system-ui, -apple-system, "Noto Sans Arabic", sans-serif;
+  --code: Consolas, "Cascadia Mono", "Courier New", monospace;
 }
 
 * { box-sizing: border-box; }
@@ -17,114 +27,122 @@
 html, body { min-height: 100%; margin: 0; }
 
 body {
-  font: 14px/1.45 "Segoe UI", system-ui, -apple-system, "Noto Sans Arabic", sans-serif;
+  font: 14px/1.5 var(--body);
   color: var(--ink);
-  /* Warm light top-end, cool indigo bottom-start: gives the glass something to blur */
-  background:
-    radial-gradient(520px 380px at 100% 0%, rgba(245, 158, 11, 0.38), transparent 70%),
-    radial-gradient(620px 460px at 0% 100%, rgba(79, 99, 201, 0.34), transparent 70%),
-    #eef0f8;
-  background-attachment: fixed;
+  background: var(--paper);
 }
 
 .ac {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   min-height: 100vh;
-  padding: 20px clamp(12px, 2vw, 24px);
+  padding: 24px clamp(14px, 2.4vw, 32px);
 }
 
-.ac-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
-.ac-title { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
-.ac-sub { margin: 4px 0 0; color: var(--muted); }
-.ac-count { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-
-.ac-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+/* ---- Header ---- */
+.ac-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.ac-title { margin: 0; font: 600 20px/1.2 var(--display); }
+.ac-sub { margin: 4px 0 0; max-width: 70ch; color: var(--slate); }
+.ac-count { font: 15px var(--display); color: var(--slate); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 .ac-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-/* Tabs: a glass segmented control, the active one carries the amber-to-coral accent */
-.ac-tabs {
-  display: inline-flex;
-  padding: 4px;
-  gap: 4px;
-  border-radius: 14px;
-  background: var(--glass);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  -webkit-backdrop-filter: blur(18px) saturate(170%);
-  backdrop-filter: blur(18px) saturate(170%);
+/* ---- Command tabs, search and Add option, all sitting on one rule ---- */
+.ac-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 10px;
+  border-bottom: 1px solid var(--rule);
 }
 
+.ac-tabs { display: flex; gap: 28px; margin-inline-end: auto; }
+
+/* The command words are what the user types in the palette, so they carry the page */
 .ac-tab {
-  font: inherit;
-  font-weight: 600;
-  color: var(--muted);
-  min-height: 40px;
-  padding: 0 16px;
+  padding: 0 0 8px;
+  font: 600 28px/1.15 var(--display);
+  color: var(--slate);
   border: 0;
-  border-radius: 10px;
+  border-radius: 0;
   background: transparent;
   cursor: pointer;
+  box-shadow: inset 0 -3px 0 transparent;
 }
-
 .ac-tab:hover { color: var(--ink); }
+.ac-tab[aria-selected="true"] { color: var(--ink); box-shadow: inset 0 -3px 0 var(--signal); }
 
-.ac-tab[aria-selected="true"] {
-  color: #fff;
-  background: linear-gradient(135deg, var(--amber), var(--coral));
-  box-shadow: 0 6px 14px -6px rgba(239, 68, 68, 0.7);
+.ac-tabn {
+  margin-inline-start: 4px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--slate);
+  vertical-align: 0.9em;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Sliding highlight: the page script adds .ac-has-pill and one .ac-tab-pill that it moves to the selected tab,
-   so the selected tab itself stays transparent and only the pill carries the gradient */
+/* The page script adds .ac-has-pill and one .ac-tab-pill that it moves under the selected tab, so the bar slides
+   from one command to the other instead of jumping */
 .ac-tabs.ac-has-pill { position: relative; }
-.ac-tabs.ac-has-pill .ac-tab { position: relative; z-index: 1; }
-.ac-tabs.ac-has-pill .ac-tab[aria-selected="true"] { background: transparent; box-shadow: none; }
+.ac-tabs.ac-has-pill .ac-tab[aria-selected="true"] { box-shadow: none; }
 .ac-tab-pill {
   position: absolute;
-  top: 4px;
-  bottom: 4px;
+  bottom: 0;
   left: 0;
   width: 0;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--amber), var(--coral));
-  box-shadow: 0 6px 14px -6px rgba(239, 68, 68, 0.7);
+  height: 3px;
+  background: var(--signal);
   pointer-events: none;
-  transition: transform 0.38s cubic-bezier(0.34, 1.32, 0.64, 1), width 0.38s cubic-bezier(0.34, 1.32, 0.64, 1);
+  transition: transform 0.24s ease-out, width 0.24s ease-out;
 }
 .ac-tab-pill.ac-no-anim { transition: none; }
 
-.ac-tabn { margin-inline-start: 6px; font-weight: 500; opacity: 0.85; font-variant-numeric: tabular-nums; }
-
-.ac-search { flex: 1 1 240px; max-width: 360px; }
-
+.ac-search { flex: 0 1 300px; margin-bottom: 10px; }
 .ac-search input {
   width: 100%;
-  min-height: 40px;
-  padding: 0 14px;
+  min-height: 38px;
+  padding: 0 12px;
   font: inherit;
   color: var(--ink);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(18px) saturate(170%);
-  backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid var(--field);
+  border-radius: 6px;
+  background: var(--sheet);
 }
+.ac-search input::placeholder { color: var(--slate); }
+.ac-search input:focus { border-color: var(--signal); }
+.ac-bar > .ac-btn { margin-bottom: 10px; }
 
-.ac-search input::placeholder { color: var(--muted); }
+/* ---- Buttons ---- */
+.ac-btn {
+  min-height: 38px;
+  padding: 0 16px;
+  font: 600 13.5px/1 var(--body);
+  color: var(--ink);
+  border: 1px solid var(--field);
+  border-radius: 6px;
+  background: var(--sheet);
+  cursor: pointer;
+}
+.ac-btn:hover { background: var(--paper); }
+.ac-btn[hidden] { display: none; }
+.ac-btn:disabled { opacity: 0.55; cursor: progress; }
+.ac-btn-sm { min-height: 30px; padding: 0 10px; font-size: 12.5px; }
+.ac-btn-primary { color: #fff; border-color: var(--ink); background: var(--ink); }
+.ac-btn-primary:hover { border-color: var(--ink-hover); background: var(--ink-hover); }
 
-/* The table sits on one large glass sheet that grows with its rows. overflow: clip keeps the rounded corners
-   without making a scroll box, so the sticky header sticks to the top of the iframe while the page scrolls. */
+/* ---- Notes ---- */
+.ac-note { margin: 0; padding: 9px 12px; font-size: 13px; color: var(--ink); border: 1px solid #cdd3f1; border-radius: 6px; background: var(--signal-tint); }
+.ac-note.ac-error { color: var(--error); border-color: #efc4be; background: var(--error-tint); }
+.ac-note[hidden] { display: none; }
+
+/* ---- Options table: one sheet that grows with its rows. overflow: clip keeps the corners without making a
+   scroll box, so the sticky header sticks to the top of the iframe while the page scrolls. ---- */
 .ac-scroll {
-  flex: 1 0 auto;
   overflow: clip;
-  border-radius: 22px;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.46));
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  -webkit-backdrop-filter: blur(24px) saturate(170%);
-  backdrop-filter: blur(24px) saturate(170%);
-  box-shadow: 0 28px 64px -16px rgba(29, 37, 71, 0.45), 0 6px 16px -6px rgba(29, 37, 71, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--sheet);
 }
 
 .ac-table { width: 100%; border-collapse: collapse; }
@@ -133,250 +151,143 @@ body {
   position: sticky;
   top: 0;
   z-index: 1;
-  padding: 12px 16px;
+  padding: 10px 16px;
   text-align: start;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: var(--muted);
-  background: rgba(255, 255, 255, 0.85);
-  border-bottom: 1px solid var(--line);
+  color: var(--slate);
+  background: var(--head);
+  border-bottom: 1px solid var(--rule);
 }
 
-.ac-table td { padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-.ac-table tbody tr:hover { background: rgba(255, 255, 255, 0.55); }
+.ac-table td { padding: 10px 16px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+.ac-table tbody tr:last-child td { border-bottom: 0; }
+.ac-table tbody tr:hover { background: #f7f8fc; }
+.ac-col-act { width: 1%; }
 
 .ac-name { font-weight: 600; }
-.ac-type { color: var(--muted); }
-.ac-target { color: var(--muted); font-family: Consolas, "Courier New", monospace; font-size: 12.5px; overflow-wrap: anywhere; direction: ltr; text-align: start; unicode-bidi: plaintext; }
+.ac-type { color: var(--slate); }
+.ac-target { color: var(--slate); font: 12.5px/1.45 var(--code); overflow-wrap: anywhere; direction: ltr; text-align: start; unicode-bidi: plaintext; }
 
 .ac-badge {
   margin-inline-start: 8px;
-  padding: 2px 8px;
+  padding: 1px 6px;
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--indigo);
-  border-radius: 999px;
-  border: 1px solid rgba(79, 99, 201, 0.4);
-  background: rgba(79, 99, 201, 0.1);
+  color: var(--slate);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--paper);
   white-space: nowrap;
 }
 
-.ac-state { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
-.ac-state::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
-.ac-on { color: #166534; }
-.ac-on::before { background: #22a559; }
-.ac-inactive { color: #9a3412; }
-.ac-inactive::before { background: transparent; border: 2px solid var(--coral); }
-
 /* Inactive options stay listed but recede */
-.ac-off .ac-name, .ac-off .ac-type, .ac-off .ac-target { opacity: 0.6; }
+.ac-off .ac-name, .ac-off .ac-type, .ac-off .ac-target { opacity: 0.55; }
 
-/* Active switch */
+/* ---- Active switch ---- */
 .ac-switch { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
 .ac-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
-.ac-switch .ac-track { width: 36px; height: 20px; border-radius: 999px; background: #c9ceda; position: relative; transition: background 0.15s; flex: none; }
+.ac-switch .ac-track { position: relative; flex: none; width: 34px; height: 20px; border-radius: 999px; background: #c3c8d6; transition: background 0.15s; }
 .ac-switch .ac-track::after { content: ""; position: absolute; top: 2px; inset-inline-start: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: inset-inline-start 0.15s; }
-.ac-switch input:checked + .ac-track { background: #22a559; }
-.ac-switch input:checked + .ac-track::after { inset-inline-start: 18px; }
-.ac-switch input:focus-visible + .ac-track { outline: 3px solid var(--indigo); outline-offset: 2px; }
-.ac-switch input:disabled { cursor: progress; }
-.ac-switch input:disabled + .ac-track { opacity: 0.55; }
+.ac-switch input:checked + .ac-track { background: var(--signal); }
+.ac-switch input:checked + .ac-track::after { inset-inline-start: 16px; }
+.ac-switch input:focus-visible + .ac-track { outline: 2px solid var(--signal); outline-offset: 2px; }
+.ac-switch input:disabled { cursor: not-allowed; }
+.ac-switch input:disabled + .ac-track { opacity: 0.5; }
 .ac-switch-label { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
-.ac-switch-label.ac-on { color: #166534; }
-.ac-switch-label.ac-inactive { color: #9a3412; }
-.ac-note { margin: 0 0 10px; padding: 8px 12px; border-radius: 10px; font-size: 13px; background: rgba(79, 99, 201, 0.1); border: 1px solid rgba(79, 99, 201, 0.3); color: #1d2547; }
-.ac-note.ac-error { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.45); color: #991b1b; }
-.ac-note[hidden] { display: none; }
+.ac-switch-label.ac-on { color: var(--ink); }
+.ac-switch-label.ac-inactive { color: var(--slate); }
 
-/* Buttons */
-.ac-btn {
-  font: inherit;
-  font-weight: 600;
-  min-height: 40px;
-  padding: 0 18px;
-  color: var(--ink);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(18px) saturate(170%);
-  backdrop-filter: blur(18px) saturate(170%);
-  cursor: pointer;
-}
-.ac-btn:hover { background: rgba(255, 255, 255, 0.85); }
-.ac-btn[hidden] { display: none; }
-.ac-btn-sm { padding: 4px 10px; font-size: 12px; }
-.ac-btn:disabled { opacity: 0.6; cursor: progress; }
-.ac-btn-primary {
-  color: #fff;
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--amber), var(--coral));
-  box-shadow: 0 6px 14px -6px rgba(239, 68, 68, 0.7);
-}
-.ac-btn-primary:hover { background: linear-gradient(135deg, var(--amber), var(--coral)); filter: brightness(1.05); }
+.ac-status { margin: 0; padding: 32px 16px; text-align: center; color: var(--slate); }
+.ac-status[hidden] { display: none; }
 
-/* Add option drawer: a glass sheet that slides in from the inline-end edge (right in LTR, left in RTL) */
-.ac-scrim { position: fixed; inset: 0; z-index: 20; background: rgba(29, 37, 71, 0.35); }
+/* While the next page loads, the current rows stay in place, dimmed */
+.ac-table tbody[aria-busy="true"] { opacity: 0.5; transition: opacity 0.15s; }
+
+/* New rows after a tab switch fade in once, as a whole */
+.ac-table tbody[class*="ac-swap-"] { animation: ac-fade 0.18s ease-out; }
+
+/* ---- Pager: "Page 2 of 5" at the start, page buttons at the end ---- */
+.ac-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.ac-pager[hidden] { display: none; }
+.ac-pageof { font: 14px var(--display); color: var(--slate); font-variant-numeric: tabular-nums; }
+.ac-pages, .ac-pagenums { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ac-pnum { min-width: 32px; font-family: var(--display); font-weight: 400; font-variant-numeric: tabular-nums; }
+.ac-pnum[aria-current="page"] { color: var(--signal); border-color: var(--signal); background: var(--signal-tint); font-weight: 600; cursor: default; }
+.ac-pager .ac-btn:disabled { opacity: 0.4; cursor: default; }
+.ac-gap { padding: 0 2px; color: var(--slate); }
+
+/* ---- Add / edit drawer: a sheet that slides in from the inline-end edge (right in LTR, left in RTL) ---- */
+.ac-scrim { position: fixed; inset: 0; z-index: 20; background: rgba(29, 37, 71, 0.28); opacity: 0; transition: opacity 0.2s ease; }
+.ac-scrim.ac-open { opacity: 1; }
 .ac-scrim[hidden], .ac-drawer[hidden] { display: none; }
+
 .ac-drawer {
+  --ac-slide: 100%;
   position: fixed;
   z-index: 21;
   inset-block: 0;
   inset-inline-end: 0;
-  width: min(440px, 100%);
   display: flex;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78));
-  border-inline-start: 1px solid rgba(255, 255, 255, 0.9);
-  -webkit-backdrop-filter: blur(24px) saturate(170%);
-  backdrop-filter: blur(24px) saturate(170%);
-  box-shadow: -24px 0 56px -16px rgba(29, 37, 71, 0.5);
+  width: min(440px, 100%);
+  background: var(--sheet);
+  border-inline-start: 1px solid var(--rule);
+  box-shadow: -16px 0 40px -20px rgba(29, 37, 71, 0.35);
+  transform: translateX(var(--ac-slide));
+  transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1);
 }
-[dir="rtl"] .ac-drawer { box-shadow: 24px 0 56px -16px rgba(29, 37, 71, 0.5); }
+[dir="rtl"] .ac-drawer { --ac-slide: -100%; box-shadow: 16px 0 40px -20px rgba(29, 37, 71, 0.35); }
+.ac-drawer.ac-open { transform: translateX(0); transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+
 .ac-form { display: flex; flex-direction: column; width: 100%; min-height: 0; }
-.ac-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--line); }
-.ac-drawer-title { margin: 0; font-size: 18px; font-weight: 700; }
-.ac-icon-btn { font: inherit; font-size: 24px; line-height: 1; width: 40px; height: 40px; color: var(--muted); border: 0; border-radius: 10px; background: transparent; cursor: pointer; }
-.ac-icon-btn:hover { color: var(--ink); background: rgba(29, 37, 71, 0.08); }
-.ac-fields { flex: 1 1 auto; overflow: auto; padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; }
-.ac-hint { margin: 0; color: var(--muted); }
+.ac-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; border-bottom: 1px solid var(--rule); }
+.ac-drawer-title { margin: 0; font: 600 20px/1.2 var(--display); }
+.ac-icon-btn { width: 36px; height: 36px; font: 22px/1 var(--body); color: var(--slate); border: 0; border-radius: 6px; background: transparent; cursor: pointer; }
+.ac-icon-btn:hover { color: var(--ink); background: var(--paper); }
+
+.ac-fields { flex: 1 1 auto; overflow: auto; display: flex; flex-direction: column; gap: 16px; padding: 18px 22px; }
+.ac-hint { margin: 0; color: var(--slate); }
 .ac-field { display: flex; flex-direction: column; gap: 5px; }
 .ac-field[hidden] { display: none; }
-.ac-field label { font-size: 12.5px; font-weight: 600; color: var(--ink); }
-.ac-opt { font-weight: 400; color: var(--muted); }
+.ac-field label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.ac-opt { font-weight: 400; color: var(--slate); }
 .ac-field input, .ac-field select {
   width: 100%;
-  min-height: 40px;
-  padding: 0 12px;
+  min-height: 38px;
+  padding: 0 10px;
   font: inherit;
   color: var(--ink);
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--field);
+  border-radius: 6px;
+  background: var(--sheet);
 }
-.ac-field input:disabled, .ac-field select:disabled { color: var(--muted); background: rgba(255, 255, 255, 0.5); }
-.ac-field input[aria-invalid="true"] { border-color: var(--coral); }
-.ac-help { font-size: 12px; color: var(--muted); }
-.ac-err { font-size: 12.5px; font-weight: 600; color: #991b1b; }
+.ac-field input:focus, .ac-field select:focus { border-color: var(--signal); }
+.ac-field input:disabled, .ac-field select:disabled { color: var(--slate); background: var(--paper); }
+.ac-field input[aria-invalid="true"] { border-color: var(--error); }
+.ac-help { font-size: 12px; color: var(--slate); }
+.ac-err { font-size: 12.5px; font-weight: 600; color: var(--error); }
 .ac-err:empty { display: none; }
-.ac-drawer-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--line); }
+.ac-drawer-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--rule); }
 
-.ac-status { margin: 0; padding: 28px 16px; text-align: center; color: var(--muted); }
-.ac-status[hidden] { display: none; }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 
-/* While the next page loads, the current rows stay in place, dimmed */
-.ac-table tbody[aria-busy="true"] { opacity: 0.55; transition: opacity 0.15s; }
-
-/* Pager under the table: "Page 2 of 5" at the start, page buttons at the end; the current page carries the brand gradient */
-.ac-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
-.ac-pager[hidden] { display: none; }
-.ac-pageof { color: var(--muted); font-variant-numeric: tabular-nums; }
-.ac-pages, .ac-pagenums { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.ac-pnum { min-width: 34px; font-variant-numeric: tabular-nums; }
-.ac-pnum[aria-current="page"] {
-  color: #fff;
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--amber), var(--coral));
-  box-shadow: 0 6px 14px -6px rgba(239, 68, 68, 0.7);
-  cursor: default;
-}
-.ac-pager .ac-btn:disabled { cursor: default; opacity: 0.45; }
-.ac-gap { padding: 0 2px; color: var(--muted); }
-
-:focus-visible { outline: 3px solid var(--indigo); outline-offset: 2px; }
-
-/* Tablet and narrower: drop the Type column, keep the rest readable */
-@media (max-width: 480px) {
-  .ac-drawer { width: 100%; }
-}
-
+/* Tablet and narrower: drop the Type column, let the search take a full line under the tabs */
 @media (max-width: 900px) {
   .ac-col-type, .ac-type { display: none; }
   .ac-table th, .ac-table td { padding-inline: 12px; }
-  .ac-search { max-width: none; }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .ac-tab { transition: background 0.2s, color 0.2s, box-shadow 0.2s; }
-}
-
-/* Drawer animation. The page script unhides the drawer, then adds .ac-open on the next frame, and on close
-   removes .ac-open and hides it after the slide-out (300ms). The sheet slides in from the inline-end edge,
-   the scrim fades and blurs in, and the fields rise in one after another. */
-.ac-scrim { opacity: 0; transition: opacity 0.25s ease, backdrop-filter 0.25s ease; }
-.ac-scrim.ac-open {
-  opacity: 1;
-  -webkit-backdrop-filter: blur(3px);
-  backdrop-filter: blur(3px);
-}
-.ac-drawer {
-  --ac-slide: 100%;
-  transform: translateX(var(--ac-slide));
-  opacity: 0.6;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 1, 1), opacity 0.3s ease;
-}
-[dir="rtl"] .ac-drawer { --ac-slide: -100%; }
-.ac-drawer.ac-open {
-  transform: translateX(0);
-  opacity: 1;
-  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
-}
-.ac-drawer .ac-fields > *,
-.ac-drawer .ac-drawer-foot {
-  opacity: 0;
-  transform: translateY(8px);
-}
-.ac-drawer.ac-open .ac-fields > *,
-.ac-drawer.ac-open .ac-drawer-foot {
-  animation: ac-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.ac-drawer.ac-open .ac-fields > :nth-child(2) { animation-delay: 0.08s; }
-.ac-drawer.ac-open .ac-fields > :nth-child(3) { animation-delay: 0.11s; }
-.ac-drawer.ac-open .ac-fields > :nth-child(4) { animation-delay: 0.14s; }
-.ac-drawer.ac-open .ac-fields > :nth-child(5) { animation-delay: 0.17s; }
-.ac-drawer.ac-open .ac-fields > :nth-child(6) { animation-delay: 0.2s; }
-.ac-drawer.ac-open .ac-fields > :nth-child(7) { animation-delay: 0.23s; }
-.ac-drawer.ac-open .ac-fields > :nth-child(n+8) { animation-delay: 0.26s; }
-.ac-drawer.ac-open .ac-drawer-foot { animation-delay: 0.28s; }
-.ac-drawer.ac-open .ac-fields > :first-child { animation-delay: 0.05s; }
-
-@keyframes ac-rise {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Tab switch: the new tab's rows slide in from the side of the tab that was picked (next = inline-end),
-   one after another. Only the first 12 rows are staggered; the rest arrive with the 12th. */
-.ac-table tbody.ac-swap-next tr { animation: ac-swap-next 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.ac-table tbody.ac-swap-prev tr { animation: ac-swap-prev 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.ac-table tbody[class*="ac-swap-"] tr:nth-child(2) { animation-delay: 0.025s; }
-.ac-table tbody[class*="ac-swap-"] tr:nth-child(3) { animation-delay: 0.05s; }
-.ac-table tbody[class*="ac-swap-"] tr:nth-child(4) { animation-delay: 0.075s; }
-.ac-table tbody[class*="ac-swap-"] tr:nth-child(5) { animation-delay: 0.1s; }
-.ac-table tbody[class*="ac-swap-"] tr:nth-child(6) { animation-delay: 0.125s; }
-.ac-table tbody[class*="ac-swap-"] tr:nth-child(7) { animation-delay: 0.15s; }
-.ac-table tbody[class*="ac-swap-"] tr:nth-child(8) { animation-delay: 0.175s; }
-.ac-table tbody[class*="ac-swap-"] tr:nth-child(9) { animation-delay: 0.2s; }
-.ac-table tbody[class*="ac-swap-"] tr:nth-child(10) { animation-delay: 0.225s; }
-.ac-table tbody[class*="ac-swap-"] tr:nth-child(11) { animation-delay: 0.25s; }
-.ac-table tbody[class*="ac-swap-"] tr:nth-child(n+12) { animation-delay: 0.275s; }
-
-@keyframes ac-swap-next {
-  from { opacity: 0; transform: translateX(var(--ac-swap-shift, 24px)); }
-  to { opacity: 1; transform: translateX(0); }
-}
-@keyframes ac-swap-prev {
-  from { opacity: 0; transform: translateX(calc(-1 * var(--ac-swap-shift, 24px))); }
-  to { opacity: 1; transform: translateX(0); }
-}
-[dir="rtl"] .ac-table tbody { --ac-swap-shift: -24px; }
-
-/* Reduced motion: no slide or rise, only a quick fade */
-@media (prefers-reduced-motion: reduce) {
-  .ac-drawer, .ac-drawer.ac-open { transform: none; transition: opacity 0.15s linear; }
-  .ac-drawer .ac-fields > *, .ac-drawer .ac-drawer-foot { opacity: 1; transform: none; }
-  .ac-drawer.ac-open .ac-fields > *, .ac-drawer.ac-open .ac-drawer-foot { animation: none; }
-  .ac-scrim { transition: opacity 0.15s linear; }
-  .ac-tab-pill { transition: none; }
-  .ac-table tbody[class*="ac-swap-"] tr { animation: ac-fade 0.15s linear both; animation-delay: 0s; }
+@media (max-width: 600px) {
+  .ac-head { flex-direction: column; align-items: flex-start; }
+  .ac-bar { border-bottom: 0; }
+  .ac-tabs { width: 100%; margin-inline-end: 0; border-bottom: 1px solid var(--rule); }
+  .ac-tab { font-size: 24px; }
+  .ac-search { flex: 1 1 160px; margin-top: 4px; }
+  .ac-bar > .ac-btn { margin-top: 4px; }
+  /* The switch alone shows the state; its aria-label still names it */
+  .ac-switch-label { display: none; }
+  .ac-table th, .ac-table td { padding-inline: 10px; }
+  .ac-drawer { width: 100%; }
 }
 
 @keyframes ac-fade {
@@ -384,6 +295,8 @@ body {
   to { opacity: 1; }
 }
 
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .ac-scroll, .ac-tabs, .ac-search input { background: rgba(255, 255, 255, 0.95); }
+/* Reduced motion: nothing slides; the drawer and rows simply appear */
+@media (prefers-reduced-motion: reduce) {
+  .ac-drawer, .ac-drawer.ac-open, .ac-scrim, .ac-tab-pill, .ac-switch .ac-track, .ac-switch .ac-track::after { transition: none; }
+  .ac-table tbody[class*="ac-swap-"] { animation: none; }
 }
