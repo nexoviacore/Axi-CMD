@@ -24,17 +24,28 @@ namespace AxiApi.Lib
             "ORDER BY LOWER(prompt_options), config_id " +
             "OFFSET {1} ROWS FETCH NEXT {2} ROWS ONLY";
 
-        public const string CountCommandOptionsPage =
-            "SELECT COUNT(*) AS cnt FROM axi_command_config WHERE LOWER(command) = :command{0}";
-
         // Name or target contains the term. Three names, not one used three times: Oracle binds by position.
         public const string CommandOptionsSearch =
             " AND (LOWER(prompt_options) LIKE :search1 ESCAPE '\\' OR LOWER(target_url) LIKE :search2 ESCAPE '\\' OR LOWER(prompt_id) LIKE :search3 ESCAPE '\\')";
 
-        // Every Configure and SDK option, active or not (the tab counts)
+        // The page's All / Custom / Inactive filter. Fixed text picked in C# (CommandOptionPaging.ShowFilter), never user input.
+        public const string CommandOptionsShowCustom = " AND COALESCE(is_system, 'F') <> 'T'";
+        public const string CommandOptionsShowInactive = " AND COALESCE(active, 'T') = 'F'";
+
+        // Configure and SDK options matching the page's search and filter, per command: the tab counts, and the total of the
+        // command being paged. {0} = the same filter as the page query.
         public const string CountCommandOptionsByCommand =
             "SELECT LOWER(command) AS command, COUNT(*) AS cnt FROM axi_command_config " +
-            "WHERE LOWER(command) IN ('configure', 'sdk') GROUP BY LOWER(command)";
+            "WHERE LOWER(command) IN ('configure', 'sdk'){0} GROUP BY LOWER(command)";
+
+        // Sort key of the option the page should show (after a save); no row when the filter hides it. {0} = the page's filter.
+        public const string SelectCommandOptionSortKey =
+            "SELECT LOWER(prompt_options) AS sortkey FROM axi_command_config WHERE config_id = :configId AND LOWER(command) = :command{0}";
+
+        // How many options sort before it in SelectCommandOptionsPage's order: its page is that count / page size + 1
+        public const string CountCommandOptionsBefore =
+            "SELECT COUNT(*) AS cnt FROM axi_command_config WHERE LOWER(command) = :command{0} " +
+            "AND (LOWER(prompt_options) < :focus1 OR (LOWER(prompt_options) = :focus2 AND config_id < :focus3))";
 
         // Option names (wordpos 2) and record source names (wordpos 3) of Configure (cmdtoken 4) and SDK (cmdtoken 7)
         public const string SelectCommandOptionPrompts =

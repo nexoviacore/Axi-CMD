@@ -29,6 +29,31 @@ namespace AxiApi.Lib
             return s.Length > MaxSearchLength ? s.Substring(0, MaxSearchLength) : s;
         }
 
+        /// <summary>The page's filter: "custom" (Custom Options only), "inactive" (switched off only) or "all" for anything else.</summary>
+        public static string NormalizeShow(string? show)
+        {
+            var s = (show ?? string.Empty).Trim().ToLowerInvariant();
+            return s == "custom" || s == "inactive" ? s : "all";
+        }
+
+        /// <summary>SQL condition for a normalized show value: fixed text, no parameters.</summary>
+        public static string ShowFilter(string show) => show switch
+        {
+            "custom" => SqlQueries.CommandOptionsShowCustom,
+            "inactive" => SqlQueries.CommandOptionsShowInactive,
+            _ => string.Empty
+        };
+
+        /// <summary>The option to show after a save (a config_id, at most 50 characters); empty when there is none.</summary>
+        public static string CleanFocus(string? focus)
+        {
+            var f = (focus ?? string.Empty).Trim();
+            return f.Length > 50 ? string.Empty : f;
+        }
+
+        /// <summary>The page holding the row that has rowsBefore rows ahead of it.</summary>
+        public static int PageOf(int rowsBefore, int pageSize) => rowsBefore / pageSize + 1;
+
         /// <summary>LIKE pattern for "contains", lower case. % and _ typed by the user match themselves (ESCAPE '\' in the SQL).</summary>
         public static string ContainsPattern(string search) =>
             "%" + search.ToLowerInvariant().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";

@@ -3432,7 +3432,7 @@
               "const p = pm.response.json();",
               "pm.test('the shipped user option is found', () => pm.expect(p.items.map(r => r.promptOptions)).to.include('user'));",
               "pm.test('every row contains the term in its name or target', () => p.items.forEach(r => pm.expect([r.promptOptions, r.targetUrl || '', r.promptId || ''].join(' ').toLowerCase()).to.include('user')));",
-              "pm.test('tab counts ignore the search', () => pm.expect(p.configureCount).to.eql(Number(pm.collectionVariables.get('configureTotal'))));"
+              "pm.test('tab counts follow the search: the Configure count is this result', () => pm.expect(p.configureCount).to.eql(p.totalCount));"
             ]
           }
         }
@@ -3472,6 +3472,300 @@
             {
               "key": "pageSize",
               "value": "25"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "last Configure option (for the focus check)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const p = pm.response.json();",
+              "pm.collectionVariables.set('configureLast', p.items.length ? p.items[p.items.length - 1].configId : '');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/page?appname={{appname}}&command=configure&search=&pageNo=9999&pageSize=5",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "page"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "command",
+              "value": "configure"
+            },
+            {
+              "key": "search",
+              "value": ""
+            },
+            {
+              "key": "pageNo",
+              "value": "9999"
+            },
+            {
+              "key": "pageSize",
+              "value": "5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "show=custom lists only Custom Options, and the tab counts follow",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const p = pm.response.json();",
+              "pm.test('every row is a Custom Option', () => p.items.forEach(r => pm.expect(r.isSystem).to.not.eql('T')));",
+              "pm.test('the Configure count is this filtered result', () => pm.expect(p.configureCount).to.eql(p.totalCount));",
+              "pm.test('no more than the unfiltered total', () => pm.expect(p.totalCount).to.be.at.most(Number(pm.collectionVariables.get('configureTotal'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/page?appname={{appname}}&command=configure&search=&pageNo=1&pageSize=25&show=custom",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "page"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "command",
+              "value": "configure"
+            },
+            {
+              "key": "search",
+              "value": ""
+            },
+            {
+              "key": "pageNo",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "25"
+            },
+            {
+              "key": "show",
+              "value": "custom"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "show=inactive lists only switched-off options",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const p = pm.response.json();",
+              "pm.test('every row is inactive', () => p.items.forEach(r => pm.expect(String(r.active).toUpperCase()).to.eql('F')));",
+              "pm.test('the Configure count is this filtered result', () => pm.expect(p.configureCount).to.eql(p.totalCount));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/page?appname={{appname}}&command=configure&search=&pageNo=1&pageSize=25&show=inactive",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "page"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "command",
+              "value": "configure"
+            },
+            {
+              "key": "search",
+              "value": ""
+            },
+            {
+              "key": "pageNo",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "25"
+            },
+            {
+              "key": "show",
+              "value": "inactive"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "unknown show value is treated as All",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "pm.test('same total as no filter', () => pm.expect(pm.response.json().totalCount).to.eql(Number(pm.collectionVariables.get('configureTotal'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/page?appname={{appname}}&command=configure&search=&pageNo=1&pageSize=25&show=bogus",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "page"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "command",
+              "value": "configure"
+            },
+            {
+              "key": "search",
+              "value": ""
+            },
+            {
+              "key": "pageNo",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "25"
+            },
+            {
+              "key": "show",
+              "value": "bogus"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "focus answers with the page that holds the option (5 a page)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const p = pm.response.json();",
+              "pm.test('the focused option is on the returned page', () => pm.expect(p.items.map(r => r.configId)).to.include(pm.collectionVariables.get('configureLast')));",
+              "pm.test('that page is the last one (the option sorts last)', () => pm.expect(p.pageNo).to.eql(p.totalPages));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/page?appname={{appname}}&command=configure&search=&pageNo=1&pageSize=5&focus={{configureLast}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "page"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "command",
+              "value": "configure"
+            },
+            {
+              "key": "search",
+              "value": ""
+            },
+            {
+              "key": "pageNo",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "5"
+            },
+            {
+              "key": "focus",
+              "value": "{{configureLast}}"
             }
           ]
         }

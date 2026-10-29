@@ -102,11 +102,11 @@ namespace AxiApi.Services
         }
 
         // Not cached either, for the same reason
-        public async Task<CommandOptionPageDTO> GetCommandOptionsPageAsync(string appname, string? command, string? search, int? pageNo, int? pageSize)
+        public async Task<CommandOptionPageDTO> GetCommandOptionsPageAsync(string appname, string? command, string? search, string? show, string? focus, int? pageNo, int? pageSize)
         {
             var cmd = CommandOptionRules.NormalizeCommand(command) ?? throw new CommandOptionException("command must be Configure or SDK.");
-            return await _repository.GetCommandOptionsPageAsync(appname, cmd, CommandOptionPaging.CleanSearch(search), pageNo,
-                CommandOptionPaging.ClampPageSize(pageSize));
+            return await _repository.GetCommandOptionsPageAsync(appname, cmd, CommandOptionPaging.CleanSearch(search),
+                CommandOptionPaging.NormalizeShow(show), CommandOptionPaging.CleanFocus(focus), pageNo, CommandOptionPaging.ClampPageSize(pageSize));
         }
 
         public async Task<bool> SetCommandOptionActiveAsync(string appname, string username, string configId, bool active)

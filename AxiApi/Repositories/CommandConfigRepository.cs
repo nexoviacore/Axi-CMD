@@ -84,7 +84,7 @@ namespace AxiApi.Repositories
             return options;
         }
 
-        public async Task<CommandOptionPageDTO> GetCommandOptionsPageAsync(string appname, string command, string search, int? pageNo, int pageSize)
+        public async Task<CommandOptionPageDTO> GetCommandOptionsPageAsync(string appname, string command, string search, string show, string focus, int? pageNo, int pageSize)
         {
             var isDbConnected = await _axExtend.OpenDBConnectionAsync(appname);
             if (!isDbConnected)
@@ -94,8 +94,29 @@ namespace AxiApi.Repositories
             }
             var db = await _axExtend.GetDB();
 
+            // The search and the All / Custom / Inactive filter, with the search parameters in SQL order (Oracle binds by position)
+            var filter = CommandOptionPaging.ShowFilter(show);
+            var searchNames = new List<string>();
+            var searchValues = new List<object>();
+            if (search.Length > 0)
+            {
+                filter = SqlQueries.CommandOptionsSearch + filter;
+                var pattern = CommandOptionPaging.ContainsPattern(search);
+                searchNames.AddRange(new[] { ":search1", ":search2", ":search3" });
+                searchValues.AddRange(new object[] { pattern, pattern, pattern });
+            }
+            Task<SQLResult> Run(string sql, IEnumerable<string> before, IEnumerable<object> beforeValues, IEnumerable<string>? after = null, IEnumerable<object>? afterValues = null)
+            {
+                var names = before.Concat(searchNames).Concat(after ?? Array.Empty<string>()).ToArray();
+                var values = beforeValues.Concat(searchValues).Concat(afterValues ?? Array.Empty<object>()).ToArray();
+                return db.ExecuteSQLAsync(sql, names, names.Select(_ => DbType.String).ToArray(), values);
+            }
+            var cmd = new[] { ":command" };
+            var cmdValue = new object[] { command.ToLowerInvariant() };
+
+            // The tab counts follow the search and the filter; the paged command's count is the page total
             var page = new CommandOptionPageDTO { PageSize = pageSize };
-            SQLResult perCommand = await db.ExecuteSQLAsync(SqlQueries.CountCommandOptionsByCommand);
+            SQLResult perCommand = await Run(string.Format(SqlQueries.CountCommandOptionsByCommand, filter), Array.Empty<string>(), Array.Empty<object>());
             if (!string.IsNullOrEmpty(perCommand?.error)) throw new DatabaseException(perCommand.error, "SELECT");
             if (perCommand?.data != null)
             {
@@ -106,28 +127,28 @@ namespace AxiApi.Repositories
                     else page.ConfigureCount = n;
                 }
             }
-
-            // Parameters in the order they appear in the SQL (Oracle binds by position)
-            var names = new List<string> { ":command" };
-            var values = new List<object> { command.ToLowerInvariant() };
-            var filter = string.Empty;
-            if (search.Length > 0)
-            {
-                filter = SqlQueries.CommandOptionsSearch;
-                var pattern = CommandOptionPaging.ContainsPattern(search);
-                names.AddRange(new[] { ":search1", ":search2", ":search3" });
-                values.AddRange(new object[] { pattern, pattern, pattern });
-            }
-            var types = names.Select(_ => DbType.String).ToArray();
-
-            SQLResult counted = await db.ExecuteSQLAsync(string.Format(SqlQueries.CountCommandOptionsPage, filter), names.ToArray(), types, values.ToArray());
-            if (!string.IsNullOrEmpty(counted?.error)) throw new DatabaseException(counted.error, "SELECT");
-            page.TotalCount = counted?.data != null && counted.data.Rows.Count > 0 ? Convert.ToInt32(counted.data.Rows[0]["cnt"]) : 0;
+            page.TotalCount = command.Equals("sdk", StringComparison.OrdinalIgnoreCase) ? page.SdkCount : page.ConfigureCount;
             page.TotalPages = CommandOptionPaging.TotalPages(page.TotalCount, pageSize);
+
+            // After a save the page asks for the option it saved: answer with the page that holds it, when the filter shows it
+            if (focus.Length > 0)
+            {
+                SQLResult key = await Run(string.Format(SqlQueries.SelectCommandOptionSortKey, filter), new[] { ":configId", ":command" }, new object[] { focus, command.ToLowerInvariant() });
+                if (!string.IsNullOrEmpty(key?.error)) throw new DatabaseException(key.error, "SELECT");
+                if (key?.data != null && key.data.Rows.Count > 0)
+                {
+                    var sortKey = key.data.Rows[0]["sortkey"]?.ToString() ?? string.Empty;
+                    SQLResult before = await Run(string.Format(SqlQueries.CountCommandOptionsBefore, filter), cmd, cmdValue,
+                        new[] { ":focus1", ":focus2", ":focus3" }, new object[] { sortKey, sortKey, focus });
+                    if (!string.IsNullOrEmpty(before?.error)) throw new DatabaseException(before.error, "SELECT");
+                    if (before?.data != null && before.data.Rows.Count > 0)
+                        pageNo = CommandOptionPaging.PageOf(Convert.ToInt32(before.data.Rows[0]["cnt"]), pageSize);
+                }
+            }
             page.PageNo = CommandOptionPaging.ClampPageNo(pageNo, page.TotalPages);
 
             var sql = string.Format(SqlQueries.SelectCommandOptionsPage, filter, (page.PageNo - 1) * pageSize, pageSize);
-            SQLResult rows = await db.ExecuteSQLAsync(sql, names.ToArray(), types, values.ToArray());
+            SQLResult rows = await Run(sql, cmd, cmdValue);
             if (!string.IsNullOrEmpty(rows?.error)) throw new DatabaseException(rows.error, "SELECT");
             if (rows?.data != null && rows.data.Rows.Count > 0)
             {
