@@ -1,7 +1,9 @@
 using ARMCommon.Interface;
 using AxExtend.Interface;
 using AxiApi.DTOs;
+using AxiApi.Exceptions;
 using AxiApi.Interfaces;
+using AxiApi.Lib;
 using AxiApi.Lib.Utils;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -97,6 +99,14 @@ namespace AxiApi.Services
             if (string.IsNullOrWhiteSpace(appname))
                 return new List<CommandConfigOptionDTO>();
             return await _repository.GetAllCommandOptionsAsync(appname);
+        }
+
+        // Not cached either, for the same reason
+        public async Task<CommandOptionPageDTO> GetCommandOptionsPageAsync(string appname, string? command, string? search, int? pageNo, int? pageSize)
+        {
+            var cmd = CommandOptionRules.NormalizeCommand(command) ?? throw new CommandOptionException("command must be Configure or SDK.");
+            return await _repository.GetCommandOptionsPageAsync(appname, cmd, CommandOptionPaging.CleanSearch(search), pageNo,
+                CommandOptionPaging.ClampPageSize(pageSize));
         }
 
         public async Task<bool> SetCommandOptionActiveAsync(string appname, string username, string configId, bool active)

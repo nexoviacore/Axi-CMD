@@ -262,6 +262,25 @@ body {
 .ac-status { margin: 0; padding: 28px 16px; text-align: center; color: var(--muted); }
 .ac-status[hidden] { display: none; }
 
+/* While the next page loads, the current rows stay in place, dimmed */
+.ac-table tbody[aria-busy="true"] { opacity: 0.55; transition: opacity 0.15s; }
+
+/* Pager under the table: "Page 2 of 5" at the start, page buttons at the end; the current page carries the brand gradient */
+.ac-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.ac-pager[hidden] { display: none; }
+.ac-pageof { color: var(--muted); font-variant-numeric: tabular-nums; }
+.ac-pages, .ac-pagenums { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ac-pnum { min-width: 34px; font-variant-numeric: tabular-nums; }
+.ac-pnum[aria-current="page"] {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--amber), var(--coral));
+  box-shadow: 0 6px 14px -6px rgba(239, 68, 68, 0.7);
+  cursor: default;
+}
+.ac-pager .ac-btn:disabled { cursor: default; opacity: 0.45; }
+.ac-gap { padding: 0 2px; color: var(--muted); }
+
 :focus-visible { outline: 3px solid var(--indigo); outline-offset: 2px; }
 
 /* Tablet and narrower: drop the Type column, keep the rest readable */

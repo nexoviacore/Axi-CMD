@@ -1,5 +1,5 @@
 /*
- * AxiCMD Config page (AxiCMDConfig.html). Read-only list of every `Configure` and `SDK` option.
+ * AxiCMD Config page (AxiCMDConfig.html). Lists the `Configure` and `SDK` options 25 a page; the API pages and searches.
  * The top half is pure logic (loaded by tests/axi-config-page-ticket-283.test.js); the bottom half wires the DOM
  * and only runs in a browser. Opened by the gear menu in axicmdmain.js with ?api=<command-config url>&appname=&username=&lang=.
  */
@@ -11,7 +11,6 @@
     "use strict";
 
     const RTL_LANGS = ["ar", "he", "fa", "ur"];
-    const TABS = ["configure", "sdk"];
 
     function pick(raw, names) {
         for (let i = 0; i < names.length; i++) {
@@ -42,27 +41,56 @@
         };
     }
 
-    /** Splits rows into the two tabs, inactive ones included, sorted by name. */
-    function groupByTab(rows) {
-        const out = { configure: [], sdk: [] };
-        (rows || []).forEach((raw) => {
-            const r = normalizeRow(raw);
-            const key = r.command.toLowerCase();
-            if (TABS.indexOf(key) !== -1) out[key].push(r);
-        });
-        TABS.forEach((k) => out[k].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" })));
+    // Rows per page; the API pages and searches (GET command-config/options/page), the page only shows one page at a time
+    const PAGE_SIZE = 25;
+
+    /** One page of a command's options, searched on the server (name or target contains the term). */
+    function buildPageUrl(baseUrl, appname, command, search, pageNo) {
+        return baseUrl.replace(/\/+$/, "") + "/options/page?appname=" + encodeURIComponent(appname) +
+            "&command=" + encodeURIComponent(command) + "&search=" + encodeURIComponent(String(search || "").trim()) +
+            "&pageNo=" + (pageNo > 0 ? Math.floor(pageNo) : 1) + "&pageSize=" + PAGE_SIZE;
+    }
+
+    /** Flattens the API page (camelCase or PascalCase keys) into rows plus the numbers the pager and the tabs show. */
+    function normalizePage(raw) {
+        const src = raw || {};
+        const num = (names, fallback) => {
+            const n = parseInt(pick(src, names), 10);
+            return isNaN(n) ? fallback : n;
+        };
+        const items = pick(src, ["items", "Items"]);
+        const rows = (Array.isArray(items) ? items : []).map(normalizeRow);
+        const total = num(["totalCount", "TotalCount"], rows.length);
+        const pageSize = num(["pageSize", "PageSize"], PAGE_SIZE) || PAGE_SIZE;
+        return {
+            rows: rows,
+            total: total,
+            pageNo: num(["pageNo", "PageNo"], 1),
+            pageSize: pageSize,
+            totalPages: Math.max(1, num(["totalPages", "TotalPages"], Math.ceil(total / pageSize))),
+            counts: { configure: num(["configureCount", "ConfigureCount"], 0), sdk: num(["sdkCount", "SdkCount"], 0) }
+        };
+    }
+
+    /** Page buttons to show: the first, the last and the neighbours of the current page; "..." marks a gap of two or more. */
+    function pageNumbers(pageNo, totalPages) {
+        const out = [];
+        let last = 0;
+        for (let p = 1; p <= totalPages; p++) {
+            if (p !== 1 && p !== totalPages && Math.abs(p - pageNo) > 1) continue;
+            if (p - last === 2) out.push(p - 1);
+            else if (p - last > 2) out.push("...");
+            out.push(p);
+            last = p;
+        }
         return out;
     }
 
-    /** Keeps rows whose name or target contains the term. */
-    function filterRows(rows, term) {
-        const t = String(term || "").trim().toLowerCase();
-        if (!t) return rows.slice();
-        return rows.filter((r) => r.name.toLowerCase().indexOf(t) !== -1 || r.target.toLowerCase().indexOf(t) !== -1);
-    }
-
-    function buildListUrl(baseUrl, appname, username) {
-        return baseUrl.replace(/\/+$/, "") + "/options?appname=" + encodeURIComponent(appname) + "&username=" + encodeURIComponent(username);
+    /** "26-50 of 120": the rows on this page. */
+    function rangeText(pageNo, pageSize, total) {
+        if (!total) return "0 of 0";
+        const from = (pageNo - 1) * pageSize + 1;
+        return from + "-" + Math.min(total, pageNo * pageSize) + " of " + total;
     }
 
     function directionFor(lang) {
@@ -88,22 +116,14 @@
         return access;
     }
 
-    /** Returns new groups with one row's Active flag changed; the input is not modified. */
-    function setActive(groups, id, active) {
-        const out = {};
-        TABS.forEach((k) => {
-            out[k] = groups[k].map((r) => (r.id === id ? Object.assign({}, r, { active: !!active }) : r));
-        });
-        return out;
+    /** Returns new rows with one row's Active flag changed; the input is not modified. */
+    function setActive(rows, id, active) {
+        return rows.map((r) => (r.id === id ? Object.assign({}, r, { active: !!active }) : r));
     }
 
-    /** Returns new groups with one row replaced by its updated version (same tab, same place); the input is not modified. */
-    function replaceRow(groups, id, row) {
-        const out = {};
-        TABS.forEach((k) => {
-            out[k] = groups[k].map((r) => (r.id === id ? row : r));
-        });
-        return out;
+    /** Returns new rows with one row replaced by its updated version (same place); the input is not modified. */
+    function replaceRow(rows, id, row) {
+        return rows.map((r) => (r.id === id ? row : r));
     }
 
     /** A readable sentence for a failed save. status 0 means the request never got an answer. */
@@ -125,8 +145,12 @@
         const note = $("acNote");
         const body = $("acBody"), search = $("acSearch"), status = $("acStatus"), count = $("acCount");
         const tabs = Array.prototype.slice.call(document.querySelectorAll("[role=tab]"));
-        let groups = { configure: [], sdk: [] };
+        // page: what the table shows now. pageNoOf: the page each tab was left on. cache: pages already fetched, by tab, search and page.
+        let page = normalizePage({});
         let active = "configure";
+        const pageNoOf = { configure: 1, sdk: 1 };
+        const cache = new Map();
+        let loadAsk = 0;
         const access = readAccess(q);
         const hasAccess = access.canConfigure;
         const apiBase = q.get("api"), appName = q.get("appname"), userName = q.get("username") || "";
@@ -149,7 +173,11 @@
                 body: JSON.stringify(buildActiveBody(userName, wanted, access))
             }).then((res) => {
                 if (!res.ok) return res.text().then((t) => { throw { status: res.status, text: t }; });
-                groups = setActive(groups, row.id, wanted);
+                // Only the Active flag changed: the row stays on its page, so the cached pages are patched instead of fetched again
+                page = Object.assign({}, page, { rows: setActive(page.rows, row.id, wanted) });
+                cache.forEach((p, key) => {
+                    if (p.rows.some((r) => r.id === row.id)) cache.set(key, Object.assign({}, p, { rows: setActive(p.rows, row.id, wanted) }));
+                });
                 // The palette drops this user's local copy and reloads its commands
                 const shell = window.top || window.parent;
                 try { if (shell && typeof shell.axiReloadCommandConfig === "function") shell.axiReloadCommandConfig(); } catch (e) { }
@@ -163,8 +191,8 @@
         }
 
         function updateCounts() {
-            $("acCountConfigure").textContent = groups.configure.length;
-            $("acCountSdk").textContent = groups.sdk.length;
+            $("acCountConfigure").textContent = page.counts.configure;
+            $("acCountSdk").textContent = page.counts.sdk;
             // The counts change the tab widths, so the highlight has to follow
             movePill(false);
         }
@@ -329,7 +357,8 @@
         const isEditable = (row) => hasAccess && Logic.isEditable(row);
 
         function existingNames(command) {
-            return (groups[command.toLowerCase()] || []).map((r) => r.name);
+            // Only the names on this page; the API checks the whole list and answers 409 for a duplicate
+            return command.toLowerCase() === active ? page.rows.map((r) => r.name) : [];
         }
 
         function submitDrawer(e) {
@@ -369,14 +398,12 @@
                 return res.json();
             }).then((created) => {
                 const key = checked.value.command.toLowerCase();
-                if (target) groups = replaceRow(groups, target.id, normalizeRow(created));
-                else groups[key] = groups[key].concat([normalizeRow(created)]);
-                groups[key].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
-                updateCounts();
                 const shell = window.top || window.parent;
                 try { if (shell && typeof shell.axiReloadCommandConfig === "function") shell.axiReloadCommandConfig(); } catch (err) { }
                 closeDrawer();
-                selectTab(key);
+                // A new or renamed option can move to another page and changes the counts: fetch again
+                cache.clear();
+                if (key === active) load(active, pageNoOf[active]); else selectTab(key);
                 showNote((target ? "Saved \"" : "Added \"") + checked.value.name + "\". " + OTHER_USERS_NOTE, false);
             }).catch((err) => {
                 saveBtn.disabled = false;
@@ -395,7 +422,7 @@
             const row = editing;
             if (!row) return;
             save(row, $("fActive").checked, $("fActive")).then(() => {
-                if (editing === row) editing = groups[row.command.toLowerCase()].filter((r) => r.id === row.id)[0] || row;
+                if (editing === row) editing = page.rows.filter((r) => r.id === row.id)[0] || row;
             });
         });
         inputOf.promptId.addEventListener("input", searchStructures);
@@ -424,7 +451,7 @@
 
         // swapFrom: on a tab switch, "next" or "prev" makes the rows slide in from that side (see axiconfig.css)
         function render(swapFrom) {
-            const rows = filterRows(groups[active], search.value);
+            const rows = page.rows;
             body.textContent = "";
             body.classList.remove("ac-swap-next", "ac-swap-prev");
             if (swapFrom) {
@@ -474,9 +501,86 @@
                 tr.appendChild(act);
                 body.appendChild(tr);
             });
-            count.textContent = rows.length + " of " + groups[active].length;
+            count.textContent = rangeText(page.pageNo, page.pageSize, page.total);
             status.hidden = rows.length > 0;
-            status.textContent = groups[active].length ? "Nothing matches \"" + search.value.trim() + "\". Try part of a name or target." : "No options found.";
+            status.textContent = search.value.trim() ? "Nothing matches \"" + search.value.trim() + "\". Try part of a name or target." : "No options found.";
+            renderPager();
+        }
+
+        // ---- Pager ----
+        const pager = $("acPager"), pageNums = $("acPageNums"), prevBtn = $("acPrev"), nextBtn = $("acNext");
+
+        function renderPager() {
+            pager.hidden = page.totalPages <= 1;
+            $("acPageOf").textContent = "Page " + page.pageNo + " of " + page.totalPages;
+            prevBtn.disabled = page.pageNo <= 1;
+            nextBtn.disabled = page.pageNo >= page.totalPages;
+            pageNums.textContent = "";
+            pageNumbers(page.pageNo, page.totalPages).forEach((p) => {
+                if (p === "...") {
+                    const gap = document.createElement("span");
+                    gap.className = "ac-gap";
+                    gap.textContent = "...";
+                    gap.setAttribute("aria-hidden", "true");
+                    pageNums.appendChild(gap);
+                    return;
+                }
+                const b = document.createElement("button");
+                b.type = "button";
+                b.className = "ac-btn ac-btn-sm ac-pnum";
+                b.textContent = p;
+                b.setAttribute("aria-label", "Page " + p);
+                if (p === page.pageNo) b.setAttribute("aria-current", "page");
+                b.addEventListener("click", () => goToPage(p));
+                pageNums.appendChild(b);
+            });
+        }
+
+        function goToPage(no) {
+            if (no < 1 || no > page.totalPages || no === page.pageNo) return;
+            load(active, no).then(() => {
+                // Back to the first row when the pager at the bottom was used
+                if ($("acTable").getBoundingClientRect().top < 0) $("acTable").scrollIntoView({ block: "start" });
+            });
+        }
+
+        prevBtn.addEventListener("click", () => goToPage(page.pageNo - 1));
+        nextBtn.addEventListener("click", () => goToPage(page.pageNo + 1));
+
+        /** Shows page no of tab for the current search: from the cache when it was fetched before, else from the API. */
+        function load(tab, no, swapFrom) {
+            const term = search.value.trim();
+            const ask = ++loadAsk;
+            const show = (p) => {
+                // A newer request (another page, tab or search) wins
+                if (ask !== loadAsk || tab !== active) return;
+                page = p;
+                pageNoOf[tab] = p.pageNo;
+                body.removeAttribute("aria-busy");
+                updateCounts();
+                render(swapFrom);
+            };
+            const cached = cache.get(tab + "|" + term + "|" + no);
+            if (cached) {
+                show(cached);
+                return Promise.resolve();
+            }
+            body.setAttribute("aria-busy", "true");
+            if (!page.rows.length) { status.hidden = false; status.textContent = "Loading options..."; }
+            return fetch(buildPageUrl(apiBase, appName, tab, term, no))
+                .then((res) => { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
+                .then((raw) => {
+                    const p = normalizePage(raw);
+                    // Stored under the page the API answered with (a page past the end comes back as the last page)
+                    cache.set(tab + "|" + term + "|" + p.pageNo, p);
+                    show(p);
+                })
+                .catch((err) => {
+                    if (ask !== loadAsk) return;
+                    body.removeAttribute("aria-busy");
+                    status.hidden = false;
+                    status.textContent = "Could not load the options (" + err.message + "). Check the connection and try again.";
+                });
         }
 
         // Sliding highlight behind the selected tab: one pill that moves and resizes instead of each tab repainting
@@ -502,10 +606,10 @@
         window.addEventListener("resize", () => movePill(false));
 
         function selectTab(name) {
-            // Same tab (first load, or a save in the open tab): just redraw, no slide
+            // Same tab: just reload its page, no slide
             if (name === active) {
                 movePill(false);
-                render();
+                load(active, pageNoOf[active]);
                 return;
             }
             const from = tabs.findIndex((t) => t.dataset.tab === active);
@@ -518,7 +622,7 @@
             });
             $("acTable").setAttribute("aria-labelledby", "tab-" + name);
             movePill(true);
-            render(to > from ? "next" : "prev");
+            load(name, pageNoOf[name], to > from ? "next" : "prev");
         }
 
         tabs.forEach((t, i) => {
@@ -534,29 +638,25 @@
                 e.preventDefault();
             });
         });
-        search.addEventListener("input", () => render());
+        // The search runs on the server: wait for a pause in typing, then start both tabs again from page 1
+        let searchTimer = null;
+        search.addEventListener("input", () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                pageNoOf.configure = 1;
+                pageNoOf.sdk = 1;
+                load(active, 1);
+            }, 300);
+        });
 
-        const api = apiBase, appname = appName, username = userName;
-        if (!api || !appname) {
+        if (!apiBase || !appName) {
             status.hidden = false;
             status.textContent = "This page needs to be opened from the AxiCMD palette.";
             return;
         }
-        status.hidden = false;
-        status.textContent = "Loading options...";
-        fetch(buildListUrl(api, appname, username || ""))
-            .then((res) => { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
-            .then((rows) => {
-                groups = groupByTab(rows);
-                updateCounts();
-                selectTab(active);
-            })
-            .catch((err) => {
-                status.hidden = false;
-                status.textContent = "Could not load the options (" + err.message + "). Check the connection and reopen the page.";
-            });
+        load(active, 1);
         search.focus();
     }
 
-    return { replaceRow, OTHER_USERS_NOTE, buildActiveUrl, buildActiveBody, readAccess, setActive, describeFailure, normalizeRow, groupByTab, filterRows, buildListUrl, directionFor, init };
+    return { replaceRow, OTHER_USERS_NOTE, PAGE_SIZE, buildActiveUrl, buildActiveBody, readAccess, setActive, describeFailure, normalizeRow, buildPageUrl, normalizePage, pageNumbers, rangeText, directionFor, init };
 }));

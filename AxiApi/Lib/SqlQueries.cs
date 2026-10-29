@@ -15,6 +15,27 @@ namespace AxiApi.Lib
             "WHERE LOWER(command) IN ('configure', 'sdk') " +
             "ORDER BY command, prompt_options";
 
+        // Paged list of one command's options (AxiCMD Config page). {0} = "" or CommandOptionsSearch, {1} = offset, {2} = page size (both
+        // integers checked in C#). OFFSET ... FETCH NEXT works on Postgres and on Oracle 12c and later.
+        public const string SelectCommandOptionsPage =
+            "SELECT config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system, record_source " +
+            "FROM axi_command_config " +
+            "WHERE LOWER(command) = :command{0} " +
+            "ORDER BY LOWER(prompt_options), config_id " +
+            "OFFSET {1} ROWS FETCH NEXT {2} ROWS ONLY";
+
+        public const string CountCommandOptionsPage =
+            "SELECT COUNT(*) AS cnt FROM axi_command_config WHERE LOWER(command) = :command{0}";
+
+        // Name or target contains the term. Three names, not one used three times: Oracle binds by position.
+        public const string CommandOptionsSearch =
+            " AND (LOWER(prompt_options) LIKE :search1 ESCAPE '\\' OR LOWER(target_url) LIKE :search2 ESCAPE '\\' OR LOWER(prompt_id) LIKE :search3 ESCAPE '\\')";
+
+        // Every Configure and SDK option, active or not (the tab counts)
+        public const string CountCommandOptionsByCommand =
+            "SELECT LOWER(command) AS command, COUNT(*) AS cnt FROM axi_command_config " +
+            "WHERE LOWER(command) IN ('configure', 'sdk') GROUP BY LOWER(command)";
+
         // Option names (wordpos 2) and record source names (wordpos 3) of Configure (cmdtoken 4) and SDK (cmdtoken 7)
         public const string SelectCommandOptionPrompts =
             "SELECT cmdtoken, wordpos, promptvalues, promptsource " +

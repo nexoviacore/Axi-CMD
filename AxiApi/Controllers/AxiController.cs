@@ -64,6 +64,23 @@ namespace AxiApi.Controllers
             return Ok(await _commandConfigService.GetAllCommandOptionsAsync(appname));
         }
 
+        // One page of the Configure or SDK options (AxiCMD Config page): name or target contains search, sorted by name, 25 a page by default
+        [HttpGet("command-config/options/page")]
+        public async Task<ActionResult<CommandOptionPageDTO>> GetCommandOptionsPage([FromQuery] string appname, [FromQuery] string? command,
+            [FromQuery] string? search, [FromQuery] int? pageNo, [FromQuery] int? pageSize)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return BadRequest("appname query parameter is required.");
+            try
+            {
+                return Ok(await _commandConfigService.GetCommandOptionsPageAsync(appname, command, search, pageNo, pageSize));
+            }
+            catch (CommandOptionException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpPost("command-config/options/{configId}/active")]
         public async Task<IActionResult> SetCommandOptionActive([FromRoute] string configId, [FromBody] SetCommandOptionActiveRequestDTO requestDTO, [FromQuery] string appname)
         {

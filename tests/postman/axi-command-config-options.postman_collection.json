@@ -60,6 +60,14 @@
     {
       "key": "sourcesBefore287",
       "value": ""
+    },
+    {
+      "key": "configureTotal",
+      "value": ""
+    },
+    {
+      "key": "configureFirst",
+      "value": ""
     }
   ],
   "item": [
@@ -3232,6 +3240,387 @@
             {
               "key": "appname",
               "value": "{{appname}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "page 1 of Configure",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const p = pm.response.json();",
+              "pm.test('at most 25 rows, all Configure', () => { pm.expect(p.items.length).to.be.at.most(25); p.items.forEach(r => pm.expect(r.command.toLowerCase()).to.eql('configure')); });",
+              "pm.test('page numbers add up', () => { pm.expect(p.pageNo).to.eql(1); pm.expect(p.pageSize).to.eql(25); pm.expect(p.totalPages).to.eql(Math.max(1, Math.ceil(p.totalCount / 25))); });",
+              "pm.test('no search: total is the Configure tab count', () => pm.expect(p.totalCount).to.eql(p.configureCount));",
+              "pm.test('sorted by name', () => { const n = p.items.map(r => r.promptOptions.toLowerCase()); pm.expect(n).to.eql(n.slice().sort()); });",
+              "pm.test('rows carry isSystem and recordSource', () => p.items.forEach(r => { pm.expect(['T', 'F']).to.include(r.isSystem); pm.expect(r).to.have.property('recordSource'); }));",
+              "pm.collectionVariables.set('configureTotal', p.totalCount);",
+              "pm.collectionVariables.set('configureFirst', p.items.length ? p.items[0].configId : '');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/page?appname={{appname}}&command=configure&search=&pageNo=1&pageSize=25",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "page"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "command",
+              "value": "configure"
+            },
+            {
+              "key": "search",
+              "value": ""
+            },
+            {
+              "key": "pageNo",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "25"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "page 2 of Configure (5 a page) follows page 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const p = pm.response.json();",
+              "const total = Number(pm.collectionVariables.get('configureTotal'));",
+              "pm.test('rows 6-10 (or fewer at the end)', () => { pm.expect(p.pageSize).to.eql(5); pm.expect(p.items.length).to.eql(Math.max(0, Math.min(5, total - 5))); });",
+              "pm.test('page 1 first row is not on page 2', () => p.items.forEach(r => pm.expect(r.configId).to.not.eql(pm.collectionVariables.get('configureFirst'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/page?appname={{appname}}&command=configure&search=&pageNo=2&pageSize=5",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "page"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "command",
+              "value": "configure"
+            },
+            {
+              "key": "search",
+              "value": ""
+            },
+            {
+              "key": "pageNo",
+              "value": "2"
+            },
+            {
+              "key": "pageSize",
+              "value": "5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "page past the end gives the last page",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const p = pm.response.json();",
+              "pm.test('last page', () => pm.expect(p.pageNo).to.eql(p.totalPages));",
+              "pm.test('SDK rows only', () => p.items.forEach(r => pm.expect(r.command.toLowerCase()).to.eql('sdk')));",
+              "pm.test('total is the SDK tab count', () => pm.expect(p.totalCount).to.eql(p.sdkCount));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/page?appname={{appname}}&command=sdk&search=&pageNo=9999&pageSize=25",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "page"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "command",
+              "value": "sdk"
+            },
+            {
+              "key": "search",
+              "value": ""
+            },
+            {
+              "key": "pageNo",
+              "value": "9999"
+            },
+            {
+              "key": "pageSize",
+              "value": "25"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "search finds by name, case-insensitively",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const p = pm.response.json();",
+              "pm.test('the shipped user option is found', () => pm.expect(p.items.map(r => r.promptOptions)).to.include('user'));",
+              "pm.test('every row contains the term in its name or target', () => p.items.forEach(r => pm.expect([r.promptOptions, r.targetUrl || '', r.promptId || ''].join(' ').toLowerCase()).to.include('user')));",
+              "pm.test('tab counts ignore the search', () => pm.expect(p.configureCount).to.eql(Number(pm.collectionVariables.get('configureTotal'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/page?appname={{appname}}&command=configure&search=USER&pageNo=1&pageSize=25",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "page"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "command",
+              "value": "configure"
+            },
+            {
+              "key": "search",
+              "value": "USER"
+            },
+            {
+              "key": "pageNo",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "25"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "search with % and _ matches them literally",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "pm.test('no option has \"%_\" in it, so nothing comes back', () => pm.expect(pm.response.json().totalCount).to.eql(0));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/page?appname={{appname}}&command=configure&search=%25_&pageNo=1&pageSize=25",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "page"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "command",
+              "value": "configure"
+            },
+            {
+              "key": "search",
+              "value": "%25_"
+            },
+            {
+              "key": "pageNo",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "25"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "unknown command is 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));",
+              "pm.test('says which commands', () => pm.expect(pm.response.text()).to.match(/Configure or SDK/));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/page?appname={{appname}}&command=upload&search=&pageNo=1&pageSize=25",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "page"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            },
+            {
+              "key": "command",
+              "value": "upload"
+            },
+            {
+              "key": "search",
+              "value": ""
+            },
+            {
+              "key": "pageNo",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "25"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "missing appname is 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/page?appname=&command=configure",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "page"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": ""
+            },
+            {
+              "key": "command",
+              "value": "configure"
             }
           ]
         }

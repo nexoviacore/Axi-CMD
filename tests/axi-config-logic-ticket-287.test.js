@@ -86,11 +86,11 @@ test('normalizeRow keeps the route fields the edit drawer needs', () => {
     assert.strictEqual(r.extraParams, 'e');
 });
 
-test('replaceRow swaps the updated row in its tab', () => {
-    const g = { configure: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], sdk: [] };
-    const out = page.replaceRow(g, 'b', { id: 'b', name: 'Z' });
-    assert.deepStrictEqual(out.configure.map((r) => r.name), ['A', 'Z']);
-    assert.strictEqual(g.configure[1].name, 'B');
+test('replaceRow swaps the updated row in place', () => {
+    const rows = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }];
+    const out = page.replaceRow(rows, 'b', { id: 'b', name: 'Z' });
+    assert.deepStrictEqual(out.map((r) => r.name), ['A', 'Z']);
+    assert.strictEqual(rows[1].name, 'B');
 });
 
 test('the page wires edit mode, the rename warning and a read-only built-in view', () => {

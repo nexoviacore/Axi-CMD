@@ -35,24 +35,43 @@ test('normalizeRow accepts PascalCase and snake_case keys', () => {
     assert.strictEqual(s.builtIn, true);
 });
 
-test('groupByTab keeps inactive options and only Configure / SDK', () => {
-    const g = page.groupByTab(API_ROWS);
-    assert.deepStrictEqual(g.configure.map(r => r.name), ['role listing', 'user']);
-    assert.deepStrictEqual(g.sdk.map(r => r.name), ['TStruct']);
-});
-
-test('filterRows matches name or target, case-insensitively, and empty term returns all', () => {
-    const rows = page.groupByTab(API_ROWS).configure;
-    assert.strictEqual(page.filterRows(rows, '').length, 2);
-    assert.deepStrictEqual(page.filterRows(rows, 'USER').map(r => r.name), ['user']);
-    assert.deepStrictEqual(page.filterRows(rows, 'ivname=ad___url').map(r => r.name), ['role listing']);
-    assert.strictEqual(page.filterRows(rows, 'nomatch').length, 0);
-});
-
-test('buildListUrl encodes appname and username', () => {
+// ---- paging (the API pages and searches; see tests/axi-config-paging.test.js for the C# side) -------------------
+test('buildPageUrl asks for one page of one command, 25 rows, with the trimmed search encoded', () => {
+    assert.strictEqual(page.PAGE_SIZE, 25);
     assert.strictEqual(
-        page.buildListUrl('http://h/AxiCMDApi/api/v1/Axi/command-config', 'my app', 'a&b'),
-        'http://h/AxiCMDApi/api/v1/Axi/command-config/options?appname=my%20app&username=a%26b');
+        page.buildPageUrl('http://h/AxiCMDApi/api/v1/Axi/command-config/', 'my app', 'sdk', '  a&b ', 3),
+        'http://h/AxiCMDApi/api/v1/Axi/command-config/options/page?appname=my%20app&command=sdk&search=a%26b&pageNo=3&pageSize=25');
+    assert.match(page.buildPageUrl('http://h/x', 'a', 'configure', '', 0), /&search=&pageNo=1&/);
+});
+
+test('normalizePage reads the API page (camelCase or PascalCase) into rows, totals and tab counts', () => {
+    const p = page.normalizePage({ items: API_ROWS.slice(0, 2), totalCount: 60, pageNo: 2, pageSize: 25, totalPages: 3, configureCount: 60, sdkCount: 7 });
+    assert.deepStrictEqual(p.rows.map(r => r.name), ['user', 'role listing']);
+    assert.deepStrictEqual({ total: p.total, pageNo: p.pageNo, pageSize: p.pageSize, totalPages: p.totalPages, counts: p.counts },
+        { total: 60, pageNo: 2, pageSize: 25, totalPages: 3, counts: { configure: 60, sdk: 7 } });
+    const q = page.normalizePage({ Items: [API_ROWS[2]], TotalCount: 1, PageNo: 1, PageSize: 25, TotalPages: 1, ConfigureCount: 2, SdkCount: 1 });
+    assert.strictEqual(q.rows[0].name, 'TStruct');
+    assert.deepStrictEqual(q.counts, { configure: 2, sdk: 1 });
+});
+
+test('normalizePage of nothing is one empty page', () => {
+    const p = page.normalizePage(null);
+    assert.deepStrictEqual({ rows: p.rows, total: p.total, pageNo: p.pageNo, totalPages: p.totalPages }, { rows: [], total: 0, pageNo: 1, totalPages: 1 });
+});
+
+test('pageNumbers shows the first, the last and the neighbours, with gaps of two or more as "..."', () => {
+    assert.deepStrictEqual(page.pageNumbers(1, 1), [1]);
+    assert.deepStrictEqual(page.pageNumbers(1, 4), [1, 2, 3, 4]);
+    assert.deepStrictEqual(page.pageNumbers(1, 10), [1, 2, '...', 10]);
+    assert.deepStrictEqual(page.pageNumbers(5, 10), [1, '...', 4, 5, 6, '...', 10]);
+    assert.deepStrictEqual(page.pageNumbers(4, 10), [1, 2, 3, 4, 5, '...', 10]);
+    assert.deepStrictEqual(page.pageNumbers(10, 10), [1, '...', 9, 10]);
+});
+
+test('rangeText names the rows on the page', () => {
+    assert.strictEqual(page.rangeText(1, 25, 60), '1-25 of 60');
+    assert.strictEqual(page.rangeText(3, 25, 60), '51-60 of 60');
+    assert.strictEqual(page.rangeText(1, 25, 0), '0 of 0');
 });
 
 test('directionFor returns rtl for RTL languages only', () => {

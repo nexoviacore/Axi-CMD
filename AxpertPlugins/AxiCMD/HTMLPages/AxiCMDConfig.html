@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AxiCMD Config</title>
     <!-- Own styles and script only; no CDN. Opened from the palette gear menu (axicmdmain.js). -->
-    <link rel="stylesheet" href="css/axiconfig.css?v=7">
+    <link rel="stylesheet" href="css/axiconfig.css?v=8">
 </head>
 
 <body>
@@ -50,6 +50,15 @@
             </table>
             <p id="acStatus" class="ac-status" role="status">Loading options...</p>
         </div>
+
+        <nav id="acPager" class="ac-pager" aria-label="Pages" hidden>
+            <span id="acPageOf" class="ac-pageof" aria-live="polite"></span>
+            <div class="ac-pages">
+                <button id="acPrev" class="ac-btn ac-btn-sm" type="button">Previous</button>
+                <span id="acPageNums" class="ac-pagenums"></span>
+                <button id="acNext" class="ac-btn ac-btn-sm" type="button">Next</button>
+            </div>
+        </nav>
     </main>
 
     <div id="acScrim" class="ac-scrim" hidden></div>
@@ -140,7 +149,7 @@
     </aside>
 
     <script src="js/axiconfiglogic.js?v=5"></script>
-    <script src="js/axiconfigpage.js?v=9"></script>
+    <script src="js/axiconfigpage.js?v=10"></script>
 </body>
 
 </html>

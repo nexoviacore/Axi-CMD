@@ -37,13 +37,13 @@ test('the page lets the user configure only with both Configure Access and build
     assert.strictEqual(at('').canConfigure, false);
 });
 
-test('setActive flips one row only and leaves the original groups untouched', () => {
-    const groups = page.groupByTab(ROWS);
-    const next = page.setActive(groups, 'cfg_a', false);
-    assert.strictEqual(next.configure[0].active, false);
-    assert.strictEqual(groups.configure[0].active, true);
-    assert.strictEqual(next.sdk[0].active, false);
-    assert.strictEqual(page.setActive(next, 'cfg_b', true).sdk[0].active, true);
+test('setActive flips one row only and leaves the original rows untouched', () => {
+    const rows = ROWS.map(page.normalizeRow);
+    const next = page.setActive(rows, 'cfg_a', false);
+    assert.strictEqual(next[0].active, false);
+    assert.strictEqual(rows[0].active, true);
+    assert.strictEqual(next[1].active, false);
+    assert.strictEqual(page.setActive(next, 'cfg_b', true)[1].active, true);
 });
 
 test('describeFailure gives a readable message for a refusal and for a network error', () => {
