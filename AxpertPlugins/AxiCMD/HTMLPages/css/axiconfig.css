@@ -13,7 +13,8 @@
 
 * { box-sizing: border-box; }
 
-html, body { height: 100%; margin: 0; }
+/* The page scrolls as a whole: inside the shell's middle1 iframe a fixed-height page left the table a small box */
+html, body { min-height: 100%; margin: 0; }
 
 body {
   font: 14px/1.45 "Segoe UI", system-ui, -apple-system, "Noto Sans Arabic", sans-serif;
@@ -30,10 +31,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: 100%;
-  max-width: 1100px;
-  margin-inline: auto;
-  padding: 24px clamp(12px, 3vw, 28px);
+  min-height: 100vh;
+  padding: 20px clamp(12px, 2vw, 24px);
 }
 
 .ac-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
@@ -115,11 +114,11 @@ body {
 
 .ac-search input::placeholder { color: var(--muted); }
 
-/* The table sits on one large glass sheet that scrolls inside the page */
+/* The table sits on one large glass sheet that grows with its rows. overflow: clip keeps the rounded corners
+   without making a scroll box, so the sticky header sticks to the top of the iframe while the page scrolls. */
 .ac-scroll {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
+  flex: 1 0 auto;
+  overflow: clip;
   border-radius: 22px;
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.46));
   border: 1px solid rgba(255, 255, 255, 0.8);
