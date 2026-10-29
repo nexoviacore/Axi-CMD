@@ -1655,30 +1655,56 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
   }
 }
 
-/* Gear menu: same glass look as the settings panel; entries are real buttons (keyboard reachable) */
-.axi-sm {
+/* =========================================
+   8. GEAR MENU AND "RECORDS PER LOAD" PANEL
+   Markup is built in axicmdmain.js (buildSettingsMenu, buildSettingsPanel); JS only toggles display and the position.
+   Follows DESIGN.md ("The Quiet Console"): solid white sheets with a 1px rule, small corners, Console Ink for text and
+   the primary action, Signal Indigo only for the current value and focus. Shadows only because both float over the page.
+   --axi-sp-fill is the slider fill (0-100%), set from JS.
+   ========================================= */
+.axi-sm,
+.axi-sp {
+  --axi-sp-ink: #1d2547;
+  --axi-sp-ink-hover: #2c3766;
+  --axi-sp-slate: #5b6482;
+  --axi-sp-paper: #f4f5f9;
+  --axi-sp-rule: #dde1eb;
+  --axi-sp-field: #c9cedb;
+  --axi-sp-signal: #3f51c2;
+  --axi-sp-error: #a3261a;
   position: fixed;
   z-index: 100000;
   display: none;
+  box-sizing: border-box;
+  color: var(--axi-sp-ink);
+  font: 13px/1.45 "Segoe UI", system-ui, -apple-system, "Noto Sans Arabic", sans-serif;
+  background: #fff;
+  border: 1px solid var(--axi-sp-rule);
+  border-radius: 8px;
+  box-shadow: 0 14px 36px -16px rgba(29, 37, 71, 0.4);
+  animation: axi-sp-in 0.14s ease-out;
+}
+
+@keyframes axi-sp-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Gear menu: real buttons (keyboard reachable); hover and focus fill with Paper, focus adds the Signal ring */
+.axi-sm {
   min-width: 190px;
-  padding: 6px;
-  border-radius: 16px;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.6));
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  -webkit-backdrop-filter: blur(24px) saturate(170%);
-  backdrop-filter: blur(24px) saturate(170%);
-  box-shadow: 0 20px 44px -14px rgba(29, 37, 71, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  padding: 4px;
 }
 
 .axi-sm-item {
   display: block;
   width: 100%;
-  padding: 10px 14px;
+  padding: 9px 12px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 6px;
   background: transparent;
-  color: #1d2547;
-  font-size: 13px;
+  color: var(--axi-sp-ink);
+  font: inherit;
   font-weight: 600;
   text-align: start;
   cursor: pointer;
@@ -1686,138 +1712,54 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
 
 .axi-sm-item:hover,
 .axi-sm-item:focus-visible {
-  background: rgba(245, 158, 11, 0.16);
+  background: var(--axi-sp-paper);
   outline: none;
-  box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.55);
 }
 
-/* =========================================
-   8. SETTINGS PANEL (gear button) - frosted glass, "load size" dial
-   Markup is built in axicmdmain.js (buildSettingsPanel); JS only toggles display and the position.
-   Palette: ink #1d2547 (Axpert sidebar navy, darker), coral #ef4444 and amber #f59e0b (AXI logo / accent).
-   --axi-sp-fill is the slider fill (0-100%), set from JS.
-   ========================================= */
+.axi-sm-item:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--axi-sp-signal);
+}
+
+/* Records per load */
 .axi-sp {
-  --axi-sp-ink: #1d2547;
-  --axi-sp-muted: #5b6482;
-  --axi-sp-coral: #ef4444;
-  --axi-sp-amber: #f59e0b;
-  --axi-sp-fill: 0%;
-  position: fixed;
-  z-index: 100000;
-  display: none;
-  width: 320px;
+  width: 300px;
   max-width: calc(100vw - 16px);
-  box-sizing: border-box;
-  padding: 20px 20px 16px;
-  overflow: hidden;
-  isolation: isolate;
-  color: var(--axi-sp-ink);
-  font-size: 13px;
-  border-radius: 22px;
-  /* Frosted glass: translucent white over a blurred, saturated backdrop with a bright top edge */
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.46));
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  -webkit-backdrop-filter: blur(24px) saturate(170%);
-  backdrop-filter: blur(24px) saturate(170%);
-  box-shadow: 0 28px 64px -16px rgba(29, 37, 71, 0.45),
-              0 6px 16px -6px rgba(29, 37, 71, 0.2),
-              inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  transform-origin: top left;
-  animation: axi-sp-in 0.26s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* Warm light pooled in one corner, cool navy in the other, so the glass has something to refract */
-.axi-sp::before,
-.axi-sp::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  border-radius: 50%;
-  filter: blur(42px);
-  pointer-events: none;
-}
-
-.axi-sp::before {
-  top: -90px;
-  right: -60px;
-  width: 220px;
-  height: 220px;
-  background: var(--axi-sp-amber);
-  opacity: 0.4;
-}
-
-.axi-sp::after {
-  bottom: -110px;
-  left: -70px;
-  width: 220px;
-  height: 220px;
-  background: #4f63c9;
-  opacity: 0.3;
-}
-
-/* No backdrop-filter support: keep the text readable with a more solid surface */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .axi-sp {
-    background: rgba(255, 255, 255, 0.97);
-  }
-}
-
-@keyframes axi-sp-in {
-  from {
-    opacity: 0;
-    transform: translateY(-8px) scale(0.96);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  padding: 16px;
 }
 
 .axi-sp-title {
   margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.3;
+  font: 600 16px/1.25 Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
   color: var(--axi-sp-ink);
 }
 
 .axi-sp-sub {
   margin-top: 2px;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--axi-sp-muted);
+  font-size: 12.5px;
+  color: var(--axi-sp-slate);
 }
 
-/* The number is the hero: a large, editable figure with its unit beside it */
+/* The value: a plain number field with its unit after it; the slider below moves the same value */
 .axi-sp-readout {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
-  margin: 14px 0 6px;
+  margin: 14px 0 10px;
 }
 
 .axi-sp-input {
-  width: 4.2ch;
-  min-width: 0;
-  padding: 0 0 2px;
-  font-family: inherit;
-  font-size: 44px;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -1.5px;
+  width: 96px;
+  min-height: 38px;
+  padding: 0 10px;
+  font: 500 18px/1 Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
   color: var(--axi-sp-ink);
-  background: transparent;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  outline: none;
+  background: #fff;
+  border: 1px solid var(--axi-sp-field);
+  border-radius: 6px;
   box-shadow: none;
   -moz-appearance: textfield;
   appearance: textfield;
-  transition: border-color 0.2s ease, color 0.2s ease;
 }
 
 .axi-sp-input::-webkit-outer-spin-button,
@@ -1826,112 +1768,103 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
   margin: 0;
 }
 
-.axi-sp-input:hover {
-  border-bottom-color: rgba(29, 37, 71, 0.25);
-}
-
 .axi-sp-input:focus {
-  border-bottom-color: var(--axi-sp-coral);
+  border-color: var(--axi-sp-signal);
+  outline: 2px solid var(--axi-sp-signal);
+  outline-offset: 2px;
 }
 
 .axi-sp-unit {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--axi-sp-muted);
+  color: var(--axi-sp-slate);
 }
 
-/* The dial: a slider whose filled part uses the brand gradient; thumb glows and grows on hover and drag */
+/* The slider: a thin Rule track whose filled part (the current value) is Signal Indigo; a plain white thumb */
 .axi-sp-range {
   -webkit-appearance: none;
   appearance: none;
   display: block;
   width: 100%;
-  height: 22px;
+  height: 20px;
   margin: 0;
   padding: 0;
   background: transparent;
   cursor: pointer;
+}
+
+.axi-sp-range:focus {
   outline: none;
 }
 
 .axi-sp-range::-webkit-slider-runnable-track {
-  height: 8px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, var(--axi-sp-amber), var(--axi-sp-coral)) 0 / var(--axi-sp-fill) 100% no-repeat,
-              rgba(29, 37, 71, 0.12);
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(var(--axi-sp-signal), var(--axi-sp-signal)) 0 0 / var(--axi-sp-fill) 100% no-repeat,
+              var(--axi-sp-rule);
+}
+
+/* A right-to-left slider runs from the right, so its fill starts there */
+body.btextDir-rtl .axi-sp-range::-webkit-slider-runnable-track {
+  background-position: 100% 0, 0 0;
 }
 
 .axi-sp-range::-moz-range-track {
-  height: 8px;
-  border-radius: 8px;
-  background: rgba(29, 37, 71, 0.12);
+  height: 4px;
+  border-radius: 2px;
+  background: var(--axi-sp-rule);
 }
 
 .axi-sp-range::-moz-range-progress {
-  height: 8px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, var(--axi-sp-amber), var(--axi-sp-coral));
+  height: 4px;
+  border-radius: 2px;
+  background: var(--axi-sp-signal);
 }
 
 .axi-sp-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 22px;
-  height: 22px;
-  margin-top: -7px;
-  border: 3px solid #fff;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border: 2px solid var(--axi-sp-signal);
   border-radius: 50%;
-  background: var(--axi-sp-coral);
-  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.55);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  background: #fff;
 }
 
 .axi-sp-range::-moz-range-thumb {
+  box-sizing: border-box;
   width: 16px;
   height: 16px;
-  border: 3px solid #fff;
+  border: 2px solid var(--axi-sp-signal);
   border-radius: 50%;
-  background: var(--axi-sp-coral);
-  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.55);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  background: #fff;
 }
 
-.axi-sp-range:hover::-webkit-slider-thumb,
 .axi-sp-range:focus-visible::-webkit-slider-thumb {
-  transform: scale(1.15);
-  box-shadow: 0 0 0 7px rgba(239, 68, 68, 0.18), 0 4px 12px rgba(239, 68, 68, 0.6);
+  outline: 2px solid var(--axi-sp-signal);
+  outline-offset: 2px;
 }
 
-.axi-sp-range:active::-webkit-slider-thumb {
-  transform: scale(1.25);
-}
-
-.axi-sp-range:hover::-moz-range-thumb,
 .axi-sp-range:focus-visible::-moz-range-thumb {
-  transform: scale(1.15);
-  box-shadow: 0 0 0 7px rgba(239, 68, 68, 0.18), 0 4px 12px rgba(239, 68, 68, 0.6);
+  outline: 2px solid var(--axi-sp-signal);
+  outline-offset: 2px;
 }
 
 .axi-sp-ends {
   display: flex;
   justify-content: space-between;
   margin-top: 2px;
-  font-size: 11.5px;
+  font: 12px Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
-  color: var(--axi-sp-muted);
+  color: var(--axi-sp-slate);
 }
 
-/* Validation message under the slider; the panel gets .axi-sp-invalid while the value is not accepted */
+/* Validation message under the slider, as a field error (DESIGN.md Inputs): a bold Error Red line, no box.
+   The panel gets .axi-sp-invalid while the value is not accepted */
 .axi-sp-error {
-  margin-top: 10px;
-  padding: 8px 10px;
-  font-size: 12px;
+  margin-top: 8px;
+  font-size: 12.5px;
   font-weight: 600;
-  line-height: 1.4;
-  color: #b42318;
-  background: rgba(254, 226, 226, 0.75);
-  border: 1px solid rgba(239, 68, 68, 0.45);
-  border-radius: 10px;
+  color: var(--axi-sp-error);
 }
 
 .axi-sp-error[hidden] {
@@ -1939,104 +1872,78 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
 }
 
 .axi-sp-invalid .axi-sp-input {
-  color: #b42318;
-  border-bottom-color: var(--axi-sp-coral);
+  border-color: var(--axi-sp-error);
 }
 
-.axi-sp-invalid .axi-sp-save {
-  opacity: 0.55;
-}
-
+/* Default (secondary) first, Save (primary) at the end */
 .axi-sp-actions {
   display: flex;
-  gap: 10px;
+  justify-content: flex-end;
+  gap: 8px;
   margin-top: 16px;
 }
 
 .axi-sp-btn {
-  position: relative;
-  overflow: hidden;
-  flex: 1;
-  padding: 10px 14px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.2;
-  border-radius: 12px;
+  min-height: 34px;
+  padding: 0 14px;
+  font: inherit;
+  font-weight: 600;
+  border-radius: 6px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.25s ease, background-position 0.4s ease,
-              background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.axi-sp-btn:active {
-  transform: translateY(0) scale(0.97);
 }
 
 .axi-sp-btn:focus-visible {
-  outline: 2px solid var(--axi-sp-ink);
+  outline: 2px solid var(--axi-sp-signal);
   outline-offset: 2px;
 }
 
-/* Save: amber-to-coral gradient that slides, lifts and glows on hover, with a light sweep */
 .axi-sp-save {
-  border: 0;
   color: #fff;
-  text-shadow: 0 1px 2px rgba(120, 30, 20, 0.35);
-  background: linear-gradient(110deg, #f59e0b, #ef4444 55%, #f59e0b);
-  background-size: 220% 100%;
-  background-position: 0% 0;
-  box-shadow: 0 8px 18px -6px rgba(239, 68, 68, 0.65);
-}
-
-.axi-sp-save::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -70%;
-  width: 45%;
-  height: 100%;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent);
-  transform: skewX(-20deg);
-  transition: left 0.55s ease;
+  background: var(--axi-sp-ink);
+  border: 1px solid var(--axi-sp-ink);
 }
 
 .axi-sp-save:hover {
-  background-position: 100% 0;
-  transform: translateY(-2px);
-  box-shadow: 0 14px 26px -8px rgba(239, 68, 68, 0.8), 0 0 0 3px rgba(245, 158, 11, 0.25);
+  background: var(--axi-sp-ink-hover);
+  border-color: var(--axi-sp-ink-hover);
 }
 
-.axi-sp-save:hover::after {
-  left: 125%;
-}
-
-/* Default: glass ghost button that fills with a navy tint on hover */
 .axi-sp-default {
   color: var(--axi-sp-ink);
-  background: rgba(255, 255, 255, 0.5);
-  border: 1.5px solid rgba(29, 37, 71, 0.18);
+  background: #fff;
+  border: 1px solid var(--axi-sp-field);
 }
 
 .axi-sp-default:hover {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: var(--axi-sp-ink);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px -8px rgba(29, 37, 71, 0.4);
+  background: var(--axi-sp-paper);
 }
 
 .axi-sp-hint {
   margin-top: 12px;
-  font-size: 11.5px;
-  line-height: 1.45;
-  color: var(--axi-sp-muted);
+  padding-top: 10px;
+  font-size: 12px;
+  color: var(--axi-sp-slate);
+  border-top: 1px solid var(--axi-sp-rule);
+}
+
+/* The panel's sentences are English even in a right-to-left shell: each takes its direction from its own text, so
+   the full stop stays at the end; they still align right with the title */
+.axi-sp-sub,
+.axi-sp-error,
+.axi-sp-hint {
+  unicode-bidi: plaintext;
+}
+
+body.btextDir-rtl .axi-sp-sub,
+body.btextDir-rtl .axi-sp-error,
+body.btextDir-rtl .axi-sp-hint {
+  text-align: right;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .axi-sp,
-  .axi-sp-btn,
-  .axi-sp-save::after {
+  .axi-sm,
+  .axi-sp {
     animation: none;
-    transition: none;
   }
 }
 

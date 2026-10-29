@@ -8818,12 +8818,12 @@ if (typeof document !== "undefined") {
             const buildSettingsPanel = () => {
                 const panel = document.createElement("div");
                 panel.id = "axiSettingsPanel";
-                // Look (glass card, gradient Save button, hover effects) lives in axicmdmain.css, section 8
+                // Look (flat sheet per DESIGN.md) lives in axicmdmain.css, section 8
                 panel.className = "axi-sp";
                 panel.innerHTML =
                     '<div class="axi-sp-title">Records per load</div>' +
                     '<div class="axi-sp-sub">How many items each list fetches at once</div>' +
-                    // The big number is the editable input itself; the slider below it moves the same value
+                    // The number box and the slider below it move the same value
                     '<div class="axi-sp-readout">' +
                     '<input id="axiPageSizeInput" class="axi-sp-input" type="number" step="100" aria-label="Records per load">' +
                     '<span class="axi-sp-unit">records</span>' +
@@ -8831,9 +8831,10 @@ if (typeof document !== "undefined") {
                     '<input id="axiPageSizeRange" class="axi-sp-range" type="range" step="100" aria-label="Records per load slider">' +
                     '<div class="axi-sp-ends"><span id="axiPageSizeMin"></span><span id="axiPageSizeMax"></span></div>' +
                     '<div id="axiPageSizeError" class="axi-sp-error" role="alert" hidden></div>' +
+                    // Secondary first, the primary action at the end, as in the AxiCMD Config drawer
                     '<div class="axi-sp-actions">' +
+                    '<button id="axiPageSizeDefault" class="axi-sp-btn axi-sp-default" type="button">Use default</button>' +
                     '<button id="axiPageSizeSave" class="axi-sp-btn axi-sp-save" type="button">Save</button>' +
-                    '<button id="axiPageSizeDefault" class="axi-sp-btn axi-sp-default" type="button">Default</button>' +
                     '</div>' +
                     '<div id="axiPageSizeHint" class="axi-sp-hint"></div>';
                 document.body.appendChild(panel);
