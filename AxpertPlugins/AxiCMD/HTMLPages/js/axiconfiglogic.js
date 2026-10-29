@@ -223,9 +223,10 @@
         return baseUrl.replace(/\/+$/, "") + "/options/" + encodeURIComponent(configId) + "?appname=" + encodeURIComponent(appname);
     }
 
-    function buildUpdateBody(username, appMgrAccess, value) {
+    /** access is { appMgrAccess, buildAccess }; the API refuses the write unless both are true. */
+    function buildUpdateBody(username, access, value) {
         return {
-            username: username, appMgrAccess: !!appMgrAccess,
+            username: username, appMgrAccess: !!(access && access.appMgrAccess), buildAccess: !!(access && access.buildAccess),
             name: value.name, type: value.type,
             promptId: value.promptId, targetUrl: value.targetUrl, paramField: value.paramField, extraParams: value.extraParams,
             recordSource: value.recordSource
@@ -236,9 +237,9 @@
         return baseUrl.replace(/\/+$/, "") + "/options?appname=" + encodeURIComponent(appname);
     }
 
-    function buildCreateBody(username, appMgrAccess, value) {
+    function buildCreateBody(username, access, value) {
         return {
-            username: username, appMgrAccess: !!appMgrAccess,
+            username: username, appMgrAccess: !!(access && access.appMgrAccess), buildAccess: !!(access && access.buildAccess),
             command: value.command, name: value.name, type: value.type,
             promptId: value.promptId, targetUrl: value.targetUrl, paramField: value.paramField, extraParams: value.extraParams,
             recordSource: value.recordSource

@@ -140,8 +140,8 @@ test('a record source of None means Axi_Dummy, anything else must be a plain nam
 // ---- request ------------------------------------------------------------------------------------------------
 test('create body carries the access flag and user, create url carries the appname', () => {
     const value = logic.validateOption({ command: 'SDK', name: 'A', type: 'url', targetUrl: '/a' }, []).value;
-    assert.deepStrictEqual(logic.buildCreateBody('admin', true, value), {
-        username: 'admin', appMgrAccess: true, command: 'SDK', name: 'A', type: 'url', promptId: '', targetUrl: '/a', paramField: '', extraParams: '', recordSource: 'Axi_Dummy'
+    assert.deepStrictEqual(logic.buildCreateBody('admin', { appMgrAccess: true, buildAccess: true }, value), {
+        username: 'admin', appMgrAccess: true, buildAccess: true, command: 'SDK', name: 'A', type: 'url', promptId: '', targetUrl: '/a', paramField: '', extraParams: '', recordSource: 'Axi_Dummy'
     });
     assert.strictEqual(logic.buildCreateUrl('https://h/api/v1/Axi/command-config/', 'My App'), 'https://h/api/v1/Axi/command-config/options?appname=My%20App');
 });

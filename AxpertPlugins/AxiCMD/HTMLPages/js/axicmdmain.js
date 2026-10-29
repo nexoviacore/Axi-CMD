@@ -8908,8 +8908,9 @@ if (typeof document !== "undefined") {
                 if (settingsMenu) settingsMenu.style.display = "none";
             };
 
-            // Opens the AxiCMD Config page (AxiCMDConfig.html) in the work area. Only offered with Configure Access.
+            // Opens the AxiCMD Config page (AxiCMDConfig.html) in the work area. Only offered with Configure Access and build access.
             const openConfigPage = () => {
+                const perms = getAccessPermissions();
                 const rtl = document.body.classList.contains("btextDir-rtl");
                 const lang = rtl ? "ar" : (document.documentElement.lang || "en");
                 const targetUrl = `${getAppBaseUrl()}/AxpertPlugins/AxiCMD/HTMLPages/AxiCMDConfig.html` +
@@ -8917,19 +8918,21 @@ if (typeof document !== "undefined") {
                     `&appname=${encodeURIComponent(getProjectName())}` +
                     `&username=${encodeURIComponent(window.mainUserName || "")}` +
                     `&lang=${encodeURIComponent(lang)}` +
-                    `&access=1`;
+                    `&appmgraccess=${perms.appMgrAccess ? 1 : 0}` +
+                    `&buildaccess=${perms.buildAccess ? 1 : 0}`;
                 const loadFn = (top && top.window && top.window.LoadIframe) || window.LoadIframe;
                 if (typeof loadFn === "function") loadFn(targetUrl);
             };
 
-            // The gear opens a small menu: "Records per load" (the panel below) and, with Configure Access, "Configure"
+            // The gear opens a small menu: "Records per load" (the panel below) and, with Configure Access and build access, "Configure"
             const buildSettingsMenu = () => {
                 const menu = document.createElement("div");
                 menu.id = "axiSettingsMenu";
                 menu.className = "axi-sm";
                 menu.setAttribute("role", "menu");
                 const entries = [{ id: "pagesize", label: "Records per load", run: () => openPageSizePanel() }];
-                if (getAccessPermissions().appMgrAccess) entries.push({ id: "configure", label: "Configure", run: openConfigPage });
+                const perms = getAccessPermissions();
+                if (perms.appMgrAccess && perms.buildAccess) entries.push({ id: "configure", label: "Configure", run: openConfigPage });
                 entries.forEach((en) => {
                     const item = document.createElement("button");
                     item.type = "button";

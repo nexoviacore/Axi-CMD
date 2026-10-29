@@ -169,7 +169,55 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"appMgrAccess\":false}"
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"buildAccess\":true,\"appMgrAccess\":false}"
+        },
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{configId}}/active?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "{{configId}}",
+            "active"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "284 refused without buildAccess",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"403 with a readable message\", () => { pm.response.to.have.status(403); pm.expect(pm.response.text()).to.match(/Configure Access/); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"buildAccess\":false,\"appMgrAccess\":true}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{configId}}/active?appname={{appname}}",
@@ -306,7 +354,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"appMgrAccess\":true}"
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"buildAccess\":true,\"appMgrAccess\":true}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{configId}}/active?appname={{appname}}",
@@ -435,7 +483,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"active\":true,\"appMgrAccess\":true}"
+          "raw": "{\"username\":\"{{username}}\",\"active\":true,\"buildAccess\":true,\"appMgrAccess\":true}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{configId}}/active?appname={{appname}}",
@@ -522,7 +570,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"active\":true,\"appMgrAccess\":true}"
+          "raw": "{\"username\":\"{{username}}\",\"active\":true,\"buildAccess\":true,\"appMgrAccess\":true}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/no_such_option/active?appname={{appname}}",
@@ -634,7 +682,54 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":false,\"command\":\"Configure\",\"name\":\"Postman nope\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":false,\"command\":\"Configure\",\"name\":\"Postman nope\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+        }
+      }
+    },
+    {
+      "name": "285 create refused without buildAccess",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('403', () => pm.response.to.have.status(403));",
+              "pm.test('says why', () => pm.expect(pm.response.text()).to.match(/Configure Access/));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":false,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman nope\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
         }
       }
     },
@@ -726,7 +821,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman refused\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+          "raw": "{\"username\":\"\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman refused\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
         }
       }
     },
@@ -773,7 +868,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"a,b\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"a,b\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
         }
       }
     },
@@ -819,7 +914,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"   \",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"   \",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
         }
       }
     },
@@ -866,7 +961,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
         }
       }
     },
@@ -913,7 +1008,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"USER\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"USER\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
         }
       }
     },
@@ -959,7 +1054,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Upload\",\"name\":\"Postman refused\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Upload\",\"name\":\"Postman refused\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
         }
       }
     },
@@ -1005,7 +1100,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman refused\",\"type\":\"action\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman refused\",\"type\":\"action\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"\"}"
         }
       }
     },
@@ -1051,7 +1146,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman refused\",\"type\":\"url\",\"targetUrl\":\"\",\"paramField\":\"\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman refused\",\"type\":\"url\",\"targetUrl\":\"\",\"paramField\":\"\"}"
         }
       }
     },
@@ -1097,7 +1192,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman refused\",\"type\":\"url\",\"targetUrl\":\"javascript:alert(1)\",\"paramField\":\"\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman refused\",\"type\":\"url\",\"targetUrl\":\"javascript:alert(1)\",\"paramField\":\"\"}"
         }
       }
     },
@@ -1199,7 +1294,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\",\"promptId\":\"ignored for url\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\",\"promptId\":\"ignored for url\"}"
         }
       }
     },
@@ -1254,7 +1349,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customName}}\",\"type\":\"url\",\"targetUrl\":\"/a\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customName}}\",\"type\":\"url\",\"targetUrl\":\"/a\"}"
         }
       }
     },
@@ -1396,7 +1491,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"appMgrAccess\":true}"
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"buildAccess\":true,\"appMgrAccess\":true}"
         }
       }
     },
@@ -1455,7 +1550,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customNametstruct}}\",\"type\":\"tstruct\",\"promptId\":\"axusr\",\"paramField\":\"username\",\"targetUrl\":\"../ignored.aspx\",\"extraParams\":\"ignored=1\",\"recordSource\":\"axi_userlist\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customNametstruct}}\",\"type\":\"tstruct\",\"promptId\":\"axusr\",\"paramField\":\"username\",\"targetUrl\":\"../ignored.aspx\",\"extraParams\":\"ignored=1\",\"recordSource\":\"axi_userlist\"}"
         }
       }
     },
@@ -1514,7 +1609,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customNameiview}}\",\"type\":\"iview\",\"promptId\":\"axusers\",\"targetUrl\":\"../aspx/iview.aspx?ivname=axusers\",\"paramField\":\"ignored\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customNameiview}}\",\"type\":\"iview\",\"promptId\":\"axusers\",\"targetUrl\":\"../aspx/iview.aspx?ivname=axusers\",\"paramField\":\"ignored\"}"
         }
       }
     },
@@ -1573,7 +1668,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customNameivtoivload}}\",\"type\":\"ivtoivload\",\"promptId\":\"ad___upg\",\"paramField\":\"prole\",\"extraParams\":\"AxOpenAct=true&isDupTab=false\",\"recordSource\":\"axi_rolelist\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{customNameivtoivload}}\",\"type\":\"ivtoivload\",\"promptId\":\"ad___upg\",\"paramField\":\"prole\",\"extraParams\":\"AxOpenAct=true&isDupTab=false\",\"recordSource\":\"axi_rolelist\"}"
         }
       }
     },
@@ -1619,7 +1714,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman no struct\",\"type\":\"tstruct\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman no struct\",\"type\":\"tstruct\"}"
         }
       }
     },
@@ -1665,7 +1760,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman bad source\",\"type\":\"tstruct\",\"promptId\":\"axusr\",\"recordSource\":\"bad source\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman bad source\",\"type\":\"tstruct\",\"promptId\":\"axusr\",\"recordSource\":\"bad source\"}"
         }
       }
     },
@@ -1711,7 +1806,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman pf\",\"type\":\"processflow\",\"promptId\":\"x\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman pf\",\"type\":\"processflow\",\"promptId\":\"x\"}"
         }
       }
     },
@@ -1757,7 +1852,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman sa\",\"type\":\"shellaction\",\"promptId\":\"x\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"Postman sa\",\"type\":\"shellaction\",\"promptId\":\"x\"}"
         }
       }
     },
@@ -1850,7 +1945,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"appMgrAccess\":true}"
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"buildAccess\":true,\"appMgrAccess\":true}"
         }
       }
     },
@@ -1898,7 +1993,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"appMgrAccess\":true}"
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"buildAccess\":true,\"appMgrAccess\":true}"
         }
       }
     },
@@ -1946,7 +2041,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"appMgrAccess\":true}"
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"buildAccess\":true,\"appMgrAccess\":true}"
         }
       }
     },
@@ -2032,7 +2127,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"command\":\"Configure\",\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\"}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options?appname={{appname}}",
@@ -2078,7 +2173,54 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":false,\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/other.aspx\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":false,\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/other.aspx\"}"
+        },
+        "url": {
+          "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{editId}}?appname={{appname}}",
+          "host": [
+            "{{axiApiUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "Axi",
+            "command-config",
+            "options",
+            "{{editId}}"
+          ],
+          "query": [
+            {
+              "key": "appname",
+              "value": "{{appname}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "287 update refused without buildAccess",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"403\", () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":false,\"appMgrAccess\":true,\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/other.aspx\"}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{editId}}?appname={{appname}}",
@@ -2125,7 +2267,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"appMgrAccess\":true,\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/other.aspx\"}"
+          "raw": "{\"buildAccess\":true,\"appMgrAccess\":true,\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/other.aspx\"}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{editId}}?appname={{appname}}",
@@ -2172,7 +2314,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\"}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/no_such_option?appname={{appname}}",
@@ -2219,7 +2361,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"name\":\"a,b\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"name\":\"a,b\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\"}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{editId}}?appname={{appname}}",
@@ -2266,7 +2408,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"name\":\"  \",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"name\":\"  \",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\"}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{editId}}?appname={{appname}}",
@@ -2322,7 +2464,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"name\":\"{{builtInName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"name\":\"{{builtInName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\"}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{editId}}?appname={{appname}}",
@@ -2369,7 +2511,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"name\":\"{{editName}}\",\"type\":\"action\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\",\"promptId\":\"x\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"name\":\"{{editName}}\",\"type\":\"action\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\",\"promptId\":\"x\"}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{editId}}?appname={{appname}}",
@@ -2416,7 +2558,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"javascript:alert(1)\",\"paramField\":\"id\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"javascript:alert(1)\",\"paramField\":\"id\"}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{editId}}?appname={{appname}}",
@@ -2463,7 +2605,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\",\"recordSource\":\"bad source\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\",\"recordSource\":\"bad source\"}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{editId}}?appname={{appname}}",
@@ -2520,7 +2662,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"name\":\"{{editName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman.aspx\",\"paramField\":\"id\"}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{editId}}?appname={{appname}}",
@@ -2578,7 +2720,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"name\":\"{{renamedName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman2.aspx\",\"paramField\":\"id\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"name\":\"{{renamedName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman2.aspx\",\"paramField\":\"id\"}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{editId}}?appname={{appname}}",
@@ -2721,7 +2863,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"appMgrAccess\":true,\"name\":\"{{renamedName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman2.aspx\",\"paramField\":\"id\",\"recordSource\":\"axi_userlist\"}"
+          "raw": "{\"username\":\"{{username}}\",\"buildAccess\":true,\"appMgrAccess\":true,\"name\":\"{{renamedName}}\",\"type\":\"url\",\"targetUrl\":\"../aspx/postman2.aspx\",\"paramField\":\"id\",\"recordSource\":\"axi_userlist\"}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{editId}}?appname={{appname}}",
@@ -3070,7 +3212,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"appMgrAccess\":true}"
+          "raw": "{\"username\":\"{{username}}\",\"active\":false,\"buildAccess\":true,\"appMgrAccess\":true}"
         },
         "url": {
           "raw": "{{axiApiUrl}}/api/v1/Axi/command-config/options/{{editId}}/active?appname={{appname}}",

@@ -19,7 +19,8 @@
 - **Dynamic On-Demand Token Resolution**: The fallback mechanism ensuring typed or pasted record identifiers not present in the locally cached initial page are queried and resolved directly from the server before command execution.
 - **`fn_axi_getstructs_obj` Parameter Extension**: The 13-parameter database function accepting optional `psearchterm`, `ppageno`, and `ppagesize` defaults, enabling SQL-level pagination (`LIMIT / OFFSET`) and multi-column keyword filtering (`LIKE %term%`) across primary key, caption, and record ID.
 - **Dynamic Search Debounce**: A 300ms–350ms delay timer buffering server-side ADS requests during continuous keystrokes to prevent excessive backend queries.
-- **Configure Access**: The user permission (the Axpert "app manager" access, for example the admin user) that makes the `configure` verb available. It also governs who may edit the Dynamic Command Configuration. It is separate from build access, which governs `sdk`.
+- **Configure Access**: The user permission (the Axpert "app manager" access, for example the admin user) that makes the `configure` verb available. It is separate from build access, which governs `sdk`.
+- **Config Page Access**: Having both Configure Access and build access. Only such a user is offered the AxiCMD Config page and may change the Dynamic Command Configuration; one of the two alone is not enough.
 - **Built-in Option**: A `configure` or `sdk` prompt option shipped with AxiCMD. Its route cannot be edited by users; it can only be switched active or inactive.
-- **Custom Option**: A `configure` or `sdk` prompt option added by a user with Configure Access. Fully editable, and removed by deactivating it rather than deleting it.
+- **Custom Option**: A `configure` or `sdk` prompt option added by a user with Config Page Access. Fully editable, and removed by deactivating it rather than deleting it.
 - **Search In-Memory Cache**: The in-session JavaScript cache (`axDatasourceObj`) storing dynamic keyword results by term key (`_q_<term>`), invalidated upon explicit refresh (`#btnRefresh`) or record save/update actions.

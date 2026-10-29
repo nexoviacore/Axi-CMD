@@ -76,8 +76,16 @@
         return baseUrl.replace(/\/+$/, "") + "/options/" + encodeURIComponent(configId) + "/active?appname=" + encodeURIComponent(appname);
     }
 
-    function buildActiveBody(username, active, appMgrAccess) {
-        return { username: username, active: !!active, appMgrAccess: !!appMgrAccess };
+    /** access is { appMgrAccess, buildAccess }; the API refuses the write unless both are true. */
+    function buildActiveBody(username, active, access) {
+        return { username: username, active: !!active, appMgrAccess: !!(access && access.appMgrAccess), buildAccess: !!(access && access.buildAccess) };
+    }
+
+    /** Both flags from the page URL; the page lets the user change options only when both are set. */
+    function readAccess(query) {
+        const access = { appMgrAccess: query.get("appmgraccess") === "1", buildAccess: query.get("buildaccess") === "1" };
+        access.canConfigure = access.appMgrAccess && access.buildAccess;
+        return access;
     }
 
     /** Returns new groups with one row's Active flag changed; the input is not modified. */
@@ -119,7 +127,8 @@
         const tabs = Array.prototype.slice.call(document.querySelectorAll("[role=tab]"));
         let groups = { configure: [], sdk: [] };
         let active = "configure";
-        const hasAccess = q.get("access") === "1";
+        const access = readAccess(q);
+        const hasAccess = access.canConfigure;
         const apiBase = q.get("api"), appName = q.get("appname"), userName = q.get("username") || "";
         const Logic = window.AxiConfigLogic;
         const AVAILABLE_TYPES = Logic.CUSTOM_TYPES;   // tstruct, iview, ivtoivload, url (never action, processflow, shellaction)
@@ -137,7 +146,7 @@
             return fetch(buildActiveUrl(apiBase, row.id, appName), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(buildActiveBody(userName, wanted, hasAccess))
+                body: JSON.stringify(buildActiveBody(userName, wanted, access))
             }).then((res) => {
                 if (!res.ok) return res.text().then((t) => { throw { status: res.status, text: t }; });
                 groups = setActive(groups, row.id, wanted);
@@ -249,7 +258,7 @@
             $("acDrawerTitle").textContent = !editing ? "Add option" : (isEditable(editing) ? "Edit option" : (Logic.isEditable(editing) ? "Option" : "Built-in option"));
             $("acHint").textContent = !editing ? "A Custom Option opens a page you choose. It appears at the end of the command's list."
                 : (isEditable(editing) ? "Changes apply to the palette after it reloads; other users see them after they press Refresh."
-                    : (Logic.isEditable(editing) ? "You need Configure Access to change this option."
+                    : (Logic.isEditable(editing) ? "You need Configure Access and build access to change this option."
                         : "A Built-in Option ships with the product, so its route is read-only. You can still switch it on or off."));
             $("fCommand").disabled = !!editing;
             const srcSel = $("fSource");
@@ -348,12 +357,12 @@
                 ? fetch(Logic.buildUpdateUrl(apiBase, target.id, appName), {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(Logic.buildUpdateBody(userName, hasAccess, checked.value))
+                    body: JSON.stringify(Logic.buildUpdateBody(userName, access, checked.value))
                 })
                 : fetch(Logic.buildCreateUrl(apiBase, appName), {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(Logic.buildCreateBody(userName, hasAccess, checked.value))
+                    body: JSON.stringify(Logic.buildCreateBody(userName, access, checked.value))
                 });
             request.then((res) => {
                 if (!res.ok) return res.text().then((t) => { throw { status: res.status, text: t }; });
@@ -549,5 +558,5 @@
         search.focus();
     }
 
-    return { replaceRow, OTHER_USERS_NOTE, buildActiveUrl, buildActiveBody, setActive, describeFailure, normalizeRow, groupByTab, filterRows, buildListUrl, directionFor, init };
+    return { replaceRow, OTHER_USERS_NOTE, buildActiveUrl, buildActiveBody, readAccess, setActive, describeFailure, normalizeRow, groupByTab, filterRows, buildListUrl, directionFor, init };
 }));

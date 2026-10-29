@@ -67,7 +67,7 @@ namespace AxiApi.Controllers
         [HttpPost("command-config/options/{configId}/active")]
         public async Task<IActionResult> SetCommandOptionActive([FromRoute] string configId, [FromBody] SetCommandOptionActiveRequestDTO requestDTO, [FromQuery] string appname)
         {
-            var refused = CheckConfigureAccess(appname, requestDTO?.Username, requestDTO?.AppMgrAccess ?? false);
+            var refused = CheckConfigureAccess(appname, requestDTO?.Username, requestDTO?.AppMgrAccess ?? false, requestDTO?.BuildAccess ?? false);
             if (refused != null) return refused;
 
             var found = await _commandConfigService.SetCommandOptionActiveAsync(appname, requestDTO.Username, configId, requestDTO.Active);
@@ -79,7 +79,7 @@ namespace AxiApi.Controllers
         [HttpPost("command-config/options")]
         public async Task<IActionResult> CreateCommandOption([FromBody] CreateCommandOptionRequestDTO requestDTO, [FromQuery] string appname)
         {
-            var refused = CheckConfigureAccess(appname, requestDTO?.Username, requestDTO?.AppMgrAccess ?? false);
+            var refused = CheckConfigureAccess(appname, requestDTO?.Username, requestDTO?.AppMgrAccess ?? false, requestDTO?.BuildAccess ?? false);
             if (refused != null) return refused;
 
             try
@@ -96,7 +96,7 @@ namespace AxiApi.Controllers
         [HttpPost("command-config/options/{configId}")]
         public async Task<IActionResult> UpdateCommandOption([FromRoute] string configId, [FromBody] UpdateCommandOptionRequestDTO requestDTO, [FromQuery] string appname)
         {
-            var refused = CheckConfigureAccess(appname, requestDTO?.Username, requestDTO?.AppMgrAccess ?? false);
+            var refused = CheckConfigureAccess(appname, requestDTO?.Username, requestDTO?.AppMgrAccess ?? false, requestDTO?.BuildAccess ?? false);
             if (refused != null) return refused;
 
             try
@@ -113,15 +113,15 @@ namespace AxiApi.Controllers
             }
         }
 
-        /// <summary>The checks every command option write needs: appname, the user, and Configure Access. Null when all pass.</summary>
-        private IActionResult? CheckConfigureAccess(string appname, string? username, bool appMgrAccess)
+        /// <summary>The checks every command option write needs: appname, the user, Configure Access and build access. Null when all pass.</summary>
+        private IActionResult? CheckConfigureAccess(string appname, string? username, bool appMgrAccess, bool buildAccess)
         {
             if (string.IsNullOrWhiteSpace(appname))
                 return BadRequest("appname query parameter is required.");
             if (string.IsNullOrWhiteSpace(username))
                 return BadRequest("Username is required in payload.");
-            if (!appMgrAccess)
-                return StatusCode(StatusCodes.Status403Forbidden, "Configure Access is required to change command options.");
+            if (!appMgrAccess || !buildAccess)
+                return StatusCode(StatusCodes.Status403Forbidden, "Configure Access and build access are both required to change command options.");
             return null;
         }
 

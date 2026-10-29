@@ -139,7 +139,7 @@ namespace AxiApi.Lib
 
             return new CreateCommandOptionRequestDTO
             {
-                Username = req.Username, AppMgrAccess = req.AppMgrAccess,
+                Username = req.Username, AppMgrAccess = req.AppMgrAccess, BuildAccess = req.BuildAccess,
                 Command = command, Name = name, Type = type,
                 PromptId = value["promptId"], TargetUrl = value["targetUrl"], ParamField = value["paramField"], ExtraParams = value["extraParams"],
                 RecordSource = source
@@ -153,7 +153,7 @@ namespace AxiApi.Lib
             var others = existingNames.Where(e => !string.Equals((e ?? "").Trim(), own, StringComparison.OrdinalIgnoreCase));
             return Validate(new CreateCommandOptionRequestDTO
             {
-                Username = req.Username, AppMgrAccess = req.AppMgrAccess, Command = command, Name = req.Name, Type = req.Type,
+                Username = req.Username, AppMgrAccess = req.AppMgrAccess, BuildAccess = req.BuildAccess, Command = command, Name = req.Name, Type = req.Type,
                 PromptId = req.PromptId, TargetUrl = req.TargetUrl, ParamField = req.ParamField, ExtraParams = req.ExtraParams, RecordSource = req.RecordSource
             }, others);
         }

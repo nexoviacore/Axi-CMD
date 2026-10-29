@@ -73,8 +73,8 @@ test('update url and body', () => {
     assert.strictEqual(logic.buildUpdateUrl('http://h/api/v1/Axi/command-config/', 'usr_configure_orders', 'My App'),
         'http://h/api/v1/Axi/command-config/options/usr_configure_orders?appname=My%20App');
     const value = { command: 'Configure', name: 'N', type: 'url', promptId: '', targetUrl: '/x', paramField: '', extraParams: '', recordSource: 'Axi_Dummy' };
-    assert.deepStrictEqual(logic.buildUpdateBody('bob', true, value),
-        { username: 'bob', appMgrAccess: true, name: 'N', type: 'url', promptId: '', targetUrl: '/x', paramField: '', extraParams: '', recordSource: 'Axi_Dummy' });
+    assert.deepStrictEqual(logic.buildUpdateBody('bob', { appMgrAccess: true, buildAccess: true }, value),
+        { username: 'bob', appMgrAccess: true, buildAccess: true, name: 'N', type: 'url', promptId: '', targetUrl: '/x', paramField: '', extraParams: '', recordSource: 'Axi_Dummy' });
 });
 
 // ---- page --------------------------------------------------------------------------------------------------
