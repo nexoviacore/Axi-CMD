@@ -3346,6 +3346,8 @@ if (typeof document !== "undefined") {
 
                 const caption = d.caption || d.CAPTION;
                 if (caption) namesSet.add(caption.toLowerCase());
+                // "Caption (transid)" names exactly one structure when several share a caption (#289)
+                if (caption && name) namesSet.add(`${caption} (${name})`.toLowerCase());
 
                 const displaydata = d.displaydata || d.DISPLAYDATA;
                 if (displaydata) {
@@ -3415,6 +3417,11 @@ if (typeof document !== "undefined") {
         if (matches.length === 0) return null;
         if (matches.length === 1) return matches[0];
 
+        // Structures sharing a caption: the internal name already picked wins over a type-only match (#289)
+        const pickedNames = Object.values(resolvedParams).filter(v => v).map(v => String(v).toLowerCase());
+        const pickedMatch = matches.find(d => pickedNames.includes((d.name || d.NAME || d.sqlname || "").toLowerCase()));
+        if (pickedMatch) return pickedMatch;
+
         let matched = null;
         const lowerToken = token.toLowerCase();
         const allKeys = new Set([...Object.keys(resolvedParams), ...Object.keys(resolvedParamType)]);
@@ -3477,6 +3484,43 @@ if (typeof document !== "undefined") {
         }
 
         return matches[0];
+    }
+
+    /**
+     * Returns the structures of one type that share the caption a token names, e.g. Test Form2 (ytdf) and
+     * Test Form2 (tst2) for "Test Form2" (#289). Such a token cannot be run: it does not say which one is meant.
+     * Empty when the token names one structure: it equals an internal name, carries "(transid)", or no other
+     * structure of the same type has that caption. A form and a report sharing a caption are not counted;
+     * the usual type preference (getTargetEntityObj) chooses between them.
+     * @param {string} token - Structure token as typed (quotes and a trailing [badge] are ignored).
+     * @param {string} [action] - Command verb (create / edit / view), used to tell which type is meant.
+     * @returns {Array<object>} Rows sharing the caption, or [] when the token is not ambiguous.
+     */
+    function getSameCaptionStructs(token, action) {
+        const raw = cleanString(token);
+        const clean = raw.replace(/\s*\[[^\]]*\]$/, "").trim();
+        if (!clean) return [];
+        const matches = getTargetEntityMatches(clean);
+        if (matches.length < 2) return [];
+        const lowClean = clean.toLowerCase();
+        if (matches.some(d => (d.name || d.NAME || d.sqlname || "").toLowerCase() === lowClean)) return [];
+
+        let typeOf = null;
+        const badge = (raw.match(/\[([^\]]*)\]$/) || [])[1];
+        if (badge) {
+            const b = badge.toLowerCase().trim();
+            if (["form", "tstruct", "t"].includes(b)) typeOf = "t";
+            else if (["report", "iview", "i"].includes(b)) typeOf = "i";
+            else if (["ads", "a", "v"].includes(b)) typeOf = "ads";
+            else if (["page", "p"].includes(b)) typeOf = "p";
+        }
+        if (!typeOf) {
+            const target = getTargetEntityObj(clean, action);
+            typeOf = target ? (target.stype || target.STYPE) : null;
+        }
+        if (!typeOf) return [];
+        const sameType = matches.filter(d => areTypesMatching(d.stype || d.STYPE, typeOf));
+        return sameType.length > 1 ? sameType : [];
     }
 
     /**
@@ -5903,8 +5947,11 @@ if (typeof document !== "undefined") {
         if (!w) return undefined;
         const same = v => v !== undefined && v !== null && String(v).trim().toLowerCase() === w;
         const typeOk = r => !preferredType || (r.stype || "").toLowerCase() === preferredType;
+        // "Caption (transid)" names one structure among several sharing a caption (#289)
+        const captionAndName = r => r.caption && r.name && `${String(r.caption).trim()} (${r.name})`.toLowerCase() === w;
         return list.find(r => r && r.name === wanted && typeOk(r))
             || list.find(r => r && r.name === wanted)
+            || list.find(r => r && captionAndName(r))
             || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)) && typeOk(r))
             || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)));
     }
@@ -6626,7 +6673,9 @@ if (typeof document !== "undefined") {
                 const matches = cachedList.filter(item =>
                     (cleanString(item.displaydata) || "").toLowerCase() === tokenText.toLowerCase() ||
                     (cleanString(item.caption) || "").toLowerCase() === tokenText.toLowerCase() ||
-                    (cleanString(item.name) || "").toLowerCase() === tokenText.toLowerCase()
+                    (cleanString(item.name) || "").toLowerCase() === tokenText.toLowerCase() ||
+                    // "Caption (transid)" kept in the input for a caption that several structures share (#289)
+                    (item.caption && item.name && `${cleanString(item.caption)} (${cleanString(item.name)})`.toLowerCase() === tokenText.toLowerCase())
                 );
 
                 if (matches.length > 0) {
@@ -6648,7 +6697,16 @@ if (typeof document !== "undefined") {
                         preferredType = "t";
                     }
 
-                    if (preferredType && matches.length > 1) {
+                    // Two structures can share a caption ("Test Form2" is both ytdf and tst2). The one the user picked
+                    // is already in resolvedParams, so keep it instead of taking the first row with that caption (#289).
+                    const pickedName = String(resolvedParams[lookupIndex] || "").toLowerCase();
+                    const pickedMatch = (pickedName && matches.length > 1)
+                        ? matches.find(item => (item.name || item.NAME || item.sqlname || "").toLowerCase() === pickedName)
+                        : null;
+
+                    if (pickedMatch) {
+                        found = pickedMatch;
+                    } else if (preferredType && matches.length > 1) {
                         const typeMatched = matches.find(item => areTypesMatching(item.stype || item.STYPE, preferredType));
                         if (typeMatched) {
                             found = typeMatched;
@@ -7383,7 +7441,14 @@ if (typeof document !== "undefined") {
 
 
 
-        if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue && !isValueToken) {
+        // A structure whose caption another one of its type shares keeps "(transid)" in the input, so the
+        // typed text, history and favourites still say which one it is (#289)
+        const isStructRow = foundObj && typeof foundObj === "object" && foundObj.stype && foundObj.name
+            && foundObj.caption && foundObj.isfield === undefined;
+        const keepStructName = isStructRow
+            && getTargetEntityMatches(foundObj.caption).filter(d => areTypesMatching(d.stype || d.STYPE, foundObj.stype)).length > 1;
+
+        if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue && !isValueToken && !keepStructName) {
             const lastBracketIndex = suggestion.lastIndexOf("(");
 
 
@@ -9746,6 +9811,15 @@ if (typeof document !== "undefined") {
         if (["view", "create", "edit"].includes(groupNameNormalized)) {
             const targetToken = tokens[1];
             if (targetToken && targetToken.toLowerCase() !== "inbox") {
+                // A caption typed by hand that several structures of one type share: don't guess which one (#289)
+                const sameCaption = getSameCaptionStructs(targetToken, groupNameNormalized);
+                if (sameCaption.length > 1) {
+                    const caption = cleanString(targetToken).replace(/\s*\[[^\]]*\]$/, "").trim();
+                    const choices = sameCaption.map(d => `${d.caption || caption} (${d.name})`).join(", ");
+                    showToast(`More than one is named '${caption}': ${choices}. Pick one from the list or type it with its name in brackets.`, 5000, "info");
+                    input.focus();
+                    return;
+                }
                 const entityObj = getTargetEntityObj(targetToken, groupNameNormalized);
                 if (entityObj) {
                     // if (groupNameNormalized === "edit" && (entityObj.keyfieldforedit === "F" || entityObj.keyfieldforedit === false)) {
