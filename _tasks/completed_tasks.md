@@ -31,6 +31,5 @@ Issue #289
 14. A tstruct (tstruct, Configure, SDK) opened from the command line and then from its normal place (popup, Configuration Studio, Developer Studio) showed a blank screen. Cause: the main-frame open caches the form, and the cached page only renders in middle1. Fix in Js/main-tstruct.js and Js/main-tstruct.min.js: tstDummyLoad and tstHtmlDummyLoad reload the page without dummyload in any other frame, so the server renders the form fully (new isTstHtmlCacheFrame / reloadWithoutDummyLoad). Docs: AxpertPlugins/AxiCMD/ISSUE-261-MAIN-TSTRUCT-CHANGES.md.
 Issue #261
 
-15. Added a console log for every URL the palette opens (main frame, popup, favourites): "[AxiCMD] <function> targetUrl: <url>" through the new logTargetUrl helper in axicmdmain.js.
-No issue number (debugging aid)
+
 
