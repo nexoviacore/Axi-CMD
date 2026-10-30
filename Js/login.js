@@ -211,6 +211,10 @@ function ForgotPwd() {
         return false;
     }
 
+    if (!chkCaptchaMandetory()) {
+        return false;
+    }
+
     $j("#hdnUsrName").val($j("#txtName").val());
     $j("#hdnMl").val($j("#txtMlOrg").val());
     $j("#hdnProj").val(hdnproj);
@@ -328,6 +332,14 @@ function AddLanguages() {
 }
 
 $j(document).ready(function () {
+    if (typeof axiLogin != "undefined" && axiLogin != "") {
+        $("#main_body").hide();
+        $("#axUserName").removeAttr("required");
+        $("#axPassword").removeAttr("required");
+        $j("#btnAxiLogin").click();
+        return;
+    }
+
     $("a[title ~= 'BotDetect']").removeAttr("style");
     $("a[title ~= 'BotDetect']").removeAttr("href");
     $("a[title ~= 'BotDetect']").css('visibility', 'hidden');
@@ -533,6 +545,14 @@ $j(document).ready(function () {
         $("#axSelectProj").val(localStorageProj);
         $('#axSelectProj').trigger('change');
         setProjectNeeds(localStorageProj, false);
+        try {
+            setTimeout(function () {
+                setTimeout(function () {
+                    const userNameField = document.getElementById("axUserName");
+                    userNameField.focus();
+                }, 0);
+            }, 100);
+        } catch (ex) { }
     } else {
         setProjectImages(localStorageProj)
         if (typeof multipleAccessCode === "undefined" || multipleAccessCode === "true")
@@ -1294,29 +1314,8 @@ function setProjectNeeds(proj, addLocalStorage = true) {
         } catch (e) { }
     }
 
-    const isIE = !!window.document.documentMode;
     const basePath = `../${proj}`;
     const tStamp = Date.now();
-
-    const gsLink = $("#customGlobalStyles");
-    if (gsLink && gsLink.data("proj") !== proj) {
-        const linkElement = document.createElement("link");
-        linkElement.id = "customGlobalStyles";
-        linkElement.setAttribute("data-proj", proj);
-        linkElement.href = `${basePath}/customGlobalStyles.css?v=${tStamp}`;
-        linkElement.rel = "stylesheet";
-
-        linkElement.onload = () => {
-            localStorage[`customGlobalStylesExist-${appUrl}`] = tStamp;
-        };
-        linkElement.onerror = () => {
-            localStorage[`customGlobalStylesExist-${appUrl}`] = false;
-        };
-
-        gsLink.replaceWith(linkElement);
-        setProjectImages(proj);
-    }
-
     const customLink = [
         "customIviewNewUi",
         "customTstructNewUi",
@@ -1325,28 +1324,67 @@ function setProjectNeeds(proj, addLocalStorage = true) {
         "customCompressedTstructUI"
     ];
 
-    customLink.forEach(elem => {
-        const isCSS = elem.toLowerCase().includes("ui");
-        const ext = isCSS ? "css" : "js";
-        const url = `${basePath}/${elem}.${ext}?v=${tStamp}`;
-        const key = `${elem}Exist-${appUrl}`;
+    const assetNames = [
+        "customGlobalStyles.css",
+        ...customLink.map(elem => `${elem}.${elem.toLowerCase().includes("ui") ? "css" : "js"}`)
+    ];
 
-        if (isCSS) {
-            const link = document.createElement("link");
-            link.rel = "stylesheet";
-            link.href = url;
-            link.onload = () => localStorage[key] = tStamp;
-            link.onerror = () => localStorage[key] = false;
-            document.head.appendChild(link);
-        } else {
-            const script = document.createElement("script");
-            script.src = url;
-            script.onload = () => localStorage[key] = tStamp;
-            script.onerror = () => {
-                localStorage[key] = false;
-            };
-            document.head.appendChild(script);
+    ASB.WebService.GetProjectCustomAssets(proj, function (result) {
+        let availableAssets;
+        try {
+            availableAssets = JSON.parse(result);
+        } catch (e) {
+            return;
         }
+
+        assetNames.forEach(assetName => {
+            const key = `${assetName.replace(/\.(css|js)$/i, "")}Exist-${appUrl}`;
+            const elem = assetName.replace(/\.(css|js)$/i, "");
+            const existingAsset = document.getElementById(elem);
+            if (!availableAssets[assetName]) {
+                localStorage[key] = false;
+                if (existingAsset) {
+                    existingAsset.remove();
+                }
+                return;
+            }
+
+            if (assetName === "customGlobalStyles.css") {
+                if (existingAsset && existingAsset.dataset.proj === proj) {
+                    return;
+                }
+
+                const link = document.createElement("link");
+                link.id = "customGlobalStyles";
+                link.setAttribute("data-proj", proj);
+                link.rel = "stylesheet";
+                link.href = `${basePath}/${assetName}?v=${tStamp}`;
+                link.onload = () => localStorage[key] = tStamp;
+                link.onerror = () => localStorage[key] = false;
+                existingAsset ? existingAsset.replaceWith(link) : document.head.appendChild(link);
+                return;
+            }
+
+            const isCSS = assetName.endsWith(".css");
+            if (existingAsset && existingAsset.dataset.proj === proj) {
+                return;
+            }
+
+            const asset = document.createElement(isCSS ? "link" : "script");
+            asset.id = elem;
+            asset.dataset.proj = proj;
+            if (isCSS) {
+                asset.rel = "stylesheet";
+                asset.href = `${basePath}/${assetName}?v=${tStamp}`;
+            } else {
+                asset.src = `${basePath}/${assetName}?v=${tStamp}`;
+            }
+            asset.onload = () => localStorage[key] = tStamp;
+            asset.onerror = () => localStorage[key] = false;
+            existingAsset ? existingAsset.replaceWith(asset) : document.head.appendChild(asset);
+        });
+
+        setProjectImages(proj);
     });
     setTimeout(function () {
         setTimeout(function () {
@@ -1833,11 +1871,17 @@ function chkNextForm() {
                     return false;
                 }
             } else {
-                const _thisEncVal = encryptLoginDetails($j("#axUserName").val());
-                $("#hdnUserName").val(_thisEncVal);
-                GetProcessTime();
-                $("#browserElapsTime").val(browserElapsTime);
-                return true;
+                if (!chkCaptchaMandetory()) {
+                    if (typeof _btn != "undefined")
+                        _btn.style.pointerEvents = "auto";
+                    return false;
+                } else {
+                    const _thisEncVal = encryptLoginDetails($j("#axUserName").val());
+                    $("#hdnUserName").val(_thisEncVal);
+                    GetProcessTime();
+                    $("#browserElapsTime").val(browserElapsTime);
+                    return true;
+                }
             }
         }
     }
@@ -1849,15 +1893,40 @@ function chkNextForm() {
                 return false;
             }
         } else {
-            const _thisEncVal = encryptLoginDetails($j("#axUserName").val());
-            $("#hdnUserName").val(_thisEncVal);
-            GetProcessTime();
-            $("#browserElapsTime").val(browserElapsTime);
-            return true;
+            if (!chkCaptchaMandetory()) {
+                if (typeof _btn != "undefined")
+                    _btn.style.pointerEvents = "auto";
+                return false;
+            } else {
+                const _thisEncVal = encryptLoginDetails($j("#axUserName").val());
+                $("#hdnUserName").val(_thisEncVal);
+                GetProcessTime();
+                $("#browserElapsTime").val(browserElapsTime);
+                return true;
+            }
         }
     }
 }
-
+function chkCaptchaMandetory() {
+    if ($("#CaptchaCodeTextBox").length > 0 && $("#CaptchaCodeTextBox").closest("#pnlCaptcha").is(":visible") && $("#CaptchaCodeTextBox").val() == "") {
+        showAlertDialog("error", 5007, "client");
+        $("#CaptchaCodeTextBox").focus();
+        errField = 'CaptchaCodeTextBox';
+        return false;
+    } else if ($("#CaptchaCodeTextBox").length > 0 && $("#CaptchaCodeTextBox").closest("#pnlCaptcha").is(":visible") && $("#CaptchaCodeTextBox").val() != "") {
+        let _value = $("#CaptchaCodeTextBox").val();
+        if (!/^[A-Za-z0-9]{1,8}$/.test(_value)) {
+            showAlertDialog("error", "Please enter a valid captcha");
+            $("#CaptchaCodeTextBox").val('');
+            $("#CaptchaCodeTextBox").focus();
+            errField = 'CaptchaCodeTextBox';
+            return false;
+        } else
+            return true;
+    }
+    else
+        return true;
+}
 function OpenForgotPwdNew() {
     var valProj = $j('#hdnProjName').val();
     if (valProj == "") {
@@ -2217,40 +2286,232 @@ function getBrowserInfo() {
 
     return { Type: browser, Browser: browser, Version: version, MajorVersion: major, MinorVersion: minor };
 }
+//function getClientInfo() {
+//    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+//    const offset = -new Date().getTimezoneOffset();
+//    const browser = getBrowserInfo();
+//    const platform = navigator.platform || "WinNT";
+//    const languages = navigator.languages ? navigator.languages.join(",") : navigator.language;
+//    const browserDetails = `tz~${tz}~${offset}?${browser.Type}${browser.MajorVersion}?${browser.Browser}?${browser.Version}?${browser.MajorVersion}?${browser.MinorVersion}?${platform}?${languages}`;
+//    const storageKey = `axKeepMeBrowserId-${appUrl}`;
+//    const legacyIpCacheKey = `axKeepMePublicIp-${appUrl}`;
+//    let clientBrowserId;
+//    let cachedIp = "";
+//    let cachedIpExpiry = 0;
+//    try {
+//        const storedValue = localStorage.getItem(storageKey);
+//        if (storedValue) {
+//            try {
+//                const storedData = JSON.parse(storedValue);
+//                if (storedData && typeof storedData == "object" && storedData.browserId) {
+//                    clientBrowserId = storedData.browserId;
+//                    cachedIp = storedData.ip || "";
+//                    cachedIpExpiry = Number(storedData.ipExpiresAt) || 0;
+//                } else {
+//                    clientBrowserId = storedValue;
+//                }
+//            } catch (e) {
+//                clientBrowserId = storedValue;
+//            }
+//        }
+
+//        const legacyIp = JSON.parse(localStorage.getItem(legacyIpCacheKey) || "null");
+//        if ((!cachedIpExpiry || cachedIpExpiry <= Date.now()) && legacyIp && legacyIp.expiresAt > Date.now()) {
+//            cachedIp = legacyIp.ip || "";
+//            cachedIpExpiry = legacyIp.expiresAt;
+//        }
+
+//        if (!clientBrowserId) {
+//            clientBrowserId = window.crypto && typeof window.crypto.randomUUID == "function"
+//                ? window.crypto.randomUUID()
+//                : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+//        }
+//    } catch (e) {
+//        clientBrowserId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+//    }
+
+//    const saveClientCache = (ip, ipExpiresAt) => {
+//        try {
+//            localStorage.setItem(storageKey, JSON.stringify({ browserId: clientBrowserId, ip, ipExpiresAt }));
+//            localStorage.removeItem(legacyIpCacheKey);
+//        } catch (e) { }
+//    };
+
+//    saveClientCache(cachedIp, cachedIpExpiry);
+//    const ipCacheExpiry = Date.now() + 24 * 60 * 60 * 1000;
+//    const submitBrowserInfo = clientIp => {
+//        const encryptedDetails = encryptLoginDetails(clientIp + "♣" + browserDetails);
+//        $.ajax({
+//            url: 'Signin.aspx/browserInfo',
+//            type: 'POST',
+//            cache: false,
+//            async: false,
+//            data: JSON.stringify({ brInfo: encryptedDetails }),
+//            dataType: 'json',
+//            contentType: "application/json",
+//            success: function () {
+//                GetBrowserUId();
+//            },
+//            error: function () {
+//                GetBrowserUId();
+//            }
+//        });
+//    };
+
+//    if (cachedIpExpiry > Date.now()) {
+//        submitBrowserInfo(cachedIp || clientBrowserId);
+//        return;
+//    }
+
+//    fetch('https://api.ipify.org?format=json')
+//        .then(response => {
+//            if (!response.ok) {
+//                throw new Error(`IP lookup failed: ${response.status}`);
+//            }
+//            return response.json();
+//        })
+//        .then(data => {
+//            if (!data.ip) {
+//                throw new Error("IP lookup returned no address");
+//            }
+//            saveClientCache(data.ip, ipCacheExpiry);
+//            submitBrowserInfo(data.ip);
+//        })
+//        .catch(() => {
+//            saveClientCache("", ipCacheExpiry);
+//            submitBrowserInfo(clientBrowserId);
+//        });
+//}
+
 function getClientInfo() {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const offset = -new Date().getTimezoneOffset();
     const browser = getBrowserInfo();
     const platform = navigator.platform || "WinNT";
-    const languages = navigator.languages ? navigator.languages.join(",") : navigator.language;
-    const browserDetails = `tz~${tz}~${offset}?${browser.Type}${browser.MajorVersion}?${browser.Browser}?${browser.Version}?${browser.MajorVersion}?${browser.MinorVersion}?${platform}?${languages}`;
-    // Get public IP address
-    fetch('https://api.ipify.org?format=json')
-        .then(response => response.json())
-        .then(data => {
-            const _thisEncVal = encryptLoginDetails(data.ip + "♣" + browserDetails);
-            $.ajax({
-                url: 'Signin.aspx/browserInfo',
-                type: 'POST',
-                cache: false,
-                async: false,
-                data: JSON.stringify({
-                    brInfo: _thisEncVal
-                }),
-                dataType: 'json',
-                contentType: "application/json",
-                success: function (data) {
-                    GetBrowserUId();
-                },
-                failure: function (response) {
-                    showAlertDialog("error", response.d);
+    const languages = navigator.languages
+        ? navigator.languages.join(",")
+        : navigator.language;
+
+    const browserDetails =
+        `tz~${tz}~${offset}?${browser.Type}${browser.MajorVersion}?${browser.Browser}?${browser.Version}?${browser.MajorVersion}?${browser.MinorVersion}?${platform}?${languages}`;
+
+    const storageKey = `axKeepMeBrowserId-${appUrl}`;
+    const legacyIpCacheKey = `axKeepMePublicIp-${appUrl}`;
+
+    let clientBrowserId;
+    let cachedIp = "";
+
+    try {
+        const storedValue = localStorage.getItem(storageKey);
+
+        if (storedValue) {
+            try {
+                const storedData = JSON.parse(storedValue);
+
+                if (
+                    storedData &&
+                    typeof storedData === "object" &&
+                    storedData.browserId
+                ) {
+                    clientBrowserId = storedData.browserId;
+                    cachedIp = storedData.ip || "";
+                } else {
+                    clientBrowserId = storedValue;
                 }
-            });
-        }).catch(error => {
-            GetBrowserUId();
+            } catch (e) {
+                clientBrowserId = storedValue;
+            }
+        }
+
+        // Read the legacy IP cache without checking expiry.
+        const legacyIp = JSON.parse(
+            localStorage.getItem(legacyIpCacheKey) || "null"
+        );
+
+        if (!cachedIp && legacyIp && legacyIp.ip) {
+            cachedIp = legacyIp.ip;
+        }
+
+        if (!clientBrowserId) {
+            clientBrowserId =
+                window.crypto &&
+                    typeof window.crypto.randomUUID === "function"
+                    ? window.crypto.randomUUID()
+                    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+        }
+    } catch (e) {
+        clientBrowserId =
+            `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+    }
+
+    const saveClientCache = (ip) => {
+        try {
+            localStorage.setItem(
+                storageKey,
+                JSON.stringify({
+                    browserId: clientBrowserId,
+                    ip: ip || ""
+                })
+            );
+
+            localStorage.removeItem(legacyIpCacheKey);
+        } catch (e) { }
+    };
+
+    saveClientCache(cachedIp);
+
+    const submitBrowserInfo = (clientIp) => {
+        const encryptedDetails = encryptLoginDetails(
+            clientIp + "♣" + browserDetails
+        );
+
+        $.ajax({
+            url: "Signin.aspx/browserInfo",
+            type: "POST",
+            cache: false,
+            async: false,
+            data: JSON.stringify({
+                brInfo: encryptedDetails
+            }),
+            dataType: "json",
+            contentType: "application/json",
+            success: function () {
+                GetBrowserUId();
+            },
+            error: function () {
+                GetBrowserUId();
+            }
+        });
+    };
+
+    // Reuse the cached IP if available.
+    if (cachedIp) {
+        submitBrowserInfo(cachedIp);
+        return;
+    }
+
+    // Fetch the public IP only when it is not cached.
+    fetch("https://api.ipify.org?format=json")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`IP lookup failed: ${response.status}`);
+            }
+
+            return response.json();
+        })
+        .then(data => {
+            if (!data.ip) {
+                throw new Error("IP lookup returned no address");
+            }
+
+            saveClientCache(data.ip);
+            submitBrowserInfo(data.ip);
+        })
+        .catch(() => {
+            saveClientCache("");
+            submitBrowserInfo(clientBrowserId);
         });
 }
-
 $j(document).on("change", "#signedin", function (e) {
     if ($(this).is(':checked')) {
         $("#hdnKeepMeSignin").val("true");

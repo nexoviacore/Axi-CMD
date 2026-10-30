@@ -94,6 +94,7 @@ public partial class Signin : System.Web.UI.Page
     public string onlyssoKey = "";
     public string multipleAccessCode = "false";
     public string temploginPrivateKey = string.Empty;
+    public string axiLogin = string.Empty;
     //public string AxiInfoLogin = string.Empty;
     public string AxiLoginInfoKey = string.Empty;
     public Dictionary<string, string> _jsoncontents = new Dictionary<string, string>();
@@ -272,7 +273,9 @@ public partial class Signin : System.Web.UI.Page
             }
             else if (Request.QueryString["axi"] != null && Request.QueryString["axi"] != "")
             {
-                AxiUserLogin();
+                //AxiUserLogin();
+                axiLogin = "true";
+                panelAxiLogin.Visible = true;
             }
             else if (Request.QueryString["ssotype"] != null)
             {
@@ -2779,6 +2782,13 @@ public partial class Signin : System.Web.UI.Page
         //if (IsPostBack && ConfigurationManager.AppSettings["enableCaptcha"] != null && ConfigurationManager.AppSettings["enableCaptcha"].ToString() == "true")
         if (IsPostBack && Session["captchaenabledFlag"] != null && Session["captchaenabledFlag"].ToString() == "true")
         {
+            string captcha = CaptchaCodeTextBox.Text;
+            if (!Regex.IsMatch(captcha, "^[A-Za-z0-9]{1,8}$"))
+            {
+                string msg = "<error><msg>Invalid captcha.</msg></error>";
+                ClientScript.RegisterStartupScript(this.GetType(), "Javascript", "javascript:SetLoginErrorMsg('" + msg + "');", true);
+                return;
+            }
             allowLogin = DynamicCaptcha.Validate();
         }
 
@@ -3490,6 +3500,116 @@ public partial class Signin : System.Web.UI.Page
     }
 
     private void AxiUserLogin()
+    {
+        try
+        {
+            if (Request.QueryString["axi"] != null && Request.QueryString["axi"] != "")
+            {
+                System.Web.Configuration.SessionStateSection sessionStateSection = (System.Web.Configuration.SessionStateSection)ConfigurationManager.GetSection("system.web/sessionState");
+                string cookieName = sessionStateSection.CookieName;
+                HttpCookie mycookie = new HttpCookie(cookieName);
+                mycookie.Expires = DateTime.Now.AddDays(-1);
+                HttpContext.Current.Response.Cookies.Add(mycookie);
+                System.Web.HttpContext.Current.Session.Abandon();
+                SessionIDManager manager = new SessionIDManager();
+                manager.RemoveSessionID(System.Web.HttpContext.Current);
+                var newId = manager.CreateSessionID(System.Web.HttpContext.Current);
+                var isRedirected = true;
+                var isAdded = true;
+                manager.SaveSessionID(System.Web.HttpContext.Current, newId, out isRedirected, out isAdded);
+                string axiinfo = "";
+                string axiinfoKey = Request.QueryString["axi"].ToString();
+                if (axiinfoKey != "")
+                {
+                    axiinfoKey = util.encrtptDecryptAES(axiinfoKey, false);
+                    string schema = axiinfoKey.Split('-')[0];
+                    Util.Util utils = new Util.Util();
+                    //logobj.CreateLog("Exception in AxiUserLogin - axiinfoKey:" + axiinfoKey, HttpContext.Current.Session.SessionID, "AxiUserLogin", "", "true");
+                    try
+                    {
+                        HttpContext.Current.Session.Remove("AppAllSettingsKey-" + schema);
+                    }
+                    catch (Exception) { }
+                    Session["AxiProjectFirst"] = "true";
+                    utils.GetAxApps(schema);
+                    //logobj.CreateLog("Exception in AxiUserLogin - after GetAxApps schema:" + schema, HttpContext.Current.Session.SessionID, "AxiUserLogin", "", "true");
+                    FDR fObj = new FDR(schema);
+                    if (fObj != null)
+                    {
+                        //logobj.CreateLog("Exception in AxiUserLogin - before ReadKeyStringValueNoSchema:", HttpContext.Current.Session.SessionID, "AxiUserLogin", "", "true");
+                        string res = fObj.ReadKeyStringValueNoSchema(axiinfoKey);
+                        //logobj.CreateLog("Exception in AxiUserLogin - after ReadKeyStringValueNoSchema:" + res, HttpContext.Current.Session.SessionID, "AxiUserLogin", "", "true");
+                        if (res != string.Empty)
+                        {
+                            AxiLoginInfoKey = axiinfoKey;
+                            Session["AxiInfoLogin"] = res;
+                            axiinfo = util.encrtptDecryptAES(res, false);
+                            //logobj.CreateLog("Exception in AxiUserLogin - after axiinfo:" + axiinfo, HttpContext.Current.Session.SessionID, "AxiUserLogin", "", "true");
+                            //FDW fdwObj = new FDW(schema);
+                            //ArrayList raxiKey = new ArrayList();
+                            //raxiKey.Add(axiinfoKey);
+                            //fdwObj.DeleteKeys(raxiKey);
+                        }
+                    }
+                }
+                //string axiinfo = Request.QueryString["axi"].ToString();
+                //axiinfo = util.encrtptDecryptAES(axiinfo, false);
+                if (axiinfo != "")
+                {
+                    string _SchemaName = axiinfo.Split('~')[0];
+                    _SchemaName = _SchemaName.Split('=')[1];
+                    string _UName = axiinfo.Split('~')[1];
+                    _UName = _UName.Split('=')[1];
+                    string _Email = axiinfo.Split('~')[2];
+                    _Email = _Email.Split('=')[1];
+                    AxiProjectLogin = "true";
+                    string isprimary = axiinfo.Split('~')[3];
+                    isprimary = isprimary.Split('=')[1];
+                    if (isprimary == "T")
+                        AxiIsPrimary = "true";
+                    else
+                        AxiIsPrimary = "false";
+
+                    string _password = axiinfo.Split('~')[4];
+                    _password = _password.Split('=')[1];
+
+                    string _keepMeSignin = axiinfo.Split('~')[5];
+                    _keepMeSignin = _keepMeSignin.Split('=')[1];
+                    if (_keepMeSignin == "true")
+                        staySignIn = _keepMeSignin;
+
+                    string _brId = axiinfo.Split('~')[6];
+                    _brId = _brId.Split('=')[1];
+                    if (_brId != "")
+                        hdnBwsrid.Value = _brId;
+                    //logobj.CreateLog("Exception in AxiUserLogin - before CallLoginService:", HttpContext.Current.Session.SessionID, "AxiUserLogin", "", "true");
+                    try
+                    {
+                        HttpContext.Current.Session.Remove("AppAllSettingsKey-" + _SchemaName);
+                    }
+                    catch (Exception) { }
+                    CallLoginService(false, _UName, _password, _SchemaName, "English", "");
+                }
+                else
+                {
+                    //logobj.CreateLog("Exception in AxiUserLogin - else ", HttpContext.Current.Session.SessionID, "AxiUserLogin", "", "true");
+                    string loginPath = util.LOGINPATH;
+                    loginPath = loginPath.Substring(3);
+                    Response.Redirect(loginPath + "?error=Query string in not valid.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            //logobj.CreateLog("Exception in AxiUserLogin - " + ex.Message, HttpContext.Current.Session.SessionID, "AxiUserLogin", "", "true");
+
+            string loginPath = util.LOGINPATH;
+            loginPath = loginPath.Substring(3);
+            Response.Redirect(loginPath + "?error=" + ex.Message);
+        }
+    }
+
+    protected void btnAxiLogin_Click(object sender, EventArgs e)
     {
         try
         {

@@ -363,10 +363,11 @@ public partial class PluginCustomCode : System.Web.UI.Page
         string project = Convert.ToString(HttpContext.Current.Session["project"]);
         string[] folderPaths = {
             applicationPath + "\\AxpertPlugins",
-            applicationPath + "\\CustomPages"
+            applicationPath + "\\CustomPages",
+            applicationPath + "\\" + project
         };
 
-
+        string skipHTMLPagesFolder = applicationPath_Custome + "\\" + project + "\\HTMLPages\\";
         string[] folderPaths_Custom = {
             applicationPath_Custome + "\\" + project+"\\HTMLPages\\",
             applicationPath_Custome + "\\ReactPages\\" + project
@@ -397,6 +398,10 @@ public partial class PluginCustomCode : System.Web.UI.Page
                     {
                         continue;
                     }
+                    if (subFolder.StartsWith(skipHTMLPagesFolder, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
 
                     folderList.Add(new FolderDetails
                     {
@@ -412,6 +417,11 @@ public partial class PluginCustomCode : System.Web.UI.Page
                 {
                     FileInfo fileInfo = new FileInfo(file);
                     if (Array.Exists(skipFolders, folder => fileInfo.DirectoryName.ToLower().Contains(folder)))
+                    {
+                        continue;
+                    }
+
+                    if (file.StartsWith(skipHTMLPagesFolder, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }

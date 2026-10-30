@@ -30,8 +30,8 @@
     <script type="text/javascript" src="../Js/iFrameHandler.min.js"></script>
     <script src="../Js/common.min.js?v=166"></script>
     <script src="../Js/tstructvars.min.js?v=98"></script>
-    <script src="../Js/tstruct.min.js?v=699"></script>
-    <script src="../Js/tstTable.min.js?v=42"></script>
+    <script src="../Js/tstruct.min.js?v=702"></script>
+    <script src="../Js/tstTable.min.js?v=44"></script>
 </head>
 <body dir="<%=direction%>">
     <form id="form1" runat="server">

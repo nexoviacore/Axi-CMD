@@ -679,6 +679,7 @@
                                                 <asp:HiddenField ID="hdnAutoSplit" runat="server" />
                                                 <asp:HiddenField ID="hdnDisableSplit" runat="server" />
                                                 <asp:HiddenField ID="hdnWebServiceViewName" runat="server" />
+                                                <asp:HiddenField ID="hdnOndemandLoad" runat="server" />
 
                                                 <asp:HiddenField ID="hdnListViewFieldsJSON" runat="server" />
                                                 <asp:HiddenField ID="hdnLvSelectedCols" runat="server" />

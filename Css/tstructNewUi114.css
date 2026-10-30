@@ -1681,6 +1681,7 @@ body.block-ui::after {
 		transition: all 0.2s ease;
 		height: 38px !important;
 		background-color: #f1f5f9 !important;
+		min-height: 38px !important;
 	}
 
 	.select2-container .select2-search--inline .select2-search__field {
@@ -1690,13 +1691,11 @@ body.block-ui::after {
 	.input-group > .form-control.flatpickr-input {
 		width: 88%;
 		background: #f1f5f9 !important;
-		/*  border-radius: 6px 0 0px 6px !important;*/
 		border-right: 0 !important;
 	}
 
 	.input-group > .form-control.flatpickr-input {
 		padding: 3px 9px;
-		/* border-radius: 0 6px 6px 0 !important;*/
 		border-color: #e2e8f0 !important;
 		background: #f1f5f9;
 	}
@@ -1839,6 +1838,7 @@ body.block-ui::after {
 
 	.tab-content.mainIframe .select2-container--bootstrap5 .select2-selection {
 		height: 32px !important;
+		min-height: 32px !important;
 	}
 
 	/*    add row and delete btn */
@@ -1847,32 +1847,13 @@ body.block-ui::after {
 		position: relative;
 	}
 
-	.tab-content.mainIframe .removeformGridbutton {
-		position: absolute;
-		top: -38px;
-		right: 52px;
-	}
-
-		.tab-content.mainIframe .removeformGridbutton button {
-			padding: 5px 16px !important;
-			/* margin-top: 2px; */
-			background: #ff000024;
-			color: #c10e0e;
-			border: 1px solid red !important;
-			border-radius: 6px;
-		}
 
 	.tab-content.mainIframe .addFormGridbutton {
 		width: 100%;
 		margin-top: 7px;
 	}
 
-	.addFormGridbutton button.btn.btn-primary {
-		width: 100%;
-		font-size: 13px;
-		font-weight: 600 !important;
-		background: green !important;
-	}
+
 
 	/*    footer btn changs*/
 
@@ -1901,6 +1882,136 @@ body.block-ui::after {
 
 	.fld-wrap3 {
 		margin-bottom: 4px;
+	}
+
+	/* add btn & remove btn alignment   bug fix raised by syamala*/
+
+	.addFormGridbutton button {
+		width: 100% !important;
+	}
+
+	.removeformGridbutton {
+		width: 100%;
+	}
+
+	.addFormGridbutton button[id^="gridAddBtnAdd"] {
+		width: 100%;
+		font-size: 13px;
+		font-weight: 600 !important;
+		background: green !important;
+	}
+
+	.tab-content.mainIframe button[id^="gridRemoveBtnAdd"] {
+		padding: 5px 16px !important;
+		/* margin-top: 2px; */
+		background: #f9dad7;
+		color: red;
+		border: 1px solid red !important;
+		border-radius: 6px;
+	}
+
+	.tab-content.mainIframe .removeformGridbutton button[id^="gridRemoveBtnAdd"]:hover {
+		background: red !important;
+		border: red !important;
+	}
+
+	.tab-content.mainIframe button[id^="gridRemoveBtnAdd"]:hover {
+		background: red !important;
+		border-color: red !important;
+	}
+
+	.BottomToolbarBar a .material-icons.material-icons-2x.mx-auto.material-icons-style.material-icons-2 {
+		margin-left: 25% !important;
+	}
+
+	.tstructMainBottomFooter .d-flex.flex-md-row {
+		width: 100% !important;
+	}
+
+	.BottomToolbarBar {
+		width: 100%;
+	}
+
+		.BottomToolbarBar a {
+			width: 50% !important;
+		}
+
+
+	/* Tkt-1072-point 7----   delete btn changes*/
+	.tab-content.mainIframe .removeformGridbutton button[id^=gridRemoveBtnAdd] {
+		position: absolute;
+		top: -38px;
+		right: 9px !important;
+	}
+
+	.tab-content.mainIframe .removeformGridbutton button {
+		padding: 0 !important;
+		width: 28px;
+		height: 28px;
+		font-size: 0;
+	}
+
+		.tab-content.mainIframe .removeformGridbutton button:before {
+			content: "\f2ed";
+			font-family: "Font Awesome 6 Free";
+			font-weight: 900;
+			font-size: 13px;
+		}
+
+	.d-flex.align-items-center.flex-nowrap.text-nowrap.mb-1.newgridbtn.gridIconBtns.ms-auto {
+		margin-right: 23px;
+	}
+	/*    delete btn changes*/
+
+	.row.hide .grid-stack.grid-stack-one-column-mode > .grid-stack-item {
+		position: absolute !important;
+		padding: 0 !important;
+	}
+
+	.tab-content.mainIframe .input-group:has(.input-group-text) .form-control, .tab-content.mainIframe .grid-stack-item-content:has(.input-group-text) .form-control {
+		width: 85% !important;
+		border-radius: 6px 0 0 6px !important;
+	}
+
+	.tab-content.mainIframe .griddivColumn .customSetupTableMN.gridHeader {
+		width: 100% !important;
+	}
+
+	.dvdcframe ul.cursor-pointer.nav.nav-tabs.mb-n2.border.border-gray-300.rounded-0.bg-light {
+		padding: 7px 0px;
+		background: #f1f5f9 !important;
+		border: 1px solid #e2e8f0;
+	}
+
+	.gridIconBtns a[title="Clear Data"] {
+		background: #e79999;
+		border: 1px solid red !important;
+	}
+
+		.gridIconBtns a[title="Clear Data"] span.material-icons.material-icons-style.material-icons-3 {
+			color: #6d1212 !important;
+		}
+
+	.edit-mode-content select.form-control {
+		background: #f2f5f9;
+		height: 32px;
+		border-color: #e4e8ef !important;
+	}
+
+	.customSetupTableMN.gridHeader td textarea.form-control.resize-none {
+		height: 32px !important;
+		min-height: 32px !important;
+		max-height: 32px !important;
+		font-weight: 600;
+		font-size: 13px;
+		padding-top: 3px !important;
+		background: #f2f5f9 !important;
+		border-color: #e4e8ef !important;
+	}
+
+	.inline-edit td:first-child, .inline-edit td:nth-child(2), tr[id^="sp2R00"] td:first-child,
+	tr[id^="sp2R00"] td:nth-child(2) {
+		display: inline-block !important;
 	}
 }
 
