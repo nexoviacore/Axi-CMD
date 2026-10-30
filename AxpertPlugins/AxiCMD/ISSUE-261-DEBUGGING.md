@@ -153,3 +153,18 @@ To roll back, copy them over `Js/main-tstruct.js` and `Js/main-tstruct.min.js`.
 - The console message "Blocked aria-hidden on an element because its descendant retained focus" on `#devStudioPopup` is a product accessibility warning from the `BSModal` close button. It is unrelated.
 - `Permissions policy violation: unload is not allowed in this document` lines are noise in this environment.
 - Product defects to hand over: the empty `tstHtmlLs` row after a `middle1` open; the `tstDummyLoad` `lastLoadtstId` branch that does nothing in a non-`middle1` frame; `StoreTstHmtlLoad` swallowing failures.
+
+## 10. Resolution (30 Oct 2026)
+
+### Root cause
+- A full tstruct render in `middle1` caches the form (localStorage `tstHtml♠<transid>…`, `originaltrIds-…`, Redis `…-<transid>-tstHtmlLs-…`) through `GenTstHtmlLocalStorage` → `StoreTstHmtlLoad` (`Js/main-tstruct.js`). AxiCMD opens forms in `middle1`, so it seeds this cache for forms that normally only open in modals.
+- A later open with a `dummyload` param gets the cached skeleton from the server (`aspx/tstruct.aspx.cs:235-555`). Its `document.ready` exits early (`main-tstruct.js:83-86`), and `tstDummyLoad` / `tstHtmlDummyLoad` only finish the render via `LoadIframe` → `LoadTstHtmlLS`, which targets `middle1`. In a modal or popup nothing renders, so the page is blank.
+- The 27 Oct guard in `tstDummyLoad` redirected to `dummyload=false♠`, which takes the same cached path (§5.4 "still blank"). The server only skips the cache when `dummyload` is absent.
+
+### Fix
+- `Js/main-tstruct.js` and `Js/main-tstruct.min.js` (the `~/Js/formInit` bundle serves the `.min.js`): new `isTstHtmlCacheFrame()` and `reloadWithoutDummyLoad()`. `tstDummyLoad` and `tstHtmlDummyLoad` now reload the page **without** `dummyload` in any frame other than `middle1` / `axMultiiframe_*`, so the server renders the form fully. The 27 Oct guard has been removed from both files (kept only in the `30102026` backups). Details: `ISSUE-261-MAIN-TSTRUCT-CHANGES.md`.
+- Outside those frames both functions rendered nothing before, so no working case changes. `middle1` keeps the fast cached path.
+- Backups: `Js/__bkp/main-tstruct_bkp_30102026.js` / `.min.js`.
+
+### Correction to §5.6
+The "empty" Redis rows were most likely a misreading. The hash field is `<transid>♦dd/MM/yyyy` (`Util.cs` `SetFormLoadData`, `stsGlobal = transId`), and `hstrlen` returns 0 for a field that doesn't exist. Deleting the key worked because it removed a valid cached copy, not an empty one.

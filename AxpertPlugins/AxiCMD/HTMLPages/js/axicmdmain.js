@@ -2239,9 +2239,11 @@ if (typeof document !== "undefined") {
                 if (popUpOption) {
                     const sep = url.includes("?") ? "&" : "?";
                     url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                    logTargetUrl("executeDynamicNavigation", url);
                     openPopOption(url);
                 } else {
                     setCommandRoutes(input.value.trim(), url);
+                    logTargetUrl("executeDynamicNavigation", url);
                     loadIframeFn(url);
                 }
             } else {
@@ -2293,9 +2295,11 @@ if (typeof document !== "undefined") {
                 if (popUpOption) {
                     const sep = url.includes("?") ? "&" : "?";
                     url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                    logTargetUrl("executeDynamicNavigation", url);
                     openPopOption(url);
                 } else {
                     setCommandRoutes(input.value.trim(), url);
+                    logTargetUrl("executeDynamicNavigation", url);
                     loadIframeFn(url);
                 }
                 return true;
@@ -2321,9 +2325,11 @@ if (typeof document !== "undefined") {
             if (popUpOption) {
                 const sep = url.includes("?") ? "&" : "?";
                 url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                logTargetUrl("executeDynamicNavigation", url);
                 openPopOption(url);
             } else {
                 setCommandRoutes(input.value.trim(), url);
+                logTargetUrl("executeDynamicNavigation", url);
                 loadIframeFn(url);
             }
             return true;
@@ -2350,9 +2356,11 @@ if (typeof document !== "undefined") {
             if (popUpOption) {
                 const sep = url.includes("?") ? "&" : "?";
                 url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                logTargetUrl("executeDynamicNavigation", url);
                 openPopOption(url);
             } else {
                 setCommandRoutes(input.value.trim(), url);
+                logTargetUrl("executeDynamicNavigation", url);
                 loadIframeFn(url);
             }
             return true;
@@ -2489,9 +2497,11 @@ if (typeof document !== "undefined") {
             targetUrl += "&AxIsPop=true";
 
             targetUrl += `&tname=${encodeURIComponent(adsName)}`;
+            logTargetUrl("redirectToSmartView", targetUrl);
             openPopOption(targetUrl)
         }
         else {
+            logTargetUrl("redirectToSmartView", targetUrl);
             top.window.LoadIframe(targetUrl);
         }
 
@@ -2544,6 +2554,7 @@ if (typeof document !== "undefined") {
         setCommandRoutes(input.value.trim(), targetUrl);
 
 
+        logTargetUrl("redirectToPermissionScreeen", targetUrl);
         top.window.LoadIframe(targetUrl);
 
     }
@@ -2658,16 +2669,19 @@ if (typeof document !== "undefined") {
             targetUrl += `${separator}${extraParams}`;
         }
 
-        console.log("[AxiCMD] redirectToTstruct targetUrl:", targetUrl, { transId, isEdit, extraParams });
+        // old code (debug log left from the #261 investigation)
+        //console.log("[AxiCMD] redirectToTstruct targetUrl:", targetUrl, { transId, isEdit, extraParams });
 
         if (popUpOption) {
             // Query string only ever has one '?': a stray one breaks the contenturl parsing in PopupContainer.html
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
             targetUrl += "&AxPop=true";
+            logTargetUrl("redirectToTstruct", targetUrl);
             openPopOption(targetUrl);
         }
         else {
             setCommandRoutes(input.value.trim(), targetUrl);
+            logTargetUrl("redirectToTstruct", targetUrl);
             top.window.LoadIframe(targetUrl);
         }
     }
@@ -2716,9 +2730,11 @@ if (typeof document !== "undefined") {
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
             targetUrl += "&AxPop=true";
+            logTargetUrl("redirectToIvtstload", targetUrl);
             openPopOption(targetUrl);
         } else {
             setCommandRoutes(input.value.trim(), targetUrl);
+            logTargetUrl("redirectToIvtstload", targetUrl);
             top.window.LoadIframe(targetUrl);
         }
     }
@@ -2768,9 +2784,11 @@ if (typeof document !== "undefined") {
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
             targetUrl += "&AxPop=true";
+            logTargetUrl("redirectToTstructRecord", targetUrl);
             openPopOption(targetUrl);
         } else {
             setCommandRoutes(input.value.trim(), targetUrl);
+            logTargetUrl("redirectToTstructRecord", targetUrl);
             top.window.LoadIframe(targetUrl);
         }
     }
@@ -2799,6 +2817,7 @@ if (typeof document !== "undefined") {
 
 
         setCommandRoutes(input.value.trim(), targetUrl);
+        logTargetUrl("redirectToResponsibilitiesPage", targetUrl);
         top.window.LoadIframe(targetUrl);
     }
 
@@ -2818,11 +2837,13 @@ if (typeof document !== "undefined") {
             // setCommandRoutes(input.value.trim(), targetUrl);
             targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
             targetUrl += "&AxIsPop=true&isDupTab=true";
+            logTargetUrl("redirectToIView", targetUrl);
             openPopOption(targetUrl)
         }
         else {
             let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
             setCommandRoutes(input.value.trim(), targetUrl);
+            logTargetUrl("redirectToIView", targetUrl);
             window.LoadIframe(targetUrl);
         }
 
@@ -2860,10 +2881,12 @@ if (typeof document !== "undefined") {
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
             targetUrl += "&AxIsPop=true";
 
+            logTargetUrl("redirectToProcessFlow", targetUrl);
             openPopOption(targetUrl)
         }
         else {
             setCommandRoutes(input.value.trim(), targetUrl);
+            logTargetUrl("redirectToProcessFlow", targetUrl);
             top.window.LoadIframe(targetUrl);
         }
     }
@@ -9010,6 +9033,7 @@ if (typeof document !== "undefined") {
                     `&appmgraccess=${perms.appMgrAccess ? 1 : 0}` +
                     `&buildaccess=${perms.buildAccess ? 1 : 0}`;
                 const loadFn = (top && top.window && top.window.LoadIframe) || window.LoadIframe;
+                logTargetUrl("setupEventListeners", targetUrl);
                 if (typeof loadFn === "function") loadFn(targetUrl);
             };
 
@@ -10060,9 +10084,11 @@ if (typeof document !== "undefined") {
         // LoadIframe('htmlpages.aspx?inbox=t')
         if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
             // top.window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+            logTargetUrl("handleViewInbox", 'htmlpages.aspx?inbox=t');
             top.window.LoadIframe('htmlpages.aspx?inbox=t');
         } else {
             // window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+            logTargetUrl("handleViewInbox", 'htmlpages.aspx?inbox=t');
             window.LoadIframe('htmlpages.aspx?inbox=t');
         }
     }
@@ -10770,11 +10796,14 @@ if (typeof document !== "undefined") {
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(formCaption)}`;
+            logTargetUrl("redirectToEntityForm", targetUrl);
             openPopOption(targetUrl);
         } else {
             if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
+                logTargetUrl("redirectToEntityForm", targetUrl);
                 top.window.LoadIframe(targetUrl);
             } else {
+                logTargetUrl("redirectToEntityForm", targetUrl);
                 window.LoadIframe(targetUrl);
             }
         }
@@ -10803,12 +10832,15 @@ if (typeof document !== "undefined") {
         setCommandRoutes(input.value.trim(), targetUrl);
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(formCaption)}`;
+            logTargetUrl("redirectToEntity", targetUrl);
             openPopOption(targetUrl);
         }
         else {
             if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
+                logTargetUrl("redirectToEntity", targetUrl);
                 top.window.LoadIframe(targetUrl);
             } else {
+                logTargetUrl("redirectToEntity", targetUrl);
                 window.LoadIframe(targetUrl);
             }
         }
@@ -10855,6 +10887,7 @@ if (typeof document !== "undefined") {
         targetUrl += "&dummyload=false?";
         // setCommandRoutes(input.value.trim(), targetUrl);
 
+        logTargetUrl("handleViewSourceAds", targetUrl);
         window.LoadIframe(targetUrl);
 
         // }
@@ -10915,6 +10948,7 @@ if (typeof document !== "undefined") {
                     showToast(`User '${window.mainUserName}' has no access for Page source`);
                     return;
                 }
+                logTargetUrl("handleViewSource", `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(structName.name)}&act=load&dummyload=false?`);
                 top.window.LoadIframe(`../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(structName.name)}&act=load&dummyload=false?`);
                 break;
 
@@ -10977,6 +11011,7 @@ if (typeof document !== "undefined") {
                 return;
             }
             targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(name)}&act=load&dummyload=false?`;
+            logTargetUrl("handleSourceCommand", targetUrl);
             top.window.LoadIframe(targetUrl);
         } else {
             showToast("Unknown source type: " + name);
@@ -12059,9 +12094,11 @@ if (typeof document !== "undefined") {
 
         if (popUpOption) {
 
+            logTargetUrl("redirectToHtmlPages", requestUrl + `&caption=${encodeURIComponent(bestMatch.caption)}`);
             openPopOption(requestUrl + `&caption=${encodeURIComponent(bestMatch.caption)}`)
         }
         else {
+            logTargetUrl("redirectToHtmlPages", requestUrl);
             window.LoadIframe(requestUrl);
         }
 
@@ -12096,12 +12133,14 @@ if (typeof document !== "undefined") {
             if (rawName && rawName.toLowerCase() === "create new") {
                 const targetUrl = `../aspx/tstruct.aspx?transid=sect&hltype=open&createaxiflag=true&isDupTab=false&dummyload=false?`;
                 setCommandRoutes(input.value.trim(), targetUrl);
+                logTargetUrl("handleOpenSource", targetUrl);
                 top.window.LoadIframe(targetUrl);
                 return;
             }
             let { value: resolvedName } = tryResolveToken(2, rawName, commandConfig, false);
             const targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(resolvedName || rawName)}&act=load&dummyload=false?`;
             setCommandRoutes(input.value.trim(), targetUrl);
+            logTargetUrl("handleOpenSource", targetUrl);
             top.window.LoadIframe(targetUrl);
             return;
         }
@@ -13715,6 +13754,7 @@ if (typeof document !== "undefined") {
 
         setCommandRoutes(input.value.trim(), targetUrl);
         // console.log("Target URL from analyse command : " + targetUrl);
+        logTargetUrl("handleAnalyse", targetUrl);
         window.LoadIframe(targetUrl);
     }
 
@@ -16246,6 +16286,7 @@ if (typeof document !== "undefined") {
 
 
         setCommandRoutes(input.value.trim(), targetUrl);
+        logTargetUrl("redirectToAxibot", targetUrl);
         top.window.LoadIframe(targetUrl);
 
 
@@ -16402,6 +16443,7 @@ if (typeof document !== "undefined") {
         mode = "";
         cachedCommands = localStorage.getItem("axi_commands_v1");
         initCommands();
+        logTargetUrl("handleAiEnd", "loadhomepage");
         window.LoadIframe("loadhomepage");
         // console.log(JSON.stringify(commands));
     }
@@ -16903,6 +16945,7 @@ if (typeof document !== "undefined") {
             if (transId) {
                 setEditSessionState(transId);
             }
+            logTargetUrl("executeFavorite", favObj.targetUrl);
             top.window.LoadIframe(favObj.targetUrl);
         } else if (favObj.targetUrl && favObj.targetUrl.startsWith("developerstudio:")) {
             // console.log("Executing Favorite via Developer Studio custom target URL:", favObj.targetUrl);
@@ -16932,8 +16975,10 @@ if (typeof document !== "undefined") {
                 } else if (secondToken === "iview") {
                     safeOpenDeveloperStudio("ivreact", resolvedName, true);
                 } else if (secondToken === "page") {
+                    logTargetUrl("executeFavorite", "../aspx/tstruct.aspx?transid=sect");
                     top.window.LoadIframe("../aspx/tstruct.aspx?transid=sect");
                 } else if (secondToken === "ads" || (secondToken === "axpert" && tokens[1].toLowerCase() === "axpert data sources")) {
+                    logTargetUrl("executeFavorite", "../aspx/tstruct.aspx?transid=b_sql");
                     top.window.LoadIframe("../aspx/tstruct.aspx?transid=b_sql");
                 }
             }
@@ -16945,6 +16990,17 @@ if (typeof document !== "undefined") {
 
 
 
+    }
+
+    // new code
+    /**
+     * Logs a URL the palette is about to open (main frame or popup), to trace what each command loads.
+     * @param {string} source - Function that opens the URL.
+     * @param {string} url - Target URL.
+     * @returns {void}
+     */
+    function logTargetUrl(source, url) {
+        console.log(`[AxiCMD] ${source} targetUrl:`, url);
     }
 
     /**

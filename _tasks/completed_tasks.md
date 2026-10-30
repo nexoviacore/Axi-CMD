@@ -25,3 +25,12 @@ Issue #281 (tickets #282 - #287)
 12. TSK-0896 - Show "User Activation" under the Configure command based on axusers.licactivation: admin (username admin with the default role) always sees it; any other user sees it only when their licactivation is true (true / T, any case). A missing row, null or a failed lookup hides it. New ADS axi_userlicactivation (Postgres and Oracle) is read through loadList before the commands are built.
 Issue #288
 
+13. Two tstructs with the same caption but different transids (e.g. Test Form2 (ytdf) and Test Form2 (tst2)): "Test Form2" view opened the wrong form. The palette now keeps the form picked from the suggestions, keeps "(transid)" in the input when another structure of the same type shares the caption ("Test Form2 (tst2)" view), recognises "Caption (transid)" when typed, and blocks a shared caption typed by hand with a toast listing the choices.
+Issue #289
+
+14. A tstruct (tstruct, Configure, SDK) opened from the command line and then from its normal place (popup, Configuration Studio, Developer Studio) showed a blank screen. Cause: the main-frame open caches the form, and the cached page only renders in middle1. Fix in Js/main-tstruct.js and Js/main-tstruct.min.js: tstDummyLoad and tstHtmlDummyLoad reload the page without dummyload in any other frame, so the server renders the form fully (new isTstHtmlCacheFrame / reloadWithoutDummyLoad). Docs: AxpertPlugins/AxiCMD/ISSUE-261-MAIN-TSTRUCT-CHANGES.md.
+Issue #261
+
+15. Added a console log for every URL the palette opens (main frame, popup, favourites): "[AxiCMD] <function> targetUrl: <url>" through the new logTargetUrl helper in axicmdmain.js.
+No issue number (debugging aid)
+

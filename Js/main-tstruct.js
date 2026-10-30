@@ -13376,10 +13376,13 @@ function tstDummyLoad(_openingTrId) {
             }
         }
     } catch (ex) { }
+    
+    // new code
     // The dummy-load flow below only renders through LoadIframe, which targets middle1. In any other frame
-    // (e.g. the Developer Studio modal) it renders nothing, leaving a blank page, so ask the server for a full render.
-    if (window.frameElement && window.frameElement.id != "middle1" && !window.frameElement.id.startsWith("axMultiiframe_")) {
-        window.location.replace(window.location.href.replace(/([?&]dummyload=)[^&]*/i, "$1false%E2%99%A0"));
+    // (e.g. the Developer Studio modal) it renders nothing, leaving a blank page. "dummyload=false♠" still returns
+    // the cached page, so reload without dummyload to get a full render (#261).
+    if (!isTstHtmlCacheFrame()) {
+        reloadWithoutDummyLoad();
         return;
     }
     callParentNew("isdummyLoad=", "true");
@@ -13440,7 +13443,36 @@ function tstDummyLoad(_openingTrId) {
         }
     }
 }
+
+// new code
+// The cached ("dummy load") page only finishes rendering through LoadIframe, which targets middle1.
+// True for the frames that path supports; any other frame (popup, Developer Studio modal) stays blank (#261).
+function isTstHtmlCacheFrame() {
+    try {
+        let _frameId = window.frameElement ? (window.frameElement.id || "") : "";
+        return _frameId == "middle1" || _frameId.startsWith("axMultiiframe_");
+    } catch (ex) {
+        return false;
+    }
+}
+
+// new code
+// Reloads this page without the dummyload param, so the server renders the form fully instead of the cached page (#261)
+function reloadWithoutDummyLoad() {
+    let _thisUrl = window.location.href;
+    let _newUrl = _thisUrl.replace(/([?&])dummyload=[^&#]*&?/i, "$1").replace(/[?&](#|$)/, "$1");
+    if (_newUrl == _thisUrl)
+        return;
+    window.location.replace(_newUrl);
+}
+
 function tstHtmlDummyLoad(_transid) {
+    // new code
+    // The cached page cannot render outside middle1 / axMultiiframe_, so ask for a full render instead (#261)
+    if (!isTstHtmlCacheFrame()) {
+        reloadWithoutDummyLoad();
+        return;
+    }
     try {
         try {
             _savedraftKeytime = $("#hdnTstAutoSD").val();
