@@ -1,0 +1,211 @@
+Message ID (msgid),Username (usern),Mail ID (mail),Message (messg),Links (field1)
+msg01,Venkat,venkitapathi.s@agile-labs.com,"<a href=""google.com"">Google</a>",chatgpt &nbsp;let us try
+msg02,Sriram,sriram.s@agile-labs.com,This is a test message from axpert,
+msg03,Tamil,Tamilarasan@agile-labs.com,Message from axpert,
+msg04,salmansheriff,sheriffsalman@gmail.com,test message2,
+msg05,Naveen Kumar,naveen.k@agile-labs.com,Initial sync message from Axpert,
+msg06,Venkat S,v12agile@gmail.com,This is a test message,
+msg07,karthik,karthik@agile-labs.com,"""Hello"" from Axpert!",
+msg08,Swati Sharma,swati.s@agile-labs.com,Welcome to Axpert Teams integration,
+msg09,sheriff,salman.s@agile-labs.com,Testing AxiCMD debounce search feature,
+msg010,Divya Nair,divya.nair@agile-labs.com,API gateway configuration updated with rate limiting (Ref #10),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg011,Meera Bose,meera.bose@agile-labs.com,Redis cache cleared for session token invalidation (Ref #11),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg012,Manoj Sharma,manoj.sharma@gmail.com,Weekly progress report submitted to engineering director (Ref #12),https://jira.agile-labs.com/browse/AX-1389
+msg013,Bhavna Rao,bhavna.rao@agile-labs.com,Security audit remediation completed for web endpoints (Ref #13),https://github.com/agile-labs/axpert/pull/245
+msg014,Karthik Verma,karthik.verma@agile-labs.com,Please review the draft architecture decision record ADR-042 (Ref #14),"<a href=""https://google.com"">Google Search</a>"
+msg015,Sneha Choudhury,sneha.choudhury@gmail.com,Staging regression testing completed with zero blockers (Ref #15),https://docs.agile-labs.com/release-notes/11.4
+msg016,Rajesh Patel,rajesh.patel@agile-labs.com,Hello from Axpert Teams integration bot (Ref #16),chatgpt &nbsp;let us try
+msg017,Ritu Kulkarni,ritu.kulkarni@agile-labs.com,Automated end-to-end test suite execution triggered (Ref #17),
+msg018,Vijay Reddy,vijay.reddy@gmail.com,Feature flag enabled for beta customer group (Ref #18),
+msg019,Anand Mishra,anand.mishra@agile-labs.com,Notification dispatched to active workspace subscribers (Ref #19),
+msg020,Vikram Iyer,vikram.iyer@agile-labs.com,Project status update for Sprint 14 review meeting (Ref #20),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg021,Swati Sheriff,swati.sheriff@gmail.com,Build 11.4 deployed to staging environment successfully (Ref #21),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg022,Harish Menon,harish.menon@agile-labs.com,Please verify the dynamic search and pagination in AxiCMD (Ref #22),https://jira.agile-labs.com/browse/AX-1389
+msg023,Venkat Kumar,venkat.kumar@agile-labs.com,Database migration script executed for release 11.4 (Ref #23),https://github.com/agile-labs/axpert/pull/245
+msg024,Rahul Joshi,rahul.joshi@gmail.com,Reminder: Daily engineering sync at 10:30 AM IST (Ref #24),"<a href=""https://google.com"">Google Search</a>"
+msg025,Pooja Raman,pooja.raman@agile-labs.com,Bug ticket #1389 marked as ready for QA testing (Ref #25),https://docs.agile-labs.com/release-notes/11.4
+msg026,Ganesh Gupta,ganesh.gupta@agile-labs.com,New pull request created for team code review (Ref #26),chatgpt &nbsp;let us try
+msg027,Sandhya Arasan,sandhya.arasan@gmail.com,Customer demo scheduled for upcoming Monday at 3 PM (Ref #27),
+msg028,Tamil Singh,tamil.singh@agile-labs.com,Performance optimization benchmark report is now available (Ref #28),
+msg029,Deepa Murugan,deepa.murugan@agile-labs.com,Unit tests passed for all frontend modules (Ref #29),
+msg030,Naveen Deshmukh,naveen.deshmukh@gmail.com,API gateway configuration updated with rate limiting (Ref #30),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg031,Ananya Nair,ananya.nair@agile-labs.com,Redis cache cleared for session token invalidation (Ref #31),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg032,Salman Bose,salman.bose@agile-labs.com,Weekly progress report submitted to engineering director (Ref #32),https://jira.agile-labs.com/browse/AX-1389
+msg033,Priya Sharma,priya.sharma@gmail.com,Security audit remediation completed for web endpoints (Ref #33),https://github.com/agile-labs/axpert/pull/245
+msg034,Suresh Rao,suresh.rao@agile-labs.com,Please review the draft architecture decision record ADR-042 (Ref #34),"<a href=""https://google.com"">Google Search</a>"
+msg035,Aarthi Verma,aarthi.verma@agile-labs.com,Staging regression testing completed with zero blockers (Ref #35),https://docs.agile-labs.com/release-notes/11.4
+msg036,Dinesh Choudhury,dinesh.choudhury@gmail.com,Hello from Axpert Teams integration bot (Ref #36),chatgpt &nbsp;let us try
+msg037,Sriram Patel,sriram.patel@agile-labs.com,Automated end-to-end test suite execution triggered (Ref #37),
+msg038,Arun Kulkarni,arun.kulkarni@agile-labs.com,Feature flag enabled for beta customer group (Ref #38),
+msg039,Kavitha Reddy,kavitha.reddy@gmail.com,Notification dispatched to active workspace subscribers (Ref #39),
+msg040,Prashant Mishra,prashant.mishra@agile-labs.com,Project status update for Sprint 14 review meeting (Ref #40),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg041,Archana Iyer,archana.iyer@agile-labs.com,Build 11.4 deployed to staging environment successfully (Ref #41),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg042,Divya Sheriff,divya.sheriff@gmail.com,Please verify the dynamic search and pagination in AxiCMD (Ref #42),https://jira.agile-labs.com/browse/AX-1389
+msg043,Meera Menon,meera.menon@agile-labs.com,Database migration script executed for release 11.4 (Ref #43),https://github.com/agile-labs/axpert/pull/245
+msg044,Manoj Kumar,manoj.kumar@agile-labs.com,Reminder: Daily engineering sync at 10:30 AM IST (Ref #44),"<a href=""https://google.com"">Google Search</a>"
+msg045,Bhavna Joshi,bhavna.joshi@gmail.com,Bug ticket #1389 marked as ready for QA testing (Ref #45),https://docs.agile-labs.com/release-notes/11.4
+msg046,Karthik Raman,karthik.raman@agile-labs.com,New pull request created for team code review (Ref #46),chatgpt &nbsp;let us try
+msg047,Sneha Gupta,sneha.gupta@agile-labs.com,Customer demo scheduled for upcoming Monday at 3 PM (Ref #47),
+msg048,Rajesh Arasan,rajesh.arasan@gmail.com,Performance optimization benchmark report is now available (Ref #48),
+msg049,Ritu Singh,ritu.singh@agile-labs.com,Unit tests passed for all frontend modules (Ref #49),
+msg050,Vijay Murugan,vijay.murugan@agile-labs.com,API gateway configuration updated with rate limiting (Ref #50),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg051,Anand Deshmukh,anand.deshmukh@gmail.com,Redis cache cleared for session token invalidation (Ref #51),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg052,Vikram Nair,vikram.nair@agile-labs.com,Weekly progress report submitted to engineering director (Ref #52),https://jira.agile-labs.com/browse/AX-1389
+msg053,Swati Bose,swati.bose@agile-labs.com,Security audit remediation completed for web endpoints (Ref #53),https://github.com/agile-labs/axpert/pull/245
+msg054,Harish Sharma,harish.sharma@gmail.com,Please review the draft architecture decision record ADR-042 (Ref #54),"<a href=""https://google.com"">Google Search</a>"
+msg055,Venkat Rao,venkat.rao@agile-labs.com,Staging regression testing completed with zero blockers (Ref #55),https://docs.agile-labs.com/release-notes/11.4
+msg056,Rahul Verma,rahul.verma@agile-labs.com,Hello from Axpert Teams integration bot (Ref #56),chatgpt &nbsp;let us try
+msg057,Pooja Choudhury,pooja.choudhury@gmail.com,Automated end-to-end test suite execution triggered (Ref #57),
+msg058,Ganesh Patel,ganesh.patel@agile-labs.com,Feature flag enabled for beta customer group (Ref #58),
+msg059,Sandhya Kulkarni,sandhya.kulkarni@agile-labs.com,Notification dispatched to active workspace subscribers (Ref #59),
+msg060,Tamil Reddy,tamil.reddy@gmail.com,Project status update for Sprint 14 review meeting (Ref #60),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg061,Deepa Mishra,deepa.mishra@agile-labs.com,Build 11.4 deployed to staging environment successfully (Ref #61),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg062,Naveen Iyer,naveen.iyer@agile-labs.com,Please verify the dynamic search and pagination in AxiCMD (Ref #62),https://jira.agile-labs.com/browse/AX-1389
+msg063,Ananya Sheriff,ananya.sheriff@gmail.com,Database migration script executed for release 11.4 (Ref #63),https://github.com/agile-labs/axpert/pull/245
+msg064,Salman Menon,salman.menon@agile-labs.com,Reminder: Daily engineering sync at 10:30 AM IST (Ref #64),"<a href=""https://google.com"">Google Search</a>"
+msg065,Priya Kumar,priya.kumar@agile-labs.com,Bug ticket #1389 marked as ready for QA testing (Ref #65),https://docs.agile-labs.com/release-notes/11.4
+msg066,Suresh Joshi,suresh.joshi@gmail.com,New pull request created for team code review (Ref #66),chatgpt &nbsp;let us try
+msg067,Aarthi Raman,aarthi.raman@agile-labs.com,Customer demo scheduled for upcoming Monday at 3 PM (Ref #67),
+msg068,Dinesh Gupta,dinesh.gupta@agile-labs.com,Performance optimization benchmark report is now available (Ref #68),
+msg069,Sriram Arasan,sriram.arasan@gmail.com,Unit tests passed for all frontend modules (Ref #69),
+msg070,Arun Singh,arun.singh@agile-labs.com,API gateway configuration updated with rate limiting (Ref #70),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg071,Kavitha Murugan,kavitha.murugan@agile-labs.com,Redis cache cleared for session token invalidation (Ref #71),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg072,Prashant Deshmukh,prashant.deshmukh@gmail.com,Weekly progress report submitted to engineering director (Ref #72),https://jira.agile-labs.com/browse/AX-1389
+msg073,Archana Nair,archana.nair@agile-labs.com,Security audit remediation completed for web endpoints (Ref #73),https://github.com/agile-labs/axpert/pull/245
+msg074,Divya Bose,divya.bose@agile-labs.com,Please review the draft architecture decision record ADR-042 (Ref #74),"<a href=""https://google.com"">Google Search</a>"
+msg075,Meera Sharma,meera.sharma@gmail.com,Staging regression testing completed with zero blockers (Ref #75),https://docs.agile-labs.com/release-notes/11.4
+msg076,Manoj Rao,manoj.rao@agile-labs.com,Hello from Axpert Teams integration bot (Ref #76),chatgpt &nbsp;let us try
+msg077,Bhavna Verma,bhavna.verma@agile-labs.com,Automated end-to-end test suite execution triggered (Ref #77),
+msg078,Karthik Choudhury,karthik.choudhury@gmail.com,Feature flag enabled for beta customer group (Ref #78),
+msg079,Sneha Patel,sneha.patel@agile-labs.com,Notification dispatched to active workspace subscribers (Ref #79),
+msg080,Rajesh Kulkarni,rajesh.kulkarni@agile-labs.com,Project status update for Sprint 14 review meeting (Ref #80),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg081,Ritu Reddy,ritu.reddy@gmail.com,Build 11.4 deployed to staging environment successfully (Ref #81),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg082,Vijay Mishra,vijay.mishra@agile-labs.com,Please verify the dynamic search and pagination in AxiCMD (Ref #82),https://jira.agile-labs.com/browse/AX-1389
+msg083,Anand Iyer,anand.iyer@agile-labs.com,Database migration script executed for release 11.4 (Ref #83),https://github.com/agile-labs/axpert/pull/245
+msg084,Vikram Sheriff,vikram.sheriff@gmail.com,Reminder: Daily engineering sync at 10:30 AM IST (Ref #84),"<a href=""https://google.com"">Google Search</a>"
+msg085,Swati Menon,swati.menon@agile-labs.com,Bug ticket #1389 marked as ready for QA testing (Ref #85),https://docs.agile-labs.com/release-notes/11.4
+msg086,Harish Kumar,harish.kumar@agile-labs.com,New pull request created for team code review (Ref #86),chatgpt &nbsp;let us try
+msg087,Venkat Joshi,venkat.joshi@gmail.com,Customer demo scheduled for upcoming Monday at 3 PM (Ref #87),
+msg088,Rahul Raman,rahul.raman@agile-labs.com,Performance optimization benchmark report is now available (Ref #88),
+msg089,Pooja Gupta,pooja.gupta@agile-labs.com,Unit tests passed for all frontend modules (Ref #89),
+msg090,Ganesh Arasan,ganesh.arasan@gmail.com,API gateway configuration updated with rate limiting (Ref #90),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg091,Sandhya Singh,sandhya.singh@agile-labs.com,Redis cache cleared for session token invalidation (Ref #91),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg092,Tamil Murugan,tamil.murugan@agile-labs.com,Weekly progress report submitted to engineering director (Ref #92),https://jira.agile-labs.com/browse/AX-1389
+msg093,Deepa Deshmukh,deepa.deshmukh@gmail.com,Security audit remediation completed for web endpoints (Ref #93),https://github.com/agile-labs/axpert/pull/245
+msg094,Naveen Nair,naveen.nair@agile-labs.com,Please review the draft architecture decision record ADR-042 (Ref #94),"<a href=""https://google.com"">Google Search</a>"
+msg095,Ananya Bose,ananya.bose@agile-labs.com,Staging regression testing completed with zero blockers (Ref #95),https://docs.agile-labs.com/release-notes/11.4
+msg096,Salman Sharma,salman.sharma@gmail.com,Hello from Axpert Teams integration bot (Ref #96),chatgpt &nbsp;let us try
+msg097,Priya Rao,priya.rao@agile-labs.com,Automated end-to-end test suite execution triggered (Ref #97),
+msg098,Suresh Verma,suresh.verma@agile-labs.com,Feature flag enabled for beta customer group (Ref #98),
+msg099,Aarthi Choudhury,aarthi.choudhury@gmail.com,Notification dispatched to active workspace subscribers (Ref #99),
+msg100,Dinesh Patel,dinesh.patel@agile-labs.com,Project status update for Sprint 14 review meeting (Ref #100),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg101,Sriram Kulkarni,sriram.kulkarni@agile-labs.com,Build 11.4 deployed to staging environment successfully (Ref #101),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg102,Arun Reddy,arun.reddy@gmail.com,Please verify the dynamic search and pagination in AxiCMD (Ref #102),https://jira.agile-labs.com/browse/AX-1389
+msg103,Kavitha Mishra,kavitha.mishra@agile-labs.com,Database migration script executed for release 11.4 (Ref #103),https://github.com/agile-labs/axpert/pull/245
+msg104,Prashant Iyer,prashant.iyer@agile-labs.com,Reminder: Daily engineering sync at 10:30 AM IST (Ref #104),"<a href=""https://google.com"">Google Search</a>"
+msg105,Archana Sheriff,archana.sheriff@gmail.com,Bug ticket #1389 marked as ready for QA testing (Ref #105),https://docs.agile-labs.com/release-notes/11.4
+msg106,Divya Menon,divya.menon@agile-labs.com,New pull request created for team code review (Ref #106),chatgpt &nbsp;let us try
+msg107,Meera Kumar,meera.kumar@agile-labs.com,Customer demo scheduled for upcoming Monday at 3 PM (Ref #107),
+msg108,Manoj Joshi,manoj.joshi@gmail.com,Performance optimization benchmark report is now available (Ref #108),
+msg109,Bhavna Raman,bhavna.raman@agile-labs.com,Unit tests passed for all frontend modules (Ref #109),
+msg110,Karthik Gupta,karthik.gupta@agile-labs.com,API gateway configuration updated with rate limiting (Ref #110),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg111,Sneha Arasan,sneha.arasan@gmail.com,Redis cache cleared for session token invalidation (Ref #111),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg112,Rajesh Singh,rajesh.singh@agile-labs.com,Weekly progress report submitted to engineering director (Ref #112),https://jira.agile-labs.com/browse/AX-1389
+msg113,Ritu Murugan,ritu.murugan@agile-labs.com,Security audit remediation completed for web endpoints (Ref #113),https://github.com/agile-labs/axpert/pull/245
+msg114,Vijay Deshmukh,vijay.deshmukh@gmail.com,Please review the draft architecture decision record ADR-042 (Ref #114),"<a href=""https://google.com"">Google Search</a>"
+msg115,Anand Nair,anand.nair@agile-labs.com,Staging regression testing completed with zero blockers (Ref #115),https://docs.agile-labs.com/release-notes/11.4
+msg116,Vikram Bose,vikram.bose@agile-labs.com,Hello from Axpert Teams integration bot (Ref #116),chatgpt &nbsp;let us try
+msg117,Swati Sharma,swati.sharma@gmail.com,Automated end-to-end test suite execution triggered (Ref #117),
+msg118,Harish Rao,harish.rao@agile-labs.com,Feature flag enabled for beta customer group (Ref #118),
+msg119,Venkat Verma,venkat.verma@agile-labs.com,Notification dispatched to active workspace subscribers (Ref #119),
+msg120,Rahul Choudhury,rahul.choudhury@gmail.com,Project status update for Sprint 14 review meeting (Ref #120),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg121,Pooja Patel,pooja.patel@agile-labs.com,Build 11.4 deployed to staging environment successfully (Ref #121),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg122,Ganesh Kulkarni,ganesh.kulkarni@agile-labs.com,Please verify the dynamic search and pagination in AxiCMD (Ref #122),https://jira.agile-labs.com/browse/AX-1389
+msg123,Sandhya Reddy,sandhya.reddy@gmail.com,Database migration script executed for release 11.4 (Ref #123),https://github.com/agile-labs/axpert/pull/245
+msg124,Tamil Mishra,tamil.mishra@agile-labs.com,Reminder: Daily engineering sync at 10:30 AM IST (Ref #124),"<a href=""https://google.com"">Google Search</a>"
+msg125,Deepa Iyer,deepa.iyer@agile-labs.com,Bug ticket #1389 marked as ready for QA testing (Ref #125),https://docs.agile-labs.com/release-notes/11.4
+msg126,Naveen Sheriff,naveen.sheriff@gmail.com,New pull request created for team code review (Ref #126),chatgpt &nbsp;let us try
+msg127,Ananya Menon,ananya.menon@agile-labs.com,Customer demo scheduled for upcoming Monday at 3 PM (Ref #127),
+msg128,Salman Kumar,salman.kumar@agile-labs.com,Performance optimization benchmark report is now available (Ref #128),
+msg129,Priya Joshi,priya.joshi@gmail.com,Unit tests passed for all frontend modules (Ref #129),
+msg130,Suresh Raman,suresh.raman@agile-labs.com,API gateway configuration updated with rate limiting (Ref #130),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg131,Aarthi Gupta,aarthi.gupta@agile-labs.com,Redis cache cleared for session token invalidation (Ref #131),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg132,Dinesh Arasan,dinesh.arasan@gmail.com,Weekly progress report submitted to engineering director (Ref #132),https://jira.agile-labs.com/browse/AX-1389
+msg133,Sriram Singh,sriram.singh@agile-labs.com,Security audit remediation completed for web endpoints (Ref #133),https://github.com/agile-labs/axpert/pull/245
+msg134,Arun Murugan,arun.murugan@agile-labs.com,Please review the draft architecture decision record ADR-042 (Ref #134),"<a href=""https://google.com"">Google Search</a>"
+msg135,Kavitha Deshmukh,kavitha.deshmukh@gmail.com,Staging regression testing completed with zero blockers (Ref #135),https://docs.agile-labs.com/release-notes/11.4
+msg136,Prashant Nair,prashant.nair@agile-labs.com,Hello from Axpert Teams integration bot (Ref #136),chatgpt &nbsp;let us try
+msg137,Archana Bose,archana.bose@agile-labs.com,Automated end-to-end test suite execution triggered (Ref #137),
+msg138,Divya Sharma,divya.sharma@gmail.com,Feature flag enabled for beta customer group (Ref #138),
+msg139,Meera Rao,meera.rao@agile-labs.com,Notification dispatched to active workspace subscribers (Ref #139),
+msg140,Manoj Verma,manoj.verma@agile-labs.com,Project status update for Sprint 14 review meeting (Ref #140),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg141,Bhavna Choudhury,bhavna.choudhury@gmail.com,Build 11.4 deployed to staging environment successfully (Ref #141),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg142,Karthik Patel,karthik.patel@agile-labs.com,Please verify the dynamic search and pagination in AxiCMD (Ref #142),https://jira.agile-labs.com/browse/AX-1389
+msg143,Sneha Kulkarni,sneha.kulkarni@agile-labs.com,Database migration script executed for release 11.4 (Ref #143),https://github.com/agile-labs/axpert/pull/245
+msg144,Rajesh Reddy,rajesh.reddy@gmail.com,Reminder: Daily engineering sync at 10:30 AM IST (Ref #144),"<a href=""https://google.com"">Google Search</a>"
+msg145,Ritu Mishra,ritu.mishra@agile-labs.com,Bug ticket #1389 marked as ready for QA testing (Ref #145),https://docs.agile-labs.com/release-notes/11.4
+msg146,Vijay Iyer,vijay.iyer@agile-labs.com,New pull request created for team code review (Ref #146),chatgpt &nbsp;let us try
+msg147,Anand Sheriff,anand.sheriff@gmail.com,Customer demo scheduled for upcoming Monday at 3 PM (Ref #147),
+msg148,Vikram Menon,vikram.menon@agile-labs.com,Performance optimization benchmark report is now available (Ref #148),
+msg149,Swati Kumar,swati.kumar@agile-labs.com,Unit tests passed for all frontend modules (Ref #149),
+msg150,Harish Joshi,harish.joshi@gmail.com,API gateway configuration updated with rate limiting (Ref #150),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg151,Venkat Raman,venkat.raman@agile-labs.com,Redis cache cleared for session token invalidation (Ref #151),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg152,Rahul Gupta,rahul.gupta@agile-labs.com,Weekly progress report submitted to engineering director (Ref #152),https://jira.agile-labs.com/browse/AX-1389
+msg153,Pooja Arasan,pooja.arasan@gmail.com,Security audit remediation completed for web endpoints (Ref #153),https://github.com/agile-labs/axpert/pull/245
+msg154,Ganesh Singh,ganesh.singh@agile-labs.com,Please review the draft architecture decision record ADR-042 (Ref #154),"<a href=""https://google.com"">Google Search</a>"
+msg155,Sandhya Murugan,sandhya.murugan@agile-labs.com,Staging regression testing completed with zero blockers (Ref #155),https://docs.agile-labs.com/release-notes/11.4
+msg156,Tamil Deshmukh,tamil.deshmukh@gmail.com,Hello from Axpert Teams integration bot (Ref #156),chatgpt &nbsp;let us try
+msg157,Deepa Nair,deepa.nair@agile-labs.com,Automated end-to-end test suite execution triggered (Ref #157),
+msg158,Naveen Bose,naveen.bose@agile-labs.com,Feature flag enabled for beta customer group (Ref #158),
+msg159,Ananya Sharma,ananya.sharma@gmail.com,Notification dispatched to active workspace subscribers (Ref #159),
+msg160,Salman Rao,salman.rao@agile-labs.com,Project status update for Sprint 14 review meeting (Ref #160),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg161,Priya Verma,priya.verma@agile-labs.com,Build 11.4 deployed to staging environment successfully (Ref #161),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg162,Suresh Choudhury,suresh.choudhury@gmail.com,Please verify the dynamic search and pagination in AxiCMD (Ref #162),https://jira.agile-labs.com/browse/AX-1389
+msg163,Aarthi Patel,aarthi.patel@agile-labs.com,Database migration script executed for release 11.4 (Ref #163),https://github.com/agile-labs/axpert/pull/245
+msg164,Dinesh Kulkarni,dinesh.kulkarni@agile-labs.com,Reminder: Daily engineering sync at 10:30 AM IST (Ref #164),"<a href=""https://google.com"">Google Search</a>"
+msg165,Sriram Reddy,sriram.reddy@gmail.com,Bug ticket #1389 marked as ready for QA testing (Ref #165),https://docs.agile-labs.com/release-notes/11.4
+msg166,Arun Mishra,arun.mishra@agile-labs.com,New pull request created for team code review (Ref #166),chatgpt &nbsp;let us try
+msg167,Kavitha Iyer,kavitha.iyer@agile-labs.com,Customer demo scheduled for upcoming Monday at 3 PM (Ref #167),
+msg168,Prashant Sheriff,prashant.sheriff@gmail.com,Performance optimization benchmark report is now available (Ref #168),
+msg169,Archana Menon,archana.menon@agile-labs.com,Unit tests passed for all frontend modules (Ref #169),
+msg170,Divya Kumar,divya.kumar@agile-labs.com,API gateway configuration updated with rate limiting (Ref #170),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg171,Meera Joshi,meera.joshi@gmail.com,Redis cache cleared for session token invalidation (Ref #171),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg172,Manoj Raman,manoj.raman@agile-labs.com,Weekly progress report submitted to engineering director (Ref #172),https://jira.agile-labs.com/browse/AX-1389
+msg173,Bhavna Gupta,bhavna.gupta@agile-labs.com,Security audit remediation completed for web endpoints (Ref #173),https://github.com/agile-labs/axpert/pull/245
+msg174,Karthik Arasan,karthik.arasan@gmail.com,Please review the draft architecture decision record ADR-042 (Ref #174),"<a href=""https://google.com"">Google Search</a>"
+msg175,Sneha Singh,sneha.singh@agile-labs.com,Staging regression testing completed with zero blockers (Ref #175),https://docs.agile-labs.com/release-notes/11.4
+msg176,Rajesh Murugan,rajesh.murugan@agile-labs.com,Hello from Axpert Teams integration bot (Ref #176),chatgpt &nbsp;let us try
+msg177,Ritu Deshmukh,ritu.deshmukh@gmail.com,Automated end-to-end test suite execution triggered (Ref #177),
+msg178,Vijay Nair,vijay.nair@agile-labs.com,Feature flag enabled for beta customer group (Ref #178),
+msg179,Anand Bose,anand.bose@agile-labs.com,Notification dispatched to active workspace subscribers (Ref #179),
+msg180,Vikram Sharma,vikram.sharma@gmail.com,Project status update for Sprint 14 review meeting (Ref #180),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg181,Swati Rao,swati.rao@agile-labs.com,Build 11.4 deployed to staging environment successfully (Ref #181),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg182,Harish Verma,harish.verma@agile-labs.com,Please verify the dynamic search and pagination in AxiCMD (Ref #182),https://jira.agile-labs.com/browse/AX-1389
+msg183,Venkat Choudhury,venkat.choudhury@gmail.com,Database migration script executed for release 11.4 (Ref #183),https://github.com/agile-labs/axpert/pull/245
+msg184,Rahul Patel,rahul.patel@agile-labs.com,Reminder: Daily engineering sync at 10:30 AM IST (Ref #184),"<a href=""https://google.com"">Google Search</a>"
+msg185,Pooja Kulkarni,pooja.kulkarni@agile-labs.com,Bug ticket #1389 marked as ready for QA testing (Ref #185),https://docs.agile-labs.com/release-notes/11.4
+msg186,Ganesh Reddy,ganesh.reddy@gmail.com,New pull request created for team code review (Ref #186),chatgpt &nbsp;let us try
+msg187,Sandhya Mishra,sandhya.mishra@agile-labs.com,Customer demo scheduled for upcoming Monday at 3 PM (Ref #187),
+msg188,Tamil Iyer,tamil.iyer@agile-labs.com,Performance optimization benchmark report is now available (Ref #188),
+msg189,Deepa Sheriff,deepa.sheriff@gmail.com,Unit tests passed for all frontend modules (Ref #189),
+msg190,Naveen Menon,naveen.menon@agile-labs.com,API gateway configuration updated with rate limiting (Ref #190),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg191,Ananya Kumar,ananya.kumar@agile-labs.com,Redis cache cleared for session token invalidation (Ref #191),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg192,Salman Joshi,salman.joshi@gmail.com,Weekly progress report submitted to engineering director (Ref #192),https://jira.agile-labs.com/browse/AX-1389
+msg193,Priya Raman,priya.raman@agile-labs.com,Security audit remediation completed for web endpoints (Ref #193),https://github.com/agile-labs/axpert/pull/245
+msg194,Suresh Gupta,suresh.gupta@agile-labs.com,Please review the draft architecture decision record ADR-042 (Ref #194),"<a href=""https://google.com"">Google Search</a>"
+msg195,Aarthi Arasan,aarthi.arasan@gmail.com,Staging regression testing completed with zero blockers (Ref #195),https://docs.agile-labs.com/release-notes/11.4
+msg196,Dinesh Singh,dinesh.singh@agile-labs.com,Hello from Axpert Teams integration bot (Ref #196),chatgpt &nbsp;let us try
+msg197,Sriram Murugan,sriram.murugan@agile-labs.com,Automated end-to-end test suite execution triggered (Ref #197),
+msg198,Arun Deshmukh,arun.deshmukh@gmail.com,Feature flag enabled for beta customer group (Ref #198),
+msg199,Kavitha Nair,kavitha.nair@agile-labs.com,Notification dispatched to active workspace subscribers (Ref #199),
+msg200,Prashant Bose,prashant.bose@agile-labs.com,Project status update for Sprint 14 review meeting (Ref #200),"<a href=""https://agile-labs.com"">AgileLabs</a>"
+msg201,Archana Sharma,archana.sharma@gmail.com,Build 11.4 deployed to staging environment successfully (Ref #201),"<a href=""https://teams.microsoft.com"">Teams Channel</a>"
+msg202,Divya Rao,divya.rao@agile-labs.com,Please verify the dynamic search and pagination in AxiCMD (Ref #202),https://jira.agile-labs.com/browse/AX-1389
+msg203,Meera Verma,meera.verma@agile-labs.com,Database migration script executed for release 11.4 (Ref #203),https://github.com/agile-labs/axpert/pull/245
+msg204,Manoj Choudhury,manoj.choudhury@gmail.com,Reminder: Daily engineering sync at 10:30 AM IST (Ref #204),"<a href=""https://google.com"">Google Search</a>"
+msg205,Bhavna Patel,bhavna.patel@agile-labs.com,Bug ticket #1389 marked as ready for QA testing (Ref #205),https://docs.agile-labs.com/release-notes/11.4
+msg206,Karthik Kulkarni,karthik.kulkarni@agile-labs.com,New pull request created for team code review (Ref #206),chatgpt &nbsp;let us try
+msg207,Sneha Reddy,sneha.reddy@gmail.com,Customer demo scheduled for upcoming Monday at 3 PM (Ref #207),
+msg208,Rajesh Mishra,rajesh.mishra@agile-labs.com,Performance optimization benchmark report is now available (Ref #208),
+msg209,Ritu Iyer,ritu.iyer@agile-labs.com,Unit tests passed for all frontend modules (Ref #209),
+msg210,Vijay Sheriff,vijay.sheriff@gmail.com,API gateway configuration updated with rate limiting (Ref #210),"<a href=""https://agile-labs.com"">AgileLabs</a>"

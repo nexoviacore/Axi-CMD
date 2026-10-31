@@ -683,7 +683,7 @@ Home Cunfiguration Page Templete
                                 <div class="d-flex align-items-center ms-1 ms-lg-2" id="axpertstudio">
                                     <!--begin::Menu wrapper-->
                                     <div class="btn btn-icon btn-active-light-primary w-30px h-30px w-md-40px h-md-40px" id="AllDevOptions" data-kt-menu-trigger="click" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end" data-kt-menu-backdrop="true" style="background: #483d8b1a;">
-                                        <img class="notif-new" src="../images/devops/axpertstudio.png">
+                                        <img class="notif-new" src="https://cdn-icons-png.flaticon.com/128/3573/3573187.png">
                                     </div>
                                     <!--begin::Menu-->
                                     <div class="DevOptions menu menu-sub menu-sub-dropdown menu-column w-sm-250px w-md-600px w-lg-600px overflow-sm-auto " data-kt-menu="true" style="">
@@ -710,6 +710,14 @@ Home Cunfiguration Page Templete
                                                     </a>
                                                 </div>
 
+                                                <!--<div id="Cards" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("iaxpcards");' class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/cards.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Cards</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">Cards</span>
+                                                    </a>
+                                                </div>-->
+
                                                 <div id="pluginCustomCode" class="col-md-3 col-sm-6 col-6">
                                                     <a href="javascript:void(0);" onclick="openPluginEditor();" title="Custom Plugins" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/icons/plugin.png">
@@ -717,6 +725,14 @@ Home Cunfiguration Page Templete
                                                         <span class="divSubTitle fs-7 text-gray-400">Plugin</span>
                                                     </a>
                                                 </div>
+
+                                                <!--<div id="CustomPages" class="col-md-3 col-sm-6 col-6">
+                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("ihplist");' title="Custom Pages" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                        <img src="../images/devops/custom-pages.png">
+                                                        <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Custom Pages</span>
+                                                        <span class="divSubTitle fs-7 text-gray-400">HTML</span>
+                                                    </a>
+                                                </div>-->
 
                                                 <div id="ADS" class="col-md-3 col-sm-6 col-6">
                                                     <a href="javascript:void(0);" onclick='openDeveloperStudio("icsqlist");' title="Axpert Data Sources" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
@@ -1206,7 +1222,7 @@ Home Cunfiguration Page Templete
                                         <!--begin::My Favourite popout-->
                                         <div id="axiMegaDropdown" data-kt-menu="true"
                                              class="menu menu-sub menu-sub-dropdown menu-column z-3"
-                                             style="display: none; position: absolute; bottom: 100%; left: 100px; width: 950px !important; max-width: calc(100vw - 120px) !important;">
+                                             style="display: none; position: absolute; bottom: 100%; left: 100px;">
                                             <!--begin::Card-->
                                             <div id="axiFavouritesCard" class="card">
                                                 <!--begin::Card header-->
@@ -1263,6 +1279,13 @@ Home Cunfiguration Page Templete
                                         <span class="material-icons material-icons-style material-icons-2 axi-refresh-icon"
                                               data-bs-toggle="tooltip" data-bs-placement="bottom"
                                               title="Refresh">refresh</span>
+                                    </div>
+                                    <!--Settings Button (records to load at a time)-->
+                                    <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                         id="axiSettingsBtn" aria-label="AxiCMD Settings">
+                                        <span class="material-icons material-icons-style material-icons-2"
+                                              data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                              title="Settings">settings</span>
                                     </div>
                                     <!--Notification Button-->
                                     <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm selectbtn d-none"
@@ -1484,7 +1507,7 @@ Home Cunfiguration Page Templete
         // files.css.push("/Css/axpertUI.min.css?v=50");
     }
 
-    files.css.push("/Css/LayoutTheme.min.css?v=11");
+    files.css.push("/Css/LayoutTheme.min.css?v=10");
     files.css.push("/Css/AxNotifications.min.css?v=2");
     files.css.push("/Css/HomeConfigPageCards.min.css?v=12");
     files.js.push("/Js/signalr.min.js");
@@ -1496,13 +1519,14 @@ Home Cunfiguration Page Templete
     var isAxiCMDEnabled = typeof axicmdEnabled !== 'undefined' && axicmdEnabled !== false && axicmdEnabled !== 'false';
     if (isAxiCMDEnabled) {
         let _appUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-        var axiCmdJs = _appUrl + "/AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js?v=1";
-        var axiCmdCss = _appUrl + "/AxpertPlugins/AxiCMD/HTMLPages/css/axicmdmain.css?v=1";
+        var axiCmdJs = _appUrl + "/AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js?v=85";
+        var axiCmdCss = _appUrl + "/AxpertPlugins/AxiCMD/HTMLPages/css/axicmdmain.css?v=14";
         function checkFileExists(url) {
             var fileExists = false;
             $.ajax({
                 url: url,
                 type: "GET",
+                dataType: "text", // existence check only; the default would execute .js responses
                 async: false,
                 cache: false,
                 success: function (data, textStatus, xhr) {

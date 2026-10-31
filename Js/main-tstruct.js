@@ -262,10 +262,9 @@ $j(document).ready(function () {
             window.location.href = "err.aspx?errmsg=Axpertweb 11.0 popgrid (subgrid) is not supporting, please change the definition and try again..";
             return;
         }
-        $j('div#wBdr').show();
         AxBeforeTstLoad();
     } catch (ex) {
-        //$j('div#wBdr').show();
+        $j('div#wBdr').show();
         ShowDimmer(false);
     }
     var t0 = performance.now();
@@ -11425,6 +11424,16 @@ function DropzoneInit(dvId) {
         let _uploadFileTypes = "";
         if (typeof UploadFileTypes != "undefined" && UploadFileTypes == "true" && typeof UploadFileTypesVal != "undefined")
             _uploadFileTypes = UploadFileTypesVal;
+        let isthisReadOnly = false;
+        let _isDummyFirstUpAxp = false;
+        let _isDummyFirstcountAxp = 0;
+        if (FFieldReadOnly[_ffuIndex] == "True") {
+            let _thisFldId = $(id).attr("id").substr(9);
+            $("#" + _thisFldId).prop('disabled', true);
+            $(id).parent().addClass('readonly');
+            isthisReadOnly = true;
+        }
+        let _isDataLoad = false;
         let protectFile = "false";
         if (typeof tstConfigurations != "undefined" && tstConfigurations.config !== undefined && tstConfigurations.config.length > 0) {
             let _finalJson = [];
@@ -11440,24 +11449,7 @@ function DropzoneInit(dvId) {
             protectFile = _finalJson.find(item => item.props?.trim().toLowerCase() === "file protected in tstruct attachments")?.propsval;
             if (typeof protectFile == "undefined" || protectFile == "")
                 protectFile = "false";
-
-            let allowSpecific = _finalJson.find(item => item.props?.trim().toLowerCase() === "allow specific file types in attachments")?.propvalue2;
-            if (typeof allowSpecific != "undefined" && allowSpecific != "")
-                _uploadFileTypes = _uploadFileTypes == "" ? allowSpecific : _uploadFileTypes + "," + allowSpecific;
-            let allowVideoFile = _finalJson.find(item => item.props?.trim().toLowerCase() === "allow video file in attachments")?.propvalue2;
-            if (typeof allowVideoFile != "undefined" && allowVideoFile != "")
-                _uploadFileTypes = _uploadFileTypes == "" ? allowVideoFile : _uploadFileTypes + "," + allowVideoFile;
         }
-        let isthisReadOnly = false;
-        let _isDummyFirstUpAxp = false;
-        let _isDummyFirstcountAxp = 0;
-        if (FFieldReadOnly[_ffuIndex] == "True") {
-            let _thisFldId = $(id).attr("id").substr(9);
-            $("#" + _thisFldId).prop('disabled', true);
-            $(id).parent().addClass('readonly');
-            isthisReadOnly = true;
-        }
-        let _isDataLoad = false;
 
         var myDropzone = new Dropzone(id, { // Make the whole body a dropzone
             url: url + `TstFileUpload.ashx?thisFld=${$(id).attr("id").substr(9)}&filePath=${$(".axpFilePath_" + $(id).attr("id").substring(("dropzone_axpfile_").length)).val() == undefined ? "" : $(".axpFilePath_" + $(id).attr("id").substring(("dropzone_axpfile_").length)).val()}&dcNo=${GetFieldsDcNo($(id).attr("id"))}&attFldName=${GetFieldsName($(id).attr("id").substr(9))}&fileExt=${_uploadFileTypes}&futransid=${transid}&protectFile=${protectFile}`,
@@ -12049,12 +12041,6 @@ function HeaderAttachFiles() {
         protectFile = _finalJson.find(item => item.props?.trim().toLowerCase() === "file protected in tstruct attachments")?.propsval;
         if (typeof protectFile == "undefined" || protectFile == "")
             protectFile = "false";
-        let allowSpecific = _finalJson.find(item => item.props?.trim().toLowerCase() === "allow specific file types in attachments")?.propvalue2;
-        if (typeof allowSpecific != "undefined" && allowSpecific != "")
-            _uploadFileTypes = _uploadFileTypes == "" ? allowSpecific : _uploadFileTypes + "," + allowSpecific;
-        let allowVideoFile = _finalJson.find(item => item.props?.trim().toLowerCase() === "allow video file in attachments")?.propvalue2;
-        if (typeof allowVideoFile != "undefined" && allowVideoFile != "")
-            _uploadFileTypes = _uploadFileTypes == "" ? allowVideoFile : _uploadFileTypes + "," + allowVideoFile;
     }
     let _delFileList = "";
     var myhdrDropzone = new Dropzone(id, { // Make the whole body a dropzone
@@ -12279,12 +12265,6 @@ function DropzoneGridInit(dvId) {
             protectFile = _finalJson.find(item => item.props?.trim().toLowerCase() === "file protected in tstruct attachments")?.propsval;
             if (typeof protectFile == "undefined" || protectFile == "")
                 protectFile = "false";
-            let allowSpecific = _finalJson.find(item => item.props?.trim().toLowerCase() === "allow specific file types in attachments")?.propvalue2;
-            if (typeof allowSpecific != "undefined" && allowSpecific != "")
-                _uploadFileTypes = _uploadFileTypes == "" ? allowSpecific : _uploadFileTypes + "," + allowSpecific;
-            let allowVideoFile = _finalJson.find(item => item.props?.trim().toLowerCase() === "allow video file in attachments")?.propvalue2;
-            if (typeof allowVideoFile != "undefined" && allowVideoFile != "")
-                _uploadFileTypes = _uploadFileTypes == "" ? allowVideoFile : _uploadFileTypes + "," + allowVideoFile;
         }
 
         var myDropzone = new Dropzone(id, { // Make the whole body a dropzone
@@ -13396,6 +13376,15 @@ function tstDummyLoad(_openingTrId) {
             }
         }
     } catch (ex) { }
+    
+    // new code
+    // The dummy-load flow below only renders through LoadIframe, which targets middle1. In any other frame
+    // (e.g. the Developer Studio modal) it renders nothing, leaving a blank page. "dummyload=false♠" still returns
+    // the cached page, so reload without dummyload to get a full render (#261).
+    if (!isTstHtmlCacheFrame()) {
+        reloadWithoutDummyLoad();
+        return;
+    }
     callParentNew("isdummyLoad=", "true");
     if (callParentNew("originalUri") != "") {
         resTstLoadDummy = $("#hdnTstLoadDummy").val();
@@ -13454,7 +13443,36 @@ function tstDummyLoad(_openingTrId) {
         }
     }
 }
+
+// new code
+// The cached ("dummy load") page only finishes rendering through LoadIframe, which targets middle1.
+// True for the frames that path supports; any other frame (popup, Developer Studio modal) stays blank (#261).
+function isTstHtmlCacheFrame() {
+    try {
+        let _frameId = window.frameElement ? (window.frameElement.id || "") : "";
+        return _frameId == "middle1" || _frameId.startsWith("axMultiiframe_");
+    } catch (ex) {
+        return false;
+    }
+}
+
+// new code
+// Reloads this page without the dummyload param, so the server renders the form fully instead of the cached page (#261)
+function reloadWithoutDummyLoad() {
+    let _thisUrl = window.location.href;
+    let _newUrl = _thisUrl.replace(/([?&])dummyload=[^&#]*&?/i, "$1").replace(/[?&](#|$)/, "$1");
+    if (_newUrl == _thisUrl)
+        return;
+    window.location.replace(_newUrl);
+}
+
 function tstHtmlDummyLoad(_transid) {
+    // new code
+    // The cached page cannot render outside middle1 / axMultiiframe_, so ask for a full render instead (#261)
+    if (!isTstHtmlCacheFrame()) {
+        reloadWithoutDummyLoad();
+        return;
+    }
     try {
         try {
             _savedraftKeytime = $("#hdnTstAutoSD").val();

@@ -1,0 +1,422 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T12:03:32.953Z",
+  "title": "Design System: AxiCMD",
+  "extensions": {
+    "colorMeta": {
+      "console-ink": {
+        "role": "primary",
+        "displayName": "Console Ink",
+        "canonical": "#1d2547",
+        "tonalRamp": [
+          "#101424",
+          "#13182d",
+          "#171c35",
+          "#1a213e",
+          "#565c75",
+          "#8e92a3",
+          "#c0c2cb",
+          "#e8e9ed"
+        ]
+      },
+      "console-ink-hover": {
+        "role": "primary",
+        "displayName": "Console Ink Hover",
+        "canonical": "#2c3766",
+        "tonalRamp": [
+          "#14182c",
+          "#1a203a",
+          "#202849",
+          "#262f57",
+          "#61698c",
+          "#969bb3",
+          "#c4c7d4",
+          "#eaebf0"
+        ]
+      },
+      "signal-indigo": {
+        "role": "secondary",
+        "displayName": "Signal Indigo",
+        "canonical": "#3f51c2",
+        "tonalRamp": [
+          "#191f43",
+          "#222b62",
+          "#2c3882",
+          "#3544a2",
+          "#6f7dd1",
+          "#9fa8e1",
+          "#c9ceee",
+          "#eceef9"
+        ]
+      },
+      "signal-tint": {
+        "role": "secondary",
+        "displayName": "Signal Tint",
+        "canonical": "#eceffb",
+        "tonalRamp": [
+          "#444651",
+          "#6e707b",
+          "#989ba6",
+          "#c2c5d0",
+          "#f1f3fc",
+          "#f6f7fd",
+          "#fafbfe",
+          "#fdfdff"
+        ]
+      },
+      "hint-amber": {
+        "role": "tertiary",
+        "displayName": "Hint Amber",
+        "canonical": "#f59e0b",
+        "tonalRamp": [
+          "#463215",
+          "#724d12",
+          "#9e6810",
+          "#c9830d",
+          "#f8b648",
+          "#facf85",
+          "#fce4bb",
+          "#fef5e7"
+        ]
+      },
+      "slate": {
+        "role": "neutral",
+        "displayName": "Slate",
+        "canonical": "#5b6482",
+        "tonalRamp": [
+          "#202433",
+          "#2f3446",
+          "#3d445a",
+          "#4c546e",
+          "#848ba1",
+          "#adb2c1",
+          "#d1d4dc",
+          "#eff0f3"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#f4f5f9",
+        "tonalRamp": [
+          "#464850",
+          "#72737a",
+          "#9d9ea5",
+          "#c9cacf",
+          "#f7f8fb",
+          "#fafafc",
+          "#fcfcfd",
+          "#fefefe"
+        ]
+      },
+      "sheet": {
+        "role": "neutral",
+        "displayName": "Sheet",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#494a52",
+          "#76777d",
+          "#a4a5a8",
+          "#d1d2d4",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff"
+        ]
+      },
+      "header-wash": {
+        "role": "neutral",
+        "displayName": "Header Wash",
+        "canonical": "#f8f9fc",
+        "tonalRamp": [
+          "#474951",
+          "#73757c",
+          "#a0a1a7",
+          "#cccdd1",
+          "#fafbfd",
+          "#fcfcfe",
+          "#fdfdfe",
+          "#fefeff"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "#dde1eb",
+        "tonalRamp": [
+          "#40434d",
+          "#676a74",
+          "#8f929c",
+          "#b6b9c3",
+          "#e6e9f0",
+          "#eef0f5",
+          "#f5f7f9",
+          "#fcfcfd"
+        ]
+      },
+      "field-stroke": {
+        "role": "neutral",
+        "displayName": "Field Stroke",
+        "canonical": "#c9cedb",
+        "tonalRamp": [
+          "#3b3e49",
+          "#5f626d",
+          "#828692",
+          "#a6aab6",
+          "#d7dae4",
+          "#e4e7ed",
+          "#f0f1f5",
+          "#fafafb"
+        ]
+      },
+      "error-red": {
+        "role": "error",
+        "displayName": "Error Red",
+        "canonical": "#a3261a",
+        "tonalRamp": [
+          "#321419",
+          "#4e1919",
+          "#6a1d19",
+          "#87221a",
+          "#ba5c53",
+          "#d1938d",
+          "#e5c2bf",
+          "#f6e9e8"
+        ]
+      },
+      "error-tint": {
+        "role": "error",
+        "displayName": "Error Tint",
+        "canonical": "#fcefed",
+        "tonalRamp": [
+          "#48464d",
+          "#757075",
+          "#a29b9d",
+          "#cfc5c5",
+          "#fdf3f2",
+          "#fef7f6",
+          "#fefbfa",
+          "#fffdfd"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Command words typed in the palette (Configure, SDK) when used as tabs; 24px below 600px."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page and drawer titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Table cells, notes and descriptions; descriptions capped at 70ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Column headers, field labels, switch labels, small buttons; sentence case."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "URLs, paths and identifiers only, always LTR."
+      }
+    },
+    "shadows": [
+      {
+        "name": "floating-edge",
+        "value": "-16px 0 40px -20px rgba(29, 37, 71, 0.35)",
+        "purpose": "Leading edge of the side drawer; mirrored in RTL. Only overlays lift."
+      },
+      {
+        "name": "toast-lift",
+        "value": "0 10px 28px -14px rgba(29, 37, 71, 0.45)",
+        "purpose": "The status toast floating at the bottom of the page."
+      },
+      {
+        "name": "scrim",
+        "value": "rgba(29, 37, 71, 0.28)",
+        "purpose": "Solid scrim fill behind a modal drawer or the version dialog; no blur."
+      },
+      {
+        "name": "dialog-lift",
+        "value": "0 24px 56px -24px rgba(29, 37, 71, 0.5)",
+        "purpose": "The palette version dialog floating over the scrim."
+      }
+    ],
+    "motion": [
+      {
+        "name": "tab-bar",
+        "value": "transform 0.24s ease-out, width 0.24s ease-out",
+        "purpose": "Signal bar sliding to the newly selected command tab."
+      },
+      {
+        "name": "drawer-in",
+        "value": "transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Side drawer opening from the inline-end edge."
+      },
+      {
+        "name": "drawer-out",
+        "value": "transform 0.22s cubic-bezier(0.4, 0, 1, 1)",
+        "purpose": "Side drawer closing."
+      },
+      {
+        "name": "rows-fade",
+        "value": "opacity 0.18s ease-out",
+        "purpose": "New rows after a tab switch fade in once, as a whole."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact",
+        "value": "600px"
+      },
+      {
+        "name": "medium",
+        "value": "900px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action per view (Add option, Save option).",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Save option</button>",
+      "css": ".ds-btn-primary { font: 600 13.5px/1 \"Segoe UI\", system-ui, sans-serif; min-height: 38px; padding: 0 16px; border-radius: 6px; cursor: pointer; color: #fff; background: #1d2547; border: 1px solid #1d2547; } .ds-btn-primary:hover { background: #2c3766; border-color: #2c3766; } .ds-btn-primary:focus-visible { outline: 2px solid #3f51c2; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Every other action: Cancel, Edit, View, Previous, Next.",
+      "html": "<button class=\"ds-btn-secondary\" type=\"button\">Cancel</button>",
+      "css": ".ds-btn-secondary { font: 600 13.5px/1 \"Segoe UI\", system-ui, sans-serif; min-height: 38px; padding: 0 16px; border-radius: 6px; cursor: pointer; color: #1d2547; background: #fff; border: 1px solid #c9cedb; } .ds-btn-secondary:hover { background: #f4f5f9; } .ds-btn-secondary:focus-visible { outline: 2px solid #3f51c2; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-text",
+      "description": "Labelled field with help text below.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Name</span><input class=\"ds-input\" type=\"text\" placeholder=\"Sales orders\"><span class=\"ds-field-help\">This is what you type after the command.</span></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 5px; font: 14px/1.5 \"Segoe UI\", system-ui, sans-serif; color: #1d2547; } .ds-field-label { font-size: 13px; font-weight: 600; } .ds-input { min-height: 38px; padding: 0 12px; font: inherit; color: #1d2547; background: #fff; border: 1px solid #c9cedb; border-radius: 6px; } .ds-input:focus { border-color: #3f51c2; outline: 2px solid #3f51c2; outline-offset: 2px; } .ds-field-help { font-size: 12px; color: #5b6482; }"
+    },
+    {
+      "name": "Command Tabs",
+      "kind": "nav",
+      "refersTo": "command-tab",
+      "description": "The command words as tabs, with a Signal bar under the selected one.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\"><button class=\"ds-tab\" role=\"tab\" aria-selected=\"true\">Configure<span class=\"ds-tabn\">42</span></button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">SDK<span class=\"ds-tabn\">19</span></button></div>",
+      "css": ".ds-tabs { display: flex; gap: 28px; border-bottom: 1px solid #dde1eb; } .ds-tab { padding: 0 0 8px; font: 600 28px/1.15 Bahnschrift, \"DIN Alternate\", \"Segoe UI\", sans-serif; color: #5b6482; background: none; border: 0; cursor: pointer; box-shadow: inset 0 -3px 0 transparent; } .ds-tab:hover { color: #1d2547; } .ds-tab[aria-selected=\"true\"] { color: #1d2547; box-shadow: inset 0 -3px 0 #3f51c2; } .ds-tab:focus-visible { outline: 2px solid #3f51c2; outline-offset: 2px; } .ds-tabn { margin-inline-start: 4px; font-size: 14px; font-weight: 400; color: #5b6482; vertical-align: 0.9em; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Built-in Badge",
+      "kind": "chip",
+      "refersTo": "badge-builtin",
+      "description": "Marks a Built-in Option beside its name.",
+      "html": "<span class=\"ds-badge\">Built-in</span>",
+      "css": ".ds-badge { padding: 1px 6px; font: 600 11.5px/1.5 \"Segoe UI\", system-ui, sans-serif; color: #5b6482; background: #f4f5f9; border: 1px solid #dde1eb; border-radius: 4px; white-space: nowrap; }"
+    },
+    {
+      "name": "Active Switch",
+      "kind": "custom",
+      "refersTo": "switch-on",
+      "description": "Turns an option on or off; indigo when on.",
+      "html": "<label class=\"ds-switch\"><input type=\"checkbox\" checked><span class=\"ds-track\"></span><span class=\"ds-switch-label\">Active</span></label>",
+      "css": ".ds-switch { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font: 600 12.5px \"Segoe UI\", system-ui, sans-serif; color: #1d2547; } .ds-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; } .ds-track { position: relative; width: 34px; height: 20px; border-radius: 999px; background: #c3c8d6; transition: background 0.15s; } .ds-track::after { content: \"\"; position: absolute; top: 2px; inset-inline-start: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: inset-inline-start 0.15s; } .ds-switch input:checked + .ds-track { background: #3f51c2; } .ds-switch input:checked + .ds-track::after { inset-inline-start: 16px; } .ds-switch input:focus-visible + .ds-track { outline: 2px solid #3f51c2; outline-offset: 2px; }"
+    },
+    {
+      "name": "Table Sheet",
+      "kind": "card",
+      "refersTo": "table-sheet",
+      "description": "One flat white sheet holding the options table.",
+      "html": "<div class=\"ds-sheet\"><table class=\"ds-table\"><thead><tr><th>Name</th><th>Target</th></tr></thead><tbody><tr><td class=\"ds-name\">user listing</td><td class=\"ds-target\">../aspx/iview.aspx?ivname=axusers</td></tr><tr><td class=\"ds-name\">Sales orders</td><td class=\"ds-target\">sorder</td></tr></tbody></table></div>",
+      "css": ".ds-sheet { overflow: clip; background: #fff; border: 1px solid #dde1eb; border-radius: 8px; font: 14px/1.5 \"Segoe UI\", system-ui, sans-serif; color: #1d2547; } .ds-table { width: 100%; border-collapse: collapse; } .ds-table th { padding: 10px 16px; text-align: start; font-size: 12.5px; font-weight: 600; color: #5b6482; background: #f8f9fc; border-bottom: 1px solid #dde1eb; } .ds-table td { padding: 10px 16px; border-bottom: 1px solid #dde1eb; } .ds-table tbody tr:last-child td { border-bottom: 0; } .ds-table tbody tr:hover { background: #f7f8fc; } .ds-name { font-weight: 600; } .ds-target { color: #5b6482; font: 12.5px/1.45 Consolas, \"Cascadia Mono\", monospace; direction: ltr; }"
+    },
+    {
+      "name": "Verb Mark",
+      "kind": "custom",
+      "description": "A palette command row with its verb colour on the 20px icon only.",
+      "html": "<div class=\"ds-verb\"><span class=\"ds-verb-mark\" style=\"background:#7c3aed\">C</span><span>configure</span></div>",
+      "css": ".ds-verb { display: inline-flex; align-items: center; gap: 10px; min-height: 28px; padding: 3px 6px; font: 14px \"Segoe UI\", system-ui, sans-serif; color: #1d2547; background: #fff; border: 1px solid #e2e8f0; border-radius: 5px; } .ds-verb-mark { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px; color: #fff; font-size: 11px; font-weight: 700; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Console",
+    "overview": "AxiCMD is a precise tool that stays out of the way. It lives inside the Axpert shell, next to Axpert's own forms and reports, so it never competes with its host: surfaces are flat, white and thinly ruled, the density is that of a working admin tool, and almost everything is ink on paper. The work is done by type and by one signal colour. The words a user types (the command verbs such as Configure and SDK) are the only element allowed to be large.\n\nColour is information, never decoration. Console Ink means \"read this\" or \"press this\"; Signal Indigo means \"this is selected or switched on\". Each palette verb keeps its own small colour mark so users learn to recognise commands at a glance. Motion appears only in answer to something the user did: a drawer sliding in, the selected-tab bar moving, rows fading in after a change.\n\nAn earlier frosted-glass look with an amber-to-coral gradient has been retired. Every AxiCMD surface now follows this system, including the palette's gear menu, the \"Records per load\" panel and the version dialog (`axicmdmain.css` sections 8 and 9).",
+    "keyCharacteristics": [
+      "Flat white sheets on a cool paper page, separated by 1px rules.",
+      "One signal colour (indigo) for state; navy ink for text and actions.",
+      "Bahnschrift for command words, titles and numbers; Segoe UI for everything else.",
+      "Small, consistent corners (4-8px); nothing pill-shaped except switches.",
+      "Keyboard-first, right-to-left ready, local assets only."
+    ],
+    "rules": [
+      {
+        "name": "The Signal Means On Rule",
+        "body": "Signal Indigo marks only what is selected, switched on, current or focused. If a thing is not in one of those states, it is not indigo.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Gradient Rule",
+        "body": "No gradients anywhere: not on buttons, page backgrounds or highlights.",
+        "section": "colors"
+      },
+      {
+        "name": "The Red Is Not An Action Rule",
+        "body": "Red appears only for errors. Primary actions are Console Ink, never red, coral or amber.",
+        "section": "colors"
+      },
+      {
+        "name": "The Typed Word Rule",
+        "body": "Only words the user types into the palette may be set at display size.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "Labels, headers and buttons are sentence case. No all-caps labels, no tracked-out eyebrows on new surfaces.",
+        "section": "typography"
+      },
+      {
+        "name": "The Code Is Code Rule",
+        "body": "Monospace is reserved for URLs, paths and identifiers; never for ordinary labels or numbers.",
+        "section": "typography"
+      },
+      {
+        "name": "The Own Direction Rule",
+        "body": "The page's strings are English even inside a right-to-left shell. Every sentence block (subtitles, notes, help, errors, status, the range) and every typed phrase takes its direction from its own text (`unicode-bidi: plaintext`), so punctuation, numbers and brackets stay in place; in RTL those sentence blocks still align right with their labels.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Anything in the page flow has no shadow. Only overlays lift.",
+        "section": "elevation"
+      },
+      {
+        "name": "The No Glass Rule",
+        "body": "No backdrop blur and no translucent panels; overlays are solid Sheet.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep surfaces flat: white Sheet on Paper with 1px Rule borders.",
+      "Do use Signal Indigo only for selected, on, current and focused states.",
+      "Do make Console Ink the colour of every primary action, one primary action per view.",
+      "Do set command words in Bahnschrift at display size and keep all other text in Segoe UI.",
+      "Do use logical properties and check every page under `dir=\"rtl\"`.",
+      "Do make every control reachable by keyboard with a visible 2px Signal Indigo focus outline.",
+      "Do load only local CSS, JS and fonts.",
+      "Do respect reduced motion: drawers and tab bars simply appear."
+    ],
+    "donts": [
+      "Don't use frosted glass, backdrop blur or translucent panels.",
+      "Don't use gradients on buttons, highlights or backgrounds.",
+      "Don't use red, coral or amber for actions.",
+      "Don't put shadows on anything that sits in the page flow.",
+      "Don't add decorative motion: no staggered entrances, bouncy easing or animations the user did not cause.",
+      "Don't use all-caps labels or monospace for non-code text.",
+      "Don't restyle the Axpert shell around AxiCMD."
+    ]
+  }
+}

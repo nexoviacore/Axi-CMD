@@ -159,6 +159,10 @@ DELETE FROM axdirectsql where sqlname = 'axi_getstructsdata'
 >>
 
 <<
+DELETE FROM axdirectsql where sqlname = 'axi_userlicactivation'
+>>
+
+<<
 DELETE FROM axdirectsql where axdirectsqlid = 99999999990040
 >>
 
@@ -686,5 +690,9 @@ INSERT INTO axdirectsql (axdirectsqlid, cancel, sourceid, mapname, username, mod
 
 <<
 Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990052,'F',0,null,'admin',TO_DATE('2025-12-23 13:22:07', 'YYYY-MM-DD HH24:MI:SS'),'admin',TO_DATE('2025-12-19 16:06:57', 'YYYY-MM-DD HH24:MI:SS'),null,1,1,null,null,null,'axi_userpwd',null,'Metadata',1,'select password  from axusers where username = :param1','param1','param1~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
+>>
+
+<<
+Insert into AXDIRECTSQL (AXDIRECTSQLID,CANCEL,SOURCEID,MAPNAME,USERNAME,MODIFIEDON,CREATEDBY,CREATEDON,WKID,APP_LEVEL,APP_DESC,APP_SLEVEL,CANCELREMARKS,WFROLES,SQLNAME,DDLDATATYPE,SQLSRC,SQLSRCCND,SQLTEXT,PARAMCAL,SQLPARAMS,ACCESSSTRING,GROUPNAME,SQLQUERYCOLS,CACHEDATA,CACHEINTERVAL,ENCRYPTEDFLDS,ADSDESC,SMARTLISTCND,PAGINATION,APPLYDIMENSIONS) values (99999999990053,'F',0,null,'admin',TO_DATE('2026-10-29 12:00:00', 'YYYY-MM-DD HH24:MI:SS'),'admin',TO_DATE('2026-10-29 12:00:00', 'YYYY-MM-DD HH24:MI:SS'),null,1,1,null,null,null,'axi_userlicactivation',null,'Metadata',1,'select username, to_char(licactivation) as licactivation from axusers where username = :param1','param1','param1~Character~','ALL',null,null,'F','6 Hr',null,null,null,'T','F')
 >>
 

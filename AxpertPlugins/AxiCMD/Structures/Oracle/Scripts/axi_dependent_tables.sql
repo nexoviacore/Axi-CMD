@@ -1,6 +1,5 @@
 
 
--- TODO: Remove this on next release. 
 <<
 DELETE FROM axiconfig where  mainpagetemplate = 'AxiCMDMainPage.html'
 <<
@@ -49,7 +48,35 @@ VALUES (1920660000003, 1920660000001, 1, 'false')
 
 <<
 INSERT INTO axpstructconfig (axpstructconfigid,cancel,sourceid,mapname,username,modifiedon,createdby,createdon,wkid,app_level,app_desc,app_slevel,cancelremarks,wfroles,asprops,setype,props,context,propvalue1,uploadfiletype,propvalue2,propsval,alluserroles,structcaption,structname,structelements,structelements1,sfield,icolumn,sbutton,hlink,stype,userroles,dupchk,purpose)
-VALUES (1920990000006,'F',0,NULL,'admin',TO_TIMESTAMP('2026-09-25 13:36:05','YYYY-MM-DD HH24:MI:SS'),'admin',TO_TIMESTAMP('2026-09-25 12:37:48','YYYY-MM-DD HH24:MI:SS'),NULL,1,1,NULL,NULL,NULL,'Axi Command Line Enable','All','General',NULL,'true',NULL,NULL,'true','F',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'ALL','Axi Command Line EnableGeneralALL',NULL)
+VALUES (1920990000006,'F',0,NULL,'admin',TO_TIMESTAMP('2026-09-25 13:36:05','YYYY-MM-DD HH24:MI:SS'),'admin',TO_TIMESTAMP('2026-09-25 12:37:48','YYYY-MM-DD HH24:MI:SS'),NULL,1,1,NULL,NULL,NULL,'Axi Command Line Enable','All','General',NULL,'false',NULL,NULL,'false','F',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'ALL','Axi Command Line EnableGeneralALL',NULL)
 >>
 
 
+
+<<
+DECLARE
+    v_exists NUMBER;
+BEGIN
+    -- The table holds user settings, so it is never dropped: create it only when it is not there yet
+    SELECT COUNT(*) INTO v_exists FROM user_tables WHERE table_name = 'AXI_USERSETTINGS';
+    IF v_exists = 0 THEN
+        EXECUTE IMMEDIATE q'[CREATE TABLE Axi_UserSettings (
+    Id VARCHAR2(36)
+        DEFAULT LOWER(
+            REGEXP_REPLACE(
+                RAWTOHEX(SYS_GUID()),
+                '(.{8})(.{4})(.{4})(.{4})(.{12})',
+                '\1-\2-\3-\4-\5'
+            )
+        )
+        PRIMARY KEY,
+
+    UserName VARCHAR2(255) NOT NULL,
+    SettingKey VARCHAR2(100) NOT NULL,
+    SettingValue VARCHAR2(4000),
+    ModifiedOn TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_axi_usersettings UNIQUE (UserName, SettingKey)
+)]';
+    END IF;
+END;
+>>

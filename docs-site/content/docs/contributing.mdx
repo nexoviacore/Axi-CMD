@@ -1,0 +1,49 @@
+---
+title: Contributing
+description: How to build, test, commit and review changes to AxiCMD.
+---
+
+## Commands
+
+Run the frontend toolchain from `UI/compiler/tools`:
+
+| Command | Purpose |
+| --- | --- |
+| `npm install` | Install dependencies. |
+| `npm run build` | Production bundles. |
+| `npm run watch` | Rebuild on change. |
+| `npm run localhost` | Dev server on `localhost:8080`. |
+| `npm run buildBundle` | Standard and RTL bundles. |
+
+Checks for the palette:
+
+```bash
+node --check AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js
+node --test tests/*.test.js
+```
+
+## Tests
+
+The tests in `tests/` use Node's built-in runner. They re-implement logic with mock data and do **not** load `axicmdmain.js`, so passing tests do not prove the real script works. There is no automated UI test: validate in the browser (Ctrl+F5, DevTools Network and console). `npm test` is a placeholder and fails by design.
+
+## Conventions
+
+- **Commits:** Conventional Commits, `type(scope): subject`, for example `feat(axi-cmd): ...` or `fix(axi-cmd): ...`.
+- **Style:** 4 spaces, no tabs. Preserve each file's line endings.
+- **Do not edit `ThirdParty/`.** It is pinned vendor code.
+- **No secrets** and no environment-specific URLs in commits.
+- **Both databases:** change the Postgres and the Oracle scripts together.
+- **Regexes:** editing JavaScript with one-liners in `node` or `sed` can silently drop backslashes in regular expressions. Re-read those lines after such an edit.
+
+## Before a large change
+
+1. Take a backup copy of `AxpertPlugins/AxiCMD`, outside the plugin folder.
+2. Read `docs/adr/` before changing how data is loaded.
+3. When replacing code, comment it out with a short "kept for future use" note instead of deleting it, if the team may need it again.
+4. Bump `?v=N` in `aspx/mainHomeConfigTemplate.html` for script or style changes.
+
+The repository holds many backup copies (`*_bkp_*`, `__bkp`, zip files). Confirm you are editing the live file.
+
+## Writing these docs
+
+The docs are in `docs-site/content/docs` as MDX. Run `npm run dev` inside `docs-site` for a live preview and `npm run build` for the static site (`out/`). Each page should name the file it describes, and state clearly what is verified in the code and what is not.

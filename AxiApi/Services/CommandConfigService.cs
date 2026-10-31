@@ -1,7 +1,9 @@
 using ARMCommon.Interface;
 using AxExtend.Interface;
 using AxiApi.DTOs;
+using AxiApi.Exceptions;
 using AxiApi.Interfaces;
+using AxiApi.Lib;
 using AxiApi.Lib.Utils;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -89,6 +91,68 @@ namespace AxiApi.Services
             }
 
             return configs ?? new List<CommandConfigDTO>();
+        }
+
+        // Not cached: the Config page must always show what is in the table
+        public async Task<List<CommandConfigOptionDTO>> GetAllCommandOptionsAsync(string appname)
+        {
+            if (string.IsNullOrWhiteSpace(appname))
+                return new List<CommandConfigOptionDTO>();
+            return await _repository.GetAllCommandOptionsAsync(appname);
+        }
+
+        // Not cached either, for the same reason
+        public async Task<CommandOptionPageDTO> GetCommandOptionsPageAsync(string appname, string? command, string? search, string? show, string? focus, int? pageNo, int? pageSize)
+        {
+            var cmd = CommandOptionRules.NormalizeCommand(command) ?? throw new CommandOptionException("command must be Configure or SDK.");
+            return await _repository.GetCommandOptionsPageAsync(appname, cmd, CommandOptionPaging.CleanSearch(search),
+                CommandOptionPaging.NormalizeShow(show), CommandOptionPaging.CleanFocus(focus), pageNo, CommandOptionPaging.ClampPageSize(pageSize));
+        }
+
+        public async Task<bool> SetCommandOptionActiveAsync(string appname, string username, string configId, bool active)
+        {
+            var found = await _repository.SetCommandOptionActiveAsync(appname, configId, active);
+            if (!found) return false;
+
+            await ClearCachesAsync(appname, username, includePrompts: false);
+            return true;
+        }
+
+        public async Task<CommandConfigOptionDTO> CreateCommandOptionAsync(string appname, CreateCommandOptionRequestDTO request)
+        {
+            var created = await _repository.CreateCommandOptionAsync(appname, request);
+            // A new option also changes the prompt lists, which the palette reads from the shared grammar cache
+            await ClearCachesAsync(appname, request.Username, includePrompts: true);
+            return created;
+        }
+
+        public async Task<CommandConfigOptionDTO?> UpdateCommandOptionAsync(string appname, string configId, UpdateCommandOptionRequestDTO request)
+        {
+            var updated = await _repository.UpdateCommandOptionAsync(appname, configId, request);
+            if (updated == null) return null;
+            // A rename or a source change also changes the prompt lists, which the palette reads from the shared grammar cache
+            await ClearCachesAsync(appname, request.Username, includePrompts: true);
+            return updated;
+        }
+
+        // Command-config key GetCommandConfigsAsync reads, so the next GET command-config is served fresh from the table.
+        // Other users keep their own cached copy until they press Refresh.
+        private async Task ClearCachesAsync(string appname, string username, bool includePrompts)
+        {
+            var keys = new List<RedisKey> { Keygenerator.GenerateCacheKey(appname, "command_config", username) };
+            if (includePrompts) keys.Add(Keygenerator.GenerateCacheKey(appname, "", "commands"));
+            try
+            {
+                if (await _axExtend.OpenRedisConnectionAsync(appname))
+                {
+                    var redisCache = await _axExtend.GetRedis();
+                    await redisCache.KeysDeleteAsync(keys.ToArray());
+                }
+            }
+            catch (RedisException ex)
+            {
+                _logger.LogWarning(ex, "CommandConfigService: Could not clear Redis cache keys {CacheKeys} after a save.", string.Join(", ", keys));
+            }
         }
     }
 }

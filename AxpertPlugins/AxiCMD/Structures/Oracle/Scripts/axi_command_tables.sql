@@ -2,9 +2,10 @@
 DROP TABLE axi_commands
 >>
 
-<<
-DROP TABLE axi_command_prompts
->>
+-- axi_command_prompts is never dropped: it holds the Custom Option names added from the AxiCMD Config page.
+-- On a re-install its CREATE TABLE and the shipped INSERTs fail with "already exists" / duplicate key, which is expected.
+-- So a change to a shipped prompt row in a later release does not reach existing databases through its INSERT: add an UPDATE that keeps
+-- the Custom Option names already in the list.
 
 <<
 CREATE TABLE AXI_COMMANDS 
@@ -21,13 +22,21 @@ CREATE TABLE AXI_COMMAND_PROMPTS
 	"CMDTOKEN" NUMBER(10,0), 
 	"WORDPOS" NUMBER(10,0), 
 	"PROMPT" VARCHAR2(200), 
-	"PROMPTSOURCE" VARCHAR2(500), 
+	"PROMPTSOURCE" VARCHAR2(4000), 
 	"PROMPTPARAMS" VARCHAR2(100), 
-	"PROMPTVALUES" VARCHAR2(500), 
+	"PROMPTVALUES" VARCHAR2(4000), 
 	"PROPS" VARCHAR2(100), 
 	"EXTRAPARAMS" VARCHAR2(1000), 
 	"REQUESTURL" VARCHAR2(2000), 
 	 CONSTRAINT "AXI_COMMAND_PROMPTS_PKEY" PRIMARY KEY ("ID"))
+>>
+
+<<
+ALTER TABLE AXI_COMMAND_PROMPTS MODIFY (PROMPTSOURCE VARCHAR2(4000))
+>>
+
+<<
+ALTER TABLE AXI_COMMAND_PROMPTS MODIFY (PROMPTVALUES VARCHAR2(4000))
 >>
 	
 <<
@@ -130,7 +139,7 @@ INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PR
 >>
 
 <<
-INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('B141E931BB7144788EC8B60253361FFB', 4, 2, 'object type', NULL, NULL, 'PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,KeyField,User,User Listing,User Permission Setup,User Permissions,User Activation,User Group,Role,Role Listing,Role Permissions,Actor,Actor Listing,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibility Listing,Dimension,Dimension Listing, Application Properties,Settings,Smart View Attributes,Smart View Listing', NULL, NULL, NULL)
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('B141E931BB7144788EC8B60253361FFB', 4, 2, 'object type', NULL, NULL, 'PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,KeyField,User,User Listing,User Permission Setup,User Permissions,User Activation,User Group,Role,Role Listing,Role Permissions,Actor,Actor Listing,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibility Listing,Dimension,Dimension Listing, Application Properties,Settings,Smart View Attributes,Smart View Listing,Trace On,Trace Off,Trace Files', NULL, NULL, NULL)
 >>
 
 <<
@@ -138,7 +147,7 @@ INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PR
 >>
 
 <<
-INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('726EB7B2772742CEA2DBC0A91AB3DA16', 4, 3, 'object name', 'Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,axi_structmetalist,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_dimensionlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,axi_smartviewlist,Axi_Dummy', NULL, NULL, NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('726EB7B2772742CEA2DBC0A91AB3DA16', 4, 3, 'object name', 'Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,axi_structmetalist,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_dimensionlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,axi_smartviewlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy', NULL, NULL, NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
 >>
 
 <<

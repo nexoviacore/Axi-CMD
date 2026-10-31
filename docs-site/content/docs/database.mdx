@@ -1,0 +1,81 @@
+---
+title: Database
+description: Tables, the ADS row, the SQL functions and keeping Postgres and Oracle in sync.
+---
+
+## Scripts
+
+Every script exists twice and must stay in sync:
+
+| Script | Contents |
+| --- | --- |
+| `axi_command_tables.sql` | The command, prompt and configuration tables and their data. |
+| `axi_axdirectsql_tables.sql` | The ADS rows in `axdirectsql`. |
+| `axi_functions.sql` | The SQL functions (and, for Oracle, the object and table types they return). |
+
+Locations: `AxpertPlugins/AxiCMD/Structures/Postgre/Scripts` and `AxpertPlugins/AxiCMD/Structures/Oracle/Scripts`.
+
+Line endings are mixed in the working copy. Keep each file's existing endings and 4-space indentation.
+
+## The ADS rows
+
+An ADS row in `axdirectsql` has a name (`sqlname`) and the SQL to run. The palette's data sources include:
+
+| ADS | Returns |
+| --- | --- |
+| `axi_structmetalist` | The forms, reports, pages and data sources the user may use. Paged. |
+| `axi_getstructsdata` | The record rows and field rows of one form. Paged. |
+| `axi_viewlist` | A paged source (listed in `PAGED_SOURCES`). |
+
+`axi_getstructsdata` calls the function with ten parameters:
+
+```sql
+select * from fn_axi_getstructs_obj(:param1, :param2, :param3, :param4, :param5,
+                                    :param6, :param7, :param8, :param9, :param10)
+```
+
+(Oracle wraps it as `select * from TABLE(fn_axi_getstructs_obj(...))`.)
+
+## `fn_axi_getstructs_obj`
+
+```text
+fn_axi_getstructs_obj(pcmd, pusername, puserrole, ptransid, pselectedfield,
+                      pdimension, ppermission, pkeyfield, pprimarytable, pglobalvars)
+```
+
+It returns `displaydata`, `id`, `caption`, `isfield` and `transrecordid`.
+
+| Result part | `isfield` | Content |
+| --- | --- | --- |
+| Records | `f` | The key field values of the primary table, newest first (`modifiedon desc`). With a selected field, `value[key]`. |
+| Fields | `t` | The fields of the form, as `caption (name) [field]`, limited by the user's permissions. |
+
+What it applies:
+
+- **Dimensions.** When `pdimension` is `T`, the condition from `fn_permissions_getpermission` is added to the record queries.
+- **Permissions.** When `ppermission` is `T`, the field list follows the user's view permissions (included or excluded fields).
+- **View filter.** For `view` and `edit`, the form's `axvarcore` filter. See [View filters](/docs/view-filters).
+- **Normalised fields.** If the key or selected field is stored in another table (`srckey = 'T'`), the queries join to that table.
+
+`pglobalvars` is `<dimension part>[@@VARS@@name=value~~name=value]`. The dimension part goes to `fn_permissions_getpermission`; the rest is used by the view filter.
+
+### Other functions
+
+| Function | Purpose |
+| --- | --- |
+| `fn_axi_getstructures_meta` | Metadata of all forms, reports, pages and data sources available to a user. |
+| `fn_permissions_getpermission` | Access rights and filters (`create`, `view`, `edit`) for a form, role and user. |
+
+## Rules for changing them
+
+- **Never rename an existing SQL function.** Add parameters or change the body instead.
+- **Keep both databases in sync.** Change the Postgres and the Oracle script together.
+- **Do not page inside the SQL.** AxList does it. See [Data loading](/docs/data-loading).
+- **Postgres ADS rows bind parameters as `varchar`.** Cast integers and avoid `::`.
+- **Double the quotes** inside SQL text that is stored in an ADS row.
+- **Run the script, then clear the ADS cache** (or recycle the app pool).
+
+## Open items
+
+- Search on a form with no key field (`NA`) fails with `42703 column p.na does not exist` in Postgres, and the Oracle version has the same weakness.
+- Oracle paging rows and the Oracle `axi_getstructsdata` parameter typing are still untested.

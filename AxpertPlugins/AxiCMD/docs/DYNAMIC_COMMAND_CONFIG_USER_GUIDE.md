@@ -95,6 +95,15 @@ The engine provides specialized execution handlers tailored to Axpert structure 
   VALUES ('cfg_configure_dim_list', 'Configure', 'dimension listing', 'ad___upg', 'ivtoivload', 'prole', '../aspx/ivtoivload.aspx?ivname=ad___upg', 'AxOpenAct=true&isDupTab=false', 'T');
   ```
 
+### 7. `shellaction` (Run a Shell Function)
+- **Use Case:** Runs a function the main page already provides instead of opening a page, for example the header trace switch. `prompt_id` is the action name and must be one of the built-in names: `trace_on`, `trace_off`, and `trace_files` (Show Logs). Only users with build access can run them, the same rule the header uses.
+- **Example:**
+  ```sql
+  INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active)
+  VALUES ('cfg_configure_trace_on', 'Configure', 'trace on', 'trace_on', 'shellaction', NULL, NULL, NULL, 'T');
+  ```
+- **Also add** the option name to the `Configure` object type list (`axi_command_prompts`, word position 2) and an `Axi_Dummy` entry at the same position in the object name list.
+
 ---
 
 ## 🔤 4. Dynamic URL Placeholders

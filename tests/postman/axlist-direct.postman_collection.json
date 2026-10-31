@@ -1,0 +1,155 @@
+{
+  "info": {
+    "name": "AxList direct (ARM)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "page 1 size 10",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const txt = pm.response.text();",
+              "let o; try { o = JSON.parse(txt); } catch (e) { console.log('NOT JSON: ' + txt.slice(0, 300)); }",
+              "const e = o && o.result && o.result.data && o.result.data[0];",
+              "const rows = (e && e.data) || [];",
+              "console.log('rows=' + rows.length + ' totalrecords=' + (e && e.totalrecords) + ' first=' + (rows[0] && rows[0].displaydata) + ' last=' + (rows[rows.length-1] && rows[rows.length-1].displaydata));",
+              "console.log('trace=' + (o && o.result && o.result.trace));",
+              "pm.test('10 rows', () => pm.expect(rows.length).to.eql(10));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{armUrl}}/AxList/api/v1/AxList",
+          "host": [
+            "{{armUrl}}"
+          ],
+          "path": [
+            "AxList",
+            "api",
+            "v1",
+            "AxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ARMSessionId\": \"{{session}}\",\n  \"action\": \"view\",\n  \"Project\": \"{{project}}\",\n  \"ADSNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"trace\": true,\n  \"getallrecordscount\": true,\n  \"CachePermissions\": false,\n  \"pageno\": 1,\n  \"pagesize\": 10,\n  \"keyfield\": \"\",\n  \"keyvalue\": \"\",\n  \"AxClient_dateformat\": \"MM/dd/yyyy\",\n  \"select_columns\": [],\n  \"aggregations\": {},\n  \"groupby_columns\": [],\n  \"sorting\": [],\n  \"filters\": [],\n  \"sqlparams\": {\n    \"param1\": \"admin\",\n    \"param2\": \"default\",\n    \"param3\": \"default\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  }\n}"
+        }
+      }
+    },
+    {
+      "name": "page 2 size 10",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const txt = pm.response.text();",
+              "let o; try { o = JSON.parse(txt); } catch (e) { console.log('NOT JSON: ' + txt.slice(0, 300)); }",
+              "const e = o && o.result && o.result.data && o.result.data[0];",
+              "const rows = (e && e.data) || [];",
+              "console.log('rows=' + rows.length + ' totalrecords=' + (e && e.totalrecords) + ' first=' + (rows[0] && rows[0].displaydata) + ' last=' + (rows[rows.length-1] && rows[rows.length-1].displaydata));",
+              "console.log('trace=' + (o && o.result && o.result.trace));",
+              "pm.test('10 rows', () => pm.expect(rows.length).to.eql(10));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{armUrl}}/AxList/api/v1/AxList",
+          "host": [
+            "{{armUrl}}"
+          ],
+          "path": [
+            "AxList",
+            "api",
+            "v1",
+            "AxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ARMSessionId\": \"{{session}}\",\n  \"action\": \"view\",\n  \"Project\": \"{{project}}\",\n  \"ADSNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"trace\": true,\n  \"getallrecordscount\": true,\n  \"CachePermissions\": false,\n  \"pageno\": 2,\n  \"pagesize\": 10,\n  \"keyfield\": \"\",\n  \"keyvalue\": \"\",\n  \"AxClient_dateformat\": \"MM/dd/yyyy\",\n  \"select_columns\": [],\n  \"aggregations\": {},\n  \"groupby_columns\": [],\n  \"sorting\": [],\n  \"filters\": [],\n  \"sqlparams\": {\n    \"param1\": \"admin\",\n    \"param2\": \"default\",\n    \"param3\": \"default\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  }\n}"
+        }
+      }
+    },
+    {
+      "name": "filter test save",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const txt = pm.response.text();",
+              "let o; try { o = JSON.parse(txt); } catch (e) { console.log('NOT JSON: ' + txt.slice(0, 300)); }",
+              "const e = o && o.result && o.result.data && o.result.data[0];",
+              "const rows = (e && e.data) || [];",
+              "console.log('rows=' + rows.length + ' totalrecords=' + (e && e.totalrecords) + ' first=' + (rows[0] && rows[0].displaydata) + ' last=' + (rows[rows.length-1] && rows[rows.length-1].displaydata));",
+              "console.log('trace=' + (o && o.result && o.result.trace));",
+              "pm.test('rows match', () => rows.forEach(r => pm.expect(String(r.displaydata).toLowerCase()).to.include('test save')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{armUrl}}/AxList/api/v1/AxList",
+          "host": [
+            "{{armUrl}}"
+          ],
+          "path": [
+            "AxList",
+            "api",
+            "v1",
+            "AxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ARMSessionId\": \"{{session}}\",\n  \"action\": \"view\",\n  \"Project\": \"{{project}}\",\n  \"ADSNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"trace\": true,\n  \"getallrecordscount\": true,\n  \"CachePermissions\": false,\n  \"pageno\": 1,\n  \"pagesize\": 10,\n  \"keyfield\": \"\",\n  \"keyvalue\": \"\",\n  \"AxClient_dateformat\": \"MM/dd/yyyy\",\n  \"select_columns\": [],\n  \"aggregations\": {},\n  \"groupby_columns\": [],\n  \"sorting\": [],\n  \"filters\": [\n    {\n      \"fldname\": \"displaydata\",\n      \"condition\": \"CONTAINS\",\n      \"value\": \"test save\",\n      \"datatype\": \"TEXT\"\n    }\n  ],\n  \"sqlparams\": {\n    \"param1\": \"admin\",\n    \"param2\": \"default\",\n    \"param3\": \"default\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  }\n}"
+        }
+      }
+    }
+  ]
+}

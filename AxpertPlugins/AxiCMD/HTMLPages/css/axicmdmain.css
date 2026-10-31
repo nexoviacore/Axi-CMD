@@ -877,10 +877,46 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
 
 
 
-#axiMegaDropdown,
-#My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown#axiMegaDropdown {
-  width: 950px !important;
-  max-width: calc(100vw - 120px) !important;
+/* Favourites / suggestions popup.
+   1400px and up: a fixed 950px panel, shifted 100px right by the inline left in the template.
+   Laptops (1024px to 1399px): the same panel, clamped to the bar width (see below), because the sidebar (60-300px)
+   and the 100px shift would push a fixed 950px panel off the right edge.
+   Phones and tablets (up to 1023px): docked to the bar, edge to edge.
+   The ranges do not overlap, so no rule depends on the cascade order to win (a phone showed the desktop max-width winning). */
+@media (min-width: 1400px) {
+  #axiMegaDropdown,
+  #My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown#axiMegaDropdown {
+    width: 950px !important;
+    max-width: calc(100vw - 120px) !important;
+  }
+}
+
+/* Laptops (1024px to 1399px): the 950px panel, kept in the bar. The template's inline left (100px) is kept, and the
+   width is clamped to the bar (its containing block) minus that shift, so it never runs off the right edge. */
+@media (min-width: 1024px) and (max-width: 1399px) {
+  #axiMegaDropdown,
+  #My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown#axiMegaDropdown {
+    width: min(950px, calc(100% - 100px)) !important;
+    max-width: calc(100% - 100px) !important;
+  }
+}
+
+/* Phones and tablets (up to 1023px): as wide as the bar it sits above, edge to edge.
+   Its containing block is .AXI-Sec, so 100% is the bar width whatever the sidebar state. */
+@media (max-width: 1023px) {
+  #axiMegaDropdown,
+  #My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown#axiMegaDropdown {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 0 4px 0 !important;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
 }
 
 /*salman*/
@@ -1475,19 +1511,7 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
     flex: 0 0 auto;
   }
 
-  /* Favourites / suggestions popup: dock above the bar, edge to edge */
-  #axiMegaDropdown,
-  #My_Fav_Bookmarks .menu.menu-sub.menu-sub-dropdown#axiMegaDropdown {
-    position: absolute !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 100% !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-    margin-bottom: 4px;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
+  /* The favourites / suggestions popup is docked edge to edge in the max-width: 1399px block near #axiMegaDropdown */
 
   #axiMegaDropdown .axi-suggestions,
   .axi-suggestions.axi-grid-layout.My-Command-Wrapper,
@@ -1631,6 +1655,298 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
   }
 }
 
+/* =========================================
+   8. GEAR MENU AND "RECORDS PER LOAD" PANEL
+   Markup is built in axicmdmain.js (buildSettingsMenu, buildSettingsPanel); JS only toggles display and the position.
+   Follows DESIGN.md ("The Quiet Console"): solid white sheets with a 1px rule, small corners, Console Ink for text and
+   the primary action, Signal Indigo only for the current value and focus. Shadows only because both float over the page.
+   --axi-sp-fill is the slider fill (0-100%), set from JS.
+   ========================================= */
+.axi-sm,
+.axi-sp {
+  --axi-sp-ink: #1d2547;
+  --axi-sp-ink-hover: #2c3766;
+  --axi-sp-slate: #5b6482;
+  --axi-sp-paper: #f4f5f9;
+  --axi-sp-rule: #dde1eb;
+  --axi-sp-field: #c9cedb;
+  --axi-sp-signal: #3f51c2;
+  --axi-sp-error: #a3261a;
+  position: fixed;
+  z-index: 100000;
+  display: none;
+  box-sizing: border-box;
+  color: var(--axi-sp-ink);
+  font: 13px/1.45 "Segoe UI", system-ui, -apple-system, "Noto Sans Arabic", sans-serif;
+  background: #fff;
+  border: 1px solid var(--axi-sp-rule);
+  border-radius: 8px;
+  box-shadow: 0 14px 36px -16px rgba(29, 37, 71, 0.4);
+  animation: axi-sp-in 0.14s ease-out;
+}
+
+@keyframes axi-sp-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Gear menu: real buttons (keyboard reachable); hover and focus fill with Paper, focus adds the Signal ring */
+.axi-sm {
+  min-width: 190px;
+  padding: 4px;
+}
+
+.axi-sm-item {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--axi-sp-ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+
+.axi-sm-item:hover,
+.axi-sm-item:focus-visible {
+  background: var(--axi-sp-paper);
+  outline: none;
+}
+
+.axi-sm-item:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--axi-sp-signal);
+}
+
+/* Records per load */
+.axi-sp {
+  width: 300px;
+  max-width: calc(100vw - 16px);
+  padding: 16px;
+}
+
+.axi-sp-title {
+  margin: 0;
+  font: 600 16px/1.25 Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+  color: var(--axi-sp-ink);
+}
+
+.axi-sp-sub {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--axi-sp-slate);
+}
+
+/* The value: a plain number field with its unit after it; the slider below moves the same value */
+.axi-sp-readout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 10px;
+}
+
+.axi-sp-input {
+  width: 96px;
+  min-height: 38px;
+  padding: 0 10px;
+  font: 500 18px/1 Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--axi-sp-ink);
+  background: #fff;
+  border: 1px solid var(--axi-sp-field);
+  border-radius: 6px;
+  box-shadow: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.axi-sp-input::-webkit-outer-spin-button,
+.axi-sp-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.axi-sp-input:focus {
+  border-color: var(--axi-sp-signal);
+  outline: 2px solid var(--axi-sp-signal);
+  outline-offset: 2px;
+}
+
+.axi-sp-unit {
+  color: var(--axi-sp-slate);
+}
+
+/* The slider: a thin Rule track whose filled part (the current value) is Signal Indigo; a plain white thumb */
+.axi-sp-range {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.axi-sp-range:focus {
+  outline: none;
+}
+
+.axi-sp-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(var(--axi-sp-signal), var(--axi-sp-signal)) 0 0 / var(--axi-sp-fill) 100% no-repeat,
+              var(--axi-sp-rule);
+}
+
+/* A right-to-left slider runs from the right, so its fill starts there */
+body.btextDir-rtl .axi-sp-range::-webkit-slider-runnable-track {
+  background-position: 100% 0, 0 0;
+}
+
+.axi-sp-range::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--axi-sp-rule);
+}
+
+.axi-sp-range::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--axi-sp-signal);
+}
+
+.axi-sp-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border: 2px solid var(--axi-sp-signal);
+  border-radius: 50%;
+  background: #fff;
+}
+
+.axi-sp-range::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--axi-sp-signal);
+  border-radius: 50%;
+  background: #fff;
+}
+
+.axi-sp-range:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--axi-sp-signal);
+  outline-offset: 2px;
+}
+
+.axi-sp-range:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--axi-sp-signal);
+  outline-offset: 2px;
+}
+
+.axi-sp-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  font: 12px Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--axi-sp-slate);
+}
+
+/* Validation message under the slider, as a field error (DESIGN.md Inputs): a bold Error Red line, no box.
+   The panel gets .axi-sp-invalid while the value is not accepted */
+.axi-sp-error {
+  margin-top: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--axi-sp-error);
+}
+
+.axi-sp-error[hidden] {
+  display: none;
+}
+
+.axi-sp-invalid .axi-sp-input {
+  border-color: var(--axi-sp-error);
+}
+
+/* Default (secondary) first, Save (primary) at the end */
+.axi-sp-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.axi-sp-btn {
+  min-height: 34px;
+  padding: 0 14px;
+  font: inherit;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.axi-sp-btn:focus-visible {
+  outline: 2px solid var(--axi-sp-signal);
+  outline-offset: 2px;
+}
+
+.axi-sp-save {
+  color: #fff;
+  background: var(--axi-sp-ink);
+  border: 1px solid var(--axi-sp-ink);
+}
+
+.axi-sp-save:hover {
+  background: var(--axi-sp-ink-hover);
+  border-color: var(--axi-sp-ink-hover);
+}
+
+.axi-sp-default {
+  color: var(--axi-sp-ink);
+  background: #fff;
+  border: 1px solid var(--axi-sp-field);
+}
+
+.axi-sp-default:hover {
+  background: var(--axi-sp-paper);
+}
+
+.axi-sp-hint {
+  margin-top: 12px;
+  padding-top: 10px;
+  font-size: 12px;
+  color: var(--axi-sp-slate);
+  border-top: 1px solid var(--axi-sp-rule);
+}
+
+/* The panel's sentences are English even in a right-to-left shell: each takes its direction from its own text, so
+   the full stop stays at the end; they still align right with the title */
+.axi-sp-sub,
+.axi-sp-error,
+.axi-sp-hint {
+  unicode-bidi: plaintext;
+}
+
+body.btextDir-rtl .axi-sp-sub,
+body.btextDir-rtl .axi-sp-error,
+body.btextDir-rtl .axi-sp-hint {
+  text-align: right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .axi-sm,
+  .axi-sp {
+    animation: none;
+  }
+}
+
 /* Landscape phones / short viewports */
 @media (max-height: 480px) and (max-width: 991px) {
   #axiMegaDropdown .axi-suggestions,
@@ -1640,5 +1956,366 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
 
   .My-Fav-Items-Wrapper {
     max-height: 30vh !important;
+  }
+}
+
+/* =========================================
+   9. VERSION DIALOG - the "version" command
+   Markup is built in axicmdmain.js (openVersionModal). Follows DESIGN.md ("The Quiet Console"), like section 8:
+   a solid white sheet over a plain navy scrim, ruled rows, Console Ink for text and the primary action,
+   Signal Indigo only for focus. Versions are numbers, so they are set in Bahnschrift with tabular figures.
+   ========================================= */
+.axi-vm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  background: rgba(29, 37, 71, 0.28);
+  animation: axi-vm-fade 0.14s ease-out;
+}
+
+.axi-vm {
+  --axi-vm-ink: #1d2547;
+  --axi-vm-ink-hover: #2c3766;
+  --axi-vm-slate: #5b6482;
+  --axi-vm-paper: #f4f5f9;
+  --axi-vm-rule: #dde1eb;
+  --axi-vm-field: #c9cedb;
+  --axi-vm-signal: #3f51c2;
+  position: relative;
+  width: 360px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 16px 20px 20px;
+  color: var(--axi-vm-ink);
+  font: 13px/1.45 "Segoe UI", system-ui, -apple-system, "Noto Sans Arabic", sans-serif;
+  background: #fff;
+  border: 1px solid var(--axi-vm-rule);
+  border-radius: 8px;
+  box-shadow: 0 24px 56px -24px rgba(29, 37, 71, 0.5);
+  animation: axi-vm-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.axi-vm ::selection {
+  background: #eceffb;
+  color: var(--axi-vm-ink);
+}
+
+.axi-vm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.axi-vm-title {
+  margin: 0;
+  font: 600 16px/1.25 Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+  color: var(--axi-vm-ink);
+}
+
+/* The close icon: a small square button; hover fills with Paper */
+.axi-vm-x {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  margin-inline-end: -6px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--axi-vm-slate);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.axi-vm-x:hover {
+  color: var(--axi-vm-ink);
+  background: var(--axi-vm-paper);
+}
+
+/* A two-row readout ruled above and between, like the Config page's table sheet */
+.axi-vm-body {
+  margin: 12px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--axi-vm-rule);
+}
+
+.axi-vm-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--axi-vm-rule);
+}
+
+.axi-vm-name {
+  margin: 0;
+  font-weight: 600;
+  color: var(--axi-vm-slate);
+}
+
+.axi-vm-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+}
+
+.axi-vm-ver {
+  max-width: 100%;
+  font: 600 18px/1.2 Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  unicode-bidi: isolate;
+  color: var(--axi-vm-ink);
+}
+
+.axi-vm-tag {
+  font-size: 12px;
+  unicode-bidi: isolate;
+  color: var(--axi-vm-slate);
+}
+
+.axi-vm-missing {
+  color: var(--axi-vm-slate);
+}
+
+/* Copy (secondary) first, Close (primary) at the end */
+.axi-vm-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.axi-vm-btn {
+  min-height: 34px;
+  padding: 0 14px;
+  font: inherit;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.axi-vm-btn-ghost {
+  color: var(--axi-vm-ink);
+  background: #fff;
+  border: 1px solid var(--axi-vm-field);
+}
+
+.axi-vm-btn-ghost:hover {
+  background: var(--axi-vm-paper);
+}
+
+.axi-vm-btn-main {
+  color: #fff;
+  background: var(--axi-vm-ink);
+  border: 1px solid var(--axi-vm-ink);
+}
+
+.axi-vm-btn-main:hover {
+  background: var(--axi-vm-ink-hover);
+  border-color: var(--axi-vm-ink-hover);
+}
+
+.axi-vm-x:focus-visible,
+.axi-vm-btn:focus-visible {
+  outline: 2px solid var(--axi-vm-signal);
+  outline-offset: 2px;
+}
+
+/* Copy result for screen readers only */
+.axi-vm-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .axi-vm-overlay,
+  .axi-vm {
+    animation: none;
+  }
+}
+
+@keyframes axi-vm-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes axi-vm-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   RTL (Arabic) support.
+   The shell puts class "btextDir-rtl" and dir="rtl" on <body> when the language
+   is Arabic (aspx/Mainnew.aspx). Everything above is written with physical
+   left/right values, so each one is mirrored here. Keep this block last.
+   ========================================================================== */
+
+/* Command bar: logo, input, hint and clear button */
+body.btextDir-rtl .searchwrap-AXI .AXI-Logo {
+  margin-right: 0;
+  padding-right: 0;
+  border-right: 0;
+  margin-left: 15px;
+  padding-left: 15px;
+  border-left: 1px solid #e5e7eb;
+}
+
+body.btextDir-rtl .searchwrap-AXI #Axi-Searchinp {
+  padding-right: 10px !important;
+  padding-left: 140px;
+  margin-right: 0;
+  margin-left: 15px;
+  border-right: 0 !important;
+  border-left: 1px solid #ccc !important;
+  direction: ltr; /* commands are typed in English; a trailing space would otherwise land left of the word in an RTL box */
+  text-align: right;
+}
+
+body.btextDir-rtl .axi-input-hint {
+  right: auto;
+  left: 46px;
+}
+
+body.btextDir-rtl .clearbtn {
+  right: auto;
+  left: 25px;
+}
+
+/* Suggestions popup */
+body.btextDir-rtl .axi-suggestions {
+  left: auto;
+  right: 77px;
+}
+
+body.btextDir-rtl .axi-suggestions.axi-grid-layout {
+  left: auto;
+  right: 0;
+}
+
+body.btextDir-rtl #axiMegaDropdown .axi-suggestions {
+  right: auto !important;
+}
+
+body.btextDir-rtl .axi-verbs-grid li.axi-suggestion {
+  text-align: right;
+}
+
+/* Previous / next page arrows are drawn as left / right glyphs */
+body.btextDir-rtl .AXI-Sec .enhance-btn .material-icons {
+  transform: scaleX(-1);
+}
+
+/* Favourites */
+body.btextDir-rtl .My-Fav-Items-Content {
+  padding-right: 0;
+  padding-left: 5px;
+}
+
+body.btextDir-rtl .Add-Favourite {
+  right: auto;
+  left: 10px;
+}
+
+body.btextDir-rtl .edit-fav {
+  margin-right: 0;
+  margin-left: 15px;
+}
+
+body.btextDir-rtl .axi-spinner {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
+body.btextDir-rtl .axi-fav-search-icon {
+  left: auto;
+  right: 12px;
+}
+
+body.btextDir-rtl .axi-fav-search-input {
+  padding: 9px 40px 9px 14px;
+}
+
+/* Desktop: pin the command bar to the left edge so it ends where the sidebar (on the right) begins.
+   It is position: fixed with no side set, so otherwise its place follows the page layout
+   and its last button (settings) can fall off the left edge. */
+body.btextDir-rtl .AXI-Sec {
+  left: 0;
+  right: auto;
+}
+
+/* Tablet: the bar sits beside the 60px collapsed sidebar */
+@media (max-width: 1023px) {
+  body.btextDir-rtl .AXI-Sec {
+    left: auto;
+    right: 60px;
+  }
+}
+
+/* Phone: the bar takes the full width */
+@media (max-width: 767px) {
+  body.btextDir-rtl .AXI-Sec {
+    left: 0;
+    right: 0;
+  }
+
+  body.btextDir-rtl .searchwrap-AXI .AXI-Logo {
+    margin-right: 0;
+    padding-right: 0;
+    margin-left: 8px;
+    padding-left: 8px;
+  }
+
+  body.btextDir-rtl .searchwrap-AXI #Axi-Searchinp {
+    padding-right: 10px !important;
+    padding-left: 45px !important;
+  }
+}
+
+@media (max-width: 991px) {
+  body.btextDir-rtl .searchwrap-AXI #Axi-Searchinp {
+    padding-right: 10px !important;
+    padding-left: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  body.btextDir-rtl .searchwrap-AXI .AXI-Logo {
+    margin-right: 0;
+    padding-right: 0;
+    margin-left: 6px;
+    padding-left: 6px;
+  }
+
+  body.btextDir-rtl .searchwrap-AXI #Axi-Searchinp {
+    padding-right: 10px !important;
+    padding-left: 36px !important;
+    margin-right: 0;
+    margin-left: 6px;
   }
 }

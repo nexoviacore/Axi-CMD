@@ -1,0 +1,47 @@
+---
+title: Operations
+description: Releasing a change, clearing caches and fixing the usual problems.
+---
+
+## Releasing a change to the palette
+
+1. Check the script syntax: `node --check AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js`.
+2. **Bump the version** in `aspx/mainHomeConfigTemplate.html`: `axicmdmain.js?v=N` (and `axicmdmain.css?v=N` for styles). Without it browsers keep the old file.
+3. If you changed an ADS row or a SQL function, run the updated script on the target database (the Postgres or the Oracle one), then clear the ADS cache or recycle the app pool.
+4. Reload with Ctrl+F5 and check the DevTools Network tab and console.
+
+The plugin version shown to users is in `AxpertPlugins/AxiCMD/AxiCMDVersioninfo.json`.
+
+## Clearing caches
+
+| Layer | How |
+| --- | --- |
+| In memory | Press the Refresh button in the palette, or reload the page. |
+| Browser (`localStorage`) | Run `Object.keys(localStorage).filter(k => k.startsWith("axi_")).forEach(k => localStorage.removeItem(k))` in the console. |
+| Server (ADS cache, 6 hours) | Clear the ADS cache, or recycle the application pool. |
+
+## Testing with session variables
+
+The palette reads the session variables from `allGloblVars.globalVars`, a list of one-key objects. In the console of the main shell window:
+
+```js
+allGloblVars.globalVars = [{ branch: "HO" }, { dep: "d1" }];   // set
+allGloblVars.globalVars = [];                                  // empty
+```
+
+It is rebuilt from the session on page load. See [View filters](/docs/view-filters).
+
+## Troubleshooting
+
+| Symptom | Likely cause and fix |
+| --- | --- |
+| My change has no effect | Old script cached: bump `?v=N` and press Ctrl+F5. Old data cached: clear the three layers above. |
+| Old query still runs after editing an ADS row | Server ADS cache (6 hours). Clear it or recycle the app pool. |
+| "AxiCMD could not load this list because its database setup is incomplete or outdated" | A function or table is missing (Postgres `42883`, Oracle `PLS-00201` and similar). Run the AxiCMD scripts. |
+| "This item has a field or table that AxiCMD could not read" | A missing column or table (`42703`, `42P01`). Check the form's key field and primary table. |
+| "AxiCMD could not reach the data service" | The direct AxList route failed (network, CORS, ARM down). It rests for 5 minutes after a network error. |
+| Redirect to the session-expired page | The ARM session or token is no longer valid. Sign in again. |
+| `view` / `edit` shows all records | No `axvarcore` row for the form, or an unresolved placeholder skipped the filter. See [View filters](/docs/view-filters). |
+| Search on a form fails with `column p.na does not exist` | The form has no key field. Known open item. |
+| List shows only the first 100 rows | Paged by design. Scroll to load more, or type 3 or more characters to search the server. |
+| In Arabic the bar, input or status text looks mirrored wrongly, or the Settings gear is missing | The `btextDir-rtl` rules in `axicmdmain.css` or the old cached stylesheet. Bump `axicmdmain.css?v=N` and press Ctrl+F5. See [Arabic and RTL](/docs/arabic-rtl). |

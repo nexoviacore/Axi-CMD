@@ -1,0 +1,17 @@
+{
+  "title": "AxiCMD",
+  "pages": [
+    "index",
+    "architecture",
+    "commands",
+    "data-loading",
+    "view-filters",
+    "arabic-rtl",
+    "database",
+    "axiapi",
+    "operations",
+    "contributing",
+    "glossary",
+    "adr"
+  ]
+}
