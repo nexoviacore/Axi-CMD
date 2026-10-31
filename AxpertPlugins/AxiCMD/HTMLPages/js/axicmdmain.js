@@ -12215,7 +12215,10 @@ if (typeof document !== "undefined") {
             const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
             const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), INSTALL_REQUEST_TIMEOUT_MS) : null;
             try {
-                const res = await fetch(`${AxiArmUrl}/AxiGit/api/git/listdirectories`, {
+                // old code
+                // const res = await fetch(`${AxiArmUrl}/AxiGit/api/git/listdirectories`, {
+                // new code
+                const res = await fetch(`${AxiArmUrl}/AxiGitAPI/api/git/listdirectories`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     signal: abortCtrl ? abortCtrl.signal : undefined,
@@ -12404,7 +12407,8 @@ if (typeof document !== "undefined") {
     }
 
     // ---- Install progress modal -------------------------------------------------------------------------------
-    const INSTALL_MODAL_CSS = `
+    // old code
+    /* const INSTALL_MODAL_CSS = `
 .axi-install-root{--ai-surface:#ffffff;--ai-ink:#1d2547;--ai-muted:#5b6482;--ai-rule:#dde1eb;--ai-paper:#f4f5f9;--ai-signal:#3f51c2;--ai-signal-tint:#eceffc;--ai-ok:#177a4a;--ai-ok-tint:#e4f4ea;--ai-err:#a3261a;--ai-err-tint:#fcefed;--ai-shadow:0 24px 60px -12px rgba(29,37,71,.35),0 4px 14px rgba(29,37,71,.12);position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px;font-family:"Segoe UI",system-ui,-apple-system,"Noto Sans Arabic",sans-serif;color:var(--ai-ink);line-height:1.4}
 :is(html.dark,html.dark-theme,body.dark,body.dark-theme,[data-bs-theme="dark"]) .axi-install-root{--ai-surface:#1e2230;--ai-ink:#e8ebf7;--ai-muted:#9aa3c4;--ai-rule:#2f3652;--ai-paper:#171a26;--ai-signal:#8d9bff;--ai-signal-tint:#262c4d;--ai-ok:#4cc38a;--ai-ok-tint:#16302a;--ai-err:#ff8f80;--ai-err-tint:#3a2224;--ai-shadow:0 24px 60px -12px rgba(0,0,0,.65),0 4px 14px rgba(0,0,0,.4)}
 .axi-install-root *{box-sizing:border-box}
@@ -12476,8 +12480,86 @@ if (typeof document !== "undefined") {
 .axi-install-root *,.axi-install-root *::before,.axi-install-root *::after{animation-duration:.001s!important;animation-delay:0s!important;transition-duration:.001s!important}
 .axi-install-step[data-state="active"] .axi-install-spin{animation:none;border-color:var(--ai-signal)}
 }
+`; */
+    // new code
+    // Follows DESIGN.md ("The Quiet Console"), like the version dialog: a solid sheet over the plain navy scrim, ruled
+    // rows, Console Ink for text, done steps and the primary action, Signal Indigo only for the current step and focus.
+    const INSTALL_MODAL_CSS = `
+.axi-install-root{--ai-ink:#1d2547;--ai-ink-hover:#2c3766;--ai-slate:#5b6482;--ai-paper:#f4f5f9;--ai-sheet:#fff;--ai-rule:#dde1eb;--ai-field:#c9cedb;--ai-signal:#3f51c2;--ai-signal-tint:#eceffb;--ai-err:#a3261a;--ai-err-tint:#fcefed;--ai-display:Bahnschrift,"DIN Alternate","Segoe UI",system-ui,sans-serif;position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;font:13px/1.45 "Segoe UI",system-ui,-apple-system,"Noto Sans Arabic",sans-serif;color:var(--ai-ink)}
+.axi-install-root *{box-sizing:border-box}
+.axi-install-root ::selection{background:var(--ai-signal-tint);color:var(--ai-ink)}
+.axi-install-backdrop{position:absolute;inset:0;background:rgba(29,37,71,.28);animation:axi-install-fade .14s ease-out both}
+.axi-install-dialog{position:relative;width:min(400px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--ai-sheet);border:1px solid var(--ai-rule);border-radius:8px;box-shadow:0 24px 56px -24px rgba(29,37,71,.5);outline:none;animation:axi-install-in .18s cubic-bezier(.22,1,.36,1) both}
+.axi-install-root.axi-install-leaving .axi-install-backdrop{animation:axi-install-fade .12s ease-in reverse both}
+.axi-install-root.axi-install-leaving .axi-install-dialog{animation:axi-install-in .12s ease-in reverse both}
+.axi-install-head{display:flex;align-items:flex-start;gap:12px;padding:16px 20px 0}
+.axi-install-titles{flex:1;min-width:0}
+.axi-install-title{margin:0;font:600 16px/1.25 var(--ai-display);color:var(--ai-ink)}
+.axi-install-sub{margin:8px 0 0;display:flex;align-items:baseline;gap:8px;min-width:0;font-size:14px;unicode-bidi:isolate}
+.axi-install-dir{min-width:0;font-weight:600;color:var(--ai-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.axi-install-ver{flex:none;font-family:var(--ai-display);font-variant-numeric:tabular-nums;color:var(--ai-slate)}
+.axi-install-repo{margin:2px 0 0;font-size:12px;color:var(--ai-slate);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:plaintext}
+.axi-install-x{flex:none;width:30px;height:30px;margin-block-start:-5px;margin-inline-end:-6px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--ai-slate);background:transparent;border:0;border-radius:6px;cursor:pointer}
+.axi-install-x:hover{color:var(--ai-ink);background:var(--ai-paper)}
+.axi-install-x:disabled{opacity:.4;cursor:default;background:transparent}
+.axi-install-x svg{width:16px;height:16px}
+.axi-install-meter{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:16px 20px 0}
+.axi-install-meter>i{height:3px;border-radius:2px;background:var(--ai-rule);transition:background-color .2s ease-out}
+.axi-install-meter>i[data-state="active"]{background:var(--ai-signal)}
+.axi-install-meter>i[data-state="done"]{background:var(--ai-ink)}
+.axi-install-meter>i[data-state="error"]{background:var(--ai-err)}
+.axi-install-body{padding:12px 20px 0}
+.axi-install-steps{list-style:none;margin:0;padding:0;border-top:1px solid var(--ai-rule)}
+.axi-install-step{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:40px;padding:8px 0;border-bottom:1px solid var(--ai-rule)}
+.axi-install-marker{position:relative;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--ai-field);display:grid;place-items:center;color:#fff;transition:background-color .16s ease-out,border-color .16s ease-out}
+.axi-install-marker svg{position:absolute;width:11px;height:11px;opacity:0}
+.axi-install-spin{position:absolute;inset:-1.5px;border-radius:50%;border:1.5px solid transparent;opacity:0}
+.axi-install-step[data-state="active"] .axi-install-marker{border-color:var(--ai-signal-tint)}
+.axi-install-step[data-state="active"] .axi-install-spin{opacity:1;border-top-color:var(--ai-signal);animation:axi-install-spin .7s linear infinite}
+.axi-install-step[data-state="done"] .axi-install-marker{background:var(--ai-ink);border-color:var(--ai-ink)}
+.axi-install-step[data-state="done"] .axi-install-ico-ok{opacity:1}
+.axi-install-step[data-state="done"] .axi-install-ico-ok path{stroke-dasharray:24;stroke-dashoffset:24;animation:axi-install-draw .2s ease-out forwards}
+.axi-install-step[data-state="error"] .axi-install-marker{background:var(--ai-err);border-color:var(--ai-err)}
+.axi-install-step[data-state="error"] .axi-install-ico-err{opacity:1}
+.axi-install-label{min-width:0;color:var(--ai-slate);unicode-bidi:plaintext}
+.axi-install-step[data-state="active"] .axi-install-label{color:var(--ai-ink);font-weight:600}
+.axi-install-step[data-state="done"] .axi-install-label{color:var(--ai-ink)}
+.axi-install-step[data-state="error"] .axi-install-label{color:var(--ai-err);font-weight:600}
+.axi-install-time{font:12px/1 var(--ai-display);font-variant-numeric:tabular-nums;color:var(--ai-slate);unicode-bidi:isolate}
+.axi-install-error{margin-top:12px;padding:10px 12px;border:1px solid #efc9c3;border-radius:6px;background:var(--ai-err-tint);color:var(--ai-err);overflow-wrap:anywhere;unicode-bidi:plaintext}
+.axi-install-error strong{display:block;margin-bottom:2px}
+.axi-install-info{margin:0 0 12px;padding:10px 12px;border:1px solid #d5dbf5;border-radius:6px;background:var(--ai-signal-tint);color:var(--ai-ink);unicode-bidi:plaintext}
+.axi-install-readout{margin:0;border-top:1px solid var(--ai-rule)}
+.axi-install-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--ai-rule)}
+.axi-install-row dt{flex:none;font-weight:600;color:var(--ai-slate)}
+.axi-install-row dd{min-width:0;margin:0;font-weight:600;color:var(--ai-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:isolate}
+.axi-install-row dd.axi-install-num{font-family:var(--ai-display);font-variant-numeric:tabular-nums}
+.axi-install-row dd.axi-install-code{font:400 12.5px/1.45 Consolas,"Cascadia Mono","Courier New",monospace;direction:ltr}
+.axi-install-foot{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:16px 20px 20px}
+.axi-install-note{margin-inline-end:auto;font-size:12px;color:var(--ai-slate);font-variant-numeric:tabular-nums;unicode-bidi:plaintext}
+.axi-install-btn{min-height:34px;padding:0 14px;font:inherit;font-weight:600;color:var(--ai-ink);background:var(--ai-sheet);border:1px solid var(--ai-field);border-radius:6px;cursor:pointer;transition:background-color .12s ease-out}
+.axi-install-btn:hover{background:var(--ai-paper)}
+.axi-install-btn-primary{color:#fff;background:var(--ai-ink);border-color:var(--ai-ink)}
+.axi-install-btn-primary:hover{background:var(--ai-ink-hover);border-color:var(--ai-ink-hover)}
+.axi-install-btn:focus-visible,.axi-install-x:focus-visible{outline:2px solid var(--ai-signal);outline-offset:2px}
+.axi-install-bar{position:absolute;inset-inline:0;bottom:0;height:2px;overflow:hidden}
+.axi-install-bar>i{display:block;height:100%;background:var(--ai-signal);transform-origin:left}
+:is([dir="rtl"],.btextDir-rtl) .axi-install-bar>i{transform-origin:right}
+.axi-install-root [hidden]{display:none!important}
+.axi-install-root.axi-install--success .axi-install-steps{display:none}
+.axi-install-root.axi-install--error .axi-install-note{display:none}
+.axi-install-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);border:0;white-space:nowrap}
+@keyframes axi-install-fade{from{opacity:0}to{opacity:1}}
+@keyframes axi-install-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes axi-install-spin{to{transform:rotate(360deg)}}
+@keyframes axi-install-draw{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){
+.axi-install-root *,.axi-install-root *::before,.axi-install-root *::after{animation-duration:.001s!important;animation-delay:0s!important;transition-duration:.001s!important}
+.axi-install-step[data-state="active"] .axi-install-spin{animation:none;border-color:var(--ai-signal)}
+}
 `;
 
+    const INSTALL_ICON_CLOSE = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
     const INSTALL_ICON_PACKAGE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3.3 7.5L12 12l8.7-4.5"/><path d="M12 12v9"/></svg>';
     const INSTALL_ICON_OK = '<svg class="axi-install-ico-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
     const INSTALL_ICON_ERR = '<svg class="axi-install-ico-err" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
@@ -12546,18 +12628,44 @@ if (typeof document !== "undefined") {
         dialog.tabIndex = -1;
 
         // header
+        // old code
+        // const head = mk("div", "axi-install-head");
+        // const badge = mk("div", "axi-install-badge");
+        // badge.innerHTML = INSTALL_ICON_PACKAGE;
+        // const titles = mk("div", "axi-install-titles");
+        // const title = mk("h2", "axi-install-title", `Installing ${label}`);
+        // title.id = titleId;
+        // const sub = mk("p", "axi-install-sub", `${ctx.directory} · ${ctx.version || "no version"}`);
+        // sub.title = sub.textContent;
+        // titles.appendChild(title);
+        // titles.appendChild(sub);
+        // head.appendChild(badge);
+        // head.appendChild(titles);
+        // new code
+        // title, then the directory (Console Ink) and its version (Slate, Bahnschrift), then account/repo; a close icon at the end
         const head = mk("div", "axi-install-head");
-        const badge = mk("div", "axi-install-badge");
-        badge.innerHTML = INSTALL_ICON_PACKAGE;
         const titles = mk("div", "axi-install-titles");
         const title = mk("h2", "axi-install-title", `Installing ${label}`);
         title.id = titleId;
-        const sub = mk("p", "axi-install-sub", `${ctx.directory} · ${ctx.version || "no version"}`);
-        sub.title = sub.textContent;
+        const sub = mk("p", "axi-install-sub");
+        const subDir = mk("span", "axi-install-dir", ctx.directory);
+        subDir.title = ctx.directory;
+        sub.appendChild(subDir);
+        sub.appendChild(mk("span", "axi-install-ver", ctx.version || "No version"));
+        const repoLine = mk("p", "axi-install-repo", `${ctx.account}/${ctx.repo}`);
         titles.appendChild(title);
         titles.appendChild(sub);
-        head.appendChild(badge);
+        titles.appendChild(repoLine);
+        const xBtn = mk("button", "axi-install-x");
+        xBtn.type = "button";
+        xBtn.setAttribute("aria-label", "Close");
+        xBtn.innerHTML = INSTALL_ICON_CLOSE;
         head.appendChild(titles);
+        head.appendChild(xBtn);
+
+        // one meter segment per step: Signal Indigo for the current one, Console Ink when done, Error Red when failed
+        const meter = mk("div", "axi-install-meter");
+        meter.setAttribute("aria-hidden", "true");
 
         // body: stepper, error, success
         const body = mk("div", "axi-install-body");
@@ -12566,6 +12674,10 @@ if (typeof document !== "undefined") {
         live.setAttribute("role", "status");
         const steps = mk("ol", "axi-install-steps");
         const labelEls = [];
+        // new code
+        const timeEls = [];
+        const segEls = [];
+        const stepStart = [];
         const stepEls = stepLabels.map((text) => {
             const li = mk("li", "axi-install-step");
             li.dataset.state = "pending";
@@ -12576,6 +12688,14 @@ if (typeof document !== "undefined") {
             const labelEl = mk("span", "axi-install-label", text);
             labelEls.push(labelEl);
             li.appendChild(labelEl);
+            // new code
+            const timeEl = mk("span", "axi-install-time", "");
+            timeEls.push(timeEl);
+            li.appendChild(timeEl);
+            const seg = document.createElement("i");
+            seg.dataset.state = "pending";
+            segEls.push(seg);
+            meter.appendChild(seg);
             steps.appendChild(li);
             return li;
         });
@@ -12588,29 +12708,54 @@ if (typeof document !== "undefined") {
         errorBox.appendChild(errorHead);
         errorBox.appendChild(errorMsg);
 
+        // old code
+        // const success = mk("div", "axi-install-success");
+        // success.hidden = true;
+        // const check = mk("div", "axi-install-check");
+        // check.innerHTML = INSTALL_ICON_BIG_CHECK;
+        // const okTitle = mk("h3", "axi-install-ok-title", "Your installation has started");
+        // const okText = mk("p", "axi-install-ok-text", "You'll get a notification when it finishes.");
+        // const card = mk("dl", "axi-install-card");
+        // const addRow = (k, v, mono) => {
+        //     const dt = mk("dt", "", k);
+        //     card.appendChild(dt);
+        //     const dd = mk("dd", mono ? "axi-install-mono" : "", v);
+        //     dd.title = v;
+        //     card.appendChild(dd);
+        //     return { dt, dd };
+        // };
+        // addRow("Type", label);
+        // addRow("Directory", ctx.directory);
+        // addRow("Version", ctx.version || "no version");
+        // addRow("Repository", `${ctx.account}/${ctx.repo}`);
+        // const commitRow = addRow("Commit", sha7, true);
+        // commitRow.dt.hidden = commitRow.dd.hidden = !sha7;
+        // success.appendChild(check);
+        // success.appendChild(okTitle);
+        // success.appendChild(okText);
+        // success.appendChild(card);
+        // new code
+        // success: an info note, then a ruled readout like the version dialog (the header title changes to "... started")
         const success = mk("div", "axi-install-success");
         success.hidden = true;
-        const check = mk("div", "axi-install-check");
-        check.innerHTML = INSTALL_ICON_BIG_CHECK;
-        const okTitle = mk("h3", "axi-install-ok-title", "Your installation has started");
-        const okText = mk("p", "axi-install-ok-text", "You'll get a notification when it finishes.");
-        const card = mk("dl", "axi-install-card");
-        const addRow = (k, v, mono) => {
+        const okText = mk("p", "axi-install-info", "You'll get a notification when it finishes.");
+        const card = mk("dl", "axi-install-readout");
+        const addRow = (k, v, cls) => {
+            const row = mk("div", "axi-install-row");
             const dt = mk("dt", "", k);
-            card.appendChild(dt);
-            const dd = mk("dd", mono ? "axi-install-mono" : "", v);
+            const dd = mk("dd", cls || "", v);
             dd.title = v;
-            card.appendChild(dd);
-            return { dt, dd };
+            row.appendChild(dt);
+            row.appendChild(dd);
+            card.appendChild(row);
+            return { row, dt, dd };
         };
-        addRow("Type", label);
         addRow("Directory", ctx.directory);
-        addRow("Version", ctx.version || "no version");
+        addRow("Version", ctx.version || "No version", ctx.version ? "axi-install-num" : "");
         addRow("Repository", `${ctx.account}/${ctx.repo}`);
-        const commitRow = addRow("Commit", sha7, true);
-        commitRow.dt.hidden = commitRow.dd.hidden = !sha7;
-        success.appendChild(check);
-        success.appendChild(okTitle);
+        const commitRow = addRow("Commit", sha7, "axi-install-code");
+        commitRow.row.hidden = !sha7;
+        addRow("Request", String(m.requestId).slice(0, 8), "axi-install-code");
         success.appendChild(okText);
         success.appendChild(card);
 
@@ -12641,6 +12786,7 @@ if (typeof document !== "undefined") {
         bar.hidden = true;
 
         dialog.appendChild(head);
+        dialog.appendChild(meter);
         dialog.appendChild(body);
         dialog.appendChild(foot);
         dialog.appendChild(bar);
@@ -12649,6 +12795,12 @@ if (typeof document !== "undefined") {
 
         const setStep = (i, state) => {
             stepEls[i].dataset.state = state;
+            // new code
+            segEls[i].dataset.state = state;
+            if (state === "active") stepStart[i] = Date.now();
+            timeEls[i].textContent = (state === "done" || state === "error") && stepStart[i]
+                ? `${((Date.now() - stepStart[i]) / 1000).toFixed(1)}s`
+                : "";
             if (state === "active") live.textContent = `Step ${i + 1} of ${stepLabels.length}: ${stepLabels[i]}`;
             if (state === "error") live.textContent = `Failed at step ${i + 1}: ${stepLabels[i]}`;
         };
@@ -12694,6 +12846,7 @@ if (typeof document !== "undefined") {
 
         backdrop.addEventListener("mousedown", () => { if (!m.inflight) m.close(false); });
         closeBtn.addEventListener("click", () => m.close(false));
+        xBtn.addEventListener("click", () => { if (!m.inflight) m.close(false); });
         doneBtn.addEventListener("click", () => m.close(false));
         dialog.addEventListener("mouseenter", () => { m.hover = true; });
         dialog.addEventListener("mouseleave", () => { m.hover = false; });
@@ -12711,6 +12864,8 @@ if (typeof document !== "undefined") {
             countdown.hidden = false;
             bar.hidden = false;
             live.textContent = "Your installation has started. You'll get a notification when it finishes.";
+            // new code
+            title.textContent = `${label} installation started`;
             doneBtn.focus();
             m.remaining = INSTALL_AUTOCLOSE_MS;
             let last = Date.now();
@@ -12748,7 +12903,10 @@ if (typeof document !== "undefined") {
             labelEls[1].textContent = stepLabels[1];
             commitRow.dd.textContent = short;
             commitRow.dd.title = short;
-            commitRow.dt.hidden = commitRow.dd.hidden = !short;
+            // old code
+            // commitRow.dt.hidden = commitRow.dd.hidden = !short;
+            // new code
+            commitRow.row.hidden = !short;
         };
         const waitAtLeast = (promise, ms) => Promise.all([promise, delay(ms)]).then(r => r[0]);
         const failStep = (i, message, resumeFrom) => {
@@ -12790,6 +12948,7 @@ if (typeof document !== "undefined") {
             setStep(2, "active");
             setStep(3, "pending");
             m.inflight = true;
+            xBtn.disabled = true;
             const result = await waitAtLeast(pushInstallToQueue(buildInstallPayload({
                 requestId: m.requestId,
                 type: ctx.type,
@@ -12803,6 +12962,7 @@ if (typeof document !== "undefined") {
                 requestedOn: m.requestedOn
             })), INSTALL_STEP_MIN_MS);
             m.inflight = false;
+            xBtn.disabled = false;
             if (m.closed) return;
             if (!result.success) {
                 failStep(2, result.message, 2);
